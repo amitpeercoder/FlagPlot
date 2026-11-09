@@ -1,0 +1,302 @@
+//! Scenario 1: one task force steams from Noumea to Espiritu Santo.
+//!
+//! Proves that movement, fuel burn and arrival time match a hand calculation,
+//! that a replay reproduces every daily hash, and that the event log can say
+//! why the task force arrived.
+//!
+//! The data is placeholder data: see `data/scenarios/01_transit.toml`.
+//!
+//! # Hand calculation
+//!
+//! Inputs, from the data files:
+//!
+//! - Route: (0,0) to (8,3), which is 11 hexes. At 40 nm per hex: 440 nm.
+//! - Both ship classes cruise at 16 kn, so the task force steams at 16 kn.
+//! - Cruiser: 2000 t lasts 8000 nm at cruise, so it burns 0.25 t per nm.
+//! - Destroyer: 500 t lasts 4000 nm at cruise, so it burns 0.125 t per nm.
+//! - A day is a 12-hour night pulse, then two 6-hour pulses. It starts at
+//!   18:00.
+//!
+//! Day 1:
+//!
+//! | Pulse     | Hours | Distance | Total  | Position            |
+//! | --------- | ----- | -------- | ------ | ------------------- |
+//! | Night     | 12    | 192 nm   | 192 nm | 4 hexes plus 32 nm  |
+//! | Morning   | 6     | 96 nm    | 288 nm | 7 hexes plus 8 nm   |
+//! | Afternoon | 6     | 96 nm    | 384 nm | 9 hexes plus 24 nm  |
+//!
+//! The route runs along q to (8,0) and then up r, so the ninth hex entered is
+//! (8,1). Fuel burned: cruiser 384 x 0.25 = 96 t, destroyer 384 x 0.125 =
+//! 48 t.
+//!
+//! Day 2: 440 - 384 = 56 nm remain. At 16 kn that takes 3.5 hours, so the
+//! task force arrives 27.5 hours after the start, at 21:30 on day 2, during
+//! the night pulse. Fuel burned on the leg: cruiser 14 t, destroyer 7 t.
+//!
+//! Totals for the transit: cruiser 110 t, destroyer 55 t.
+//!
+//! Day 3: no new orders. The task force has arrived, so nothing moves and no
+//! fuel is burned.
+
+use std::path::PathBuf;
+
+use sim_core::events::{Cause, EventKind};
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::ids::{EntityRef, ShipId, TaskForceId};
+use sim_core::orders::{Issuer, OrderKind, TaskForceOrder};
+use sim_core::state::{ShipLocation, Side, TaskForceStatus};
+use sim_core::time::{ClockTime, Pulse};
+use sim_data::Scenario;
+
+const TASK_FORCE: TaskForceId = TaskForceId::new(1);
+const CRUISER: ShipId = ShipId::new(1);
+const DESTROYER: ShipId = ShipId::new(2);
+
+fn load() -> Scenario {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/01_transit.toml");
+    Scenario::load(&path).expect("scenario 1 loads")
+}
+
+fn tons(value: i64) -> Fixed {
+    Fixed::from_int(value)
+}
+
+#[test]
+fn the_transit_matches_the_hand_calculation() {
+    let mut scenario = load();
+    assert!(scenario.placeholder);
+    assert_eq!(scenario.days, 3);
+
+    // Before day 1: in port, full tanks.
+    {
+        let truth = scenario.world.umpire();
+        assert_eq!(truth.task_forces[&TASK_FORCE].hex, Hex::new(0, 0));
+        assert_eq!(truth.task_forces[&TASK_FORCE].status, TaskForceStatus::Idle);
+        assert_eq!(truth.ships[&CRUISER].fuel_t, tons(2000));
+        assert_eq!(truth.ships[&DESTROYER].fuel_t, tons(500));
+    }
+
+    // Day 1: 384 nm, which is nine hexes and 24 nm.
+    let day1 = scenario
+        .next_day()
+        .expect("day 1 resolves")
+        .expect("day 1 exists");
+    assert_eq!(day1.day, 1);
+    {
+        let truth = scenario.world.umpire();
+        let task_force = &truth.task_forces[&TASK_FORCE];
+        assert_eq!(task_force.status, TaskForceStatus::Underway);
+        assert_eq!(task_force.hex, Hex::new(8, 1));
+        assert_eq!(task_force.progress_nm, Fixed::from_int(24));
+        assert_eq!(truth.ships[&CRUISER].fuel_t, tons(2000 - 96));
+        assert_eq!(truth.ships[&DESTROYER].fuel_t, tons(500 - 48));
+    }
+
+    // Each pulse of day 1 covered the distance the table says.
+    let steamed: Vec<(Pulse, Fixed, Hex)> = scenario
+        .world
+        .events()
+        .from_index(day1.first_event)
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::TaskForceSteamed {
+                distance_nm, to, ..
+            } => Some((
+                event.pulse.expect("movement has a pulse"),
+                *distance_nm,
+                *to,
+            )),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        steamed,
+        vec![
+            (Pulse::Night, Fixed::from_int(192), Hex::new(4, 0)),
+            (Pulse::Morning, Fixed::from_int(96), Hex::new(7, 0)),
+            (Pulse::Afternoon, Fixed::from_int(96), Hex::new(8, 1)),
+        ]
+    );
+
+    // Day 2: the last 56 nm, arriving 27.5 hours after the start.
+    let day2 = scenario
+        .next_day()
+        .expect("day 2 resolves")
+        .expect("day 2 exists");
+    {
+        let truth = scenario.world.umpire();
+        let task_force = &truth.task_forces[&TASK_FORCE];
+        assert_eq!(task_force.status, TaskForceStatus::Arrived);
+        assert_eq!(task_force.hex, Hex::new(8, 3));
+        assert_eq!(task_force.progress_nm, Fixed::ZERO);
+        assert_eq!(truth.ships[&CRUISER].fuel_t, tons(2000 - 110));
+        assert_eq!(truth.ships[&DESTROYER].fuel_t, tons(500 - 55));
+    }
+
+    let arrivals: Vec<_> = scenario
+        .world
+        .events()
+        .from_index(day2.first_event)
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::TaskForceArrived {
+                hex, elapsed_hours, ..
+            } => Some((event.pulse, *hex, *elapsed_hours)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(arrivals.len(), 1);
+    let (pulse, hex, elapsed_hours) = arrivals[0];
+    assert_eq!(pulse, Some(Pulse::Night));
+    assert_eq!(hex, Hex::new(8, 3));
+    assert_eq!(elapsed_hours, Fixed::from_ratio(55, 2));
+    assert_eq!(
+        ClockTime::from_elapsed(elapsed_hours).to_string(),
+        "D2 21:30"
+    );
+
+    // Day 3: no orders, nothing moves, nothing burns, nothing is logged.
+    let day3 = scenario
+        .next_day()
+        .expect("day 3 resolves")
+        .expect("day 3 exists");
+    assert_eq!(day3.event_count, 0);
+    {
+        let truth = scenario.world.umpire();
+        assert_eq!(truth.task_forces[&TASK_FORCE].hex, Hex::new(8, 3));
+        assert_eq!(truth.ships[&CRUISER].fuel_t, tons(1890));
+        assert_eq!(truth.ships[&DESTROYER].fuel_t, tons(445));
+    }
+
+    // The scenario is over.
+    assert!(scenario
+        .next_day()
+        .expect("no error past the end")
+        .is_none());
+}
+
+#[test]
+fn a_replay_reproduces_every_daily_hash() {
+    let mut first = load();
+    let first_hashes: Vec<u64> = first
+        .run_to_end()
+        .expect("first run resolves")
+        .iter()
+        .map(|summary| summary.state_hash)
+        .collect();
+
+    let mut second = load();
+    let second_hashes: Vec<u64> = second
+        .run_to_end()
+        .expect("second run resolves")
+        .iter()
+        .map(|summary| summary.state_hash)
+        .collect();
+
+    assert_eq!(first_hashes.len(), 3);
+    assert_eq!(first_hashes, second_hashes);
+    assert_eq!(first.world.day_hashes(), first_hashes.as_slice());
+
+    // The state changes on days 1 and 2, so their hashes differ.
+    assert_ne!(first_hashes[0], first_hashes[1]);
+    // Day 3 changes nothing but the day counter, which is part of the state.
+    assert_ne!(first_hashes[1], first_hashes[2]);
+}
+
+#[test]
+fn the_event_log_explains_the_arrival() {
+    let mut scenario = load();
+    scenario.run_to_end().expect("run resolves");
+    let world = &scenario.world;
+    let log = world.events();
+
+    // What happened to the task force: found by entity, without re-running.
+    let arrival = log
+        .involving(EntityRef::TaskForce(TASK_FORCE))
+        .find(|event| matches!(event.kind, EventKind::TaskForceArrived { .. }))
+        .expect("the task force arrived");
+
+    // Why: the arrival was caused by a movement event...
+    assert_eq!(arrival.causes.len(), 1);
+    let Cause::Event(steamed_id) = arrival.causes[0] else {
+        panic!("the arrival should be caused by an event");
+    };
+    let steamed = log.get(steamed_id).expect("the cause is in the log");
+    assert!(matches!(steamed.kind, EventKind::TaskForceSteamed { .. }));
+
+    // ...which was caused by the two standing orders from day 1.
+    let orders: Vec<_> = log
+        .trace(arrival.id)
+        .into_iter()
+        .filter_map(|cause| match cause {
+            Cause::Order(id) => Some(id),
+            Cause::Event(_) => None,
+        })
+        .collect();
+    assert_eq!(orders.len(), 2);
+
+    let route_order = world.order(orders[0]).expect("the order is on record");
+    assert_eq!(route_order.side, Side::Allied);
+    assert_eq!(route_order.day_issued, 1);
+    assert_eq!(route_order.origin.issuer, Issuer::Player);
+    assert_eq!(route_order.origin.intent, None);
+    assert_eq!(
+        route_order.kind,
+        OrderKind::TaskForce {
+            target: TASK_FORCE,
+            order: TaskForceOrder::SetRoute(vec![Hex::new(8, 3)]),
+        }
+    );
+    let speed_order = world.order(orders[1]).expect("the order is on record");
+    assert!(matches!(
+        speed_order.kind,
+        OrderKind::TaskForce {
+            order: TaskForceOrder::SetSpeed(_),
+            ..
+        }
+    ));
+
+    // Every fuel figure records the factors that produced it.
+    let burn = log
+        .involving(EntityRef::Ship(CRUISER))
+        .find(|event| matches!(event.kind, EventKind::FuelBurned { .. }))
+        .expect("the cruiser burned fuel");
+    let breakdown = burn
+        .breakdown
+        .as_ref()
+        .expect("breakdowns are on by default");
+    assert_eq!(breakdown.result, tons(48));
+    let factor = |name: &str| {
+        breakdown
+            .factors
+            .iter()
+            .find(|factor| factor.name == name)
+            .map(|factor| factor.value)
+    };
+    assert_eq!(factor("distance_nm"), Some(Fixed::from_int(192)));
+    assert_eq!(factor("speed_multiplier"), Some(Fixed::ONE));
+}
+
+#[test]
+fn each_side_sees_only_its_own_units() {
+    let mut scenario = load();
+    scenario.run_to_end().expect("run resolves");
+
+    let allied = scenario.world.side_view(Side::Allied);
+    assert_eq!(allied.ships().count(), 2);
+    assert_eq!(allied.task_forces().count(), 1);
+    assert_eq!(allied.bases().count(), 2);
+    assert_eq!(allied.contacts().count(), 0);
+    assert!(allied
+        .ships()
+        .all(|ship| ship.location == ShipLocation::TaskForce(TASK_FORCE)));
+
+    // The Japanese side has no units here and has sighted nothing, so its
+    // view is empty. It has no way to ask for the Allied task force.
+    let japanese = scenario.world.side_view(Side::Japanese);
+    assert_eq!(japanese.ships().count(), 0);
+    assert_eq!(japanese.task_forces().count(), 0);
+    assert_eq!(japanese.bases().count(), 0);
+    assert_eq!(japanese.contacts().count(), 0);
+}

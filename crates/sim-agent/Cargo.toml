@@ -1,0 +1,11 @@
+[package]
+name = "sim-agent"
+description = "Flag Plot agent interface: server mode, briefings and the MCP wrapper. Placeholder."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

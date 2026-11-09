@@ -1,0 +1,28 @@
+# PLACEHOLDER MAP. A strip of open sea with two port hexes, used by scenario 1.
+# The geography is invented: the two ports are 11 hexes (440 nm) apart so the
+# transit arithmetic comes out exact. The real distance between Noumea and
+# Espiritu Santo is different. The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 10]
+r = [-1, 5]
+
+# Stands in for Noumea.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 5
+anchorage = true
+
+# Stands in for Espiritu Santo.
+[[hex]]
+q = 8
+r = 3
+kind = "coast"
+port_size = 3
+anchorage = true

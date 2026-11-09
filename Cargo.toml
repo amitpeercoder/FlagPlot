@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sim-core",
+    "crates/sim-data",
+    "crates/sim-cli",
+    "crates/sim-agent",
+    "tests",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace.dependencies]
+sim-core = { path = "crates/sim-core" }
+sim-data = { path = "crates/sim-data" }
+serde = { version = "1", features = ["derive"] }
+toml = "1"
+csv = "1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# See clippy.toml for the lists these enforce.
+disallowed_types = "deny"
+disallowed_methods = "deny"
+
+# Integer overflow must behave the same in every build profile, or debug and
+# release runs could produce different state hashes.
+[profile.release]
+overflow-checks = true
+
+[profile.bench]
+overflow-checks = true

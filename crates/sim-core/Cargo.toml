@@ -1,0 +1,12 @@
+[package]
+name = "sim-core"
+description = "Flag Plot simulation core: state, rules, resolution and event log. No file or network access."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+# Deliberately no dependencies. See docs/decisions/0004-state-hash.md.
+[dependencies]
+
+[lints]
+workspace = true

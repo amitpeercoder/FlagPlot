@@ -1,0 +1,12 @@
+# Determinism rules, enforced by clippy across the workspace.
+# See CLAUDE.md and docs/step1-spec.md ("Determinism and traceability").
+
+disallowed-types = [
+    { path = "std::collections::HashMap", reason = "iteration order is not deterministic; use BTreeMap" },
+    { path = "std::collections::HashSet", reason = "iteration order is not deterministic; use BTreeSet" },
+]
+
+disallowed-methods = [
+    { path = "std::time::SystemTime::now", reason = "no wall clock in the simulation" },
+    { path = "std::time::Instant::now", reason = "no wall clock in the simulation" },
+]
