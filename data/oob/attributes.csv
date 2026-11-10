@@ -25,6 +25,7 @@ sunk,ship,date,,one,Date the ship sank or was scuttled
 fate,ship,text,,one,One line on how the ship's service ended
 name_native,ship,text,,one,Name in the navy's own script
 alias,ship,text,,many,Another name or spelling found in sources
+ship_class,ship,ref:ship_class,,one,The class a source assigns the ship to; the class column in ships.csv holds the preferred value
 max_speed_kn,aircraft_type,decimal,knots,one,Maximum level speed at the altitude given by max_speed_altitude_m
 max_speed_altitude_m,aircraft_type,integer,metres,one,Altitude at which max_speed_kn is quoted
 cruise_speed_kn,aircraft_type,decimal,knots,one,Cruising speed
@@ -74,6 +75,7 @@ bearing_accuracy_deg,sensor,decimal,degrees,one,Stated bearing accuracy
 display,sensor,text,,one,Display type such as A-scope or PPI
 purpose,sensor,text,,one,What the set was for in a few words
 base_length_m,sensor,decimal,metres,one,Base length of an optical rangefinder
+objective_diameter_mm,sensor,decimal,millimetres,one,Diameter of the objective lens of a binocular or of the mirror of a searchlight
 sonar_frequency_khz,sensor,decimal,kilohertz,one,Sonar operating frequency
 sonar_range_m,sensor,integer,metres,one,Stated sonar detection range; the note gives the condition
 in_service,sensor,date,,one,Date the set entered service

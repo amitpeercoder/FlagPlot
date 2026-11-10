@@ -16,3 +16,14 @@ id,key,name,nation,kind
 1012,us-sc-radar,US SC / SC-1,us,air_search_radar
 1013,us-sg-radar,US SG,us,surface_search_radar
 1014,us-sk-radar,US SK,us,air_search_radar
+1015,jp-radar-any,Any Japanese radar set (used only to record that a ship had none),jp,surface_search_radar
+1016,us-radar-type-unstated,"US radar, set type not stated by the source",us,surface_search_radar
+1017,jp-type96-searchlight-90cm,Type 96 Mod 1 90 cm searchlight,jp,searchlight
+1018,jp-type96-searchlight-110cm,Type 96 Mod 1 110 cm searchlight,jp,searchlight
+1019,jp-type96-searchlight-director,Type 96 searchlight director (Mod 1 and Mod 2),jp,director
+1020,jp-type92-searchlight,Type 92 searchlight (diameter not stated),jp,searchlight
+1021,jp-type93-rangefinder-3-5m,3.5 m Type 93 rangefinder,jp,rangefinder
+1022,jp-type93-rangefinder-4-5m,4.5 m Type 93 rangefinder,jp,rangefinder
+1023,jp-binocular-12cm,12 cm (120 mm) large binocular,jp,night_binocular
+1024,jp-binocular-15cm,15 cm (150 mm) large binocular,jp,night_binocular
+1025,jp-binocular-18cm,"18 cm large binocular (listed as shipped to the US, role not stated)",jp,night_binocular
