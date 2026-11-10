@@ -26,12 +26,12 @@ struct ShipClassRow {
     endurance_nm: String,
     cargo_capacity_t: String,
     main_guns: u32,
-    gun_rounds_per_min: u32,
+    gun_rounds_per_min: String,
     gun_rounds_per_gun: u32,
-    gun_damage: u32,
+    gun_damage: String,
     torpedo_tubes: u32,
-    torpedo_damage: u32,
-    toughness: u32,
+    torpedo_damage: String,
+    toughness: String,
     /// 0 or 1.
     radar: u8,
 }
@@ -90,12 +90,12 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
             endurance_nm: number("endurance_nm", &row.endurance_nm)?,
             cargo_capacity_t: number("cargo_capacity_t", &row.cargo_capacity_t)?,
             main_guns: row.main_guns,
-            gun_rounds_per_min: row.gun_rounds_per_min,
+            gun_rounds_per_min: number("gun_rounds_per_min", &row.gun_rounds_per_min)?,
             gun_rounds_per_gun: row.gun_rounds_per_gun,
-            gun_damage: row.gun_damage,
+            gun_damage: number("gun_damage", &row.gun_damage)?,
             torpedo_tubes: row.torpedo_tubes,
-            torpedo_damage: row.torpedo_damage,
-            toughness: row.toughness,
+            torpedo_damage: number("torpedo_damage", &row.torpedo_damage)?,
+            toughness: number("toughness", &row.toughness)?,
             radar: match row.radar {
                 0 => false,
                 1 => true,
@@ -663,18 +663,37 @@ mod tests {
         .expect("parses");
         let cruiser = &data.ship_classes[&ShipClassId::new(1)];
         assert_eq!(cruiser.main_guns, 8);
-        assert_eq!(cruiser.gun_rounds_per_min, 3);
+        assert_eq!(cruiser.gun_rounds_per_min, Fixed::from_int(3));
         assert_eq!(cruiser.gun_rounds_per_gun, 100);
-        assert_eq!(cruiser.gun_damage, 20);
+        assert_eq!(cruiser.gun_damage, Fixed::from_int(20));
         assert_eq!(cruiser.torpedo_tubes, 8);
-        assert_eq!(cruiser.torpedo_damage, 200);
-        assert_eq!(cruiser.toughness, 400);
+        assert_eq!(cruiser.torpedo_damage, Fixed::from_int(200));
+        assert_eq!(cruiser.toughness, Fixed::from_int(400));
         assert!(cruiser.radar);
         let cargo = &data.ship_classes[&ShipClassId::new(2)];
         assert_eq!(cargo.main_guns, 0);
         assert_eq!(cargo.torpedo_tubes, 0);
-        assert_eq!(cargo.toughness, 300);
+        assert_eq!(cargo.toughness, Fixed::from_int(300));
         assert!(!cargo.radar);
+    }
+
+    #[test]
+    fn gun_rate_of_fire_may_be_a_decimal() {
+        let data =
+            classes("1,A,cruiser,16,32,2000,8000,0,8,3.5,100,20,8,200,400,0\n").expect("parses");
+        let rate = data.ship_classes[&ShipClassId::new(1)].gun_rounds_per_min;
+        assert_eq!(rate, "3.5".parse::<Fixed>().expect("fixed"));
+        assert_eq!(rate * 2, Fixed::from_int(7));
+    }
+
+    #[test]
+    fn damage_and_toughness_may_be_decimals() {
+        let data = classes("1,A,cruiser,16,32,2000,8000,0,9,3.5,100,19.666666,8,196,405.44,0\n")
+            .expect("parses");
+        let class = &data.ship_classes[&ShipClassId::new(1)];
+        assert_eq!(class.gun_damage.raw(), 19_666_666);
+        assert_eq!(class.torpedo_damage, Fixed::from_int(196));
+        assert_eq!(class.toughness.raw(), 405_440_000);
     }
 
     #[test]
@@ -686,7 +705,13 @@ mod tests {
         assert!(
             bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,2\n").contains("radar is 2")
         );
-        // Whole numbers only: a fraction, a negative and text are rejected.
+        // Toughness must be above zero, and damage may not be negative.
+        assert!(
+            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,0.0,0\n").contains("toughness")
+        );
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,-20,8,200,400,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,1e2,0\n").is_err());
+        // Whole numbers only for counts: a fraction, a negative and text are rejected.
         assert!(classes("1,A,cruiser,16,32,2000,8000,0,8.5,3,100,20,8,200,400,0\n").is_err());
         assert!(classes("1,A,cruiser,16,32,2000,8000,0,-8,3,100,20,8,200,400,0\n").is_err());
         assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,yes\n").is_err());
@@ -710,8 +735,11 @@ mod tests {
         let data = load_ship_classes(&path).expect("the shipped classes load");
         let cruiser = &data.ship_classes[&ShipClassId::new(1)];
         assert_eq!(cruiser.main_guns, 8);
-        assert_eq!(cruiser.toughness, 400);
-        assert!(data.ship_classes.values().all(|class| class.toughness > 0));
+        assert_eq!(cruiser.toughness, Fixed::from_int(400));
+        assert!(data
+            .ship_classes
+            .values()
+            .all(|class| class.toughness > Fixed::ZERO));
     }
 
     fn combat_text() -> String {

@@ -83,19 +83,22 @@ pub struct ShipClass {
     pub cargo_capacity_t: Fixed,
     /// Guns in the main battery. May be zero.
     pub main_guns: u32,
-    /// Rounds one gun fires in a minute.
-    pub gun_rounds_per_min: u32,
+    /// Rounds one gun fires in a minute. May be a decimal (real guns fire
+    /// 3.5 a minute); zero if the ship has no main battery.
+    pub gun_rounds_per_min: Fixed,
     /// Rounds carried for each gun.
     pub gun_rounds_per_gun: u32,
-    /// Damage one gun hit does, before the target's toughness.
-    pub gun_damage: u32,
+    /// Damage one gun hit does, before the target's toughness. May be a
+    /// decimal.
+    pub gun_damage: Fixed,
     /// Torpedo tubes. May be zero.
     pub torpedo_tubes: u32,
-    /// Damage one torpedo hit does, before the target's toughness.
-    pub torpedo_damage: u32,
+    /// Damage one torpedo hit does, before the target's toughness. May be a
+    /// decimal.
+    pub torpedo_damage: Fixed,
     /// Damage a ship of the class can take. A hit does
-    /// 100 x damage / toughness points. Above zero.
-    pub toughness: u32,
+    /// 100 x damage / toughness points. Above zero. May be a decimal.
+    pub toughness: Fixed,
     /// True if the class carries radar.
     pub radar: bool,
 }
@@ -135,7 +138,13 @@ impl ShipClass {
         if self.cargo_capacity_t.is_negative() {
             return Some(format!("{} has a negative cargo capacity", self.id));
         }
-        if self.toughness == 0 {
+        if self.gun_rounds_per_min.is_negative() {
+            return Some(format!("{} has a negative gun rate of fire", self.id));
+        }
+        if self.gun_damage.is_negative() || self.torpedo_damage.is_negative() {
+            return Some(format!("{} has a negative damage figure", self.id));
+        }
+        if self.toughness <= Fixed::ZERO {
             return Some(format!("{} has no toughness", self.id));
         }
         None
@@ -799,12 +808,12 @@ mod tests {
             endurance_nm: Fixed::from_int(8000),
             cargo_capacity_t: Fixed::ZERO,
             main_guns: 8,
-            gun_rounds_per_min: 3,
+            gun_rounds_per_min: Fixed::from_int(3),
             gun_rounds_per_gun: 100,
-            gun_damage: 20,
+            gun_damage: Fixed::from_int(20),
             torpedo_tubes: 8,
-            torpedo_damage: 200,
-            toughness: 400,
+            torpedo_damage: Fixed::from_int(200),
+            toughness: Fixed::from_int(400),
             radar: false,
         }
     }
@@ -813,15 +822,15 @@ mod tests {
     fn a_ship_class_needs_toughness_but_may_have_no_weapons() {
         assert_eq!(test_class().problem(), None);
         let mut bad = test_class();
-        bad.toughness = 0;
+        bad.toughness = Fixed::ZERO;
         assert!(bad.problem().expect("problem").contains("toughness"));
         let mut unarmed = test_class();
         unarmed.main_guns = 0;
-        unarmed.gun_rounds_per_min = 0;
+        unarmed.gun_rounds_per_min = Fixed::ZERO;
         unarmed.gun_rounds_per_gun = 0;
-        unarmed.gun_damage = 0;
+        unarmed.gun_damage = Fixed::ZERO;
         unarmed.torpedo_tubes = 0;
-        unarmed.torpedo_damage = 0;
+        unarmed.torpedo_damage = Fixed::ZERO;
         assert_eq!(unarmed.problem(), None);
     }
 

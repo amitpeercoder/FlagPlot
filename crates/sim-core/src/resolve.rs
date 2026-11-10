@@ -991,12 +991,12 @@ mod tests {
             endurance_nm: Fixed::from_int(8000),
             cargo_capacity_t: Fixed::ZERO,
             main_guns: 0,
-            gun_rounds_per_min: 0,
+            gun_rounds_per_min: Fixed::ZERO,
             gun_rounds_per_gun: 0,
-            gun_damage: 0,
+            gun_damage: Fixed::ZERO,
             torpedo_tubes: 0,
-            torpedo_damage: 0,
-            toughness: 100,
+            torpedo_damage: Fixed::ZERO,
+            toughness: Fixed::from_int(100),
             radar: false,
         };
         let mut ref_data = RefData::default();
@@ -1853,7 +1853,7 @@ mod tests {
             r.ship_classes
                 .get_mut(&ShipClassId::new(1))
                 .expect("class")
-                .toughness = 0;
+                .toughness = Fixed::ZERO;
         })
         .is_err());
     }

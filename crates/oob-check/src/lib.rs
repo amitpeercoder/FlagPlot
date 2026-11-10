@@ -24,7 +24,7 @@ mod schema;
 mod sourcing;
 mod standing;
 mod structure;
-mod table;
+pub mod table;
 mod value;
 mod values;
 
@@ -84,8 +84,9 @@ impl Report {
     }
 }
 
-/// Checks every `.csv` file in a directory.
-pub fn check_dir(path: &Path) -> Report {
+/// Reads every `.csv` file in a directory: file name to text. Anything that
+/// cannot be read is a problem, so the caller can still check what was read.
+pub fn read_dir(path: &Path) -> (BTreeMap<String, String>, Vec<Problem>) {
     let mut files = BTreeMap::new();
     let mut unreadable = Vec::new();
     match std::fs::read_dir(path) {
@@ -110,6 +111,12 @@ pub fn check_dir(path: &Path) -> Report {
             }
         }
     }
+    (files, unreadable)
+}
+
+/// Checks every `.csv` file in a directory.
+pub fn check_dir(path: &Path) -> Report {
+    let (files, unreadable) = read_dir(path);
     let mut report = check_files(&files);
     report.problems.extend(unreadable);
     report.problems.sort();

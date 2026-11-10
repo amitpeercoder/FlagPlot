@@ -413,12 +413,20 @@ mod tests {
                     endurance_nm: Fixed::from_int(8000),
                     cargo_capacity_t: Fixed::ZERO,
                     main_guns: guns,
-                    gun_rounds_per_min: if guns > 0 { 3 } else { 0 },
+                    gun_rounds_per_min: if guns > 0 {
+                        Fixed::from_int(3)
+                    } else {
+                        Fixed::ZERO
+                    },
                     gun_rounds_per_gun: if guns > 0 { 100 } else { 0 },
-                    gun_damage: if guns > 0 { 20 } else { 0 },
+                    gun_damage: if guns > 0 {
+                        Fixed::from_int(20)
+                    } else {
+                        Fixed::ZERO
+                    },
                     torpedo_tubes: 0,
-                    torpedo_damage: 0,
-                    toughness: 300,
+                    torpedo_damage: Fixed::ZERO,
+                    toughness: Fixed::from_int(300),
                     radar: false,
                 },
             );
