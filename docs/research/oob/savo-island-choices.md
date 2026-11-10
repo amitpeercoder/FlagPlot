@@ -36,35 +36,46 @@ The figures are not all the same kind of thing. The table says what each one is,
 
 **How the picks were made.** The ship as she was in 1942 where a rebuild changed her; then a figure two sources give; then the better-graded source. Decision 0015 says a higher grade alone does not settle a dispute, and three of these picks (Kamikaze, New Orleans, Northampton) rest on little more than that. That is why they are proposals.
 
-## 2. Radar where none was found: unknown, with a proposed treatment
+## 2. Radar where no set is named: unknown
 
-**The facts.** What radar Bagley, Patterson, Helm, Wilson, Jarvis and Australia carried on 8 August 1942 is **unknown**. No source read says any of them had a set and none says they had none. The data records it as a gap, not as "none". Canberra's surface set stays disputed between Type 271 and Type 241, on four weak sources.
+**Decided.** Decision 0019 treats a ship as not fitted with search radar where no source says, as a named working assumption, for Bagley, Patterson, Helm, Wilson, Jarvis, Vincennes and Canberra. The assumption stops applying to a ship as soon as the facts hold a readable fit for her. What follows is the evidence, not a different choice.
 
-**Proposal for the scenario.** Give those six ships no radar detection of surface ships, as a stated assumption. Give Chicago and Canberra a search radar, and Vincennes, Quincy and Astoria a fire-control radar that ranges on a target already found.
+**The facts.** What search radar Bagley, Patterson, Helm, Wilson, Jarvis, Australia and Vincennes carried on 8 August 1942 is **unknown**. No source read names a set for any of them and none says they had none. The data records gaps.
 
-**What supports it.** One thing only: the Navy's history of Blue says the two pickets were chosen because they had the new search set, which implies most other destroyers present did not.
+Two things are sourced from the Australian official history:
 
-**What does not support it.** An earlier draft argued that no radar contact by these ships is recorded. That proves nothing: Chicago and Canberra had search sets and also detected nothing, and so did both pickets. The absence of a contact that night is not evidence about what was fitted.
+- **Canberra was using a Type 271 surface warning set that night,** and saw Blue on it at intervals. It had earlier picked up cruisers at 30 miles. Two websites say Type 241. The rows are disputed and the question is on the settlement sheet. If Type 271 is approved, the working assumption no longer applies to her.
+- **The pickets were chosen because, in their squadron commander's opinion, they had "the most effective radar and radar operating capability of the nine ships in his squadron".** That suggests the other destroyers of the squadron, Bagley, Patterson and Helm among them, had some set. It is an inference from one sentence. The data keeps it as low-grade, unconfirmed rows saying "a set, type not stated". Those rows are not a readable fit and do not change the working assumption. Nothing was found for Wilson; whether she is one of the nine was not established.
 
-**What it risks, and why the risk is small.** If one of the five destroyers did carry a set, the scenario understates a capability that failed for every ship known to have it. The detection rule has to reproduce "radar near land found nothing" from the ships that did have sets, and should not depend on this assumption.
+**A caution on arguing from the night.** That no radar contact by a ship is recorded says nothing about what she carried: Chicago, Canberra and both pickets had sets and detected nothing either.
+
+**What it means for the detection rule.** Every ship known to have a search radar failed to detect the Japanese column. The rule has to reproduce that from the ships that did have sets, so the outcome should not turn on which of the others are given one.
 
 ## 3. Torpedoes with no named type: a proposed reading
 
-**The facts.** No source read names the torpedo carried by Kinugasa, Tenryu, Yubari or Yunagi in August 1942. For Yubari the data is in conflict with itself: a ship row names the Type 93 and the class rows name the 8th Year Type, both by assumption. All three rows are now marked `disputed`, so neither overrides the other. For the US Mark 15, both warhead rows (224 kg and 374 kg) are `disputed`.
+**The facts.** No source read names the torpedo itself for Kinugasa, Tenryu, Yubari or Yunagi in August 1942. A second pass found what their tubes were:
 
-**Proposal.** Until a source is found, the combat rule reads these, each flagged as an assumption:
-
-| Ship | Torpedo | Basis |
+| Ship | What is sourced | What it implies |
 | --- | --- | --- |
-| Kinugasa | 61 cm Type 93 | Her sister Aoba's class fit after the same rebuild. The other three cruisers of her division fired Type 93 that night |
-| Tenryu | 53 cm 6th Year Type | The standard 53 cm torpedo when she was built. No source read reports a change |
-| Yubari | 61 cm 8th Year Type | The 61 cm torpedo for light cruisers when she was built. No source read reports a change |
-| Yunagi | 53 cm 6th Year Type | As for Tenryu |
-| US destroyers | Mark 15 with the 224 kg warhead | The first model. Nothing read puts the heavier warhead in service by August 1942 |
+| Kinugasa | Eight 24-inch tubes (1950 analysis). The post-war US technical mission says the quadruple Type 92 mount, which her class was given in its rebuild, fires the Type 93 | Type 93, by inference from the mount |
+| Tenryu | Six 21-inch tubes (1950 analysis) | Not the Type 93, which is a 24-inch torpedo. The 21-inch 6th Year Type by inference |
+| Yunagi | Six 21-inch tubes. The technical mission's table of mounts lists the 6th Year twin 21-inch mount for her class | As Tenryu |
+| Yubari | Four 24-inch tubes. The technical mission's table lists her with the 8th Year twin mount. One unsourced website says she carried four reserve Type 93 | Open. The mount is the old one. Whether it could fire, or she was issued, the Type 93 was not found |
 
-**How to carry it.** For the rule to read the Yubari proposal, the scenario has to name the 8th Year Type for her itself. It cannot get it from the facts layer, where the question is open. The same holds for the Mark 15 warhead.
+For the US Mark 15, the Bureau of Ordnance history says the heavier explosive was first used in autumn 1942, and the Navy's torpedo history gives the 374 kg warhead as a later model. Neither says outright what destroyers carried in August.
 
-**What it risks.** If Tenryu or Yubari had been re-armed with Type 93, their torpedoes are understated by more than half: 490 kg against about 200 and 345 kg. They fired ten between them, and one compilation credits Tenryu with hits on Quincy. A research pass on this question is under way.
+**Proposal.** The combat rule reads these, each flagged as an inference:
+
+| Ship | Torpedo | Warhead |
+| --- | --- | --- |
+| Kinugasa | 61 cm Type 93 | 490 kg |
+| Tenryu, Yunagi | 53 cm 6th Year Type | about 200 kg |
+| Yubari | 61 cm 8th Year Type | about 345 kg |
+| US destroyers | Mark 15, first model | 224 kg |
+
+**How to carry it.** The Tenryu, Yunagi and Kinugasa rows are in the data as low-confidence inferences, so a rule that says it may read unconfirmed values gets them from the facts layer. Yubari and the Mark 15 warhead are `disputed` in the data, so the scenario has to name them itself.
+
+**What it risks.** Only Yubari is still a real doubt. If she had Type 93, her four torpedoes are understated by a third.
 
 ## 4. The disputed placements: a proposed reading
 
@@ -89,4 +100,4 @@ The figures are not all the same kind of thing. The table says what each one is,
 - Whether Canberra was torpedoed, and by whom. The scenario should not need to decide.
 - When Chokai changed to Type 93 torpedoes. She had them on the night.
 - Rate of fire. Every figure is from one website and is the gun's rate, not what crews achieved. The outcome data gives a check: the three northern cruisers fired 107 main-battery rounds between them before they were silenced.
-- Ammunition carried. Nothing is in the data yet. A research pass is under way.
+- Ammunition carried. Now in the data for main guns of every class but Tenryu, Yubari and Yunagi, and for torpedo reloads of the Japanese heavy cruisers. See `savo-island.md`.

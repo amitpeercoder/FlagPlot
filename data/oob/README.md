@@ -6,7 +6,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - Which sources may be used and how to cite: `docs/research/oob/source-policy.md`
 - Where sources disagree: `docs/research/oob/conflicts.md`
 - What was looked for and not found: `gaps.csv`
-- Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`
+- Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`. The disputed facts its ships need, for one-pass approval: `savo-island-settlement.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.
 
@@ -28,19 +28,19 @@ Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 
 | File | Rows | Holds |
 | --- | --- | --- |
 | `ships.csv`, `ship_facts.csv` | 122, 612 | 53 US, 66 Japanese and 3 Australian ships with build dates and fates |
-| `ship_classes.csv`, `ship_class_facts.csv` | 44, 635 | Dimensions, speed, fuel, endurance, armour |
+| `ship_classes.csv`, `ship_class_facts.csv` | 44, 731 | Dimensions, speed, fuel, endurance, armour |
 | `aircraft_types.csv`, `aircraft_type_facts.csv` | 20, 240 | Performance and weights |
-| `weapons.csv`, `weapon_facts.csv` | 60, 414 | Guns, torpedoes, bombs, depth charges |
+| `weapons.csv`, `weapon_facts.csv` | 60, 432 | Guns, torpedoes, bombs, depth charges |
 | `sensors.csv`, `sensor_facts.csv` | 26, 103 | Radar, sonar, and Japanese rangefinders, binoculars and searchlights |
 | `air_units.csv`, `air_unit_facts.csv` | 45, 201 | Equipment, base and strength by date |
-| `fits.csv` | 374 | Armament by class, radar by ship, aircraft guns and loads |
+| `fits.csv` | 392 | Armament by class, radar by ship, aircraft guns and loads |
 | `engagement_forces.csv` | 278 | Who was present at the two battles, by formation |
-| `engagement_events.csv` | 119 | Savo Island: sightings, warnings, readiness, open fire, by time |
+| `engagement_events.csv` | 120 | Savo Island: sightings, warnings, readiness, open fire, by time |
 | `engagement_positions.csv` | 261 | Savo Island: patrol stations, Mikawa's track, sinking positions |
-| `engagement_outcomes.csv` | 168 | Savo Island: hits, losses, rounds and torpedoes fired |
+| `engagement_outcomes.csv` | 180 | Savo Island: hits, losses, rounds and torpedoes fired |
 | `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
-| `sources.csv` | 39 | Every source cited |
-| `gaps.csv` | 300 | What was not found |
+| `sources.csv` | 45 | Every source cited |
+| `gaps.csv` | 350 | What was not found |
 
 Every row has a source and a locator. About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
 
@@ -48,16 +48,16 @@ Every row has a source and a locator. About 30 values from the first pass and ab
 
 | Confidence | Rows | Share |
 | --- | --- | --- |
-| high | 685 | 20% |
-| medium | 1,625 | 48% |
-| low | 1,095 | 32% |
+| high | 697 | 20% |
+| medium | 1,700 | 48% |
+| low | 1,153 | 32% |
 
 | Standing | Rows | Share |
 | --- | --- | --- |
-| preferred | 2,075 | 61% |
-| unconfirmed | 688 | 20% |
-| disputed | 617 | 18% |
-| alternative | 25 | 1% |
+| preferred | 2,107 | 59% |
+| unconfirmed | 699 | 20% |
+| disputed | 707 | 20% |
+| alternative | 37 | 1% |
 
 Where the rows come from matters more than the count:
 
@@ -69,8 +69,9 @@ Where the rows come from matters more than the count:
 
 ### Main gaps
 
-- **Savo Island radar.** Nothing found for Australia, Bagley, Patterson, Helm, Wilson or Jarvis. Vincennes, Quincy, Astoria and Chicago had sets the sources describe in use but do not name. Canberra's is disputed.
-- **Torpedo carried by Kinugasa, Tenryu, Yubari and Yunagi.** No source read names it. The class rows are inferences.
+- **Savo Island radar.** Nothing found for Wilson, Jarvis or Australia. Bagley, Patterson and Helm have only an inference that they carried some set. Vincennes, Quincy, Astoria and Chicago had sets the sources describe in use but do not all name. Canberra's is Type 271 on the Australian official history and awaits settlement.
+- **Savo Island torpedoes.** Yubari's type is open. Kinugasa's, Tenryu's and Yunagi's are inferences from their tubes. Reloads are unknown for the US destroyers, Canberra and Yunagi.
+- **Savo Island ammunition.** No rounds-per-gun figure for the 14 cm and 12 cm guns of Tenryu, Yubari and Yunagi.
 - **Displacement.** Disputed for nearly every Savo Island class, because sources quote different conditions.
 - **Japanese night optics.** That the big binoculars and searchlights existed is sourced. How many each ship carried and how far they could see is not, beyond the sighting ranges recorded for the night itself.
 - **Japanese destroyers.** Most have no build dates. Their class rows lack the torpedo model.
