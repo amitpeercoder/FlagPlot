@@ -7,6 +7,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - Where sources disagree: `docs/research/oob/conflicts.md`
 - What was looked for and not found: `gaps.csv`
 - Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`. The disputed facts its ships need, for one-pass approval: `savo-island-settlement.md`
+- Eastern Solomons, the same: `docs/research/oob/eastern-solomons.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.
 
@@ -21,7 +22,7 @@ The simulation does not read these files. `data/reference/` is what it loads.
 - Quantities are whole numbers or decimal strings in the unit `attributes.csv` gives. The source's own figure is kept in `as_stated`.
 - Nothing comes from any wargame.
 
-## Status after three passes, read on 2026-11-10
+## Status after several passes, read on 2026-11-10
 
 Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 1942) and Eastern Solomons (24 to 25 August 1942), their classes, the aircraft flown from the carriers, Henderson Field and Rabaul in August and September 1942, and the weapons and sensors they carried. The second pass covered Savo Island only. The third re-read, in a browser, two official sites that refuse automated fetches.
 
@@ -32,15 +33,15 @@ Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 
 | `aircraft_types.csv`, `aircraft_type_facts.csv` | 20, 240 | Performance and weights |
 | `weapons.csv`, `weapon_facts.csv` | 60, 432 | Guns, torpedoes, bombs, depth charges |
 | `sensors.csv`, `sensor_facts.csv` | 26, 103 | Radar, sonar, and Japanese rangefinders, binoculars and searchlights |
-| `air_units.csv`, `air_unit_facts.csv` | 45, 201 | Equipment, base and strength by date |
+| `air_units.csv`, `air_unit_facts.csv` | 45, 206 | Equipment, base and strength by date |
 | `fits.csv` | 392 | Armament by class, radar by ship, aircraft guns and loads |
 | `engagement_forces.csv` | 278 | Who was present at the two battles, by formation |
-| `engagement_events.csv` | 120 | Savo Island: sightings, warnings, readiness, open fire, by time |
-| `engagement_positions.csv` | 261 | Savo Island: patrol stations, Mikawa's track, sinking positions |
-| `engagement_outcomes.csv` | 180 | Savo Island: hits, losses, rounds and torpedoes fired |
+| `engagement_events.csv` | 265 | Both battles: sightings, reports, readiness, strikes, by time |
+| `engagement_positions.csv` | 347 | Both battles: stations, tracks, reported positions, sinkings |
+| `engagement_outcomes.csv` | 332 | Both battles: hits, losses, ammunition, aircraft |
 | `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
-| `sources.csv` | 45 | Every source cited |
-| `gaps.csv` | 350 | What was not found |
+| `sources.csv` | 47 | Every source cited |
+| `gaps.csv` | 409 | What was not found |
 
 Every row has a source and a locator. About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
 
@@ -48,20 +49,20 @@ Every row has a source and a locator. About 30 values from the first pass and ab
 
 | Confidence | Rows | Share |
 | --- | --- | --- |
-| high | 697 | 20% |
-| medium | 1,700 | 48% |
-| low | 1,153 | 32% |
+| high | 874 | 22% |
+| medium | 1,860 | 47% |
+| low | 1,249 | 31% |
 
 | Standing | Rows | Share |
 | --- | --- | --- |
-| preferred | 2,107 | 59% |
-| unconfirmed | 699 | 20% |
-| disputed | 707 | 20% |
-| alternative | 37 | 1% |
+| preferred | 2,392 | 60% |
+| unconfirmed | 767 | 19% |
+| disputed | 710 | 18% |
+| alternative | 114 | 3% |
 
 Where the rows come from matters more than the count:
 
-- **Wikipedia is still the largest single source: 795 rows, 24%.** All are `low` confidence and none is `preferred` on its own.
+- **Wikipedia is still the largest single source: 829 rows, 21%.** All are `low` confidence and none is `preferred` on its own.
 - **The Naval War College analysis of Savo Island (1950) is second: 465 rows.** The second pass found a complete scan. It was read through machine-read text, which misreads some digits. Rows with a doubtful digit say so and are graded down. Its diagrams were not read.
 - **Websites carry most of the class and weapon data:** combinedfleet.com (401), navweaps.com (383), the Nishida class pages (285), uboat.net (224) and navypedia.org (76). Nishida and Navypedia give no sources.
 - **Two official sites load in a browser and not otherwise.** The US Navy's online ship histories and the Australian Navy's unit histories were read that way for the Savo Island ships (30 rows). They gave firm dates, casualties and Chicago's radar, and nothing on the radar of the six ships still missing. Most ship histories in the data still come from a mirror of the older printed entries. NavSource refuses the browser too.
@@ -82,7 +83,7 @@ Where the rows come from matters more than the count:
 - **Australian ships.** Dates, guns and Canberra's losses now have the Australian Navy's own history behind them. Radar and torpedo fits still rest on websites.
 - **Ship-to-class assignment.** Only Yunagi's has a sourced row (`ship_class`). The rest follow the usual class names. Two sources disagree on the class name for the Bagley group of destroyers. The transports and patrol boats have no class.
 - **Transports and auxiliaries** are named in `gaps.csv` and not researched. Submarines are left out.
-- **Eastern Solomons** has no events, positions or outcomes yet.
+- **Eastern Solomons.** No Japanese track from Japanese records, and no squadron strengths on the day beyond totals. Its sources keep two clocks about half an hour apart; times are entered as printed.
 - **Not started:** `events.csv`. Losses are recorded as `sunk` and `fate` facts. Refits are recorded as dated fits.
 
 ### Known limits of the format, found while filling it
