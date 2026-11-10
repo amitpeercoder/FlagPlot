@@ -1,0 +1,94 @@
+# Scenario 2: a convoy loads supply at Espiritu Santo and unloads it at
+# Guadalcanal.
+#
+# Proves loading, port capacity limits and base supply levels against a hand
+# calculation. The calculation is written out in
+# tests/scenario_02_supply_run.rs.
+#
+# PLACEHOLDER DATA. The ships, their figures, the port figures and the map are
+# invented.
+
+name = "Scenario 2: Supply run, Espiritu Santo to Guadalcanal"
+placeholder = true
+seed = 1942
+days = 8
+map = "../map/placeholder_supply_run.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+
+[[base]]
+id = 1
+name = "Espiritu Santo"
+side = "allied"
+q = 0
+r = 0
+supply_t = 10000
+
+[[base]]
+id = 2
+name = "Guadalcanal"
+side = "allied"
+q = 8
+r = 0
+supply_t = 500
+
+[[task_force]]
+id = 1
+name = "Placeholder supply convoy"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# Day 1: load supply.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "load"
+
+# Day 2: steam to Guadalcanal at cruise speed and unload on arrival.
+[[order]]
+day = 2
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[8, 0]]
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 1
+kind = "unload"
+
+# Days 3 to 8 have no new orders. The standing ones continue.

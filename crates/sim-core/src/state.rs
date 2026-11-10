@@ -3,15 +3,16 @@
 //! Only the umpire reads this directly. A player, the staff planner or an
 //! agent gets a [`crate::view::SideView`] instead.
 //!
-//! Only the fields scenario 1 needs exist so far. Damage, ammunition, air
+//! Only the fields scenarios 1 and 2 need exist so far: position, fuel and
+//! route, and supply aboard ships and in base stocks. Damage, ammunition, air
 //! groups, pilots and land units arrive with the scenarios that use them.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{BaseId, OrderId, ShipClassId, ShipId, TaskForceId};
-use crate::orders::{Mission, SpeedSetting};
+use crate::ids::{BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
+use crate::orders::{CargoAction, Mission, SpeedSetting};
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -55,6 +56,8 @@ pub struct Ship {
     pub side: Side,
     /// Fuel aboard, in tons.
     pub fuel_t: Fixed,
+    /// Supply aboard, in tons.
+    pub supply_t: Fixed,
     pub location: ShipLocation,
 }
 
@@ -64,6 +67,8 @@ pub struct Base {
     pub name: String,
     pub side: Side,
     pub hex: Hex,
+    /// Supply stock, in tons.
+    pub supply_t: Fixed,
 }
 
 /// What a task force is doing about its route.
@@ -100,6 +105,13 @@ pub struct Route {
     pub next_index: usize,
 }
 
+/// A standing cargo order: what to do, and the order that set it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct CargoOrder {
+    pub action: CargoAction,
+    pub order: OrderId,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TaskForce {
     pub id: TaskForceId,
@@ -119,6 +131,13 @@ pub struct TaskForce {
     pub route_order: Option<OrderId>,
     /// The standing order that set the speed, if any.
     pub speed_order: Option<OrderId>,
+    /// The standing cargo order and the order that set it, if any.
+    pub cargo_order: Option<CargoOrder>,
+    /// Elapsed hours since the scenario began at which the task force last
+    /// arrived at the end of its route. Cleared by a new route.
+    pub arrived_at_hours: Option<Fixed>,
+    /// The `TaskForceArrived` event of that arrival.
+    pub arrival_event: Option<EventId>,
 }
 
 impl TaskForce {
@@ -137,6 +156,9 @@ impl TaskForce {
             status: TaskForceStatus::Idle,
             route_order: None,
             speed_order: None,
+            cargo_order: None,
+            arrived_at_hours: None,
+            arrival_event: None,
         }
     }
 }

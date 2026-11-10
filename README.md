@@ -6,7 +6,7 @@ The name comes from the compartment on a flagship where the admiral and staff tr
 
 ## Status
 
-Step 1 of five: a headless, deterministic simulation core. One of its eight test scenarios is built. There is no game to play yet.
+Step 1 of five: a headless, deterministic simulation core. Two of its eight test scenarios are built. There is no game to play yet.
 
 The ships and the map in the repo are placeholders, invented so the engine has something to run. They are not historical.
 

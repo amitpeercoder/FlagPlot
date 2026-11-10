@@ -14,7 +14,7 @@ use crate::belief::Contact;
 use crate::hex::Hex;
 use crate::ids::ShipClassId;
 use crate::map::{HexData, Map};
-use crate::refdata::{RefData, ShipClass};
+use crate::refdata::{PortSize, RefData, ShipClass};
 use crate::state::{Base, Ship, Side, TaskForce, TruthState};
 
 /// One side's view of the game.
@@ -53,7 +53,8 @@ impl<'a> SideView<'a> {
         self.truth.day
     }
 
-    /// The side's own ships, known exactly.
+    /// The side's own ships, known exactly. Supply aboard is visible only for
+    /// the own side, because the filter hides every enemy ship.
     pub fn ships(&self) -> impl Iterator<Item = &'a Ship> + '_ {
         let side = self.side;
         self.truth
@@ -71,7 +72,8 @@ impl<'a> SideView<'a> {
             .filter(move |task_force| task_force.side == side)
     }
 
-    /// The side's own bases.
+    /// The side's own bases. Supply stock is visible only for the own side,
+    /// because the filter hides every enemy base.
     pub fn bases(&self) -> impl Iterator<Item = &'a Base> + '_ {
         let side = self.side;
         self.truth
@@ -93,5 +95,10 @@ impl<'a> SideView<'a> {
     /// Reference data is common knowledge.
     pub fn ship_class(&self, id: ShipClassId) -> Option<&'a ShipClass> {
         self.ref_data.ship_classes.get(&id)
+    }
+
+    /// Port handling figures are reference data, so common knowledge.
+    pub fn port_size(&self, size: u8) -> Option<&'a PortSize> {
+        self.ref_data.port_sizes.get(&size)
     }
 }

@@ -14,6 +14,7 @@ use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{BaseId, ShipId, TaskForceId};
 use crate::map::Map;
+use crate::refdata::RefData;
 use crate::state::{ShipLocation, TruthState};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -32,6 +33,10 @@ pub enum InvariantViolation {
     /// Progress toward the next hex is negative or a full hex or more.
     TaskForceProgressOutOfRange(TaskForceId),
     BaseOffMap(BaseId, Hex),
+    NegativeSupplyAboard(ShipId),
+    /// A ship carries more supply than its class's cargo capacity.
+    ShipOverCargoCapacity(ShipId),
+    NegativeBaseStock(BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -62,17 +67,34 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::BaseOffMap(base, hex) => {
                 write!(f, "{base} is at {hex}, which is off the map")
             }
+            InvariantViolation::NegativeSupplyAboard(ship) => {
+                write!(f, "{ship} has negative supply aboard")
+            }
+            InvariantViolation::ShipOverCargoCapacity(ship) => {
+                write!(f, "{ship} carries more supply than its class can hold")
+            }
+            InvariantViolation::NegativeBaseStock(base) => {
+                write!(f, "{base} has negative supply stock")
+            }
         }
     }
 }
 
 /// Returns every invariant the state breaks. Empty means the state is sound.
-pub(crate) fn check(truth: &TruthState, map: &Map) -> Vec<InvariantViolation> {
+pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<InvariantViolation> {
     let mut violations = Vec::new();
 
     for ship in truth.ships.values() {
         if ship.fuel_t.is_negative() {
             violations.push(InvariantViolation::NegativeFuel(ship.id));
+        }
+        if ship.supply_t.is_negative() {
+            violations.push(InvariantViolation::NegativeSupplyAboard(ship.id));
+        }
+        if let Some(class) = ref_data.ship_classes.get(&ship.class) {
+            if ship.supply_t > class.cargo_capacity_t {
+                violations.push(InvariantViolation::ShipOverCargoCapacity(ship.id));
+            }
         }
         match ship.location {
             ShipLocation::TaskForce(task_force_id) => {
@@ -142,6 +164,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map) -> Vec<InvariantViolation> {
     for base in truth.bases.values() {
         if !map.contains(base.hex) {
             violations.push(InvariantViolation::BaseOffMap(base.id, base.hex));
+        }
+        if base.supply_t.is_negative() {
+            violations.push(InvariantViolation::NegativeBaseStock(base.id));
         }
     }
 

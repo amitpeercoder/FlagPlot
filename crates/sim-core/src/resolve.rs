@@ -10,8 +10,8 @@ use crate::fixed::Fixed;
 use crate::hex::HEX_NM;
 use crate::ids::{EventId, ShipId, TaskForceId};
 use crate::invariants;
-use crate::orders::{Order, OrderKind, RejectReason, SpeedSetting, TaskForceOrder};
-use crate::state::{Route, TaskForceStatus};
+use crate::orders::{CargoAction, Order, OrderKind, RejectReason, SpeedSetting, TaskForceOrder};
+use crate::state::{CargoOrder, Route, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
 use crate::world::{DaySummary, SimError, World};
 
@@ -79,9 +79,14 @@ struct Steamer {
     endurance_nm: Fixed,
 }
 
-/// Fuel burn per mile rises with the square of speed relative to cruise.
-/// This is a placeholder model: see `docs/decisions/0006-fuel-model.md`.
+/// Fuel burn per mile rises with the square of speed relative to cruise, and
+/// never falls below the cruise rate: at cruise speed or slower the
+/// multiplier is 1 (the floor, decision 3 of
+/// `docs/decisions/0006-fuel-model.md`). This is a placeholder model.
 fn speed_multiplier(speed_kn: Fixed, cruise_speed_kn: Fixed) -> Fixed {
+    if speed_kn <= cruise_speed_kn {
+        return Fixed::ONE;
+    }
     let ratio = speed_kn / cruise_speed_kn;
     ratio * ratio
 }
@@ -125,7 +130,7 @@ impl World {
 
         self.truth.day = day;
 
-        let violations = invariants::check(&self.truth, &self.map);
+        let violations = invariants::check(&self.truth, &self.map, &self.ref_data);
         if !violations.is_empty() {
             return Err(SimError::InvariantsViolated { day, violations });
         }
@@ -143,14 +148,14 @@ impl World {
     fn run_pulse_phase(&mut self, day: u32, pulse: Pulse, phase: PulsePhase) {
         match phase {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
+            PulsePhase::Loading => self.handle_cargo(day, pulse),
             // Not implemented yet. Each arrives with the scenario that needs it.
             PulsePhase::NightSearch
             | PulsePhase::AirSearch
             | PulsePhase::StrikeDecisions
             | PulsePhase::AirCombat
             | PulsePhase::SurfaceEngagements
-            | PulsePhase::ShoreBombardment
-            | PulsePhase::Loading => {}
+            | PulsePhase::ShoreBombardment => {}
         }
     }
 
@@ -234,7 +239,24 @@ impl World {
                         }
                         Ok(())
                     }
-                    TaskForceOrder::SetSpeed(_) | TaskForceOrder::SetMission(_) => Ok(()),
+                    TaskForceOrder::Load => {
+                        if task_force.status == TaskForceStatus::Underway {
+                            return Err(RejectReason::UnderWay);
+                        }
+                        let own_base_here = self
+                            .truth
+                            .bases
+                            .values()
+                            .any(|base| base.side == order.side && base.hex == task_force.hex);
+                        if own_base_here {
+                            Ok(())
+                        } else {
+                            Err(RejectReason::NoOwnBaseHere)
+                        }
+                    }
+                    TaskForceOrder::SetSpeed(_)
+                    | TaskForceOrder::SetMission(_)
+                    | TaskForceOrder::Unload => Ok(()),
                 }
             }
         }
@@ -261,6 +283,8 @@ impl World {
                         };
                         task_force.status = TaskForceStatus::Underway;
                         task_force.route_order = Some(order.id);
+                        task_force.arrived_at_hours = None;
+                        task_force.arrival_event = None;
                     }
                     TaskForceOrder::SetSpeed(speed) => {
                         task_force.speed = *speed;
@@ -268,6 +292,18 @@ impl World {
                     }
                     TaskForceOrder::SetMission(mission) => {
                         task_force.mission = *mission;
+                    }
+                    TaskForceOrder::Load => {
+                        task_force.cargo_order = Some(CargoOrder {
+                            action: CargoAction::Load,
+                            order: order.id,
+                        });
+                    }
+                    TaskForceOrder::Unload => {
+                        task_force.cargo_order = Some(CargoOrder {
+                            action: CargoAction::Unload,
+                            order: order.id,
+                        });
                     }
                 }
             }
@@ -488,17 +524,25 @@ impl World {
             None => standing_orders,
         };
         if arrived {
-            self.events.record(
+            let elapsed_hours = pulse_start(day, pulse) + travelled_nm / speed_kn;
+            let event = self.events.record(
                 day,
                 Some(pulse),
                 EventKind::TaskForceArrived {
                     task_force: id,
                     hex,
-                    elapsed_hours: pulse_start(day, pulse) + travelled_nm / speed_kn,
+                    elapsed_hours,
                 },
                 outcome_causes,
                 None,
             );
+            let task_force = self
+                .truth
+                .task_forces
+                .get_mut(&id)
+                .expect("task force exists");
+            task_force.arrived_at_hours = Some(elapsed_hours);
+            task_force.arrival_event = Some(event);
         } else if ran_dry {
             self.events.record(
                 day,
@@ -521,7 +565,7 @@ mod tests {
     use crate::ids::{BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
     use crate::orders::{Mission, OrderRequest, Origin};
-    use crate::refdata::{RefData, ShipClass, ShipKind};
+    use crate::refdata::{PortSize, RefData, ShipClass, ShipKind};
     use crate::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 
     const TF: TaskForceId = TaskForceId::new(1);
@@ -552,9 +596,19 @@ mod tests {
             max_speed_kn: Fixed::from_int(32),
             fuel_capacity_t: Fixed::from_int(2000),
             endurance_nm: Fixed::from_int(8000),
+            cargo_capacity_t: Fixed::ZERO,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
+        // Test-only figures: the test base sits in open sea, port size 0.
+        ref_data.port_sizes.insert(
+            0,
+            PortSize {
+                berths: 0,
+                berth_rate_t_per_h: Fixed::ZERO,
+                lighter_rate_t_per_h: Fixed::from_int(20),
+            },
+        );
 
         let mut truth = TruthState::default();
         let mut task_force = TaskForce::at(
@@ -574,6 +628,7 @@ mod tests {
                 class: ShipClassId::new(1),
                 side: Side::Allied,
                 fuel_t: Fixed::from_int(fuel_t),
+                supply_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
             },
         );
@@ -584,6 +639,7 @@ mod tests {
                 name: "Test base".to_string(),
                 side: Side::Allied,
                 hex: Hex::new(0, 0),
+                supply_t: Fixed::ZERO,
             },
         );
 
@@ -631,6 +687,56 @@ mod tests {
         assert_eq!(truth.task_forces[&TF].status, TaskForceStatus::Arrived);
         assert_eq!(truth.task_forces[&TF].hex, Hex::new(12, 0));
         assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::from_int(2000 - 480));
+    }
+
+    #[test]
+    fn slow_steaming_burns_the_cruise_rate_per_mile() {
+        let cruise = Fixed::from_int(16);
+        assert_eq!(speed_multiplier(Fixed::from_int(8), cruise), Fixed::ONE);
+        assert_eq!(speed_multiplier(cruise, cruise), Fixed::ONE);
+        assert_eq!(
+            speed_multiplier(Fixed::from_int(32), cruise),
+            Fixed::from_int(4)
+        );
+
+        // End to end: a second ship whose cruise speed is 32 kn rides in a
+        // task force held to 16 kn by the first. It steams below its own
+        // cruise speed, so it burns exactly its cruise rate per mile:
+        // 8 hexes = 320 nm at 2000/8000 = 0.25 t/nm is 80 t, the same as the
+        // slow ship, not less.
+        let mut world = world_with_fuel(2000);
+        let mut fast = world.ref_data.ship_classes[&ShipClassId::new(1)].clone();
+        fast.id = ShipClassId::new(2);
+        fast.cruise_speed_kn = Fixed::from_int(32);
+        fast.max_speed_kn = Fixed::from_int(36);
+        world.ref_data.ship_classes.insert(fast.id, fast);
+        let fast_ship = ShipId::new(2);
+        world.truth.ships.insert(
+            fast_ship,
+            Ship {
+                id: fast_ship,
+                name: "Fast ship".to_string(),
+                class: ShipClassId::new(2),
+                side: Side::Allied,
+                fuel_t: Fixed::from_int(2000),
+                supply_t: Fixed::ZERO,
+                location: ShipLocation::TaskForce(TF),
+            },
+        );
+        world
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force exists")
+            .ships
+            .insert(fast_ship);
+        world.submit_orders(Side::Allied, vec![route_to(8, 0)]);
+        world.resolve_day().expect("day resolves");
+
+        let truth = world.umpire();
+        assert_eq!(truth.task_forces[&TF].status, TaskForceStatus::Arrived);
+        assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::from_int(2000 - 80));
+        assert_eq!(truth.ships[&fast_ship].fuel_t, Fixed::from_int(2000 - 80));
     }
 
     #[test]
@@ -775,5 +881,80 @@ mod tests {
         let task_force = &world.umpire().task_forces[&TF];
         assert_eq!(task_force.status, TaskForceStatus::Arrived);
         assert_eq!(task_force.hex, Hex::new(9, 2));
+    }
+
+    #[test]
+    fn load_needs_a_stopped_task_force_at_an_own_base() {
+        // At the base and idle: accepted, and it becomes the cargo order
+        // without touching the route or speed.
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(Side::Allied, vec![order(TaskForceOrder::Load)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+        let task_force = &world.umpire().task_forces[&TF];
+        let cargo = task_force.cargo_order.expect("cargo order is set");
+        assert_eq!(cargo.action, CargoAction::Load);
+        assert_eq!(task_force.status, TaskForceStatus::Idle);
+        assert_eq!(task_force.route_order, None);
+
+        // Under way: rejected, even before the base question.
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+        world.submit_orders(Side::Allied, vec![order(TaskForceOrder::Load)]);
+        world.resolve_day().expect("day resolves");
+        // 480 nm at 16 kn takes 30 hours, so it is still under way.
+        assert_eq!(rejection(&world), Some(RejectReason::UnderWay));
+
+        // Stopped away from any base: rejected.
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(Side::Allied, vec![route_to(2, 0)]);
+        world.resolve_day().expect("day resolves");
+        world.submit_orders(Side::Allied, vec![order(TaskForceOrder::Load)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), Some(RejectReason::NoOwnBaseHere));
+    }
+
+    #[test]
+    fn unload_is_always_accepted_and_replaces_load() {
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                order(TaskForceOrder::Load),
+                route_to(2, 0),
+                order(TaskForceOrder::Unload),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+        let task_force = &world.umpire().task_forces[&TF];
+        assert_eq!(
+            task_force.cargo_order.map(|cargo| cargo.action),
+            Some(CargoAction::Unload)
+        );
+        assert!(task_force.route_order.is_some());
+    }
+
+    #[test]
+    fn arrival_is_recorded_and_a_new_route_clears_it() {
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(Side::Allied, vec![route_to(2, 0)]);
+        world.resolve_day().expect("day resolves");
+        // 80 nm at 16 kn takes 5 hours.
+        let task_force = &world.umpire().task_forces[&TF];
+        assert_eq!(task_force.arrived_at_hours, Some(Fixed::from_int(5)));
+        let event = task_force.arrival_event.expect("arrival event recorded");
+        assert!(matches!(
+            world.events().get(event).map(|e| &e.kind),
+            Some(EventKind::TaskForceArrived { .. })
+        ));
+
+        world.submit_orders(Side::Allied, vec![route_to(2, 2)]);
+        world.resolve_day().expect("day resolves");
+        let task_force = &world.umpire().task_forces[&TF];
+        assert_eq!(task_force.status, TaskForceStatus::Arrived);
+        // It arrived again, so the fields describe the new arrival.
+        assert_ne!(task_force.arrival_event, Some(event));
     }
 }

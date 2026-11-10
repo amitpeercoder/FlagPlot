@@ -91,8 +91,10 @@ pub struct World {
 }
 
 impl World {
-    /// Starts a game. Fails if the reference data is unusable or the
-    /// starting state already breaks an invariant.
+    /// Starts a game. Fails if the reference data is unusable (a ship class
+    /// or port size with bad figures), a ship has an unknown class, a base
+    /// sits in a port size with no entry in the port table, or the starting
+    /// state already breaks an invariant.
     pub fn new(
         seed: u64,
         ref_data: RefData,
@@ -113,7 +115,24 @@ impl World {
             }
         }
 
-        let violations = invariants::check(&truth, &map);
+        for (size, port) in &ref_data.port_sizes {
+            if let Some(problem) = port.problem(*size) {
+                return Err(SimError::InvalidSetup(problem));
+            }
+        }
+        for base in truth.bases.values() {
+            // A base off the map is reported by the invariant check below.
+            if let Some(hex) = map.get(base.hex) {
+                if !ref_data.port_sizes.contains_key(&hex.port_size) {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{} is in a hex of port size {}, which has no entry in the port table",
+                        base.id, hex.port_size
+                    )));
+                }
+            }
+        }
+
+        let violations = invariants::check(&truth, &map, &ref_data);
         if !violations.is_empty() {
             return Err(SimError::InvariantsViolated {
                 day: truth.day,
