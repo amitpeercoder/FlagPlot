@@ -2,16 +2,16 @@ Scenario 2: Supply run, Espiritu Santo to Guadalcanal
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash eea31f0e8846d390  8 events
-day   2  hash f7af648a0d0ed136  15 events
-day   3  hash e5410ec1185cf981  11 events
-day   4  hash 491dccb9f43f5aa0  6 events
-day   5  hash 6aadbf66cb7db16b  6 events
-day   6  hash 9a0999263cd6882a  3 events
-day   7  hash 5e99ae292890b529  2 events
-day   8  hash c97797a93fd1f152  0 events
+day   1  hash bda483f3308a234e  8 events
+day   2  hash e905d31f1c349da2  15 events
+day   3  hash 77636ddb1c45238b  11 events
+day   4  hash 8ebe2ff88ea2f19a  6 events
+day   5  hash edee850da6784c47  6 events
+day   6  hash 893d9e84fdfd1d1e  3 events
+day   7  hash 432471c1957dc997  2 events
+day   8  hash 9456452ed46eca7e  0 events
 
-task_force:1 "Placeholder supply convoy" (Allied): Arrived at (8,0); alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:1 "Placeholder supply convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
 ship:2 "Placeholder cargo ship 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
 ship:3 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 460 t of fuel, 0 t of supply

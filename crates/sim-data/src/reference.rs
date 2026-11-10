@@ -45,7 +45,7 @@ struct PortSizeRow {
     lighter_rate_t_per_h: String,
 }
 
-fn parse_kind(text: &str) -> Option<ShipKind> {
+pub(crate) fn parse_kind(text: &str) -> Option<ShipKind> {
     Some(match text {
         "carrier" => ShipKind::Carrier,
         "battleship" => ShipKind::Battleship,
@@ -325,6 +325,9 @@ struct SurfaceCombatFile {
     sighting_chance_day: Quantity,
     radar_sighting_bonus: Quantity,
     not_alert_sighting_factor: Quantity,
+    alert_contact_distance_hexes: u32,
+    alert_contact_max_age_pulses: u32,
+    alarm_chance: Quantity,
     gun_hit_chance_night: Quantity,
     gun_hit_chance_day: Quantity,
     torpedo_hit_chance_night: Quantity,
@@ -418,6 +421,9 @@ fn parse_surface_combat_figures(
             "not_alert_sighting_factor",
             &file.not_alert_sighting_factor,
         )?,
+        alert_contact_distance_hexes: file.alert_contact_distance_hexes,
+        alert_contact_max_age_pulses: file.alert_contact_max_age_pulses,
+        alarm_chance: number("alarm_chance", &file.alarm_chance)?,
         gun_hit_chance_night: number("gun_hit_chance_night", &file.gun_hit_chance_night)?,
         gun_hit_chance_day: number("gun_hit_chance_day", &file.gun_hit_chance_day)?,
         torpedo_hit_chance_night: number(
@@ -757,6 +763,9 @@ mod tests {
         assert_eq!(figures.sighting_chance_day, Fixed::ONE);
         assert_eq!(figures.radar_sighting_bonus, Fixed::from_ratio(1, 5));
         assert_eq!(figures.not_alert_sighting_factor, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.alert_contact_distance_hexes, 3);
+        assert_eq!(figures.alert_contact_max_age_pulses, 2);
+        assert_eq!(figures.alarm_chance, Fixed::from_ratio(1, 2));
         assert_eq!(figures.gun_hit_chance_night, Fixed::from_ratio(3, 100));
         assert_eq!(figures.gun_hit_chance_day, Fixed::from_ratio(5, 100));
         assert_eq!(figures.torpedo_hit_chance_night, Fixed::from_ratio(4, 100));

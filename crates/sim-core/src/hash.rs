@@ -94,6 +94,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
     match speed {
         SpeedSetting::Cruise => 1,
         SpeedSetting::Full => 2,
+        SpeedSetting::Knots(_) => 3,
     }
 }
 
@@ -145,6 +146,9 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         h.u8(mission_code(task_force.mission));
         h.u8(speed_code(task_force.speed));
+        if let SpeedSetting::Knots(knots) = task_force.speed {
+            h.i64(knots.raw());
+        }
         h.count(task_force.route.waypoints.len());
         for waypoint in &task_force.route.waypoints {
             h.i32(waypoint.q);
@@ -188,7 +192,10 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
-        h.u8(u8::from(task_force.alert));
+        h.u8(task_force.readiness.code());
+        h.optional_u32(task_force.readiness_order.map(|id| id.raw()));
+        h.u8(u8::from(task_force.alerted));
+        h.optional_u32(task_force.alerted_by.map(|id| id.raw()));
         h.u8(task_force.rules_of_engagement.stance.code());
         h.i64(task_force.rules_of_engagement.break_off.raw());
         h.u8(task_force.rules_of_engagement.stragglers.code());

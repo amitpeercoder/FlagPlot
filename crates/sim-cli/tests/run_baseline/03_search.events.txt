@@ -2,10 +2,10 @@ Scenario 3: Search, flying boats against an approaching force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7dee4dcf5e8f600c  19 events
-day   2  hash 5b9d7fa08cd20bbe  22 events
-day   3  hash 6159ab3e259726c2  11 events
-day   4  hash 2f71321163f3f0c1  7 events
+day   1  hash a3fabe606de35a6e  19 events
+day   2  hash 14296ed2c2e2aab6  22 events
+day   3  hash 1a8af91c0bb31e7e  11 events
+day   4  hash 37f3761e6acc039f  7 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -67,7 +67,7 @@ day   4  hash 2f71321163f3f0c1  7 events
 #58 D4 afternoon air_group:1 searched 240-300 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:5
 #59 D4 afternoon Allied contact:2 aged to 3 pulses, confidence 0.4096  <- #51
 
-task_force:1 "Placeholder cruiser force" (Japanese): Arrived at (4,0), last noticed sighted at D3 06:00; alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:1 "Placeholder cruiser force" (Japanese): Arrived at (4,0), last noticed sighted at D3 06:00; readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder patrol squadron" (Allied) at base:1: 4 ready, mission Search, arc 240-300 to 600 nm
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1820 t of fuel, 0 t of supply
 ship:2 "Placeholder cruiser 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1820 t of fuel, 0 t of supply

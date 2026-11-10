@@ -41,10 +41,13 @@ pub fn mission(mission: Mission) -> &'static str {
     }
 }
 
-pub fn speed(speed: SpeedSetting) -> &'static str {
+/// A speed setting as text: "cruise", "full", or the knots with their unit,
+/// such as "24 kn".
+pub fn speed(speed: SpeedSetting) -> String {
     match speed {
-        SpeedSetting::Cruise => "cruise",
-        SpeedSetting::Full => "full",
+        SpeedSetting::Cruise => "cruise".to_string(),
+        SpeedSetting::Full => "full".to_string(),
+        SpeedSetting::Knots(knots) => format!("{knots} kn"),
     }
 }
 

@@ -115,7 +115,7 @@ The game must stay something a person and a model can both reason about. A rule 
 - **Cite what was read.** A figure a website quotes from a book cites the website. `docs/research/oob/source-policy.md` says which sources may be used.
 - **A source that disagrees gets its own row.** Rows are never overwritten to settle a disagreement. A person settles it and writes the reason on the row.
 - **A value has to earn `preferred`.** A lone weak row is `unconfirmed`, and a rule may read it only if the rule says so.
-- **Engagement rows are history to test against.** A scenario may take starting positions and alert states from them. Its result is compared with the recorded outcome and is never scripted to match it.
+- **Engagement rows are history to test against.** A scenario may take starting positions, readiness and contacts already held from them. Its result is compared with the recorded outcome and is never scripted to match it.
 - **Run `oob-check` after any change to `data/oob`.**
 
 ## Reference material
@@ -157,6 +157,6 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Stage 4c1's tool is built (`oob-derive`, decision 0020); the real ships wait for facts. Next is stage 4c, Savo Island. See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Stage 4c1's tool is built (`oob-derive`, decision 0020), and stage 4c2a is done (readiness by order, alertness from belief and events, the alarm roll, speed orders in knots and starting contacts, decision 0021). The Savo Island scenario waits for the real ships, which wait for facts. See the spec's "First test scenarios" table.
 
 The order-of-battle facts cover what scenarios 4 to 6 need: the ships at Savo Island and Eastern Solomons, their classes, weapons and sensors, the aircraft of August and September 1942, and what happened at both battles. `data/oob/README.md` says how firm they are and what is missing.
