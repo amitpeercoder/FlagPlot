@@ -11,7 +11,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::RejectReason;
 use crate::refdata::ShipKind;
-use crate::state::Side;
+use crate::state::{ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
 
 /// Something that led to an event.
@@ -42,6 +42,105 @@ pub struct Factor {
 pub struct Breakdown {
     pub factors: Vec<Factor>,
     pub result: Fixed,
+}
+
+/// The weapon a salvo was fired with.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Weapon {
+    Gun,
+    Torpedo,
+}
+
+impl Weapon {
+    /// The weapon's name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Weapon::Gun => "guns",
+            Weapon::Torpedo => "torpedoes",
+        }
+    }
+}
+
+/// One of the two damage tracks of a ship. Named systems are separate
+/// (decision 0016).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum DamageTrack {
+    Flotation,
+    Fire,
+}
+
+impl DamageTrack {
+    /// Every track, in the order gun hits are assigned to them.
+    pub const ALL: [DamageTrack; 2] = [DamageTrack::Flotation, DamageTrack::Fire];
+
+    /// The track's name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            DamageTrack::Flotation => "flotation",
+            DamageTrack::Fire => "fire",
+        }
+    }
+}
+
+/// Why a surface engagement ended.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum EngagementEndReason {
+    /// A force that avoids sighted the enemy first and left.
+    SlippedAway,
+    /// A force had no ship afloat.
+    ForceSunk,
+    /// A force broke off.
+    BrokeOff,
+    /// Neither force sighted the other in all the rounds.
+    PassedUnseen,
+    /// The last round was fought.
+    MaxRounds,
+}
+
+impl EngagementEndReason {
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            EngagementEndReason::SlippedAway => "slipped away",
+            EngagementEndReason::ForceSunk => "a force was sunk",
+            EngagementEndReason::BrokeOff => "a force broke off",
+            EngagementEndReason::PassedUnseen => "passed unseen",
+            EngagementEndReason::MaxRounds => "reached the last round",
+        }
+    }
+}
+
+/// Why ships were split off a task force by the straggler rule (decision 12
+/// of `docs/decisions/0016-systems-and-stragglers.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum DetachReason {
+    /// Stragglers that can steam, sent for the home port with escorts.
+    SentHome,
+    /// Stragglers left where they are.
+    LeftBehind,
+    /// Ships detached by a detach order.
+    Ordered,
+}
+
+impl DetachReason {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            DetachReason::SentHome => 1,
+            DetachReason::LeftBehind => 2,
+            DetachReason::Ordered => 3,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            DetachReason::SentHome => "sent home",
+            DetachReason::LeftBehind => "left behind",
+            DetachReason::Ordered => "ordered",
+        }
+    }
 }
 
 /// What happened.
@@ -170,6 +269,117 @@ pub enum EventKind {
         age_pulses: u32,
         confidence: Fixed,
     },
+    /// Two opposing task forces met in one hex and a fight began.
+    EngagementBegun {
+        a: TaskForceId,
+        b: TaskForceId,
+        hex: Hex,
+    },
+    /// One roll of a force looking for the enemy force.
+    SightingRoll {
+        round: u32,
+        task_force: TaskForceId,
+        enemy: TaskForceId,
+        chance: Fixed,
+        sighted: bool,
+    },
+    /// A force that has not sighted the enemy is fired on by an enemy that
+    /// has.
+    ForceSurprised {
+        round: u32,
+        task_force: TaskForceId,
+        enemy: TaskForceId,
+    },
+    /// One ship fired one weapon at one ship.
+    Salvo {
+        round: u32,
+        firer: ShipId,
+        target: ShipId,
+        weapon: Weapon,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+    },
+    /// The hits of one salvo on one damage track of the target.
+    ShipDamaged {
+        round: u32,
+        ship: ShipId,
+        track: DamageTrack,
+        hits: u32,
+        points: Fixed,
+        value_after: Fixed,
+    },
+    /// A ship's flotation damage reached 100 and it left its task force.
+    ShipSunk {
+        round: u32,
+        ship: ShipId,
+        task_force: TaskForceId,
+    },
+    /// A force sighted the enemy or was fired on and was not alert.
+    ForceBecameAlert {
+        round: u32,
+        task_force: TaskForceId,
+    },
+    /// A force broke off. `share` is the share of the ships it began the
+    /// fight with that are sunk or crippled.
+    ForceBrokeOff {
+        round: u32,
+        task_force: TaskForceId,
+        share: Fixed,
+    },
+    /// A force that avoids sighted the enemy first and left unseen.
+    ForceSlippedAway {
+        round: u32,
+        task_force: TaskForceId,
+        enemy: TaskForceId,
+    },
+    /// Neither force sighted the other in the last round.
+    ForcesPassedUnseen {
+        round: u32,
+        a: TaskForceId,
+        b: TaskForceId,
+    },
+    /// A fight ended.
+    EngagementEnded {
+        round: u32,
+        a: TaskForceId,
+        b: TaskForceId,
+        hex: Hex,
+        reason: EngagementEndReason,
+    },
+    /// A battle claim reached a side's belief.
+    ClaimReceived {
+        side: Side,
+        hex: Hex,
+        claimed_sunk: u32,
+    },
+    /// A hit knocked, or tried to knock, one named system of a ship down one
+    /// level (decision 0016). `before == after` when the ship lacks the
+    /// system or it was already out.
+    SystemHit {
+        round: u32,
+        ship: ShipId,
+        system: ShipSystem,
+        before: SystemState,
+        after: SystemState,
+    },
+    /// The straggler rule split ships off a task force into a new one
+    /// (decision 0016). `ships` are the stragglers moved and `escorts` the
+    /// escorts moved, each in ID order. `escorts` is empty when the ships
+    /// are left behind.
+    ShipsDetached {
+        parent: TaskForceId,
+        new_force: TaskForceId,
+        ships: Vec<ShipId>,
+        escorts: Vec<ShipId>,
+        reason: DetachReason,
+    },
+    /// A task force retired under the straggler rule: it is set to avoid
+    /// combat and, if it has a home port, heads for it.
+    ForceRetired {
+        task_force: TaskForceId,
+    },
 }
 
 impl EventKind {
@@ -231,6 +441,58 @@ impl EventKind {
                 EntityRef::TaskForce(*task_force),
                 EntityRef::AirGroup(*air_group),
             ],
+            EventKind::EngagementBegun { a, b, .. }
+            | EventKind::ForcesPassedUnseen { a, b, .. }
+            | EventKind::EngagementEnded { a, b, .. } => {
+                vec![EntityRef::TaskForce(*a), EntityRef::TaskForce(*b)]
+            }
+            EventKind::SightingRoll {
+                task_force, enemy, ..
+            }
+            | EventKind::ForceSurprised {
+                task_force, enemy, ..
+            }
+            | EventKind::ForceSlippedAway {
+                task_force, enemy, ..
+            } => vec![
+                EntityRef::TaskForce(*task_force),
+                EntityRef::TaskForce(*enemy),
+            ],
+            EventKind::Salvo { firer, target, .. } => {
+                vec![EntityRef::Ship(*firer), EntityRef::Ship(*target)]
+            }
+            EventKind::ShipDamaged { ship, .. } | EventKind::SystemHit { ship, .. } => {
+                vec![EntityRef::Ship(*ship)]
+            }
+            EventKind::ShipSunk {
+                ship, task_force, ..
+            } => vec![EntityRef::Ship(*ship), EntityRef::TaskForce(*task_force)],
+            EventKind::ForceBecameAlert { task_force, .. }
+            | EventKind::ForceBrokeOff { task_force, .. } => {
+                vec![EntityRef::TaskForce(*task_force)]
+            }
+            // A side is not an entity: the claim names no force or ship.
+            EventKind::ClaimReceived { .. } => Vec::new(),
+            EventKind::ShipsDetached {
+                parent,
+                new_force,
+                ships,
+                escorts,
+                ..
+            } => {
+                let mut entities = vec![
+                    EntityRef::TaskForce(*parent),
+                    EntityRef::TaskForce(*new_force),
+                ];
+                entities.extend(
+                    ships
+                        .iter()
+                        .chain(escorts)
+                        .map(|ship| EntityRef::Ship(*ship)),
+                );
+                entities
+            }
+            EventKind::ForceRetired { task_force } => vec![EntityRef::TaskForce(*task_force)],
         }
     }
 }
@@ -382,8 +644,155 @@ impl fmt::Display for EventKind {
                 "{} {contact} dropped at {age_pulses} pulses, confidence {confidence}",
                 side.name()
             ),
+            EventKind::EngagementBegun { a, b, hex } => {
+                write!(f, "{a} and {b} met at {hex}: engagement begun")
+            }
+            EventKind::SightingRoll {
+                round,
+                task_force,
+                enemy,
+                chance,
+                sighted,
+            } => write!(
+                f,
+                "round {round}: {task_force} looked for {enemy}, chance {chance}: {}",
+                if *sighted { "sighted" } else { "not sighted" }
+            ),
+            EventKind::ForceSurprised {
+                round,
+                task_force,
+                enemy,
+            } => write!(f, "round {round}: {task_force} was surprised by {enemy}"),
+            EventKind::Salvo {
+                round,
+                firer,
+                target,
+                weapon,
+                shots,
+                chance,
+                expected,
+                hits,
+            } => write!(
+                f,
+                "round {round}: {firer} {} at {target}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                weapon.name(),
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            EventKind::ShipDamaged {
+                round,
+                ship,
+                track,
+                hits,
+                points,
+                value_after,
+            } => write!(
+                f,
+                "round {round}: {ship} took {hits} {} on {}, {points} points, now {value_after}",
+                if *hits == 1 { "hit" } else { "hits" },
+                track.name()
+            ),
+            EventKind::SystemHit {
+                round,
+                ship,
+                system,
+                before,
+                after,
+            } => {
+                if before == after {
+                    write!(
+                        f,
+                        "round {round}: {ship} {} hit, no change, still {}",
+                        system.name(),
+                        before.name()
+                    )
+                } else {
+                    write!(
+                        f,
+                        "round {round}: {ship} {} hit, {} -> {}",
+                        system.name(),
+                        before.name(),
+                        after.name()
+                    )
+                }
+            }
+            EventKind::ShipSunk {
+                round,
+                ship,
+                task_force,
+            } => write!(f, "round {round}: {ship} of {task_force} sank"),
+            EventKind::ForceBecameAlert { round, task_force } => {
+                write!(f, "round {round}: {task_force} became alert")
+            }
+            EventKind::ForceBrokeOff {
+                round,
+                task_force,
+                share,
+            } => write!(
+                f,
+                "round {round}: {task_force} broke off, {share} of its ships sunk or crippled"
+            ),
+            EventKind::ForceSlippedAway {
+                round,
+                task_force,
+                enemy,
+            } => write!(f, "round {round}: {task_force} slipped away from {enemy}"),
+            EventKind::ForcesPassedUnseen { round, a, b } => {
+                write!(f, "round {round}: {a} and {b} passed unseen")
+            }
+            EventKind::EngagementEnded {
+                round,
+                a,
+                b,
+                hex,
+                reason,
+            } => write!(
+                f,
+                "engagement of {a} and {b} at {hex} ended in round {round}: {}",
+                reason.name()
+            ),
+            EventKind::ClaimReceived {
+                side,
+                hex,
+                claimed_sunk,
+            } => write!(
+                f,
+                "{} claims {claimed_sunk} enemy {} sunk at {hex}",
+                side.name(),
+                if *claimed_sunk == 1 { "ship" } else { "ships" }
+            ),
+            EventKind::ShipsDetached {
+                parent,
+                new_force,
+                ships,
+                escorts,
+                reason,
+            } => {
+                let ships = join_ships(ships);
+                match reason {
+                    DetachReason::SentHome => {
+                        write!(f, "{parent} sent {ships} home as {new_force}")?;
+                        if !escorts.is_empty() {
+                            write!(f, " with escorts {}", join_ships(escorts))?;
+                        }
+                        Ok(())
+                    }
+                    DetachReason::LeftBehind => {
+                        write!(f, "{parent} left {ships} behind as {new_force}")
+                    }
+                    DetachReason::Ordered => {
+                        write!(f, "{parent} detached {ships} as {new_force}")
+                    }
+                }
+            }
+            EventKind::ForceRetired { task_force } => write!(f, "{task_force} retires"),
         }
     }
+}
+
+/// Ship IDs written as a list, such as `ship:2, ship:4`.
+fn join_ships(ships: &[ShipId]) -> String {
+    let names: Vec<String> = ships.iter().map(ShipId::to_string).collect();
+    names.join(", ")
 }
 
 /// One entry in the log.
@@ -501,5 +910,103 @@ impl EventLog {
             }
         }
         found
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_system_hit_reads_as_a_change_or_as_no_change() {
+        let hit = |before, after| EventKind::SystemHit {
+            round: 2,
+            ship: ShipId::new(5),
+            system: ShipSystem::Propulsion,
+            before,
+            after,
+        };
+        assert_eq!(
+            hit(SystemState::Working, SystemState::Degraded).to_string(),
+            "round 2: ship:5 propulsion hit, working -> degraded"
+        );
+        assert_eq!(
+            hit(SystemState::Out, SystemState::Out).to_string(),
+            "round 2: ship:5 propulsion hit, no change, still out"
+        );
+    }
+
+    #[test]
+    fn a_system_hit_is_about_its_ship() {
+        let kind = EventKind::SystemHit {
+            round: 1,
+            ship: ShipId::new(3),
+            system: ShipSystem::MainBattery,
+            before: SystemState::Working,
+            after: SystemState::Degraded,
+        };
+        assert_eq!(kind.entities(), vec![EntityRef::Ship(ShipId::new(3))]);
+    }
+
+    #[test]
+    fn detaching_ships_reads_clearly() {
+        let ships = |raw: &[u32]| raw.iter().map(|n| ShipId::new(*n)).collect::<Vec<_>>();
+        let sent = EventKind::ShipsDetached {
+            parent: TaskForceId::new(1),
+            new_force: TaskForceId::new(2),
+            ships: ships(&[2]),
+            escorts: ships(&[4, 5]),
+            reason: DetachReason::SentHome,
+        };
+        assert_eq!(
+            sent.to_string(),
+            "task_force:1 sent ship:2 home as task_force:2 with escorts ship:4, ship:5"
+        );
+        let alone = EventKind::ShipsDetached {
+            parent: TaskForceId::new(1),
+            new_force: TaskForceId::new(2),
+            ships: ships(&[2, 3]),
+            escorts: Vec::new(),
+            reason: DetachReason::SentHome,
+        };
+        assert_eq!(
+            alone.to_string(),
+            "task_force:1 sent ship:2, ship:3 home as task_force:2"
+        );
+        let left = EventKind::ShipsDetached {
+            parent: TaskForceId::new(1),
+            new_force: TaskForceId::new(3),
+            ships: ships(&[6]),
+            escorts: Vec::new(),
+            reason: DetachReason::LeftBehind,
+        };
+        assert_eq!(
+            left.to_string(),
+            "task_force:1 left ship:6 behind as task_force:3"
+        );
+        assert_eq!(
+            left.entities(),
+            vec![
+                EntityRef::TaskForce(TaskForceId::new(1)),
+                EntityRef::TaskForce(TaskForceId::new(3)),
+                EntityRef::Ship(ShipId::new(6)),
+            ]
+        );
+        let retired = EventKind::ForceRetired {
+            task_force: TaskForceId::new(1),
+        };
+        assert_eq!(retired.to_string(), "task_force:1 retires");
+        assert_eq!(
+            retired.entities(),
+            vec![EntityRef::TaskForce(TaskForceId::new(1))]
+        );
+    }
+
+    #[test]
+    fn detach_reason_codes_are_stable() {
+        assert_eq!(DetachReason::SentHome.code(), 1);
+        assert_eq!(DetachReason::LeftBehind.code(), 2);
+        assert_eq!(DetachReason::SentHome.name(), "sent home");
+        assert_eq!(DetachReason::LeftBehind.name(), "left behind");
     }
 }

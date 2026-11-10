@@ -18,6 +18,8 @@ The spec says a task force stores its hex plus progress toward the next one. It 
    - A force turned back at exactly 20 nm changes position, from the hex ahead to the hex it left, without steaming. It is on the boundary, and the tie rule in decision 1 puts it in the hex it now steams toward.
 6. **A task force that reaches its last waypoint stops** and is marked as arrived. It stays a task force. It does not dock or disband.
 
+Decisions 3 and 4 are replaced by decision 0017: a task force follows a shortest path over hexes ships can enter, which is the greedy path on open water.
+
 ## What the review changed
 
 - **Decision 1** was "the task force enters the next hex after covering the full 40 nm". A force 39 nm along was reported, searched for and fought one hex behind where it was.

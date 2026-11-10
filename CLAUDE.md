@@ -17,9 +17,19 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
+cargo run -p sim-cli -- export data/scenarios/04a_night_action.toml --out viewer/replays/04a_night_action.json
+cargo run --release -p map-tool -- render
+cargo run -p oob-check -- data/oob
+cargo run -p oob-derive -- data/derivation/savo_island.toml --check
 ```
 
-All three checks must pass before a commit. CI runs the same three.
+`export` runs a scenario exactly as `run` does and writes it as one replay file for the viewer (decision 0018); it also takes `--seed N` and `--labels data/map/south_pacific_anchors.csv`. Open `viewer/index.html` in a browser and pick the file. `node viewer/check.js viewer/replays/*.json` checks replays against the page's own rebuild.
+
+The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides --hex q,r` (a hex's closed sides and neighbours), `water --lat --lon` (why a position's hex has the water it has) and `generate`, which rebuilds `data/map/south_pacific.csv` from the Natural Earth files under `references/` (the exact command is in the file's header). `generate --anchors data/map/south_pacific_anchors.csv` applies the listed anchorages (decision 0017, decision 6); without it hexes keep their largest body of water. `render` draws `#` land, `+` coast, `%` coast with a closed side toward water and `.` sea, each row labelled with its r and the q of its first hex.
+
+`oob-derive` derives ship classes for a list of real ships from `data/oob` (decision 0020). With any problem it writes nothing and lists every problem; `--check` only reports; `--facts DIR` reads another facts directory.
+
+All three checks must pass before a commit. CI runs the same three. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build; `oob-check` run by hand lists the problems.
 
 ## Layout
 
@@ -29,17 +39,25 @@ All three checks must pass before a commit. CI runs the same three.
 | `crates/sim-data` | Loads reference data, maps and scenarios from files into `sim-core` types |
 | `crates/sim-cli` | Command-line runner |
 | `crates/sim-agent` | Agent interface (server mode, briefings, MCP). Placeholder |
-| `data/reference` | Ship classes, port sizes and aircraft types as CSV; search figures as TOML |
-| `data/map` | Maps as TOML |
+| `crates/map-tool` | Generates the hex map of the slice from open coastline data, and renders it, locates points and finds sea paths. May use floats and its own dependencies; nothing depends on it |
+| `crates/oob-check` | Checker for the order-of-battle facts in `data/oob`. Depends on nothing else in the workspace |
+| `crates/oob-derive` | Derives ship class figures for a list of real ships from `data/oob` and `data/derivation` (decision 0020). Depends only on `oob-check`; `sim-data` and `sim-core` only in its tests |
+| `data/reference` | Ship classes, port sizes and aircraft types as CSV; search and surface combat figures as TOML. Files `oob-derive` generates (`<name>.csv` with `<name>.sources.csv` and `<name>.ships.csv`) say so in their header and are never edited by hand |
+| `data/derivation` | The derivation rules and constants (`rules.toml`) and one ship list per scenario, for `oob-derive` |
+| `data/map` | The generated map of the slice as CSV (`south_pacific.csv`, decision 0017) and the anchorages it was generated with (`south_pacific_anchors.csv`), and small hand-drawn placeholder maps as TOML |
 | `data/scenarios` | One TOML file per scenario: starting state, seed, scripted orders |
+| `data/oob` | Order-of-battle facts: sourced historical statements as CSV. Research, not simulation data. Start with its `README.md` |
+| `docs/research/oob` | The facts format, the source policy, where sources disagree, and a note per battle and per topic |
 | `tests` | One test file per scenario, each with its hand calculation written out |
+| `viewer` | The read-only replay viewer (decision 0018): one HTML page with no build step, its check script, and `replays/` (git-ignored) for exported runs |
 
 Crate boundaries:
 
 - `sim-core` depends on nothing, not even other workspace crates. Keep it that way.
-- Only `sim-data` reads simulation data files.
+- Only `sim-data` reads simulation data files. The simulation never reads `data/oob`; only `oob-check` and `oob-derive` do.
 - `sim-cli` and the tests are the umpire. They may read truth through `World::umpire()`.
 - Anything that plays the game (the staff planner, an agent, the UI) gets a `SideView` and nothing else.
+- The replay viewer (`viewer/`) is an umpire's tool like `sim-cli`: it shows the truth. Nothing that plays the game may use it or the replay files.
 
 ## Determinism rules
 
@@ -88,6 +106,18 @@ The game must stay something a person and a model can both reason about. A rule 
 - **Nothing from the War in the Pacific: Admiral's Edition database.** Real data comes from open historical sources, with the source recorded.
 - Entity IDs in data files are stable. Never renumber or reuse one.
 
+### Order-of-battle facts
+
+`data/oob` holds what sources say about real ships, aircraft, weapons and battles. `data/reference` holds the figures the simulation uses. Decision 0015 and `docs/research/oob/database-design.md` give the full rules. The ones that matter most:
+
+- **No real ship, aircraft or weapon gets an invented rating.** A game figure for a real entity is derived from fact rows by a written rule, and can name the rule and the rows. The derivation now exists: `oob-derive`, with its rules in `data/derivation/rules.toml` and decision 0020. Until it can derive a ship, figures in `data/reference` stay placeholders.
+- **One row is one source's statement.** It carries its source, where in the source, the date read, a confidence and a standing. A missing fact is a missing row, listed in `gaps.csv`. Nothing is guessed.
+- **Cite what was read.** A figure a website quotes from a book cites the website. `docs/research/oob/source-policy.md` says which sources may be used.
+- **A source that disagrees gets its own row.** Rows are never overwritten to settle a disagreement. A person settles it and writes the reason on the row.
+- **A value has to earn `preferred`.** A lone weak row is `unconfirmed`, and a rule may read it only if the rule says so.
+- **Engagement rows are history to test against.** A scenario may take starting positions and alert states from them. Its result is compared with the recorded outcome and is never scripted to match it.
+- **Run `oob-check` after any change to `data/oob`.**
+
 ## Reference material
 
 `references/` is local only and ignored by git. It holds the designer's own copy of War in the Pacific: Admiral's Edition: the manuals as PDF and text, a map image and the installers.
@@ -97,6 +127,7 @@ The game must stay something a person and a model can both reason about. A rule 
 - **Read just in time.** Before planning a scenario, read the sections `docs/research/witpae-manual-index.md` lists for it. Report how WitP:AE models it, what the player had to do by hand, and what Flag Plot should do differently.
 - **The map image is for looking at only.** Do not trace hexes or take terrain from it. The real map is generated from open coastline data.
 - **Never commit anything from `references/`.** Do not run or unpack the installers.
+- **`references/natural-earth/`** holds public-domain coastlines (Natural Earth 1:10m land and minor islands, 5.1.1), used only by the map tool, never committed.
 
 ## Roles and delegation
 
@@ -126,4 +157,6 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search) and the movement change from decision 0005 are done. Next is scenario 4 (night surface action). See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Stage 4c1's tool is built (`oob-derive`, decision 0020); the real ships wait for facts. Next is stage 4c, Savo Island. See the spec's "First test scenarios" table.
+
+The order-of-battle facts cover what scenarios 4 to 6 need: the ships at Savo Island and Eastern Solomons, their classes, weapons and sensors, the aircraft of August and September 1942, and what happened at both battles. `data/oob/README.md` says how firm they are and what is missing.

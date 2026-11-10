@@ -1,0 +1,19 @@
+[package]
+name = "oob-derive"
+description = "Flag Plot derivation tool: ship class figures for a scenario, derived from the facts in data/oob (decision 0020)."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+oob-check = { path = "../oob-check" }
+toml.workspace = true
+serde.workspace = true
+csv.workspace = true
+
+[dev-dependencies]
+sim-core.workspace = true
+sim-data.workspace = true
+
+[lints]
+workspace = true

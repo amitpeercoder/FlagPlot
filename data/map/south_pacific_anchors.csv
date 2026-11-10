@@ -1,0 +1,20 @@
+# Anchorages that decide which body of water their hex stands for.
+#
+# The map tool gives each hex its largest body of water. Where a hex has water
+# on both sides of an island, that can be the wrong side for the anchorage in
+# it. A hex that holds an anchorage listed here stands for the body of water
+# nearest that anchorage instead, provided that body has at least 5 lattice
+# points. See docs/decisions/0017-map-and-pathfinding.md, decision 6.
+#
+# Real, sourced positions: not placeholder data. Decimal degrees, south and
+# west negative, WGS84. They are the same statements as the "preferred" rows
+# for these places in data/oob/place_positions.csv, from the order-of-battle
+# research.
+place,feature,lat,lon,source,locator,accessed
+rabaul,"Simpson Harbour, the anchorage",-4.22224,152.16544,geonames,https://www.geonames.org/2086663,2026-11-10
+buka,Buka Passage,-5.44605,154.65681,geonames,https://www.geonames.org/2098911,2026-11-10
+tulagi,Tulagi Harbour,-9.09975,160.15356,geonames,https://www.geonames.org/2102382,2026-11-10
+lunga-point,Lunga Point,-9.40538,160.02861,geonames,https://www.geonames.org/2106681,2026-11-10
+milne-bay,"Gili Gili anchorage, at the head of the bay",-10.33333,150.38333,geonames,https://www.geonames.org/2133495,2026-11-10
+espiritu-santo,"Segond Channel, the fleet anchorage",-15.55075,167.15375,geonames,https://www.geonames.org/2134856,2026-11-10
+noumea,"Grande Rade, the main roadstead",-22.25675,166.42019,geonames,https://www.geonames.org/2141120,2026-11-10

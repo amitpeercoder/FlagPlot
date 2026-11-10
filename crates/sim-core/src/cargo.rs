@@ -282,7 +282,7 @@ mod tests {
     use crate::map::{HexData, Map};
     use crate::orders::{Mission, OrderKind, OrderRequest, Origin, TaskForceOrder};
     use crate::refdata::{RefData, ShipClass, ShipKind};
-    use crate::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
+    use crate::state::{Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState};
     use crate::world::SimConfig;
 
     /// One task force for `world`: its ID, its hex, and its ships as
@@ -330,6 +330,14 @@ mod tests {
             fuel_capacity_t: Fixed::from_int(2000),
             endurance_nm: Fixed::from_int(8000),
             cargo_capacity_t: Fixed::from_int(3000),
+            main_guns: 0,
+            gun_rounds_per_min: Fixed::ZERO,
+            gun_rounds_per_gun: 0,
+            gun_damage: Fixed::ZERO,
+            torpedo_tubes: 0,
+            torpedo_damage: Fixed::ZERO,
+            toughness: Fixed::from_int(100),
+            radar: false,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -365,6 +373,11 @@ mod tests {
                         fuel_t: Fixed::from_int(2000),
                         supply_t: Fixed::from_int(*supply),
                         location: ShipLocation::TaskForce(tf(*id)),
+                        flotation_damage: Fixed::ZERO,
+                        fire_damage: Fixed::ZERO,
+                        gun_rounds: Fixed::ZERO,
+                        torpedoes_ready: false,
+                        systems: ShipSystems::ALL_WORKING,
                     },
                 );
             }
@@ -447,6 +460,39 @@ mod tests {
         );
         let expected_causes: Vec<Cause> = loaded.iter().map(|e| Cause::Event(e.id)).collect();
         assert_eq!(complete.causes, expected_causes);
+    }
+
+    #[test]
+    fn a_task_force_whose_ships_are_all_sunk_works_no_cargo() {
+        for action in [TaskForceOrder::Load, TaskForceOrder::Unload] {
+            let mut world = world(1, 1, 1000, &[(1, Hex::new(0, 0), &[(1, 0), (2, 500)])]);
+            for raw in [1, 2] {
+                let record = world.truth.ships.get_mut(&ship(raw)).expect("ship");
+                record.location = ShipLocation::Sunk;
+                record.flotation_damage = Fixed::from_int(100);
+            }
+            world
+                .truth
+                .task_forces
+                .get_mut(&tf(1))
+                .expect("task force")
+                .ships
+                .clear();
+            world.submit_orders(Side::Allied, vec![order(1, action)]);
+            world.resolve_day().expect("day resolves");
+
+            assert!(world.events().iter().all(|event| !matches!(
+                event.kind,
+                EventKind::CargoLoaded { .. }
+                    | EventKind::CargoUnloaded { .. }
+                    | EventKind::LoadingComplete { .. }
+                    | EventKind::UnloadingComplete { .. }
+            )));
+            let truth = world.umpire();
+            assert_eq!(truth.bases[&BaseId::new(1)].supply_t, Fixed::from_int(1000));
+            // The sunk ship keeps what it carried: nothing is unloaded from it.
+            assert_eq!(truth.ships[&ship(2)].supply_t, Fixed::from_int(500));
+        }
     }
 
     #[test]

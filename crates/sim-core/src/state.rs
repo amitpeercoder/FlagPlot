@@ -4,9 +4,11 @@
 //! agent gets a [`crate::view::SideView`] instead.
 //!
 //! Only the fields the scenarios so far need exist: position, fuel and
-//! route, supply aboard ships and in base stocks, and air groups (base,
-//! aircraft ready, mission and search arc). Damage, ammunition, pilots and
-//! land units arrive with the scenarios that use them.
+//! route, supply aboard ships and in base stocks, air groups (base,
+//! aircraft ready, mission and search arc), and for surface combat each
+//! ship's damage tracks, named systems and ammunition and each task force's alertness and
+//! rules of engagement. Pilots and land units arrive with the scenarios that
+//! use them.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -15,7 +17,8 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
 };
-use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting};
+use crate::map::Map;
+use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting, Stance, StragglerInstruction};
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -44,11 +47,14 @@ impl Side {
     }
 }
 
-/// Where a ship is. A ship is always in exactly one task force or one port.
+/// Where a ship is. A ship is always in exactly one task force, in exactly
+/// one port, or sunk.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ShipLocation {
     TaskForce(TaskForceId),
     Port(BaseId),
+    /// Sunk. In no task force and no port, and out of every rule.
+    Sunk,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -62,6 +68,137 @@ pub struct Ship {
     /// Supply aboard, in tons.
     pub supply_t: Fixed,
     pub location: ShipLocation,
+    /// Flotation damage, 0 to 100. At 100 the ship sinks.
+    pub flotation_damage: Fixed,
+    /// Fire damage, 0 to 100. Any fire lights the ship at night.
+    pub fire_damage: Fixed,
+    /// Gun rounds left aboard. Never negative.
+    pub gun_rounds: Fixed,
+    /// True while the ship still has its torpedoes to fire.
+    pub torpedoes_ready: bool,
+    /// The state of each named system (decision 0016).
+    pub systems: ShipSystems,
+}
+
+/// A named system of a ship that a hit can knock down (decision 0016).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ShipSystem {
+    Propulsion,
+    FireControl,
+    MainBattery,
+    TorpedoMounts,
+}
+
+impl ShipSystem {
+    /// Every system, in code order.
+    pub const ALL: [ShipSystem; 4] = [
+        ShipSystem::Propulsion,
+        ShipSystem::FireControl,
+        ShipSystem::MainBattery,
+        ShipSystem::TorpedoMounts,
+    ];
+
+    /// A stable number for the system. Part of the state hash and of the
+    /// order of the system hit bands. Never renumber it; add new systems at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            ShipSystem::Propulsion => 1,
+            ShipSystem::FireControl => 2,
+            ShipSystem::MainBattery => 3,
+            ShipSystem::TorpedoMounts => 4,
+        }
+    }
+
+    /// The system's name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            ShipSystem::Propulsion => "propulsion",
+            ShipSystem::FireControl => "fire control",
+            ShipSystem::MainBattery => "main battery",
+            ShipSystem::TorpedoMounts => "torpedo mounts",
+        }
+    }
+}
+
+/// How well a system works.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SystemState {
+    Working,
+    Degraded,
+    Out,
+}
+
+impl SystemState {
+    /// A stable number for the state. Part of the state hash. Never
+    /// renumber it.
+    pub const fn code(self) -> u8 {
+        match self {
+            SystemState::Working => 1,
+            SystemState::Degraded => 2,
+            SystemState::Out => 3,
+        }
+    }
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            SystemState::Working => "working",
+            SystemState::Degraded => "degraded",
+            SystemState::Out => "out",
+        }
+    }
+
+    /// One level worse: working to degraded, degraded to out. Out stays out.
+    pub const fn step_down(self) -> SystemState {
+        match self {
+            SystemState::Working => SystemState::Degraded,
+            SystemState::Degraded | SystemState::Out => SystemState::Out,
+        }
+    }
+}
+
+/// The state of every named system of one ship. A system the ship's class
+/// does not have stays working.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ShipSystems {
+    pub propulsion: SystemState,
+    pub fire_control: SystemState,
+    pub main_battery: SystemState,
+    pub torpedo_mounts: SystemState,
+}
+
+impl ShipSystems {
+    /// Every system working.
+    pub const ALL_WORKING: ShipSystems = ShipSystems {
+        propulsion: SystemState::Working,
+        fire_control: SystemState::Working,
+        main_battery: SystemState::Working,
+        torpedo_mounts: SystemState::Working,
+    };
+
+    pub const fn get(&self, system: ShipSystem) -> SystemState {
+        match system {
+            ShipSystem::Propulsion => self.propulsion,
+            ShipSystem::FireControl => self.fire_control,
+            ShipSystem::MainBattery => self.main_battery,
+            ShipSystem::TorpedoMounts => self.torpedo_mounts,
+        }
+    }
+
+    pub fn set(&mut self, system: ShipSystem, state: SystemState) {
+        match system {
+            ShipSystem::Propulsion => self.propulsion = state,
+            ShipSystem::FireControl => self.fire_control = state,
+            ShipSystem::MainBattery => self.main_battery = state,
+            ShipSystem::TorpedoMounts => self.torpedo_mounts = state,
+        }
+    }
+}
+
+impl Default for ShipSystems {
+    fn default() -> ShipSystems {
+        ShipSystems::ALL_WORKING
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -99,7 +236,9 @@ impl TaskForceStatus {
     }
 }
 
-/// The waypoints a task force is steaming to.
+/// The waypoints a task force is steaming to. Between waypoints it follows
+/// the shortest path over hexes ships can enter (decision 0017); the path
+/// itself is not stored, only the waypoints and which one is next.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Route {
     pub waypoints: Vec<Hex>,
@@ -115,6 +254,38 @@ pub struct CargoOrder {
     pub order: OrderId,
 }
 
+/// How a task force behaves in a surface fight: whether it fights or tries
+/// to slip away, and how much loss makes it break off.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct RulesOfEngagement {
+    pub stance: Stance,
+    /// The share of ships sunk or crippled, 0 to 1, at which the force
+    /// breaks off.
+    pub break_off: Fixed,
+    /// What to do about stragglers (decision 11 of
+    /// `docs/decisions/0016-systems-and-stragglers.md`).
+    pub stragglers: StragglerInstruction,
+    /// The share, 0 to 1, of the ships with working propulsion the force
+    /// keeps when it detaches stragglers.
+    pub keep_share: Fixed,
+}
+
+impl RulesOfEngagement {
+    /// Engage, break off at half the ships lost or crippled, keep stragglers.
+    pub const DEFAULT: RulesOfEngagement = RulesOfEngagement {
+        stance: Stance::Engage,
+        break_off: Fixed::from_raw(500_000),
+        stragglers: StragglerInstruction::Keep,
+        keep_share: Fixed::ZERO,
+    };
+}
+
+impl Default for RulesOfEngagement {
+    fn default() -> RulesOfEngagement {
+        RulesOfEngagement::DEFAULT
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TaskForce {
     pub id: TaskForceId,
@@ -127,10 +298,13 @@ pub struct TaskForce {
     /// The hex whose centre the task force last left, or is sitting on.
     /// Read only by movement, route intake, the hash and the leg invariants.
     /// Everything else asks [`TaskForce::position`].
+    ///
+    /// A force is always in a navigable hex: this one, and `toward_hex` when
+    /// set, are hexes ships can enter (decision 0017; an invariant checks it).
     pub from_hex: Hex,
     /// The hex the task force is steaming toward. `Some` exactly when
     /// `progress_nm` is above zero, and then always a neighbour of
-    /// `from_hex`.
+    /// `from_hex` that ships can enter.
     pub toward_hex: Option<Hex>,
     /// Nautical miles covered from the centre of `from_hex` toward the centre
     /// of `toward_hex`. At least 0 and less than one hex.
@@ -151,6 +325,16 @@ pub struct TaskForce {
     /// the latest sighting this task force noticed (decision 17 of
     /// `docs/decisions/0012-search-and-contacts.md`).
     pub noticed_sighted_at_hours: Option<Fixed>,
+    /// Whether the task force is alert (decision 6 of
+    /// `docs/decisions/0014-surface-combat.md`).
+    pub alert: bool,
+    /// The standing rules of engagement.
+    pub rules_of_engagement: RulesOfEngagement,
+    /// The standing order that set the rules of engagement, if any.
+    pub rules_order: Option<OrderId>,
+    /// The base the force heads for when it retires or sends stragglers home
+    /// (decision 0016). It must be a base of the force's own side.
+    pub home_port: Option<BaseId>,
 }
 
 impl TaskForce {
@@ -167,31 +351,48 @@ impl TaskForce {
     }
 
     /// Where a new route starts when it is accepted now, and whether the task
-    /// force turns back to get there (decision 0005, decision 5).
+    /// force turns back to get there (decision 0005, decision 5, amended by
+    /// decision 0017, decision 14).
     ///
     /// At a centre this is `(false, from_hex)`. Between centres the force
     /// goes on to the hex ahead or turns back to the hex it left, whichever
-    /// is the shorter trip to `first_waypoint`. Going on costs the rest of
-    /// the leg plus the hexes from the hex ahead. Turning back costs the
-    /// miles already covered plus the hexes from the hex it left. A tie goes
-    /// ahead. With no waypoint there is nothing to compare, so it goes ahead.
+    /// is the shorter trip to `first_waypoint` by sea. Going on costs the
+    /// rest of the leg plus 40 nm for each step from the hex ahead. Turning
+    /// back costs the miles already covered plus 40 nm for each step from
+    /// the hex it left. A tie goes ahead. If only one side can reach the
+    /// waypoint, that side is taken. If neither can, the result is `None`
+    /// and the order must be rejected. With no waypoint there is nothing to
+    /// compare, so it goes ahead.
     ///
-    /// Pure: used by both intake validation and applying the order.
-    pub fn reroute_centre(&self, first_waypoint: Option<Hex>) -> (bool, Hex) {
+    /// Pure: used by both intake validation and applying the order, so they
+    /// cannot disagree.
+    pub fn reroute_centre(&self, map: &Map, first_waypoint: Option<Hex>) -> Option<(bool, Hex)> {
         let Some(toward) = self.toward_hex else {
-            return (false, self.from_hex);
+            return Some((false, self.from_hex));
         };
         let Some(waypoint) = first_waypoint else {
-            return (false, toward);
+            return Some((false, toward));
         };
+        // Turning back never has to cross a closed side. A force between
+        // centres is on an open step from `from_hex` to `toward_hex` (the
+        // invariant `TaskForceLegCrossesClosedSide`), and `Map::can_step` is
+        // symmetric, so the step back from `toward_hex` to `from_hex` is
+        // open too. Both distances below are therefore reached by open steps
+        // only, and the cost of turning back is always a real trip.
+        let distances = map.sea_distances_to(waypoint);
         let one_hex = Fixed::from_int(HEX_NM);
-        let cost_ahead =
-            (one_hex - self.progress_nm) + one_hex * i64::from(toward.distance(waypoint));
-        let cost_back = self.progress_nm + one_hex * i64::from(self.from_hex.distance(waypoint));
-        if cost_back < cost_ahead {
-            (true, self.from_hex)
-        } else {
-            (false, toward)
+        let cost_ahead = distances
+            .get(&toward)
+            .map(|steps| (one_hex - self.progress_nm) + one_hex * i64::from(*steps));
+        let cost_back = distances
+            .get(&self.from_hex)
+            .map(|steps| self.progress_nm + one_hex * i64::from(*steps));
+        match (cost_ahead, cost_back) {
+            (None, None) => None,
+            (Some(_), None) => Some((false, toward)),
+            (None, Some(_)) => Some((true, self.from_hex)),
+            (Some(ahead), Some(back)) if back < ahead => Some((true, self.from_hex)),
+            (Some(_), Some(_)) => Some((false, toward)),
         }
     }
 
@@ -225,6 +426,10 @@ impl TaskForce {
             arrived_at_hours: None,
             arrival_event: None,
             noticed_sighted_at_hours: None,
+            alert: true,
+            rules_of_engagement: RulesOfEngagement::DEFAULT,
+            rules_order: None,
+            home_port: None,
         }
     }
 }
