@@ -1,8 +1,8 @@
 //! Unit-level orders: the only way to influence the simulation.
 //!
 //! Only the orders the scenarios so far need exist: task force orders (route,
-//! speed, mission, load and unload) and air group orders (mission and search
-//! arc). The spec lists the full set (form, disband, rules of engagement and
+//! speed, mission, load, unload and rules of engagement) and air group orders
+//! (mission and search arc). The spec lists the full set (form, disband and
 //! so on). They arrive with the scenarios that use them.
 
 use core::fmt;
@@ -76,6 +76,27 @@ pub enum SpeedSetting {
     Full,
 }
 
+/// Whether a task force fights or tries to slip away from a surface fight.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Stance {
+    /// Fights when it can.
+    Engage,
+    /// Slips away from an enemy that has not sighted it, and breaks off at
+    /// the end of the first round in which it is fired on.
+    Avoid,
+}
+
+impl Stance {
+    /// A stable number for the stance. Part of the state hash. Never
+    /// renumber it; add new stances at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Stance::Engage => 1,
+            Stance::Avoid => 2,
+        }
+    }
+}
+
 /// What a standing cargo order does at a port.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum CargoAction {
@@ -109,6 +130,13 @@ pub enum TaskForceOrder {
     /// stops. A standing order of the "cargo" kind: it replaces a load order,
     /// and neither cancels the route or the speed.
     Unload,
+    /// Set the rules of engagement. A standing order of its own kind: it
+    /// replaces the rules of engagement and nothing else. `break_off` must
+    /// be from 0 to 1.
+    SetRulesOfEngagement {
+        stance: Stance,
+        break_off: Fixed,
+    },
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -191,6 +219,8 @@ pub enum RejectReason {
     /// A search range is zero, negative, or beyond the aircraft type's
     /// search range.
     InvalidSearchRange { range_nm: Fixed, max_nm: Fixed },
+    /// A break-off level is below 0 or above 1.
+    BreakOffOutOfRange(Fixed),
 }
 
 impl fmt::Display for RejectReason {
@@ -214,6 +244,9 @@ impl fmt::Display for RejectReason {
                 f,
                 "search range {range_nm} nm is not above 0 and at most the aircraft's {max_nm} nm"
             ),
+            RejectReason::BreakOffOutOfRange(level) => {
+                write!(f, "break-off level {level} is not between 0 and 1")
+            }
         }
     }
 }

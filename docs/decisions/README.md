@@ -21,5 +21,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0011 | Cargo handling: berths and lighters by port size, load and unload orders. Placeholder figures | Confirmed |
 | 0012 | Air search by coverage, reports with independent errors, contacts that age and merge. Placeholder figures | Confirmed |
 | 0013 | A random number key may name a second entity | Confirmed |
+| 0014 | Surface combat: sight first, fire by expected hits, three damage tracks. Scenario 4 built in three stages. Placeholder figures | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

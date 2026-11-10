@@ -10,7 +10,7 @@ use sim_core::ids::{
 };
 use sim_core::orders::{
     AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, SpeedSetting,
-    TaskForceOrder,
+    Stance, TaskForceOrder,
 };
 use sim_core::state::{AirGroup, Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 use sim_core::{DaySummary, World};
@@ -20,6 +20,7 @@ use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
     load_aircraft_types, load_port_sizes, load_search_figures, load_ship_classes,
+    load_surface_combat_figures,
 };
 
 #[derive(Deserialize)]
@@ -41,6 +42,8 @@ struct ScenarioFile {
     aircraft_types: String,
     /// Path to the search figures file, relative to the scenario file.
     search: String,
+    /// Path to the surface combat figures file, relative to the scenario file.
+    surface_combat: String,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -89,6 +92,8 @@ struct TaskForceSpec {
     q: Option<i32>,
     r: Option<i32>,
     mission: MissionSpec,
+    /// Whether the task force starts alert. Defaults to true.
+    alert: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -104,6 +109,9 @@ struct ShipSpec {
     /// Exactly one of `task_force` and `port` must be given.
     task_force: Option<u32>,
     port: Option<u32>,
+    /// Gun rounds aboard at the start. Defaults to the guns times the
+    /// rounds each carries.
+    gun_rounds: Option<Quantity>,
 }
 
 #[derive(Deserialize)]
@@ -148,6 +156,26 @@ enum ActionSpec {
         to_deg: i32,
         range_nm: Quantity,
     },
+    SetRulesOfEngagement {
+        stance: StanceSpec,
+        break_off: Quantity,
+    },
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum StanceSpec {
+    Engage,
+    Avoid,
+}
+
+impl From<StanceSpec> for Stance {
+    fn from(spec: StanceSpec) -> Stance {
+        match spec {
+            StanceSpec::Engage => Stance::Engage,
+            StanceSpec::Avoid => Stance::Avoid,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -272,6 +300,9 @@ impl Scenario {
         ref_data.port_sizes = load_port_sizes(&folder.join(&file.port_sizes))?;
         ref_data.aircraft_types = load_aircraft_types(&folder.join(&file.aircraft_types))?;
         ref_data.search = Some(load_search_figures(&folder.join(&file.search))?);
+        ref_data.surface_combat = Some(load_surface_combat_figures(
+            &folder.join(&file.surface_combat),
+        )?);
 
         let mut truth = TruthState::default();
 
@@ -350,13 +381,14 @@ impl Scenario {
                     )))
                 }
             };
-            let task_force = TaskForce::at(
+            let mut task_force = TaskForce::at(
                 id,
                 spec.name.clone(),
                 spec.side.into(),
                 hex,
                 spec.mission.into(),
             );
+            task_force.alert = spec.alert.unwrap_or(true);
             if truth.task_forces.insert(id, task_force).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
@@ -392,6 +424,15 @@ impl Scenario {
                     )))
                 }
             };
+            let ship_class = &ref_data.ship_classes[&class];
+            let gun_rounds = match &spec.gun_rounds {
+                Some(quantity) => quantity
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id}: gun_rounds {e}")))?,
+                None => Fixed::from_int(
+                    i64::from(ship_class.main_guns) * i64::from(ship_class.gun_rounds_per_gun),
+                ),
+            };
             let ship = Ship {
                 id,
                 name: spec.name.clone(),
@@ -408,6 +449,11 @@ impl Scenario {
                     None => Fixed::ZERO,
                 },
                 location,
+                flotation_damage: Fixed::ZERO,
+                system_damage: Fixed::ZERO,
+                fire_damage: Fixed::ZERO,
+                gun_rounds,
+                torpedoes_ready: ship_class.torpedo_tubes > 0,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -444,6 +490,14 @@ impl Scenario {
                         }
                         ActionSpec::Load {} => TaskForceOrder::Load,
                         ActionSpec::Unload {} => TaskForceOrder::Unload,
+                        ActionSpec::SetRulesOfEngagement { stance, break_off } => {
+                            TaskForceOrder::SetRulesOfEngagement {
+                                stance: (*stance).into(),
+                                break_off: break_off
+                                    .to_fixed()
+                                    .map_err(|e| fail(format!("break_off on day {day} {e}")))?,
+                            }
+                        }
                         ActionSpec::SetAirMission { .. } => {
                             return Err(wrong_target("set_air_mission", "air_group"))
                         }
@@ -562,6 +616,7 @@ impl Scenario {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sim_core::state::RulesOfEngagement;
 
     #[derive(Deserialize)]
     struct Holder {
@@ -595,6 +650,7 @@ ship_classes = "../reference/ship_classes.csv"
 port_sizes = "../reference/port_sizes.csv"
 aircraft_types = "../reference/aircraft_types.csv"
 search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
 
 [[base]]
 id = 1
@@ -711,6 +767,172 @@ r = 0
         assert!(parse_with(&order("task_force = 1", "kind = \"load\"\nspeeed = 5")).is_err());
         let typo = "kind = \"load\"\nintnet = 1";
         assert!(parse_with(&order("task_force = 1", typo)).is_err());
+    }
+
+    fn ship(extra: &str) -> String {
+        format!(
+            "[[ship]]\nid = 1\nname = \"S\"\nclass = 1\nside = \"allied\"\nfuel_t = 100\ntask_force = 1\n{extra}\n"
+        )
+    }
+
+    fn with_force(extra: &str) -> String {
+        format!("{}{}", task_force("at_base = 1"), extra)
+    }
+
+    #[test]
+    fn a_task_force_is_alert_unless_the_scenario_says_otherwise() {
+        let truth = |scenario: Scenario| scenario.world.umpire().clone();
+        let default = truth(parse_with(&task_force("at_base = 1")).expect("loads"));
+        let force = &default.task_forces[&TaskForceId::new(1)];
+        assert!(force.alert);
+        assert_eq!(force.rules_of_engagement, RulesOfEngagement::DEFAULT);
+        assert_eq!(force.rules_order, None);
+        for (text, expected) in [("alert = true", true), ("alert = false", false)] {
+            let loaded =
+                truth(parse_with(&task_force(&format!("at_base = 1\n{text}"))).expect("loads"));
+            assert_eq!(loaded.task_forces[&TaskForceId::new(1)].alert, expected);
+        }
+        assert!(parse_with(&task_force("at_base = 1\nalert = \"no\"")).is_err());
+        assert!(parse_with(&task_force("at_base = 1\nalert = 0")).is_err());
+    }
+
+    #[test]
+    fn a_ship_starts_with_the_guns_it_carries_and_its_torpedoes() {
+        let scenario = parse_with(&with_force(&ship(""))).expect("loads");
+        let truth = scenario.world.umpire();
+        let cruiser = &truth.ships[&ShipId::new(1)];
+        // Class 1: 8 guns x 100 rounds, 8 tubes.
+        assert_eq!(cruiser.gun_rounds, Fixed::from_int(800));
+        assert!(cruiser.torpedoes_ready);
+        assert_eq!(cruiser.flotation_damage, Fixed::ZERO);
+        assert_eq!(cruiser.system_damage, Fixed::ZERO);
+        assert_eq!(cruiser.fire_damage, Fixed::ZERO);
+
+        // Class 3 is a cargo ship: no guns and no tubes.
+        let cargo = ship("").replace("class = 1", "class = 3");
+        let scenario = parse_with(&with_force(&cargo)).expect("loads");
+        let ship = &scenario.world.umpire().ships[&ShipId::new(1)];
+        assert_eq!(ship.gun_rounds, Fixed::ZERO);
+        assert!(!ship.torpedoes_ready);
+    }
+
+    #[test]
+    fn gun_rounds_are_a_whole_number_or_a_decimal_string() {
+        let rounds = |text: &str| {
+            parse_with(&with_force(&ship(&format!("gun_rounds = {text}"))))
+                .map(|s| s.world.umpire().ships[&ShipId::new(1)].gun_rounds)
+        };
+        assert_eq!(rounds("120").expect("loads"), Fixed::from_int(120));
+        assert_eq!(
+            rounds("\"120.5\"").expect("loads"),
+            Fixed::from_ratio(241, 2)
+        );
+        assert_eq!(rounds("0").expect("loads"), Fixed::ZERO);
+        assert!(rounds("120.5").is_err());
+        assert!(rounds("\"many\"").is_err());
+        // A negative count starts the game in a state that breaks an
+        // invariant.
+        let message = rounds("-1").expect_err("rejected").message;
+        assert!(message.contains("negative gun rounds"), "{message}");
+    }
+
+    fn roe(body: &str) -> String {
+        order(
+            "task_force = 1",
+            &format!("kind = \"set_rules_of_engagement\"\n{body}"),
+        )
+    }
+
+    #[test]
+    fn a_rules_of_engagement_order_loads() {
+        let scenario = parse_with(&roe("stance = \"avoid\"\nbreak_off = \"0.25\"")).expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::SetRulesOfEngagement {
+                    stance: Stance::Avoid,
+                    break_off: Fixed::from_ratio(1, 4),
+                },
+            }
+        );
+        let scenario = parse_with(&roe("stance = \"engage\"\nbreak_off = \"1\"")).expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::SetRulesOfEngagement {
+                    stance: Stance::Engage,
+                    break_off: Fixed::ONE,
+                },
+            }
+        );
+        // A whole number works as for any quantity.
+        parse_with(&roe("stance = \"engage\"\nbreak_off = 1")).expect("loads");
+    }
+
+    #[test]
+    fn rules_of_engagement_order_errors_are_rejected() {
+        // A float, text that is no number, an unknown stance, a missing or
+        // misspelled field.
+        assert!(parse_with(&roe("stance = \"engage\"\nbreak_off = 0.5")).is_err());
+        assert!(parse_with(&roe("stance = \"engage\"\nbreak_off = \"half\"")).is_err());
+        let message = error_of(&roe("stance = \"engage\"\nbreak_off = \"half\""));
+        assert!(message.contains("break_off on day 1"), "{message}");
+        assert!(parse_with(&roe("stance = \"charge\"\nbreak_off = \"0.5\"")).is_err());
+        assert!(parse_with(&roe("stance = \"engage\"")).is_err());
+        assert!(parse_with(&roe("break_off = \"0.5\"")).is_err());
+        assert!(parse_with(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nbreak_offf = 1"
+        ))
+        .is_err());
+        // It is addressed to a task force, not an air group.
+        let to_group = order(
+            "air_group = 1",
+            "kind = \"set_rules_of_engagement\"\nstance = \"engage\"\nbreak_off = \"0.5\"",
+        );
+        assert!(error_of(&to_group).contains("air_group"));
+    }
+
+    #[test]
+    fn the_surface_combat_path_is_required_and_the_file_is_loaded() {
+        let scenario = parse_with(&task_force("at_base = 1")).expect("loads");
+        let figures = scenario
+            .world
+            .ref_data()
+            .surface_combat
+            .as_ref()
+            .expect("the loader supplies the figures");
+        assert_eq!(figures.max_rounds, 6);
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let text = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            "",
+        );
+        let message = Scenario::parse(&text, &path).expect_err("rejected").message;
+        assert!(message.contains("surface_combat"), "{message}");
+
+        let text = HEAD.replace("../reference/surface_combat.toml", "../reference/nope.toml");
+        assert!(Scenario::parse(&text, &path).is_err());
+    }
+
+    #[test]
+    fn the_night_action_scenario_loads_and_builds_a_world() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/scenarios/04a_night_action.toml");
+        let scenario = Scenario::load(&path).expect("scenario 4a loads");
+        let truth = scenario.world.umpire();
+        assert_eq!(truth.ships.len(), 6);
+        assert!(truth.task_forces[&TaskForceId::new(1)].alert);
+        assert!(!truth.task_forces[&TaskForceId::new(2)].alert);
+        assert!(truth
+            .ships
+            .values()
+            .all(|ship| ship.gun_rounds == Fixed::from_int(800) && ship.torpedoes_ready));
+        assert_eq!(scenario.script[&1].len(), 4);
     }
 
     #[test]

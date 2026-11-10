@@ -29,7 +29,7 @@ All three checks must pass before a commit. CI runs the same three.
 | `crates/sim-data` | Loads reference data, maps and scenarios from files into `sim-core` types |
 | `crates/sim-cli` | Command-line runner |
 | `crates/sim-agent` | Agent interface (server mode, briefings, MCP). Placeholder |
-| `data/reference` | Ship classes, port sizes and aircraft types as CSV; search figures as TOML |
+| `data/reference` | Ship classes, port sizes and aircraft types as CSV; search and surface combat figures as TOML |
 | `data/map` | Maps as TOML |
 | `data/scenarios` | One TOML file per scenario: starting state, seed, scripted orders |
 | `tests` | One test file per scenario, each with its hand calculation written out |
@@ -126,4 +126,4 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search) and the movement change from decision 0005 are done. Next is scenario 4 (night surface action). See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stage 4a of scenario 4 (the surface combat rule, decision 0014) are done. Next is stage 4b, the real map and pathfinding. See the spec's "First test scenarios" table.

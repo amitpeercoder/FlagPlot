@@ -1,0 +1,10 @@
+# PLACEHOLDER MAP. A strip of open sea, used by scenario 4a.
+# The geography is invented. The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 12]
+r = [-1, 1]

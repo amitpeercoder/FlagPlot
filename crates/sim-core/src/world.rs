@@ -92,7 +92,8 @@ pub struct World {
 
 impl World {
     /// Starts a game. Fails if the reference data is unusable (a ship class,
-    /// port size, aircraft type or the search figures with bad figures), a
+    /// port size, aircraft type, the search figures or the surface combat
+    /// figures with bad figures), a
     /// ship has an unknown class, an air group has an unknown aircraft type,
     /// there are air groups but no search figures, a base
     /// sits in a port size with no entry in the port table, or the starting
@@ -116,6 +117,13 @@ impl World {
         if let Some(problem) = ref_data.search.as_ref().and_then(|search| search.problem()) {
             return Err(SimError::InvalidSetup(problem));
         }
+        if let Some(problem) = ref_data
+            .surface_combat
+            .as_ref()
+            .and_then(|figures| figures.problem())
+        {
+            return Err(SimError::InvalidSetup(problem));
+        }
         for group in truth.air_groups.values() {
             if !ref_data.aircraft_types.contains_key(&group.aircraft_type) {
                 return Err(SimError::InvalidSetup(format!(
@@ -127,6 +135,12 @@ impl World {
         if !truth.air_groups.is_empty() && ref_data.search.is_none() {
             return Err(SimError::InvalidSetup(
                 "there are air groups but no search figures".to_string(),
+            ));
+        }
+        if ref_data.surface_combat.is_some() && ref_data.search.is_none() {
+            // A fight reports what it sighted through the search figures.
+            return Err(SimError::InvalidSetup(
+                "there are surface combat figures but no search figures".to_string(),
             ));
         }
         for ship in truth.ships.values() {
