@@ -8,8 +8,10 @@ use core::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{BaseId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::RejectReason;
+use crate::refdata::ShipKind;
+use crate::state::Side;
 use crate::time::{ClockTime, Pulse};
 
 /// Something that led to an event.
@@ -118,6 +120,56 @@ pub enum EventKind {
         /// Elapsed hours since the scenario began.
         elapsed_hours: Fixed,
     },
+    /// An air group flew its search arc from its base.
+    SearchFlown {
+        air_group: AirGroupId,
+        base: BaseId,
+        from_deg: u32,
+        to_deg: u32,
+        range_nm: Fixed,
+        aircraft: u32,
+    },
+    /// One roll of an air group looking for one task force in its arc.
+    SearchAttempt {
+        air_group: AirGroupId,
+        task_force: TaskForceId,
+        distance_nm: Fixed,
+        chance: Fixed,
+        sighted: bool,
+    },
+    /// A sighting report reached the searching side's belief.
+    ReportReceived {
+        side: Side,
+        contact: ContactId,
+        hex: Hex,
+        ship_count: u32,
+        kind: ShipKind,
+        confidence: Fixed,
+        /// True if the report made a new contact, false if it refreshed one.
+        created: bool,
+    },
+    /// A sighted task force noticed the aircraft that sighted it.
+    SightingNoticed {
+        task_force: TaskForceId,
+        air_group: AirGroupId,
+        /// Elapsed hours since the scenario began, at the start of the pulse.
+        elapsed_hours: Fixed,
+    },
+    /// A contact went a pulse without a fresh report.
+    ContactAged {
+        side: Side,
+        contact: ContactId,
+        age_pulses: u32,
+        confidence: Fixed,
+    },
+    /// A contact's confidence fell below the floor and it was forgotten.
+    /// The age and confidence are what it would have had.
+    ContactDropped {
+        side: Side,
+        contact: ContactId,
+        age_pulses: u32,
+        confidence: Fixed,
+    },
 }
 
 impl EventKind {
@@ -157,6 +209,28 @@ impl EventKind {
             | EventKind::UnloadingComplete {
                 task_force, base, ..
             } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
+            EventKind::SearchFlown {
+                air_group, base, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            EventKind::SearchAttempt {
+                air_group,
+                task_force,
+                ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::ReportReceived { contact, .. }
+            | EventKind::ContactAged { contact, .. }
+            | EventKind::ContactDropped { contact, .. } => vec![EntityRef::Contact(*contact)],
+            EventKind::SightingNoticed {
+                task_force,
+                air_group,
+                ..
+            } => vec![
+                EntityRef::TaskForce(*task_force),
+                EntityRef::AirGroup(*air_group),
+            ],
         }
     }
 }
@@ -241,6 +315,73 @@ impl fmt::Display for EventKind {
                 "{task_force} completed unloading at {base} at {}",
                 ClockTime::from_elapsed(*elapsed_hours)
             ),
+            EventKind::SearchFlown {
+                air_group,
+                base,
+                from_deg,
+                to_deg,
+                range_nm,
+                aircraft,
+            } => write!(
+                f,
+                "{air_group} searched {from_deg:03}-{to_deg:03} out to {range_nm} nm from {base} with {aircraft} aircraft"
+            ),
+            EventKind::SearchAttempt {
+                air_group,
+                task_force,
+                distance_nm,
+                chance,
+                sighted,
+            } => write!(
+                f,
+                "{air_group} searched for {task_force} at {distance_nm} nm, chance {chance}: {}",
+                if *sighted { "sighted" } else { "not sighted" }
+            ),
+            EventKind::ReportReceived {
+                side,
+                contact,
+                hex,
+                ship_count,
+                kind,
+                confidence,
+                created,
+            } => write!(
+                f,
+                "{} report: {ship_count} {}, {}, at {hex}, confidence {confidence}: {} {contact}",
+                side.name(),
+                if *ship_count == 1 { "ship" } else { "ships" },
+                kind.name(),
+                if *created { "new" } else { "refreshed" }
+            ),
+            EventKind::SightingNoticed {
+                task_force,
+                air_group,
+                elapsed_hours,
+            } => write!(
+                f,
+                "{task_force} noticed it was sighted by {air_group} at {}",
+                ClockTime::from_elapsed(*elapsed_hours)
+            ),
+            EventKind::ContactAged {
+                side,
+                contact,
+                age_pulses,
+                confidence,
+            } => write!(
+                f,
+                "{} {contact} aged to {age_pulses} pulses, confidence {confidence}",
+                side.name()
+            ),
+            EventKind::ContactDropped {
+                side,
+                contact,
+                age_pulses,
+                confidence,
+            } => write!(
+                f,
+                "{} {contact} dropped at {age_pulses} pulses, confidence {confidence}",
+                side.name()
+            ),
         }
     }
 }
@@ -302,6 +443,11 @@ impl EventLog {
             breakdown,
         });
         id
+    }
+
+    /// The ID the next recorded event will get.
+    pub(crate) fn next_id(&self) -> EventId {
+        EventId::new(u32::try_from(self.events.len() + 1).expect("ran out of event IDs"))
     }
 
     pub fn len(&self) -> usize {

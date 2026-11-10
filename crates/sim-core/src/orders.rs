@@ -1,13 +1,15 @@
 //! Unit-level orders: the only way to influence the simulation.
 //!
-//! Only the task force orders scenarios 1 and 2 need exist so far (route,
-//! speed, mission, load and unload). The spec lists the full set (form, disband, rules of engagement, air group orders and so
-//! on). They arrive with the scenarios that use them.
+//! Only the orders the scenarios so far need exist: task force orders (route,
+//! speed, mission, load and unload) and air group orders (mission and search
+//! arc). The spec lists the full set (form, disband, rules of engagement and
+//! so on). They arrive with the scenarios that use them.
 
 use core::fmt;
 
+use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{EntityRef, IntentId, OrderId, TaskForceId};
+use crate::ids::{AirGroupId, EntityRef, IntentId, OrderId, TaskForceId};
 use crate::state::Side;
 
 /// Who issued an order.
@@ -42,6 +44,27 @@ pub enum Mission {
     Carrier,
     Bombardment,
     Escort,
+}
+
+/// What an air group is doing.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum AirMission {
+    /// Stays on the ground.
+    #[default]
+    Rest,
+    /// Searches its arc.
+    Search,
+}
+
+impl AirMission {
+    /// A stable number for the mission. Part of the state hash. Never
+    /// renumber it.
+    pub const fn code(self) -> u8 {
+        match self {
+            AirMission::Rest => 1,
+            AirMission::Search => 2,
+        }
+    }
 }
 
 /// How fast a task force steams.
@@ -88,12 +111,32 @@ pub enum TaskForceOrder {
     Unload,
 }
 
+/// An order to an air group. Each is a standing order of its own kind: a new
+/// mission order replaces the mission and leaves the arc alone, and a new arc
+/// order replaces the arc and leaves the mission alone.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum AirGroupOrder {
+    SetAirMission(AirMission),
+    /// Search from `from_deg` clockwise to `to_deg`, out to `range_nm`.
+    /// Bearings are signed so that a negative one reaches intake and is
+    /// rejected there.
+    SetSearchArc {
+        from_deg: i32,
+        to_deg: i32,
+        range_nm: Fixed,
+    },
+}
+
 /// An order together with the unit it is for.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum OrderKind {
     TaskForce {
         target: TaskForceId,
         order: TaskForceOrder,
+    },
+    AirGroup {
+        target: AirGroupId,
+        order: AirGroupOrder,
     },
 }
 
@@ -102,6 +145,7 @@ impl OrderKind {
     pub fn target(&self) -> EntityRef {
         match self {
             OrderKind::TaskForce { target, .. } => EntityRef::TaskForce(*target),
+            OrderKind::AirGroup { target, .. } => EntityRef::AirGroup(*target),
         }
     }
 }
@@ -128,9 +172,9 @@ pub struct Order {
 /// Why an order was rejected at intake.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum RejectReason {
-    /// The target does not exist.
-    UnknownTarget,
-    /// The target belongs to the other side.
+    /// The target is not a unit of the issuing side. The same reason covers
+    /// a unit that does not exist and one that belongs to the enemy, so a
+    /// rejection never reveals that an enemy unit exists (decision 0008).
     NotYourUnit,
     /// The route has no waypoint other than where the task force already is.
     EmptyRoute,
@@ -142,13 +186,17 @@ pub enum RejectReason {
     UnderWay,
     /// A load order needs a base of the side in the task force's hex.
     NoOwnBaseHere,
+    /// A search arc bearing is not a multiple of 10 from 0 to 350.
+    InvalidBearing(i32),
+    /// A search range is zero, negative, or beyond the aircraft type's
+    /// search range.
+    InvalidSearchRange { range_nm: Fixed, max_nm: Fixed },
 }
 
 impl fmt::Display for RejectReason {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RejectReason::UnknownTarget => f.write_str("the target does not exist"),
-            RejectReason::NotYourUnit => f.write_str("the target belongs to the other side"),
+            RejectReason::NotYourUnit => f.write_str("the target is not one of your units"),
             RejectReason::EmptyRoute => f.write_str("the route goes nowhere"),
             RejectReason::WaypointOffMap(hex) => write!(f, "waypoint {hex} is off the map"),
             RejectReason::RouteBlocked(hex) => {
@@ -159,6 +207,13 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::UnderWay => f.write_str("the task force is under way"),
             RejectReason::NoOwnBaseHere => f.write_str("there is no base of your side here"),
+            RejectReason::InvalidBearing(bearing) => {
+                write!(f, "bearing {bearing} is not a multiple of 10 from 0 to 350")
+            }
+            RejectReason::InvalidSearchRange { range_nm, max_nm } => write!(
+                f,
+                "search range {range_nm} nm is not above 0 and at most the aircraft's {max_nm} nm"
+            ),
         }
     }
 }

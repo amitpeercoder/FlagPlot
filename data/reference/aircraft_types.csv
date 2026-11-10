@@ -1,0 +1,8 @@
+# PLACEHOLDER DATA. This type is invented so the engine has something to run.
+# It is not historical and must not be used for validation.
+#
+# search_range_nm: the furthest a search by this type can reach.
+# sweep_width_nm: the width of sea one aircraft covers as it flies.
+# See docs/decisions/0012-search-and-contacts.md.
+id,name,role,search_range_nm,sweep_width_nm
+1,Placeholder flying boat,patrol,600,40
