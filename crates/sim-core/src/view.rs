@@ -134,7 +134,7 @@ mod tests {
     use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId, ShipId, TaskForceId};
     use crate::map::{HexData, Map};
-    use crate::orders::{AirMission, Mission};
+    use crate::orders::{AirMission, Mission, Readiness};
     use crate::refdata::{
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
         SurfaceCombatFigures,
@@ -274,6 +274,8 @@ mod tests {
                 hex,
                 Mission::SurfaceCombat,
             );
+            // Both forces were alert by default before decision 0021.
+            task_force.readiness = Readiness::Battle;
             for ship in ships {
                 let id = ShipId::new(ship);
                 task_force.ships.insert(id);

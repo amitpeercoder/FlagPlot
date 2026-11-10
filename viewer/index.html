@@ -342,7 +342,9 @@ function stepLabel(day, phase) {
 }
 
 /**
- * Steps in order: index 0 is "Start" (no events); then every (day, phase) that has events.
+ * Steps in order: index 0 is "Start"; then every (day, phase) that has events. Events on day 0, which
+ * a scenario records before the first day (the contacts a side starts with, decision 0021), belong to
+ * no day: they are the Start step's events, so Start has none when the scenario has none.
  * Each step lists positions into the events array, in log order. Every event is in exactly one step.
  */
 function buildSteps(events) {
@@ -351,8 +353,8 @@ function buildSteps(events) {
     if (!byDay.has(ev.day)) byDay.set(ev.day, []);
     byDay.get(ev.day).push(i);
   });
-  const steps = [{ index: 0, day: 0, phase: 'start', label: 'Start', events: [] }];
-  for (const day of [...byDay.keys()].sort((a, b) => a - b)) {
+  const steps = [{ index: 0, day: 0, phase: 'start', label: 'Start', events: byDay.get(0) || [] }];
+  for (const day of [...byDay.keys()].filter(d => d !== 0).sort((a, b) => a - b)) {
     const idxs = byDay.get(day);
     let first = -1, last = -1;
     idxs.forEach((ei, pos) => { if (events[ei].pulse) { if (first < 0) first = pos; last = pos; } });
@@ -427,7 +429,7 @@ function cloneTrail(trail) { return trail.slice(); }
 
 function snapshot(cur, aux) {
   const forces = new Map();
-  for (const [id, f] of cur.forces) forces.set(id, { id, name: f.name, side: f.side, q: f.q, r: f.r, ships: f.ships.slice(), trail: cloneTrail(f.trail), detachedFrom: f.detachedFrom });
+  for (const [id, f] of cur.forces) forces.set(id, { id, name: f.name, side: f.side, q: f.q, r: f.r, ships: f.ships.slice(), trail: cloneTrail(f.trail), detachedFrom: f.detachedFrom, readiness: f.readiness, alerted: f.alerted });
   const contacts = {};
   for (const side of Object.keys(cur.contacts)) {
     const m = new Map();
@@ -481,11 +483,11 @@ function buildModel(replay) {
   const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() } };
   for (const f of initial.task_forces || []) {
     const pos = f.position || { q: 0, r: 0 };
-    cur.forces.set(f.id, { id: f.id, name: f.name || ('TF ' + f.id), side: f.side, q: pos.q, r: pos.r, ships: (f.ships || []).slice(), trail: [[pos.q, pos.r]], detachedFrom: null });
+    cur.forces.set(f.id, { id: f.id, name: f.name || ('TF ' + f.id), side: f.side, q: pos.q, r: pos.r, ships: (f.ships || []).slice(), trail: [[pos.q, pos.r]], detachedFrom: null, readiness: f.readiness || 'normal', alerted: !!f.alerted });
     for (const s of f.ships || []) cur.shipForce.set(s, f.id);
   }
   const eventForces = new Map(); // event id -> force ids it concerns, as of that moment
-  const states = [snapshot(cur, { moves: new Map(), fights: [], searches: [] })];
+  const states = []; // one per step; step 0 is the initial state with the day-0 events applied
 
   const contactSide = (ev) => {
     const side = ev.data && ev.data.side;
@@ -494,7 +496,7 @@ function buildModel(replay) {
     return cur.contacts[side];
   };
 
-  for (let si = 1; si < steps.length; si++) {
+  for (let si = 0; si < steps.length; si++) {
     const aux = { moves: new Map(), fights: [], searches: [] };
     for (const ei of steps[si].events) {
       const ev = events[ei], d = ev.data || {};
@@ -531,6 +533,7 @@ function buildModel(replay) {
             cur.forces.set(d.new_force, {
               id: d.new_force, name: fin ? fin.name : 'TF ' + d.new_force, side: fin ? fin.side : (parent ? parent.side : null),
               q, r, ships: [], trail: [[q, r]], detachedFrom: d.parent,
+              readiness: parent ? parent.readiness : (fin && fin.readiness) || 'normal', alerted: parent ? parent.alerted : false,
             });
           }
           const nf = cur.forces.get(d.new_force);
@@ -539,6 +542,23 @@ function buildModel(replay) {
             if (!nf.ships.includes(s)) nf.ships.push(s);
             cur.shipForce.set(s, d.new_force);
           }
+          break;
+        }
+        // Readiness is set by an accepted order; alerted follows the alert and stand-down events and a successful
+        // alarm roll, which are all the engine changes it by (a force that stays alerted from one pulse to the next
+        // has no event, and a failed alarm roll changes nothing).
+        case 'order_accepted': {
+          const o = orderById.get(d.order), t = parseEntity(d.target), rd = o && /^readiness (normal|battle)$/.exec(o.text);
+          const f = rd && t && t.type === 'task_force' ? cur.forces.get(t.id) : null;
+          if (f) f.readiness = rd[1];
+          break;
+        }
+        case 'force_became_alert':
+        case 'force_alerted_by_contact':
+        case 'alarm_roll':
+        case 'force_stood_down': {
+          const f = cur.forces.get(d.task_force);
+          if (f) f.alerted = ev.kind === 'alarm_roll' ? (d.alarmed ? true : f.alerted) : ev.kind !== 'force_stood_down';
           break;
         }
         case 'ship_sunk': {
@@ -622,6 +642,8 @@ function compareWithFinal(model) {
     if (!r) { problems.push('force ' + f.id + ' is in the final state but was never rebuilt'); continue; }
     if (!f.position || r.q !== f.position.q || r.r !== f.position.r) problems.push('force ' + f.id + ' rebuilt at (' + r.q + ',' + r.r + ') but final says ' + JSON.stringify(f.position));
     if (!setEq(r.ships, f.ships || [])) problems.push('force ' + f.id + ' ships rebuilt as [' + r.ships + '] but final says [' + (f.ships || []) + ']');
+    if (f.readiness !== undefined && r.readiness !== f.readiness) problems.push('force ' + f.id + ' readiness rebuilt as ' + r.readiness + ' but final says ' + f.readiness);
+    if (f.alerted !== undefined && r.alerted !== f.alerted) problems.push('force ' + f.id + ' alerted rebuilt as ' + r.alerted + ' but final says ' + f.alerted);
   }
   for (const id of end.forces.keys()) if (!model.finalForces.has(id)) problems.push('force ' + id + ' was rebuilt but is not in the final state');
   const finalSunk = (final.ships || []).filter(s => s.location === 'sunk').map(s => s.id);
@@ -913,7 +935,9 @@ function highlightSets() {
       else if (p.type === 'ship') { const fid = st.shipForce.get(p.id); if (fid !== undefined) hl.forces.add(fid); }
       else if (p.type === 'base') hl.bases.add(p.id);
       else if (p.type === 'contact') {
-        const side = ev.data && ev.data.side;
+        // A report names its side; an alert names the force, whose side it is.
+        const alerted = ev.data && ev.data.task_force !== undefined ? st.forces.get(ev.data.task_force) : null;
+        const side = (ev.data && ev.data.side) || (alerted && alerted.side);
         if (side) hl.contacts.add(side + ':' + p.id);
         else { hl.contacts.add('allied:' + p.id); hl.contacts.add('japanese:' + p.id); }
       }
@@ -1416,12 +1440,20 @@ function entitySection(sel) {
   const add = (k, v) => { kv.append(el('dt', { text: k }), el('dd', { text: String(v) })); };
   const side = (now && now.side) || (fin && fin.side);
   add('Side', side || '?');
+  if (now) {
+    add('Readiness', now.readiness);
+    // The flag follows the events for every force. A force at battle readiness is alert by its readiness
+    // whatever the flag says, and the Readiness line above says so.
+    add('Alerted', now.alerted ? 'yes' : 'no');
+  } else if (fin) {
+    add('Readiness (end of run)', fin.readiness);
+    add('Alerted (end of run)', fin.alerted ? 'yes' : 'no');
+  }
   if (now) add('Position now', '(' + now.q + ', ' + now.r + ')' + (now.detachedFrom != null ? ', detached from TF' + now.detachedFrom : ''));
   if (fin) {
     add('Mission', fin.mission);
     add('Status (end of run)', fin.status);
     if (fin.home_port != null) add('Home port', 'base:' + fin.home_port);
-    add('Alert (end of run)', fin.alert ? 'yes' : 'no');
     const roe = fin.rules_of_engagement || {};
     add('Rules of engagement', Object.entries(roe).map(([k, v]) => k + ' ' + v).join(', '));
   } else add('Final record', 'none (not in the final state)');

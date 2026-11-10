@@ -110,6 +110,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::ShipNotInTaskForce(ship) => base("ship_not_in_task_force").id("ship", *ship),
         RejectReason::WouldLeaveTaskForceEmpty => base("would_leave_task_force_empty"),
         RejectReason::WaypointUnreachable(hex) => base("waypoint_unreachable").hex("hex", *hex),
+        RejectReason::SpeedNotAboveZero(knots) => base("speed_not_above_zero").num("knots", *knots),
     }
 }
 
@@ -467,5 +468,29 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
         EventKind::ForceRetired { task_force } => {
             ("force_retired", d.id("task_force", *task_force))
         }
+        EventKind::ForceAlertedByContact {
+            task_force,
+            contact,
+        } => (
+            "force_alerted_by_contact",
+            d.id("task_force", *task_force).id("contact", *contact),
+        ),
+        EventKind::ForceStoodDown { task_force } => {
+            ("force_stood_down", d.id("task_force", *task_force))
+        }
+        EventKind::AlarmRoll {
+            task_force,
+            by_a,
+            by_b,
+            chance,
+            alarmed,
+        } => (
+            "alarm_roll",
+            d.id("task_force", *task_force)
+                .id("by_a", *by_a)
+                .id("by_b", *by_b)
+                .num("chance", *chance)
+                .flag("alarmed", *alarmed),
+        ),
     }
 }
