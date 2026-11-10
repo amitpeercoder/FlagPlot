@@ -8,7 +8,7 @@ use core::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{BaseId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::RejectReason;
 use crate::time::{ClockTime, Pulse};
 
@@ -82,6 +82,42 @@ pub enum EventKind {
         task_force: TaskForceId,
         hex: Hex,
     },
+    /// A ship took supply aboard from a base.
+    CargoLoaded {
+        ship: ShipId,
+        task_force: TaskForceId,
+        base: BaseId,
+        loaded_t: Fixed,
+        /// Tons aboard the ship after loading.
+        aboard_t: Fixed,
+        /// The base's stock after loading.
+        base_stock_t: Fixed,
+    },
+    /// A ship put supply ashore into a base's stock.
+    CargoUnloaded {
+        ship: ShipId,
+        task_force: TaskForceId,
+        base: BaseId,
+        unloaded_t: Fixed,
+        /// Tons aboard the ship after unloading.
+        aboard_t: Fixed,
+        /// The base's stock after unloading.
+        base_stock_t: Fixed,
+    },
+    /// Every ship of a task force is full, or the base has no stock left.
+    LoadingComplete {
+        task_force: TaskForceId,
+        base: BaseId,
+        /// Elapsed hours since the scenario began.
+        elapsed_hours: Fixed,
+    },
+    /// Every ship of a task force has put all its supply ashore.
+    UnloadingComplete {
+        task_force: TaskForceId,
+        base: BaseId,
+        /// Elapsed hours since the scenario began.
+        elapsed_hours: Fixed,
+    },
 }
 
 impl EventKind {
@@ -99,6 +135,28 @@ impl EventKind {
             EventKind::FuelBurned {
                 ship, task_force, ..
             } => vec![EntityRef::Ship(*ship), EntityRef::TaskForce(*task_force)],
+            EventKind::CargoLoaded {
+                ship,
+                task_force,
+                base,
+                ..
+            }
+            | EventKind::CargoUnloaded {
+                ship,
+                task_force,
+                base,
+                ..
+            } => vec![
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Base(*base),
+            ],
+            EventKind::LoadingComplete {
+                task_force, base, ..
+            }
+            | EventKind::UnloadingComplete {
+                task_force, base, ..
+            } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
         }
     }
 }
@@ -143,6 +201,46 @@ impl fmt::Display for EventKind {
             EventKind::TaskForceOutOfFuel { task_force, hex } => {
                 write!(f, "{task_force} ran out of fuel at {hex}")
             }
+            EventKind::CargoLoaded {
+                ship,
+                base,
+                loaded_t,
+                aboard_t,
+                base_stock_t,
+                ..
+            } => write!(
+                f,
+                "{ship} loaded {loaded_t} t from {base}, {aboard_t} t aboard, {base_stock_t} t in stock"
+            ),
+            EventKind::CargoUnloaded {
+                ship,
+                base,
+                unloaded_t,
+                aboard_t,
+                base_stock_t,
+                ..
+            } => write!(
+                f,
+                "{ship} unloaded {unloaded_t} t at {base}, {aboard_t} t aboard, {base_stock_t} t in stock"
+            ),
+            EventKind::LoadingComplete {
+                task_force,
+                base,
+                elapsed_hours,
+            } => write!(
+                f,
+                "{task_force} completed loading at {base} at {}",
+                ClockTime::from_elapsed(*elapsed_hours)
+            ),
+            EventKind::UnloadingComplete {
+                task_force,
+                base,
+                elapsed_hours,
+            } => write!(
+                f,
+                "{task_force} completed unloading at {base} at {}",
+                ClockTime::from_elapsed(*elapsed_hours)
+            ),
         }
     }
 }

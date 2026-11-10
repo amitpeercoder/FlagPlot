@@ -4,6 +4,8 @@
 #
 # cruise_speed_kn: economical speed. endurance_nm is quoted at this speed.
 # fuel_capacity_t / endurance_nm gives the burn per nautical mile at cruise.
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm
-1,Placeholder cruiser,cruiser,16,32,2000,8000
-2,Placeholder destroyer,destroyer,16,36,500,4000
+# cargo_capacity_t: supply the ship can carry, in tons. 0 for a ship that carries none.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t
+1,Placeholder cruiser,cruiser,16,32,2000,8000,0
+2,Placeholder destroyer,destroyer,16,36,500,4000,0
+3,Placeholder cargo ship,transport,10,12,1000,10000,3000

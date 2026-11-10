@@ -24,6 +24,7 @@ pub mod time;
 pub mod view;
 pub mod world;
 
+mod cargo;
 mod invariants;
 mod resolve;
 

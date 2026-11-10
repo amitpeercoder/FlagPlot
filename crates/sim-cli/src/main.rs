@@ -97,8 +97,18 @@ fn run(args: &[String]) -> Result<(), String> {
             ShipLocation::Port(id) => id.to_string(),
         };
         println!(
-            "{} \"{}\": {} t of fuel, in {}",
-            ship.id, ship.name, ship.fuel_t, location
+            "{} \"{}\": {} t of fuel, {} t of supply, in {}",
+            ship.id, ship.name, ship.fuel_t, ship.supply_t, location
+        );
+    }
+    for base in truth.bases.values() {
+        println!(
+            "{} \"{}\" ({}) at {}: {} t of supply in stock",
+            base.id,
+            base.name,
+            base.side.name(),
+            base.hex,
+            base.supply_t
         );
     }
     Ok(())

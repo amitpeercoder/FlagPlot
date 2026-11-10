@@ -11,6 +11,7 @@ seed = 1942
 days = 3
 map = "../map/placeholder_transit.toml"
 ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
 
 [[base]]
 id = 1

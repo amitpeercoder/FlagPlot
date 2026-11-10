@@ -8,6 +8,9 @@
 //!
 //! - Ship classes: CSV, one class per row. Lines starting with `#` are
 //!   comments.
+//! - Port sizes: CSV with the header
+//!   `port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h`, one row for
+//!   each size 0 to 10. Lines starting with `#` are comments.
 //! - Maps: TOML, as rectangular regions plus single-hex overrides.
 //! - Scenarios: TOML, with the starting state, the seed and the scripted
 //!   orders per day. A scenario file is therefore also a saved game.
@@ -23,5 +26,5 @@ mod scenario;
 
 pub use error::DataError;
 pub use map::load_map;
-pub use reference::load_ship_classes;
+pub use reference::{load_port_sizes, load_ship_classes};
 pub use scenario::Scenario;
