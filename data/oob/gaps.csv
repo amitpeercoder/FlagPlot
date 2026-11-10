@@ -301,3 +301,62 @@ ship,hmas-australia; hmas-canberra,radar fitted on 8 August 1942,1942-08-08,Sea 
 ship,dd-408-wilson,torpedo tubes on 8 August 1942,1942-08,Navy online ship history,Gives 16 tubes in the as-built particulars only
 source,navsource.org,any page,2026-11-10,Tried in a browser,Refused in the browser as well as by automated fetch
 ship,ca-34-astoria,Navy online ship history,,history.navy.mil,Entry address not found; four guesses returned not found
+battle,eastern-solomons,"Times of the Japanese strike launches from Shokaku and Zuikaku on a Japanese-clock source (Japanese Monograph, Nagumo/Kusaka reports, Sekino or Okumiya interrogation on the air groups)",1942-08-24,"ONI; USSBS Campaigns; USSBS Nav 8, 16, 60; combinedfleet Chikuma/Tone; Wikipedia","Only combinedfleet (1445, 1600) and Wikipedia (1450, 1600; 27 D3A plus 15 Zero; then 27 D3A plus 9 Zero) give launch times and numbers. Nav 16 (Okumiya) says nothing on the carrier strikes. Zones unstated."
+battle,eastern-solomons,"Combinedfleet tabular records for Ryujo, Shokaku, Zuikaku",1942-08,"combinedfleet.com ryujo.htm, shokaku.htm, Zuikak.htm (timed out twice each)",Not read.
+battle,eastern-solomons,Ryujo launch time and strike composition against Henderson Field from a Japanese or Marine source,1942-08-24,ONI; Shaw; combinedfleet Jintsu/Kinryu; Wikipedia,"Only Wikipedia (12:20, 6 B5N and 15 A6M3) gives a time; Shaw misdates the Ryujo strike to 29 Aug."
+battle,eastern-solomons,"Marine/Army account of the Henderson fight on 24 Aug (aircraft numbers, times, claims)",1942-08-24,Shaw; Miller ch.5-10 (no hits for the date),Miller (Army) does not cover it; Shaw pamphlet gives one sentence.
+battle,eastern-solomons,PBY sightings of the Kondo advance force and the Mikawa/vanguard forces on 24 Aug with times,1942-08-24,ONI; Enterprise report; USSBS,Not found. Only the 0935 Ryujo-group report and a second report (intercepted 1158) are given; Wikipedia says later sightings of Kondo's and Mikawa's forces occurred but gives no times.
+battle,eastern-solomons,"Type of aircraft and time of the 23 Aug sighting of Tanaka's convoy (PBY, squadron, base)",1942-08-23,ONI ('long-range search planes'); USSBS; combinedfleet; Wikipedia,ONI and USSBS say 1040; Wikipedia says 09:50 from Ndeni; PBY named only by Wikipedia and combinedfleet.
+battle,eastern-solomons,Which ship's radar made the 88 mile contact,1942-08-24,ONI; Enterprise report; USSBS,ONI says the fighter directors of both Enterprise and Saratoga reported it; the Enterprise report and USSBS name Enterprise only for the plot; no radar set type named (CXAM presumably but not stated).
+battle,eastern-solomons,Fletcher's reasoning and the exact time of his withdrawal order on 24 Aug; Nagumo's withdrawal order time,1942-08-24,ONI; Enterprise report; Wikipedia,ONI gives only the order's substance. Nagumo's order time is not stated in any source read (Wikipedia: Japanese ships turned at midnight).
+battle,eastern-solomons,Zone minus 11 conversion of ONI times,1942-08,ONI chapter 2 footnote 2,"ONI states Zone minus 11 1/2; Enterprise report and USSBS state no zone. No times were converted, except Toyama's 0700(-9)."
+battle,eastern-solomons,Paragraph numbers in the Enterprise action report,1942-08-24,cv6.org page,The transcription has no numbered paragraphs; section headings cited.
+battle,eastern-solomons,Separate figures for TF 11 / TF 16 distance at the time of attack in the Enterprise screen diagram,1942-08-24,ONI; Enterprise report,Only the disputed 8 and 10-15 mile figures were found.
+battle,eastern-solomons,B-17 attack on Tanaka convoy with date-time from Army source (11th BG report),1942-08-25,ONI; USSBS; combinedfleet Mutsuki,No Army Air Forces source read.
+air_unit,vf-5,aircraft_on_hand and aircraft_operational on 24 Aug 1942 by squadron,1942-08-24,"ONI chapters, Enterprise CO report, DANFS Saratoga/Wasp, USSBS Campaigns, Miller, Shaw; web search","ONI gives only 54 F4F-4 combined for Saratoga and Enterprise and 38 VF-5/VF-6 attached to Saratoga; no squadron split. Existing Wikipedia rows (VF-5 27, VF-6 29) remain unreplaced."
+air_unit,vf-6,aircraft_on_hand and aircraft_operational on 24 Aug 1942,1942-08-24,same,"Enterprise CO report gives fighters launched (16, 8, 8, 7 F4F-4) but not on-hand."
+air_unit,vb-3,aircraft_on_hand,1942-08-24,same,"ONI gives bombs released (VB-3 13, VS-3 15) and 30 SBD launched by the Saratoga group, no squadron totals."
+air_unit,vs-3,aircraft_on_hand,1942-08-24,same,
+air_unit,vt-8,aircraft_on_hand,1942-08-24,same,ONI: 8 TBF originally in the strike (7 attacked) plus 5 TBF in the second group; squadron total not given.
+air_unit,vb-6,aircraft_on_hand,1942-08-24,same,Enterprise launches by type are in outcomes; no squadron strength given. VB-6 and VS-5 not separated.
+air_unit,vs-5,aircraft_on_hand,1942-08-24,same,
+air_unit,vt-3,aircraft_on_hand,1942-08-24,same,7 TBF launched in the Enterprise attack group.
+air_unit,vf-71,aircraft_on_hand,1942-08-24,same; DANFS Wasp,Wasp was detached south to refuel on 23 Aug and was not engaged; no air group figures found in primary sources read.
+air_unit,vs-71,aircraft_on_hand,1942-08-24,same,
+air_unit,vs-72,aircraft_on_hand,1942-08-24,same,
+air_unit,vt-7,aircraft_on_hand,1942-08-24,same,
+air_unit,vmf-223,aircraft_on_hand/operational on 24 Aug 1942,1942-08-24,"ONI, Shaw, Miller ch IV","Only aggregate (20 fighters, 12 scout bombers at Henderson, ONI) for the Marine air group; existing 19 F4F-4 is 20 Aug."
+air_unit,vmsb-232,aircraft_on_hand on 24 Aug 1942,1942-08-24,same,
+air_unit,67th-fs,aircraft_on_hand on 24 Aug 1942,1942-08-24,same,Only 22 Aug (5 P-400) in existing rows.
+air_unit,shokaku-fighter-unit,stated aircraft complement on 24 Aug 1942 by type,1942-08-24,"combinedfleet Shokaku TROM, Kojinsha No.6, USSBS Campaigns","Kojinsha gives only the design complement (18+2 fighters, 27+5 D3A, 27+5 B5N per carrier, 1938 plan). Only launch numbers sourced; lower-bound rows are inferred."
+air_unit,zuikaku-bomber-unit,stated complement on 24 Aug 1942,1942-08-24,"combinedfleet Zuikaku TROM (not loaded), Kojinsha",Zuikaku TROM not retrievable (404 at Wayback copy).
+air_unit,shokaku-attack-unit,torpedo bomber strength and launches on 24 Aug,1942-08-24,combinedfleet Shokaku TROM,Only the combined CarDiv 1 search launch (19 B5N) given; no per-carrier split.
+air_unit,zuikaku-attack-unit,torpedo bomber strength,1942-08-24,same,
+ship,cv-6-enterprise,bomb sizes (weights) of the three hits,1942-08-24,"ONI, Enterprise CO report, BuShips summary","Only ""large"", ""large"", ""medium"". The detailed War Damage Report is not on HyperWar; the Enterprise executive officer, medical and damage enclosures are not on the cv6.org page."
+ship,cv-6-enterprise,times of the individual hits,1942-08-24,same,"Only attack start 1711 and duration about 4 minutes; hits ordered, not timed."
+ship,bb-55-north-carolina,AA rounds fired by calibre,1942-08-24,"ONI, DANFS",Only barrels engaged (twenty 5-inch etc.). North Carolina action report not found.
+ship,cl-51-atlanta,AA rounds fired,1942-08-24,"ONI, DANFS",
+ship,ca-33-portland,AA rounds fired,1942-08-24,"ONI, DANFS",
+ship,cv-3-saratoga,AA rounds fired and time of separation from Enterprise,1942-08-24,"ONI, DANFS",She was not attacked; distance given as 8 miles (ONI) vs 10-15 miles (Enterprise CO).
+ship,zuikaku,24 Aug damage/aircraft losses from her own TROM,1942-08-24,"combinedfleet (404 at Wayback), Kojinsha",Only Kojinsha one-line entry.
+ship,mutsuki,combinedfleet tabular record,1942-08-25,combinedfleet Mutsuki_t.htm and Mutsuki.htm (404 at Wayback copy),"Data taken from Jintsu, Kinryu Maru pages and USSBS."
+ship,ryujo,Japanese casualties from a Japanese official source; number of hits per Japanese report,1942-08-24,"USSBS Campaigns, combinedfleet",USSBS quotes 10 bomb hits without naming the source document.
+ship,chitose,casualties,1942-08-24,"USSBS, combinedfleet",No casualty figure in either.
+force,japanese-forces,Japanese aircraft loss by Japanese records (total for 24-25 Aug),1942-08-24,"combinedfleet, Kojinsha, USSBS",No Japanese-side total found; USSBS 90 not attributed to a Japanese document.
+source,wdr-enterprise-1942,Detailed BuShips War Damage Report on Enterprise 24 Aug 1942,1942-08-24,HyperWar WDR index (WDR59 and others not linked),Only the Summary (15 Sep 1943) was readable.
+source,combinedfleet,Live site fetch,,"combinedfleet.com (WebFetch and curl, two tries each), Wayback copies",Live site unreachable; used Wayback copies.
+source,cv6-action-reports,Live site fetch,,http://www.cv6.org (DNS failure),Used Wayback copy.
+air_unit,shokaku and zuikaku air groups,aircraft on hand or operational on 24 August 1942,1942-08-24,combinedfleet ship records; Kojinsha Shokaku-class volume,"Only the numbers launched in each strike are given. Adding them gives a lower bound (Shokaku 27 dive bombers and 18 fighters, Zuikaku 27 and 12), which is not a strength and was not recorded as one"
+formation,tf-18,Position where the Wasp group refuelled and the times it left and rejoined (only departure 1830 on 23 Aug and passing the Saratoga group about 0330 on 25 Aug; Noumea named by USSBS),1942-08-23/25,oni-cn-eastern-solomons; cv6-action-reports; ussbs-campaigns,Neither ONI nor the Enterprise report states the position. Wasp action report and Fletcher report not found.
+formation,tf-61,Dawn and noon positions on 22 and 23 Aug (only 10 S 163 E near 1040 on 23 Aug) and positions 24 Aug 1713 to 25 Aug 0800 along the retirement; retirement course in degrees,1942-08-22/25,same,ONI says only retirement to the south. Enterprise track chart enclosure and ONI chart images not readable.
+formation,tf-11,Own position and course of the Saratoga group (only separation from Enterprise),1942-08-24,same,No Saratoga action report found.
+formation,nagumo-carrier-force,"True positions and tracks of Shokaku and Zuikaku on 22-25 Aug; Truk was bypassed, so no Truk departure",1942-08-16/25,"combinedfleet (Tone, Jintsu pages); wikipedia-en; ussbs-campaigns","Combinedfleet Shokaku, Zuikaku, Chikuma pages not retrieved (host unreachable; Wayback had no copy). Only US-reported contact positions at 1500."
+formation,abe-vanguard-force,Positions and track of Hiei and Kirishima and the vanguard cruisers,1942-08-20/25,combinedfleet Tone page (names membership only); wikipedia-en,Hiei and Kirishima combinedfleet pages not retrieved.
+formation,kondo-advance-force,Position and track after sortie; Chitose group position,1942-08-23/25,"combinedfleet Chitose, Jintsu pages","No lat/lon found. Truk departure date disputed (20, 21 or 23 Aug)."
+formation,ryujo-group,True position when Ryujo launched (about 200 nm north of Lunga Point per Wikipedia only) and a cited source for the sinking coordinates,1942-08-24,wikipedia-en; combinedfleet Tone and Jintsu pages; ussbs-campaigns; oni,"Combinedfleet Ryujo, Amatsukaze pages not retrieved. ONI gives only the 1606 US sighting."
+formation,tanaka-convoy,"Latitude/longitude for the convoy on 23, 24 and 25 Aug; positions of Jintsu, Kinryu Maru, Mutsuki sinking beyond a distance north of Guadalcanal",1942-08-23/25,oni; combinedfleet Jintsu; ussbs-campaigns,Only distances from Guadalcanal. Mutsuki combinedfleet page not retrieved.
+formation,mikawa-cruisers,Any position or track of Mikawa's Eighth Fleet cruisers during 23-25 Aug,1942-08-23/25,oni; ussbs-campaigns; wikipedia-en,Wikipedia says Mikawa's ships were sighted on the morning of 24 Aug; no position. Not found.
+report,pby-contact-reports,Latitude/longitude of the PBY reports of Tanaka's convoy on 23 Aug (only distance 250 miles north) and the 1300 course change report,1942-08-23,oni; cv6-action-reports; ussbs-campaigns,Only the 0935 24 Aug report carries lat/lon (04 40 S 161 15 E). COMAIRSOPAC messages not found.
+place,ndeni,Position of Ndeni / Graciosa Bay (PBY tender base),n/a,wikipedia-en Santa Cruz Islands (group only); Ndende_Island page 404,Not given by any source read; Santa Cruz Islands group coordinates not entered.
+place,stewart-islands,Cited position of the Stewart Islands in 1942 usage,n/a,wikipedia-en Sikaiana,Identification with Sikaiana made by me and noted on the row.
+source,"history.navy.mil, navy.gov.au, navsource.org, usni.org",Not tried (brief listed combinedfleet as the one to try); no naval history pages fetched,n/a,n/a,DANFS was read from HyperWar instead.
