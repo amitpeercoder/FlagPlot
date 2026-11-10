@@ -17,8 +17,11 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
+cargo run --release -p map-tool -- render
 cargo run -p oob-check -- data/oob
 ```
+
+The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides --hex q,r` (a hex's closed sides and neighbours), `water --lat --lon` (why a position's hex has the water it has) and `generate`, which rebuilds `data/map/south_pacific.csv` from the Natural Earth files under `references/` (the exact command is in the file's header). `generate --anchors data/map/south_pacific_anchors.csv` applies the listed anchorages (decision 0017, decision 6); without it hexes keep their largest body of water. `render` draws `#` land, `+` coast, `%` coast with a closed side toward water and `.` sea, each row labelled with its r and the q of its first hex.
 
 All three checks must pass before a commit. CI runs the same three. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build; `oob-check` run by hand lists the problems.
 
@@ -30,9 +33,10 @@ All three checks must pass before a commit. CI runs the same three. `cargo test`
 | `crates/sim-data` | Loads reference data, maps and scenarios from files into `sim-core` types |
 | `crates/sim-cli` | Command-line runner |
 | `crates/sim-agent` | Agent interface (server mode, briefings, MCP). Placeholder |
+| `crates/map-tool` | Generates the hex map of the slice from open coastline data, and renders it, locates points and finds sea paths. May use floats and its own dependencies; nothing depends on it |
 | `crates/oob-check` | Checker for the order-of-battle facts in `data/oob`. Depends on nothing else in the workspace |
 | `data/reference` | Ship classes, port sizes and aircraft types as CSV; search and surface combat figures as TOML |
-| `data/map` | Maps as TOML |
+| `data/map` | The generated map of the slice as CSV (`south_pacific.csv`, decision 0017) and the anchorages it was generated with (`south_pacific_anchors.csv`), and small hand-drawn placeholder maps as TOML |
 | `data/scenarios` | One TOML file per scenario: starting state, seed, scripted orders |
 | `data/oob` | Order-of-battle facts: sourced historical statements as CSV. Research, not simulation data. Start with its `README.md` |
 | `docs/research/oob` | The facts format, the source policy, where sources disagree, and a note per battle and per topic |
@@ -113,6 +117,7 @@ The game must stay something a person and a model can both reason about. A rule 
 - **Read just in time.** Before planning a scenario, read the sections `docs/research/witpae-manual-index.md` lists for it. Report how WitP:AE models it, what the player had to do by hand, and what Flag Plot should do differently.
 - **The map image is for looking at only.** Do not trace hexes or take terrain from it. The real map is generated from open coastline data.
 - **Never commit anything from `references/`.** Do not run or unpack the installers.
+- **`references/natural-earth/`** holds public-domain coastlines (Natural Earth 1:10m land and minor islands, 5.1.1), used only by the map tool, never committed.
 
 ## Roles and delegation
 
@@ -142,6 +147,6 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a and 4a2 of scenario 4 (the surface combat rule, decision 0014, and damage to named systems and stragglers, decision 0016) are done. Next is stage 4b, the real map and pathfinding. See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Next is stage 4c, Savo Island. See the spec's "First test scenarios" table.
 
 The order-of-battle facts cover what scenarios 4 to 6 need: the ships at Savo Island and Eastern Solomons, their classes, weapons and sensors, the aircraft of August and September 1942, and what happened at both battles. `data/oob/README.md` says how firm they are and what is missing.

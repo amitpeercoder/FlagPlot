@@ -20,7 +20,9 @@
 //!   ship kinds giving the chance of each reported kind.
 //! - Surface combat figures: TOML. A `placeholder` flag and the figures of
 //!   the surface combat rule (`docs/decisions/0014-surface-combat.md`).
-//! - Maps: TOML, as rectangular regions plus single-hex overrides.
+//! - Maps: TOML, as rectangular regions plus single-hex overrides, or a
+//!   generated CSV with the columns `q,r,kind,land_percent,lat,lon` (decision
+//!   0017). The extension decides which.
 //! - Scenarios: TOML, with the starting state, the seed and the scripted
 //!   orders per day. A scenario file is therefore also a saved game. It names
 //!   its map and reference files, and may hold bases, air groups, task

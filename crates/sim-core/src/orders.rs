@@ -157,7 +157,10 @@ impl CargoAction {
 /// An order to a task force.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TaskForceOrder {
-    /// Steam to each waypoint in turn and stop at the last.
+    /// Steam to each waypoint in turn and stop at the last, by the shortest
+    /// path over hexes ships can enter (decision 0017). Rejected if a
+    /// waypoint is off the map or cannot be reached by sea from the one
+    /// before.
     SetRoute(Vec<Hex>),
     SetSpeed(SpeedSetting),
     SetMission(Mission),
@@ -255,8 +258,6 @@ pub enum RejectReason {
     EmptyRoute,
     /// A waypoint is not on the map.
     WaypointOffMap(Hex),
-    /// The route would pass through a hex ships cannot enter.
-    RouteBlocked(Hex),
     /// A load order needs a task force that is stopped.
     UnderWay,
     /// A load order needs a base of the side in the task force's hex.
@@ -279,6 +280,10 @@ pub enum RejectReason {
     ShipNotInTaskForce(ShipId),
     /// A detach order lists every ship of the task force.
     WouldLeaveTaskForceEmpty,
+    /// A waypoint is on the map but ships cannot get to it from the one
+    /// before: it is land, or it lies across land with no way round
+    /// (decision 0017, decision 13). Added at the end of the enum.
+    WaypointUnreachable(Hex),
 }
 
 impl fmt::Display for RejectReason {
@@ -287,12 +292,6 @@ impl fmt::Display for RejectReason {
             RejectReason::NotYourUnit => f.write_str("the target is not one of your units"),
             RejectReason::EmptyRoute => f.write_str("the route goes nowhere"),
             RejectReason::WaypointOffMap(hex) => write!(f, "waypoint {hex} is off the map"),
-            RejectReason::RouteBlocked(hex) => {
-                write!(
-                    f,
-                    "the route passes through {hex}, which ships cannot enter"
-                )
-            }
             RejectReason::UnderWay => f.write_str("the task force is under way"),
             RejectReason::NoOwnBaseHere => f.write_str("there is no base of your side here"),
             RejectReason::InvalidBearing(bearing) => {
@@ -315,6 +314,9 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::WouldLeaveTaskForceEmpty => {
                 f.write_str("detaching these ships would leave the task force empty")
+            }
+            RejectReason::WaypointUnreachable(hex) => {
+                write!(f, "waypoint {hex} cannot be reached by sea")
             }
         }
     }
