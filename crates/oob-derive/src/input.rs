@@ -20,6 +20,8 @@ struct RawList {
     ships: Vec<String>,
     #[serde(default)]
     radar_unknown_means_none: Vec<String>,
+    #[serde(default)]
+    main_gun_ammunition_not_limiting: Vec<String>,
 }
 
 /// The list file, checked.
@@ -36,6 +38,9 @@ pub struct List {
     /// Ship keys in list order, each once.
     pub ships: Vec<String>,
     pub radar_unknown_means_none: BTreeSet<String>,
+    /// Ships whose main-gun ammunition is treated as not limiting while no
+    /// `main_rounds_per_gun` row exists (decision 0023).
+    pub main_gun_ammunition_not_limiting: BTreeSet<String>,
 }
 
 fn list_problem(figure: &str, message: impl Into<String>) -> Problem {
@@ -99,6 +104,14 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             ));
         }
     }
+    for ship in &raw.main_gun_ammunition_not_limiting {
+        if !ships.contains(ship) {
+            problems.push(list_problem(
+                "main_gun_ammunition_not_limiting",
+                format!("`{ship}` is not in ships"),
+            ));
+        }
+    }
     let Some(date) = date else {
         return (None, problems);
     };
@@ -111,6 +124,10 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         first_class_id: raw.first_class_id,
         ships,
         radar_unknown_means_none: raw.radar_unknown_means_none.into_iter().collect(),
+        main_gun_ammunition_not_limiting: raw
+            .main_gun_ammunition_not_limiting
+            .into_iter()
+            .collect(),
     };
     (Some(list), problems)
 }

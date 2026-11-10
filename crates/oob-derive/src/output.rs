@@ -3,7 +3,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use crate::derive::{ShipResult, Value, CARGO, FIGURES, KIND, RADAR, WHOLE};
+use crate::derive::{
+    ShipResult, Value, AMMUNITION_NOT_LIMITING_ROUNDS, CARGO, FIGURES, KIND, RADAR, WHOLE,
+};
 use crate::input::{List, Rules};
 use crate::problem::{Kind, Problem};
 use crate::reading::Row;
@@ -17,8 +19,8 @@ const RULES: [&str; 14] = [
     "endurance_nm of the ship, else of its class",
     "fixed at 0: warships carry no cargo",
     "count of the main_battery fit",
-    "rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm is never read)",
-    "main_rounds_per_gun of the ship, else of its class",
+    "rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",
+    "main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",
     "shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage",
     "count of the torpedo_tubes fit",
     "warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted",
@@ -181,6 +183,12 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         .map(|r| r.ship.as_str())
         .collect();
 
+    let ammunition: Vec<&str> = results
+        .iter()
+        .filter(|r| r.ammunition_assumed)
+        .map(|r| r.ship.as_str())
+        .collect();
+
     // Class CSV.
     let mut class_text = String::new();
     let mut line = |text: String| {
@@ -240,6 +248,16 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             ));
         }
     }
+    if ammunition.is_empty() {
+        line("Ammunition assumptions used (decision 0023): none".to_string());
+    } else {
+        line("Ammunition assumptions used (decision 0023):".to_string());
+        for ship in &ammunition {
+            line(format!(
+                "  {ship}: no main_rounds_per_gun row in the facts, main-gun ammunition treated as not limiting ({AMMUNITION_NOT_LIMITING_ROUNDS} is a marker, not an outfit)"
+            ));
+        }
+    }
     let class_header: Vec<&str> = [&["id", "name"][..], &FIGURES[..]].concat();
     let class_body: Vec<Vec<String>> = rows
         .iter()
@@ -293,8 +311,18 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                     doubts.into_iter().collect::<Vec<_>>().join(", ")
                 ));
             }
-            if row.members.iter().any(|&m| results[m].figures[i].excepted) {
+            if i == 7 && row.members.iter().any(|&m| results[m].designed_rate) {
+                notes.push(
+                    "designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
+                        .to_string(),
+                );
+            } else if row.members.iter().any(|&m| results[m].figures[i].excepted) {
                 notes.push("rests on an exception".to_string());
+            }
+            if i == 8 && row.members.iter().any(|&m| results[m].ammunition_assumed) {
+                notes.push(format!(
+                    "assumption, not a fact: main-gun ammunition is treated as not limiting (decision 0023); {AMMUNITION_NOT_LIMITING_ROUNDS} is a marker, not an outfit"
+                ));
             }
             if i == RADAR {
                 let ships: Vec<&str> = row
