@@ -4,9 +4,11 @@
 //! agent gets a [`crate::view::SideView`] instead.
 //!
 //! Only the fields the scenarios so far need exist: position, fuel and
-//! route, supply aboard ships and in base stocks, and air groups (base,
-//! aircraft ready, mission and search arc). Damage, ammunition, pilots and
-//! land units arrive with the scenarios that use them.
+//! route, supply aboard ships and in base stocks, air groups (base,
+//! aircraft ready, mission and search arc), and for surface combat each
+//! ship's damage tracks and ammunition and each task force's alertness and
+//! rules of engagement. Pilots and land units arrive with the scenarios that
+//! use them.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -15,7 +17,7 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
 };
-use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting};
+use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting, Stance};
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -44,11 +46,14 @@ impl Side {
     }
 }
 
-/// Where a ship is. A ship is always in exactly one task force or one port.
+/// Where a ship is. A ship is always in exactly one task force, in exactly
+/// one port, or sunk.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ShipLocation {
     TaskForce(TaskForceId),
     Port(BaseId),
+    /// Sunk. In no task force and no port, and out of every rule.
+    Sunk,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -62,6 +67,16 @@ pub struct Ship {
     /// Supply aboard, in tons.
     pub supply_t: Fixed,
     pub location: ShipLocation,
+    /// Flotation damage, 0 to 100. At 100 the ship sinks.
+    pub flotation_damage: Fixed,
+    /// System damage, 0 to 100. Reduces gun shots.
+    pub system_damage: Fixed,
+    /// Fire damage, 0 to 100. Any fire lights the ship at night.
+    pub fire_damage: Fixed,
+    /// Gun rounds left aboard. Never negative.
+    pub gun_rounds: Fixed,
+    /// True while the ship still has its torpedoes to fire.
+    pub torpedoes_ready: bool,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -115,6 +130,30 @@ pub struct CargoOrder {
     pub order: OrderId,
 }
 
+/// How a task force behaves in a surface fight: whether it fights or tries
+/// to slip away, and how much loss makes it break off.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct RulesOfEngagement {
+    pub stance: Stance,
+    /// The share of ships sunk or crippled, 0 to 1, at which the force
+    /// breaks off.
+    pub break_off: Fixed,
+}
+
+impl RulesOfEngagement {
+    /// Engage, and break off at half the ships lost or crippled.
+    pub const DEFAULT: RulesOfEngagement = RulesOfEngagement {
+        stance: Stance::Engage,
+        break_off: Fixed::from_raw(500_000),
+    };
+}
+
+impl Default for RulesOfEngagement {
+    fn default() -> RulesOfEngagement {
+        RulesOfEngagement::DEFAULT
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TaskForce {
     pub id: TaskForceId,
@@ -151,6 +190,13 @@ pub struct TaskForce {
     /// the latest sighting this task force noticed (decision 17 of
     /// `docs/decisions/0012-search-and-contacts.md`).
     pub noticed_sighted_at_hours: Option<Fixed>,
+    /// Whether the task force is alert (decision 6 of
+    /// `docs/decisions/0014-surface-combat.md`).
+    pub alert: bool,
+    /// The standing rules of engagement.
+    pub rules_of_engagement: RulesOfEngagement,
+    /// The standing order that set the rules of engagement, if any.
+    pub rules_order: Option<OrderId>,
 }
 
 impl TaskForce {
@@ -225,6 +271,9 @@ impl TaskForce {
             arrived_at_hours: None,
             arrival_event: None,
             noticed_sighted_at_hours: None,
+            alert: true,
+            rules_of_engagement: RulesOfEngagement::DEFAULT,
+            rules_order: None,
         }
     }
 }

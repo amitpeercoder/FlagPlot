@@ -7,6 +7,7 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
+    SurfaceCombatFigures,
 };
 
 use crate::error::DataError;
@@ -23,6 +24,15 @@ struct ShipClassRow {
     fuel_capacity_t: String,
     endurance_nm: String,
     cargo_capacity_t: String,
+    main_guns: u32,
+    gun_rounds_per_min: u32,
+    gun_rounds_per_gun: u32,
+    gun_damage: u32,
+    torpedo_tubes: u32,
+    torpedo_damage: u32,
+    toughness: u32,
+    /// 0 or 1.
+    radar: u8,
 }
 
 #[derive(Deserialize)]
@@ -49,6 +59,11 @@ fn parse_kind(text: &str) -> Option<ShipKind> {
 /// Loads ship classes from a CSV file.
 pub fn load_ship_classes(path: &Path) -> Result<RefData, DataError> {
     let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_ship_classes(&text, path)
+}
+
+/// Parses ship classes from CSV text. `path` is only used in messages.
+fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
     let mut reader = csv::ReaderBuilder::new()
         .comment(Some(b'#'))
         .trim(csv::Trim::All)
@@ -73,6 +88,23 @@ pub fn load_ship_classes(path: &Path) -> Result<RefData, DataError> {
             fuel_capacity_t: number("fuel_capacity_t", &row.fuel_capacity_t)?,
             endurance_nm: number("endurance_nm", &row.endurance_nm)?,
             cargo_capacity_t: number("cargo_capacity_t", &row.cargo_capacity_t)?,
+            main_guns: row.main_guns,
+            gun_rounds_per_min: row.gun_rounds_per_min,
+            gun_rounds_per_gun: row.gun_rounds_per_gun,
+            gun_damage: row.gun_damage,
+            torpedo_tubes: row.torpedo_tubes,
+            torpedo_damage: row.torpedo_damage,
+            toughness: row.toughness,
+            radar: match row.radar {
+                0 => false,
+                1 => true,
+                other => {
+                    return Err(DataError::in_file(
+                        path,
+                        format!("{id}: radar is {other}, not 0 or 1"),
+                    ))
+                }
+            },
             name: row.name,
         };
         if let Some(problem) = class.problem() {
@@ -280,6 +312,81 @@ fn parse_search_figures(text: &str, path: &Path) -> Result<SearchFigures, DataEr
     Ok(figures)
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SurfaceCombatFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    round_minutes: u32,
+    max_rounds: u32,
+    sighting_chance_night: Quantity,
+    sighting_chance_day: Quantity,
+    radar_sighting_bonus: Quantity,
+    not_alert_sighting_factor: Quantity,
+    gun_hit_chance_night: Quantity,
+    gun_hit_chance_day: Quantity,
+    torpedo_hit_chance_night: Quantity,
+    torpedo_hit_chance_day: Quantity,
+    surprised_target_factor: Quantity,
+    lit_target_factor: Quantity,
+    gun_hit_flotation: Quantity,
+    gun_hit_system: Quantity,
+    gun_hit_fire: Quantity,
+    crippled_flotation: Quantity,
+    claimed_sunk_fire: Quantity,
+}
+
+/// Loads the surface combat figures from a TOML file.
+pub fn load_surface_combat_figures(path: &Path) -> Result<SurfaceCombatFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_surface_combat_figures(&text, path)
+}
+
+/// Parses surface combat figures from TOML text. `path` is only used in
+/// messages.
+fn parse_surface_combat_figures(
+    text: &str,
+    path: &Path,
+) -> Result<SurfaceCombatFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: SurfaceCombatFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = SurfaceCombatFigures {
+        round_minutes: file.round_minutes,
+        max_rounds: file.max_rounds,
+        sighting_chance_night: number("sighting_chance_night", &file.sighting_chance_night)?,
+        sighting_chance_day: number("sighting_chance_day", &file.sighting_chance_day)?,
+        radar_sighting_bonus: number("radar_sighting_bonus", &file.radar_sighting_bonus)?,
+        not_alert_sighting_factor: number(
+            "not_alert_sighting_factor",
+            &file.not_alert_sighting_factor,
+        )?,
+        gun_hit_chance_night: number("gun_hit_chance_night", &file.gun_hit_chance_night)?,
+        gun_hit_chance_day: number("gun_hit_chance_day", &file.gun_hit_chance_day)?,
+        torpedo_hit_chance_night: number(
+            "torpedo_hit_chance_night",
+            &file.torpedo_hit_chance_night,
+        )?,
+        torpedo_hit_chance_day: number("torpedo_hit_chance_day", &file.torpedo_hit_chance_day)?,
+        surprised_target_factor: number("surprised_target_factor", &file.surprised_target_factor)?,
+        lit_target_factor: number("lit_target_factor", &file.lit_target_factor)?,
+        gun_hit_flotation: number("gun_hit_flotation", &file.gun_hit_flotation)?,
+        gun_hit_system: number("gun_hit_system", &file.gun_hit_system)?,
+        gun_hit_fire: number("gun_hit_fire", &file.gun_hit_fire)?,
+        crippled_flotation: number("crippled_flotation", &file.crippled_flotation)?,
+        claimed_sunk_fire: number("claimed_sunk_fire", &file.claimed_sunk_fire)?,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -467,5 +574,148 @@ mod tests {
         assert_eq!(five.berths, 4);
         assert_eq!(five.berth_rate_t_per_h, Fixed::from_int(150));
         assert_eq!(five.lighter_rate_t_per_h, Fixed::from_int(20));
+    }
+
+    const CLASS_HEADER: &str = "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar\n";
+
+    fn classes(rows: &str) -> Result<RefData, DataError> {
+        parse_ship_classes(&format!("# c\n{CLASS_HEADER}{rows}"), here())
+    }
+
+    #[test]
+    fn ship_classes_parse_with_their_combat_columns() {
+        let data = classes(
+            "1,Cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,1\n\
+             2,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,300,0\n",
+        )
+        .expect("parses");
+        let cruiser = &data.ship_classes[&ShipClassId::new(1)];
+        assert_eq!(cruiser.main_guns, 8);
+        assert_eq!(cruiser.gun_rounds_per_min, 3);
+        assert_eq!(cruiser.gun_rounds_per_gun, 100);
+        assert_eq!(cruiser.gun_damage, 20);
+        assert_eq!(cruiser.torpedo_tubes, 8);
+        assert_eq!(cruiser.torpedo_damage, 200);
+        assert_eq!(cruiser.toughness, 400);
+        assert!(cruiser.radar);
+        let cargo = &data.ship_classes[&ShipClassId::new(2)];
+        assert_eq!(cargo.main_guns, 0);
+        assert_eq!(cargo.torpedo_tubes, 0);
+        assert_eq!(cargo.toughness, 300);
+        assert!(!cargo.radar);
+    }
+
+    #[test]
+    fn ship_class_combat_errors_are_rejected() {
+        let bad = |row: &str| classes(row).expect_err("rejected").message;
+        // Zero toughness.
+        assert!(bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,0,0\n").contains("toughness"));
+        // Radar must be 0 or 1.
+        assert!(
+            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,2\n").contains("radar is 2")
+        );
+        // Whole numbers only: a fraction, a negative and text are rejected.
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8.5,3,100,20,8,200,400,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,-8,3,100,20,8,200,400,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,yes\n").is_err());
+        // A missing column and an extra one.
+        let short = "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t\n1,A,cruiser,16,32,2000,8000,0\n";
+        assert!(parse_ship_classes(short, here()).is_err());
+        let extra = format!(
+            "{}\n1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,9\n",
+            CLASS_HEADER.trim_end().to_string() + ",extra"
+        );
+        let message = parse_ship_classes(&extra, here())
+            .expect_err("rejected")
+            .message;
+        assert!(message.contains("extra"), "{message}");
+    }
+
+    #[test]
+    fn the_real_ship_classes_load() {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ship_classes.csv");
+        let data = load_ship_classes(&path).expect("the shipped classes load");
+        let cruiser = &data.ship_classes[&ShipClassId::new(1)];
+        assert_eq!(cruiser.main_guns, 8);
+        assert_eq!(cruiser.toughness, 400);
+        assert!(data.ship_classes.values().all(|class| class.toughness > 0));
+    }
+
+    fn combat_text() -> String {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/surface_combat.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn surface_combat_figures_parse_with_the_files_values() {
+        let figures = parse_surface_combat_figures(&combat_text(), here()).expect("parses");
+        assert_eq!(figures.round_minutes, 5);
+        assert_eq!(figures.max_rounds, 6);
+        assert_eq!(figures.sighting_chance_night, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.sighting_chance_day, Fixed::ONE);
+        assert_eq!(figures.radar_sighting_bonus, Fixed::from_ratio(1, 5));
+        assert_eq!(figures.not_alert_sighting_factor, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.gun_hit_chance_night, Fixed::from_ratio(3, 100));
+        assert_eq!(figures.gun_hit_chance_day, Fixed::from_ratio(5, 100));
+        assert_eq!(figures.torpedo_hit_chance_night, Fixed::from_ratio(4, 100));
+        assert_eq!(figures.torpedo_hit_chance_day, Fixed::from_ratio(2, 100));
+        assert_eq!(figures.surprised_target_factor, Fixed::from_ratio(3, 2));
+        assert_eq!(figures.lit_target_factor, Fixed::from_int(2));
+        assert_eq!(figures.gun_hit_flotation, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.gun_hit_system, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.gun_hit_fire, Fixed::from_ratio(1, 5));
+        assert_eq!(figures.crippled_flotation, Fixed::from_int(50));
+        assert_eq!(figures.claimed_sunk_fire, Fixed::from_int(30));
+    }
+
+    #[test]
+    fn a_float_in_surface_combat_figures_is_rejected() {
+        let text = combat_text().replace("\"0.03\"", "0.03");
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = combat_text().replace("crippled_flotation = 50", "crippled_flotation = 50.5");
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = combat_text().replace("round_minutes = 5", "round_minutes = 5.0");
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+    }
+
+    #[test]
+    fn an_unknown_or_missing_surface_combat_field_is_rejected() {
+        let text = format!("{}\nextra = 1\n", combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = combat_text().replace("max_rounds = 6\n", "");
+        let message = parse_surface_combat_figures(&text, here())
+            .expect_err("rejected")
+            .message;
+        assert!(message.contains("max_rounds"), "{message}");
+    }
+
+    #[test]
+    fn bad_surface_combat_figures_are_rejected_by_their_checks() {
+        let bad = |from: &str, to: &str| {
+            let text = combat_text().replace(from, to);
+            assert_ne!(text, combat_text(), "{from} is in the file");
+            parse_surface_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("gun_hit_fire = \"0.2\"", "gun_hit_fire = \"0.3\"").contains("not 1"));
+        assert!(bad("round_minutes = 5", "round_minutes = 0").contains("round minutes"));
+        assert!(bad("max_rounds = 6", "max_rounds = 0").contains("max rounds"));
+        assert!(bad(
+            "sighting_chance_night = \"0.5\"",
+            "sighting_chance_night = \"1.5\""
+        )
+        .contains("night sighting"));
+        assert!(
+            bad("lit_target_factor = \"2\"", "lit_target_factor = \"-2\"").contains("lit target")
+        );
+        assert!(bad("claimed_sunk_fire = 30", "claimed_sunk_fire = 101").contains("claimed sunk"));
+        assert!(bad(
+            "radar_sighting_bonus = \"0.2\"",
+            "radar_sighting_bonus = \"a fifth\""
+        )
+        .contains("radar_sighting_bonus"));
     }
 }

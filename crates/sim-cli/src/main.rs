@@ -7,6 +7,7 @@ use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 
+use sim_core::orders::Stance;
 use sim_core::state::{ShipLocation, Side};
 use sim_core::time::ClockTime;
 use sim_data::Scenario;
@@ -114,14 +115,25 @@ fn run(args: &[String]) -> Result<(), String> {
             ),
             None => String::new(),
         };
+        let stance = match task_force.rules_of_engagement.stance {
+            Stance::Engage => "engage",
+            Stance::Avoid => "avoid",
+        };
         println!(
-            "{} \"{}\" ({}): {:?} at {}{}",
+            "{} \"{}\" ({}): {:?} at {}{}; {}, rules of engagement: {}, break off at {}",
             task_force.id,
             task_force.name,
             task_force.side.name(),
             task_force.status,
             position,
-            noticed
+            noticed,
+            if task_force.alert {
+                "alert"
+            } else {
+                "not alert"
+            },
+            stance,
+            task_force.rules_of_engagement.break_off
         );
     }
     for group in truth.air_groups.values() {
@@ -147,10 +159,24 @@ fn run(args: &[String]) -> Result<(), String> {
         let location = match ship.location {
             ShipLocation::TaskForce(id) => id.to_string(),
             ShipLocation::Port(id) => id.to_string(),
+            ShipLocation::Sunk => "no task force or port".to_string(),
+        };
+        let state = if ship.location == ShipLocation::Sunk {
+            "SUNK".to_string()
+        } else {
+            format!("afloat in {location}")
         };
         println!(
-            "{} \"{}\": {} t of fuel, {} t of supply, in {}",
-            ship.id, ship.name, ship.fuel_t, ship.supply_t, location
+            "{} \"{}\": {state}; damage flotation {}, system {}, fire {}; {} gun rounds, torpedoes {}; {} t of fuel, {} t of supply",
+            ship.id,
+            ship.name,
+            ship.flotation_damage,
+            ship.system_damage,
+            ship.fire_damage,
+            ship.gun_rounds,
+            if ship.torpedoes_ready { "ready" } else { "gone" },
+            ship.fuel_t,
+            ship.supply_t
         );
     }
     for base in truth.bases.values() {
@@ -181,6 +207,24 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         if !any {
             println!("{}: no contacts", side.name());
+        }
+        for claim in view.claims() {
+            println!(
+                "{} claims {} enemy {} sunk at {}, day {} {}",
+                side.name(),
+                claim.claimed_sunk,
+                if claim.claimed_sunk == 1 {
+                    "ship"
+                } else {
+                    "ships"
+                },
+                claim.hex,
+                claim.day,
+                claim.pulse.name()
+            );
+        }
+        if view.claims().is_empty() {
+            println!("{}: no battle claims", side.name());
         }
     }
     Ok(())

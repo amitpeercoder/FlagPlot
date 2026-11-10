@@ -115,6 +115,11 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u8(ship.side.code());
         h.i64(ship.fuel_t.raw());
         h.i64(ship.supply_t.raw());
+        h.i64(ship.flotation_damage.raw());
+        h.i64(ship.system_damage.raw());
+        h.i64(ship.fire_damage.raw());
+        h.i64(ship.gun_rounds.raw());
+        h.u8(u8::from(ship.torpedoes_ready));
         match ship.location {
             ShipLocation::TaskForce(id) => {
                 h.u8(1);
@@ -124,6 +129,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u8(2);
                 h.u32(id.raw());
             }
+            ShipLocation::Sunk => h.u8(3),
         }
     }
 
@@ -180,6 +186,10 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        h.u8(u8::from(task_force.alert));
+        h.u8(task_force.rules_of_engagement.stance.code());
+        h.i64(task_force.rules_of_engagement.break_off.raw());
+        h.optional_u32(task_force.rules_order.map(|id| id.raw()));
     }
 
     h.count(truth.bases.len());
@@ -232,6 +242,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u32(contact.age_pulses);
             h.i64(contact.confidence.raw());
             h.u32(contact.last_report_event.raw());
+        }
+        h.count(belief.claims().len());
+        for claim in belief.claims() {
+            h.i32(claim.hex.q);
+            h.i32(claim.hex.r);
+            h.u32(claim.day);
+            h.u64(claim.pulse.code());
+            h.u32(claim.claimed_sunk);
+            h.u32(claim.received_event.raw());
         }
     }
 
