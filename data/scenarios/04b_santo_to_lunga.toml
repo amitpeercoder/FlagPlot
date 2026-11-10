@@ -1,0 +1,57 @@
+# Scenario 4b, on the real map: a task force steams from Espiritu Santo to
+# Lunga Point with one waypoint and finds its own way.
+#
+# The map is real: generated from Natural Earth coastlines. The ships are
+# PLACEHOLDER DATA, invented. The hand calculation is in Part 3 of
+# tests/scenario_04b_pathfinding.rs.
+
+name = "Scenario 4b: Espiritu Santo to Lunga Point on the real map"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/south_pacific.csv"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# At sea in the hex of the Segond Channel anchorage.
+[[task_force]]
+id = 1
+name = "Placeholder transit force"
+side = "allied"
+q = 7
+r = 6
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# Day 1: one waypoint, the hex of Lunga Point.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"

@@ -36,7 +36,11 @@ impl Hex {
         Self::DIRECTIONS.map(|(dq, dr)| Hex::new(self.q + dq, self.r + dr))
     }
 
-    /// The neighbour that is one step closer to `target`. When two neighbours
+    /// The neighbour that is one step closer to `target` in a straight line,
+    /// ignoring land. It defines the open-water path: on open water the
+    /// map's shortest-path step ([`crate::map::Map::next_step`], decision
+    /// 0017) is the same hex. Movement uses the map's step, not this one.
+    /// When two neighbours
     /// are equally close, the one that comes first in [`Hex::DIRECTIONS`]
     /// wins. Returns `self` when already there.
     pub fn step_toward(self, target: Hex) -> Hex {

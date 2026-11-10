@@ -1,0 +1,58 @@
+# Scenario 4b: a task force is ordered to a point on the far side of an
+# island and finds its own way round.
+#
+# Stage 4b of scenario 4. It proves pathfinding against a hand calculation,
+# on a small hand-drawn map. The calculation is written out in
+# tests/scenario_04b_pathfinding.rs. The real map is tested there too.
+#
+# PLACEHOLDER DATA. The ships and this map are invented.
+
+name = "Scenario 4b: Round the island"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_island.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+[[task_force]]
+id = 1
+name = "Placeholder transit force"
+side = "allied"
+q = 0
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# Day 1: one waypoint, on the far side of the island. No waypoints round it.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[8, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"

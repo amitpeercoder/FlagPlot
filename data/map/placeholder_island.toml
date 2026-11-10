@@ -1,0 +1,30 @@
+# PLACEHOLDER MAP. Open sea with a wall of land three hexes long across the
+# straight line between two points, used by scenario 4b. The geography is
+# invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 9]
+r = [-3, 3]
+
+# The wall, at q = 4.
+[[hex]]
+q = 4
+r = -1
+kind = "land"
+terrain = "jungle"
+
+[[hex]]
+q = 4
+r = 0
+kind = "land"
+terrain = "jungle"
+
+[[hex]]
+q = 4
+r = 1
+kind = "land"
+terrain = "jungle"

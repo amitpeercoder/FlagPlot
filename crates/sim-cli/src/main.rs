@@ -73,7 +73,7 @@ fn run(args: &[String]) -> Result<(), String> {
     }
     println!("{}", scenario.name);
     if scenario.placeholder {
-        println!("PLACEHOLDER DATA: units and geography are invented, not historical.");
+        println!("PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.");
     }
     println!("seed {}", scenario.world.seed());
     println!();
