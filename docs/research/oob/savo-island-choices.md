@@ -41,7 +41,7 @@ The figures are not all the same kind of thing. The table says what each one is,
 Two things are now sourced from the Australian official history:
 
 - **Canberra was using a Type 271 surface warning set that night,** and saw Blue on it at intervals. It had earlier picked up cruisers at 30 miles. That settles her set in the data, against websites that said Type 241.
-- **The pickets were chosen because, in their squadron commander's opinion, they had "the most effective radar and radar operating capability of the nine ships in his squadron".** That reads as the other seven destroyers, Bagley, Patterson and Helm among them, having some radar that was less effective or less well worked. The data has low-confidence rows for those three saying "a set, type not stated", marked as an inference. Wilson was in another squadron and nothing was found.
+- **The pickets were chosen because, in their squadron commander's opinion, they had "the most effective radar and radar operating capability of the nine ships in his squadron".** That reads as the other seven destroyers, Bagley, Patterson and Helm among them, having some radar that was less effective or less well worked. The data has low-confidence rows for those three saying "a set, type not stated", marked as an inference. Nothing was found for Wilson; whether she is one of the nine was not established.
 
 **Proposal for the scenario.** Treat every Allied ship in the fight as carrying a search radar no better than the pickets' set, except Wilson and Jarvis, which get none as a stated assumption. Vincennes, Quincy and Astoria also have a fire-control radar that ranges on a target already found.
 
