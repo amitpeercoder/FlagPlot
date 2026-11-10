@@ -63,6 +63,11 @@ define_id!(
     "ship_class"
 );
 define_id!(
+    /// An aircraft type in the reference data.
+    AircraftTypeId,
+    "aircraft_type"
+);
+define_id!(
     /// A task force.
     TaskForceId,
     "task_force"
@@ -219,6 +224,12 @@ impl From<ShipId> for EntityRef {
 impl From<TaskForceId> for EntityRef {
     fn from(id: TaskForceId) -> Self {
         EntityRef::TaskForce(id)
+    }
+}
+
+impl From<AirGroupId> for EntityRef {
+    fn from(id: AirGroupId) -> Self {
+        EntityRef::AirGroup(id)
     }
 }
 

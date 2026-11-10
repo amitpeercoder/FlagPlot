@@ -16,6 +16,8 @@ The spec says orders are validated against truth at intake, that they persist un
 6. **A route is rejected whole** if any waypoint is off the map or the path crosses a hex ships cannot enter.
 7. **A rejection may only cite facts the issuing side can see:** its own units, the map and ownership. An order that would fail because of something the side does not know is accepted at intake and fails in execution. The side learns of it through an event it would plausibly receive. This amends the spec, which said orders are validated against truth state.
 
+   One reason, "not one of your units", covers both a unit that does not exist and a unit of the enemy. Two reasons would let a side probe for enemy unit IDs.
+
 ## Why
 
 - **Decision 3:** the override rules in pillar 2 depend on telling a hand-given order from a staff order. That is true whoever holds the seat. A third issuer value for agents would need a fourth as soon as an agent has a staff.

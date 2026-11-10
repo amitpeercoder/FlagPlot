@@ -1,0 +1,56 @@
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0012-search-and-contacts.md.
+
+placeholder = true
+
+# Confidence of a fresh report, and what happens to it with age.
+initial_confidence = "0.8"
+confidence_decay_per_pulse = "0.8"
+drop_below_confidence = "0.3"
+
+# A report refreshes a contact this close and this fresh.
+merge_distance_hexes = 2
+merge_max_age_pulses = 2
+
+# Chance a report names a neighbouring hex.
+position_error_chance = "0.3"
+
+# Chance a report counts one ship too many, or one too few.
+count_over_chance = "0.2"
+count_under_chance = "0.2"
+
+# Chance a sighted task force notices the aircraft that sighted it.
+notice_chance = "0.5"
+
+# For each true kind, the chance of each reported kind. Each row adds to 1.
+[kind_confusion.carrier]
+carrier = "0.7"
+battleship = "0.1"
+cruiser = "0.1"
+transport = "0.1"
+
+[kind_confusion.battleship]
+battleship = "0.7"
+carrier = "0.1"
+cruiser = "0.2"
+
+[kind_confusion.cruiser]
+cruiser = "0.7"
+battleship = "0.1"
+destroyer = "0.1"
+carrier = "0.1"
+
+[kind_confusion.destroyer]
+destroyer = "0.7"
+cruiser = "0.2"
+transport = "0.1"
+
+[kind_confusion.transport]
+transport = "0.7"
+auxiliary = "0.2"
+carrier = "0.1"
+
+[kind_confusion.auxiliary]
+auxiliary = "0.7"
+transport = "0.3"

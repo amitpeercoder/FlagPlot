@@ -2,7 +2,9 @@
 //!
 //! There is no shared generator that advances as the simulation runs. Each
 //! draw is a pure function of a key: seed, day, pulse, subsystem, entity, and
-//! the position of the draw in that entity's own sequence. Processing
+//! the position of the draw in that entity's own sequence. A draw about a pair
+//! of entities (this air group looking for that task force) names a second
+//! entity as well; see `docs/decisions/0013-random-keys-for-pairs.md`. Processing
 //! entities in a different order therefore cannot change any result.
 //!
 //! The mixing function is the SplitMix64 finaliser. It is not cryptographic
@@ -54,6 +56,11 @@ pub struct RngKey {
     pub pulse: Option<Pulse>,
     pub subsystem: Subsystem,
     pub entity: EntityRef,
+    /// The second entity of a pair, or `None` for a draw about one entity.
+    /// With `None` the stream is exactly what it was before this field
+    /// existed. The order of `entity` and `other` is fixed by the rule that
+    /// draws (decision 0013).
+    pub other: Option<EntityRef>,
 }
 
 const GOLDEN: u64 = 0x9E37_79B9_7F4A_7C15;
@@ -61,6 +68,8 @@ const TAG_DAY: u64 = 0xA076_1D64_78BD_642F;
 const TAG_PULSE: u64 = 0xE703_7ED1_A0B4_28DB;
 const TAG_SUBSYSTEM: u64 = 0x8EBC_6AF0_9C88_C6E3;
 const TAG_ENTITY: u64 = 0x5899_65CC_7537_4CC3;
+/// Tag for the second entity of a pair key. Part of the save format.
+const TAG_OTHER: u64 = 0xD1B5_4A32_D192_ED03;
 
 /// SplitMix64 finaliser.
 const fn mix64(mut z: u64) -> u64 {
@@ -87,6 +96,9 @@ impl RngKey {
         base = absorb(base, TAG_PULSE, pulse_code);
         base = absorb(base, TAG_SUBSYSTEM, self.subsystem.code());
         base = absorb(base, TAG_ENTITY, self.entity.stable_key());
+        if let Some(other) = self.other {
+            base = absorb(base, TAG_OTHER, other.stable_key());
+        }
         RngStream { base, counter: 0 }
     }
 }
@@ -131,7 +143,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
-    use crate::ids::{ShipId, TaskForceId};
+    use crate::ids::{AirGroupId, ShipId, TaskForceId};
 
     fn key(entity: EntityRef) -> RngKey {
         RngKey {
@@ -140,6 +152,7 @@ mod tests {
             pulse: Some(Pulse::Morning),
             subsystem: Subsystem::Search,
             entity,
+            other: None,
         }
     }
 
@@ -230,6 +243,15 @@ mod tests {
                 entity: EntityRef::TaskForce(TaskForceId::new(3)),
                 ..base
             },
+            // A second entity, and a different second entity.
+            RngKey {
+                other: Some(ship(4)),
+                ..base
+            },
+            RngKey {
+                other: Some(ship(5)),
+                ..base
+            },
         ];
 
         let mut seen = vec![first(base)];
@@ -248,6 +270,7 @@ mod tests {
             pulse: None,
             subsystem: Subsystem::Movement,
             entity: ship(1),
+            other: None,
         };
         let b = RngKey {
             seed: 2,
@@ -304,14 +327,68 @@ mod tests {
             pulse: None,
             subsystem: Subsystem::Logistics,
             entity: EntityRef::TaskForce(TaskForceId::new(1)),
+            other: None,
         };
         assert_eq!(draws(end_of_day, 2), PINNED_END_OF_DAY);
+    }
+
+    fn pair_key(entity: EntityRef, other: EntityRef) -> RngKey {
+        RngKey {
+            other: Some(other),
+            ..key(entity)
+        }
+    }
+
+    fn air_group(raw: u32) -> EntityRef {
+        EntityRef::AirGroup(AirGroupId::new(raw))
+    }
+
+    fn task_force(raw: u32) -> EntityRef {
+        EntityRef::TaskForce(TaskForceId::new(raw))
+    }
+
+    /// Pinned values for the pair form (decision 0013). Part of the save
+    /// format, like the single-entity values.
+    #[test]
+    fn pair_output_is_pinned() {
+        assert_eq!(
+            draws(pair_key(air_group(1), task_force(1)), 3),
+            PINNED_PAIR_AIR_GROUP_1_TASK_FORCE_1
+        );
+    }
+
+    #[test]
+    fn the_order_of_a_pair_matters() {
+        let ab = draws(pair_key(air_group(1), task_force(1)), 4);
+        let ba = draws(pair_key(task_force(1), air_group(1)), 4);
+        assert_ne!(ab, ba);
+    }
+
+    #[test]
+    fn a_pair_key_differs_from_the_single_key_of_its_first_entity() {
+        let single = draws(key(air_group(1)), 4);
+        let pair = draws(pair_key(air_group(1), task_force(1)), 4);
+        assert_ne!(single, pair);
+    }
+
+    #[test]
+    fn changing_the_second_entity_changes_the_stream() {
+        let one = draws(pair_key(air_group(1), task_force(1)), 4);
+        let two = draws(pair_key(air_group(1), task_force(2)), 4);
+        assert_ne!(one, two);
     }
 
     const PINNED_SHIP_3: [u64; 3] = [
         14_248_313_465_659_663_483,
         11_050_835_108_968_198_041,
         11_523_755_419_223_571_334,
+    ];
+    // Seed 1942, day 17, morning, search; air group 1 and task force 1. Part
+    // of the save format: do not change without a decision record.
+    const PINNED_PAIR_AIR_GROUP_1_TASK_FORCE_1: [u64; 3] = [
+        3_902_777_303_372_789_147,
+        4_120_078_374_976_771_759,
+        14_060_622_519_450_889_050,
     ];
     const PINNED_END_OF_DAY: [u64; 2] = [6_669_309_778_430_270_743, 10_390_202_447_835_255_326];
 }

@@ -738,6 +738,7 @@ fn the_event_log_explains_an_unload() {
         .filter_map(|cause| match cause {
             Cause::Order(id) => match &world.order(*id).expect("on record").kind {
                 OrderKind::TaskForce { order, .. } => Some(order),
+                OrderKind::AirGroup { .. } => None,
             },
             Cause::Event(_) => None,
         })
@@ -837,6 +838,11 @@ fn variant(tag: &str, port_size: u8) -> Scenario {
     );
     copy("reference/ship_classes.csv", "reference/ship_classes.csv");
     copy("reference/port_sizes.csv", "reference/port_sizes.csv");
+    copy(
+        "reference/aircraft_types.csv",
+        "reference/aircraft_types.csv",
+    );
+    copy("reference/search.toml", "reference/search.toml");
 
     let map_text = fs::read_to_string(data.join("map/placeholder_supply_run.toml"))
         .expect("read the map file");

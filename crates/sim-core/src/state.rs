@@ -3,16 +3,19 @@
 //! Only the umpire reads this directly. A player, the staff planner or an
 //! agent gets a [`crate::view::SideView`] instead.
 //!
-//! Only the fields scenarios 1 and 2 need exist so far: position, fuel and
-//! route, and supply aboard ships and in base stocks. Damage, ammunition, air
-//! groups, pilots and land units arrive with the scenarios that use them.
+//! Only the fields the scenarios so far need exist: position, fuel and
+//! route, supply aboard ships and in base stocks, and air groups (base,
+//! aircraft ready, mission and search arc). Damage, ammunition, pilots and
+//! land units arrive with the scenarios that use them.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
-use crate::orders::{CargoAction, Mission, SpeedSetting};
+use crate::ids::{
+    AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
+};
+use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting};
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -144,6 +147,10 @@ pub struct TaskForce {
     pub arrived_at_hours: Option<Fixed>,
     /// The `TaskForceArrived` event of that arrival.
     pub arrival_event: Option<EventId>,
+    /// Elapsed hours since the scenario began at the start of the pulse of
+    /// the latest sighting this task force noticed (decision 17 of
+    /// `docs/decisions/0012-search-and-contacts.md`).
+    pub noticed_sighted_at_hours: Option<Fixed>,
 }
 
 impl TaskForce {
@@ -217,8 +224,36 @@ impl TaskForce {
             cargo_order: None,
             arrived_at_hours: None,
             arrival_event: None,
+            noticed_sighted_at_hours: None,
         }
     }
+}
+
+/// The arc an air group searches: from one bearing clockwise to another, in
+/// degrees, out to a range. Equal bearings mean the whole circle.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SearchArc {
+    pub from_deg: u32,
+    pub to_deg: u32,
+    pub range_nm: Fixed,
+}
+
+/// A group of aircraft of one type, based at one base.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct AirGroup {
+    pub id: AirGroupId,
+    pub name: String,
+    pub side: Side,
+    pub base: BaseId,
+    pub aircraft_type: AircraftTypeId,
+    /// Aircraft ready to fly. Unsigned so that it cannot go negative.
+    pub ready: u32,
+    pub mission: AirMission,
+    pub search: Option<SearchArc>,
+    /// The standing order that set the mission, if any.
+    pub mission_order: Option<OrderId>,
+    /// The standing order that set the search arc, if any.
+    pub arc_order: Option<OrderId>,
 }
 
 /// The real state of the world.
@@ -229,4 +264,5 @@ pub struct TruthState {
     pub ships: BTreeMap<ShipId, Ship>,
     pub task_forces: BTreeMap<TaskForceId, TaskForce>,
     pub bases: BTreeMap<BaseId, Base>,
+    pub air_groups: BTreeMap<AirGroupId, AirGroup>,
 }

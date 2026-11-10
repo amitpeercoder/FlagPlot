@@ -9,6 +9,7 @@
 
 #![deny(clippy::float_arithmetic)]
 
+pub mod bearing;
 pub mod belief;
 pub mod events;
 pub mod fixed;
@@ -27,6 +28,7 @@ pub mod world;
 mod cargo;
 mod invariants;
 mod resolve;
+mod search;
 
 pub use invariants::InvariantViolation;
 pub use world::{DaySummary, SimConfig, SimError, World};

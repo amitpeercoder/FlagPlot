@@ -4,10 +4,13 @@ use std::path::Path;
 
 use serde::Deserialize;
 use sim_core::fixed::Fixed;
-use sim_core::ids::ShipClassId;
-use sim_core::refdata::{PortSize, RefData, ShipClass, ShipKind};
+use sim_core::ids::{AircraftTypeId, ShipClassId};
+use sim_core::refdata::{
+    AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
+};
 
 use crate::error::DataError;
+use crate::quantity::Quantity;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -143,6 +146,140 @@ pub fn load_port_sizes(path: &Path) -> Result<BTreeMap<u8, PortSize>, DataError>
     Ok(sizes)
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AircraftTypeRow {
+    id: u32,
+    name: String,
+    role: String,
+    search_range_nm: String,
+    sweep_width_nm: String,
+}
+
+/// Loads aircraft types from a CSV file.
+pub fn load_aircraft_types(
+    path: &Path,
+) -> Result<BTreeMap<AircraftTypeId, AircraftType>, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_aircraft_types(&text, path)
+}
+
+/// Parses aircraft types from CSV text. `path` is only used in messages.
+fn parse_aircraft_types(
+    text: &str,
+    path: &Path,
+) -> Result<BTreeMap<AircraftTypeId, AircraftType>, DataError> {
+    let mut reader = csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .trim(csv::Trim::All)
+        .from_reader(text.as_bytes());
+
+    let mut types = BTreeMap::new();
+    for row in reader.deserialize::<AircraftTypeRow>() {
+        let row = row.map_err(|e| DataError::in_file(path, e.to_string()))?;
+        let id = AircraftTypeId::new(row.id);
+        let number = |field: &str, text: &str| -> Result<Fixed, DataError> {
+            text.parse::<Fixed>().map_err(|e| {
+                DataError::in_file(path, format!("{id}: {field} \"{text}\" is invalid: {e}"))
+            })
+        };
+        let role = match row.role.as_str() {
+            "patrol" => AircraftRole::Patrol,
+            other => {
+                return Err(DataError::in_file(
+                    path,
+                    format!("{id}: unknown role \"{other}\""),
+                ))
+            }
+        };
+        let aircraft_type = AircraftType {
+            id,
+            role,
+            search_range_nm: number("search_range_nm", &row.search_range_nm)?,
+            sweep_width_nm: number("sweep_width_nm", &row.sweep_width_nm)?,
+            name: row.name,
+        };
+        if let Some(problem) = aircraft_type.problem() {
+            return Err(DataError::in_file(path, problem));
+        }
+        if types.insert(id, aircraft_type).is_some() {
+            return Err(DataError::in_file(path, format!("{id} appears twice")));
+        }
+    }
+    Ok(types)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SearchFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    initial_confidence: Quantity,
+    confidence_decay_per_pulse: Quantity,
+    drop_below_confidence: Quantity,
+    merge_distance_hexes: u32,
+    merge_max_age_pulses: u32,
+    position_error_chance: Quantity,
+    count_over_chance: Quantity,
+    count_under_chance: Quantity,
+    notice_chance: Quantity,
+    /// True kind name, then reported kind name, then the chance.
+    kind_confusion: BTreeMap<String, BTreeMap<String, Quantity>>,
+}
+
+/// Loads the search, report and contact figures from a TOML file.
+pub fn load_search_figures(path: &Path) -> Result<SearchFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_search_figures(&text, path)
+}
+
+/// Parses search figures from TOML text. `path` is only used in messages.
+fn parse_search_figures(text: &str, path: &Path) -> Result<SearchFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: SearchFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let kind = |name: &str| -> Result<ShipKind, DataError> {
+        parse_kind(name).ok_or_else(|| fail(format!("kind_confusion: unknown kind \"{name}\"")))
+    };
+
+    let mut kind_confusion = BTreeMap::new();
+    for (true_name, row) in &file.kind_confusion {
+        let true_kind = kind(true_name)?;
+        let mut reported_row = BTreeMap::new();
+        for (reported_name, chance) in row {
+            let reported = kind(reported_name)?;
+            let field = format!("kind_confusion.{true_name}.{reported_name}");
+            reported_row.insert(reported, number(&field, chance)?);
+        }
+        kind_confusion.insert(true_kind, reported_row);
+    }
+
+    let figures = SearchFigures {
+        initial_confidence: number("initial_confidence", &file.initial_confidence)?,
+        confidence_decay_per_pulse: number(
+            "confidence_decay_per_pulse",
+            &file.confidence_decay_per_pulse,
+        )?,
+        drop_below_confidence: number("drop_below_confidence", &file.drop_below_confidence)?,
+        merge_distance_hexes: file.merge_distance_hexes,
+        merge_max_age_pulses: file.merge_max_age_pulses,
+        position_error_chance: number("position_error_chance", &file.position_error_chance)?,
+        count_over_chance: number("count_over_chance", &file.count_over_chance)?,
+        count_under_chance: number("count_under_chance", &file.count_under_chance)?,
+        notice_chance: number("notice_chance", &file.notice_chance)?,
+        kind_confusion,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,6 +305,97 @@ mod tests {
 
     fn message(result: Result<BTreeMap<u8, PortSize>, DataError>) -> String {
         result.expect_err("the table is rejected").message
+    }
+
+    fn here() -> &'static Path {
+        Path::new("test.file")
+    }
+
+    const AIRCRAFT_HEADER: &str = "id,name,role,search_range_nm,sweep_width_nm\n";
+
+    #[test]
+    fn aircraft_types_parse() {
+        let types = parse_aircraft_types(
+            &format!("# c\n{AIRCRAFT_HEADER}1, Flying boat ,patrol,600,\"40.5\"\n"),
+            here(),
+        )
+        .expect("parses");
+        let one = &types[&AircraftTypeId::new(1)];
+        assert_eq!(one.name, "Flying boat");
+        assert_eq!(one.role, AircraftRole::Patrol);
+        assert_eq!(one.search_range_nm, Fixed::from_int(600));
+        assert_eq!(one.sweep_width_nm, "40.5".parse::<Fixed>().expect("fixed"));
+    }
+
+    #[test]
+    fn aircraft_type_errors_are_rejected() {
+        let bad = |rows: &str| {
+            parse_aircraft_types(&format!("{AIRCRAFT_HEADER}{rows}"), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("1,A,fighter,600,40\n").contains("unknown role"));
+        assert!(bad("1,A,patrol,600,40\n1,B,patrol,600,40\n").contains("appears twice"));
+        assert!(bad("1,A,patrol,0,40\n").contains("search range"));
+        assert!(bad("1,A,patrol,600,x\n").contains("sweep_width_nm"));
+        let extra = parse_aircraft_types(
+            "id,name,role,search_range_nm,sweep_width_nm,extra\n1,A,patrol,600,40,9\n",
+            here(),
+        )
+        .expect_err("rejected");
+        assert!(extra.message.contains("extra"), "{extra}");
+    }
+
+    fn search_text() -> String {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/search.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn search_figures_parse_with_the_files_values() {
+        let figures = parse_search_figures(&search_text(), here()).expect("parses");
+        assert_eq!(figures.initial_confidence, Fixed::from_ratio(8, 10));
+        assert_eq!(figures.merge_distance_hexes, 2);
+        assert_eq!(figures.merge_max_age_pulses, 2);
+        let cruiser = &figures.kind_confusion[&ShipKind::Cruiser];
+        assert_eq!(cruiser[&ShipKind::Cruiser], Fixed::from_ratio(7, 10));
+        assert_eq!(cruiser[&ShipKind::Battleship], Fixed::from_ratio(1, 10));
+    }
+
+    #[test]
+    fn a_float_in_search_figures_is_rejected() {
+        let text = search_text().replace("\"0.8\"", "0.8");
+        assert!(parse_search_figures(&text, here()).is_err());
+    }
+
+    #[test]
+    fn an_unknown_kind_in_search_figures_is_rejected() {
+        let text =
+            search_text().replace("[kind_confusion.auxiliary]", "[kind_confusion.submarine]");
+        let message = parse_search_figures(&text, here())
+            .expect_err("rejected")
+            .message;
+        assert!(message.contains("unknown kind \"submarine\""), "{message}");
+        let text = search_text().replace("transport = \"0.3\"", "submarine = \"0.3\"");
+        assert!(parse_search_figures(&text, here()).is_err());
+    }
+
+    #[test]
+    fn a_row_not_adding_to_one_is_rejected() {
+        let text = search_text().replace(
+            "cruiser = \"0.2\"\n\n[kind_confusion.cruiser]",
+            "cruiser = \"0.3\"\n\n[kind_confusion.cruiser]",
+        );
+        let message = parse_search_figures(&text, here())
+            .expect_err("rejected")
+            .message;
+        assert!(message.contains("not 1"), "{message}");
+    }
+
+    #[test]
+    fn an_unknown_search_field_is_rejected() {
+        let text = format!("{}\nextra = 1\n", search_text());
+        assert!(parse_search_figures(&text, here()).is_err());
     }
 
     #[test]

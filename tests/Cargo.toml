@@ -17,5 +17,9 @@ path = "scenario_01_transit.rs"
 name = "scenario_02_supply_run"
 path = "scenario_02_supply_run.rs"
 
+[[test]]
+name = "scenario_03_search"
+path = "scenario_03_search.rs"
+
 [lints]
 workspace = true

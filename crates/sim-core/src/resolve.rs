@@ -1,17 +1,20 @@
 //! Resolving one day.
 //!
 //! The order of phases below is the one in the spec ("Daily resolution
-//! order"). Only orders intake, task force movement and closing the day do
-//! anything so far. The other phases are listed so the sequence is fixed
-//! from the start, and each is filled in by the scenario that needs it.
+//! order"). Orders intake, task force movement, cargo handling, air search
+//! (`search.rs`), contact ageing at the end of every pulse and closing the
+//! day do something so far. The other phases are listed so the sequence is
+//! fixed from the start, and each is filled in by the scenario that needs it.
 
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::HEX_NM;
 use crate::ids::{EventId, ShipId, TaskForceId};
 use crate::invariants;
-use crate::orders::{CargoAction, Order, OrderKind, RejectReason, SpeedSetting, TaskForceOrder};
-use crate::state::{CargoOrder, Route, TaskForceStatus};
+use crate::orders::{
+    AirGroupOrder, CargoAction, Order, OrderKind, RejectReason, SpeedSetting, TaskForceOrder,
+};
+use crate::state::{CargoOrder, Route, SearchArc, Side, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
 use crate::world::{DaySummary, SimError, World};
 
@@ -123,6 +126,7 @@ impl World {
             for phase in pulse_sequence(pulse) {
                 self.run_pulse_phase(day, pulse, *phase);
             }
+            self.age_contacts_at_end_of_pulse(day, pulse);
         }
         for phase in END_OF_DAY_SEQUENCE {
             self.run_end_of_day_phase(day, phase);
@@ -149,9 +153,11 @@ impl World {
         match phase {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
             PulsePhase::Loading => self.handle_cargo(day, pulse),
+            PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
             // Not implemented yet. Each arrives with the scenario that needs it.
+            // Night search is decision 7 territory: there is no search where it
+            // is dark, so this phase stays empty.
             PulsePhase::NightSearch
-            | PulsePhase::AirSearch
             | PulsePhase::StrikeDecisions
             | PulsePhase::AirCombat
             | PulsePhase::SurfaceEngagements
@@ -162,10 +168,56 @@ impl World {
     fn run_end_of_day_phase(&mut self, _day: u32, phase: EndOfDayPhase) {
         match phase {
             // Not implemented yet. Each arrives with the scenario that needs it.
+            // IntelligenceUpdate stays empty on purpose: contacts age at the end
+            // of every pulse and reports merge on arrival, which covers "age
+            // contacts, merge duplicates" (decision 15 of
+            // `docs/decisions/0012-search-and-contacts.md`).
             EndOfDayPhase::GroundCombat
             | EndOfDayPhase::Logistics
             | EndOfDayPhase::AirGroupUpkeep
             | EndOfDayPhase::IntelligenceUpdate => {}
+        }
+    }
+
+    /// Ages each side's contacts after the pulse's last phase, night
+    /// included (decision 14 of `docs/decisions/0012-search-and-contacts.md`).
+    /// Each aged or dropped contact is an event citing the report that last
+    /// refreshed it.
+    fn age_contacts_at_end_of_pulse(&mut self, day: u32, pulse: Pulse) {
+        // With no search figures there are no air groups, so no contacts.
+        let Some(figures) = self.ref_data.search.clone() else {
+            return;
+        };
+        for side in Side::ALL {
+            let outcomes = self
+                .beliefs
+                .get_mut(&side)
+                .expect("both sides have a belief state")
+                .age_contacts(&figures);
+            for outcome in outcomes {
+                let kind = if outcome.dropped {
+                    EventKind::ContactDropped {
+                        side,
+                        contact: outcome.contact,
+                        age_pulses: outcome.age_pulses,
+                        confidence: outcome.confidence,
+                    }
+                } else {
+                    EventKind::ContactAged {
+                        side,
+                        contact: outcome.contact,
+                        age_pulses: outcome.age_pulses,
+                        confidence: outcome.confidence,
+                    }
+                };
+                self.events.record(
+                    day,
+                    Some(pulse),
+                    kind,
+                    vec![Cause::Event(outcome.last_report_event)],
+                    None,
+                );
+            }
         }
     }
 
@@ -214,7 +266,7 @@ impl World {
                     .truth
                     .task_forces
                     .get(target)
-                    .ok_or(RejectReason::UnknownTarget)?;
+                    .ok_or(RejectReason::NotYourUnit)?;
                 if task_force.side != order.side {
                     return Err(RejectReason::NotYourUnit);
                 }
@@ -262,6 +314,47 @@ impl World {
                     TaskForceOrder::SetSpeed(_)
                     | TaskForceOrder::SetMission(_)
                     | TaskForceOrder::Unload => Ok(()),
+                }
+            }
+            OrderKind::AirGroup {
+                target,
+                order: air_group_order,
+            } => {
+                let group = self
+                    .truth
+                    .air_groups
+                    .get(target)
+                    .ok_or(RejectReason::NotYourUnit)?;
+                if group.side != order.side {
+                    return Err(RejectReason::NotYourUnit);
+                }
+                match air_group_order {
+                    AirGroupOrder::SetAirMission(_) => Ok(()),
+                    AirGroupOrder::SetSearchArc {
+                        from_deg,
+                        to_deg,
+                        range_nm,
+                    } => {
+                        for bearing in [*from_deg, *to_deg] {
+                            if !(0..=350).contains(&bearing) || bearing % 10 != 0 {
+                                return Err(RejectReason::InvalidBearing(bearing));
+                            }
+                        }
+                        // World::new checked that every group's type exists.
+                        let max_nm = self
+                            .ref_data
+                            .aircraft_types
+                            .get(&group.aircraft_type)
+                            .expect("air group has a known aircraft type")
+                            .search_range_nm;
+                        if *range_nm <= Fixed::ZERO || *range_nm > max_nm {
+                            return Err(RejectReason::InvalidSearchRange {
+                                range_nm: *range_nm,
+                                max_nm,
+                            });
+                        }
+                        Ok(())
+                    }
                 }
             }
         }
@@ -315,6 +408,34 @@ impl World {
                             action: CargoAction::Unload,
                             order: order.id,
                         });
+                    }
+                }
+            }
+            OrderKind::AirGroup {
+                target,
+                order: air_group_order,
+            } => {
+                let group = self
+                    .truth
+                    .air_groups
+                    .get_mut(target)
+                    .expect("order was validated against this air group");
+                match air_group_order {
+                    AirGroupOrder::SetAirMission(mission) => {
+                        group.mission = *mission;
+                        group.mission_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetSearchArc {
+                        from_deg,
+                        to_deg,
+                        range_nm,
+                    } => {
+                        group.search = Some(SearchArc {
+                            from_deg: u32::try_from(*from_deg).expect("bearing was validated"),
+                            to_deg: u32::try_from(*to_deg).expect("bearing was validated"),
+                            range_nm: *range_nm,
+                        });
+                        group.arc_order = Some(order.id);
                     }
                 }
             }
@@ -604,11 +725,13 @@ impl World {
 mod tests {
     use super::*;
     use crate::hex::Hex;
-    use crate::ids::{BaseId, ShipClassId};
+    use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
-    use crate::orders::{Mission, OrderRequest, Origin};
-    use crate::refdata::{PortSize, RefData, ShipClass, ShipKind};
-    use crate::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
+    use crate::orders::{AirMission, Mission, OrderRequest, Origin};
+    use crate::refdata::{
+        AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
+    };
+    use crate::state::{AirGroup, Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 
     const TF: TaskForceId = TaskForceId::new(1);
     const SHIP: ShipId = ShipId::new(1);
@@ -840,7 +963,7 @@ mod tests {
             }],
         );
         world.resolve_day().expect("day resolves");
-        assert_eq!(rejection(&world), Some(RejectReason::UnknownTarget));
+        assert_eq!(rejection(&world), Some(RejectReason::NotYourUnit));
     }
 
     #[test]
@@ -1012,6 +1135,288 @@ mod tests {
         assert_eq!(task_force.status, TaskForceStatus::Arrived);
         // It arrived again, so the fields describe the new arrival.
         assert_ne!(task_force.arrival_event, Some(event));
+    }
+
+    // ---- Air group orders (decision 0012) ----
+
+    const GROUP: AirGroupId = AirGroupId::new(1);
+    const SEARCH_RANGE_NM: i64 = 600;
+
+    /// The standard test world plus one Allied air group of three aircraft at
+    /// the test base. The aircraft type has test-only figures (range 600 nm).
+    fn world_with_air_group() -> World {
+        let mut world = world_with_fuel(2000);
+        let aircraft_type = AircraftType {
+            id: AircraftTypeId::new(1),
+            name: "Test flying boat".to_string(),
+            role: AircraftRole::Patrol,
+            search_range_nm: nm(SEARCH_RANGE_NM),
+            sweep_width_nm: nm(40),
+        };
+        world
+            .ref_data
+            .aircraft_types
+            .insert(aircraft_type.id, aircraft_type);
+        world.ref_data.search = Some(SearchFigures::from_search_toml());
+        world.truth.air_groups.insert(
+            GROUP,
+            AirGroup {
+                id: GROUP,
+                name: "Test group".to_string(),
+                side: Side::Allied,
+                base: BaseId::new(1),
+                aircraft_type: AircraftTypeId::new(1),
+                ready: 3,
+                mission: AirMission::Rest,
+                search: None,
+                mission_order: None,
+                arc_order: None,
+            },
+        );
+        assert_sound(&world);
+        world
+    }
+
+    fn air_order(target: AirGroupId, order: AirGroupOrder) -> OrderRequest {
+        OrderRequest {
+            kind: OrderKind::AirGroup { target, order },
+            origin: Origin::PLAYER,
+        }
+    }
+
+    fn arc_order(from_deg: i32, to_deg: i32, range_nm: Fixed) -> OrderRequest {
+        air_order(
+            GROUP,
+            AirGroupOrder::SetSearchArc {
+                from_deg,
+                to_deg,
+                range_nm,
+            },
+        )
+    }
+
+    /// Submits one Allied order and returns the rejection, if any.
+    fn air_rejection(world: &mut World, request: OrderRequest) -> Option<RejectReason> {
+        world.submit_orders(Side::Allied, vec![request]);
+        world.resolve_day().expect("day resolves");
+        rejection(world)
+    }
+
+    #[test]
+    fn an_air_group_order_for_an_unknown_group_is_rejected() {
+        let mut world = world_with_air_group();
+        let request = air_order(
+            AirGroupId::new(99),
+            AirGroupOrder::SetAirMission(AirMission::Search),
+        );
+        assert_eq!(
+            air_rejection(&mut world, request),
+            Some(RejectReason::NotYourUnit)
+        );
+    }
+
+    #[test]
+    fn an_air_group_order_from_the_other_side_is_rejected() {
+        let mut world = world_with_air_group();
+        world.submit_orders(
+            Side::Japanese,
+            vec![air_order(
+                GROUP,
+                AirGroupOrder::SetAirMission(AirMission::Search),
+            )],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), Some(RejectReason::NotYourUnit));
+        assert_eq!(world.umpire().air_groups[&GROUP].mission, AirMission::Rest);
+    }
+
+    #[test]
+    fn a_bad_bearing_is_rejected_from_first_then_to() {
+        for bad in [-10, 5, 355, 360, 370] {
+            let mut world = world_with_air_group();
+            assert_eq!(
+                air_rejection(&mut world, arc_order(bad, 90, nm(300))),
+                Some(RejectReason::InvalidBearing(bad)),
+                "from {bad}"
+            );
+            let mut world = world_with_air_group();
+            assert_eq!(
+                air_rejection(&mut world, arc_order(0, bad, nm(300))),
+                Some(RejectReason::InvalidBearing(bad)),
+                "to {bad}"
+            );
+        }
+        // Both bad: the "from" bearing is the one named.
+        let mut world = world_with_air_group();
+        assert_eq!(
+            air_rejection(&mut world, arc_order(15, 25, nm(300))),
+            Some(RejectReason::InvalidBearing(15))
+        );
+        // A bad bearing is checked before a bad range.
+        let mut world = world_with_air_group();
+        assert_eq!(
+            air_rejection(&mut world, arc_order(0, 25, nm(0))),
+            Some(RejectReason::InvalidBearing(25))
+        );
+        assert_eq!(world.umpire().air_groups[&GROUP].search, None);
+    }
+
+    #[test]
+    fn the_bearing_message_names_the_bearing() {
+        assert_eq!(
+            RejectReason::InvalidBearing(15).to_string(),
+            "bearing 15 is not a multiple of 10 from 0 to 350"
+        );
+    }
+
+    #[test]
+    fn a_search_range_of_zero_below_zero_or_beyond_the_type_is_rejected() {
+        for bad in [nm(0), nm(-5), nm(SEARCH_RANGE_NM) + Fixed::from_raw(1)] {
+            let mut world = world_with_air_group();
+            let rejected = air_rejection(&mut world, arc_order(0, 90, bad));
+            assert_eq!(
+                rejected,
+                Some(RejectReason::InvalidSearchRange {
+                    range_nm: bad,
+                    max_nm: nm(SEARCH_RANGE_NM),
+                })
+            );
+            assert_eq!(world.umpire().air_groups[&GROUP].search, None);
+            assert_eq!(world.umpire().air_groups[&GROUP].arc_order, None);
+        }
+        let message = RejectReason::InvalidSearchRange {
+            range_nm: nm(700),
+            max_nm: nm(600),
+        }
+        .to_string();
+        assert!(message.contains("700") && message.contains("600"));
+    }
+
+    #[test]
+    fn a_search_range_equal_to_the_types_is_accepted_and_stored() {
+        let mut world = world_with_air_group();
+        let rejected = air_rejection(&mut world, arc_order(270, 30, nm(SEARCH_RANGE_NM)));
+        assert_eq!(rejected, None);
+        let group = &world.umpire().air_groups[&GROUP];
+        assert_eq!(
+            group.search,
+            Some(SearchArc {
+                from_deg: 270,
+                to_deg: 30,
+                range_nm: nm(SEARCH_RANGE_NM),
+            })
+        );
+        // The arc order is the first order the world numbered.
+        assert_eq!(group.arc_order, Some(crate::ids::OrderId::new(1)));
+        assert_eq!(group.mission_order, None);
+        assert_eq!(group.mission, AirMission::Rest);
+    }
+
+    #[test]
+    fn a_mission_order_and_an_arc_order_do_not_clear_each_other() {
+        let mut world = world_with_air_group();
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                arc_order(0, 90, nm(300)),
+                air_order(GROUP, AirGroupOrder::SetAirMission(AirMission::Search)),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+        let group = world.umpire().air_groups[&GROUP].clone();
+        assert_eq!(group.mission, AirMission::Search);
+        assert_eq!(group.mission_order, Some(crate::ids::OrderId::new(2)));
+        assert_eq!(group.arc_order, Some(crate::ids::OrderId::new(1)));
+        assert!(group.search.is_some());
+
+        // A new arc replaces the arc and its order, and leaves the mission.
+        world.submit_orders(Side::Allied, vec![arc_order(100, 200, nm(100))]);
+        world.resolve_day().expect("day resolves");
+        let group = &world.umpire().air_groups[&GROUP];
+        assert_eq!(group.mission, AirMission::Search);
+        assert_eq!(group.mission_order, Some(crate::ids::OrderId::new(2)));
+        assert_eq!(group.arc_order, Some(crate::ids::OrderId::new(3)));
+        assert_eq!(group.search.map(|arc| arc.from_deg), Some(100));
+
+        // A new mission replaces the mission and leaves the arc.
+        world.submit_orders(
+            Side::Allied,
+            vec![air_order(
+                GROUP,
+                AirGroupOrder::SetAirMission(AirMission::Rest),
+            )],
+        );
+        world.resolve_day().expect("day resolves");
+        let group = &world.umpire().air_groups[&GROUP];
+        assert_eq!(group.mission, AirMission::Rest);
+        assert_eq!(group.mission_order, Some(crate::ids::OrderId::new(4)));
+        assert_eq!(group.arc_order, Some(crate::ids::OrderId::new(3)));
+        assert_eq!(group.search.map(|arc| arc.to_deg), Some(200));
+    }
+
+    #[test]
+    fn world_new_rejects_bad_air_group_setups() {
+        let good = world_with_air_group();
+        let build = |change: &dyn Fn(&mut RefData, &mut TruthState)| {
+            let mut ref_data = good.ref_data.clone();
+            let mut truth = good.truth.clone();
+            change(&mut ref_data, &mut truth);
+            World::new(1, ref_data, good.map.clone(), truth)
+        };
+        assert!(build(&|_, _| {}).is_ok());
+        assert!(build(&|r, _| {
+            r.aircraft_types
+                .get_mut(&AircraftTypeId::new(1))
+                .expect("type")
+                .sweep_width_nm = Fixed::ZERO;
+        })
+        .is_err());
+        assert!(build(&|r, _| {
+            r.search.as_mut().expect("search").notice_chance = nm(2);
+        })
+        .is_err());
+        assert!(build(&|_, t| {
+            t.air_groups.get_mut(&GROUP).expect("group").aircraft_type = AircraftTypeId::new(9);
+        })
+        .is_err());
+        assert!(build(&|r, _| r.search = None).is_err());
+        // No air groups and no search figures is fine.
+        assert!(build(&|r, t| {
+            r.search = None;
+            t.air_groups.clear();
+        })
+        .is_ok());
+    }
+
+    #[test]
+    fn the_new_air_group_and_notice_fields_are_part_of_the_state_hash() {
+        let base = world_with_air_group();
+        let mut fewer_ready = base.clone();
+        fewer_ready
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .ready = 2;
+        assert_ne!(base.state_hash(), fewer_ready.state_hash());
+
+        let mut noticed = base.clone();
+        noticed
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force")
+            .noticed_sighted_at_hours = Some(nm(8));
+        assert_ne!(base.state_hash(), noticed.state_hash());
+        let mut noticed_later = noticed.clone();
+        noticed_later
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force")
+            .noticed_sighted_at_hours = Some(nm(16));
+        assert_ne!(noticed.state_hash(), noticed_later.state_hash());
     }
 
     // ---- Movement between hex centres (decision 0005, decisions 1 and 5) ----

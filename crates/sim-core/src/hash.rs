@@ -173,6 +173,13 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             None => h.u8(0),
         }
         h.optional_u32(task_force.arrival_event.map(|id| id.raw()));
+        match task_force.noticed_sighted_at_hours {
+            Some(hours) => {
+                h.u8(1);
+                h.i64(hours.raw());
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.bases.len());
@@ -184,8 +191,35 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(base.supply_t.raw());
     }
 
+    h.count(truth.air_groups.len());
+    for group in truth.air_groups.values() {
+        h.u32(group.id.raw());
+        h.u8(group.side.code());
+        h.u32(group.base.raw());
+        h.u32(group.aircraft_type.raw());
+        h.u32(group.ready);
+        h.u8(group.mission.code());
+        match group.search {
+            Some(arc) => {
+                h.u8(1);
+                h.u32(arc.from_deg);
+                h.u32(arc.to_deg);
+                h.i64(arc.range_nm.raw());
+            }
+            None => h.u8(0),
+        }
+        h.optional_u32(group.mission_order.map(|id| id.raw()));
+        h.optional_u32(group.arc_order.map(|id| id.raw()));
+    }
+
     h.count(world.beliefs.len());
     for (side, belief) in &world.beliefs {
+        // The refreshed-this-pulse set is transient and not hashed: it must
+        // be empty here, after the last pulse's ageing.
+        debug_assert!(
+            !belief.has_pending_refreshes(),
+            "contacts were refreshed and not aged before the state was hashed"
+        );
         h.u8(side.code());
         h.u32(belief.next_contact_raw());
         h.count(belief.contacts().count());
@@ -194,8 +228,10 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.i32(contact.estimated_hex.q);
             h.i32(contact.estimated_hex.r);
             h.u32(contact.estimated_ship_count);
+            h.u8(contact.estimated_kind.code());
             h.u32(contact.age_pulses);
             h.i64(contact.confidence.raw());
+            h.u32(contact.last_report_event.raw());
         }
     }
 

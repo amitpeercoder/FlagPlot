@@ -1,0 +1,110 @@
+# Scenario 3: flying boats search an arc while an enemy task force steams
+# toward their base.
+#
+# Proves detection rates over 1,000 runs, report errors and contact ageing
+# against a hand calculation. The calculation is written out in
+# tests/scenario_03_search.rs. The test runs this file with seeds 1 to 1000.
+#
+# PLACEHOLDER DATA. The ships, aircraft, search figures and map are invented.
+
+name = "Scenario 3: Search, flying boats against an approaching force"
+placeholder = true
+seed = 1942
+days = 4
+map = "../map/placeholder_search.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+
+[[base]]
+id = 1
+name = "Placeholder seaplane base"
+side = "allied"
+q = 0
+r = 0
+
+[[air_group]]
+id = 1
+name = "Placeholder patrol squadron"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 4
+
+# The enemy force starts at sea, 22 hexes (880 nm) due east of the base.
+[[task_force]]
+id = 1
+name = "Placeholder cruiser force"
+side = "japanese"
+q = 22
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 1"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 1
+
+# Day 1, Allied: search the 60 degree arc centred on due east, out to 600 nm.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 60
+to_deg = 120
+range_nm = 600
+
+# Day 1, Japanese: steam west to 4 hexes from the base and stop.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[4, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+# Days 2 and 3 have no new orders.
+
+# Day 4, Allied: swing the arc to the west, away from the enemy force.
+[[order]]
+day = 4
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 240
+to_deg = 300
+range_nm = 600

@@ -91,8 +91,10 @@ pub struct World {
 }
 
 impl World {
-    /// Starts a game. Fails if the reference data is unusable (a ship class
-    /// or port size with bad figures), a ship has an unknown class, a base
+    /// Starts a game. Fails if the reference data is unusable (a ship class,
+    /// port size, aircraft type or the search figures with bad figures), a
+    /// ship has an unknown class, an air group has an unknown aircraft type,
+    /// there are air groups but no search figures, a base
     /// sits in a port size with no entry in the port table, or the starting
     /// state already breaks an invariant.
     pub fn new(
@@ -105,6 +107,27 @@ impl World {
             if let Some(problem) = class.problem() {
                 return Err(SimError::InvalidSetup(problem));
             }
+        }
+        for aircraft_type in ref_data.aircraft_types.values() {
+            if let Some(problem) = aircraft_type.problem() {
+                return Err(SimError::InvalidSetup(problem));
+            }
+        }
+        if let Some(problem) = ref_data.search.as_ref().and_then(|search| search.problem()) {
+            return Err(SimError::InvalidSetup(problem));
+        }
+        for group in truth.air_groups.values() {
+            if !ref_data.aircraft_types.contains_key(&group.aircraft_type) {
+                return Err(SimError::InvalidSetup(format!(
+                    "{} has unknown aircraft type {}",
+                    group.id, group.aircraft_type
+                )));
+            }
+        }
+        if !truth.air_groups.is_empty() && ref_data.search.is_none() {
+            return Err(SimError::InvalidSetup(
+                "there are air groups but no search figures".to_string(),
+            ));
         }
         for ship in truth.ships.values() {
             if !ref_data.ship_classes.contains_key(&ship.class) {
@@ -241,6 +264,31 @@ impl World {
             pulse,
             subsystem,
             entity,
+            other: None,
+        }
+        .stream()
+    }
+
+    /// Opens the random number stream for a pair of entities, such as an air
+    /// group looking for a task force. See
+    /// `docs/decisions/0013-random-keys-for-pairs.md`. The order of `entity`
+    /// and `other` is fixed by the rule that draws, and swapping them gives a
+    /// different stream.
+    pub fn rng_pair(
+        &self,
+        day: u32,
+        pulse: Option<Pulse>,
+        subsystem: Subsystem,
+        entity: EntityRef,
+        other: EntityRef,
+    ) -> RngStream {
+        RngKey {
+            seed: self.seed,
+            day,
+            pulse,
+            subsystem,
+            entity,
+            other: Some(other),
         }
         .stream()
     }

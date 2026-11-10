@@ -10,6 +10,7 @@
 use core::fmt;
 
 use crate::fixed::Fixed;
+use crate::hex::Hex;
 
 pub const HOURS_PER_DAY: i64 = 24;
 /// Clock hour at which every game day starts.
@@ -68,6 +69,17 @@ pub fn pulse_start(day: u32, pulse: Pulse) -> Fixed {
     Fixed::from_int((i64::from(day) - 1) * HOURS_PER_DAY + pulse.offset_hours())
 }
 
+/// Whether it is dark at `hex` in `pulse`. Dark pulses allow no search.
+///
+/// For now it is dark exactly in the night pulse, everywhere
+/// (`docs/decisions/0001-day-boundary.md`, decision 7 of
+/// `docs/decisions/0012-search-and-contacts.md`). The hex is a parameter
+/// because later rules will vary darkness by place; callers pass it now so
+/// they do not change then.
+pub fn is_dark(_hex: Hex, pulse: Pulse) -> bool {
+    pulse == Pulse::Night
+}
+
 /// A moment shown the way a person reads it: game day and clock time.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ClockTime {
@@ -111,6 +123,14 @@ mod tests {
         assert_eq!(pulse_start(1, Pulse::Night), Fixed::ZERO);
         assert_eq!(pulse_start(1, Pulse::Afternoon), Fixed::from_int(18));
         assert_eq!(pulse_start(2, Pulse::Night), Fixed::from_int(24));
+    }
+
+    #[test]
+    fn it_is_dark_only_in_the_night_pulse() {
+        let hex = Hex::new(3, -2);
+        assert!(is_dark(hex, Pulse::Night));
+        assert!(!is_dark(hex, Pulse::Morning));
+        assert!(!is_dark(hex, Pulse::Afternoon));
     }
 
     #[test]

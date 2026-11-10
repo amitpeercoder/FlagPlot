@@ -2,9 +2,12 @@
 //!
 //! A violation is always a bug in the rules, never a legal game state.
 //!
-//! The spec lists two more invariants. "Every air group is at exactly one
-//! base or on one carrier" arrives with air groups. "No belief-state data was
-//! written from anything except a report" holds by construction: see
+//! The spec lists three more invariants. "Aircraft ready is never negative"
+//! holds by construction: `ready` is unsigned. "Every air group is at exactly
+//! one base" holds by construction too, since an air group has one `base`
+//! field; the checks here are that the base exists and is the group's own
+//! side's. (Carriers arrive later.) "No belief-state data was written from
+//! anything except a report" holds by construction: see
 //! [`crate::belief::BeliefState::apply_report`].
 
 use core::fmt;
@@ -12,7 +15,7 @@ use std::collections::BTreeMap;
 
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{BaseId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
 use crate::state::{ShipLocation, TruthState};
@@ -44,6 +47,10 @@ pub enum InvariantViolation {
     TaskForceTowardNotAdjacent(TaskForceId, Hex),
     /// `toward_hex` is off the map.
     TaskForceTowardOffMap(TaskForceId, Hex),
+    /// The air group is based at a base that does not exist.
+    AirGroupAtUnknownBase(AirGroupId, BaseId),
+    /// The air group is based at a base of the other side.
+    AirGroupAtOtherSidesBase(AirGroupId, BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -99,6 +106,15 @@ impl fmt::Display for InvariantViolation {
                 write!(
                     f,
                     "{task_force} is steaming toward {hex}, which is off the map"
+                )
+            }
+            InvariantViolation::AirGroupAtUnknownBase(group, base) => {
+                write!(f, "{group} is based at {base}, which does not exist")
+            }
+            InvariantViolation::AirGroupAtOtherSidesBase(group, base) => {
+                write!(
+                    f,
+                    "{group} is based at {base}, which belongs to the other side"
                 )
             }
         }
@@ -214,5 +230,98 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         }
     }
 
+    for group in truth.air_groups.values() {
+        match truth.bases.get(&group.base) {
+            None => violations.push(InvariantViolation::AirGroupAtUnknownBase(
+                group.id, group.base,
+            )),
+            Some(base) if base.side != group.side => violations.push(
+                InvariantViolation::AirGroupAtOtherSidesBase(group.id, group.base),
+            ),
+            Some(_) => {}
+        }
+    }
+
     violations
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ids::AircraftTypeId;
+    use crate::map::HexData;
+    use crate::orders::AirMission;
+    use crate::state::{AirGroup, Base, Side};
+
+    fn setup() -> (TruthState, Map) {
+        let mut map = Map::new();
+        map.insert(Hex::new(0, 0), HexData::open_sea());
+        let mut truth = TruthState::default();
+        truth.bases.insert(
+            BaseId::new(1),
+            Base {
+                id: BaseId::new(1),
+                name: "Base".to_string(),
+                side: Side::Allied,
+                hex: Hex::new(0, 0),
+                supply_t: Fixed::ZERO,
+            },
+        );
+        truth.air_groups.insert(
+            AirGroupId::new(1),
+            AirGroup {
+                id: AirGroupId::new(1),
+                name: "Group".to_string(),
+                side: Side::Allied,
+                base: BaseId::new(1),
+                aircraft_type: AircraftTypeId::new(1),
+                ready: 2,
+                mission: AirMission::Rest,
+                search: None,
+                mission_order: None,
+                arc_order: None,
+            },
+        );
+        (truth, map)
+    }
+
+    #[test]
+    fn a_sound_air_group_breaks_nothing() {
+        let (truth, map) = setup();
+        assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+    }
+
+    #[test]
+    fn an_air_group_at_an_unknown_base_is_caught() {
+        let (mut truth, map) = setup();
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .base = BaseId::new(9);
+        assert_eq!(
+            check(&truth, &map, &RefData::default()),
+            vec![InvariantViolation::AirGroupAtUnknownBase(
+                AirGroupId::new(1),
+                BaseId::new(9)
+            )]
+        );
+    }
+
+    #[test]
+    fn an_air_group_at_the_other_sides_base_is_caught() {
+        let (mut truth, map) = setup();
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .side = Side::Japanese;
+        assert_eq!(
+            check(&truth, &map, &RefData::default()),
+            vec![InvariantViolation::AirGroupAtOtherSidesBase(
+                AirGroupId::new(1),
+                BaseId::new(1)
+            )]
+        );
+    }
 }
