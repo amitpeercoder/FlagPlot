@@ -23,7 +23,13 @@ ships = [
 
 # Working assumption, not a fact (decision 0019, 5): no source says whether
 # these ships carried a search radar on the date, and the scenario treats
-# them as not fitted.
+# them as not fitted. The list only matters while the facts are silent: a
+# ship with a sourced fit, or a sourced "none", is read from the facts.
+#
+# - Bagley, Patterson, Helm, Wilson, Jarvis: no radar row of any kind.
+# - Vincennes: fire-control radar rows only, no search radar row.
+# - Canberra: stays here until her radar fit is settled in the facts.
 radar_unknown_means_none = [
-    "dd-386-bagley", "dd-392-patterson", "dd-388-helm", "dd-408-wilson", "hmas-canberra",
+    "dd-386-bagley", "dd-392-patterson", "dd-388-helm", "dd-408-wilson", "dd-393-jarvis",
+    "ca-44-vincennes", "hmas-canberra",
 ]
