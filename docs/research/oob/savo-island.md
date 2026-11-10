@@ -14,7 +14,17 @@ Times are zone minus 11, the time the Allied ships kept. Ranges are as the sourc
 | BuShips War Damage Report 29, 1943 | Damage to Quincy, Astoria and Vincennes from survivors' statements | Hits and sinking times for those three |
 | combinedfleet.com ship records | Modern compilation from Japanese records | Japanese ammunition and damage. Half its pages would not load |
 
-Bates was read as a scan through machine-read text. Digits are sometimes misread, and one time that matters (0136, printed in one text layer as 0156) was settled from context. Page numbers can be one out. The diagrams, which are in a second volume, were not read. **A person with the printed book should check the dozen figures in the next two sections before the scenario fixes them.**
+Bates was read as a scan through machine-read text, in which digits are sometimes misread. **Printed pages 106 to 108, 110 to 112 and 114 to 117 have since been checked against the page images of the scan.** They cover the Japanese sightings in the first two encounters and the Allied positions at 0000 and 0132. Most figures were as first read. These were corrected from the images:
+
+- Aoba and Kako sighted Jarvis at 0135, not 0136.
+- Furutaka took bearings on Blue at 0121 and 0126, not 0116.
+- Chokai turned to course 150 at 0105, not 160.
+- Patterson was 5,500 yards from Chokai at 0140, not 6,500.
+- Ralph Talbot's nearest approach to the column was 13,000 yards, not 15,000.
+- Australia left at 2123, not 2125.
+- At 0132 the southern group bore 146 degrees from Savo, not 140, and Blue 273 degrees, not 275. At 0000 Ralph Talbot bore 013 degrees, not 015.
+
+One conflict is confirmed as printed and stands: the range at which Chokai sighted Blue is 10,900 yards on p.107 and 8,700 yards on p.110. Rows checked this way say so. The other Bates rows, about 430, have not been checked against images, and page numbers in their locators can be one out. The plates are bound into the same scan and are legible, but were not used for positions.
 
 Not read at all: Gill's Australian official history, the Japanese interrogations themselves (only as Bates quotes them), Morison, Loxton, Frank.
 
@@ -29,7 +39,7 @@ This is the question the scenario turns on, and the sources agree on its shape: 
 | 2345 | Ralph Talbot sees a floatplane over Savo and broadcasts a warning. Blue, Patterson, Vincennes and Quincy hear it. Turner and Crutchley do not get it | Eye | | Bates, ONI |
 | about 0000 | Blue's radar picks up the plane, after the warning | Radar | | Bates, ONI |
 | 0053 | Chokai sights Blue. Aoba sights her a minute later | Eye | 10,900 yd, or 8,700 yd: Bates gives both | Bates |
-| about 0105 | Furutaka sights Blue. The time is doubtful in the scan | Eye | about 11,000 yd | Bates |
+| 0121 | Furutaka takes bearings on Blue | Eye | 11,000 yd | Bates |
 | never | Blue sights nothing and has no radar contact. Her radar was working | | | Bates |
 | never | Ralph Talbot and the Japanese column do not sight each other. Bates puts the nearest approach beyond her radar's range | | | Bates |
 
@@ -78,12 +88,12 @@ All from Bates unless marked. Bearings are true, from the centre of Savo Island.
 
 | Force | Station | Movement |
 | --- | --- | --- |
-| Blue | Picket line west of Savo. At 0000: 270 degrees, 10.7 miles. At 0132: 275 degrees, 9 miles | Back and forth on 051 and 231 at 12 knots. The printed end points of her line do not agree with each other |
-| Ralph Talbot | Picket line north of Savo, 8°59'S 159°55'E to 9°01'S 159°49'E. At 0000: 010 or 015 degrees, 7 miles | Back and forth on 072 and 252 at 12 knots |
-| Southern group: Canberra leading Chicago at 600 yd, Patterson and Bagley 2,000 yd on either bow | South of a line drawn 125 degrees from Savo. At 0000: 146 degrees, 10 miles. At 0132: 140 degrees, 11.2 miles, heading 306 | A line on about 125 and 305 at 12 knots, reversing roughly on the hour |
+| Blue | Picket line west of Savo. At 0000: 270 degrees, 10.7 miles. At 0132: 273 degrees, 9 miles | Back and forth on 051 and 231 at 12 knots. The printed end points of her line do not agree with each other |
+| Ralph Talbot | Picket line north of Savo, 8°59'S 159°55'E to 9°01'S 159°49'E. At 0000: 013 degrees, 7 miles (010 in another place) | Back and forth on 072 and 252 at 12 knots |
+| Southern group: Canberra leading Chicago at 600 yd, Patterson and Bagley 2,000 yd on either bow | South of a line drawn 125 degrees from Savo. At 0000: 146 degrees, 10 miles. At 0132: 146 degrees, 11.2 miles, heading 306 | A line on about 125 and 305 at 12 knots, reversing roughly on the hour |
 | Northern group: Vincennes, Quincy, Astoria in column, Helm and Wilson ahead | North of the same line. At 0000: 080 degrees, 4.5 miles. At 0132: 094 degrees, 9.1 miles, heading 225 | Clockwise round a square five miles on a side at 10 knots, turning 90 degrees every half hour |
 | Eastern group: San Juan, Hobart, Monssen, Buchanan | East of 160°04'E. At 0000: 090 degrees, 11 miles | North and south at 15 knots |
-| Australia | Left the southern group at 2055 or 2125 for the conference. At 0000: 140 degrees, 20 miles. After 0116 inside the transport screen off Guadalcanal | |
+| Australia | Ordered away at 2055 and left the southern group at 2123 for the conference. At 0000: 140 degrees, 20 miles. After 0116 inside the transport screen off Guadalcanal | |
 | Transports | X-Ray off the Guadalcanal beach near Lunga, Yoke off Tulagi | At anchor or under way unloading. Bates gives areas, not positions |
 
 The two cruiser groups could be as much as 17 miles apart depending on where each was in its patrol.
@@ -118,7 +128,7 @@ What they had been told:
 | Chokai | 302 8-inch, 8 torpedoes | 4 hits by Bates, from the Japanese report. A modern compilation says 3, 10 and "several" on different pages | About 34 killed |
 | Aoba | 183 8-inch, 3 torpedoes at least | One hit, by one account | |
 | Kako | 192 8-inch, 6 torpedoes by Bates, 10 by the compilation | None | Sunk by submarine S-44 on 10 August |
-| Kinugasa | 85 8-inch, 4 or more torpedoes | 2 | |
+| Kinugasa | 85 8-inch as printed, probably 185 (see below), 4 or more torpedoes | 2 | |
 | Furutaka | 152 or 153 8-inch, 8 torpedoes | None | |
 | Tenryu | 6 torpedoes | 1 | |
 | Yubari | 4 torpedoes | 3 | |
@@ -132,7 +142,7 @@ What they had been told:
 | Helm | One 4-gun salvo at nothing | None | |
 | Ralph Talbot | 1 to 4 torpedoes | 5 or 6 hits | |
 
-Totals from Bates: the Japanese fired 1,867 shells of all sizes and the Allied cruisers 471. His five 8-inch figures add to 914 and he prints 1,014. ONI puts the fight with the southern group at no more than ten minutes and the whole action at about half an hour.
+Totals from Bates: the Japanese fired 1,867 shells of all sizes and the Allied cruisers 471. His five 8-inch figures add to 914 and he prints 1,014. On the page image Kinugasa's 85 has a gap where a leading digit would sit, and 185 makes the total right; both readings are in the data. ONI puts the fight with the southern group at no more than ten minutes and the whole action at about half an hour.
 
 ## What the class data can and cannot give the combat rule
 
@@ -140,15 +150,19 @@ The rule asks for guns, rate of fire, shell weight, torpedo tubes, torpedo and w
 
 | Input | State |
 | --- | --- |
-| Number of main guns | Sourced for all eleven classes. Quincy and Vincennes carried the Mark 12 gun and Astoria an earlier mark; the class row says Mark 9 |
-| Rate of fire, shell weight | One source, a weapons reference site, for every gun. It rarely says whether the rate is what the gun could do or what crews achieved |
-| Torpedo tubes | Sourced for every class. New Orleans class and Chicago had none. Australia's were landed in December 1940. Canberra's are inferred present, and ONI says she may have fired two. Wilson's number in 1942 is unknown |
-| Torpedo type | Type 93 is attested for Chokai and Kako on the night, for Furutaka two months later and for Aoba in 1943. **Kinugasa, Tenryu, Yubari and Yunagi have no source naming the torpedo they carried.** The class rows for the last three are inferences from what was standard when they were built. For US destroyers the Mark 15 is an inference from a Navy torpedo history, not a statement about these classes |
-| Warhead | Type 93: 490 kg, three sources. Mark 15: 224 kg or 374 kg depending on the model, and which was in the tubes in August 1942 was not found |
-| Displacement | **Disputed for every class but one.** Sources differ by 2 to 20 per cent, mostly because they quote different conditions or dates without saying which. A rule that uses displacement needs to name one source and one condition for all ships. Full load agrees across sources for the New Orleans, Bagley and Benham classes only |
+| Number of main guns | Sourced for all eleven classes. Quincy and Vincennes carried the Mark 12 gun and Astoria an earlier mark; the class row says Mark 9. For Furutaka and Kako the bore is 20.32 cm on every reading, but whether the guns were the "No. 2" pattern or re-bored "No. 1" guns is disputed, and one website says both in different footnotes |
+| Rounds carried per main gun | **New.** Japanese 8-inch cruisers 120 (a figure for the gun, not the class). Canberra's class 130. Chicago's class about 167 early in the war (1,500 a ship). New Orleans class about 156 (1,400 a ship). Bagley and Benham classes 300. All from one weapons reference site. **Nothing found for the 14 cm guns of Tenryu and Yubari or the 12 cm guns of Yunagi** |
+| Rate of fire | Still one website for the designed rate of every gun, and its figures for the Japanese 8-inch range from 3 to 5 depending on which sentence is read. **New:** a separate attribute for the rate crews achieved, where a source says so: about 2 for the older Japanese 8-inch mounting, 3 to 4 sustained for the British 8-inch. And from the night itself: the Japanese heavy cruisers averaged 1.2 to 1.6 rounds per gun per minute over their firing window, Astoria 0.25 |
+| Torpedo tubes | Sourced for every class. New Orleans class and Chicago had none. Australia's were landed in December 1940. Canberra's were aboard: her torpedo officer tried to fire them and the triggers did not respond, on the Australian official history. Wilson's number in 1942 is unknown |
+| Torpedo reloads | **New.** Eight for the Aoba and Furutaka classes, inferred from the technical mission's four per quadruple mount. Chokai's class: 16 by Wikipedia, 8 by another website, disputed. Tenryu 6 and Yubari 4 on one website's unexplained notation. **Nothing found on whether the US destroyers, Canberra or Yunagi carried reloads** |
+| Torpedo type | Type 93 is attested for Chokai and Kako on the night, for Furutaka two months later and for Aoba in 1943. Kinugasa: Type 93 by inference from her mounts. Tenryu and Yunagi: 21-inch tubes, so not the Type 93. Yubari: open. For US destroyers the Mark 15 is an inference from a Navy torpedo history |
+| Warhead | Type 93: 490 kg, three sources. Mark 15: 224 kg in the first model and 374 kg in a later one; the Bureau of Ordnance history dates the heavier explosive to autumn 1942. The British Mark VII: 336 kg; which mark Canberra carried is disputed, and no warhead was found for the Mark V |
+| Displacement | **Settled by Amit for all eleven classes on 2026-11-10; see `savo-island-settlement.md`.** Before that, disputed for nearly every class. Sources differ by 2 to 20 per cent, mostly because they quote different conditions or dates without saying which. `savo-island-choices.md` proposes one figure per class and says what kind of figure each is. Nothing is settled in the data, and the Bagley and Benham classes have no figure from a source graded above low |
 | Speed | Agreed for seven classes. Disputed for Aoba (32 or 33 knots), Bagley, Benham and New Orleans classes, between design and trial figures |
-| Radar on 8 August | Japanese: none, on the statement of the Navy's analysis and of a Japanese admiral who was there. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: the CXAM air search set, fitted in 1940 on the Navy's own ship history, and a set that ranged a ship at 7,000 yards that night, not named. Canberra: disputed, three weak sources. **Australia, Bagley, Patterson, Helm, Wilson, Jarvis: nothing found** |
+| Radar on 8 August | Japanese: none. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: CXAM from 1940, and a set that ranged a ship that night. **Canberra: Type 271 on the Australian official history, settled by Amit against Type 241 on two websites.** Bagley, Patterson, Helm: the same history says the pickets had the best radar of the squadron's nine ships, which suggests the others had some set. That is an inference, kept as low-grade rows; decision 0019 treats these ships as not fitted until a source names a set. **Wilson, Jarvis, Australia, and a search set for Vincennes: nothing found** |
 | Night optics | The technical mission reports confirm 12, 15 and 18 cm binoculars and 90 and 110 cm searchlights existed. Nothing found gives numbers per ship or a sighting range except the ranges in the detection tables above |
+
+Four choices the sources leave open (damage measure, ships with no radar found, torpedoes with no named type, disputed placements) have proposals in `savo-island-choices.md`. They are for Amit to confirm.
 
 ## What a rule would need to model
 

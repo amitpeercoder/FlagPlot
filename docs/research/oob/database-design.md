@@ -229,6 +229,20 @@ Added for scenario 4c (Savo Island). A scenario needs more than who was present:
 | `value`, `as_stated` | As for facts |
 | Source columns | As for facts |
 
+`place_positions.csv`: where a named place is, for drawing it on a map.
+
+| Column | Meaning |
+| --- | --- |
+| `id` | Whole number |
+| `place` | `key` in `places.csv` |
+| `feature` | Which point the position is for: the harbour, the airfield, a cape. A name such as Espiritu Santo covers a hundred miles, so a row always says what it marks |
+| `lat`, `lon` | Signed decimal degrees as strings, south and west negative, as the source gives them |
+| `datum` | The datum the source states, or empty |
+| `as_stated` | The source's own name for the feature and its own figures |
+| Source columns | As for facts |
+
+A place may have several rows: one per feature and one per source. The rows are today's positions of features that have not moved. Whether a modern airport stands on a 1942 airfield is a separate statement and is made in the note, with its basis. Positions for an engagement (a patrol line, a ship at a time) stay in `engagement_positions.csv`.
+
 These rows are history to test against. They are never an input that makes the simulation reproduce the night: a scenario takes its starting positions and alert states from them, and its result is then compared with the outcomes.
 
 ## Sources
@@ -372,6 +386,7 @@ data/oob/
   events.csv
   engagements.csv           engagement_forces.csv
   engagement_events.csv     engagement_positions.csv     engagement_outcomes.csv
+  place_positions.csv
   gaps.csv
 docs/research/oob/
   database-design.md        this file
@@ -407,6 +422,10 @@ These are choices I would rather not make alone. My recommendation is first in e
 - **A fit row with `count` 0 also records "never fitted",** not only "removed", when a source says a ship or class had none.
 - **Night optics.** Sensor kinds `night_binocular` and `searchlight` and fit slots of the same names were added.
 - Notes no longer point at a `proposed_attributes.csv` file. That was a working file and was never part of the format.
+
+## Changes made for the real map (stage 4b)
+
+- **`place_positions.csv`,** described under "Engagement records". `places.csv` still holds names only. A position is one source's statement like any other fact, so it gets rows with sources and not a column on the identity file.
 
 ## What this design does not cover
 
