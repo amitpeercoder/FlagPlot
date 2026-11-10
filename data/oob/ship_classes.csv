@@ -1,0 +1,47 @@
+# Ship classes. Identity only; everything else is in ship_class_facts.csv and fits.csv.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,nation,type
+1000,jp-akizuki-class,Akizuki class,jp,destroyer
+1001,jp-aoba-class,Aoba class,jp,heavy_cruiser
+1002,jp-asashio-class,Asashio class,jp,destroyer
+1003,jp-chitose-class,Chitose class,jp,seaplane_carrier
+1004,jp-fubuki-class,Fubuki class,jp,destroyer
+1005,jp-furutaka-class,Furutaka class,jp,heavy_cruiser
+1006,jp-kagero-class,Kagero class,jp,destroyer
+1007,jp-kamikaze-class,Kamikaze class (1922),jp,destroyer
+1008,jp-kongo-class,Kongo class,jp,battleship
+1009,jp-mogami-class,Mogami class,jp,heavy_cruiser
+1010,jp-mutsuki-class,Mutsuki class,jp,destroyer
+1011,jp-myoko-class,Myoko class,jp,heavy_cruiser
+1012,jp-nagara-class,Nagara class,jp,light_cruiser
+1013,jp-nagato-class,Nagato class,jp,battleship
+1014,jp-ryujo-class,Ryujo class,jp,light_carrier
+1015,jp-sendai-class,Sendai class,jp,light_cruiser
+1016,jp-shiratsuyu-class,Shiratsuyu class,jp,destroyer
+1017,jp-shokaku-class,Shokaku class,jp,carrier
+1018,jp-takao-class,Takao class,jp,heavy_cruiser
+1019,jp-tenryu-class,Tenryu class,jp,light_cruiser
+1020,jp-tone-class,Tone class,jp,heavy_cruiser
+1021,jp-yubari-class,Yubari class,jp,light_cruiser
+1022,jp-yugumo-class,Yugumo class,jp,destroyer
+1023,uk-county-kent-class,County class (Kent subclass),uk,heavy_cruiser
+1024,uk-leander-modified-class,Modified Leander class,uk,light_cruiser
+1025,us-atlanta-class,Atlanta class,us,light_cruiser
+1026,us-bagley-class,Bagley class,us,destroyer
+1027,us-benham-class,Benham class,us,destroyer
+1028,us-clemson-class,Clemson class,us,destroyer
+1029,us-farragut-class,Farragut class,us,destroyer
+1030,us-gleaves-class,Gleaves class,us,destroyer
+1031,us-gridley-class,Gridley class,us,destroyer
+1032,us-lexington-class,Lexington class,us,carrier
+1033,us-mahan-class,Mahan class,us,destroyer
+1034,us-new-orleans-class,New Orleans class,us,heavy_cruiser
+1035,us-north-carolina-class,North Carolina class,us,battleship
+1036,us-northampton-class,Northampton class,us,heavy_cruiser
+1037,us-pensacola-class,Pensacola class,us,heavy_cruiser
+1038,us-porter-class,Porter class,us,destroyer
+1039,us-portland-class,Portland class,us,heavy_cruiser
+1040,us-sims-class,Sims class,us,destroyer
+1041,us-wasp-class,Wasp class,us,carrier
+1042,us-wickes-class,Wickes class,us,destroyer
+1043,us-yorktown-class,Yorktown class,us,carrier

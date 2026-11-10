@@ -1,0 +1,48 @@
+# Air units. Identity only; see air_unit_facts.csv.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,nation,service,parent
+1000,11th-bg,11th Bombardment Group (Heavy),us,usaaf,
+1001,25th-air-flotilla,25th Air Flotilla,jp,ijn,
+1002,26th-bs,26th Bombardment Squadron,us,usaaf,11th-bg
+1003,2nd-ku,2nd Kokutai,jp,ijn,25th-air-flotilla
+1004,4th-ku,4th Kokutai,jp,ijn,25th-air-flotilla
+1005,5th-air-attack-force,5th Air Attack Force (Rabaul/Lae),jp,ijn,25th-air-flotilla
+1006,67th-fs,"67th Fighter (Pursuit) Squadron, USAAF",us,usaaf,
+1007,6th-ku,6th Kokutai,jp,ijn,
+1008,cactus-air-force,Cactus Air Force (Henderson Field composite force),us,joint,
+1009,chitose-ku,Chitose Kokutai,jp,ijn,
+1010,flight-300,Enterprise Flight 300 (SBD detachment),us,usn,
+1011,kanoya-ku,Kanoya Kokutai,jp,ijn,
+1012,kisarazu-ku,Kisarazu Kokutai,jp,ijn,
+1013,misawa-ku,Misawa Kokutai,jp,ijn,
+1014,ryujo-attack-unit,Ryujo torpedo bomber unit,jp,ijn,
+1015,ryujo-fighter-unit,Ryujo fighter unit,jp,ijn,
+1016,shokaku-attack-unit,Shokaku torpedo bomber unit,jp,ijn,
+1017,shokaku-bomber-unit,Shokaku dive bomber unit,jp,ijn,
+1018,shokaku-fighter-unit,Shokaku fighter unit,jp,ijn,
+1019,tainan-ku,Tainan Kokutai,jp,ijn,25th-air-flotilla
+1020,takao-ku,Takao Kokutai (Wikipedia text calls the loaned unit the 3rd Air Group),jp,ijn,
+1021,vb-3,Bombing Squadron 3,us,usn,
+1022,vb-6,Bombing Squadron 6,us,usn,
+1023,vf-5,Fighting Squadron 5,us,usn,
+1024,vf-6,Fighting Squadron 6,us,usn,
+1025,vf-71,Fighting Squadron 71,us,usn,
+1026,vmf-223,VMF-223,us,usmc,
+1027,vmf-224,VMF-224,us,usmc,
+1028,vmo-251,VMO-251,us,usmc,
+1029,vmsb-231,VMSB-231,us,usmc,
+1030,vmsb-232,VMSB-232,us,usmc,
+1031,vp-11,VP-11,us,usn,
+1032,vp-14,VP-14,us,usn,
+1033,vp-23,VP-23,us,usn,
+1034,vs-3,Scouting Squadron 3,us,usn,
+1035,vs-5,Scouting Squadron 5,us,usn,
+1036,vs-71,Scouting Squadron 71,us,usn,
+1037,vs-72,Scouting Squadron 72,us,usn,
+1038,vt-3,Torpedo Squadron 3,us,usn,
+1039,vt-7,Torpedo Squadron 7,us,usn,
+1040,vt-8,Torpedo Squadron 8,us,usn,
+1041,yokohama-ku,Yokohama Kokutai,jp,ijn,25th-air-flotilla
+1042,zuikaku-attack-unit,Zuikaku torpedo bomber unit,jp,ijn,
+1043,zuikaku-bomber-unit,Zuikaku dive bomber unit,jp,ijn,
+1044,zuikaku-fighter-unit,Zuikaku fighter unit,jp,ijn,
