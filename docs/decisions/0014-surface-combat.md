@@ -19,7 +19,7 @@ The spec's scenario 4 is Savo Island. It needs a combat rule, the real map and r
 
 ### Meeting
 
-1. **Two task forces of opposing sides fight when they are in the same hex at the surface engagement step of a pulse.** That step comes after movement. Where more than two forces share a hex, each opposing pair is resolved in turn, in task force ID order. A force with no ships afloat does not fight.
+1. *(Replaced by decision 0022: forces meet and fight when one enters the other's hex, in time order.)* **Two task forces of opposing sides fight when they are in the same hex at the surface engagement step of a pulse.** That step comes after movement. Where more than two forces share a hex, each opposing pair is resolved in turn, in task force ID order. A force with no ships afloat does not fight.
 2. **A fight runs in rounds of five minutes, six at most in one pulse.** Everything in a round happens at once: fire is worked out on the state at the start of the round, and damage is applied at its end. A ship sunk in a round still fires in that round.
 
 ### Who sees whom
@@ -51,7 +51,7 @@ The spec's scenario 4 is Savo Island. It needs a combat rule, the real map and r
 13. **Each force has rules of engagement: engage or avoid, and a break-off level.** They are set by order and persist.
     - A force breaks off at the end of a round when the share of its ships that are sunk or crippled (flotation damage of 50 or more), out of the ships it began the fight with, reaches its break-off level.
     - A force set to avoid, which has sighted an enemy that has not sighted it, slips away: the fight ends at once with no fire. Otherwise an avoiding force fights when it can and breaks off at the end of the first round in which it was fired on.
-14. **A fight ends** when either force breaks off or slips away, when one force has no ship afloat, when they pass unseen, or after six rounds. Both forces stay where they are. Breaking off does not move a force.
+14. *(Decision 0022 adds what breaking off means for the rest of the pulse, and that a force keeps to its route.)* **A fight ends** when either force breaks off or slips away, when one force has no ship afloat, when they pass unseen, or after six rounds. Both forces stay where they are. Breaking off does not move a force.
 
 ### What each side learns
 

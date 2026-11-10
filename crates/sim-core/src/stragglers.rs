@@ -3,8 +3,10 @@
 //!
 //! A straggler is a ship whose propulsion is degraded or out. A task force
 //! with a straggler and a standing instruction other than keep applies it at
-//! the start of every movement step and at the end of every surface
-//! engagement step. The rule uses no randomness.
+//! the start of every movement step, for every force, and straight after each
+//! fight, for the two forces that fought (decision 0016, decision 12, with
+//! decision 5 of `docs/decisions/0022-meeting-and-breaking-off.md`). The rule
+//! uses no randomness.
 //!
 //! - Leave: every straggler goes into one new force that stays where it is.
 //! - Detach: stragglers that can steam (degraded) go home with escorts taken
@@ -48,6 +50,23 @@ impl World {
         };
         let ids: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
         for id in ids {
+            self.handle_stragglers_of(day, pulse, &figures, id);
+        }
+    }
+
+    /// The same pass for the two forces of a fight, straight after it, the
+    /// lower ID first (the caller passes them in that order). A force made
+    /// by the pass is not processed in it.
+    pub(crate) fn handle_stragglers_after_fight(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        forces: [TaskForceId; 2],
+    ) {
+        let Some(figures) = self.ref_data.surface_combat.clone() else {
+            return;
+        };
+        for id in forces {
             self.handle_stragglers_of(day, pulse, &figures, id);
         }
     }
@@ -1186,7 +1205,7 @@ mod tests {
         // Propulsion goes down with no movement step before it: the end of
         // the surface engagement step catches it, with no enemy near.
         let mut world = world(&scenario_ships(), StragglerInstruction::Detach, half());
-        world.run_pulse_phase(1, Pulse::Night, PulsePhase::SurfaceEngagements);
+        world.run_pulse_phase(1, Pulse::Night, PulsePhase::Movement);
         assert_eq!(members(&world, 1), ids(&[1, 3, 5]));
         assert_eq!(members(&world, 2), ids(&[2, 4]));
         assert_eq!(members(&world, 3), ids(&[6]));
@@ -1202,7 +1221,7 @@ mod tests {
         let mut found = false;
         for seed in 1..=300 {
             let mut world = fight_world(seed);
-            world.run_pulse_phase(1, Pulse::Night, PulsePhase::SurfaceEngagements);
+            world.run_pulse_phase(1, Pulse::Night, PulsePhase::Movement);
             let events: Vec<&Event> = world.events().iter().collect();
             let Some(detach) = events
                 .iter()

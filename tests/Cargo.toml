@@ -41,5 +41,9 @@ path = "scenario_04b_pathfinding.rs"
 name = "scenario_04c_readiness"
 path = "scenario_04c_readiness.rs"
 
+[[test]]
+name = "scenario_04c_meeting"
+path = "scenario_04c_meeting.rs"
+
 [lints]
 workspace = true

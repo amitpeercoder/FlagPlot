@@ -139,6 +139,7 @@ mod tests {
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
         SurfaceCombatFigures,
     };
+    use crate::resolve::PulsePhase;
     use crate::state::{
         AirGroup, Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState,
     };
@@ -305,7 +306,7 @@ mod tests {
             truth.task_forces.insert(force_id, task_force);
         }
         let mut world = World::new(1, ref_data, map, truth).expect("valid setup");
-        world.surface_engagements(1, Pulse::Morning);
+        world.run_pulse_phase(1, Pulse::Morning, PulsePhase::Movement);
         world
     }
 

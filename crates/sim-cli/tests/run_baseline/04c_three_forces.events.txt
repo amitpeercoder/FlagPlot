@@ -2,18 +2,18 @@ Scenario 4c2a: Readiness, one attacker and two defenders
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 56de9998f17ade7d  82 events
+day   1  hash 12ea0f4b08f811e9  86 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:3  <- order:2
 #3 D1 -         order:3 accepted for task_force:1  <- order:3
 #4 D1 -         order:4 accepted for task_force:1  <- order:4
 #5 D1 -         order:5 accepted for task_force:1  <- order:5
-#6 D1 night     task_force:1 steamed 288 nm at 24 kn from (0,0) to (7,0)  <- order:3, order:4
-#7 D1 night     ship:1 burned 162 t, 1838 t remaining  <- #6
-#8 D1 night     ship:2 burned 162 t, 1838 t remaining  <- #6
-#9 D1 night     ship:3 burned 162 t, 1838 t remaining  <- #6
-#10 D1 night     task_force:1 and task_force:2 met at (7,0): engagement begun  <- order:5, order:1
+#6 D1 night     task_force:1 steamed 260 nm at 24 kn from (0,0) to (7,0)  <- order:3, order:4
+#7 D1 night     ship:1 burned 146.25 t, 1853.75 t remaining  <- #6
+#8 D1 night     ship:2 burned 146.25 t, 1853.75 t remaining  <- #6
+#9 D1 night     ship:3 burned 146.25 t, 1853.75 t remaining  <- #6
+#10 D1 night     task_force:1 and task_force:2 met at (7,0) at D1 04:49: engagement begun  <- #6, order:5, order:1
 #11 D1 night     round 1: task_force:1 looked for task_force:2, chance 0.5: sighted  <- #10
 #12 D1 night     round 1: task_force:2 looked for task_force:1, chance 0.25: not sighted  <- #10
 #13 D1 night     round 1: task_force:2 was surprised by task_force:1  <- #11
@@ -43,7 +43,7 @@ day   1  hash 56de9998f17ade7d  82 events
 #37 D1 night     Japanese claims 0 enemy ships sunk at (7,0)  <- #35
 #38 D1 night     Allied report: 3 ships, cruiser, at (7,0), confidence 0.8: new contact:1  <- #35
 #39 D1 night     task_force:3 heard the fight of task_force:1 and task_force:2, chance 0.5: not alarmed  <- #35
-#40 D1 night     task_force:1 and task_force:3 met at (7,0): engagement begun  <- order:5, order:2
+#40 D1 night     task_force:1 and task_force:3 met at (7,0) at D1 04:49: engagement begun  <- #6, order:5, order:2
 #41 D1 night     round 1: task_force:1 looked for task_force:3, chance 0.5: not sighted  <- #40
 #42 D1 night     round 1: task_force:3 looked for task_force:1, chance 0.25: not sighted  <- #40
 #43 D1 night     round 2: task_force:1 looked for task_force:3, chance 0.5: not sighted  <- #40
@@ -76,16 +76,20 @@ day   1  hash 56de9998f17ade7d  82 events
 #70 D1 night     Japanese report: 3 ships, cruiser, at (7,0), confidence 0.8: refreshed contact:1  <- #69
 #71 D1 night     Japanese claims 0 enemy ships sunk at (7,0)  <- #69
 #72 D1 night     Allied report: 3 ships, cruiser, at (7,0), confidence 0.8: refreshed contact:1  <- #69
-#73 D1 morning   task_force:1 alerted by contact:1  <- #70
-#74 D1 morning   task_force:1 steamed 112 nm at 24 kn from (7,0) to (10,0)  <- order:3, order:4
-#75 D1 morning   ship:1 burned 63 t, 1775 t remaining  <- #74
-#76 D1 morning   ship:2 burned 63 t, 1775 t remaining  <- #74
-#77 D1 morning   ship:3 burned 63 t, 1775 t remaining  <- #74
-#78 D1 morning   task_force:1 arrived at (10,0) at D1 10:39  <- #74
-#79 D1 morning   Allied contact:1 aged to 1 pulses, confidence 0.64  <- #72
-#80 D1 morning   Japanese contact:1 aged to 1 pulses, confidence 0.64  <- #70
-#81 D1 afternoon Allied contact:1 aged to 2 pulses, confidence 0.512  <- #72
-#82 D1 afternoon Japanese contact:1 aged to 2 pulses, confidence 0.512  <- #70
+#73 D1 night     task_force:1 steamed 28 nm at 24 kn from (7,0) to (7,0)  <- order:3, order:4
+#74 D1 night     ship:1 burned 15.75 t, 1838 t remaining  <- #73
+#75 D1 night     ship:2 burned 15.75 t, 1838 t remaining  <- #73
+#76 D1 night     ship:3 burned 15.75 t, 1838 t remaining  <- #73
+#77 D1 morning   task_force:1 alerted by contact:1  <- #70
+#78 D1 morning   task_force:1 steamed 112 nm at 24 kn from (7,0) to (10,0)  <- order:3, order:4
+#79 D1 morning   ship:1 burned 63 t, 1775 t remaining  <- #78
+#80 D1 morning   ship:2 burned 63 t, 1775 t remaining  <- #78
+#81 D1 morning   ship:3 burned 63 t, 1775 t remaining  <- #78
+#82 D1 morning   task_force:1 arrived at (10,0) at D1 10:39  <- #78
+#83 D1 morning   Allied contact:1 aged to 1 pulses, confidence 0.64  <- #72
+#84 D1 morning   Japanese contact:1 aged to 1 pulses, confidence 0.64  <- #70
+#85 D1 afternoon Allied contact:1 aged to 2 pulses, confidence 0.512  <- #72
+#86 D1 afternoon Japanese contact:1 aged to 2 pulses, confidence 0.512  <- #70
 
 task_force:1 "Placeholder attacking force" (Japanese): Arrived at (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder first defending force" (Allied): Idle at (7,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

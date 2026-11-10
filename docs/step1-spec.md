@@ -110,6 +110,8 @@ A game day starts at 18:00 in the scenario's reference zone, which is UTC+11 for
 8. **Intelligence update.** Age contacts, merge duplicates, generate the day's reports.
 9. **Close the day.** Check invariants, write the event log, compute the state hash.
 
+Task force movement and surface engagements are resolved together, in order of clock time within the pulse: forces fight when one enters the hex of another, and then carry on. See decision 0022.
+
 Strike decisions in the pulses are automatic and made by the simulated local commander. That is deliberate. A carrier admiral who sights the enemy at 09:00 does not wait for tomorrow's orders.
 
 ## Orders

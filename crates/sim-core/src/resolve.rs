@@ -1,31 +1,30 @@
 //! Resolving one day.
 //!
 //! The order of phases below is the one in the spec ("Daily resolution
-//! order"). Orders intake, task force movement (which begins with the
-//! straggler pass, `stragglers.rs`), cargo handling, air search
-//! (`search.rs`), surface engagements (`surface.rs`, followed by the
-//! straggler pass again), contact ageing at the end of every pulse and
-//! closing the day do something so far. The other phases are listed so the
+//! order"). Orders intake, task force movement (`movement.rs`: it begins with
+//! the straggler pass, `stragglers.rs`, and runs the surface fights,
+//! `surface.rs`, where forces meet), cargo handling, air search
+//! (`search.rs`), contact ageing at the end of every pulse and closing the
+//! day do something so far. The other phases, the surface engagement slot
+//! among them (decision 8 of
+//! `docs/decisions/0022-meeting-and-breaking-off.md`), are listed so the
 //! sequence is fixed from the start, and each is filled in by the scenario
 //! that needs it.
 
-use crate::events::{Breakdown, Cause, DetachReason, EventKind, Factor};
+use crate::events::{Cause, DetachReason, EventKind};
 use crate::fixed::Fixed;
-use crate::hex::{Hex, HEX_NM};
 use crate::ids::{EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
     AirGroupOrder, CargoAction, Order, OrderKind, OrderRequest, RejectReason, SpeedSetting,
     TaskForceOrder,
 };
-use crate::refdata::SurfaceCombatFigures;
 use crate::state::{
-    CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, ShipSystem, Side, TaskForce,
-    TaskForceStatus,
+    CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, Side, TaskForce, TaskForceStatus,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
-use crate::time::{pulse_start, Pulse};
+use crate::time::Pulse;
 use crate::world::{DaySummary, SimError, World};
 
 /// A step inside a pulse.
@@ -81,54 +80,6 @@ const fn pulse_sequence(pulse: Pulse) -> &'static [PulsePhase] {
     }
 }
 
-/// What the movement rules need to know about one ship of a task force.
-struct Steamer {
-    ship: ShipId,
-    fuel_t: Fixed,
-    /// The ship's own speed: its class speed at the task force's speed
-    /// setting, times its propulsion factor (decision 7 of
-    /// `docs/decisions/0016-systems-and-stragglers.md`). For a speed in
-    /// knots, the lower of the ordered speed and the ship's top speed times
-    /// its propulsion factor (decision 7 of
-    /// `docs/decisions/0021-readiness-and-alarm.md`).
-    speed_kn: Fixed,
-    /// 1, the degraded factor or 0, by the state of the ship's propulsion.
-    propulsion_factor: Fixed,
-    cruise_speed_kn: Fixed,
-    fuel_capacity_t: Fixed,
-    endurance_nm: Fixed,
-}
-
-/// Fuel burn per mile rises with the square of speed relative to cruise, and
-/// never falls below the cruise rate: at cruise speed or slower the
-/// multiplier is 1 (the floor, decision 3 of
-/// `docs/decisions/0006-fuel-model.md`). This is a placeholder model.
-fn speed_multiplier(speed_kn: Fixed, cruise_speed_kn: Fixed) -> Fixed {
-    if speed_kn <= cruise_speed_kn {
-        return Fixed::ONE;
-    }
-    let ratio = speed_kn / cruise_speed_kn;
-    ratio * ratio
-}
-
-impl Steamer {
-    /// Fuel needed to steam `distance_nm` at `speed_kn`, in tons.
-    fn fuel_for(&self, distance_nm: Fixed, speed_kn: Fixed) -> Fixed {
-        distance_nm.mul_div(self.fuel_capacity_t, self.endurance_nm)
-            * speed_multiplier(speed_kn, self.cruise_speed_kn)
-    }
-
-    /// How far the fuel aboard lasts at `speed_kn`. `None` when the burn rate
-    /// rounds to nothing, which means fuel does not limit the ship.
-    fn range_nm(&self, speed_kn: Fixed) -> Option<Fixed> {
-        let multiplier = speed_multiplier(speed_kn, self.cruise_speed_kn);
-        if multiplier.is_zero() {
-            return None;
-        }
-        Some((self.fuel_t / multiplier).mul_div(self.endurance_nm, self.fuel_capacity_t))
-    }
-}
-
 impl World {
     /// Resolves the next day: takes in the orders both sides submitted, runs
     /// the three pulses and the end-of-day phases, checks the invariants and
@@ -174,14 +125,10 @@ impl World {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
             PulsePhase::Loading => self.handle_cargo(day, pulse),
             PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
-            // Opposing task forces in one hex fight (decision 0014).
-            // Then each force applies its straggler instruction, whether or
-            // not a fight happened (decision 12 of
-            // `docs/decisions/0016-systems-and-stragglers.md`).
-            PulsePhase::SurfaceEngagements => {
-                self.surface_engagements(day, pulse);
-                self.handle_stragglers(day, pulse);
-            }
+            // Fights happen inside the movement step, where forces meet, and
+            // so do the straggler passes after them (decision 0022,
+            // decision 8). The slot stays, like night search.
+            PulsePhase::SurfaceEngagements => {}
             // Not implemented yet. Each arrives with the scenario that needs it.
             // Night search is decision 7 territory: there is no search where it
             // is dark, so this phase stays empty.
@@ -643,340 +590,16 @@ impl World {
             }
         }
     }
-
-    /// Moves every task force for one pulse. The straggler pass comes first
-    /// (`stragglers.rs`), before the list of forces to move is taken, so a
-    /// force it makes moves in this same step.
-    fn move_task_forces(&mut self, day: u32, pulse: Pulse) {
-        self.handle_stragglers(day, pulse);
-        let ids: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
-        for id in ids {
-            self.move_task_force(id, day, pulse);
-        }
-    }
-
-    /// Moves one task force along its route for one pulse.
-    ///
-    /// The task force steams at the speed of its slowest ship for the whole
-    /// pulse, unless it reaches the end of its route or a ship runs dry
-    /// first. A leg between two hex centres is 40 nm and, once started, is
-    /// always finished: the next centre reached is the hex ahead, whatever
-    /// the route says. At a centre the next leg goes to the next hex on the
-    /// shortest sea path to the current waypoint (`Map::next_step_in`,
-    /// decision 0017), from a distance field worked out once per waypoint.
-    /// The task force enters a hex (its position changes) when it passes the
-    /// midpoint of the leg, 20 nm along, so
-    /// `hexes_entered` and the `from` and `to` of the event are positions,
-    /// not centres reached.
-    fn move_task_force(&mut self, id: TaskForceId, day: u32, pulse: Pulse) {
-        let Some(task_force) = self.truth.task_forces.get(&id) else {
-            return;
-        };
-        if task_force.status != TaskForceStatus::Underway {
-            return;
-        }
-
-        let figures: Option<&SurfaceCombatFigures> = self.ref_data.surface_combat.as_ref();
-        let steamers: Vec<Steamer> = task_force
-            .ships
-            .iter()
-            .map(|ship_id| {
-                let ship = &self.truth.ships[ship_id];
-                let class = &self.ref_data.ship_classes[&ship.class];
-                // World::new rejects a damaged ship without figures, so
-                // with none every ship's propulsion works.
-                let propulsion_factor = match figures {
-                    Some(figures) => {
-                        figures.system_factor(ShipSystem::Propulsion, ship.systems.propulsion)
-                    }
-                    None => Fixed::ONE,
-                };
-                let speed_kn = match task_force.speed {
-                    SpeedSetting::Cruise => class.cruise_speed_kn * propulsion_factor,
-                    SpeedSetting::Full => class.max_speed_kn * propulsion_factor,
-                    // Decision 7 of 0021: the ordered speed, or the best
-                    // speed of the ship (top speed times its propulsion
-                    // factor) if that is lower.
-                    SpeedSetting::Knots(knots) => knots.min(class.max_speed_kn * propulsion_factor),
-                };
-                Steamer {
-                    ship: *ship_id,
-                    fuel_t: ship.fuel_t,
-                    speed_kn,
-                    propulsion_factor,
-                    cruise_speed_kn: class.cruise_speed_kn,
-                    fuel_capacity_t: class.fuel_capacity_t,
-                    endurance_nm: class.endurance_nm,
-                }
-            })
-            .collect();
-        // The slowest ship sets the speed; the lowest ship ID on a tie.
-        let Some(slowest) = steamers.iter().min_by_key(|s| s.speed_kn) else {
-            // A task force with no ships goes nowhere.
-            return;
-        };
-        let speed_kn = slowest.speed_kn;
-        let propulsion_factor = slowest.propulsion_factor;
-        if speed_kn.is_zero() {
-            // Dead in the water: no movement, no event, no fuel burned. The
-            // force stays under way.
-            return;
-        }
-
-        let time_limit_nm = speed_kn * pulse.hours();
-        let fuel_limit_nm = steamers.iter().filter_map(|s| s.range_nm(speed_kn)).min();
-        let budget_nm = match fuel_limit_nm {
-            Some(limit) => time_limit_nm.min(limit),
-            None => time_limit_nm,
-        };
-        let fuel_is_the_limit = budget_nm < time_limit_nm;
-
-        let one_hex = Fixed::from_int(HEX_NM);
-        let half_hex = one_hex / Fixed::from_int(2);
-        let waypoints = task_force.route.waypoints.clone();
-        let from = task_force.position();
-        let mut from_hex = task_force.from_hex;
-        let mut toward_hex = task_force.toward_hex;
-        let mut progress_nm = task_force.progress_nm;
-        let mut next_index = task_force.route.next_index;
-        let mut travelled_nm = Fixed::ZERO;
-        let mut hexes_entered = Vec::new();
-        // The distance field to the waypoint being steamed to, worked out
-        // once per waypoint rather than once per step (decision 0017,
-        // decision 12: the path itself is never stored).
-        let mut field: Option<(usize, BTreeMap<Hex, u32>)> = None;
-
-        loop {
-            if toward_hex.is_none() {
-                // At a centre: advance past a waypoint reached, or stop.
-                let Some(target) = waypoints.get(next_index) else {
-                    break;
-                };
-                if from_hex == *target {
-                    next_index += 1;
-                    continue;
-                }
-            }
-            let remaining_nm = budget_nm - travelled_nm;
-            if remaining_nm.is_zero() {
-                break;
-            }
-            let leg_end = match toward_hex {
-                Some(toward) => toward,
-                None => {
-                    // Only start a leg with distance left to steam it, so
-                    // zero progress always means no hex ahead.
-                    let target = waypoints[next_index];
-                    if field.as_ref().map(|(index, _)| *index) != Some(next_index) {
-                        field = Some((next_index, self.map.sea_distances_to(target)));
-                    }
-                    let distances = field.as_ref().map(|(_, d)| d);
-                    // Intake proved every waypoint reachable and the map never
-                    // changes, so there is always a next step. If there were
-                    // none, stop here and stay under way rather than panic.
-                    let Some(toward) = distances.and_then(|d| self.map.next_step_in(d, from_hex))
-                    else {
-                        break;
-                    };
-                    toward_hex = Some(toward);
-                    toward
-                }
-            };
-            let to_centre_nm = one_hex - progress_nm;
-            if remaining_nm >= to_centre_nm {
-                travelled_nm += to_centre_nm;
-                if progress_nm < half_hex {
-                    hexes_entered.push(leg_end);
-                }
-                from_hex = leg_end;
-                toward_hex = None;
-                progress_nm = Fixed::ZERO;
-            } else {
-                travelled_nm += remaining_nm;
-                if progress_nm < half_hex && progress_nm + remaining_nm >= half_hex {
-                    hexes_entered.push(leg_end);
-                }
-                progress_nm += remaining_nm;
-            }
-        }
-
-        let arrived = next_index >= waypoints.len();
-        let ran_dry = !arrived && fuel_is_the_limit;
-        let status = if arrived {
-            TaskForceStatus::Arrived
-        } else if ran_dry {
-            TaskForceStatus::OutOfFuel
-        } else {
-            TaskForceStatus::Underway
-        };
-
-        let standing_orders: Vec<Cause> = [task_force.route_order, task_force.speed_order]
-            .into_iter()
-            .flatten()
-            .map(Cause::Order)
-            .collect();
-
-        let task_force = self
-            .truth
-            .task_forces
-            .get_mut(&id)
-            .expect("task force exists");
-        task_force.from_hex = from_hex;
-        task_force.toward_hex = toward_hex;
-        task_force.progress_nm = progress_nm;
-        let hex = task_force.position();
-        task_force.route.next_index = next_index;
-        task_force.status = status;
-
-        let mut steamed: Option<EventId> = None;
-        if !travelled_nm.is_zero() {
-            let breakdown = self.config.record_breakdowns.then(|| {
-                let mut factors = vec![
-                    Factor {
-                        name: "speed_kn",
-                        value: speed_kn,
-                    },
-                    Factor {
-                        name: "propulsion_factor",
-                        value: propulsion_factor,
-                    },
-                    Factor {
-                        name: "pulse_hours",
-                        value: Fixed::from_int(pulse.hours()),
-                    },
-                    Factor {
-                        name: "time_limit_nm",
-                        value: time_limit_nm,
-                    },
-                ];
-                if let Some(limit) = fuel_limit_nm {
-                    factors.push(Factor {
-                        name: "fuel_limit_nm",
-                        value: limit,
-                    });
-                }
-                Breakdown {
-                    factors,
-                    result: travelled_nm,
-                }
-            });
-            let event = self.events.record(
-                day,
-                Some(pulse),
-                EventKind::TaskForceSteamed {
-                    task_force: id,
-                    from,
-                    to: hex,
-                    distance_nm: travelled_nm,
-                    speed_kn,
-                    hexes_entered,
-                },
-                standing_orders.clone(),
-                breakdown,
-            );
-            steamed = Some(event);
-
-            for steamer in &steamers {
-                // The fuel limit and the burn round separately, so cap the
-                // burn at what is aboard. Fuel never goes negative.
-                let burned_t = steamer.fuel_for(travelled_nm, speed_kn).min(steamer.fuel_t);
-                let remaining_t = steamer.fuel_t - burned_t;
-                self.truth
-                    .ships
-                    .get_mut(&steamer.ship)
-                    .expect("ship exists")
-                    .fuel_t = remaining_t;
-
-                let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                    factors: vec![
-                        Factor {
-                            name: "distance_nm",
-                            value: travelled_nm,
-                        },
-                        Factor {
-                            name: "fuel_capacity_t",
-                            value: steamer.fuel_capacity_t,
-                        },
-                        Factor {
-                            name: "endurance_nm",
-                            value: steamer.endurance_nm,
-                        },
-                        Factor {
-                            name: "speed_kn",
-                            value: speed_kn,
-                        },
-                        Factor {
-                            name: "cruise_speed_kn",
-                            value: steamer.cruise_speed_kn,
-                        },
-                        Factor {
-                            name: "speed_multiplier",
-                            value: speed_multiplier(speed_kn, steamer.cruise_speed_kn),
-                        },
-                    ],
-                    result: burned_t,
-                });
-                self.events.record(
-                    day,
-                    Some(pulse),
-                    EventKind::FuelBurned {
-                        ship: steamer.ship,
-                        task_force: id,
-                        burned_t,
-                        remaining_t,
-                    },
-                    vec![Cause::Event(event)],
-                    breakdown,
-                );
-            }
-        }
-
-        let outcome_causes = match steamed {
-            Some(event) => vec![Cause::Event(event)],
-            None => standing_orders,
-        };
-        if arrived {
-            let elapsed_hours = pulse_start(day, pulse) + travelled_nm / speed_kn;
-            let event = self.events.record(
-                day,
-                Some(pulse),
-                EventKind::TaskForceArrived {
-                    task_force: id,
-                    hex,
-                    elapsed_hours,
-                },
-                outcome_causes,
-                None,
-            );
-            let task_force = self
-                .truth
-                .task_forces
-                .get_mut(&id)
-                .expect("task force exists");
-            task_force.arrived_at_hours = Some(elapsed_hours);
-            task_force.arrival_event = Some(event);
-        } else if ran_dry {
-            self.events.record(
-                day,
-                Some(pulse),
-                EventKind::TaskForceOutOfFuel {
-                    task_force: id,
-                    hex,
-                },
-                outcome_causes,
-                None,
-            );
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::belief::{BattleClaim, Report};
-    use crate::hex::Hex;
+    use crate::hex::{Hex, HEX_NM};
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
+    use crate::movement::speed_multiplier;
     use crate::orders::{
         AirMission, Mission, OrderRequest, Origin, Readiness, Stance, StragglerInstruction,
     };

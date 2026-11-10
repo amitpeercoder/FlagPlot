@@ -274,6 +274,11 @@ pub enum EventKind {
         a: TaskForceId,
         b: TaskForceId,
         hex: Hex,
+        /// Elapsed hours since the scenario began at the meeting: the start
+        /// of the pulse for forces that were in one hex at its start, else
+        /// the start of the pulse plus the hours the arriving force had
+        /// steamed.
+        elapsed_hours: Fixed,
     },
     /// One roll of a force looking for the enemy force.
     SightingRoll {
@@ -686,9 +691,16 @@ impl fmt::Display for EventKind {
                 "{} {contact} dropped at {age_pulses} pulses, confidence {confidence}",
                 side.name()
             ),
-            EventKind::EngagementBegun { a, b, hex } => {
-                write!(f, "{a} and {b} met at {hex}: engagement begun")
-            }
+            EventKind::EngagementBegun {
+                a,
+                b,
+                hex,
+                elapsed_hours,
+            } => write!(
+                f,
+                "{a} and {b} met at {hex} at {}: engagement begun",
+                ClockTime::from_elapsed(*elapsed_hours)
+            ),
             EventKind::SightingRoll {
                 round,
                 task_force,

@@ -1,0 +1,118 @@
+# Scenario 4c2b, in and out: a force steams in, fights and leaves in one night.
+#
+# Stage 4c2b of scenario 4. The hand calculation is in
+# tests/scenario_04c_meeting.rs. The test runs this file with seeds 1 to
+# 1000.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Scenario 4c2b: In and out"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_night_action.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# The raider, at battle readiness.
+[[task_force]]
+id = 1
+name = "Placeholder raiding force"
+side = "japanese"
+q = 0
+r = 0
+mission = "surface_combat"
+readiness = "battle"
+
+# The defender lies stopped in (5,0) at normal readiness. Its side holds no
+# contact.
+[[task_force]]
+id = 2
+name = "Placeholder defending force"
+side = "allied"
+q = 5
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser A3"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cruiser B3"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+# Day 1, Japanese: in to (5,0) and back out to (0,0), at 24 knots, and fight.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[5, 0], [0, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# Day 1, Allied: hold position, and fight.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
