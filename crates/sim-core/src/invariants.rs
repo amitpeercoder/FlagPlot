@@ -37,6 +37,13 @@ pub enum InvariantViolation {
     /// A ship carries more supply than its class's cargo capacity.
     ShipOverCargoCapacity(ShipId),
     NegativeBaseStock(BaseId),
+    /// `toward_hex` is set with no progress, or progress is made with no
+    /// `toward_hex`.
+    TaskForceLegStateInconsistent(TaskForceId),
+    /// `toward_hex` is not a neighbour of `from_hex`.
+    TaskForceTowardNotAdjacent(TaskForceId, Hex),
+    /// `toward_hex` is off the map.
+    TaskForceTowardOffMap(TaskForceId, Hex),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -75,6 +82,24 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::NegativeBaseStock(base) => {
                 write!(f, "{base} has negative supply stock")
+            }
+            InvariantViolation::TaskForceLegStateInconsistent(task_force) => {
+                write!(
+                    f,
+                    "{task_force} has a hex ahead without progress, or progress without one"
+                )
+            }
+            InvariantViolation::TaskForceTowardNotAdjacent(task_force, hex) => {
+                write!(
+                    f,
+                    "{task_force} is steaming toward {hex}, which is not next to the hex it left"
+                )
+            }
+            InvariantViolation::TaskForceTowardOffMap(task_force, hex) => {
+                write!(
+                    f,
+                    "{task_force} is steaming toward {hex}, which is off the map"
+                )
             }
         }
     }
@@ -120,11 +145,30 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
     let mut listings: BTreeMap<ShipId, u32> = BTreeMap::new();
     let one_hex = Fixed::from_int(HEX_NM);
     for task_force in truth.task_forces.values() {
-        if !map.contains(task_force.hex) {
+        if !map.contains(task_force.from_hex) {
             violations.push(InvariantViolation::TaskForceOffMap(
                 task_force.id,
-                task_force.hex,
+                task_force.from_hex,
             ));
+        }
+        if task_force.toward_hex.is_some() != (task_force.progress_nm.raw() > 0) {
+            violations.push(InvariantViolation::TaskForceLegStateInconsistent(
+                task_force.id,
+            ));
+        }
+        if let Some(toward) = task_force.toward_hex {
+            if task_force.from_hex.distance(toward) != 1 {
+                violations.push(InvariantViolation::TaskForceTowardNotAdjacent(
+                    task_force.id,
+                    toward,
+                ));
+            }
+            if !map.contains(toward) {
+                violations.push(InvariantViolation::TaskForceTowardOffMap(
+                    task_force.id,
+                    toward,
+                ));
+            }
         }
         if task_force.progress_nm.is_negative() || task_force.progress_nm >= one_hex {
             violations.push(InvariantViolation::TaskForceProgressOutOfRange(

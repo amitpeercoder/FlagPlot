@@ -41,8 +41,8 @@ impl World {
                 continue;
             };
             // Only a task force that has stopped on purpose works cargo. One
-            // that ran dry counts as being in the hex it last left, which may
-            // hold a base it is in fact miles past.
+            // that ran dry may be miles from any base, whatever hex
+            // it is nearest to.
             if !matches!(
                 task_force.status,
                 TaskForceStatus::Idle | TaskForceStatus::Arrived
@@ -53,7 +53,7 @@ impl World {
                 .truth
                 .bases
                 .values()
-                .find(|base| base.side == task_force.side && base.hex == task_force.hex)
+                .find(|base| base.side == task_force.side && base.hex == task_force.position())
             else {
                 continue;
             };
@@ -65,7 +65,10 @@ impl World {
             if hours <= Fixed::ZERO {
                 continue;
             }
-            let size = self.map.get(task_force.hex).map_or(0, |hex| hex.port_size);
+            let size = self
+                .map
+                .get(task_force.position())
+                .map_or(0, |hex| hex.port_size);
             participants.push(Participant {
                 task_force: task_force.id,
                 base: base.id,
@@ -486,7 +489,12 @@ mod tests {
 
         let truth = world.umpire();
         assert_eq!(truth.task_forces[&tf(1)].status, TaskForceStatus::OutOfFuel);
-        assert_eq!(truth.task_forces[&tf(1)].hex, Hex::new(0, 0));
+        let task_force = &truth.task_forces[&tf(1)];
+        // 4 nm along its first leg: still nearest (0,0).
+        assert_eq!(task_force.position(), Hex::new(0, 0));
+        assert_eq!(task_force.from_hex, Hex::new(0, 0));
+        assert_eq!(task_force.toward_hex, Some(Hex::new(1, 0)));
+        assert_eq!(task_force.progress_nm, Fixed::from_int(4));
         assert_eq!(truth.ships[&ship(1)].supply_t, Fixed::from_int(1000));
         assert!(!world
             .events()

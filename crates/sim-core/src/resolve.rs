@@ -220,8 +220,15 @@ impl World {
                 }
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
-                        let mut current = task_force.hex;
-                        let mut goes_somewhere = false;
+                        // The new route starts from the centre the force
+                        // reaches first: the same choice apply_order makes.
+                        let (_, mut current) =
+                            task_force.reroute_centre(waypoints.first().copied());
+                        // A force between centres always has somewhere to go:
+                        // the leg it must finish. So "stop at the hex ahead"
+                        // and "go back to the hex I left" are real routes.
+                        let mut goes_somewhere =
+                            task_force.toward_hex.is_some() && !waypoints.is_empty();
                         for waypoint in waypoints {
                             if !self.map.contains(*waypoint) {
                                 return Err(RejectReason::WaypointOffMap(*waypoint));
@@ -243,11 +250,9 @@ impl World {
                         if task_force.status == TaskForceStatus::Underway {
                             return Err(RejectReason::UnderWay);
                         }
-                        let own_base_here = self
-                            .truth
-                            .bases
-                            .values()
-                            .any(|base| base.side == order.side && base.hex == task_force.hex);
+                        let own_base_here = self.truth.bases.values().any(|base| {
+                            base.side == order.side && base.hex == task_force.position()
+                        });
                         if own_base_here {
                             Ok(())
                         } else {
@@ -277,6 +282,12 @@ impl World {
                     .expect("order was validated against this task force");
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
+                        // Turning back is decided on the state the order
+                        // found, and the leg is then finished by movement.
+                        let (turns_back, _) = task_force.reroute_centre(waypoints.first().copied());
+                        if turns_back {
+                            task_force.turn_back();
+                        }
                         task_force.route = Route {
                             waypoints: waypoints.clone(),
                             next_index: 0,
@@ -321,8 +332,13 @@ impl World {
     ///
     /// The task force steams at the speed of its slowest ship for the whole
     /// pulse, unless it reaches the end of its route or a ship runs dry
-    /// first. It enters the next hex once it has covered the full 40 nm
-    /// between hex centres.
+    /// first. A leg between two hex centres is 40 nm and, once started, is
+    /// always finished: the next centre reached is the hex ahead, whatever
+    /// the route says. At a centre the next leg goes to the neighbour nearest
+    /// the current waypoint. The task force enters a hex (its position
+    /// changes) when it passes the midpoint of the leg, 20 nm along, so
+    /// `hexes_entered` and the `from` and `to` of the event are positions,
+    /// not centres reached.
     fn move_task_force(&mut self, id: TaskForceId, day: u32, pulse: Pulse) {
         let Some(task_force) = self.truth.task_forces.get(&id) else {
             return;
@@ -364,32 +380,56 @@ impl World {
         let fuel_is_the_limit = budget_nm < time_limit_nm;
 
         let one_hex = Fixed::from_int(HEX_NM);
+        let half_hex = one_hex / Fixed::from_int(2);
         let waypoints = task_force.route.waypoints.clone();
-        let from = task_force.hex;
-        let mut hex = from;
+        let from = task_force.position();
+        let mut from_hex = task_force.from_hex;
+        let mut toward_hex = task_force.toward_hex;
         let mut progress_nm = task_force.progress_nm;
         let mut next_index = task_force.route.next_index;
         let mut travelled_nm = Fixed::ZERO;
         let mut hexes_entered = Vec::new();
 
-        while next_index < waypoints.len() {
-            let target = waypoints[next_index];
-            if hex == target {
-                next_index += 1;
-                continue;
+        loop {
+            if toward_hex.is_none() {
+                // At a centre: advance past a waypoint reached, or stop.
+                let Some(target) = waypoints.get(next_index) else {
+                    break;
+                };
+                if from_hex == *target {
+                    next_index += 1;
+                    continue;
+                }
             }
             let remaining_nm = budget_nm - travelled_nm;
             if remaining_nm.is_zero() {
                 break;
             }
-            let to_next_hex_nm = one_hex - progress_nm;
-            if remaining_nm >= to_next_hex_nm {
-                travelled_nm += to_next_hex_nm;
+            let leg_end = match toward_hex {
+                Some(toward) => toward,
+                None => {
+                    // Only start a leg with distance left to steam it, so
+                    // zero progress always means no hex ahead.
+                    let target = waypoints[next_index];
+                    let toward = from_hex.step_toward(target);
+                    toward_hex = Some(toward);
+                    toward
+                }
+            };
+            let to_centre_nm = one_hex - progress_nm;
+            if remaining_nm >= to_centre_nm {
+                travelled_nm += to_centre_nm;
+                if progress_nm < half_hex {
+                    hexes_entered.push(leg_end);
+                }
+                from_hex = leg_end;
+                toward_hex = None;
                 progress_nm = Fixed::ZERO;
-                hex = hex.step_toward(target);
-                hexes_entered.push(hex);
             } else {
                 travelled_nm += remaining_nm;
+                if progress_nm < half_hex && progress_nm + remaining_nm >= half_hex {
+                    hexes_entered.push(leg_end);
+                }
                 progress_nm += remaining_nm;
             }
         }
@@ -415,8 +455,10 @@ impl World {
             .task_forces
             .get_mut(&id)
             .expect("task force exists");
-        task_force.hex = hex;
+        task_force.from_hex = from_hex;
+        task_force.toward_hex = toward_hex;
         task_force.progress_nm = progress_nm;
+        let hex = task_force.position();
         task_force.route.next_index = next_index;
         task_force.status = status;
 
@@ -685,7 +727,10 @@ mod tests {
         // Fuel: 480 nm x 0.25 t/nm x 4 = 480 t.
         let truth = world.umpire();
         assert_eq!(truth.task_forces[&TF].status, TaskForceStatus::Arrived);
-        assert_eq!(truth.task_forces[&TF].hex, Hex::new(12, 0));
+        assert_eq!(truth.task_forces[&TF].from_hex, Hex::new(12, 0));
+        assert_eq!(truth.task_forces[&TF].toward_hex, None);
+        assert_eq!(truth.task_forces[&TF].progress_nm, Fixed::ZERO);
+        assert_eq!(truth.task_forces[&TF].position(), Hex::new(12, 0));
         assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::from_int(2000 - 480));
     }
 
@@ -749,7 +794,9 @@ mod tests {
         let truth = world.umpire();
         let task_force = &truth.task_forces[&TF];
         assert_eq!(task_force.status, TaskForceStatus::OutOfFuel);
-        assert_eq!(task_force.hex, Hex::new(1, 0));
+        assert_eq!(task_force.from_hex, Hex::new(1, 0));
+        assert_eq!(task_force.toward_hex, None);
+        assert_eq!(task_force.position(), Hex::new(1, 0));
         assert_eq!(task_force.progress_nm, Fixed::ZERO);
         assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::ZERO);
 
@@ -873,14 +920,23 @@ mod tests {
         let mut world = world_with_fuel(2000);
         world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
         world.resolve_day().expect("day resolves");
-        // 16 kn for 24 h = 384 nm: nine hexes and 24 nm.
-        assert_eq!(world.umpire().task_forces[&TF].hex, Hex::new(9, 0));
+        // 16 kn for 24 h = 384 nm: nine hexes and 24 nm. It has left (9,0),
+        // is 24 nm toward (10,0) and so is in (10,0).
+        let task_force = &world.umpire().task_forces[&TF];
+        assert_eq!(task_force.from_hex, Hex::new(9, 0));
+        assert_eq!(task_force.toward_hex, Some(Hex::new(10, 0)));
+        assert_eq!(task_force.progress_nm, Fixed::from_int(24));
+        assert_eq!(task_force.position(), Hex::new(10, 0));
 
         world.submit_orders(Side::Allied, vec![route_to(9, 2)]);
         world.resolve_day().expect("day resolves");
         let task_force = &world.umpire().task_forces[&TF];
+        // Going on costs 16 + 40 x 2 = 96 nm, turning back 24 + 40 x 2 =
+        // 104 nm, so it finishes the leg to (10,0) and goes on to (9,2).
         assert_eq!(task_force.status, TaskForceStatus::Arrived);
-        assert_eq!(task_force.hex, Hex::new(9, 2));
+        assert_eq!(task_force.from_hex, Hex::new(9, 2));
+        assert_eq!(task_force.toward_hex, None);
+        assert_eq!(task_force.position(), Hex::new(9, 2));
     }
 
     #[test]
@@ -956,5 +1012,398 @@ mod tests {
         assert_eq!(task_force.status, TaskForceStatus::Arrived);
         // It arrived again, so the fields describe the new arrival.
         assert_ne!(task_force.arrival_event, Some(event));
+    }
+
+    // ---- Movement between hex centres (decision 0005, decisions 1 and 5) ----
+
+    fn hx(q: i32, r: i32) -> Hex {
+        Hex::new(q, r)
+    }
+
+    fn nm(value: i64) -> Fixed {
+        Fixed::from_int(value)
+    }
+
+    /// Puts the task force part-way along a leg by writing the stored state.
+    fn set_leg(world: &mut World, from: Hex, toward: Option<Hex>, progress_nm: Fixed) {
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.from_hex = from;
+        task_force.toward_hex = toward;
+        task_force.progress_nm = progress_nm;
+        assert_sound(world);
+    }
+
+    fn assert_sound(world: &World) {
+        assert_eq!(
+            invariants::check(&world.truth, &world.map, &world.ref_data),
+            Vec::new()
+        );
+    }
+
+    fn leg(world: &World) -> (Hex, Option<Hex>, Fixed) {
+        let task_force = &world.truth.task_forces[&TF];
+        (
+            task_force.from_hex,
+            task_force.toward_hex,
+            task_force.progress_nm,
+        )
+    }
+
+    /// Submits `orders` and takes them in, without moving anything, so the
+    /// state an order leaves behind can be looked at.
+    fn take_in(world: &mut World, orders: Vec<OrderRequest>) {
+        world.submit_orders(Side::Allied, orders);
+        let day = world.truth.day + 1;
+        world.intake_orders(day);
+    }
+
+    /// Resolves days until the force stops, and returns the miles steamed.
+    fn miles_until_stopped(world: &mut World) -> Fixed {
+        let first = world.events().len();
+        world.resolve_day().expect("day resolves");
+        for _ in 0..30 {
+            if world.truth.task_forces[&TF].status != TaskForceStatus::Underway {
+                break;
+            }
+            world.resolve_day().expect("day resolves");
+        }
+        world
+            .events()
+            .from_index(first)
+            .iter()
+            .filter_map(|event| match &event.kind {
+                EventKind::TaskForceSteamed { distance_nm, .. } => Some(*distance_nm),
+                _ => None,
+            })
+            .fold(Fixed::ZERO, |total, distance| total + distance)
+    }
+
+    #[test]
+    fn position_flips_to_the_hex_ahead_at_exactly_20_nm() {
+        let mut world = world_with_fuel(2000);
+        // 20 nm less the smallest step (a millionth) is still nearer (0,0).
+        let just_under = nm(20) - Fixed::from_raw(1);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), just_under);
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(0, 0));
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(20));
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(1, 0));
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), Fixed::from_raw(1));
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(0, 0));
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(39));
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(1, 0));
+    }
+
+    #[test]
+    fn a_pulse_enters_the_hex_ahead_at_20_nm_and_not_at_the_centre() {
+        // From (0,0), the 12-hour night pulse at 16 kn is 192 nm: four
+        // centres (160 nm) and 32 nm of the fifth leg. Hexes entered are at
+        // 20, 60, 100, 140 and 180 nm: (1,0) to (5,0). Position (5,0).
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+        let night = world
+            .events()
+            .iter()
+            .find_map(|event| match &event.kind {
+                EventKind::TaskForceSteamed {
+                    from,
+                    to,
+                    hexes_entered,
+                    ..
+                } if event.pulse == Some(Pulse::Night) => Some((*from, *to, hexes_entered.clone())),
+                _ => None,
+            })
+            .expect("night movement");
+        assert_eq!(
+            night,
+            (
+                hx(0, 0),
+                hx(5, 0),
+                vec![hx(1, 0), hx(2, 0), hx(3, 0), hx(4, 0), hx(5, 0)]
+            )
+        );
+    }
+
+    #[test]
+    fn a_reroute_ahead_finishes_the_leg_then_follows_the_new_route() {
+        // From (0,0), 10 nm toward (1,0). New first waypoint (5,0):
+        // ahead = (40 - 10) + 40 x 4 = 190, back = 10 + 40 x 5 = 210.
+        // Ahead wins. 190 nm at 16 kn is 11.875 h, inside the night pulse.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        take_in(&mut world, vec![route_to(5, 0)]);
+        assert_eq!(leg(&world), (hx(0, 0), Some(hx(1, 0)), nm(10)));
+
+        assert_eq!(miles_until_stopped(&mut world), nm(190));
+        assert_eq!(leg(&world), (hx(5, 0), None, Fixed::ZERO));
+        assert_eq!(
+            world.truth.task_forces[&TF].status,
+            TaskForceStatus::Arrived
+        );
+    }
+
+    #[test]
+    fn a_reroute_back_reverses_and_reaches_the_hex_it_left_after_exactly_p_more_miles() {
+        // From (0,0), 10 nm toward (1,0). New first waypoint (0,1), one hex
+        // from both: ahead = 30 + 40 = 70, back = 10 + 40 = 50. Back wins.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        take_in(&mut world, vec![route_to(0, 1)]);
+        // Swapped: left (1,0), toward (0,0), 40 - 10 = 30 nm along.
+        assert_eq!(leg(&world), (hx(1, 0), Some(hx(0, 0)), nm(30)));
+        assert_sound(&world);
+
+        // Total: 10 nm to (0,0), then 40 nm to (0,1) = 50 nm.
+        assert_eq!(miles_until_stopped(&mut world), nm(50));
+        assert_eq!(leg(&world), (hx(0, 1), None, Fixed::ZERO));
+
+        // Exactly 10 more miles reach (0,0), never more: 2.5 t of fuel at
+        // 0.25 t/nm is 10 nm, and the force stops dead on the centre.
+        let mut world = world_with_fuel(2000);
+        world.truth.ships.get_mut(&SHIP).expect("ship").fuel_t = Fixed::from_ratio(5, 2);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        take_in(&mut world, vec![route_to(0, 1)]);
+        assert_eq!(miles_until_stopped(&mut world), nm(10));
+        assert_eq!(leg(&world), (hx(0, 0), None, Fixed::ZERO));
+        assert_eq!(
+            world.truth.task_forces[&TF].status,
+            TaskForceStatus::OutOfFuel
+        );
+    }
+
+    #[test]
+    fn a_tie_between_ahead_and_back_goes_ahead() {
+        // From (0,0), 20 nm toward (1,0). New first waypoint (0,1) is one
+        // hex from both: ahead = 20 + 40 = 60, back = 20 + 40 = 60. Tie.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(20));
+        take_in(&mut world, vec![route_to(0, 1)]);
+        assert_eq!(leg(&world), (hx(0, 0), Some(hx(1, 0)), nm(20)));
+        assert_eq!(miles_until_stopped(&mut world), nm(60));
+        assert_eq!(leg(&world), (hx(0, 1), None, Fixed::ZERO));
+    }
+
+    #[test]
+    fn a_reroute_never_gains_distance() {
+        let from = hx(5, 1);
+        let toward = hx(6, 1);
+        let waypoints = [
+            hx(9, 1),
+            hx(1, 1),
+            hx(5, 4),
+            hx(6, -1),
+            hx(8, 3),
+            hx(2, 4),
+            hx(5, 0),
+            hx(7, 0),
+        ];
+        let one_hex = nm(HEX_NM);
+        for progress in [1, 10, 19, 20, 21, 39] {
+            for waypoint in waypoints {
+                let mut world = world_with_fuel(2000);
+                set_leg(&mut world, from, Some(toward), nm(progress));
+                world.submit_orders(
+                    Side::Allied,
+                    vec![order(TaskForceOrder::SetRoute(vec![waypoint]))],
+                );
+                let steamed = miles_until_stopped(&mut world);
+                assert_eq!(rejection(&world), None, "p={progress} W={waypoint}");
+
+                // cost ahead = (40 - p) + 40 x d(toward, W)
+                // cost back  = p + 40 x d(from, W)
+                let ahead = nm(40 - progress) + one_hex * i64::from(toward.distance(waypoint));
+                let back = nm(progress) + one_hex * i64::from(from.distance(waypoint));
+                assert_eq!(steamed, ahead.min(back), "p={progress} W={waypoint}");
+
+                // Position-independent bound: no shorter than the trip from
+                // the nearer of the two centres.
+                let bound =
+                    one_hex * i64::from(from.distance(waypoint).min(toward.distance(waypoint)));
+                assert!(steamed >= bound, "p={progress} W={waypoint}");
+                assert_eq!(leg(&world), (waypoint, None, Fixed::ZERO));
+            }
+        }
+    }
+
+    #[test]
+    fn turning_back_twice_restores_the_stored_state() {
+        // Directly: swap and 40 - p, twice.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        let original = leg(&world);
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.turn_back();
+        assert_eq!(
+            (
+                task_force.from_hex,
+                task_force.toward_hex,
+                task_force.progress_nm
+            ),
+            (hx(1, 0), Some(hx(0, 0)), nm(30))
+        );
+        task_force.turn_back();
+        assert_eq!(leg(&world), original);
+
+        // Through two orders. First (0,1): back (see above), giving
+        // (1,0) -> (0,0) at 30 nm. Then (2,0): ahead = (40 - 30) + 40 x 2 =
+        // 90, back = 30 + 40 x 1 = 70, so it turns back again.
+        take_in(&mut world, vec![route_to(0, 1)]);
+        assert_eq!(leg(&world), (hx(1, 0), Some(hx(0, 0)), nm(30)));
+        world.submit_orders(Side::Allied, vec![route_to(2, 0)]);
+        world.intake_orders(2);
+        assert_eq!(leg(&world), original);
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn a_route_rejected_at_intake_leaves_the_leg_unchanged() {
+        // Off the map: rejected before any choice is made.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
+        let before = world.truth.task_forces[&TF].clone();
+        take_in(&mut world, vec![route_to(40, 40)]);
+        assert_eq!(
+            rejection(&world),
+            Some(RejectReason::WaypointOffMap(hx(40, 40)))
+        );
+        assert_eq!(world.truth.task_forces[&TF], before);
+
+        // Blocked: from (2,0), going ahead (190 vs 210 back), the greedy path
+        // to (3,3) runs (3,0), (3,1), (3,2), which is land.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
+        let before = world.truth.task_forces[&TF].clone();
+        take_in(&mut world, vec![route_to(3, 3)]);
+        assert_eq!(
+            rejection(&world),
+            Some(RejectReason::RouteBlocked(hx(3, 2)))
+        );
+        assert_eq!(world.truth.task_forces[&TF], before);
+
+        // No waypoints at all: empty, even between centres.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
+        let before = world.truth.task_forces[&TF].clone();
+        take_in(&mut world, vec![order(TaskForceOrder::SetRoute(vec![]))]);
+        assert_eq!(rejection(&world), Some(RejectReason::EmptyRoute));
+        assert_eq!(world.truth.task_forces[&TF], before);
+    }
+
+    #[test]
+    fn between_centres_the_hex_ahead_and_the_hex_left_are_real_routes() {
+        // Ordered to stop at the hex ahead: accepted. Ahead = (40 - 10) + 0 =
+        // 30, back = 10 + 40 = 50, so it goes on and arrives after 30 nm.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
+        world
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force")
+            .status = TaskForceStatus::Underway;
+        world.submit_orders(Side::Allied, vec![route_to(2, 0)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+        assert_eq!(leg(&world), (hx(2, 0), None, nm(0)));
+        assert_eq!(
+            world.truth.task_forces[&TF].status,
+            TaskForceStatus::Arrived
+        );
+        // 30 nm at 0.25 t/nm is 7.5 t.
+        assert_eq!(
+            world.truth.ships[&SHIP].fuel_t,
+            Fixed::from_int(2000) - Fixed::from_int(15) / Fixed::from_int(2)
+        );
+
+        // Ordered back to the hex it left, 1 nm out: accepted. Ahead =
+        // (40 - 1) + 40 = 79, back = 1 + 0 = 1, so it turns back and arrives
+        // after 1 nm, burning 0.25 t. This is the case decision 5 was changed
+        // for.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(1));
+        world
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force")
+            .status = TaskForceStatus::Underway;
+        world.submit_orders(Side::Allied, vec![route_to(1, 0)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+        assert_eq!(leg(&world), (hx(1, 0), None, nm(0)));
+        assert_eq!(
+            world.truth.task_forces[&TF].status,
+            TaskForceStatus::Arrived
+        );
+        assert_eq!(
+            world.truth.ships[&SHIP].fuel_t,
+            Fixed::from_int(2000) - Fixed::ONE / Fixed::from_int(4)
+        );
+    }
+
+    #[test]
+    fn an_out_of_fuel_force_mid_leg_is_sound_and_reports_its_position() {
+        // 5 t at 0.25 t/nm lasts 20 nm: the force stops 20 nm out of (0,0)
+        // toward (1,0), which puts it in (1,0).
+        let mut world = world_with_fuel(5);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("invariants hold");
+
+        assert_eq!(leg(&world), (hx(0, 0), Some(hx(1, 0)), nm(20)));
+        let task_force = &world.truth.task_forces[&TF];
+        assert_eq!(task_force.status, TaskForceStatus::OutOfFuel);
+        assert_eq!(task_force.position(), hx(1, 0));
+        let reported = world.events().iter().find_map(|event| match event.kind {
+            EventKind::TaskForceOutOfFuel { hex, .. } => Some(hex),
+            _ => None,
+        });
+        assert_eq!(reported, Some(hx(1, 0)));
+        let entered = world.events().iter().find_map(|event| match &event.kind {
+            EventKind::TaskForceSteamed {
+                to, hexes_entered, ..
+            } => Some((*to, hexes_entered.clone())),
+            _ => None,
+        });
+        assert_eq!(entered, Some((hx(1, 0), vec![hx(1, 0)])));
+    }
+
+    #[test]
+    fn the_hex_ahead_is_part_of_the_state_hash() {
+        let mut a = world_with_fuel(2000);
+        set_leg(&mut a, hx(0, 0), Some(hx(1, 0)), nm(10));
+        let mut b = world_with_fuel(2000);
+        set_leg(&mut b, hx(0, 0), Some(hx(0, 1)), nm(10));
+        assert_ne!(a.state_hash(), b.state_hash());
+        let mut c = world_with_fuel(2000);
+        set_leg(&mut c, hx(0, 0), Some(hx(1, 0)), nm(10));
+        assert_eq!(a.state_hash(), c.state_hash());
+    }
+
+    #[test]
+    fn the_leg_invariants_catch_a_broken_state() {
+        let mut world = world_with_fuel(2000);
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        // A hex ahead with no progress.
+        task_force.toward_hex = Some(hx(1, 0));
+        assert_eq!(
+            invariants::check(&world.truth, &world.map, &world.ref_data),
+            vec![crate::invariants::InvariantViolation::TaskForceLegStateInconsistent(TF)]
+        );
+        // Progress and a hex ahead, but the hex ahead is two hexes away.
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.toward_hex = Some(hx(2, 0));
+        task_force.progress_nm = nm(5);
+        assert_eq!(
+            invariants::check(&world.truth, &world.map, &world.ref_data),
+            vec![crate::invariants::InvariantViolation::TaskForceTowardNotAdjacent(TF, hx(2, 0))]
+        );
+        // Off the map: (-2,0) is adjacent to (-1,0) only.
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.from_hex = hx(-1, 0);
+        task_force.toward_hex = Some(hx(-2, 0));
+        assert_eq!(
+            invariants::check(&world.truth, &world.map, &world.ref_data),
+            vec![crate::invariants::InvariantViolation::TaskForceTowardOffMap(TF, hx(-2, 0))]
+        );
     }
 }

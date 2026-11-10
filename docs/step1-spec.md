@@ -36,7 +36,7 @@ The simulation uses a hex grid at 40 nautical miles per hex, in axial coordinate
 | Land terrain | Clear, jungle, mountain, atoll |
 | Sites | Port size 0 to 10, airfield size 0 to 10, anchorage flag |
 
-Movement is hex to hex inside the simulation. A task force stores its hex plus progress toward the next one, so speed differences of a knot or two still matter over a day. It counts as being in the hex whose centre is nearest, so it changes hex at the midpoint. A re-routed task force finishes the step it is on. See decision 0005.
+Movement is hex to hex inside the simulation. A task force stores its hex plus progress toward the next one, so speed differences of a knot or two still matter over a day. It counts as being in the hex whose centre is nearest, so it changes hex at the midpoint. A task force re-routed between two hex centres goes on or turns back, whichever is the shorter trip, and never gains distance. See decision 0005.
 
 ## Data model
 

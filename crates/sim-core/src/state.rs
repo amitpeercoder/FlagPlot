@@ -10,7 +10,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::fixed::Fixed;
-use crate::hex::Hex;
+use crate::hex::{Hex, HEX_NM};
 use crate::ids::{BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
 use crate::orders::{CargoAction, Mission, SpeedSetting};
 
@@ -121,10 +121,16 @@ pub struct TaskForce {
     pub mission: Mission,
     pub speed: SpeedSetting,
     pub route: Route,
-    /// The hex the task force is in.
-    pub hex: Hex,
-    /// Nautical miles steamed from the centre of `hex` toward the next one.
-    /// Always at least 0 and less than one hex.
+    /// The hex whose centre the task force last left, or is sitting on.
+    /// Read only by movement, route intake, the hash and the leg invariants.
+    /// Everything else asks [`TaskForce::position`].
+    pub from_hex: Hex,
+    /// The hex the task force is steaming toward. `Some` exactly when
+    /// `progress_nm` is above zero, and then always a neighbour of
+    /// `from_hex`.
+    pub toward_hex: Option<Hex>,
+    /// Nautical miles covered from the centre of `from_hex` toward the centre
+    /// of `toward_hex`. At least 0 and less than one hex.
     pub progress_nm: Fixed,
     pub status: TaskForceStatus,
     /// The standing order that set the route, if any.
@@ -141,6 +147,57 @@ pub struct TaskForce {
 }
 
 impl TaskForce {
+    /// Where the task force is: the hex whose centre is nearest. That is
+    /// the hex ahead once it is half a hex (20 nm) or more along its leg,
+    /// and the hex it left before that (decision 0005, decision 1).
+    pub fn position(&self) -> Hex {
+        match self.toward_hex {
+            Some(toward) if self.progress_nm >= Fixed::from_int(HEX_NM) / Fixed::from_int(2) => {
+                toward
+            }
+            _ => self.from_hex,
+        }
+    }
+
+    /// Where a new route starts when it is accepted now, and whether the task
+    /// force turns back to get there (decision 0005, decision 5).
+    ///
+    /// At a centre this is `(false, from_hex)`. Between centres the force
+    /// goes on to the hex ahead or turns back to the hex it left, whichever
+    /// is the shorter trip to `first_waypoint`. Going on costs the rest of
+    /// the leg plus the hexes from the hex ahead. Turning back costs the
+    /// miles already covered plus the hexes from the hex it left. A tie goes
+    /// ahead. With no waypoint there is nothing to compare, so it goes ahead.
+    ///
+    /// Pure: used by both intake validation and applying the order.
+    pub fn reroute_centre(&self, first_waypoint: Option<Hex>) -> (bool, Hex) {
+        let Some(toward) = self.toward_hex else {
+            return (false, self.from_hex);
+        };
+        let Some(waypoint) = first_waypoint else {
+            return (false, toward);
+        };
+        let one_hex = Fixed::from_int(HEX_NM);
+        let cost_ahead =
+            (one_hex - self.progress_nm) + one_hex * i64::from(toward.distance(waypoint));
+        let cost_back = self.progress_nm + one_hex * i64::from(self.from_hex.distance(waypoint));
+        if cost_back < cost_ahead {
+            (true, self.from_hex)
+        } else {
+            (false, toward)
+        }
+    }
+
+    /// Turns the task force round mid-leg: the two hexes swap and the miles
+    /// covered become the miles still to go. Does nothing at a centre.
+    pub fn turn_back(&mut self) {
+        if let Some(toward) = self.toward_hex {
+            self.toward_hex = Some(self.from_hex);
+            self.from_hex = toward;
+            self.progress_nm = Fixed::from_int(HEX_NM) - self.progress_nm;
+        }
+    }
+
     /// A task force sitting at a hex with no route.
     pub fn at(id: TaskForceId, name: String, side: Side, hex: Hex, mission: Mission) -> TaskForce {
         TaskForce {
@@ -151,7 +208,8 @@ impl TaskForce {
             mission,
             speed: SpeedSetting::Cruise,
             route: Route::default(),
-            hex,
+            from_hex: hex,
+            toward_hex: None,
             progress_nm: Fixed::ZERO,
             status: TaskForceStatus::Idle,
             route_order: None,
