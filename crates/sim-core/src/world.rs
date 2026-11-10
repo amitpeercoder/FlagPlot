@@ -6,13 +6,13 @@ use std::collections::BTreeMap;
 use crate::belief::BeliefState;
 use crate::events::EventLog;
 use crate::hash;
-use crate::ids::{EntityRef, IdAllocator, OrderId};
+use crate::ids::{EntityRef, IdAllocator, OrderId, TaskForceId};
 use crate::invariants::{self, InvariantViolation};
 use crate::map::Map;
 use crate::orders::{Order, OrderRequest};
 use crate::refdata::RefData;
 use crate::rng::{RngKey, RngStream, Subsystem};
-use crate::state::{Side, TruthState};
+use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
 use crate::view::SideView;
 
@@ -84,6 +84,9 @@ pub struct World {
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
+    /// Hands out IDs to task forces made during a day (decision 0016). Every
+    /// starting task force's ID is reserved.
+    pub(crate) task_force_ids: IdAllocator<TaskForceId>,
     /// Orders submitted for the coming day, not yet taken in.
     pub(crate) pending: BTreeMap<Side, Vec<OrderRequest>>,
     pub(crate) events: EventLog,
@@ -92,7 +95,8 @@ pub struct World {
 
 impl World {
     /// Starts a game. Fails if the reference data is unusable (a ship class,
-    /// port size, aircraft type or the search figures with bad figures), a
+    /// port size, aircraft type, the search figures or the surface combat
+    /// figures with bad figures), a
     /// ship has an unknown class, an air group has an unknown aircraft type,
     /// there are air groups but no search figures, a base
     /// sits in a port size with no entry in the port table, or the starting
@@ -116,6 +120,13 @@ impl World {
         if let Some(problem) = ref_data.search.as_ref().and_then(|search| search.problem()) {
             return Err(SimError::InvalidSetup(problem));
         }
+        if let Some(problem) = ref_data
+            .surface_combat
+            .as_ref()
+            .and_then(|figures| figures.problem())
+        {
+            return Err(SimError::InvalidSetup(problem));
+        }
         for group in truth.air_groups.values() {
             if !ref_data.aircraft_types.contains_key(&group.aircraft_type) {
                 return Err(SimError::InvalidSetup(format!(
@@ -127,6 +138,12 @@ impl World {
         if !truth.air_groups.is_empty() && ref_data.search.is_none() {
             return Err(SimError::InvalidSetup(
                 "there are air groups but no search figures".to_string(),
+            ));
+        }
+        if ref_data.surface_combat.is_some() && ref_data.search.is_none() {
+            // A fight reports what it sighted through the search figures.
+            return Err(SimError::InvalidSetup(
+                "there are surface combat figures but no search figures".to_string(),
             ));
         }
         for ship in truth.ships.values() {
@@ -155,6 +172,22 @@ impl World {
             }
         }
 
+        if ref_data.surface_combat.is_none() {
+            // Without the figures a damaged system has no factor to apply.
+            for ship in truth.ships.values() {
+                for system in ShipSystem::ALL {
+                    if ship.systems.get(system) != SystemState::Working {
+                        return Err(SimError::InvalidSetup(format!(
+                            "{} has {} {} but there are no surface combat figures",
+                            ship.id,
+                            system.name(),
+                            ship.systems.get(system).name()
+                        )));
+                    }
+                }
+            }
+        }
+
         let violations = invariants::check(&truth, &map, &ref_data);
         if !violations.is_empty() {
             return Err(SimError::InvariantsViolated {
@@ -168,6 +201,11 @@ impl World {
             .map(|side| (side, BeliefState::new(side)))
             .collect();
 
+        let mut task_force_ids = IdAllocator::new();
+        for id in truth.task_forces.keys() {
+            task_force_ids.reserve(*id);
+        }
+
         Ok(World {
             seed,
             config: SimConfig::default(),
@@ -177,6 +215,7 @@ impl World {
             beliefs,
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
+            task_force_ids,
             pending: BTreeMap::new(),
             events: EventLog::default(),
             day_hashes: Vec::new(),

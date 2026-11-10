@@ -6,9 +6,9 @@ The name comes from the compartment on a flagship where the admiral and staff tr
 
 ## Status
 
-Step 1 of five: a headless, deterministic simulation core. Three of its eight test scenarios are built. There is no game to play yet.
+Step 1 of five: a headless, deterministic simulation core. Three of its eight test scenarios are built, and scenario 4 is in progress. There is no game to play yet.
 
-The ships and the map in the repo are placeholders, invented so the engine has something to run. They are not historical.
+The ships in the repo are placeholders, invented so the engine has something to run. They are not historical. The map of the South Pacific slice, `data/map/south_pacific.csv`, is real geography, generated from public-domain Natural Earth coastlines by `crates/map-tool`; the small maps the early test scenarios use are placeholders.
 
 ## Documents
 
@@ -27,3 +27,5 @@ cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
 ```
 
 The second command runs scenario 1 and prints the state hash of each day, the full event log with what caused each event, and where every ship ended up.
+
+`viewer/` holds a read-only replay viewer for debugging: `sim-cli export` writes a run as one file and `viewer/index.html` draws it on the map. See [viewer/README.md](viewer/README.md).

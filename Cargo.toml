@@ -5,6 +5,9 @@ members = [
     "crates/sim-data",
     "crates/sim-cli",
     "crates/sim-agent",
+    "crates/map-tool",
+    "crates/oob-check",
+    "crates/oob-derive",
     "tests",
 ]
 
@@ -17,6 +20,7 @@ publish = false
 sim-core = { path = "crates/sim-core" }
 sim-data = { path = "crates/sim-data" }
 serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
 toml = "1"
 csv = "1"
 

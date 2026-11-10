@@ -1,15 +1,15 @@
 //! Unit-level orders: the only way to influence the simulation.
 //!
 //! Only the orders the scenarios so far need exist: task force orders (route,
-//! speed, mission, load and unload) and air group orders (mission and search
-//! arc). The spec lists the full set (form, disband, rules of engagement and
+//! speed, mission, load, unload and rules of engagement) and air group orders
+//! (mission and search arc). The spec lists the full set (form, disband and
 //! so on). They arrive with the scenarios that use them.
 
 use core::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, EntityRef, IntentId, OrderId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, EntityRef, IntentId, OrderId, ShipId, TaskForceId};
 use crate::state::Side;
 
 /// Who issued an order.
@@ -76,6 +76,66 @@ pub enum SpeedSetting {
     Full,
 }
 
+/// Whether a task force fights or tries to slip away from a surface fight.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Stance {
+    /// Fights when it can.
+    Engage,
+    /// Slips away from an enemy that has not sighted it, and breaks off at
+    /// the end of the first round in which it is fired on.
+    Avoid,
+}
+
+impl Stance {
+    /// A stable number for the stance. Part of the state hash. Never
+    /// renumber it; add new stances at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Stance::Engage => 1,
+            Stance::Avoid => 2,
+        }
+    }
+}
+
+/// What a task force does about its stragglers, ships whose propulsion is
+/// degraded or out (decisions 10 to 12 of
+/// `docs/decisions/0016-systems-and-stragglers.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum StragglerInstruction {
+    /// Nothing happens.
+    #[default]
+    Keep,
+    /// Send stragglers that can steam home with escorts.
+    Detach,
+    /// Leave every straggler where it is.
+    Leave,
+    /// The whole force heads home.
+    Retire,
+}
+
+impl StragglerInstruction {
+    /// A stable number for the instruction. Part of the state hash. Never
+    /// renumber it; add new instructions at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            StragglerInstruction::Keep => 1,
+            StragglerInstruction::Detach => 2,
+            StragglerInstruction::Leave => 3,
+            StragglerInstruction::Retire => 4,
+        }
+    }
+
+    /// The instruction's name as scenario files and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            StragglerInstruction::Keep => "keep",
+            StragglerInstruction::Detach => "detach",
+            StragglerInstruction::Leave => "leave",
+            StragglerInstruction::Retire => "retire",
+        }
+    }
+}
+
 /// What a standing cargo order does at a port.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum CargoAction {
@@ -97,7 +157,10 @@ impl CargoAction {
 /// An order to a task force.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TaskForceOrder {
-    /// Steam to each waypoint in turn and stop at the last.
+    /// Steam to each waypoint in turn and stop at the last, by the shortest
+    /// path over hexes ships can enter (decision 0017). Rejected if a
+    /// waypoint is off the map or cannot be reached by sea from the one
+    /// before.
     SetRoute(Vec<Hex>),
     SetSpeed(SpeedSetting),
     SetMission(Mission),
@@ -109,6 +172,21 @@ pub enum TaskForceOrder {
     /// stops. A standing order of the "cargo" kind: it replaces a load order,
     /// and neither cancels the route or the speed.
     Unload,
+    /// Set the rules of engagement. A standing order of its own kind: it
+    /// replaces the rules of engagement and nothing else. `break_off` and
+    /// `keep_share` must each be from 0 to 1.
+    SetRulesOfEngagement {
+        stance: Stance,
+        break_off: Fixed,
+        stragglers: StragglerInstruction,
+        keep_share: Fixed,
+    },
+    /// Set the base the force heads for when it retires or sends stragglers
+    /// home. It must be a base of the issuing side.
+    SetHomePort(BaseId),
+    /// Split the listed ships off into a new task force at the same spot,
+    /// idle, with the same rules of engagement. At least one ship must stay.
+    DetachShips(Vec<ShipId>),
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -180,8 +258,6 @@ pub enum RejectReason {
     EmptyRoute,
     /// A waypoint is not on the map.
     WaypointOffMap(Hex),
-    /// The route would pass through a hex ships cannot enter.
-    RouteBlocked(Hex),
     /// A load order needs a task force that is stopped.
     UnderWay,
     /// A load order needs a base of the side in the task force's hex.
@@ -191,6 +267,23 @@ pub enum RejectReason {
     /// A search range is zero, negative, or beyond the aircraft type's
     /// search range.
     InvalidSearchRange { range_nm: Fixed, max_nm: Fixed },
+    /// A break-off level is below 0 or above 1.
+    BreakOffOutOfRange(Fixed),
+    /// A share to keep is below 0 or above 1.
+    KeepShareOutOfRange(Fixed),
+    /// The base does not exist or is not the issuing side's. One reason for
+    /// both, so a rejection never reveals an enemy base.
+    NotYourBase,
+    /// A detach order lists no ships.
+    NoShipsToDetach,
+    /// A ship listed in a detach order is not afloat in the task force.
+    ShipNotInTaskForce(ShipId),
+    /// A detach order lists every ship of the task force.
+    WouldLeaveTaskForceEmpty,
+    /// A waypoint is on the map but ships cannot get to it from the one
+    /// before: it is land, or it lies across land with no way round
+    /// (decision 0017, decision 13). Added at the end of the enum.
+    WaypointUnreachable(Hex),
 }
 
 impl fmt::Display for RejectReason {
@@ -199,12 +292,6 @@ impl fmt::Display for RejectReason {
             RejectReason::NotYourUnit => f.write_str("the target is not one of your units"),
             RejectReason::EmptyRoute => f.write_str("the route goes nowhere"),
             RejectReason::WaypointOffMap(hex) => write!(f, "waypoint {hex} is off the map"),
-            RejectReason::RouteBlocked(hex) => {
-                write!(
-                    f,
-                    "the route passes through {hex}, which ships cannot enter"
-                )
-            }
             RejectReason::UnderWay => f.write_str("the task force is under way"),
             RejectReason::NoOwnBaseHere => f.write_str("there is no base of your side here"),
             RejectReason::InvalidBearing(bearing) => {
@@ -214,6 +301,23 @@ impl fmt::Display for RejectReason {
                 f,
                 "search range {range_nm} nm is not above 0 and at most the aircraft's {max_nm} nm"
             ),
+            RejectReason::BreakOffOutOfRange(level) => {
+                write!(f, "break-off level {level} is not between 0 and 1")
+            }
+            RejectReason::KeepShareOutOfRange(share) => {
+                write!(f, "share to keep {share} is not between 0 and 1")
+            }
+            RejectReason::NotYourBase => f.write_str("the base is not one of your bases"),
+            RejectReason::NoShipsToDetach => f.write_str("no ships are listed to detach"),
+            RejectReason::ShipNotInTaskForce(ship) => {
+                write!(f, "{ship} is not afloat in the task force")
+            }
+            RejectReason::WouldLeaveTaskForceEmpty => {
+                f.write_str("detaching these ships would leave the task force empty")
+            }
+            RejectReason::WaypointUnreachable(hex) => {
+                write!(f, "waypoint {hex} cannot be reached by sea")
+            }
         }
     }
 }

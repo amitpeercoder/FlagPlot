@@ -843,6 +843,10 @@ fn variant(tag: &str, port_size: u8) -> Scenario {
         "reference/aircraft_types.csv",
     );
     copy("reference/search.toml", "reference/search.toml");
+    copy(
+        "reference/surface_combat.toml",
+        "reference/surface_combat.toml",
+    );
 
     let map_text = fs::read_to_string(data.join("map/placeholder_supply_run.toml"))
         .expect("read the map file");

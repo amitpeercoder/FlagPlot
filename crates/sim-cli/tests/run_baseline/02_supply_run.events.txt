@@ -1,0 +1,75 @@
+Scenario 2: Supply run, Espiritu Santo to Guadalcanal
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash eea31f0e8846d390  8 events
+day   2  hash f7af648a0d0ed136  15 events
+day   3  hash e5410ec1185cf981  11 events
+day   4  hash 491dccb9f43f5aa0  6 events
+day   5  hash 6aadbf66cb7db16b  6 events
+day   6  hash 9a0999263cd6882a  3 events
+day   7  hash 5e99ae292890b529  2 events
+day   8  hash c97797a93fd1f152  0 events
+
+#1 D1 -         order:1 accepted for task_force:1  <- order:1
+#2 D1 night     ship:1 loaded 1800 t from base:1, 1800 t aboard, 8200 t in stock  <- order:1
+#3 D1 night     ship:2 loaded 1800 t from base:1, 1800 t aboard, 6400 t in stock  <- order:1
+#4 D1 morning   ship:1 loaded 900 t from base:1, 2700 t aboard, 5500 t in stock  <- order:1
+#5 D1 morning   ship:2 loaded 900 t from base:1, 2700 t aboard, 4600 t in stock  <- order:1
+#6 D1 afternoon ship:1 loaded 300 t from base:1, 3000 t aboard, 4300 t in stock  <- order:1
+#7 D1 afternoon ship:2 loaded 300 t from base:1, 3000 t aboard, 4000 t in stock  <- order:1
+#8 D1 afternoon task_force:1 completed loading at base:1 at D1 14:00  <- #6, #7
+#9 D2 -         order:2 accepted for task_force:1  <- order:2
+#10 D2 -         order:3 accepted for task_force:1  <- order:3
+#11 D2 -         order:4 accepted for task_force:1  <- order:4
+#12 D2 night     task_force:1 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:2, order:3
+#13 D2 night     ship:1 burned 12 t, 988 t remaining  <- #12
+#14 D2 night     ship:2 burned 12 t, 988 t remaining  <- #12
+#15 D2 night     ship:3 burned 15 t, 485 t remaining  <- #12
+#16 D2 morning   task_force:1 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:2, order:3
+#17 D2 morning   ship:1 burned 6 t, 982 t remaining  <- #16
+#18 D2 morning   ship:2 burned 6 t, 982 t remaining  <- #16
+#19 D2 morning   ship:3 burned 7.5 t, 477.5 t remaining  <- #16
+#20 D2 afternoon task_force:1 steamed 60 nm at 10 kn from (5,0) to (6,0)  <- order:2, order:3
+#21 D2 afternoon ship:1 burned 6 t, 976 t remaining  <- #20
+#22 D2 afternoon ship:2 burned 6 t, 976 t remaining  <- #20
+#23 D2 afternoon ship:3 burned 7.5 t, 470 t remaining  <- #20
+#24 D3 night     task_force:1 steamed 80 nm at 10 kn from (6,0) to (8,0)  <- order:2, order:3
+#25 D3 night     ship:1 burned 8 t, 968 t remaining  <- #24
+#26 D3 night     ship:2 burned 8 t, 968 t remaining  <- #24
+#27 D3 night     ship:3 burned 10 t, 460 t remaining  <- #24
+#28 D3 night     task_force:1 arrived at (8,0) at D3 02:00  <- #24
+#29 D3 night     ship:1 unloaded 200 t at base:2, 2800 t aboard, 700 t in stock  <- order:4, #28
+#30 D3 night     ship:2 unloaded 80 t at base:2, 2920 t aboard, 780 t in stock  <- order:4, #28
+#31 D3 morning   ship:1 unloaded 300 t at base:2, 2500 t aboard, 1080 t in stock  <- order:4, #28
+#32 D3 morning   ship:2 unloaded 120 t at base:2, 2800 t aboard, 1200 t in stock  <- order:4, #28
+#33 D3 afternoon ship:1 unloaded 300 t at base:2, 2200 t aboard, 1500 t in stock  <- order:4, #28
+#34 D3 afternoon ship:2 unloaded 120 t at base:2, 2680 t aboard, 1620 t in stock  <- order:4, #28
+#35 D4 night     ship:1 unloaded 600 t at base:2, 1600 t aboard, 2220 t in stock  <- order:4, #28
+#36 D4 night     ship:2 unloaded 240 t at base:2, 2440 t aboard, 2460 t in stock  <- order:4, #28
+#37 D4 morning   ship:1 unloaded 300 t at base:2, 1300 t aboard, 2760 t in stock  <- order:4, #28
+#38 D4 morning   ship:2 unloaded 120 t at base:2, 2320 t aboard, 2880 t in stock  <- order:4, #28
+#39 D4 afternoon ship:1 unloaded 300 t at base:2, 1000 t aboard, 3180 t in stock  <- order:4, #28
+#40 D4 afternoon ship:2 unloaded 120 t at base:2, 2200 t aboard, 3300 t in stock  <- order:4, #28
+#41 D5 night     ship:1 unloaded 600 t at base:2, 400 t aboard, 3900 t in stock  <- order:4, #28
+#42 D5 night     ship:2 unloaded 240 t at base:2, 1960 t aboard, 4140 t in stock  <- order:4, #28
+#43 D5 morning   ship:1 unloaded 300 t at base:2, 100 t aboard, 4440 t in stock  <- order:4, #28
+#44 D5 morning   ship:2 unloaded 120 t at base:2, 1840 t aboard, 4560 t in stock  <- order:4, #28
+#45 D5 afternoon ship:1 unloaded 100 t at base:2, 0 t aboard, 4660 t in stock  <- order:4, #28
+#46 D5 afternoon ship:2 unloaded 120 t at base:2, 1720 t aboard, 4780 t in stock  <- order:4, #28
+#47 D6 night     ship:2 unloaded 600 t at base:2, 1120 t aboard, 5380 t in stock  <- order:4, #28
+#48 D6 morning   ship:2 unloaded 300 t at base:2, 820 t aboard, 5680 t in stock  <- order:4, #28
+#49 D6 afternoon ship:2 unloaded 300 t at base:2, 520 t aboard, 5980 t in stock  <- order:4, #28
+#50 D7 night     ship:2 unloaded 520 t at base:2, 0 t aboard, 6500 t in stock  <- order:4, #28
+#51 D7 night     task_force:1 completed unloading at base:2 at D7 04:24  <- #50
+
+task_force:1 "Placeholder supply convoy" (Allied): Arrived at (8,0); alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder cargo ship 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:3 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 460 t of fuel, 0 t of supply
+base:1 "Espiritu Santo" (Allied) at (0,0): 4000 t of supply in stock
+base:2 "Guadalcanal" (Allied) at (8,0): 6500 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
