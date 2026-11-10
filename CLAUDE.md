@@ -65,6 +65,16 @@ Every outcome must be able to say what caused it. This cannot be added later.
 - **Every computed quantity or chance records a breakdown** of its factors when `SimConfig::record_breakdowns` is on. Breakdown recording must never change what happens or the state hash.
 - **Every order carries its origin:** who issued it and the intent it serves.
 
+## Rule complexity
+
+The game must stay something a person and a model can both reason about. A rule set that is correct but cannot be followed is a failure.
+
+- **One mechanism over several.** A new rule reuses or replaces an existing mechanism where it can. Two limits on the same quantity need a reason, written in the decision record.
+- **Every decision record that adds a rule carries a rule card:** the state the rule reads and the state it writes. A rule that reads what many other rules write is where interactions hide.
+- **Every scenario test has property tests beside its hand calculation.** They state what must always hold: more of a helpful thing never makes the outcome worse, and quantities that should be conserved are conserved.
+- **The legibility test, from scenario 3 on.** A cheap model is given only one side's briefing and the event log, and is asked to explain an outcome and predict the next day. If it cannot, the rules or the events need simplifying before the next scenario starts.
+- **Complexity review after scenario 5,** the first scenario where several subsystems meet. The rule cards are read together and anything nobody can explain is cut or merged.
+
 ## Truth and belief
 
 - Truth state is the real world. Belief state is what one side thinks.
@@ -77,6 +87,35 @@ Every outcome must be able to say what caused it. This cannot be added later.
 - **Do not invent historical figures.** Anything made up is marked `placeholder` in its file and uses a name starting with "Placeholder".
 - **Nothing from the War in the Pacific: Admiral's Edition database.** Real data comes from open historical sources, with the source recorded.
 - Entity IDs in data files are stable. Never renumber or reuse one.
+
+## Reference material
+
+`references/` is local only and ignored by git. It holds the designer's own copy of War in the Pacific: Admiral's Edition: the manuals as PDF and text, a map image and the installers.
+
+- **Mechanics and lessons, not numbers.** Use the manuals to learn how a subsystem was modelled and where it made the player do clerical work. Do not copy their tables, formulas' constants or data. Our figures come from open historical sources, or are marked `placeholder`.
+- **Own words, with section numbers.** Notes go in `docs/research/`, written in our own words and citing manual sections. No copied passages.
+- **Read just in time.** Before planning a scenario, read the sections `docs/research/witpae-manual-index.md` lists for it. Report how WitP:AE models it, what the player had to do by hand, and what Flag Plot should do differently.
+- **The map image is for looking at only.** Do not trace hexes or take terrain from it. The real map is generated from open coastline data.
+- **Never commit anything from `references/`.** Do not run or unpack the installers.
+
+## Roles and delegation
+
+| Role | Who | Owns |
+| --- | --- | --- |
+| Product manager | Amit, with the main session | What the game is, the spec, every decision marked "needs review", approval of each scenario plan |
+| Architect | The main session (the most capable model) | The plan for each scenario, crate boundaries, the determinism and traceability rules, the hand calculation, decision records, final review before a pull request |
+| Team lead | An Opus subagent | Turning an approved plan into tasks, briefing the developers, reviewing their work against the plan and this file, reporting back what was built, deferred and unclear |
+| Developers | Sonnet subagents | Implementation tasks, tests, bulk reading and summarising of reference material, code search |
+
+Rules:
+
+- **Use the cheapest model that can do the job well.** Haiku is enough for plain lookups.
+- **The hand calculation is written by the architect before any code is delegated.** Developers make the code match it. Nobody changes an expected number to make a test pass; a mismatch goes back to the architect.
+- **Nothing reaches a pull request unreviewed.** The team lead reviews the developers. The architect reviews the team lead, reads every change to `sim-core`, and runs the three checks.
+- **Questions go up, not sideways.** If a brief or the spec is unclear, a developer or the team lead stops and asks. Only the product managers settle a spec question.
+- **A subagent's summary is a lead, not a fact.** Check any claim a design choice will rest on against the source before using it.
+- **Two developers never edit the same files at the same time.**
+- **Small jobs skip the chain.** A change of a few lines is done by whoever is holding it.
 
 ## Tests
 

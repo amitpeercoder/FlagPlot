@@ -113,4 +113,11 @@ The last row is the one to get right from the first commit. Traceability added l
 - [ ] Staff planner approach: deterministic code is decided. Still open: hand-written planning logic, search, or a mix?
 - [ ] Sources for the order of battle, and how each entry records where it came from.
 - [ ] How the player expresses intent: map gestures, structured forms, or plain language?
+- [ ] The plan loop, to be designed in step 3 and judged at the kill gate. A plan is a lasting object, not a one-off instruction, and it runs in four stages:
+  1. Plan: objectives, each with a measure and a date, such as "Guadalcanal held at 30 days of supply by 1 October".
+  2. Feasibility: the staff costs the plan before the player commits, such as "this needs 14 transports and you have 9".
+  3. Execute: the staff compiles the plan into orders.
+  4. Follow up: plan against actual, with an interrupt when they drift apart.
+
+  What it asks of step 1: every order carries the intent it serves, and every objective can be measured from state. War-wide strategy (production, the whole Pacific) stays in step 5.
 - [ ] Open source from the start, or decide after the kill gate?
