@@ -17,7 +17,10 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
+cargo run --release -p map-tool -- render
 ```
+
+The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides --hex q,r` (a hex's closed sides and neighbours), `water --lat --lon` (why a position's hex has the water it has) and `generate`, which rebuilds `data/map/south_pacific.csv` from the Natural Earth files under `references/` (the exact command is in the file's header). `generate --anchors data/map/south_pacific_anchors.csv` applies the listed anchorages (decision 0017, decision 6); without it hexes keep their largest body of water. `render` draws `#` land, `+` coast, `%` coast with a closed side toward water and `.` sea, each row labelled with its r and the q of its first hex.
 
 All three checks must pass before a commit. CI runs the same three.
 
@@ -29,8 +32,9 @@ All three checks must pass before a commit. CI runs the same three.
 | `crates/sim-data` | Loads reference data, maps and scenarios from files into `sim-core` types |
 | `crates/sim-cli` | Command-line runner |
 | `crates/sim-agent` | Agent interface (server mode, briefings, MCP). Placeholder |
+| `crates/map-tool` | Generates the hex map of the slice from open coastline data, and renders it, locates points and finds sea paths. May use floats and its own dependencies; nothing depends on it |
 | `data/reference` | Ship classes, port sizes and aircraft types as CSV; search and surface combat figures as TOML |
-| `data/map` | Maps as TOML |
+| `data/map` | The generated map of the slice as CSV (`south_pacific.csv`, decision 0017) and the anchorages it was generated with (`south_pacific_anchors.csv`), and small hand-drawn placeholder maps as TOML |
 | `data/scenarios` | One TOML file per scenario: starting state, seed, scripted orders |
 | `tests` | One test file per scenario, each with its hand calculation written out |
 
@@ -97,6 +101,7 @@ The game must stay something a person and a model can both reason about. A rule 
 - **Read just in time.** Before planning a scenario, read the sections `docs/research/witpae-manual-index.md` lists for it. Report how WitP:AE models it, what the player had to do by hand, and what Flag Plot should do differently.
 - **The map image is for looking at only.** Do not trace hexes or take terrain from it. The real map is generated from open coastline data.
 - **Never commit anything from `references/`.** Do not run or unpack the installers.
+- **`references/natural-earth/`** holds public-domain coastlines (Natural Earth 1:10m land and minor islands, 5.1.1), used only by the map tool, never committed.
 
 ## Roles and delegation
 
@@ -126,4 +131,4 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a and 4a2 of scenario 4 (the surface combat rule, decision 0014, and damage to named systems and stragglers, decision 0016) are done. Next is stage 4b, the real map and pathfinding. See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Next is stage 4c, Savo Island. See the spec's "First test scenarios" table.
