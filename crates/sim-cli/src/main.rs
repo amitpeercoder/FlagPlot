@@ -1,28 +1,83 @@
 //! Flag Plot command-line runner.
 //!
-//! So far there is one command: `run`. The spec also lists `batch`, `replay`,
-//! `hash` and `serve`. They arrive with the scenarios that need them.
+//! Two commands so far: `run` and `export`. The spec also lists `batch`,
+//! `replay`, `hash` and `serve`. They arrive with the scenarios that need
+//! them.
+
+mod export;
 
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 
 use sim_core::orders::Stance;
-use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState};
+use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::time::ClockTime;
+use sim_core::DaySummary;
 use sim_data::Scenario;
 
 const USAGE: &str = "\
 Usage: sim-cli run <scenario.toml> [--events] [--seed N]
+       sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
 
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up.
-  --events  Also prints the full event log, with what caused each event.
-  --seed N  Runs with seed N instead of the scenario's own seed.";
+  export    Runs a scenario the same way and writes the finished run as one
+            JSON replay file: the map, the starting forces, every event with
+            its causes, and the final state.
+  --events  (run) Also prints the full event log, with what caused each event.
+  --seed N  Runs with seed N instead of the scenario's own seed.
+  --out F   (export) The replay file to write.
+  --labels F  (export) An anchors CSV (place, feature, lat, lon) to put place
+            names on the replay's map.";
+
+/// A scenario that has been loaded, given its seed and run to its last day.
+/// Both commands build one with [`execute`].
+struct Executed {
+    scenario: Scenario,
+    summaries: Vec<DaySummary>,
+    /// The truth as it stood after loading and seeding, before day 1.
+    initial: TruthState,
+}
+
+/// The one way a scenario is run: load it, apply the seed if one is given,
+/// call `before_run` (the runner prints its header there, so a run that fails
+/// partway still shows which scenario and seed it was), note the starting
+/// truth, run every day.
+fn execute(
+    path: &str,
+    seed: Option<u64>,
+    before_run: impl FnOnce(&Scenario),
+) -> Result<Executed, String> {
+    let mut scenario = Scenario::load(Path::new(path)).map_err(|e| e.to_string())?;
+    if let Some(seed) = seed {
+        scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
+    }
+    before_run(&scenario);
+    let initial = scenario.world.umpire().clone();
+    let summaries = scenario.run_to_end().map_err(|e| e.to_string())?;
+    Ok(Executed {
+        scenario,
+        summaries,
+        initial,
+    })
+}
+
+/// Reads the number after `--seed`.
+fn parse_seed(value: Option<&str>) -> Result<u64, String> {
+    let value = value.ok_or_else(|| format!("--seed needs a number\n\n{USAGE}"))?;
+    value
+        .parse::<u64>()
+        .map_err(|_| format!("--seed \"{value}\" is not a whole number"))
+}
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
-    match run(&args) {
+    let result = match args.first().map(String::as_str) {
+        Some("export") => export::command(&args[1..], USAGE),
+        _ => run(&args),
+    };
+    match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(message) => {
             eprintln!("error: {message}");
@@ -48,16 +103,7 @@ fn run(args: &[String]) -> Result<(), String> {
     while let Some(word) = words.next() {
         match word {
             "--events" => show_events = true,
-            "--seed" => {
-                let value = words
-                    .next()
-                    .ok_or_else(|| format!("--seed needs a number\n\n{USAGE}"))?;
-                seed = Some(
-                    value
-                        .parse::<u64>()
-                        .map_err(|_| format!("--seed \"{value}\" is not a whole number"))?,
-                );
-            }
+            "--seed" => seed = Some(parse_seed(words.next())?),
             flag if flag.starts_with('-') => {
                 return Err(format!("unknown option \"{flag}\"\n\n{USAGE}"))
             }
@@ -67,18 +113,19 @@ fn run(args: &[String]) -> Result<(), String> {
     }
     let scenario_path = scenario_path.ok_or_else(|| format!("no scenario given\n\n{USAGE}"))?;
 
-    let mut scenario = Scenario::load(Path::new(scenario_path)).map_err(|e| e.to_string())?;
-    if let Some(seed) = seed {
-        scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
-    }
-    println!("{}", scenario.name);
-    if scenario.placeholder {
-        println!("PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.");
-    }
-    println!("seed {}", scenario.world.seed());
-    println!();
+    let Executed {
+        scenario,
+        summaries,
+        initial: _,
+    } = execute(scenario_path, seed, |scenario| {
+        println!("{}", scenario.name);
+        if scenario.placeholder {
+            println!("PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.");
+        }
+        println!("seed {}", scenario.world.seed());
+        println!();
+    })?;
 
-    let summaries = scenario.run_to_end().map_err(|e| e.to_string())?;
     for summary in &summaries {
         println!(
             "day {:>3}  hash {:016x}  {} events",

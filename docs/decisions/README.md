@@ -25,6 +25,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0015 | Order-of-battle facts: sourced rows in CSV, ratings derived by written rules, no invented figures for real ships | Confirmed; standing rules need review |
 | 0016 | Damage to named systems in three states, and a standing instruction for stragglers. Replaces the system track of 0014. Placeholder figures | Confirmed |
 | 0017 | The slice map generated from Natural Earth coastlines, and shortest-path movement | Confirmed |
+| 0018 | A read-only replay viewer, as a debugging tool and not the game's interface | Confirmed |
 | 0019 | Savo Island: who was where, standard displacement, and unknown radar treated as not fitted | Confirmed |
 | 0020 | Game figures for real ships derived from facts by written rules, with three shared scaling constants | Confirmed; constants are placeholders |
 
