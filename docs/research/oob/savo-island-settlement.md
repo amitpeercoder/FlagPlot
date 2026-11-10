@@ -1,6 +1,6 @@
 # Savo Island: settlement sheet for the 20 ships
 
-Status: **approved by Amit on 2026-11-10, in one pass, as recommended.** The rows are marked in the data with "Settled by Amit" and the item of this sheet. Two things were not approved because the sheet made no recommendation or did not list them: rounds per gun for three ships (e6), and the 8th Year torpedo warhead (see "What approval did"). The sheet below is kept as it was put to him, apart from this paragraph and the last section. It is for the architect to turn into a numbered decision record.
+Status: **approved by Amit on 2026-11-10, in one pass, as recommended.** The rows are marked in the data with "Settled by Amit" and the item of this sheet. Two things the sheet had left open were approved later the same day: the 8th Year torpedo warhead, and treating main-gun ammunition for three Japanese ships as not limiting (see "What approval did"). The sheet below is kept as it was put to him, apart from this paragraph and the last section. It is for the architect to turn into a numbered decision record.
 
 **Why it exists.** The derivation tool (`crates/oob-derive`, decision 0020) builds the ship classes a scenario loads from `preferred` fact rows that hold on 8 August 1942, and refuses anything else. Against this branch it reports 103 problems and derives no ship. Each group below is one decision that clears several of them.
 
@@ -189,11 +189,14 @@ Applied on 2026-11-10. Winning rows are `preferred` and the others `alternative`
 | Vincennes, Quincy | 349 | 3 | e4 |
 | Astoria, Chicago | 358 | 3 | e5 |
 
-**Still open, not approved:**
+**Approved afterwards, on the same day:**
 
-- **Rounds per gun for Tenryu, Yubari and Yunagi (e6).** No figure was found and the sheet recommended none. The suggestion on the sheet, to treat their main-gun ammunition as not limiting, needs Amit's word.
-- **The 61 cm 8th Year torpedo warhead (Yubari).** Two rows, 345 kg from the US technical mission and 346 kg from a website. This was not on the sheet, because Yubari's torpedo type was itself open until item 6 was approved. It is the same kind of case as bulk item b8, and the same recommendation would be 345.
-- **Search radar for Vincennes and Jarvis (e7, e8).** Unknown in the sources. Decision 0019's working assumption covers both.
+- **The 61 cm 8th Year torpedo warhead (Yubari): 345 kg,** the US technical mission's figure (row 156), over 346 kg from a website (row 155). Applied in the data.
+- **Rounds per gun for Tenryu, Yubari and Yunagi (e6): their main-gun ammunition is treated as not limiting.** No figure was found. Tenryu fired 80 rounds that night and Yubari 96, far below any plausible outfit. This is a scenario assumption, not a fact, so nothing is added to the facts layer: there is still no `main_rounds_per_gun` row for the three classes, and `gaps.csv` still lists it. The scenario or the tool's rules file has to carry the assumption by name.
+
+**Still unknown in the sources:**
+
+- **Search radar for Vincennes and Jarvis (e7, e8).** Decision 0019's working assumption covers both.
 
 **Three things this sheet cannot fix and the rule should know.**
 
