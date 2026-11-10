@@ -1,0 +1,125 @@
+# Individual ships. Identity only; see ship_facts.csv and fits.csv.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,nation,class,hull_number
+1000,akigumo,Akigumo,jp,jp-kagero-class,
+1001,akizuki,Akizuki,jp,jp-akizuki-class,
+1002,amatsukaze,Amatsukaze,jp,jp-kagero-class,
+1003,aoba,Aoba,jp,jp-aoba-class,
+1004,apd-2-colhoun,USS Colhoun,us,us-wickes-class,APD-2
+1005,apd-3-gregory,USS Gregory,us,us-wickes-class,APD-3
+1006,apd-4-little,USS Little,us,us-wickes-class,APD-4
+1007,apd-5-mckean,USS McKean,us,us-wickes-class,APD-5
+1008,asagumo,Asagumo,jp,jp-asashio-class,
+1009,atago,Atago,jp,jp-takao-class,
+1010,bb-55-north-carolina,North Carolina,us,us-north-carolina-class,BB-55
+1011,boston-maru,Boston Maru,jp,,
+1012,ca-25-salt-lake-city,Salt Lake City,us,us-pensacola-class,CA-25
+1013,ca-29-chicago,USS Chicago,us,us-northampton-class,CA-29
+1014,ca-32-new-orleans,New Orleans,us,us-new-orleans-class,CA-32
+1015,ca-33-portland,Portland,us,us-portland-class,CA-33
+1016,ca-34-astoria,USS Astoria,us,us-new-orleans-class,CA-34
+1017,ca-36-minneapolis,Minneapolis,us,us-new-orleans-class,CA-36
+1018,ca-38-san-francisco,San Francisco,us,us-new-orleans-class,CA-38
+1019,ca-39-quincy,USS Quincy,us,us-new-orleans-class,CA-39
+1020,ca-44-vincennes,USS Vincennes,us,us-new-orleans-class,CA-44
+1021,chikuma,Chikuma,jp,jp-tone-class,
+1022,chitose,Chitose,jp,jp-chitose-class,
+1023,chokai,Chokai,jp,jp-takao-class,
+1024,cl-51-atlanta,Atlanta,us,us-atlanta-class,CL-51
+1025,cl-54-san-juan,USS San Juan,us,us-atlanta-class,CL-54
+1026,cv-3-saratoga,Saratoga,us,us-lexington-class,CV-3
+1027,cv-6-enterprise,Enterprise,us,us-yorktown-class,CV-6
+1028,cv-7-wasp,Wasp,us,us-wasp-class,CV-7
+1029,daifuku-maru,Daifuku Maru No. 1,jp,,
+1030,dd-348-farragut,Farragut,us,us-farragut-class,DD-348
+1031,dd-349-dewey,USS Dewey,us,us-farragut-class,DD-349
+1032,dd-350-hull,USS Hull,us,us-farragut-class,DD-350
+1033,dd-351-macdonough,MacDonough,us,us-farragut-class,DD-351
+1034,dd-352-worden,Worden,us,us-farragut-class,DD-352
+1035,dd-353-dale,Dale,us,us-farragut-class,DD-353
+1036,dd-357-selfridge,USS Selfridge,us,us-porter-class,DD-357
+1037,dd-360-phelps,Phelps,us,us-porter-class,DD-360
+1038,dd-363-balch,Balch,us,us-porter-class,DD-363
+1039,dd-386-bagley,USS Bagley,us,us-bagley-class,DD-386
+1040,dd-387-blue,USS Blue,us,us-bagley-class,DD-387
+1041,dd-388-helm,USS Helm,us,us-bagley-class,DD-388
+1042,dd-389-mugford,USS Mugford,us,us-bagley-class,DD-389
+1043,dd-390-ralph-talbot,USS Ralph Talbot,us,us-bagley-class,DD-390
+1044,dd-391-henley,USS Henley,us,us-bagley-class,DD-391
+1045,dd-392-patterson,USS Patterson,us,us-bagley-class,DD-392
+1046,dd-393-jarvis,USS Jarvis,us,us-bagley-class,DD-393
+1047,dd-397-benham,Benham,us,us-benham-class,DD-397
+1048,dd-398-ellet,USS Ellet,us,us-benham-class,DD-398
+1049,dd-399-lang,Lang,us,us-benham-class,DD-399
+1050,dd-401-maury,Maury,us,us-gridley-class,DD-401
+1051,dd-406-stack,Stack,us,us-benham-class,DD-406
+1052,dd-407-sterett,Sterett,us,us-benham-class,DD-407
+1053,dd-408-wilson,USS Wilson,us,us-benham-class,DD-408
+1054,dd-435-grayson,Grayson,us,us-gleaves-class,DD-435
+1055,dd-436-monssen,USS Monssen,us,us-gleaves-class,DD-436
+1056,dd-483-aaron-ward,Aaron Ward,us,us-gleaves-class,DD-483
+1057,dd-484-buchanan,USS Buchanan,us,us-gleaves-class,DD-484
+1058,dd-491-farenholt,Farenholt,us,us-gleaves-class,DD-491
+1059,dms-10-southard,USS Southard,us,us-clemson-class,DMS-10
+1060,dms-11-hovey,USS Hovey,us,us-clemson-class,DMS-11
+1061,dms-13-hopkins,USS Hopkins,us,us-clemson-class,DMS-13
+1062,dms-14-zane,USS Zane,us,us-clemson-class,DMS-14
+1063,dms-16-trever,USS Trever,us,us-clemson-class,DMS-16
+1064,furutaka,Furutaka,jp,jp-furutaka-class,
+1065,haguro,Haguro,jp,jp-myoko-class,
+1066,harusame,Harusame,jp,jp-shiratsuyu-class,
+1067,hatsukaze,Hatsukaze,jp,jp-kagero-class,
+1068,hayashio,Hayashio,jp,jp-kagero-class,
+1069,hiei,Hiei,jp,jp-kongo-class,
+1070,hmas-australia,HMAS Australia,au,uk-county-kent-class,D84
+1071,hmas-canberra,HMAS Canberra,au,uk-county-kent-class,D33
+1072,hmas-hobart,HMAS Hobart,au,uk-leander-modified-class,D63
+1073,isokaze,Isokaze,jp,jp-kagero-class,
+1074,jintsu,Jintsu,jp,jp-sendai-class,
+1075,kagero,Kagero,jp,jp-kagero-class,
+1076,kako,Kako,jp,jp-furutaka-class,
+1077,kawakaze,Kawakaze,jp,jp-shiratsuyu-class,
+1078,kazagumo,Kazagumo,jp,jp-yugumo-class,
+1079,kinryu-maru,Kinryu Maru,jp,,
+1080,kinugasa,Kinugasa,jp,jp-aoba-class,
+1081,kirishima,Kirishima,jp,jp-kongo-class,
+1082,kumano,Kumano,jp,jp-mogami-class,
+1083,kuroshio,Kuroshio,jp,jp-kagero-class,
+1084,maikaze,Maikaze,jp,jp-kagero-class,
+1085,makigumo,Makigumo,jp,jp-yugumo-class,
+1086,maya,Maya,jp,jp-takao-class,
+1087,minegumo,Minegumo,jp,jp-asashio-class,
+1088,murasame,Murasame,jp,jp-shiratsuyu-class,
+1089,mutsu,Mutsu,jp,jp-nagato-class,
+1090,mutsuki,Mutsuki,jp,jp-mutsuki-class,
+1091,myoko,Myoko,jp,jp-myoko-class,
+1092,nagara,Nagara,jp,jp-nagara-class,
+1093,natsugumo,Natsugumo,jp,jp-asashio-class,
+1094,nowaki,Nowaki,jp,jp-kagero-class,
+1095,oyashio,Oyashio,jp,jp-kagero-class,
+1096,pb-1,Patrol Boat No. 1,jp,,
+1097,pb-2,Patrol Boat No. 2,jp,,
+1098,pb-34,Patrol Boat No. 34,jp,,
+1099,pb-35,Patrol Boat No. 35,jp,,
+1100,ryujo,Ryujo,jp,jp-ryujo-class,
+1101,samidare,Samidare,jp,jp-shiratsuyu-class,
+1102,shikinami,Shikinami,jp,jp-fubuki-class,
+1103,shokaku,Shokaku,jp,jp-shokaku-class,
+1104,suzukaze,Suzukaze,jp,jp-shiratsuyu-class,
+1105,suzuya,Suzuya,jp,jp-mogami-class,
+1106,takao,Takao,jp,jp-takao-class,
+1107,tanikaze,Tanikaze,jp,jp-kagero-class,
+1108,tenryu,Tenryu,jp,jp-tenryu-class,
+1109,tokitsukaze,Tokitsukaze,jp,jp-kagero-class,
+1110,tone,Tone,jp,jp-tone-class,
+1111,umikaze,Umikaze,jp,jp-shiratsuyu-class,
+1112,uranami,Uranami,jp,jp-fubuki-class,
+1113,uzuki,Uzuki,jp,jp-mutsuki-class,
+1114,yamagumo,Yamagumo,jp,jp-asashio-class,
+1115,yayoi,Yayoi,jp,jp-mutsuki-class,
+1116,yubari,Yubari,jp,jp-yubari-class,
+1117,yugumo,Yugumo,jp,jp-yugumo-class,
+1118,yukikaze,Yukikaze,jp,jp-kagero-class,
+1119,yunagi,Yunagi,jp,jp-kamikaze-class,
+1120,yura,Yura,jp,jp-nagara-class,
+1121,zuikaku,Zuikaku,jp,jp-shokaku-class,

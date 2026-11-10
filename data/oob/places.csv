@@ -1,0 +1,19 @@
+# Names of places that facts point at. No map data.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,region
+1000,buka,Buka,Bougainville region
+1001,buna,Buna,New Guinea
+1002,efate,Efate,New Hebrides
+1003,espiritu-santo,Espiritu Santo,New Hebrides
+1004,henderson-field,"Henderson Field, Guadalcanal",Solomon Islands
+1005,kavieng,Kavieng,New Ireland
+1006,lae,Lae,New Guinea
+1007,malaita,Malaita,Solomon Islands
+1008,ndeni-graciosa-bay,"Graciosa Bay, Ndeni (Nendo), Santa Cruz Islands",Solomon Islands
+1009,noumea,Noumea,New Caledonia
+1010,rabaul,Rabaul (airfield not specified),New Britain
+1011,rabaul-lakunai,Rabaul Lakunai airfield,New Britain
+1012,rabaul-vunakanau,Rabaul Vunakanau airfield,New Britain
+1013,saweni-beach,Saweni Beach,Fiji
+1014,shortland-harbor,Shortland Harbor seaplane base,Shortland Islands
+1015,tulagi,Tulagi,Solomon Islands

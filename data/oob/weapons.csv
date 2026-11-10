@@ -1,0 +1,63 @@
+# Guns, torpedoes, bombs. Identity only; see weapon_facts.csv.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,nation,kind
+1000,jp-100mm-65-type98,10 cm/65 Type 98,jp,aa_gun
+1001,jp-127mm-40-type89,12.7 cm/40 Type 89 (Type 88),jp,aa_gun
+1002,jp-127mm-50-3ns,12.7 cm/50 3rd Year Type,jp,gun
+1003,jp-12cm-45-10ns,12 cm/45 10th Year Type,jp,aa_gun
+1004,jp-12cm-45-3ns,12 cm/45 3rd Year Type,jp,gun
+1005,jp-13mm-type93,13 mm/76 Type 93 AA machine gun,jp,machine_gun
+1006,jp-14cm-50-3ns,14 cm/50 3rd Year Type,jp,gun
+1007,jp-15cm-50-type41,15 cm/50 41st Year Type,jp,gun
+1008,jp-20cm-50-3ns-no1,20 cm/50 3rd Year Type No. 1,jp,gun
+1009,jp-20cm-50-3ns-no2,20 cm (20.3 cm)/50 3rd Year Type No. 2,jp,gun
+1010,jp-20mm-type99-1,Type 99 Mark 1 20 mm aircraft cannon,jp,gun
+1011,jp-25mm-type96,25 mm/60 Type 96 AA machine gun,jp,aa_gun
+1012,jp-36cm-45-type41,36 cm/45 41st Year Type,jp,gun
+1013,jp-41cm-45-3ns,41 cm/45 3rd Year Type (designated 40 cm/45),jp,gun
+1014,jp-53cm-torpedo-6ns,53 cm (53.3 cm) 6th Year Type (Type 6) torpedo,jp,torpedo
+1015,jp-61cm-torpedo-8ns,61 cm 8th Year Type (Type 8) torpedo,jp,torpedo
+1016,jp-61cm-torpedo-type90,61 cm Type 90 torpedo,jp,torpedo
+1017,jp-61cm-torpedo-type93,"61 cm Type 93 torpedo, Model 1",jp,torpedo
+1018,jp-77mm-type92-flexible,Type 92 7.7 mm flexible aircraft machine gun,jp,machine_gun
+1019,jp-77mm-type97-aircraft,Type 97 7.7 mm aircraft machine gun,jp,machine_gun
+1020,jp-bomb-250kg,250 kg bomb (No. 25),jp,bomb
+1021,jp-bomb-60kg,60 kg bomb (No. 6),jp,bomb
+1022,jp-bomb-800kg,800 kg bomb (No. 80),jp,bomb
+1023,jp-depth-charge-type95,Type 95 depth charge,jp,depth_charge
+1024,jp-torpedo-type91,Type 91 aerial torpedo,jp,torpedo
+1025,uk-20mm-oerlikon,20 mm Oerlikon,uk,aa_gun
+1026,uk-21in-torpedo,21-inch torpedo (mark not specified by sources read),uk,torpedo
+1027,uk-21in-torpedo-mk9,British 21in torpedo Mark IX,uk,torpedo
+1028,uk-2pdr-pompom-mk8,QF 2-pounder pom-pom Mark VIII,uk,aa_gun
+1029,uk-4in-45-mk16,British 4in/45 QF HA Mark XVI,uk,aa_gun
+1030,uk-4in-45-mk5,QF 4-inch/45 Mark V,uk,aa_gun
+1031,uk-50cal-vickers-mk3,.50 cal (0.5-inch) Vickers Mark III machine gun,uk,machine_gun
+1032,uk-6in-50-mk23,British 6in/50 BL Mark XXIII,uk,gun
+1033,uk-8in-50-mk8,British 8in/50 BL Mark VIII,uk,gun
+1034,us-1.1in-75-mk1,US 1.1in/75 (28 mm) Mark 1,us,aa_gun
+1035,us-16in-45-mk6,US 16in/45 Mark 6,us,gun
+1036,us-20mm-hispano-m1,20 mm Hispano M1 aircraft cannon,us,gun
+1037,us-20mm-oerlikon,US 20 mm/70 Oerlikon (Mark 2),us,aa_gun
+1038,us-21in-torpedo,21-inch torpedo (mark not specified by sources read),us,torpedo
+1039,us-21in-torpedo-mk15,US 21in torpedo Mark 15,us,torpedo
+1040,us-30cal-m2-aircraft,Browning .30 cal AN/M2 aircraft machine gun,us,machine_gun
+1041,us-37mm-m4,37 mm M4 aircraft cannon,us,gun
+1042,us-40mm-bofors,40 mm Bofors,us,aa_gun
+1043,us-50cal-m2-aa,US .50 cal M2 Browning (naval AA),us,machine_gun
+1044,us-50cal-m2-aircraft,Browning .50 cal AN/M2 aircraft machine gun,us,machine_gun
+1045,us-5in-25-mk10,US 5in/25 Mark 10,us,aa_gun
+1046,us-5in-38-mk12,US 5in/38 Mark 12,us,aa_gun
+1047,us-8in-55-mk12,US 8in/55 Mark 12,us,gun
+1048,us-8in-55-mk9,US 8in/55 Mark 9 (relined as Mark 14),us,gun
+1049,us-bomb-1000lb-gp,1000 lb GP bomb (AN-M65),us,bomb
+1050,us-bomb-100lb-gp,100 lb GP bomb (AN-M30),us,bomb
+1051,us-bomb-500lb-gp,500 lb GP bomb (AN-M64),us,bomb
+1052,us-depth-bomb-325lb,325 lb aircraft depth bomb,us,depth_charge
+1053,us-depth-charge-mk6,US depth charge Mark 6,us,depth_charge
+1054,us-depth-charge-mk7,US depth charge Mark 7,us,depth_charge
+1055,us-torpedo-mk13,Mark 13 aerial torpedo,us,torpedo
+1056,uk-21in-torpedo-mk5,British 21in torpedo Mark V,uk,torpedo
+1057,uk-21in-torpedo-mk7,British 21in torpedo Mark VII,uk,torpedo
+1058,us-21in-torpedo-mk11,US 21in torpedo Mark 11,us,torpedo
+1059,us-21in-torpedo-mk12,US 21in torpedo Mark 12,us,torpedo

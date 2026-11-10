@@ -1,0 +1,243 @@
+# Sourced facts about aircraft types. One row is one source's statement.
+# Format and rules: docs/research/oob/database-design.md
+id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,confidence,basis,standing,note
+1,a6m2-21,alias,Zeke,Zeke,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,"Wikipedia: Allied code-name system introduced in 1942; Zeke was in the first batch; no exact date for A6M names. Brief notes names were assigned from H2 1942, so not in use at August 1942"
+2,a6m2-21,carrier_capable,yes,carrier-borne Model 21 with folding wingtips,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+3,a6m2-21,crew,1,One (pilot),,,pacificwrecks,https://pacificwrecks.com/aircraft/a6m/tech.html,2026-11-10,medium,stated,preferred,
+4,a6m2-21,empty_weight_kg,1778,"3,920 lb empty",,,ibiblio-phha,https://www.ibiblio.org/phha/ZERO.html,2026-11-10,low,stated,disputed,Hobby page
+5,a6m2-21,empty_weight_kg,1680,"3,704 lb empty",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Wikipedia agrees (1,680 kg); phha gives 3,920 lb (1,778 kg)"
+6,a6m2-21,engine,Nakajima Sakae 12 x1,1x Nakajima Sakae 12 with single-stage supercharger,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Wikipedia: Sakae-12 (NK1C); phha says Sakae 21 for the Model 21, which looks wrong"
+7,a6m2-21,engine,Nakajima NK1C Sakae-12 x1,Nakajima NK1C Sakae-12 14-cylinder radial,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,disputed,Agrees with j-aircraft
+8,a6m2-21,engine_power_hp,940,"940 hp at take-off, 950 hp at 13,780 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Wikipedia agrees: 940 hp take-off, 950 hp at 4,200 m"
+9,a6m2-21,loaded_weight_kg,2608,"5,750 lb normal loaded",,,ibiblio-phha,https://www.ibiblio.org/phha/ZERO.html,2026-11-10,low,stated,disputed,Hobby page
+10,a6m2-21,loaded_weight_kg,2410,"5,313 lb loaded",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"j-aircraft lists 6,164 lb as maximum; Wikipedia labels 6,164 lb (2,796 kg) as loaded/gross"
+11,a6m2-21,loaded_weight_kg,2796,"6,164 lb (2,796 kg) loaded (gross)",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,disputed,Same number j-aircraft calls maximum weight
+12,a6m2-21,manufacturer,Mitsubishi,Mitsubishi (Nakajima also built about 800),,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+13,a6m2-21,max_bomb_load_kg,120,2 x 60 kg (wing hard points),,,pacificwrecks,https://pacificwrecks.com/aircraft/a6m/tech.html,2026-11-10,low,stated,unconfirmed,"j-aircraft: 2 x 132 lb bombs, agrees"
+14,a6m2-21,max_speed_altitude_m,6005,"19,700 ft",,,ibiblio-phha,https://www.ibiblio.org/phha/ZERO.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+15,a6m2-21,max_speed_altitude_m,4400,"4,400 m",,,j-aircraft,https://j-aircraft.com/research/rdunn/zeroperformance/zero_performance.htm,2026-11-10,medium,stated,disputed,
+16,a6m2-21,max_speed_altitude_m,4551,"14,930 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+17,a6m2-21,max_speed_altitude_m,4877,"16,000 ft",,,j-aircraft,https://j-aircraft.com/research/rdunn/zeroperformance/zero_performance.htm,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+18,a6m2-21,max_speed_altitude_m,4550,"4,550 m",,,pacificwrecks,https://pacificwrecks.com/aircraft/a6m/tech.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+19,a6m2-21,max_speed_altitude_m,4550,"4,550 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,disputed,Tertiary source; the reference it cites was not read
+20,a6m2-21,max_speed_kn,295.5,"340 mph at 19,700 ft",,,ibiblio-phha,https://www.ibiblio.org/phha/ZERO.html,2026-11-10,low,stated,disputed,"Hobby page, no source named; gives Sakae 21 for the Model 21 which disagrees with other rows"
+21,a6m2-21,max_speed_kn,275,"275 knots at 4,400 m",,,j-aircraft,https://j-aircraft.com/research/rdunn/zeroperformance/zero_performance.htm,2026-11-10,medium,stated,disputed,Japanese flight manual JICPOA Item 5981 Oct 1943 as quoted by Dunn; nearly 316 mph
+22,a6m2-21,max_speed_kn,285.0,328 mph,,,j-aircraft,https://j-aircraft.com/research/rdunn/zeroperformance/zero_performance.htm,2026-11-10,low,stated,disputed,TAIC summaries (US wartime estimate); Intelligence Summary 44-11 calls it an emergency speed. Altitude not given
+23,a6m2-21,max_speed_kn,288.1,"331.5 mph at 14,930 ft (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,Zero Facts and Figures (Broshot). Francillon p.16 per Dunn article. Zero speed claims range 316 to 345 mph; each source is its own row
+24,a6m2-21,max_speed_kn,291.1,"335 mph at 16,000 ft",,,j-aircraft,https://j-aircraft.com/research/rdunn/zeroperformance/zero_performance.htm,2026-11-10,low,stated,disputed,Bureau of Aeronautics memo 19 Oct 1942 preliminary data on the Akutan Zero as quoted by Dunn
+25,a6m2-21,max_speed_kn,288.5,"332 mph at 14,930 ft",,,pacificwrecks,https://pacificwrecks.com/aircraft/a6m/tech.html,2026-11-10,low,stated,disputed,"General Zero entry, not model specific"
+26,a6m2-21,max_speed_kn,287.8,"533 km/h at 4,550 m (331 mph at 14,930 ft)",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,disputed,Cites The Great Book of Fighters and Aircraft Profile 129
+27,a6m2-21,name_native,Navy Type 0 Carrier Fighter Model 21,Navy Type 0 Carrier Fighter Model 21,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,medium,stated,preferred,
+28,a6m2-21,range_max_nm,1677,"1,930 miles (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,preferred,"Pacificwrecks and phha also give 1,930 miles (likely with drop tank); Wikipedia text says over 2,600 km (1,600 mi) = about 1,400 nm"
+29,a6m2-21,range_max_nm,1677,"1,930 miles",,,pacificwrecks,https://pacificwrecks.com/aircraft/a6m/tech.html,2026-11-10,low,stated,preferred,Agrees with j-aircraft; not independent
+30,a6m2-21,range_normal_nm,1008,"1,160 miles (normal)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,Condition: normal range as stated; no fuel/drop-tank detail
+31,a6m2-21,service_ceiling_m,10001,"32,810 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"phha gives the same 32,810 ft"
+32,a6m2-21,wingspan_m,11.0,36 ft 2 in,,,ibiblio-phha,https://www.ibiblio.org/phha/ZERO.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+33,a6m2-21,wingspan_m,12.1,12.1 m,,,pacificwrecks,https://pacificwrecks.com/aircraft/a6m/tech.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+34,a6m2-21,wingspan_m,12.0,12 m (39 ft 4 in),,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,disputed,Pacificwrecks 12.1 m; phha 36 ft 2 in (11.0 m) which is the folded-tip span
+35,a6m2-n,alias,Rufe,Rufe,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,Page gives no date for the name
+36,a6m2-n,empty_weight_kg,1921,"4,235 lb empty",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+37,a6m2-n,engine,Nakajima Sakae 12 x1,1x Nakajima Sakae 12,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+38,a6m2-n,engine_power_hp,940,940 hp at take-off,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+39,a6m2-n,loaded_weight_kg,2460,"5,423 lb loaded",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Max 6,349 lb"
+40,a6m2-n,manufacturer,Nakajima,Built by Nakajima,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,Based on the Model 11 Zero
+41,a6m2-n,max_bomb_load_kg,120,2 x 132 lb bombs,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+42,a6m2-n,max_speed_altitude_m,5000,"16,405 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+43,a6m2-n,max_speed_kn,235.1,"270.5 mph at 16,405 ft (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,Page uses the label A6M2-N Navy Type 2 Floatplane Fighter Model 11
+44,a6m2-n,range_max_nm,962,"1,107 miles (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+45,a6m2-n,range_normal_nm,620,714 miles (normal),,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+46,a6m2-n,service_ceiling_m,10001,"32,810 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+47,a6m3-32,alias,Hamp,Hap renamed Hamp,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,First called Hap; Arnold objected; Hamp. Names introduced during 1942 per Wikipedia
+48,a6m3-32,carrier_capable,no,redesigned wing with square wingtips and no folding tips,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,inferred,unconfirmed,Absence of folding tips is stated; carrier unsuitability is inferred
+49,a6m3-32,empty_weight_kg,1807,"3,984 lb empty",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Second entry on same page gives 4,107 lb (1,862.9 kg)"
+50,a6m3-32,empty_weight_kg,1863,"4,107 lb empty",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,Second entry
+51,a6m3-32,engine,Nakajima Sakae 21 x1,1x Nakajima Sakae 21 with two-stage supercharger,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Wikipedia agrees (Sakae 21, two-speed supercharger)"
+52,a6m3-32,engine_power_hp,1130,"1,130 hp at take-off",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Wikipedia: 831 kW (1,130 hp)"
+53,a6m3-32,loaded_weight_kg,2544,"5,609 lb loaded",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Second entry on same page gives 5,906 lb (2,678.8 kg)"
+54,a6m3-32,loaded_weight_kg,2679,"5,906 lb loaded",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,Second entry
+55,a6m3-32,manufacturer,Mitsubishi,Mitsubishi,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_A6M_Zero,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+56,a6m3-32,max_bomb_load_kg,120,2 x 132 lb bombs,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,60 kg each
+57,a6m3-32,max_speed_altitude_m,6000,"19,685 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+58,a6m3-32,max_speed_kn,291.9,"336 mph at 19,685 ft (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,Second entry on same page
+59,a6m3-32,max_speed_kn,293.7,"338 mph at 19,685 ft (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,disputed,"Same page has a second ""A6M3-32"" entry with 336 mph at 19,685 ft; both listed"
+60,a6m3-32,name_native,Navy Type 0 Carrier Fighter Model 32,Navy Type 0 Carrier Fighter Model 32,,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,medium,stated,preferred,
+61,a6m3-32,range_max_nm,1283,"1,477 miles (maximum)",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,Wikipedia: shorter range was a significant limitation (no figure)
+62,a6m3-32,service_ceiling_m,11049,"36,250 ft",,,j-aircraft,https://j-aircraft.com/research/zerofacts.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+63,b-17e,alias,Flying Fortress,,,,wikipedia-en,https://en.wikipedia.org/wiki/List_of_Boeing_B-17_Flying_Fortress_variants,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+64,b-17e,manufacturer,Boeing,,,,wikipedia-en,https://en.wikipedia.org/wiki/List_of_Boeing_B-17_Flying_Fortress_variants,2026-11-10,low,stated,unconfirmed,Wikipedia: as many as 512 B-17Es built
+65,b5n2,alias,Kate,Kate,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+66,b5n2,carrier_capable,yes,Type 97 Carrier Attack Bomber,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+67,b5n2,crew,3,3,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Pacificwrecks agrees
+68,b5n2,cruise_speed_kn,139.8,"259 km/h at 3,000 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+69,b5n2,empty_weight_kg,2279,"2,279 kg",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+70,b5n2,engine,Nakajima Sakae 11 x1,Nakajima Sakae 11,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,"Pacificwrecks: Nakajima NK1B Sakae 11, 1,000 hp"
+71,b5n2,engine_power_hp,1000,"1,000 hp for take-off",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+72,b5n2,first_service,1938,1938 as Type 97 Carrier Attack Bomber; B5N2 from 1939,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Date is the B5N series
+73,b5n2,loaded_weight_kg,3800,"3,800 kg gross",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,"Max takeoff 4,100 kg"
+74,b5n2,manufacturer,Nakajima,Nakajima,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Aichi also built 200 Type 97 Mark 3 (B5N2) 1942-43 per pacificwrecks
+75,b5n2,max_bomb_load_kg,800,1 x 800 kg torpedo or bomb,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Or 2 x 250 kg or 6 x 60 kg
+76,b5n2,max_speed_altitude_m,3600,"3,600 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+77,b5n2,max_speed_kn,204.1,"378 km/h (235 mph) at 3,600 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Cites Francillon 1970 pp.415-416; pacificwrecks 235 mph agrees
+78,b5n2,range_max_nm,1075,"1,237 miles",,,pacificwrecks,https://pacificwrecks.com/aircraft/b5n/tech.html,2026-11-10,low,stated,disputed,Condition not stated
+79,b5n2,range_normal_nm,528,978 km (528 nmi),,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,disputed,"Condition not stated. Pacificwrecks 1,237 miles (1,075 nm) is a different figure (probably max range)"
+80,b5n2,service_ceiling_m,8260,"8,260 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+81,b5n2,wingspan_m,15.5,15.518 m,,,wikipedia-en,https://en.wikipedia.org/wiki/Nakajima_B5N,2026-11-10,low,stated,unconfirmed,Pacificwrecks 15.52 m
+82,d3a1-11,alias,Val,Val,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_D3A,2026-11-10,low,stated,unconfirmed,Wikipedia: Val applied in mid-to-late 1943; Allies often used Type 99 navy dive bomber before
+83,d3a1-11,crew,2,Two,,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,medium,stated,preferred,
+84,d3a1-11,empty_weight_kg,2408,"5,309 lb",,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,unconfirmed,"Wikipedia D3A2 table 2,570 kg: different variant"
+85,d3a1-11,engine,Mitsubishi Kinsei 54 x1,Kinsei 54 fourteen-cylinder radial,,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,disputed,"Wikipedia D3A2 Kinsei 54; j-aircraft D3A1 Kinsei 43 or 44. Kinsei 54 is the D3A2 engine per Wikipedia, so this looks like a D3A2 figure"
+86,d3a1-11,engine,Mitsubishi Kinsei 43 x1,"1,000 hp Mitsubishi Kinsei 43 (or 1,070 hp Kinsei 44)",,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+87,d3a1-11,engine_power_hp,1000,"1,000 hp",,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,unconfirmed,"Kinsei 44 option 1,070 hp; phha also 1,000 hp"
+88,d3a1-11,first_service,1940,Introduction date 1940 (infobox); first combat Nov 1939 before official acceptance,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_D3A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+89,d3a1-11,loaded_weight_kg,3650,"8,047 lb max takeoff",,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,disputed,"Figure is max takeoff. j-aircraft and Wikipedia (D3A2): 3,800 kg"
+90,d3a1-11,loaded_weight_kg,3800,"3,800 kg (8,378 lb) max takeoff",,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,disputed,"Max takeoff, Gary Barling page, no Model number on page"
+91,d3a1-11,manufacturer,Aichi,Aichi,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_D3A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+92,d3a1-11,max_bomb_load_kg,370,1 x 250 kg under fuselage + 2 x 60 kg under wings,,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,unconfirmed,Wikipedia D3A2 gives same stores
+93,d3a1-11,max_speed_altitude_m,6187,"20,300 ft",,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+94,d3a1-11,max_speed_altitude_m,6200,"6,200 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_D3A,2026-11-10,low,stated,disputed,D3A2 table
+95,d3a1-11,max_speed_kn,244.2,"281 mph at 20,300 ft",,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+96,d3a1-11,max_speed_kn,206.0,237 mph (430 km/h),,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,disputed,Altitude not stated
+97,d3a1-11,max_speed_kn,230,"430 km/h at 6,200 m (230 kn)",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_D3A,2026-11-10,low,stated,disputed,Table is for the D3A2 Model 22 not the D3A1; cites Francillon 1979 pp.271-276
+98,d3a1-11,range_normal_nm,759,874 miles at 205 mph,,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,disputed,Condition stated: cruise at 205 mph
+99,d3a1-11,range_normal_nm,730,"1,352 km (840 mi)",,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,disputed,"Condition not stated; Wikipedia D3A2 table gives same 1,352 km"
+100,d3a1-11,service_ceiling_m,9144,"30,000 ft",,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+101,d3a1-11,service_ceiling_m,10500,"10,500 m (34,450 ft)",,,j-aircraft,https://j-aircraft.com/main/newkits/d3a1desc.htm,2026-11-10,low,stated,disputed,"Wikipedia D3A2 table also 10,500 m"
+102,d3a1-11,wingspan_m,14.4,47 ft 2 in,,,ibiblio-phha,https://www.ibiblio.org/phha/VAL.html,2026-11-10,low,stated,unconfirmed,"Gary Barling (j-aircraft) 14.37 m, Wikipedia (D3A2) 14.365 m: all agree"
+103,e13a1,alias,Jake,Jake,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+104,e13a1,carrier_capable,no,floatplane,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,inferred,unconfirmed,Tertiary source; the reference it cites was not read
+105,e13a1,crew,3,3,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Pacificwrecks agrees
+106,e13a1,cruise_speed_kn,119.9,"222 km/h at 2,000 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+107,e13a1,empty_weight_kg,2642,"2,642 kg",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+108,e13a1,engine,Mitsubishi Kinsei 43 x1,Mitsubishi MK8 Kinsei 43,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+109,e13a1,engine_power_hp,1060,"790 kW (1,060 hp) for takeoff",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+110,e13a1,first_service,1941,1941,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+111,e13a1,loaded_weight_kg,3640,"3,640 kg gross",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+112,e13a1,manufacturer,Aichi,Aichi,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+113,e13a1,max_bomb_load_kg,250,250 kg,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Pacificwrecks: 1 x 250 kg or 4 x 60 kg
+114,e13a1,max_speed_altitude_m,2180,"2,180 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,disputed,Tertiary source; the reference it cites was not read
+115,e13a1,max_speed_kn,109.6,203 km/h,,,pacificwrecks,https://pacificwrecks.com/aircraft/e13a/tech.html,2026-11-10,low,stated,disputed,Likely mislabelled (cf Wikipedia 203 kn)
+116,e13a1,max_speed_kn,203.0,"376 km/h (234 mph) at 2,180 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,disputed,Cites Francillon 1979. Pacificwrecks states 203 km/h; probably a mislabelled 203 kn
+117,e13a1,range_normal_nm,1128,"2,089 km",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,disputed,"Condition not stated. Pacificwrecks says 1,128 miles, probably nautical miles converted wrongly"
+118,e13a1,service_ceiling_m,8730,"8,730 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+119,e13a1,wingspan_m,14.5,14.5 m,,,wikipedia-en,https://en.wikipedia.org/wiki/Aichi_E13A,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+120,f1m2,alias,Pete,Pete,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+121,f1m2,carrier_capable,no,floatplane,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,inferred,unconfirmed,Tertiary source; the reference it cites was not read
+122,f1m2,crew,2,2,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Pacificwrecks agrees
+123,f1m2,empty_weight_kg,1928,"1,928 kg",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+124,f1m2,engine,Mitsubishi MK2C Zuisei 13 x1,Mitsubishi MK2C Zuisei 13,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+125,f1m2,engine_power_hp,875,652 kW (875 hp) for take-off,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+126,f1m2,first_service,1941,1941 introduction,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+127,f1m2,loaded_weight_kg,2550,"2,550 kg gross",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+128,f1m2,manufacturer,Mitsubishi,Mitsubishi,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+129,f1m2,max_bomb_load_kg,120,2 x 60 kg,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+130,f1m2,max_speed_altitude_m,3440,"3,440 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,disputed,Tertiary source; the reference it cites was not read
+131,f1m2,max_speed_kn,108.0,200 km/h,,,pacificwrecks,https://pacificwrecks.com/aircraft/f1m/tech.html,2026-11-10,low,stated,disputed,"Implausibly low for max speed (likely cruise); engine on that page named ""Nakajima Aarika"", also doubtful"
+132,f1m2,max_speed_kn,199.8,"370 km/h at 3,440 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,disputed,Cites Francillon 1970 p.362; page text says 368 km/h
+133,f1m2,range_normal_nm,400,740 km (400 nmi),,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,disputed,"Condition not stated. Page text elsewhere gives 1,072 km without external stores"
+134,f1m2,service_ceiling_m,9440,"9,440 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+135,f1m2,wingspan_m,11.0,11 m,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_F1M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+136,f4f-4,alias,Wildcat,Wildcat,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+137,f4f-4,carrier_capable,yes,folding wings added on F4F-4,,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,inferred,preferred,Page says the F4F-4 added folding wings; carrier use is inferred
+138,f4f-4,crew,1,F4F-3 table lists 1,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat,2026-11-10,low,inferred,unconfirmed,Single-seat fighter; the table read is for F4F-3
+139,f4f-4,empty_weight_kg,2624,"5,785 lb",,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,preferred,"Smithsonian lists a 5,759 lb weight for the FM-1 (Eastern Aircraft F4F-4 equivalent); not fetched in this session"
+140,f4f-4,engine,Pratt & Whitney R-1830-86 x1,"One 1,200 horsepower Pratt & Whitney R-1830-86 double-row radial",,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,preferred,
+141,f4f-4,engine_power_hp,1200,"1,200 horsepower",,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,preferred,Rated power as stated; take-off power not distinguished
+142,f4f-4,first_service,1941,1941 (variant section),,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat,2026-11-10,low,stated,unconfirmed,Type introduction December 1940 per infobox; F4F-4 variant year only
+143,f4f-4,loaded_weight_kg,3617,"7,975 lb gross",,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,preferred,
+144,f4f-4,manufacturer,Grumman,Grumman,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat,2026-11-10,low,stated,unconfirmed,General Motors Eastern Aircraft took over production in mid-1942
+145,f4f-4,max_bomb_load_kg,91,two 100-pound bombs,,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,inferred,preferred,2 x 100 lb = 200 lb; page lists bombs but no maximum
+146,f4f-4,max_speed_altitude_m,6035,"19,800 ft",,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,disputed,Pairs with 278.1 kn
+147,f4f-4,max_speed_altitude_m,5900,"19,400 ft (5,900 m)",,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat,2026-11-10,low,stated,disputed,Pairs with 276.3 kn
+148,f4f-4,max_speed_kn,278.1,"320 mph at 19,800 ft at 7,975 lb",,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,disputed,"Navy text; Wikipedia gives 318 mph at 19,400 ft. Different test weights/sources"
+149,f4f-4,max_speed_kn,276.3,"about 318 mph at 19,400 ft",,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat,2026-11-10,low,stated,disputed,Wikipedia page; spec table is for F4F-3 and F4F-4 figure is in text; Wikipedia cites Angelucci The American Fighter for the F4F-3 table
+150,f4f-4,name_native,F4F-4,,,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,preferred,US Navy designation
+151,f4f-4,service_ceiling_m,10272,"33,700 ft",,,historyofwar,https://www.historyofwar.org/articles/weapons_F4F-4.html,2026-11-10,low,stated,unconfirmed,Cites Rickard 2007
+152,f4f-4,wingspan_m,11.6,38 ft,,,nhhc-aircraft-pages,https://ibiblio.org/hyperwar/OnlineLibrary/photos/ac-usn22/f-types/f4f.htm,2026-11-10,medium,stated,preferred,Spread wings; folded width 14 ft 4 in per historyofwar
+153,g4m1-11,alias,Betty,Betty,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,Reporting name; assigned during or after 1942 (Wikipedia D3A page puts Val at mid-to-late 1943)
+154,g4m1-11,carrier_capable,no,,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,inferred,unconfirmed,Land-based bomber; page describes 4th Air Group G4Ms based at Rabaul
+155,g4m1-11,crew,7,7-10,,,pacificwrecks,https://pacificwrecks.com/aircraft/g4m/tech.html,2026-11-10,low,stated,preferred,Range of crew sizes; low end used as value
+156,g4m1-11,crew,7,7,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,preferred,Pacificwrecks gives 7-10
+157,g4m1-11,cruise_speed_kn,170.1,"315 km/h (170 kn) at 3,000 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+158,g4m1-11,empty_weight_kg,6741,"14,861 lb",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+159,g4m1-11,engine,Mitsubishi Kasei 21 x2,2 x Mitsubishi MK4P Kasei 21,,,pacificwrecks,https://pacificwrecks.com/aircraft/g4m/tech.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+160,g4m1-11,engine,Mitsubishi Kasei 11 x2,2 x Mitsubishi MK4A Kasei 11,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,disputed,Pacificwrecks says Kasei 21 (MK4P) for the Model 11
+161,g4m1-11,engine_power_hp,1530,"1,140 kW (1,530 hp) each for takeoff",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,"Pacificwrecks agrees: 1,530 hp"
+162,g4m1-11,first_service,1941-04-02,Introduction date 2 April 1941,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+163,g4m1-11,loaded_weight_kg,9500,"20,944 lb gross",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,"Max takeoff 12,860 kg"
+164,g4m1-11,manufacturer,Mitsubishi,Mitsubishi Aircraft Company,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+165,g4m1-11,max_bomb_load_kg,1000,"up to 1,000 kg of bombs",,,pacificwrecks,https://pacificwrecks.com/aircraft/g4m/tech.html,2026-11-10,low,stated,unconfirmed,"Wikipedia lists 1 x 858 kg torpedo, or 1 x 800 kg bomb, or 4 x 250 kg bombs"
+166,g4m1-11,max_speed_altitude_m,4200,"13,780 ft",,,pacificwrecks,https://pacificwrecks.com/aircraft/g4m/tech.html,2026-11-10,low,stated,preferred,"Single source, not corroborated"
+167,g4m1-11,max_speed_altitude_m,4200,"4,200 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,preferred,Tertiary source; the reference it cites was not read
+168,g4m1-11,max_speed_kn,231.2,"266 mph at 13,780 ft",,,pacificwrecks,https://pacificwrecks.com/aircraft/g4m/tech.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+169,g4m1-11,max_speed_kn,231.1,"428 km/h (231 kn) at 4,200 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,disputed,"Pacificwrecks: 266 mph at 13,780 ft = 231.2 kn, agrees; sources cited: Airreview and Francillon"
+170,g4m1-11,range_max_nm,1540,"2,852 km (1,540 nmi)",,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,"Condition not stated; taken as maximum (inferred). Pacificwrecks 1,772 miles = 2,852 km, same figure"
+171,g4m1-11,wingspan_m,24.9,24.89 m,,,wikipedia-en,https://en.wikipedia.org/wiki/Mitsubishi_G4M,2026-11-10,low,stated,unconfirmed,Pacificwrecks agrees 24.89 m
+172,h6k4,alias,Mavis,Mavis; Japanese designation Type 97 Large Flying Boat,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+173,h6k4,carrier_capable,no,flying boat,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,inferred,unconfirmed,Tertiary source; the reference it cites was not read
+174,h6k4,crew,9,Nine,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,disputed,Table is H6K4 Model 22. Pacificwrecks 8-9 crew
+175,h6k4,cruise_speed_kn,119.9,"222 km/h (120 kn) at 4,000 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+176,h6k4,empty_weight_kg,11707,"11,707 kg",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+177,h6k4,engine,Mitsubishi Kinsei 43 x4,4 x Kinsei 43,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+178,h6k4,engine_power_hp,1000,"750 kW (1,000 hp) each for take-off",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+179,h6k4,first_service,1938-01,January 1938 (infobox); design section says January 1934,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Internal contradiction in the page
+180,h6k4,loaded_weight_kg,17000,"17,000 kg gross",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+181,h6k4,manufacturer,Kawanishi,Kawanishi,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+182,h6k4,max_bomb_load_kg,1600,"two 800 kg torpedoes (or up to 1,000 kg bombs)",,,pacificwrecks,https://pacificwrecks.com/aircraft/h6k/tech.html,2026-11-10,low,inferred,unconfirmed,"Torpedo case 2 x 800 kg = 1,600 kg; bomb case 1,000 kg"
+183,h6k4,max_speed_altitude_m,4000,"4,000 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,disputed,Tertiary source; the reference it cites was not read
+184,h6k4,max_speed_kn,179,179 knots,,,pacificwrecks,https://pacificwrecks.com/aircraft/h6k/tech.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+185,h6k4,max_speed_kn,183.6,"340 km/h (180 kn) at 4,000 m",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,disputed,Pacificwrecks 179 kn; cites Green 1962 and Francillon 1979
+186,h6k4,range_max_nm,1938,"2,230 miles",,,pacificwrecks,https://pacificwrecks.com/aircraft/h6k/tech.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+187,h6k4,range_max_nm,2590,"4,797 km (2,590 nmi)",,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,disputed,"Condition not stated; taken as max (inferred). Pacificwrecks 2,230 miles (1,938 nm)"
+188,h6k4,wingspan_m,40.0,40 m,,,wikipedia-en,https://en.wikipedia.org/wiki/Kawanishi_H6K,2026-11-10,low,stated,unconfirmed,Pacificwrecks agrees
+189,p-39d,alias,Airacobra,Airacobra,,,wikipedia-en,https://en.wikipedia.org/wiki/Bell_P-39_Airacobra,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+190,p-39d,empty_weight_kg,2858,"6,300 lb",,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+191,p-39d,engine,Allison V-1710-35 x1,Allison V-1710-35,,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,Database entry for the P-39D
+192,p-39d,engine_power_hp,1150,"1,150 hp",,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+193,p-39d,loaded_weight_kg,3470,"7,650 lb gross",,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,"Max 8,850 lb"
+194,p-39d,manufacturer,Bell,Bell,,,wikipedia-en,https://en.wikipedia.org/wiki/Bell_P-39_Airacobra,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+195,p-39d,max_speed_kn,312.8,360 mph (312 kt),,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,Altitude not stated
+196,p-39d,range_normal_nm,304,350 miles,,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,Condition not stated
+197,p-39d,service_ceiling_m,9723,"31,900 ft",,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+198,p-39d,wingspan_m,10.4,34 ft 0 in (10.3 m),,,aero-web,https://aero-web.org/specs/bell/p-39d.htm,2026-11-10,low,stated,unconfirmed,34 ft converts to 10.36 m; page rounds down
+199,p-400,alias,Airacobra I (RAF Caribou),Britain ordered 675 as the Airacobra IA (Caribou),,,wikipedia-en,https://en.wikipedia.org/wiki/Bell_P-39_Airacobra,2026-11-10,low,stated,unconfirmed,USAAF requisitioned 200 (elsewhere on page 128) and designated them P-400
+200,p-400,manufacturer,Bell,Bell,,,wikipedia-en,https://en.wikipedia.org/wiki/Bell_P-39_Airacobra,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+201,pby-5,alias,Catalina,Catalina,,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+202,pby-5,engine,Pratt & Whitney R-1830-82 or -92 x2,"two 1,200 hp R-1830-82 or -92",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Flying boat; 683 built; PBY-5A is the amphibian
+203,pby-5,engine_power_hp,1200,"1,200 hp",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+204,pby-5a,alias,Catalina,Catalina,,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Name adopted November 1941 when the UK ordered its first 30
+205,pby-5a,crew,8,8,,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,"Specs for PBY-5A; Wikipedia cites Encyclopedia of World Air Power, Jane's Fighting Aircraft of WWII and others"
+206,pby-5a,cruise_speed_kn,108.6,125 mph (109 kn),,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+207,pby-5a,empty_weight_kg,9485,"20,910 lb",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+208,pby-5a,engine,Pratt & Whitney R-1830-92 Twin Wasp x2,2 x R-1830-92,,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+209,pby-5a,engine_power_hp,1200,"1,200 hp each",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+210,pby-5a,first_service,1936-10,US Navy introduction October 1936 (XPBY-1),,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,inferred,unconfirmed,"Date for the PBY type, not the PBY-5A"
+211,pby-5a,loaded_weight_kg,16066,"35,420 lb max takeoff weight",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Figure is maximum take-off; no normal loaded weight on the page
+212,pby-5a,manufacturer,Consolidated,Consolidated,,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+213,pby-5a,max_bomb_load_kg,1814,"4,000 lb of bombs or depth charges under wings",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Torpedo racks also available
+214,pby-5a,max_speed_kn,170.3,196 mph (170 kn),,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Altitude not stated
+215,pby-5a,range_max_nm,2190,"2,520 mi (2,190 nmi)",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Condition not stated; likely maximum range with extra tanks
+216,pby-5a,service_ceiling_m,4816,"15,800 ft",,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,"Wikipedia converts to 4,800 m"
+217,pby-5a,wingspan_m,31.7,104 ft (32 m),,,wikipedia-en,https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+218,sbd-3,alias,Dauntless,Dauntless,,,wikipedia-en,https://en.wikipedia.org/wiki/Douglas_SBD_Dauntless,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+219,sbd-3,crew,2,"2 (Pilot, Radioman/Gunner)",,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,Museum page for SBD-3/A-24
+220,sbd-3,engine,Wright R-1820-52 x1,Wright R-1820-52,,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,
+221,sbd-3,engine_power_hp,1000,"1,000 hp",,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,
+222,sbd-3,first_service,1941,SBD-3 manufacture began early 1941,,,wikipedia-en,https://en.wikipedia.org/wiki/Douglas_SBD_Dauntless,2026-11-10,low,inferred,unconfirmed,"Production start, not service entry; 584 built"
+223,sbd-3,manufacturer,Douglas,Douglas Aircraft,,,wikipedia-en,https://en.wikipedia.org/wiki/Douglas_SBD_Dauntless,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+224,sbd-3,max_bomb_load_kg,454,"1,000 pounds",,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,"Page says maximum bomb load 1,000 lb; Wikipedia SBD-5 gives 2,250 lb for that later variant"
+225,sbd-3,max_speed_kn,217.2,250 miles per hour,,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,Altitude not stated
+226,sbd-3,range_max_nm,826,Maximum Range: 950 miles,,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,Condition not stated by the page (labelled maximum range)
+227,sbd-3,wingspan_m,12.8,42 feet,,,nww2m,https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/warbirds/douglas-sbd-dauntless,2026-11-10,medium,stated,preferred,Rounded foot figure; real span is 41 ft 6 in per Wikipedia SBD-5 table (41 ft 6.375 in)
+228,tbf-1,alias,Avenger,Avenger,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+229,tbf-1,crew,3,3,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+230,tbf-1,cruise_speed_kn,186.8,215 mph (187 kn),,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Jane's per Wikipedia
+231,tbf-1,engine,Wright R-2600-8 Twin Cyclone x1,Wright R-2600-8 Twin Cyclone,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+232,tbf-1,engine_power_hp,1700,"1,700 hp",,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+233,tbf-1,first_service,1942,1942 (infobox),,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+234,tbf-1,loaded_weight_kg,7047,"15,536 lb gross weight",,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Empty weight not listed on the page
+235,tbf-1,manufacturer,Grumman,Grumman,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read
+236,tbf-1,max_bomb_load_kg,907,"up to 2,000 lb",,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Armament data from FlightJournal.com per Wikipedia; same weight as Mk 13 torpedo load
+237,tbf-1,max_speed_kn,241.6,278 mph (242 kn),,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Spec section says data from Jane's Fighting Aircraft of WWII; altitude not stated
+238,tbf-1,range_normal_nm,786,905 mi at cruise speed,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Condition: at cruise speed; bomb or torpedo load not stated
+239,tbf-1,service_ceiling_m,6888,"22,600 ft",,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,"Wikipedia converts to 6,900 m"
+240,tbf-1,wingspan_m,16.5,54 ft 2 in,,,wikipedia-en,https://en.wikipedia.org/wiki/Grumman_TBF_Avenger,2026-11-10,low,stated,unconfirmed,Tertiary source; the reference it cites was not read

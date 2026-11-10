@@ -1,0 +1,23 @@
+# Aircraft types by variant. Identity only; see aircraft_type_facts.csv and fits.csv.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,nation,designation,role
+1000,a6m2-21,Mitsubishi A6M2 Type 0 Carrier Fighter Model 21,jp,A6M2 Model 21,fighter
+1001,a6m2-n,Nakajima A6M2-N Type 2 Floatplane Fighter,jp,A6M2-N,floatplane_fighter
+1002,a6m3-22,Mitsubishi A6M3 Model 22,jp,A6M3 Model 22,fighter
+1003,a6m3-32,Mitsubishi A6M3 Type 0 Carrier Fighter Model 32,jp,A6M3 Model 32,fighter
+1004,b-17e,Boeing B-17E Flying Fortress,us,B-17E,heavy_bomber
+1005,b5n2,Nakajima B5N2 Type 97 Carrier Attack Bomber,jp,B5N2,torpedo_bomber
+1006,d3a1-11,Aichi D3A1 Type 99 Carrier Bomber Model 11,jp,D3A1 Model 11,dive_bomber
+1007,e13a1,Aichi E13A1 Type 0 Reconnaissance Seaplane,jp,E13A1,floatplane_reconnaissance
+1008,f1m2,Mitsubishi F1M2 Type 0 Observation Seaplane,jp,F1M2,floatplane_observation
+1009,f4f-3p,Grumman F4F-3P Wildcat,us,F4F-3P,photo reconnaissance
+1010,f4f-4,Grumman F4F-4 Wildcat,us,F4F-4,fighter
+1011,g4m1-11,Mitsubishi G4M1 Type 1 Attack Bomber Model 11,jp,G4M1 Model 11,land_attack_bomber
+1012,h6k4,Kawanishi H6K4 Type 97 Large Flying Boat,jp,H6K4,patrol_flying_boat
+1013,p-39d,Bell P-39D Airacobra,us,P-39D,fighter
+1014,p-400,Bell P-400 Airacobra (export P-39 with 20 mm gun),us,P-400,fighter
+1015,pby-5,Consolidated PBY-5 Catalina,us,PBY-5,patrol_flying_boat
+1016,pby-5a,Consolidated PBY-5A Catalina,us,PBY-5A,patrol_amphibian
+1017,sbd-3,Douglas SBD-3 Dauntless,us,SBD-3,dive_bomber
+1018,tbf-1,Grumman TBF-1 Avenger,us,TBF-1,torpedo_bomber
+1019,walrus,Supermarine Walrus,uk,Walrus,reconnaissance amphibian

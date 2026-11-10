@@ -1,0 +1,303 @@
+# What was looked for and not found. The work list for the next research pass.
+# Format and rules: docs/research/oob/database-design.md
+entity_type,entity,what,period,sources_checked,note
+air_unit,11th-bg,"aircraft on hand per date, squadrons active",1942-08/09,"Wikipedia 11th BG, Miller",No unit-specific count found
+air_unit,3rd Kokutai,detachments Aug-Sep 1942,1942-09,Wikipedia Takao Air Group,Page text says '3rd Air Group' loaned to 25th Air Flotilla; I entered it as Takao Ku; identity unresolved
+air_unit,Marine and Army units at Guadalcanal,Not covered (brief asks for carrier air units only),,,
+air_unit,all Japanese,"USSBS Interrogations, USSBS Campaigns, Japanese Monographs strength figures",1942-08/09,not opened,One search for Japanese Monographs found nothing usable; Japanese figures are all Wikipedia (low) or Miller
+air_unit,all US squadrons,aircraft_operational,1942-08-24,,No source found
+air_unit,chitose floatplanes,14 F1M2 and 5 E13A1 on 14 Jul 1942 (combinedfleet); no air unit row made,1942-07,combinedfleet Chitose TROM,Not asked for in the task
+air_unit,flight-300,unit designation of squadron(s) behind Flight 300,1942-08-24,Miller ch IV,Miller calls it Flight 300 only
+air_unit,hornet/wasp fighter squadrons,13 Sep 18 Wildcats from Hornet and Wasp: unit names,1942-09-13,Wikipedia Cactus Air Force,Unit designations not given in the text read
+air_unit,kisarazu-ku,strength on 7 Aug and Aug reinforcement details,1942-08,Wikipedia,Only 19 G4M1 detachment figure
+air_unit,pby squadrons,NHHC Location of US Naval Aircraft weekly reports,1942-08/09,not searched,Time limit; not opened
+air_unit,pby squadrons,"aircraft counts per squadron and tender, Ndeni and Espiritu Santo",1942-08/09,"Pacific Wrecks Graciosa Bay, Wikipedia VPB-23, VPB-11, Miller ch IV",Miller: 39 PBYs in South Pacific (not recorded as a unit fact). Tender assignment conflicts; start/end dates loose
+air_unit,r-area-air-force,"seaplane units, aircraft, dates (reported set up 28 Aug 1942 at Shortland)",1942-08/09,web search snippet only; pacificwrecks Shortland page,Page I fetched does not mention it; no row written
+air_unit,rnzaf-3-sqn,Hudsons in range during Aug-Sep 1942,1942-08/09,historyofwar.org No.3 Sqn; pacificwrecks,"Squadron at Espiritu Santo from Oct 1942, Guadalcanal Nov-Dec 1942; nothing earlier found"
+air_unit,shokaku/zuikaku units,Date-specific strength on 24 Aug,1942-08-24,"combinedfleet (gives strikes, not on-hand totals); ussbs","Strike sizes: Shokaku 27 D3A + 7 A6M, Zuikaku 27 D3A + 12 A6M; torpedo bombers held in reserve. Not recorded as aircraft_on_hand"
+air_unit,tainan-ku / 4th-ku / yokohama-ku,strength on 7 Aug by unit (on hand vs sortie),1942-08-07,"Wikipedia, Miller ch III",Only strike sizes and totals found; flying boat type of Yokohama Ku not stated
+air_unit,vf-5 / vs-3 / vt-8,arrival date and basing at Henderson (carrier air groups); reliable source,1942-09,"Wikipedia Cactus Air Force, Miller ch V",Only Wikipedia names units; VF-5 'flying from Espiritu Santo' ambiguous; pacificwrecks and Wikipedia VFA pages not found (404)
+air_unit,vf-5; vf-6,Per-squadron aircraft numbers from a primary source,1942-08-24,oni-cn-eastern-solomons,ONI gives only 54 F4F-4s for both carriers combined and ~53 airborne
+air_unit,vmf-121,arrival at Henderson Field,1942-10,pacificwrecks VMF-121,"Arrived 9 Oct 1942 with 20 F4F-4 per Pacific Wrecks, outside the period; no row written"
+air_unit,vmo-251,date and counts at Espiritu Santo,1942-08/09,Wikipedia VMO-251,Only undated
+aircraft_type,a6m2-21,"cruise speed, first service date for the Model 21",1942,j-aircraft; pacificwrecks; Wikipedia,Pacificwrecks gives only the type's first combat date 13 Sep 1940
+aircraft_type,a6m2-n,"wingspan, crew, armament from a second source, first service",1942,j-aircraft Zero Facts and Figures; Wikipedia A6M,Wikipedia gives no specs for the floatplane; deployment to Tulagi/Shortlands not sourced here
+aircraft_type,a6m3-32,"wingspan, cruise speed, first service date, carrier suitability stated directly",1942,j-aircraft; Wikipedia,Wikipedia says Model 32 had square wingtips; no span given
+aircraft_type,all-japanese,TAIC wartime manuals (US estimates) and Japanese primary data,1942,Only j-aircraft pages quoting TAIC were reached,No TAIC document fetched directly
+aircraft_type,all-us,Standard Aircraft Characteristics sheets / wwiiaircraftperformance.org primary documents,1942,"history.navy.mil (TLS error), HyperWar guessed URLs (404), wwiiaircraftperformance.org not reached",Specs rely on Wikipedia and museum pages
+aircraft_type,b-17e,"max speed, range, ceiling, crew, engine, weights, wingspan, bomb load, first service date",1942-08/1942-09,"Wikipedia B-17 articles (B-17G table only, variants list); NMUSAF fact sheet not located","Only manufacturer, guns in tail and dorsal turret and production count found"
+aircraft_type,d3a1-11,Model-11-specific figures from a reliable source; Wikipedia table is D3A2,1942,Wikipedia D3A (D3A2 table); j-aircraft D3A1; ibiblio phha VAL; pacificwrecks d3a page (404),Pacificwrecks D3A1 page appeared in search but was not opened
+aircraft_type,f4f-4,"cruise speed, range, crew from a Navy source, first service date, Navy Standard Aircraft Characteristics sheet",1942,HyperWar NHHC F4F page; Wikipedia; historyofwar,NHHC page has dimensions weights speed only; HyperWar USN aircraft pages for SBD and TBF could not be found at guessed URLs
+aircraft_type,g3m2,source placing it at Rabaul in Aug-Sep 1942,1942,none,Not searched; no row written
+aircraft_type,h6k4,"ceiling, H6K4-specific data from second source",1942,Wikipedia H6K; pacificwrecks,Neither page gives a ceiling
+aircraft_type,h8k1,"everything (optional, not attempted)",1942,none,Optional per task
+aircraft_type,os2u-3,everything (not attempted for time),1942,none,Optional per task
+aircraft_type,p-39d,service at Guadalcanal in Aug-Sep 1942,1942-08/1942-09,Wikipedia P-39; historyofwar P-39,Sources place P-400s (67th FS from 22 Aug 1942) at Henderson; no P-39D claim found
+aircraft_type,p-400,"performance (speed, range, ceiling, weights), bomb load, round counts for 20 mm",1942-08/1942-09,Wikipedia P-39; historyofwar P-39; aero-web P-39D,P-39D figures are under p-39d; no P-400-specific performance page found; whether P-39D flew at Guadalcanal in the period not confirmed
+aircraft_type,sbd-3,"max speed altitude, cruise, ceiling, weights, SBD-3 specific data from a Navy sheet",1942,Wikipedia SBD (only SBD-5 table); National WWII Museum page,history.navy.mil NNAM pages failed TLS verification so were not read
+aircraft_type,soc-3,everything (not attempted for time),1942,none,Optional per task
+aircraft_type,tbf-1,"max speed altitude, empty weight, TBF-1 Navy sheet figures",1942,Wikipedia TBF; history.navy.mil TBM page (TLS error),Wikipedia cites Jane's
+organisation,"Japanese escort and unavailable ships: Oite, Yuzuki (DesDiv 29), Mitsuki, Uzuki, Yatoi, Mochizuki (DesDiv 30), DesDiv 17, Akitsushima, Mogamigawa Maru",whether any belonged to the striking force,1942-08,Bates NWC-Savo-2,Bates says they were on escort duty or at Rabaul and took no part; not researched as ships
+organisation,Vincennes Group (Bates),ship list,1942-08-09,Bates NWC-Savo-Fwd,Text says it does not list them; ships taken from ONI
+place,buin,opening date and units,1942,web search snippet only,"Snippet said Buin built Nov 1942 (after period); not fetched; Wikipedia Yokohama says small Yokohama detachments at Buin/Shortlands, undated"
+place,buka,units Aug 1942,1942-08,,Only 2nd Ku move on 29 Sep found
+sensor,Type 14 director,any description,1942,USNTMJ O-31 OCR (Type 94 director only),not found
+sensor,Type 90 / Type 96 searchlights,specifications,1942,web search,not found; not searched in USNTMJ
+sensor,jp-type21-radar,"Alias or designation ""Type 2 Mark 2 Model 1"" and any Japanese-side designation",1942,combinedfleet radar page; USNTMJ E-17 (no radar detail); Wikipedia Type_21 page returned 404,not found on any fetched page
+sensor,jp-type22-radar,"Designation ""Type 2 Mark 2 Model 2"" and a pre-1944 service date from a primary source",1942,"combinedfleet radar page, Hyuga/Ise TROMs",only combinedfleet; USNTMJ shipboard radar report not located (E-02/E-03 are airborne and land-based; S-01-5 is 432 pages and was not read)
+sensor,jp-type93-hydrophone,sonar range and in-service date,1942,USNTMJ E-10,Table I in E-10 is garbled in OCR; ranges quoted are for the Type 4
+sensor,jp-type93-sonar,single operating frequency,1942,USNTMJ E-10,only the 16-31 kc receiver band was readable
+sensor,"large night binoculars (12 cm, 15 cm and larger)","magnification, objective diameter, lookout detection range",1942,web search (dealer and museum listings only); USNTMJ X-05 enclosure list,"X-05 only lists items shipped (12 cm AA binoculars, 12 cm spotting binoculars, 18 cm binoculars, a binocular for the Type 97 director); no specifications; dealer listings not used"
+sensor,"main battery rangefinders (6 m, 8 m types)","base length, type names",1942,"USNTMJ O-31 OCR (mentions five rangefinders in Nagato and a radar/rangefinder in Ise, no base lengths); web search",not found
+sensor,uk-type271-radar,"wavelength confirmation, power, ranges",1942,Madsen only,Only 10 cm from Madsen found
+sensor,us-cxam-radar,wavelength and peak power from FTP 217 or navweaps,1940-1942,"FTP 217, navweaps",Both silent; Wikipedia only
+sensor,us-fc-mk3-radar|us-fd-mk4-radar,peak power (Mk 4),1942,navweaps,Navweaps lists Mk 4 power N/A
+sensor,us-qc-sonar,QC series destroyer sonar characteristics,1942,none productive,Not searched successfully; no page fetched with QC data
+sensor,us-sc-radar,wavelength/power from a US government source,1942,"FTP 217 (silent), navweaps (silent)",Only a hobby site gives 150 cm and 100/200 kW
+sensor,us-sg-radar|us-fc-mk3-radar|us-fd-mk4-radar,frequency_mhz,1942,"FTP 217, navweaps",Not given by either
+ship,"Japanese destroyers (all except Yugumo, Hayashio, Murasame)","laid_down, launched, commissioned",,combinedfleet TROM and class pages,Class pages give only class-wide completion ranges
+ship,Japanese submarines I-121 I-123 Ro-34,Out of scope,,,
+ship,Tanaka convoy,Other ships (e.g. Mutsu Maru) and total ship count,,,"Wikipedia lists patrol boats 1, 2, 34, 35 but its Transport Unit names only Kinryu Maru; Boston and Daifuku Maru from combinedfleet"
+ship,all Japanese ships,hull_number,,,Japanese ships have no hull numbers; left blank
+ship,all Japanese ships,name_native (kanji),,"combinedfleet.com Chokai, Aoba, Kako, Kinugasa, Furutaka, Tenryu, Yubari, Yunagi pages",Not shown on any page read
+ship,all US ships,DANFS pages on history.navy.mil,,history.navy.mil (certificate error; connection refused),HyperWar copies of DANFS used instead
+ship,aoba,Any difference from Kinugasa in Aug 1942,1942-08,combinedfleet aoba_t kinugasa_t; wikipedia-en,"No difference in armament found; only catapult history differs. Aoba refit at Kure May 1942 and Kinugasa June 1942, no changes recorded."
+ship,aoba,no radar on 8-9 Aug 1942,1942-08-09,USSBS NAV-61 (general statement only),not stated per ship
+ship,aoba,sunk,1945,combinedfleet.com aoba_t.htm,"Settled on the bottom after air attack at Kure 24 Jul 1945; no sinking date given as such, so no sunk fact"
+ship,apd-2-colhoun,DANFS entry,,DANFS HyperWar apd2 and dd85 returned 404,uboat.net only
+ship,bb-55-north-carolina,"fire_control_radar (Mk 3, Mk 4) and SG",1942-08-24,Wikipedia,"Wikipedia lists 3 Mk 3, 4 Mk 4, CXAM and SG as of Nov 1942 (citing Friedman); not entered for 24 Aug"
+ship,ca-29-chicago,fire_control_radar type,1942-08-08,"Bates ch.V and ONI Savo narrative (HyperWar), WDR 29, Madsen (navyhistory.au), DANFS (HyperWar), Wikipedia ship page",Savo accounts mention sweeps of a fire-control radar every half hour (Wikipedia citing Warner); type not named
+ship,ca-29-chicago; ca-34-astoria,DANFS exact sinking date,1943; 1942,DANFS HyperWar,Pages read gave no full date on the sinking sentence; uboat.net date used alone for Chicago
+ship,ca-32-new-orleans,radar type,1942-08-24,"DANFS (HyperWar), web searches","DANFS says new search radar installed at San Francisco after 13 Jan 1942, type not named; not entered as a fit"
+ship,ca-33-portland,any radar,1942-08-24,"Wikipedia, DANFS (HyperWar), web searches",No source for the Eastern Solomons date. Minneapolis radars are described for Tassafaronga (Nov 1942) only
+ship,ca-34-astoria,fire_control_radar type,1942-08-08,"Bates ch.V and ONI Savo narrative (HyperWar), WDR 29, Madsen (navyhistory.au), DANFS (HyperWar), Wikipedia ship page",Madsen says her fire control radar had just been repaired; type not named
+ship,ca-36-minneapolis,any radar,1942-08-24,"Wikipedia, DANFS (HyperWar), web searches",No source for the Eastern Solomons date. Minneapolis radars are described for Tassafaronga (Nov 1942) only
+ship,ca-39-quincy,radar type(s) and slots,1942-08-08,"Bates ch.V and ONI Savo narrative (HyperWar), WDR 29, Madsen (navyhistory.au), DANFS (HyperWar), Wikipedia ship page","ONI: Quincy's radar picked up a plane and gave a range of 5,800 yd on the cruisers; type unnamed. WDR 29 mentions a radar antenna fouled by Director I rigging on one of the three ships (ship not clear in OCR)"
+ship,ca-44-vincennes,radar type(s) and slots,1942-08-08,"Bates ch.V and ONI Savo narrative (HyperWar), WDR 29, Madsen (navyhistory.au), DANFS (HyperWar), Wikipedia ship page","ONI says she fired on a radar range of 8,250 yd, so she had some fire-control radar; no source names the set. Madsen gives no type. WDR 29 not searchable for type"
+ship,chitose,sunk and fate,,combinedfleet Chitose TROM,Record ends Jan 1943
+ship,chokai,Actual 12 cm/12.7 cm AA fit in Aug 1942; count of 13.2 mm; whether 25 mm total is 8,1942-08,combinedfleet; nishida; wikipedia-en,See conflicts.md.
+ship,chokai,Radar/catapult/aircraft types carried in Aug 1942,1942-08,combinedfleet chokai_t,Not in page.
+ship,chokai,no radar on 8-9 Aug 1942,1942-08-09,combinedfleet chokai_t.htm,TROM shows Type 21 installed 16 Aug 1943 and no radar entry for Savo; absence not stated
+ship,cl-51-atlanta,air_search_radar corroboration,1942-08-24,Wikipedia,Only the Wikipedia infobox; no second source
+ship,cl-54-san-juan,air search and fire control radar types,1942-08-08,"Madsen, Wikipedia, DANFS",Madsen mentions an air search radar that saw a plane next morning but names no set
+ship,class assignments in ships.csv,Classes follow the brief's class keys and combinedfleet's class pages; not read from each ship's own page,,,Pensacola class for Salt Lake City and Atlanta-class for San Juan are not on the brief's list; added by the same naming rule
+ship,cv-6-enterprise,fire_control_radar and surface search radar,1942-08-24,"Wikipedia, DANFS",Wikipedia infobox lists SK and SM but undated and later-war; not used
+ship,cv-6-enterprise,laid_down,,danfs (HyperWar copy),Page does not give the keel date
+ship,dd-348-farragut; dd-352-worden; dd-436-monssen; dd-483-aaron-ward; dd-406-stack; dd-407-sterett; dd-491-farenholt,"laid_down, launched, most commissioning dates and fates",,danfs HyperWar path returned 404 for these; Clancey list pages give commissioning year only,Aaron Ward has no data at all (both pages 404). Monssen's sinking date comes only from the Clancey list's '14 Nov 42'
+ship,dd-350-hull; dd-349-dewey,DANFS launched dates,,DANFS HyperWar,Text partly unreadable in the transcription
+ship,dd-353-dale; dd-349-dewey; dd-386-bagley; dd-363-balch; dd-397-benham; dd-398-ellet; dd-484-buchanan,laid_down,,danfs (HyperWar copy),Not stated in the copy fetched
+ship,dd-386-bagley,any radar,1942-08-08,"Madsen, Wikipedia, DANFS (HyperWar), Bates ch.V",No source found stating a radar fit on this ship at the date; not assumed from class
+ship,dd-388-helm,any radar,1942-08-08,"Madsen, Wikipedia, DANFS (HyperWar), Bates ch.V",No source found stating a radar fit on this ship at the date; not assumed from class
+ship,dd-392-patterson,radar type,1942-08-08,"ONI Savo ch.8, DANFS, Wikipedia","ONI: Patterson made a radar contact at 8,000 yd on 9 Aug; DANFS: radar pip 25 Aug. No type named"
+ship,dd-393-jarvis,any radar,1942-08-08,"Madsen, Wikipedia, DANFS (HyperWar), Bates ch.V",No source found stating a radar fit on this ship at the date; not assumed from class
+ship,dd-398-ellet; dd-391-henley; dd-386-bagley; dd-387-blue; dd-388-helm; dd-349-dewey,laid_down in DANFS,,DANFS HyperWar,Entries omit the keel date; uboat.net supplies it
+ship,dd-408-wilson,DANFS entry,,DANFS HyperWar dd408 returned 404,uboat.net only
+ship,dd-408-wilson,any radar,1942-08-08,"Madsen, Wikipedia, DANFS (HyperWar), Bates ch.V",No source found stating a radar fit on this ship at the date; not assumed from class
+ship,dd-436-monssen,DANFS entry,,DANFS HyperWar dd436 returned 404,uboat.net only
+ship,dd-436-monssen,any radar,1942-08-08,"Madsen, Wikipedia, DANFS (HyperWar), Bates ch.V",No source found stating a radar fit on this ship at the date; not assumed from class
+ship,dd-484-buchanan,any radar,1942-08-08,"Madsen, Wikipedia, DANFS (HyperWar), Bates ch.V",No source found stating a radar fit on this ship at the date; not assumed from class
+ship,dd-484-buchanan,laid_down,1941,DANFS via HyperWar; uboat.net class page lacks her,DANFS gives launched and commissioned only
+ship,dms-10-southard,DANFS entry,,DANFS HyperWar dd207 and dms10 returned 404,uboat.net only
+ship,furutaka,no radar on 8-9 Aug 1942,1942-08-09,USSBS NAV-61 (general statement only),not stated per ship
+ship,"fuso, yamashiro, ryujo, kongo, haruna, hiei, tone, chikuma and others in the carrier force",radar on 24 Aug 1942,1942-08-24,combinedfleet radar page (Kongo and Haruna Type 22 from Oct 1942 only),no statement for 24 Aug 1942
+ship,hmas-australia,any radar,1942-08-08,"Madsen, Wikipedia (first 100k chars), Gregory log",Madsen says no Type 271 at Savo; no other set named. Wikipedia mentions only a new radar in Feb 1943
+ship,hmas-australia; hmas-hobart,"Whether they were in TF 11 on 24 Aug; hull numbers, dates",1942-08,wikipedia-en only,ONI does not list them
+ship,hmas-canberra,which of Type 271 / Type 241 was fitted,1942-08-08,"Madsen, Gregory log, Wikipedia",See conflicts.md; no primary RAN document found
+ship,hmas-canberra; hmas-australia; hmas-hobart,class as stated by a source,,uboat.net gives Kent and Modified Leander,Class keys follow the brief
+ship,hmas-hobart,any radar,1942-08-08,"Madsen, Wikipedia",Madsen says no Type 271 at Savo; nothing else found
+ship,kako,no radar on 8-9 Aug 1942,1942-08-09,USSBS NAV-61 (general statement only),not stated per ship
+ship,kinugasa,Aircraft type embarked Aug 1942,1942-08,combinedfleet,Not stated.
+ship,kinugasa,no radar on 8-9 Aug 1942,1942-08-09,USSBS NAV-61 (general statement only),not stated per ship
+ship,mutsu-maru,Whether a third transport (sometimes named in Japanese convoy accounts) was present,1942-08,"combinedfleet Kinryu Maru, Boston Maru, Daifuku Maru pages","Only Kinryu, Boston and Daifuku Maru are named in the pages read"
+ship,navsource and navy.gov.au,Could not load navsource.org (host not found) or navy.gov.au (timeout) so no second source for US dates and nothing for Australian ships,,"navsource.org; navy.gov.au HMAS Australia (II), Hobart (I)",Australian ships have identity rows only and no dates
+ship,tenryu,no radar on 24 Aug 1942 (the statement refers to 8-9 Aug 1942),1942-08-24,USSBS NAV-61,row written for 9 Aug only
+ship,umikaze,sunk (exact date),1944,combinedfleet,Page gives only a range 28 Jan to 1 Feb 1944 spanning two months
+ship,uzuki; kagero; isokaze etc.,hull numbers for all Japanese ships,,,IJN ships carry no hull numbers; left blank
+ship,yubari,no radar on 8-9 Aug 1942,1942-08-09,USSBS NAV-61 (general statement only),"Matsuyama commanded CruDiv 18 (Tenryu, Yubari); his ""we"" may cover Yubari but the page does not name her"
+ship,yunagi,"class, laid_down, launched, commissioned",,combinedfleet.com yunagi_t.htm,Page gives none of these; hull class left blank in ships.csv. Sinking date is only a 21-25 Aug 1944 window
+ship,yunagi,no radar on 8-9 Aug 1942,1942-08-09,USSBS NAV-61 (general statement only),not stated
+ship,zuikaku,radar on 24 Aug 1942 stated directly,1942-08-24,Kojinsha No. 6,only the Santa Cruz (26 Oct 1942) absence is stated
+ship_class,all,Displacement basis: sources give a single figure without saying standard or full for some classes,,wikipedia-en;uboat-net,uboat.net labels everything BRT
+ship_class,all,"Per-ship fits (radar, light AA) as of Aug 1942",1942-08,,Out of scope for class fits
+ship_class,all,Primary-source (USNTMJ) figures,,not found in this session,No US Naval Technical Mission report was located; combinedfleet class pages and HyperWar not reached.
+ship_class,all us destroyers,max_speed_kn design vs trial,,wikipedia-en;uboat-net,"Several sources give trial speeds, others design"
+ship_class,jp-chitose-class,Tender-configuration displacement and armament in 1942,1942,nishida; combinedfleet chitose_t,Nishida page is the carrier conversion.
+ship_class,jp-fubuki-class,Endurance,,nishida,
+ship_class,jp-fubuki-class; jp-shiratsuyu-class; jp-asashio-class; jp-kagero-class; jp-yugumo-class; jp-akizuki-class,Torpedo model and Aug 1942 AA,1942,nishida,No torpedo_tubes rows written because model unstated.
+ship_class,jp-furutaka-class,Gun model (No.1 rebored vs No.2),1937-1942,combinedfleet; navweaps,Disputed.
+ship_class,jp-furutaka-class,Length/shaft power/fuel/armour/complement after 1936-39 rebuild,1937-1939,nishida; combinedfleet; wikipedia-en,Page gives as-built only; figures here are as built.
+ship_class,jp-kamikaze-class,Torpedo model for 53 cm tubes; 7.7 mm MG key; Yunagi 1942 AA,1942,nishida; wikipedia-en; combinedfleet yunagi_t,Key assigned inferred.
+ship_class,jp-kongo-class,"Hiei and Kirishima 1942 AA fit, endurance, per-ship fits",1942-08,nishida; wikipedia-en; combinedfleet hiei.htm ships/kongo,Kirishima TROM URL not fetched.
+ship_class,jp-mogami-class,Aug 1942 AA count; endurance,1942,nishida; combinedfleet kumano_t suzuya_t,
+ship_class,jp-myoko-class,Endurance; fuel after refit; torpedo model,1941-1942,nishida,
+ship_class,jp-nagara-class,Endurance (page value 5000 nm at 36 kt is implausible); gun mounts; 8 cm AA key,,nishida,Left out.
+ship_class,jp-nagato-class,Torpedo tubes after 1936; endurance,1942,nishida,
+ship_class,jp-ryujo-class,Endurance; Aug 1942 light AA,1942,nishida; combinedfleet ryujo.htm,
+ship_class,jp-sendai-class,Jintsu's light AA in Aug 1942,1942-08,combinedfleet jintsu_t; wikipedia-en,
+ship_class,jp-shiratsuyu-class,Overall length,,nishida,Only waterline given.
+ship_class,jp-shokaku-class,Endurance; Aug 1942 25 mm count,1942,nishida,
+ship_class,jp-takao-class,Torpedo model for as-built 8 tubes; 40 mm Vickers AA key (no key in brief list),1932-1939,nishida; wikipedia-en,Type 90 given only by Wikipedia (low).
+ship_class,jp-tenryu-class,Mine capacity and 8 cm gun removal date,1940,nishida; wikipedia-en,
+ship_class,jp-tone-class,Torpedo model; endurance; fuel,1942,nishida; combinedfleet tone_t,
+ship_class,jp-yubari-class,Torpedo model (61 cm),1942,nishida; wikipedia-en,Not named on pages.
+ship_class,uk-county-kent-class,HMAS Australia and Canberra 1942 light AA and torpedo tube status,1942,wikipedia-en,"Wikipedia pages contradict each other, see conflicts.md"
+ship_class,uk-county-kent-class,"belt armour, fuel capacity, aircraft_capacity for Australia and Canberra",1942,wikipedia-en;uboat-net,As built no belt; belt added after 1935 to some ships but not Canberra
+ship_class,uk-leander-modified-class,"Hobart 1942 fit, radar, light AA",1942,wikipedia-en,Hobart page has no 1942 list
+ship_class,uk-leander-modified-class,fuel capacity,,wikipedia-en;uboat-net,Not stated
+ship_class,us-atlanta-class,"fuel_capacity_lt, endurance at a second source, aircraft_capacity (none)",1942,hyperwar-fuel-consumption,"HyperWar CL 55 class is the Cleveland class (it lists Atlanta CL 104), not Atlanta CL 51, so not used"
+ship_class,us-atlanta-class,uboat.net class page not located,,uboat-net,
+ship_class,us-farragut-class;us-mahan-class;us-porter-class;us-bagley-class;us-gridley-class;us-benham-class;us-sims-class;us-gleaves-class,"Torpedo mark, 1942 light AA fit, belt and deck armour",1942,wikipedia-en;uboat-net;navweaps,"Torpedo mark not stated; Farragut, Bagley, Gridley give circa 1943 not 1942"
+ship_class,us-lexington-class,fuel and endurance from a wartime US Navy document,1942,hyperwar-fuel-consumption,Fuel-CV page covers the Essex class (CV 9) and Ranger only
+ship_class,us-lexington-class;us-yorktown-class,20mm Oerlikon count in Aug 1942,1942-08,wikipedia-en,Wikipedia gives Hornet 30 (Jan 1942) and Saratoga 52 (late 1942) only
+ship_class,us-mahan-class;us-bagley-class,separate HyperWar fuel row per class,,hyperwar-fuel-consumption,HyperWar lists both under DD 364 class; the same row is used for both
+ship_class,us-new-orleans-class;us-northampton-class;us-portland-class,1.1in and 20mm Oerlikon counts in Aug 1942,1942-08,wikipedia-en,Wikipedia gives counts only for Portland (16 x 1.1in)
+ship_class,us-new-orleans-class;us-northampton-class;us-portland-class,8in/55 mark per class (Mk 9 / 11 / 13 / 14) and whether regunned by Aug 1942,1942,navweaps,Navweaps names the family but no per-class mark; fits use Mk 9 with basis inferred
+ship_class,us-north-carolina-class,aircraft_capacity,1942,wikipedia-en,"Only aircraft types named (Kingfisher, Seahawk), no count"
+ship_class,us-northampton-class,"deck_armour_max_mm, fuel capacity for CA-26 itself",,wikipedia-en;hyperwar-fuel-consumption,"HyperWar gives CA 27 class (Chester, Louisville); Northampton not covered"
+ship_class,us-northampton-class,endurance from a second source,,wikipedia-en,Wikipedia gives no range
+ship_class,us-wasp-class,"fuel_capacity_lt, belt_armour_max_mm, deck_armour_max_mm",1942,wikipedia-en;hyperwar-fuel-consumption,Wikipedia gives only side 3.5 in and 1.25 in deck over steering gear
+ship_class,us-yorktown-class,wartime US Navy fuel and endurance data; max beam basis,1942,hyperwar-fuel-consumption,Fuel-CV page covers the Essex class (CV 9) and Ranger only
+site,history.navy.mil (DANFS),Specification blocks,,history.navy.mil,Certificate verification error on the one page tried
+site,hyperwar ship data books,Wartime Ships' Data class tables,,ibiblio.org/hyperwar (search only),Only the fuel consumption tables were found; no class characteristics tables located
+site,navsource.org,"All class and ship pages (DNS lookup failed, 3 tries on different URL forms)",,navsource.org,Could not be fetched; no navsource data used
+site,navy.gov.au,"HMAS Canberra (I), Australia (II), Hobart (I) pages",,navy.gov.au,Timed out twice; RAN data taken from Wikipedia instead (low confidence)
+source,awm.gov.au Gill official history,Allied organisation at Savo,1942,not fetched,Not attempted after the other sources covered organisation
+source,history.navy.mil (NHHC Savo OOB page and DANFS),page content,1942,history.navy.mil via a summarising reader and curl,"Certificate error, connection refused and 404 on repeated tries; NHHC order of battle page not read. ONI and Bates used via HyperWar and DANFS via HyperWar transcription"
+source,navsource.org,second source for US ships,,navsource.org (host not resolvable),uboat.net and DANFS used instead
+source,navy.gov.au RAN ship histories,"laid down, launched, commissioned, fate for Australia, Canberra, Hobart",1925-1962,navy.gov.au (timed out twice),"RAN ship values come from uboat.net only (single source, medium)"
+transport,"Hunter Liggett, Elliot (AP-13), Alchiba",not researched,1942-08,ONI chapter 2 and DANFS Jarvis,Transports and cargo ships named in passing
+transport,"McCawley, Fuller, American Legion, Bellatrix (TG 62.1 XRAY)",not researched,1942-08,Bates NWC-Savo-3,Transports not in scope
+transport,"Neville, Zeilin, Heywood, President Jackson (TG 62.2 YOKE)",not researched,1942-08,Bates NWC-Savo-3,Transports not in scope
+weapon,all guns,"explicit AA ceiling for guns marked not stated (12 cm/45 3rd Year, 15 cm, 14 cm, 20 cm)",1942,navweaps,not stated on page
+weapon,jp-20cm-50-3ns-no1,firm rate of fire for Furutaka-class mounts,1942,navweaps,page says less than 2 rpm
+weapon,jp-20mm-type99-1,navweaps page not found; Model 2 (long barrel) figures,1942,Wikipedia; pacificwrecks,"Mark 2 figures in Wikipedia: 34 kg, 480 rpm, 750 m/s, 20x101RB; not entered as it is a later type"
+weapon,jp-61cm-torpedo-type93,Model 1 weight from USNTMJ; any source giving a 400 kg Model 1 warhead,1942,"navweaps, USNTMJ O-01-1 pp.31-32, Wikipedia",all three read give 490 kg
+weapon,jp-bomb-250kg,actual weight and filler weight,1942,bulletpicker Japanese Navy bomb page,Nominal only
+weapon,jp-bomb-60kg,actual weight and filler weight,1942,bulletpicker Japanese Navy bomb page,Nominal only
+weapon,jp-torpedo-type91,which model was in front-line use Aug-Sep 1942; Kai-3 for G4M,1942,navweaps; Wikipedia,Mod 2 and Mod 3 both recorded as disputed
+weapon,uk-6in-50-mk23,max_range_elevation_deg,1933,navweaps,No elevation stated for the range
+weapon,uk-8in-50-mk8|uk-4in-45-mk16,fit to HMAS Australia/Canberra/Hobart,1942,navweaps,Fits to the three ships were outside this task and not sourced
+weapon,us-16in-45-mk6,aa_ceiling_m,1941,navweaps,Not applicable; not recorded
+weapon,us-20mm-hispano-m1,navweaps page not found; round counts on P-400,1942,Wikipedia HS.404 only,Wikipedia lists P-400 under AN/M2 not M1; see conflicts
+weapon,us-21in-torpedo-mk15,mod in use Aug 1942,1942,navweaps,Only Mod 0 recorded; Mod 3 values in notes
+weapon,us-30cal-m2-aircraft,"muzzle velocity, weight, barrel length for the aircraft gun",1942,Wikipedia Browning M1919,Page gives M1919 figures only
+weapon,us-37mm-m4,in-service date for aircraft use,1941,navweaps,Page dates 1942 for PT boat use only
+weapon,us-50cal-m2-aa,max_range_elevation_deg,1940s,navweaps,"Elevation for the 7,400 yd figure not given"
+weapon,us-8in-55-mk9|us-8in-55-mk12,which mark each cruiser carried in Aug 1942,1942,navweaps,Navweaps does not map marks to ships on the pages fetched
+weapon,us-bomb-1000lb-gp,"actual total weight, 1942 filler type",1942,bulletpicker; Wikipedia Mark 65,Weight is nominal from designation
+weapon,us-bomb-100lb-gp,filler weight,1942,bulletpicker search snippet only; designation-systems,Fetched pages give no filler weight
+weapon,us-depth-bomb-325lb,all attributes,1942,navweaps ASW weapons page (ship weapons only),No source found
+weapon,us-torpedo-mk13,which mod was in use Aug 1942; date shroud rings were fitted,1942,navweaps,The navweaps page gives launch limits with and without rings; the vocabulary has no attribute for launch limits so they are not recorded
+event,savo-island,Chokai Aoba Kako Kinugasa Furutaka Tenryu Yubari Yunagi tabular records of movement times in Tokyo time,1942-08-08/09,combinedfleet.com Chokai_t.htm via curl and a summarising reader,fetch failed (empty response); not read
+event,savo-island,Gill official history account of Canberra and the southern group,1942-08-09,awm.gov.au blog link,PDF link returned HTML; chapter not read
+event,savo-island,USSBS interrogation texts (Ohmae Nav 109; Kato Nav 83; Matsuyama Nav 61) read directly,1942-08-09,ibiblio USSBS IJO-83 (404),Only cited via Bates footnotes
+event,savo-island,Time and range of Chokai sighting of Blue; Bates gives 10900 yd and 8700 yd,1942-08-09,Bates pp.107 and 111,No source resolves it
+event,savo-island,Exact time of Hudson 1026 and 1101 contact reports reaching Crutchley,1942-08-08,Bates pp.102-103 and 88-90,Bates gives 1645-1646 for CTF 62 and about 1900 for another dispatch; 1101 report time OCR-garbled
+event,savo-island,Radar types and range statements for Blue and Ralph Talbot other than SC radar and 4-10 mile reliable range,1942-08-09,Bates p.57,Bates gives SC radar reliable range 4-10 miles; no further detail
+event,savo-island,Bates Part 2 diagrams (DTIC ADA003038) for plotted positions,1942-08-09,archive.org DTIC_ADA003038,Not read
+event,savo-island,Wikipedia/Morison not used,,,By design
+event,savo-island,ONI chapters 8-11 and Hepburn report for later events,1942-08-09,ONI,Not needed for detection sequence; not read in full
+ship_class,jp-takao-class,Chokai torpedo model and the date she changed from Type 90 to Type 93,1932-1942,combinedfleet chokai_t takao_t(failed to load) navweaps Type 90 and 93 pages Nishida stc0332 navypedia jap_cr_takao Wikipedia USNTMJ O-01-1 and O-01-3,Only evidence: four combinedfleet ship pages say Chokai fired Type 93 at Savo. No source read dates her conversion. Wikipedia 1941 date is undocumented. Navypedia page for Chokai and Maya returned 404.
+ship,chokai,Torpedo reloads in August 1942 (16 per Wikipedia as built),1942-08,combinedfleet navweaps Nishida navypedia,Wikipedia only; no better source found. Wikipedia infobox gives 24 Type 93 in final layout (8 + 16).
+ship_class,jp-furutaka-class,Torpedo reloads and whether rebuild reload gear existed,1939-1942,combinedfleet kako_t furuta_t Nishida stc0329 navypedia,Only an inferred 8 from navypedia bracket figure. Kako page says ten torpedoes were expended at Savo.
+ship_class,jp-aoba-class,Torpedo model in August 1942 for Aoba and Kinugasa,1942-08,combinedfleet aoba_t kinugasa_t,Type 93 only attested for Aoba on 1943-04-03 (two stored aboard). Kinugasa page names no model; she fired four torpedoes at transports at Savo.
+ship,tenryu,Torpedo model fired at Savo,1942-08-09,combinedfleet tenryu_t,Page says Tenryu hit Quincy with two torpedoes but names no model; the Type 93 line refers to Chokai and Kako.
+ship,yubari,Torpedo model and tube number in 1942,1942,combinedfleet yubari_t Nishida stc0328 navypedia navweaps,No source read names the model. Type 8 (61 cm) is an inference from the navweaps list only.
+ship,yunagi,Armament and torpedo fit in 1942,1942,combinedfleet yunagi_t Nishida stc0421 navypedia,combinedfleet page has no armament or class text; class data only.
+ship,dd-408-wilson,Number of torpedo tubes aboard on 8 August 1942,1942-08,navypedia us_dd_benham Wikipedia Benham-class DANFS (certificate error on history.navy.mil) navsource (failed),Navypedia says tubes were reduced in 1941 on Lang to Wilson with no number; Wikipedia says after mounts were landed on some ships. Needs navsource DD-408 or the Mare Island 1942 overhaul drawings.
+ship_class,us-bagley-class,Torpedo mark carried in 1942 named for the class,1942,navweaps WTUS_PreWWII and WTUS_WWII Jolie NUSC 5436 historyofwar navypedia hyperwar,No source names the mark per class; Mark 15 inferred from 'Destroyers' and replacement of Mk 11/12. Only Wikipedia (Benham class) names it directly.
+ship_class,us-farragut-class,Torpedo mark in 1942 (also Porter Mahan Gridley Sims Gleaves classes),1942,navweaps Jolie Wikipedia search results,Not verified class by class; no fit rows written for these classes except general evidence under Bagley and Benham.
+ship_class,uk-county-kent-class,Which torpedo mark Canberra carried and warhead of Mark V,1942,navweaps WTBR_PreWWII and WTBR_WWII navypedia Wikipedia,Navweaps: Mark V on Kent class; Mark VII on 8 in cruisers; Mark IX replaced Mark VII in some 8 in cruisers in the war. Mark V warhead N/A on navweaps.
+ship,hmas-canberra,Explicit statement that her tubes were aboard on 8 August 1942,1942-08,navypedia aus_cv_australia Wikipedia navy.gov.au (timeout twice),Inference from no recorded removal only.
+ship_class,us-new-orleans-class,Shell and rate of fire for Mark 9 versus Mark 14 on Astoria,1942-08,navweaps navypedia,Which mark Astoria carried is not stated; Quincy and Vincennes had Mark 12.
+ship_class,all,Displacement belt and deck armour better than Wikipedia for Furutaka Aoba (belt deck) Kamikaze (armour) Benham Bagley (armour n/a),,navypedia Nishida historyofwar uboat.net ONI 222 (not found on HyperWar),Navypedia and Nishida are compilations. No ONI 222-US or 222-J text found; history.navy.mil failed certificate check; navsource refused; navy.gov.au timed out.
+weapon,jp-20cm-50-3ns-no2,Whether the rate of fire of the Japanese guns on navweaps is theoretical or practical,,existing weapon_facts only,Not re-fetched in this pass.
+weapon,uk-21in-torpedo-mk5,Warhead weight,,navweaps WTBR_PreWWII,Listed N/A.
+ship,ca-44-vincennes,time of first hit; killed and wounded,1942-08-09,"Bates, ONI, WDR 29","No time stated for first hit; no casualty counts in the Bates summary, ONI or WDR 29 text read. WDR 29 gives no personnel totals"
+ship,ca-39-quincy,time of first hit; killed and wounded,1942-08-09,"Bates, ONI, WDR 29",Only that casualties were the heaviest of any ship (WDR para 56)
+ship,ca-34-astoria,time of first hit; killed and wounded,1942-08-09,"Bates, ONI, WDR 29",ONI says about 400 men plus 150 on fantail assembled and 70 wounded among them; no casualty total
+ship,hmas-canberra,wounded; rounds fired by calibre (exact),1942-08-09,"AWM page, Wikipedia, Bates, ONI","Wounded figure 109/110 seen only in search-engine snippets of seapower.navy.gov.au and DVA pages, which I did not open (seapower page timed out twice). Gill vol.2 chapter not located"
+ship,ca-29-chicago,killed and wounded (primary),1942-08-09,"Bates, ONI",Only Wikipedia gives 2 killed
+ship,dd-387-blue,"everything (hits, rounds, torpedoes, casualties)",1942-08-09,"Bates, ONI",Blue took no part; no explicit statements beyond ONI narrative
+ship,dd-393-jarvis,"rounds fired, hits received in night action, time of loss, casualties",1942-08-08/09,"Bates, ONI",Bates gives the time of her loss as illegible OCR (about 1?30). DANFS not read
+ship,dd-386-bagley,"hits received, casualties",1942-08-09,"Bates, ONI",Bates summary text truncated by OCR after the torpedoes
+ship,dd-388-helm,time sunk n/a; casualties,1942-08-09,Bates,None stated
+ship,dd-390-ralph-talbot,wounded; time of first hit,1942-08-09,"Bates, ONI",ONI gives about 0220-0223 for engagement but no exact first-hit time
+ship,chokai,rounds of 8-inch/5-inch confirmed from Japanese source; time of Astoria hit; wounded,1942-08-09,"combinedfleet (Chokai page), Bates",combinedfleet Chokai page as fetched gave no rounds or torpedo counts
+ship,aoba,"hits received, killed, wounded, combinedfleet rounds/torpedoes",1942-08-09,combinedfleet aoba_t.htm (failed to load 3 times via a summarising reader),Only Bates figures and the Aoba-hit-once line from other ships' pages
+ship,kinugasa,combinedfleet page; wounded,1942-08-09,combinedfleet kinugas_t.htm (failed to load),Bates and Wikipedia only
+ship,tenryu,combinedfleet page; hits,1942-08-09,combinedfleet tenryu_t.htm (failed to load),Bates only
+ship,yubari,combinedfleet page; killed/wounded,1942-08-09,combinedfleet yubari_t.htm (failed to load),Bates only
+ship,yunagi,"rounds fired, torpedoes, casualties",1942-08-09,"combinedfleet yunagi_t.htm, Bates","Only ""probably engaged Jarvis, received Chicago fire without damage"""
+ship,furutaka,killed,1942-08-09,combinedfleet furuta_t.htm,Page says none recorded
+force,mikawa-force,total torpedoes expended; total casualties from a primary source; durations by phase from Japanese side,1942-08-09,"Bates, ONI, combinedfleet","Bates gives per-ship torpedo salvoes but no total. Japanese casualty total only from Wikipedia (58). Bates sum of per-ship torpedo counts (Chokai 8, Aoba 3, Kako 6, Kinugasa 2-4, Furutaka 8, Tenryu 6, Yubari 4) not computed as it conflicts with combinedfleet (Kako 10)"
+force,allied-force,total casualties from a primary/official source,1942-08-09,"Bates (not found), AWM","AWM page gives RAN 193 / USN 1593; Bates summary of Allied damage (Chapter XXII, contents p.370-374) not read"
+source,"Bates chapters XXI-XXII (Effects of the battle; Summary of Japanese/Allied Damage, printed pp.370-374)",tables of damage and casualties,1950,archive.org OCR text,Not read in this pass; the per-ship summaries in ch. XIX and lesson 16 were used instead
+source,"Gill, Royal Australian Navy 1942-1945, ch. 2","Canberra hits, casualties, scuttling",1957,awm.gov.au search,Chapter PDF not located; only the AWM encyclopedia page citing it
+source,DANFS entries for US ships,hits/casualties/times,,not attempted,history.navy.mil refused earlier sessions; not retried. navy.gov.au/navsource not attempted
+source,"USSBS interrogations, Campaigns of the Pacific War",Japanese expenditure and casualties,,not attempted,
+place,lunga-point,latitude and longitude,,Bates ch I; ONI; Wikipedia (not fetched for this place),Not obtained. No page fetched for Lunga Point or Cape Esperance or Tulagi coordinates
+place,cape-esperance,latitude and longitude,,Bates ch I (only 7 nm from Savo given),Not obtained
+place,tulagi,latitude and longitude,,Bates ch I,Not obtained
+formation,northern-group,side length of the box patrol and exact times of the 90-degree turns,1942-08-08/09,ONI ch 2; Bates ch V (pp. 58-60 only),ONI gives speed 10 kn course 045 at midnight and a turn about every half hour; side length not stated in the text read. Bates pages 52-56 of the HyperWar text are blank
+formation,southern-group,patrol line length speed and reversal times,1942-08-08/09,ONI ch 2,Only base course 305/125 and hourly reversals found
+formation,eastern-group,start and end points of the 000/180 legs,1942-08-08/09,ONI ch 2,Only the longitude limit 160 04 E found
+formation,transports,lat/lon of anchorages X-Ray and Yoke,1942-08-08,ONI ch 2; Bates,Only relative descriptions found (arc of 6000 yd about the Tenaru River; Tulagi area)
+ship,hmas-australia,exact track and time to the conference and where Australia anchored,1942-08-08,ONI ch 6,Only 'conference aboard McCawley' and later patrol 7 nm west of X-Ray found; Gill not found online
+force,mikawa-force,departure times from Rabaul and Kavieng of each ship,1942-08-07,Bates ch IV; combinedfleet Chokai Kako Yunagi; Wikipedia,"Bates gives Chokai and CruDiv 6 from Silver Sound (0615) and Yunagi meeting at 1224; no departure time for Tenryu Yubari Yunagi found, no time for departure from Moewe Passage"
+force,mikawa-force,S-38 sighting time and position and B-17 and Hudson sighting positions,1942-08-07/08,combinedfleet; Wikipedia; USSBS,No time or latitude/longitude found. Bates chapters VI and later are not online
+force,mikawa-force,positions at defined times 8 Aug (Kieta passage; entry to Slot; 24/26/30 kn changes) and time passing Savo and turn north and withdrawal course and speed,1942-08-08/09,USSBS; Wikipedia,Only statements already recorded. No 30 kn found. Ohmae's account (USNI Proceedings Dec 1957) and USSBS interrogations not found online as a transcription
+ship,aoba/kinugasa/furutaka/tenryu/yubari,combinedfleet records,1942-08,combinedfleet fetch of aoba_t.htm tenryu_t.htm kinugasa_t.htm failed,Not retried further. Yubari and Furutaka not tried
+ship,ca-39-quincy/ca-34-astoria/ca-44-vincennes/hmas-canberra,sinking positions from a primary document (BuShips War Damage Report 29 or Hepburn report),1942-08-09,ONI ch 5 8; Wikipedia,Only Wikipedia header coordinates and one Riefkohl quote found; ONI gives Canberra position after the action only
+source,Gill official history,Australian official history account of the dispositions,,web search only,Chapter text not found
+source,history.navy.mil,Bates PDF,,a summarising reader,Certificate error; not retried
+source,DTIC and usnwcarchives,Bates full scan,,DTIC ADA003037 and usnwcarchives.org digital_objects/33,HTTP 403 bot check; not circumvented
+source,pacificwrecks,ship pages for Vincennes Quincy Astoria Canberra,,pacificwrecks.com/ship/usn/*.html,404 on guessed URLs. Japanese track map page had only a caption
+place,savo-island,latitude and longitude of Savo Island centre,1942-08,bates-savo-1950 (full text),Bates gives only bearing and distance from the centre of Savo; no lat/lon for Savo Island Cape Esperance Lunga Point or Tulagi
+place,cape-esperance,latitude and longitude,1942-08,bates-savo-1950,not given
+place,lunga-point,latitude and longitude,1942-08,bates-savo-1950,not given
+place,tulagi,latitude and longitude,1942-08,bates-savo-1950,not given
+formation,transports-x-ray,lat/lon or bearing/distance of Transport Area X-Ray and its inner screen stations,1942-08-08,bates-savo-1950,only qualitative (off Lunga Roads / Guadalcanal beach); screen ships named but no station distances; the AUSTRALIA covering line was about seven miles west of the area
+formation,transports-yoke,lat/lon or bearing/distance of Transport Area Yoke and its inner screen,1942-08-08,bates-savo-1950,only qualitative (off Tulagi); night screen ships not named beyond SELFRIDGE MUGFORD HENLEY with the transports
+formation,northern-group,exact times of each turn on 8-9 Aug before 0000 and for destroyer station changes,1942-08-08,bates-savo-1950,schedule is implied by the 30-minute rule and the 2000 west-corner start; Bates gives explicit turn times only for 0000 0030 0050
+formation,southern-group,exact reversal times other than 0015/0016 and about 0100,1942-08-08,bates-savo-1950,earlier reversals not stated; Canberra led and turned approximately on even hours
+formation,southern-group,distance between the southern and northern groups at 0132,1942-08-09,bates-savo-1950,not stated; Bates gives only the maximum possible (17 miles); computed from the two stated 0132 positions it is about 8 nm but that is my arithmetic and is not in the source
+ship,dd-387-blue,reliable end points and return course of the Blue picket line,1942-08-08,bates-savo-1950,printed end-point digits are inconsistent with the 6.5-mile leg; return course printed three different ways
+ship,mikawa-force,floatplane recovery area near Kieta,1942-08-08,bates-savo-1950,Bates does not mention Kieta in this connection; recovery was 1036-1100 and about 1200 near 06-56S 156-30E (OCR-doubtful)
+ship,mikawa-force,Chokai departing Rabaul on 7 Aug versus Cruiser Division 6 from Kavieng,1942-08-07,bates-savo-1950,Bates says CHOKAI and CRUDIV 6 were both based at Kavieng from 1 Aug and sortied together at 0615 on 7 Aug; Chokai then went to Rabaul and sailed again at 1628; the Rabaul-origin of Chokai on 7 Aug is not separate in Bates
+ship,mikawa-force,junction position of CRUDIV 6 with Chokai group after 1805 on 7 Aug,1942-08-07,bates-savo-1950,no position given; only that CRUDIV 6 joined astern outside Rabaul
+ship,mikawa-force,Mikawa position at 1500 and 1900 on 8 Aug and at 2030-2300,1942-08-08,bates-savo-1950,only times of passing Bougainville Strait (1537) and entering the Slot (1600) and the 2400 position; courses in between 140 at 24 kn
+ship,mikawa-force,time abeam Cape Esperance,1942-08-09,bates-savo-1950,not stated; Chokai passed Savo about three miles to port at about 0132
+ship,mikawa-force,positions on the morning of 9 Aug between 0340 and 0700 other than course 300 at 30 kn,1942-08-09,bates-savo-1950,only 0700 (135 mi NW of Savo) 0830 and 0930 and the 2400 positions
+ship,yunagi,Yunagi track 0200-0340,1942-08-09,bates-savo-1950,only 0220 position and retirement course
+ship,hmas-canberra,position at sinking and at 0220,1942-08-09,bates-savo-1950,0220 position OCR-garbled; sinking position not stated
+ship,ca-29-chicago,0220 distance from Savo,1942-08-09,bates-savo-1950,distance OCR-garbled
+ship,kinugasa,0220 bearing from Savo,1942-08-09,bates-savo-1950,OCR-garbled
+engagement,savo-island,page numbers,1942-08,bates-savo-1950,printed page numbers in the OCR are sparse and sometimes misread; pages in locators are interpolated and may be off by one
+ship,ca-44-vincennes,"radar type (SC, CXAM, FC, FD)",1942-08-08,"Bates ch.I-V, ONI ch.1-6 (full text searched), BuShips WDR 29, Madsen",ONI and Madsen show a radar used for gunnery and plane detection; no source read names the type
+ship,ca-39-quincy,radar type,1942-08-08,"Bates ch.I-V, ONI ch.1-6, BuShips WDR 29, Madsen","radar existed (ONI, WDR 29 antenna); type unnamed"
+ship,ca-34-astoria,fire control radar type,1942-08-08,"Madsen, ONI, WDR 29",Madsen says fire control radar; no type
+ship,ca-29-chicago,fire control radar; confirmation of CXAM operating that night,1942-08-08,"Bates ch.I-V, ONI ch.1-6, Madsen",Madsen says radars not in continuous operation; no primary
+ship,dd-386-bagley,any radar,1942-08-08,"Bates ch.I-V, ONI, Madsen, destroyerhistory.org, history.navy.mil DANFS (certificate error on fetch), historyofwar.org","Madsen implies Bagley tracked ships (0232), unsourced; not entered"
+ship,dd-392-patterson,any radar,1942-08-08,"ONI ch.4, destroyerhistory.org, DANFS (certificate error), Wikipedia not used",ONI says she used star shell in preference to a searchlight
+ship,dd-388-helm,any radar,1942-08-08,"historyofwar.org, destroyerhistory.org, ONI ch.5","A sea.museum page was cited by a search engine as saying radar installed in Sydney in early June, no year, unoperated crew; the URL returned 404 so it is not used"
+ship,dd-408-wilson,any radar,1942-08-08,"search results, ONI ch.5, Madsen",nothing found
+ship,dd-393-jarvis,any radar,1942-08-08,"search results, ibiblio ship photo page not read",nothing found
+ship,hmas-australia,what radar she carried at all,1942-08-08,"Madsen, pacificwrecks.com, ahoy CanberraRadar, navyhistory.au ?p=2047, Gill vol II (AWM page not retrievable via search)",Only a negative (no Type 271)
+ship,kinugasa,radar on 1942-08-08 and first radar date,1942,combinedfleet kinugasa_t.htm (fetch failed twice),not read
+ship,furutaka,radar,1942-08-08,combinedfleet furutaka_t.htm (fetch failed),not read; NAV 61 covers the force only
+ship,tenryu,first radar date after Aug 1942,1942,combinedfleet tenryu_t.htm (fetch failed),existing NAV 61 statement only
+ship,yunagi,radar before 1943,1942,combinedfleet yunagi_t.htm read,no radar entry in record
+ship,aoba; yubari,direct read of combinedfleet page,1942-1943,aoba_t.htm and yubari_t.htm (a summarising reader failed repeatedly),only search-engine excerpts
+ship,all Allied ships,sets switched off or restricted that night,1942-08-08,"Bates ch.I-V, ONI, Madsen",Only Chicago (not continuous per Madsen) and a radar-guard instruction; no per-ship records
+ship_class,jp-takao-class; jp-aoba-class; jp-furutaka-class; jp-tenryu-class; jp-yubari-class,number of searchlights per ship,1942,"navweaps (search found no page), Wikipedia not used, USNTMJ O-29 (document list only), combinedfleet Chokai",No count per ship found; Yubari one 90 cm bridge light only
+ship_class,jp-takao-class; jp-aoba-class; jp-furutaka-class,6 m rangefinder,1942,"O-29, O-31, X-05 (OCR), navweaps search",Only 3.5 m and 4.5 m Type 93 titles found; 6 m not found
+sensor,night binoculars,magnification and number of lookout stations,1942,"X-05, Madsen, ahoy Mac Savo page, USSBS NAV 61, NAV 82",Apertures only; no magnification
+sensor,night binoculars,Japanese statements on night sighting range,1942,"USSBS NAV 61 (no range given), NAV 82 (Shiki, no mention), Bates ch.I-V, history.navy.mil and DTIC and usnwcarchives copies of Bates (refused)",Madsen figures only
+sensor,illumination shells and floatplane flares,Japanese quantities,1942,O-31 (pyrotechnics report O-11 and O-12 not read),"NAV 61: no starshells used, aircraft flares dropped"
+sensor,USNTMJ O-30 and E-series,"searchlights, optics",1945,TOC read; E and O-30 not opened,not read
+ship,dd-386-bagley; dd-392-patterson; dd-388-helm; dd-408-wilson; dd-393-jarvis,radar fitted on 8 August 1942,1942-08-08,"Navy online ship histories (history.navy.mil) read in a browser, every sentence mentioning radar","Not stated for any of the five. Bagley got an ""improved fire control radar"" at Mare Island in March to April 1943. Helm was at Mare Island 17 to 27 February 1942, Patterson in April to May 1942, Wilson at Norfolk 21 May to 4 June 1942: yard periods when a set could have been fitted, with no statement that one was"
+ship,hmas-australia; hmas-canberra,radar fitted on 8 August 1942,1942-08-08,Sea Power Centre - Australia unit histories read in a browser,Not stated. Canberra was in refit at Sydney from 7 February to mid-May 1942. The Australia page first mentions radar (Type 273) in October 1944
+ship,dd-408-wilson,torpedo tubes on 8 August 1942,1942-08,Navy online ship history,Gives 16 tubes in the as-built particulars only
+source,navsource.org,any page,2026-11-10,Tried in a browser,Refused in the browser as well as by automated fetch
+ship,ca-34-astoria,Navy online ship history,,history.navy.mil,Entry address not found; four guesses returned not found
