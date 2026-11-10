@@ -10,7 +10,7 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::orders::{Mission, SpeedSetting};
-use crate::state::ShipLocation;
+use crate::state::{ShipLocation, ShipSystem};
 use crate::world::World;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
@@ -116,10 +116,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(ship.fuel_t.raw());
         h.i64(ship.supply_t.raw());
         h.i64(ship.flotation_damage.raw());
-        h.i64(ship.system_damage.raw());
         h.i64(ship.fire_damage.raw());
         h.i64(ship.gun_rounds.raw());
         h.u8(u8::from(ship.torpedoes_ready));
+        for system in ShipSystem::ALL {
+            h.u8(ship.systems.get(system).code());
+        }
         match ship.location {
             ShipLocation::TaskForce(id) => {
                 h.u8(1);
@@ -189,7 +191,10 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u8(u8::from(task_force.alert));
         h.u8(task_force.rules_of_engagement.stance.code());
         h.i64(task_force.rules_of_engagement.break_off.raw());
+        h.u8(task_force.rules_of_engagement.stragglers.code());
+        h.i64(task_force.rules_of_engagement.keep_share.raw());
         h.optional_u32(task_force.rules_order.map(|id| id.raw()));
+        h.optional_u32(task_force.home_port.map(|id| id.raw()));
     }
 
     h.count(truth.bases.len());
@@ -256,6 +261,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
 
     h.count(world.orders.len());
     h.u32(world.order_ids.next_raw());
+    h.u32(world.task_force_ids.next_raw());
     h.count(world.events.len());
 
     h.finish()

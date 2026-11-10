@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 
 use crate::fixed::Fixed;
 use crate::ids::{AircraftTypeId, ShipClassId};
+use crate::state::{ShipSystem, SystemState};
 
 /// Broad type of a ship class.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -100,6 +101,18 @@ pub struct ShipClass {
 }
 
 impl ShipClass {
+    /// True if ships of the class have the system (decision 2 of
+    /// `docs/decisions/0016-systems-and-stragglers.md`): propulsion always;
+    /// main battery and fire control if the class has main guns; torpedo
+    /// mounts if it has tubes.
+    pub fn has_system(&self, system: ShipSystem) -> bool {
+        match system {
+            ShipSystem::Propulsion => true,
+            ShipSystem::FireControl | ShipSystem::MainBattery => self.main_guns > 0,
+            ShipSystem::TorpedoMounts => self.torpedo_tubes > 0,
+        }
+    }
+
     /// Describes what is wrong with the class's numbers, if anything.
     pub fn problem(&self) -> Option<String> {
         let positive = [
@@ -277,10 +290,24 @@ pub struct SurfaceCombatFigures {
     pub lit_target_factor: Fixed,
     /// Share of gun hits that land on flotation.
     pub gun_hit_flotation: Fixed,
-    /// Share of gun hits that land on system.
-    pub gun_hit_system: Fixed,
-    /// Share of gun hits that land on fire. The three shares add to 1.
+    /// Share of gun hits that land on fire. The two shares add to 1.
     pub gun_hit_fire: Fixed,
+    /// Chance a gun hit also knocks a system down one level.
+    pub gun_system_hit_chance: Fixed,
+    /// The same for a torpedo hit.
+    pub torpedo_system_hit_chance: Fixed,
+    /// Multiplies what a degraded system gives.
+    pub degraded_factor: Fixed,
+    /// Multiplies the gun hit chance of a firer whose fire control is out.
+    pub fire_control_out_factor: Fixed,
+    /// Which system a gun system hit lands on: each system's share. A system
+    /// absent from the table has share 0. The shares add to 1.
+    pub gun_system_hit: BTreeMap<ShipSystem, Fixed>,
+    /// The same for a torpedo system hit.
+    pub torpedo_system_hit: BTreeMap<ShipSystem, Fixed>,
+    /// Escorts given to a straggler sent home, by its kind. Has an entry for
+    /// every kind.
+    pub straggler_escorts: BTreeMap<ShipKind, u32>,
     /// Flotation damage at which a ship counts as crippled.
     pub crippled_flotation: Fixed,
     /// Fire damage at which the enemy believes a ship is sinking.
@@ -288,6 +315,17 @@ pub struct SurfaceCombatFigures {
 }
 
 impl SurfaceCombatFigures {
+    /// What a system in `state` multiplies: working 1, degraded the degraded
+    /// factor, out 0 (for fire control, the fire control out factor).
+    pub fn system_factor(&self, system: ShipSystem, state: SystemState) -> Fixed {
+        match state {
+            SystemState::Working => Fixed::ONE,
+            SystemState::Degraded => self.degraded_factor,
+            SystemState::Out if system == ShipSystem::FireControl => self.fire_control_out_factor,
+            SystemState::Out => Fixed::ZERO,
+        }
+    }
+
     /// Describes what is wrong with the figures, if anything.
     pub fn problem(&self) -> Option<String> {
         if self.round_minutes == 0 {
@@ -306,8 +344,11 @@ impl SurfaceCombatFigures {
             ("night torpedo hit chance", self.torpedo_hit_chance_night),
             ("day torpedo hit chance", self.torpedo_hit_chance_day),
             ("gun hit flotation share", self.gun_hit_flotation),
-            ("gun hit system share", self.gun_hit_system),
             ("gun hit fire share", self.gun_hit_fire),
+            ("gun system hit chance", self.gun_system_hit_chance),
+            ("torpedo system hit chance", self.torpedo_system_hit_chance),
+            ("degraded factor", self.degraded_factor),
+            ("fire control out factor", self.fire_control_out_factor),
         ];
         for (label, value) in chances {
             if !in_unit(value) {
@@ -326,11 +367,40 @@ impl SurfaceCombatFigures {
                 return Some(format!("surface combat {label} {value} is negative"));
             }
         }
-        let shares = self.gun_hit_flotation + self.gun_hit_system + self.gun_hit_fire;
+        let shares = self.gun_hit_flotation + self.gun_hit_fire;
         if shares != Fixed::ONE {
             return Some(format!(
                 "surface combat gun hit shares add to {shares}, not 1"
             ));
+        }
+        let tables = [
+            ("gun system hit", &self.gun_system_hit),
+            ("torpedo system hit", &self.torpedo_system_hit),
+        ];
+        for (label, table) in tables {
+            let mut total = Fixed::ZERO;
+            for (system, share) in table {
+                if !in_unit(*share) {
+                    return Some(format!(
+                        "surface combat {label} share for {} {share} is not between 0 and 1",
+                        system.name()
+                    ));
+                }
+                total += *share;
+            }
+            if total != Fixed::ONE {
+                return Some(format!(
+                    "surface combat {label} shares add to {total}, not 1"
+                ));
+            }
+        }
+        for kind in ShipKind::ALL {
+            if !self.straggler_escorts.contains_key(&kind) {
+                return Some(format!(
+                    "surface combat straggler escorts has no entry for {}",
+                    kind.name()
+                ));
+            }
         }
         let hundred = Fixed::from_int(100);
         let levels = [
@@ -412,9 +482,37 @@ impl SurfaceCombatFigures {
             torpedo_hit_chance_day: hundredth(2),
             surprised_target_factor: hundredth(150),
             lit_target_factor: Fixed::from_int(2),
-            gun_hit_flotation: hundredth(50),
-            gun_hit_system: hundredth(30),
-            gun_hit_fire: hundredth(20),
+            gun_hit_flotation: hundredth(75),
+            gun_hit_fire: hundredth(25),
+            gun_system_hit_chance: hundredth(30),
+            torpedo_system_hit_chance: hundredth(50),
+            degraded_factor: hundredth(50),
+            fire_control_out_factor: hundredth(25),
+            gun_system_hit: [
+                (ShipSystem::Propulsion, hundredth(20)),
+                (ShipSystem::FireControl, hundredth(30)),
+                (ShipSystem::MainBattery, hundredth(35)),
+                (ShipSystem::TorpedoMounts, hundredth(15)),
+            ]
+            .into_iter()
+            .collect(),
+            torpedo_system_hit: [
+                (ShipSystem::Propulsion, hundredth(80)),
+                (ShipSystem::FireControl, hundredth(10)),
+                (ShipSystem::MainBattery, hundredth(10)),
+            ]
+            .into_iter()
+            .collect(),
+            straggler_escorts: [
+                (ShipKind::Carrier, 2),
+                (ShipKind::Battleship, 2),
+                (ShipKind::Cruiser, 1),
+                (ShipKind::Destroyer, 0),
+                (ShipKind::Transport, 1),
+                (ShipKind::Auxiliary, 0),
+            ]
+            .into_iter()
+            .collect(),
             crippled_flotation: Fixed::from_int(50),
             claimed_sunk_fire: Fixed::from_int(30),
         }
@@ -567,9 +665,109 @@ mod tests {
         // Each share is also a chance, so one outside 0 to 1 is named.
         let message = combat_problem_of(|f| {
             f.gun_hit_flotation = Fixed::from_ratio(-1, 10);
-            f.gun_hit_system = Fixed::from_ratio(9, 10);
+            f.gun_hit_fire = Fixed::from_ratio(11, 10);
         });
         assert!(message.contains("flotation share"), "{message}");
+    }
+
+    #[test]
+    fn the_system_hit_chances_and_factors_must_be_between_zero_and_one() {
+        let over = Fixed::from_ratio(11, 10);
+        let under = Fixed::from_ratio(-1, 10);
+        assert!(combat_problem_of(|f| f.gun_system_hit_chance = over).contains("gun system hit"));
+        assert!(combat_problem_of(|f| f.torpedo_system_hit_chance = under)
+            .contains("torpedo system hit"));
+        assert!(combat_problem_of(|f| f.degraded_factor = over).contains("degraded factor"));
+        assert!(combat_problem_of(|f| f.fire_control_out_factor = under)
+            .contains("fire control out factor"));
+    }
+
+    #[test]
+    fn each_system_hit_table_must_add_to_one_with_shares_in_range() {
+        let message = combat_problem_of(|f| {
+            f.gun_system_hit
+                .insert(ShipSystem::Propulsion, Fixed::from_ratio(3, 10));
+        });
+        assert!(
+            message.contains("gun system hit shares add to"),
+            "{message}"
+        );
+        let message = combat_problem_of(|f| {
+            f.torpedo_system_hit.remove(&ShipSystem::Propulsion);
+        });
+        assert!(
+            message.contains("torpedo system hit shares add to"),
+            "{message}"
+        );
+        // One share outside 0 to 1, the table still adding to 1.
+        let message = combat_problem_of(|f| {
+            f.torpedo_system_hit
+                .insert(ShipSystem::Propulsion, Fixed::from_ratio(11, 10));
+            f.torpedo_system_hit
+                .insert(ShipSystem::FireControl, Fixed::from_ratio(-1, 10));
+        });
+        assert!(message.contains("not between 0 and 1"), "{message}");
+        // A table may name a single system.
+        let mut one = SurfaceCombatFigures::from_surface_combat_toml();
+        one.gun_system_hit = [(ShipSystem::MainBattery, Fixed::ONE)]
+            .into_iter()
+            .collect();
+        assert_eq!(one.problem(), None);
+    }
+
+    #[test]
+    fn every_kind_needs_a_straggler_escort_entry() {
+        let message = combat_problem_of(|f| {
+            f.straggler_escorts.remove(&ShipKind::Transport);
+        });
+        assert!(message.contains("transport"), "{message}");
+    }
+
+    #[test]
+    fn a_systems_factor_follows_its_state() {
+        let figures = SurfaceCombatFigures::from_surface_combat_toml();
+        for system in ShipSystem::ALL {
+            assert_eq!(
+                figures.system_factor(system, SystemState::Working),
+                Fixed::ONE
+            );
+            assert_eq!(
+                figures.system_factor(system, SystemState::Degraded),
+                Fixed::from_ratio(1, 2)
+            );
+        }
+        assert_eq!(
+            figures.system_factor(ShipSystem::FireControl, SystemState::Out),
+            Fixed::from_ratio(1, 4)
+        );
+        for system in [
+            ShipSystem::Propulsion,
+            ShipSystem::MainBattery,
+            ShipSystem::TorpedoMounts,
+        ] {
+            assert_eq!(figures.system_factor(system, SystemState::Out), Fixed::ZERO);
+        }
+    }
+
+    #[test]
+    fn a_class_has_the_systems_its_weapons_give_it() {
+        let armed = test_class();
+        for system in ShipSystem::ALL {
+            assert!(armed.has_system(system));
+        }
+        let mut guns_only = test_class();
+        guns_only.torpedo_tubes = 0;
+        assert!(guns_only.has_system(ShipSystem::MainBattery));
+        assert!(guns_only.has_system(ShipSystem::FireControl));
+        assert!(!guns_only.has_system(ShipSystem::TorpedoMounts));
+        let mut tubes_only = test_class();
+        tubes_only.main_guns = 0;
+        assert!(!tubes_only.has_system(ShipSystem::MainBattery));
+        assert!(!tubes_only.has_system(ShipSystem::FireControl));
+        assert!(tubes_only.has_system(ShipSystem::TorpedoMounts));
+        tubes_only.torpedo_tubes = 0;
+        assert!(tubes_only.has_system(ShipSystem::Propulsion));
+        assert!(!tubes_only.has_system(ShipSystem::TorpedoMounts));
     }
 
     #[test]

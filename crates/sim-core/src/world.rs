@@ -6,13 +6,13 @@ use std::collections::BTreeMap;
 use crate::belief::BeliefState;
 use crate::events::EventLog;
 use crate::hash;
-use crate::ids::{EntityRef, IdAllocator, OrderId};
+use crate::ids::{EntityRef, IdAllocator, OrderId, TaskForceId};
 use crate::invariants::{self, InvariantViolation};
 use crate::map::Map;
 use crate::orders::{Order, OrderRequest};
 use crate::refdata::RefData;
 use crate::rng::{RngKey, RngStream, Subsystem};
-use crate::state::{Side, TruthState};
+use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
 use crate::view::SideView;
 
@@ -84,6 +84,9 @@ pub struct World {
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
+    /// Hands out IDs to task forces made during a day (decision 0016). Every
+    /// starting task force's ID is reserved.
+    pub(crate) task_force_ids: IdAllocator<TaskForceId>,
     /// Orders submitted for the coming day, not yet taken in.
     pub(crate) pending: BTreeMap<Side, Vec<OrderRequest>>,
     pub(crate) events: EventLog,
@@ -169,6 +172,22 @@ impl World {
             }
         }
 
+        if ref_data.surface_combat.is_none() {
+            // Without the figures a damaged system has no factor to apply.
+            for ship in truth.ships.values() {
+                for system in ShipSystem::ALL {
+                    if ship.systems.get(system) != SystemState::Working {
+                        return Err(SimError::InvalidSetup(format!(
+                            "{} has {} {} but there are no surface combat figures",
+                            ship.id,
+                            system.name(),
+                            ship.systems.get(system).name()
+                        )));
+                    }
+                }
+            }
+        }
+
         let violations = invariants::check(&truth, &map, &ref_data);
         if !violations.is_empty() {
             return Err(SimError::InvariantsViolated {
@@ -182,6 +201,11 @@ impl World {
             .map(|side| (side, BeliefState::new(side)))
             .collect();
 
+        let mut task_force_ids = IdAllocator::new();
+        for id in truth.task_forces.keys() {
+            task_force_ids.reserve(*id);
+        }
+
         Ok(World {
             seed,
             config: SimConfig::default(),
@@ -191,6 +215,7 @@ impl World {
             beliefs,
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
+            task_force_ids,
             pending: BTreeMap::new(),
             events: EventLog::default(),
             day_hashes: Vec::new(),

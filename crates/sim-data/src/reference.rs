@@ -9,6 +9,7 @@ use sim_core::refdata::{
     AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
     SurfaceCombatFigures,
 };
+use sim_core::state::ShipSystem;
 
 use crate::error::DataError;
 use crate::quantity::Quantity;
@@ -331,10 +332,61 @@ struct SurfaceCombatFile {
     surprised_target_factor: Quantity,
     lit_target_factor: Quantity,
     gun_hit_flotation: Quantity,
-    gun_hit_system: Quantity,
     gun_hit_fire: Quantity,
+    gun_system_hit_chance: Quantity,
+    torpedo_system_hit_chance: Quantity,
+    degraded_factor: Quantity,
+    fire_control_out_factor: Quantity,
     crippled_flotation: Quantity,
     claimed_sunk_fire: Quantity,
+    gun_system_hit: SystemTable,
+    torpedo_system_hit: SystemTable,
+    straggler_escorts: EscortTable,
+}
+
+/// A table of shares by system. A system left out has share 0.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SystemTable {
+    propulsion: Option<Quantity>,
+    fire_control: Option<Quantity>,
+    main_battery: Option<Quantity>,
+    torpedo_mounts: Option<Quantity>,
+}
+
+impl SystemTable {
+    fn to_map(
+        &self,
+        table: &str,
+        number: &dyn Fn(&str, &Quantity) -> Result<Fixed, DataError>,
+    ) -> Result<BTreeMap<ShipSystem, Fixed>, DataError> {
+        let entries = [
+            (ShipSystem::Propulsion, &self.propulsion),
+            (ShipSystem::FireControl, &self.fire_control),
+            (ShipSystem::MainBattery, &self.main_battery),
+            (ShipSystem::TorpedoMounts, &self.torpedo_mounts),
+        ];
+        let mut map = BTreeMap::new();
+        for (system, share) in entries {
+            if let Some(share) = share {
+                let label = format!("{table} {}", system.name());
+                map.insert(system, number(&label, share)?);
+            }
+        }
+        Ok(map)
+    }
+}
+
+/// Escorts by ship kind. Every kind is required.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EscortTable {
+    carrier: u32,
+    battleship: u32,
+    cruiser: u32,
+    destroyer: u32,
+    transport: u32,
+    auxiliary: u32,
 }
 
 /// Loads the surface combat figures from a TOML file.
@@ -376,8 +428,28 @@ fn parse_surface_combat_figures(
         surprised_target_factor: number("surprised_target_factor", &file.surprised_target_factor)?,
         lit_target_factor: number("lit_target_factor", &file.lit_target_factor)?,
         gun_hit_flotation: number("gun_hit_flotation", &file.gun_hit_flotation)?,
-        gun_hit_system: number("gun_hit_system", &file.gun_hit_system)?,
         gun_hit_fire: number("gun_hit_fire", &file.gun_hit_fire)?,
+        gun_system_hit_chance: number("gun_system_hit_chance", &file.gun_system_hit_chance)?,
+        torpedo_system_hit_chance: number(
+            "torpedo_system_hit_chance",
+            &file.torpedo_system_hit_chance,
+        )?,
+        degraded_factor: number("degraded_factor", &file.degraded_factor)?,
+        fire_control_out_factor: number("fire_control_out_factor", &file.fire_control_out_factor)?,
+        gun_system_hit: file.gun_system_hit.to_map("gun_system_hit", &number)?,
+        torpedo_system_hit: file
+            .torpedo_system_hit
+            .to_map("torpedo_system_hit", &number)?,
+        straggler_escorts: [
+            (ShipKind::Carrier, file.straggler_escorts.carrier),
+            (ShipKind::Battleship, file.straggler_escorts.battleship),
+            (ShipKind::Cruiser, file.straggler_escorts.cruiser),
+            (ShipKind::Destroyer, file.straggler_escorts.destroyer),
+            (ShipKind::Transport, file.straggler_escorts.transport),
+            (ShipKind::Auxiliary, file.straggler_escorts.auxiliary),
+        ]
+        .into_iter()
+        .collect(),
         crippled_flotation: number("crippled_flotation", &file.crippled_flotation)?,
         claimed_sunk_fire: number("claimed_sunk_fire", &file.claimed_sunk_fire)?,
     };
@@ -663,9 +735,48 @@ mod tests {
         assert_eq!(figures.torpedo_hit_chance_day, Fixed::from_ratio(2, 100));
         assert_eq!(figures.surprised_target_factor, Fixed::from_ratio(3, 2));
         assert_eq!(figures.lit_target_factor, Fixed::from_int(2));
-        assert_eq!(figures.gun_hit_flotation, Fixed::from_ratio(1, 2));
-        assert_eq!(figures.gun_hit_system, Fixed::from_ratio(3, 10));
-        assert_eq!(figures.gun_hit_fire, Fixed::from_ratio(1, 5));
+        assert_eq!(figures.gun_hit_flotation, Fixed::from_ratio(3, 4));
+        assert_eq!(figures.gun_hit_fire, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.gun_system_hit_chance, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.torpedo_system_hit_chance, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.degraded_factor, Fixed::from_ratio(1, 2));
+        assert_eq!(figures.fire_control_out_factor, Fixed::from_ratio(1, 4));
+        let tenths = |entries: &[(ShipSystem, i64)]| -> BTreeMap<ShipSystem, Fixed> {
+            entries
+                .iter()
+                .map(|(system, n)| (*system, Fixed::from_ratio(*n, 100)))
+                .collect()
+        };
+        assert_eq!(
+            figures.gun_system_hit,
+            tenths(&[
+                (ShipSystem::Propulsion, 20),
+                (ShipSystem::FireControl, 30),
+                (ShipSystem::MainBattery, 35),
+                (ShipSystem::TorpedoMounts, 15),
+            ])
+        );
+        // The torpedo table leaves torpedo mounts out: absent, not zero.
+        assert_eq!(
+            figures.torpedo_system_hit,
+            tenths(&[
+                (ShipSystem::Propulsion, 80),
+                (ShipSystem::FireControl, 10),
+                (ShipSystem::MainBattery, 10),
+            ])
+        );
+        let escorts: Vec<(ShipKind, u32)> = figures.straggler_escorts.into_iter().collect();
+        assert_eq!(
+            escorts,
+            vec![
+                (ShipKind::Carrier, 2),
+                (ShipKind::Battleship, 2),
+                (ShipKind::Cruiser, 1),
+                (ShipKind::Destroyer, 0),
+                (ShipKind::Transport, 1),
+                (ShipKind::Auxiliary, 0),
+            ]
+        );
         assert_eq!(figures.crippled_flotation, Fixed::from_int(50));
         assert_eq!(figures.claimed_sunk_fire, Fixed::from_int(30));
     }
@@ -700,7 +811,12 @@ mod tests {
                 .expect_err("rejected")
                 .message
         };
-        assert!(bad("gun_hit_fire = \"0.2\"", "gun_hit_fire = \"0.3\"").contains("not 1"));
+        assert!(bad("gun_hit_fire = \"0.25\"", "gun_hit_fire = \"0.3\"").contains("not 1"));
+        assert!(bad("propulsion = \"0.2\"", "propulsion = \"0.3\"").contains("gun system hit"));
+        assert!(
+            bad("degraded_factor = \"0.5\"", "degraded_factor = \"1.5\"")
+                .contains("degraded factor")
+        );
         assert!(bad("round_minutes = 5", "round_minutes = 0").contains("round minutes"));
         assert!(bad("max_rounds = 6", "max_rounds = 0").contains("max rounds"));
         assert!(bad(
@@ -717,5 +833,56 @@ mod tests {
             "radar_sighting_bonus = \"a fifth\""
         )
         .contains("radar_sighting_bonus"));
+    }
+
+    #[test]
+    fn a_misspelled_system_key_or_an_unknown_table_is_rejected() {
+        let text = combat_text().replace("fire_control = \"0.3\"", "fire_controls = \"0.3\"");
+        assert_ne!(text, combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = combat_text().replace("main_battery = \"0.1\"", "main_batery = \"0.1\"");
+        assert_ne!(text, combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = format!("{}\n[extra_table]\npropulsion = \"1\"\n", combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = combat_text().replace("destroyer = 0", "destroyers = 0");
+        assert_ne!(text, combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+    }
+
+    #[test]
+    fn a_missing_escort_kind_or_system_table_is_rejected() {
+        let text = combat_text().replace("transport = 1\n", "");
+        assert_ne!(text, combat_text());
+        let message = parse_surface_combat_figures(&text, here())
+            .expect_err("rejected")
+            .message;
+        assert!(message.contains("transport"), "{message}");
+        let text = combat_text().replace("[straggler_escorts]", "[straggler_escorts_gone]");
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+    }
+
+    #[test]
+    fn a_float_in_a_system_table_or_the_escorts_is_rejected() {
+        let text = combat_text().replace("propulsion = \"0.8\"", "propulsion = 0.8");
+        assert_ne!(text, combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+        let text = combat_text().replace("carrier = 2", "carrier = 2.0");
+        assert_ne!(text, combat_text());
+        assert!(parse_surface_combat_figures(&text, here()).is_err());
+    }
+
+    #[test]
+    fn an_absent_system_in_a_table_is_a_share_of_zero_not_an_error() {
+        // The torpedo table in the file has no torpedo_mounts key; removing
+        // fire control and moving its share to propulsion still adds to 1.
+        let text = combat_text()
+            .replace("propulsion = \"0.8\"", "propulsion = \"0.9\"")
+            .replace("fire_control = \"0.1\"\n", "");
+        let figures = parse_surface_combat_figures(&text, here()).expect("parses");
+        assert!(!figures
+            .torpedo_system_hit
+            .contains_key(&ShipSystem::FireControl));
+        assert_eq!(figures.torpedo_system_hit.len(), 2);
     }
 }

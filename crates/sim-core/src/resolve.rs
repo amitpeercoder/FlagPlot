@@ -1,26 +1,36 @@
 //! Resolving one day.
 //!
 //! The order of phases below is the one in the spec ("Daily resolution
-//! order"). Orders intake, task force movement, cargo handling, air search
-//! (`search.rs`), surface engagements (`surface.rs`), contact ageing at the
-//! end of every pulse and closing the day do something so far. The other phases are listed so the sequence is
-//! fixed from the start, and each is filled in by the scenario that needs it.
+//! order"). Orders intake, task force movement (which begins with the
+//! straggler pass, `stragglers.rs`), cargo handling, air search
+//! (`search.rs`), surface engagements (`surface.rs`, followed by the
+//! straggler pass again), contact ageing at the end of every pulse and
+//! closing the day do something so far. The other phases are listed so the
+//! sequence is fixed from the start, and each is filled in by the scenario
+//! that needs it.
 
-use crate::events::{Breakdown, Cause, EventKind, Factor};
+use crate::events::{Breakdown, Cause, DetachReason, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::HEX_NM;
-use crate::ids::{EventId, ShipId, TaskForceId};
+use crate::ids::{EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
-    AirGroupOrder, CargoAction, Order, OrderKind, RejectReason, SpeedSetting, TaskForceOrder,
+    AirGroupOrder, CargoAction, Order, OrderKind, OrderRequest, RejectReason, SpeedSetting,
+    TaskForceOrder,
 };
-use crate::state::{CargoOrder, Route, RulesOfEngagement, SearchArc, Side, TaskForceStatus};
+use crate::refdata::SurfaceCombatFigures;
+use crate::state::{
+    CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, ShipSystem, Side, TaskForce,
+    TaskForceStatus,
+};
+use std::collections::BTreeSet;
+
 use crate::time::{pulse_start, Pulse};
 use crate::world::{DaySummary, SimError, World};
 
 /// A step inside a pulse.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum PulsePhase {
+pub(crate) enum PulsePhase {
     Movement,
     NightSearch,
     AirSearch,
@@ -75,8 +85,12 @@ const fn pulse_sequence(pulse: Pulse) -> &'static [PulsePhase] {
 struct Steamer {
     ship: ShipId,
     fuel_t: Fixed,
-    /// The ship's own speed at the task force's speed setting.
-    setting_speed_kn: Fixed,
+    /// The ship's own speed: its class speed at the task force's speed
+    /// setting, times its propulsion factor (decision 7 of
+    /// `docs/decisions/0016-systems-and-stragglers.md`).
+    speed_kn: Fixed,
+    /// 1, the degraded factor or 0, by the state of the ship's propulsion.
+    propulsion_factor: Fixed,
     cruise_speed_kn: Fixed,
     fuel_capacity_t: Fixed,
     endurance_nm: Fixed,
@@ -149,13 +163,19 @@ impl World {
         })
     }
 
-    fn run_pulse_phase(&mut self, day: u32, pulse: Pulse, phase: PulsePhase) {
+    pub(crate) fn run_pulse_phase(&mut self, day: u32, pulse: Pulse, phase: PulsePhase) {
         match phase {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
             PulsePhase::Loading => self.handle_cargo(day, pulse),
             PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
             // Opposing task forces in one hex fight (decision 0014).
-            PulsePhase::SurfaceEngagements => self.surface_engagements(day, pulse),
+            // Then each force applies its straggler instruction, whether or
+            // not a fight happened (decision 12 of
+            // `docs/decisions/0016-systems-and-stragglers.md`).
+            PulsePhase::SurfaceEngagements => {
+                self.surface_engagements(day, pulse);
+                self.handle_stragglers(day, pulse);
+            }
             // Not implemented yet. Each arrives with the scenario that needs it.
             // Night search is decision 7 territory: there is no search where it
             // is dark, so this phase stays empty.
@@ -228,31 +248,102 @@ impl World {
         let pending = std::mem::take(&mut self.pending);
         for (side, requests) in pending {
             for request in requests {
-                let id = self.order_ids.alloc();
-                let order = Order {
-                    id,
-                    side,
-                    day_issued: day,
-                    kind: request.kind,
-                    origin: request.origin,
-                };
-                let target = order.kind.target();
-                let kind = match self.validate_order(&order) {
-                    Ok(()) => {
-                        self.apply_order(&order);
-                        EventKind::OrderAccepted { order: id, target }
-                    }
-                    Err(reason) => EventKind::OrderRejected {
-                        order: id,
-                        target,
-                        reason,
-                    },
-                };
-                self.events
-                    .record(day, None, kind, vec![Cause::Order(id)], None);
-                self.orders.insert(id, order);
+                self.take_in_order(day, None, side, request, Vec::new());
             }
         }
+    }
+
+    /// Takes in one order: numbers it, checks it, applies it if it is sound,
+    /// records `OrderAccepted` or `OrderRejected` and stores it. The event's
+    /// causes are the order itself followed by `extra_causes`. `pulse` is
+    /// `None` at the start of a day and the current pulse for an order the
+    /// simulation issues mid-day. Returns the order's ID, the event's ID and
+    /// whether it was accepted.
+    pub(crate) fn take_in_order(
+        &mut self,
+        day: u32,
+        pulse: Option<Pulse>,
+        side: Side,
+        request: OrderRequest,
+        extra_causes: Vec<Cause>,
+    ) -> (OrderId, EventId, bool) {
+        let id = self.order_ids.alloc();
+        let order = Order {
+            id,
+            side,
+            day_issued: day,
+            kind: request.kind,
+            origin: request.origin,
+        };
+        let target = order.kind.target();
+        let result = self.validate_order(&order);
+        let accepted = result.is_ok();
+        let kind = match result {
+            Ok(()) => {
+                self.apply_order(&order);
+                EventKind::OrderAccepted { order: id, target }
+            }
+            Err(reason) => EventKind::OrderRejected {
+                order: id,
+                target,
+                reason,
+            },
+        };
+        let mut causes = vec![Cause::Order(id)];
+        causes.extend(extra_causes);
+        let event = self.events.record(day, pulse, kind, causes, None);
+        self.orders.insert(id, order);
+        (id, event, accepted)
+    }
+
+    /// Splits `ships` off `parent` into a new task force and returns its ID
+    /// (decision 15 of `docs/decisions/0016-systems-and-stragglers.md`). The
+    /// new force has the parent's side, mission, speed setting and speed
+    /// order, home port, alert flag, rules of engagement and rules order, and
+    /// its exact position. It is idle with no route and no other standing
+    /// order. The ships move into it. Records no event: the caller does.
+    /// Every ship must be in the parent.
+    pub(crate) fn split_task_force(
+        &mut self,
+        parent: TaskForceId,
+        ships: &BTreeSet<ShipId>,
+        name: String,
+    ) -> TaskForceId {
+        let id = self.task_force_ids.alloc();
+        let parent_force = self
+            .truth
+            .task_forces
+            .get_mut(&parent)
+            .expect("the parent task force exists");
+        let mut force = TaskForce::at(
+            id,
+            name,
+            parent_force.side,
+            parent_force.from_hex,
+            parent_force.mission,
+        );
+        force.speed = parent_force.speed;
+        force.speed_order = parent_force.speed_order;
+        force.home_port = parent_force.home_port;
+        force.alert = parent_force.alert;
+        force.rules_of_engagement = parent_force.rules_of_engagement;
+        force.rules_order = parent_force.rules_order;
+        force.toward_hex = parent_force.toward_hex;
+        force.progress_nm = parent_force.progress_nm;
+        for ship in ships {
+            let removed = parent_force.ships.remove(ship);
+            assert!(removed, "{ship} is in the parent task force");
+            force.ships.insert(*ship);
+        }
+        for ship in ships {
+            self.truth
+                .ships
+                .get_mut(ship)
+                .expect("ship exists")
+                .location = ShipLocation::TaskForce(id);
+        }
+        self.truth.task_forces.insert(id, force);
+        id
     }
 
     /// Orders are checked against the truth, as the spec says. Note that a
@@ -312,9 +403,35 @@ impl World {
                             Err(RejectReason::NoOwnBaseHere)
                         }
                     }
-                    TaskForceOrder::SetRulesOfEngagement { break_off, .. } => {
+                    TaskForceOrder::SetRulesOfEngagement {
+                        break_off,
+                        keep_share,
+                        ..
+                    } => {
                         if *break_off < Fixed::ZERO || *break_off > Fixed::ONE {
                             return Err(RejectReason::BreakOffOutOfRange(*break_off));
+                        }
+                        if *keep_share < Fixed::ZERO || *keep_share > Fixed::ONE {
+                            return Err(RejectReason::KeepShareOutOfRange(*keep_share));
+                        }
+                        Ok(())
+                    }
+                    TaskForceOrder::SetHomePort(base) => match self.truth.bases.get(base) {
+                        Some(base) if base.side == order.side => Ok(()),
+                        _ => Err(RejectReason::NotYourBase),
+                    },
+                    TaskForceOrder::DetachShips(ships) => {
+                        if ships.is_empty() {
+                            return Err(RejectReason::NoShipsToDetach);
+                        }
+                        for ship in ships {
+                            if !task_force.ships.contains(ship) {
+                                return Err(RejectReason::ShipNotInTaskForce(*ship));
+                            }
+                        }
+                        let listed: BTreeSet<ShipId> = ships.iter().copied().collect();
+                        if listed.len() == task_force.ships.len() {
+                            return Err(RejectReason::WouldLeaveTaskForceEmpty);
                         }
                         Ok(())
                     }
@@ -375,6 +492,27 @@ impl World {
                 target,
                 order: task_force_order,
             } => {
+                if let TaskForceOrder::DetachShips(ships) = task_force_order {
+                    let listed: BTreeSet<ShipId> = ships.iter().copied().collect();
+                    let name = format!("{}, detached", self.truth.task_forces[target].name);
+                    let new_force = self.split_task_force(*target, &listed, name);
+                    // Name the new force in the log: the order's acceptance
+                    // names only the parent.
+                    self.events.record(
+                        order.day_issued,
+                        None,
+                        EventKind::ShipsDetached {
+                            parent: *target,
+                            new_force,
+                            ships: listed.iter().copied().collect(),
+                            escorts: Vec::new(),
+                            reason: DetachReason::Ordered,
+                        },
+                        vec![Cause::Order(order.id)],
+                        None,
+                    );
+                    return;
+                }
                 let task_force = self
                     .truth
                     .task_forces
@@ -416,12 +554,25 @@ impl World {
                             order: order.id,
                         });
                     }
-                    TaskForceOrder::SetRulesOfEngagement { stance, break_off } => {
+                    TaskForceOrder::SetRulesOfEngagement {
+                        stance,
+                        break_off,
+                        stragglers,
+                        keep_share,
+                    } => {
                         task_force.rules_of_engagement = RulesOfEngagement {
                             stance: *stance,
                             break_off: *break_off,
+                            stragglers: *stragglers,
+                            keep_share: *keep_share,
                         };
                         task_force.rules_order = Some(order.id);
+                    }
+                    TaskForceOrder::SetHomePort(base) => {
+                        task_force.home_port = Some(*base);
+                    }
+                    TaskForceOrder::DetachShips(_) => {
+                        unreachable!("detach orders are applied above")
                     }
                 }
             }
@@ -456,7 +607,11 @@ impl World {
         }
     }
 
+    /// Moves every task force for one pulse. The straggler pass comes first
+    /// (`stragglers.rs`), before the list of forces to move is taken, so a
+    /// force it makes moves in this same step.
     fn move_task_forces(&mut self, day: u32, pulse: Pulse) {
+        self.handle_stragglers(day, pulse);
         let ids: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
         for id in ids {
             self.move_task_force(id, day, pulse);
@@ -482,29 +637,48 @@ impl World {
             return;
         }
 
+        let figures: Option<&SurfaceCombatFigures> = self.ref_data.surface_combat.as_ref();
         let steamers: Vec<Steamer> = task_force
             .ships
             .iter()
             .map(|ship_id| {
                 let ship = &self.truth.ships[ship_id];
                 let class = &self.ref_data.ship_classes[&ship.class];
+                let setting_speed_kn = match task_force.speed {
+                    SpeedSetting::Cruise => class.cruise_speed_kn,
+                    SpeedSetting::Full => class.max_speed_kn,
+                };
+                // World::new rejects a damaged ship without figures, so
+                // with none every ship's propulsion works.
+                let propulsion_factor = match figures {
+                    Some(figures) => {
+                        figures.system_factor(ShipSystem::Propulsion, ship.systems.propulsion)
+                    }
+                    None => Fixed::ONE,
+                };
                 Steamer {
                     ship: *ship_id,
                     fuel_t: ship.fuel_t,
-                    setting_speed_kn: match task_force.speed {
-                        SpeedSetting::Cruise => class.cruise_speed_kn,
-                        SpeedSetting::Full => class.max_speed_kn,
-                    },
+                    speed_kn: setting_speed_kn * propulsion_factor,
+                    propulsion_factor,
                     cruise_speed_kn: class.cruise_speed_kn,
                     fuel_capacity_t: class.fuel_capacity_t,
                     endurance_nm: class.endurance_nm,
                 }
             })
             .collect();
-        let Some(speed_kn) = steamers.iter().map(|s| s.setting_speed_kn).min() else {
+        // The slowest ship sets the speed; the lowest ship ID on a tie.
+        let Some(slowest) = steamers.iter().min_by_key(|s| s.speed_kn) else {
             // A task force with no ships goes nowhere.
             return;
         };
+        let speed_kn = slowest.speed_kn;
+        let propulsion_factor = slowest.propulsion_factor;
+        if speed_kn.is_zero() {
+            // Dead in the water: no movement, no event, no fuel burned. The
+            // force stays under way.
+            return;
+        }
 
         let time_limit_nm = speed_kn * pulse.hours();
         let fuel_limit_nm = steamers.iter().filter_map(|s| s.range_nm(speed_kn)).min();
@@ -604,6 +778,10 @@ impl World {
                     Factor {
                         name: "speed_kn",
                         value: speed_kn,
+                    },
+                    Factor {
+                        name: "propulsion_factor",
+                        value: propulsion_factor,
                     },
                     Factor {
                         name: "pulse_hours",
@@ -742,12 +920,14 @@ mod tests {
     use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
-    use crate::orders::{AirMission, Mission, OrderRequest, Origin, Stance};
+    use crate::orders::{AirMission, Mission, OrderRequest, Origin, Stance, StragglerInstruction};
     use crate::refdata::{
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
         SurfaceCombatFigures,
     };
-    use crate::state::{AirGroup, Base, Ship, ShipLocation, Side, TaskForce, TruthState};
+    use crate::state::{
+        AirGroup, Base, Ship, ShipLocation, ShipSystems, Side, SystemState, TaskForce, TruthState,
+    };
 
     const TF: TaskForceId = TaskForceId::new(1);
     const SHIP: ShipId = ShipId::new(1);
@@ -820,10 +1000,10 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
                 flotation_damage: Fixed::ZERO,
-                system_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,
                 gun_rounds: Fixed::ZERO,
                 torpedoes_ready: false,
+                systems: ShipSystems::ALL_WORKING,
             },
         );
         truth.bases.insert(
@@ -919,10 +1099,10 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
                 flotation_damage: Fixed::ZERO,
-                system_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,
                 gun_rounds: Fixed::ZERO,
                 torpedoes_ready: false,
+                systems: ShipSystems::ALL_WORKING,
             },
         );
         world
@@ -1456,7 +1636,12 @@ mod tests {
     // ---- Rules of engagement and surface combat state (decision 0014) ----
 
     fn roe_order(stance: Stance, break_off: Fixed) -> OrderRequest {
-        order(TaskForceOrder::SetRulesOfEngagement { stance, break_off })
+        order(TaskForceOrder::SetRulesOfEngagement {
+            stance,
+            break_off,
+            stragglers: StragglerInstruction::Keep,
+            keep_share: Fixed::ZERO,
+        })
     }
 
     #[test]
@@ -1632,7 +1817,9 @@ mod tests {
         }
 
         hash_after(&|w| ship(w).flotation_damage = nm(10));
-        hash_after(&|w| ship(w).system_damage = nm(10));
+        hash_after(&|w| ship(w).systems.propulsion = SystemState::Degraded);
+        hash_after(&|w| ship(w).systems.torpedo_mounts = SystemState::Out);
+        hash_after(&|w| force(w).home_port = Some(crate::ids::BaseId::new(1)));
         hash_after(&|w| ship(w).fire_damage = nm(10));
         hash_after(&|w| ship(w).gun_rounds = nm(10));
         hash_after(&|w| ship(w).torpedoes_ready = true);
@@ -1641,13 +1828,24 @@ mod tests {
         hash_after(&|w| force(w).rules_of_engagement.stance = Stance::Avoid);
         hash_after(&|w| force(w).rules_of_engagement.break_off = nm_frac(1, 10));
         hash_after(&|w| force(w).rules_order = Some(crate::ids::OrderId::new(1)));
+        hash_after(&|w| {
+            force(w).rules_of_engagement.stragglers = StragglerInstruction::Retire;
+        });
+        hash_after(&|w| force(w).rules_of_engagement.keep_share = nm_frac(1, 2));
 
         // Two tracks with the same value are not interchangeable.
         let mut flotation = base.clone();
         ship(&mut flotation).flotation_damage = nm(10);
-        let mut system = base.clone();
-        ship(&mut system).system_damage = nm(10);
-        assert_ne!(flotation.state_hash(), system.state_hash());
+        let mut fire = base.clone();
+        ship(&mut fire).fire_damage = nm(10);
+        assert_ne!(flotation.state_hash(), fire.state_hash());
+
+        // Two systems in the same state are not interchangeable either.
+        let mut propulsion = base.clone();
+        ship(&mut propulsion).systems.propulsion = SystemState::Out;
+        let mut mounts = base.clone();
+        ship(&mut mounts).systems.torpedo_mounts = SystemState::Out;
+        assert_ne!(propulsion.state_hash(), mounts.state_hash());
 
         // A claim is part of the hash, and so is each of its fields.
         let claim = BattleClaim {
@@ -2176,6 +2374,563 @@ mod tests {
         assert_eq!(
             invariants::check(&world.truth, &world.map, &world.ref_data),
             vec![crate::invariants::InvariantViolation::TaskForceTowardOffMap(TF, hx(-2, 0))]
+        );
+    }
+
+    // ---- Damage to named systems, and stragglers (decision 0016) ----
+
+    const ENEMY_BASE: BaseId = BaseId::new(2);
+
+    /// The one-ship test world with surface combat figures (degraded factor
+    /// 1/2) and an enemy base at (1, 0), so propulsion can be damaged.
+    fn damage_world() -> World {
+        let good = world_with_fuel(2000);
+        let mut ref_data = good.ref_data.clone();
+        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        let mut truth = good.truth.clone();
+        truth.bases.insert(
+            ENEMY_BASE,
+            Base {
+                id: ENEMY_BASE,
+                name: "Enemy base".to_string(),
+                side: Side::Japanese,
+                hex: hx(1, 0),
+                supply_t: Fixed::ZERO,
+            },
+        );
+        World::new(7, ref_data, good.map.clone(), truth).expect("valid setup")
+    }
+
+    /// Adds a copy of ship 1 as ship `raw` to task force 1, with its
+    /// propulsion in `state`.
+    fn add_ship(world: &mut World, raw: u32, state: SystemState) -> ShipId {
+        let id = ShipId::new(raw);
+        let mut ship = world.truth.ships[&SHIP].clone();
+        ship.id = id;
+        ship.name = format!("Ship {raw}");
+        ship.systems.propulsion = state;
+        world.truth.ships.insert(id, ship);
+        world
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force")
+            .ships
+            .insert(id);
+        id
+    }
+
+    fn set_propulsion(world: &mut World, ship: ShipId, state: SystemState) {
+        world
+            .truth
+            .ships
+            .get_mut(&ship)
+            .expect("ship")
+            .systems
+            .propulsion = state;
+    }
+
+    fn steamed_speeds(world: &World) -> Vec<Fixed> {
+        world
+            .events()
+            .iter()
+            .filter_map(|event| match &event.kind {
+                EventKind::TaskForceSteamed { speed_kn, .. } => Some(*speed_kn),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn force_speed_follows_each_ships_propulsion() {
+        // The class steams at 16 kn at cruise and 32 kn at full. The
+        // degraded factor is 1/2, out is 0.
+        //   working:  16 x 1   = 16 kn;  full 32 x 1   = 32 kn
+        //   degraded: 16 x 1/2 = 8 kn;   full 32 x 1/2 = 16 kn
+        //   out:      16 x 0   = 0 kn
+        // A force goes at its slowest ship: working + degraded = 8 kn.
+        for (state, setting, expected) in [
+            (SystemState::Working, SpeedSetting::Cruise, 16),
+            (SystemState::Degraded, SpeedSetting::Cruise, 8),
+            (SystemState::Working, SpeedSetting::Full, 32),
+            (SystemState::Degraded, SpeedSetting::Full, 16),
+        ] {
+            let mut world = damage_world();
+            set_propulsion(&mut world, SHIP, state);
+            world.submit_orders(
+                Side::Allied,
+                vec![route_to(12, 0), order(TaskForceOrder::SetSpeed(setting))],
+            );
+            world.resolve_day().expect("day resolves");
+            let speeds = steamed_speeds(&world);
+            assert!(!speeds.is_empty());
+            assert!(speeds.iter().all(|s| *s == Fixed::from_int(expected)));
+        }
+
+        let mut world = damage_world();
+        add_ship(&mut world, 2, SystemState::Degraded);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+        assert!(steamed_speeds(&world)
+            .iter()
+            .all(|s| *s == Fixed::from_int(8)));
+    }
+
+    #[test]
+    fn the_steamed_breakdown_names_the_propulsion_factor_of_the_slowest_ship() {
+        // Ships 1 and 3 work (factor 1); ship 2 is degraded (factor 1/2) and
+        // sets the speed.
+        let mut world = damage_world();
+        add_ship(&mut world, 2, SystemState::Degraded);
+        add_ship(&mut world, 3, SystemState::Working);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+        let event = world
+            .events()
+            .iter()
+            .find(|e| matches!(e.kind, EventKind::TaskForceSteamed { .. }))
+            .expect("steamed");
+        let breakdown = event.breakdown.as_ref().expect("breakdown");
+        let factor = |name: &str| {
+            breakdown
+                .factors
+                .iter()
+                .find(|f| f.name == name)
+                .expect("factor")
+                .value
+        };
+        assert_eq!(factor("propulsion_factor"), nm_frac(1, 2));
+        assert_eq!(factor("speed_kn"), nm(8));
+    }
+
+    #[test]
+    fn a_force_dead_in_the_water_stays_underway_and_burns_nothing() {
+        // The second ship is out: 16 kn x 0 = 0 kn, so the force speed is 0.
+        // Nothing moves, no event is recorded and no fuel is burned.
+        let mut world = damage_world();
+        add_ship(&mut world, 2, SystemState::Out);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+        world.resolve_day().expect("day resolves");
+
+        let truth = world.umpire();
+        let force = &truth.task_forces[&TF];
+        assert_eq!(force.status, TaskForceStatus::Underway);
+        assert_eq!(force.position(), hx(0, 0));
+        assert_eq!(force.toward_hex, None);
+        assert_eq!(force.progress_nm, Fixed::ZERO);
+        assert_eq!(force.route.next_index, 0);
+        assert_eq!(steamed(&world), 0);
+        assert!(world.events().iter().all(|event| !matches!(
+            event.kind,
+            EventKind::FuelBurned { .. } | EventKind::TaskForceArrived { .. }
+        )));
+        for ship in truth.ships.values() {
+            assert_eq!(ship.fuel_t, Fixed::from_int(2000));
+        }
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn half_speed_burns_the_cruise_rate_per_mile() {
+        // Degraded: 16 kn x 1/2 = 8 kn, below cruise, so the multiplier
+        // floors at 1 and the burn is 0.25 t per nm.
+        // Night pulse: 12 h x 8 kn = 96 nm, burning 96 x 0.25 = 24 t.
+        // Whole day: 24 h x 8 kn = 192 nm, 48 t, which is 4 hexes and 32 nm
+        // along the leg to hex 5: the position is hex 5 (32 nm is over 20).
+        let mut world = damage_world();
+        set_propulsion(&mut world, SHIP, SystemState::Degraded);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+
+        let night = world
+            .events()
+            .iter()
+            .find_map(|event| match &event.kind {
+                EventKind::TaskForceSteamed { distance_nm, .. } => Some(*distance_nm),
+                _ => None,
+            })
+            .expect("steamed");
+        assert_eq!(night, nm(96));
+        let first_burn = world
+            .events()
+            .iter()
+            .find_map(|event| match &event.kind {
+                EventKind::FuelBurned { burned_t, .. } => Some(*burned_t),
+                _ => None,
+            })
+            .expect("burned");
+        assert_eq!(first_burn, nm(24));
+
+        let truth = world.umpire();
+        assert_eq!(truth.ships[&SHIP].fuel_t, nm(2000 - 48));
+        let force = &truth.task_forces[&TF];
+        assert_eq!(force.from_hex, hx(4, 0));
+        assert_eq!(force.toward_hex, Some(hx(5, 0)));
+        assert_eq!(force.progress_nm, nm(32));
+        assert_eq!(force.position(), hx(5, 0));
+    }
+
+    #[test]
+    fn breakdown_recording_does_not_change_the_hash_with_a_damaged_ship() {
+        let run = |record_breakdowns: bool| {
+            let mut world = damage_world();
+            add_ship(&mut world, 2, SystemState::Degraded);
+            world.set_config(crate::SimConfig { record_breakdowns });
+            world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+            world.resolve_day().expect("day resolves");
+            world.state_hash()
+        };
+        assert_eq!(run(true), run(false));
+    }
+
+    #[test]
+    fn world_new_rejects_a_damaged_system_without_surface_combat_figures() {
+        let good = world_with_fuel(2000);
+        let mut truth = good.truth.clone();
+        truth.ships.get_mut(&SHIP).expect("ship").systems.propulsion = SystemState::Degraded;
+        let error = World::new(1, good.ref_data.clone(), good.map.clone(), truth.clone())
+            .expect_err("rejected");
+        assert!(matches!(error, SimError::InvalidSetup(_)), "{error}");
+        let mut ref_data = good.ref_data.clone();
+        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        assert!(World::new(1, ref_data, good.map.clone(), truth).is_ok());
+    }
+
+    fn full_roe(share: Fixed, stragglers: StragglerInstruction) -> OrderRequest {
+        order(TaskForceOrder::SetRulesOfEngagement {
+            stance: Stance::Avoid,
+            break_off: nm_frac(1, 4),
+            stragglers,
+            keep_share: share,
+        })
+    }
+
+    /// The rejection reasons of every order in the log, in order.
+    fn rejections(world: &World) -> Vec<RejectReason> {
+        world
+            .events()
+            .iter()
+            .filter_map(|event| match &event.kind {
+                EventKind::OrderRejected { reason, .. } => Some(reason.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn the_straggler_instruction_and_keep_share_are_accepted_and_stored() {
+        let mut world = damage_world();
+        let rules = world.truth.task_forces[&TF].rules_of_engagement;
+        assert_eq!(rules.stragglers, StragglerInstruction::Keep);
+        assert_eq!(rules.keep_share, Fixed::ZERO);
+        world.submit_orders(
+            Side::Allied,
+            vec![full_roe(nm_frac(1, 2), StragglerInstruction::Detach)],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejections(&world), Vec::new());
+        let rules = world.truth.task_forces[&TF].rules_of_engagement;
+        assert_eq!(rules.stragglers, StragglerInstruction::Detach);
+        assert_eq!(rules.keep_share, nm_frac(1, 2));
+        assert_eq!(rules.break_off, nm_frac(1, 4));
+        assert_eq!(rules.stance, Stance::Avoid);
+        assert_eq!(StragglerInstruction::Keep.code(), 1);
+        assert_eq!(StragglerInstruction::Detach.code(), 2);
+        assert_eq!(StragglerInstruction::Leave.code(), 3);
+        assert_eq!(StragglerInstruction::Retire.code(), 4);
+    }
+
+    #[test]
+    fn keep_shares_of_zero_and_one_are_accepted_and_others_rejected() {
+        let mut world = damage_world();
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                full_roe(Fixed::ZERO, StragglerInstruction::Leave),
+                full_roe(Fixed::ONE, StragglerInstruction::Retire),
+                full_roe(nm_frac(-1, 100), StragglerInstruction::Leave),
+                full_roe(nm_frac(101, 100), StragglerInstruction::Leave),
+                // break_off is checked first.
+                order(TaskForceOrder::SetRulesOfEngagement {
+                    stance: Stance::Engage,
+                    break_off: nm(2),
+                    stragglers: StragglerInstruction::Keep,
+                    keep_share: nm(2),
+                }),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            rejections(&world),
+            vec![
+                RejectReason::KeepShareOutOfRange(nm_frac(-1, 100)),
+                RejectReason::KeepShareOutOfRange(nm_frac(101, 100)),
+                RejectReason::BreakOffOutOfRange(nm(2)),
+            ]
+        );
+        // The last accepted order stands: retire, keep 1.
+        let rules = world.truth.task_forces[&TF].rules_of_engagement;
+        assert_eq!(rules.stragglers, StragglerInstruction::Retire);
+        assert_eq!(rules.keep_share, Fixed::ONE);
+    }
+
+    #[test]
+    fn a_home_port_order_needs_a_base_of_your_side() {
+        let mut world = damage_world();
+        let home = |base: u32| order(TaskForceOrder::SetHomePort(BaseId::new(base)));
+        // Unknown base 9 and enemy base 2 give the same reason.
+        world.submit_orders(Side::Allied, vec![home(9), home(2), home(1)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            rejections(&world),
+            vec![RejectReason::NotYourBase, RejectReason::NotYourBase]
+        );
+        assert_eq!(world.truth.task_forces[&TF].home_port, Some(BaseId::new(1)));
+        assert_sound(&world);
+        // The other side cannot use the Allied base either.
+        let mut world = damage_world();
+        world.truth.task_forces.get_mut(&TF).expect("force").side = Side::Japanese;
+        for ship in world.truth.ships.values_mut() {
+            ship.side = Side::Japanese;
+        }
+        world.submit_orders(Side::Japanese, vec![home(1), home(2)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejections(&world), vec![RejectReason::NotYourBase]);
+        assert_eq!(world.truth.task_forces[&TF].home_port, Some(BaseId::new(2)));
+    }
+
+    #[test]
+    fn detach_orders_are_checked_in_order_and_accepted_when_sound() {
+        let mut world = damage_world();
+        let second = add_ship(&mut world, 2, SystemState::Working);
+        let third = add_ship(&mut world, 3, SystemState::Working);
+        let detach = |ships: Vec<ShipId>| order(TaskForceOrder::DetachShips(ships));
+        sink(&mut world, third);
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                detach(vec![]),
+                // Ship 9 does not exist; ship 3 is sunk. The first listed
+                // ship that is not afloat in the force is reported.
+                detach(vec![second, ShipId::new(9), third]),
+                detach(vec![third, ShipId::new(9)]),
+                // Every ship afloat in the force, duplicates and all.
+                detach(vec![second, SHIP, second]),
+                detach(vec![SHIP, second]),
+                // A good one, with a duplicate.
+                detach(vec![second, second]),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            rejections(&world),
+            vec![
+                RejectReason::NoShipsToDetach,
+                RejectReason::ShipNotInTaskForce(ShipId::new(9)),
+                RejectReason::ShipNotInTaskForce(third),
+                RejectReason::WouldLeaveTaskForceEmpty,
+                RejectReason::WouldLeaveTaskForceEmpty,
+            ]
+        );
+        let truth = world.umpire();
+        assert_eq!(truth.task_forces.len(), 2);
+        assert_eq!(
+            truth.task_forces[&TF].ships,
+            [SHIP].into_iter().collect::<BTreeSet<_>>()
+        );
+        let new = &truth.task_forces[&TaskForceId::new(2)];
+        assert_eq!(new.name, "Test force, detached");
+        assert_eq!(new.ships, [second].into_iter().collect::<BTreeSet<_>>());
+        assert_eq!(
+            truth.ships[&second].location,
+            ShipLocation::TaskForce(new.id)
+        );
+        // The accepted order is the record: its target is the parent.
+        let accepted: Vec<_> = world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::OrderAccepted { .. }))
+            .collect();
+        assert_eq!(accepted.len(), 1);
+        assert!(matches!(
+            accepted[0].kind,
+            EventKind::OrderAccepted { target, .. } if target == crate::ids::EntityRef::TaskForce(TF)
+        ));
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn a_detached_force_starts_mid_leg_with_the_parents_settings() {
+        let mut world = damage_world();
+        let second = add_ship(&mut world, 2, SystemState::Working);
+        {
+            let force = world.truth.task_forces.get_mut(&TF).expect("force");
+            force.from_hex = hx(2, 0);
+            force.toward_hex = Some(hx(3, 0));
+            force.progress_nm = nm(13);
+            force.status = TaskForceStatus::Underway;
+            force.route = Route {
+                waypoints: vec![hx(9, 0)],
+                next_index: 0,
+            };
+            force.alert = false;
+            force.home_port = Some(BaseId::new(1));
+            force.mission = Mission::SurfaceCombat;
+            force.speed = SpeedSetting::Full;
+            force.rules_of_engagement = RulesOfEngagement {
+                stance: Stance::Avoid,
+                break_off: nm_frac(1, 4),
+                stragglers: StragglerInstruction::Retire,
+                keep_share: nm_frac(3, 4),
+            };
+            force.rules_order = Some(crate::ids::OrderId::new(40));
+            force.speed_order = Some(crate::ids::OrderId::new(41));
+            force.route_order = Some(crate::ids::OrderId::new(42));
+            force.cargo_order = Some(CargoOrder {
+                action: CargoAction::Load,
+                order: crate::ids::OrderId::new(43),
+            });
+            force.arrived_at_hours = Some(nm(5));
+            force.arrival_event = Some(EventId::new(3));
+            force.noticed_sighted_at_hours = Some(nm(6));
+        }
+        assert_sound(&world);
+        let parent_before = world.truth.task_forces[&TF].clone();
+        let ids = [second].into_iter().collect::<BTreeSet<_>>();
+        let new_id = world.split_task_force(TF, &ids, "Split".to_string());
+        assert_sound(&world);
+
+        let truth = world.umpire();
+        let new = &truth.task_forces[&new_id];
+        assert_eq!(new_id, TaskForceId::new(2));
+        assert_eq!(new.name, "Split");
+        assert_eq!(new.side, Side::Allied);
+        assert_eq!(new.from_hex, hx(2, 0));
+        assert_eq!(new.toward_hex, Some(hx(3, 0)));
+        assert_eq!(new.progress_nm, nm(13));
+        assert_eq!(new.position(), hx(2, 0));
+        assert_eq!(new.status, TaskForceStatus::Idle);
+        assert_eq!(new.route, Route::default());
+        assert_eq!(new.route_order, None);
+        assert_eq!(new.cargo_order, None);
+        assert_eq!(new.arrived_at_hours, None);
+        assert_eq!(new.arrival_event, None);
+        assert_eq!(new.noticed_sighted_at_hours, None);
+        assert!(!new.alert);
+        assert_eq!(new.home_port, Some(BaseId::new(1)));
+        assert_eq!(new.mission, Mission::SurfaceCombat);
+        assert_eq!(new.speed, SpeedSetting::Full);
+        assert_eq!(new.speed_order, parent_before.speed_order);
+        assert_eq!(new.rules_of_engagement, parent_before.rules_of_engagement);
+        assert_eq!(new.rules_order, parent_before.rules_order);
+        assert_eq!(new.ships, ids);
+        assert_eq!(
+            truth.ships[&second].location,
+            ShipLocation::TaskForce(new_id)
+        );
+        // The parent keeps everything but the ship.
+        let mut expected = parent_before;
+        expected.ships.remove(&second);
+        assert_eq!(truth.task_forces[&TF], expected);
+        // Splitting records no event.
+        assert!(world.events().iter().next().is_none());
+    }
+
+    #[test]
+    fn created_task_forces_get_the_next_ids_and_the_counter_is_hashed() {
+        // The scenario's only force is 1, so the first new force is 2, then 3.
+        let mut world = damage_world();
+        assert_eq!(world.task_force_ids.next_raw(), 2);
+        let a = add_ship(&mut world, 2, SystemState::Working);
+        let b = add_ship(&mut world, 3, SystemState::Working);
+        let first = world.split_task_force(TF, &[a].into_iter().collect(), "A".to_string());
+        let second = world.split_task_force(TF, &[b].into_iter().collect(), "B".to_string());
+        assert_eq!((first, second), (TaskForceId::new(2), TaskForceId::new(3)));
+        assert_eq!(world.task_force_ids.next_raw(), 4);
+
+        // A scenario whose highest force ID is 7 hands out 8.
+        let mut high = damage_world();
+        let mut moved = high.truth.task_forces.remove(&TF).expect("force");
+        moved.id = TaskForceId::new(7);
+        high.truth.task_forces.insert(moved.id, moved);
+        for ship in high.truth.ships.values_mut() {
+            ship.location = ShipLocation::TaskForce(TaskForceId::new(7));
+        }
+        let rebuilt = World::new(
+            7,
+            high.ref_data.clone(),
+            high.map.clone(),
+            high.truth.clone(),
+        )
+        .expect("valid");
+        assert_eq!(rebuilt.task_force_ids.next_raw(), 8);
+
+        // Two worlds identical but for the counter hash differently.
+        let base = damage_world();
+        let mut counted = base.clone();
+        counted.task_force_ids.alloc();
+        assert_eq!(base.truth, counted.truth);
+        assert_ne!(base.state_hash(), counted.state_hash());
+    }
+
+    #[test]
+    fn a_staff_order_taken_in_mid_day_is_stored_and_cites_its_causes() {
+        let mut world = damage_world();
+        let cause = world.events.record(
+            1,
+            Some(Pulse::Morning),
+            EventKind::TaskForceOutOfFuel {
+                task_force: TF,
+                hex: hx(0, 0),
+            },
+            Vec::new(),
+            None,
+        );
+        let staff = OrderRequest {
+            kind: OrderKind::TaskForce {
+                target: TF,
+                order: TaskForceOrder::SetRoute(vec![hx(2, 0)]),
+            },
+            origin: Origin {
+                issuer: crate::orders::Issuer::Staff,
+                intent: None,
+            },
+        };
+        let (id, event, accepted) = world.take_in_order(
+            1,
+            Some(Pulse::Morning),
+            Side::Allied,
+            staff,
+            vec![Cause::Event(cause)],
+        );
+        assert!(accepted);
+        let stored = world.order(id).expect("stored");
+        assert_eq!(stored.origin.issuer, crate::orders::Issuer::Staff);
+        assert_eq!(stored.side, Side::Allied);
+        assert_eq!(stored.day_issued, 1);
+        let recorded = world.events().get(event).expect("event");
+        assert_eq!(recorded.pulse, Some(Pulse::Morning));
+        assert_eq!(recorded.day, 1);
+        assert_eq!(recorded.causes, vec![Cause::Order(id), Cause::Event(cause)]);
+        assert!(matches!(
+            recorded.kind,
+            EventKind::OrderAccepted { order, .. } if order == id
+        ));
+        let force = &world.truth.task_forces[&TF];
+        assert_eq!(force.status, TaskForceStatus::Underway);
+        assert_eq!(force.route_order, Some(id));
+
+        // A rejection returns false and cites the same causes.
+        let bad = order(TaskForceOrder::SetHomePort(ENEMY_BASE));
+        let (id, event, accepted) =
+            world.take_in_order(1, Some(Pulse::Morning), Side::Allied, bad, vec![]);
+        assert!(!accepted);
+        assert_eq!(
+            world.events().get(event).expect("event").causes,
+            vec![Cause::Order(id)]
         );
     }
 }
