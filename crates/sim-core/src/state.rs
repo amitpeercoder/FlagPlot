@@ -17,6 +17,7 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
 };
+use crate::map::Map;
 use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting, Stance, StragglerInstruction};
 
 /// One of the two sides.
@@ -235,7 +236,9 @@ impl TaskForceStatus {
     }
 }
 
-/// The waypoints a task force is steaming to.
+/// The waypoints a task force is steaming to. Between waypoints it follows
+/// the shortest path over hexes ships can enter (decision 0017); the path
+/// itself is not stored, only the waypoints and which one is next.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Route {
     pub waypoints: Vec<Hex>,
@@ -295,10 +298,13 @@ pub struct TaskForce {
     /// The hex whose centre the task force last left, or is sitting on.
     /// Read only by movement, route intake, the hash and the leg invariants.
     /// Everything else asks [`TaskForce::position`].
+    ///
+    /// A force is always in a navigable hex: this one, and `toward_hex` when
+    /// set, are hexes ships can enter (decision 0017; an invariant checks it).
     pub from_hex: Hex,
     /// The hex the task force is steaming toward. `Some` exactly when
     /// `progress_nm` is above zero, and then always a neighbour of
-    /// `from_hex`.
+    /// `from_hex` that ships can enter.
     pub toward_hex: Option<Hex>,
     /// Nautical miles covered from the centre of `from_hex` toward the centre
     /// of `toward_hex`. At least 0 and less than one hex.
@@ -345,31 +351,48 @@ impl TaskForce {
     }
 
     /// Where a new route starts when it is accepted now, and whether the task
-    /// force turns back to get there (decision 0005, decision 5).
+    /// force turns back to get there (decision 0005, decision 5, amended by
+    /// decision 0017, decision 14).
     ///
     /// At a centre this is `(false, from_hex)`. Between centres the force
     /// goes on to the hex ahead or turns back to the hex it left, whichever
-    /// is the shorter trip to `first_waypoint`. Going on costs the rest of
-    /// the leg plus the hexes from the hex ahead. Turning back costs the
-    /// miles already covered plus the hexes from the hex it left. A tie goes
-    /// ahead. With no waypoint there is nothing to compare, so it goes ahead.
+    /// is the shorter trip to `first_waypoint` by sea. Going on costs the
+    /// rest of the leg plus 40 nm for each step from the hex ahead. Turning
+    /// back costs the miles already covered plus 40 nm for each step from
+    /// the hex it left. A tie goes ahead. If only one side can reach the
+    /// waypoint, that side is taken. If neither can, the result is `None`
+    /// and the order must be rejected. With no waypoint there is nothing to
+    /// compare, so it goes ahead.
     ///
-    /// Pure: used by both intake validation and applying the order.
-    pub fn reroute_centre(&self, first_waypoint: Option<Hex>) -> (bool, Hex) {
+    /// Pure: used by both intake validation and applying the order, so they
+    /// cannot disagree.
+    pub fn reroute_centre(&self, map: &Map, first_waypoint: Option<Hex>) -> Option<(bool, Hex)> {
         let Some(toward) = self.toward_hex else {
-            return (false, self.from_hex);
+            return Some((false, self.from_hex));
         };
         let Some(waypoint) = first_waypoint else {
-            return (false, toward);
+            return Some((false, toward));
         };
+        // Turning back never has to cross a closed side. A force between
+        // centres is on an open step from `from_hex` to `toward_hex` (the
+        // invariant `TaskForceLegCrossesClosedSide`), and `Map::can_step` is
+        // symmetric, so the step back from `toward_hex` to `from_hex` is
+        // open too. Both distances below are therefore reached by open steps
+        // only, and the cost of turning back is always a real trip.
+        let distances = map.sea_distances_to(waypoint);
         let one_hex = Fixed::from_int(HEX_NM);
-        let cost_ahead =
-            (one_hex - self.progress_nm) + one_hex * i64::from(toward.distance(waypoint));
-        let cost_back = self.progress_nm + one_hex * i64::from(self.from_hex.distance(waypoint));
-        if cost_back < cost_ahead {
-            (true, self.from_hex)
-        } else {
-            (false, toward)
+        let cost_ahead = distances
+            .get(&toward)
+            .map(|steps| (one_hex - self.progress_nm) + one_hex * i64::from(*steps));
+        let cost_back = distances
+            .get(&self.from_hex)
+            .map(|steps| self.progress_nm + one_hex * i64::from(*steps));
+        match (cost_ahead, cost_back) {
+            (None, None) => None,
+            (Some(_), None) => Some((false, toward)),
+            (None, Some(_)) => Some((true, self.from_hex)),
+            (Some(ahead), Some(back)) if back < ahead => Some((true, self.from_hex)),
+            (Some(_), Some(_)) => Some((false, toward)),
         }
     }
 

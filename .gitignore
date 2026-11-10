@@ -3,3 +3,9 @@
 # Local reference material (installers, extracted manuals). Not for commit.
 /references/
 .DS_Store
+
+# Replays exported for the viewer. Generated; not for commit.
+/viewer/replays/
+
+# Local preview server settings for the Claude app. They hold a machine path.
+/.claude/launch.json

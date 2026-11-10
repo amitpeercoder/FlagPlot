@@ -66,6 +66,13 @@ pub enum InvariantViolation {
     TaskForceHomePortOfOtherSide(TaskForceId, BaseId),
     /// The task force's share to keep is below 0 or above 1.
     TaskForceKeepShareOutOfRange(TaskForceId),
+    /// The task force's `from_hex`, or its `toward_hex` when set, is on the
+    /// map but ships cannot enter it. A force is always in a navigable hex.
+    TaskForceNotNavigable(TaskForceId, Hex),
+    /// A force between centres: the step from `from_hex` to `toward_hex`
+    /// crosses a closed side (decision 0017, decision 7). Reported only when
+    /// the hexes are adjacent, on the map and navigable.
+    TaskForceLegCrossesClosedSide(TaskForceId, Hex, Hex),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -86,6 +93,15 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::TaskForceHasShipOfOtherSide(task_force, ship) => {
                 write!(f, "{task_force} holds {ship} of the other side")
+            }
+            InvariantViolation::TaskForceNotNavigable(task_force, hex) => {
+                write!(f, "{task_force} is at {hex}, which ships cannot enter")
+            }
+            InvariantViolation::TaskForceLegCrossesClosedSide(task_force, from, toward) => {
+                write!(
+                    f,
+                    "{task_force} is between {from} and {toward}, and the side between them is closed to ships"
+                )
             }
             InvariantViolation::TaskForceOffMap(task_force, hex) => {
                 write!(f, "{task_force} is at {hex}, which is off the map")
@@ -236,23 +252,58 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 task_force.from_hex,
             ));
         }
+        // A force is always in a navigable hex (decision 0017): it is only
+        // ever placed in one, and movement only steps onto one.
+        if map.contains(task_force.from_hex) && !map.is_navigable(task_force.from_hex) {
+            violations.push(InvariantViolation::TaskForceNotNavigable(
+                task_force.id,
+                task_force.from_hex,
+            ));
+        }
         if task_force.toward_hex.is_some() != (task_force.progress_nm.raw() > 0) {
             violations.push(InvariantViolation::TaskForceLegStateInconsistent(
                 task_force.id,
             ));
         }
         if let Some(toward) = task_force.toward_hex {
-            if task_force.from_hex.distance(toward) != 1 {
+            let adjacent = task_force.from_hex.distance(toward) == 1;
+            if !adjacent {
                 violations.push(InvariantViolation::TaskForceTowardNotAdjacent(
                     task_force.id,
                     toward,
                 ));
             }
+            let mut both_navigable = map.is_navigable(task_force.from_hex);
             if !map.contains(toward) {
                 violations.push(InvariantViolation::TaskForceTowardOffMap(
                     task_force.id,
                     toward,
                 ));
+                both_navigable = false;
+            } else if !map.is_navigable(toward) {
+                violations.push(InvariantViolation::TaskForceNotNavigable(
+                    task_force.id,
+                    toward,
+                ));
+                both_navigable = false;
+            }
+            // The leg itself must be an open step. Only reported when the
+            // checks above passed, so a bad leg is not reported twice.
+            if adjacent && both_navigable {
+                let open = Hex::DIRECTIONS
+                    .iter()
+                    .position(|(dq, dr)| {
+                        task_force.from_hex.q + dq == toward.q
+                            && task_force.from_hex.r + dr == toward.r
+                    })
+                    .is_some_and(|direction| map.can_step(task_force.from_hex, direction));
+                if !open {
+                    violations.push(InvariantViolation::TaskForceLegCrossesClosedSide(
+                        task_force.id,
+                        task_force.from_hex,
+                        toward,
+                    ));
+                }
             }
         }
         let share = task_force.rules_of_engagement.keep_share;
@@ -593,12 +644,12 @@ mod tests {
                 endurance_nm: Fixed::from_int(1000),
                 cargo_capacity_t: Fixed::from_int(100),
                 main_guns: 0,
-                gun_rounds_per_min: 0,
+                gun_rounds_per_min: Fixed::ZERO,
                 gun_rounds_per_gun: 0,
-                gun_damage: 0,
+                gun_damage: Fixed::ZERO,
                 torpedo_tubes: 0,
-                torpedo_damage: 0,
-                toughness: 100,
+                torpedo_damage: Fixed::ZERO,
+                toughness: Fixed::from_int(100),
                 radar: false,
             },
         );
@@ -636,6 +687,45 @@ mod tests {
             assert_eq!(
                 violations_of(&truth, &map),
                 vec![InvariantViolation::TaskForceKeepShareOutOfRange(TF)]
+            );
+        }
+    }
+
+    /// The setup's map gains the sea hex (1,0), east of (0,0), and the force
+    /// is on a leg from (0,0) toward it, 10 nm in. `closed_here` closes the
+    /// side of (0,0) toward (1,0), direction 0; `closed_there` closes the
+    /// side of (1,0) toward (0,0), direction 3.
+    fn setup_on_a_leg(closed_here: bool, closed_there: bool) -> (TruthState, Map) {
+        let (mut truth, mut map) = setup_with_ship();
+        let mut here = HexData::open_sea();
+        here.closed_sides[0] = closed_here;
+        map.insert(Hex::new(0, 0), here);
+        let mut there = HexData::open_sea();
+        there.closed_sides[3] = closed_there;
+        map.insert(Hex::new(1, 0), there);
+        let task_force = truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.toward_hex = Some(Hex::new(1, 0));
+        task_force.progress_nm = Fixed::from_int(10);
+        (truth, map)
+    }
+
+    #[test]
+    fn a_leg_across_a_closed_side_is_caught_and_the_same_leg_on_an_open_side_is_not() {
+        let (truth, map) = setup_on_a_leg(false, false);
+        assert_eq!(violations_of(&truth, &map), Vec::new());
+
+        // Closed in either hex's data, or both, the leg is reported once,
+        // naming the hex left and the hex ahead.
+        for (here, there) in [(true, false), (false, true), (true, true)] {
+            let (truth, map) = setup_on_a_leg(here, there);
+            assert_eq!(
+                violations_of(&truth, &map),
+                vec![InvariantViolation::TaskForceLegCrossesClosedSide(
+                    TF,
+                    Hex::new(0, 0),
+                    Hex::new(1, 0)
+                )],
+                "closed here {here}, closed there {there}"
             );
         }
     }

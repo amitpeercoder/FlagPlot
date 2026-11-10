@@ -11,7 +11,7 @@
 
 use crate::events::{Breakdown, Cause, DetachReason, EventKind, Factor};
 use crate::fixed::Fixed;
-use crate::hex::HEX_NM;
+use crate::hex::{Hex, HEX_NM};
 use crate::ids::{EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
@@ -23,7 +23,7 @@ use crate::state::{
     CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, ShipSystem, Side, TaskForce,
     TaskForceStatus,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::time::{pulse_start, Pulse};
 use crate::world::{DaySummary, SimError, World};
@@ -364,24 +364,38 @@ impl World {
                 }
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
+                        // A waypoint off the map is rejected first, even for
+                        // the first one, before any turn-back choice.
+                        let first = waypoints.first().copied();
+                        if let Some(first) = first {
+                            if !self.map.contains(first) {
+                                return Err(RejectReason::WaypointOffMap(first));
+                            }
+                        }
                         // The new route starts from the centre the force
                         // reaches first: the same choice apply_order makes.
-                        let (_, mut current) =
-                            task_force.reroute_centre(waypoints.first().copied());
+                        // If neither side can reach the first waypoint by sea
+                        // the order is rejected.
+                        let Some((_, mut current)) = task_force.reroute_centre(&self.map, first)
+                        else {
+                            return Err(RejectReason::WaypointUnreachable(
+                                first.unwrap_or(task_force.from_hex),
+                            ));
+                        };
                         // A force between centres always has somewhere to go:
                         // the leg it must finish. So "stop at the hex ahead"
                         // and "go back to the hex I left" are real routes.
                         let mut goes_somewhere =
                             task_force.toward_hex.is_some() && !waypoints.is_empty();
+                        // Each leg must be reachable by sea from the one
+                        // before (decision 0017, decision 13).
                         for waypoint in waypoints {
                             if !self.map.contains(*waypoint) {
                                 return Err(RejectReason::WaypointOffMap(*waypoint));
                             }
-                            for step in current.steps_to(*waypoint) {
-                                if !self.map.is_navigable(step) {
-                                    return Err(RejectReason::RouteBlocked(step));
-                                }
-                                goes_somewhere = true;
+                            match self.map.sea_distance(current, *waypoint) {
+                                None => return Err(RejectReason::WaypointUnreachable(*waypoint)),
+                                Some(steps) => goes_somewhere |= steps > 0,
                             }
                             current = *waypoint;
                         }
@@ -522,7 +536,9 @@ impl World {
                     TaskForceOrder::SetRoute(waypoints) => {
                         // Turning back is decided on the state the order
                         // found, and the leg is then finished by movement.
-                        let (turns_back, _) = task_force.reroute_centre(waypoints.first().copied());
+                        let (turns_back, _) = task_force
+                            .reroute_centre(&self.map, waypoints.first().copied())
+                            .expect("order was validated: the first waypoint is reachable");
                         if turns_back {
                             task_force.turn_back();
                         }
@@ -624,9 +640,11 @@ impl World {
     /// pulse, unless it reaches the end of its route or a ship runs dry
     /// first. A leg between two hex centres is 40 nm and, once started, is
     /// always finished: the next centre reached is the hex ahead, whatever
-    /// the route says. At a centre the next leg goes to the neighbour nearest
-    /// the current waypoint. The task force enters a hex (its position
-    /// changes) when it passes the midpoint of the leg, 20 nm along, so
+    /// the route says. At a centre the next leg goes to the next hex on the
+    /// shortest sea path to the current waypoint (`Map::next_step_in`,
+    /// decision 0017), from a distance field worked out once per waypoint.
+    /// The task force enters a hex (its position changes) when it passes the
+    /// midpoint of the leg, 20 nm along, so
     /// `hexes_entered` and the `from` and `to` of the event are positions,
     /// not centres reached.
     fn move_task_force(&mut self, id: TaskForceId, day: u32, pulse: Pulse) {
@@ -698,6 +716,10 @@ impl World {
         let mut next_index = task_force.route.next_index;
         let mut travelled_nm = Fixed::ZERO;
         let mut hexes_entered = Vec::new();
+        // The distance field to the waypoint being steamed to, worked out
+        // once per waypoint rather than once per step (decision 0017,
+        // decision 12: the path itself is never stored).
+        let mut field: Option<(usize, BTreeMap<Hex, u32>)> = None;
 
         loop {
             if toward_hex.is_none() {
@@ -720,7 +742,17 @@ impl World {
                     // Only start a leg with distance left to steam it, so
                     // zero progress always means no hex ahead.
                     let target = waypoints[next_index];
-                    let toward = from_hex.step_toward(target);
+                    if field.as_ref().map(|(index, _)| *index) != Some(next_index) {
+                        field = Some((next_index, self.map.sea_distances_to(target)));
+                    }
+                    let distances = field.as_ref().map(|(_, d)| d);
+                    // Intake proved every waypoint reachable and the map never
+                    // changes, so there is always a next step. If there were
+                    // none, stop here and stay under way rather than panic.
+                    let Some(toward) = distances.and_then(|d| self.map.next_step_in(d, from_hex))
+                    else {
+                        break;
+                    };
                     toward_hex = Some(toward);
                     toward
                 }
@@ -959,12 +991,12 @@ mod tests {
             endurance_nm: Fixed::from_int(8000),
             cargo_capacity_t: Fixed::ZERO,
             main_guns: 0,
-            gun_rounds_per_min: 0,
+            gun_rounds_per_min: Fixed::ZERO,
             gun_rounds_per_gun: 0,
-            gun_damage: 0,
+            gun_damage: Fixed::ZERO,
             torpedo_tubes: 0,
-            torpedo_damage: 0,
-            toughness: 100,
+            torpedo_damage: Fixed::ZERO,
+            toughness: Fixed::from_int(100),
             radar: false,
         };
         let mut ref_data = RefData::default();
@@ -1190,13 +1222,39 @@ mod tests {
             Some(RejectReason::WaypointOffMap(Hex::new(40, 40)))
         );
 
-        // (0,0) to (3,3) steps along q to (3,0), then up r through (3,2).
+        // The single land hex (3,2) is on the map but no ship can reach it:
+        // unreachable, not off the map (decision 0017, decision 13).
         let mut world = world_with_fuel(2000);
-        world.submit_orders(Side::Allied, vec![route_to(3, 3)]);
+        world.submit_orders(Side::Allied, vec![route_to(3, 2)]);
         world.resolve_day().expect("day resolves");
         assert_eq!(
             rejection(&world),
-            Some(RejectReason::RouteBlocked(Hex::new(3, 2)))
+            Some(RejectReason::WaypointUnreachable(Hex::new(3, 2)))
+        );
+
+        // (3,3) lies behind that hex on the straight line, but ships can go
+        // round it: 6 steps either way, so the order is accepted.
+        let mut world = world_with_fuel(2000);
+        assert_eq!(
+            world.map.sea_distance(Hex::new(0, 0), Hex::new(3, 3)),
+            Some(6)
+        );
+        world.submit_orders(Side::Allied, vec![route_to(3, 3)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+
+        // A wall of land across the whole strip at q = 4 cuts (6,0) off.
+        let mut world = world_with_fuel(2000);
+        wall_at_q(&mut world, 4);
+        world.submit_orders(Side::Allied, vec![route_to(6, 0)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            rejection(&world),
+            Some(RejectReason::WaypointUnreachable(Hex::new(6, 0)))
+        );
+        assert_eq!(
+            world.umpire().task_forces[&TF].status,
+            TaskForceStatus::Idle
         );
 
         let mut world = world_with_fuel(2000);
@@ -1795,7 +1853,7 @@ mod tests {
             r.ship_classes
                 .get_mut(&ShipClassId::new(1))
                 .expect("class")
-                .toughness = 0;
+                .toughness = Fixed::ZERO;
         })
         .is_err());
     }
@@ -1984,6 +2042,19 @@ mod tests {
 
     fn hx(q: i32, r: i32) -> Hex {
         Hex::new(q, r)
+    }
+
+    /// Turns every hex of column `q` into land, so nothing crosses it.
+    fn wall_at_q(world: &mut World, q: i32) {
+        for r in -1..=5 {
+            world.map.insert(
+                hx(q, r),
+                HexData {
+                    kind: HexKind::Land,
+                    ..HexData::open_sea()
+                },
+            );
+        }
     }
 
     fn nm_frac(num: i64, den: i64) -> Fixed {
@@ -2238,15 +2309,27 @@ mod tests {
         );
         assert_eq!(world.truth.task_forces[&TF], before);
 
-        // Blocked: from (2,0), going ahead (190 vs 210 back), the greedy path
-        // to (3,3) runs (3,0), (3,1), (3,2), which is land.
+        // Unreachable: a wall of land at q = 4 cuts (6,0) off from both the
+        // hex ahead and the hex left, so there is no side to go to.
+        let mut world = world_with_fuel(2000);
+        wall_at_q(&mut world, 4);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
+        let before = world.truth.task_forces[&TF].clone();
+        take_in(&mut world, vec![route_to(6, 0)]);
+        assert_eq!(
+            rejection(&world),
+            Some(RejectReason::WaypointUnreachable(hx(6, 0)))
+        );
+        assert_eq!(world.truth.task_forces[&TF], before);
+
+        // Land: (3,2) is on the map but cannot be entered.
         let mut world = world_with_fuel(2000);
         set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
         let before = world.truth.task_forces[&TF].clone();
-        take_in(&mut world, vec![route_to(3, 3)]);
+        take_in(&mut world, vec![route_to(3, 2)]);
         assert_eq!(
             rejection(&world),
-            Some(RejectReason::RouteBlocked(hx(3, 2)))
+            Some(RejectReason::WaypointUnreachable(hx(3, 2)))
         );
         assert_eq!(world.truth.task_forces[&TF], before);
 
@@ -2931,6 +3014,224 @@ mod tests {
         assert_eq!(
             world.events().get(event).expect("event").causes,
             vec![Cause::Order(id)]
+        );
+    }
+
+    // Pathfinding at intake and in the turn-back choice (decision 0017).
+
+    /// Sets hexes to land on the test map.
+    fn make_land(world: &mut World, hexes: &[(i32, i32)]) {
+        for (q, r) in hexes {
+            world.map.insert(
+                hx(*q, *r),
+                HexData {
+                    kind: HexKind::Land,
+                    ..HexData::open_sea()
+                },
+            );
+        }
+    }
+
+    #[test]
+    fn a_pocket_makes_the_force_turn_back_though_the_straight_line_says_ahead() {
+        // Test map: q -1 to 12, r -1 to 5, land already at (3,2). Add land at
+        // (3,1), (2,1), (1,2) and (1,3), so the hex (2,2) is a pocket: its
+        // only sea neighbour is (2,3).
+        //
+        //   r=-1:     .  .  W  .  .          W = (2,-1)
+        //   r= 0:    .  .  .  .  .
+        //   r= 1:   .  .  #  #  .            (2,1) (3,1) land
+        //   r= 2:  .  #  P  #  .             (1,2) land, P = (2,2), (3,2) land
+        //   r= 3: .  #  F  .  .              (1,3) land, F = (2,3)
+        //
+        // The force is on the leg F (2,3) -> P (2,2), 10 nm out, ordered to W.
+        // Straight line: P is 3 from W and F is 4, so
+        //   ahead = (40 - 10) + 40 x 3 = 150, back = 10 + 40 x 4 = 170:
+        //   the old rule goes ahead.
+        // By sea: F is 7 from W ((3,3), (4,2), (4,1), (4,0), (3,0), (3,-1),
+        // (2,-1)) and P is 8 (it must go back through F), so
+        //   ahead = 30 + 40 x 8 = 350, back = 10 + 40 x 7 = 290:
+        //   it turns back.
+        let mut world = world_with_fuel(2000);
+        make_land(&mut world, &[(3, 1), (2, 1), (1, 2), (1, 3)]);
+        set_leg(&mut world, hx(2, 3), Some(hx(2, 2)), nm(10));
+        let waypoint = hx(2, -1);
+        assert_eq!(world.map.sea_distance(hx(2, 3), waypoint), Some(7));
+        assert_eq!(world.map.sea_distance(hx(2, 2), waypoint), Some(8));
+        assert_eq!(hx(2, 2).distance(waypoint), 3);
+        assert_eq!(hx(2, 3).distance(waypoint), 4);
+
+        let task_force = &world.truth.task_forces[&TF];
+        assert_eq!(
+            task_force.reroute_centre(&world.map, Some(waypoint)),
+            Some((true, hx(2, 3)))
+        );
+
+        take_in(
+            &mut world,
+            vec![order(TaskForceOrder::SetRoute(vec![waypoint]))],
+        );
+        assert_eq!(rejection(&world), None);
+        // Turned round: the two hexes swap and 40 - 10 = 30 nm are covered.
+        assert_eq!(leg(&world), (hx(2, 2), Some(hx(2, 3)), nm(30)));
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn the_turn_back_choice_takes_the_only_side_that_can_reach_the_waypoint() {
+        // Two adjacent hexes you can enter are always in the same part of the
+        // sea, so in a sound state either both reach the waypoint or neither
+        // does. The one-sided cases are therefore tested on the function
+        // itself, with a state the invariants would reject: the hex ahead, or
+        // the hex left, is land.
+        let mut world = world_with_fuel(2000);
+        let waypoint = hx(8, 0);
+        set_leg(&mut world, hx(1, 0), Some(hx(2, 0)), nm(10));
+        // Open sea: ahead = 30 + 40 x 6 = 270, back = 10 + 40 x 7 = 290.
+        let task_force = world.truth.task_forces[&TF].clone();
+        assert_eq!(
+            task_force.reroute_centre(&world.map, Some(waypoint)),
+            Some((false, hx(2, 0)))
+        );
+
+        // The hex ahead is land: it cannot reach the waypoint, so the force
+        // turns back, though ahead would otherwise win.
+        make_land(&mut world, &[(2, 0)]);
+        assert_eq!(
+            task_force.reroute_centre(&world.map, Some(waypoint)),
+            Some((true, hx(1, 0)))
+        );
+
+        // The hex left is land: back cannot reach it. Put the force where
+        // turning back would win on distance (1 nm out, waypoint behind it),
+        // and it still goes ahead.
+        let mut world = world_with_fuel(2000);
+        make_land(&mut world, &[(1, 0)]);
+        let mut task_force = task_force;
+        task_force.progress_nm = nm(1);
+        assert_eq!(
+            task_force.reroute_centre(&world.map, Some(hx(0, 0))),
+            Some((false, hx(2, 0)))
+        );
+
+        // Neither side can reach it: no choice, so the order is rejected.
+        make_land(&mut world, &[(2, 0)]);
+        assert_eq!(task_force.reroute_centre(&world.map, Some(hx(0, 0))), None);
+        // At a centre there is no choice to make, whatever the map.
+        task_force.toward_hex = None;
+        task_force.progress_nm = Fixed::ZERO;
+        assert_eq!(
+            task_force.reroute_centre(&world.map, Some(hx(0, 0))),
+            Some((false, hx(1, 0)))
+        );
+    }
+
+    #[test]
+    fn a_waypoint_off_the_map_is_rejected_even_mid_leg() {
+        // The off-map check comes before the turn-back choice, so the reason
+        // is the same between centres as at one.
+        for leg_state in [None, Some((hx(1, 0), hx(2, 0), 10))] {
+            let mut world = world_with_fuel(2000);
+            if let Some((from, toward, progress)) = leg_state {
+                set_leg(&mut world, from, Some(toward), nm(progress));
+            }
+            take_in(&mut world, vec![route_to(40, 40)]);
+            assert_eq!(
+                rejection(&world),
+                Some(RejectReason::WaypointOffMap(hx(40, 40)))
+            );
+        }
+    }
+
+    #[test]
+    fn a_waypoint_across_land_with_no_way_round_is_rejected() {
+        // Land across the whole strip at q = 4: (6,0) is on the map, ships
+        // are in the part of the sea at q 3 or less, and nothing links them.
+        // A later waypoint is checked from the one before: (2,0) is fine,
+        // (6,0) after it is not.
+        let mut world = world_with_fuel(2000);
+        make_land(
+            &mut world,
+            &[(4, -1), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5)],
+        );
+        take_in(
+            &mut world,
+            vec![order(TaskForceOrder::SetRoute(vec![hx(2, 0), hx(6, 0)]))],
+        );
+        assert_eq!(
+            rejection(&world),
+            Some(RejectReason::WaypointUnreachable(hx(6, 0)))
+        );
+        assert_eq!(world.truth.task_forces[&TF].status, TaskForceStatus::Idle);
+        // The message says why.
+        assert_eq!(
+            RejectReason::WaypointUnreachable(hx(6, 0)).to_string(),
+            "waypoint (6,0) cannot be reached by sea"
+        );
+    }
+
+    #[test]
+    fn a_land_waypoint_is_rejected_as_unreachable() {
+        // (3,2) is land and on the map: not off the map, but unreachable.
+        let mut world = world_with_fuel(2000);
+        take_in(&mut world, vec![route_to(3, 2)]);
+        assert_eq!(
+            rejection(&world),
+            Some(RejectReason::WaypointUnreachable(hx(3, 2)))
+        );
+    }
+
+    #[test]
+    fn a_force_that_must_go_round_land_does_so_and_arrives() {
+        // Wall (3,-1) to (3,2) with the strip open at r = 3: from (0,0) to
+        // (6,0) the force has to go down to r = 3 and back. The route is
+        // accepted and finished: the movement loop uses the path.
+        let mut world = world_with_fuel(2000);
+        make_land(&mut world, &[(3, -1), (3, 0), (3, 1), (3, 2)]);
+        let steps = world
+            .map
+            .sea_distance(hx(0, 0), hx(6, 0))
+            .expect("reachable");
+        assert!(steps > 6);
+        world.submit_orders(Side::Allied, vec![route_to(6, 0)]);
+        for _ in 0..3 {
+            world.resolve_day().expect("day resolves");
+        }
+        assert_eq!(rejection(&world), None);
+        assert_eq!(
+            world.truth.task_forces[&TF].status,
+            TaskForceStatus::Arrived
+        );
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(6, 0));
+        // 40 nm a hex at 0.25 t/nm.
+        assert_eq!(
+            world.truth.ships[&SHIP].fuel_t,
+            Fixed::from_int(2000 - 10 * i64::from(steps))
+        );
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn a_force_in_a_hex_ships_cannot_enter_breaks_an_invariant() {
+        let mut world = world_with_fuel(2000);
+        make_land(&mut world, &[(0, 0)]);
+        assert_eq!(
+            invariants::check(&world.truth, &world.map, &world.ref_data),
+            vec![crate::invariants::InvariantViolation::TaskForceNotNavigable(TF, hx(0, 0))]
+        );
+        // The hex ahead too.
+        let mut world = world_with_fuel(2000);
+        make_land(&mut world, &[(1, 0)]);
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.toward_hex = Some(hx(1, 0));
+        task_force.progress_nm = nm(5);
+        assert_eq!(
+            invariants::check(&world.truth, &world.map, &world.ref_data),
+            vec![crate::invariants::InvariantViolation::TaskForceNotNavigable(TF, hx(1, 0))]
+        );
+        assert_eq!(
+            crate::invariants::InvariantViolation::TaskForceNotNavigable(TF, hx(1, 0)).to_string(),
+            format!("{TF} is at (1,0), which ships cannot enter")
         );
     }
 }

@@ -1,0 +1,360 @@
+//! The three output files.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
+
+use crate::derive::{ShipResult, Value, CARGO, FIGURES, KIND, RADAR, WHOLE};
+use crate::input::{List, Rules};
+use crate::problem::{Kind, Problem};
+use crate::reading::Row;
+
+/// The rule behind each figure, in words, in the order of `FIGURES`.
+const RULES: [&str; 14] = [
+    "type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",
+    "endurance_speed_kn of the ship, else of its class",
+    "max_speed_kn of the ship, else of its class",
+    "fuel_capacity_lt of the ship, else of its class (a simulation ton is a long ton)",
+    "endurance_nm of the ship, else of its class",
+    "fixed at 0: warships carry no cargo",
+    "count of the main_battery fit",
+    "rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm is never read)",
+    "main_rounds_per_gun of the ship, else of its class",
+    "shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage",
+    "count of the torpedo_tubes fit",
+    "warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted",
+    "displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",
+    "1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0",
+];
+
+/// The three files, as text.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Outputs {
+    pub class_csv: String,
+    pub sources_csv: String,
+    pub ships_csv: String,
+}
+
+/// `<stem>.sources.csv` and `<stem>.ships.csv`, the names of the companions
+/// of a class CSV, from the output path as the list writes it.
+pub fn companion_names(output: &str) -> (String, String) {
+    let stem = Path::new(output).file_stem().map_or_else(
+        || "ship_classes".to_string(),
+        |s| s.to_string_lossy().into_owned(),
+    );
+    (format!("{stem}.sources.csv"), format!("{stem}.ships.csv"))
+}
+
+struct ClassRow {
+    id: u32,
+    name: String,
+    class_id: u64,
+    figures: Vec<Value>,
+    members: Vec<usize>,
+}
+
+fn cell(i: usize, value: &Value) -> String {
+    match value {
+        Value::Text(text) => text.clone(),
+        Value::Flag(flag) => if *flag { "1" } else { "0" }.to_string(),
+        Value::Num(dec) if WHOLE.contains(&i) => dec.whole().to_string(),
+        Value::Num(dec) => dec.to_string(),
+    }
+}
+
+fn shown(value: &Value) -> String {
+    match value {
+        Value::Text(text) => text.clone(),
+        Value::Flag(flag) => if *flag { "1" } else { "0" }.to_string(),
+        Value::Num(dec) => dec.to_string(),
+    }
+}
+
+fn one_line(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn csv_text(header: &[&str], rows: &[Vec<String>]) -> String {
+    let mut writer = csv::Writer::from_writer(Vec::new());
+    writer.write_record(header).expect("writing to memory");
+    for row in rows {
+        writer.write_record(row).expect("writing to memory");
+    }
+    let bytes = writer.into_inner().expect("writing to memory");
+    String::from_utf8(bytes).expect("the text written was UTF-8")
+}
+
+/// Groups ships into class rows, names and numbers them.
+fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Problem> {
+    let mut groups: BTreeMap<(u64, Vec<Value>), Vec<usize>> = BTreeMap::new();
+    for (i, result) in results.iter().enumerate() {
+        let figures = result.figures.iter().map(|f| f.value.clone()).collect();
+        groups
+            .entry((result.class_id, figures))
+            .or_default()
+            .push(i);
+    }
+    let mut rows = Vec::new();
+    for (n, ((class_id, figures), members)) in groups.into_iter().enumerate() {
+        let id = u32::try_from(n)
+            .ok()
+            .and_then(|n| list.first_class_id.checked_add(n))
+            .ok_or_else(|| {
+                Problem::new(
+                    "list",
+                    Kind::List,
+                    "first_class_id",
+                    "class ids run past the largest whole number",
+                )
+            })?;
+        rows.push(ClassRow {
+            id,
+            name: String::new(),
+            class_id,
+            figures,
+            members,
+        });
+    }
+    // Names: the facts class name, and for a class with several rows what
+    // differs between them.
+    let mut by_class: BTreeMap<u64, Vec<usize>> = BTreeMap::new();
+    for (i, row) in rows.iter().enumerate() {
+        by_class.entry(row.class_id).or_default().push(i);
+    }
+    for indexes in by_class.values() {
+        let base = results[rows[indexes[0]].members[0]].class_name.clone();
+        let differing: Vec<usize> = (0..FIGURES.len())
+            .filter(|&f| {
+                indexes
+                    .iter()
+                    .any(|&i| rows[i].figures[f] != rows[indexes[0]].figures[f])
+            })
+            .collect();
+        for &i in indexes {
+            let mut name = base.clone();
+            if indexes.len() > 1 {
+                for &f in &differing {
+                    match (&rows[i].figures[f], f) {
+                        (Value::Flag(true), RADAR) => name.push_str(", radar"),
+                        (Value::Flag(false), RADAR) => name.push_str(", no radar"),
+                        (value, _) => {
+                            name.push_str(&format!(", {} {}", FIGURES[f], shown(value)));
+                        }
+                    }
+                }
+            }
+            rows[i].name = name;
+        }
+    }
+    debug_assert_eq!(
+        rows.iter().map(|r| &r.name).collect::<BTreeSet<_>>().len(),
+        rows.len(),
+        "class row names must be distinct"
+    );
+    Ok(rows)
+}
+
+pub struct Context<'a> {
+    pub list: &'a List,
+    pub list_name: &'a str,
+    pub rules: &'a Rules,
+    pub results: &'a [ShipResult],
+    /// Exceptions used, deduplicated, in rules order.
+    pub used: &'a BTreeMap<(usize, String, u64), Row>,
+}
+
+pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
+    let Context {
+        list,
+        list_name,
+        rules,
+        results,
+        used,
+    } = ctx;
+    let rows = class_rows(list, results)?;
+    let (sources_name, ships_name) = companion_names(&list.output);
+    let class_name = Path::new(&list.output)
+        .file_name()
+        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+    let assumed: Vec<&str> = results
+        .iter()
+        .filter(|r| r.radar_assumed)
+        .map(|r| r.ship.as_str())
+        .collect();
+
+    // Class CSV.
+    let mut class_text = String::new();
+    let mut line = |text: String| {
+        class_text.push_str("# ");
+        class_text.push_str(&text);
+        class_text.push('\n');
+    };
+    line("GENERATED by oob-derive from the facts in data/oob. Do not edit.".to_string());
+    line(format!(
+        "List: {list_name}: {} (as of {})",
+        one_line(&list.name),
+        list.date_text
+    ));
+    line(format!("Rules: {}", list.rules));
+    line(format!("Companions: {sources_name} (the rule and fact rows behind every figure), {ships_name} (the class of each listed ship)"));
+    line(
+        "Constants, MODEL PARAMETERS AND PLACEHOLDERS, not history (decision 0020, 8):".to_string(),
+    );
+    line(format!(
+        "  gun_shell_kg_per_damage = {}",
+        rules.gun_shell_kg_per_damage
+    ));
+    line(format!(
+        "  torpedo_damage_per_warhead_kg = {}",
+        rules.torpedo_damage_per_warhead_kg
+    ));
+    line(format!(
+        "  displacement_lt_per_toughness = {}",
+        rules.displacement_lt_per_toughness
+    ));
+    line("Counts and rounds carried are whole numbers. The other figures are exact decimals of up to six places, trailing zeros trimmed; a division truncates toward zero at the sixth place.".to_string());
+    if used.is_empty() {
+        line("Exceptions used (decision 0020, 3): none".to_string());
+    } else {
+        line("Exceptions used (decision 0020, 3):".to_string());
+        for ((index, _, _), row) in used.iter() {
+            let e = &rules.exceptions[*index];
+            line(format!(
+                "  {} {}: {} row {} ({}); reason: {}; agreed {}",
+                e.entity,
+                e.fact,
+                row.file,
+                row.id,
+                row.standing,
+                one_line(&e.reason),
+                e.agreed
+            ));
+        }
+    }
+    if assumed.is_empty() {
+        line("Radar assumptions used (decision 0019, 5): none".to_string());
+    } else {
+        line("Radar assumptions used (decision 0019, 5):".to_string());
+        for ship in &assumed {
+            line(format!(
+                "  {ship}: radar unknown in the facts, treated as not fitted"
+            ));
+        }
+    }
+    let class_header: Vec<&str> = [&["id", "name"][..], &FIGURES[..]].concat();
+    let class_body: Vec<Vec<String>> = rows
+        .iter()
+        .map(|row| {
+            let mut cells = vec![row.id.to_string(), row.name.clone()];
+            cells.extend(row.figures.iter().enumerate().map(|(i, v)| cell(i, v)));
+            cells
+        })
+        .collect();
+    let class_csv = format!("{class_text}{}", csv_text(&class_header, &class_body));
+
+    // Sources CSV.
+    let mut sources_text = String::new();
+    for text in [
+        "GENERATED by oob-derive. Do not edit.".to_string(),
+        format!("For each class row of {class_name} and each of its figures: the value as written there, the rule, the fact rows read, and a note."),
+        "facts: file:id of each row read, files in data/oob, unioned over the ships of the class row. Constants and fixed values cite no row.".to_string(),
+        "The note gives the exact value where the class CSV truncated a count or rounds figure to a whole number, says where a figure rests on an exception or an assumption, and lists the ship rows that hold on the date but were not read (so the class's rows were).".to_string(),
+    ] {
+        sources_text.push_str("# ");
+        sources_text.push_str(&text);
+        sources_text.push('\n');
+    }
+    let mut source_rows = Vec::new();
+    for row in &rows {
+        for (i, figure) in FIGURES.iter().enumerate() {
+            let cites: BTreeSet<_> = row
+                .members
+                .iter()
+                .flat_map(|&m| results[m].figures[i].cites.iter().cloned())
+                .collect();
+            let facts = cites
+                .iter()
+                .map(|(file, id)| format!("{file}:{id}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let mut notes = Vec::new();
+            if let Value::Num(exact) = &row.figures[i] {
+                if WHOLE.contains(&i) && exact.has_fraction() {
+                    notes.push(format!("exact {exact}, truncated"));
+                }
+            }
+            let doubts: BTreeSet<&str> = row
+                .members
+                .iter()
+                .flat_map(|&m| results[m].figures[i].doubts.iter().map(String::as_str))
+                .collect();
+            if !doubts.is_empty() {
+                notes.push(format!(
+                    "ship rows holding on the date but not read: {}",
+                    doubts.into_iter().collect::<Vec<_>>().join(", ")
+                ));
+            }
+            if row.members.iter().any(|&m| results[m].figures[i].excepted) {
+                notes.push("rests on an exception".to_string());
+            }
+            if i == RADAR {
+                let ships: Vec<&str> = row
+                    .members
+                    .iter()
+                    .filter(|&&m| results[m].radar_assumed)
+                    .map(|&m| results[m].ship.as_str())
+                    .collect();
+                if !ships.is_empty() {
+                    notes.push(format!("radar assumed none for {}", ships.join(", ")));
+                }
+            }
+            debug_assert!(i != CARGO || facts.is_empty());
+            let _ = KIND;
+            source_rows.push(vec![
+                row.id.to_string(),
+                (*figure).to_string(),
+                cell(i, &row.figures[i]),
+                RULES[i].to_string(),
+                facts,
+                notes.join("; "),
+            ]);
+        }
+    }
+    let sources_csv = format!(
+        "{sources_text}{}",
+        csv_text(
+            &["class_id", "figure", "value", "rule", "facts", "note"],
+            &source_rows
+        )
+    );
+
+    // Ships CSV.
+    let mut ships_text = String::new();
+    for text in [
+        "GENERATED by oob-derive. Do not edit.".to_string(),
+        format!("The class row of {class_name} each listed ship is given, in list order."),
+    ] {
+        ships_text.push_str("# ");
+        ships_text.push_str(&text);
+        ships_text.push('\n');
+    }
+    let ship_rows: Vec<Vec<String>> = results
+        .iter()
+        .enumerate()
+        .map(|(i, result)| {
+            let row = rows
+                .iter()
+                .find(|r| r.members.contains(&i))
+                .expect("every ship is in a class row");
+            vec![result.ship.clone(), row.id.to_string(), row.name.clone()]
+        })
+        .collect();
+    let ships_csv = format!(
+        "{ships_text}{}",
+        csv_text(&["ship", "class_id", "class_name"], &ship_rows)
+    );
+    Ok(Outputs {
+        class_csv,
+        sources_csv,
+        ships_csv,
+    })
+}

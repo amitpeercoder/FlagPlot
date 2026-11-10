@@ -1,0 +1,29 @@
+# How game figures for real ships are derived from the facts in data/oob.
+# See docs/decisions/0020-figures-from-facts.md.
+#
+# The three constants below are MODEL PARAMETERS and PLACEHOLDERS. They are
+# not historical figures. They are the same for every ship, and step 2 tunes
+# them against recorded outcomes. Everything else a real ship's figures rest
+# on is a sourced fact.
+
+constants_are_placeholders = true
+
+# Gun damage = shell weight in kg / this.
+gun_shell_kg_per_damage = 6
+
+# Torpedo damage = warhead weight in kg x this.
+torpedo_damage_per_warhead_kg = "0.4"
+
+# Toughness = standard displacement in long tons / this.
+displacement_lt_per_toughness = 25
+
+# Exceptions to "read only preferred rows" (decision 0020, 3). Each names a
+# class or ship, a fact, the row to read, the reason, and the date the
+# designer agreed. None yet.
+#
+# [[exception]]
+# entity = "us-bagley-class"
+# fact = "displacement_standard_lt"
+# row = 625
+# reason = "..."
+# agreed = "2026-11-10"

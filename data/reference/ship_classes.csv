@@ -8,7 +8,8 @@
 # main_guns, gun_rounds_per_min (per gun), gun_rounds_per_gun (ammunition
 # carried), gun_damage: the main battery. torpedo_tubes, torpedo_damage: one
 # salvo. toughness: damage a ship of the class can take. A hit does
-# 100 x damage / toughness points. radar: 1 if fitted. See
+# 100 x damage / toughness points. gun_rounds_per_min, gun_damage,
+# torpedo_damage and toughness may be decimals such as 19.666666. radar: 1 if fitted. See
 # docs/decisions/0014-surface-combat.md.
 id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar
 1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0

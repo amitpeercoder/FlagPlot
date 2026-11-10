@@ -1,0 +1,70 @@
+//! Orders as JSON.
+
+use serde::Serialize;
+use sim_core::orders::{AirGroupOrder, Order, OrderKind, TaskForceOrder};
+
+use super::names;
+
+#[derive(Serialize)]
+pub struct OrderOut {
+    id: u32,
+    side: &'static str,
+    /// The day the order took effect.
+    day: u32,
+    issuer: &'static str,
+    /// An entity string such as `task_force:1`.
+    target: String,
+    text: String,
+}
+
+pub fn order(order: &Order) -> OrderOut {
+    OrderOut {
+        id: order.id.raw(),
+        side: names::side(order.side),
+        day: order.day_issued,
+        issuer: names::issuer(order.origin.issuer),
+        target: order.kind.target().to_string(),
+        text: text(&order.kind),
+    }
+}
+
+/// A short description of what the order asks for.
+fn text(kind: &OrderKind) -> String {
+    match kind {
+        OrderKind::TaskForce { order, .. } => match order {
+            TaskForceOrder::SetRoute(waypoints) => {
+                let waypoints: Vec<String> = waypoints.iter().map(ToString::to_string).collect();
+                format!("route via {}", waypoints.join(", "))
+            }
+            TaskForceOrder::SetSpeed(speed) => format!("speed {}", names::speed(*speed)),
+            TaskForceOrder::SetMission(mission) => format!("mission {}", names::mission(*mission)),
+            TaskForceOrder::Load => "load supply from the base here".to_string(),
+            TaskForceOrder::Unload => "unload supply into the base here".to_string(),
+            TaskForceOrder::SetRulesOfEngagement {
+                stance,
+                break_off,
+                stragglers,
+                keep_share,
+            } => format!(
+                "rules of engagement: {}, break off at {break_off}, stragglers {}, keep share {keep_share}",
+                names::stance(*stance),
+                stragglers.name()
+            ),
+            TaskForceOrder::SetHomePort(base) => format!("home port {base}"),
+            TaskForceOrder::DetachShips(ships) => {
+                let ships: Vec<String> = ships.iter().map(ToString::to_string).collect();
+                format!("detach {}", ships.join(", "))
+            }
+        },
+        OrderKind::AirGroup { order, .. } => match order {
+            AirGroupOrder::SetAirMission(mission) => {
+                format!("air mission {}", names::air_mission(*mission))
+            }
+            AirGroupOrder::SetSearchArc {
+                from_deg,
+                to_deg,
+                range_nm,
+            } => format!("search {from_deg:03}-{to_deg:03} out to {range_nm} nm"),
+        },
+    }
+}
