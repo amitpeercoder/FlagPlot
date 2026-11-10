@@ -1,0 +1,118 @@
+# Scenario 4a: two cruiser forces meet at night. One is alert and one is not.
+#
+# Stage 4a of scenario 4: it proves the surface combat rule on placeholder
+# ships, before the real map (4b) and Savo Island (4c). The hand calculation
+# is written out in tests/scenario_04a_night_action.rs. The test runs this
+# file with seeds 1 to 1000.
+#
+# PLACEHOLDER DATA. The ships, combat figures and map are invented.
+
+name = "Scenario 4a: Night action, an alert force meets one that is not"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_night_action.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# The attacking force starts at (0,0) and steams east through (5,0).
+[[task_force]]
+id = 1
+name = "Placeholder attacking force"
+side = "japanese"
+q = 0
+r = 0
+mission = "surface_combat"
+
+# The defending force lies stopped at (5,0), 200 nm east. It is not alert.
+[[task_force]]
+id = 2
+name = "Placeholder defending force"
+side = "allied"
+q = 5
+r = 0
+mission = "surface_combat"
+alert = false
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser A3"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cruiser B3"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+# Day 1, Japanese: steam east to (10,0) at cruise speed, and fight.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[10, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# Day 1, Allied: hold position, and fight.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"

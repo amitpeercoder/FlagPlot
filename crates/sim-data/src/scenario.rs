@@ -10,9 +10,12 @@ use sim_core::ids::{
 };
 use sim_core::orders::{
     AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, SpeedSetting,
-    TaskForceOrder,
+    Stance, StragglerInstruction, TaskForceOrder,
 };
-use sim_core::state::{AirGroup, Base, Ship, ShipLocation, Side, TaskForce, TruthState};
+use sim_core::state::{
+    AirGroup, Base, Ship, ShipLocation, ShipSystem, ShipSystems, Side, SystemState, TaskForce,
+    TruthState,
+};
 use sim_core::{DaySummary, World};
 
 use crate::error::DataError;
@@ -20,6 +23,7 @@ use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
     load_aircraft_types, load_port_sizes, load_search_figures, load_ship_classes,
+    load_surface_combat_figures,
 };
 
 #[derive(Deserialize)]
@@ -41,6 +45,8 @@ struct ScenarioFile {
     aircraft_types: String,
     /// Path to the search figures file, relative to the scenario file.
     search: String,
+    /// Path to the surface combat figures file, relative to the scenario file.
+    surface_combat: String,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -89,6 +95,11 @@ struct TaskForceSpec {
     q: Option<i32>,
     r: Option<i32>,
     mission: MissionSpec,
+    /// Whether the task force starts alert. Defaults to true.
+    alert: Option<bool>,
+    /// The base the force heads for when it retires or sends stragglers
+    /// home. It must be a base of the force's own side. Defaults to none.
+    home_port: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -104,6 +115,33 @@ struct ShipSpec {
     /// Exactly one of `task_force` and `port` must be given.
     task_force: Option<u32>,
     port: Option<u32>,
+    /// Gun rounds aboard at the start. Defaults to the guns times the
+    /// rounds each carries.
+    gun_rounds: Option<Quantity>,
+    /// The state of each named system at the start. Each defaults to
+    /// working, and anything else needs a class that has the system.
+    propulsion: Option<SystemStateSpec>,
+    fire_control: Option<SystemStateSpec>,
+    main_battery: Option<SystemStateSpec>,
+    torpedo_mounts: Option<SystemStateSpec>,
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum SystemStateSpec {
+    Working,
+    Degraded,
+    Out,
+}
+
+impl From<SystemStateSpec> for SystemState {
+    fn from(spec: SystemStateSpec) -> SystemState {
+        match spec {
+            SystemStateSpec::Working => SystemState::Working,
+            SystemStateSpec::Degraded => SystemState::Degraded,
+            SystemStateSpec::Out => SystemState::Out,
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -148,6 +186,56 @@ enum ActionSpec {
         to_deg: i32,
         range_nm: Quantity,
     },
+    SetRulesOfEngagement {
+        stance: StanceSpec,
+        break_off: Quantity,
+        #[serde(default)]
+        stragglers: StragglersSpec,
+        keep_share: Option<Quantity>,
+    },
+    SetHomePort {
+        base: u32,
+    },
+    Detach {
+        ships: Vec<u32>,
+    },
+}
+
+#[derive(Deserialize, Clone, Copy, Default)]
+#[serde(rename_all = "snake_case")]
+enum StragglersSpec {
+    #[default]
+    Keep,
+    Detach,
+    Leave,
+    Retire,
+}
+
+impl From<StragglersSpec> for StragglerInstruction {
+    fn from(spec: StragglersSpec) -> StragglerInstruction {
+        match spec {
+            StragglersSpec::Keep => StragglerInstruction::Keep,
+            StragglersSpec::Detach => StragglerInstruction::Detach,
+            StragglersSpec::Leave => StragglerInstruction::Leave,
+            StragglersSpec::Retire => StragglerInstruction::Retire,
+        }
+    }
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum StanceSpec {
+    Engage,
+    Avoid,
+}
+
+impl From<StanceSpec> for Stance {
+    fn from(spec: StanceSpec) -> Stance {
+        match spec {
+            StanceSpec::Engage => Stance::Engage,
+            StanceSpec::Avoid => Stance::Avoid,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -272,6 +360,9 @@ impl Scenario {
         ref_data.port_sizes = load_port_sizes(&folder.join(&file.port_sizes))?;
         ref_data.aircraft_types = load_aircraft_types(&folder.join(&file.aircraft_types))?;
         ref_data.search = Some(load_search_figures(&folder.join(&file.search))?);
+        ref_data.surface_combat = Some(load_surface_combat_figures(
+            &folder.join(&file.surface_combat),
+        )?);
 
         let mut truth = TruthState::default();
 
@@ -350,13 +441,29 @@ impl Scenario {
                     )))
                 }
             };
-            let task_force = TaskForce::at(
+            let mut task_force = TaskForce::at(
                 id,
                 spec.name.clone(),
                 spec.side.into(),
                 hex,
                 spec.mission.into(),
             );
+            task_force.alert = spec.alert.unwrap_or(true);
+            if let Some(raw) = spec.home_port {
+                let port = BaseId::new(raw);
+                let base = truth
+                    .bases
+                    .get(&port)
+                    .ok_or_else(|| fail(format!("{id} has unknown home port {raw}")))?;
+                if base.side != task_force.side {
+                    return Err(fail(format!(
+                        "{id} is {} but its home port {port} is {}",
+                        task_force.side.name(),
+                        base.side.name()
+                    )));
+                }
+                task_force.home_port = Some(port);
+            }
             if truth.task_forces.insert(id, task_force).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
@@ -392,6 +499,37 @@ impl Scenario {
                     )))
                 }
             };
+            let ship_class = &ref_data.ship_classes[&class];
+            let gun_rounds = match &spec.gun_rounds {
+                Some(quantity) => quantity
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id}: gun_rounds {e}")))?,
+                None => Fixed::from_int(
+                    i64::from(ship_class.main_guns) * i64::from(ship_class.gun_rounds_per_gun),
+                ),
+            };
+            let mut systems = ShipSystems::ALL_WORKING;
+            for (system, wanted) in [
+                (ShipSystem::Propulsion, spec.propulsion),
+                (ShipSystem::FireControl, spec.fire_control),
+                (ShipSystem::MainBattery, spec.main_battery),
+                (ShipSystem::TorpedoMounts, spec.torpedo_mounts),
+            ] {
+                let Some(wanted) = wanted else {
+                    continue;
+                };
+                let state: SystemState = wanted.into();
+                if state != SystemState::Working && !ship_class.has_system(system) {
+                    return Err(fail(format!(
+                        "{id} is {} {} but its class {} has no {}",
+                        system.name(),
+                        state.name(),
+                        spec.class,
+                        system.name()
+                    )));
+                }
+                systems.set(system, state);
+            }
             let ship = Ship {
                 id,
                 name: spec.name.clone(),
@@ -408,6 +546,11 @@ impl Scenario {
                     None => Fixed::ZERO,
                 },
                 location,
+                flotation_damage: Fixed::ZERO,
+                fire_damage: Fixed::ZERO,
+                gun_rounds,
+                torpedoes_ready: ship_class.torpedo_tubes > 0,
+                systems,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -444,6 +587,30 @@ impl Scenario {
                         }
                         ActionSpec::Load {} => TaskForceOrder::Load,
                         ActionSpec::Unload {} => TaskForceOrder::Unload,
+                        ActionSpec::SetRulesOfEngagement {
+                            stance,
+                            break_off,
+                            stragglers,
+                            keep_share,
+                        } => TaskForceOrder::SetRulesOfEngagement {
+                            stance: (*stance).into(),
+                            break_off: break_off
+                                .to_fixed()
+                                .map_err(|e| fail(format!("break_off on day {day} {e}")))?,
+                            stragglers: (*stragglers).into(),
+                            keep_share: match keep_share {
+                                Some(quantity) => quantity
+                                    .to_fixed()
+                                    .map_err(|e| fail(format!("keep_share on day {day} {e}")))?,
+                                None => Fixed::ZERO,
+                            },
+                        },
+                        ActionSpec::SetHomePort { base } => {
+                            TaskForceOrder::SetHomePort(BaseId::new(*base))
+                        }
+                        ActionSpec::Detach { ships } => TaskForceOrder::DetachShips(
+                            ships.iter().map(|raw| ShipId::new(*raw)).collect(),
+                        ),
                         ActionSpec::SetAirMission { .. } => {
                             return Err(wrong_target("set_air_mission", "air_group"))
                         }
@@ -562,6 +729,7 @@ impl Scenario {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sim_core::state::RulesOfEngagement;
 
     #[derive(Deserialize)]
     struct Holder {
@@ -595,6 +763,7 @@ ship_classes = "../reference/ship_classes.csv"
 port_sizes = "../reference/port_sizes.csv"
 aircraft_types = "../reference/aircraft_types.csv"
 search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
 
 [[base]]
 id = 1
@@ -711,6 +880,363 @@ r = 0
         assert!(parse_with(&order("task_force = 1", "kind = \"load\"\nspeeed = 5")).is_err());
         let typo = "kind = \"load\"\nintnet = 1";
         assert!(parse_with(&order("task_force = 1", typo)).is_err());
+    }
+
+    fn ship(extra: &str) -> String {
+        format!(
+            "[[ship]]\nid = 1\nname = \"S\"\nclass = 1\nside = \"allied\"\nfuel_t = 100\ntask_force = 1\n{extra}\n"
+        )
+    }
+
+    fn with_force(extra: &str) -> String {
+        format!("{}{}", task_force("at_base = 1"), extra)
+    }
+
+    #[test]
+    fn a_task_force_is_alert_unless_the_scenario_says_otherwise() {
+        let truth = |scenario: Scenario| scenario.world.umpire().clone();
+        let default = truth(parse_with(&task_force("at_base = 1")).expect("loads"));
+        let force = &default.task_forces[&TaskForceId::new(1)];
+        assert!(force.alert);
+        assert_eq!(force.rules_of_engagement, RulesOfEngagement::DEFAULT);
+        assert_eq!(force.rules_order, None);
+        for (text, expected) in [("alert = true", true), ("alert = false", false)] {
+            let loaded =
+                truth(parse_with(&task_force(&format!("at_base = 1\n{text}"))).expect("loads"));
+            assert_eq!(loaded.task_forces[&TaskForceId::new(1)].alert, expected);
+        }
+        assert!(parse_with(&task_force("at_base = 1\nalert = \"no\"")).is_err());
+        assert!(parse_with(&task_force("at_base = 1\nalert = 0")).is_err());
+    }
+
+    #[test]
+    fn a_ship_starts_with_the_guns_it_carries_and_its_torpedoes() {
+        let scenario = parse_with(&with_force(&ship(""))).expect("loads");
+        let truth = scenario.world.umpire();
+        let cruiser = &truth.ships[&ShipId::new(1)];
+        // Class 1: 8 guns x 100 rounds, 8 tubes.
+        assert_eq!(cruiser.gun_rounds, Fixed::from_int(800));
+        assert!(cruiser.torpedoes_ready);
+        assert_eq!(cruiser.flotation_damage, Fixed::ZERO);
+        assert_eq!(cruiser.systems, ShipSystems::ALL_WORKING);
+        assert_eq!(cruiser.fire_damage, Fixed::ZERO);
+
+        // Class 3 is a cargo ship: no guns and no tubes.
+        let cargo = ship("").replace("class = 1", "class = 3");
+        let scenario = parse_with(&with_force(&cargo)).expect("loads");
+        let ship = &scenario.world.umpire().ships[&ShipId::new(1)];
+        assert_eq!(ship.gun_rounds, Fixed::ZERO);
+        assert!(!ship.torpedoes_ready);
+    }
+
+    #[test]
+    fn gun_rounds_are_a_whole_number_or_a_decimal_string() {
+        let rounds = |text: &str| {
+            parse_with(&with_force(&ship(&format!("gun_rounds = {text}"))))
+                .map(|s| s.world.umpire().ships[&ShipId::new(1)].gun_rounds)
+        };
+        assert_eq!(rounds("120").expect("loads"), Fixed::from_int(120));
+        assert_eq!(
+            rounds("\"120.5\"").expect("loads"),
+            Fixed::from_ratio(241, 2)
+        );
+        assert_eq!(rounds("0").expect("loads"), Fixed::ZERO);
+        assert!(rounds("120.5").is_err());
+        assert!(rounds("\"many\"").is_err());
+        // A negative count starts the game in a state that breaks an
+        // invariant.
+        let message = rounds("-1").expect_err("rejected").message;
+        assert!(message.contains("negative gun rounds"), "{message}");
+    }
+
+    #[test]
+    fn a_ship_starts_with_the_system_states_the_scenario_gives() {
+        // Default: everything working. Class 1 has guns and tubes, so all
+        // four systems may be set.
+        let truth = |extra: &str| {
+            parse_with(&with_force(&ship(extra)))
+                .expect("loads")
+                .world
+                .umpire()
+                .ships[&ShipId::new(1)]
+                .systems
+        };
+        assert_eq!(truth(""), ShipSystems::ALL_WORKING);
+        let systems = truth(
+            "propulsion = \"degraded\"\nfire_control = \"out\"\nmain_battery = \"working\"\ntorpedo_mounts = \"out\"",
+        );
+        assert_eq!(systems.propulsion, SystemState::Degraded);
+        assert_eq!(systems.fire_control, SystemState::Out);
+        assert_eq!(systems.main_battery, SystemState::Working);
+        assert_eq!(systems.torpedo_mounts, SystemState::Out);
+    }
+
+    #[test]
+    fn a_system_state_must_be_a_known_word_on_a_class_that_has_the_system() {
+        assert!(parse_with(&with_force(&ship("propulsion = \"broken\""))).is_err());
+        assert!(parse_with(&with_force(&ship("propulsion = 2"))).is_err());
+        assert!(parse_with(&with_force(&ship("propulsions = \"out\""))).is_err());
+        // Class 3 is a cargo ship with no guns and no tubes: only propulsion.
+        let cargo = |extra: &str| ship(extra).replace("class = 1", "class = 3");
+        parse_with(&with_force(&cargo("propulsion = \"out\""))).expect("propulsion loads");
+        // A system the class lacks may be given as working, and nothing else.
+        parse_with(&with_force(&cargo("main_battery = \"working\""))).expect("working loads");
+        for (key, state) in [
+            ("main_battery", "degraded"),
+            ("fire_control", "out"),
+            ("torpedo_mounts", "degraded"),
+        ] {
+            let message = error_of(&with_force(&cargo(&format!("{key} = \"{state}\""))));
+            assert!(message.contains("ship:1"), "{message}");
+            assert!(
+                message.contains(&key.replace('_', " ")) && message.contains("has no"),
+                "{message}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_task_force_may_have_a_home_port_of_its_own_side() {
+        let force = |extra: &str| {
+            parse_with(&task_force(&format!("at_base = 1\n{extra}")))
+                .expect("loads")
+                .world
+                .umpire()
+                .task_forces[&TaskForceId::new(1)]
+                .home_port
+        };
+        assert_eq!(force(""), None);
+        assert_eq!(force("home_port = 1"), Some(BaseId::new(1)));
+        // Base 9 does not exist; base 2 is Japanese and the force is Allied.
+        let message = error_of(&task_force("at_base = 1\nhome_port = 9"));
+        assert!(message.contains("task_force:1") && message.contains("home port"));
+        let message = error_of(&task_force("at_base = 1\nhome_port = 2"));
+        assert!(
+            message.contains("home port") && message.contains("Japanese"),
+            "{message}"
+        );
+        assert!(parse_with(&task_force("at_base = 1\nhome_port = \"one\"")).is_err());
+        assert!(parse_with(&task_force("at_base = 1\nhome_ports = 1")).is_err());
+    }
+
+    fn roe(body: &str) -> String {
+        order(
+            "task_force = 1",
+            &format!("kind = \"set_rules_of_engagement\"\n{body}"),
+        )
+    }
+
+    #[test]
+    fn a_rules_of_engagement_order_loads() {
+        let scenario = parse_with(&roe("stance = \"avoid\"\nbreak_off = \"0.25\"")).expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::SetRulesOfEngagement {
+                    stance: Stance::Avoid,
+                    break_off: Fixed::from_ratio(1, 4),
+                    stragglers: StragglerInstruction::Keep,
+                    keep_share: Fixed::ZERO,
+                },
+            }
+        );
+        let scenario = parse_with(&roe("stance = \"engage\"\nbreak_off = \"1\"")).expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::SetRulesOfEngagement {
+                    stance: Stance::Engage,
+                    break_off: Fixed::ONE,
+                    stragglers: StragglerInstruction::Keep,
+                    keep_share: Fixed::ZERO,
+                },
+            }
+        );
+        // A whole number works as for any quantity.
+        parse_with(&roe("stance = \"engage\"\nbreak_off = 1")).expect("loads");
+    }
+
+    #[test]
+    fn a_rules_of_engagement_order_loads_stragglers_and_keep_share() {
+        for (text, wanted) in [
+            ("keep", StragglerInstruction::Keep),
+            ("detach", StragglerInstruction::Detach),
+            ("leave", StragglerInstruction::Leave),
+            ("retire", StragglerInstruction::Retire),
+        ] {
+            let scenario = parse_with(&roe(&format!(
+                "stance = \"engage\"\nbreak_off = \"0.5\"\nstragglers = \"{text}\"\nkeep_share = \"0.5\""
+            )))
+            .expect("loads");
+            let (_, request) = &scenario.script[&1][0];
+            assert_eq!(
+                request.kind,
+                OrderKind::TaskForce {
+                    target: TaskForceId::new(1),
+                    order: TaskForceOrder::SetRulesOfEngagement {
+                        stance: Stance::Engage,
+                        break_off: Fixed::from_ratio(1, 2),
+                        stragglers: wanted,
+                        keep_share: Fixed::from_ratio(1, 2),
+                    },
+                }
+            );
+        }
+        // A bad name, a float and a misspelled field are errors.
+        assert!(parse_with(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nstragglers = \"abandon\""
+        ))
+        .is_err());
+        assert!(parse_with(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nkeep_share = 0.5"
+        ))
+        .is_err());
+        let message = error_of(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nkeep_share = \"most\"",
+        ));
+        assert!(message.contains("keep_share on day 1"), "{message}");
+        assert!(parse_with(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nstraggler = \"detach\""
+        ))
+        .is_err());
+        assert!(parse_with(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nkeepshare = \"0.5\""
+        ))
+        .is_err());
+    }
+
+    #[test]
+    fn a_home_port_order_loads_for_a_task_force_only() {
+        let scenario = parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_home_port\"\nbase = 2",
+        ))
+        .expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::SetHomePort(BaseId::new(2)),
+            }
+        );
+        assert!(error_of(&order(
+            "air_group = 1",
+            "kind = \"set_home_port\"\nbase = 1"
+        ))
+        .contains("air_group"));
+        assert!(parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_home_port\"\nbase = 1.5"
+        ))
+        .is_err());
+        assert!(parse_with(&order("task_force = 1", "kind = \"set_home_port\"")).is_err());
+        assert!(parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_home_port\"\nbse = 1"
+        ))
+        .is_err());
+        assert!(parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_home_port\"\nbase = 1\nextra = 1"
+        ))
+        .is_err());
+    }
+
+    #[test]
+    fn a_detach_order_loads_for_a_task_force_only() {
+        let scenario = parse_with(&order(
+            "task_force = 1",
+            "kind = \"detach\"\nships = [3, 1, 3]",
+        ))
+        .expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::DetachShips(vec![
+                    ShipId::new(3),
+                    ShipId::new(1),
+                    ShipId::new(3)
+                ]),
+            }
+        );
+        // An empty list loads: intake rejects it, as a rule of the game.
+        parse_with(&order("task_force = 1", "kind = \"detach\"\nships = []")).expect("loads");
+        assert!(
+            error_of(&order("air_group = 1", "kind = \"detach\"\nships = [1]"))
+                .contains("air_group")
+        );
+        assert!(parse_with(&order("task_force = 1", "kind = \"detach\"")).is_err());
+        assert!(parse_with(&order("task_force = 1", "kind = \"detach\"\nship = [1]")).is_err());
+        assert!(parse_with(&order("task_force = 1", "kind = \"detach\"\nships = [1.5]")).is_err());
+    }
+
+    #[test]
+    fn rules_of_engagement_order_errors_are_rejected() {
+        // A float, text that is no number, an unknown stance, a missing or
+        // misspelled field.
+        assert!(parse_with(&roe("stance = \"engage\"\nbreak_off = 0.5")).is_err());
+        assert!(parse_with(&roe("stance = \"engage\"\nbreak_off = \"half\"")).is_err());
+        let message = error_of(&roe("stance = \"engage\"\nbreak_off = \"half\""));
+        assert!(message.contains("break_off on day 1"), "{message}");
+        assert!(parse_with(&roe("stance = \"charge\"\nbreak_off = \"0.5\"")).is_err());
+        assert!(parse_with(&roe("stance = \"engage\"")).is_err());
+        assert!(parse_with(&roe("break_off = \"0.5\"")).is_err());
+        assert!(parse_with(&roe(
+            "stance = \"engage\"\nbreak_off = \"0.5\"\nbreak_offf = 1"
+        ))
+        .is_err());
+        // It is addressed to a task force, not an air group.
+        let to_group = order(
+            "air_group = 1",
+            "kind = \"set_rules_of_engagement\"\nstance = \"engage\"\nbreak_off = \"0.5\"",
+        );
+        assert!(error_of(&to_group).contains("air_group"));
+    }
+
+    #[test]
+    fn the_surface_combat_path_is_required_and_the_file_is_loaded() {
+        let scenario = parse_with(&task_force("at_base = 1")).expect("loads");
+        let figures = scenario
+            .world
+            .ref_data()
+            .surface_combat
+            .as_ref()
+            .expect("the loader supplies the figures");
+        assert_eq!(figures.max_rounds, 6);
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let text = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            "",
+        );
+        let message = Scenario::parse(&text, &path).expect_err("rejected").message;
+        assert!(message.contains("surface_combat"), "{message}");
+
+        let text = HEAD.replace("../reference/surface_combat.toml", "../reference/nope.toml");
+        assert!(Scenario::parse(&text, &path).is_err());
+    }
+
+    #[test]
+    fn the_night_action_scenario_loads_and_builds_a_world() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/scenarios/04a_night_action.toml");
+        let scenario = Scenario::load(&path).expect("scenario 4a loads");
+        let truth = scenario.world.umpire();
+        assert_eq!(truth.ships.len(), 6);
+        assert!(truth.task_forces[&TaskForceId::new(1)].alert);
+        assert!(!truth.task_forces[&TaskForceId::new(2)].alert);
+        assert!(truth
+            .ships
+            .values()
+            .all(|ship| ship.gun_rounds == Fixed::from_int(800) && ship.torpedoes_ready));
+        assert_eq!(scenario.script[&1].len(), 4);
     }
 
     #[test]

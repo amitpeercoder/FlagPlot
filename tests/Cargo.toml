@@ -8,6 +8,10 @@ publish.workspace = true
 [dev-dependencies]
 sim-core.workspace = true
 sim-data.workspace = true
+# Part 3 of scenario 4b reads the anchors file and places each position in a
+# hex with the map tool's own projection.
+csv.workspace = true
+map-tool = { path = "../crates/map-tool" }
 
 [[test]]
 name = "scenario_01_transit"
@@ -20,6 +24,18 @@ path = "scenario_02_supply_run.rs"
 [[test]]
 name = "scenario_03_search"
 path = "scenario_03_search.rs"
+
+[[test]]
+name = "scenario_04a_night_action"
+path = "scenario_04a_night_action.rs"
+
+[[test]]
+name = "scenario_04a2_stragglers"
+path = "scenario_04a2_stragglers.rs"
+
+[[test]]
+name = "scenario_04b_pathfinding"
+path = "scenario_04b_pathfinding.rs"
 
 [lints]
 workspace = true

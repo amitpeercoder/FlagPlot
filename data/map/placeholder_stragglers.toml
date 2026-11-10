@@ -1,0 +1,18 @@
+# PLACEHOLDER MAP. A strip of open sea with one base, used by scenario 4a2.
+# The geography is invented. The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 13]
+r = [-1, 1]
+
+# Stands in for a home port.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
