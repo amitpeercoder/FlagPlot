@@ -14,7 +14,17 @@ Times are zone minus 11, the time the Allied ships kept. Ranges are as the sourc
 | BuShips War Damage Report 29, 1943 | Damage to Quincy, Astoria and Vincennes from survivors' statements | Hits and sinking times for those three |
 | combinedfleet.com ship records | Modern compilation from Japanese records | Japanese ammunition and damage. Half its pages would not load |
 
-Bates was read as a scan through machine-read text, in which digits are sometimes misread. **The Japanese sightings in the first two encounters have since been checked against the page images of the scan** (printed pages 106 to 108 and 114 to 117): the times, ranges and bearings in the tables below are as printed. Four details were corrected from the images: Aoba and Kako sighted Jarvis at 0135, Chokai turned to course 150 at 0105, Patterson was 5,500 yards from Chokai at 0140, and Australia left at 2123. Rows checked this way say so. The rest of the Bates rows, about 440, have not been checked against images, and page numbers in their locators can be one out. The plates are bound into the same scan and are legible, but were not used for positions.
+Bates was read as a scan through machine-read text, in which digits are sometimes misread. **Printed pages 106 to 108, 110 to 112 and 114 to 117 have since been checked against the page images of the scan.** They cover the Japanese sightings in the first two encounters and the Allied positions at 0000 and 0132. Most figures were as first read. These were corrected from the images:
+
+- Aoba and Kako sighted Jarvis at 0135, not 0136.
+- Furutaka took bearings on Blue at 0121 and 0126, not 0116.
+- Chokai turned to course 150 at 0105, not 160.
+- Patterson was 5,500 yards from Chokai at 0140, not 6,500.
+- Ralph Talbot's nearest approach to the column was 13,000 yards, not 15,000.
+- Australia left at 2123, not 2125.
+- At 0132 the southern group bore 146 degrees from Savo, not 140, and Blue 273 degrees, not 275. At 0000 Ralph Talbot bore 013 degrees, not 015.
+
+One conflict is confirmed as printed and stands: the range at which Chokai sighted Blue is 10,900 yards on p.107 and 8,700 yards on p.110. Rows checked this way say so. The other Bates rows, about 430, have not been checked against images, and page numbers in their locators can be one out. The plates are bound into the same scan and are legible, but were not used for positions.
 
 Not read at all: Gill's Australian official history, the Japanese interrogations themselves (only as Bates quotes them), Morison, Loxton, Frank.
 
@@ -29,7 +39,7 @@ This is the question the scenario turns on, and the sources agree on its shape: 
 | 2345 | Ralph Talbot sees a floatplane over Savo and broadcasts a warning. Blue, Patterson, Vincennes and Quincy hear it. Turner and Crutchley do not get it | Eye | | Bates, ONI |
 | about 0000 | Blue's radar picks up the plane, after the warning | Radar | | Bates, ONI |
 | 0053 | Chokai sights Blue. Aoba sights her a minute later | Eye | 10,900 yd, or 8,700 yd: Bates gives both | Bates |
-| about 0105 | Furutaka sights Blue. The time is doubtful in the scan | Eye | about 11,000 yd | Bates |
+| 0121 | Furutaka takes bearings on Blue | Eye | 11,000 yd | Bates |
 | never | Blue sights nothing and has no radar contact. Her radar was working | | | Bates |
 | never | Ralph Talbot and the Japanese column do not sight each other. Bates puts the nearest approach beyond her radar's range | | | Bates |
 
@@ -78,9 +88,9 @@ All from Bates unless marked. Bearings are true, from the centre of Savo Island.
 
 | Force | Station | Movement |
 | --- | --- | --- |
-| Blue | Picket line west of Savo. At 0000: 270 degrees, 10.7 miles. At 0132: 275 degrees, 9 miles | Back and forth on 051 and 231 at 12 knots. The printed end points of her line do not agree with each other |
-| Ralph Talbot | Picket line north of Savo, 8°59'S 159°55'E to 9°01'S 159°49'E. At 0000: 010 or 015 degrees, 7 miles | Back and forth on 072 and 252 at 12 knots |
-| Southern group: Canberra leading Chicago at 600 yd, Patterson and Bagley 2,000 yd on either bow | South of a line drawn 125 degrees from Savo. At 0000: 146 degrees, 10 miles. At 0132: 140 degrees, 11.2 miles, heading 306 | A line on about 125 and 305 at 12 knots, reversing roughly on the hour |
+| Blue | Picket line west of Savo. At 0000: 270 degrees, 10.7 miles. At 0132: 273 degrees, 9 miles | Back and forth on 051 and 231 at 12 knots. The printed end points of her line do not agree with each other |
+| Ralph Talbot | Picket line north of Savo, 8°59'S 159°55'E to 9°01'S 159°49'E. At 0000: 013 degrees, 7 miles (010 in another place) | Back and forth on 072 and 252 at 12 knots |
+| Southern group: Canberra leading Chicago at 600 yd, Patterson and Bagley 2,000 yd on either bow | South of a line drawn 125 degrees from Savo. At 0000: 146 degrees, 10 miles. At 0132: 146 degrees, 11.2 miles, heading 306 | A line on about 125 and 305 at 12 knots, reversing roughly on the hour |
 | Northern group: Vincennes, Quincy, Astoria in column, Helm and Wilson ahead | North of the same line. At 0000: 080 degrees, 4.5 miles. At 0132: 094 degrees, 9.1 miles, heading 225 | Clockwise round a square five miles on a side at 10 knots, turning 90 degrees every half hour |
 | Eastern group: San Juan, Hobart, Monssen, Buchanan | East of 160°04'E. At 0000: 090 degrees, 11 miles | North and south at 15 knots |
 | Australia | Ordered away at 2055 and left the southern group at 2123 for the conference. At 0000: 140 degrees, 20 miles. After 0116 inside the transport screen off Guadalcanal | |
@@ -145,12 +155,12 @@ The rule asks for guns, rate of fire, shell weight, torpedo tubes, torpedo and w
 | Torpedo tubes | Sourced for every class. New Orleans class and Chicago had none. Australia's were landed in December 1940. Canberra's are inferred present, and ONI says she may have fired two. Wilson's number in 1942 is unknown |
 | Torpedo type | Type 93 is attested for Chokai and Kako on the night, for Furutaka two months later and for Aoba in 1943. **Kinugasa, Tenryu, Yubari and Yunagi have no source naming the torpedo they carried.** The class rows for the last three are inferences from what was standard when they were built. For US destroyers the Mark 15 is an inference from a Navy torpedo history, not a statement about these classes |
 | Warhead | Type 93: 490 kg, three sources. Mark 15: 224 kg or 374 kg depending on the model, and which was in the tubes in August 1942 was not found |
-| Displacement | **Disputed for every class but one.** Sources differ by 2 to 20 per cent, mostly because they quote different conditions or dates without saying which. A rule that uses displacement needs to name one source and one condition for all ships. Full load agrees across sources for the New Orleans, Bagley and Benham classes only |
+| Displacement | **Disputed for nearly every class.** Sources differ by 2 to 20 per cent, mostly because they quote different conditions or dates without saying which. `savo-island-choices.md` proposes one figure per class and says what kind of figure each is. Nothing is settled in the data, and the Bagley and Benham classes have no figure from a source graded above low |
 | Speed | Agreed for seven classes. Disputed for Aoba (32 or 33 knots), Bagley, Benham and New Orleans classes, between design and trial figures |
 | Radar on 8 August | Japanese: none, on the statement of the Navy's analysis and of a Japanese admiral who was there. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: the CXAM air search set, fitted in 1940 on the Navy's own ship history, and a set that ranged a ship at 7,000 yards that night, not named. Canberra: disputed, three weak sources. **Australia, Bagley, Patterson, Helm, Wilson, Jarvis: nothing found** |
 | Night optics | The technical mission reports confirm 12, 15 and 18 cm binoculars and 90 and 110 cm searchlights existed. Nothing found gives numbers per ship or a sighting range except the ranges in the detection tables above |
 
-The four choices the sources leave open (damage measure, ships with no radar found, torpedoes with no named type, disputed placements) are made in `savo-island-choices.md`.
+Four choices the sources leave open (damage measure, ships with no radar found, torpedoes with no named type, disputed placements) have proposals in `savo-island-choices.md`. They are for Amit to confirm.
 
 ## What a rule would need to model
 

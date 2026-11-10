@@ -1,50 +1,56 @@
-# Savo Island: four choices for scenario 4c
+# Savo Island: four proposed choices for scenario 4c
 
-Status: decided by Claude on 2026-11-10. Amit delegated these and may overturn any of them. They are choices about how to use the facts, made where the sources stop. None of them is a sourced fact, and none adds a figure to the facts layer.
+Status: **proposed, not decided.** Written by Claude on 2026-11-10 and revised after review. Amit confirms or overturns each one when the stage 4c plan is put to him. Until then nothing here is settled in the data: every row these proposals touch keeps the standing the sources give it.
 
-The evidence behind each is in `savo-island.md` and `conflicts.md`. If the scenario plan records these as a numbered decision, that record replaces this file.
+These are proposals about how to use the facts where the sources stop. None is a sourced fact and none adds a figure to the facts layer. The evidence is in `savo-island.md` and `conflicts.md`.
 
-## 1. Damage measure: standard displacement, one figure per class
+## 1. Damage measure: one displacement figure per class
 
-**Choice.** The measure of how much damage a ship can take is her standard displacement in August 1942, in long tons.
+**Proposal.** Use one displacement figure per class as the measure of how much damage a ship can take, as below. The rows stay `disputed` in `ship_class_facts.csv` until Amit confirms.
 
-| Class | Ships at Savo | Figure | Next nearest source figure |
-| --- | --- | --- | --- |
-| Takao | Chokai | 11,350 | 9,694 (the design figure) |
-| Aoba | Aoba, Kinugasa | 8,858 | 7,100 (before rebuild) |
-| Furutaka | Furutaka, Kako | 8,563 | 8,100 (before rebuild) |
-| Tenryu | Tenryu | 3,948 | 3,886 |
-| Yubari | Yubari | 2,844 | 3,387 |
-| Kamikaze | Yunagi | 1,378 | 1,270 |
-| County (Kent) | Canberra, Australia | 9,750 | 9,850 to 10,570 |
-| Northampton | Chicago | 9,300 | 9,050 |
-| New Orleans | Vincennes, Quincy, Astoria | 9,950 | 10,136 |
-| Bagley | Bagley, Patterson, Helm, Blue, Ralph Talbot, Jarvis | 1,624 | 1,646 |
-| Benham | Wilson | 1,657 | 1,656 |
+The figures are not all the same kind of thing. The table says what each one is, in the source's own terms.
 
-**Why standard and not full load.** Standard displacement has one definition for every navy in the list, set by treaty, and every class has a figure for it. Full load has no common definition, and several classes have no agreed figure for it.
+| Class | Ships at Savo | Proposed figure (long tons) | What the source calls it | Other source figures |
+| --- | --- | --- | --- | --- |
+| Takao | Chokai | 11,350 | One website prints it as displacement in "t" without naming the condition; Wikipedia gives the same number in long tons | 9,694: the as-built figure of the website that carries most Japanese class data |
+| Aoba | Aoba, Kinugasa | 8,858 | The figure after the 1938 to 1940 rebuild, converted from 9,000 metric tons. The condition was not recorded from the page | 7,100, before the rebuild |
+| Furutaka | Furutaka, Kako | 8,563 | The figure after the 1936 to 1939 rebuild, converted from 8,700 metric tons. The condition was not recorded from the page | 8,100, before the rebuild |
+| Tenryu | Tenryu | 3,948 | **"Normal", not standard** | 3,886: the same 3,948 treated as metric tons |
+| Yubari | Yubari | 2,844 | "Standard", as completed in 1923, converted from 2,890 metric tons. Two rows, one source | 3,387, which that source's page suggests is normal displacement |
+| Kamikaze | Yunagi | 1,378 | **"Normal", not standard**, converted from 1,400 metric tons | 1,270 |
+| County (Kent) | Canberra, Australia | 9,750 | One website labels it "BRT", a merchant-ship measure it uses for every warship; taken as standard. A second prints the same number in "t" | 9,850 to 10,570 for single ships at other dates |
+| Northampton | Chicago | 9,300 | "BRT" on the same website; taken as standard | 9,050 and 9,006 |
+| New Orleans | Vincennes, Quincy, Astoria | 9,950 | "BRT" on the same website; Wikipedia gives the same number as standard | 10,136 |
+| Bagley | Bagley, Patterson, Helm, Blue, Ralph Talbot | **not settled** | Candidates: 1,624 (two weak sources that may share an origin) and 1,646 (one website, condition not named) | 1,500, a nominal treaty figure |
+| Benham | Wilson | **not settled** | Candidates: 1,657 and 1,656 (two weak sources) | 1,500, a nominal treaty figure |
 
-**How each figure was picked.** In this order: the figure for the ship as she was in 1942, where a rebuild changed it; then a figure two sources give; then the better-graded source. Each row in `ship_class_facts.csv` now says which it was and why.
+**So the measure is not one definition.** It is standard displacement where a source says so (Yubari, and New Orleans by one source), normal displacement for Tenryu and Yunagi, and a figure whose condition the source does not name for the rest. Normal is a heavier condition than standard, so those two ships are overstated against the others by an amount the sources do not give. Whether the main Japanese source's tons are metric or long is not stated on its pages, and the Tenryu figure suggests long. That is a 1.6 per cent doubt on every Japanese figure.
 
-**How much it matters.** Apart from the three cases where the rejected figure describes a different ship (design, or before a rebuild), the sources differ by under 4 per cent, except Yubari (19 per cent) and the Kamikaze class (8 per cent). A damage rule that is sensitive to 4 per cent of displacement is too fine for this data.
+**Six destroyers have no preferable figure.** No source graded above "low" gives a displacement for the Bagley or Benham class. The candidates differ by under 2 per cent.
 
-**Known weakness.** The Japanese figures come from one website that gives no sources, and it is not certain whether its tons are metric or long. The difference is 1.6 per cent. A second weakness: one figure per class hides any difference between sisters.
+**Why displacement at all, and why not full load.** It is the one measure every class has. Full load has no common definition and several classes have no agreed figure.
 
-## 2. Ships with no radar found: treat as having no search radar
+**How much it matters.** Leaving aside figures that describe a different ship (before a rebuild, or a design figure), the candidates for each class lie within 4 per cent, except Yubari at 19 per cent. A damage rule sensitive to 4 per cent is finer than this data.
 
-**Choice.** Bagley, Patterson, Helm, Wilson and Jarvis are given no search radar on 8 August. Australia is given none either, though she was away from the fight. Vincennes, Quincy and Astoria are given a fire-control radar, which gives a range on a target already found and plays no part in finding one. Chicago and Canberra are given a search radar that detected nothing that night.
+**How the picks were made.** The ship as she was in 1942 where a rebuild changed her; then a figure two sources give; then the better-graded source. Decision 0015 says a higher grade alone does not settle a dispute, and three of these picks (Kamikaze, New Orleans, Northampton) rest on little more than that. That is why they are proposals.
 
-**Why.**
+## 2. Radar where none was found: unknown, with a proposed treatment
 
-- The pickets were chosen because they had the new search set. The Navy's own history of Blue says so. That only makes sense if most of the other destroyers did not have it.
-- No source records a radar detection of a ship by any of the five destroyers, by Chicago or by Canberra before the shooting. Whatever they carried, the result was the same as carrying nothing.
-- Giving a ship a radar the sources do not show would be inventing equipment. Leaving the ships out of the scenario would remove half the Allied force.
+**The facts.** What radar Bagley, Patterson, Helm, Wilson, Jarvis and Australia carried on 8 August 1942 is **unknown**. No source read says any of them had a set and none says they had none. The data records it as a gap, not as "none". Canberra's surface set stays disputed between Type 271 and Type 241, on four weak sources.
 
-**What it risks.** If one of the five did carry a set, the scenario understates a capability that failed anyway. The detection rule should be able to reproduce "radar near land found nothing" from the two pickets, which did have sets. It should not rely on the other ships having none.
+**Proposal for the scenario.** Give those six ships no radar detection of surface ships, as a stated assumption. Give Chicago and Canberra a search radar, and Vincennes, Quincy and Astoria a fire-control radar that ranges on a target already found.
 
-## 3. Torpedoes with no named type: the rule may read the inferred rows
+**What supports it.** One thing only: the Navy's history of Blue says the two pickets were chosen because they had the new search set, which implies most other destroyers present did not.
 
-**Choice.** The combat rule may use these, each flagged as resting on an unconfirmed fact:
+**What does not support it.** An earlier draft argued that no radar contact by these ships is recorded. That proves nothing: Chicago and Canberra had search sets and also detected nothing, and so did both pickets. The absence of a contact that night is not evidence about what was fitted.
+
+**What it risks, and why the risk is small.** If one of the five destroyers did carry a set, the scenario understates a capability that failed for every ship known to have it. The detection rule has to reproduce "radar near land found nothing" from the ships that did have sets, and should not depend on this assumption.
+
+## 3. Torpedoes with no named type: a proposed reading
+
+**The facts.** No source read names the torpedo carried by Kinugasa, Tenryu, Yubari or Yunagi in August 1942. For Yubari the data is in conflict with itself: a ship row names the Type 93 and the class rows name the 8th Year Type, both by assumption. All three rows are now marked `disputed`, so neither overrides the other. For the US Mark 15, both warhead rows (224 kg and 374 kg) are `disputed`.
+
+**Proposal.** Until a source is found, the combat rule reads these, each flagged as an assumption:
 
 | Ship | Torpedo | Basis |
 | --- | --- | --- |
@@ -52,31 +58,33 @@ The evidence behind each is in `savo-island.md` and `conflicts.md`. If the scena
 | Tenryu | 53 cm 6th Year Type | The standard 53 cm torpedo when she was built. No source read reports a change |
 | Yubari | 61 cm 8th Year Type | The 61 cm torpedo for light cruisers when she was built. No source read reports a change |
 | Yunagi | 53 cm 6th Year Type | As for Tenryu |
+| US destroyers | Mark 15 with the 224 kg warhead | The first model. Nothing read puts the heavier warhead in service by August 1942 |
 
-US destroyers: the Mark 15, with the 224 kg warhead of the first model. The 374 kg warhead belongs to a later model, and nothing read puts it in service by August 1942.
+**How to carry it.** For the rule to read the Yubari proposal, the scenario has to name the 8th Year Type for her itself. It cannot get it from the facts layer, where the question is open. The same holds for the Mark 15 warhead.
 
-**Why.** Decision 0015 lets a rule read an unconfirmed value if the rule says so. The alternative is ships with tubes and nothing in them. Tenryu and Yubari fired ten torpedoes between them and Tenryu's are credited with hits on Quincy, so leaving them unarmed would change the result.
+**What it risks.** If Tenryu or Yubari had been re-armed with Type 93, their torpedoes are understated by more than half: 490 kg against about 200 and 345 kg. They fired ten between them, and one compilation credits Tenryu with hits on Quincy. A research pass on this question is under way.
 
-**What it risks.** If Tenryu or Yubari had been re-armed with Type 93, their torpedoes are understated: 490 kg against about 200 and 345 kg. The Mark 15 choice matters less. Bagley's four were the only US torpedoes that may have hit anything, and that was Canberra.
+## 4. The disputed placements: a proposed reading
 
-## 4. The disputed placements
+**The facts.** The 1943 narrative and the 1950 analysis list Australia, Jarvis, Hull and Hobart differently. The rows stay `disputed` in `engagement_forces.csv`.
 
-**Choice.**
+**Proposal.**
 
 | Ship | Placement at the start of the night action |
 | --- | --- |
 | Australia | Not with the southern group. Inside the transport screen off Guadalcanal, about 20 miles from Savo. She takes no part |
-| Jarvis | Not in any group. Alone, damaged, steaming west about 3,000 yards south of Savo at slow speed, unable to report. She is in the scenario because the Japanese column sighted her and held fire |
+| Jarvis | Not in any group. Alone, damaged, steaming west about 3,000 yards south of Savo at slow speed, unable to report. In the scenario because the Japanese column sighted her and held fire |
 | Wilson | In the northern group, in Jarvis's place |
 | Hull | With the transport screen. Not in the fight |
 | Hobart | With San Juan in the eastern group. Not in the fight |
 
-**Why.** For Australia the two official accounts do not disagree about the night: one lists the task organisation and the other says where she was. For Jarvis the 1950 analysis reconstructs her track from three Japanese sightings, and the Navy's history has her replaced by Wilson after the torpedo hit of 8 August. Hull and Hobart appear in no account of the action itself.
+**Why.** For Australia and Hobart the two accounts mostly describe different things: one the task organisation on paper, the other where the ship was that night. For Jarvis the 1950 analysis reconstructs her track from Japanese sightings, and the Navy's history has Wilson replace her after the torpedo hit of 8 August. Hull appears in no account of the action.
 
-**The command consequence is part of the placement.** With Australia gone, Chicago's captain was in charge of the southern group and gave no orders, and the northern group's commander did not know he was the senior officer present. A scenario that puts Australia elsewhere should also start with those two gaps.
+**The command consequence is part of the placement.** With Australia gone, Chicago's captain was in charge of the southern group and gave no orders, and the northern group's commander did not know he was the senior officer present.
 
-## What these choices do not settle
+## What these proposals do not touch
 
 - Whether Canberra was torpedoed, and by whom. The scenario should not need to decide.
 - When Chokai changed to Type 93 torpedoes. She had them on the night.
-- Rate of fire. Every figure is from one website and is the gun's rate, not what crews achieved that night. The outcome data gives a check: the three northern cruisers fired 107 main-battery rounds between them before they were silenced.
+- Rate of fire. Every figure is from one website and is the gun's rate, not what crews achieved. The outcome data gives a check: the three northern cruisers fired 107 main-battery rounds between them before they were silenced.
+- Ammunition carried. Nothing is in the data yet. A research pass is under way.
