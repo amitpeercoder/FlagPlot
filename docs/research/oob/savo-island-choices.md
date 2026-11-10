@@ -1,8 +1,10 @@
 # Savo Island: four proposed choices for scenario 4c
 
-Status: **proposed, not decided.** Written by Claude on 2026-11-10 and revised after review. Amit confirms or overturns each one when the stage 4c plan is put to him. Until then nothing here is settled in the data: every row these proposals touch keeps the standing the sources give it.
+**What was decided is in `docs/decisions/0019-savo-island-choices.md`.** That record is the designer's answer. This file is the research behind it and is kept for the reasoning. Where the two differ, the decision stands.
 
-These are proposals about how to use the facts where the sources stop. None is a sourced fact and none adds a figure to the facts layer. The evidence is in `savo-island.md` and `conflicts.md`.
+Status of this file: proposals, written by Claude on 2026-11-10 and revised after review. They do not settle anything in the data. Decision 0019 took the proposals on placements and on displacement as the damage measure. It treats unknown search radar as not fitted, as a named working assumption. It leaves torpedo types, gun marks and ammunition open as facts still being sourced. The figures themselves are put to Amit row by row in `savo-island-settlement.md`.
+
+The evidence is in `savo-island.md` and `conflicts.md`.
 
 ## 1. Damage measure: one displacement figure per class
 
