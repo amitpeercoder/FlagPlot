@@ -2,8 +2,8 @@ Scenario 4a2: Stragglers, a damaged force sheds two ships
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0da3f7d3289f1ffb  24 events
-day   2  hash 693ba6c19a1055bd  4 events
+day   1  hash 5131676a68e0ec69  24 events
+day   2  hash 9a8d198f823028a3  4 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -34,9 +34,9 @@ day   2  hash 693ba6c19a1055bd  4 events
 #27 D2 night     ship:4 burned 6 t, 470 t remaining  <- #25
 #28 D2 night     task_force:2 arrived at (0,0) at D2 00:00  <- #25
 
-task_force:1 "Placeholder damaged force" (Allied): Arrived at (12,0); alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0.5; home port base:1
-task_force:2 "Placeholder damaged force, sent home" (Allied): Arrived at (0,0); alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
-task_force:3 "Placeholder damaged force, left behind" (Allied): Idle at (6,0); alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:1 "Placeholder damaged force" (Allied): Arrived at (12,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0.5; home port base:1
+task_force:2 "Placeholder damaged force, sent home" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:3 "Placeholder damaged force, left behind" (Allied): Idle at (6,0); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1940 t of fuel, 0 t of supply
 ship:2 "Placeholder cruiser 2": afloat in task_force:2; damage flotation 0, fire 0; propulsion degraded; 800 gun rounds, torpedoes ready; 1940 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser 3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1940 t of fuel, 0 t of supply

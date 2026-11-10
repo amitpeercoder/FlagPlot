@@ -35,8 +35,8 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{EntityRef, EventId, OrderId, ShipId, TaskForceId};
-use crate::orders::Stance;
+use crate::ids::{ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::orders::{Readiness, Stance};
 use crate::refdata::{ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{RngStream, Subsystem};
 use crate::search::build_sighting_report;
@@ -81,6 +81,10 @@ struct Fight {
     /// Each ship's fire stream, opened when it first fires and kept for the
     /// whole fight.
     fire_streams: BTreeMap<ShipId, RngStream>,
+    /// At least one salvo with shots above zero was fired in this fight
+    /// (decision 5 of `docs/decisions/0021-readiness-and-alarm.md`: the
+    /// alarm sounds only for a fight with fire).
+    fired: bool,
 }
 
 impl Fight {
@@ -239,6 +243,10 @@ impl World {
         let Some(figures) = self.ref_data.surface_combat.clone() else {
             return;
         };
+        // One alarm stream per force per pulse, opened the first time the
+        // force rolls and kept across every fight of this step (decision 9
+        // of 0021): the force's draws come in the order the fights end.
+        let mut alarm_streams: BTreeMap<TaskForceId, RngStream> = BTreeMap::new();
         for (a, b) in self.opposing_pairs_in_one_hex() {
             if self.truth.task_forces[&a].ships.is_empty()
                 || self.truth.task_forces[&b].ships.is_empty()
@@ -247,7 +255,163 @@ impl World {
             }
             let mut fight = self.begin_fight(day, pulse, &figures, a, b);
             let ending = self.fight_rounds(&mut fight);
-            self.end_fight(&fight, &ending);
+            let ended = self.end_fight(&fight, &ending);
+            if fight.fired {
+                self.sound_alarm(&fight, ended, &mut alarm_streams);
+            }
+        }
+    }
+
+    /// The alarm of a fight in which shots were fired (decision 5 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`). Every other task force
+    /// in the fight hex with a ship afloat that is not alert draws once
+    /// against the alarm chance, in task force ID order. Every roll is
+    /// recorded, whether or not it succeeds, by an `AlarmRoll` event citing
+    /// the end of the fight. On success the force is alerted for the rest of
+    /// the pulse and `alerted_by` is that event; a failed roll changes nothing
+    /// else.
+    ///
+    /// The draw is `RngStream::below(SCALE)` compared with the chance, which
+    /// is exactly what `RngStream::chance` does, taken in two steps so the
+    /// draw can go in the breakdown.
+    fn sound_alarm(
+        &mut self,
+        fight: &Fight,
+        ended: EventId,
+        streams: &mut BTreeMap<TaskForceId, RngStream>,
+    ) {
+        let parties = [fight.forces[0].id, fight.forces[1].id];
+        let chance = fight.figures.alarm_chance;
+        let hearers: Vec<TaskForceId> = self
+            .truth
+            .task_forces
+            .values()
+            .filter(|force| {
+                force.position() == fight.hex
+                    && !force.ships.is_empty()
+                    && !parties.contains(&force.id)
+                    && !force.is_alert()
+            })
+            .map(|force| force.id)
+            .collect();
+        for id in hearers {
+            let stream = streams.entry(id).or_insert_with(|| {
+                self.rng(
+                    fight.day,
+                    Some(fight.pulse),
+                    Subsystem::SurfaceCombat,
+                    EntityRef::TaskForce(id),
+                )
+            });
+            let draw = stream.below(Fixed::SCALE.unsigned_abs());
+            let alarmed = draw < raw_u64(chance.clamp(Fixed::ZERO, Fixed::ONE));
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "alarm_chance",
+                        value: chance,
+                    },
+                    Factor {
+                        name: "draw",
+                        value: Fixed::from_raw(i64::try_from(draw).expect("a draw fits in i64")),
+                    },
+                ],
+                result: chance,
+            });
+            let event = self.record_in_fight(
+                fight,
+                EventKind::AlarmRoll {
+                    task_force: id,
+                    by_a: parties[0],
+                    by_b: parties[1],
+                    chance,
+                    alarmed,
+                },
+                vec![Cause::Event(ended)],
+                breakdown,
+            );
+            if !alarmed {
+                continue;
+            }
+            let force = self
+                .truth
+                .task_forces
+                .get_mut(&id)
+                .expect("task force exists");
+            force.alerted = true;
+            force.alerted_by = Some(event);
+        }
+    }
+
+    /// Alert from belief (decision 3 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`), at the very start of
+    /// every pulse, before its first phase. A task force with a ship afloat
+    /// is alerted by a contact when its side's belief holds one no older than
+    /// `alert_contact_max_age_pulses` within `alert_contact_distance_hexes`
+    /// of the force. The contact cited is the nearest, the lowest ID on a
+    /// tie. Reads belief only, never the truth of enemy units.
+    pub(crate) fn alert_from_belief(&mut self, day: u32, pulse: Pulse) {
+        let Some(figures) = self.ref_data.surface_combat.clone() else {
+            return;
+        };
+        let decisions: Vec<(TaskForceId, Option<(ContactId, EventId)>)> = self
+            .truth
+            .task_forces
+            .values()
+            .filter(|force| !force.ships.is_empty())
+            .map(|force| {
+                let position = force.position();
+                // Contacts come in ID order and min_by_key keeps the first
+                // minimum, so a tie goes to the lowest ID.
+                let nearest = self.beliefs[&force.side]
+                    .contacts()
+                    .filter(|contact| {
+                        contact.age_pulses <= figures.alert_contact_max_age_pulses
+                            && contact.estimated_hex.distance(position)
+                                <= figures.alert_contact_distance_hexes
+                    })
+                    .min_by_key(|contact| contact.estimated_hex.distance(position))
+                    .map(|contact| (contact.id, contact.last_report_event));
+                (force.id, nearest)
+            })
+            .collect();
+        for (id, nearest) in decisions {
+            let (alerted, alerted_by) = {
+                let force = &self.truth.task_forces[&id];
+                (force.alerted, force.alerted_by)
+            };
+            match (alerted, nearest) {
+                (false, Some((contact, report))) => {
+                    let event = self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::ForceAlertedByContact {
+                            task_force: id,
+                            contact,
+                        },
+                        vec![Cause::Event(report)],
+                        None,
+                    );
+                    let force = self.truth.task_forces.get_mut(&id).expect("force exists");
+                    force.alerted = true;
+                    force.alerted_by = Some(event);
+                }
+                (true, None) => {
+                    self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::ForceStoodDown { task_force: id },
+                        alerted_by.into_iter().map(Cause::Event).collect(),
+                        None,
+                    );
+                    let force = self.truth.task_forces.get_mut(&id).expect("force exists");
+                    force.alerted = false;
+                    force.alerted_by = None;
+                }
+                // Still alerted by a contact: alerted_by stays. Not alerted
+                // and no contact: nothing.
+                (true, Some(_)) | (false, None) => {}
+            }
         }
     }
 
@@ -319,6 +483,7 @@ impl World {
             begun,
             forces: [force_fight(self, a, b), force_fight(self, b, a)],
             fire_streams: BTreeMap::new(),
+            fired: false,
         }
     }
 
@@ -378,7 +543,7 @@ impl World {
             } else {
                 Fixed::ZERO
             };
-            let alert_factor = if self.truth.task_forces[&id].alert {
+            let alert_factor = if self.truth.task_forces[&id].is_alert() {
                 Fixed::ONE
             } else {
                 figures.not_alert_sighting_factor
@@ -738,6 +903,8 @@ impl World {
         );
 
         fight.forces[force].fired_this_fight = true;
+        // A `Shot` exists only when its shots are above zero.
+        fight.fired = true;
         let against = &mut round.forces[shot.target_force];
         against.fired_on = true;
         against.first_salvo_against.get_or_insert(event);
@@ -861,7 +1028,10 @@ impl World {
     }
 
     /// A force that sighted the enemy this round, or was fired on this
-    /// round, and is not alert becomes alert.
+    /// round, is at normal readiness and is not already alerted becomes
+    /// alerted (decision 4 of `docs/decisions/0021-readiness-and-alarm.md`).
+    /// A force at battle readiness is alert by its readiness and changes
+    /// nothing.
     fn become_alert(&mut self, fight: &Fight, round: &Round) {
         for (index, force) in fight.forces.iter().enumerate() {
             let this_round = &round.forces[index];
@@ -873,15 +1043,18 @@ impl World {
                 .task_forces
                 .get_mut(&force.id)
                 .expect("task force exists");
-            if task_force.alert {
+            // A force at battle readiness is alert by its readiness: nothing
+            // changes and nothing is recorded. Its flag changes only in
+            // `alert_from_belief`, which records it.
+            if task_force.alerted || task_force.readiness == Readiness::Battle {
                 continue;
             }
-            task_force.alert = true;
+            task_force.alerted = true;
             let cause = this_round
                 .rolled
                 .or(this_round.first_salvo_against)
                 .unwrap_or(fight.begun);
-            self.record_in_fight(
+            let event = self.record_in_fight(
                 fight,
                 EventKind::ForceBecameAlert {
                     round: round.number,
@@ -890,6 +1063,11 @@ impl World {
                 vec![Cause::Event(cause)],
                 None,
             );
+            self.truth
+                .task_forces
+                .get_mut(&force.id)
+                .expect("task force exists")
+                .alerted_by = Some(event);
         }
     }
 
@@ -1032,7 +1210,7 @@ impl World {
 
     /// Records the end of the fight, then each force reports and claims, the
     /// lower ID first.
-    fn end_fight(&mut self, fight: &Fight, ending: &Ending) {
+    fn end_fight(&mut self, fight: &Fight, ending: &Ending) -> EventId {
         let ended = self.record_in_fight(
             fight,
             EventKind::EngagementEnded {
@@ -1049,6 +1227,7 @@ impl World {
             self.report_sighting(fight, index, ended);
             self.claim_victory(fight, index, ended);
         }
+        ended
     }
 
     /// A force that sighted the enemy reports the enemy force: at the fight
@@ -1196,7 +1375,7 @@ mod tests {
     use crate::ids::ShipClassId;
     use crate::invariants;
     use crate::map::{HexData, Map};
-    use crate::orders::Mission;
+    use crate::orders::{Mission, Readiness};
     use crate::refdata::{PortSize, RefData, SearchFigures};
     use crate::state::{RulesOfEngagement, ShipSystems, SystemState, TaskForce, TruthState};
     use crate::world::SimConfig;
@@ -1216,14 +1395,15 @@ mod tests {
 
     /// One task force to place: ID, side, hex, the class of each ship (ship
     /// IDs are handed out in order across the forces, from 1), whether it is
-    /// alert, and its rules of engagement.
+    /// readiness (the old "alert" is battle, "not alert" is normal), and its
+    /// rules of engagement.
     #[derive(Clone)]
     struct ForceSpec {
         id: u32,
         side: Side,
         hex: Hex,
         classes: Vec<u32>,
-        alert: bool,
+        readiness: Readiness,
         rules: RulesOfEngagement,
     }
 
@@ -1234,13 +1414,13 @@ mod tests {
                 side,
                 hex,
                 classes: classes.to_vec(),
-                alert: true,
+                readiness: Readiness::Battle,
                 rules: RulesOfEngagement::DEFAULT,
             }
         }
 
         fn not_alert(mut self) -> ForceSpec {
-            self.alert = false;
+            self.readiness = Readiness::Normal;
             self
         }
 
@@ -1361,7 +1541,7 @@ mod tests {
                     spec.hex,
                     Mission::SurfaceCombat,
                 );
-                force.alert = spec.alert;
+                force.readiness = spec.readiness;
                 force.rules_of_engagement = spec.rules;
                 for class in &spec.classes {
                     let ship_id = ShipId::new(next_ship);
@@ -3435,5 +3615,1096 @@ mod tests {
                 "round {round}"
             );
         }
+    }
+
+    // ---- alertness and alarm (decision 0021) ----
+    //
+    // Alert from belief runs at the start of a pulse (`alert_from_belief`);
+    // events during the pulse and the alarm run in `surface_engagements`.
+    // The placeholder figures are: contact distance 3 hexes, contact age 2
+    // pulses, alarm chance 0.5. A contact enters belief the way a report
+    // does, through `apply_report`, after a `ReportReceived` event.
+
+    use crate::belief::SightingReport;
+
+    /// Puts a contact into one side's belief and returns it with the event
+    /// that recorded the report's arrival.
+    fn give_contact(world: &mut World, side: Side, hex: Hex) -> (ContactId, EventId) {
+        let figures = world.ref_data.search.clone().expect("search figures");
+        let received = world.events.next_id();
+        let report = Report::Sighting(SightingReport {
+            estimated_hex: hex,
+            estimated_ship_count: 1,
+            estimated_kind: ShipKind::Cruiser,
+            confidence: figures.initial_confidence,
+            received_event: received,
+        });
+        let ApplyOutcome::Contact(outcome) = world
+            .beliefs
+            .get_mut(&side)
+            .expect("belief")
+            .apply_report(&report, &figures)
+        else {
+            unreachable!("a sighting makes a contact");
+        };
+        let event = world.events.record(
+            1,
+            Some(Pulse::Night),
+            EventKind::ReportReceived {
+                side,
+                contact: outcome.contact,
+                hex,
+                ship_count: 1,
+                kind: ShipKind::Cruiser,
+                confidence: figures.initial_confidence,
+                created: outcome.created,
+            },
+            Vec::new(),
+            None,
+        );
+        assert_eq!(event, received);
+        (outcome.contact, event)
+    }
+
+    /// Ages every contact by `pulses` pulses. The first call only clears the
+    /// "refreshed this pulse" mark of contacts just made, so it takes one more
+    /// call than the age wanted. With the placeholder decay of 0.8 a contact
+    /// of confidence 0.8 is still held at age 4 (0.328 is not below 0.3).
+    fn age_contacts_by(world: &mut World, pulses: u32) {
+        let figures = world.ref_data.search.clone().expect("search figures");
+        for _ in 0..=pulses {
+            for belief in world.beliefs.values_mut() {
+                belief.age_contacts(&figures);
+            }
+        }
+    }
+
+    fn force(world: &World, id: u32) -> &TaskForce {
+        &world.truth.task_forces[&TaskForceId::new(id)]
+    }
+
+    fn force_mut(world: &mut World, id: u32) -> &mut TaskForce {
+        world
+            .truth
+            .task_forces
+            .get_mut(&TaskForceId::new(id))
+            .expect("force exists")
+    }
+
+    /// One Allied cruiser force (task force 1, normal readiness) at (0,0)
+    /// and nothing else.
+    fn lone_allied() -> World {
+        Scene::new(
+            1,
+            Pulse::Night,
+            vec![ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1]).not_alert()],
+        )
+        .world()
+    }
+
+    /// Whether force 1 is alerted at the start of a pulse by one Allied
+    /// contact at `hex`, aged `age` pulses.
+    fn alerted_by_contact_at(hex: Hex, age: u32) -> bool {
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, hex);
+        age_contacts_by(&mut world, age);
+        world.alert_from_belief(1, Pulse::Night);
+        force(&world, 1).alerted
+    }
+
+    fn alerts_by_contact(world: &World) -> Vec<Event> {
+        events_of(world, |k| {
+            matches!(k, EventKind::ForceAlertedByContact { .. })
+        })
+    }
+
+    #[test]
+    fn a_contact_at_the_start_of_a_pulse_alerts_a_force_citing_its_report() {
+        // Allied force 1 (normal readiness) at (0,0), Allied force 2 at
+        // battle readiness at (1,0). A fresh Allied contact at (2,0) is 2
+        // hexes from force 1 and 1 from force 2: both are alerted (battle
+        // readiness does not stop the flag tracking the contact). Each event
+        // cites the report behind the contact, and alerted_by is the event.
+        let scene = Scene::new(
+            1,
+            Pulse::Night,
+            vec![
+                ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1]).not_alert(),
+                ForceSpec::new(2, Side::Allied, Hex::new(1, 0), &[1]),
+            ],
+        );
+        let mut world = scene.world();
+        let (contact, report) = give_contact(&mut world, Side::Allied, Hex::new(2, 0));
+        world.alert_from_belief(1, Pulse::Night);
+        let alerts = alerts_by_contact(&world);
+        assert_eq!(alerts.len(), 2);
+        for (alert, id) in alerts.iter().zip([1, 2]) {
+            assert_eq!(
+                alert.kind,
+                EventKind::ForceAlertedByContact {
+                    task_force: TaskForceId::new(id),
+                    contact
+                }
+            );
+            assert_eq!(alert.causes, vec![Cause::Event(report)]);
+            assert_eq!(alert.pulse, Some(Pulse::Night));
+            assert!(force(&world, id).alerted);
+            assert_eq!(force(&world, id).alerted_by, Some(alert.id));
+            assert!(force(&world, id).is_alert());
+        }
+        // Nothing but the alerts and the report was recorded.
+        assert_eq!(world.events().len(), 3);
+
+        // Still alerted by the same contact: nothing happens, alerted_by
+        // stays.
+        world.alert_from_belief(1, Pulse::Morning);
+        assert_eq!(world.events().len(), 3);
+        assert_eq!(force(&world, 1).alerted_by, Some(alerts[0].id));
+    }
+
+    #[test]
+    fn a_force_stands_down_when_no_such_contact_remains_citing_what_alerted_it() {
+        // Alerted at age 2 (the limit). Two pulses on, the contact is 4
+        // pulses old: too old, so the force stands down. The event cites
+        // alerted_by, and alerted_by is cleared.
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        age_contacts_by(&mut world, 2);
+        world.alert_from_belief(1, Pulse::Night);
+        let alerted_by = force(&world, 1).alerted_by.expect("alerted");
+        assert!(force(&world, 1).alerted);
+
+        age_contacts_by(&mut world, 2);
+        world.alert_from_belief(1, Pulse::Morning);
+        let stood = events_of(&world, |k| matches!(k, EventKind::ForceStoodDown { .. }));
+        assert_eq!(stood.len(), 1);
+        assert_eq!(
+            stood[0].kind,
+            EventKind::ForceStoodDown {
+                task_force: TaskForceId::new(1)
+            }
+        );
+        assert_eq!(stood[0].causes, vec![Cause::Event(alerted_by)]);
+        assert_eq!(stood[0].pulse, Some(Pulse::Morning));
+        assert!(!force(&world, 1).alerted);
+        assert_eq!(force(&world, 1).alerted_by, None);
+
+        // Not alerted and no contact: nothing more is recorded.
+        let len = world.events().len();
+        world.alert_from_belief(1, Pulse::Afternoon);
+        assert_eq!(world.events().len(), len);
+    }
+
+    #[test]
+    fn a_contact_exactly_at_the_distance_limit_alerts_and_one_further_does_not() {
+        // Limit 3 hexes. From (0,0): (3,0) is 3, (2,1) is (2+1+3)/2 = 3 and
+        // (-3,3) is (3+3+0)/2 = 3, all alert. (4,0) is 4 and (2,2) is
+        // (2+2+4)/2 = 4, neither does.
+        for hex in [Hex::new(3, 0), Hex::new(2, 1), Hex::new(-3, 3)] {
+            assert_eq!(Hex::new(0, 0).distance(hex), 3);
+            assert!(alerted_by_contact_at(hex, 0), "{hex:?} at 3 alerts");
+        }
+        for hex in [Hex::new(4, 0), Hex::new(2, 2)] {
+            assert_eq!(Hex::new(0, 0).distance(hex), 4);
+            assert!(!alerted_by_contact_at(hex, 0), "{hex:?} at 4 does not");
+        }
+    }
+
+    #[test]
+    fn a_contact_exactly_at_the_age_limit_alerts_and_one_pulse_older_does_not() {
+        // Limit 2 pulses: age 0 and 2 alert, age 3 does not.
+        assert!(alerted_by_contact_at(Hex::new(1, 0), 0));
+        assert!(alerted_by_contact_at(Hex::new(1, 0), 2));
+        assert!(!alerted_by_contact_at(Hex::new(1, 0), 3));
+    }
+
+    #[test]
+    fn only_the_forces_own_sides_belief_alerts_it() {
+        // A Japanese contact next to the Allied force alerts nobody: the
+        // Allied force reads the Allied belief, which is empty.
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Japanese, Hex::new(1, 0));
+        world.alert_from_belief(1, Pulse::Night);
+        assert!(!force(&world, 1).alerted);
+        assert!(alerts_by_contact(&world).is_empty());
+    }
+
+    #[test]
+    fn a_force_without_ships_is_not_alerted_and_without_combat_figures_nothing_runs() {
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        force_mut(&mut world, 1).ships.clear();
+        world.alert_from_belief(1, Pulse::Night);
+        assert!(!force(&world, 1).alerted);
+
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        world.ref_data.surface_combat = None;
+        world.alert_from_belief(1, Pulse::Night);
+        assert!(!force(&world, 1).alerted);
+        assert_eq!(world.events().len(), 1, "only the report");
+    }
+
+    #[test]
+    fn the_nearest_contact_is_cited_and_an_equal_distance_goes_to_the_lower_id() {
+        // Contact 1 at (3,0) is 3 from force 1, contact 2 at (-2,0) is 2:
+        // the nearer one is cited though its ID is higher. They are 5 apart,
+        // beyond the merge distance of 2, so they are two contacts.
+        let mut world = lone_allied();
+        let (far, _) = give_contact(&mut world, Side::Allied, Hex::new(3, 0));
+        let (near, near_report) = give_contact(&mut world, Side::Allied, Hex::new(-2, 0));
+        assert_ne!(far, near);
+        world.alert_from_belief(1, Pulse::Night);
+        let alert = &alerts_by_contact(&world)[0];
+        assert_eq!(
+            alert.kind,
+            EventKind::ForceAlertedByContact {
+                task_force: TaskForceId::new(1),
+                contact: near
+            }
+        );
+        assert_eq!(alert.causes, vec![Cause::Event(near_report)]);
+
+        // Both 3 away (6 apart): the lower ID, whichever side it is on.
+        for (first, second) in [
+            (Hex::new(3, 0), Hex::new(-3, 0)),
+            (Hex::new(-3, 0), Hex::new(3, 0)),
+        ] {
+            let mut world = lone_allied();
+            let (lower, lower_report) = give_contact(&mut world, Side::Allied, first);
+            let (higher, _) = give_contact(&mut world, Side::Allied, second);
+            assert!(lower < higher);
+            world.alert_from_belief(1, Pulse::Night);
+            let alert = &alerts_by_contact(&world)[0];
+            assert_eq!(
+                alert.kind,
+                EventKind::ForceAlertedByContact {
+                    task_force: TaskForceId::new(1),
+                    contact: lower
+                }
+            );
+            assert_eq!(alert.causes, vec![Cause::Event(lower_report)]);
+        }
+    }
+
+    #[test]
+    fn belief_made_by_a_fight_alerts_nobody_until_the_next_pulse() {
+        // Night. Japanese force 1 (battle readiness, sights for sure) fights
+        // Allied force 2 at (0,0). Japanese force 3 (normal readiness) is at
+        // (1,0): 1 hex from the fight, so the report (at most 1 hex out)
+        // puts a contact within 2 of it. But force 3 is not in the fight
+        // hex, so it cannot hear the alarm, and belief does not alert in the
+        // middle of the pulse: it is not alerted after the fight. At the
+        // start of the next pulse it is, citing the fight's report.
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, Hex::new(0, 0), &[1]),
+            ForceSpec::new(2, Side::Allied, Hex::new(0, 0), &[1]).not_alert(),
+            ForceSpec::new(3, Side::Japanese, Hex::new(1, 0), &[1]).not_alert(),
+        ]);
+        let mut world = run(&scene, |w| {
+            only_force_1_sights_by_roll(w);
+            harmless(w);
+        });
+        assert!(count(&world, |k| matches!(k, EventKind::Salvo { .. })) > 0);
+        let reports = events_of(&world, |k| {
+            matches!(
+                k,
+                EventKind::ReportReceived {
+                    side: Side::Japanese,
+                    ..
+                }
+            )
+        });
+        assert_eq!(reports.len(), 1);
+        assert!(!force(&world, 3).alerted);
+        assert_eq!(
+            count(&world, |k| matches!(
+                k,
+                EventKind::ForceAlertedByContact { .. } | EventKind::AlarmRoll { .. }
+            )),
+            0
+        );
+
+        world.alert_from_belief(1, Pulse::Morning);
+        let alerts: Vec<Event> = alerts_by_contact(&world)
+            .into_iter()
+            .filter(|e| {
+                matches!(e.kind, EventKind::ForceAlertedByContact { task_force, .. } if task_force.raw() == 3)
+            })
+            .collect();
+        assert_eq!(alerts.len(), 1);
+        assert_eq!(alerts[0].causes, vec![Cause::Event(reports[0].id)]);
+        assert_eq!(alerts[0].pulse, Some(Pulse::Morning));
+        assert!(force(&world, 3).alerted);
+        assert_eq!(force(&world, 3).alerted_by, Some(alerts[0].id));
+    }
+
+    #[test]
+    fn a_normal_force_fired_on_gets_a_became_alert_event_and_a_battle_force_that_sights_none() {
+        // Night. Force 1 (battle readiness) sights for sure by roll in round
+        // 1; force 2 (normal) never sights by rolling, but is fired on.
+        // Force 2: ForceBecameAlert citing the first salvo against it, and
+        // alerted_by is that event. Force 1: sighting changes nothing and
+        // records nothing (it is alert by its readiness): not alerted, no
+        // alerted_by, no ForceBecameAlert.
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, Hex::new(0, 0), &[1]),
+            ForceSpec::new(2, Side::Allied, Hex::new(0, 0), &[1]).not_alert(),
+        ]);
+        let world = run(&scene, |w| {
+            only_force_1_sights_by_roll(w);
+            harmless(w);
+        });
+        let roll = events_of(
+            &world,
+            |k| matches!(k, EventKind::SightingRoll { task_force, sighted: true, .. } if task_force.raw() == 1),
+        );
+        assert_eq!(roll.len(), 1);
+        let first_against_2 = salvos(&world)
+            .into_iter()
+            .find(|s| s.target == 2)
+            .expect("force 1 fired at ship 2")
+            .id;
+
+        let became = events_of(&world, |k| matches!(k, EventKind::ForceBecameAlert { .. }));
+        assert_eq!(became.len(), 1);
+        assert_eq!(
+            became[0].kind,
+            EventKind::ForceBecameAlert {
+                round: 1,
+                task_force: TaskForceId::new(2)
+            }
+        );
+        assert_eq!(became[0].causes, vec![Cause::Event(first_against_2)]);
+        assert!(force(&world, 2).alerted);
+        assert_eq!(force(&world, 2).alerted_by, Some(became[0].id));
+
+        assert!(!force(&world, 1).alerted);
+        assert_eq!(force(&world, 1).alerted_by, None);
+        assert!(force(&world, 1).is_alert());
+    }
+
+    /// Four forces in one hex by day, all sighting for sure in round 1 and
+    /// all firing: Japanese 1 and 3, Allied 2 and 4. Force 3 is the one at
+    /// normal readiness. Fights in order: (1,2), (1,4), (2,3), (3,4).
+    fn crowded_hex(seed: u64) -> Scene {
+        let hex = Hex::new(0, 0);
+        Scene::new(
+            seed,
+            Pulse::Morning,
+            vec![
+                ForceSpec::new(1, Side::Japanese, hex, &[1]),
+                ForceSpec::new(2, Side::Allied, hex, &[1]),
+                ForceSpec::new(3, Side::Japanese, hex, &[1]).not_alert(),
+                ForceSpec::new(4, Side::Allied, hex, &[1]),
+            ],
+        )
+    }
+
+    /// Fights that harm nobody, with the given alarm chance.
+    fn alarm_chance_is(chance: Fixed) -> impl FnOnce(&mut World) {
+        move |world| {
+            harmless(world);
+            figures_mut(world).alarm_chance = chance;
+        }
+    }
+
+    /// Every alarm roll, whether or not it succeeded.
+    fn alarm_rolls(world: &World) -> Vec<Event> {
+        events_of(world, |k| matches!(k, EventKind::AlarmRoll { .. }))
+    }
+
+    /// The alarm rolls that succeeded.
+    fn alarms(world: &World) -> Vec<Event> {
+        events_of(world, |k| {
+            matches!(k, EventKind::AlarmRoll { alarmed: true, .. })
+        })
+    }
+
+    fn ending_ids(world: &World) -> Vec<EventId> {
+        world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::EngagementEnded { .. }))
+            .map(|e| e.id)
+            .collect()
+    }
+
+    /// The first draw of a force's alarm stream on day 1, in the morning.
+    fn alarm_stream(world: &World, id: u32) -> RngStream {
+        world.rng(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::SurfaceCombat,
+            EntityRef::TaskForce(TaskForceId::new(id)),
+        )
+    }
+
+    #[test]
+    fn an_alarm_alerts_a_force_in_the_hex_citing_the_end_of_the_fight_with_its_breakdown() {
+        // Forces 1 (Japanese) and 2 (Allied) fight first, with fire. Force 3
+        // is in the hex at normal readiness and not alerted; with the alarm
+        // chance 1 it is alarmed by the fight of 1 and 2, citing that fight's
+        // EngagementEnded. Forces 1, 2 and 4 are at battle readiness, so
+        // they never roll. Force 3 hears only that fight: its later fights
+        // (2,3) and (3,4) are its own.
+        let mut hash_with = None;
+        for record in [true, false] {
+            let world = run(&crowded_hex(1), move |w| {
+                alarm_chance_is(Fixed::ONE)(w);
+                w.set_config(SimConfig {
+                    record_breakdowns: record,
+                });
+            });
+            let alarms = alarm_rolls(&world);
+            assert_eq!(alarms.len(), 1);
+            let first_end = ending_ids(&world)[0];
+            assert_eq!(
+                alarms[0].kind,
+                EventKind::AlarmRoll {
+                    task_force: TaskForceId::new(3),
+                    by_a: TaskForceId::new(1),
+                    by_b: TaskForceId::new(2),
+                    chance: Fixed::ONE,
+                    alarmed: true
+                }
+            );
+            assert_eq!(alarms[0].causes, vec![Cause::Event(first_end)]);
+            assert_eq!(alarms[0].pulse, Some(Pulse::Morning));
+            assert!(force(&world, 3).alerted);
+            assert_eq!(force(&world, 3).alerted_by, Some(alarms[0].id));
+            // The alarm comes after the fight's report and claim, before
+            // the next fight begins.
+            let next_begun = world
+                .events()
+                .iter()
+                .filter(|e| matches!(e.kind, EventKind::EngagementBegun { .. }))
+                .nth(1)
+                .expect("a second fight")
+                .id;
+            assert!(first_end < alarms[0].id && alarms[0].id < next_begun);
+            let first_claim =
+                events_of(&world, |k| matches!(k, EventKind::ClaimReceived { .. }))[0].id;
+            assert!(first_claim < alarms[0].id);
+            if record {
+                let breakdown = alarms[0].breakdown.as_ref().expect("a breakdown");
+                assert_eq!(breakdown.result, Fixed::ONE);
+                assert_eq!(breakdown.factors[0].name, "alarm_chance");
+                assert_eq!(breakdown.factors[0].value, Fixed::ONE);
+                assert_eq!(breakdown.factors[1].name, "draw");
+                // The draw is the first of force 3's own stream.
+                let draw = alarm_stream(&world, 3).below(Fixed::SCALE.unsigned_abs());
+                assert_eq!(
+                    breakdown.factors[1].value.raw(),
+                    i64::try_from(draw).expect("fits")
+                );
+                hash_with = Some(world.state_hash());
+            } else {
+                assert!(alarms[0].breakdown.is_none());
+                assert_eq!(Some(world.state_hash()), hash_with);
+            }
+        }
+    }
+
+    #[test]
+    fn an_alarm_chance_of_zero_alarms_nobody_and_the_parties_are_never_alarmed() {
+        // Chance 0: no draw is below 0, nobody is alarmed, force 3 included.
+        // Force 3 still rolls, and fails, for each of the two fights it
+        // hears: (1,2) and (1,4).
+        let world = run(&crowded_hex(1), alarm_chance_is(Fixed::ZERO));
+        assert!(count(&world, |k| matches!(k, EventKind::Salvo { .. })) > 0);
+        assert!(alarms(&world).is_empty());
+        let rolls: Vec<(u32, u32, u32, Fixed, bool)> = alarm_rolls(&world)
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::AlarmRoll {
+                    task_force,
+                    by_a,
+                    by_b,
+                    chance,
+                    alarmed,
+                } => (task_force.raw(), by_a.raw(), by_b.raw(), chance, alarmed),
+                _ => unreachable!(),
+            })
+            .collect();
+        assert_eq!(
+            rolls,
+            vec![(3, 1, 2, Fixed::ZERO, false), (3, 1, 4, Fixed::ZERO, false)]
+        );
+
+        // Two forces only, both at normal readiness, and chance 1: there is
+        // nobody but the parties, and they are never alarmed.
+        let hex = Hex::new(0, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]).not_alert(),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
+        ]);
+        let world = run(&scene, |w| {
+            alarm_chance_is(Fixed::ONE)(w);
+            figures_mut(w).not_alert_sighting_factor = Fixed::ONE;
+        });
+        assert!(count(&world, |k| matches!(k, EventKind::Salvo { .. })) > 0);
+        assert!(alarm_rolls(&world).is_empty());
+    }
+
+    /// Night: Japanese force 1 (avoids, battle readiness), Allied force 2
+    /// (normal) and Japanese force 3 (normal) in one hex.
+    fn night_crowded() -> Scene {
+        let hex = Hex::new(0, 0);
+        night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]).stance(Stance::Avoid),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
+            ForceSpec::new(3, Side::Japanese, hex, &[1]).not_alert(),
+        ])
+    }
+
+    #[test]
+    fn no_alarm_after_a_fight_in_which_nobody_fired() {
+        // Passed unseen: nobody sights (night chance 0), no salvo, no alarm,
+        // though force 3 is in the hex, normal and not alerted, and the
+        // alarm chance is 1.
+        let world = run(&night_crowded(), |w| {
+            alarm_chance_is(Fixed::ONE)(w);
+            figures_mut(w).sighting_chance_night = Fixed::ZERO;
+        });
+        assert!(salvos(&world).is_empty());
+        assert!(
+            count(&world, |k| matches!(
+                k,
+                EventKind::ForcesPassedUnseen { .. }
+            )) > 0,
+            "the forces passed unseen"
+        );
+        assert!(alarm_rolls(&world).is_empty());
+        assert!(!force(&world, 3).alerted);
+
+        // Slipped away before any fire: force 1 avoids and sights, the
+        // normal forces never do (their chance is multiplied by 0), so the
+        // fight with force 2 ends with no salvo, and force 2 and 3 never
+        // sight each other. Force 3 draws no alarm.
+        let world = run(&night_crowded(), |w| {
+            alarm_chance_is(Fixed::ONE)(w);
+            only_force_1_sights_by_roll(w);
+        });
+        assert!(salvos(&world).is_empty());
+        assert!(count(&world, |k| matches!(k, EventKind::ForceSlippedAway { .. })) > 0);
+        assert!(alarm_rolls(&world).is_empty());
+        assert!(!force(&world, 3).alerted);
+    }
+
+    #[test]
+    fn an_alarm_is_never_rolled_for_a_force_that_is_already_alert() {
+        // Alarm chance 1. Japanese force 1 and Allied force 2 fight first.
+        // Force 3 is at battle readiness, force 5 is normal but already
+        // alerted, force 6 is normal and not alerted. Only force 6 is
+        // alarmed, and only by the first fight.
+        let hex = Hex::new(0, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+            ForceSpec::new(3, Side::Japanese, hex, &[1]),
+            ForceSpec::new(5, Side::Japanese, hex, &[1]).not_alert(),
+            ForceSpec::new(6, Side::Japanese, hex, &[1]).not_alert(),
+        ]);
+        let world = run(&scene, |w| {
+            alarm_chance_is(Fixed::ONE)(w);
+            force_mut(w, 5).alerted = true;
+        });
+        let alarmed: Vec<(u32, u32, u32)> = alarm_rolls(&world)
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::AlarmRoll {
+                    task_force,
+                    by_a,
+                    by_b,
+                    alarmed: true,
+                    ..
+                } => (task_force.raw(), by_a.raw(), by_b.raw()),
+                _ => unreachable!(),
+            })
+            .collect();
+        assert_eq!(alarmed, vec![(6, 1, 2)]);
+        // Force 5 was alerted by nothing the log knows about: it stays so.
+        assert_eq!(force(&world, 5).alerted_by, None);
+    }
+
+    #[test]
+    fn a_force_that_hears_two_fights_draws_twice_from_one_stream() {
+        // The crowded hex at alarm chance 0.5, so a draw succeeds below
+        // 500000 of 1000000. Force 3 hears fight (1,2) and then fight (1,4)
+        // if the first alarm failed. Its stream is keyed on the force alone:
+        // the first draw is for the first fight, the second for the second.
+        //   draw 1 below the threshold: alarmed by (1,2);
+        //   else draw 2 below it: alarmed by (1,4);
+        //   else not alarmed, after two failed rolls (it then fights as a
+        //   party).
+        // A fresh stream for the second fight would repeat draw 1 and never
+        // alarm in the second fight, so seeing outcome 2 shows the stream is
+        // carried on.
+        let threshold = u64::try_from(fx("0.5").raw()).expect("positive");
+        let mut seen = [0u32; 3];
+        for seed in 1..=60 {
+            let world = run(&crowded_hex(seed), alarm_chance_is(fx("0.5")));
+            let mut stream = alarm_stream(&world, 3);
+            let draw_1 = stream.below(Fixed::SCALE.unsigned_abs());
+            let draw_2 = stream.below(Fixed::SCALE.unsigned_abs());
+            let ends = ending_ids(&world);
+            let rolls = alarm_rolls(&world);
+            let roll = |by_b: u32, alarmed: bool| EventKind::AlarmRoll {
+                task_force: TaskForceId::new(3),
+                by_a: TaskForceId::new(1),
+                by_b: TaskForceId::new(by_b),
+                chance: fx("0.5"),
+                alarmed,
+            };
+            if draw_1 < threshold {
+                seen[0] += 1;
+                assert_eq!(rolls.len(), 1, "seed {seed}");
+                assert_eq!(rolls[0].kind, roll(2, true));
+                assert_eq!(rolls[0].causes, vec![Cause::Event(ends[0])]);
+            } else if draw_2 < threshold {
+                seen[1] += 1;
+                assert_eq!(rolls.len(), 2, "seed {seed}");
+                assert_eq!(rolls[0].kind, roll(2, false));
+                assert_eq!(rolls[0].causes, vec![Cause::Event(ends[0])]);
+                assert_eq!(rolls[1].kind, roll(4, true));
+                assert_eq!(rolls[1].causes, vec![Cause::Event(ends[1])]);
+            } else {
+                seen[2] += 1;
+                assert_eq!(rolls.len(), 2, "seed {seed}");
+                assert_eq!(rolls[0].kind, roll(2, false));
+                assert_eq!(rolls[1].kind, roll(4, false));
+                assert!(alarms(&world).is_empty(), "seed {seed}");
+            }
+        }
+        assert!(seen.iter().all(|n| *n > 0), "every outcome seen: {seen:?}");
+    }
+
+    #[test]
+    fn two_forces_are_alarmed_independently_each_from_its_own_stream() {
+        // Force 1 (Japanese) and 2 (Allied) fight first, at battle
+        // readiness. Forces 3 (Japanese) and 5 (Allied) are normal and not
+        // alerted. Each hears the first fight and draws the first number of
+        // its own stream, against 0.5. Over the seeds all four combinations
+        // of alarmed and not occur: different streams.
+        let hex = Hex::new(0, 0);
+        let threshold = u64::try_from(fx("0.5").raw()).expect("positive");
+        let mut outcomes = BTreeSet::new();
+        for seed in 1..=60 {
+            let scene = Scene::new(
+                seed,
+                Pulse::Morning,
+                vec![
+                    ForceSpec::new(1, Side::Japanese, hex, &[1]),
+                    ForceSpec::new(2, Side::Allied, hex, &[1]),
+                    ForceSpec::new(3, Side::Japanese, hex, &[1]).not_alert(),
+                    ForceSpec::new(5, Side::Allied, hex, &[1]).not_alert(),
+                ],
+            );
+            let world = run(&scene, alarm_chance_is(fx("0.5")));
+            let first_end = ending_ids(&world)[0];
+            let mut outcome = Vec::new();
+            for id in [3, 5] {
+                let alarmed =
+                    alarm_stream(&world, id).below(Fixed::SCALE.unsigned_abs()) < threshold;
+                let rolls = alarm_rolls(&world);
+                let by_first_fight = rolls.iter().find(|e| {
+                    e.causes == vec![Cause::Event(first_end)]
+                        && matches!(e.kind, EventKind::AlarmRoll { task_force, .. } if task_force.raw() == id)
+                });
+                let roll = by_first_fight.expect("every hearer rolls");
+                assert!(
+                    matches!(roll.kind, EventKind::AlarmRoll { alarmed: a, .. } if a == alarmed),
+                    "seed {seed}, force {id}"
+                );
+                outcome.push(alarmed);
+            }
+            outcomes.insert(outcome);
+        }
+        assert_eq!(
+            outcomes.len(),
+            4,
+            "all four combinations occur: {outcomes:?}"
+        );
+    }
+
+    #[test]
+    fn breakdowns_leave_the_hash_alone_for_a_run_with_an_alarm_and_an_alert_from_belief() {
+        // Force 7 (Japanese, normal) is at (5,0) with a Japanese contact at
+        // (4,0): alerted at the start of the pulse by belief. The contact is
+        // 4 hexes from the crowded hex at (0,0), so no one there is. Then the
+        // crowded hex fights, and force 3 is alarmed (chance 1). The log has
+        // both kinds, and events, causes and hash agree with breakdowns on
+        // and off.
+        let mut forces = crowded_hex(1).forces;
+        forces.push(ForceSpec::new(7, Side::Japanese, Hex::new(5, 0), &[1]).not_alert());
+        let scene = Scene::new(1, Pulse::Morning, forces);
+        let build = |record: bool| {
+            let mut world = scene.world();
+            alarm_chance_is(Fixed::ONE)(&mut world);
+            world.set_config(SimConfig {
+                record_breakdowns: record,
+            });
+            give_contact(&mut world, Side::Japanese, Hex::new(4, 0));
+            world.alert_from_belief(1, scene.pulse);
+            scene.run_step(&mut world);
+            world.alert_from_belief(1, Pulse::Afternoon);
+            world
+        };
+        let with = build(true);
+        let without = build(false);
+        // One alert at the start of the morning pulse (force 7). Those at
+        // the start of the afternoon follow from the fight's reports.
+        let morning = alerts_by_contact(&with)
+            .into_iter()
+            .filter(|e| e.pulse == Some(Pulse::Morning))
+            .count();
+        assert_eq!(morning, 1);
+        assert_eq!(alarms(&with).len(), 1);
+        assert_eq!(with.state_hash(), without.state_hash());
+        assert_eq!(with.events().len(), without.events().len());
+        for (a, b) in with.events().iter().zip(without.events().iter()) {
+            assert_eq!(a.kind, b.kind);
+            assert_eq!(a.causes, b.causes);
+            assert!(b.breakdown.is_none());
+        }
+    }
+
+    #[test]
+    fn a_resolved_day_runs_alert_from_belief_before_the_first_phase_of_the_first_pulse() {
+        // A day through `resolve_day`: the alert event is the first recorded
+        // in the first pulse (Night), and the force stays alerted by the
+        // fresh contact in the pulses after it (no second event).
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        let before = world.events().len();
+        world.resolve_day().expect("a day resolves");
+        let first = &world.events().iter().collect::<Vec<_>>()[before];
+        assert!(matches!(
+            first.kind,
+            EventKind::ForceAlertedByContact { .. }
+        ));
+        assert_eq!(first.pulse, Some(Pulse::ALL[0]));
+        assert_eq!(alerts_by_contact(&world).len(), 1);
+    }
+
+    // ---- starting contacts (decision 0021, 8; `start.rs`) ----
+    //
+    // The placeholder search figures: confidence of a fresh report 0.8, decay
+    // 0.8 a pulse, dropped below 0.3 (0.8 x 0.8^4 = 0.32768 is held at age 4,
+    // 0.8 x 0.8^5 = 0.262144 is not at age 5), merge distance 2 hexes and age 2 pulses. Every
+    // product below is exact in millionths.
+
+    use crate::start::StartingContact;
+
+    fn starting(side: Side, q: i32, r: i32, age: u32) -> StartingContact {
+        StartingContact {
+            side,
+            hex: Hex::new(q, r),
+            ship_count: 3,
+            kind: ShipKind::Cruiser,
+            age_pulses: age,
+        }
+    }
+
+    fn contacts_of(world: &World, side: Side) -> Vec<crate::belief::Contact> {
+        world.beliefs[&side].contacts().cloned().collect()
+    }
+
+    fn day_zero_kinds(world: &World) -> Vec<&'static str> {
+        world
+            .events()
+            .iter()
+            .map(|event| {
+                assert_eq!(event.day, 0);
+                assert_eq!(event.pulse, None);
+                match event.kind {
+                    EventKind::ReportReceived { .. } => "report",
+                    EventKind::ContactAged { .. } => "aged",
+                    _ => panic!("only reports and ageing are recorded before day 1"),
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_fresh_starting_contact_is_one_report_at_age_zero() {
+        // One Allied contact, age 0: one report (confidence 0.8, the figures'
+        // fresh-report confidence), no ageing events, age 0.
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
+            .expect("held");
+        let contacts = contacts_of(&world, Side::Allied);
+        assert_eq!(contacts.len(), 1);
+        let contact = &contacts[0];
+        assert_eq!(contact.estimated_hex, Hex::new(3, 0));
+        assert_eq!(contact.estimated_ship_count, 3);
+        assert_eq!(contact.estimated_kind, ShipKind::Cruiser);
+        assert_eq!(contact.age_pulses, 0);
+        assert_eq!(contact.confidence, Fixed::from_ratio(8, 10));
+        assert_eq!(day_zero_kinds(&world), ["report"]);
+        let event = world.events().iter().next().expect("one event");
+        assert_eq!(event.id, EventId::new(1));
+        assert!(event.causes.is_empty());
+        assert_eq!(contact.last_report_event, event.id);
+        assert_eq!(
+            event.to_string(),
+            "#1 D0 -         Allied report: 3 ships, cruiser, at (3,0), confidence 0.8, held at the start: new contact:1"
+        );
+        assert!(contacts_of(&world, Side::Japanese).is_empty());
+        // Nothing is left refreshed, so the state can be hashed.
+        world.state_hash();
+    }
+
+    #[test]
+    fn a_starting_contact_has_exactly_its_age() {
+        // Age 2: the report, then 2 ageing events citing it. Confidence
+        // 0.8 x 0.8 x 0.8 = 0.512. Age 3: 0.512 x 0.8 = 0.4096.
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 2)])
+            .expect("held");
+        let contact = &contacts_of(&world, Side::Allied)[0];
+        assert_eq!(contact.age_pulses, 2);
+        assert_eq!(contact.confidence, Fixed::from_ratio(512, 1000));
+        assert_eq!(day_zero_kinds(&world), ["report", "aged", "aged"]);
+        let events: Vec<Event> = world.events().iter().cloned().collect();
+        for (event, (age, confidence)) in events[1..].iter().zip([
+            (1, Fixed::from_ratio(64, 100)),
+            (2, Fixed::from_ratio(512, 1000)),
+        ]) {
+            assert_eq!(
+                event.kind,
+                EventKind::ContactAged {
+                    side: Side::Allied,
+                    contact: contact.id,
+                    age_pulses: age,
+                    confidence
+                }
+            );
+            assert_eq!(event.causes, vec![Cause::Event(events[0].id)]);
+        }
+
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 3)])
+            .expect("held");
+        let contact = &contacts_of(&world, Side::Allied)[0];
+        assert_eq!(contact.age_pulses, 3);
+        assert_eq!(contact.confidence, Fixed::from_ratio(4096, 10_000));
+        assert_eq!(day_zero_kinds(&world), ["report", "aged", "aged", "aged"]);
+
+        // Age 4 is the oldest held: 0.8 x 0.8^4 = 0.32768 is not below 0.3.
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 4)])
+            .expect("held");
+        assert_eq!(
+            contacts_of(&world, Side::Allied)[0].confidence,
+            Fixed::from_ratio(32768, 100_000)
+        );
+    }
+
+    #[test]
+    fn a_starting_contact_that_would_be_dropped_is_an_error_naming_it() {
+        // Age 6: 0.8 x 0.8^6 = 0.2097152 is below 0.3 (it already is at age 5). The error names the entry and
+        // nothing is left behind.
+        let mut world = lone_allied();
+        let hash = world.state_hash();
+        let error = world
+            .hold_starting_contacts(vec![
+                starting(Side::Allied, 3, 0, 0),
+                starting(Side::Japanese, -4, 2, 6),
+            ])
+            .expect_err("dropped");
+        let crate::SimError::InvalidSetup(message) = error else {
+            panic!("an invalid setup");
+        };
+        assert!(
+            message.contains("Japanese starting contact at (-4,2)"),
+            "{message}"
+        );
+        assert!(message.contains("dropped"), "{message}");
+        assert!(world.events().is_empty());
+        assert!(contacts_of(&world, Side::Allied).is_empty());
+        assert_eq!(world.state_hash(), hash);
+    }
+
+    #[test]
+    fn entries_of_different_ages_each_end_with_their_own() {
+        // Allied A (3,0) age 3 and B (-3,0) age 1, 6 hexes apart (no merge).
+        // Virtual pulse 3: A is reported. Pulse 2: A ages to 1. Pulse 1: B is
+        // reported, A ages to 2 and B is skipped. Pulse 0: A ages to 3, B to
+        // 1. So A ends at 3 (0.4096) and B at 1 (0.64): 2 reports and 4
+        // ageing events, in the order they happened.
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![
+                starting(Side::Allied, 3, 0, 3),
+                starting(Side::Allied, -3, 0, 1),
+            ])
+            .expect("held");
+        let contacts = contacts_of(&world, Side::Allied);
+        assert_eq!(contacts[0].estimated_hex, Hex::new(3, 0));
+        assert_eq!(contacts[0].age_pulses, 3);
+        assert_eq!(contacts[0].confidence, Fixed::from_ratio(4096, 10_000));
+        assert_eq!(contacts[1].estimated_hex, Hex::new(-3, 0));
+        assert_eq!(contacts[1].age_pulses, 1);
+        assert_eq!(contacts[1].confidence, Fixed::from_ratio(64, 100));
+        assert_eq!(
+            day_zero_kinds(&world),
+            ["report", "aged", "report", "aged", "aged", "aged"]
+        );
+    }
+
+    #[test]
+    fn a_side_is_finished_before_the_next_and_the_allied_side_goes_first() {
+        // File order puts the Japanese entry first, but the Allied side is
+        // done first (Side::ALL): its report is event 1.
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![
+                starting(Side::Japanese, 3, 0, 1),
+                starting(Side::Allied, -3, 0, 1),
+            ])
+            .expect("held");
+        let sides: Vec<Side> = world
+            .events()
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::ReportReceived { side, .. } | EventKind::ContactAged { side, .. } => {
+                    side
+                }
+                _ => panic!("unexpected event"),
+            })
+            .collect();
+        assert_eq!(
+            sides,
+            [Side::Allied, Side::Allied, Side::Japanese, Side::Japanese]
+        );
+        assert_eq!(contacts_of(&world, Side::Japanese)[0].age_pulses, 1);
+    }
+
+    #[test]
+    fn entries_that_would_merge_are_an_error() {
+        // (3,0) and (4,0) are 1 hex apart, within the merge distance of 2,
+        // both age 0: the second report would refresh the first.
+        let mut world = lone_allied();
+        let error = world
+            .hold_starting_contacts(vec![
+                starting(Side::Allied, 3, 0, 0),
+                starting(Side::Allied, 4, 0, 0),
+            ])
+            .expect_err("merge");
+        assert!(error.to_string().contains("too close"), "{error}");
+        assert!(world.events().is_empty());
+
+        // The older contact is only 2 pulses old when the younger is
+        // reported (age 2 <= 2): still a merge.
+        let error = world
+            .hold_starting_contacts(vec![
+                starting(Side::Allied, 3, 0, 2),
+                starting(Side::Allied, 3, 0, 0),
+            ])
+            .expect_err("merge");
+        assert!(error.to_string().contains("too close"), "{error}");
+
+        // The same places on the two sides are two beliefs, not a merge.
+        world
+            .hold_starting_contacts(vec![
+                starting(Side::Allied, 3, 0, 0),
+                starting(Side::Japanese, 3, 0, 0),
+            ])
+            .expect("held");
+    }
+
+    #[test]
+    fn a_starting_contact_needs_ships_and_search_figures_and_a_game_not_begun() {
+        let mut world = lone_allied();
+        let mut none = starting(Side::Allied, 3, 0, 0);
+        none.ship_count = 0;
+        let error = world.hold_starting_contacts(vec![none]).expect_err("0");
+        assert!(error.to_string().contains("no ships"), "{error}");
+
+        world.ref_data.search = None;
+        assert!(world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
+            .is_err());
+
+        // A second call is refused as well (it would age the first call's
+        // contacts again). An empty list changes nothing.
+        let mut world = lone_allied();
+        world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
+            .expect("held");
+        assert!(world
+            .hold_starting_contacts(vec![starting(Side::Japanese, -3, 0, 0)])
+            .is_err());
+
+        // After day 1 it is refused.
+        let mut world = lone_allied();
+        world.resolve_day().expect("a day");
+        assert!(world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
+            .is_err());
+        assert!(world.hold_starting_contacts(Vec::new()).is_err());
+    }
+
+    #[test]
+    fn the_state_hash_includes_starting_contacts() {
+        // hash_world hashes each side's contacts (id, hex, count, kind, age,
+        // confidence, last report event), so a contact, and its age, change
+        // the hash.
+        let bare = lone_allied().state_hash();
+        let hash_with = |age: u32| {
+            let mut world = lone_allied();
+            world
+                .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, age)])
+                .expect("held");
+            world.state_hash()
+        };
+        assert_ne!(hash_with(0), bare);
+        assert_ne!(hash_with(0), hash_with(2));
+        assert_eq!(hash_with(2), hash_with(2));
+    }
+
+    #[test]
+    fn a_fresh_starting_contact_alerts_a_normal_force_at_the_start_of_the_night_pulse() {
+        // Allied force 1 at normal readiness at (5,0), a fresh Allied contact
+        // at (3,0): 2 hexes away, within 3, and age 0 is within 2. Day 1's
+        // first event is the alert, in the night pulse, citing the day-0
+        // report (event 1). The contact then ages once, at the end of the
+        // night pulse, like any other.
+        let mut world = Scene::new(
+            1,
+            Pulse::Night,
+            vec![ForceSpec::new(1, Side::Allied, Hex::new(5, 0), &[1]).not_alert()],
+        )
+        .world();
+        world
+            .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
+            .expect("held");
+        let contact = contacts_of(&world, Side::Allied)[0].id;
+        let summary = world.resolve_day().expect("a day");
+        assert_eq!(summary.first_event, 1);
+        let events: Vec<Event> = world.events().iter().cloned().collect();
+        let alert = &events[1];
+        assert_eq!(alert.day, 1);
+        assert_eq!(alert.pulse, Some(Pulse::Night));
+        assert_eq!(
+            alert.kind,
+            EventKind::ForceAlertedByContact {
+                task_force: TaskForceId::new(1),
+                contact
+            }
+        );
+        assert_eq!(alert.causes, vec![Cause::Event(events[0].id)]);
+        assert_eq!(events[0].day, 0);
+        let aged = events
+            .iter()
+            .find(|e| matches!(e.kind, EventKind::ContactAged { .. }) && e.day == 1)
+            .expect("aged on day 1");
+        assert_eq!(aged.pulse, Some(Pulse::Night));
     }
 }

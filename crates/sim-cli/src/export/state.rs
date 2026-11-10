@@ -49,7 +49,9 @@ pub struct TaskForceOut {
     status: &'static str,
     ships: Vec<u32>,
     home_port: Option<u32>,
-    alert: bool,
+    /// "normal" or "battle" (decision 0021).
+    readiness: &'static str,
+    alerted: bool,
     rules_of_engagement: RulesOut,
 }
 
@@ -163,7 +165,8 @@ fn task_force(force: &TaskForce) -> TaskForceOut {
         status: names::status(force.status),
         ships: force.ships.iter().map(|ship| ship.raw()).collect(),
         home_port: force.home_port.map(|port| port.raw()),
-        alert: force.alert,
+        readiness: force.readiness.name(),
+        alerted: force.alerted,
         rules_of_engagement: RulesOut {
             stance: names::stance(roe.stance),
             break_off: Num(roe.break_off),

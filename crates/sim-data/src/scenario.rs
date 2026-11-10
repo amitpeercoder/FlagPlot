@@ -9,21 +9,21 @@ use sim_core::ids::{
     AirGroupId, AircraftTypeId, BaseId, IntentId, ShipClassId, ShipId, TaskForceId,
 };
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, SpeedSetting,
-    Stance, StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Readiness,
+    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::state::{
     AirGroup, Base, Ship, ShipLocation, ShipSystem, ShipSystems, Side, SystemState, TaskForce,
     TruthState,
 };
-use sim_core::{DaySummary, World};
+use sim_core::{DaySummary, StartingContact, World};
 
 use crate::error::DataError;
 use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
     load_aircraft_types, load_port_sizes, load_search_figures, load_ship_classes,
-    load_surface_combat_figures,
+    load_surface_combat_figures, parse_kind,
 };
 
 #[derive(Deserialize)]
@@ -57,6 +57,24 @@ struct ScenarioFile {
     ship: Vec<ShipSpec>,
     #[serde(default)]
     order: Vec<OrderSpec>,
+    #[serde(default)]
+    contact: Vec<ContactSpec>,
+}
+
+/// A contact a side holds when the game begins (decision 8 of
+/// `docs/decisions/0021-readiness-and-alarm.md`).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ContactSpec {
+    side: SideSpec,
+    q: i32,
+    r: i32,
+    ship_count: u32,
+    /// A ship kind spelt as in the ship class file: `carrier`, `battleship`,
+    /// `cruiser`, `destroyer`, `transport` or `auxiliary`.
+    kind: String,
+    /// How many pulses old the contact is at the start. Defaults to 0.
+    age_pulses: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -95,8 +113,9 @@ struct TaskForceSpec {
     q: Option<i32>,
     r: Option<i32>,
     mission: MissionSpec,
-    /// Whether the task force starts alert. Defaults to true.
-    alert: Option<bool>,
+    /// The task force's readiness at the start (decision 0021): `normal` or
+    /// `battle`. Defaults to normal.
+    readiness: Option<ReadinessSpec>,
     /// The base the force heads for when it retires or sends stragglers
     /// home. It must be a base of the force's own side. Defaults to none.
     home_port: Option<u32>,
@@ -170,8 +189,10 @@ enum ActionSpec {
     SetRoute {
         waypoints: Vec<[i32; 2]>,
     },
+    /// Exactly one of `speed` and `knots` (decision 7 of 0021).
     SetSpeed {
-        speed: SpeedSpec,
+        speed: Option<SpeedSpec>,
+        knots: Option<Quantity>,
     },
     SetMission {
         mission: MissionSpec,
@@ -196,6 +217,9 @@ enum ActionSpec {
     SetHomePort {
         base: u32,
     },
+    SetReadiness {
+        readiness: ReadinessSpec,
+    },
     Detach {
         ships: Vec<u32>,
     },
@@ -218,6 +242,22 @@ impl From<StragglersSpec> for StragglerInstruction {
             StragglersSpec::Detach => StragglerInstruction::Detach,
             StragglersSpec::Leave => StragglerInstruction::Leave,
             StragglersSpec::Retire => StragglerInstruction::Retire,
+        }
+    }
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum ReadinessSpec {
+    Normal,
+    Battle,
+}
+
+impl From<ReadinessSpec> for Readiness {
+    fn from(spec: ReadinessSpec) -> Readiness {
+        match spec {
+            ReadinessSpec::Normal => Readiness::Normal,
+            ReadinessSpec::Battle => Readiness::Battle,
         }
     }
 }
@@ -336,6 +376,9 @@ pub struct Scenario {
     pub days: u32,
     pub world: World,
     script: BTreeMap<u32, Vec<(Side, OrderRequest)>>,
+    /// The contacts the sides start with, kept so that a world built afresh
+    /// for another seed holds them too.
+    contacts: Vec<StartingContact>,
 }
 
 impl Scenario {
@@ -448,7 +491,7 @@ impl Scenario {
                 hex,
                 spec.mission.into(),
             );
-            task_force.alert = spec.alert.unwrap_or(true);
+            task_force.readiness = spec.readiness.map_or(Readiness::Normal, Readiness::from);
             if let Some(raw) = spec.home_port {
                 let port = BaseId::new(raw);
                 let base = truth
@@ -581,7 +624,21 @@ impl Scenario {
                         ActionSpec::SetRoute { waypoints } => TaskForceOrder::SetRoute(
                             waypoints.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
                         ),
-                        ActionSpec::SetSpeed { speed } => TaskForceOrder::SetSpeed((*speed).into()),
+                        ActionSpec::SetSpeed { speed, knots } => {
+                            TaskForceOrder::SetSpeed(match (speed, knots) {
+                                (Some(speed), None) => (*speed).into(),
+                                (None, Some(knots)) => SpeedSetting::Knots(
+                                    knots
+                                        .to_fixed()
+                                        .map_err(|e| fail(format!("knots on day {day} {e}")))?,
+                                ),
+                                _ => {
+                                    return Err(fail(format!(
+                                        "the set_speed order on day {day} needs exactly one of speed and knots"
+                                    )))
+                                }
+                            })
+                        }
                         ActionSpec::SetMission { mission } => {
                             TaskForceOrder::SetMission((*mission).into())
                         }
@@ -607,6 +664,9 @@ impl Scenario {
                         },
                         ActionSpec::SetHomePort { base } => {
                             TaskForceOrder::SetHomePort(BaseId::new(*base))
+                        }
+                        ActionSpec::SetReadiness { readiness } => {
+                            TaskForceOrder::SetReadiness((*readiness).into())
                         }
                         ActionSpec::Detach { ships } => TaskForceOrder::DetachShips(
                             ships.iter().map(|raw| ShipId::new(*raw)).collect(),
@@ -663,7 +723,29 @@ impl Scenario {
                 .push((spec.side.into(), request));
         }
 
-        let world = World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
+        let mut world =
+            World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
+
+        let mut contacts = Vec::new();
+        for (index, spec) in file.contact.iter().enumerate() {
+            let kind = parse_kind(&spec.kind).ok_or_else(|| {
+                fail(format!(
+                    "contact {} has unknown kind \"{}\"",
+                    index + 1,
+                    spec.kind
+                ))
+            })?;
+            contacts.push(StartingContact {
+                side: spec.side.into(),
+                hex: Hex::new(spec.q, spec.r),
+                ship_count: spec.ship_count,
+                kind,
+                age_pulses: spec.age_pulses.unwrap_or(0),
+            });
+        }
+        world
+            .hold_starting_contacts(contacts.clone())
+            .map_err(|e| fail(e.to_string()))?;
 
         Ok(Scenario {
             name: file.name,
@@ -671,6 +753,7 @@ impl Scenario {
             days: file.days,
             world,
             script,
+            contacts,
         })
     }
 
@@ -688,18 +771,20 @@ impl Scenario {
                 ),
             });
         }
-        let world = World::new(
+        let mut world = World::new(
             seed,
             self.world.ref_data().clone(),
             self.world.map().clone(),
             self.world.umpire().clone(),
         )?;
+        world.hold_starting_contacts(self.contacts.clone())?;
         Ok(Scenario {
             name: self.name.clone(),
             placeholder: self.placeholder,
             days: self.days,
             world,
             script: self.script.clone(),
+            contacts: self.contacts.clone(),
         })
     }
 
@@ -893,20 +978,120 @@ r = 0
     }
 
     #[test]
-    fn a_task_force_is_alert_unless_the_scenario_says_otherwise() {
+    fn a_task_force_is_at_normal_readiness_unless_the_scenario_says_otherwise() {
         let truth = |scenario: Scenario| scenario.world.umpire().clone();
         let default = truth(parse_with(&task_force("at_base = 1")).expect("loads"));
         let force = &default.task_forces[&TaskForceId::new(1)];
-        assert!(force.alert);
+        assert_eq!(force.readiness, Readiness::Normal);
+        assert_eq!(force.readiness_order, None);
+        assert!(!force.alerted);
+        assert_eq!(force.alerted_by, None);
+        assert!(!force.is_alert());
         assert_eq!(force.rules_of_engagement, RulesOfEngagement::DEFAULT);
         assert_eq!(force.rules_order, None);
-        for (text, expected) in [("alert = true", true), ("alert = false", false)] {
+        for (text, expected) in [
+            ("readiness = \"normal\"", Readiness::Normal),
+            ("readiness = \"battle\"", Readiness::Battle),
+        ] {
             let loaded =
                 truth(parse_with(&task_force(&format!("at_base = 1\n{text}"))).expect("loads"));
-            assert_eq!(loaded.task_forces[&TaskForceId::new(1)].alert, expected);
+            let force = &loaded.task_forces[&TaskForceId::new(1)];
+            assert_eq!(force.readiness, expected);
+            assert_eq!(force.is_alert(), expected == Readiness::Battle);
         }
-        assert!(parse_with(&task_force("at_base = 1\nalert = \"no\"")).is_err());
-        assert!(parse_with(&task_force("at_base = 1\nalert = 0")).is_err());
+        assert!(parse_with(&task_force("at_base = 1\nreadiness = \"ready\"")).is_err());
+        assert!(parse_with(&task_force("at_base = 1\nreadiness = true")).is_err());
+        // The old key is gone: unknown fields are errors.
+        assert!(parse_with(&task_force("at_base = 1\nalert = false")).is_err());
+        assert!(parse_with(&task_force("at_base = 1\nalert = true")).is_err());
+    }
+
+    #[test]
+    fn a_set_speed_order_gives_a_named_speed_or_knots_but_not_both_or_neither() {
+        let speed_of = |body: &str| {
+            let scenario = parse_with(&order("task_force = 1", body)).expect("loads");
+            let (_, request) = &scenario.script[&1][0];
+            match &request.kind {
+                OrderKind::TaskForce {
+                    order: TaskForceOrder::SetSpeed(speed),
+                    ..
+                } => *speed,
+                other => panic!("not a speed order: {other:?}"),
+            }
+        };
+        assert_eq!(
+            speed_of("kind = \"set_speed\"\nspeed = \"full\""),
+            SpeedSetting::Full
+        );
+        assert_eq!(
+            speed_of("kind = \"set_speed\"\nknots = \"24\""),
+            SpeedSetting::Knots(Fixed::from_int(24))
+        );
+        assert_eq!(
+            speed_of("kind = \"set_speed\"\nknots = \"22.5\""),
+            SpeedSetting::Knots(Fixed::from_ratio(45, 2))
+        );
+        let both = "kind = \"set_speed\"\nspeed = \"full\"\nknots = \"24\"";
+        let message = error_of(&order("task_force = 1", both));
+        assert!(
+            message.contains("exactly one of speed and knots"),
+            "{message}"
+        );
+        let message = error_of(&order("task_force = 1", "kind = \"set_speed\""));
+        assert!(
+            message.contains("exactly one of speed and knots"),
+            "{message}"
+        );
+        let message = error_of(&order(
+            "task_force = 1",
+            "kind = \"set_speed\"\nknots = \"fast\"",
+        ));
+        assert!(message.contains("knots on day 1"), "{message}");
+    }
+
+    #[test]
+    fn a_readiness_order_loads_for_a_task_force_only() {
+        let scenario = parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_readiness\"\nreadiness = \"battle\"",
+        ))
+        .expect("loads");
+        let (_, request) = &scenario.script[&1][0];
+        assert_eq!(
+            request.kind,
+            OrderKind::TaskForce {
+                target: TaskForceId::new(1),
+                order: TaskForceOrder::SetReadiness(Readiness::Battle),
+            }
+        );
+        let scenario = parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_readiness\"\nreadiness = \"normal\"",
+        ))
+        .expect("loads");
+        assert!(matches!(
+            &scenario.script[&1][0].1.kind,
+            OrderKind::TaskForce {
+                order: TaskForceOrder::SetReadiness(Readiness::Normal),
+                ..
+            }
+        ));
+        assert!(error_of(&order(
+            "air_group = 1",
+            "kind = \"set_readiness\"\nreadiness = \"battle\""
+        ))
+        .contains("air_group"));
+        assert!(parse_with(&order("task_force = 1", "kind = \"set_readiness\"")).is_err());
+        assert!(parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_readiness\"\nreadiness = \"ready\""
+        ))
+        .is_err());
+        assert!(parse_with(&order(
+            "task_force = 1",
+            "kind = \"set_readiness\"\nreadiness = \"battle\"\nextra = 1"
+        ))
+        .is_err());
     }
 
     #[test]
@@ -1230,8 +1415,14 @@ r = 0
         let scenario = Scenario::load(&path).expect("scenario 4a loads");
         let truth = scenario.world.umpire();
         assert_eq!(truth.ships.len(), 6);
-        assert!(truth.task_forces[&TaskForceId::new(1)].alert);
-        assert!(!truth.task_forces[&TaskForceId::new(2)].alert);
+        assert_eq!(
+            truth.task_forces[&TaskForceId::new(1)].readiness,
+            Readiness::Battle
+        );
+        assert_eq!(
+            truth.task_forces[&TaskForceId::new(2)].readiness,
+            Readiness::Normal
+        );
         assert!(truth
             .ships
             .values()
@@ -1252,5 +1443,63 @@ r = 0
         let mut started = scenario.clone();
         started.next_day().expect("runs");
         assert!(started.with_seed(1).is_err());
+    }
+
+    fn contact(body: &str) -> String {
+        format!("[[contact]]\nside = \"allied\"\nq = 3\nr = 0\nship_count = 3\n{body}\n")
+    }
+
+    #[test]
+    fn a_starting_contact_is_held_at_the_given_age() {
+        // Age 2: confidence 0.8 x 0.8 x 0.8 = 0.512.
+        let scenario = parse_with(&contact("kind = \"cruiser\"\nage_pulses = 2")).expect("loads");
+        let view = scenario.world.side_view(Side::Allied);
+        let held: Vec<_> = view.contacts().collect();
+        assert_eq!(held.len(), 1);
+        assert_eq!(held[0].estimated_hex, Hex::new(3, 0));
+        assert_eq!(held[0].estimated_ship_count, 3);
+        assert_eq!(held[0].age_pulses, 2);
+        assert_eq!(held[0].confidence, Fixed::from_ratio(512, 1000));
+        // One report and two ageing events, all on day 0.
+        assert_eq!(scenario.world.events().len(), 3);
+
+        // The age is optional and defaults to 0.
+        let scenario = parse_with(&contact("kind = \"destroyer\"")).expect("loads");
+        let view = scenario.world.side_view(Side::Allied);
+        assert_eq!(view.contacts().next().expect("held").age_pulses, 0);
+        assert_eq!(scenario.world.events().len(), 1);
+    }
+
+    #[test]
+    fn a_bad_starting_contact_is_a_load_error() {
+        let message = error_of(&contact("kind = \"dreadnought\""));
+        assert!(
+            message.contains("unknown kind \"dreadnought\""),
+            "{message}"
+        );
+        let message = error_of(&contact("kind = \"cruiser\"\nspeed = 3"));
+        assert!(message.contains("speed"), "{message}");
+        // Age 6 is below the drop floor: 0.8 x 0.8^6 = 0.2097152 < 0.3.
+        let message = error_of(&contact("kind = \"cruiser\"\nage_pulses = 6"));
+        assert!(message.contains("would be dropped"), "{message}");
+        let message = error_of(&format!(
+            "{}{}",
+            contact("kind = \"cruiser\""),
+            contact("kind = \"cruiser\"")
+        ));
+        assert!(message.contains("too close"), "{message}");
+    }
+
+    #[test]
+    fn a_scenario_for_another_seed_holds_the_same_contacts() {
+        let scenario = parse_with(&contact("kind = \"cruiser\"\nage_pulses = 1")).expect("loads");
+        let other = scenario.with_seed(77).expect("copies");
+        assert_eq!(other.world.events().len(), scenario.world.events().len());
+        assert_eq!(other.world.state_hash(), {
+            let mut again = scenario.clone();
+            again = again.with_seed(77).expect("copies");
+            again.world.state_hash()
+        });
+        assert_eq!(other.world.side_view(Side::Allied).contacts().count(), 1);
     }
 }
