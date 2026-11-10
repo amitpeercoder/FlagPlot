@@ -285,3 +285,79 @@ fn run_output_matches_the_golden_files() {
         }
     }
 }
+
+/// A copy of scenario 4c2a with one Allied starting contact, 2 pulses old, at
+/// (5,0), in the temp folder. Its relative paths are made absolute so that
+/// they still resolve from there.
+struct TempScenario(PathBuf);
+
+impl TempScenario {
+    fn with_contact(label: &str) -> TempScenario {
+        let source =
+            fs::read_to_string(Path::new(ROOT).join("data/scenarios/04c_three_forces.toml"))
+                .expect("scenario 4c2a exists");
+        let data = Path::new(ROOT)
+            .join("data")
+            .canonicalize()
+            .expect("data folder");
+        let source = source.replace("= \"../", &format!("= \"{}/", data.display()));
+        let dir = std::env::temp_dir().join(format!("flagplot-export-test-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("make the temp dir");
+        let path = dir.join(format!("{label}.toml"));
+        let text = format!(
+            "{source}\n[[contact]]\nside = \"allied\"\nq = 5\nr = 0\nship_count = 3\nkind = \"cruiser\"\nage_pulses = 2\n"
+        );
+        fs::write(&path, text).expect("write the temp scenario");
+        TempScenario(path)
+    }
+
+    fn path(&self) -> String {
+        self.0.to_string_lossy().into_owned()
+    }
+}
+
+impl Drop for TempScenario {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.0);
+    }
+}
+
+#[test]
+fn starting_contacts_are_events_before_day_one_in_no_days_range() {
+    // One report and two ageing events on day 0 (age 2), ahead of day 1's
+    // events in the events array, and in none of the days' ranges.
+    let scenario = TempScenario::with_contact("export_day_zero");
+    let replay = parse(&export("day-zero", &scenario.path(), &[]));
+    let events = replay["events"].as_array().expect("events");
+    let kinds: Vec<&str> = events
+        .iter()
+        .take(3)
+        .map(|event| event["kind"].as_str().expect("a kind"))
+        .collect();
+    assert_eq!(kinds, ["report_received", "contact_aged", "contact_aged"]);
+    for event in &events[..3] {
+        assert_eq!(event["day"], 0);
+        assert!(event["pulse"].is_null());
+    }
+    assert!(events[3..].iter().all(|event| event["day"] != 0));
+    assert!(events[0]["text"]
+        .as_str()
+        .expect("text")
+        .contains("confidence 0.8, held at the start: new contact:1"));
+
+    let days = replay["days"].as_array().expect("days");
+    assert_eq!(days[0]["first_event"], 3);
+    let counted: u64 = days
+        .iter()
+        .map(|day| day["event_count"].as_u64().expect("a count"))
+        .sum();
+    assert_eq!(counted + 3, events.len() as u64);
+
+    // The run command prints the day-0 events before day 1's.
+    let result = binary(&["run", &scenario.path(), "--events"]);
+    let text = String::from_utf8_lossy(&result.stdout).into_owned();
+    let day0: Vec<&str> = text.lines().filter(|line| line.contains(" D0 ")).collect();
+    assert_eq!(day0.len(), 3, "{text}");
+    let first_day_one = text.find(" D1 ").expect("day 1 events");
+    assert!(text.find(" D0 ").expect("day 0 events") < first_day_one);
+}

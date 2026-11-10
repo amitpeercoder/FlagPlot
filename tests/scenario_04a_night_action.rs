@@ -16,9 +16,11 @@
 //!
 //! Inputs, from the data files:
 //!
-//! - Force A, task force 1, Japanese: cruisers 1, 2 and 3. Alert. It starts
+//! - Force A, task force 1, Japanese: cruisers 1, 2 and 3. At battle readiness, so alert
+//!   (decision 0021). It starts
 //!   at (0,0) and steams east to (10,0) at 16 kn.
-//! - Force B, task force 2, Allied: cruisers 4, 5 and 6. Not alert. It lies
+//! - Force B, task force 2, Allied: cruisers 4, 5 and 6. At normal readiness with no
+//!   contact held, so not alert. It lies
 //!   stopped at (5,0).
 //! - Both are ordered to engage and to break off at 0.5.
 //! - Placeholder cruiser: 8 guns, 3 rounds a gun a minute, 100 rounds a gun,
@@ -499,7 +501,7 @@ fn snapshot(seed: u64, scenario: &Scenario) -> RunData {
                     ForceEnd {
                         position: force.position(),
                         ships: force.ships.iter().map(|ship| ship.raw()).collect(),
-                        alert: force.alert,
+                        alert: force.is_alert(),
                     },
                 )
             })
@@ -3054,20 +3056,25 @@ fn a_force_is_never_faster_than_its_slowest_ship_afloat() {
 #[test]
 fn an_alert_force_never_sights_less_readily() {
     let seed = both_sight_in_round_one();
-    // (A not alert, B not alert, radar) -> round 1 chances of A and B.
-    let a_not_alert = (
-        "q = 0\nr = 0\nmission = \"surface_combat\"",
-        "q = 0\nr = 0\nmission = \"surface_combat\"\nalert = false",
+    // (A not alert, B alert, radar) -> round 1 chances of A and B. In the
+    // scenario file A is at battle readiness and B at normal readiness. A is
+    // made not alert by setting its readiness to normal; B is made alert by
+    // giving it battle readiness (its block has no readiness line).
+    let a_not_alert = ("readiness = \"battle\"", "readiness = \"normal\"");
+    let b_alert = (
+        "q = 5\nr = 0\nmission = \"surface_combat\"",
+        "q = 5\nr = 0\nmission = \"surface_combat\"\nreadiness = \"battle\"",
     );
-    let b_alert = ("alert = false", "alert = true");
     let mut table: Vec<(bool, bool, [Fixed; 2])> = Vec::new();
     for (flipped, radar) in [(false, false), (true, false), (false, true), (true, true)] {
         let mut edits: Vec<(&str, &str, &str)> = Vec::new();
         let row = cruiser_row(8, 20, 1);
         if flipped {
-            // B first: A's edit adds a second `alert = false` to the text.
-            edits.push((SCENARIO, b_alert.0, b_alert.1));
+            // A's edit goes first: B's edit adds a second
+            // `readiness = "battle"` line to the text, and A's original
+            // line must still appear exactly once when A's edit is made.
             edits.push((SCENARIO, a_not_alert.0, a_not_alert.1));
+            edits.push((SCENARIO, b_alert.0, b_alert.1));
         }
         if radar {
             edits.push((CLASSES, CRUISER_ROW, &row));

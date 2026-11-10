@@ -27,7 +27,7 @@ The spec's scenario 4 is Savo Island. It needs a combat rule, the real map and r
 3. **Each round, a force that has not yet sighted the enemy rolls to sight it.** The chance is a base figure for night or day, plus a bonus if any ship afloat in the force has radar, multiplied by a factor if the force is not alert. It is capped at 1. Whether it is night comes from the darkness function (decision 0001).
 4. **A force that is fired on has sighted the enemy from the next round,** with no roll. Gun flashes give the firer away.
 5. **A force is surprised in any round in which it is fired on before it has sighted the enemy.** It cannot fire in that round, and fire against it is more accurate.
-6. **A task force is alert or not alert.** It is a stored flag, alert unless the scenario says otherwise. A force becomes alert when it sights an enemy force or is fired on. What makes a force lose its alertness, or start without it, is deferred: see below.
+6. *(Replaced by decision 0021: readiness is set by order, and a force at normal readiness is alert only while alerted.)* **A task force is alert or not alert.** It is a stored flag, alert unless the scenario says otherwise. A force becomes alert when it sights an enemy force or is fired on. What makes a force lose its alertness, or start without it, is deferred: see below.
 7. **If neither force sights the other in six rounds, they pass unseen.** An event records it.
 
 ### Fire

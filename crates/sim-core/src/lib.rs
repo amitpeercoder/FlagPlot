@@ -29,8 +29,10 @@ mod cargo;
 mod invariants;
 mod resolve;
 mod search;
+mod start;
 mod stragglers;
 mod surface;
 
 pub use invariants::InvariantViolation;
+pub use start::StartingContact;
 pub use world::{DaySummary, SimConfig, SimError, World};
