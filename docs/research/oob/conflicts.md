@@ -261,3 +261,17 @@ URLs: Bates = https://archive.org/download/DTIC_ADA003037/DTIC_ADA003037.pdf ; O
 - Chokai's sighting of Blue: 10,900 yd at 0053 (Madsen, section Operations at Savo) versus about five miles at 0054 (Madsen, introduction). Both in the same article.
 - Tenryu radar: earlier USSBS NAV 61 row says none; combinedfleet and Kojinsha say radar installation on Japanese cruisers began 1943 or later, no conflict. combinedfleet radar.htm lists Type 21/22 "operational" dates (Aug 1943 and Sep 1944) later than its own fitting dates (earlier note).
 - Vincennes/Quincy radar: ONI says radar ranges were used; Madsen adds fire control radars. No source names the sets.
+
+## Found in the browser pass (third pass)
+
+Sources: the US Navy's online ship histories (https://www.history.navy.mil/research/histories/ship-histories/danfs.html) and the Australian Navy's unit histories (https://seapower.navy.gov.au/history/units).
+
+- **Canberra torpedoed or not.** The Australian Navy's history says two torpedoes struck her starboard side. The 1950 US analysis says none. The US Navy's history of Bagley says it is possible but unconfirmed that Bagley's four torpedoes hit Canberra, on the port side. Four accounts, three answers, two different sides of the ship.
+- **Patterson's warning.** Her Navy history says 0143, as the 1943 narrative does. The 1950 analysis and her own report say 0146.
+- **When Australia left the southern group.** 2130 by the Navy history of Bagley; 2055 and 2125 in two places in the 1950 analysis.
+- **Patterson's wounded.** 8 by her Navy history, 10 by the 1950 analysis. Both say 10 killed.
+- **Patterson laid down.** The Navy's current online entry still says 23 July 1933, so the odd date is in the entry itself and not a fault of the mirror read earlier. The other ships of the class were laid down in 1935.
+- **Canberra commissioned. Settled.** 9 July 1928 by the Australian Navy; 10 July by one website. The Navy's date is preferred.
+- **Hobart laid down.** 15 August 1934 by the Australian Navy's page, which also has her launched eight weeks later; 15 August 1933 by one website. Left disputed. The Navy page looks like the one in error.
+- **Chicago's radar set name.** Her Navy history calls the set fitted in 1940 the CXAM-1. Other sources call the first six sets CXAM and the later ones CXAM-1.
+

@@ -416,19 +416,29 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 413,hiei,laid_down,1911-11-04,4 November 1911,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,
 414,hiei,launched,1912-11-21,21 November 1912,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,
 415,hiei,sunk,1942-11-14,14 November 1942,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,Page: sank between 1900 on 13 Nov and 0100 on 14 Nov
+605,hmas-australia,commissioned,1928-04-24,24 April 1928,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-australia-ii (specification panel),2026-11-10,high,stated,preferred,
 416,hmas-australia,commissioned,1928-04-24,24 Apr 1928,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
 417,hmas-australia,fate,Survived the war; end of service 31 Aug 1954,,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
+603,hmas-australia,laid_down,1925-08-26,26 August 1925,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-australia-ii (specification panel),2026-11-10,high,stated,preferred,
 418,hmas-australia,laid_down,1925-08-26,26 Aug 1925,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
+604,hmas-australia,launched,1927-03-17,17 March 1927,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-australia-ii (specification panel),2026-11-10,high,stated,preferred,
 419,hmas-australia,launched,1927-03-17,17 Mar 1927,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
-420,hmas-canberra,commissioned,1928-07-10,10 Jul 1928,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+608,hmas-canberra,commissioned,1928-07-09,9 July 1928,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-canberra-i (specification panel),2026-11-10,high,stated,preferred,
+420,hmas-canberra,commissioned,1928-07-10,10 Jul 1928,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,alternative,Not preferred: the Australian Navy's own history gives 9 July 1928.
 421,hmas-canberra,fate,Disabled at Savo Island; scuttled by US destroyers the morning of 9 Aug 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+606,hmas-canberra,laid_down,1925-09-09,9 September 1925,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-canberra-i (specification panel),2026-11-10,high,stated,preferred,
 422,hmas-canberra,laid_down,1925-09-09,9 Sep 1925,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+607,hmas-canberra,launched,1927-05-31,31 May 1927,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-canberra-i (specification panel),2026-11-10,high,stated,preferred,
 423,hmas-canberra,launched,1927-05-31,31 May 1927,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+609,hmas-canberra,sunk,1942-08-09,9 August 1942,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-canberra-i (specification panel),2026-11-10,high,stated,preferred,
 424,hmas-canberra,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
 425,hmas-hobart,alias,HMS Apollo,HMS Apollo,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+612,hmas-hobart,commissioned,1938-09-28,28 September 1938,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-hobart-i (specification panel),2026-11-10,high,stated,preferred,As HMAS Hobart. She first commissioned as HMS Apollo on 13 January 1936
 426,hmas-hobart,commissioned,1938-09-28,28 Sep 1938,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,Commissioned into RAN 28 Sep 1938; previously commissioned in the Royal Navy as HMS Apollo 13 Jan 1936
 427,hmas-hobart,fate,"Survived the war; decommissioned 20 Dec 1947; sold for scrap 2 Feb 1962, broken up at Osaka",,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,
-428,hmas-hobart,laid_down,1933-08-15,15 Aug 1933,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,
+610,hmas-hobart,laid_down,1934-08-15,15 August 1934,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-hobart-i (specification panel),2026-11-10,medium,stated,disputed,"The panel gives 9 October 1934 for the launch, eight weeks after the keel. One of the two dates is probably wrong on the page"
+428,hmas-hobart,laid_down,1933-08-15,15 Aug 1933,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,disputed,
+611,hmas-hobart,launched,1934-10-09,9 October 1934,,,ran-ship-histories,https://seapower.navy.gov.au/history/units/hmas-hobart-i (specification panel),2026-11-10,medium,stated,preferred,See the note on laid_down
 429,hmas-hobart,launched,1934-10-09,9 Oct 1934,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,
 430,isokaze,fate,"Disabled by carrier aircraft off Okinawa, scuttled by Yukikaze","Disabled by carrier aircraft off Okinawa, scuttled by Yukikaze",,,combinedfleet,https://www.combinedfleet.com/isokaz_t.htm,2026-11-10,medium,stated,preferred,
 431,isokaze,sunk,1945-04-07,7 April 1945,,,combinedfleet,https://www.combinedfleet.com/isokaz_t.htm,2026-11-10,medium,stated,preferred,Placed in the page's 6-7 April entry

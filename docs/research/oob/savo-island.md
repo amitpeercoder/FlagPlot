@@ -9,6 +9,7 @@ Times are zone minus 11, the time the Allied ships kept. Ranges are as the sourc
 | Source | What it is | Use it for |
 | --- | --- | --- |
 | Bates and Innis, Naval War College, 1950 | The Navy's own analysis, built from Allied action reports, captured Japanese records and the 1945 interrogations | Almost everything below. Allied positions and actions are firm. Japanese times and ranges are Bates's reconstruction, plotted on his own diagrams |
+| US Navy online ship histories and the Australian Navy's unit histories | Current official short histories, read in a browser | Chicago's radar, Bagley's part, Canberra's losses. Thin on equipment |
 | ONI Combat Narrative, 1943 | Wartime account from Allied reports | Allied readiness and what each ship saw. It says its own times are approximate. Poor on the Japanese |
 | BuShips War Damage Report 29, 1943 | Damage to Quincy, Astoria and Vincennes from survivors' statements | Hits and sinking times for those three |
 | combinedfleet.com ship records | Modern compilation from Japanese records | Japanese ammunition and damage. Half its pages would not load |
@@ -121,7 +122,7 @@ What they had been told:
 | Furutaka | 152 or 153 8-inch, 8 torpedoes | None | |
 | Tenryu | 6 torpedoes | 1 | |
 | Yubari | 4 torpedoes | 3 | |
-| Canberra | No 8-inch, a few 4-inch | At least 24 shells. Torpedo hits: none by Bates, one or two by ONI | Scuttled 0800 |
+| Canberra | No 8-inch, a few 4-inch | At least 24 shells. Torpedo hits: none by Bates, one or two by ONI, two by the Australian Navy's history. The US Navy's history of Bagley allows that hers may have hit Canberra. 84 dead, 109 wounded | Scuttled 0800 |
 | Chicago | No 8-inch. 44 star shells, of which 6 worked | 1 shell, 1 torpedo in the bow, 1 dud torpedo | Survived |
 | Vincennes | About 33 8-inch | 57 known shell hits, 1 to 3 torpedoes | Sank 0250 |
 | Quincy | 21 8-inch | 36 known shell hits, 2 or 3 torpedoes | Sank about 0236 |
@@ -146,7 +147,7 @@ The rule asks for guns, rate of fire, shell weight, torpedo tubes, torpedo and w
 | Warhead | Type 93: 490 kg, three sources. Mark 15: 224 kg or 374 kg depending on the model, and which was in the tubes in August 1942 was not found |
 | Displacement | **Disputed for every class but one.** Sources differ by 2 to 20 per cent, mostly because they quote different conditions or dates without saying which. A rule that uses displacement needs to name one source and one condition for all ships. Full load agrees across sources for the New Orleans, Bagley and Benham classes only |
 | Speed | Agreed for seven classes. Disputed for Aoba (32 or 33 knots), Bagley, Benham and New Orleans classes, between design and trial figures |
-| Radar on 8 August | Japanese: none, on the statement of the Navy's analysis and of a Japanese admiral who was there. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: a set that could range a ship, type not named. Canberra: disputed, three weak sources. **Australia, Bagley, Patterson, Helm, Wilson, Jarvis: nothing found** |
+| Radar on 8 August | Japanese: none, on the statement of the Navy's analysis and of a Japanese admiral who was there. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: the CXAM air search set, fitted in 1940 on the Navy's own ship history, and a set that ranged a ship at 7,000 yards that night, not named. Canberra: disputed, three weak sources. **Australia, Bagley, Patterson, Helm, Wilson, Jarvis: nothing found** |
 | Night optics | The technical mission reports confirm 12, 15 and 18 cm binoculars and 90 and 110 cm searchlights existed. Nothing found gives numbers per ship or a sighting range except the ranges in the detection tables above |
 
 ## What a rule would need to model
