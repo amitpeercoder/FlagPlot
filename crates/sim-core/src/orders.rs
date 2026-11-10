@@ -74,6 +74,42 @@ pub enum SpeedSetting {
     Cruise,
     /// The top speed of the slowest ship.
     Full,
+    /// A speed in knots (decision 7 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`). Each ship steams at
+    /// this speed or at its class top speed if that is lower, times its
+    /// propulsion factor. Must be above zero. Added at the end.
+    Knots(Fixed),
+}
+
+/// How ready a task force is for action (decision 1 of
+/// `docs/decisions/0021-readiness-and-alarm.md`). A force at battle readiness
+/// is alert.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum Readiness {
+    /// Not expecting action. Alert only while alerted.
+    #[default]
+    Normal,
+    /// At battle stations. Always alert.
+    Battle,
+}
+
+impl Readiness {
+    /// A stable number for the readiness. Part of the state hash. Never
+    /// renumber it; add new levels at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Readiness::Normal => 1,
+            Readiness::Battle => 2,
+        }
+    }
+
+    /// The readiness's name as scenario files and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Readiness::Normal => "normal",
+            Readiness::Battle => "battle",
+        }
+    }
 }
 
 /// Whether a task force fights or tries to slip away from a surface fight.
@@ -187,6 +223,11 @@ pub enum TaskForceOrder {
     /// Split the listed ships off into a new task force at the same spot,
     /// idle, with the same rules of engagement. At least one ship must stay.
     DetachShips(Vec<ShipId>),
+    /// Set the readiness (decision 1 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`). A standing order of its
+    /// own kind: it replaces the readiness and nothing else, and does not
+    /// touch whether the force is alerted. Added at the end.
+    SetReadiness(Readiness),
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -284,6 +325,10 @@ pub enum RejectReason {
     /// before: it is land, or it lies across land with no way round
     /// (decision 0017, decision 13). Added at the end of the enum.
     WaypointUnreachable(Hex),
+    /// A speed in knots is zero or negative (decision 7 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`). Added at the end of
+    /// the enum.
+    SpeedNotAboveZero(Fixed),
 }
 
 impl fmt::Display for RejectReason {
@@ -317,6 +362,9 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::WaypointUnreachable(hex) => {
                 write!(f, "waypoint {hex} cannot be reached by sea")
+            }
+            RejectReason::SpeedNotAboveZero(knots) => {
+                write!(f, "speed {knots} kn is not above 0")
             }
         }
     }

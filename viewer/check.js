@@ -84,7 +84,14 @@ function checkReplay(file) {
   const g = checkGeometry(replay, path.basename(file)) || { edges: 0, oneSided: 0 };
 
   // Steps: Start first; every event in exactly one step; steps ordered
-  assert(model.steps[0].label === 'Start' && model.steps[0].events.length === 0 && model.steps[0].index === 0, 'step 0 is not an empty Start step');
+  // Day-0 events (contacts a scenario starts a side with) are the Start step's; every other step has days >= 1.
+  const day0 = replay.events.map((e, i) => e.day === 0 ? i : -1).filter(i => i >= 0);
+  assert(model.steps[0].label === 'Start' && model.steps[0].index === 0, 'step 0 is not the Start step');
+  assert(JSON.stringify(model.steps[0].events) === JSON.stringify(day0), 'the Start step does not hold exactly the day-0 events');
+  assert(model.steps.slice(1).every(s => s.day >= 1), 'a step after Start has day 0');
+  for (const d of replay.days) {
+    for (const ei of day0) assert(ei < d.first_event || ei >= d.first_event + d.event_count, 'day ' + d.day + ' range includes day-0 event index ' + ei);
+  }
   const count = new Map();
   model.steps.forEach((s, i) => {
     assert(s.index === i, 'step index mismatch at ' + i);
@@ -196,6 +203,20 @@ function synthetic() {
   single.events = [{ id: 1, day: 1, pulse: null, kind: 'order_accepted', text: '#1 D1 -         order:1 accepted for task_force:1  <- order:1', causes: [{ order: 1 }], entities: ['task_force:1'], data: { order: 1, target: 'task_force:1' } }];
   single.orders = [{ id: 1, side: 'allied', day: 1, issuer: 'player', target: 'task_force:1', text: 'hold' }];
   run('single hex, one force, orders only', single, 2);
+  // A failed alarm roll leaves the force as it was; a successful one alerts it. alerted is compared for every force.
+  const alarm = (failedOnly) => {
+    const r = base();
+    const tf = (alerted) => ({ id: 1, name: 'Solo', side: 'allied', position: { q: 0, r: 0 }, ships: [1], readiness: 'battle', alerted });
+    r.initial.task_forces = [tf(false)];
+    r.initial.ships = [{ id: 1, name: 'S', side: 'allied' }];
+    r.final.task_forces = [tf(!failedOnly)];
+    r.final.ships = [{ id: 1, location: { task_force: 1 } }];
+    const roll = (id, alarmed) => ({ id, day: 1, pulse: 'night', kind: 'alarm_roll', text: '#' + id + ' D1 night     task_force:1 heard the fight of task_force:2 and task_force:3, chance 0.5: ' + (alarmed ? 'alarmed' : 'not alarmed'), causes: [], entities: ['task_force:1', 'task_force:2', 'task_force:3'], data: { task_force: 1, by_a: 2, by_b: 3, chance: 0.5, alarmed } });
+    r.events = failedOnly ? [roll(1, false)] : [roll(1, false), roll(2, true)];
+    return r;
+  };
+  run('a failed alarm roll alerts nobody', alarm(true), 2);
+  run('a successful alarm roll alerts the force', alarm(false), 2);
   const nolatlon = base();
   nolatlon.labels = [{ place: 'nowhere', feature: 'x', lat: -5, lon: 150 }];
   run('labels but no lat/lon on the map', nolatlon, 1);
@@ -208,6 +229,9 @@ function synthetic() {
   const want = ['Start', 'Day 1, orders', 'Day 1, night (18:00 to 06:00)', 'Day 1, afternoon (12:00 to 18:00)', 'Day 1, end of day', 'Day 2, orders', 'Day 3, morning (06:00 to 12:00)', 'Day 3, end of day'];
   assert(JSON.stringify(labels) === JSON.stringify(want), 'step labels: ' + JSON.stringify(labels));
   console.log('  ok: step phases and labels');
+  const withStart = Core.buildSteps([ev(1, 0, null), ev(2, 0, null), ev(3, 1, null), ev(4, 1, 'night')]);
+  assert(JSON.stringify(withStart.map(s => s.label)) === JSON.stringify(['Start', 'Day 1, orders', 'Day 1, night (18:00 to 06:00)']) && JSON.stringify(withStart[0].events) === '[0,1]', 'day-0 events are not the Start step: ' + JSON.stringify(withStart));
+  console.log('  ok: day-0 events form the Start step');
   // Geometry spot checks
   assert(Core.arcWidth(60, 120) === 60 && Core.arcWidth(300, 60) === 120 && Core.arcWidth(90, 90) === 360 && Core.arcWidth(0, 0) === 360, 'arcWidth');
   const p = Core.bearingPoint(0, 0, 90, 10); assert(close(p, [10, 0]), 'bearing 90 is east');

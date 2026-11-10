@@ -285,6 +285,15 @@ pub struct SurfaceCombatFigures {
     pub radar_sighting_bonus: Fixed,
     /// Multiplies the sighting chance of a force that is not alert.
     pub not_alert_sighting_factor: Fixed,
+    /// A force at normal readiness is alerted by a contact its side holds
+    /// within this many hexes of it (decision 3 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`).
+    pub alert_contact_distance_hexes: u32,
+    /// ... and no older than this many pulses.
+    pub alert_contact_max_age_pulses: u32,
+    /// Chance the alarm of a finished fight alerts another force in its hex
+    /// (decision 5 of 0021). From 0 to 1.
+    pub alarm_chance: Fixed,
     /// Chance one gun shot hits, at night.
     pub gun_hit_chance_night: Fixed,
     /// The same by day.
@@ -348,6 +357,7 @@ impl SurfaceCombatFigures {
             ("night sighting chance", self.sighting_chance_night),
             ("day sighting chance", self.sighting_chance_day),
             ("radar sighting bonus", self.radar_sighting_bonus),
+            ("alarm chance", self.alarm_chance),
             ("night gun hit chance", self.gun_hit_chance_night),
             ("day gun hit chance", self.gun_hit_chance_day),
             ("night torpedo hit chance", self.torpedo_hit_chance_night),
@@ -485,6 +495,9 @@ impl SurfaceCombatFigures {
             sighting_chance_day: Fixed::ONE,
             radar_sighting_bonus: hundredth(20),
             not_alert_sighting_factor: hundredth(50),
+            alert_contact_distance_hexes: 3,
+            alert_contact_max_age_pulses: 2,
+            alarm_chance: hundredth(50),
             gun_hit_chance_night: hundredth(3),
             gun_hit_chance_day: hundredth(5),
             torpedo_hit_chance_night: hundredth(4),
@@ -637,6 +650,8 @@ mod tests {
         assert!(combat_problem_of(|f| f.sighting_chance_night = over).contains("night sighting"));
         assert!(combat_problem_of(|f| f.sighting_chance_day = under).contains("day sighting"));
         assert!(combat_problem_of(|f| f.radar_sighting_bonus = over).contains("radar"));
+        assert!(combat_problem_of(|f| f.alarm_chance = over).contains("alarm chance"));
+        assert!(combat_problem_of(|f| f.alarm_chance = under).contains("alarm chance"));
         assert!(combat_problem_of(|f| f.gun_hit_chance_night = under).contains("night gun"));
         assert!(combat_problem_of(|f| f.gun_hit_chance_day = over).contains("day gun"));
         assert!(combat_problem_of(|f| f.torpedo_hit_chance_night = over).contains("night torpedo"));
@@ -645,6 +660,9 @@ mod tests {
         let mut edge = SurfaceCombatFigures::from_surface_combat_toml();
         edge.gun_hit_chance_night = Fixed::ZERO;
         edge.sighting_chance_night = Fixed::ONE;
+        edge.alarm_chance = Fixed::ONE;
+        assert_eq!(edge.problem(), None);
+        edge.alarm_chance = Fixed::ZERO;
         assert_eq!(edge.problem(), None);
     }
 

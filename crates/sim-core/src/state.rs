@@ -18,7 +18,9 @@ use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
 };
 use crate::map::Map;
-use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting, Stance, StragglerInstruction};
+use crate::orders::{
+    AirMission, CargoAction, Mission, Readiness, SpeedSetting, Stance, StragglerInstruction,
+};
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -325,9 +327,17 @@ pub struct TaskForce {
     /// the latest sighting this task force noticed (decision 17 of
     /// `docs/decisions/0012-search-and-contacts.md`).
     pub noticed_sighted_at_hours: Option<Fixed>,
-    /// Whether the task force is alert (decision 6 of
-    /// `docs/decisions/0014-surface-combat.md`).
-    pub alert: bool,
+    /// The standing readiness (decision 1 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`).
+    pub readiness: Readiness,
+    /// The standing order that set the readiness, if any.
+    pub readiness_order: Option<OrderId>,
+    /// Whether the task force is alerted (decisions 2 to 5 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`). Matters only at
+    /// normal readiness; see [`TaskForce::is_alert`].
+    pub alerted: bool,
+    /// The event that alerted the force, if it is alerted.
+    pub alerted_by: Option<EventId>,
     /// The standing rules of engagement.
     pub rules_of_engagement: RulesOfEngagement,
     /// The standing order that set the rules of engagement, if any.
@@ -396,6 +406,12 @@ impl TaskForce {
         }
     }
 
+    /// Whether the task force is alert: at battle readiness, or alerted
+    /// (decisions 1 and 2 of `docs/decisions/0021-readiness-and-alarm.md`).
+    pub fn is_alert(&self) -> bool {
+        self.readiness == Readiness::Battle || self.alerted
+    }
+
     /// Turns the task force round mid-leg: the two hexes swap and the miles
     /// covered become the miles still to go. Does nothing at a centre.
     pub fn turn_back(&mut self) {
@@ -426,7 +442,10 @@ impl TaskForce {
             arrived_at_hours: None,
             arrival_event: None,
             noticed_sighted_at_hours: None,
-            alert: true,
+            readiness: Readiness::Normal,
+            readiness_order: None,
+            alerted: false,
+            alerted_by: None,
             rules_of_engagement: RulesOfEngagement::DEFAULT,
             rules_order: None,
             home_port: None,

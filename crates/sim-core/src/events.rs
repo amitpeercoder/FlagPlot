@@ -380,6 +380,31 @@ pub enum EventKind {
     ForceRetired {
         task_force: TaskForceId,
     },
+    /// At the start of a pulse a force's side held a recent contact near it,
+    /// and the force became alerted (decision 3 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`). `contact` is the
+    /// nearest such contact, the lowest ID on a tie.
+    ForceAlertedByContact {
+        task_force: TaskForceId,
+        contact: ContactId,
+    },
+    /// At the start of a pulse an alerted force no longer had such a contact
+    /// and stood down (decision 3 of 0021).
+    ForceStoodDown {
+        task_force: TaskForceId,
+    },
+    /// One roll of the alarm of a fight in which shots were fired, for a
+    /// force in its hex that was not alert (decision 5 of 0021). Recorded
+    /// whether or not it succeeded. `by_a` and `by_b` are the two forces that
+    /// fought, the lower ID first. On success the force is alerted by this
+    /// event.
+    AlarmRoll {
+        task_force: TaskForceId,
+        by_a: TaskForceId,
+        by_b: TaskForceId,
+        chance: Fixed,
+        alarmed: bool,
+    },
 }
 
 impl EventKind {
@@ -492,7 +517,26 @@ impl EventKind {
                 );
                 entities
             }
-            EventKind::ForceRetired { task_force } => vec![EntityRef::TaskForce(*task_force)],
+            EventKind::ForceRetired { task_force } | EventKind::ForceStoodDown { task_force } => {
+                vec![EntityRef::TaskForce(*task_force)]
+            }
+            EventKind::ForceAlertedByContact {
+                task_force,
+                contact,
+            } => vec![
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Contact(*contact),
+            ],
+            EventKind::AlarmRoll {
+                task_force,
+                by_a,
+                by_b,
+                ..
+            } => vec![
+                EntityRef::TaskForce(*task_force),
+                EntityRef::TaskForce(*by_a),
+                EntityRef::TaskForce(*by_b),
+            ],
         }
     }
 }
@@ -607,13 +651,11 @@ impl fmt::Display for EventKind {
                 kind,
                 confidence,
                 created,
-            } => write!(
+            } => write_report(
                 f,
-                "{} report: {ship_count} {}, {}, at {hex}, confidence {confidence}: {} {contact}",
-                side.name(),
-                if *ship_count == 1 { "ship" } else { "ships" },
-                kind.name(),
-                if *created { "new" } else { "refreshed" }
+                (*side, *contact, *hex, *ship_count, *kind, *confidence),
+                *created,
+                false,
             ),
             EventKind::SightingNoticed {
                 task_force,
@@ -785,6 +827,22 @@ impl fmt::Display for EventKind {
                 }
             }
             EventKind::ForceRetired { task_force } => write!(f, "{task_force} retires"),
+            EventKind::ForceAlertedByContact {
+                task_force,
+                contact,
+            } => write!(f, "{task_force} alerted by {contact}"),
+            EventKind::ForceStoodDown { task_force } => write!(f, "{task_force} stood down"),
+            EventKind::AlarmRoll {
+                task_force,
+                by_a,
+                by_b,
+                chance,
+                alarmed,
+            } => write!(
+                f,
+                "{task_force} heard the fight of {by_a} and {by_b}, chance {chance}: {}",
+                if *alarmed { "alarmed" } else { "not alarmed" }
+            ),
         }
     }
 }
@@ -808,16 +866,59 @@ pub struct Event {
     pub breakdown: Option<Breakdown>,
 }
 
+/// The text of a `ReportReceived` event. A report logged on day 0, before the
+/// first day, is a contact a scenario started a side with, and says so
+/// (decision 8 of `docs/decisions/0021-readiness-and-alarm.md`). Every other
+/// report reads as before.
+fn write_report(
+    f: &mut fmt::Formatter<'_>,
+    (side, contact, hex, ship_count, kind, confidence): (
+        Side,
+        ContactId,
+        Hex,
+        u32,
+        ShipKind,
+        Fixed,
+    ),
+    created: bool,
+    held_at_start: bool,
+) -> fmt::Result {
+    write!(
+        f,
+        "{} report: {ship_count} {}, {}, at {hex}, confidence {confidence}{}: {} {contact}",
+        side.name(),
+        if ship_count == 1 { "ship" } else { "ships" },
+        kind.name(),
+        if held_at_start {
+            ", held at the start"
+        } else {
+            ""
+        },
+        if created { "new" } else { "refreshed" }
+    )
+}
+
 impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let pulse = self.pulse.map_or("-", Pulse::name);
-        write!(
-            f,
-            "#{} D{} {pulse:<9} {}",
-            self.id.raw(),
-            self.day,
-            self.kind
-        )?;
+        write!(f, "#{} D{} {pulse:<9} ", self.id.raw(), self.day)?;
+        match &self.kind {
+            EventKind::ReportReceived {
+                side,
+                contact,
+                hex,
+                ship_count,
+                kind,
+                confidence,
+                created,
+            } if self.day == 0 => write_report(
+                f,
+                (*side, *contact, *hex, *ship_count, *kind, *confidence),
+                *created,
+                true,
+            )?,
+            kind => write!(f, "{kind}")?,
+        }
         if !self.causes.is_empty() {
             let causes: Vec<String> = self.causes.iter().map(Cause::to_string).collect();
             write!(f, "  <- {}", causes.join(", "))?;

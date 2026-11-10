@@ -340,7 +340,7 @@ mod tests {
     use crate::ids::{BaseId, OrderId, ShipClassId};
     use crate::invariants;
     use crate::map::{HexData, Map};
-    use crate::orders::Mission;
+    use crate::orders::{Mission, Readiness};
     use crate::refdata::{PortSize, RefData, SearchFigures, ShipClass, ShipKind};
     use crate::resolve::PulsePhase;
     use crate::state::{Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState};
@@ -1248,7 +1248,7 @@ mod tests {
         {
             let force = world.truth.task_forces.get_mut(&TF).unwrap();
             force.from_hex = hx(5, 0);
-            force.alert = false;
+            force.readiness = Readiness::Normal;
         }
         let enemy = TaskForceId::new(2);
         world.task_force_ids.alloc();
@@ -1259,6 +1259,8 @@ mod tests {
             hx(5, 0),
             Mission::SurfaceCombat,
         );
+        // The enemy was alert by default before decision 0021.
+        force.readiness = Readiness::Battle;
         for raw in 11..=13 {
             let id = ShipId::new(raw);
             let mut ship = world.truth.ships[&ShipId::new(1)].clone();
