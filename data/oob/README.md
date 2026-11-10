@@ -38,7 +38,8 @@ Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 
 | `engagement_events.csv` | 119 | Savo Island: sightings, warnings, readiness, open fire, by time |
 | `engagement_positions.csv` | 261 | Savo Island: patrol stations, Mikawa's track, sinking positions |
 | `engagement_outcomes.csv` | 168 | Savo Island: hits, losses, rounds and torpedoes fired |
-| `sources.csv` | 37 | Every source cited |
+| `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature |
+| `sources.csv` | 39 | Every source cited |
 | `gaps.csv` | 300 | What was not found |
 
 Every row has a source and a locator. About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
