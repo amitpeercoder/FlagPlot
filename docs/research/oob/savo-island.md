@@ -14,7 +14,7 @@ Times are zone minus 11, the time the Allied ships kept. Ranges are as the sourc
 | BuShips War Damage Report 29, 1943 | Damage to Quincy, Astoria and Vincennes from survivors' statements | Hits and sinking times for those three |
 | combinedfleet.com ship records | Modern compilation from Japanese records | Japanese ammunition and damage. Half its pages would not load |
 
-Bates was read as a scan through machine-read text. Digits are sometimes misread, and one time that matters (0136, printed in one text layer as 0156) was settled from context. Page numbers can be one out. The diagrams, which are in a second volume, were not read. **A person with the printed book should check the dozen figures in the next two sections before the scenario fixes them.**
+Bates was read as a scan through machine-read text, in which digits are sometimes misread. **The Japanese sightings in the first two encounters have since been checked against the page images of the scan** (printed pages 106 to 108 and 114 to 117): the times, ranges and bearings in the tables below are as printed. Four details were corrected from the images: Aoba and Kako sighted Jarvis at 0135, Chokai turned to course 150 at 0105, Patterson was 5,500 yards from Chokai at 0140, and Australia left at 2123. Rows checked this way say so. The rest of the Bates rows, about 440, have not been checked against images, and page numbers in their locators can be one out. The plates are bound into the same scan and are legible, but were not used for positions.
 
 Not read at all: Gill's Australian official history, the Japanese interrogations themselves (only as Bates quotes them), Morison, Loxton, Frank.
 
@@ -83,7 +83,7 @@ All from Bates unless marked. Bearings are true, from the centre of Savo Island.
 | Southern group: Canberra leading Chicago at 600 yd, Patterson and Bagley 2,000 yd on either bow | South of a line drawn 125 degrees from Savo. At 0000: 146 degrees, 10 miles. At 0132: 140 degrees, 11.2 miles, heading 306 | A line on about 125 and 305 at 12 knots, reversing roughly on the hour |
 | Northern group: Vincennes, Quincy, Astoria in column, Helm and Wilson ahead | North of the same line. At 0000: 080 degrees, 4.5 miles. At 0132: 094 degrees, 9.1 miles, heading 225 | Clockwise round a square five miles on a side at 10 knots, turning 90 degrees every half hour |
 | Eastern group: San Juan, Hobart, Monssen, Buchanan | East of 160°04'E. At 0000: 090 degrees, 11 miles | North and south at 15 knots |
-| Australia | Left the southern group at 2055 or 2125 for the conference. At 0000: 140 degrees, 20 miles. After 0116 inside the transport screen off Guadalcanal | |
+| Australia | Ordered away at 2055 and left the southern group at 2123 for the conference. At 0000: 140 degrees, 20 miles. After 0116 inside the transport screen off Guadalcanal | |
 | Transports | X-Ray off the Guadalcanal beach near Lunga, Yoke off Tulagi | At anchor or under way unloading. Bates gives areas, not positions |
 
 The two cruiser groups could be as much as 17 miles apart depending on where each was in its patrol.
@@ -149,6 +149,8 @@ The rule asks for guns, rate of fire, shell weight, torpedo tubes, torpedo and w
 | Speed | Agreed for seven classes. Disputed for Aoba (32 or 33 knots), Bagley, Benham and New Orleans classes, between design and trial figures |
 | Radar on 8 August | Japanese: none, on the statement of the Navy's analysis and of a Japanese admiral who was there. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: the CXAM air search set, fitted in 1940 on the Navy's own ship history, and a set that ranged a ship at 7,000 yards that night, not named. Canberra: disputed, three weak sources. **Australia, Bagley, Patterson, Helm, Wilson, Jarvis: nothing found** |
 | Night optics | The technical mission reports confirm 12, 15 and 18 cm binoculars and 90 and 110 cm searchlights existed. Nothing found gives numbers per ship or a sighting range except the ranges in the detection tables above |
+
+The four choices the sources leave open (damage measure, ships with no radar found, torpedoes with no named type, disputed placements) are made in `savo-island-choices.md`.
 
 ## What a rule would need to model
 
