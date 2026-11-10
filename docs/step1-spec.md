@@ -36,7 +36,7 @@ The simulation uses a hex grid at 40 nautical miles per hex, in axial coordinate
 | Land terrain | Clear, jungle, mountain, atoll |
 | Sites | Port size 0 to 10, airfield size 0 to 10, anchorage flag |
 
-Movement is hex to hex inside the simulation. A task force stores its hex plus progress toward the next one, so speed differences of a knot or two still matter over a day.
+Movement is hex to hex inside the simulation. A task force stores its hex plus progress toward the next one, so speed differences of a knot or two still matter over a day. It counts as being in the hex whose centre is nearest, so it changes hex at the midpoint. A re-routed task force finishes the step it is on. See decision 0005.
 
 ## Data model
 
@@ -87,7 +87,9 @@ This split is in step 1 because it cannot be added later. The staff planner in s
 
 A day resolves in three pulses, then an end-of-day pass. Both sides' orders are fixed before the day starts.
 
-1. **Orders intake.** Validate every order against truth state. Reject invalid ones with a logged reason.
+A game day starts at 18:00 in the scenario's reference zone, which is UTC+11 for the slice. The simulation keeps one clock, anchored to UTC, and pulses are simultaneous across the map. A game day takes the reference-zone date of its daylight pulses. A pulse is a time bucket: rules that depend on light ask whether a hex is dark during a pulse, and do not read it off the pulse name. See decision 0001.
+
+1. **Orders intake.** Validate every order against what the issuing side can see: its own units, the map and ownership. Reject invalid ones with a logged reason. An order that would fail because of something the side does not know is accepted and fails in execution. See decision 0008.
 2. **Night pulse (12 hours).**
    1. Task force movement.
    2. Night search, limited to radar and night-capable aircraft.
@@ -125,7 +127,7 @@ Task force missions in step 1: transport, surface combat, carrier, bombardment, 
 
 Air missions in step 1: search, combat air patrol, naval strike, airfield attack, ground support, escort, rest.
 
-Every order carries an origin field with two parts: who issued it (player or staff) and the ID of the intent it serves. Step 1 only stores and logs this field. Steps 3 and 4 depend on it to answer "why did this happen".
+Every order carries an origin field with two parts: who issued it (player or staff) and the ID of the intent it serves. Who holds the seat (human, agent or script) is recorded once per side in the saved game, not on each order. Step 1 only stores and logs this field. Steps 3 and 4 depend on it to answer "why did this happen".
 
 Orders persist until replaced. A day with no new orders is valid and continues the standing ones.
 
@@ -199,6 +201,13 @@ Eight scenarios, built in this order. Each one adds a subsystem, so a failure po
 | 8 | Soak: 180 days with scripted orders on both sides | No crashes, all invariants hold |
 
 Scenarios 4 and 5 are the first historical checks. In step 1 they only need to run and produce plausible spreads. The acceptance bands for losses and damage are set from sources in step 2.
+
+Two checks guard against rules that are correct but cannot be followed:
+
+- **Legibility test, after each scenario from 3 on.** A cheap model is given only one side's briefing and the event log, and is asked to explain an outcome and predict the next day. Failure means the rules or the events are simplified before the next scenario.
+- **Complexity review, after scenario 5.** It is the first scenario where search, strike decisions, air combat and ship damage meet. Every rule's inputs and outputs are read together before scenario 6 starts.
+
+Base supply consumption arrives by scenario 6 at the latest. Objectives such as "30 days of supply" cannot be measured without it.
 
 Invariants checked at the end of every day in every scenario:
 

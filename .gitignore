@@ -1,1 +1,5 @@
 /target
+
+# Local reference material (installers, extracted manuals). Not for commit.
+/references/
+.DS_Store
