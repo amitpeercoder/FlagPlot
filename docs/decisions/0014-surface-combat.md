@@ -1,6 +1,6 @@
 # 0014: Surface combat
 
-Status: confirmed by the designer, Nov 10, 2026, as stage 4a of the scenario 4 plan. Every figure is a placeholder.
+Status: confirmed by the designer, Nov 10, 2026, as stage 4a of the scenario 4 plan. Every figure is a placeholder. Decision 0016 replaces the system damage track described here with named systems.
 
 ## The gap in the spec
 

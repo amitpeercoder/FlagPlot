@@ -1,0 +1,116 @@
+# Scenario 4a2: a force with two damaged ships is ordered away from home and
+# told to detach its stragglers.
+#
+# Stage 4a2 of scenario 4. There is no enemy and no randomness: the damage is
+# set in this file, so the hand calculation in
+# tests/scenario_04a2_stragglers.rs is exact.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Scenario 4a2: Stragglers, a damaged force sheds two ships"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_stragglers.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder home port"
+side = "allied"
+q = 0
+r = 0
+
+# The force is at sea at (6,0), 240 nm east of its home port.
+[[task_force]]
+id = 1
+name = "Placeholder damaged force"
+side = "allied"
+q = 6
+r = 0
+mission = "surface_combat"
+home_port = 1
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+# Half speed.
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+propulsion = "degraded"
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser 3"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 5
+name = "Placeholder destroyer 5"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# Dead in the water.
+[[ship]]
+id = 6
+name = "Placeholder destroyer 6"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+propulsion = "out"
+
+# Day 1: steam east, away from home, at cruise speed. Detach stragglers, but
+# keep at least half the ships that can steam at full speed.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[12, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+keep_share = "0.5"
+
+# Day 2 has no new orders.

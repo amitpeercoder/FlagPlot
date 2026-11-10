@@ -8,7 +8,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 use sim_core::orders::Stance;
-use sim_core::state::{ShipLocation, Side};
+use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState};
 use sim_core::time::ClockTime;
 use sim_data::Scenario;
 
@@ -90,7 +90,20 @@ fn run(args: &[String]) -> Result<(), String> {
     if show_events {
         println!();
         for event in world.events().iter() {
-            println!("{event}");
+            // An order the simulation issued itself is marked, so the log
+            // shows who gave it (decision 0016, 14).
+            let by_staff = match &event.kind {
+                sim_core::events::EventKind::OrderAccepted { order, .. }
+                | sim_core::events::EventKind::OrderRejected { order, .. } => world
+                    .order(*order)
+                    .is_some_and(|o| o.origin.issuer == sim_core::orders::Issuer::Staff),
+                _ => false,
+            };
+            if by_staff {
+                println!("{event}  [issued by the staff]");
+            } else {
+                println!("{event}");
+            }
         }
     }
 
@@ -120,7 +133,7 @@ fn run(args: &[String]) -> Result<(), String> {
             Stance::Avoid => "avoid",
         };
         println!(
-            "{} \"{}\" ({}): {:?} at {}{}; {}, rules of engagement: {}, break off at {}",
+            "{} \"{}\" ({}): {:?} at {}{}; {}, rules of engagement: {}, break off at {}, stragglers: {}, keep {}; {}",
             task_force.id,
             task_force.name,
             task_force.side.name(),
@@ -133,7 +146,13 @@ fn run(args: &[String]) -> Result<(), String> {
                 "not alert"
             },
             stance,
-            task_force.rules_of_engagement.break_off
+            task_force.rules_of_engagement.break_off,
+            task_force.rules_of_engagement.stragglers.name(),
+            task_force.rules_of_engagement.keep_share,
+            match task_force.home_port {
+                Some(port) => format!("home port {port}"),
+                None => "no home port".to_string(),
+            }
         );
     }
     for group in truth.air_groups.values() {
@@ -166,12 +185,23 @@ fn run(args: &[String]) -> Result<(), String> {
         } else {
             format!("afloat in {location}")
         };
+        let class = &world.ref_data().ship_classes[&ship.class];
+        let damaged: Vec<String> = ShipSystem::ALL
+            .into_iter()
+            .filter(|system| class.has_system(*system))
+            .filter(|system| ship.systems.get(*system) != SystemState::Working)
+            .map(|system| format!("{} {}", system.name(), ship.systems.get(system).name()))
+            .collect();
+        let systems = if damaged.is_empty() {
+            "all systems working".to_string()
+        } else {
+            damaged.join(", ")
+        };
         println!(
-            "{} \"{}\": {state}; damage flotation {}, system {}, fire {}; {} gun rounds, torpedoes {}; {} t of fuel, {} t of supply",
+            "{} \"{}\": {state}; damage flotation {}, fire {}; {systems}; {} gun rounds, torpedoes {}; {} t of fuel, {} t of supply",
             ship.id,
             ship.name,
             ship.flotation_damage,
-            ship.system_damage,
             ship.fire_damage,
             ship.gun_rounds,
             if ship.torpedoes_ready { "ready" } else { "gone" },

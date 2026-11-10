@@ -22,8 +22,9 @@
 //! [`BeliefState::apply_report`](crate::belief::BeliefState::apply_report)
 //! and nothing else.
 //!
-//! The fight writes truth only in ship damage, ammunition, torpedoes, sinking
-//! (the ship's location and its task force's set) and task force alertness.
+//! The fight writes truth only in ship damage, named system states (decision
+//! 0016), ammunition, torpedoes, sinking (the ship's location and its task
+//! force's set) and task force alertness.
 //! The per-fight state lives in [`Fight`] and is gone when the fight ends.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -39,7 +40,7 @@ use crate::orders::Stance;
 use crate::refdata::{ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{RngStream, Subsystem};
 use crate::search::build_sighting_report;
-use crate::state::{Ship, ShipLocation, Side};
+use crate::state::{Ship, ShipLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
 use crate::world::World;
 
@@ -108,8 +109,10 @@ struct SalvoRecord {
     target: ShipId,
     target_force: usize,
     damage_per_hit: Fixed,
-    /// Hits on flotation, system and fire, in [`DamageTrack::ALL`] order.
-    track_hits: [u32; 3],
+    /// Hits on flotation and fire, in [`DamageTrack::ALL`] order.
+    track_hits: [u32; 2],
+    /// The systems hit, in hit order. One entry per system hit.
+    system_hits: Vec<ShipSystem>,
 }
 
 /// One round's working state.
@@ -152,8 +155,10 @@ struct Shot {
     shots: Fixed,
     base_chance: Fixed,
     /// The factors behind `shots`: guns or tubes, rate, minutes and the
-    /// firer's system damage.
+    /// firer's main battery or torpedo mount factor.
     shot_factors: [Fixed; 4],
+    /// The firer's fire control factor. One for torpedoes.
+    fire_control_factor: Fixed,
     damage_per_hit: Fixed,
 }
 
@@ -163,27 +168,58 @@ fn raw_u64(value: Fixed) -> u64 {
 }
 
 /// The gun shots a ship would fire in a round of `minutes`: guns x rate x
-/// minutes, cut by system damage (multiplied first, divided once), then
-/// capped by the ammunition aboard.
-fn gun_shots(ship: &Ship, class: &ShipClass, minutes: u32) -> Fixed {
+/// minutes x the main battery factor, then capped by the ammunition aboard
+/// (decision 6 of `docs/decisions/0016-systems-and-stragglers.md`).
+fn gun_shots(
+    ship: &Ship,
+    class: &ShipClass,
+    minutes: u32,
+    figures: &SurfaceCombatFigures,
+) -> Fixed {
     let full = Fixed::from_int(
         i64::from(class.main_guns) * i64::from(class.gun_rounds_per_min) * i64::from(minutes),
     );
-    full.mul_div(FULL_DAMAGE - ship.system_damage, FULL_DAMAGE)
-        .min(ship.gun_rounds)
+    let factor = figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery);
+    (full * factor).min(ship.gun_rounds)
 }
 
-/// True if the ship has torpedoes to fire.
-fn has_torpedo_salvo(ship: &Ship, class: &ShipClass) -> bool {
-    ship.torpedoes_ready && class.torpedo_tubes > 0
+/// The torpedo shots a ship fires in its first firing round: tubes x the
+/// torpedo mount factor. Zero if it has no torpedoes left to fire.
+fn torpedo_shots(ship: &Ship, class: &ShipClass, figures: &SurfaceCombatFigures) -> Fixed {
+    if !(ship.torpedoes_ready && class.torpedo_tubes > 0) {
+        return Fixed::ZERO;
+    }
+    let factor = figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts);
+    Fixed::from_int(i64::from(class.torpedo_tubes)) * factor
 }
 
 fn track_value(ship: &mut Ship, track: DamageTrack) -> &mut Fixed {
     match track {
         DamageTrack::Flotation => &mut ship.flotation_damage,
-        DamageTrack::System => &mut ship.system_damage,
         DamageTrack::Fire => &mut ship.fire_damage,
     }
+}
+
+/// Which system one system draw lands on, if any. `draw` is a uniform draw
+/// below one million, read as a [`Fixed`] in millionths. The systems take
+/// consecutive bands in [`ShipSystem::ALL`] order, each of width `chance` x
+/// the system's share in `table` (a system absent from it has share 0). A
+/// draw at or above the end of the last band hits no system.
+fn system_for_draw(
+    draw: Fixed,
+    chance: Fixed,
+    table: &BTreeMap<ShipSystem, Fixed>,
+) -> Option<ShipSystem> {
+    let mut start = Fixed::ZERO;
+    for system in ShipSystem::ALL {
+        let share = table.get(&system).copied().unwrap_or(Fixed::ZERO);
+        let end = start + chance * share;
+        if draw >= start && draw < end {
+            return Some(system);
+        }
+        start = end;
+    }
+    None
 }
 
 impl World {
@@ -491,12 +527,14 @@ impl World {
     fn has_any_salvo(&self, fight: &Fight, ship: ShipId) -> bool {
         let state = &self.truth.ships[&ship];
         let class = self.class_of(ship);
-        gun_shots(state, class, fight.figures.round_minutes) > Fixed::ZERO
-            || has_torpedo_salvo(state, class)
+        gun_shots(state, class, fight.figures.round_minutes, &fight.figures) > Fixed::ZERO
+            || torpedo_shots(state, class, &fight.figures) > Fixed::ZERO
     }
 
     /// One ship's fire for the round: a gun salvo if it has shots, then a
-    /// torpedo salvo if its torpedoes are ready. Both go at the same target.
+    /// torpedo salvo if its torpedoes are ready and its mounts give shots.
+    /// Both go at the same target. Torpedoes are gone after this round
+    /// whatever the mounts gave.
     fn fire_ship(
         &mut self,
         fight: &mut Fight,
@@ -510,8 +548,11 @@ impl World {
         let class = self.class_of(firer);
         let target_class = self.class_of(target);
         let figures = &fight.figures;
-        let shots = gun_shots(ship, class, figures.round_minutes);
-        let torpedoes = has_torpedo_salvo(ship, class);
+        let shots = gun_shots(ship, class, figures.round_minutes, figures);
+        let torpedo_shot_count = torpedo_shots(ship, class, figures);
+        let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
+        let fire_control =
+            figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
         let per_hit = |damage: u32| {
             Fixed::from_ratio(100 * i64::from(damage), i64::from(target_class.toughness))
         };
@@ -530,16 +571,17 @@ impl World {
                 Fixed::from_int(i64::from(class.main_guns)),
                 Fixed::from_int(i64::from(class.gun_rounds_per_min)),
                 Fixed::from_int(i64::from(figures.round_minutes)),
-                ship.system_damage,
+                figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery),
             ],
+            fire_control_factor: fire_control,
             damage_per_hit: per_hit(class.gun_damage),
         });
-        let torpedo = torpedoes.then(|| Shot {
+        let torpedo = (torpedo_shot_count > Fixed::ZERO).then(|| Shot {
             firer,
             target,
             target_force: enemy,
             weapon: Weapon::Torpedo,
-            shots: Fixed::from_int(i64::from(class.torpedo_tubes)),
+            shots: torpedo_shot_count,
             base_chance: if fight.dark {
                 figures.torpedo_hit_chance_night
             } else {
@@ -549,8 +591,9 @@ impl World {
                 Fixed::from_int(i64::from(class.torpedo_tubes)),
                 Fixed::ONE,
                 Fixed::ONE,
-                Fixed::ZERO,
+                figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts),
             ],
+            fire_control_factor: Fixed::ONE,
             damage_per_hit: per_hit(class.torpedo_damage),
         });
 
@@ -570,19 +613,26 @@ impl World {
             ship.gun_rounds -= gun.shots;
             self.fire_weapon(fight, round, force, &mut stream, &gun);
         }
-        if let Some(torpedo) = torpedo {
+        // Torpedoes are used up only when a salvo is fired. With the mounts
+        // out none are fired and none are used, so no state changes without
+        // an event (decision 0016, 6).
+        if torpedoes_fired && torpedo.is_some() {
             self.truth
                 .ships
                 .get_mut(&firer)
                 .expect("firer exists")
                 .torpedoes_ready = false;
+        }
+        if let Some(torpedo) = torpedo {
             self.fire_weapon(fight, round, force, &mut stream, &torpedo);
         }
         fight.fire_streams.insert(firer, stream);
     }
 
     /// Rolls one salvo and records it. Draws, in order: the fraction of the
-    /// expected hits, then for a gun one track for each hit.
+    /// expected hits, then for each hit of a gun its track and then its
+    /// system, and for each hit of a torpedo its system (a torpedo hit is
+    /// always on flotation, so it has no track draw).
     fn fire_weapon(
         &mut self,
         fight: &mut Fight,
@@ -603,49 +653,65 @@ impl World {
         } else {
             Fixed::ONE
         };
-        let chance = shot.base_chance * surprised_factor * lit_factor;
+        let chance = shot.base_chance * surprised_factor * lit_factor * shot.fire_control_factor;
         let expected = shot.shots * chance;
         let whole = expected.trunc();
         let fraction = expected - Fixed::from_int(whole);
         let hits = u32::try_from(whole).expect("expected hits are not negative")
             + u32::from(stream.chance(fraction));
 
-        let mut track_hits = [0u32; 3];
-        if shot.weapon == Weapon::Gun {
-            let flotation = raw_u64(figures.gun_hit_flotation);
-            let system = flotation + raw_u64(figures.gun_hit_system);
-            for _ in 0..hits {
+        let (system_chance, system_table) = match shot.weapon {
+            Weapon::Gun => (figures.gun_system_hit_chance, &figures.gun_system_hit),
+            Weapon::Torpedo => (
+                figures.torpedo_system_hit_chance,
+                &figures.torpedo_system_hit,
+            ),
+        };
+        let mut track_hits = [0u32; 2];
+        let mut system_hits = Vec::new();
+        for _ in 0..hits {
+            let track = if shot.weapon == Weapon::Gun {
                 let draw = stream.below(Fixed::SCALE.unsigned_abs());
-                let track = if draw < flotation {
+                if draw < raw_u64(figures.gun_hit_flotation) {
                     DamageTrack::Flotation
-                } else if draw < system {
-                    DamageTrack::System
                 } else {
                     DamageTrack::Fire
-                };
-                track_hits[track as usize] += 1;
-            }
-        } else {
-            track_hits[DamageTrack::Flotation as usize] = hits;
+                }
+            } else {
+                DamageTrack::Flotation
+            };
+            track_hits[track as usize] += 1;
+            // One draw for the system, always, even if the chance is 0.
+            let draw = stream.below(Fixed::SCALE.unsigned_abs());
+            let draw = Fixed::from_raw(i64::try_from(draw).expect("a draw fits in i64"));
+            system_hits.extend(system_for_draw(draw, system_chance, system_table));
         }
 
         let breakdown = self.config.record_breakdowns.then(|| {
-            let [count, rate, minutes, system_damage] = shot.shot_factors;
-            let count_name = match shot.weapon {
-                Weapon::Gun => "guns",
-                Weapon::Torpedo => "tubes",
-            };
+            let [count, rate, minutes, system_factor] = shot.shot_factors;
             let factor = |name, value| Factor { name, value };
-            Breakdown {
-                factors: vec![
-                    factor(count_name, count),
+            let mut factors = match shot.weapon {
+                Weapon::Gun => vec![
+                    factor("guns", count),
                     factor("rate", rate),
                     factor("minutes", minutes),
-                    factor("system_damage", system_damage),
-                    factor("base_chance", shot.base_chance),
-                    factor("surprised_factor", surprised_factor),
-                    factor("lit_factor", lit_factor),
+                    factor("main_battery_factor", system_factor),
                 ],
+                Weapon::Torpedo => vec![
+                    factor("tubes", count),
+                    factor("rate", rate),
+                    factor("minutes", minutes),
+                    factor("torpedo_mount_factor", system_factor),
+                ],
+            };
+            factors.push(factor("base_chance", shot.base_chance));
+            factors.push(factor("surprised_factor", surprised_factor));
+            factors.push(factor("lit_factor", lit_factor));
+            if shot.weapon == Weapon::Gun {
+                factors.push(factor("fire_control_factor", shot.fire_control_factor));
+            }
+            Breakdown {
+                factors,
                 result: expected,
             }
         });
@@ -675,16 +741,18 @@ impl World {
             target_force: shot.target_force,
             damage_per_hit: shot.damage_per_hit,
             track_hits,
+            system_hits,
         });
     }
 
     // ---- (d) damage ----
 
     /// Damage lands, in salvo order: one `ShipDamaged` event per salvo per
-    /// track that took hits. A ship whose flotation reaches 100 sinks.
+    /// track that took hits, then one `SystemHit` event per system hit of the
+    /// salvo, in hit order. A ship whose flotation reaches 100 sinks.
     fn apply_damage(&mut self, fight: &mut Fight, round: &mut Round) {
         for salvo_index in 0..round.salvos.len() {
-            let (salvo_event, target, target_force, damage_per_hit, track_hits) = {
+            let (salvo_event, target, target_force, damage_per_hit, track_hits, system_hits) = {
                 let salvo = &round.salvos[salvo_index];
                 (
                     salvo.event,
@@ -692,6 +760,7 @@ impl World {
                     salvo.target_force,
                     salvo.damage_per_hit,
                     salvo.track_hits,
+                    salvo.system_hits.clone(),
                 )
             };
             for track in DamageTrack::ALL {
@@ -723,6 +792,30 @@ impl World {
                     let sunk = self.sink(fight, round, target_force, target, damaged);
                     round.sunk.push(sunk);
                 }
+            }
+            for system in system_hits {
+                let class = self.class_of(target);
+                let has_system = class.has_system(system);
+                let ship = self.truth.ships.get_mut(&target).expect("target exists");
+                let before = ship.systems.get(system);
+                let after = if has_system {
+                    before.step_down()
+                } else {
+                    before
+                };
+                ship.systems.set(system, after);
+                self.record_in_fight(
+                    fight,
+                    EventKind::SystemHit {
+                        round: round.number,
+                        ship: target,
+                        system,
+                        before,
+                        after,
+                    },
+                    vec![Cause::Event(salvo_event)],
+                    None,
+                );
             }
         }
     }
@@ -1099,7 +1192,7 @@ mod tests {
     use crate::map::{HexData, Map};
     use crate::orders::Mission;
     use crate::refdata::{PortSize, RefData, SearchFigures};
-    use crate::state::{RulesOfEngagement, TaskForce, TruthState};
+    use crate::state::{RulesOfEngagement, ShipSystems, SystemState, TaskForce, TruthState};
     use crate::world::SimConfig;
 
     // ---- a fixture to build fights from ----
@@ -1280,12 +1373,12 @@ mod tests {
                             supply_t: Fixed::ZERO,
                             location: ShipLocation::TaskForce(id),
                             flotation_damage: Fixed::ZERO,
-                            system_damage: Fixed::ZERO,
                             fire_damage: Fixed::ZERO,
                             gun_rounds: Fixed::from_int(i64::from(
                                 class_data.main_guns * class_data.gun_rounds_per_gun,
                             )),
                             torpedoes_ready: class_data.torpedo_tubes > 0,
+                            systems: ShipSystems::ALL_WORKING,
                         },
                     );
                 }
@@ -1539,13 +1632,15 @@ mod tests {
     }
 
     /// Nothing is ever sunk or crippled and no torpedo hits: every gun hit
-    /// lands on the fire track (which does nothing by day) and torpedoes
-    /// always miss. A fight with these figures runs to the last round.
+    /// lands on the fire track (which does nothing by day), no hit knocks
+    /// down a system and torpedoes always miss. A fight with these figures
+    /// runs to the last round.
     fn harmless(world: &mut World) {
         let figures = figures_mut(world);
         figures.gun_hit_flotation = Fixed::ZERO;
-        figures.gun_hit_system = Fixed::ZERO;
         figures.gun_hit_fire = Fixed::ONE;
+        figures.gun_system_hit_chance = Fixed::ZERO;
+        figures.torpedo_system_hit_chance = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
         figures.torpedo_hit_chance_day = Fixed::ZERO;
     }
@@ -1555,8 +1650,9 @@ mod tests {
     fn flotation_only(world: &mut World) {
         let figures = figures_mut(world);
         figures.gun_hit_flotation = Fixed::ONE;
-        figures.gun_hit_system = Fixed::ZERO;
         figures.gun_hit_fire = Fixed::ZERO;
+        figures.gun_system_hit_chance = Fixed::ZERO;
+        figures.torpedo_system_hit_chance = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
         figures.torpedo_hit_chance_day = Fixed::ZERO;
     }
@@ -2237,20 +2333,45 @@ mod tests {
         assert_eq!(torpedoes[0].expected, fx("0.16"));
     }
 
-    // ---- 8. system damage ----
+    // ---- 8. named systems (decision 0016) ----
 
-    #[test]
-    fn a_ship_with_100_system_damage_fires_no_guns_but_still_its_torpedoes() {
-        // Shots = 120 x (100 - 100) / 100 = 0: no gun salvo (no event), and
-        // the torpedoes go in round 1.
+    /// Day, one cruiser each (ships 1 and 2), nothing sunk or hit.
+    fn duel() -> Scene {
         let hex = Hex::new(5, 0);
-        let scene = day_scene(vec![
+        day_scene(vec![
             ForceSpec::new(1, Side::Japanese, hex, &[1]),
             ForceSpec::new(2, Side::Allied, hex, &[1]),
-        ]);
-        let world = run(&scene, |w| {
+        ])
+    }
+
+    #[test]
+    fn a_degraded_main_battery_fires_60_shots_a_round() {
+        // Shots = 8 guns x 3 rate x 5 minutes x 0.5 = 60, in each of the six
+        // rounds (harmless: no hit knocks a system down further), using
+        // 6 x 60 = 360 of the 800 rounds. Chance is the plain day 0.05, so
+        // 60 x 0.05 = 3 expected hits.
+        let world = run(&duel(), |w| {
             harmless(w);
-            ship_mut(w, 1).system_damage = Fixed::from_int(100);
+            ship_mut(w, 1).systems.main_battery = SystemState::Degraded;
+        });
+        let guns = gun_salvos_of(&world, 1);
+        assert_eq!(guns.len(), 6);
+        assert!(guns.iter().all(|s| s.shots == Fixed::from_int(60)));
+        assert_eq!(guns[0].expected, Fixed::from_int(3));
+        assert_eq!(ship(&world, 1).gun_rounds, Fixed::from_int(440));
+        // The other ship is untouched: 120 shots a round.
+        assert!(gun_salvos_of(&world, 2)
+            .iter()
+            .all(|s| s.shots == Fixed::from_int(120)));
+    }
+
+    #[test]
+    fn a_main_battery_that_is_out_fires_no_guns_but_still_its_torpedoes() {
+        // Shots = 120 x 0 = 0: no gun salvo (no event, no draws), the
+        // torpedoes go in round 1 and no ammunition is used.
+        let world = run(&duel(), |w| {
+            harmless(w);
+            ship_mut(w, 1).systems.main_battery = SystemState::Out;
         });
         assert!(gun_salvos_of(&world, 1).is_empty());
         let torpedoes = torpedo_salvos_of(&world, 1);
@@ -2260,23 +2381,423 @@ mod tests {
     }
 
     #[test]
-    fn fifteen_system_damage_leaves_102_shots() {
-        // Shots = 120 x (100 - 15) / 100 = 120 x 85 / 100 = 102, in each of
-        // the six rounds (harmless: no further system damage), using 6 x 102
-        // = 612 of the 800 rounds.
+    fn degraded_fire_control_halves_the_gun_chance_and_out_quarters_it() {
+        // Day, round 1. Gun chance = 0.05 base x 1 surprised x 1 lit x the
+        // firer's fire control factor.
+        //   degraded: 0.05 x 0.5 = 0.025, 120 x 0.025 = 3 expected
+        //   out:      0.05 x 0.25 = 0.0125, 120 x 0.0125 = 1.5 expected
+        // The torpedo chance (0.02, 8 x 0.02 = 0.16 expected) is not touched.
+        for (state, chance, expected) in [
+            (SystemState::Working, fx("0.05"), fx("6")),
+            (SystemState::Degraded, fx("0.025"), fx("3")),
+            (SystemState::Out, fx("0.0125"), fx("1.5")),
+        ] {
+            let world = run(&duel(), |w| {
+                harmless(w);
+                figures_mut(w).torpedo_hit_chance_day = fx("0.02");
+                ship_mut(w, 1).systems.fire_control = state;
+            });
+            let gun = first_round_salvo(&world, 1, Weapon::Gun);
+            assert_eq!(gun.shots, Fixed::from_int(120), "{state:?}");
+            assert_eq!(gun.chance, chance, "{state:?}");
+            assert_eq!(gun.expected, expected, "{state:?}");
+            let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+            assert_eq!(torpedo.chance, fx("0.02"), "{state:?}");
+            assert_eq!(torpedo.shots, Fixed::from_int(8), "{state:?}");
+        }
+    }
+
+    #[test]
+    fn fire_control_is_the_firers_and_multiplies_after_surprise_and_light() {
+        // Night. Ship 2 (not alert) is surprised and lit. Ship 1's fire
+        // control is degraded. Gun chance = 0.03 x 1.5 x 2 x 0.5 = 0.045;
+        // 120 x 0.045 = 5.4 expected. The target's own fire control is not
+        // read: ship 2's is out, and ship 1's chance stays the same.
+        let hex = Hex::new(5, 0);
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
+        ]);
+        let world = run(&scene, |w| {
+            only_force_1_sights_by_roll(w);
+            ship_mut(w, 2).fire_damage = Fixed::from_int(10);
+            ship_mut(w, 2).systems.fire_control = SystemState::Out;
+            ship_mut(w, 1).systems.fire_control = SystemState::Degraded;
+        });
+        let gun = first_round_salvo(&world, 1, Weapon::Gun);
+        assert_eq!(gun.chance, fx("0.045"));
+        assert_eq!(gun.expected, fx("5.4"));
+    }
+
+    #[test]
+    fn degraded_torpedo_mounts_fire_4_tubes_and_out_fire_none() {
+        // Degraded: 8 tubes x 0.5 = 4 shots, at 0.02 = 0.08 expected, and the
+        // torpedoes are then gone. Out: 8 x 0 = 0 shots, no torpedo salvo and
+        // no draws. Nothing was fired, so the torpedoes are still aboard.
+        let world = run(&duel(), |w| {
+            harmless(w);
+            figures_mut(w).torpedo_hit_chance_day = fx("0.02");
+            ship_mut(w, 1).systems.torpedo_mounts = SystemState::Degraded;
+        });
+        let torpedoes = torpedo_salvos_of(&world, 1);
+        assert_eq!(torpedoes.len(), 1);
+        assert_eq!(
+            (torpedoes[0].round, torpedoes[0].shots),
+            (1, Fixed::from_int(4))
+        );
+        assert_eq!(torpedoes[0].expected, fx("0.08"));
+        assert!(!ship(&world, 1).torpedoes_ready);
+
+        let world = run(&duel(), |w| {
+            harmless(w);
+            ship_mut(w, 1).systems.torpedo_mounts = SystemState::Out;
+        });
+        assert!(torpedo_salvos_of(&world, 1).is_empty());
+        assert!(ship(&world, 1).torpedoes_ready);
+        // Its guns are not affected.
+        assert_eq!(gun_salvos_of(&world, 1).len(), 6);
+        // The other ship's torpedoes went as usual.
+        assert_eq!(torpedo_salvos_of(&world, 2).len(), 1);
+    }
+
+    /// Ship 1 has two gun rounds and no torpedoes, ship 2 fires nothing, and
+    /// every gun hit lands on flotation and always knocks down `system`:
+    /// ship 1's salvo is 2 shots at chance 1, so exactly 2 hits.
+    fn two_forced_hits_on(system: ShipSystem) -> impl FnOnce(&mut World) {
+        move |w| {
+            let figures = figures_mut(w);
+            figures.gun_hit_chance_day = Fixed::ONE;
+            figures.gun_hit_flotation = Fixed::ONE;
+            figures.gun_hit_fire = Fixed::ZERO;
+            figures.gun_system_hit_chance = Fixed::ONE;
+            figures.gun_system_hit = [(system, Fixed::ONE)].into_iter().collect();
+            let attacker = ship_mut(w, 1);
+            attacker.gun_rounds = Fixed::from_int(2);
+            attacker.torpedoes_ready = false;
+            let target = ship_mut(w, 2);
+            target.gun_rounds = Fixed::ZERO;
+            target.torpedoes_ready = false;
+        }
+    }
+
+    fn system_hits(world: &World) -> Vec<(EventId, u32, ShipSystem, SystemState, SystemState)> {
+        world
+            .events()
+            .iter()
+            .filter_map(|event| match event.kind {
+                EventKind::SystemHit {
+                    ship,
+                    system,
+                    before,
+                    after,
+                    ..
+                } => Some((event.id, ship.raw(), system, before, after)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn two_hits_on_one_system_in_one_round_take_it_from_working_to_out() {
+        // 2 shots x chance 1 = 2 hits, each a system hit on propulsion with
+        // chance 1 x share 1. Working -> degraded -> out, in hit order, in
+        // round 1. Flotation takes 2 x 5 = 10 points, and the events of the
+        // salvo come in the order: track damage, then system hits.
+        let world = run(&duel(), two_forced_hits_on(ShipSystem::Propulsion));
+        let salvo = gun_salvos_of(&world, 1);
+        assert_eq!(salvo.len(), 1);
+        assert_eq!(salvo[0].hits, 2);
+        let hits = system_hits(&world);
+        assert_eq!(
+            hits.iter()
+                .map(|(_, ship, system, before, after)| (*ship, *system, *before, *after))
+                .collect::<Vec<_>>(),
+            vec![
+                (
+                    2,
+                    ShipSystem::Propulsion,
+                    SystemState::Working,
+                    SystemState::Degraded
+                ),
+                (
+                    2,
+                    ShipSystem::Propulsion,
+                    SystemState::Degraded,
+                    SystemState::Out
+                ),
+            ]
+        );
+        assert_eq!(ship(&world, 2).systems.propulsion, SystemState::Out);
+        assert_eq!(ship(&world, 2).systems.fire_control, SystemState::Working);
+        assert_eq!(ship(&world, 2).flotation_damage, Fixed::from_int(10));
+        // Each cites the salvo, and comes after the salvo's track damage.
+        let kinds_after_salvo: Vec<&'static str> = world
+            .events()
+            .iter()
+            .filter(|e| e.causes == vec![Cause::Event(salvo[0].id)])
+            .map(|e| match e.kind {
+                EventKind::ShipDamaged { .. } => "damaged",
+                EventKind::SystemHit { .. } => "system",
+                _ => "other",
+            })
+            .collect();
+        assert_eq!(kinds_after_salvo, vec!["damaged", "system", "system"]);
+        // The rest of the cruiser's fire is unaffected the next round: it
+        // fired nothing after the two rounds of ammunition anyway.
+        assert!(gun_salvos_of(&world, 1).iter().all(|s| s.round == 1));
+    }
+
+    #[test]
+    fn a_hit_on_a_system_already_out_changes_nothing_but_is_recorded() {
+        // Ship 2's propulsion is already out. Two hits on it: out -> out
+        // twice, each recorded with before == after.
+        let world = run(&duel(), |w| {
+            two_forced_hits_on(ShipSystem::Propulsion)(w);
+            ship_mut(w, 2).systems.propulsion = SystemState::Out;
+        });
+        let hits = system_hits(&world);
+        assert_eq!(hits.len(), 2);
+        for (_, ship_id, system, before, after) in hits {
+            assert_eq!(ship_id, 2);
+            assert_eq!(system, ShipSystem::Propulsion);
+            assert_eq!(before, SystemState::Out);
+            assert_eq!(after, SystemState::Out);
+        }
+        assert_eq!(ship(&world, 2).systems.propulsion, SystemState::Out);
+    }
+
+    #[test]
+    fn a_hit_on_a_system_the_ship_lacks_changes_nothing_but_is_recorded() {
+        // Ship 2 is a transport (class 3): no guns, no tubes, so only
+        // propulsion. Two hits on its main battery change nothing.
         let hex = Hex::new(5, 0);
         let scene = day_scene(vec![
             ForceSpec::new(1, Side::Japanese, hex, &[1]),
-            ForceSpec::new(2, Side::Allied, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[3]),
+        ]);
+        let world = run(&scene, two_forced_hits_on(ShipSystem::MainBattery));
+        let hits = system_hits(&world);
+        assert_eq!(hits.len(), 2);
+        for (_, ship_id, system, before, after) in hits {
+            assert_eq!(ship_id, 2);
+            assert_eq!(system, ShipSystem::MainBattery);
+            assert_eq!(before, SystemState::Working);
+            assert_eq!(after, SystemState::Working);
+        }
+        assert_eq!(ship(&world, 2).systems, ShipSystems::ALL_WORKING);
+        let violations = invariants::check(world.umpire(), world.map(), world.ref_data());
+        assert!(violations.is_empty(), "{violations:?}");
+    }
+
+    #[test]
+    fn system_hits_land_at_the_end_of_the_round_and_bite_in_the_next() {
+        // Day. Every gun hit knocks the main battery down one level. Ship 1
+        // fires 120 shots x 0.05 = exactly 6 hits at ship 2 in round 1, and
+        // ship 2 the same at ship 1, so both main batteries are out at the
+        // end of round 1 (working -> degraded -> out -> out ...). Both
+        // still fired their full 120 shots in round 1, and neither fires a
+        // gun in round 2.
+        let world = run(&duel(), |w| {
+            let figures = figures_mut(w);
+            figures.gun_system_hit_chance = Fixed::ONE;
+            figures.gun_system_hit = [(ShipSystem::MainBattery, Fixed::ONE)]
+                .into_iter()
+                .collect();
+            figures.torpedo_system_hit_chance = Fixed::ZERO;
+            figures.torpedo_hit_chance_day = Fixed::ZERO;
+        });
+        for firer in [1, 2] {
+            let guns = gun_salvos_of(&world, firer);
+            assert_eq!(guns.len(), 1, "ship {firer}");
+            assert_eq!(guns[0].shots, Fixed::from_int(120));
+            assert_eq!(guns[0].hits, 6);
+            assert_eq!(ship(&world, firer).systems.main_battery, SystemState::Out);
+        }
+    }
+
+    #[test]
+    fn a_force_whose_salvos_are_all_dead_surprises_nobody() {
+        // Night. Force 1 sights (chance 1), force 2 never does. Ship 1's main
+        // battery and torpedo mounts are out: it has ammunition and torpedoes
+        // aboard but no real salvo, so force 2 is not surprised and nothing
+        // is fired.
+        let hex = Hex::new(5, 0);
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
         ]);
         let world = run(&scene, |w| {
-            harmless(w);
-            ship_mut(w, 1).system_damage = Fixed::from_int(15);
+            only_force_1_sights_by_roll(w);
+            let ship = ship_mut(w, 1);
+            ship.systems.main_battery = SystemState::Out;
+            ship.systems.torpedo_mounts = SystemState::Out;
         });
-        let guns = gun_salvos_of(&world, 1);
-        assert_eq!(guns.len(), 6);
-        assert!(guns.iter().all(|s| s.shots == Fixed::from_int(102)));
-        assert_eq!(ship(&world, 1).gun_rounds, Fixed::from_int(188));
+        assert!(salvos(&world).is_empty());
+        assert_eq!(
+            count(&world, |k| matches!(k, EventKind::ForceSurprised { .. })),
+            0
+        );
+        // No torpedo salvo was fired, so the torpedoes are still aboard.
+        assert!(ship(&world, 1).torpedoes_ready);
+        assert_eq!(endings(&world), vec![(6, EngagementEndReason::MaxRounds)]);
+
+        // With only the main battery out, the torpedoes are a real salvo and
+        // do surprise force 2.
+        let world = run(&scene, |w| {
+            only_force_1_sights_by_roll(w);
+            ship_mut(w, 1).systems.main_battery = SystemState::Out;
+        });
+        assert_eq!(
+            count(&world, |k| matches!(k, EventKind::ForceSurprised { .. })),
+            1
+        );
+    }
+
+    /// The factors of an event's breakdown, as (name, value).
+    fn breakdown_of(event: &Event) -> Vec<(&'static str, Fixed)> {
+        let breakdown = event.breakdown.as_ref().expect("a breakdown");
+        breakdown
+            .factors
+            .iter()
+            .map(|f| (f.name, f.value))
+            .collect()
+    }
+
+    #[test]
+    fn salvo_breakdowns_name_the_system_factors_in_order() {
+        // Night, ship 2 surprised and lit; ship 1 has degraded main battery,
+        // degraded torpedo mounts and fire control out.
+        //   gun:     120 x 0.5 shots, chance 0.03 x 1.5 x 2 x 0.25 = 0.0225
+        //   torpedo: 4 shots, chance 0.04 x 1.5 x 2 = 0.12 (no fire control)
+        let hex = Hex::new(5, 0);
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
+        ]);
+        let mut world = scene.world();
+        world.set_config(SimConfig {
+            record_breakdowns: true,
+        });
+        only_force_1_sights_by_roll(&mut world);
+        ship_mut(&mut world, 2).fire_damage = Fixed::from_int(10);
+        let systems = &mut ship_mut(&mut world, 1).systems;
+        systems.main_battery = SystemState::Degraded;
+        systems.torpedo_mounts = SystemState::Degraded;
+        systems.fire_control = SystemState::Out;
+        scene.run_step(&mut world);
+
+        let gun = first_round_salvo(&world, 1, Weapon::Gun);
+        let event = world.events().iter().find(|e| e.id == gun.id).unwrap();
+        assert_eq!(
+            breakdown_of(event),
+            vec![
+                ("guns", Fixed::from_int(8)),
+                ("rate", Fixed::from_int(3)),
+                ("minutes", Fixed::from_int(5)),
+                ("main_battery_factor", fx("0.5")),
+                ("base_chance", fx("0.03")),
+                ("surprised_factor", fx("1.5")),
+                ("lit_factor", Fixed::from_int(2)),
+                ("fire_control_factor", fx("0.25")),
+            ]
+        );
+        assert_eq!(gun.shots, Fixed::from_int(60));
+        assert_eq!(gun.chance, fx("0.0225"));
+
+        let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+        let event = world.events().iter().find(|e| e.id == torpedo.id).unwrap();
+        assert_eq!(
+            breakdown_of(event),
+            vec![
+                ("tubes", Fixed::from_int(8)),
+                ("rate", Fixed::ONE),
+                ("minutes", Fixed::ONE),
+                ("torpedo_mount_factor", fx("0.5")),
+                ("base_chance", fx("0.04")),
+                ("surprised_factor", fx("1.5")),
+                ("lit_factor", Fixed::from_int(2)),
+            ]
+        );
+        assert_eq!(torpedo.shots, Fixed::from_int(4));
+        assert_eq!(torpedo.chance, fx("0.12"));
+    }
+
+    // ---- the system draw ----
+
+    /// Propulsion, fire control, main battery, torpedo mounts: 0.2, 0.2, 0.2,
+    /// 0.4.
+    fn even_table() -> BTreeMap<ShipSystem, Fixed> {
+        [
+            (ShipSystem::Propulsion, fx("0.2")),
+            (ShipSystem::FireControl, fx("0.2")),
+            (ShipSystem::MainBattery, fx("0.2")),
+            (ShipSystem::TorpedoMounts, fx("0.4")),
+        ]
+        .into_iter()
+        .collect()
+    }
+
+    #[test]
+    fn the_system_draw_bands_are_exact_at_their_boundaries() {
+        // Chance 0.5 x shares 0.2 / 0.2 / 0.2 / 0.4 = widths 0.1, 0.1, 0.1,
+        // 0.2: bands [0, 0.1), [0.1, 0.2), [0.2, 0.3), [0.3, 0.5), in system
+        // code order. A draw is in millionths. 0.5 and above is no hit.
+        let table = even_table();
+        let draw = |raw: i64| system_for_draw(Fixed::from_raw(raw), fx("0.5"), &table);
+        use ShipSystem::*;
+        let expected = [
+            (0, Some(Propulsion)),
+            (99_999, Some(Propulsion)),
+            (100_000, Some(FireControl)),
+            (199_999, Some(FireControl)),
+            (200_000, Some(MainBattery)),
+            (299_999, Some(MainBattery)),
+            (300_000, Some(TorpedoMounts)),
+            (499_999, Some(TorpedoMounts)),
+            (500_000, None),
+            (999_999, None),
+        ];
+        for (raw, system) in expected {
+            assert_eq!(draw(raw), system, "draw {raw}");
+        }
+    }
+
+    #[test]
+    fn a_system_absent_from_the_table_has_no_band_and_zero_chance_hits_nothing() {
+        // Torpedo-like table: fire control absent. Chance 1, shares 0.8 /
+        // 0 / 0.1 / 0.1: bands [0, 0.8) propulsion, none for fire control,
+        // [0.8, 0.9) main battery, [0.9, 1) torpedo mounts.
+        let table: BTreeMap<ShipSystem, Fixed> = [
+            (ShipSystem::Propulsion, fx("0.8")),
+            (ShipSystem::MainBattery, fx("0.1")),
+            (ShipSystem::TorpedoMounts, fx("0.1")),
+        ]
+        .into_iter()
+        .collect();
+        let draw = |raw: i64| system_for_draw(Fixed::from_raw(raw), Fixed::ONE, &table);
+        assert_eq!(draw(799_999), Some(ShipSystem::Propulsion));
+        assert_eq!(draw(800_000), Some(ShipSystem::MainBattery));
+        assert_eq!(draw(899_999), Some(ShipSystem::MainBattery));
+        assert_eq!(draw(900_000), Some(ShipSystem::TorpedoMounts));
+        assert_eq!(draw(999_999), Some(ShipSystem::TorpedoMounts));
+        // Chance 0: every band is empty.
+        for raw in [0, 1, 500_000, 999_999] {
+            assert_eq!(
+                system_for_draw(Fixed::from_raw(raw), Fixed::ZERO, &table),
+                None
+            );
+        }
+    }
+
+    #[test]
+    fn a_zero_system_chance_still_draws_but_never_hits() {
+        // harmless() sets both system chances to 0: hits land, nothing is
+        // knocked down, no SystemHit event. The draws are still taken, so the
+        // stream stays aligned (checked by the draw order tests below).
+        let world = run(&duel(), harmless);
+        assert!(system_hits(&world).is_empty());
+        assert_eq!(ship(&world, 1).systems, ShipSystems::ALL_WORKING);
+        assert_eq!(ship(&world, 2).systems, ShipSystems::ALL_WORKING);
     }
 
     #[test]
@@ -2562,6 +3083,41 @@ mod tests {
         }
     }
 
+    #[test]
+    fn breakdowns_leave_the_hash_alone_for_a_fight_with_system_hits() {
+        // Day, every gun hit may knock a system down (chance 1, spread over
+        // all four) and so may every torpedo hit. The log has system hits,
+        // and the hash and events agree with breakdowns on and off.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1, 1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1, 1]),
+        ]);
+        let setup = |record: bool| {
+            run(&scene, move |w| {
+                let figures = figures_mut(w);
+                figures.gun_system_hit_chance = Fixed::ONE;
+                figures.torpedo_system_hit_chance = Fixed::ONE;
+                figures.torpedo_hit_chance_day = fx("0.125");
+                w.set_config(SimConfig {
+                    record_breakdowns: record,
+                });
+            })
+        };
+        let with = setup(true);
+        let without = setup(false);
+        assert!(count(&with, |k| matches!(k, EventKind::SystemHit { .. })) > 0);
+        assert_eq!(with.state_hash(), without.state_hash());
+        assert_eq!(with.events().len(), without.events().len());
+        for (a, b) in with.events().iter().zip(without.events().iter()) {
+            assert_eq!(a.kind, b.kind);
+            assert_eq!(a.causes, b.causes);
+            assert!(b.breakdown.is_none());
+        }
+        let violations = invariants::check(with.umpire(), with.map(), with.ref_data());
+        assert!(violations.is_empty(), "{violations:?}");
+    }
+
     // ---- 14. the claim counts burning ships ----
 
     fn claim_of(world: &World, side: Side) -> u32 {
@@ -2689,78 +3245,143 @@ mod tests {
         );
     }
 
-    // ---- 16. the fire stream draw count ----
+    // ---- 16. the fire stream draw order ----
 
-    #[test]
-    fn the_fire_stream_draws_the_fraction_even_when_it_is_zero_then_tracks_then_the_torpedo() {
-        // Day, one cruiser each, torpedo chance set to 0 (no torpedo hit, but
-        // the fraction is still rolled). A gun salvo is 120 shots x 0.05 = 6
-        // expected hits: a whole number, fraction 0. The stream of ship 1
-        // (keyed on ship 1 and task force 2) is drawn in this order:
-        //   round 1: gun fraction (1 draw), 6 track draws, torpedo fraction
-        //   round 2: gun fraction (1 draw), 6 track draws
-        // Replaying the same stream by hand must give the same hits on each
-        // track in both rounds, which fails if the fraction draw is skipped
-        // when it is 0 or if the torpedo fraction is skipped.
-        let hex = Hex::new(5, 0);
-        let scene = day_scene(vec![
-            ForceSpec::new(1, Side::Japanese, hex, &[1]),
-            ForceSpec::new(2, Side::Allied, hex, &[1]),
-        ]);
-        let world = run(&scene, |w| {
-            let figures = figures_mut(w);
-            figures.torpedo_hit_chance_day = Fixed::ZERO;
-            // No hit lands on the system track, which would cut the shots
-            // (and so the whole expected hits) in round 2.
-            figures.gun_hit_system = Fixed::ZERO;
-            figures.gun_hit_fire = fx("0.5");
-        });
-        let mut stream = world.rng_pair(
+    /// Replays `hits` gun hits from `stream` as the fire rule draws them: for
+    /// each, a track draw (flotation if below the flotation share, else
+    /// fire), then a system draw. Returns the hits on flotation and fire and
+    /// the systems hit, in order.
+    fn replay_gun_hits(
+        stream: &mut RngStream,
+        figures: &SurfaceCombatFigures,
+        hits: u32,
+    ) -> ([u32; 2], Vec<ShipSystem>) {
+        let flotation = u64::try_from(figures.gun_hit_flotation.raw()).unwrap();
+        let mut tracks = [0u32; 2];
+        let mut systems = Vec::new();
+        for _ in 0..hits {
+            let draw = stream.below(Fixed::SCALE.unsigned_abs());
+            tracks[usize::from(draw >= flotation)] += 1;
+            let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
+            systems.extend(system_for_draw(
+                draw,
+                figures.gun_system_hit_chance,
+                &figures.gun_system_hit,
+            ));
+        }
+        (tracks, systems)
+    }
+
+    /// The track hits and system hits that cite one salvo.
+    fn outcome_of_salvo(world: &World, salvo: EventId) -> ([u32; 2], Vec<ShipSystem>) {
+        let mut tracks = [0u32; 2];
+        let mut systems = Vec::new();
+        for event in world.events().iter() {
+            if event.causes != vec![Cause::Event(salvo)] {
+                continue;
+            }
+            match event.kind {
+                EventKind::ShipDamaged { track, hits, .. } => tracks[track as usize] += hits,
+                EventKind::SystemHit { system, .. } => systems.push(system),
+                _ => {}
+            }
+        }
+        (tracks, systems)
+    }
+
+    /// Ship 2 fires nothing, so ship 1 is never hit and its own shots stay
+    /// the same in every round.
+    fn only_ship_1_fires(world: &mut World) {
+        let target = ship_mut(world, 2);
+        target.gun_rounds = Fixed::ZERO;
+        target.torpedoes_ready = false;
+    }
+
+    fn ship_1_stream(world: &World) -> RngStream {
+        world.rng_pair(
             1,
             Some(Pulse::Morning),
             Subsystem::SurfaceCombat,
             EntityRef::Ship(ShipId::new(1)),
             EntityRef::TaskForce(TaskForceId::new(2)),
-        );
+        )
+    }
+
+    #[test]
+    fn the_fire_stream_draws_fraction_then_track_and_system_per_gun_hit_then_the_torpedo() {
+        // Day, one cruiser each, ship 2 silent. Ship 1, round 1, from the
+        // stream keyed on ship 1 and task force 2:
+        //   gun fraction (120 x 0.05 = 6, fraction 0): 1 draw
+        //   6 gun hits, each a track draw then a system draw: 12 draws
+        //   torpedo fraction (8 x 0.125 = 1, fraction 0): 1 draw
+        //   1 torpedo hit: no track draw, one system draw
+        // The torpedo hit is on flotation whatever the stream says.
+        let world = run(&duel(), |w| {
+            only_ship_1_fires(w);
+            figures_mut(w).torpedo_hit_chance_day = fx("0.125");
+        });
         let figures = world.ref_data.surface_combat.clone().unwrap();
-        let flotation = u64::try_from(figures.gun_hit_flotation.raw()).unwrap();
-        let system = flotation + u64::try_from(figures.gun_hit_system.raw()).unwrap();
+        let mut stream = ship_1_stream(&world);
 
+        assert!(!stream.chance(Fixed::ZERO));
+        let (tracks, systems) = replay_gun_hits(&mut stream, &figures, 6);
+        let gun = first_round_salvo(&world, 1, Weapon::Gun);
+        assert_eq!(gun.expected, Fixed::from_int(6));
+        assert_eq!(gun.hits, 6);
+        assert_eq!(outcome_of_salvo(&world, gun.id), (tracks, systems));
+
+        assert!(!stream.chance(Fixed::ZERO));
+        let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
+        let torpedo_system = system_for_draw(
+            draw,
+            figures.torpedo_system_hit_chance,
+            &figures.torpedo_system_hit,
+        );
+        let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+        assert_eq!(torpedo.expected, Fixed::ONE);
+        assert_eq!(torpedo.hits, 1);
+        let (torpedo_tracks, torpedo_systems) = outcome_of_salvo(&world, torpedo.id);
+        assert_eq!(torpedo_tracks, [1, 0]);
+        assert_eq!(
+            torpedo_systems,
+            torpedo_system.into_iter().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn the_fire_stream_carries_on_in_the_next_round_even_when_the_fraction_is_zero() {
+        // Day, one cruiser each, ship 2 silent, ship 1's torpedoes gone and
+        // every gun hit forced onto fire control with chance 0.5 (so some
+        // system draws miss). Each round: gun fraction (0, still one draw),
+        // then 6 x (track, system). Replaying the stream by hand over two
+        // rounds must give the same hits and system hits: it fails if the
+        // fraction draw is skipped when it is 0, or if either draw per hit is
+        // skipped.
+        let world = run(&duel(), |w| {
+            only_ship_1_fires(w);
+            ship_mut(w, 1).torpedoes_ready = false;
+            let figures = figures_mut(w);
+            figures.gun_system_hit_chance = fx("0.5");
+            figures.gun_system_hit = [(ShipSystem::FireControl, Fixed::ONE)]
+                .into_iter()
+                .collect();
+        });
+        let figures = world.ref_data.surface_combat.clone().unwrap();
+        let mut stream = ship_1_stream(&world);
         for round in 1..=2 {
-            // The fraction is 0, so this draw is false whatever its value.
             assert!(!stream.chance(Fixed::ZERO));
-            let mut expected = [0u32; 3];
-            for _ in 0..6 {
-                let draw = stream.below(Fixed::SCALE.unsigned_abs());
-                let track = if draw < flotation {
-                    0
-                } else if draw < system {
-                    1
-                } else {
-                    2
-                };
-                expected[track] += 1;
-            }
-            if round == 1 {
-                // The torpedo fraction (0.16 x 0 = 0): one draw.
-                assert!(!stream.chance(Fixed::ZERO));
-            }
-
+            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, 6);
             let salvo = gun_salvos_of(&world, 1)
                 .into_iter()
                 .find(|s| s.round == round)
                 .expect("a gun salvo this round");
             assert_eq!(salvo.expected, Fixed::from_int(6));
             assert_eq!(salvo.hits, 6);
-            let mut actual = [0u32; 3];
-            for event in world.events().iter() {
-                if let EventKind::ShipDamaged { track, hits, .. } = event.kind {
-                    if event.causes == vec![Cause::Event(salvo.id)] {
-                        actual[track as usize] += hits;
-                    }
-                }
-            }
-            assert_eq!(actual, expected, "round {round}: tracks line up");
+            assert_eq!(
+                outcome_of_salvo(&world, salvo.id),
+                (tracks, systems),
+                "round {round}"
+            );
         }
     }
 }

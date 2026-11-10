@@ -374,7 +374,9 @@ mod tests {
     use crate::map::{HexData, HexKind};
     use crate::orders::{AirGroupOrder, Mission, OrderKind, OrderRequest, Origin};
     use crate::refdata::{AircraftRole, AircraftType, PortSize, RefData, ShipClass};
-    use crate::state::{AirGroup, Base, SearchArc, Ship, ShipLocation, TaskForce, TruthState};
+    use crate::state::{
+        AirGroup, Base, SearchArc, Ship, ShipLocation, ShipSystems, TaskForce, TruthState,
+    };
     use crate::world::SimConfig;
 
     const GROUP: AirGroupId = AirGroupId::new(1);
@@ -669,10 +671,10 @@ mod tests {
                         supply_t: Fixed::ZERO,
                         location: ShipLocation::TaskForce(id),
                         flotation_damage: Fixed::ZERO,
-                        system_damage: Fixed::ZERO,
                         fire_damage: Fixed::ZERO,
                         gun_rounds: Fixed::ZERO,
                         torpedoes_ready: false,
+                        systems: ShipSystems::ALL_WORKING,
                     },
                 );
             }

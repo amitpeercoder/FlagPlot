@@ -18,7 +18,7 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
-use crate::state::{ShipLocation, TruthState};
+use crate::state::{ShipLocation, ShipSystem, SystemState, TruthState};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum InvariantViolation {
@@ -58,6 +58,14 @@ pub enum InvariantViolation {
     SunkShipInTaskForce(ShipId, TaskForceId),
     /// The ship has flotation damage of 100 and is not sunk.
     ShipNotSunkAtFullFlotationDamage(ShipId),
+    /// The ship's class lacks the system, and it is not working.
+    ShipSystemNotInClass(ShipId, ShipSystem),
+    /// The task force's home port is not an existing base.
+    TaskForceHomePortUnknown(TaskForceId, BaseId),
+    /// The task force's home port is a base of the other side.
+    TaskForceHomePortOfOtherSide(TaskForceId, BaseId),
+    /// The task force's share to keep is below 0 or above 1.
+    TaskForceKeepShareOutOfRange(TaskForceId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -136,6 +144,25 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::ShipNotSunkAtFullFlotationDamage(ship) => {
                 write!(f, "{ship} has flotation damage of 100 and is not sunk")
             }
+            InvariantViolation::ShipSystemNotInClass(ship, system) => {
+                write!(
+                    f,
+                    "{ship} has {} damaged but its class does not have one",
+                    system.name()
+                )
+            }
+            InvariantViolation::TaskForceHomePortUnknown(task_force, base) => {
+                write!(f, "{task_force} has home port {base}, which does not exist")
+            }
+            InvariantViolation::TaskForceKeepShareOutOfRange(task_force) => {
+                write!(f, "{task_force} has a share to keep outside 0 to 1")
+            }
+            InvariantViolation::TaskForceHomePortOfOtherSide(task_force, base) => {
+                write!(
+                    f,
+                    "{task_force} has home port {base}, which belongs to the other side"
+                )
+            }
         }
     }
 }
@@ -152,7 +179,7 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         if ship.supply_t.is_negative() {
             violations.push(InvariantViolation::NegativeSupplyAboard(ship.id));
         }
-        let tracks = [ship.flotation_damage, ship.system_damage, ship.fire_damage];
+        let tracks = [ship.flotation_damage, ship.fire_damage];
         if tracks
             .iter()
             .any(|track| *track < Fixed::ZERO || *track > full_damage)
@@ -170,6 +197,11 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         if let Some(class) = ref_data.ship_classes.get(&ship.class) {
             if ship.supply_t > class.cargo_capacity_t {
                 violations.push(InvariantViolation::ShipOverCargoCapacity(ship.id));
+            }
+            for system in ShipSystem::ALL {
+                if !class.has_system(system) && ship.systems.get(system) != SystemState::Working {
+                    violations.push(InvariantViolation::ShipSystemNotInClass(ship.id, system));
+                }
             }
         }
         match ship.location {
@@ -221,6 +253,24 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                     task_force.id,
                     toward,
                 ));
+            }
+        }
+        let share = task_force.rules_of_engagement.keep_share;
+        if share < Fixed::ZERO || share > Fixed::ONE {
+            violations.push(InvariantViolation::TaskForceKeepShareOutOfRange(
+                task_force.id,
+            ));
+        }
+        if let Some(port) = task_force.home_port {
+            match truth.bases.get(&port) {
+                None => violations.push(InvariantViolation::TaskForceHomePortUnknown(
+                    task_force.id,
+                    port,
+                )),
+                Some(base) if base.side != task_force.side => violations.push(
+                    InvariantViolation::TaskForceHomePortOfOtherSide(task_force.id, port),
+                ),
+                Some(_) => {}
             }
         }
         if task_force.progress_nm.is_negative() || task_force.progress_nm >= one_hex {
@@ -294,7 +344,8 @@ mod tests {
     use crate::ids::{AircraftTypeId, ShipClassId};
     use crate::map::HexData;
     use crate::orders::{AirMission, Mission};
-    use crate::state::{AirGroup, Base, Ship, Side, TaskForce};
+    use crate::refdata::{ShipClass, ShipKind};
+    use crate::state::{AirGroup, Base, Ship, ShipSystems, Side, TaskForce};
 
     fn setup() -> (TruthState, Map) {
         let mut map = Map::new();
@@ -394,10 +445,10 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
                 flotation_damage: Fixed::ZERO,
-                system_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,
                 gun_rounds: Fixed::from_int(800),
                 torpedoes_ready: true,
+                systems: ShipSystems::ALL_WORKING,
             },
         );
         (truth, map)
@@ -432,7 +483,7 @@ mod tests {
         // Damage short of 100 on every track, and 100 on the other two.
         let ship = ship_mut(&mut truth);
         ship.flotation_damage = Fixed::from_int(99);
-        ship.system_damage = Fixed::from_int(100);
+        ship.systems.propulsion = SystemState::Out;
         ship.fire_damage = Fixed::ZERO;
         assert_eq!(violations_of(&truth, &map), Vec::new());
         sink(&mut truth);
@@ -443,8 +494,6 @@ mod tests {
     fn a_damage_track_outside_zero_to_one_hundred_is_caught() {
         for set in [
             (|s: &mut Ship| s.flotation_damage = Fixed::from_raw(-1)) as fn(&mut Ship),
-            |s| s.system_damage = Fixed::from_int(101),
-            |s| s.system_damage = Fixed::from_raw(-1),
             |s| s.fire_damage = Fixed::from_raw(100_000_001),
             |s| s.fire_damage = Fixed::from_int(-5),
         ] {
@@ -525,5 +574,99 @@ mod tests {
         truth.task_forces.insert(second.id, second);
         let found = violations_of(&truth, &map);
         assert!(found.contains(&InvariantViolation::ShipInSeveralTaskForces(SHIP)));
+    }
+
+    #[test]
+    fn a_damaged_system_the_class_lacks_is_caught() {
+        let (mut truth, map) = setup_with_ship();
+        let mut ref_data = RefData::default();
+        // A class with no guns and no tubes: only propulsion exists.
+        ref_data.ship_classes.insert(
+            ShipClassId::new(1),
+            ShipClass {
+                id: ShipClassId::new(1),
+                name: "Auxiliary".to_string(),
+                kind: ShipKind::Auxiliary,
+                cruise_speed_kn: Fixed::from_int(10),
+                max_speed_kn: Fixed::from_int(12),
+                fuel_capacity_t: Fixed::from_int(100),
+                endurance_nm: Fixed::from_int(1000),
+                cargo_capacity_t: Fixed::from_int(100),
+                main_guns: 0,
+                gun_rounds_per_min: 0,
+                gun_rounds_per_gun: 0,
+                gun_damage: 0,
+                torpedo_tubes: 0,
+                torpedo_damage: 0,
+                toughness: 100,
+                radar: false,
+            },
+        );
+        // Propulsion may be damaged.
+        ship_mut(&mut truth).systems.propulsion = SystemState::Out;
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
+        ship_mut(&mut truth).systems.main_battery = SystemState::Degraded;
+        ship_mut(&mut truth).systems.torpedo_mounts = SystemState::Out;
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![
+                InvariantViolation::ShipSystemNotInClass(SHIP, ShipSystem::MainBattery),
+                InvariantViolation::ShipSystemNotInClass(SHIP, ShipSystem::TorpedoMounts),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_keep_share_must_be_from_zero_to_one() {
+        let (mut truth, map) = setup_with_ship();
+        let set = |truth: &mut TruthState, share: Fixed| {
+            truth
+                .task_forces
+                .get_mut(&TF)
+                .expect("task force")
+                .rules_of_engagement
+                .keep_share = share;
+        };
+        for ok in [Fixed::ZERO, Fixed::from_ratio(1, 2), Fixed::ONE] {
+            set(&mut truth, ok);
+            assert_eq!(violations_of(&truth, &map), Vec::new());
+        }
+        for bad in [Fixed::from_ratio(-1, 100), Fixed::from_ratio(101, 100)] {
+            set(&mut truth, bad);
+            assert_eq!(
+                violations_of(&truth, &map),
+                vec![InvariantViolation::TaskForceKeepShareOutOfRange(TF)]
+            );
+        }
+    }
+
+    #[test]
+    fn a_home_port_must_be_a_base_of_the_forces_own_side() {
+        let (mut truth, map) = setup_with_ship();
+        let set = |truth: &mut TruthState, port: Option<BaseId>| {
+            truth
+                .task_forces
+                .get_mut(&TF)
+                .expect("task force")
+                .home_port = port;
+        };
+        set(&mut truth, Some(BaseId::new(1)));
+        assert_eq!(violations_of(&truth, &map), Vec::new());
+        set(&mut truth, Some(BaseId::new(9)));
+        assert_eq!(
+            violations_of(&truth, &map),
+            vec![InvariantViolation::TaskForceHomePortUnknown(
+                TF,
+                BaseId::new(9)
+            )]
+        );
+        truth.bases.get_mut(&BaseId::new(1)).expect("base").side = Side::Japanese;
+        set(&mut truth, Some(BaseId::new(1)));
+        assert!(violations_of(&truth, &map).contains(
+            &InvariantViolation::TaskForceHomePortOfOtherSide(TF, BaseId::new(1))
+        ));
+        set(&mut truth, None);
+        truth.bases.get_mut(&BaseId::new(1)).expect("base").side = Side::Allied;
+        assert_eq!(violations_of(&truth, &map), Vec::new());
     }
 }

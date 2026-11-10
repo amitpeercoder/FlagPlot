@@ -142,6 +142,6 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stage 4a of scenario 4 (the surface combat rule, decision 0014) are done. Next is stage 4b, the real map and pathfinding. See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a and 4a2 of scenario 4 (the surface combat rule, decision 0014, and damage to named systems and stragglers, decision 0016) are done. Next is stage 4b, the real map and pathfinding. See the spec's "First test scenarios" table.
 
 The order-of-battle facts cover what scenarios 4 to 6 need: the ships at Savo Island and Eastern Solomons, their classes, weapons and sensors, the aircraft of August and September 1942, and what happened at both battles. `data/oob/README.md` says how firm they are and what is missing.
