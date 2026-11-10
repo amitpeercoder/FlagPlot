@@ -81,14 +81,23 @@ fn run(args: &[String]) -> Result<(), String> {
     let truth = world.umpire();
     println!();
     for task_force in truth.task_forces.values() {
+        let position = match task_force.toward_hex {
+            Some(toward) => format!(
+                "{}, {} nm from {} toward {}",
+                task_force.position(),
+                task_force.progress_nm,
+                task_force.from_hex,
+                toward
+            ),
+            None => task_force.position().to_string(),
+        };
         println!(
-            "{} \"{}\" ({}): {:?} at {}, {} nm toward the next hex",
+            "{} \"{}\" ({}): {:?} at {}",
             task_force.id,
             task_force.name,
             task_force.side.name(),
             task_force.status,
-            task_force.hex,
-            task_force.progress_nm
+            position
         );
     }
     for ship in truth.ships.values() {

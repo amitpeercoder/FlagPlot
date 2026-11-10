@@ -54,11 +54,17 @@
 //! Orders: set route to (8,0), set speed cruise, unload. The unload order
 //! waits for arrival.
 //!
-//! | Pulse     | Hours | Distance | Total  | Position at end      |
-//! | --------- | ----- | -------- | ------ | -------------------- |
-//! | Night     | 12    | 120 nm   | 120 nm | (3,0) plus 0 nm      |
-//! | Morning   | 6     | 60 nm    | 180 nm | (4,0) plus 20 nm     |
-//! | Afternoon | 6     | 60 nm    | 240 nm | (6,0) plus 0 nm      |
+//! | Pulse     | Hours | Distance | Total  | Hex left, miles on | Position |
+//! | --------- | ----- | -------- | ------ | ------------------ | -------- |
+//! | Night     | 12    | 120 nm   | 120 nm | (3,0) plus 0 nm    | (3,0)    |
+//! | Morning   | 6     | 60 nm    | 180 nm | (4,0) plus 20 nm   | (5,0)    |
+//! | Afternoon | 6     | 60 nm    | 240 nm | (6,0) plus 0 nm    | (6,0)    |
+//!
+//! A task force is in the hex whose centre is nearest, and at exactly 20 nm
+//! it is in the hex ahead (decision 0005). So at the end of the morning
+//! pulse, 20 nm out of (4,0) toward (5,0), its position is (5,0). Hexes
+//! entered: night (1,0), (2,0), (3,0); morning (4,0), (5,0); afternoon
+//! (6,0). On day 3 it enters (7,0) and (8,0).
 //!
 //! Fuel burned on day 2:
 //!
@@ -255,20 +261,37 @@ fn fuel_burns(events: &[Event], ship: ShipId) -> Vec<(Pulse, Fixed)> {
         .collect()
 }
 
-fn steams(events: &[Event]) -> Vec<(Pulse, Fixed, Hex)> {
+/// Movement events as (pulse, distance, position at the start, position at
+/// the end, hexes entered).
+fn steams(events: &[Event]) -> Vec<(Pulse, Fixed, Hex, Hex, Vec<Hex>)> {
     events
         .iter()
         .filter_map(|event| match &event.kind {
             EventKind::TaskForceSteamed {
-                distance_nm, to, ..
+                distance_nm,
+                from,
+                to,
+                hexes_entered,
+                ..
             } => Some((
                 event.pulse.expect("movement has a pulse"),
                 *distance_nm,
+                *from,
                 *to,
+                hexes_entered.clone(),
             )),
             _ => None,
         })
         .collect()
+}
+
+/// Asserts the stored leg state and the position of the task force.
+fn assert_leg(world: &World, from: Hex, toward: Option<Hex>, progress: i64, position: Hex) {
+    let task_force = &world.umpire().task_forces[&TASK_FORCE];
+    assert_eq!(task_force.from_hex, from);
+    assert_eq!(task_force.toward_hex, toward);
+    assert_eq!(task_force.progress_nm, tons(progress));
+    assert_eq!(task_force.position(), position);
 }
 
 fn completions(events: &[Event], loading: bool) -> Vec<(Option<Pulse>, Fixed)> {
@@ -300,7 +323,7 @@ fn the_supply_run_matches_the_hand_calculation() {
         assert_eq!(ship_fuel(world, CARGO_1), tons(1000));
         assert_eq!(ship_fuel(world, CARGO_2), tons(1000));
         assert_eq!(ship_fuel(world, DESTROYER), tons(500));
-        assert_eq!(world.umpire().task_forces[&TASK_FORCE].hex, Hex::new(0, 0));
+        assert_leg(world, Hex::new(0, 0), None, 0, Hex::new(0, 0));
     }
 
     let mut all_events: Vec<Event> = Vec::new();
@@ -349,7 +372,7 @@ fn the_supply_run_matches_the_hand_calculation() {
         .all(|event| !matches!(event.kind, EventKind::FuelBurned { .. })));
     {
         let world = &scenario.world;
-        assert_eq!(world.umpire().task_forces[&TASK_FORCE].hex, Hex::new(0, 0));
+        assert_leg(world, Hex::new(0, 0), None, 0, Hex::new(0, 0));
         assert_eq!(base_stock(world, BASE_1), tons(4000));
         assert_eq!(ship_supply(world, CARGO_1), tons(3000));
         assert_eq!(ship_supply(world, CARGO_2), tons(3000));
@@ -362,28 +385,34 @@ fn the_supply_run_matches_the_hand_calculation() {
     // Day 2: under way.
     let (day, events) = run_day(&mut scenario);
     assert_eq!(day, 2);
+    let hex = Hex::new;
     assert_eq!(
         steams(&events),
         vec![
-            (Pulse::Night, tons(120), Hex::new(3, 0)),
-            (Pulse::Morning, tons(60), Hex::new(4, 0)),
-            (Pulse::Afternoon, tons(60), Hex::new(6, 0)),
+            (
+                Pulse::Night,
+                tons(120),
+                hex(0, 0),
+                hex(3, 0),
+                vec![hex(1, 0), hex(2, 0), hex(3, 0)]
+            ),
+            // Ends 20 nm out of (4,0), so it is in (5,0).
+            (
+                Pulse::Morning,
+                tons(60),
+                hex(3, 0),
+                hex(5, 0),
+                vec![hex(4, 0), hex(5, 0)]
+            ),
+            // Already in (5,0): reaching its centre enters nothing.
+            (
+                Pulse::Afternoon,
+                tons(60),
+                hex(5, 0),
+                hex(6, 0),
+                vec![hex(6, 0)]
+            ),
         ]
-    );
-    // The position at the end of each pulse, as whole hexes plus miles toward
-    // the next, follows from the miles steamed so far: 120, 180, 240 nm.
-    let mut total_nm = Fixed::ZERO;
-    let positions: Vec<(i64, Fixed)> = steams(&events)
-        .iter()
-        .map(|(_, distance_nm, _)| {
-            total_nm += *distance_nm;
-            let hexes = (total_nm / tons(40)).trunc();
-            (hexes, total_nm - tons(40 * hexes))
-        })
-        .collect();
-    assert_eq!(
-        positions,
-        vec![(3, Fixed::ZERO), (4, tons(20)), (6, Fixed::ZERO)]
     );
     for cargo_ship in [CARGO_1, CARGO_2] {
         assert_eq!(
@@ -408,8 +437,10 @@ fn the_supply_run_matches_the_hand_calculation() {
         let world = &scenario.world;
         let task_force = &world.umpire().task_forces[&TASK_FORCE];
         assert_eq!(task_force.status, TaskForceStatus::Underway);
-        assert_eq!(task_force.hex, Hex::new(6, 0));
+        assert_eq!(task_force.from_hex, Hex::new(6, 0));
+        assert_eq!(task_force.toward_hex, None);
         assert_eq!(task_force.progress_nm, Fixed::ZERO);
+        assert_eq!(task_force.position(), Hex::new(6, 0));
         assert_eq!(ship_fuel(world, CARGO_1), tons(976));
         assert_eq!(ship_fuel(world, CARGO_2), tons(976));
         assert_eq!(ship_fuel(world, DESTROYER), tons(470));
@@ -441,7 +472,13 @@ fn the_supply_run_matches_the_hand_calculation() {
     assert_eq!(ClockTime::from_elapsed(tons(56)).to_string(), "D3 02:00");
     assert_eq!(
         steams(&events),
-        vec![(Pulse::Night, tons(80), Hex::new(8, 0))]
+        vec![(
+            Pulse::Night,
+            tons(80),
+            Hex::new(6, 0),
+            Hex::new(8, 0),
+            vec![Hex::new(7, 0), Hex::new(8, 0)]
+        )]
     );
     assert_eq!(fuel_burns(&events, CARGO_1), vec![(Pulse::Night, tons(8))]);
     assert_eq!(fuel_burns(&events, CARGO_2), vec![(Pulse::Night, tons(8))]);
@@ -453,7 +490,10 @@ fn the_supply_run_matches_the_hand_calculation() {
         let world = &scenario.world;
         let task_force = &world.umpire().task_forces[&TASK_FORCE];
         assert_eq!(task_force.status, TaskForceStatus::Arrived);
-        assert_eq!(task_force.hex, Hex::new(8, 0));
+        assert_eq!(task_force.from_hex, Hex::new(8, 0));
+        assert_eq!(task_force.toward_hex, None);
+        assert_eq!(task_force.progress_nm, Fixed::ZERO);
+        assert_eq!(task_force.position(), Hex::new(8, 0));
         assert_eq!(ship_fuel(world, CARGO_1), tons(968));
         assert_eq!(ship_fuel(world, CARGO_2), tons(968));
         assert_eq!(ship_fuel(world, DESTROYER), tons(460));

@@ -143,8 +143,16 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.i32(waypoint.r);
         }
         h.count(task_force.route.next_index);
-        h.i32(task_force.hex.q);
-        h.i32(task_force.hex.r);
+        h.i32(task_force.from_hex.q);
+        h.i32(task_force.from_hex.r);
+        match task_force.toward_hex {
+            Some(toward) => {
+                h.u8(1);
+                h.i32(toward.q);
+                h.i32(toward.r);
+            }
+            None => h.u8(0),
+        }
         h.i64(task_force.progress_nm.raw());
         h.u8(task_force.status.code());
         h.optional_u32(task_force.route_order.map(|id| id.raw()));
