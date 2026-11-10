@@ -9,7 +9,7 @@ use core::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, EntityRef, IntentId, OrderId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, EntityRef, IntentId, OrderId, ShipId, TaskForceId};
 use crate::state::Side;
 
 /// Who issued an order.
@@ -97,6 +97,45 @@ impl Stance {
     }
 }
 
+/// What a task force does about its stragglers, ships whose propulsion is
+/// degraded or out (decisions 10 to 12 of
+/// `docs/decisions/0016-systems-and-stragglers.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum StragglerInstruction {
+    /// Nothing happens.
+    #[default]
+    Keep,
+    /// Send stragglers that can steam home with escorts.
+    Detach,
+    /// Leave every straggler where it is.
+    Leave,
+    /// The whole force heads home.
+    Retire,
+}
+
+impl StragglerInstruction {
+    /// A stable number for the instruction. Part of the state hash. Never
+    /// renumber it; add new instructions at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            StragglerInstruction::Keep => 1,
+            StragglerInstruction::Detach => 2,
+            StragglerInstruction::Leave => 3,
+            StragglerInstruction::Retire => 4,
+        }
+    }
+
+    /// The instruction's name as scenario files and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            StragglerInstruction::Keep => "keep",
+            StragglerInstruction::Detach => "detach",
+            StragglerInstruction::Leave => "leave",
+            StragglerInstruction::Retire => "retire",
+        }
+    }
+}
+
 /// What a standing cargo order does at a port.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum CargoAction {
@@ -131,12 +170,20 @@ pub enum TaskForceOrder {
     /// and neither cancels the route or the speed.
     Unload,
     /// Set the rules of engagement. A standing order of its own kind: it
-    /// replaces the rules of engagement and nothing else. `break_off` must
-    /// be from 0 to 1.
+    /// replaces the rules of engagement and nothing else. `break_off` and
+    /// `keep_share` must each be from 0 to 1.
     SetRulesOfEngagement {
         stance: Stance,
         break_off: Fixed,
+        stragglers: StragglerInstruction,
+        keep_share: Fixed,
     },
+    /// Set the base the force heads for when it retires or sends stragglers
+    /// home. It must be a base of the issuing side.
+    SetHomePort(BaseId),
+    /// Split the listed ships off into a new task force at the same spot,
+    /// idle, with the same rules of engagement. At least one ship must stay.
+    DetachShips(Vec<ShipId>),
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -221,6 +268,17 @@ pub enum RejectReason {
     InvalidSearchRange { range_nm: Fixed, max_nm: Fixed },
     /// A break-off level is below 0 or above 1.
     BreakOffOutOfRange(Fixed),
+    /// A share to keep is below 0 or above 1.
+    KeepShareOutOfRange(Fixed),
+    /// The base does not exist or is not the issuing side's. One reason for
+    /// both, so a rejection never reveals an enemy base.
+    NotYourBase,
+    /// A detach order lists no ships.
+    NoShipsToDetach,
+    /// A ship listed in a detach order is not afloat in the task force.
+    ShipNotInTaskForce(ShipId),
+    /// A detach order lists every ship of the task force.
+    WouldLeaveTaskForceEmpty,
 }
 
 impl fmt::Display for RejectReason {
@@ -246,6 +304,17 @@ impl fmt::Display for RejectReason {
             ),
             RejectReason::BreakOffOutOfRange(level) => {
                 write!(f, "break-off level {level} is not between 0 and 1")
+            }
+            RejectReason::KeepShareOutOfRange(share) => {
+                write!(f, "share to keep {share} is not between 0 and 1")
+            }
+            RejectReason::NotYourBase => f.write_str("the base is not one of your bases"),
+            RejectReason::NoShipsToDetach => f.write_str("no ships are listed to detach"),
+            RejectReason::ShipNotInTaskForce(ship) => {
+                write!(f, "{ship} is not afloat in the task force")
+            }
+            RejectReason::WouldLeaveTaskForceEmpty => {
+                f.write_str("detaching these ships would leave the task force empty")
             }
         }
     }

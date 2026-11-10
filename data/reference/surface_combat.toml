@@ -23,12 +23,39 @@ torpedo_hit_chance_day = "0.02"
 surprised_target_factor = "1.5"
 lit_target_factor = "2"
 
-# Where a gun hit lands. The three add to 1.
-gun_hit_flotation = "0.5"
-gun_hit_system = "0.3"
-gun_hit_fire = "0.2"
+# Where a gun hit lands. The two add to 1. A torpedo hit lands on flotation.
+gun_hit_flotation = "0.75"
+gun_hit_fire = "0.25"
+
+# Chance a hit also knocks a system down one level, and the factor a degraded
+# system applies. Fire control that is out still gives this much.
+gun_system_hit_chance = "0.3"
+torpedo_system_hit_chance = "0.5"
+degraded_factor = "0.5"
+fire_control_out_factor = "0.25"
 
 # Flotation damage at which a ship counts as crippled, and fire damage at
 # which the enemy believes it is sinking.
 crippled_flotation = 50
 claimed_sunk_fire = 30
+
+# Which system a system hit lands on. Each table adds to 1.
+[gun_system_hit]
+propulsion = "0.2"
+fire_control = "0.3"
+main_battery = "0.35"
+torpedo_mounts = "0.15"
+
+[torpedo_system_hit]
+propulsion = "0.8"
+fire_control = "0.1"
+main_battery = "0.1"
+
+# Escorts given to a straggler that is sent home, by its kind.
+[straggler_escorts]
+carrier = 2
+battleship = 2
+cruiser = 1
+destroyer = 0
+transport = 1
+auxiliary = 0

@@ -282,7 +282,7 @@ mod tests {
     use crate::map::{HexData, Map};
     use crate::orders::{Mission, OrderKind, OrderRequest, Origin, TaskForceOrder};
     use crate::refdata::{RefData, ShipClass, ShipKind};
-    use crate::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
+    use crate::state::{Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState};
     use crate::world::SimConfig;
 
     /// One task force for `world`: its ID, its hex, and its ships as
@@ -374,10 +374,10 @@ mod tests {
                         supply_t: Fixed::from_int(*supply),
                         location: ShipLocation::TaskForce(tf(*id)),
                         flotation_damage: Fixed::ZERO,
-                        system_damage: Fixed::ZERO,
                         fire_damage: Fixed::ZERO,
                         gun_rounds: Fixed::ZERO,
                         torpedoes_ready: false,
+                        systems: ShipSystems::ALL_WORKING,
                     },
                 );
             }

@@ -139,7 +139,9 @@ mod tests {
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
         SurfaceCombatFigures,
     };
-    use crate::state::{AirGroup, Base, Ship, ShipLocation, Side, TaskForce, TruthState};
+    use crate::state::{
+        AirGroup, Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState,
+    };
     use crate::time::Pulse;
     use crate::world::World;
 
@@ -259,7 +261,6 @@ mod tests {
         ref_data.search = Some(SearchFigures::from_search_toml());
         let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
         figures.gun_hit_flotation = Fixed::ONE;
-        figures.gun_hit_system = Fixed::ZERO;
         figures.gun_hit_fire = Fixed::ZERO;
         ref_data.surface_combat = Some(figures);
 
@@ -292,10 +293,10 @@ mod tests {
                         } else {
                             Fixed::from_int(95)
                         },
-                        system_damage: Fixed::ZERO,
                         fire_damage: Fixed::ZERO,
                         gun_rounds: Fixed::from_int(800),
                         torpedoes_ready: false,
+                        systems: ShipSystems::ALL_WORKING,
                     },
                 );
             }

@@ -6,7 +6,7 @@
 //! Only the fields the scenarios so far need exist: position, fuel and
 //! route, supply aboard ships and in base stocks, air groups (base,
 //! aircraft ready, mission and search arc), and for surface combat each
-//! ship's damage tracks and ammunition and each task force's alertness and
+//! ship's damage tracks, named systems and ammunition and each task force's alertness and
 //! rules of engagement. Pilots and land units arrive with the scenarios that
 //! use them.
 
@@ -17,7 +17,7 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
 };
-use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting, Stance};
+use crate::orders::{AirMission, CargoAction, Mission, SpeedSetting, Stance, StragglerInstruction};
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -69,14 +69,135 @@ pub struct Ship {
     pub location: ShipLocation,
     /// Flotation damage, 0 to 100. At 100 the ship sinks.
     pub flotation_damage: Fixed,
-    /// System damage, 0 to 100. Reduces gun shots.
-    pub system_damage: Fixed,
     /// Fire damage, 0 to 100. Any fire lights the ship at night.
     pub fire_damage: Fixed,
     /// Gun rounds left aboard. Never negative.
     pub gun_rounds: Fixed,
     /// True while the ship still has its torpedoes to fire.
     pub torpedoes_ready: bool,
+    /// The state of each named system (decision 0016).
+    pub systems: ShipSystems,
+}
+
+/// A named system of a ship that a hit can knock down (decision 0016).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ShipSystem {
+    Propulsion,
+    FireControl,
+    MainBattery,
+    TorpedoMounts,
+}
+
+impl ShipSystem {
+    /// Every system, in code order.
+    pub const ALL: [ShipSystem; 4] = [
+        ShipSystem::Propulsion,
+        ShipSystem::FireControl,
+        ShipSystem::MainBattery,
+        ShipSystem::TorpedoMounts,
+    ];
+
+    /// A stable number for the system. Part of the state hash and of the
+    /// order of the system hit bands. Never renumber it; add new systems at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            ShipSystem::Propulsion => 1,
+            ShipSystem::FireControl => 2,
+            ShipSystem::MainBattery => 3,
+            ShipSystem::TorpedoMounts => 4,
+        }
+    }
+
+    /// The system's name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            ShipSystem::Propulsion => "propulsion",
+            ShipSystem::FireControl => "fire control",
+            ShipSystem::MainBattery => "main battery",
+            ShipSystem::TorpedoMounts => "torpedo mounts",
+        }
+    }
+}
+
+/// How well a system works.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SystemState {
+    Working,
+    Degraded,
+    Out,
+}
+
+impl SystemState {
+    /// A stable number for the state. Part of the state hash. Never
+    /// renumber it.
+    pub const fn code(self) -> u8 {
+        match self {
+            SystemState::Working => 1,
+            SystemState::Degraded => 2,
+            SystemState::Out => 3,
+        }
+    }
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            SystemState::Working => "working",
+            SystemState::Degraded => "degraded",
+            SystemState::Out => "out",
+        }
+    }
+
+    /// One level worse: working to degraded, degraded to out. Out stays out.
+    pub const fn step_down(self) -> SystemState {
+        match self {
+            SystemState::Working => SystemState::Degraded,
+            SystemState::Degraded | SystemState::Out => SystemState::Out,
+        }
+    }
+}
+
+/// The state of every named system of one ship. A system the ship's class
+/// does not have stays working.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ShipSystems {
+    pub propulsion: SystemState,
+    pub fire_control: SystemState,
+    pub main_battery: SystemState,
+    pub torpedo_mounts: SystemState,
+}
+
+impl ShipSystems {
+    /// Every system working.
+    pub const ALL_WORKING: ShipSystems = ShipSystems {
+        propulsion: SystemState::Working,
+        fire_control: SystemState::Working,
+        main_battery: SystemState::Working,
+        torpedo_mounts: SystemState::Working,
+    };
+
+    pub const fn get(&self, system: ShipSystem) -> SystemState {
+        match system {
+            ShipSystem::Propulsion => self.propulsion,
+            ShipSystem::FireControl => self.fire_control,
+            ShipSystem::MainBattery => self.main_battery,
+            ShipSystem::TorpedoMounts => self.torpedo_mounts,
+        }
+    }
+
+    pub fn set(&mut self, system: ShipSystem, state: SystemState) {
+        match system {
+            ShipSystem::Propulsion => self.propulsion = state,
+            ShipSystem::FireControl => self.fire_control = state,
+            ShipSystem::MainBattery => self.main_battery = state,
+            ShipSystem::TorpedoMounts => self.torpedo_mounts = state,
+        }
+    }
+}
+
+impl Default for ShipSystems {
+    fn default() -> ShipSystems {
+        ShipSystems::ALL_WORKING
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -138,13 +259,21 @@ pub struct RulesOfEngagement {
     /// The share of ships sunk or crippled, 0 to 1, at which the force
     /// breaks off.
     pub break_off: Fixed,
+    /// What to do about stragglers (decision 11 of
+    /// `docs/decisions/0016-systems-and-stragglers.md`).
+    pub stragglers: StragglerInstruction,
+    /// The share, 0 to 1, of the ships with working propulsion the force
+    /// keeps when it detaches stragglers.
+    pub keep_share: Fixed,
 }
 
 impl RulesOfEngagement {
-    /// Engage, and break off at half the ships lost or crippled.
+    /// Engage, break off at half the ships lost or crippled, keep stragglers.
     pub const DEFAULT: RulesOfEngagement = RulesOfEngagement {
         stance: Stance::Engage,
         break_off: Fixed::from_raw(500_000),
+        stragglers: StragglerInstruction::Keep,
+        keep_share: Fixed::ZERO,
     };
 }
 
@@ -197,6 +326,9 @@ pub struct TaskForce {
     pub rules_of_engagement: RulesOfEngagement,
     /// The standing order that set the rules of engagement, if any.
     pub rules_order: Option<OrderId>,
+    /// The base the force heads for when it retires or sends stragglers home
+    /// (decision 0016). It must be a base of the force's own side.
+    pub home_port: Option<BaseId>,
 }
 
 impl TaskForce {
@@ -274,6 +406,7 @@ impl TaskForce {
             alert: true,
             rules_of_engagement: RulesOfEngagement::DEFAULT,
             rules_order: None,
+            home_port: None,
         }
     }
 }
