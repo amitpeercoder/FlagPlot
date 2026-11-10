@@ -1,0 +1,86 @@
+# The vocabulary of the facts layer. A fact row may only use an attribute
+# listed here. Every value of an attribute is stored in the one unit given.
+# See docs/research/oob/database-design.md.
+#
+# cardinality: one = a single value at any date; many = several may hold at once.
+key,applies_to,value_type,unit,cardinality,description
+displacement_standard_lt,ship_class,integer,long tons,one,Standard (Washington Treaty) displacement
+displacement_full_lt,ship_class,integer,long tons,one,Full load displacement
+length_overall_m,ship_class,decimal,metres,one,Length overall
+beam_m,ship_class,decimal,metres,one,Maximum beam
+max_speed_kn,ship_class,decimal,knots,one,Designed maximum speed
+shaft_power_shp,ship_class,integer,shaft horsepower,one,Designed shaft horsepower
+endurance_nm,ship_class,integer,nautical miles,one,Designed endurance at the speed given by endurance_speed_kn
+endurance_speed_kn,ship_class,decimal,knots,one,Speed at which endurance_nm is quoted
+fuel_capacity_lt,ship_class,integer,long tons,one,Maximum fuel oil carried
+belt_armour_max_mm,ship_class,integer,millimetres,one,Thickest part of the main side belt
+deck_armour_max_mm,ship_class,integer,millimetres,one,Thickest armoured deck
+complement,ship_class,integer,men,one,Designed or stated complement; the note says peace or war
+aircraft_capacity,ship_class,integer,aircraft,one,Aircraft normally carried
+laid_down,ship,date,,one,Date the keel was laid
+launched,ship,date,,one,Date launched
+commissioned,ship,date,,one,Date first commissioned or completed
+sunk,ship,date,,one,Date the ship sank or was scuttled
+fate,ship,text,,one,One line on how the ship's service ended
+name_native,ship,text,,one,Name in the navy's own script
+alias,ship,text,,many,Another name or spelling found in sources
+max_speed_kn,aircraft_type,decimal,knots,one,Maximum level speed at the altitude given by max_speed_altitude_m
+max_speed_altitude_m,aircraft_type,integer,metres,one,Altitude at which max_speed_kn is quoted
+cruise_speed_kn,aircraft_type,decimal,knots,one,Cruising speed
+range_normal_nm,aircraft_type,integer,nautical miles,one,Range on internal fuel with the normal load; the note gives the condition
+range_max_nm,aircraft_type,integer,nautical miles,one,Maximum or ferry range; the note gives the condition
+service_ceiling_m,aircraft_type,integer,metres,one,Service ceiling
+crew,aircraft_type,integer,men,one,Normal crew
+engine,aircraft_type,text,,one,Engine model and number of engines
+engine_power_hp,aircraft_type,integer,horsepower,one,Take-off power of one engine
+empty_weight_kg,aircraft_type,integer,kilograms,one,Empty weight
+loaded_weight_kg,aircraft_type,integer,kilograms,one,Normal loaded weight
+wingspan_m,aircraft_type,decimal,metres,one,Wingspan
+max_bomb_load_kg,aircraft_type,integer,kilograms,one,Maximum bomb or torpedo load
+carrier_capable,aircraft_type,text,,one,yes or no
+first_service,aircraft_type,date,,one,Date the variant entered service
+manufacturer,aircraft_type,text,,one,Designing manufacturer
+name_native,aircraft_type,text,,one,Official designation in the service's own form
+alias,aircraft_type,text,,many,Popular name or Allied reporting name
+calibre_mm,weapon,decimal,millimetres,one,Bore diameter of a gun
+barrel_length_cal,weapon,decimal,calibres,one,Barrel length in calibres
+shell_weight_kg,weapon,decimal,kilograms,one,Weight of the main projectile; the note names it
+muzzle_velocity_mps,weapon,integer,metres per second,one,Muzzle velocity with the main projectile
+max_range_m,weapon,integer,metres,one,Maximum surface range at the elevation given by max_range_elevation_deg
+max_range_elevation_deg,weapon,decimal,degrees,one,Elevation at which max_range_m is quoted
+aa_ceiling_m,weapon,integer,metres,one,Maximum anti-aircraft ceiling
+rate_of_fire_rpm,weapon,decimal,rounds per minute,one,Rate of fire per barrel; the note says cyclic or practical
+diameter_mm,weapon,decimal,millimetres,one,Diameter of a torpedo
+weight_kg,weapon,decimal,kilograms,one,Total weight of a torpedo or bomb or depth charge
+warhead_kg,weapon,decimal,kilograms,one,Weight of the explosive charge
+speed_high_kn,weapon,decimal,knots,one,Torpedo speed at its fastest setting
+range_high_m,weapon,integer,metres,one,Torpedo range at its fastest setting
+speed_mid_kn,weapon,decimal,knots,one,Torpedo speed at its middle setting
+range_mid_m,weapon,integer,metres,one,Torpedo range at its middle setting
+speed_low_kn,weapon,decimal,knots,one,Torpedo speed at its slowest setting
+range_low_m,weapon,integer,metres,one,Torpedo range at its slowest setting
+propulsion,weapon,text,,one,Torpedo propulsion in a few words
+in_service,weapon,date,,one,Date the weapon entered service
+name_native,weapon,text,,one,Designation in the service's own form
+alias,weapon,text,,many,Another designation found in sources
+wavelength_cm,sensor,decimal,centimetres,one,Radar operating wavelength
+frequency_mhz,sensor,decimal,megahertz,one,Radar operating frequency
+peak_power_kw,sensor,decimal,kilowatts,one,Radar peak power
+range_aircraft_nm,sensor,decimal,nautical miles,one,Stated detection range on aircraft; the note gives target and height
+range_ship_nm,sensor,decimal,nautical miles,one,Stated detection range on a large ship; the note gives the target
+range_accuracy_m,sensor,decimal,metres,one,Stated range accuracy
+bearing_accuracy_deg,sensor,decimal,degrees,one,Stated bearing accuracy
+display,sensor,text,,one,Display type such as A-scope or PPI
+purpose,sensor,text,,one,What the set was for in a few words
+base_length_m,sensor,decimal,metres,one,Base length of an optical rangefinder
+sonar_frequency_khz,sensor,decimal,kilohertz,one,Sonar operating frequency
+sonar_range_m,sensor,integer,metres,one,Stated sonar detection range; the note gives the condition
+in_service,sensor,date,,one,Date the set entered service
+name_native,sensor,text,,one,Designation in the service's own form
+alias,sensor,text,,many,Another designation found in sources
+equipped_with,air_unit,ref:aircraft_type,,many,Aircraft type the unit flew in the period
+based_at,air_unit,ref:place_or_ship,,one,Airfield or ship the unit operated from in the period
+aircraft_on_hand,air_unit,integer,aircraft,one,Aircraft on strength on the date; the note names the type if the unit is mixed
+aircraft_operational,air_unit,integer,aircraft,one,Aircraft operational on the date; the note names the type if the unit is mixed
+name_native,air_unit,text,,one,Name in the service's own script
+alias,air_unit,text,,many,Another name found in sources
