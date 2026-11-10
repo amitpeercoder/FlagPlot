@@ -888,6 +888,7 @@ fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
         "reference/port_sizes.csv",
         "reference/aircraft_types.csv",
         "reference/search.toml",
+        "reference/surface_combat.toml",
     ] {
         fs::copy(data.join(file), root.join(file)).expect("copy a data file");
     }

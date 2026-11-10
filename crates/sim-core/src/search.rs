@@ -12,15 +12,15 @@
 //! [`BeliefState::apply_report`](crate::belief::BeliefState::apply_report).
 
 use crate::bearing;
-use crate::belief::Report;
+use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{EntityRef, TaskForceId};
+use crate::ids::{EntityRef, EventId, TaskForceId};
 use crate::map::Map;
 use crate::orders::AirMission;
 use crate::refdata::{SearchFigures, ShipKind};
-use crate::rng::Subsystem;
+use crate::rng::{RngStream, Subsystem};
 use crate::state::Side;
 use crate::time::{self, Pulse};
 use crate::world::World;
@@ -105,6 +105,45 @@ pub(crate) fn reported_kind(true_kind: ShipKind, v: u64, figures: &SearchFigures
         }
     }
     unreachable!("a confusion row adds to exactly 1, so a draw below 1 lands in it")
+}
+
+/// Draws the rest of a sighting report from `stream`, in a fixed order:
+/// position error, then count, then kind (decision 0012). Air search and
+/// surface combat both build their reports here, so a report means the same
+/// thing whoever made it. `received_event` is the event that will record the
+/// report's arrival: the caller passes the log's next ID.
+pub(crate) fn build_sighting_report(
+    stream: &mut RngStream,
+    map: &Map,
+    true_hex: Hex,
+    true_count: u32,
+    true_kind: ShipKind,
+    figures: &SearchFigures,
+    received_event: EventId,
+) -> SightingReport {
+    let direction = if stream.chance(figures.position_error_chance) {
+        Some(usize::try_from(stream.below(6)).expect("below 6"))
+    } else {
+        None
+    };
+    let estimated_hex = report_hex(map, true_hex, direction);
+    let estimated_ship_count = reported_count(
+        true_count,
+        stream.below(Fixed::SCALE.unsigned_abs()),
+        figures,
+    );
+    let estimated_kind = reported_kind(
+        true_kind,
+        stream.below(Fixed::SCALE.unsigned_abs()),
+        figures,
+    );
+    SightingReport {
+        estimated_hex,
+        estimated_ship_count,
+        estimated_kind,
+        confidence: figures.initial_confidence,
+        received_event,
+    }
 }
 
 /// What search needs to know about a task force that can be sighted.
@@ -252,37 +291,28 @@ impl World {
                     continue;
                 }
 
-                // The rest of the report is drawn from the same stream, in
-                // a fixed order: position, count, kind.
-                let direction = if stream.chance(figures.position_error_chance) {
-                    Some(usize::try_from(stream.below(6)).expect("below 6"))
-                } else {
-                    None
-                };
-                let estimated_hex = report_hex(&self.map, target.position, direction);
-                let estimated_ship_count = reported_count(
+                // The rest of the report is drawn from the same stream.
+                let report = build_sighting_report(
+                    &mut stream,
+                    &self.map,
+                    target.position,
                     target.ship_count,
-                    stream.below(Fixed::SCALE.unsigned_abs()),
-                    &figures,
-                );
-                let estimated_kind = reported_kind(
                     target.kind,
-                    stream.below(Fixed::SCALE.unsigned_abs()),
                     &figures,
+                    self.events.next_id(),
                 );
+                let estimated_hex = report.estimated_hex;
+                let estimated_ship_count = report.estimated_ship_count;
+                let estimated_kind = report.estimated_kind;
 
-                let report = Report {
-                    estimated_hex,
-                    estimated_ship_count,
-                    estimated_kind,
-                    confidence: figures.initial_confidence,
-                    received_event: self.events.next_id(),
-                };
-                let outcome = self
+                let ApplyOutcome::Contact(outcome) = self
                     .beliefs
                     .get_mut(&group.side)
                     .expect("both sides have a belief state")
-                    .apply_report(&report, &figures);
+                    .apply_report(&Report::Sighting(report.clone()), &figures)
+                else {
+                    unreachable!("a sighting report makes or refreshes a contact");
+                };
                 let received = self.events.record(
                     day,
                     Some(pulse),
@@ -553,6 +583,14 @@ mod tests {
                     fuel_capacity_t: Fixed::from_int(2000),
                     endurance_nm: Fixed::from_int(8000),
                     cargo_capacity_t: Fixed::ZERO,
+                    main_guns: 0,
+                    gun_rounds_per_min: 0,
+                    gun_rounds_per_gun: 0,
+                    gun_damage: 0,
+                    torpedo_tubes: 0,
+                    torpedo_damage: 0,
+                    toughness: 100,
+                    radar: false,
                 },
             );
         }
@@ -630,6 +668,11 @@ mod tests {
                         fuel_t: Fixed::from_int(2000),
                         supply_t: Fixed::ZERO,
                         location: ShipLocation::TaskForce(id),
+                        flotation_damage: Fixed::ZERO,
+                        system_damage: Fixed::ZERO,
+                        fire_damage: Fixed::ZERO,
+                        gun_rounds: Fixed::ZERO,
+                        torpedoes_ready: false,
                     },
                 );
             }
@@ -749,6 +792,40 @@ mod tests {
     }
 
     // ---- who is a target ----
+
+    #[test]
+    fn a_task_force_with_every_ship_sunk_is_not_a_search_target() {
+        let sink = |world: &mut World, ships: &[u32]| {
+            for raw in ships {
+                let id = ShipId::new(*raw);
+                let ship = world.truth.ships.get_mut(&id).expect("ship");
+                ship.location = ShipLocation::Sunk;
+                ship.flotation_damage = Fixed::from_int(100);
+                for task_force in world.truth.task_forces.values_mut() {
+                    task_force.ships.remove(&id);
+                }
+            }
+        };
+
+        // With both ships afloat the force is searched for.
+        let mut afloat = world(1, target_at(10, 0));
+        resolve_days(&mut afloat, 1);
+        assert!(!attempts(&afloat).is_empty());
+
+        // Ships 1 and 2 are the force's. With one of them sunk it still is.
+        let mut some = world(1, target_at(10, 0));
+        sink(&mut some, &[1]);
+        resolve_days(&mut some, 1);
+        assert!(!attempts(&some).is_empty());
+
+        // With both sunk the air group flies its search and finds nothing to
+        // roll for.
+        let mut none = world(1, target_at(10, 0));
+        sink(&mut none, &[1, 2]);
+        resolve_days(&mut none, 1);
+        assert_eq!(flown(&none).len(), 2);
+        assert!(attempts(&none).is_empty());
+    }
 
     #[test]
     fn a_group_never_searches_for_its_own_side() {

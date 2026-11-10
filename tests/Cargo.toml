@@ -21,5 +21,9 @@ path = "scenario_02_supply_run.rs"
 name = "scenario_03_search"
 path = "scenario_03_search.rs"
 
+[[test]]
+name = "scenario_04a_night_action"
+path = "scenario_04a_night_action.rs"
+
 [lints]
 workspace = true

@@ -1,9 +1,10 @@
 //! Belief state: what one side thinks is out there.
 //!
-//! A side never reads the truth about the enemy. It holds contacts, and a
-//! contact only ever comes from a [`Report`]. [`BeliefState::apply_report`]
-//! is the only way a contact is created or refreshed, which keeps "belief is
-//! written only from reports" true by construction.
+//! A side never reads the truth about the enemy. It holds contacts and battle
+//! claims, and both only ever come from a [`Report`].
+//! [`BeliefState::apply_report`] is the only way a contact is created or
+//! refreshed or a claim is stored, which keeps "belief is written only from
+//! reports" true by construction.
 //!
 //! [`BeliefState::age_contacts`] is the second method. It takes no truth and
 //! no report: it only ages contacts and forgets what reports once said, so it
@@ -16,13 +17,14 @@
 //! pulse's ageing). [`hash::hash_world`](crate::hash) asserts, in debug
 //! builds, that it is empty.
 //!
-//! Neither a [`Report`] nor a [`Contact`] may ever hold a truth ID (a
-//! task force, ship or air group ID): that would let a side tell that two
+//! Neither a [`Report`] nor a [`Contact`] nor a [`BattleClaim`] may ever hold
+//! a truth ID (a task force, ship or air group ID): that would let a side tell that two
 //! sightings were the same force. They do hold an [`EventId`]. That is a
 //! reference to an event in the log, not truth, and `SideView` does not
 //! expose events.
 //!
-//! See `docs/decisions/0012-search-and-contacts.md`, decisions 12 to 14.
+//! Claims never age. See `docs/decisions/0012-search-and-contacts.md`,
+//! decisions 12 to 14, and `docs/decisions/0014-surface-combat.md`.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -31,10 +33,20 @@ use crate::hex::Hex;
 use crate::ids::{ContactId, EventId, IdAllocator};
 use crate::refdata::{SearchFigures, ShipKind};
 use crate::state::Side;
+use crate::time::Pulse;
+
+/// Something a side is told. It may be wrong about everything.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum Report {
+    /// An air search or a fight sighted an enemy force.
+    Sighting(SightingReport),
+    /// A force that fired claims enemy ships sunk.
+    BattleClaim(BattleClaim),
+}
 
 /// What a sighting claims. It may be wrong about everything.
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Report {
+pub struct SightingReport {
     pub estimated_hex: Hex,
     pub estimated_ship_count: u32,
     /// The most important kind of ship the report claims to have seen.
@@ -42,6 +54,20 @@ pub struct Report {
     /// How sure the observer is, where `Fixed::ONE` is certain.
     pub confidence: Fixed,
     /// The event that records this report's arrival.
+    pub received_event: EventId,
+}
+
+/// What a side believes came of a fight: how many enemy ships it believes
+/// sank. Real damage goes into truth, and the two can differ.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct BattleClaim {
+    /// The hex of the fight.
+    pub hex: Hex,
+    /// The day of the fight.
+    pub day: u32,
+    pub pulse: Pulse,
+    pub claimed_sunk: u32,
+    /// The event that records this claim's arrival.
     pub received_event: EventId,
 }
 
@@ -60,12 +86,21 @@ pub struct Contact {
     pub last_report_event: EventId,
 }
 
-/// What [`BeliefState::apply_report`] did.
+/// What a sighting report did to the contacts.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ReportOutcome {
     pub contact: ContactId,
     /// True if the report made a new contact, false if it refreshed one.
     pub created: bool,
+}
+
+/// What [`BeliefState::apply_report`] did with a report.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ApplyOutcome {
+    /// A sighting made or refreshed a contact.
+    Contact(ReportOutcome),
+    /// A battle claim was stored.
+    Claim,
 }
 
 /// What [`BeliefState::age_contacts`] did to one contact.
@@ -86,6 +121,8 @@ pub struct BeliefState {
     side: Side,
     contacts: BTreeMap<ContactId, Contact>,
     contact_ids: IdAllocator<ContactId>,
+    /// Battle claims, in the order they arrived. They never age.
+    claims: Vec<BattleClaim>,
     /// Contacts created or refreshed since the last ageing. Always empty
     /// between pulses, so not hashed.
     refreshed_this_pulse: BTreeSet<ContactId>,
@@ -97,6 +134,7 @@ impl BeliefState {
             side,
             contacts: BTreeMap::new(),
             contact_ids: IdAllocator::new(),
+            claims: Vec::new(),
             refreshed_this_pulse: BTreeSet::new(),
         }
     }
@@ -114,6 +152,11 @@ impl BeliefState {
         self.contacts.get(&id)
     }
 
+    /// The side's battle claims, in the order they arrived.
+    pub fn claims(&self) -> &[BattleClaim] {
+        &self.claims
+    }
+
     /// The raw value the next contact ID will have. Part of the state hash.
     pub(crate) fn next_contact_raw(&self) -> u32 {
         self.contact_ids.next_raw()
@@ -127,14 +170,31 @@ impl BeliefState {
 
     /// Writes a report into belief. With [`BeliefState::age_contacts`] this
     /// is the only way belief changes, and it is the only way a contact is
-    /// created or refreshed (decision 13).
+    /// created or refreshed or a claim stored (decision 13).
     ///
-    /// Among contacts within `merge_distance_hexes` of the reported hex and
-    /// no older than `merge_max_age_pulses`, the nearest is refreshed, the
-    /// lowest ID on a tie. Otherwise the report makes a new contact.
+    /// A sighting: among contacts within `merge_distance_hexes` of the
+    /// reported hex and no older than `merge_max_age_pulses`, the nearest is
+    /// refreshed, the lowest ID on a tie. Otherwise the report makes a new
+    /// contact. A battle claim is appended to the claims.
     pub(crate) fn apply_report(
         &mut self,
         report: &Report,
+        figures: &SearchFigures,
+    ) -> ApplyOutcome {
+        match report {
+            Report::Sighting(sighting) => {
+                ApplyOutcome::Contact(self.apply_sighting(sighting, figures))
+            }
+            Report::BattleClaim(claim) => {
+                self.claims.push(claim.clone());
+                ApplyOutcome::Claim
+            }
+        }
+    }
+
+    fn apply_sighting(
+        &mut self,
+        report: &SightingReport,
         figures: &SearchFigures,
     ) -> ReportOutcome {
         // Iteration is in ID order and min_by_key keeps the first minimum, so
@@ -214,12 +274,20 @@ mod tests {
     }
 
     fn report(q: i32, r: i32, count: u32, event: u32) -> Report {
-        Report {
+        Report::Sighting(SightingReport {
             estimated_hex: Hex::new(q, r),
             estimated_ship_count: count,
             estimated_kind: ShipKind::Cruiser,
             confidence: figures().initial_confidence,
             received_event: EventId::new(event),
+        })
+    }
+
+    /// Applies a sighting and returns what it did to the contacts.
+    fn apply(belief: &mut BeliefState, report: &Report) -> ReportOutcome {
+        match belief.apply_report(report, &figures()) {
+            ApplyOutcome::Contact(outcome) => outcome,
+            ApplyOutcome::Claim => panic!("a sighting is not a claim"),
         }
     }
 
@@ -247,7 +315,7 @@ mod tests {
         let mut belief = BeliefState::new(Side::Allied);
         assert_eq!(belief.contacts().count(), 0);
 
-        let outcome = belief.apply_report(&report(4, 2, 3, 17), &figures());
+        let outcome = apply(&mut belief, &report(4, 2, 3, 17));
         assert!(outcome.created);
 
         let contact = belief.contact(outcome.contact).expect("contact exists");
@@ -265,7 +333,7 @@ mod tests {
     fn a_merge_refreshes_the_contact_with_the_new_report() {
         let mut belief = BeliefState::new(Side::Allied);
         let id = put_contact(&mut belief, 0, 0, 1);
-        let outcome = belief.apply_report(&report(1, 0, 4, 20), &figures());
+        let outcome = apply(&mut belief, &report(1, 0, 4, 20));
         // Distance 1 <= 2 and age 1 <= 2: refreshed, not created.
         assert_eq!(
             outcome,
@@ -292,7 +360,7 @@ mod tests {
         // although its ID is higher.
         let far = put_contact(&mut belief, 2, 0, 0);
         let near = put_contact(&mut belief, -1, 0, 0);
-        let outcome = belief.apply_report(&report(0, 0, 1, 5), &figures());
+        let outcome = apply(&mut belief, &report(0, 0, 1, 5));
         assert_eq!(outcome.contact, near);
         assert!(!outcome.created);
         assert_eq!(
@@ -308,7 +376,7 @@ mod tests {
         let first = put_contact(&mut belief, 1, 0, 0);
         let second = put_contact(&mut belief, -1, 0, 0);
         assert!(first < second);
-        let outcome = belief.apply_report(&report(0, 0, 1, 5), &figures());
+        let outcome = apply(&mut belief, &report(0, 0, 1, 5));
         assert_eq!(outcome.contact, first);
         assert_eq!(
             belief.contact(second).expect("second").estimated_hex,
@@ -321,7 +389,7 @@ mod tests {
         let mut belief = BeliefState::new(Side::Allied);
         // Distance 3 with a merge distance of 2.
         put_contact(&mut belief, 3, 0, 0);
-        let outcome = belief.apply_report(&report(0, 0, 1, 5), &figures());
+        let outcome = apply(&mut belief, &report(0, 0, 1, 5));
         assert!(outcome.created);
         assert_eq!(belief.contacts().count(), 2);
     }
@@ -331,7 +399,7 @@ mod tests {
         let mut belief = BeliefState::new(Side::Allied);
         // Age 3 with a maximum of 2, in the same hex.
         put_contact(&mut belief, 0, 0, 3);
-        let outcome = belief.apply_report(&report(0, 0, 1, 5), &figures());
+        let outcome = apply(&mut belief, &report(0, 0, 1, 5));
         assert!(outcome.created);
         assert_eq!(belief.contacts().count(), 2);
     }
@@ -341,7 +409,7 @@ mod tests {
         let mut belief = BeliefState::new(Side::Allied);
         // Distance exactly 2 and age exactly 2.
         let id = put_contact(&mut belief, 2, 0, 2);
-        let outcome = belief.apply_report(&report(0, 0, 1, 5), &figures());
+        let outcome = apply(&mut belief, &report(0, 0, 1, 5));
         assert_eq!(outcome.contact, id);
         assert!(!outcome.created);
     }
@@ -350,7 +418,7 @@ mod tests {
     fn a_lone_contact_ages_and_is_dropped_by_the_figures() {
         let mut belief = BeliefState::new(Side::Allied);
         let figures = figures();
-        let id = belief.apply_report(&report(0, 0, 1, 9), &figures).contact;
+        let id = apply(&mut belief, &report(0, 0, 1, 9)).contact;
         // The pulse that made it ages nothing.
         assert!(belief.age_contacts(&figures).is_empty());
         assert!(!belief.has_pending_refreshes());
@@ -401,7 +469,7 @@ mod tests {
         let mut belief = BeliefState::new(Side::Allied);
         let figures = figures();
         let old = put_contact(&mut belief, 20, 20, 0);
-        let fresh = belief.apply_report(&report(0, 0, 1, 9), &figures).contact;
+        let fresh = apply(&mut belief, &report(0, 0, 1, 9)).contact;
 
         // Only the old contact ages: 0.5 x 0.8 = 0.4 (>= 0.3, kept).
         let outcomes = belief.age_contacts(&figures);
@@ -429,12 +497,55 @@ mod tests {
         let figures = figures();
         let id = put_contact(&mut belief, 0, 0, 2);
         belief.contacts.get_mut(&id).expect("contact").confidence = Fixed::from_ratio(31, 100);
-        belief.apply_report(&report(0, 0, 1, 9), &figures);
+        apply(&mut belief, &report(0, 0, 1, 9));
         // Refreshed: no ageing, so no drop, and confidence is the report's.
         assert!(belief.age_contacts(&figures).is_empty());
         assert_eq!(
             belief.contact(id).expect("kept").confidence,
             Fixed::from_ratio(8, 10)
         );
+    }
+
+    #[test]
+    fn a_battle_claim_is_stored_and_holds_no_truth_id() {
+        let mut belief = BeliefState::new(Side::Japanese);
+        assert!(belief.claims().is_empty());
+        let claim = BattleClaim {
+            hex: Hex::new(5, 0),
+            day: 1,
+            pulse: Pulse::Night,
+            claimed_sunk: 2,
+            received_event: EventId::new(40),
+        };
+        let outcome = belief.apply_report(&Report::BattleClaim(claim.clone()), &figures());
+        assert_eq!(outcome, ApplyOutcome::Claim);
+        assert_eq!(belief.claims(), std::slice::from_ref(&claim));
+        // A claim is not a contact, and needs no ageing.
+        assert_eq!(belief.contacts().count(), 0);
+        assert!(!belief.has_pending_refreshes());
+        assert!(belief.age_contacts(&figures()).is_empty());
+        assert_eq!(belief.claims(), std::slice::from_ref(&claim));
+
+        // Claims keep the order they arrived in.
+        let later = BattleClaim {
+            hex: Hex::new(6, 0),
+            day: 2,
+            pulse: Pulse::Morning,
+            claimed_sunk: 0,
+            received_event: EventId::new(90),
+        };
+        belief.apply_report(&Report::BattleClaim(later.clone()), &figures());
+        assert_eq!(belief.claims().len(), 2);
+        assert_eq!(belief.claims()[1], later);
+
+        // The struct is exhaustive here on purpose: adding a field, such as
+        // a truth ID, breaks this destructuring and forces a look.
+        let BattleClaim {
+            hex: _,
+            day: _,
+            pulse: _,
+            claimed_sunk: _,
+            received_event: _,
+        } = belief.claims()[0].clone();
     }
 }

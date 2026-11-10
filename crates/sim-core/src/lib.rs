@@ -29,6 +29,7 @@ mod cargo;
 mod invariants;
 mod resolve;
 mod search;
+mod surface;
 
 pub use invariants::InvariantViolation;
 pub use world::{DaySummary, SimConfig, SimError, World};

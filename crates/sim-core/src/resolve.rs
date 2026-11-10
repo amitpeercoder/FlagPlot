@@ -2,8 +2,8 @@
 //!
 //! The order of phases below is the one in the spec ("Daily resolution
 //! order"). Orders intake, task force movement, cargo handling, air search
-//! (`search.rs`), contact ageing at the end of every pulse and closing the
-//! day do something so far. The other phases are listed so the sequence is
+//! (`search.rs`), surface engagements (`surface.rs`), contact ageing at the
+//! end of every pulse and closing the day do something so far. The other phases are listed so the sequence is
 //! fixed from the start, and each is filled in by the scenario that needs it.
 
 use crate::events::{Breakdown, Cause, EventKind, Factor};
@@ -14,7 +14,7 @@ use crate::invariants;
 use crate::orders::{
     AirGroupOrder, CargoAction, Order, OrderKind, RejectReason, SpeedSetting, TaskForceOrder,
 };
-use crate::state::{CargoOrder, Route, SearchArc, Side, TaskForceStatus};
+use crate::state::{CargoOrder, Route, RulesOfEngagement, SearchArc, Side, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
 use crate::world::{DaySummary, SimError, World};
 
@@ -154,13 +154,14 @@ impl World {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
             PulsePhase::Loading => self.handle_cargo(day, pulse),
             PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
+            // Opposing task forces in one hex fight (decision 0014).
+            PulsePhase::SurfaceEngagements => self.surface_engagements(day, pulse),
             // Not implemented yet. Each arrives with the scenario that needs it.
             // Night search is decision 7 territory: there is no search where it
             // is dark, so this phase stays empty.
             PulsePhase::NightSearch
             | PulsePhase::StrikeDecisions
             | PulsePhase::AirCombat
-            | PulsePhase::SurfaceEngagements
             | PulsePhase::ShoreBombardment => {}
         }
     }
@@ -311,6 +312,12 @@ impl World {
                             Err(RejectReason::NoOwnBaseHere)
                         }
                     }
+                    TaskForceOrder::SetRulesOfEngagement { break_off, .. } => {
+                        if *break_off < Fixed::ZERO || *break_off > Fixed::ONE {
+                            return Err(RejectReason::BreakOffOutOfRange(*break_off));
+                        }
+                        Ok(())
+                    }
                     TaskForceOrder::SetSpeed(_)
                     | TaskForceOrder::SetMission(_)
                     | TaskForceOrder::Unload => Ok(()),
@@ -408,6 +415,13 @@ impl World {
                             action: CargoAction::Unload,
                             order: order.id,
                         });
+                    }
+                    TaskForceOrder::SetRulesOfEngagement { stance, break_off } => {
+                        task_force.rules_of_engagement = RulesOfEngagement {
+                            stance: *stance,
+                            break_off: *break_off,
+                        };
+                        task_force.rules_order = Some(order.id);
                     }
                 }
             }
@@ -724,12 +738,14 @@ impl World {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::belief::{BattleClaim, Report};
     use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
-    use crate::orders::{AirMission, Mission, OrderRequest, Origin};
+    use crate::orders::{AirMission, Mission, OrderRequest, Origin, Stance};
     use crate::refdata::{
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
+        SurfaceCombatFigures,
     };
     use crate::state::{AirGroup, Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 
@@ -762,6 +778,14 @@ mod tests {
             fuel_capacity_t: Fixed::from_int(2000),
             endurance_nm: Fixed::from_int(8000),
             cargo_capacity_t: Fixed::ZERO,
+            main_guns: 0,
+            gun_rounds_per_min: 0,
+            gun_rounds_per_gun: 0,
+            gun_damage: 0,
+            torpedo_tubes: 0,
+            torpedo_damage: 0,
+            toughness: 100,
+            radar: false,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -795,6 +819,11 @@ mod tests {
                 fuel_t: Fixed::from_int(fuel_t),
                 supply_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
+                flotation_damage: Fixed::ZERO,
+                system_damage: Fixed::ZERO,
+                fire_damage: Fixed::ZERO,
+                gun_rounds: Fixed::ZERO,
+                torpedoes_ready: false,
             },
         );
         truth.bases.insert(
@@ -889,6 +918,11 @@ mod tests {
                 fuel_t: Fixed::from_int(2000),
                 supply_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
+                flotation_damage: Fixed::ZERO,
+                system_damage: Fixed::ZERO,
+                fire_damage: Fixed::ZERO,
+                gun_rounds: Fixed::ZERO,
+                torpedoes_ready: false,
             },
         );
         world
@@ -1419,10 +1453,343 @@ mod tests {
         assert_ne!(noticed.state_hash(), noticed_later.state_hash());
     }
 
+    // ---- Rules of engagement and surface combat state (decision 0014) ----
+
+    fn roe_order(stance: Stance, break_off: Fixed) -> OrderRequest {
+        order(TaskForceOrder::SetRulesOfEngagement { stance, break_off })
+    }
+
+    #[test]
+    fn a_rules_of_engagement_order_is_accepted_and_stored() {
+        let mut world = world_with_fuel(2000);
+        let task_force = &world.truth.task_forces[&TF];
+        assert_eq!(task_force.rules_of_engagement, RulesOfEngagement::DEFAULT);
+        assert_eq!(task_force.rules_of_engagement.stance, Stance::Engage);
+        assert_eq!(task_force.rules_of_engagement.break_off, nm_frac(5, 10));
+        assert_eq!(task_force.rules_order, None);
+
+        world.submit_orders(
+            Side::Allied,
+            vec![roe_order(Stance::Avoid, nm_frac(25, 100))],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), None);
+        let task_force = &world.truth.task_forces[&TF];
+        assert_eq!(task_force.rules_of_engagement.stance, Stance::Avoid);
+        assert_eq!(task_force.rules_of_engagement.break_off, nm_frac(25, 100));
+        assert_eq!(task_force.rules_order, Some(crate::ids::OrderId::new(1)));
+        assert!(world
+            .events()
+            .iter()
+            .any(|event| matches!(event.kind, EventKind::OrderAccepted { .. })));
+    }
+
+    #[test]
+    fn break_off_levels_of_zero_and_one_are_accepted() {
+        for level in [Fixed::ZERO, Fixed::ONE] {
+            let mut world = world_with_fuel(2000);
+            world.submit_orders(Side::Allied, vec![roe_order(Stance::Engage, level)]);
+            world.resolve_day().expect("day resolves");
+            assert_eq!(rejection(&world), None, "{level}");
+            assert_eq!(
+                world.truth.task_forces[&TF].rules_of_engagement.break_off,
+                level
+            );
+        }
+    }
+
+    #[test]
+    fn break_off_levels_outside_zero_to_one_are_rejected() {
+        for raw in [-1, 1_000_001] {
+            let level = Fixed::from_raw(raw);
+            let mut world = world_with_fuel(2000);
+            world.submit_orders(Side::Allied, vec![roe_order(Stance::Avoid, level)]);
+            world.resolve_day().expect("day resolves");
+            assert_eq!(
+                rejection(&world),
+                Some(RejectReason::BreakOffOutOfRange(level))
+            );
+            let task_force = &world.truth.task_forces[&TF];
+            assert_eq!(task_force.rules_of_engagement, RulesOfEngagement::DEFAULT);
+            assert_eq!(task_force.rules_order, None);
+        }
+        assert!(RejectReason::BreakOffOutOfRange(Fixed::from_raw(-1))
+            .to_string()
+            .contains("-0.000001"));
+    }
+
+    #[test]
+    fn a_rules_of_engagement_order_does_not_clear_the_route_or_speed_order() {
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                route_to(12, 0),
+                order(TaskForceOrder::SetSpeed(SpeedSetting::Full)),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        let before = world.truth.task_forces[&TF].clone();
+        assert!(before.route_order.is_some());
+        assert!(before.speed_order.is_some());
+
+        world.submit_orders(Side::Allied, vec![roe_order(Stance::Avoid, nm_frac(1, 10))]);
+        world.resolve_day().expect("day resolves");
+        let after = &world.truth.task_forces[&TF];
+        assert_eq!(after.route, before.route);
+        assert_eq!(after.route_order, before.route_order);
+        assert_eq!(after.speed, SpeedSetting::Full);
+        assert_eq!(after.speed_order, before.speed_order);
+        assert_eq!(after.cargo_order, before.cargo_order);
+        assert_eq!(after.mission, before.mission);
+        assert_eq!(after.rules_of_engagement.stance, Stance::Avoid);
+        assert_eq!(after.rules_order, Some(crate::ids::OrderId::new(3)));
+    }
+
+    #[test]
+    fn a_route_or_speed_order_does_not_clear_the_rules_of_engagement() {
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(Side::Allied, vec![roe_order(Stance::Avoid, nm_frac(1, 10))]);
+        world.resolve_day().expect("day resolves");
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                route_to(2, 0),
+                order(TaskForceOrder::SetSpeed(SpeedSetting::Full)),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        let task_force = &world.truth.task_forces[&TF];
+        assert_eq!(task_force.rules_of_engagement.stance, Stance::Avoid);
+        assert_eq!(task_force.rules_of_engagement.break_off, nm_frac(1, 10));
+        assert_eq!(task_force.rules_order, Some(crate::ids::OrderId::new(1)));
+    }
+
+    #[test]
+    fn a_rules_of_engagement_order_for_the_other_sides_force_is_rejected() {
+        let mut world = world_with_fuel(2000);
+        world.submit_orders(
+            Side::Japanese,
+            vec![roe_order(Stance::Avoid, nm_frac(1, 10))],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejection(&world), Some(RejectReason::NotYourUnit));
+        let task_force = &world.truth.task_forces[&TF];
+        assert_eq!(task_force.rules_of_engagement, RulesOfEngagement::DEFAULT);
+        assert_eq!(task_force.rules_order, None);
+    }
+
+    #[test]
+    fn world_new_checks_the_surface_combat_figures_and_class_toughness() {
+        let good = world_with_fuel(2000);
+        let build = |change: &dyn Fn(&mut RefData)| {
+            let mut ref_data = good.ref_data.clone();
+            change(&mut ref_data);
+            World::new(1, ref_data, good.map.clone(), good.truth.clone())
+        };
+        // No figures at all is fine for a world with no fights.
+        assert!(build(&|_| {}).is_ok());
+        assert!(build(&|r| {
+            r.search = Some(SearchFigures::from_search_toml());
+            r.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        })
+        .is_ok());
+        // Fights report through the search figures, so they need them.
+        assert!(build(&|r| {
+            r.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        })
+        .is_err());
+        assert!(build(&|r| {
+            r.search = Some(SearchFigures::from_search_toml());
+            let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+            figures.gun_hit_fire = Fixed::ZERO;
+            r.surface_combat = Some(figures);
+        })
+        .is_err());
+        assert!(build(&|r| {
+            r.ship_classes
+                .get_mut(&ShipClassId::new(1))
+                .expect("class")
+                .toughness = 0;
+        })
+        .is_err());
+    }
+
+    #[test]
+    fn the_surface_combat_fields_are_part_of_the_state_hash() {
+        let base = world_with_fuel(2000);
+        let hash_after = |change: &dyn Fn(&mut World)| {
+            let mut changed = base.clone();
+            change(&mut changed);
+            assert_ne!(base.state_hash(), changed.state_hash());
+            changed.state_hash()
+        };
+        fn ship(world: &mut World) -> &mut Ship {
+            world.truth.ships.get_mut(&SHIP).expect("ship")
+        }
+        fn force(world: &mut World) -> &mut TaskForce {
+            world.truth.task_forces.get_mut(&TF).expect("force")
+        }
+
+        hash_after(&|w| ship(w).flotation_damage = nm(10));
+        hash_after(&|w| ship(w).system_damage = nm(10));
+        hash_after(&|w| ship(w).fire_damage = nm(10));
+        hash_after(&|w| ship(w).gun_rounds = nm(10));
+        hash_after(&|w| ship(w).torpedoes_ready = true);
+        hash_after(&|w| ship(w).location = ShipLocation::Sunk);
+        hash_after(&|w| force(w).alert = false);
+        hash_after(&|w| force(w).rules_of_engagement.stance = Stance::Avoid);
+        hash_after(&|w| force(w).rules_of_engagement.break_off = nm_frac(1, 10));
+        hash_after(&|w| force(w).rules_order = Some(crate::ids::OrderId::new(1)));
+
+        // Two tracks with the same value are not interchangeable.
+        let mut flotation = base.clone();
+        ship(&mut flotation).flotation_damage = nm(10);
+        let mut system = base.clone();
+        ship(&mut system).system_damage = nm(10);
+        assert_ne!(flotation.state_hash(), system.state_hash());
+
+        // A claim is part of the hash, and so is each of its fields.
+        let claim = BattleClaim {
+            hex: hx(5, 0),
+            day: 1,
+            pulse: Pulse::Night,
+            claimed_sunk: 2,
+            received_event: EventId::new(7),
+        };
+        let with_claim = |claim: &BattleClaim| {
+            let mut world = base.clone();
+            world
+                .beliefs
+                .get_mut(&Side::Allied)
+                .expect("belief")
+                .apply_report(
+                    &Report::BattleClaim(claim.clone()),
+                    &SearchFigures::from_search_toml(),
+                );
+            world.state_hash()
+        };
+        let claimed = with_claim(&claim);
+        assert_ne!(base.state_hash(), claimed);
+        assert_eq!(claimed, with_claim(&claim));
+        let variants = [
+            BattleClaim {
+                hex: hx(6, 0),
+                ..claim.clone()
+            },
+            BattleClaim {
+                day: 2,
+                ..claim.clone()
+            },
+            BattleClaim {
+                pulse: Pulse::Morning,
+                ..claim.clone()
+            },
+            BattleClaim {
+                claimed_sunk: 3,
+                ..claim.clone()
+            },
+            BattleClaim {
+                received_event: EventId::new(8),
+                ..claim.clone()
+            },
+        ];
+        for variant in variants {
+            assert_ne!(claimed, with_claim(&variant), "{variant:?}");
+        }
+    }
+
+    // ---- Sunk ships are out of the rules ----
+
+    /// Sinks `ship` the way combat will: location Sunk, full flotation
+    /// damage, and gone from its task force's set.
+    fn sink(world: &mut World, ship: ShipId) {
+        let record = world.truth.ships.get_mut(&ship).expect("ship");
+        record.location = ShipLocation::Sunk;
+        record.flotation_damage = nm(100);
+        for task_force in world.truth.task_forces.values_mut() {
+            task_force.ships.remove(&ship);
+        }
+    }
+
+    fn steamed(world: &World) -> usize {
+        world
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::TaskForceSteamed { .. }))
+            .count()
+    }
+
+    #[test]
+    fn a_task_force_whose_ships_are_all_sunk_does_not_move() {
+        let mut world = world_with_fuel(2000);
+        sink(&mut world, SHIP);
+        assert_sound(&world);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
+        world.resolve_day().expect("day resolves");
+
+        let truth = world.umpire();
+        let task_force = &truth.task_forces[&TF];
+        assert_eq!(task_force.position(), hx(0, 0));
+        assert_eq!(task_force.toward_hex, None);
+        assert_eq!(task_force.progress_nm, Fixed::ZERO);
+        assert_eq!(task_force.route.waypoints, vec![hx(12, 0)]);
+        assert_eq!(steamed(&world), 0);
+        assert!(world
+            .events()
+            .iter()
+            .all(|event| !matches!(event.kind, EventKind::FuelBurned { .. })));
+        assert_eq!(truth.ships[&SHIP].location, ShipLocation::Sunk);
+        assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::from_int(2000));
+    }
+
+    #[test]
+    fn a_task_force_with_some_ships_sunk_moves_and_burns_fuel_for_those_afloat() {
+        let mut world = world_with_fuel(2000);
+        let second = ShipId::new(2);
+        let mut ship = world.truth.ships[&SHIP].clone();
+        ship.id = second;
+        ship.name = "Second ship".to_string();
+        world.truth.ships.insert(second, ship);
+        world
+            .truth
+            .task_forces
+            .get_mut(&TF)
+            .expect("task force")
+            .ships
+            .insert(second);
+        sink(&mut world, SHIP);
+        assert_sound(&world);
+        world.submit_orders(Side::Allied, vec![route_to(8, 0)]);
+        world.resolve_day().expect("day resolves");
+
+        // 8 hexes = 320 nm at 0.25 t/nm: 80 t for the ship afloat, nothing
+        // for the sunk one.
+        let truth = world.umpire();
+        assert_eq!(truth.task_forces[&TF].status, TaskForceStatus::Arrived);
+        assert_eq!(truth.task_forces[&TF].position(), hx(8, 0));
+        assert_eq!(truth.ships[&second].fuel_t, Fixed::from_int(2000 - 80));
+        assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::from_int(2000));
+        let burned: Vec<ShipId> = world
+            .events()
+            .iter()
+            .filter_map(|event| match event.kind {
+                EventKind::FuelBurned { ship, .. } => Some(ship),
+                _ => None,
+            })
+            .collect();
+        assert!(!burned.is_empty());
+        assert!(burned.iter().all(|ship| *ship == second));
+    }
+
     // ---- Movement between hex centres (decision 0005, decisions 1 and 5) ----
 
     fn hx(q: i32, r: i32) -> Hex {
         Hex::new(q, r)
+    }
+
+    fn nm_frac(num: i64, den: i64) -> Fixed {
+        Fixed::from_ratio(num, den)
     }
 
     fn nm(value: i64) -> Fixed {

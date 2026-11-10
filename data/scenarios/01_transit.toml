@@ -14,6 +14,7 @@ ship_classes = "../reference/ship_classes.csv"
 port_sizes = "../reference/port_sizes.csv"
 aircraft_types = "../reference/aircraft_types.csv"
 search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
 
 [[base]]
 id = 1
