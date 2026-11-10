@@ -311,9 +311,17 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .int("age_pulses", *age_pulses)
                 .num("confidence", *confidence),
         ),
-        EventKind::EngagementBegun { a, b, hex } => (
+        EventKind::EngagementBegun {
+            a,
+            b,
+            hex,
+            elapsed_hours,
+        } => (
             "engagement_begun",
-            d.id("a", *a).id("b", *b).hex("hex", *hex),
+            d.id("a", *a)
+                .id("b", *b)
+                .hex("hex", *hex)
+                .num("elapsed_hours", *elapsed_hours),
         ),
         EventKind::SightingRoll {
             round,

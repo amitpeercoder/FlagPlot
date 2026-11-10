@@ -27,6 +27,7 @@ pub mod world;
 
 mod cargo;
 mod invariants;
+mod movement;
 mod resolve;
 mod search;
 mod start;

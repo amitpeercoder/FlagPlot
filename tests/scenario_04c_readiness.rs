@@ -33,13 +33,13 @@
 //! ## The speed order
 //!
 //! 24 kn is below the cruiser's top speed of 32 kn, so force A steams at
-//! 24 kn. In the 12-hour night pulse it covers 288 nm: seven hexes and 8 nm.
-//! It has left (7,0) and is 8 nm toward (8,0), so its position is (7,0),
-//! where forces B and C lie.
+//! 24 kn. Fuel: 24 kn is 1.5 times cruise speed, so burn per mile is
+//! multiplied by 1.5 squared, 2.25: 0.5625 t per nm.
 //!
-//! Fuel: 24 kn is 1.5 times cruise speed, so burn per mile is multiplied by
-//! 1.5 squared, 2.25: 0.5625 t per nm. Over 288 nm each cruiser burns 162 t
-//! and has 1838 t left.
+//! Force A enters (7,0), where forces B and C lie, 20 nm short of its
+//! centre: after 260 nm, at 260 / 24 = 10.833333 hours into the night pulse.
+//! It meets both at that moment and fights them one after the other
+//! (decision 0022). By then each cruiser has burned 260 x 0.5625 = 146.25 t.
 //!
 //! ## Who is alert when the fights begin
 //!
@@ -54,7 +54,8 @@
 //!
 //! ## The first fight: A against B
 //!
-//! Opposing pairs fight in task force ID order, so A fights B first. The
+//! Meetings at the same moment are taken in task force ID order, so A fights
+//! B first. The
 //! chances are those of scenario 4a: A has a free round with chance
 //! 0.598331, B with 0.199444, both fire from the start with 0.199444, and
 //! they pass unseen with 0.002781.
@@ -108,24 +109,65 @@
 //! an alarm event for B, which forgot that B is a bystander to the second
 //! fight when the first never opened.
 //!
-//! ## After the night
+//! ## After the fights
 //!
 //! Force A keeps its stragglers, the default, and steams on for (10,0) at
 //! 24 kn or the best speed of its slowest ship afloat. A cruiser with
 //! degraded propulsion makes 32 x 0.5 = 16 kn, which is below 24.
 //!
-//! | Slowest ship's propulsion | Speed | 112 nm to go takes | Arrives at hour | Fuel for it        | Fuel left |
-//! | ------------------------- | ----- | ------------------ | --------------- | ------------------ | --------- |
-//! | Working                   | 24 kn | 4.666666 hours     | 16.666666       | 112 x 0.5625 = 63 t | 1775 t    |
-//! | Degraded                  | 16 kn | 7 hours            | 19              | 112 x 0.25 = 28 t  | 1810 t    |
-//! | Out                       | 0 kn  | it does not move   | never           | none               | 1838 t    |
+//! At 24 kn force A had 288 - 260 = 28 nm of the night left. At 16 kn that
+//! becomes 28 x 16 / 24 = 18.666666 nm, truncated to six places.
 //!
-//! Hours are counted from the start of the scenario. If force A has a ship
-//! dead in the water it stays in (7,0) and fights both forces again by day.
-//! If that ship then sinks, force A moves on at the speed of its slowest
-//! ship still afloat, as in scenario 4a. The fuel column holds for every
-//! ship of force A afloat at the end, whenever its slowest ship had the same
-//! propulsion state from the end of the night to the end of the day.
+//! | Slowest ship's propulsion | Speed | Rest of the night | Night total   | Fuel in the night                    |
+//! | ------------------------- | ----- | ----------------- | ------------- | ------------------------------------ |
+//! | Working                   | 24 kn | 28 nm             | 288 nm        | 288 x 0.5625 = 162 t                 |
+//! | Degraded                  | 16 kn | 18.666666 nm      | 278.666666 nm | 146.25 + 18.666666 x 0.25 = 150.916666 t |
+//! | Out                       | 0 kn  | 0 nm              | 260 nm        | 146.25 t                             |
+//!
+//! (18.666666 x 0.25 is 4.6666665, which truncates to 4.666666.)
+//!
+//! By day it steams the rest of the 400 nm to (10,0):
+//!
+//! | Slowest ship's propulsion | Left to go    | Takes          | Arrives at hour | Fuel by day  | Fuel left     |
+//! | ------------------------- | ------------- | -------------- | --------------- | ------------ | ------------- |
+//! | Working                   | 112 nm        | 4.666666 hours | 16.666666       | 63 t         | 1775 t        |
+//! | Degraded                  | 121.333334 nm | 7.583333 hours | 19.583333       | 30.333333 t  | 1818.750001 t |
+//! | Out                       | it does not move | never       | never           | none         | 1853.75 t     |
+//!
+//! For the degraded row, by pulse: the morning is 6 hours at 16 kn, 96 nm
+//! and 24 t. The afternoon is the last 25.333334 nm, which takes 1.583333
+//! hours and burns 25.333334 x 0.25 = 6.333333 t (6.3333335 truncated). So
+//! it arrives at hour 18 + 1.583333, and has 2000 - 150.916666 - 24 -
+//! 6.333333 = 1818.750001 t left.
+//!
+//! Hours are counted from the start of the scenario. A force that can move
+//! is leaving, so it does not fight again at the start of the morning pulse.
+//! If force A has a ship dead in the water it stays in (7,0) and fights both
+//! forces again at the start of each day pulse. If that ship then sinks,
+//! force A moves on at the speed of its slowest ship still afloat. The
+//! tables hold for every ship of force A afloat at the end, whenever its
+//! slowest ship had the same propulsion state from the night fights to the
+//! end of the day.
+//!
+//! Corrected by the architect for decision 0022. Before it, the fights were
+//! at the end of the night pulse and the night total was always 288 nm.
+//!
+//! ## Breaking off
+//!
+//! If force A breaks off from force B, it avoids action for the rest of the
+//! pulse, and that includes force C, which it meets at the same moment. In
+//! those runs force A never has a free round against C: it slips away if it
+//! sights C before C sights it, and otherwise the fight ends no later than
+//! the end of the first round in which A is fired on.
+//!
+//! In these runs it ends sooner still. Force A broke off from B because half
+//! or more of its ships were sunk or crippled, and they still are when it
+//! meets C. A force over its break-off level breaks off at the end of a
+//! round whatever happened in it (decision 0014), so unless A slips away in
+//! round 1 the fight with C ends at the end of round 1: with A breaking
+//! off, fired on or not, or, checked first, because C's fire sank the last
+//! ship A had afloat. (Corrected after the code was run: the first version of
+//! this section left the break-off level out.)
 //!
 //! ## Alertness from belief
 //!
@@ -152,12 +194,13 @@
 //!
 //! - Force A at normal readiness, no contacts on either side: A's chance in
 //!   round 1 is 0.25, the same as B's.
-//! - Force A ordered to 40 kn: it steams at 32 kn, its top speed, 384 nm in
-//!   the night pulse, and passes through (7,0) without stopping there. It is
-//!   nine hexes and 24 nm along: its position is (10,0), and it arrives
-//!   there at hour 12.5. Burn per mile is multiplied by 4: 1 t per nm, so
-//!   each cruiser burns 400 t over the 400 nm and has 1600 t left. No fight
-//!   takes place, because the forces are in the same hex only in passing.
+//! - Force A ordered to 40 kn: it steams at 32 kn, its top speed. It enters
+//!   (7,0) after 260 nm, at 260 / 32 = 8.125 hours into the night pulse, and
+//!   meets and fights both forces there. Before decision 0022 it passed
+//!   through untouched. Burn per mile is multiplied by 4: 1 t per nm. If it
+//!   comes through with its propulsion working it has 384 - 260 = 124 nm of
+//!   the night left, ends the night nine hexes and 24 nm along with its
+//!   position (10,0), and arrives there at hour 12.5 with 1600 t left.
 //!
 //! # Properties
 //!
@@ -326,10 +369,15 @@ struct Fight {
     ended: u32,
     ended_round: u32,
     reason: EngagementEndReason,
+    /// Elapsed hours since the scenario began, from `EngagementBegun`.
+    elapsed_hours: Fixed,
     rolls: Vec<Roll>,
     salvos: Vec<SalvoRec>,
     /// (round, ship) for each ship that sank in this fight.
     sunk: Vec<(u32, u32)>,
+    /// The forces that broke off, and the forces that slipped away.
+    broke_off: Vec<u32>,
+    slipped: Vec<u32>,
 }
 
 impl Fight {
@@ -397,6 +445,7 @@ struct BurnRec {
 
 #[derive(Clone, Debug)]
 struct SystemHitRec {
+    event: u32,
     pulse: Pulse,
     ship: u32,
     system: ShipSystem,
@@ -467,7 +516,12 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
         assert_eq!(usize::try_from(id).expect("small"), index + 1);
         let pulse = event.pulse;
         match &event.kind {
-            EventKind::EngagementBegun { a, b, .. } => {
+            EventKind::EngagementBegun {
+                a,
+                b,
+                elapsed_hours,
+                ..
+            } => {
                 assert!(!open, "seed {seed}: a fight inside a fight");
                 open = true;
                 p.fights.push(Fight {
@@ -479,10 +533,29 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                     ended: 0,
                     ended_round: 0,
                     reason: EngagementEndReason::MaxRounds,
+                    elapsed_hours: *elapsed_hours,
                     rolls: Vec::new(),
                     salvos: Vec::new(),
                     sunk: Vec::new(),
+                    broke_off: Vec::new(),
+                    slipped: Vec::new(),
                 });
+            }
+            EventKind::ForceBrokeOff { task_force, .. } => {
+                assert!(open, "seed {seed}: a break-off outside a fight");
+                p.fights
+                    .last_mut()
+                    .expect("a fight")
+                    .broke_off
+                    .push(task_force.raw());
+            }
+            EventKind::ForceSlippedAway { task_force, .. } => {
+                assert!(open, "seed {seed}: a slip outside a fight");
+                p.fights
+                    .last_mut()
+                    .expect("a fight")
+                    .slipped
+                    .push(task_force.raw());
             }
             EventKind::EngagementEnded { round, reason, .. } => {
                 assert!(open, "seed {seed}: a fight ended that never began");
@@ -641,6 +714,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 after,
                 ..
             } => p.system_hits.push(SystemHitRec {
+                event: id,
                 pulse: pulse.expect("a system hit has a pulse"),
                 ship: ship.raw(),
                 system: *system,
@@ -755,6 +829,29 @@ impl Parsed {
             .max()
     }
 
+    /// The propulsion of A's slowest ship afloat between the two night
+    /// fights: after the fight with B and before the fight with C. The same
+    /// as after the night when A has no second night fight.
+    fn a_slowest_between_night_fights(&self) -> Option<SystemState> {
+        let Some(second) = self.second() else {
+            return self.a_slowest(Pulse::Night);
+        };
+        A_SHIPS
+            .iter()
+            .filter(|ship| self.sunk.get(ship).is_none_or(|(index, ..)| *index > 0))
+            .map(|ship| {
+                self.system_hits
+                    .iter()
+                    .rfind(|h| {
+                        h.ship == *ship
+                            && h.system == ShipSystem::Propulsion
+                            && h.event < second.begun
+                    })
+                    .map_or(SystemState::Working, |h| h.after)
+            })
+            .max()
+    }
+
     fn a_arrival(&self) -> Option<(Hex, Fixed)> {
         let arrivals: Vec<_> = self.arrivals.iter().filter(|a| a.0 == 1).collect();
         assert!(arrivals.len() <= 1, "seed {}: A arrives twice", self.seed);
@@ -857,32 +954,89 @@ fn contact_block(q: i32, r: i32, age: u32) -> String {
 // 1. The speed order.
 // ---------------------------------------------------------------------
 
+/// Where force A enters (7,0): 20 nm short of its centre, after 260 nm
+/// (decision 0022).
+const ENTRY_NM: i64 = 260;
+
 /// The night pulse's movement and burn of force A, asserted against the
-/// hand calculation. Used for every run.
+/// hand calculation. Used for every run. Force A steams 260 nm at 24 kn to
+/// enter (7,0), burning 260 x 0.5625 = 146.25 t a ship, and fights there.
+/// What it does for the rest of the night depends on its slowest ship afloat
+/// after the fights: 28 nm at 24 kn, 28 x 16 / 24 = 18.666666 nm at 16 kn, or
+/// nothing.
 fn assert_night_steaming(p: &Parsed, final_positions: &BTreeMap<u32, Hex>) {
     let seed = p.seed;
     let night: Vec<&StepRec> = p.steps.iter().filter(|s| s.pulse == Pulse::Night).collect();
-    assert_eq!(night.len(), 1, "seed {seed}: one step in the night");
-    let step = night[0];
-    assert_eq!(step.task_force, 1, "seed {seed}: only force A moves");
-    // 24 kn for 12 hours is 288 nm: from (0,0), seven hexes and 8 nm, so the
+    assert!(
+        night.iter().all(|s| s.task_force == 1),
+        "seed {seed}: only force A moves"
+    );
+    // 24 kn for 260 nm: it enters (7,0) 20 nm short of its centre, and its
     // position is (7,0).
-    assert_eq!(step.from, Hex::new(0, 0), "seed {seed}");
-    assert_eq!(step.to, MEETING, "seed {seed}");
-    assert_eq!(step.distance, fx(288), "seed {seed}");
-    assert_eq!(step.speed, fx(24), "seed {seed}");
-    assert_eq!(288 - 7 * HEX_NM, 8);
-    // 162 t burned and 1838 t left, for each cruiser of A.
+    assert_eq!(night[0].from, Hex::new(0, 0), "seed {seed}");
+    assert_eq!(night[0].to, MEETING, "seed {seed}");
+    assert_eq!(night[0].distance, fx(ENTRY_NM), "seed {seed}");
+    assert_eq!(night[0].speed, fx(24), "seed {seed}");
+    assert_eq!(7 * HEX_NM - ENTRY_NM, 20);
+    // The rest of the night, by the slowest ship afloat after the fights.
+    //
+    // The distance is scaled at each fight by new speed over old, so it is
+    // exact only if the slowest ship's state did not change between the two
+    // night fights (the hand calculation's condition). If it did, only the
+    // speed is checked.
+    let after = p.a_slowest(Pulse::Night);
+    let same_between = p.a_slowest_between_night_fights() == after;
+    let rest = match after {
+        Some(SystemState::Working) => Some((fx(28), fx(24))),
+        Some(SystemState::Degraded) => Some((millionths(18_666_666), fx(16))),
+        Some(SystemState::Out) | None => None,
+    };
+    match rest {
+        Some((distance, speed)) => {
+            assert_eq!(night.len(), 2, "seed {seed}: the rest of the night");
+            assert_eq!(night[1].from, MEETING, "seed {seed}");
+            assert_eq!(night[1].to, MEETING, "seed {seed}");
+            if same_between {
+                assert_eq!(night[1].distance, distance, "seed {seed}");
+            }
+            assert_eq!(night[1].speed, speed, "seed {seed}");
+        }
+        None => assert_eq!(night.len(), 1, "seed {seed}: no steaming after the fights"),
+    }
+    // 146.25 t burned and 1853.75 t left, for each cruiser of A, at the
+    // meeting.
+    let after_night = p.a_afloat(Pulse::Night);
     for ship in A_SHIPS {
         let burns: Vec<&BurnRec> = p
             .burns
             .iter()
             .filter(|b| b.ship == ship && b.pulse == Pulse::Night)
             .collect();
-        assert_eq!(burns.len(), 1, "seed {seed} ship {ship}");
         assert_eq!(burns[0].task_force, 1, "seed {seed}");
-        assert_eq!(burns[0].burned, fx(162), "seed {seed} ship {ship}");
-        assert_eq!(burns[0].remaining, fx(1838), "seed {seed} ship {ship}");
+        assert_eq!(burns[0].burned, millionths(146_250_000), "seed {seed}");
+        assert_eq!(
+            burns[0].remaining,
+            millionths(1_853_750_000),
+            "seed {seed} ship {ship}"
+        );
+        // A ship afloat after the fights burns for the rest of the night
+        // too: 15.75 t at 24 kn, 4.666666 t at 16 kn.
+        match (rest, after_night.contains(&ship)) {
+            (Some(_), true) if !same_between => {
+                assert_eq!(burns.len(), 2, "seed {seed} ship {ship}");
+            }
+            (Some((_, speed)), true) => {
+                assert_eq!(burns.len(), 2, "seed {seed} ship {ship}");
+                let (burned, left) = if speed == fx(24) {
+                    (millionths(15_750_000), fx(1838))
+                } else {
+                    (millionths(4_666_666), millionths(1_849_083_334))
+                };
+                assert_eq!(burns[1].burned, burned, "seed {seed} ship {ship}");
+                assert_eq!(burns[1].remaining, left, "seed {seed} ship {ship}");
+            }
+            _ => assert_eq!(burns.len(), 1, "seed {seed} ship {ship}"),
+        }
     }
     // B and C never move and burn nothing.
     assert!(p.steps.iter().all(|s| s.task_force == 1), "seed {seed}");
@@ -892,7 +1046,7 @@ fn assert_night_steaming(p: &Parsed, final_positions: &BTreeMap<u32, Hex>) {
 }
 
 #[test]
-fn force_a_steams_288_nm_at_24_kn_and_burns_162_t_each() {
+fn force_a_enters_the_hex_after_260_nm_at_24_kn_and_burns_146_25_t_each() {
     let default = load();
     let default_run = run_scenario(&default, FILE_SEED);
     let parsed = parse(FILE_SEED, &default_run.events);
@@ -1175,6 +1329,135 @@ fn no_ship_of_a_fires_torpedoes_twice_and_a_sunk_ship_fires_no_more() {
 }
 
 // ---------------------------------------------------------------------
+// 6b. When the fights begin.
+// ---------------------------------------------------------------------
+
+#[test]
+fn the_night_fights_begin_after_260_nm_at_hour_10_833333_and_day_fights_at_the_start_of_their_pulse(
+) {
+    // A enters (7,0) after 260 nm at 24 kn: 260 / 24 = 10.833333 hours into
+    // the night pulse, which starts at hour 0 (truncated to six places). It
+    // meets B and C at that moment. A force that is dead in the water lies
+    // in the hex at the start of a pulse: the morning pulse begins at hour
+    // 12 and the afternoon pulse at hour 18.
+    for (_, p) in batch() {
+        for fight in &p.fights {
+            let hours = match (fight.day, fight.pulse) {
+                (1, Pulse::Night) => millionths(10_833_333),
+                (1, Pulse::Morning) => fx(12),
+                (1, Pulse::Afternoon) => fx(18),
+                other => panic!("seed {}: a fight in {other:?}", p.seed),
+            };
+            assert_eq!(fight.elapsed_hours, hours, "seed {}", p.seed);
+        }
+    }
+    // The default run at the scenario's own seed agrees.
+    let run = run_scenario(&load(), FILE_SEED);
+    let p = parse(FILE_SEED, &run.events);
+    assert_eq!(p.first().elapsed_hours, millionths(10_833_333));
+}
+
+// ---------------------------------------------------------------------
+// 6c. Breaking off.
+// ---------------------------------------------------------------------
+
+/// What the "Breaking off" section says, counted for the summary.
+#[derive(Default)]
+struct BreakingOff {
+    /// Pulses in which A broke off from B and then met C.
+    cases: usize,
+    slipped: usize,
+    broke_off_in_round_1: usize,
+    /// Pulses in which A met C without having broken off from B, and had a
+    /// free round against C.
+    free_rounds_otherwise: usize,
+}
+
+fn a_has_a_free_round(fight: &Fight) -> bool {
+    (1..=6).any(|round| {
+        let fired = |a_side: bool| {
+            fight
+                .salvos
+                .iter()
+                .any(|s| s.round == round && A_SHIPS.contains(&s.firer) == a_side)
+        };
+        fired(true) && !fired(false)
+    })
+}
+
+fn breaking_off() -> BreakingOff {
+    let mut out = BreakingOff::default();
+    for (_, p) in batch() {
+        let seed = p.seed;
+        for pulse in [Pulse::Night, Pulse::Morning, Pulse::Afternoon] {
+            let in_pulse: Vec<&Fight> = p.fights.iter().filter(|f| f.pulse == pulse).collect();
+            let (Some(ab), Some(ac)) = (
+                in_pulse.iter().find(|f| (f.a, f.b) == (1, 2)),
+                in_pulse.iter().find(|f| (f.a, f.b) == (1, 3)),
+            ) else {
+                continue;
+            };
+            if !ab.broke_off.contains(&1) {
+                out.free_rounds_otherwise += usize::from(a_has_a_free_round(ac));
+                continue;
+            }
+            out.cases += 1;
+            // A avoids C: it never has a free round against it.
+            assert!(
+                !a_has_a_free_round(ac),
+                "seed {seed} {pulse:?}: A has a free round against C"
+            );
+            // No such fight goes past round 1.
+            assert_eq!(ac.ended_round, 1, "seed {seed} {pulse:?}: ends in round 1");
+            // Either A slips away in round 1, with no fire and no break-off,
+            // or the fight ends at the end of round 1 with A breaking off,
+            // fired on or not.
+            if ac.reason == EngagementEndReason::SlippedAway {
+                out.slipped += 1;
+                assert_eq!(ac.slipped, vec![1], "seed {seed}");
+                assert!(ac.salvos.is_empty(), "seed {seed}");
+                assert!(ac.broke_off.is_empty(), "seed {seed}");
+            } else if ac.reason == EngagementEndReason::ForceSunk {
+                // C's fire left A with no ship afloat: that ending is
+                // checked before the break-off.
+                assert!(!ac.salvos.is_empty(), "seed {seed} {pulse:?}");
+                assert!(ac.slipped.is_empty(), "seed {seed}");
+            } else {
+                assert_eq!(
+                    ac.reason,
+                    EngagementEndReason::BrokeOff,
+                    "seed {seed} {pulse:?}"
+                );
+                assert!(ac.broke_off.contains(&1), "seed {seed}: A breaks off");
+                assert!(ac.slipped.is_empty(), "seed {seed}");
+                out.broke_off_in_round_1 += 1;
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn a_force_that_breaks_off_from_b_avoids_c_for_the_rest_of_the_pulse() {
+    let out = breaking_off();
+    assert!(
+        out.cases > 0,
+        "A breaks off from B and meets C in some runs"
+    );
+    assert!(out.slipped > 0, "some seed has A slip away from C");
+    assert!(
+        out.broke_off_in_round_1 > 0,
+        "some seed has A break off in round 1"
+    );
+    // Without the rule A would have a free round against C in some of the
+    // other runs: it still does where it did not break off from B.
+    assert!(
+        out.free_rounds_otherwise > 0,
+        "A has a free round against C when it has not broken off"
+    );
+}
+
+// ---------------------------------------------------------------------
 // 7. After the night.
 // ---------------------------------------------------------------------
 
@@ -1183,6 +1466,8 @@ fn no_ship_of_a_fires_torpedoes_twice_and_a_sunk_ship_fires_no_more() {
 struct AfterNight {
     rows: [usize; 3],
     changed: usize,
+    /// Of those, runs where the state changed between the two night fights.
+    changed_between: usize,
     none_afloat: usize,
     freed: usize,
 }
@@ -1207,6 +1492,13 @@ fn after_the_night() -> AfterNight {
             out.none_afloat += 1;
             continue;
         };
+        // The hand calculation holds when the slowest ship's state is the
+        // same from the night fights to the end of the day, between the two
+        // night fights too.
+        if morning == night && day == night && p.a_slowest_between_night_fights() != night {
+            out.changed_between += 1;
+            continue;
+        }
         if morning != night || day != night {
             out.changed += 1;
             out.freed += usize::from(day.is_some() && day != night);
@@ -1218,6 +1510,17 @@ fn after_the_night() -> AfterNight {
             .copied()
             .filter(|ship| run.ships[ship].location != ShipLocation::Sunk)
             .collect();
+        let night_steps: Vec<&StepRec> =
+            p.steps.iter().filter(|s| s.pulse == Pulse::Night).collect();
+        let night_nm = night_steps
+            .iter()
+            .fold(Fixed::ZERO, |sum, s| sum + s.distance);
+        let night_burn = |ship: u32| {
+            p.burns
+                .iter()
+                .filter(|b| b.ship == ship && b.pulse == Pulse::Night)
+                .fold(Fixed::ZERO, |sum, b| sum + b.burned)
+        };
         let post_night_burn = |ship: u32| {
             p.burns
                 .iter()
@@ -1227,6 +1530,8 @@ fn after_the_night() -> AfterNight {
         match state {
             SystemState::Working => {
                 out.rows[0] += 1;
+                // The night: 28 nm to go at 24 kn, 288 nm in all, 162 t.
+                assert_eq!(night_nm, fx(288), "seed {seed}: night total");
                 assert!(after.iter().all(|s| s.speed == fx(24)), "seed {seed}");
                 assert_eq!(
                     after.iter().fold(Fixed::ZERO, |sum, s| sum + s.distance),
@@ -1242,34 +1547,74 @@ fn after_the_night() -> AfterNight {
                 );
                 assert_eq!(run.positions[&1], DESTINATION, "seed {seed}");
                 for ship in &afloat {
+                    assert_eq!(night_burn(*ship), fx(162), "seed {seed} ship {ship}");
                     assert_eq!(post_night_burn(*ship), fx(63), "seed {seed} ship {ship}");
                     assert_eq!(run.ships[ship].fuel, fx(1775), "seed {seed} ship {ship}");
                 }
             }
             SystemState::Degraded => {
                 out.rows[1] += 1;
+                // The night: 18.666666 nm to go at 16 kn, 278.666666 nm in
+                // all, 150.916666 t. Then 96 nm in the morning and the last
+                // 25.333334 nm in the afternoon: 121.333334 nm, 30.333333 t
+                // (24 t and 6.333333 t).
+                assert_eq!(night_nm, millionths(278_666_666), "seed {seed}");
                 assert!(after.iter().all(|s| s.speed == fx(16)), "seed {seed}");
                 assert_eq!(
                     after.iter().fold(Fixed::ZERO, |sum, s| sum + s.distance),
-                    fx(112),
-                    "seed {seed}: 112 nm to go"
+                    millionths(121_333_334),
+                    "seed {seed}: 121.333334 nm to go"
                 );
-                assert_eq!(p.a_arrival(), Some((DESTINATION, fx(19))), "seed {seed}");
+                let pieces: Vec<(Pulse, Fixed)> =
+                    after.iter().map(|s| (s.pulse, s.distance)).collect();
+                assert_eq!(
+                    pieces,
+                    vec![
+                        (Pulse::Morning, fx(96)),
+                        (Pulse::Afternoon, millionths(25_333_334))
+                    ],
+                    "seed {seed}"
+                );
+                assert_eq!(
+                    p.a_arrival(),
+                    Some((DESTINATION, millionths(19_583_333))),
+                    "seed {seed}"
+                );
                 assert_eq!(run.positions[&1], DESTINATION, "seed {seed}");
                 for ship in &afloat {
-                    assert_eq!(post_night_burn(*ship), fx(28), "seed {seed} ship {ship}");
-                    assert_eq!(run.ships[ship].fuel, fx(1810), "seed {seed} ship {ship}");
+                    assert_eq!(
+                        night_burn(*ship),
+                        millionths(150_916_666),
+                        "seed {seed} ship {ship}"
+                    );
+                    assert_eq!(
+                        post_night_burn(*ship),
+                        millionths(30_333_333),
+                        "seed {seed} ship {ship}"
+                    );
+                    assert_eq!(
+                        run.ships[ship].fuel,
+                        millionths(1_818_750_001),
+                        "seed {seed} ship {ship}"
+                    );
                 }
             }
             SystemState::Out => {
                 out.rows[2] += 1;
+                // The night total is the 260 nm to the meeting, 146.25 t.
                 // Speed 0: it does not move, burns nothing and never arrives.
+                assert_eq!(night_nm, fx(260), "seed {seed}: night total");
                 assert!(after.is_empty(), "seed {seed}: A steams dead in the water");
                 assert_eq!(p.a_arrival(), None, "seed {seed}");
                 assert_eq!(run.positions[&1], MEETING, "seed {seed}");
                 for ship in &afloat {
+                    assert_eq!(night_burn(*ship), millionths(146_250_000), "seed {seed}");
                     assert_eq!(post_night_burn(*ship), Fixed::ZERO, "seed {seed}");
-                    assert_eq!(run.ships[ship].fuel, fx(1838), "seed {seed} ship {ship}");
+                    assert_eq!(
+                        run.ships[ship].fuel,
+                        millionths(1_853_750_000),
+                        "seed {seed} ship {ship}"
+                    );
                 }
             }
         }
@@ -1532,22 +1877,42 @@ fn a_at_normal_readiness_sights_at_a_quarter_like_b() {
 }
 
 #[test]
-fn a_ordered_to_40_kn_steams_at_32_kn_and_fights_nobody() {
+fn a_ordered_to_40_kn_steams_at_32_kn_and_fights_both_forces_in_passing() {
     let scenario = variant(
         "forty",
         &[(SCENARIO_FILE, "knots = \"24\"", "knots = \"40\"")],
     );
     let run = run_scenario(&scenario, FILE_SEED);
     let p = parse(FILE_SEED, &run.events);
-    // 32 kn, the top speed, for 12 hours is 384 nm: nine hexes and 24 nm, so
-    // the position is (10,0).
+    // 32 kn, the top speed. It enters (7,0) after 260 nm, 260 / 32 = 8.125
+    // hours into the night pulse, and meets and fights both forces there,
+    // one after the other.
+    let hours = millionths(8_125_000);
+    assert_eq!(p.fights.len(), 2, "two fights, both at the meeting");
+    for (fight, enemy) in p.fights.iter().zip([2, 3]) {
+        assert_eq!((fight.a, fight.b), (1, enemy));
+        assert_eq!((fight.day, fight.pulse), (1, Pulse::Night));
+        assert_eq!(fight.elapsed_hours, hours);
+    }
+    // Burn per mile is multiplied by 4: 1 t a nm, so 260 t at the meeting.
+    // At this seed no ship of A is sunk or loses propulsion, so it comes
+    // through at 32 kn with 384 - 260 = 124 nm of the night left, ends the
+    // night nine hexes and 24 nm along, with its position (10,0).
+    for ship in A_SHIPS {
+        assert_eq!(run.ships[&ship].propulsion, SystemState::Working);
+        assert_ne!(run.ships[&ship].location, ShipLocation::Sunk);
+    }
     let night: Vec<&StepRec> = p.steps.iter().filter(|s| s.pulse == Pulse::Night).collect();
-    assert_eq!(night.len(), 1);
-    assert_eq!(night[0].task_force, 1);
-    assert_eq!(night[0].from, Hex::new(0, 0));
-    assert_eq!(night[0].to, DESTINATION);
-    assert_eq!(night[0].distance, fx(384));
-    assert_eq!(night[0].speed, fx(32));
+    assert_eq!(night.len(), 2);
+    assert!(night.iter().all(|s| s.task_force == 1 && s.speed == fx(32)));
+    assert_eq!(
+        (night[0].from, night[0].to, night[0].distance),
+        (Hex::new(0, 0), MEETING, fx(260))
+    );
+    assert_eq!(
+        (night[1].from, night[1].to, night[1].distance),
+        (MEETING, DESTINATION, fx(124))
+    );
     assert!(p
         .steps
         .iter()
@@ -1555,15 +1920,17 @@ fn a_ordered_to_40_kn_steams_at_32_kn_and_fights_nobody() {
     // The 16 nm that remain take half an hour: it arrives at hour 12.5.
     assert_eq!(p.a_arrival(), Some((DESTINATION, millionths(12_500_000))));
     assert_eq!(run.positions[&1], DESTINATION);
-    // 1 t a nm: 384 t in the night, 16 t after, 400 t in all, 1600 t left.
+    // 1 t a nm: 260 t to the meeting, 124 t for the rest of the night, 16 t
+    // after, 400 t in all, 1600 t left.
     for ship in A_SHIPS {
         let night_burn: Vec<&BurnRec> = p
             .burns
             .iter()
             .filter(|b| b.ship == ship && b.pulse == Pulse::Night)
             .collect();
-        assert_eq!(night_burn.len(), 1);
-        assert_eq!(night_burn[0].burned, fx(384));
+        assert_eq!(night_burn.len(), 2);
+        assert_eq!(night_burn[0].burned, fx(260));
+        assert_eq!(night_burn[1].burned, fx(124));
         let total = p
             .burns
             .iter()
@@ -1572,16 +1939,6 @@ fn a_ordered_to_40_kn_steams_at_32_kn_and_fights_nobody() {
         assert_eq!(total, fx(400), "ship {ship}");
         assert_eq!(run.ships[&ship].fuel, fx(1600), "ship {ship}");
     }
-    // The forces are in the same hex only in passing: no fight at all, no
-    // alert and no alarm.
-    assert!(
-        !run.events
-            .iter()
-            .any(|e| matches!(e.kind, EventKind::EngagementBegun { .. })),
-        "a fight took place"
-    );
-    assert!(p.fights.is_empty());
-    assert!(p.alerts.is_empty());
 }
 
 // ---------------------------------------------------------------------
@@ -1702,6 +2059,15 @@ fn print_the_summary() {
     eprintln!(
         "after the night, slowest ship of A held its state to the end of the day: working {}, degraded {}, out {}; state changed by the end of the day {} (of them freed by a sinking {}); no ship of A afloat after the night {}",
         out.rows[0], out.rows[1], out.rows[2], out.changed, out.freed, out.none_afloat
+    );
+    eprintln!(
+        "state changed only between the two night fights (the tables do not apply): {}",
+        out.changed_between
+    );
+    let bo = breaking_off();
+    eprintln!(
+        "A broke off from B and met C: {} pulses (slipped away in round 1: {}, broke off at the end of round 1: {}); A had a free round against C when it had not broken off: {}",
+        bo.cases, bo.slipped, bo.broke_off_in_round_1, bo.free_rounds_otherwise
     );
     let second_fights = batch().iter().filter(|(_, p)| p.second().is_some()).count();
     let day_fights: usize = batch()

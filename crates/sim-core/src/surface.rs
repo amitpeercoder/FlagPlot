@@ -1,11 +1,12 @@
 //! Surface combat: opposing task forces in one hex fight in rounds.
 //!
-//! This is the `SurfaceEngagements` phase of a pulse. The rule is
-//! `docs/decisions/0014-surface-combat.md`; the random number keys follow
-//! `docs/decisions/0013-random-keys-for-pairs.md`.
+//! The rule is `docs/decisions/0014-surface-combat.md`; the random number
+//! keys follow `docs/decisions/0013-random-keys-for-pairs.md`. Since
+//! decision 0022 the fights are run from the movement step (`movement.rs`),
+//! at the moment two opposing forces meet; the surface engagement phase of a
+//! pulse is an empty slot. [`World::hold_meeting`] runs one meeting.
 //!
-//! Every pair of opposing task forces in one hex fights in turn, in
-//! (lower ID, higher ID) order. A fight is a run of rounds. Each round is
+//! A fight is a run of rounds. Each round is
 //! worked in five steps, each its own function below, and everything in a
 //! round is computed on the state at its start:
 //!
@@ -85,6 +86,9 @@ struct Fight {
     /// (decision 5 of `docs/decisions/0021-readiness-and-alarm.md`: the
     /// alarm sounds only for a fight with fire).
     fired: bool,
+    /// The forces that broke off or slipped away earlier in this pulse,
+    /// copied in from the step and written back when the fight ends.
+    avoiding: BTreeSet<TaskForceId>,
 }
 
 impl Fight {
@@ -235,30 +239,48 @@ fn system_for_draw(
 }
 
 impl World {
-    /// The surface engagement phase of one pulse: every pair of opposing task
-    /// forces in one hex fights, in (lower ID, higher ID) order. A pair is
-    /// skipped when its turn comes if either force has no ship afloat, so a
-    /// later pair sees what earlier pairs did.
-    pub(crate) fn surface_engagements(&mut self, day: u32, pulse: Pulse) {
-        let Some(figures) = self.ref_data.surface_combat.clone() else {
-            return;
-        };
-        // One alarm stream per force per pulse, opened the first time the
-        // force rolls and kept across every fight of this step (decision 9
-        // of 0021): the force's draws come in the order the fights end.
-        let mut alarm_streams: BTreeMap<TaskForceId, RngStream> = BTreeMap::new();
-        for (a, b) in self.opposing_pairs_in_one_hex() {
-            if self.truth.task_forces[&a].ships.is_empty()
-                || self.truth.task_forces[&b].ships.is_empty()
-            {
-                continue;
-            }
-            let mut fight = self.begin_fight(day, pulse, &figures, a, b);
-            let ending = self.fight_rounds(&mut fight);
-            let ended = self.end_fight(&fight, &ending);
-            if fight.fired {
-                self.sound_alarm(&fight, ended, &mut alarm_streams);
-            }
+    /// One meeting of two opposing task forces (decision 0022): the fight of
+    /// decision 0014 in full, then the alarm for any bystander in the hex if
+    /// shots were fired. `a` is the lower task force ID. The caller has
+    /// closed the forces' steaming segments and deals with stragglers after.
+    /// `elapsed_hours` is when the meeting happens, and `arrival` the steaming
+    /// event that brought a force into the hex, if one did. `avoiding` is the
+    /// set of forces that broke off or slipped away earlier in the pulse.
+    /// `alarm_streams` holds
+    /// one alarm stream per force per pulse, opened the first time the force
+    /// rolls and kept across every fight of the movement step (decision 9 of
+    /// 0021): the force's draws come in the order the fights end.
+    pub(crate) fn hold_meeting(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        figures: &SurfaceCombatFigures,
+        (a, b): (TaskForceId, TaskForceId),
+        (elapsed_hours, arrival): (Fixed, Option<EventId>),
+        (avoiding, alarm_streams): (
+            &mut BTreeSet<TaskForceId>,
+            &mut BTreeMap<TaskForceId, RngStream>,
+        ),
+    ) {
+        let mut fight = self.begin_fight(day, pulse, figures, (a, b), (elapsed_hours, arrival));
+        fight.avoiding = std::mem::take(avoiding);
+        let ending = self.fight_rounds(&mut fight);
+        let ended = self.end_fight(&fight, &ending);
+        if fight.fired {
+            self.sound_alarm(&fight, ended, alarm_streams);
+        }
+        *avoiding = fight.avoiding;
+    }
+
+    /// The stance a force takes in a fight: avoid if it broke off or slipped
+    /// away earlier in the pulse, whatever its orders say (decision 9 of
+    /// `docs/decisions/0022-meeting-and-breaking-off.md`), else its ordered
+    /// stance.
+    fn effective_stance(&self, fight: &Fight, force: TaskForceId) -> Stance {
+        if fight.avoiding.contains(&force) {
+            Stance::Avoid
+        } else {
+            self.truth.task_forces[&force].rules_of_engagement.stance
         }
     }
 
@@ -416,7 +438,7 @@ impl World {
     }
 
     /// Opposing task forces with the same position, lower ID first, in order.
-    fn opposing_pairs_in_one_hex(&self) -> Vec<(TaskForceId, TaskForceId)> {
+    pub(crate) fn opposing_pairs_in_one_hex(&self) -> Vec<(TaskForceId, TaskForceId)> {
         let forces: Vec<_> = self.truth.task_forces.values().collect();
         let mut pairs = Vec::new();
         for (index, a) in forces.iter().enumerate() {
@@ -434,22 +456,31 @@ impl World {
         day: u32,
         pulse: Pulse,
         figures: &SurfaceCombatFigures,
-        a: TaskForceId,
-        b: TaskForceId,
+        (a, b): (TaskForceId, TaskForceId),
+        (elapsed_hours, arrival): (Fixed, Option<EventId>),
     ) -> Fight {
         let hex = self.truth.task_forces[&a].position();
-        let causes: Vec<Cause> = [a, b]
-            .into_iter()
-            .filter_map(|id| {
-                let force = &self.truth.task_forces[&id];
-                force.rules_order.or(force.route_order)
-            })
-            .map(Cause::Order)
-            .collect();
+        // The steaming that brought a force into the hex comes first, then
+        // the orders.
+        let mut causes: Vec<Cause> = arrival.map(Cause::Event).into_iter().collect();
+        causes.extend(
+            [a, b]
+                .into_iter()
+                .filter_map(|id| {
+                    let force = &self.truth.task_forces[&id];
+                    force.rules_order.or(force.route_order)
+                })
+                .map(Cause::Order),
+        );
         let begun = self.events.record(
             day,
             Some(pulse),
-            EventKind::EngagementBegun { a, b, hex },
+            EventKind::EngagementBegun {
+                a,
+                b,
+                hex,
+                elapsed_hours,
+            },
             causes,
             None,
         );
@@ -484,6 +515,7 @@ impl World {
             forces: [force_fight(self, a, b), force_fight(self, b, a)],
             fire_streams: BTreeMap::new(),
             fired: false,
+            avoiding: BTreeSet::new(),
         }
     }
 
@@ -602,12 +634,11 @@ impl World {
     /// A force that avoids, has sighted and faces an enemy that has not,
     /// slips away. Returns the `ForceSlippedAway` event if one did. If both
     /// have sighted, neither slips.
-    fn avoid(&mut self, fight: &Fight, round: &Round) -> Option<EventId> {
+    fn avoid(&mut self, fight: &mut Fight, round: &Round) -> Option<EventId> {
         for index in 0..2 {
             let force = &fight.forces[index];
             let enemy = &fight.forces[Fight::enemy(index)];
-            let task_force = &self.truth.task_forces[&force.id];
-            if task_force.rules_of_engagement.stance != Stance::Avoid
+            if self.effective_stance(fight, force.id) != Stance::Avoid
                 || !force.sighted
                 || enemy.sighted
             {
@@ -618,16 +649,19 @@ impl World {
                 .filter(|(number, _)| *number == round.number);
             let mut causes = vec![Cause::Event(sighted_now.map_or(fight.begun, |(_, e)| e))];
             causes.extend(force.rules_order.map(Cause::Order));
+            let (slipper, enemy_id) = (force.id, enemy.id);
             let event = self.record_in_fight(
                 fight,
                 EventKind::ForceSlippedAway {
                     round: round.number,
-                    task_force: force.id,
-                    enemy: enemy.id,
+                    task_force: slipper,
+                    enemy: enemy_id,
                 },
                 causes,
                 None,
             );
+            // A force that slips away avoids for the rest of the pulse.
+            fight.avoiding.insert(slipper);
             return Some(event);
         }
         None
@@ -1075,7 +1109,7 @@ impl World {
 
     /// The ending checks, in order: a force with no ship afloat, break-off,
     /// the last round. Returns how the fight ended, or `None` if it goes on.
-    fn check_ending(&mut self, fight: &Fight, round: &Round) -> Option<Ending> {
+    fn check_ending(&mut self, fight: &mut Fight, round: &Round) -> Option<Ending> {
         let number = round.number;
 
         // 1. A force with no ship afloat. A force can only empty by sinking
@@ -1140,8 +1174,9 @@ impl World {
     /// sunk or crippled reaches its break-off level, or when it avoids and
     /// was fired on this round. The share is compared without dividing:
     /// count x 1 >= break-off x ships. Returns the `ForceBrokeOff` event.
-    fn break_off(&mut self, fight: &Fight, round: &Round, index: usize) -> Option<EventId> {
+    fn break_off(&mut self, fight: &mut Fight, round: &Round, index: usize) -> Option<EventId> {
         let force = &fight.forces[index];
+        let task_force = force.id;
         let rules = self.truth.task_forces[&force.id].rules_of_engagement;
         let began = i64::try_from(force.began_with.len()).expect("few ships");
         let lost = i64::try_from(
@@ -1158,7 +1193,8 @@ impl World {
         .expect("few ships");
 
         let over_level = Fixed::from_int(lost) >= rules.break_off * began;
-        let avoiding_under_fire = rules.stance == Stance::Avoid && round.forces[index].fired_on;
+        let avoiding_under_fire =
+            self.effective_stance(fight, force.id) == Stance::Avoid && round.forces[index].fired_on;
         if !(over_level || avoiding_under_fire) {
             return None;
         }
@@ -1194,16 +1230,19 @@ impl World {
             causes.push(Cause::Event(fight.begun));
         }
         causes.extend(force.rules_order.map(Cause::Order));
-        Some(self.record_in_fight(
+        let event = self.record_in_fight(
             fight,
             EventKind::ForceBrokeOff {
                 round: round.number,
-                task_force: force.id,
+                task_force,
                 share,
             },
             causes,
             breakdown,
-        ))
+        );
+        // A force that breaks off avoids for the rest of the pulse.
+        fight.avoiding.insert(task_force);
+        Some(event)
     }
 
     // ---- after the fight ----
@@ -1377,6 +1416,7 @@ mod tests {
     use crate::map::{HexData, Map};
     use crate::orders::{Mission, Readiness};
     use crate::refdata::{PortSize, RefData, SearchFigures};
+    use crate::resolve::PulsePhase;
     use crate::state::{RulesOfEngagement, ShipSystems, SystemState, TaskForce, TruthState};
     use crate::world::SimConfig;
 
@@ -1582,7 +1622,7 @@ mod tests {
         /// The surface engagement step, then what the end of the pulse does
         /// to belief (contacts age), so that the state can be hashed.
         fn run_step(&self, world: &mut World) {
-            world.surface_engagements(1, self.pulse);
+            world.run_pulse_phase(1, self.pulse, PulsePhase::Movement);
             let figures = world.ref_data.search.clone().expect("search figures");
             for belief in world.beliefs.values_mut() {
                 belief.age_contacts(&figures);

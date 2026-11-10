@@ -39,29 +39,43 @@
 //!
 //! ## The meeting
 //!
-//! Force A steams 192 nm in the night pulse: four hexes and 32 nm, so it has
-//! left (4,0) and is 32 nm toward (5,0). Its position is the nearest centre,
-//! (5,0), which is where force B lies. The two fight in the surface
-//! engagement step of the night pulse of day 1. It is dark.
+//! Force A's position is the nearest hex centre, so it enters (5,0), where
+//! force B lies, 20 nm short of that centre: after 180 nm, 11.25 hours into
+//! the night pulse. The two meet and fight at that moment (decision 0022).
+//! It is dark. By then each cruiser of force A has burned 180 x 0.25 = 45 t.
 //!
-//! After the fight force A steams on for the 12 hours of the morning and
-//! afternoon pulses, at the speed of its slowest ship afloat. Both forces
+//! After the fight force A steams on for what is left of the night pulse and
+//! for the 12 hours of the morning and afternoon pulses, at the speed of its
+//! slowest ship afloat. At 16 kn it had 12 nm of the night left. At another
+//! speed that distance is scaled by the new speed over the old. Both forces
 //! keep their stragglers, which is the default.
 //!
-//! | Slowest ship's propulsion | Speed | Steams | Total  | Ends at | Fuel left |
-//! | ------------------------- | ----- | ------ | ------ | ------- | --------- |
-//! | Working                   | 16 kn | 192 nm | 384 nm | (10,0)  | 1904 t    |
-//! | Degraded                  | 8 kn  | 96 nm  | 288 nm | (7,0)   | 1928 t    |
-//! | Out                       | 0 kn  | 0 nm   | 192 nm | (5,0)   | 1952 t    |
+//! | Slowest ship's propulsion | Speed | Rest of the night | Night total | By day | Day total | Ends at | Fuel left |
+//! | ------------------------- | ----- | ----------------- | ----------- | ------ | --------- | ------- | --------- |
+//! | Working                   | 16 kn | 12 nm             | 192 nm      | 192 nm | 384 nm    | (10,0)  | 1904 t    |
+//! | Degraded                  | 8 kn  | 6 nm              | 186 nm      | 96 nm  | 282 nm    | (7,0)   | 1929.5 t  |
+//! | Out                       | 0 kn  | 0 nm              | 180 nm      | 0 nm   | 180 nm    | (5,0)   | 1955 t    |
 //!
 //! Every ship afloat burns 0.25 t per nm, at half speed too, because burn
-//! never falls below the cruise rate. Force B does not move and burns
-//! nothing.
+//! never falls below the cruise rate: 96 t, 70.5 t and 45 t. Force B does
+//! not move and burns nothing. The table holds when the propulsion state of
+//! force A's slowest ship afloat does not change after the night fight.
+//!
+//! Corrected by the architect for decision 0022. Before it, the fight was at
+//! the end of the night pulse and the night total was always 192 nm.
+//!
+//! A force that can move is leaving, so it does not fight again at the start
+//! of the morning pulse although it is still in (5,0) then.
 //!
 //! If force A has a ship dead in the water it stays at (5,0), and the two
-//! forces fight again in the morning and afternoon pulses. If that ship is
-//! sunk in the morning fight, force A steams on in the afternoon at the
-//! speed of its slowest ship still afloat. Those fights are
+//! forces fight again at the start of the morning and afternoon pulses. If
+//! that ship is sunk in one of those fights, force A steams on straight
+//! after it, in the same pulse and for the whole of it, since the fight is
+//! at the pulse's start and takes no time: 6 hours at the speed of its
+//! slowest ship still afloat, and the same again in the afternoon if the
+//! fight was in the morning. (Corrected for decision 0022 after the code was
+//! run: before it, a fight came after the pulse's movement, so the force
+//! steamed on only in the next pulse.) Those fights are
 //! by day: both forces sight in round 1, nobody is surprised, a gun shot
 //! hits with chance 0.05 and a torpedo with 0.02, and fire does not light a
 //! target. Everything this file asserts about a salvo, damage and the end
@@ -279,6 +293,10 @@ const CLAIMED_FIRE: i64 = 30;
 /// cruise setting with propulsion working.
 const HEX_NM: i64 = 40;
 const CRUISE_KN: i64 = 16;
+/// Force A enters (5,0), 20 nm short of its centre, after 180 nm of the
+/// night pulse's 12 hours at 16 kn (decision 0022).
+const NIGHT_ENTRY_NM: i64 = 180;
+const NIGHT_HOURS: i64 = 12;
 /// Fuel a cruiser burns a mile, in millionths of a ton.
 const BURN_PER_NM: i64 = 250_000;
 
@@ -650,6 +668,8 @@ struct FightRec {
     begun_event: u32,
     /// The two forces and the hex the `EngagementBegun` event names.
     begun_with: (TaskForceId, TaskForceId, Hex),
+    /// The `elapsed_hours` the `EngagementBegun` event carries.
+    elapsed_hours: Fixed,
     ended: Ended,
     rolls: Vec<Roll>,
     surprised: Vec<(u32, usize)>,
@@ -785,7 +805,12 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
         let id = event.id.raw();
         assert_eq!(usize::try_from(id).expect("small"), index + 1);
         match &event.kind {
-            EventKind::EngagementBegun { a, b, hex } => {
+            EventKind::EngagementBegun {
+                a,
+                b,
+                hex,
+                elapsed_hours,
+            } => {
                 assert!(!open, "seed {seed}: a fight inside a fight");
                 assert_eq!(event.day, 1);
                 open = true;
@@ -793,6 +818,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                     pulse: event.pulse.expect("a fight has a pulse"),
                     begun_event: id,
                     begun_with: (*a, *b, *hex),
+                    elapsed_hours: *elapsed_hours,
                     ended: Ended {
                         event: 0,
                         round: 0,
@@ -1404,11 +1430,13 @@ struct Movement {
     burned_nm: BTreeMap<u32, i64>,
 }
 
-/// Force A steams 192 nm at 16 kn in the night pulse and fights force B at
-/// (5,0). Then, in each daylight pulse, it steams at the speed of its slowest
-/// ship afloat (16, 8 or 0 kn) for 6 hours. Force B never moves. The forces
-/// fight in a pulse if A has a ship afloat, B has a ship afloat and A is in
-/// B's hex after moving.
+/// Force A steams 180 nm at 16 kn to enter (5,0), 11.25 hours into the night
+/// pulse, and fights force B there (decision 0022). It then steams on for the
+/// rest of the night: the 12 nm it had left at 16 kn, scaled by its new speed
+/// over 16, at the speed of its slowest ship afloat (16, 8 or 0 kn). Then, in
+/// each daylight pulse, it steams at the speed of its slowest ship afloat for
+/// 6 hours. Force B never moves. The forces fight in a pulse if A has a ship
+/// afloat, B has a ship afloat and A is in B's hex after moving.
 fn expected_movement(an: &Analysed) -> Movement {
     let mut m = Movement {
         fights: vec![Pulse::Night],
@@ -1416,8 +1444,7 @@ fn expected_movement(an: &Analysed) -> Movement {
         total_nm: 0,
         burned_nm: SHIPS[0].iter().map(|ship| (*ship, 0)).collect(),
     };
-    let step = |m: &mut Movement, pulse: Pulse, speed: i64, afloat: &[u32]| {
-        let distance = speed * pulse_hours(pulse);
+    let step = |m: &mut Movement, pulse: Pulse, distance: i64, speed: i64, afloat: &[u32]| {
         let from = hex_at(m.total_nm);
         m.total_nm += distance;
         m.steps
@@ -1426,29 +1453,48 @@ fn expected_movement(an: &Analysed) -> Movement {
             *m.burned_nm.get_mut(ship).expect("a ship of A") += distance;
         }
     };
-    step(&mut m, Pulse::Night, CRUISE_KN, &SHIPS[0]);
+    step(&mut m, Pulse::Night, NIGHT_ENTRY_NM, CRUISE_KN, &SHIPS[0]);
+    // The rest of the night, at the speed after the night fight.
+    let after_night = an.walks[0].end.afloat(0);
+    if let Some(slowest) = an.walks[0].end.slowest_propulsion(0) {
+        let speed = ship_speed_kn(slowest);
+        if speed > 0 {
+            let rest = (NIGHT_HOURS * CRUISE_KN - NIGHT_ENTRY_NM) * speed / CRUISE_KN;
+            step(&mut m, Pulse::Night, rest, speed, &after_night);
+        }
+    }
     let mut tracks = an.walks[0].end.clone();
     let mut fights = 1;
+    let slowest_kn = |tracks: &Tracks, a: &[u32]| {
+        a.iter()
+            .map(|ship| ship_speed_kn(tracks.systems[ship].propulsion))
+            .min()
+            .expect("a ship afloat")
+    };
     for pulse in [Pulse::Morning, Pulse::Afternoon] {
-        let a = tracks.afloat(0);
+        let mut a = tracks.afloat(0);
         if a.is_empty() {
             continue;
         }
-        let speed = a
-            .iter()
-            .map(|ship| ship_speed_kn(tracks.systems[ship].propulsion))
-            .min()
-            .expect("a ship afloat");
-        if speed > 0 {
-            step(&mut m, pulse, speed, &a);
-        }
-        if hex_at(m.total_nm) == MEETING && !tracks.afloat(1).is_empty() {
+        let mut speed = slowest_kn(&tracks, &a);
+        // A force dead in the water in B's hex fights at the start of the
+        // pulse; if it is freed by a sinking it steams the whole pulse
+        // straight after.
+        if speed == 0 && hex_at(m.total_nm) == MEETING && !tracks.afloat(1).is_empty() {
             m.fights.push(pulse);
             let Some(walk) = an.walks.get(fights) else {
                 break;
             };
             tracks = walk.end.clone();
             fights += 1;
+            a = tracks.afloat(0);
+            if a.is_empty() {
+                continue;
+            }
+            speed = slowest_kn(&tracks, &a);
+        }
+        if speed > 0 {
+            step(&mut m, pulse, speed * pulse_hours(pulse), speed, &a);
         }
     }
     m
@@ -1503,6 +1549,17 @@ fn the_forces_meet_at_five_zero_and_fight_again_only_while_a_is_dead_in_the_wate
             "seed {seed}: the first fight"
         );
         second_fights += p.fights.len() - 1;
+        // A enters (5,0) 20 nm short of its centre, after 180 nm at 16 kn:
+        // 11.25 hours into the night pulse, which starts at hour 0. Later
+        // fights are at the start of their pulse: hours 12 and 18.
+        for fight in &p.fights {
+            let hours = match fight.pulse {
+                Pulse::Night => millionths(11_250_000),
+                Pulse::Morning => fx(12),
+                Pulse::Afternoon => fx(18),
+            };
+            assert_eq!(fight.elapsed_hours, hours, "seed {seed}: fight hour");
+        }
 
         // Force A steams as the model says, and fights again exactly when
         // the model says.
@@ -1562,15 +1619,18 @@ fn the_forces_meet_at_five_zero_and_fight_again_only_while_a_is_dead_in_the_wate
 
         // The hand calculation's table, by the propulsion of A's slowest
         // ship afloat after the night fight.
-        let night = (Pulse::Night, Hex::new(0, 0), MEETING, fx(192), fx(16));
+        let night = (Pulse::Night, Hex::new(0, 0), MEETING, fx(180), fx(16));
         let a_afloat: Vec<u32> = an.walks[0].end.afloat(0);
-        let fuel_of_afloat = |nm: i64| {
+        // Fuel left by every ship of A afloat at the end: the miles it
+        // steamed, at 0.25 t a nm, and the figure the hand calculation gives.
+        let fuel_of_afloat = |nm: i64, left: Fixed| {
             for ship in &a_afloat {
                 assert_eq!(
                     run.ships[ship].fuel,
                     fx(2000) - millionths(BURN_PER_NM * nm),
                     "seed {seed} ship {ship}"
                 );
+                assert_eq!(run.ships[ship].fuel, left, "seed {seed} ship {ship}");
             }
         };
         let tail = |pulse, from: (i32, i32), to: (i32, i32), nm: i64, kn: i64| {
@@ -1590,13 +1650,14 @@ fn the_forces_meet_at_five_zero_and_fight_again_only_while_a_is_dead_in_the_wate
                     steps,
                     vec![
                         night,
+                        tail(Pulse::Night, (5, 0), (5, 0), 12, 16),
                         tail(Pulse::Morning, (5, 0), (7, 0), 96, 16),
                         tail(Pulse::Afternoon, (7, 0), (10, 0), 96, 16),
                     ],
                     "seed {seed}"
                 );
                 assert_eq!(run.forces[&1].position, Hex::new(10, 0), "seed {seed}");
-                fuel_of_afloat(384);
+                fuel_of_afloat(384, fx(1904));
             }
             Some(SystemState::Degraded) => {
                 cases[1] += 1;
@@ -1605,35 +1666,54 @@ fn the_forces_meet_at_five_zero_and_fight_again_only_while_a_is_dead_in_the_wate
                     steps,
                     vec![
                         night,
+                        tail(Pulse::Night, (5, 0), (5, 0), 6, 8),
                         tail(Pulse::Morning, (5, 0), (6, 0), 48, 8),
                         tail(Pulse::Afternoon, (6, 0), (7, 0), 48, 8),
                     ],
                     "seed {seed}"
                 );
                 assert_eq!(run.forces[&1].position, Hex::new(7, 0), "seed {seed}");
-                fuel_of_afloat(288);
+                fuel_of_afloat(282, millionths(1_929_500_000));
             }
             Some(SystemState::Out) => {
                 cases[2] += 1;
-                // Dead in the water: no TaskForceSteamed in the morning.
-                assert!(
-                    steps.iter().all(|s| s.0 != Pulse::Morning),
-                    "seed {seed}: A steams with a ship dead in the water"
-                );
+                // Dead in the water at the end of the night: A does not
+                // steam until a fight frees it. It fights again at the start
+                // of the morning pulse if B has a ship afloat.
                 let b_afloat = !an.walks[0].end.afloat(1).is_empty();
                 assert_eq!(
                     pulses.contains(&Pulse::Morning),
                     b_afloat,
                     "seed {seed}: a second fight in the morning"
                 );
-                if steps.iter().all(|s| s.0 != Pulse::Afternoon) {
-                    assert_eq!(steps, vec![night], "seed {seed}");
+                if steps == vec![night] {
                     assert_eq!(run.forces[&1].position, MEETING, "seed {seed}");
-                    fuel_of_afloat(192);
+                    fuel_of_afloat(180, fx(1955));
                 } else {
-                    // The ship dead in the water sank in the morning fight.
+                    // The ship dead in the water sank in a day fight, and A
+                    // steamed the whole pulse straight after it (decision
+                    // 0022): in the morning if freed in the morning, and
+                    // again in the afternoon.
                     freed += 1;
-                    assert!(pulses.contains(&Pulse::Morning), "seed {seed}");
+                    let first = steps.get(1).expect("a step after the night").0;
+                    assert!(pulses.contains(&first), "seed {seed}");
+                    assert!(steps[1..].iter().all(|s| s.4 > Fixed::ZERO), "seed {seed}");
+                    let freed_in = pulses[1..]
+                        .iter()
+                        .copied()
+                        .find(|pulse| *pulse == first)
+                        .expect("fought in the pulse it was freed in");
+                    let expected: Vec<Pulse> = if freed_in == Pulse::Morning {
+                        vec![Pulse::Morning, Pulse::Afternoon]
+                    } else {
+                        vec![Pulse::Afternoon]
+                    };
+                    let got: Vec<Pulse> = steps[1..].iter().map(|s| s.0).collect();
+                    assert_eq!(got, expected, "seed {seed}");
+                    // Each step is 6 hours at its speed.
+                    for step in &steps[1..] {
+                        assert_eq!(step.3, step.4 * fx(6), "seed {seed}");
+                    }
                 }
             }
             None => {
@@ -1648,7 +1728,7 @@ fn the_forces_meet_at_five_zero_and_fight_again_only_while_a_is_dead_in_the_wate
         }
     }
     eprintln!(
-        "slowest ship of A after the night fight: working {}, degraded {}, out {}, none afloat {}; out and then freed by a sinking {freed}; second fights {second_fights}",
+        "slowest ship of A after the night fight: working {}, degraded {}, out {}, none afloat {}; out and then freed by a sinking in a day fight and steaming on in the same pulse {freed}; second fights {second_fights}",
         cases[0], cases[1], cases[2], cases[3]
     );
     assert!(cases[..3].iter().all(|n| *n > 0), "every case is met");
