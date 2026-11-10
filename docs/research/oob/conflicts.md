@@ -295,3 +295,7 @@ Sources: the US Navy's online ship histories (https://www.history.navy.mil/resea
 - Furutaka and Kako guns: navweaps WNJAP_8-50_3ns footnote 2 says rebored No. 1 guns from Haguro and Ashigara; footnote 5 on the same page and combinedfleet (https://www.combinedfleet.com/furuta_t.htm) say No. 2.
 - Mark 15 warhead: navweaps Mod 0 494 lb TNT, Mod 3 801 lb TNT or 823 lb HBX; Jolie sheet 825 lb HBX (Mk 17 Mod 3); Jolie text says 500 to 825 lb with no mod.
 - Type 90 torpedo: USNTMJ O-01-1 printed p.31 says used on second-class destroyers and withdrawn at end of 1942; navweaps (WTJAP_PreWWII) lists it for heavy cruisers and Fubuki class destroyers. O-01-1 also says Type 8 was used in small numbers on second-class destroyers.
+
+## Settled by Amit on 2026-11-10
+
+The disputes over the facts the 20 Savo Island ships need were settled in one pass from `savo-island-settlement.md`: displacement, speed, endurance, fuel, the Mark 15 and 6th Year torpedo warheads, Yubari's torpedo, Chicago's rounds per gun, Canberra's radar and tubes, and the practical rates of fire that have a source. Each settled row says so in its note. The entries above describe the disagreements as found and are kept for the record.

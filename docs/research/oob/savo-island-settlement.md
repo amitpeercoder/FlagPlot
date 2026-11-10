@@ -1,6 +1,6 @@
 # Savo Island: settlement sheet for the 20 ships
 
-Status: **proposed.** Written by Claude on 2026-11-10 for Amit to approve in one pass. Nothing here is settled in the data. No row has been marked `preferred` to settle a dispute. After approval the rows are marked with the reason, and this sheet becomes a decision record.
+Status: **approved by Amit on 2026-11-10, in one pass, as recommended.** The rows are marked in the data with "Settled by Amit" and the item of this sheet. Two things were not approved because the sheet made no recommendation or did not list them: rounds per gun for three ships (e6), and the 8th Year torpedo warhead (see "What approval did"). The sheet below is kept as it was put to him, apart from this paragraph and the last section. It is for the architect to turn into a numbered decision record.
 
 **Why it exists.** The derivation tool (`crates/oob-derive`, decision 0020) builds the ship classes a scenario loads from `preferred` fact rows that hold on 8 August 1942, and refuses anything else. Against this branch it reports 103 problems and derives no ship. Each group below is one decision that clears several of them.
 
@@ -161,9 +161,39 @@ Each of these was marked by the researcher and has been returned to `disputed` o
 
 Torpedo reloads are not on this sheet because the tool does not read them. The data has eight for the Aoba and Furutaka classes as a low-grade inference, and Chokai's class disputed between 16 and 8.
 
-## What approval would do
+## What approval did
 
-If every recommendation is approved, the tool's remaining problems should be only the items marked "your call" and "unknown": rounds per gun for three ships (e6) and search radar for Vincennes and Jarvis (e7, e8), which decision 0019 already covers with its working assumption. The check has not been run with the recommendations applied, because applying them is the settlement.
+Applied on 2026-11-10. Winning rows are `preferred` and the others `alternative`, each with a note naming this sheet's item. The data checker passes. The derivation tool went from 103 problems to 29.
+
+**Rows chosen that cannot be `preferred` under the format's rule,** because each rests on a lone low-grade source or on weak sources only. They stay `unconfirmed`, say "chosen" in their note, and need a written exception in the tool's rules file (decision 0020, item 3):
+
+| Ships | Fact | Row to read | Value | Sheet item |
+| --- | --- | --- | --- | --- |
+| Bagley, Patterson, Helm, Blue, Ralph Talbot, Jarvis | Displacement | `ship_class_facts.csv` 625 or 315 | 1,624 | b4 |
+| Wilson | Displacement | 612 | 1,657 | b5 |
+| Chicago | Displacement | 468 | 9,050 | b3 |
+| Yunagi | Displacement | 596 | 1,270 | group 1 |
+| Yubari | Endurance and cruise speed | 240 or 699; 241 or 698 | 3,310 at 14 | group 3 |
+| Yubari | Fuel | 243 or 701 | 902 | group 4 |
+| Chicago | Main guns | `fits.csv` 254 | Nine 8-inch | group 7 |
+| Canberra | Torpedo tubes | `fits.csv` 388 | Eight, Mark VII | r2 |
+| Five Japanese heavy cruisers | Practical rate of fire | `weapon_facts.csv` 431 | 2.4 | e1 |
+| Tenryu, Yubari | Practical rate of fire | 432 | 6 | e2 |
+| Kinugasa; Tenryu, Yunagi | Torpedo type | `fits.csv` 381; the class rows | Type 93; 6th Year Type | r8, r9 |
+
+**Approved figures the tool cannot yet read at all,** because they are designed rates and it reads only the practical-rate attribute. The rules file would have to name the designed-rate row:
+
+| Ships | Row | Value | Sheet item |
+| --- | --- | --- | --- |
+| Yunagi | `weapon_facts.csv` 44 | 5.5 | e3 |
+| Vincennes, Quincy | 349 | 3 | e4 |
+| Astoria, Chicago | 358 | 3 | e5 |
+
+**Still open, not approved:**
+
+- **Rounds per gun for Tenryu, Yubari and Yunagi (e6).** No figure was found and the sheet recommended none. The suggestion on the sheet, to treat their main-gun ammunition as not limiting, needs Amit's word.
+- **The 61 cm 8th Year torpedo warhead (Yubari).** Two rows, 345 kg from the US technical mission and 346 kg from a website. This was not on the sheet, because Yubari's torpedo type was itself open until item 6 was approved. It is the same kind of case as bulk item b8, and the same recommendation would be 345.
+- **Search radar for Vincennes and Jarvis (e7, e8).** Unknown in the sources. Decision 0019's working assumption covers both.
 
 **Three things this sheet cannot fix and the rule should know.**
 
