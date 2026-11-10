@@ -6,7 +6,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - Which sources may be used and how to cite: `docs/research/oob/source-policy.md`
 - Where sources disagree: `docs/research/oob/conflicts.md`
 - What was looked for and not found: `gaps.csv`
-- Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`
+- Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`. The disputed facts its ships need, for one-pass approval: `savo-island-settlement.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.
 
@@ -28,18 +28,18 @@ Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 
 | File | Rows | Holds |
 | --- | --- | --- |
 | `ships.csv`, `ship_facts.csv` | 122, 612 | 53 US, 66 Japanese and 3 Australian ships with build dates and fates |
-| `ship_classes.csv`, `ship_class_facts.csv` | 44, 668 | Dimensions, speed, fuel, endurance, armour |
+| `ship_classes.csv`, `ship_class_facts.csv` | 44, 731 | Dimensions, speed, fuel, endurance, armour |
 | `aircraft_types.csv`, `aircraft_type_facts.csv` | 20, 240 | Performance and weights |
-| `weapons.csv`, `weapon_facts.csv` | 60, 430 | Guns, torpedoes, bombs, depth charges |
+| `weapons.csv`, `weapon_facts.csv` | 60, 432 | Guns, torpedoes, bombs, depth charges |
 | `sensors.csv`, `sensor_facts.csv` | 26, 103 | Radar, sonar, and Japanese rangefinders, binoculars and searchlights |
 | `air_units.csv`, `air_unit_facts.csv` | 45, 201 | Equipment, base and strength by date |
-| `fits.csv` | 393 | Armament by class, radar by ship, aircraft guns and loads |
+| `fits.csv` | 392 | Armament by class, radar by ship, aircraft guns and loads |
 | `engagement_forces.csv` | 278 | Who was present at the two battles, by formation |
 | `engagement_events.csv` | 120 | Savo Island: sightings, warnings, readiness, open fire, by time |
 | `engagement_positions.csv` | 261 | Savo Island: patrol stations, Mikawa's track, sinking positions |
 | `engagement_outcomes.csv` | 180 | Savo Island: hits, losses, rounds and torpedoes fired |
-| `sources.csv` | 40 | Every source cited |
-| `gaps.csv` | 339 | What was not found |
+| `sources.csv` | 43 | Every source cited |
+| `gaps.csv` | 350 | What was not found |
 
 Every row has a source and a locator. About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
 
@@ -47,15 +47,15 @@ Every row has a source and a locator. About 30 values from the first pass and ab
 
 | Confidence | Rows | Share |
 | --- | --- | --- |
-| high | 691 | 20% |
-| medium | 1,665 | 48% |
-| low | 1,130 | 32% |
+| high | 697 | 20% |
+| medium | 1,700 | 48% |
+| low | 1,153 | 32% |
 
 | Standing | Rows | Share |
 | --- | --- | --- |
-| preferred | 2,095 | 60% |
-| unconfirmed | 707 | 20% |
-| disputed | 647 | 19% |
+| preferred | 2,107 | 59% |
+| unconfirmed | 699 | 20% |
+| disputed | 707 | 20% |
 | alternative | 37 | 1% |
 
 Where the rows come from matters more than the count:
