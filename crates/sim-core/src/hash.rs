@@ -114,6 +114,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(ship.class.raw());
         h.u8(ship.side.code());
         h.i64(ship.fuel_t.raw());
+        h.i64(ship.supply_t.raw());
         match ship.location {
             ShipLocation::TaskForce(id) => {
                 h.u8(1);
@@ -148,6 +149,22 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u8(task_force.status.code());
         h.optional_u32(task_force.route_order.map(|id| id.raw()));
         h.optional_u32(task_force.speed_order.map(|id| id.raw()));
+        match task_force.cargo_order {
+            Some(cargo) => {
+                h.u8(1);
+                h.u8(cargo.action.code());
+                h.u32(cargo.order.raw());
+            }
+            None => h.u8(0),
+        }
+        match task_force.arrived_at_hours {
+            Some(hours) => {
+                h.u8(1);
+                h.i64(hours.raw());
+            }
+            None => h.u8(0),
+        }
+        h.optional_u32(task_force.arrival_event.map(|id| id.raw()));
     }
 
     h.count(truth.bases.len());
@@ -156,6 +173,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u8(base.side.code());
         h.i32(base.hex.q);
         h.i32(base.hex.r);
+        h.i64(base.supply_t.raw());
     }
 
     h.count(world.beliefs.len());

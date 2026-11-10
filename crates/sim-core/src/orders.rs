@@ -1,7 +1,7 @@
 //! Unit-level orders: the only way to influence the simulation.
 //!
-//! Only the task force orders scenario 1 needs exist so far. The spec lists
-//! the full set (form, disband, rules of engagement, air group orders and so
+//! Only the task force orders scenarios 1 and 2 need exist so far (route,
+//! speed, mission, load and unload). The spec lists the full set (form, disband, rules of engagement, air group orders and so
 //! on). They arrive with the scenarios that use them.
 
 use core::fmt;
@@ -53,6 +53,24 @@ pub enum SpeedSetting {
     Full,
 }
 
+/// What a standing cargo order does at a port.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum CargoAction {
+    Load,
+    Unload,
+}
+
+impl CargoAction {
+    /// A stable number for the action. Part of the state hash. Never
+    /// renumber it.
+    pub const fn code(self) -> u8 {
+        match self {
+            CargoAction::Load => 1,
+            CargoAction::Unload => 2,
+        }
+    }
+}
+
 /// An order to a task force.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TaskForceOrder {
@@ -60,6 +78,14 @@ pub enum TaskForceOrder {
     SetRoute(Vec<Hex>),
     SetSpeed(SpeedSetting),
     SetMission(Mission),
+    /// Fill every ship to its cargo capacity from the stock of the base here.
+    /// A standing order of the "cargo" kind: it replaces an unload order, and
+    /// neither cancels the route or the speed.
+    Load,
+    /// Move all supply aboard into the stock of the base where the task force
+    /// stops. A standing order of the "cargo" kind: it replaces a load order,
+    /// and neither cancels the route or the speed.
+    Unload,
 }
 
 /// An order together with the unit it is for.
@@ -112,6 +138,10 @@ pub enum RejectReason {
     WaypointOffMap(Hex),
     /// The route would pass through a hex ships cannot enter.
     RouteBlocked(Hex),
+    /// A load order needs a task force that is stopped.
+    UnderWay,
+    /// A load order needs a base of the side in the task force's hex.
+    NoOwnBaseHere,
 }
 
 impl fmt::Display for RejectReason {
@@ -127,6 +157,8 @@ impl fmt::Display for RejectReason {
                     "the route passes through {hex}, which ships cannot enter"
                 )
             }
+            RejectReason::UnderWay => f.write_str("the task force is under way"),
+            RejectReason::NoOwnBaseHere => f.write_str("there is no base of your side here"),
         }
     }
 }

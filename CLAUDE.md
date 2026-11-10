@@ -126,4 +126,4 @@ Rules:
 
 ## Status
 
-Scenario 1 (transit) is done. Next is scenario 2 (supply run). See the spec's "First test scenarios" table.
+Scenarios 1 (transit) and 2 (supply run) are done. Next is the movement change from decision 0005, then scenario 3. See the spec's "First test scenarios" table.

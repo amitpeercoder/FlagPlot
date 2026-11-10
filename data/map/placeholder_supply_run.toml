@@ -1,0 +1,28 @@
+# PLACEHOLDER MAP. A strip of open sea with two port hexes, used by scenario 2.
+# The geography is invented: the two ports are 8 hexes (320 nm) apart so the
+# arithmetic comes out exact. The real distance between Espiritu Santo and
+# Guadalcanal is different. The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 10]
+r = [-1, 1]
+
+# Stands in for Espiritu Santo.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 5
+anchorage = true
+
+# Stands in for Guadalcanal.
+[[hex]]
+q = 8
+r = 0
+kind = "coast"
+port_size = 1
+anchorage = true

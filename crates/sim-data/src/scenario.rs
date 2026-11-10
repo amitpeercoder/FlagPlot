@@ -14,7 +14,7 @@ use sim_core::{DaySummary, World};
 
 use crate::error::DataError;
 use crate::map::load_map;
-use crate::reference::load_ship_classes;
+use crate::reference::{load_port_sizes, load_ship_classes};
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -29,6 +29,8 @@ struct ScenarioFile {
     map: String,
     /// Path to the ship class file, relative to the scenario file.
     ship_classes: String,
+    /// Path to the port size file, relative to the scenario file.
+    port_sizes: String,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -47,6 +49,8 @@ struct BaseSpec {
     side: SideSpec,
     q: i32,
     r: i32,
+    /// Supply stock at the start, in tons. Defaults to 0.
+    supply_t: Option<Quantity>,
 }
 
 #[derive(Deserialize)]
@@ -68,6 +72,8 @@ struct ShipSpec {
     class: u32,
     side: SideSpec,
     fuel_t: Quantity,
+    /// Supply aboard at the start, in tons. Defaults to 0.
+    supply_t: Option<Quantity>,
     /// Exactly one of `task_force` and `port` must be given.
     task_force: Option<u32>,
     port: Option<u32>,
@@ -94,6 +100,8 @@ enum ActionSpec {
     SetRoute { waypoints: Vec<[i32; 2]> },
     SetSpeed { speed: SpeedSpec },
     SetMission { mission: MissionSpec },
+    Load,
+    Unload,
 }
 
 /// A quantity written as a whole number or a decimal string. A TOML float
@@ -210,7 +218,8 @@ impl Scenario {
 
         let folder = path.parent().unwrap_or_else(|| Path::new("."));
         let map = load_map(&folder.join(&file.map))?;
-        let ref_data = load_ship_classes(&folder.join(&file.ship_classes))?;
+        let mut ref_data = load_ship_classes(&folder.join(&file.ship_classes))?;
+        ref_data.port_sizes = load_port_sizes(&folder.join(&file.port_sizes))?;
 
         let mut truth = TruthState::default();
 
@@ -221,6 +230,12 @@ impl Scenario {
                 name: spec.name.clone(),
                 side: spec.side.into(),
                 hex: Hex::new(spec.q, spec.r),
+                supply_t: match &spec.supply_t {
+                    Some(quantity) => quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: supply_t {e}")))?,
+                    None => Fixed::ZERO,
+                },
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -284,6 +299,12 @@ impl Scenario {
                     .fuel_t
                     .to_fixed()
                     .map_err(|e| fail(format!("{id}: fuel_t {e}")))?,
+                supply_t: match &spec.supply_t {
+                    Some(quantity) => quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: supply_t {e}")))?,
+                    None => Fixed::ZERO,
+                },
                 location,
             };
             if truth.ships.insert(id, ship).is_some() {
@@ -305,6 +326,8 @@ impl Scenario {
                 ),
                 ActionSpec::SetSpeed { speed } => TaskForceOrder::SetSpeed((*speed).into()),
                 ActionSpec::SetMission { mission } => TaskForceOrder::SetMission((*mission).into()),
+                ActionSpec::Load => TaskForceOrder::Load,
+                ActionSpec::Unload => TaskForceOrder::Unload,
             };
             let request = OrderRequest {
                 kind: OrderKind::TaskForce {
