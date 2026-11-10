@@ -63,11 +63,13 @@ Works prepared by US government employees as part of their duties have no copyri
 | Source | Use |
 | --- | --- |
 | Wikipedia | Text is CC BY-SA 4.0 (and GFDL). A fact from it carries no licence, but the article is tertiary and changes. Use it to find the source it cites, then read and cite that. A row citing Wikipedia directly is `low` confidence and says what Wikipedia cites. Never copy its text or tables into the repo: share-alike terms would attach to the copy |
-| Enthusiast sites, forums, model-kit references, YouTube | Leads only. Never cited in a fact row |
+| Enthusiast sites and museum summaries | May be cited only when nothing better was found, always at `low` confidence, with reliability `C` in `sources.csv`. Each such row is a lead to be replaced |
+| Forums, model-kit references, YouTube | Never cited in a fact row |
 | Any wargame or its documentation | Not used at all |
 
 ## Reliability rules of thumb
 
+- **The first data set leans on leads.** About 29% of its rows cite Wikipedia and a few cite enthusiast sites, because the Navy's history site would not load and no book was in hand. That is recorded, not hidden: those rows are `low`, and `data/oob/README.md` gives the counts.
 - **Each side is the authority on itself.** US records for US ships; Japanese records, or studies built on them, for Japanese ships. A US wartime statement about Japanese equipment or losses is a claim, not a fact, and is `low`.
 - **Claims are not losses.** Aircraft shot down and ships sunk "as reported" by the claiming side are belief, not truth. Only the loser's records establish a loss.
 - **Nominal is not actual.** A manual's radar range or a gun's rate of fire is the stated figure. What was achieved in action belongs in the research notes, with its own sources.

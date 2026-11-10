@@ -1,0 +1,18 @@
+# Radar, sonar, optics. Identity only; see sensor_facts.csv.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,nation,kind
+1000,jp-type21-radar,Type 21 (Type 2 Mark 2 Model 1) air search radar,jp,air_search_radar
+1001,jp-type22-radar,Type 22 surface search radar,jp,surface_search_radar
+1002,jp-type93-hydrophone,Type 93 hydrophone,jp,hydrophone
+1003,jp-type93-sonar,Type 93 echo-ranging sonar,jp,sonar
+1004,jp-type94-director,Type 94 low-angle director (Hoiban),jp,director
+1005,uk-type241-radar,British Type 241 (as named by one source for Canberra),uk,surface_search_radar
+1006,uk-type271-radar,British Type 271,uk,surface_search_radar
+1007,uk-type290-radar,British Type 290 (A290),uk,air_search_radar
+1008,us-cxam-radar,US CXAM / CXAM-1,us,air_search_radar
+1009,us-fc-mk3-radar,US FC (Mark 3),us,fire_control_radar
+1010,us-fd-mk4-radar,US FD (Mark 4),us,fire_control_radar
+1011,us-sa-radar,US SA,us,air_search_radar
+1012,us-sc-radar,US SC / SC-1,us,air_search_radar
+1013,us-sg-radar,US SG,us,surface_search_radar
+1014,us-sk-radar,US SK,us,air_search_radar

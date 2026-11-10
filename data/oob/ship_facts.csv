@@ -1,0 +1,597 @@
+# Sourced facts about individual ships. One row is one source's statement.
+# Format and rules: docs/research/oob/database-design.md
+id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,confidence,basis,standing,note
+1,akigumo,fate,Torpedoed by USS Redfin off Zamboanga,Torpedoed by USS Redfin off Zamboanga,,,combinedfleet,https://www.combinedfleet.com/akigum_t.htm,2026-11-10,medium,stated,preferred,
+2,akigumo,sunk,1944-04-11,11 April 1944,,,combinedfleet,https://www.combinedfleet.com/akigum_t.htm,2026-11-10,medium,stated,preferred,
+3,akizuki,commissioned,1942-06-11,11 June 1942,,,combinedfleet,https://www.combinedfleet.com/akizuk_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+4,akizuki,fate,Sunk by carrier aircraft off Cape Engano,Sunk by carrier aircraft off Cape Engano,,,combinedfleet,https://www.combinedfleet.com/akizuk_t.htm,2026-11-10,medium,stated,preferred,
+5,akizuki,sunk,1944-10-25,25 October 1944,,,combinedfleet,https://www.combinedfleet.com/akizuk_t.htm,2026-11-10,medium,stated,preferred,
+6,amatsukaze,fate,Wrecked south of Amoy after air attacks Apr 1945,Wrecked south of Amoy after air attacks Apr 1945,,,combinedfleet,https://www.combinedfleet.com/amatsu_texp.htm,2026-11-10,medium,stated,preferred,
+7,amatsukaze,sunk,1945-04-10,10 April 1945,,,combinedfleet,https://www.combinedfleet.com/amatsu_texp.htm,2026-11-10,medium,stated,preferred,Ran aground after B-25 attacks and was wrecked; used as a target
+8,aoba,commissioned,1927-09-20,20 September 1927,,,combinedfleet,https://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+9,aoba,commissioned,1927-09-20,20 Sep 1927,,,combinedfleet,http://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+10,aoba,fate,Heavily damaged by carrier aircraft at Kure 24 Jul 1945 and settled on the bottom; struck 20 Nov 1945; scrapped Nov 1946,,,,combinedfleet,http://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,disputed,
+11,aoba,fate,Settled at Kure after air attacks Jul 1945; refloated and scrapped 1946,Settled at Kure after air attacks Jul 1945; refloated and scrapped 1946,,,combinedfleet,https://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,disputed,
+12,aoba,laid_down,1924-02-04,4 February 1924,,,combinedfleet,https://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,
+13,aoba,laid_down,1924-02-04,4 Feb 1924,,,combinedfleet,http://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,
+14,aoba,launched,1926-09-25,25 September 1926,,,combinedfleet,https://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,
+15,aoba,launched,1926-09-25,25 Sep 1926,,,combinedfleet,http://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,
+16,aoba,sunk,1945-07-24,24 July 1945,,,combinedfleet,https://www.combinedfleet.com/aoba_t.htm,2026-11-10,medium,stated,preferred,Settled to the bottom at Kure after carrier air attacks
+17,apd-2-colhoun,alias,DD-85,DD-85,,,uboat-net,https://uboat.net/allies/warships/ship/2141.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+18,apd-2-colhoun,commissioned,1918-06-13,13 Jun 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2141.html,2026-11-10,medium,stated,preferred,
+19,apd-2-colhoun,fate,Sunk by Japanese aircraft off Guadalcanal 30 Aug 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/2141.html,2026-11-10,medium,stated,preferred,
+20,apd-2-colhoun,laid_down,1917-09-19,19 Sep 1917,,,uboat-net,https://uboat.net/allies/warships/ship/2141.html,2026-11-10,medium,stated,preferred,
+21,apd-2-colhoun,launched,1918-02-21,21 Feb 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2141.html,2026-11-10,medium,stated,preferred,
+22,apd-2-colhoun,sunk,1942-08-30,30 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2141.html,2026-11-10,medium,stated,preferred,
+23,apd-3-gregory,alias,DD-82,DD-82,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd3.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+24,apd-3-gregory,commissioned,1918-06-01,1 Jun 1918,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd3.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+25,apd-3-gregory,commissioned,1918-06-01,1 Jun 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2159.html,2026-11-10,high,stated,preferred,
+26,apd-3-gregory,fate,Sunk by Japanese destroyers off Guadalcanal; struck from Navy List 2 Oct 1942,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd3.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+27,apd-3-gregory,fate,Sunk by Japanese destroyers off Guadalcanal 5 Sep 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/2159.html,2026-11-10,medium,stated,disputed,
+28,apd-3-gregory,laid_down,1917-08-25,25 Aug 1917,,,uboat-net,https://uboat.net/allies/warships/ship/2159.html,2026-11-10,medium,stated,preferred,
+29,apd-3-gregory,launched,1915-01-27,27 Jan 1915,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd3.html,2026-11-10,low,stated,disputed,uboat.net and DANFS differ on this date; see conflicts.md
+30,apd-3-gregory,launched,1918-01-27,27 Jan 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2159.html,2026-11-10,low,stated,disputed,uboat.net and DANFS differ on this date; see conflicts.md
+31,apd-3-gregory,sunk,1942-09-05,5 Sep 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2159.html,2026-11-10,medium,stated,preferred,
+32,apd-4-little,alias,DD-79,DD-79,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd4.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+33,apd-4-little,commissioned,1918-04-06,6 Apr 1918,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd4.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+34,apd-4-little,commissioned,1918-04-06,6 Apr 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2183.html,2026-11-10,high,stated,preferred,
+35,apd-4-little,fate,Sunk by Japanese destroyers off Guadalcanal (date not on the page text checked),,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd4.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+36,apd-4-little,fate,Sunk by Japanese destroyers off Guadalcanal 5 Sep 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/2183.html,2026-11-10,medium,stated,disputed,
+37,apd-4-little,laid_down,1917-06-18,18 Jun 1917,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd4.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+38,apd-4-little,laid_down,1917-06-18,18 Jun 1917,,,uboat-net,https://uboat.net/allies/warships/ship/2183.html,2026-11-10,high,stated,preferred,
+39,apd-4-little,launched,1917-11-11,11 Nov 1917,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd4.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+40,apd-4-little,launched,1917-11-11,11 Nov 1917,,,uboat-net,https://uboat.net/allies/warships/ship/2183.html,2026-11-10,high,stated,preferred,
+41,apd-4-little,sunk,1942-09-05,5 Sep 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2183.html,2026-11-10,medium,stated,preferred,
+42,apd-5-mckean,alias,DD-90,DD-90,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd5.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+43,apd-5-mckean,commissioned,1919-02-25,25 Feb 1919,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd5.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+44,apd-5-mckean,commissioned,1919-02-25,25 Feb 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2190.html,2026-11-10,high,stated,preferred,
+45,apd-5-mckean,fate,Sunk by Japanese aircraft off Bougainville (date not on the page text checked),,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd5.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+46,apd-5-mckean,fate,Sunk by Japanese aircraft off Bougainville 17 Nov 1943,,,,uboat-net,https://uboat.net/allies/warships/ship/2190.html,2026-11-10,medium,stated,disputed,
+47,apd-5-mckean,laid_down,1918-02-12,12 Feb 1918,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd5.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+48,apd-5-mckean,laid_down,1918-02-12,12 Feb 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2190.html,2026-11-10,high,stated,preferred,
+49,apd-5-mckean,launched,1918-07-04,4 Jul 1918,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/APD/apd5.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+50,apd-5-mckean,launched,1918-07-04,4 Jul 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2190.html,2026-11-10,high,stated,preferred,
+51,apd-5-mckean,sunk,1943-11-17,17 Nov 1943,,,uboat-net,https://uboat.net/allies/warships/ship/2190.html,2026-11-10,medium,stated,preferred,
+52,asagumo,fate,Sunk in Surigao Strait after McDermut's torpedo,Sunk in Surigao Strait after McDermut's torpedo,,,combinedfleet,https://www.combinedfleet.com/asagum_t.htm,2026-11-10,medium,stated,preferred,
+53,asagumo,sunk,1944-10,As stated: 22-25 Oct 1944,,,combinedfleet,https://www.combinedfleet.com/asagum_t.htm,2026-11-10,medium,stated,preferred,As stated: 22-25 Oct 1944
+54,atago,commissioned,1932-03-30,30 March 1932,,,combinedfleet,https://www.combinedfleet.com/atago_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+55,atago,fate,Torpedoed by USS Darter at Palawan Passage,Torpedoed by USS Darter at Palawan Passage,,,combinedfleet,https://www.combinedfleet.com/atago_t.htm,2026-11-10,medium,stated,preferred,
+56,atago,laid_down,1927-04-28,28 April 1927,,,combinedfleet,https://www.combinedfleet.com/atago_t.htm,2026-11-10,medium,stated,preferred,
+57,atago,launched,1930-06-16,16 June 1930,,,combinedfleet,https://www.combinedfleet.com/atago_t.htm,2026-11-10,medium,stated,preferred,
+58,atago,sunk,1944-10-23,23 October 1944,,,combinedfleet,https://www.combinedfleet.com/atago_t.htm,2026-11-10,medium,stated,preferred,
+59,bb-55-north-carolina,commissioned,1941-04-09,9 April 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/BB/bb55.html,2026-11-10,high,stated,preferred,
+60,bb-55-north-carolina,fate,Decommissioned 27 Jun 1947; became a memorial ship in 1962,Decommissioned 27 Jun 1947; became a memorial ship in 1962,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/BB/bb55.html,2026-11-10,high,stated,preferred,
+61,bb-55-north-carolina,laid_down,1937-10-27,27 October 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/BB/bb55.html,2026-11-10,high,stated,preferred,
+62,bb-55-north-carolina,launched,1940-06-13,13 June 1940,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/BB/bb55.html,2026-11-10,high,stated,preferred,
+63,boston-maru,commissioned,1919-10-11,11 October 1919,,,combinedfleet,https://www.combinedfleet.com/Boston_t.htm,2026-11-10,medium,stated,preferred,Completion date; treated as commissioning
+64,boston-maru,fate,Torpedoed and sunk 16 Nov 1942,Torpedoed and sunk 16 Nov 1942,,,combinedfleet,https://www.combinedfleet.com/Boston_t.htm,2026-11-10,medium,stated,preferred,
+65,boston-maru,laid_down,1919-05-15,15 May 1919,,,combinedfleet,https://www.combinedfleet.com/Boston_t.htm,2026-11-10,medium,stated,preferred,
+66,boston-maru,launched,1919-09-14,14 September 1919,,,combinedfleet,https://www.combinedfleet.com/Boston_t.htm,2026-11-10,medium,stated,preferred,
+67,boston-maru,sunk,1942-11-16,16 November 1942,,,combinedfleet,https://www.combinedfleet.com/Boston_t.htm,2026-11-10,medium,stated,preferred,
+68,ca-25-salt-lake-city,commissioned,1929-12-11,11 December 1929,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca25.html,2026-11-10,high,stated,preferred,
+69,ca-25-salt-lake-city,fate,Survived Crossroads tests; sunk as a target 25 May 1948,Survived Crossroads tests; sunk as a target 25 May 1948,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca25.html,2026-11-10,high,stated,preferred,
+70,ca-25-salt-lake-city,laid_down,1927-06-09,9 June 1927,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca25.html,2026-11-10,high,stated,preferred,
+71,ca-25-salt-lake-city,launched,1929-01-23,23 January 1929,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca25.html,2026-11-10,high,stated,preferred,
+72,ca-25-salt-lake-city,sunk,1948-05-25,25 May 1948,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca25.html,2026-11-10,high,stated,preferred,"Sunk as target, not by enemy"
+73,ca-29-chicago,commissioned,1931-03-09,9 Mar 1931,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca29.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+74,ca-29-chicago,commissioned,1931-03-09,9 Mar 1931,,,uboat-net,https://uboat.net/allies/warships/ship/2554.html,2026-11-10,high,stated,preferred,
+75,ca-29-chicago,fate,Sunk by Japanese torpedo aircraft in the Battle of Rennell Island (date not on the transcription seen),,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca29.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+76,ca-29-chicago,fate,Hit by Japanese aerial torpedoes at Rennell Island 29 Jan 1943; sank 30 Jan 1943 while under tow,,,,uboat-net,https://uboat.net/allies/warships/ship/2554.html,2026-11-10,medium,stated,disputed,
+77,ca-29-chicago,laid_down,1928-09-10,10 Sep 1928,,,uboat-net,https://uboat.net/allies/warships/ship/2554.html,2026-11-10,medium,stated,preferred,
+78,ca-29-chicago,launched,1930-04-10,10 Apr 1930,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca29.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+79,ca-29-chicago,launched,1930-04-10,10 Apr 1930,,,uboat-net,https://uboat.net/allies/warships/ship/2554.html,2026-11-10,high,stated,preferred,
+80,ca-29-chicago,sunk,1943-01-30,30 Jan 1943,,,uboat-net,https://uboat.net/allies/warships/ship/2554.html,2026-11-10,medium,stated,preferred,
+81,ca-32-new-orleans,commissioned,1934-02-15,15 February 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca32.html,2026-11-10,high,stated,preferred,
+82,ca-32-new-orleans,fate,Decommissioned 10 Feb 1947; sold for scrap 22 Sep 1959,Decommissioned 10 Feb 1947; sold for scrap 22 Sep 1959,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca32.html,2026-11-10,high,stated,preferred,
+83,ca-32-new-orleans,laid_down,1931-03-14,14 March 1931,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca32.html,2026-11-10,high,stated,preferred,
+84,ca-32-new-orleans,launched,1933-04-12,12 April 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca32.html,2026-11-10,high,stated,preferred,
+85,ca-33-portland,commissioned,1933-02-23,23 February 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca33.html,2026-11-10,high,stated,preferred,
+86,ca-33-portland,fate,Decommissioned 12 Jul 1946; sold for scrap 6 Oct 1959,Decommissioned 12 Jul 1946; sold for scrap 6 Oct 1959,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca33.html,2026-11-10,high,stated,preferred,
+87,ca-33-portland,laid_down,1930-02-17,17 February 1930,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca33.html,2026-11-10,high,stated,preferred,
+88,ca-33-portland,launched,1932-05-21,21 May 1932,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca33.html,2026-11-10,high,stated,preferred,
+89,ca-34-astoria,commissioned,1934-04-28,28 Apr 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca34.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+90,ca-34-astoria,commissioned,1934-04-28,28 Apr 1934,,,uboat-net,https://uboat.net/allies/warships/ship/2558.html,2026-11-10,high,stated,preferred,
+91,ca-34-astoria,fate,Foundered about 1215 on the day of the battle after damage control failed (day given as 9 Aug by the narrative context; exact date not on the same line),,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca34.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+92,ca-34-astoria,fate,Sunk off Savo Island 9 Aug 1942 after gunfire damage in the night action,,,,uboat-net,https://uboat.net/allies/warships/ship/2558.html,2026-11-10,medium,stated,disputed,
+93,ca-34-astoria,laid_down,1930-09-01,1 Sep 1930,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca34.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+94,ca-34-astoria,laid_down,1930-09-01,1 Sep 1930,,,uboat-net,https://uboat.net/allies/warships/ship/2558.html,2026-11-10,high,stated,preferred,
+95,ca-34-astoria,launched,1933-12-16,16 Dec 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca34.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+96,ca-34-astoria,launched,1933-12-16,16 Dec 1933,,,uboat-net,https://uboat.net/allies/warships/ship/2558.html,2026-11-10,high,stated,preferred,
+97,ca-34-astoria,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2558.html,2026-11-10,medium,stated,preferred,
+98,ca-36-minneapolis,commissioned,1934-05-19,19 May 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,high,stated,preferred,
+99,ca-36-minneapolis,fate,Decommissioned 10 Feb 1947; sold for scrap 14 Aug 1959,Decommissioned 10 Feb 1947; sold for scrap 14 Aug 1959,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,high,stated,preferred,
+100,ca-36-minneapolis,laid_down,1921-06-27,27 June 1921,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,low,stated,preferred,Page as fetched reads 1921 although launch is 1933; probably a typo for 1931. Not corrected here. See conflicts.md
+101,ca-36-minneapolis,launched,1933-09-06,6 September 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,high,stated,preferred,
+102,ca-38-san-francisco,commissioned,1934-02-10,10 February 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca38.html,2026-11-10,high,stated,preferred,
+103,ca-38-san-francisco,fate,Decommissioned Feb 1946; sold for scrap 9 Sep 1959,Decommissioned Feb 1946; sold for scrap 9 Sep 1959,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca38.html,2026-11-10,high,stated,preferred,
+104,ca-38-san-francisco,laid_down,1931-09-09,9 September 1931,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca38.html,2026-11-10,high,stated,preferred,
+105,ca-38-san-francisco,launched,1933-03-09,9 March 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca38.html,2026-11-10,high,stated,preferred,
+106,ca-39-quincy,commissioned,1936-06-09,9 Jun 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca39.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+107,ca-39-quincy,commissioned,1936-06-09,9 Jun 1936,,,uboat-net,https://uboat.net/allies/warships/ship/2562.html,2026-11-10,high,stated,preferred,
+108,ca-39-quincy,fate,Attacked by a large Japanese naval force early on 9 Aug 1942 and sank,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca39.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+109,ca-39-quincy,fate,"Sunk by Japanese cruisers in the Battle of Savo Island, early 9 Aug 1942",,,,uboat-net,https://uboat.net/allies/warships/ship/2562.html,2026-11-10,medium,stated,disputed,
+110,ca-39-quincy,laid_down,1933-11-15,15 Nov 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca39.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+111,ca-39-quincy,laid_down,1933-11-15,15 Nov 1933,,,uboat-net,https://uboat.net/allies/warships/ship/2562.html,2026-11-10,high,stated,preferred,
+112,ca-39-quincy,launched,1935-06-19,19 Jun 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca39.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+113,ca-39-quincy,launched,1935-06-19,19 Jun 1935,,,uboat-net,https://uboat.net/allies/warships/ship/2562.html,2026-11-10,high,stated,preferred,
+114,ca-39-quincy,sunk,1942-08-09,9 Aug 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca39.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+115,ca-39-quincy,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2562.html,2026-11-10,high,stated,preferred,
+116,ca-44-vincennes,commissioned,1937-02-24,24 Feb 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca44.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+117,ca-44-vincennes,commissioned,1937-02-24,24 Feb 1937,,,uboat-net,https://uboat.net/allies/warships/ship/2563.html,2026-11-10,high,stated,preferred,
+118,ca-44-vincennes,fate,Rolled over and sank about 0250 on 9 Aug 1942 east of Savo Island; struck from Navy list 2 Nov 1942,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca44.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+119,ca-44-vincennes,fate,"Sunk by Japanese cruisers in the Battle of Savo Island, 9 Aug 1942",,,,uboat-net,https://uboat.net/allies/warships/ship/2563.html,2026-11-10,medium,stated,disputed,
+120,ca-44-vincennes,laid_down,1934-01-02,2 Jan 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca44.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+121,ca-44-vincennes,laid_down,1934-01-02,2 Jan 1934,,,uboat-net,https://uboat.net/allies/warships/ship/2563.html,2026-11-10,high,stated,preferred,
+122,ca-44-vincennes,launched,1936-05-21,21 May 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca44.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+123,ca-44-vincennes,launched,1936-05-21,21 May 1936,,,uboat-net,https://uboat.net/allies/warships/ship/2563.html,2026-11-10,high,stated,preferred,
+124,ca-44-vincennes,sunk,1942-08-09,9 Aug 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca44.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+125,ca-44-vincennes,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2563.html,2026-11-10,high,stated,preferred,
+126,chikuma,commissioned,1939-05-20,20 May 1939,,,combinedfleet,https://www.combinedfleet.com/chikuma_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+127,chikuma,fate,Torpedoed by carrier aircraft off Samar,Torpedoed by carrier aircraft off Samar,,,combinedfleet,https://www.combinedfleet.com/chikuma_t.htm,2026-11-10,medium,stated,preferred,
+128,chikuma,laid_down,1935-10-01,1 October 1935,,,combinedfleet,https://www.combinedfleet.com/chikuma_t.htm,2026-11-10,medium,stated,preferred,
+129,chikuma,launched,1938-03-19,19 March 1938,,,combinedfleet,https://www.combinedfleet.com/chikuma_t.htm,2026-11-10,medium,stated,preferred,
+130,chikuma,sunk,1944-10-25,25 October 1944,,,combinedfleet,https://www.combinedfleet.com/chikuma_t.htm,2026-11-10,medium,stated,preferred,
+131,chitose,commissioned,1938-07-25,25 July 1938,,,combinedfleet,https://www.combinedfleet.com/Chitose_t.htm,2026-11-10,medium,stated,preferred,
+132,chitose,fate,Page record ends Jan 1943 as conversion to carrier began,Page record ends Jan 1943 as conversion to carrier began,,,combinedfleet,https://www.combinedfleet.com/Chitose_t.htm,2026-11-10,medium,stated,preferred,
+133,chitose,laid_down,1934-11-26,26 November 1934,,,combinedfleet,https://www.combinedfleet.com/Chitose_t.htm,2026-11-10,medium,stated,preferred,
+134,chitose,launched,1936-11-29,29 November 1936,,,combinedfleet,https://www.combinedfleet.com/Chitose_t.htm,2026-11-10,medium,stated,preferred,
+135,chokai,commissioned,1932-06-30,30 June 1932,,,combinedfleet,https://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+136,chokai,commissioned,1932-06-30,30 Jun 1932,,,combinedfleet,http://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+137,chokai,fate,Crippled off Samar and scuttled by Fujinami,Crippled off Samar and scuttled by Fujinami,,,combinedfleet,https://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,disputed,
+138,chokai,fate,Damaged in the Battle off Samar and scuttled by torpedoes from destroyer Fujinami 25 Oct 1944,,,,combinedfleet,http://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,disputed,
+139,chokai,laid_down,1928-03-26,26 March 1928,,,combinedfleet,https://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,
+140,chokai,laid_down,1928-03-26,26 Mar 1928,,,combinedfleet,http://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,
+141,chokai,launched,1931-04-05,5 April 1931,,,combinedfleet,https://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,
+142,chokai,launched,1931-04-05,5 Apr 1931,,,combinedfleet,http://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,
+143,chokai,sunk,1944-10-25,25 October 1944,,,combinedfleet,https://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,
+144,chokai,sunk,1944-10-25,25 Oct 1944,,,combinedfleet,http://www.combinedfleet.com/chokai_t.htm,2026-11-10,medium,stated,preferred,
+145,cl-51-atlanta,commissioned,1941-12-24,24 December 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl51.html,2026-11-10,high,stated,preferred,
+146,cl-51-atlanta,fate,Disabled in the Naval Battle of Guadalcanal and scuttled by demolition charge 13 Nov 1942,Disabled in the Naval Battle of Guadalcanal and scuttled by demolition charge 13 Nov 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl51.html,2026-11-10,high,stated,preferred,
+147,cl-51-atlanta,laid_down,1940-04-22,22 April 1940,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl51.html,2026-11-10,high,stated,preferred,
+148,cl-51-atlanta,launched,1941-09-06,6 September 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl51.html,2026-11-10,high,stated,preferred,
+149,cl-51-atlanta,sunk,1942-11-13,13 November 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl51.html,2026-11-10,high,stated,preferred,
+150,cl-54-san-juan,commissioned,1942-02-28,28 February 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,preferred,
+151,cl-54-san-juan,commissioned,1942-02-28,28 Feb 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+152,cl-54-san-juan,commissioned,1942-02-28,28 Feb 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2578.html,2026-11-10,high,stated,preferred,
+153,cl-54-san-juan,fate,Decommissioned 9 Nov 1946; struck 1 Mar 1959; sold 31 Oct 1961 for scrapping,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+154,cl-54-san-juan,fate,Struck 1 Mar 1959; sold for scrap 31 Oct 1961,Struck 1 Mar 1959; sold for scrap 31 Oct 1961,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,disputed,
+155,cl-54-san-juan,fate,"Survived the war; decommissioned 8 Nov 1946, stricken 1 Mar 1959, sold 31 Oct 1961 and scrapped",,,,uboat-net,https://uboat.net/allies/warships/ship/2578.html,2026-11-10,medium,stated,disputed,
+156,cl-54-san-juan,laid_down,1940-05-15,15 May 1940,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,preferred,
+157,cl-54-san-juan,laid_down,1940-05-15,15 May 1940,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+158,cl-54-san-juan,laid_down,1940-05-15,15 May 1940,,,uboat-net,https://uboat.net/allies/warships/ship/2578.html,2026-11-10,high,stated,preferred,
+159,cl-54-san-juan,launched,1941-09-06,6 September 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,preferred,
+160,cl-54-san-juan,launched,1941-09-06,6 Sep 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CL/cl54.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+161,cl-54-san-juan,launched,1941-09-06,6 Sep 1941,,,uboat-net,https://uboat.net/allies/warships/ship/2578.html,2026-11-10,high,stated,preferred,
+162,cv-3-saratoga,commissioned,1927-11-16,16 November 1927,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv3.html,2026-11-10,high,stated,preferred,
+163,cv-3-saratoga,fate,Sunk at Bikini in the 25 July 1946 atomic test; struck 15 Aug 1946,Sunk at Bikini in the 25 July 1946 atomic test; struck 15 Aug 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv3.html,2026-11-10,high,stated,preferred,
+164,cv-3-saratoga,laid_down,1920-09-25,25 September 1920,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv3.html,2026-11-10,high,stated,preferred,
+165,cv-3-saratoga,launched,1925-04-07,7 April 1925,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv3.html,2026-11-10,high,stated,preferred,
+166,cv-3-saratoga,sunk,1946-07-25,25 July 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv3.html,2026-11-10,high,stated,preferred,
+167,cv-6-enterprise,commissioned,1938-05-12,12 May 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv6.html,2026-11-10,high,stated,preferred,
+168,cv-6-enterprise,fate,Decommissioned 17 Feb 1947; sold 1 Jul 1958,Decommissioned 17 Feb 1947; sold 1 Jul 1958,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv6.html,2026-11-10,high,stated,preferred,
+169,cv-6-enterprise,launched,1936-10-03,3 October 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv6.html,2026-11-10,high,stated,preferred,
+170,cv-7-wasp,commissioned,1940-04-25,25 April 1940,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv7.html,2026-11-10,high,stated,preferred,
+171,cv-7-wasp,fate,Torpedoed by I-19 on 15 Sep 1942 and sunk by Lansdowne's torpedoes,Torpedoed by I-19 on 15 Sep 1942 and sunk by Lansdowne's torpedoes,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv7.html,2026-11-10,high,stated,preferred,
+172,cv-7-wasp,laid_down,1936-04-01,1 April 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv7.html,2026-11-10,high,stated,preferred,
+173,cv-7-wasp,launched,1939-04-04,4 April 1939,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv7.html,2026-11-10,high,stated,preferred,
+174,cv-7-wasp,sunk,1942-09-15,15 September 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CV/cv7.html,2026-11-10,high,stated,preferred,
+175,daifuku-maru,commissioned,1916-12-28,28 December 1916,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,Completion date; treated as commissioning
+176,daifuku-maru,fate,Torpedoed by USS Pollack in convoy FU-806,Torpedoed by USS Pollack in convoy FU-806,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
+177,daifuku-maru,laid_down,1916,1916,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
+178,daifuku-maru,launched,1916-09-12,12 September 1916,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
+179,daifuku-maru,sunk,1943-08-27,27 August 1943,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
+180,dd-348-farragut,commissioned,1934-06-18,18 June 1934,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-348_Farragut.html,2026-11-10,low,stated,preferred,Clancey list page on HyperWar
+181,dd-349-dewey,commissioned,1934-10-04,4 October 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,preferred,
+182,dd-349-dewey,commissioned,1934-10-04,4 Oct 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+183,dd-349-dewey,commissioned,1934-10-04,4 Oct 1934,,,uboat-net,https://uboat.net/allies/warships/ship/1857.html,2026-11-10,high,stated,preferred,
+184,dd-349-dewey,fate,Decommissioned 19 Oct 1945; sold 20 Dec 1946,Decommissioned 19 Oct 1945; sold 20 Dec 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,disputed,
+185,dd-349-dewey,fate,Decommissioned 19 Oct 1945; sold 20 Dec 1946,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+186,dd-349-dewey,fate,Decommissioned 19 Oct 1945; stricken 1 Nov 1945; sold for scrap 20 Dec 1946,,,,uboat-net,https://uboat.net/allies/warships/ship/1857.html,2026-11-10,medium,stated,disputed,
+187,dd-349-dewey,laid_down,1932-12-16,16 Dec 1932,,,uboat-net,https://uboat.net/allies/warships/ship/1857.html,2026-11-10,medium,stated,preferred,
+188,dd-349-dewey,launched,1934-07-28,28 July 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,preferred,
+189,dd-349-dewey,launched,1934-07-28,28 Jul 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+190,dd-349-dewey,launched,1934-07-28,28 Jul 1934,,,uboat-net,https://uboat.net/allies/warships/ship/1857.html,2026-11-10,high,stated,preferred,
+191,dd-350-hull,commissioned,1935-01-11,11 Jan 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd350.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+192,dd-350-hull,commissioned,1935-01-11,11 Jan 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1859.html,2026-11-10,high,stated,preferred,
+193,dd-350-hull,fate,Locked in the trough of a typhoon about 1100 on 18 Dec and lost (year not on the same line),,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd350.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+194,dd-350-hull,fate,"Capsized and lost in a typhoon east of Samar, 18 Dec 1944",,,,uboat-net,https://uboat.net/allies/warships/ship/1859.html,2026-11-10,medium,stated,disputed,
+195,dd-350-hull,laid_down,1933-03-07,7 Mar 1933,,,uboat-net,https://uboat.net/allies/warships/ship/1859.html,2026-11-10,medium,stated,preferred,
+196,dd-350-hull,launched,1934-01-31,31 Jan 1934,,,uboat-net,https://uboat.net/allies/warships/ship/1859.html,2026-11-10,medium,stated,preferred,
+197,dd-350-hull,sunk,1944-12-18,18 Dec 1944,,,uboat-net,https://uboat.net/allies/warships/ship/1859.html,2026-11-10,medium,stated,preferred,
+198,dd-351-macdonough,commissioned,1935-03-15,15 March 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
+199,dd-351-macdonough,fate,Decommissioned 22 Oct 1945; sold 20 Dec 1946,Decommissioned 22 Oct 1945; sold 20 Dec 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
+200,dd-351-macdonough,laid_down,1933-05-15,15 May 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
+201,dd-351-macdonough,launched,1934-08-22,22 August 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
+202,dd-352-worden,commissioned,1935,1935,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
+203,dd-352-worden,fate,Grounded and wrecked at Amchitka 12 Jan 1943,Grounded and wrecked at Amchitka 12 Jan 1943,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,preferred,"Single source, not corroborated"
+204,dd-352-worden,sunk,1943-01-12,12 January 1943,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,preferred,"Wrecked by grounding, not sunk by enemy"
+205,dd-353-dale,commissioned,1935-06-17,17 June 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd353.html,2026-11-10,high,stated,preferred,
+206,dd-353-dale,fate,Decommissioned 16 Oct 1945; sold 20 Dec 1946,Decommissioned 16 Oct 1945; sold 20 Dec 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd353.html,2026-11-10,high,stated,preferred,
+207,dd-353-dale,launched,1935-01-23,23 January 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd353.html,2026-11-10,high,stated,preferred,
+208,dd-357-selfridge,commissioned,1936-11-26,26 November 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,preferred,
+209,dd-357-selfridge,commissioned,1936-11-26,26 Nov 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+210,dd-357-selfridge,commissioned,1936-11-26,26 Nov 1936,,,uboat-net,https://uboat.net/allies/warships/ship/5150.html,2026-11-10,high,stated,preferred,
+211,dd-357-selfridge,fate,Decommissioned 15 Oct 1945; sold and scrapped 1946-47,Decommissioned 15 Oct 1945; sold and scrapped 1946-47,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,disputed,
+212,dd-357-selfridge,fate,Decommissioned 15 Oct 1945; struck 1 Nov 1945; sold and scrapped Oct 1947,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+213,dd-357-selfridge,fate,Survived the war; decommissioned 15 Oct 1945,,,,uboat-net,https://uboat.net/allies/warships/ship/5150.html,2026-11-10,medium,stated,disputed,
+214,dd-357-selfridge,laid_down,1933-12-18,18 December 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,preferred,
+215,dd-357-selfridge,laid_down,1933-12-18,18 Dec 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+216,dd-357-selfridge,laid_down,1933-12-18,18 Dec 1933,,,uboat-net,https://uboat.net/allies/warships/ship/5150.html,2026-11-10,high,stated,preferred,
+217,dd-357-selfridge,launched,1936-04-18,18 April 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,preferred,
+218,dd-357-selfridge,launched,1936-04-18,18 Apr 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd357.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+219,dd-357-selfridge,launched,1936-04-18,18 Apr 1936,,,uboat-net,https://uboat.net/allies/warships/ship/5150.html,2026-11-10,high,stated,preferred,
+220,dd-360-phelps,commissioned,1936-02-26,26 February 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd360.html,2026-11-10,high,stated,preferred,
+221,dd-360-phelps,fate,Decommissioned 6 Nov 1945; struck 28 Jan 1947 and scrapped,Decommissioned 6 Nov 1945; struck 28 Jan 1947 and scrapped,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd360.html,2026-11-10,high,stated,preferred,
+222,dd-360-phelps,laid_down,1934-01-02,2 January 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd360.html,2026-11-10,high,stated,preferred,
+223,dd-360-phelps,launched,1935-07-18,18 July 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd360.html,2026-11-10,high,stated,preferred,
+224,dd-363-balch,commissioned,1936-10-20,20 October 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd363.html,2026-11-10,high,stated,preferred,
+225,dd-363-balch,fate,Decommissioned 19 Oct 1945; scrapped 1946,Decommissioned 19 Oct 1945; scrapped 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd363.html,2026-11-10,high,stated,preferred,
+226,dd-363-balch,launched,1936-03-24,24 March 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd363.html,2026-11-10,high,stated,preferred,
+227,dd-386-bagley,commissioned,1937-06-12,12 June 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd386.html,2026-11-10,high,stated,preferred,
+228,dd-386-bagley,commissioned,1937-06-12,12 Jun 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd386.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+229,dd-386-bagley,commissioned,1937-06-12,12 Jun 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1867.html,2026-11-10,high,stated,preferred,
+230,dd-386-bagley,fate,Decommissioned 14 Jun 1946; sold 3 Oct 1947,Decommissioned 14 Jun 1946; sold 3 Oct 1947,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd386.html,2026-11-10,high,stated,disputed,
+231,dd-386-bagley,fate,Decommissioned 14 Jun 1946; sold 3 Oct 1947,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd386.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+232,dd-386-bagley,fate,Decommissioned 14 Jun 1946; stricken 25 Feb 1947; sold 3 Oct 1947 for scrap,,,,uboat-net,https://uboat.net/allies/warships/ship/1867.html,2026-11-10,medium,stated,disputed,
+233,dd-386-bagley,laid_down,1935-07-31,31 Jul 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1867.html,2026-11-10,medium,stated,preferred,
+234,dd-386-bagley,launched,1936-09-03,3 September 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd386.html,2026-11-10,high,stated,preferred,
+235,dd-386-bagley,launched,1936-09-03,3 Sep 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd386.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+236,dd-386-bagley,launched,1936-09-03,3 Sep 1936,,,uboat-net,https://uboat.net/allies/warships/ship/1867.html,2026-11-10,high,stated,preferred,
+237,dd-387-blue,commissioned,1937-08-14,14 Aug 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd387.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+238,dd-387-blue,commissioned,1937-08-14,14 Aug 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1868.html,2026-11-10,high,stated,preferred,
+239,dd-387-blue,fate,Scuttled at 2221 on 23 Aug 1942 after salvage attempts failed,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd387.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+240,dd-387-blue,fate,Torpedoed by destroyer Kawakaze 22 Aug 1942; scuttled 23 Aug 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/1868.html,2026-11-10,medium,stated,disputed,
+241,dd-387-blue,laid_down,1935-09-25,25 Sep 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1868.html,2026-11-10,medium,stated,preferred,
+242,dd-387-blue,launched,1937-05-27,27 May 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd387.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+243,dd-387-blue,launched,1937-05-27,27 May 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1868.html,2026-11-10,high,stated,preferred,
+244,dd-387-blue,sunk,1942-08-23,23 Aug 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd387.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+245,dd-387-blue,sunk,1942-08-23,23 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/1868.html,2026-11-10,high,stated,preferred,
+246,dd-388-helm,commissioned,1937-10-16,16 Oct 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd388.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+247,dd-388-helm,commissioned,1937-10-16,16 Oct 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1869.html,2026-11-10,high,stated,preferred,
+248,dd-388-helm,fate,Decommissioned 26 Jun 1946; target in the 1946 Crossroads tests; hulk sold Oct 1947 for scrapping,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd388.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+249,dd-388-helm,fate,Decommissioned 26 Jun 1946; stricken 25 Feb 1947; sold 2 Oct 1947 for scrap,,,,uboat-net,https://uboat.net/allies/warships/ship/1869.html,2026-11-10,medium,stated,disputed,
+250,dd-388-helm,laid_down,1935-09-25,25 Sep 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1869.html,2026-11-10,medium,stated,preferred,
+251,dd-388-helm,launched,1937-05-27,27 May 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd388.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+252,dd-388-helm,launched,1937-05-27,27 May 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1869.html,2026-11-10,high,stated,preferred,
+253,dd-389-mugford,commissioned,1937-08-16,16 Aug 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd389.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+254,dd-389-mugford,commissioned,1937-08-16,16 Aug 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1872.html,2026-11-10,high,stated,preferred,
+255,dd-389-mugford,fate,Decommissioned 29 Aug 1946 after atomic tests; sunk off Kwajalein 22 Mar 1948,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd389.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+256,dd-389-mugford,fate,Damaged at Bikini 1946; decommissioned 29 Aug 1946; scuttled off Kwajalein 22 Mar 1948,,,,uboat-net,https://uboat.net/allies/warships/ship/1872.html,2026-11-10,medium,stated,disputed,
+257,dd-389-mugford,laid_down,1935-10-28,28 Oct 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd389.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+258,dd-389-mugford,laid_down,1935-10-28,28 Oct 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1872.html,2026-11-10,high,stated,preferred,
+259,dd-389-mugford,launched,1936-10-31,31 Oct 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd389.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+260,dd-389-mugford,launched,1936-10-31,31 Oct 1936,,,uboat-net,https://uboat.net/allies/warships/ship/1872.html,2026-11-10,high,stated,preferred,
+261,dd-390-ralph-talbot,commissioned,1937-10-14,14 Oct 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd390.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+262,dd-390-ralph-talbot,commissioned,1937-10-14,14 Oct 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1874.html,2026-11-10,high,stated,preferred,
+263,dd-390-ralph-talbot,fate,Decommissioned 29 Aug 1946 after atomic tests; sunk off Kwajalein 8 Mar 1948,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd390.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+264,dd-390-ralph-talbot,fate,Damaged at Bikini 1946; decommissioned 28 Aug 1946; scuttled off Kwajalein 8 Mar 1948,,,,uboat-net,https://uboat.net/allies/warships/ship/1874.html,2026-11-10,medium,stated,disputed,
+265,dd-390-ralph-talbot,laid_down,1935-10-28,28 Oct 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd390.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+266,dd-390-ralph-talbot,laid_down,1935-10-28,28 Oct 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1874.html,2026-11-10,high,stated,preferred,
+267,dd-390-ralph-talbot,launched,1936-10-31,31 Oct 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd390.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+268,dd-390-ralph-talbot,launched,1936-10-31,31 Oct 1936,,,uboat-net,https://uboat.net/allies/warships/ship/1874.html,2026-11-10,high,stated,preferred,
+269,dd-391-henley,commissioned,1937-08-14,14 Aug 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd391.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+270,dd-391-henley,commissioned,1937-08-14,14 Aug 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1870.html,2026-11-10,high,stated,preferred,
+271,dd-391-henley,fate,Hit by a Japanese torpedo on 3 Oct 1943 while on a sweep off Finschhafen and lost,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd391.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+272,dd-391-henley,fate,"Torpedoed by submarine RO-108 off Cape Cretin, New Guinea, 3 Oct 1943",,,,uboat-net,https://uboat.net/allies/warships/ship/1870.html,2026-11-10,medium,stated,disputed,
+273,dd-391-henley,laid_down,1935-10-28,28 Oct 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1870.html,2026-11-10,medium,stated,preferred,
+274,dd-391-henley,launched,1937-01-12,12 Jan 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd391.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+275,dd-391-henley,launched,1937-01-12,12 Jan 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1870.html,2026-11-10,high,stated,preferred,
+276,dd-391-henley,sunk,1943-10-03,3 Oct 1943,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd391.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+277,dd-391-henley,sunk,1943-10-03,3 Oct 1943,,,uboat-net,https://uboat.net/allies/warships/ship/1870.html,2026-11-10,high,stated,preferred,
+278,dd-392-patterson,commissioned,1937-09-22,22 September 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,high,stated,preferred,
+279,dd-392-patterson,commissioned,1937-09-22,22 Sep 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+280,dd-392-patterson,commissioned,1937-09-22,22 Sep 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1873.html,2026-11-10,high,stated,preferred,
+281,dd-392-patterson,fate,Decommissioned 8 Nov 1945; sold for scrap 18 Aug 1947,Decommissioned 8 Nov 1945; sold for scrap 18 Aug 1947,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,high,stated,disputed,
+282,dd-392-patterson,fate,Decommissioned 8 Nov 1945; struck 25 Feb 1947; sold for scrapping 18 Aug 1947,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+283,dd-392-patterson,fate,Decommissioned 8 Nov 1945; stricken 25 Feb 1947; sold 18 Aug 1947 for scrap,,,,uboat-net,https://uboat.net/allies/warships/ship/1873.html,2026-11-10,medium,stated,disputed,
+284,dd-392-patterson,laid_down,1933-07-23,23 July 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,high,stated,disputed,
+285,dd-392-patterson,laid_down,1933-07-23,23 Jul 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,low,stated,disputed,uboat.net and DANFS differ on this date; see conflicts.md
+286,dd-392-patterson,laid_down,1935-07-23,23 Jul 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1873.html,2026-11-10,low,stated,disputed,uboat.net and DANFS differ on this date; see conflicts.md
+287,dd-392-patterson,launched,1937-05-06,6 May 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,high,stated,preferred,
+288,dd-392-patterson,launched,1937-05-06,6 May 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd392.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+289,dd-392-patterson,launched,1937-05-06,6 May 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1873.html,2026-11-10,high,stated,preferred,
+290,dd-393-jarvis,commissioned,1937-10-27,27 Oct 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd393.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+291,dd-393-jarvis,commissioned,1937-10-27,27 Oct 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1871.html,2026-11-10,high,stated,preferred,
+292,dd-393-jarvis,fate,Torpedoed in the 8 Aug air attack; sailed west and was sunk by Japanese aircraft about 1300 on 9 Aug 1942,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd393.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+293,dd-393-jarvis,fate,Torpedo-damaged 8 Aug 1942; sunk by Japanese aircraft southeast of Guadalcanal 9 Aug 1942 with all hands,,,,uboat-net,https://uboat.net/allies/warships/ship/1871.html,2026-11-10,medium,stated,disputed,
+294,dd-393-jarvis,laid_down,1935-08-21,21 Aug 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd393.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+295,dd-393-jarvis,laid_down,1935-08-21,21 Aug 1935,,,uboat-net,https://uboat.net/allies/warships/ship/1871.html,2026-11-10,high,stated,preferred,
+296,dd-393-jarvis,launched,1937-05-06,6 May 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd393.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+297,dd-393-jarvis,launched,1937-05-06,6 May 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1871.html,2026-11-10,high,stated,preferred,
+298,dd-393-jarvis,sunk,1942-08-09,9 Aug 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd393.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+299,dd-393-jarvis,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/1871.html,2026-11-10,high,stated,preferred,
+300,dd-397-benham,commissioned,1939-02-02,2 February 1939,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd397.html,2026-11-10,high,stated,preferred,
+301,dd-397-benham,fate,Torpedoed in the Naval Battle of Guadalcanal; abandoned and sunk by Gwin 15 Nov 1942,Torpedoed in the Naval Battle of Guadalcanal; abandoned and sunk by Gwin 15 Nov 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd397.html,2026-11-10,high,stated,preferred,
+302,dd-397-benham,launched,1938-04-16,16 April 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd397.html,2026-11-10,high,stated,preferred,
+303,dd-397-benham,sunk,1942-11-15,15 November 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd397.html,2026-11-10,high,stated,preferred,
+304,dd-398-ellet,commissioned,1939-02-17,17 February 1939,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd398.html,2026-11-10,high,stated,preferred,
+305,dd-398-ellet,commissioned,1939-02-17,17 Feb 1939,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd398.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+306,dd-398-ellet,commissioned,1939-02-17,17 Feb 1939,,,uboat-net,https://uboat.net/allies/warships/ship/1715.html,2026-11-10,high,stated,preferred,
+307,dd-398-ellet,fate,Decommissioned 29 Oct 1945 at Ulithi; sold 1 Aug 1947,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd398.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+308,dd-398-ellet,fate,Decommissioned 29 Oct 1945; sold 1 Aug 1947,Decommissioned 29 Oct 1945; sold 1 Aug 1947,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd398.html,2026-11-10,high,stated,disputed,
+309,dd-398-ellet,fate,Decommissioned 29 Oct 1945; stricken 13 Nov 1945; sold 1 Aug 1947 and broken up,,,,uboat-net,https://uboat.net/allies/warships/ship/1715.html,2026-11-10,medium,stated,disputed,
+310,dd-398-ellet,laid_down,1936-12-03,3 Dec 1936,,,uboat-net,https://uboat.net/allies/warships/ship/1715.html,2026-11-10,medium,stated,preferred,
+311,dd-398-ellet,launched,1938-06-11,11 June 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd398.html,2026-11-10,high,stated,preferred,
+312,dd-398-ellet,launched,1938-06-11,11 Jun 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd398.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+313,dd-398-ellet,launched,1938-06-11,11 Jun 1938,,,uboat-net,https://uboat.net/allies/warships/ship/1715.html,2026-11-10,high,stated,preferred,
+314,dd-399-lang,commissioned,1939-03-30,30 March 1939,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd399.html,2026-11-10,high,stated,preferred,
+315,dd-399-lang,fate,Decommissioned 16 Oct 1945; sold and scrapped 1945-47,Decommissioned 16 Oct 1945; sold and scrapped 1945-47,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd399.html,2026-11-10,high,stated,preferred,
+316,dd-399-lang,laid_down,1937-04-05,5 April 1937,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd399.html,2026-11-10,high,stated,preferred,
+317,dd-399-lang,launched,1938-08-27,27 August 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd399.html,2026-11-10,high,stated,preferred,
+318,dd-401-maury,commissioned,1938-08-05,5 August 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
+319,dd-401-maury,fate,Decommissioned 10 Oct 1945; sold 13 Jun 1946 and scrapped,Decommissioned 10 Oct 1945; sold 13 Jun 1946 and scrapped,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
+320,dd-401-maury,laid_down,1936-03-24,24 March 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
+321,dd-401-maury,launched,1938-02-14,14 February 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
+322,dd-406-stack,commissioned,1939,1939,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-406_Stack.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
+323,dd-407-sterett,commissioned,1939,1939,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-407_Sterett.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
+324,dd-408-wilson,commissioned,1939-07-05,5 Jul 1939,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
+325,dd-408-wilson,fate,Damaged at Bikini Jul 1946; decommissioned 28 Aug 1946; scuttled off Kwajalein 8 Mar 1948,,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
+326,dd-408-wilson,laid_down,1937-03-22,22 Mar 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
+327,dd-408-wilson,launched,1939-04-12,12 Apr 1939,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
+328,dd-435-grayson,commissioned,1941-02-14,14 February 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd435.html,2026-11-10,high,stated,preferred,
+329,dd-435-grayson,fate,Decommissioned 4 Feb 1947; struck 1 Jun 1971 and sold 22 Nov 1971,Decommissioned 4 Feb 1947; struck 1 Jun 1971 and sold 22 Nov 1971,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd435.html,2026-11-10,high,stated,preferred,
+330,dd-435-grayson,laid_down,1939-07-17,17 July 1939,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd435.html,2026-11-10,high,stated,preferred,
+331,dd-435-grayson,launched,1940-08-07,7 August 1940,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd435.html,2026-11-10,high,stated,preferred,
+332,dd-436-monssen,commissioned,1941,1941,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-436_Monssen.html,2026-11-10,low,stated,disputed,"Clancey list page on HyperWar, year only for commissioning"
+333,dd-436-monssen,commissioned,1941-03-14,14 Mar 1941,,,uboat-net,https://uboat.net/allies/warships/ship/1825.html,2026-11-10,medium,stated,disputed,
+334,dd-436-monssen,fate,Lost to gunfire in the Naval Battle of Guadalcanal (list gives 14 Nov 1942),Lost to gunfire in the Naval Battle of Guadalcanal (list gives 14 Nov 1942),,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-436_Monssen.html,2026-11-10,low,stated,disputed,"Single source, not corroborated"
+335,dd-436-monssen,fate,Wrecked by gunfire in the Naval Battle of Guadalcanal and sank 13 Nov 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/1825.html,2026-11-10,medium,stated,disputed,
+336,dd-436-monssen,laid_down,1939-07-12,12 Jul 1939,,,uboat-net,https://uboat.net/allies/warships/ship/1825.html,2026-11-10,medium,stated,preferred,
+337,dd-436-monssen,launched,1940-05-16,16 May 1940,,,uboat-net,https://uboat.net/allies/warships/ship/1825.html,2026-11-10,medium,stated,preferred,
+338,dd-436-monssen,sunk,1942-11-14,14 November 1942,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-436_Monssen.html,2026-11-10,low,stated,disputed,Date from the Clancey list entry '14 Nov 42'; the list does not state fate
+339,dd-436-monssen,sunk,1942-11-13,13 Nov 1942,,,uboat-net,https://uboat.net/allies/warships/ship/1825.html,2026-11-10,medium,stated,disputed,
+340,dd-484-buchanan,commissioned,1942-03-21,21 March 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,preferred,
+341,dd-484-buchanan,commissioned,1942-03-21,21 Mar 1942,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+342,dd-484-buchanan,fate,Survived the war; recommissioned 11 Dec 1948 with a Turkish nucleus crew and turned over to the Turkish Navy 28 Apr 1949,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+343,dd-484-buchanan,fate,Transferred to Turkey 28 Apr 1949,Transferred to Turkey 28 Apr 1949,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,disputed,
+344,dd-484-buchanan,launched,1941-11-22,22 November 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,preferred,
+345,dd-484-buchanan,launched,1941-11-22,22 Nov 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+346,dd-491-farenholt,commissioned,1942,1942,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-491_Farenholt.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
+347,dms-10-southard,alias,DD-207,DD-207,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+348,dms-10-southard,commissioned,1919-09-24,24 Sep 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,
+349,dms-10-southard,fate,Ran aground 9 Oct 1945 on Tsugen Jima; decommissioned 15 Dec 1945; wreck destroyed 14 Jan 1946,,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,
+350,dms-10-southard,laid_down,1918-08-18,18 Aug 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,
+351,dms-10-southard,launched,1919-03-31,31 Mar 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,
+352,dms-11-hovey,alias,DD-208,DD-208,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms11.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+353,dms-11-hovey,commissioned,1919-10-02,2 Oct 1919,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms11.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+354,dms-11-hovey,commissioned,1919-10-02,2 Oct 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2284.html,2026-11-10,high,stated,preferred,
+355,dms-11-hovey,fate,Torpedoed by aircraft and sank in Lingayen Gulf (date not seen on the page text checked),,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms11.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+356,dms-11-hovey,fate,Sunk by Japanese aircraft in Lingayen Gulf 6 Jan 1945,,,,uboat-net,https://uboat.net/allies/warships/ship/2284.html,2026-11-10,medium,stated,disputed,
+357,dms-11-hovey,laid_down,1918-09-07,7 Sep 1918,,,uboat-net,https://uboat.net/allies/warships/ship/2284.html,2026-11-10,medium,stated,preferred,
+358,dms-11-hovey,launched,1919-04-26,26 Apr 1919,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms11.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+359,dms-11-hovey,launched,1919-04-26,26 Apr 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2284.html,2026-11-10,high,stated,preferred,
+360,dms-11-hovey,sunk,1945-01-06,6 Jan 1945,,,uboat-net,https://uboat.net/allies/warships/ship/2284.html,2026-11-10,medium,stated,preferred,
+361,dms-13-hopkins,alias,DD-249,DD-249,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms13.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+362,dms-13-hopkins,commissioned,1921-03-21,21 Mar 1921,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms13.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+363,dms-13-hopkins,commissioned,1921-03-21,21 Mar 1921,,,uboat-net,https://uboat.net/allies/warships/ship/2283.html,2026-11-10,high,stated,preferred,
+364,dms-13-hopkins,fate,Decommissioned 21 Dec 1945; sold for scrapping 8 Nov 1946,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms13.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+365,dms-13-hopkins,fate,Survived the war; decommissioned 21 Dec 1945; sold for scrap 8 Nov 1946,,,,uboat-net,https://uboat.net/allies/warships/ship/2283.html,2026-11-10,medium,stated,disputed,
+366,dms-13-hopkins,laid_down,1919-07-30,30 Jul 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2283.html,2026-11-10,medium,stated,preferred,
+367,dms-13-hopkins,launched,1920-06-26,26 Jun 1920,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms13.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+368,dms-13-hopkins,launched,1920-06-26,26 Jun 1920,,,uboat-net,https://uboat.net/allies/warships/ship/2283.html,2026-11-10,high,stated,preferred,
+369,dms-14-zane,alias,DD-337,DD-337,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms14.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+370,dms-14-zane,commissioned,1921-02-15,15 Feb 1921,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms14.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+371,dms-14-zane,commissioned,1921-02-15,15 Feb 1921,,,uboat-net,https://uboat.net/allies/warships/ship/2384.html,2026-11-10,high,stated,preferred,
+372,dms-14-zane,fate,Delivered for scrapping 22 Oct 1946; hulk scrapped 3 Mar 1947,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms14.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+373,dms-14-zane,fate,Survived the war; decommissioned 15 Dec 1945; sold for scrap 22 Oct 1946,,,,uboat-net,https://uboat.net/allies/warships/ship/2384.html,2026-11-10,medium,stated,disputed,
+374,dms-14-zane,laid_down,1919-01-15,15 Jan 1919,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms14.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+375,dms-14-zane,laid_down,1919-01-15,15 Jan 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2384.html,2026-11-10,high,stated,preferred,
+376,dms-14-zane,launched,1919-08-12,12 Aug 1919,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms14.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+377,dms-14-zane,launched,1919-08-12,12 Aug 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2384.html,2026-11-10,high,stated,preferred,
+378,dms-16-trever,alias,DD-339,DD-339,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms16.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+379,dms-16-trever,commissioned,1922-08-03,3 Aug 1922,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms16.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+380,dms-16-trever,commissioned,1922-08-03,3 Aug 1922,,,uboat-net,https://uboat.net/allies/warships/ship/2369.html,2026-11-10,high,stated,preferred,
+381,dms-16-trever,fate,Decommissioned 23 Nov 1945; struck 5 Dec 1945; sold for scrapping 12 Nov 1946,,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms16.html,2026-11-10,medium,stated,disputed,DANFS text transcribed on HyperWar (history.navy.mil copy not reachable)
+382,dms-16-trever,fate,Survived the war; decommissioned 23 Nov 1945; sold for scrap 26 Nov 1946,,,,uboat-net,https://uboat.net/allies/warships/ship/2369.html,2026-11-10,medium,stated,disputed,
+383,dms-16-trever,laid_down,1919-08-12,12 Aug 1919,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms16.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+384,dms-16-trever,laid_down,1919-08-12,12 Aug 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2369.html,2026-11-10,high,stated,preferred,
+385,dms-16-trever,launched,1920-09-15,15 Sep 1920,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DMS/dms16.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
+386,dms-16-trever,launched,1920-09-15,15 Sep 1920,,,uboat-net,https://uboat.net/allies/warships/ship/2369.html,2026-11-10,high,stated,preferred,
+387,furutaka,commissioned,1926-03-31,31 March 1926,,,combinedfleet,https://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+388,furutaka,commissioned,1926-03-31,31 Mar 1926,,,combinedfleet,http://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+389,furutaka,fate,Sank 12 Oct 1942 northwest of Savo Island after the Battle of Cape Esperance,,,,combinedfleet,http://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,disputed,
+390,furutaka,fate,Sunk at the Battle of Cape Esperance,Sunk at the Battle of Cape Esperance,,,combinedfleet,https://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,disputed,
+391,furutaka,laid_down,1922-12-05,5 December 1922,,,combinedfleet,https://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,
+392,furutaka,laid_down,1922-12-05,5 Dec 1922,,,combinedfleet,http://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,
+393,furutaka,launched,1925-02-25,25 February 1925,,,combinedfleet,https://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,
+394,furutaka,launched,1925-02-25,25 Feb 1925,,,combinedfleet,http://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,
+395,furutaka,sunk,1942-10-12,12 October 1942,,,combinedfleet,https://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,
+396,furutaka,sunk,1942-10-12,12 Oct 1942,,,combinedfleet,http://www.combinedfleet.com/furuta_t.htm,2026-11-10,medium,stated,preferred,
+397,haguro,commissioned,1929-04-25,25 April 1929,,,combinedfleet,https://www.combinedfleet.com/haguro_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+398,haguro,fate,Sunk by British destroyers in the Malacca Strait,Sunk by British destroyers in the Malacca Strait,,,combinedfleet,https://www.combinedfleet.com/haguro_t.htm,2026-11-10,medium,stated,preferred,
+399,haguro,laid_down,1925-03-16,16 March 1925,,,combinedfleet,https://www.combinedfleet.com/haguro_t.htm,2026-11-10,medium,stated,preferred,
+400,haguro,launched,1928-03-24,24 March 1928,,,combinedfleet,https://www.combinedfleet.com/haguro_t.htm,2026-11-10,medium,stated,preferred,
+401,haguro,sunk,1945-05-16,16 May 1945,,,combinedfleet,https://www.combinedfleet.com/haguro_t.htm,2026-11-10,medium,stated,preferred,
+402,harusame,fate,Sunk by B-25s near Manokwari,Sunk by B-25s near Manokwari,,,combinedfleet,https://www.combinedfleet.com/harusa_t.htm,2026-11-10,medium,stated,preferred,
+403,harusame,sunk,1944-06-08,8 June 1944,,,combinedfleet,https://www.combinedfleet.com/harusa_t.htm,2026-11-10,medium,stated,preferred,
+404,hatsukaze,fate,"Bow lost in collision with Myoko, then sunk by US destroyers","Bow lost in collision with Myoko, then sunk by US destroyers",,,combinedfleet,https://www.combinedfleet.com/hatsuk_t.htm,2026-11-10,medium,stated,preferred,
+405,hatsukaze,sunk,1943-11-02,2 November 1943,,,combinedfleet,https://www.combinedfleet.com/hatsuk_t.htm,2026-11-10,medium,inferred,preferred,Year inferred from page chronology
+406,hayashio,commissioned,1940-08-31,31 August 1940,,,combinedfleet,https://www.combinedfleet.com/hayaso_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+407,hayashio,fate,"Bombed by B-17s off Salamaua, then sunk by Shiratsuyu","Bombed by B-17s off Salamaua, then sunk by Shiratsuyu",,,combinedfleet,https://www.combinedfleet.com/hayaso_t.htm,2026-11-10,medium,stated,preferred,
+408,hayashio,laid_down,1938-06-30,30 June 1938,,,combinedfleet,https://www.combinedfleet.com/hayaso_t.htm,2026-11-10,medium,stated,preferred,
+409,hayashio,launched,1939-04-19,19 April 1939,,,combinedfleet,https://www.combinedfleet.com/hayaso_t.htm,2026-11-10,medium,stated,preferred,
+410,hayashio,sunk,1942-11-24,24 November 1942,,,combinedfleet,https://www.combinedfleet.com/hayaso_t.htm,2026-11-10,medium,stated,preferred,
+411,hiei,commissioned,1914-08-04,4 August 1914,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,
+412,hiei,fate,Scuttled after air and torpedo attacks off Guadalcanal,Scuttled after air and torpedo attacks off Guadalcanal,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,
+413,hiei,laid_down,1911-11-04,4 November 1911,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,
+414,hiei,launched,1912-11-21,21 November 1912,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,
+415,hiei,sunk,1942-11-14,14 November 1942,,,combinedfleet,https://www.combinedfleet.com/hiei2.htm,2026-11-10,medium,stated,preferred,Page: sank between 1900 on 13 Nov and 0100 on 14 Nov
+416,hmas-australia,commissioned,1928-04-24,24 Apr 1928,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
+417,hmas-australia,fate,Survived the war; end of service 31 Aug 1954,,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
+418,hmas-australia,laid_down,1925-08-26,26 Aug 1925,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
+419,hmas-australia,launched,1927-03-17,17 Mar 1927,,,uboat-net,https://uboat.net/allies/warships/ship/1173.html,2026-11-10,medium,stated,preferred,
+420,hmas-canberra,commissioned,1928-07-10,10 Jul 1928,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+421,hmas-canberra,fate,Disabled at Savo Island; scuttled by US destroyers the morning of 9 Aug 1942,,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+422,hmas-canberra,laid_down,1925-09-09,9 Sep 1925,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+423,hmas-canberra,launched,1927-05-31,31 May 1927,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+424,hmas-canberra,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/1183.html,2026-11-10,medium,stated,preferred,
+425,hmas-hobart,alias,HMS Apollo,HMS Apollo,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
+426,hmas-hobart,commissioned,1938-09-28,28 Sep 1938,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,Commissioned into RAN 28 Sep 1938; previously commissioned in the Royal Navy as HMS Apollo 13 Jan 1936
+427,hmas-hobart,fate,"Survived the war; decommissioned 20 Dec 1947; sold for scrap 2 Feb 1962, broken up at Osaka",,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,
+428,hmas-hobart,laid_down,1933-08-15,15 Aug 1933,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,
+429,hmas-hobart,launched,1934-10-09,9 Oct 1934,,,uboat-net,https://uboat.net/allies/warships/ship/1221.html,2026-11-10,medium,stated,preferred,
+430,isokaze,fate,"Disabled by carrier aircraft off Okinawa, scuttled by Yukikaze","Disabled by carrier aircraft off Okinawa, scuttled by Yukikaze",,,combinedfleet,https://www.combinedfleet.com/isokaz_t.htm,2026-11-10,medium,stated,preferred,
+431,isokaze,sunk,1945-04-07,7 April 1945,,,combinedfleet,https://www.combinedfleet.com/isokaz_t.htm,2026-11-10,medium,stated,preferred,Placed in the page's 6-7 April entry
+432,jintsu,commissioned,1925-07-31,31 July 1925,,,combinedfleet,https://www.combinedfleet.com/jintsu_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+433,jintsu,fate,Sunk at Kolombangara,Sunk at Kolombangara,,,combinedfleet,https://www.combinedfleet.com/jintsu_t.htm,2026-11-10,medium,stated,preferred,
+434,jintsu,laid_down,1922-08-04,4 August 1922,,,combinedfleet,https://www.combinedfleet.com/jintsu_t.htm,2026-11-10,medium,stated,preferred,
+435,jintsu,launched,1923-12-08,8 December 1923,,,combinedfleet,https://www.combinedfleet.com/jintsu_t.htm,2026-11-10,medium,stated,preferred,
+436,jintsu,sunk,1943-07-13,13 July 1943,,,combinedfleet,https://www.combinedfleet.com/jintsu_t.htm,2026-11-10,medium,stated,preferred,
+437,kagero,fate,"Mined in Blackett Strait, then bombed; capsized","Mined in Blackett Strait, then bombed; capsized",,,combinedfleet,https://www.combinedfleet.com/kagero_t.htm,2026-11-10,medium,stated,preferred,
+438,kagero,sunk,1943-05-08,8 May 1943,,,combinedfleet,https://www.combinedfleet.com/kagero_t.htm,2026-11-10,medium,stated,preferred,
+439,kako,commissioned,1926-07-20,20 Jul 1926,,,combinedfleet,http://www.combinedfleet.com/kako_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+440,kako,fate,Sunk by torpedoes from USS S-44 off Simbari Island 10 Aug 1942,,,,combinedfleet,http://www.combinedfleet.com/kako_t.htm,2026-11-10,medium,stated,preferred,
+441,kako,laid_down,1922-11-17,17 Nov 1922,,,combinedfleet,http://www.combinedfleet.com/kako_t.htm,2026-11-10,medium,stated,preferred,
+442,kako,launched,1925-04-10,10 Apr 1925,,,combinedfleet,http://www.combinedfleet.com/kako_t.htm,2026-11-10,medium,stated,preferred,
+443,kako,sunk,1942-08-10,10 Aug 1942,,,combinedfleet,http://www.combinedfleet.com/kako_t.htm,2026-11-10,medium,stated,preferred,
+444,kawakaze,fate,Sunk by US destroyers at Vella Gulf,Sunk by US destroyers at Vella Gulf,,,combinedfleet,https://www.combinedfleet.com/kawaka_t.htm,2026-11-10,medium,stated,preferred,
+445,kawakaze,sunk,1943-08,As stated: 6-7 August 1943,,,combinedfleet,https://www.combinedfleet.com/kawaka_t.htm,2026-11-10,medium,stated,preferred,As stated: 6-7 August 1943
+446,kazagumo,alias,Kazegumo,Kazegumo,,,wikipedia-en,https://en.wikipedia.org/wiki/Eastern_Solomons_order_of_battle,2026-11-10,low,stated,preferred,Wikipedia order of battle spells it Kazegumo; combinedfleet uses Kazagumo
+447,kazagumo,commissioned,1942-03-28,28 March 1942,,,combinedfleet,https://www.combinedfleet.com/kazagu_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+448,kazagumo,fate,Torpedoed by USS Hake at Davao Bay,Torpedoed by USS Hake at Davao Bay,,,combinedfleet,https://www.combinedfleet.com/kazagu_t.htm,2026-11-10,medium,stated,preferred,
+449,kazagumo,sunk,1944-06,As stated: 7-8 June 1944,,,combinedfleet,https://www.combinedfleet.com/kazagu_t.htm,2026-11-10,medium,stated,preferred,As stated: 7-8 June 1944
+450,kinryu-maru,commissioned,1938-08-31,31 August 1938,,,combinedfleet,https://www.combinedfleet.com/Kinryu_t.htm,2026-11-10,medium,stated,preferred,Completion date; treated as commissioning
+451,kinryu-maru,fate,Bombed by Marine SBDs 25 Aug 1942 and scuttled by torpedo from Mutsuki,Bombed by Marine SBDs 25 Aug 1942 and scuttled by torpedo from Mutsuki,,,combinedfleet,https://www.combinedfleet.com/Kinryu_t.htm,2026-11-10,medium,stated,preferred,
+452,kinryu-maru,laid_down,1937-11-18,18 November 1937,,,combinedfleet,https://www.combinedfleet.com/Kinryu_t.htm,2026-11-10,medium,stated,preferred,
+453,kinryu-maru,launched,1938-06-16,16 June 1938,,,combinedfleet,https://www.combinedfleet.com/Kinryu_t.htm,2026-11-10,medium,stated,preferred,
+454,kinryu-maru,sunk,1942-08-25,25 August 1942,,,combinedfleet,https://www.combinedfleet.com/Kinryu_t.htm,2026-11-10,medium,stated,preferred,
+455,kinugasa,commissioned,1927-09-30,30 September 1927,,,combinedfleet,https://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+456,kinugasa,commissioned,1927-09-30,30 Sep 1927,,,combinedfleet,http://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+457,kinugasa,fate,Bombed by US aircraft after the Naval Battle of Guadalcanal and sank,Bombed by US aircraft after the Naval Battle of Guadalcanal and sank,,,combinedfleet,https://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,disputed,
+458,kinugasa,fate,Capsized and sank southwest of Rendova 14 Nov 1942,,,,combinedfleet,http://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,disputed,
+459,kinugasa,laid_down,1924-01-23,23 January 1924,,,combinedfleet,https://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,
+460,kinugasa,laid_down,1924-01-23,23 Jan 1924,,,combinedfleet,http://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,
+461,kinugasa,launched,1926-10-24,24 October 1926,,,combinedfleet,https://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,
+462,kinugasa,launched,1926-10-24,24 Oct 1926,,,combinedfleet,http://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,
+463,kinugasa,sunk,1942-11-14,14 November 1942,,,combinedfleet,https://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,
+464,kinugasa,sunk,1942-11-14,14 Nov 1942,,,combinedfleet,http://www.combinedfleet.com/kinugasa_t.htm,2026-11-10,medium,stated,preferred,
+465,kirishima,commissioned,1915-04-19,19 April 1915,,,combinedfleet,https://www.combinedfleet.com/Kirishima.htm,2026-11-10,medium,stated,preferred,
+466,kirishima,fate,Crippled by USS Washington's gunfire and capsized,Crippled by USS Washington's gunfire and capsized,,,combinedfleet,https://www.combinedfleet.com/Kirishima.htm,2026-11-10,medium,stated,preferred,
+467,kirishima,laid_down,1912-03-17,17 March 1912,,,combinedfleet,https://www.combinedfleet.com/Kirishima.htm,2026-11-10,medium,stated,preferred,
+468,kirishima,launched,1913-12-01,1 December 1913,,,combinedfleet,https://www.combinedfleet.com/Kirishima.htm,2026-11-10,medium,stated,preferred,
+469,kirishima,sunk,1942-11-15,15 November 1942,,,combinedfleet,https://www.combinedfleet.com/Kirishima.htm,2026-11-10,medium,stated,preferred,
+470,kumano,commissioned,1937-10-31,31 October 1937,,,combinedfleet,https://www.combinedfleet.com/kumano_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+471,kumano,fate,"Sunk by Ticonderoga aircraft at Santa Cruz harbour, Luzon","Sunk by Ticonderoga aircraft at Santa Cruz harbour, Luzon",,,combinedfleet,https://www.combinedfleet.com/kumano_t.htm,2026-11-10,medium,stated,preferred,
+472,kumano,laid_down,1934-04-05,5 April 1934,,,combinedfleet,https://www.combinedfleet.com/kumano_t.htm,2026-11-10,medium,stated,preferred,
+473,kumano,launched,1936-10-15,15 October 1936,,,combinedfleet,https://www.combinedfleet.com/kumano_t.htm,2026-11-10,medium,stated,preferred,
+474,kumano,sunk,1944-11-25,25 November 1944,,,combinedfleet,https://www.combinedfleet.com/kumano_t.htm,2026-11-10,medium,stated,preferred,
+475,kuroshio,fate,Mined leaving Vila and blew up,Mined leaving Vila and blew up,,,combinedfleet,https://www.combinedfleet.com/kurosh_t.htm,2026-11-10,medium,stated,preferred,
+476,kuroshio,sunk,1943-05,As stated: 7-8 May (year inferred),,,combinedfleet,https://www.combinedfleet.com/kurosh_t.htm,2026-11-10,medium,inferred,preferred,As stated: 7-8 May (year inferred)
+477,maikaze,fate,Sunk by gunfire from Minneapolis and New Orleans NW of Truk,Sunk by gunfire from Minneapolis and New Orleans NW of Truk,,,combinedfleet,https://www.combinedfleet.com/maikaz_t.htm,2026-11-10,medium,stated,preferred,
+478,maikaze,sunk,1944-02-17,17 February 1944,,,combinedfleet,https://www.combinedfleet.com/maikaz_t.htm,2026-11-10,medium,stated,preferred,Page gives no separate sinking date; the date is the page's entry date
+479,makigumo,commissioned,1942-03-14,14 March 1942,,,combinedfleet,https://www.combinedfleet.com/makigu_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+480,makigumo,fate,Mined near Savo Island and scuttled by Yugumo,Mined near Savo Island and scuttled by Yugumo,,,combinedfleet,https://www.combinedfleet.com/makigu_t.htm,2026-11-10,medium,stated,preferred,
+481,makigumo,sunk,1943-02-02,2 February 1943,,,combinedfleet,https://www.combinedfleet.com/makigu_t.htm,2026-11-10,medium,stated,preferred,
+482,maya,commissioned,1932-06-30,30 June 1932,,,combinedfleet,https://www.combinedfleet.com/maya_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+483,maya,fate,Torpedoed by USS Dace at Palawan Passage,Torpedoed by USS Dace at Palawan Passage,,,combinedfleet,https://www.combinedfleet.com/maya_t.htm,2026-11-10,medium,stated,preferred,
+484,maya,laid_down,1928-12-04,4 December 1928,,,combinedfleet,https://www.combinedfleet.com/maya_t.htm,2026-11-10,medium,stated,preferred,
+485,maya,launched,1930-11-08,8 November 1930,,,combinedfleet,https://www.combinedfleet.com/maya_t.htm,2026-11-10,medium,stated,preferred,
+486,maya,sunk,1944-10-23,23 October 1944,,,combinedfleet,https://www.combinedfleet.com/maya_t.htm,2026-11-10,medium,stated,preferred,
+487,minegumo,fate,Sunk by US cruisers and destroyers in Kula Gulf,Sunk by US cruisers and destroyers in Kula Gulf,,,combinedfleet,https://www.combinedfleet.com/minegu_t.htm,2026-11-10,medium,stated,preferred,
+488,minegumo,sunk,1943-03-05,5 March 1943,,,combinedfleet,https://www.combinedfleet.com/minegu_t.htm,2026-11-10,medium,stated,preferred,
+489,murasame,commissioned,1937-01-07,7 January 1937,,,combinedfleet,https://www.combinedfleet.com/murasa_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+490,murasame,fate,Sunk by US cruisers and destroyers in Kula Gulf,Sunk by US cruisers and destroyers in Kula Gulf,,,combinedfleet,https://www.combinedfleet.com/murasa_t.htm,2026-11-10,medium,stated,preferred,
+491,murasame,laid_down,1934-02-01,1 February 1934,,,combinedfleet,https://www.combinedfleet.com/murasa_t.htm,2026-11-10,medium,stated,preferred,
+492,murasame,launched,1935-06-20,20 June 1935,,,combinedfleet,https://www.combinedfleet.com/murasa_t.htm,2026-11-10,medium,stated,preferred,
+493,murasame,sunk,1943-03-06,6 March 1943,,,combinedfleet,https://www.combinedfleet.com/murasa_t.htm,2026-11-10,medium,stated,preferred,
+494,mutsu,commissioned,1921-10-24,24 October 1921,,,combinedfleet,https://www.combinedfleet.com/Mutsu.htm,2026-11-10,medium,stated,preferred,
+495,mutsu,fate,Destroyed by a magazine explosion at Hashirajima,Destroyed by a magazine explosion at Hashirajima,,,combinedfleet,https://www.combinedfleet.com/Mutsu.htm,2026-11-10,medium,stated,preferred,
+496,mutsu,laid_down,1918-06-01,1 June 1918,,,combinedfleet,https://www.combinedfleet.com/Mutsu.htm,2026-11-10,medium,stated,preferred,
+497,mutsu,launched,1920-05-31,31 May 1920,,,combinedfleet,https://www.combinedfleet.com/Mutsu.htm,2026-11-10,medium,stated,preferred,
+498,mutsu,sunk,1943-06-08,8 June 1943,,,combinedfleet,https://www.combinedfleet.com/Mutsu.htm,2026-11-10,medium,stated,preferred,Magazine explosion; stern section sank about 0200 on 9 Jun
+499,mutsuki,fate,Sunk by B-17s while scuttling Kinryu Maru,Sunk by B-17s while scuttling Kinryu Maru,,,combinedfleet,https://www.combinedfleet.com/mutsuk_t.htm,2026-11-10,medium,stated,preferred,
+500,mutsuki,sunk,1942-08-25,25 August 1942,,,combinedfleet,https://www.combinedfleet.com/mutsuk_t.htm,2026-11-10,medium,stated,preferred,
+501,myoko,commissioned,1929-07-31,31 July 1929,,,combinedfleet,https://www.combinedfleet.com/myoko_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+502,myoko,fate,Disarmed at Singapore and scuttled off Port Swettenham Jul 1946,Disarmed at Singapore and scuttled off Port Swettenham Jul 1946,,,combinedfleet,https://www.combinedfleet.com/myoko_t.htm,2026-11-10,medium,stated,preferred,
+503,myoko,laid_down,1924-10-25,25 October 1924,,,combinedfleet,https://www.combinedfleet.com/myoko_t.htm,2026-11-10,medium,stated,preferred,
+504,myoko,launched,1927-04-16,16 April 1927,,,combinedfleet,https://www.combinedfleet.com/myoko_t.htm,2026-11-10,medium,stated,preferred,
+505,myoko,sunk,1946-07,As stated: scuttled 2-8 July 1946,,,combinedfleet,https://www.combinedfleet.com/myoko_t.htm,2026-11-10,medium,stated,preferred,As stated: scuttled 2-8 July 1946
+506,nagara,commissioned,1922-04-21,21 April 1922,,,combinedfleet,https://www.combinedfleet.com/nagara_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+507,nagara,fate,Torpedoed by USS Croaker off Amakusa,Torpedoed by USS Croaker off Amakusa,,,combinedfleet,https://www.combinedfleet.com/nagara_t.htm,2026-11-10,medium,stated,preferred,
+508,nagara,laid_down,1920-09-09,9 September 1920,,,combinedfleet,https://www.combinedfleet.com/nagara_t.htm,2026-11-10,medium,stated,preferred,
+509,nagara,launched,1921-04-25,25 April 1921,,,combinedfleet,https://www.combinedfleet.com/nagara_t.htm,2026-11-10,medium,stated,preferred,
+510,nagara,sunk,1944-08-07,7 August 1944,,,combinedfleet,https://www.combinedfleet.com/nagara_t.htm,2026-11-10,medium,stated,preferred,
+511,natsugumo,fate,Sunk by air attack after Cape Esperance,Sunk by air attack after Cape Esperance,,,combinedfleet,https://www.combinedfleet.com/natsug_t.htm,2026-11-10,medium,stated,preferred,
+512,natsugumo,sunk,1942-10,As stated: 11-12 Oct 1942,,,combinedfleet,https://www.combinedfleet.com/natsug_t.htm,2026-11-10,medium,stated,preferred,As stated: 11-12 Oct 1942
+513,nowaki,fate,Crippled by cruiser gunfire and sunk by USS Owen,Crippled by cruiser gunfire and sunk by USS Owen,,,combinedfleet,https://www.combinedfleet.com/nowaki_t.htm,2026-11-10,medium,stated,preferred,
+514,nowaki,sunk,1944-10-26,26 October 1944,,,combinedfleet,https://www.combinedfleet.com/nowaki_t.htm,2026-11-10,medium,inferred,preferred,Year inferred from page chronology
+515,oyashio,fate,"Mined in Blackett Strait, then bombed","Mined in Blackett Strait, then bombed",,,combinedfleet,https://www.combinedfleet.com/oyashi_t.htm,2026-11-10,medium,stated,preferred,
+516,oyashio,sunk,1943-05-08,8 May 1943,,,combinedfleet,https://www.combinedfleet.com/oyashi_t.htm,2026-11-10,medium,stated,preferred,
+517,pb-1,commissioned,1920-11-15,15 November 1920,,,combinedfleet,https://www.combinedfleet.com/PB-1_t.htm,2026-11-10,medium,stated,preferred,Completion date; treated as commissioning
+518,pb-1,fate,Torpedoed by USS Guardfish near New Hanover,Torpedoed by USS Guardfish near New Hanover,,,combinedfleet,https://www.combinedfleet.com/PB-1_t.htm,2026-11-10,medium,stated,preferred,
+519,pb-1,sunk,1943-01-12,12 January 1943,,,combinedfleet,https://www.combinedfleet.com/PB-1_t.htm,2026-11-10,medium,stated,preferred,
+520,pb-34,commissioned,1921-05-05,5 May 1921,,,combinedfleet,https://www.combinedfleet.com/PB-34_t.htm,2026-11-10,medium,stated,preferred,Completion date; treated as commissioning
+521,pb-34,fate,"Bombed and sunk off Dublon, Truk","Bombed and sunk off Dublon, Truk",,,combinedfleet,https://www.combinedfleet.com/PB-34_t.htm,2026-11-10,medium,stated,preferred,
+522,pb-34,sunk,1944-07-03,3 July 1944,,,combinedfleet,https://www.combinedfleet.com/PB-34_t.htm,2026-11-10,medium,stated,preferred,
+523,ryujo,commissioned,1933-05-09,9 May 1933,,,combinedfleet,https://www.combinedfleet.com/ryujo.htm,2026-11-10,medium,stated,preferred,
+524,ryujo,fate,Sunk by Saratoga aircraft in the Eastern Solomons,Sunk by Saratoga aircraft in the Eastern Solomons,,,combinedfleet,https://www.combinedfleet.com/ryujo.htm,2026-11-10,medium,stated,preferred,
+525,ryujo,laid_down,1929-11-26,26 November 1929,,,combinedfleet,https://www.combinedfleet.com/ryujo.htm,2026-11-10,medium,stated,preferred,
+526,ryujo,launched,1931-04-02,2 April 1931,,,combinedfleet,https://www.combinedfleet.com/ryujo.htm,2026-11-10,medium,stated,preferred,
+527,ryujo,sunk,1942-08-24,24 August 1942,,,combinedfleet,https://www.combinedfleet.com/ryujo.htm,2026-11-10,medium,stated,preferred,
+528,samidare,fate,"Grounded on Velasco Reef, torpedoed by USS Batfish","Grounded on Velasco Reef, torpedoed by USS Batfish",,,combinedfleet,https://www.combinedfleet.com/samida_t.htm,2026-11-10,medium,stated,preferred,
+529,samidare,sunk,1944-08,As stated: 18-25 Aug 1944,,,combinedfleet,https://www.combinedfleet.com/samida_t.htm,2026-11-10,medium,stated,preferred,As stated: 18-25 Aug 1944
+530,shikinami,fate,Torpedoed by USS Growler escorting convoy HI-72,Torpedoed by USS Growler escorting convoy HI-72,,,combinedfleet,https://www.combinedfleet.com/shikin_t.htm,2026-11-10,medium,stated,preferred,
+531,shikinami,sunk,1944-09,As stated: 6-12 Sep 1944,,,combinedfleet,https://www.combinedfleet.com/shikin_t.htm,2026-11-10,medium,stated,preferred,As stated: 6-12 Sep 1944
+532,shokaku,commissioned,1941-08-08,8 August 1941,,,combinedfleet,https://www.combinedfleet.com/shokaku.htm,2026-11-10,medium,stated,preferred,
+533,shokaku,fate,Torpedoed by USS Cavalla in the Philippine Sea and sank 19 Jun 1944,Torpedoed by USS Cavalla in the Philippine Sea and sank 19 Jun 1944,,,combinedfleet,https://www.combinedfleet.com/shokaku.htm,2026-11-10,medium,stated,preferred,
+534,shokaku,laid_down,1937-12-12,12 December 1937,,,combinedfleet,https://www.combinedfleet.com/shokaku.htm,2026-11-10,medium,stated,preferred,
+535,shokaku,launched,1939-06-01,1 June 1939,,,combinedfleet,https://www.combinedfleet.com/shokaku.htm,2026-11-10,medium,stated,preferred,
+536,shokaku,sunk,1944-06-19,19 June 1944,,,combinedfleet,https://www.combinedfleet.com/shokaku.htm,2026-11-10,medium,stated,preferred,
+537,suzukaze,fate,Torpedoed by USS Skipjack north of Ponape,Torpedoed by USS Skipjack north of Ponape,,,combinedfleet,https://www.combinedfleet.com/suzuka_t.htm,2026-11-10,medium,stated,preferred,
+538,suzukaze,sunk,1944-01-25,25 January 1944,,,combinedfleet,https://www.combinedfleet.com/suzuka_t.htm,2026-11-10,medium,stated,preferred,
+539,suzuya,commissioned,1937-10-31,31 October 1937,,,combinedfleet,https://www.combinedfleet.com/suzuya_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+540,suzuya,fate,Sunk by air attack and torpedoes off Samar,Sunk by air attack and torpedoes off Samar,,,combinedfleet,https://www.combinedfleet.com/suzuya_t.htm,2026-11-10,medium,stated,preferred,
+541,suzuya,laid_down,1933-12-11,11 December 1933,,,combinedfleet,https://www.combinedfleet.com/suzuya_t.htm,2026-11-10,medium,stated,preferred,
+542,suzuya,launched,1934-11-20,20 November 1934,,,combinedfleet,https://www.combinedfleet.com/suzuya_t.htm,2026-11-10,medium,stated,preferred,
+543,suzuya,sunk,1944-10-25,25 October 1944,,,combinedfleet,https://www.combinedfleet.com/suzuya_t.htm,2026-11-10,medium,stated,preferred,
+544,takao,commissioned,1932-05-31,31 May 1932,,,combinedfleet,https://www.combinedfleet.com/takao_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+545,takao,fate,Crippled in 1944-45 and scuttled by HMS Newfoundland off Malaya 29 Oct 1946,Crippled in 1944-45 and scuttled by HMS Newfoundland off Malaya 29 Oct 1946,,,combinedfleet,https://www.combinedfleet.com/takao_t.htm,2026-11-10,medium,stated,preferred,
+546,takao,laid_down,1927-04-28,28 April 1927,,,combinedfleet,https://www.combinedfleet.com/takao_t.htm,2026-11-10,medium,stated,preferred,
+547,takao,launched,1930-05-12,12 May 1930,,,combinedfleet,https://www.combinedfleet.com/takao_t.htm,2026-11-10,medium,stated,preferred,
+548,takao,sunk,1946-10-29,29 October 1946,,,combinedfleet,https://www.combinedfleet.com/takao_t.htm,2026-11-10,medium,stated,preferred,
+549,tanikaze,fate,Torpedoed by USS Harder off Tawitawi,Torpedoed by USS Harder off Tawitawi,,,combinedfleet,https://www.combinedfleet.com/tanika_t.htm,2026-11-10,medium,stated,preferred,
+550,tanikaze,sunk,1944-06-09,9 June 1944,,,combinedfleet,https://www.combinedfleet.com/tanika_t.htm,2026-11-10,medium,stated,preferred,
+551,tenryu,commissioned,1919-11-20,20 Nov 1919,,,combinedfleet,http://www.combinedfleet.com/tenryu_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+552,tenryu,fate,Sunk by two torpedoes from USS Albacore off Madang 18 Dec 1942,,,,combinedfleet,http://www.combinedfleet.com/tenryu_t.htm,2026-11-10,medium,stated,preferred,
+553,tenryu,laid_down,1917-05-17,17 May 1917,,,combinedfleet,http://www.combinedfleet.com/tenryu_t.htm,2026-11-10,medium,stated,preferred,
+554,tenryu,launched,1918-03-11,11 Mar 1918,,,combinedfleet,http://www.combinedfleet.com/tenryu_t.htm,2026-11-10,medium,stated,preferred,
+555,tenryu,sunk,1942-12-18,18 Dec 1942,,,combinedfleet,http://www.combinedfleet.com/tenryu_t.htm,2026-11-10,medium,stated,preferred,
+556,tokitsukaze,fate,Sunk by US B-25s in the Bismarck Sea convoy battle,Sunk by US B-25s in the Bismarck Sea convoy battle,,,combinedfleet,https://www.combinedfleet.com/tokits_t.htm,2026-11-10,medium,stated,preferred,
+557,tokitsukaze,sunk,1943-03-04,4 March 1943,,,combinedfleet,https://www.combinedfleet.com/tokits_t.htm,2026-11-10,medium,stated,preferred,
+558,tone,commissioned,1938-11-20,20 November 1938,,,combinedfleet,https://www.combinedfleet.com/tone_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+559,tone,fate,Bombed by carrier aircraft Jul 1945; settled in shallow water; scrapped 1948,Bombed by carrier aircraft Jul 1945; settled in shallow water; scrapped 1948,,,combinedfleet,https://www.combinedfleet.com/tone_t.htm,2026-11-10,medium,stated,preferred,
+560,tone,laid_down,1934-12-01,1 December 1934,,,combinedfleet,https://www.combinedfleet.com/tone_t.htm,2026-11-10,medium,stated,preferred,
+561,tone,launched,1937-11-21,21 November 1937,,,combinedfleet,https://www.combinedfleet.com/tone_t.htm,2026-11-10,medium,stated,preferred,
+562,tone,sunk,1945-07-29,29 July 1945,,,combinedfleet,https://www.combinedfleet.com/tone_t.htm,2026-11-10,medium,stated,preferred,Settled on the bottom after air attacks; refloated and scrapped 1948
+563,umikaze,fate,Torpedoed by USS Guardfish off Truk (page gives 28 Jan-1 Feb 1944),Torpedoed by USS Guardfish off Truk (page gives 28 Jan-1 Feb 1944),,,combinedfleet,https://www.combinedfleet.com/umikaz_t.htm,2026-11-10,medium,stated,preferred,
+564,uranami,fate,Sunk by aircraft of TF 77.4.2 off Panay,Sunk by aircraft of TF 77.4.2 off Panay,,,combinedfleet,https://www.combinedfleet.com/uranam_t.htm,2026-11-10,medium,stated,preferred,
+565,uranami,sunk,1944-10-26,26 October 1944,,,combinedfleet,https://www.combinedfleet.com/uranam_t.htm,2026-11-10,medium,stated,preferred,
+566,uzuki,fate,"Sunk by PT boats off Palompon, Leyte","Sunk by PT boats off Palompon, Leyte",,,combinedfleet,https://www.combinedfleet.com/uzuki_t.htm,2026-11-10,medium,stated,preferred,
+567,uzuki,sunk,1944-12-12,12 December 1944,,,combinedfleet,https://www.combinedfleet.com/uzuki_t.htm,2026-11-10,medium,inferred,preferred,Year inferred by the page's chronology
+568,yamagumo,fate,Torpedoed by USS McDermut in Surigao Strait,Torpedoed by USS McDermut in Surigao Strait,,,combinedfleet,https://www.combinedfleet.com/yamagu_t.htm,2026-11-10,medium,stated,preferred,
+569,yamagumo,sunk,1944-10-25,25 October 1944,,,combinedfleet,https://www.combinedfleet.com/yamagu_t.htm,2026-11-10,medium,stated,preferred,
+570,yayoi,fate,Sunk by Allied aircraft off Vakuta Island,Sunk by Allied aircraft off Vakuta Island,,,combinedfleet,https://www.combinedfleet.com/yayoi_t.htm,2026-11-10,medium,stated,preferred,
+571,yayoi,sunk,1942-09,As stated: 10-11 Sep 1942,,,combinedfleet,https://www.combinedfleet.com/yayoi_t.htm,2026-11-10,medium,stated,preferred,As stated: 10-11 Sep 1942
+572,yubari,commissioned,1923-07-31,31 Jul 1923,,,combinedfleet,http://www.combinedfleet.com/yubari_t.htm,2026-11-10,medium,stated,preferred,"Source says ""completed and registered""; treated as commissioning"
+573,yubari,fate,Torpedoed by USS Bluegill 27 Apr 1944; sank by the bow 28 Apr 1944,,,,combinedfleet,http://www.combinedfleet.com/yubari_t.htm,2026-11-10,medium,stated,preferred,
+574,yubari,laid_down,1922-06-05,5 Jun 1922,,,combinedfleet,http://www.combinedfleet.com/yubari_t.htm,2026-11-10,medium,stated,preferred,
+575,yubari,launched,1923-03-05,5 Mar 1923,,,combinedfleet,http://www.combinedfleet.com/yubari_t.htm,2026-11-10,medium,stated,preferred,
+576,yubari,sunk,1944-04-28,28 Apr 1944,,,combinedfleet,http://www.combinedfleet.com/yubari_t.htm,2026-11-10,medium,stated,preferred,
+577,yugumo,commissioned,1941-12-05,5 December 1941,,,combinedfleet,https://www.combinedfleet.com/yugumo_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+578,yugumo,fate,Sunk at Vella Lavella,Sunk at Vella Lavella,,,combinedfleet,https://www.combinedfleet.com/yugumo_t.htm,2026-11-10,medium,stated,preferred,
+579,yugumo,laid_down,1940-06-12,12 June 1940,,,combinedfleet,https://www.combinedfleet.com/yugumo_t.htm,2026-11-10,medium,stated,preferred,
+580,yugumo,launched,1941-03-16,16 March 1941,,,combinedfleet,https://www.combinedfleet.com/yugumo_t.htm,2026-11-10,medium,stated,preferred,
+581,yugumo,sunk,1943-10-06,6 October 1943,,,combinedfleet,https://www.combinedfleet.com/yugumo_t.htm,2026-11-10,medium,stated,preferred,
+582,yukikaze,fate,Survived the war; transferred to China 1947 as Tang Yan and scrapped,Survived the war; transferred to China 1947 as Tang Yan and scrapped,,,combinedfleet,https://www.combinedfleet.com/yukika_t.htm,2026-11-10,medium,stated,preferred,
+583,yunagi,fate,"Torpedoed by USS Picuda about 20 miles NNE of Cape Bojeador, Luzon, during 21-25 Aug 1944",,,,combinedfleet,http://www.combinedfleet.com/yunagi_t.htm,2026-11-10,medium,stated,preferred,
+584,yunagi,sunk,1944-08,21-25 Aug 1944,,,combinedfleet,http://www.combinedfleet.com/yunagi_t.htm,2026-11-10,medium,stated,preferred,Source gives only the 21-25 Aug 1944 voyage window
+585,yura,commissioned,1923-03-20,20 March 1923,,,combinedfleet,https://www.combinedfleet.com/yura_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
+586,yura,fate,Damaged by dive bombers and scuttled off Guadalcanal,Damaged by dive bombers and scuttled off Guadalcanal,,,combinedfleet,https://www.combinedfleet.com/yura_t.htm,2026-11-10,medium,stated,preferred,
+587,yura,laid_down,1920-05-21,21 May 1920,,,combinedfleet,https://www.combinedfleet.com/yura_t.htm,2026-11-10,medium,stated,preferred,
+588,yura,launched,1922-02-15,15 February 1922,,,combinedfleet,https://www.combinedfleet.com/yura_t.htm,2026-11-10,medium,stated,preferred,
+589,yura,sunk,1942-10-25,25 October 1942,,,combinedfleet,https://www.combinedfleet.com/yura_t.htm,2026-11-10,medium,stated,preferred,
+590,zuikaku,commissioned,1941-09-25,25 September 1941,,,combinedfleet,https://www.combinedfleet.com/Zuikak.htm,2026-11-10,medium,stated,preferred,
+591,zuikaku,fate,Sunk by US carrier aircraft off Cape Engano 25 Oct 1944,Sunk by US carrier aircraft off Cape Engano 25 Oct 1944,,,combinedfleet,https://www.combinedfleet.com/Zuikak.htm,2026-11-10,medium,stated,preferred,
+592,zuikaku,laid_down,1938-05-25,25 May 1938,,,combinedfleet,https://www.combinedfleet.com/Zuikak.htm,2026-11-10,medium,stated,preferred,
+593,zuikaku,launched,1939-11-27,27 November 1939,,,combinedfleet,https://www.combinedfleet.com/Zuikak.htm,2026-11-10,medium,stated,preferred,
+594,zuikaku,sunk,1944-10-25,25 October 1944,,,combinedfleet,https://www.combinedfleet.com/Zuikak.htm,2026-11-10,medium,stated,preferred,

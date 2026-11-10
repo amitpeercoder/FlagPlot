@@ -6,6 +6,7 @@
 key,applies_to,value_type,unit,cardinality,description
 displacement_standard_lt,ship_class,integer,long tons,one,Standard (Washington Treaty) displacement
 displacement_full_lt,ship_class,integer,long tons,one,Full load displacement
+displacement_trial_lt,ship_class,integer,long tons,one,Trial displacement (Japanese practice: two-thirds stores and fuel)
 length_overall_m,ship_class,decimal,metres,one,Length overall
 beam_m,ship_class,decimal,metres,one,Maximum beam
 max_speed_kn,ship_class,decimal,knots,one,Designed maximum speed
@@ -79,8 +80,8 @@ in_service,sensor,date,,one,Date the set entered service
 name_native,sensor,text,,one,Designation in the service's own form
 alias,sensor,text,,many,Another designation found in sources
 equipped_with,air_unit,ref:aircraft_type,,many,Aircraft type the unit flew in the period
-based_at,air_unit,ref:place_or_ship,,one,Airfield or ship the unit operated from in the period
-aircraft_on_hand,air_unit,integer,aircraft,one,Aircraft on strength on the date; the note names the type if the unit is mixed
-aircraft_operational,air_unit,integer,aircraft,one,Aircraft operational on the date; the note names the type if the unit is mixed
+based_at,air_unit,ref:place_or_ship,,many,Airfield or ship the unit operated from in the period
+aircraft_on_hand,air_unit,integer,aircraft,many,Aircraft on strength on the date; the note names the type if the unit is mixed
+aircraft_operational,air_unit,integer,aircraft,many,Aircraft operational on the date; the note names the type if the unit is mixed
 name_native,air_unit,text,,one,Name in the service's own script
 alias,air_unit,text,,many,Another name found in sources

@@ -1,6 +1,6 @@
 # Order-of-battle database: design proposal
 
-Status: proposal, awaiting review by Amit. Nothing here is binding until it is recorded in `docs/decisions/`.
+Status: approved by Amit on 2026-11-10 as the working format. To be recorded in `docs/decisions/` as the next numbered file.
 
 Scope: the first slice only (South Pacific, August 1942 to February 1943). The design is sized so the full order of battle can use it in step 5 without a change of format.
 
@@ -339,6 +339,14 @@ These are choices I would rather not make alone. My recommendation is first in e
 4. **Where does the checker live?** Recommended: a `sim-data` test, written by the scenario team or after their current work lands, since I am not to touch `crates/`. Until then the checks are run by hand.
 5. **Real ids start at 1000,** leaving the low range to placeholders. This touches a `CLAUDE.md` data rule ("entity IDs in data files are stable"), so it should be your call.
 6. **Decision record.** Once you agree the format, I propose recording it as the next numbered file in `docs/decisions/`. The scenario 2 team may also be taking the next number, so I will check the number at that point, not now.
+
+## Changes made while filling the first data set
+
+- `aircraft_on_hand`, `aircraft_operational` and `based_at` are `many`, not `one`. A mixed unit has one strength row per aircraft type on a date, and a unit can have detachments at two bases. This switches off the conflict check for those attributes. A `qualifier` column on fact rows would restore it and is the first change to consider.
+- `displacement_trial_lt` was added. Japanese sources give trial displacement where others give full load.
+- `events.csv` was not started. Losses are `sunk` and `fate` facts and refits are dated fits. It is added when a scenario needs a change with a cause.
+- Sources graded `C` are capped at `low` confidence whatever the row says.
+- The link from a ship to its class has no source column. It should get one, or become a dated fact.
 
 ## What this design does not cover
 

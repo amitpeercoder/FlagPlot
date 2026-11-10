@@ -1,0 +1,5 @@
+# Named battles used to group an order of battle.
+# Format and rules: docs/research/oob/database-design.md
+id,key,name,date_from,date_to
+1000,eastern-solomons,Battle of the Eastern Solomons,1942-08-24,1942-08-25
+1001,savo-island,Battle of Savo Island,1942-08-08,1942-08-09
