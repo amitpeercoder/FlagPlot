@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flag Plot replay viewer</title>
+<!--
+  Flag Plot replay viewer. An umpire's debugging tool: read-only, offline, one file.
+  See docs/decisions/0018-replay-viewer.md. Nothing that plays the game may use it.
+  Two script blocks: #core (pure functions, also run by check.js) and #ui (everything that touches the page).
+-->
+<style>
+:root {
+  --bg: #f4f4f1; --panel: #ffffff; --ink: #1d2024; --dim: #596068; --line: #cdd1d4;
+  --accent: #2a5db0; --halo: #eef3f6;
+  --sea-deep: #bfd3e4; --sea-shallow: #d6e6f0; --coast: #ebe1bd; --land: #aebf86;
+  --hexline: rgba(40, 60, 80, 0.16); --closed: #20242a;
+  --allied: #1f4fa3; --allied-ink: #ffffff; --japanese: #c4361f; --japanese-ink: #ffffff;
+  --edge: #ffffff; --fight: #d1137a; --hl: #f0a500; --warn-bg: #fff1c2; --warn-ink: #5a4300; --bad-bg: #fbd9d4; --bad-ink: #6b1308;
+  --hover: rgba(0, 0, 0, 0.5);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171a; --panel: #1e2226; --ink: #e5e7e9; --dim: #a0a8b0; --line: #3a4147;
+    --accent: #7fb0ff; --halo: #16222c;
+    --sea-deep: #132638; --sea-shallow: #1b3347; --coast: #54503a; --land: #43552f;
+    --hexline: rgba(170, 200, 230, 0.16); --closed: #f2f2ee;
+    --allied: #6aa3f5; --allied-ink: #08182e; --japanese: #f2705a; --japanese-ink: #2b0c06;
+    --edge: #0d0f11; --fight: #ff63b0; --hl: #ffd04a; --warn-bg: #4a3d0c; --warn-ink: #ffe9a6; --bad-bg: #5a1c14; --bad-ink: #ffd6cf;
+    --hover: rgba(255, 255, 255, 0.6);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; }
+button, select, input { font: inherit; color: inherit; }
+button { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 3px 10px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input[type=text], input[type=search], select { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+
+/* Header */
+#top { background: var(--panel); border-bottom: 1px solid var(--line); padding: 6px 12px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+#top .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; min-height: 26px; }
+h1 { font-size: 15px; margin: 0; font-weight: 650; }
+.spacer { flex: 1; }
+.dim { color: var(--dim); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+.badge.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.badge.bad { background: var(--bad-bg); color: var(--bad-ink); }
+.filebtn { position: relative; display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 3px 10px; cursor: pointer; background: var(--bg); }
+.filebtn:hover, .filebtn:focus-within { border-color: var(--accent); }
+.filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+fieldset.belief { border: 0; padding: 0; margin: 0; display: flex; gap: 12px; align-items: center; }
+fieldset.belief legend { float: left; padding: 0; margin-right: 8px; color: var(--dim); }
+fieldset.belief label { cursor: pointer; white-space: nowrap; }
+#msg { flex: none; padding: 8px 12px; background: var(--bad-bg); color: var(--bad-ink); border-bottom: 1px solid var(--line); }
+#msg.info { background: var(--warn-bg); color: var(--warn-ink); }
+
+/* Layout */
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; }
+@media (max-width: 960px) { main { grid-template-columns: minmax(0, 1fr) 320px; } }
+@media (max-width: 700px) { main { grid-template-columns: 1fr; grid-template-rows: 55% 45%; } }
+#mapwrap { position: relative; min-width: 0; min-height: 0; background: var(--sea-deep); overflow: hidden; }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; display: block; user-select: none; }
+#map.dragging { cursor: grabbing; }
+.dropping #mapwrap { outline: 3px dashed var(--accent); outline-offset: -4px; }
+#panel { background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+@media (max-width: 700px) { #panel { border-left: 0; border-top: 1px solid var(--line); } }
+
+/* Map decoration */
+.maptool { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+#mapbtns { top: 8px; left: 8px; display: flex; gap: 4px; padding: 4px; }
+#mapbtns button { min-width: 30px; padding: 2px 8px; }
+#north { top: 8px; left: 150px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
+#scalebar { right: 10px; bottom: 10px; }
+#scalebar .bar { height: 6px; border: 2px solid var(--ink); border-top: 0; margin-top: 2px; }
+#readout { left: 8px; bottom: 8px; max-width: min(430px, calc(100% - 180px)); font-size: 12.5px; pointer-events: none; }
+#readout div { overflow-wrap: anywhere; }
+#legend { right: 10px; top: 8px; max-width: 250px; }
+#legend summary { cursor: pointer; font-weight: 600; }
+#legend ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 3px; }
+#legend li { display: flex; gap: 8px; align-items: center; }
+.sw { flex: none; width: 24px; height: 14px; display: inline-block; border: 1px solid var(--line); }
+.sw.deep { background: var(--sea-deep); } .sw.shallow { background: var(--sea-shallow); } .sw.coast { background: var(--coast); } .sw.land { background: var(--land); }
+.sw.allied { background: var(--allied); border-color: var(--edge); border-radius: 3px; }
+.sw.japanese { background: var(--japanese); border-color: var(--edge); clip-path: polygon(0 30%, 20% 0, 80% 0, 100% 30%, 100% 70%, 80% 100%, 20% 100%, 0 70%); border: 0; }
+.sw.ghost { border: 2px dashed var(--allied); background: transparent; opacity: 0.7; }
+.sw.closed { height: 0; border: 0; border-top: 3px solid var(--closed); }
+.sw.fight { border: 3px solid var(--fight); border-radius: 50%; width: 16px; height: 16px; margin: 0 4px; }
+.sw.arc { background: color-mix(in srgb, var(--allied) 18%, transparent); border: 1px dashed var(--allied); clip-path: polygon(0 100%, 0 20%, 100% 0, 100% 100%); }
+.sw.trail { height: 0; border: 0; border-top: 2px solid var(--allied); opacity: 0.5; }
+.sw.move { height: 0; border: 0; border-top: 4px solid var(--allied); }
+
+/* SVG */
+.hex { stroke: var(--hexline); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.hex.deep_sea { fill: var(--sea-deep); } .hex.shallow_sea { fill: var(--sea-shallow); } .hex.coast { fill: var(--coast); } .hex.land { fill: var(--land); }
+.closed-line { fill: none; stroke: var(--closed); stroke-width: 2.4; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.closed-line.inland { stroke-width: 1; opacity: 0.55; }
+.hover-hex { fill: none; stroke: var(--hover); stroke-width: 2; vector-effect: non-scaling-stroke; pointer-events: none; }
+.fight-ring { fill: none; stroke: var(--fight); stroke-width: 3; vector-effect: non-scaling-stroke; }
+.fight-ring.inner { stroke-width: 1.5; stroke-dasharray: 4 3; }
+.trail { fill: none; stroke-width: 1.6; opacity: 0.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.move { fill: none; stroke-width: 4; opacity: 0.9; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.arc { stroke-width: 1.2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.side-allied { --sc: var(--allied); --si: var(--allied-ink); }
+.side-japanese { --sc: var(--japanese); --si: var(--japanese-ink); }
+.trail.side-allied, .move.side-allied, .arc.side-allied, .trail.side-japanese, .move.side-japanese, .arc.side-japanese { stroke: var(--sc); }
+.arc { fill: color-mix(in srgb, var(--sc) 14%, transparent); }
+svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 12px; }
+.lbl { fill: var(--ink); stroke: var(--halo); stroke-width: 3.5px; paint-order: stroke; stroke-linejoin: round; pointer-events: none; }
+.lbl.place { font-style: italic; fill: var(--dim); }
+.lbl.base { font-weight: 650; }
+.feat { fill: var(--ink); opacity: 0.7; font-size: 12px; pointer-events: none; }
+.counter { cursor: pointer; }
+.counter .shape { fill: var(--sc); stroke: var(--edge); stroke-width: 1.5; }
+.counter text { fill: var(--si); font-weight: 700; text-anchor: middle; pointer-events: none; }
+.counter.hollow .shape { fill: var(--panel); stroke: var(--sc); stroke-width: 2; stroke-dasharray: 3 2; }
+.counter.hollow text { fill: var(--sc); }
+.counter .strike { stroke: var(--sc); stroke-width: 2; }
+.ring-hl { fill: none; stroke: var(--hl); stroke-width: 3.5; pointer-events: none; }
+.ring-sel { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 3; pointer-events: none; }
+.ghost .gshape { fill: color-mix(in srgb, var(--sc) 12%, transparent); stroke: var(--sc); stroke-width: 2; stroke-dasharray: 5 3; }
+.ghost text { fill: var(--ink); stroke: var(--halo); stroke-width: 3px; paint-order: stroke; text-anchor: middle; }
+.basemark { fill: var(--panel); stroke: var(--ink); stroke-width: 1.6; }
+.basemark.side-allied { fill: var(--allied); stroke: var(--edge); }
+.basemark.side-japanese { fill: var(--japanese); stroke: var(--edge); }
+
+/* Panel */
+.pane-head { padding: 6px 10px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; flex: none; }
+.pane-head .line { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pane-head h2, #detail h2 { font-size: 13px; margin: 0; font-weight: 650; }
+#filter { flex: 1; min-width: 120px; }
+#evwrap { flex: 1 1 42%; min-height: 110px; display: flex; flex-direction: column; min-height: 0; }
+#evlist { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1; }
+#evlist li.ev { padding: 3px 10px; border-bottom: 1px solid var(--line); cursor: pointer; overflow-wrap: anywhere; }
+#evlist li.ev:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+#evlist li.ev.sel { background: color-mix(in srgb, var(--hl) 28%, transparent); box-shadow: inset 3px 0 0 var(--hl); }
+#evlist li.grp { padding: 3px 10px; background: var(--bg); font-weight: 650; cursor: pointer; position: sticky; top: 0; border-bottom: 1px solid var(--line); }
+.eid { color: var(--dim); margin-right: 6px; font-variant-numeric: tabular-nums; }
+.ecause { color: var(--dim); font-size: 12px; margin-left: 4px; }
+.empty { padding: 10px; color: var(--dim); }
+#detail { flex: 1 1 58%; overflow: auto; border-top: 2px solid var(--line); padding: 8px 10px; min-height: 0; }
+#detail section { margin-bottom: 12px; }
+#detail h3 { font-size: 12.5px; margin: 8px 0 3px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.03em; }
+#detail table { border-collapse: collapse; }
+#detail td, #detail th { padding: 1px 10px 1px 0; text-align: left; vertical-align: top; font-weight: normal; }
+#detail td.num { text-align: right; font-variant-numeric: tabular-nums; }
+#detail tr.result td { border-top: 1px solid var(--line); font-weight: 650; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 1px 10px; }
+.kv dt { color: var(--dim); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+.link { color: var(--accent); cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; }
+.why ul { list-style: none; margin: 0; padding-left: 14px; border-left: 1px solid var(--line); }
+.why > ul { padding-left: 0; border-left: 0; }
+.why details > summary { cursor: pointer; }
+.why li { margin: 2px 0; overflow-wrap: anywhere; }
+.why .leaf { padding-left: 14px; }
+.tag { font-size: 12px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--line); color: var(--dim); margin-right: 4px; }
+.shiprow { border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; margin: 4px 0; cursor: pointer; }
+.shiprow:hover { border-color: var(--accent); }
+.shiprow.sel { outline: 2px solid var(--ink); outline-offset: -1px; }
+.shiprow .sub { color: var(--dim); font-size: 12.5px; }
+.note { color: var(--dim); font-size: 12.5px; margin: 4px 0; }
+
+/* Footer */
+#controls { flex: none; background: var(--panel); border-top: 1px solid var(--line); padding: 6px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#slider { flex: 1; min-width: 160px; }
+#stepcount { min-width: 70px; text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="row">
+    <h1 id="title">Flag Plot replay viewer</h1>
+    <span id="seed" class="dim"></span>
+    <span id="placeholder" class="badge warn" hidden>Placeholder data: figures are not historical</span>
+    <span id="rebuildwarn" class="badge bad" hidden></span>
+    <span class="spacer"></span>
+    <span class="dim" id="readonly">Umpire's view, read-only</span>
+    <label class="filebtn">Open replay file<input type="file" id="file" accept=".json,application/json"></label>
+  </div>
+  <div class="row">
+    <span>Step: <b id="steplabel">none loaded</b></span>
+    <span>State hash: <code id="hash">-</code></span>
+    <fieldset class="belief" id="belief">
+      <legend>Show</legend>
+      <label><input type="radio" autocomplete="off" name="belief" value="truth" checked> Truth only</label>
+      <label><input type="radio" autocomplete="off" name="belief" value="allied"> + Allied contacts</label>
+      <label><input type="radio" autocomplete="off" name="belief" value="japanese"> + Japanese contacts</label>
+    </fieldset>
+  </div>
+</header>
+<div id="msg" role="alert" hidden></div>
+<main>
+  <section id="mapwrap" aria-label="Map">
+    <svg id="map" role="img" aria-label="Hex map of the replay">
+      <g id="world"><g id="gHexes"></g><g id="gClosed"></g><g id="gDyn"></g><g id="gHover"></g></g>
+      <g id="gScreen"></g>
+    </svg>
+    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button></div>
+    <div id="north" class="maptool" title="North is up"><svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1 L12 16 L7 12.5 L2 16 Z" fill="currentColor"/></svg><b>N</b></div>
+    <div id="scalebar" class="maptool" hidden><div id="scalelabel"></div><div class="bar" id="scalebarbar"></div></div>
+    <div id="readout" class="maptool"><div class="dim">Move the pointer over the map.</div></div>
+    <details id="legend" class="maptool" open><summary>Legend</summary><ul id="legendlist"></ul></details>
+  </section>
+  <aside id="panel" aria-label="Events and details">
+    <div id="evwrap">
+      <div class="pane-head">
+        <div class="line"><h2 id="evtitle">Events</h2><span class="dim" id="evinfo"></span></div>
+        <div class="line"><input type="search" id="filter" placeholder="Filter events by text" aria-label="Filter events by text"></div>
+        <div class="line">
+          <label title="Only events about the selected force or ship"><input type="checkbox" id="onlysel"> only this force / ship <span class="dim" id="selname"></span></label>
+          <label title="List matching events from every step, grouped by step"><input type="checkbox" id="allsteps"> all steps</label>
+        </div>
+      </div>
+      <ul id="evlist"></ul>
+    </div>
+    <div id="detail"><div class="empty">Click an event to see why it happened, or a force counter on the map to see its ships.</div></div>
+  </aside>
+</main>
+<footer id="controls">
+  <button id="prev" title="Previous step (Left arrow)">&#9664; Prev</button>
+  <button id="play" title="Play or pause (Space)">Play</button>
+  <button id="next" title="Next step (Right arrow)">Next &#9654;</button>
+  <label class="dim">Speed <select id="speed" aria-label="Playback speed"><option value="0.5">0.5 steps/s</option><option value="1" selected>1 step/s</option><option value="2">2 steps/s</option><option value="4">4 steps/s</option></select></label>
+  <input type="range" id="slider" min="0" max="0" value="0" aria-label="Step">
+  <span id="stepcount" class="dim">0 / 0</span>
+</footer>
+
+<script id="core">
+'use strict';
+// =====================================================================
+// Core: pure functions. No DOM, no window. Run by the page and by check.js.
+// =====================================================================
+
+// ---- Geometry (nautical miles before scaling; y grows southward) ----
+const HEX_SPACING = 40;
+const ROW_SPACING = 34.641016;
+const HEX_R = 40 / Math.sqrt(3); // circumradius, 23.094011
+const LABEL_COS_LAT = Math.cos(12 * Math.PI / 180);
+
+function hexKey(q, r) { return q + ',' + r; }
+
+/** Centre of hex (q, r) as [x, y]. */
+function hexCenter(q, r) { return [HEX_SPACING * (q + r / 2), ROW_SPACING * r]; }
+
+/** Corner k (0..5) of hex (q, r): top first, then clockwise on screen. */
+function hexCorner(q, r, k) {
+  const c = hexCenter(q, r);
+  const a = (-90 + 60 * k) * Math.PI / 180;
+  return [c[0] + HEX_R * Math.cos(a), c[1] + HEX_R * Math.sin(a)];
+}
+
+function hexCorners(q, r) {
+  const out = [];
+  for (let k = 0; k < 6; k++) out.push(hexCorner(q, r, k));
+  return out;
+}
+
+/**
+ * The shared edge for direction d of hex (q, r), as [[x1, y1], [x2, y2]].
+ * The neighbour offset comes from directions[d] = [dq, dr]; the edge is perpendicular to it.
+ */
+function edgeForDirection(q, r, d, directions) {
+  const dq = directions[d][0], dr = directions[d][1];
+  const ox = HEX_SPACING * (dq + dr / 2), oy = ROW_SPACING * dr;
+  const theta = Math.atan2(oy, ox);
+  const c = hexCenter(q, r);
+  const a = theta - Math.PI / 6, b = theta + Math.PI / 6;
+  return [
+    [c[0] + HEX_R * Math.cos(a), c[1] + HEX_R * Math.sin(a)],
+    [c[0] + HEX_R * Math.cos(b), c[1] + HEX_R * Math.sin(b)],
+  ];
+}
+
+/** The hex whose cell contains the point (x, y) in nm. */
+function pointToHex(x, y) {
+  const rf = y / ROW_SPACING;
+  const qf = x / HEX_SPACING - rf / 2;
+  let q = Math.round(qf), r = Math.round(rf);
+  const s = Math.round(-qf - rf);
+  const dq = Math.abs(q - qf), dr = Math.abs(r - rf), ds = Math.abs(s + qf + rf);
+  if (dq > dr && dq > ds) q = -r - s;
+  else if (dr > ds) r = -q - s;
+  return { q: q + 0, r: r + 0 };
+}
+
+/** Point at bearing b degrees (clockwise from north) and distance d from (x, y). */
+function bearingPoint(x, y, deg, d) {
+  const a = deg * Math.PI / 180;
+  return [x + d * Math.sin(a), y - d * Math.cos(a)];
+}
+
+/** Width in degrees of the clockwise arc from..to; equal bearings mean the full 360 (as sim-core's arc_degrees). */
+function arcWidth(fromDeg, toDeg) {
+  const w = (((toDeg - fromDeg) % 360) + 360) % 360;
+  return w === 0 ? 360 : w;
+}
+
+/** A search arc as drawing data: full circle, or two end points and the large-arc flag. */
+function arcSpec(x, y, fromDeg, toDeg, range) {
+  const width = arcWidth(fromDeg, toDeg);
+  if (width >= 360) return { full: true, width, cx: x, cy: y, range };
+  return { full: false, width, cx: x, cy: y, range, p1: bearingPoint(x, y, fromDeg, range), p2: bearingPoint(x, y, toDeg, range), large: width > 180 };
+}
+
+/** Place each label in the hex nearest by projected lat/lon. Only hexes with lat and lon count; ties go to file order. */
+function placeLabels(hexes, labels) {
+  const out = [];
+  if (!Array.isArray(hexes) || !Array.isArray(labels)) return out;
+  const located = hexes.filter(h => typeof h.lat === 'number' && typeof h.lon === 'number');
+  if (!located.length) return out;
+  for (const label of labels) {
+    if (!label || typeof label.lat !== 'number' || typeof label.lon !== 'number') continue;
+    let best = null, bestD = Infinity;
+    for (const h of located) {
+      const dx = (label.lon - h.lon) * LABEL_COS_LAT, dy = label.lat - h.lat;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = h; }
+    }
+    out.push({ label, q: best.q, r: best.r });
+  }
+  return out;
+}
+
+// ---- Time steps ----
+const PHASES = ['orders', 'night', 'morning', 'afternoon', 'end'];
+const PHASE_HOURS = { night: '18:00 to 06:00', morning: '06:00 to 12:00', afternoon: '12:00 to 18:00' };
+
+function phaseRank(p) { const i = PHASES.indexOf(p); return i < 0 ? 3.5 : i; }
+
+function stepLabel(day, phase) {
+  if (phase === 'start') return 'Start';
+  if (phase === 'orders') return 'Day ' + day + ', orders';
+  if (phase === 'end') return 'Day ' + day + ', end of day';
+  return 'Day ' + day + ', ' + phase + (PHASE_HOURS[phase] ? ' (' + PHASE_HOURS[phase] + ')' : '');
+}
+
+/**
+ * Steps in order: index 0 is "Start" (no events); then every (day, phase) that has events.
+ * Each step lists positions into the events array, in log order. Every event is in exactly one step.
+ */
+function buildSteps(events) {
+  const byDay = new Map();
+  events.forEach((ev, i) => {
+    if (!byDay.has(ev.day)) byDay.set(ev.day, []);
+    byDay.get(ev.day).push(i);
+  });
+  const steps = [{ index: 0, day: 0, phase: 'start', label: 'Start', events: [] }];
+  for (const day of [...byDay.keys()].sort((a, b) => a - b)) {
+    const idxs = byDay.get(day);
+    let first = -1, last = -1;
+    idxs.forEach((ei, pos) => { if (events[ei].pulse) { if (first < 0) first = pos; last = pos; } });
+    const groups = new Map();
+    let lastPulse = null;
+    idxs.forEach((ei, pos) => {
+      const p = events[ei].pulse;
+      let phase;
+      if (p) { phase = p; lastPulse = p; }
+      else if (first < 0 || pos < first) phase = 'orders';
+      else if (pos > last) phase = 'end';
+      else phase = lastPulse; // null-pulse event between pulsed ones: stays with the pulse before it
+      if (!groups.has(phase)) groups.set(phase, []);
+      groups.get(phase).push(ei);
+    });
+    [...groups.keys()].sort((a, b) => phaseRank(a) - phaseRank(b)).forEach(phase => {
+      steps.push({ index: steps.length, day, phase, label: stepLabel(day, phase), events: groups.get(phase) });
+    });
+  }
+  return steps;
+}
+
+// ---- Validation ----
+/** Returns null when the replay can be read, otherwise a message saying what is wrong. */
+function validateReplay(r) {
+  if (r === null || typeof r !== 'object' || Array.isArray(r)) return 'This is JSON but not a replay: expected an object at the top level.';
+  if (r.format !== 'flagplot-replay') return 'Not a Flag Plot replay: format is ' + JSON.stringify(r.format) + ', expected "flagplot-replay".';
+  if (r.version !== 1) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads version 1 only.';
+  if (!r.scenario || typeof r.scenario !== 'object') return 'Replay has no "scenario" object.';
+  if (!r.map || typeof r.map !== 'object' || !Array.isArray(r.map.hexes)) return 'Replay has no "map.hexes" list.';
+  if (!Array.isArray(r.directions) || r.directions.length !== 6 || !r.directions.every(d => Array.isArray(d) && d.length === 2 && Number.isInteger(d[0]) && Number.isInteger(d[1]))) return 'Replay "directions" must be six [dq, dr] pairs.';
+  if (!Array.isArray(r.events)) return 'Replay has no "events" list.';
+  for (const h of r.map.hexes) {
+    if (!h || !Number.isInteger(h.q) || !Number.isInteger(h.r)) return 'A map hex has no integer q and r.';
+  }
+  const seen = new Set();
+  for (const ev of r.events) {
+    if (!ev || typeof ev !== 'object' || !Number.isInteger(ev.id) || !Number.isInteger(ev.day) || typeof ev.kind !== 'string') return 'An event is missing its integer id, integer day or kind.';
+    if (seen.has(ev.id)) return 'Two events share id ' + ev.id + '.';
+    seen.add(ev.id);
+    if (ev.pulse !== null && ev.pulse !== undefined && typeof ev.pulse !== 'string') return 'Event ' + ev.id + ' has a pulse that is not a string or null.';
+  }
+  for (const key of ['orders', 'bases', 'labels', 'days']) {
+    if (r[key] !== undefined && !Array.isArray(r[key])) return 'Replay "' + key + '" is not a list.';
+  }
+  return null;
+}
+
+// ---- Entities and text ----
+/** "task_force:1" -> { type: "task_force", id: 1 }; anything else -> null. */
+function parseEntity(s) {
+  const m = /^([a-z_]+):(\d+)$/.exec(String(s));
+  return m ? { type: m[1], id: Number(m[2]) } : null;
+}
+
+/** Splits an event's log line into its body, with the "#id Dd pulse" prefix and "  <- causes" suffix removed. */
+function splitText(text) {
+  let body = String(text == null ? '' : text), causes = '';
+  const i = body.lastIndexOf('  <- ');
+  if (i >= 0) { causes = body.slice(i + 5); body = body.slice(0, i); }
+  body = body.replace(/^#\d+\s+D\d+\s+\S+\s+/, '');
+  return { body, causes };
+}
+
+function numEq(a, b) {
+  if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) < 1e-9;
+  return a === b;
+}
+
+// ---- Model: indexes and state rebuild ----
+function cloneTrail(trail) { return trail.slice(); }
+
+function snapshot(cur, aux) {
+  const forces = new Map();
+  for (const [id, f] of cur.forces) forces.set(id, { id, name: f.name, side: f.side, q: f.q, r: f.r, ships: f.ships.slice(), trail: cloneTrail(f.trail), detachedFrom: f.detachedFrom });
+  const contacts = {};
+  for (const side of Object.keys(cur.contacts)) {
+    const m = new Map();
+    for (const [id, c] of cur.contacts[side]) m.set(id, { id, side, hex: c.hex.slice(), ship_count: c.ship_count, kind: c.kind, age_pulses: c.age_pulses, confidence: c.confidence });
+    contacts[side] = m;
+  }
+  return {
+    forces, contacts,
+    sunk: new Set(cur.sunk),
+    shipForce: new Map(cur.shipForce),
+    moves: aux.moves, fights: aux.fights, searches: aux.searches,
+  };
+}
+
+/** Builds everything the page and the checker need from a validated replay. */
+function buildModel(replay) {
+  const events = replay.events || [];
+  const initial = replay.initial || {};
+  const final = replay.final || null;
+  const hexes = (replay.map && replay.map.hexes) || [];
+  const hexByKey = new Map();
+  for (const h of hexes) hexByKey.set(hexKey(h.q, h.r), h);
+  const bases = new Map();
+  for (const b of replay.bases || []) bases.set(b.id, b);
+  const airGroups = new Map();
+  for (const g of initial.air_groups || []) airGroups.set(g.id, g);
+  const finalForces = new Map(), finalShips = new Map();
+  if (final) {
+    for (const f of final.task_forces || []) finalForces.set(f.id, f);
+    for (const s of final.ships || []) finalShips.set(s.id, s);
+  }
+  const initShips = new Map();
+  for (const s of initial.ships || []) initShips.set(s.id, s);
+
+  const eventById = new Map(), orderById = new Map(), ledTo = new Map();
+  events.forEach(ev => eventById.set(ev.id, ev));
+  for (const o of replay.orders || []) orderById.set(o.id, o);
+  for (const ev of events) {
+    for (const c of ev.causes || []) {
+      const key = c.order !== undefined ? 'order:' + c.order : 'event:' + c.event;
+      if (!ledTo.has(key)) ledTo.set(key, []);
+      ledTo.get(key).push(ev.id);
+    }
+  }
+
+  const steps = buildSteps(events);
+  const stepOfEvent = new Map();
+  steps.forEach(s => s.events.forEach(ei => stepOfEvent.set(events[ei].id, s.index)));
+
+  // Rebuild
+  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() } };
+  for (const f of initial.task_forces || []) {
+    const pos = f.position || { q: 0, r: 0 };
+    cur.forces.set(f.id, { id: f.id, name: f.name || ('TF ' + f.id), side: f.side, q: pos.q, r: pos.r, ships: (f.ships || []).slice(), trail: [[pos.q, pos.r]], detachedFrom: null });
+    for (const s of f.ships || []) cur.shipForce.set(s, f.id);
+  }
+  const eventForces = new Map(); // event id -> force ids it concerns, as of that moment
+  const states = [snapshot(cur, { moves: new Map(), fights: [], searches: [] })];
+
+  const contactSide = (ev) => {
+    const side = ev.data && ev.data.side;
+    if (!side) return null;
+    if (!cur.contacts[side]) cur.contacts[side] = new Map();
+    return cur.contacts[side];
+  };
+
+  for (let si = 1; si < steps.length; si++) {
+    const aux = { moves: new Map(), fights: [], searches: [] };
+    for (const ei of steps[si].events) {
+      const ev = events[ei], d = ev.data || {};
+      // Which forces is this event about? Decided before it is applied (a sunk ship still counts for its force).
+      const fset = new Set();
+      for (const e of ev.entities || []) {
+        const p = parseEntity(e);
+        if (!p) continue;
+        if (p.type === 'task_force') fset.add(p.id);
+        else if (p.type === 'ship' && cur.shipForce.has(p.id)) fset.add(cur.shipForce.get(p.id));
+      }
+      if (ev.kind === 'ships_detached') { fset.add(d.parent); fset.add(d.new_force); }
+      eventForces.set(ev.id, [...fset].filter(x => x !== undefined));
+
+      switch (ev.kind) {
+        case 'task_force_steamed': {
+          const f = cur.forces.get(d.task_force);
+          if (!f || !Array.isArray(d.to)) break;
+          const path = [];
+          if (Array.isArray(d.from)) path.push(d.from.slice());
+          const entered = Array.isArray(d.hexes_entered) && d.hexes_entered.length ? d.hexes_entered : [d.to];
+          for (const h of entered) { f.trail.push([h[0], h[1]]); path.push([h[0], h[1]]); }
+          f.q = d.to[0]; f.r = d.to[1];
+          if (!aux.moves.has(f.id)) aux.moves.set(f.id, []);
+          aux.moves.get(f.id).push(path);
+          break;
+        }
+        case 'ships_detached': {
+          const parent = cur.forces.get(d.parent);
+          const ships = [...(d.ships || []), ...(d.escorts || [])];
+          if (!cur.forces.has(d.new_force)) {
+            const fin = finalForces.get(d.new_force);
+            const q = parent ? parent.q : 0, r = parent ? parent.r : 0;
+            cur.forces.set(d.new_force, {
+              id: d.new_force, name: fin ? fin.name : 'TF ' + d.new_force, side: fin ? fin.side : (parent ? parent.side : null),
+              q, r, ships: [], trail: [[q, r]], detachedFrom: d.parent,
+            });
+          }
+          const nf = cur.forces.get(d.new_force);
+          for (const s of ships) {
+            if (parent) parent.ships = parent.ships.filter(x => x !== s);
+            if (!nf.ships.includes(s)) nf.ships.push(s);
+            cur.shipForce.set(s, d.new_force);
+          }
+          break;
+        }
+        case 'ship_sunk': {
+          cur.sunk.add(d.ship);
+          for (const f of cur.forces.values()) f.ships = f.ships.filter(x => x !== d.ship);
+          break;
+        }
+        case 'report_received': {
+          const m = contactSide(ev);
+          if (m) m.set(d.contact, { id: d.contact, side: d.side, hex: Array.isArray(d.hex) ? d.hex.slice() : [0, 0], ship_count: d.ship_count, kind: d.kind, age_pulses: d.age_pulses !== undefined ? d.age_pulses : 0, confidence: d.confidence });
+          break;
+        }
+        case 'contact_aged': {
+          const m = contactSide(ev);
+          const c = m && m.get(d.contact);
+          if (c) { c.age_pulses = d.age_pulses; c.confidence = d.confidence; }
+          break;
+        }
+        case 'contact_dropped': {
+          const m = contactSide(ev);
+          if (m) m.delete(d.contact);
+          break;
+        }
+        case 'engagement_begun':
+        case 'engagement_ended':
+          if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
+          break;
+        case 'search_flown': {
+          const b = bases.get(d.base);
+          if (b) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, q: b.q, r: b.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b).side });
+          break;
+        }
+        default: break;
+      }
+    }
+    states.push(snapshot(cur, aux));
+  }
+
+  // Bounds in nm
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const h of hexes) for (const c of hexCorners(h.q, h.r)) {
+    if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+    if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+  }
+  if (!hexes.length) { minX = -100; maxX = 100; minY = -100; maxY = 100; }
+
+  const hexList = hexes;
+  const hasLatLon = hexList.some(h => typeof h.lat === 'number' && typeof h.lon === 'number');
+  const placements = placeLabels(hexList, replay.labels || []);
+  const placementsByHex = new Map();
+  for (const p of placements) {
+    const k = hexKey(p.q, p.r);
+    if (!placementsByHex.has(k)) placementsByHex.set(k, []);
+    placementsByHex.get(k).push(p);
+  }
+  const days = new Map();
+  for (const d of replay.days || []) days.set(d.day, d);
+  const basesByHex = new Map();
+  for (const b of bases.values()) {
+    const k = hexKey(b.q, b.r);
+    if (!basesByHex.has(k)) basesByHex.set(k, []);
+    basesByHex.get(k).push(b);
+  }
+
+  return {
+    replay, events, steps, stepOfEvent, states, eventById, orderById, ledTo, eventForces,
+    hexes: hexList, hexByKey, bases, basesByHex, airGroups, initShips, finalForces, finalShips,
+    placements, placementsByHex, hasLatLon, days, bounds: { minX, minY, maxX, maxY },
+  };
+}
+
+/** Compares the rebuilt end state with replay.final. Returns a list of problems; empty means they agree. */
+function compareWithFinal(model) {
+  const problems = [];
+  const final = model.replay.final;
+  if (!final) return problems;
+  const end = model.states[model.states.length - 1];
+  const setEq = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  for (const f of final.task_forces || []) {
+    const r = end.forces.get(f.id);
+    if (!r) { problems.push('force ' + f.id + ' is in the final state but was never rebuilt'); continue; }
+    if (!f.position || r.q !== f.position.q || r.r !== f.position.r) problems.push('force ' + f.id + ' rebuilt at (' + r.q + ',' + r.r + ') but final says ' + JSON.stringify(f.position));
+    if (!setEq(r.ships, f.ships || [])) problems.push('force ' + f.id + ' ships rebuilt as [' + r.ships + '] but final says [' + (f.ships || []) + ']');
+  }
+  for (const id of end.forces.keys()) if (!model.finalForces.has(id)) problems.push('force ' + id + ' was rebuilt but is not in the final state');
+  const finalSunk = (final.ships || []).filter(s => s.location === 'sunk').map(s => s.id);
+  for (const id of finalSunk) if (!end.sunk.has(id)) problems.push('ship ' + id + ' is sunk in final but not in the rebuild');
+  for (const id of end.sunk) if (!finalSunk.includes(id)) problems.push('ship ' + id + ' is sunk in the rebuild but not in final');
+  const fc = final.contacts || {};
+  for (const side of new Set([...Object.keys(fc), ...Object.keys(end.contacts)])) {
+    const want = fc[side] || [], have = end.contacts[side] || new Map();
+    for (const c of want) {
+      const r = have.get(c.id);
+      if (!r) { problems.push(side + ' contact ' + c.id + ' is in final but not in the rebuild'); continue; }
+      if (!Array.isArray(c.hex) || r.hex[0] !== c.hex[0] || r.hex[1] !== c.hex[1]) problems.push(side + ' contact ' + c.id + ' hex differs');
+      for (const k of ['ship_count', 'kind', 'age_pulses', 'confidence']) if (!numEq(r[k], c[k])) problems.push(side + ' contact ' + c.id + ' ' + k + ' rebuilt ' + r[k] + ' but final ' + c[k]);
+    }
+    for (const id of have.keys()) if (!want.some(c => c.id === id)) problems.push(side + ' contact ' + id + ' is in the rebuild but not in final');
+  }
+  return problems;
+}
+
+/** Cause trees for the Why box: a bounded, de-duplicated walk back through causes. */
+function whyTree(model, eventId, opts) {
+  const maxDepth = (opts && opts.maxDepth) || 8, maxNodes = (opts && opts.maxNodes) || 60;
+  const seen = new Set();
+  let count = 0, omitted = 0;
+  function expand(causes, depth) {
+    const nodes = [];
+    for (const c of causes || []) {
+      const kind = c.order !== undefined ? 'order' : 'event';
+      const id = kind === 'order' ? c.order : c.event;
+      const key = kind + ':' + id;
+      const obj = kind === 'order' ? model.orderById.get(id) : model.eventById.get(id);
+      if (seen.has(key)) { nodes.push({ kind, id, obj, repeat: true, children: [] }); continue; }
+      if (count >= maxNodes) { omitted++; continue; }
+      seen.add(key); count++;
+      const node = { kind, id, obj, repeat: false, children: [], cutoff: 0 };
+      if (kind === 'event' && obj && obj.causes && obj.causes.length) {
+        if (depth + 1 >= maxDepth) node.cutoff = obj.causes.length;
+        else node.children = expand(obj.causes, depth + 1);
+      }
+      nodes.push(node);
+    }
+    return nodes;
+  }
+  const ev = model.eventById.get(eventId);
+  const nodes = ev ? expand(ev.causes, 0) : [];
+  return { nodes, omitted, count };
+}
+
+/** Does an event pass the text filter and the entity filter? sel is {type:'force'|'ship', id} or null. */
+function eventMatches(model, ev, text, sel) {
+  if (text) {
+    const hay = (ev.text + ' ' + ev.kind).toLowerCase();
+    if (!hay.includes(text.toLowerCase())) return false;
+  }
+  if (sel) {
+    if (sel.type === 'force') return (model.eventForces.get(ev.id) || []).includes(sel.id);
+    if (sel.type === 'ship') return (ev.entities || []).includes('ship:' + sel.id);
+  }
+  return true;
+}
+
+/** Short counts for the checker's one-line summary. */
+function summarize(model) {
+  const end = model.states[model.states.length - 1];
+  let contacts = 0;
+  for (const side of Object.keys(end.contacts)) contacts += end.contacts[side].size;
+  return { steps: model.steps.length, events: model.events.length, forces: end.forces.size, contacts, labels: model.placements.length };
+}
+
+const FlagPlotCore = {
+  HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
+  hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
+  stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
+};
+if (typeof module !== 'undefined') module.exports = FlagPlotCore;
+</script>
+
+<script id="ui">
+'use strict';
+(() => {
+const C = FlagPlotCore;
+const $ = id => document.getElementById(id);
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+// ---- Small DOM helpers (all text goes in as text nodes or textContent, never as HTML) ----
+function el(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const c of kids.flat()) if (c != null) e.append(c);
+  return e;
+}
+function sv(tag, props, ...kids) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.setAttribute('class', v);
+    else if (k === 'text') e.textContent = v;
+    else e.setAttribute(k, String(v));
+  }
+  for (const c of kids.flat()) if (c != null) e.append(c);
+  return e;
+}
+const clear = node => node.replaceChildren();
+const f1 = n => (Math.round(n * 10) / 10).toString();
+
+// ---- State ----
+const S = {
+  replay: null, model: null, step: 0,
+  belief: 'truth', selEvent: null, selEntity: null,
+  view: { k: 1, tx: 0, ty: 0 }, autoFit: true,
+  playing: false, timer: null, speed: 1,
+  filter: '', onlySel: false, allSteps: false,
+  hoverKey: null,
+};
+const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
+
+// =====================================================================
+// Loading: file picker, drop, ?replay= fetch
+// =====================================================================
+function showMessage(text, info) {
+  const m = $('msg');
+  m.textContent = text || '';
+  m.hidden = !text;
+  m.className = info ? 'info' : '';
+}
+
+function loadText(text, sourceName) {
+  let obj;
+  try { obj = JSON.parse(text); }
+  catch (err) { showMessage('Could not read ' + sourceName + ': it is not valid JSON (' + err.message + ').'); return; }
+  const problem = C.validateReplay(obj);
+  if (problem) { showMessage(sourceName + ': ' + problem); return; }
+  let model;
+  try { model = C.buildModel(obj); }
+  catch (err) { showMessage('Could not build the replay from ' + sourceName + ': ' + err.message); return; }
+  showMessage('');
+  stopPlaying();
+  S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null;
+  S.filter = ''; $('filter').value = '';
+  buildWorld();
+  fit();
+  initHeader();
+  render();
+  renderReadout();
+}
+
+function loadFile(file) {
+  if (!file) return;
+  file.text().then(t => loadText(t, file.name)).catch(err => showMessage('Could not read ' + file.name + ': ' + err.message));
+}
+
+function initLoading() {
+  $('file').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+  let depth = 0;
+  window.addEventListener('dragenter', e => { e.preventDefault(); depth++; document.body.classList.add('dropping'); });
+  window.addEventListener('dragleave', () => { depth = Math.max(0, depth - 1); if (!depth) document.body.classList.remove('dropping'); });
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => {
+    e.preventDefault(); depth = 0; document.body.classList.remove('dropping');
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  });
+  const param = new URLSearchParams(location.search).get('replay');
+  if (param) {
+    if (location.protocol === 'file:') { showMessage('?replay= only works when the page is served over http. Use the file picker instead.', true); return; }
+    showMessage('Loading ' + param + ' ...', true);
+    fetch(param).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(t => loadText(t, param))
+      .catch(err => showMessage('Could not fetch ' + param + ' (' + err.message + '). You can still pick a file with "Open replay file".'));
+  }
+}
+
+// =====================================================================
+// Header
+// =====================================================================
+function initHeader() {
+  const sc = S.replay.scenario || {};
+  $('title').textContent = sc.name || 'Untitled scenario';
+  $('seed').textContent = sc.seed !== undefined ? 'seed ' + sc.seed : '';
+  $('placeholder').hidden = !sc.placeholder;
+  document.title = (sc.name ? sc.name + ' - ' : '') + 'Flag Plot replay viewer';
+  const problems = C.compareWithFinal(S.model);
+  const w = $('rebuildwarn');
+  w.hidden = !problems.length;
+  if (problems.length) { w.textContent = 'Rebuilt end state differs from the file'; w.title = problems.join('\n'); }
+}
+
+function renderHeaderStep() {
+  const m = S.model, step = m.steps[S.step];
+  $('steplabel').textContent = step.label;
+  const d = step.phase === 'start' ? null : m.days.get(step.day);
+  $('hash').textContent = d && d.hash ? d.hash : '-';
+}
+
+// =====================================================================
+// Map drawing: world layer (hexes, closed sides, trails, arcs, fights) and screen layer (labels, markers, counters)
+// =====================================================================
+function buildWorld() {
+  const m = S.model;
+  clear(gHexes); clear(gClosed); clear(gDyn); clear(gHover);
+  const frag = document.createDocumentFragment();
+  for (const h of m.hexes) {
+    const kind = ['deep_sea', 'shallow_sea', 'coast', 'land'].includes(h.kind) ? h.kind : 'deep_sea';
+    const p = sv('polygon', { class: 'hex ' + kind, points: C.hexCorners(h.q, h.r).map(c => c[0].toFixed(3) + ',' + c[1].toFixed(3)).join(' ') });
+    if (kind === 'coast' && typeof h.land_percent === 'number') {
+      const pc = Math.max(10, Math.min(90, h.land_percent));
+      p.setAttribute('style', 'fill: color-mix(in srgb, var(--land) ' + pc + '%, var(--coast))');
+    }
+    frag.append(p);
+  }
+  gHexes.append(frag);
+  // Closed sides: either hex may mark a side; draw each shared edge once.
+  const seen = new Set();
+  let firm = '', inland = '';
+  for (const h of m.hexes) {
+    for (const d of h.closed || []) {
+      if (!Number.isInteger(d) || d < 0 || d > 5) continue;
+      const dir = S.replay.directions[d];
+      const nb = m.hexByKey.get(C.hexKey(h.q + dir[0], h.r + dir[1]));
+      const a = C.hexKey(h.q, h.r), b = C.hexKey(h.q + dir[0], h.r + dir[1]);
+      const key = a < b ? a + '|' + b : b + '|' + a;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const e = C.edgeForDirection(h.q, h.r, d, S.replay.directions);
+      const seg = 'M' + e[0][0].toFixed(3) + ' ' + e[0][1].toFixed(3) + 'L' + e[1][0].toFixed(3) + ' ' + e[1][1].toFixed(3);
+      if (h.kind === 'land' && nb && nb.kind === 'land') inland += seg; else firm += seg;
+    }
+  }
+  if (inland) gClosed.append(sv('path', { class: 'closed-line inland', d: inland }));
+  if (firm) gClosed.append(sv('path', { class: 'closed-line', d: firm }));
+}
+
+function renderDynamic() {
+  const m = S.model, st = m.states[S.step];
+  clear(gDyn);
+  // Search arcs flown this step
+  for (const s of st.searches) {
+    const c = C.hexCenter(s.q, s.r);
+    const a = C.arcSpec(c[0], c[1], s.from_deg, s.to_deg, s.range_nm);
+    const cls = 'arc side-' + (s.side || 'allied');
+    let node;
+    if (a.full) node = sv('circle', { class: cls, cx: c[0], cy: c[1], r: s.range_nm });
+    else node = sv('path', { class: cls, d: 'M' + c[0] + ' ' + c[1] + 'L' + a.p1[0] + ' ' + a.p1[1] + 'A' + s.range_nm + ' ' + s.range_nm + ' 0 ' + (a.large ? 1 : 0) + ' 1 ' + a.p2[0] + ' ' + a.p2[1] + 'Z' });
+    node.append(sv('title', { text: 'Search by air_group:' + s.air_group + ' from base:' + s.base + ', ' + s.from_deg + ' to ' + s.to_deg + ' degrees, out to ' + s.range_nm + ' nm (event #' + s.event + ')' }));
+    gDyn.append(node);
+  }
+  // Fights
+  const fought = new Set();
+  for (const f of st.fights) {
+    const k = C.hexKey(f.q, f.r);
+    if (fought.has(k)) continue;
+    fought.add(k);
+    const c = C.hexCenter(f.q, f.r);
+    gDyn.append(sv('circle', { class: 'fight-ring', cx: c[0], cy: c[1], r: C.HEX_R * 0.92 }));
+    gDyn.append(sv('circle', { class: 'fight-ring inner', cx: c[0], cy: c[1], r: C.HEX_R * 0.7 }));
+  }
+  // Trails and this step's movement
+  for (const f of st.forces.values()) {
+    const side = 'side-' + (f.side === 'japanese' ? 'japanese' : 'allied');
+    if (f.trail.length > 1) gDyn.append(sv('polyline', { class: 'trail ' + side, points: f.trail.map(h => C.hexCenter(h[0], h[1]).join(',')).join(' ') }));
+    for (const path of st.moves.get(f.id) || []) {
+      if (path.length > 1) gDyn.append(sv('polyline', { class: 'move ' + side, points: path.map(h => C.hexCenter(h[0], h[1]).join(',')).join(' ') }));
+    }
+  }
+}
+
+function counterShape(side) {
+  if (side === 'japanese') return sv('polygon', { class: 'shape', points: '-18,-5 -13,-10 13,-10 18,-5 18,5 13,10 -13,10 -18,5' });
+  return sv('rect', { class: 'shape', x: -18, y: -10, width: 36, height: 20, rx: 3 });
+}
+
+function counterLabel(f) { return 'TF' + f.id; }
+
+function highlightSets() {
+  const hl = { forces: new Set(), bases: new Set(), contacts: new Set() };
+  const st = S.model.states[S.step];
+  const ev = S.selEvent != null ? S.model.eventById.get(S.selEvent) : null;
+  if (ev) {
+    for (const e of ev.entities || []) {
+      const p = C.parseEntity(e);
+      if (!p) continue;
+      if (p.type === 'task_force') hl.forces.add(p.id);
+      else if (p.type === 'ship') { const fid = st.shipForce.get(p.id); if (fid !== undefined) hl.forces.add(fid); }
+      else if (p.type === 'base') hl.bases.add(p.id);
+      else if (p.type === 'contact') {
+        const side = ev.data && ev.data.side;
+        if (side) hl.contacts.add(side + ':' + p.id);
+        else { hl.contacts.add('allied:' + p.id); hl.contacts.add('japanese:' + p.id); }
+      }
+    }
+  }
+  const sel = new Set();
+  if (S.selEntity) {
+    if (S.selEntity.type === 'force') sel.add(S.selEntity.id);
+    else { const fid = st.shipForce.get(S.selEntity.id); if (fid !== undefined) sel.add(fid); }
+  }
+  return { hl, sel };
+}
+
+function renderScreen() {
+  clear(gScreen);
+  const m = S.model;
+  if (!m) return;
+  const { k, tx, ty } = S.view;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const st = m.states[S.step];
+  const pos = (q, r) => { const c = C.hexCenter(q, r); return [c[0] * k + tx, c[1] * k + ty]; };
+  const visible = (p, pad) => p[0] > -pad && p[1] > -pad && p[0] < W + pad && p[1] < H + pad;
+  const { hl, sel } = highlightSets();
+  const obstacles = [];
+  const free = (rect) => !obstacles.some(o => rect.x < o.x + o.w && rect.x + rect.w > o.x && rect.y < o.y + o.h && rect.y + rect.h > o.y);
+  const rectFor = (x, y, w, h) => ({ x: x - w / 2, y: y - h / 2, w, h });
+  const textW = s => s.length * 6.8 + 6;
+  const hexPx = C.HEX_SPACING * k;
+
+  const gFeat = sv('g'), gLbl = sv('g'), gBase = sv('g'), gGhost = sv('g'), gCtr = sv('g');
+
+  // Forces per hex, fanned out
+  const byHex = new Map();
+  for (const f of st.forces.values()) {
+    const key = C.hexKey(f.q, f.r);
+    if (!byHex.has(key)) byHex.set(key, []);
+    byHex.get(key).push(f);
+  }
+  const counters = [];
+  for (const [key, list] of byHex) {
+    const f0 = list[0], p = pos(f0.q, f0.r);
+    if (!visible(p, 40)) continue;
+    list.sort((a, b) => a.id - b.id);
+    const n = list.length, rad = n === 1 ? 0 : Math.max(24, n * 9);
+    list.forEach((f, i) => {
+      const a = (-90 + (360 / n) * i + (n === 2 ? 90 : 0)) * Math.PI / 180;
+      counters.push({ f, x: p[0] + rad * Math.cos(a), y: p[1] + rad * Math.sin(a) });
+    });
+  }
+  for (const c of counters) obstacles.push(rectFor(c.x, c.y, 40, 24));
+
+  // Ghost contacts for the chosen belief
+  const ghosts = [];
+  if (S.belief !== 'truth' && st.contacts[S.belief]) {
+    const perHex = new Map();
+    for (const c of st.contacts[S.belief].values()) {
+      const key = C.hexKey(c.hex[0], c.hex[1]);
+      const i = perHex.get(key) || 0;
+      perHex.set(key, i + 1);
+      const p = pos(c.hex[0], c.hex[1]);
+      if (!visible(p, 60)) continue;
+      ghosts.push({ c, x: p[0], y: p[1] + 30 + i * 42 });
+    }
+  }
+  for (const g of ghosts) obstacles.push(rectFor(g.x, g.y + 6, Math.max(40, textW(ghostText(g.c))), 42));
+
+  // Bases
+  const baseMarks = [];
+  for (const b of m.bases.values()) {
+    const p = pos(b.q, b.r);
+    if (!visible(p, 60)) continue;
+    baseMarks.push({ b, x: p[0], y: p[1] });
+    obstacles.push(rectFor(p[0], p[1], 14, 14));
+  }
+  for (const bm of baseMarks) {
+    const name = bm.b.name || ('base ' + bm.b.id);
+    const rect = { x: bm.x + 9, y: bm.y - 9, w: textW(name), h: 16 };
+    if (free(rect)) { obstacles.push(rect); bm.label = name; }
+  }
+  // Place labels (only when the map has lat/lon): greedy, skipping collisions
+  const placeLabels = [];
+  for (const p of m.placements) {
+    const sp = pos(p.q, p.r);
+    if (!visible(sp, 60)) continue;
+    const text = String(p.label.place);
+    const rect = rectFor(sp[0], sp[1] + 17, textW(text), 16);
+    if (free(rect)) { obstacles.push(rect); placeLabels.push({ text, x: sp[0], y: sp[1] + 21, title: p.label.feature }); }
+  }
+
+  // Hex features (port, airfield, anchorage) when zoomed in enough to read
+  if (hexPx >= 34) {
+    for (const h of m.hexes) {
+      if (!(h.port_size || h.airfield_size || h.anchorage)) continue;
+      const p = pos(h.q, h.r);
+      if (!visible(p, 40)) continue;
+      const bits = [];
+      if (h.port_size) bits.push('P' + h.port_size);
+      if (h.airfield_size) bits.push('A' + h.airfield_size);
+      if (h.anchorage) bits.push('anch');
+      gFeat.append(sv('text', { class: 'feat', x: p[0], y: p[1] - 14, 'text-anchor': 'middle', text: bits.join(' ') }));
+    }
+  }
+
+  for (const pl of placeLabels) gLbl.append(sv('text', { class: 'lbl place', x: pl.x, y: pl.y, 'text-anchor': 'middle', text: pl.text }, pl.title ? sv('title', { text: pl.title }) : null));
+
+  for (const bm of baseMarks) {
+    const b = bm.b, side = b.side === 'japanese' ? 'japanese' : 'allied';
+    const g = sv('g', { class: 'base', transform: 'translate(' + bm.x + ' ' + bm.y + ')' });
+    if (hl.bases.has(b.id)) g.append(sv('rect', { class: 'ring-hl', x: -10, y: -10, width: 20, height: 20 }));
+    g.append(sv('path', { class: 'basemark side-' + side, d: 'M0 -7L7 0L0 7L-7 0Z' }));
+    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + ', supply ' + b.supply + ')' }));
+    gBase.append(g);
+    if (bm.label) gBase.append(sv('text', { class: 'lbl base', x: bm.x + 10, y: bm.y + 4, text: bm.label }));
+  }
+
+  for (const g of ghosts) {
+    const c = g.c, side = c.side === 'japanese' ? 'japanese' : 'allied';
+    const op = 0.35 + 0.65 * Math.max(0, Math.min(1, Number(c.confidence) || 0));
+    const grp = sv('g', { class: 'ghost side-' + side, transform: 'translate(' + g.x + ' ' + g.y + ')', opacity: op.toFixed(2) });
+    if (hl.contacts.has(c.side + ':' + c.id)) grp.append(sv('rect', { class: 'ring-hl', x: -23, y: -14, width: 46, height: 28, rx: 5, opacity: 1 }));
+    grp.append(sv('rect', { class: 'gshape', x: -20, y: -11, width: 40, height: 22, rx: 3 }));
+    grp.append(sv('text', { x: 0, y: 4, text: String(c.ship_count) }));
+    grp.append(sv('text', { x: 0, y: 26, text: ghostText(c) }));
+    grp.append(sv('title', { text: 'Contact ' + c.id + ' (' + c.side + ' belief): ' + ghostText(c) + ', confidence ' + c.confidence + ', in (' + c.hex[0] + ',' + c.hex[1] + ')' }));
+    gGhost.append(grp);
+  }
+
+  for (const c of counters) {
+    const f = c.f, side = f.side === 'japanese' ? 'japanese' : 'allied';
+    const afloat = f.ships.length > 0;
+    const g = sv('g', { class: 'counter side-' + side + (afloat ? '' : ' hollow'), transform: 'translate(' + c.x + ' ' + c.y + ')', 'data-kind': 'force', 'data-id': f.id });
+    if (hl.forces.has(f.id)) g.append(sv('rect', { class: 'ring-hl', x: -23, y: -15, width: 46, height: 30, rx: 6 }));
+    if (sel.has(f.id)) g.append(sv('rect', { class: 'ring-sel', x: -26, y: -18, width: 52, height: 36, rx: 8 }));
+    g.append(counterShape(side));
+    g.append(sv('text', { x: 0, y: 4.5, text: counterLabel(f) }));
+    if (!afloat) g.append(sv('line', { class: 'strike', x1: -20, y1: 11, x2: 20, y2: -11 }));
+    g.append(sv('title', { text: f.name + ' (' + (f.side || '?') + '), task_force:' + f.id + ', ' + f.ships.length + ' ship(s) afloat' + (afloat ? '' : ', none afloat') }));
+    gCtr.append(g);
+  }
+  gScreen.append(gFeat, gLbl, gBase, gGhost, gCtr);
+}
+
+function ghostText(c) { return c.ship_count + ' ' + c.kind + ', age ' + c.age_pulses; }
+
+function renderScale() {
+  const k = S.view.k, box = $('scalebar');
+  if (!S.model || !(k > 0)) { box.hidden = true; return; }
+  const cands = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+  let pick = cands[0];
+  for (const c of cands) { if (c * k <= 150) pick = c; }
+  box.hidden = false;
+  $('scalelabel').textContent = pick + ' nm';
+  $('scalebarbar').style.width = Math.max(8, pick * k) + 'px';
+}
+
+function applyView() {
+  const { k, tx, ty } = S.view;
+  worldEl.setAttribute('transform', 'translate(' + tx + ' ' + ty + ') scale(' + k + ')');
+  renderScale();
+  scheduleScreen();
+}
+let screenQueued = false;
+function scheduleScreen() {
+  if (screenQueued) return;
+  screenQueued = true;
+  requestAnimationFrame(() => { screenQueued = false; renderScreen(); });
+}
+
+// =====================================================================
+// Pan and zoom
+// =====================================================================
+function fit() {
+  const m = S.model;
+  if (!m) return;
+  const W = wrap.clientWidth || 800, H = wrap.clientHeight || 600, pad = 30;
+  const b = m.bounds, bw = Math.max(1, b.maxX - b.minX), bh = Math.max(1, b.maxY - b.minY);
+  const k = Math.max(0.02, Math.min(30, Math.min((W - 2 * pad) / bw, (H - 2 * pad) / bh)));
+  S.view = { k, tx: W / 2 - (b.minX + bw / 2) * k, ty: H / 2 - (b.minY + bh / 2) * k };
+  S.autoFit = true;
+  applyView();
+}
+
+function zoomAt(factor, cx, cy) {
+  const v = S.view;
+  const k = Math.max(0.02, Math.min(40, v.k * factor));
+  const f = k / v.k;
+  S.view = { k, tx: cx - (cx - v.tx) * f, ty: cy - (cy - v.ty) * f };
+  S.autoFit = false;
+  applyView();
+}
+
+function initPanZoom() {
+  let drag = null;
+  mapEl.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, tx: S.view.tx, ty: S.view.ty, moved: false, target: e.target.closest ? e.target.closest('[data-kind]') : null };
+    mapEl.setPointerCapture(e.pointerId);
+  });
+  mapEl.addEventListener('pointermove', e => {
+    if (drag && drag.id === e.pointerId) {
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) > 4) { drag.moved = true; mapEl.classList.add('dragging'); }
+      if (drag.moved) { S.view = { k: S.view.k, tx: drag.tx + dx, ty: drag.ty + dy }; S.autoFit = false; applyView(); return; }
+    }
+    hoverAt(e);
+  });
+  const end = e => {
+    if (!drag || drag.id !== e.pointerId) return;
+    const wasClick = !drag.moved && e.type === 'pointerup';
+    const target = drag.target;
+    drag = null;
+    mapEl.classList.remove('dragging');
+    if (wasClick && target && target.getAttribute('data-kind') === 'force') selectEntity({ type: 'force', id: Number(target.getAttribute('data-id')) });
+  };
+  mapEl.addEventListener('pointerup', end);
+  mapEl.addEventListener('pointercancel', end);
+  mapEl.addEventListener('pointerleave', () => { if (!drag) hoverClear(); });
+  mapEl.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = mapEl.getBoundingClientRect();
+    zoomAt(Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  $('zin').addEventListener('click', () => zoomAt(1.4, wrap.clientWidth / 2, wrap.clientHeight / 2));
+  $('zout').addEventListener('click', () => zoomAt(1 / 1.4, wrap.clientWidth / 2, wrap.clientHeight / 2));
+  $('zfit').addEventListener('click', fit);
+  new ResizeObserver(() => { if (S.autoFit) fit(); else scheduleScreen(); }).observe(wrap);
+}
+
+// =====================================================================
+// Hover readout
+// =====================================================================
+function hoverAt(e) {
+  if (!S.model) return;
+  const r = mapEl.getBoundingClientRect();
+  const x = (e.clientX - r.left - S.view.tx) / S.view.k, y = (e.clientY - r.top - S.view.ty) / S.view.k;
+  const h = C.pointToHex(x, y);
+  const key = C.hexKey(h.q, h.r);
+  if (key === S.hoverKey) return;
+  S.hoverKey = key;
+  renderReadout();
+}
+function hoverClear() { S.hoverKey = null; renderReadout(); }
+
+function renderReadout() {
+  const box = $('readout'), m = S.model;
+  clear(box); clear(gHover);
+  if (!m || !S.hoverKey) { box.append(el('div', { class: 'dim', text: m ? 'Move the pointer over the map.' : 'No replay loaded.' })); return; }
+  const [q, r] = S.hoverKey.split(',').map(Number);
+  const hx = m.hexByKey.get(S.hoverKey), st = m.states[S.step];
+  const line = (t) => box.append(el('div', { text: t }));
+  if (!hx) { line('Hex (' + q + ', ' + r + '): off the map'); return; }
+  gHover.append(sv('polygon', { class: 'hover-hex', points: C.hexCorners(q, r).map(c => c.join(',')).join(' ') }));
+  line('Hex (' + q + ', ' + r + '): ' + String(hx.kind).replace('_', ' ') + (typeof hx.land_percent === 'number' ? ', ' + hx.land_percent + '% land' : '') + (hx.terrain ? ', ' + hx.terrain : ''));
+  if (typeof hx.lat === 'number') line('Lat ' + hx.lat + ', lon ' + hx.lon);
+  const feat = [];
+  if (hx.port_size) feat.push('port size ' + hx.port_size);
+  if (hx.airfield_size) feat.push('airfield size ' + hx.airfield_size);
+  if (hx.anchorage) feat.push('anchorage');
+  if (feat.length) line(feat.join(', '));
+  if ((hx.closed || []).length) line('Closed sides: ' + hx.closed.join(', '));
+  for (const p of m.placementsByHex.get(S.hoverKey) || []) line('Place: ' + p.label.place + (p.label.feature ? ' (' + p.label.feature + ')' : ''));
+  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + ', supply ' + b.supply + ')');
+  for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
+  if (S.belief !== 'truth' && st.contacts[S.belief]) {
+    for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c) + ', confidence ' + c.confidence);
+  }
+  if (st.fights.some(f => f.q === q && f.r === r)) line('A fight is recorded here in this step.');
+}
+
+// =====================================================================
+// Time controls
+// =====================================================================
+function goto(i) {
+  const m = S.model;
+  if (!m) return;
+  S.step = Math.max(0, Math.min(m.steps.length - 1, i));
+  render();
+}
+function stopPlaying() {
+  S.playing = false;
+  if (S.timer) clearTimeout(S.timer);
+  S.timer = null;
+  $('play').textContent = 'Play';
+}
+function tick() {
+  if (!S.playing) return;
+  if (S.step >= S.model.steps.length - 1) { stopPlaying(); return; }
+  goto(S.step + 1);
+  S.timer = setTimeout(tick, 1000 / S.speed);
+}
+function togglePlay() {
+  if (!S.model) return;
+  if (S.playing) { stopPlaying(); return; }
+  if (S.step >= S.model.steps.length - 1) goto(0);
+  S.playing = true;
+  $('play').textContent = 'Pause';
+  S.timer = setTimeout(tick, 1000 / S.speed);
+}
+function renderControls() {
+  const m = S.model, n = m ? m.steps.length : 1;
+  const slider = $('slider');
+  slider.max = String(n - 1);
+  slider.value = String(S.step);
+  slider.disabled = !m || n < 2;
+  for (const id of ['prev', 'next', 'play']) $(id).disabled = !m || n < 2;
+  $('stepcount').textContent = (S.step) + ' / ' + (n - 1);
+}
+function initControls() {
+  const blurAfter = b => b.addEventListener('click', () => b.blur());
+  $('prev').addEventListener('click', () => { stopPlaying(); goto(S.step - 1); });
+  $('next').addEventListener('click', () => { stopPlaying(); goto(S.step + 1); });
+  $('play').addEventListener('click', togglePlay);
+  ['prev', 'next', 'play'].forEach(id => blurAfter($(id)));
+  $('slider').addEventListener('input', e => { stopPlaying(); goto(Number(e.target.value)); });
+  $('speed').addEventListener('change', e => { S.speed = Number(e.target.value) || 1; e.target.blur(); });
+  document.addEventListener('keydown', e => {
+    const t = e.target, tag = t && t.tagName;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Escape') { clearSelection(); return; }
+    if (tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && (t.type === 'text' || t.type === 'search'))) return; // typing in the filter box
+    if (tag === 'INPUT' && t.type === 'checkbox' && (e.key === ' ' || e.code === 'Space')) return; // Space toggles the checkbox
+    if (!S.model) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); stopPlaying(); goto(S.step - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stopPlaying(); goto(S.step + 1); }
+    else if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  });
+  document.querySelectorAll('input[name=belief]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.belief = r.value; r.blur(); render(); renderReadout(); } }));
+}
+
+// =====================================================================
+// Events panel
+// =====================================================================
+function renderEvents() {
+  const m = S.model, ul = $('evlist');
+  clear(ul);
+  $('selname').textContent = S.selEntity ? '(' + entityName(S.selEntity) + ')' : '(nothing selected)';
+  if (!m) { ul.append(el('li', { class: 'empty', text: 'No replay loaded.' })); $('evinfo').textContent = ''; return; }
+  const sel = S.onlySel ? S.selEntity : null;
+  const steps = S.allSteps ? m.steps : [m.steps[S.step]];
+  let shown = 0, total = 0, truncated = false;
+  const LIMIT = 2000;
+  for (const step of steps) {
+    const rows = [];
+    for (const ei of step.events) {
+      total++;
+      const ev = m.events[ei];
+      if (C.eventMatches(m, ev, S.filter, sel)) rows.push(ev);
+    }
+    if (!rows.length) continue;
+    if (S.allSteps) ul.append(el('li', { class: 'grp', title: 'Go to this step', onclick: () => { stopPlaying(); goto(step.index); } }, step.label));
+    for (const ev of rows) {
+      if (shown >= LIMIT) { truncated = true; break; }
+      shown++;
+      const parts = C.splitText(ev.text);
+      const li = el('li', { class: 'ev' + (S.selEvent === ev.id ? ' sel' : ''), 'data-id': ev.id, onclick: () => clickEvent(ev.id) },
+        el('span', { class: 'eid', text: '#' + ev.id }), el('span', { text: parts.body }), parts.causes ? el('span', { class: 'ecause', text: '← ' + parts.causes }) : null);
+      ul.append(li);
+    }
+  }
+  if (!shown) ul.append(el('li', { class: 'empty', text: S.model.steps[S.step].phase === 'start' && !S.allSteps ? 'Start: the initial state. Step forward to see events.' : 'No events match.' }));
+  if (truncated) ul.append(el('li', { class: 'empty', text: 'List cut off at ' + LIMIT + ' events. Narrow the filter.' }));
+  $('evinfo').textContent = shown + ' of ' + total + ' shown';
+  const selRow = ul.querySelector('li.sel');
+  if (selRow) selRow.scrollIntoView({ block: 'nearest' });
+}
+
+function clickEvent(id) {
+  if (S.selEvent === id) { S.selEvent = null; render(); return; }
+  selectEvent(id);
+}
+
+function entityName(sel) {
+  if (!sel) return '';
+  if (sel.type === 'force') return 'TF' + sel.id;
+  return 'ship ' + sel.id;
+}
+
+// =====================================================================
+// Selection
+// =====================================================================
+function selectEvent(id) {
+  const m = S.model;
+  if (!m || !m.eventById.has(id)) return;
+  S.selEvent = id;
+  const si = m.stepOfEvent.get(id);
+  if (si !== undefined && si !== S.step) { stopPlaying(); S.step = si; }
+  render();
+}
+function selectEntity(sel) {
+  if (S.selEntity && S.selEntity.type === sel.type && S.selEntity.id === sel.id) S.selEntity = null;
+  else S.selEntity = sel;
+  render();
+}
+function clearSelection() {
+  if (S.selEvent == null && !S.selEntity) return;
+  S.selEvent = null; S.selEntity = null;
+  render();
+}
+
+// =====================================================================
+// Why / Led to, breakdown, and entity details
+// =====================================================================
+function eventLink(id) {
+  const ev = S.model.eventById.get(id);
+  const a = el('span', { class: 'link', title: 'Jump to this event', onclick: e => { e.preventDefault(); e.stopPropagation(); selectEvent(id); } }, '#' + id);
+  return [a, ' ', ev ? C.splitText(ev.text).body : '(event not in this file)'];
+}
+function orderLine(o, id) {
+  if (!o) return ['order ' + id + ' (not in this file)'];
+  return [el('span', { class: 'tag', text: 'order ' + o.id }), (o.side || '?') + ', ' + (o.issuer || '?') + ': ', String(o.text)];
+}
+function whyNode(n) {
+  if (n.kind === 'order') return el('li', null, orderLine(n.obj, n.id));
+  const head = n.obj ? eventLink(n.id) : ['#' + n.id + ' (event not in this file)'];
+  if (n.repeat) return el('li', null, head, el('span', { class: 'dim', text: ' (shown above)' }));
+  if (!n.children.length && !n.cutoff) return el('li', { class: 'leaf' }, head);
+  const kids = el('ul', null, n.children.map(whyNode));
+  if (n.cutoff) kids.append(el('li', { class: 'dim', text: '... ' + n.cutoff + ' more cause(s) not expanded; jump to the event to continue' }));
+  const det = el('details', null, el('summary', null, head), kids);
+  det.open = true;
+  return el('li', null, det);
+}
+
+function renderDetail() {
+  const m = S.model, box = $('detail');
+  clear(box);
+  if (!m) { box.append(el('div', { class: 'empty', text: 'Open a replay file to begin.' })); return; }
+  let any = false;
+  if (S.selEntity) { box.append(entitySection(S.selEntity)); any = true; }
+  if (S.selEvent != null) { box.append(eventSection(S.selEvent)); any = true; }
+  if (!any) box.append(el('div', { class: 'empty', text: 'Click an event to see why it happened, or a force counter on the map to see its ships. Escape clears the selection.' }));
+}
+
+function eventSection(id) {
+  const m = S.model, ev = m.eventById.get(id);
+  const sec = el('section');
+  if (!ev) return sec;
+  sec.append(el('h2', null, 'Event #' + ev.id + ' ', el('span', { class: 'tag', text: ev.kind }), el('span', { class: 'dim', text: ' ' + m.steps[m.stepOfEvent.get(ev.id) || 0].label })));
+  sec.append(el('div', { text: C.splitText(ev.text).body }));
+  if (ev.breakdown && Array.isArray(ev.breakdown.factors)) {
+    sec.append(el('h3', { text: 'Breakdown' }));
+    const rows = ev.breakdown.factors.map(f => el('tr', null, el('td', { text: String(f.name) }), el('td', { class: 'num', text: String(f.value) })));
+    rows.push(el('tr', { class: 'result' }, el('td', { text: 'result' }), el('td', { class: 'num', text: String(ev.breakdown.result) })));
+    sec.append(el('table', null, el('tbody', null, rows)));
+  }
+  sec.append(el('h3', { text: 'Why' }));
+  const tree = C.whyTree(m, ev.id, { maxDepth: 8, maxNodes: 60 });
+  if (!tree.nodes.length) sec.append(el('div', { class: 'dim', text: 'No recorded causes.' }));
+  else {
+    const why = el('div', { class: 'why' }, el('ul', null, tree.nodes.map(whyNode)));
+    if (tree.omitted) why.append(el('div', { class: 'dim', text: '... ' + tree.omitted + ' more cause(s) left out (limit ' + 60 + ' shown).' }));
+    sec.append(why);
+  }
+  sec.append(el('h3', { text: 'Led to' }));
+  const led = m.ledTo.get('event:' + ev.id) || [];
+  if (!led.length) sec.append(el('div', { class: 'dim', text: 'No later event cites this one.' }));
+  else {
+    const ul = el('ul', { class: 'why' });
+    led.slice(0, 30).forEach(id => ul.append(el('li', { class: 'leaf' }, eventLink(id))));
+    sec.append(ul);
+    if (led.length > 30) sec.append(el('div', { class: 'dim', text: '... and ' + (led.length - 30) + ' more.' }));
+  }
+  return sec;
+}
+
+function shipSummary(id, st) {
+  const m = S.model;
+  const fin = m.finalShips.get(id), ini = m.initShips.get(id);
+  const s = fin || ini;
+  const sunkNow = st.sunk.has(id);
+  const row = el('div', { class: 'shiprow' + (S.selEntity && S.selEntity.type === 'ship' && S.selEntity.id === id ? ' sel' : ''), onclick: e => { e.stopPropagation(); selectEntity({ type: 'ship', id }); } });
+  if (!s) { row.append(el('div', null, 'ship:' + id + ' (no record in this file)')); return row; }
+  row.append(el('div', null, el('b', { text: s.name || ('ship ' + id) }), ' ', el('span', { class: 'dim', text: (s.class || '') + (s.kind ? ' (' + s.kind + ')' : '') + ', ship:' + id })));
+  const bits = [];
+  if (sunkNow) bits.push('SUNK by this step');
+  else if (fin && fin.location === 'sunk') bits.push('afloat at this step; sunk later in the run');
+  if (fin) {
+    bits.push('flotation damage ' + fin.flotation_damage + ', fire damage ' + fin.fire_damage);
+    const bad = Object.entries(fin.systems || {}).filter(([, v]) => v !== 'working').map(([k, v]) => k + ' ' + v);
+    bits.push(bad.length ? 'systems not working: ' + bad.join(', ') : 'all systems working');
+    bits.push('fuel ' + fin.fuel + ', gun rounds ' + fin.gun_rounds + ', torpedoes ' + (fin.torpedoes_ready ? 'ready' : 'not ready'));
+  } else bits.push('no end-of-run record');
+  row.append(el('div', { class: 'sub', text: bits.join('. ') + '.' }));
+  return row;
+}
+
+function entitySection(sel) {
+  const m = S.model, st = m.states[S.step];
+  const sec = el('section');
+  let fid = sel.type === 'force' ? sel.id : st.shipForce.get(sel.id);
+  if (sel.type === 'ship' && fid === undefined) {
+    sec.append(el('h2', { text: 'Ship ' + sel.id }));
+    sec.append(shipSummary(sel.id, st));
+    sec.append(el('div', { class: 'note', text: 'Damage, fuel and ammunition are as at the end of the run.' }));
+    return sec;
+  }
+  const now = st.forces.get(fid), fin = m.finalForces.get(fid);
+  sec.append(el('h2', null, 'TF' + fid + ' ', el('span', { class: 'dim', text: (now && now.name) || (fin && fin.name) || '' })));
+  const kv = el('dl', { class: 'kv' });
+  const add = (k, v) => { kv.append(el('dt', { text: k }), el('dd', { text: String(v) })); };
+  const side = (now && now.side) || (fin && fin.side);
+  add('Side', side || '?');
+  if (now) add('Position now', '(' + now.q + ', ' + now.r + ')' + (now.detachedFrom != null ? ', detached from TF' + now.detachedFrom : ''));
+  if (fin) {
+    add('Mission', fin.mission);
+    add('Status (end of run)', fin.status);
+    if (fin.home_port != null) add('Home port', 'base:' + fin.home_port);
+    add('Alert (end of run)', fin.alert ? 'yes' : 'no');
+    const roe = fin.rules_of_engagement || {};
+    add('Rules of engagement', Object.entries(roe).map(([k, v]) => k + ' ' + v).join(', '));
+  } else add('Final record', 'none (not in the final state)');
+  sec.append(kv);
+  sec.append(el('h3', { text: 'Ships' }));
+  const ships = [...st.shipForce.entries()].filter(([, f]) => f === fid).map(([s]) => s).sort((a, b) => a - b);
+  if (!ships.length) sec.append(el('div', { class: 'dim', text: 'No ships.' }));
+  ships.forEach(id => sec.append(shipSummary(id, st)));
+  sec.append(el('div', { class: 'note', text: 'Damage, fuel and ammunition are as at the end of the run.' }));
+  return sec;
+}
+
+// =====================================================================
+// Legend and theme (colours come from CSS custom properties; the page follows prefers-color-scheme)
+// =====================================================================
+function initLegend() {
+  const items = [
+    ['allied', 'Allied force'], ['japanese', 'Japanese force'], ['ghost', 'Contact (belief), fainter when less sure'],
+    ['deep', 'Deep sea'], ['shallow', 'Shallow sea'], ['coast', 'Coast (more land, darker)'], ['land', 'Land'],
+    ['closed', 'Closed side'], ['fight', 'Fight in this step'], ['arc', 'Search arc flown in this step'],
+    ['trail', 'Trail of hexes entered'], ['move', 'Movement in this step'],
+  ];
+  const ul = $('legendlist');
+  if (window.innerWidth < 1000 || window.innerHeight < 700) $('legend').open = false; // small windows: start collapsed
+  items.forEach(([cls, text]) => ul.append(el('li', null, el('span', { class: 'sw ' + cls }), text)));
+}
+
+// =====================================================================
+// Render everything for the current step
+// =====================================================================
+function render() {
+  renderControls();
+  if (!S.model) { renderEvents(); renderDetail(); return; }
+  renderHeaderStep();
+  renderDynamic();
+  scheduleScreen();
+  renderEvents();
+  renderDetail();
+  if (S.hoverKey) renderReadout();
+}
+
+function init() {
+  initLegend();
+  initControls();
+  const checked = document.querySelector('input[name=belief]:checked'); // the browser may restore form state on reload
+  if (checked) S.belief = checked.value;
+  initPanZoom();
+  $('filter').addEventListener('input', e => { S.filter = e.target.value.trim(); renderEvents(); });
+  $('onlysel').addEventListener('change', e => { S.onlySel = e.target.checked; renderEvents(); });
+  $('allsteps').addEventListener('change', e => { S.allSteps = e.target.checked; renderEvents(); });
+  render();
+  renderReadout();
+  initLoading();
+}
+init();
+})();
+</script>
+</body>
+</html>
