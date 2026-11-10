@@ -6,6 +6,7 @@ members = [
     "crates/sim-cli",
     "crates/sim-agent",
     "crates/map-tool",
+    "crates/oob-check",
     "tests",
 ]
 

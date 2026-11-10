@@ -1,0 +1,12 @@
+[package]
+name = "oob-check"
+description = "Flag Plot checker for the order-of-battle facts files in data/oob."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+csv.workspace = true
+
+[lints]
+workspace = true
