@@ -5,6 +5,7 @@ members = [
     "crates/sim-data",
     "crates/sim-cli",
     "crates/sim-agent",
+    "crates/oob-check",
     "tests",
 ]
 
