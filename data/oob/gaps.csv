@@ -187,4 +187,4 @@ weapon,us-8in-55-mk9|us-8in-55-mk12,which mark each cruiser carried in Aug 1942,
 weapon,us-bomb-1000lb-gp,"actual total weight, 1942 filler type",1942,bulletpicker; Wikipedia Mark 65,Weight is nominal from designation
 weapon,us-bomb-100lb-gp,filler weight,1942,bulletpicker search snippet only; designation-systems,Fetched pages give no filler weight
 weapon,us-depth-bomb-325lb,all attributes,1942,navweaps ASW weapons page (ship weapons only),No source found
-weapon,us-torpedo-mk13,which mod was in use Aug 1942; date shroud rings were fitted,1942,navweaps,Launch limits recorded with and without rings in proposed_attributes
+weapon,us-torpedo-mk13,which mod was in use Aug 1942; date shroud rings were fitted,1942,navweaps,The navweaps page gives launch limits with and without rings; the vocabulary has no attribute for launch limits so they are not recorded

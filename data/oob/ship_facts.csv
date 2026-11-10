@@ -100,7 +100,7 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 97,ca-34-astoria,sunk,1942-08-09,9 Aug 1942,,,uboat-net,https://uboat.net/allies/warships/ship/2558.html,2026-11-10,medium,stated,preferred,
 98,ca-36-minneapolis,commissioned,1934-05-19,19 May 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,high,stated,preferred,
 99,ca-36-minneapolis,fate,Decommissioned 10 Feb 1947; sold for scrap 14 Aug 1959,Decommissioned 10 Feb 1947; sold for scrap 14 Aug 1959,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,high,stated,preferred,
-100,ca-36-minneapolis,laid_down,1921-06-27,27 June 1921,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,low,stated,preferred,Page as fetched reads 1921 although launch is 1933; probably a typo for 1931. Not corrected here. See conflicts.md
+100,ca-36-minneapolis,laid_down,1921-06-27,27 June 1921,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,low,stated,unconfirmed,Page as fetched reads 1921 although launch is 1933; probably a typo for 1931. Not corrected here. See conflicts.md
 101,ca-36-minneapolis,launched,1933-09-06,6 September 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca36.html,2026-11-10,high,stated,preferred,
 102,ca-38-san-francisco,commissioned,1934-02-10,10 February 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca38.html,2026-11-10,high,stated,preferred,
 103,ca-38-san-francisco,fate,Decommissioned Feb 1946; sold for scrap 9 Sep 1959,Decommissioned Feb 1946; sold for scrap 9 Sep 1959,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/CA/ca38.html,2026-11-10,high,stated,preferred,
@@ -180,7 +180,7 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 177,daifuku-maru,laid_down,1916,1916,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
 178,daifuku-maru,launched,1916-09-12,12 September 1916,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
 179,daifuku-maru,sunk,1943-08-27,27 August 1943,,,combinedfleet,https://www.combinedfleet.com/Daifuku_t.htm,2026-11-10,medium,stated,preferred,
-180,dd-348-farragut,commissioned,1934-06-18,18 June 1934,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-348_Farragut.html,2026-11-10,low,stated,preferred,Clancey list page on HyperWar
+180,dd-348-farragut,commissioned,1934-06-18,18 June 1934,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-348_Farragut.html,2026-11-10,low,stated,unconfirmed,Clancey list page on HyperWar
 181,dd-349-dewey,commissioned,1934-10-04,4 October 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,preferred,
 182,dd-349-dewey,commissioned,1934-10-04,4 Oct 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd349.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
 183,dd-349-dewey,commissioned,1934-10-04,4 Oct 1934,,,uboat-net,https://uboat.net/allies/warships/ship/1857.html,2026-11-10,high,stated,preferred,
@@ -202,9 +202,9 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 199,dd-351-macdonough,fate,Decommissioned 22 Oct 1945; sold 20 Dec 1946,Decommissioned 22 Oct 1945; sold 20 Dec 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
 200,dd-351-macdonough,laid_down,1933-05-15,15 May 1933,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
 201,dd-351-macdonough,launched,1934-08-22,22 August 1934,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd351.html,2026-11-10,high,stated,preferred,
-202,dd-352-worden,commissioned,1935,1935,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
-203,dd-352-worden,fate,Grounded and wrecked at Amchitka 12 Jan 1943,Grounded and wrecked at Amchitka 12 Jan 1943,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,preferred,"Single source, not corroborated"
-204,dd-352-worden,sunk,1943-01-12,12 January 1943,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,preferred,"Wrecked by grounding, not sunk by enemy"
+202,dd-352-worden,commissioned,1935,1935,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,unconfirmed,"Clancey list page on HyperWar, year only for commissioning"
+203,dd-352-worden,fate,Grounded and wrecked at Amchitka 12 Jan 1943,Grounded and wrecked at Amchitka 12 Jan 1943,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,unconfirmed,"Single source, not corroborated"
+204,dd-352-worden,sunk,1943-01-12,12 January 1943,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-352_Worden.html,2026-11-10,low,stated,unconfirmed,"Wrecked by grounding, not sunk by enemy"
 205,dd-353-dale,commissioned,1935-06-17,17 June 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd353.html,2026-11-10,high,stated,preferred,
 206,dd-353-dale,fate,Decommissioned 16 Oct 1945; sold 20 Dec 1946,Decommissioned 16 Oct 1945; sold 20 Dec 1946,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd353.html,2026-11-10,high,stated,preferred,
 207,dd-353-dale,launched,1935-01-23,23 January 1935,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd353.html,2026-11-10,high,stated,preferred,
@@ -322,8 +322,8 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 319,dd-401-maury,fate,Decommissioned 10 Oct 1945; sold 13 Jun 1946 and scrapped,Decommissioned 10 Oct 1945; sold 13 Jun 1946 and scrapped,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
 320,dd-401-maury,laid_down,1936-03-24,24 March 1936,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
 321,dd-401-maury,launched,1938-02-14,14 February 1938,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd401.html,2026-11-10,high,stated,preferred,
-322,dd-406-stack,commissioned,1939,1939,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-406_Stack.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
-323,dd-407-sterett,commissioned,1939,1939,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-407_Sterett.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
+322,dd-406-stack,commissioned,1939,1939,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-406_Stack.html,2026-11-10,low,stated,unconfirmed,"Clancey list page on HyperWar, year only for commissioning"
+323,dd-407-sterett,commissioned,1939,1939,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-407_Sterett.html,2026-11-10,low,stated,unconfirmed,"Clancey list page on HyperWar, year only for commissioning"
 324,dd-408-wilson,commissioned,1939-07-05,5 Jul 1939,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
 325,dd-408-wilson,fate,Damaged at Bikini Jul 1946; decommissioned 28 Aug 1946; scuttled off Kwajalein 8 Mar 1948,,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
 326,dd-408-wilson,laid_down,1937-03-22,22 Mar 1937,,,uboat-net,https://uboat.net/allies/warships/ship/1723.html,2026-11-10,medium,stated,preferred,
@@ -346,7 +346,7 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 343,dd-484-buchanan,fate,Transferred to Turkey 28 Apr 1949,Transferred to Turkey 28 Apr 1949,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,disputed,
 344,dd-484-buchanan,launched,1941-11-22,22 November 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,preferred,
 345,dd-484-buchanan,launched,1941-11-22,22 Nov 1941,,,danfs,https://www.ibiblio.org/hyperwar/USN/ships/dafs/DD/dd484.html,2026-11-10,high,stated,preferred,DANFS text via HyperWar transcription
-346,dd-491-farenholt,commissioned,1942,1942,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-491_Farenholt.html,2026-11-10,low,stated,preferred,"Clancey list page on HyperWar, year only for commissioning"
+346,dd-491-farenholt,commissioned,1942,1942,,,hyperwar-ships-usn,http://www.ibiblio.org/hyperwar/USN/ships/DD/DD-491_Farenholt.html,2026-11-10,low,stated,unconfirmed,"Clancey list page on HyperWar, year only for commissioning"
 347,dms-10-southard,alias,DD-207,DD-207,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,Earlier or other designation shown in the source
 348,dms-10-southard,commissioned,1919-09-24,24 Sep 1919,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,
 349,dms-10-southard,fate,Ran aground 9 Oct 1945 on Tsugen Jima; decommissioned 15 Dec 1945; wreck destroyed 14 Jan 1946,,,,uboat-net,https://uboat.net/allies/warships/ship/2358.html,2026-11-10,medium,stated,preferred,
@@ -446,7 +446,7 @@ id,entity,attribute,value,as_stated,valid_from,valid_to,source,locator,accessed,
 443,kako,sunk,1942-08-10,10 Aug 1942,,,combinedfleet,http://www.combinedfleet.com/kako_t.htm,2026-11-10,medium,stated,preferred,
 444,kawakaze,fate,Sunk by US destroyers at Vella Gulf,Sunk by US destroyers at Vella Gulf,,,combinedfleet,https://www.combinedfleet.com/kawaka_t.htm,2026-11-10,medium,stated,preferred,
 445,kawakaze,sunk,1943-08,As stated: 6-7 August 1943,,,combinedfleet,https://www.combinedfleet.com/kawaka_t.htm,2026-11-10,medium,stated,preferred,As stated: 6-7 August 1943
-446,kazagumo,alias,Kazegumo,Kazegumo,,,wikipedia-en,https://en.wikipedia.org/wiki/Eastern_Solomons_order_of_battle,2026-11-10,low,stated,preferred,Wikipedia order of battle spells it Kazegumo; combinedfleet uses Kazagumo
+446,kazagumo,alias,Kazegumo,Kazegumo,,,wikipedia-en,https://en.wikipedia.org/wiki/Eastern_Solomons_order_of_battle,2026-11-10,low,stated,unconfirmed,Wikipedia order of battle spells it Kazegumo; combinedfleet uses Kazagumo
 447,kazagumo,commissioned,1942-03-28,28 March 1942,,,combinedfleet,https://www.combinedfleet.com/kazagu_t.htm,2026-11-10,medium,stated,preferred,Page gives completion date; treated as commissioning
 448,kazagumo,fate,Torpedoed by USS Hake at Davao Bay,Torpedoed by USS Hake at Davao Bay,,,combinedfleet,https://www.combinedfleet.com/kazagu_t.htm,2026-11-10,medium,stated,preferred,
 449,kazagumo,sunk,1944-06,As stated: 7-8 June 1944,,,combinedfleet,https://www.combinedfleet.com/kazagu_t.htm,2026-11-10,medium,stated,preferred,As stated: 7-8 June 1944
