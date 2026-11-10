@@ -1,0 +1,17 @@
+[package]
+name = "scenario-tests"
+description = "Flag Plot scenarios as automated tests, one file per scenario."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+sim-core.workspace = true
+sim-data.workspace = true
+
+[[test]]
+name = "scenario_01_transit"
+path = "scenario_01_transit.rs"
+
+[lints]
+workspace = true
