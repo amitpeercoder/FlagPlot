@@ -166,7 +166,7 @@ Sources: WP = en.wikipedia.org class/ship pages (URL pattern https://en.wikipedi
 
 ## Savo Island: detection and alert state (second pass)
 
-- Chokai's sighting of USS Blue: Bates gives range 10,900 yd (Diagram K, p.107) and 8,700 yd (p.111, citing Kato). Time about 0053 (Aoba 0054). https://archive.org/download/DTIC_ADA003037/DTIC_ADA003037.pdf
+- Chokai's sighting of USS Blue: the 1950 analysis prints 10,900 yards on p.107, from its Diagram K, and 8,700 yards on p.110. Both were checked against the page images. The time is about 0053 in both places (Aoba 0054). https://archive.org/download/DTIC_ADA003037/DTIC_ADA003037.pdf
 - Patterson's sighting time: ONI text says about 0143; ONI footnote 10 says Patterson 0146, Bagley 0144, Canberra 0143, Chicago saw Canberra turn 0145; Bates uses 0146 for Patterson and 0144 for Bagley. https://www.ibiblio.org/hyperwar/USN/USN-CN-Savo/USN-CN-Savo-4.html
 - Range of Patterson's sighting: Patterson estimated 5,000 yd; Bates plot gives 3,700 yd (FURUTAKA). ONI repeats 5,000 yd.
 - Patterson's firing: Bates says Patterson ceased about 0150; ONI says she fired until about 0200.
@@ -185,7 +185,7 @@ Source for everything: https://archive.org/download/DTIC_ADA003037/DTIC_ADA00303
 - **Screening destroyers of the Vincennes group.** Ch III says JARVIS and HELM; ch IX says HELM and WILSON. Explained by Jarvis being replaced (ch VII, time garbled) but not stated as a conflict by Bates.
 - **Ralph Talbot position at 0000.** Ch VII 2400 list: bearing 010, seven miles from Savo centre; ch IX: bearing 015, seven miles. Both rows disputed.
 - **Time AUSTRALIA left the southern group.** Order given at 2055 (ch VII, brief narrative); "departed at 2125" (ch IX); CHICAGO confirmed formation at 2123. Both rows disputed.
-- **Blue sighted by Chokai.** Ch IX: about 0053, range 10,900 yd (Diagram K); ch X: about 0058 (printed 0068), range 8,700 yd. Both disputed.
+- **Blue sighted by Chokai.** Ch IX, p.107: about 0053, range 10,900 yd (Diagram K). Ch X, p.110: about 0053, range 8,700 yd. An earlier reading of the machine-read text gave the second time as 0058; the page image reads 0053. The ranges are both as printed and both rows are disputed.
 - **Chokai course at 0105-0112.** Ch IX says course 160 at 0105 then "continued on course 150"; recorded as one disputed row.
 - **Canberra position after the battle.** About seven miles southeast of Savo (Patterson message about 0315) versus five miles southeast (CTG 62.6 order at 0532). Two different statements; recorded, the later marked disputed.
 - **Jarvis loss.** Position 284 deg, 180 miles from Savo; time given as 1500 ("to have arrived at 1500 over the Jarvis"), "about 1530" (brief narrative), 1800 (OCR, probably a misread 1500) and an attack time of 1300 (ch XVIII p.277). Both time rows disputed.
