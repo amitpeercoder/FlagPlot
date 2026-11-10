@@ -1,18 +1,24 @@
 # Order-of-battle conflicts between sources
 
-Every place the first research pass found sources disagreeing, or a source disagreeing with itself. Nothing here has been settled. In the data, the rows concerned are marked `disputed`, or `low` confidence with a note. Read on 2026-11-10.
+Every place the research passes found sources disagreeing, or a source disagreeing with itself. A row is `disputed` until a person settles it with a reason; the few settled so far say so here. Read on 2026-11-10.
 
 ## The ones that matter most for scenarios 4 to 6
 
 - **Which Allied ships were where at Savo Island.** The 1943 Navy narrative and the 1950 Naval War College analysis give different groupings for Australia, Jarvis, Hobart and four destroyers. Mostly this is organisation on paper against presence on the night, but it decides the scenario's starting positions.
-- **Which radar each ship carried.** Only seven Allied ships at Savo have a sourced set, and Canberra's is disputed (Type 271 or Type 241). No source read gives a radar fit for Vincennes, Quincy, Australia, Hobart or six of the destroyers.
+- **Which radar each ship carried.** After the second pass: the Japanese ships had none (the 1950 Navy analysis and a Japanese admiral's interrogation agree). Astoria, Vincennes, Quincy and Chicago each had a set the sources describe in use but do not name. Canberra's surface set is Type 271 by two accounts and Type 241 by two others, all weak. Nothing was found for Australia, Bagley, Patterson, Helm, Wilson or Jarvis.
 - **Japanese shipboard radar in August 1942.** One Japanese ship-movement record puts an air search set on Shokaku from June 1942 and has it detecting aircraft on 24 August. A recent article says there is no firm evidence of Japanese shipborne radar before late 1943. The same reference site contradicts itself on Ise, Hyuga and Kirishima.
 - **Who was at Eastern Solomons.** The Navy narrative and Wikipedia (citing Morison) differ on the Saratoga group's destroyers and on whether Australia, Hobart and San Juan were present. On the Japanese side, three destroyers Wikipedia lists have movement records placing them elsewhere, and the seaplane carrier Chitose is missing from Wikipedia's list.
 - **Carrier aircraft numbers on 24 August.** The Navy narrative gives 54 fighters for both US carriers together; per-squadron figures come only from Wikipedia and total 56. Zuikaku's dive bombers are 27 or 18 depending on source.
-- **Type 93 torpedo settings.** Three sources give three sets of speed and range figures. They agree on the warhead.
+- **Type 93 torpedo settings. Settled.** The 1945 US technical mission report, from examined torpedoes and Japanese officers, is preferred: 49 knots to 20,000 m, 40 to 32,000 m, 36 to 40,000 m. A weapons reference site differs by a knot at two settings and Wikipedia by more; both are kept as alternatives. The date it entered service is still disputed (1935, 1936 or 1938). Three smaller disputes on older torpedoes were settled the same way.
 - **Zero performance.** Eleven different maximum speeds for the Model 21 are in circulation.
 - **Chokai's anti-aircraft guns in August 1942.** Three sources, three answers.
 - **Japanese air strength at Rabaul.** Unit arrival dates and numbers differ between sources for the 2nd, 6th and Kisarazu air groups, and almost all of it rests on Wikipedia.
+
+- **Displacement of almost every class at Savo Island.** Sources differ by 2 to 20 per cent and seldom say which condition or date they quote. Only full load for the New Orleans, Bagley and Benham classes agrees. A rule that uses displacement must name one source and one condition.
+- **What torpedo four Japanese ships carried.** Type 93 is attested for Chokai and Kako on the night. No source read names the torpedo in Kinugasa, Tenryu, Yubari or Yunagi. When Chokai changed from the Type 90 she was built with is not dated by any source read.
+- **US destroyer torpedo warhead.** The Mark 15 carried 224 kg in its first model and 374 kg in a later one. Which was in the tubes in August 1942 was not found.
+- **Hits at Savo Island.** Astoria took 34 hits by the 1950 analysis and 65 by the 1943 damage report. Chokai took 3, 4, 10 or "several". Canberra was or was not torpedoed. See the Savo Island sections below.
+- **One figure in the 1950 analysis does not add up.** It prints 1,014 Japanese 8-inch rounds; its per-ship figures add to 914.
 
 ## Savo Island order of battle
 
@@ -157,3 +163,115 @@ Sources: WP = en.wikipedia.org class/ship pages (URL pattern https://en.wikipedi
 - **Type 92 7.7 mm gun.** NavWeaps' Type 92 is a ship/army tripod Lewis derivative, not labelled aircraft; the aircraft flexible gun of the same name is assumed identical.
 - **37 mm M4 rate of fire.** NavWeaps 125-150 rpm cyclic; Wikipedia (seen as a search snippet only) 150 rpm.
 - **TBF-1 fixed guns.** Wikipedia: single .30 in the nose on early models, or two .50 in the wings; which applied in Aug 1942 not stated.
+
+## Savo Island: detection and alert state (second pass)
+
+- Chokai's sighting of USS Blue: Bates gives range 10,900 yd (Diagram K, p.107) and 8,700 yd (p.111, citing Kato). Time about 0053 (Aoba 0054). https://archive.org/download/DTIC_ADA003037/DTIC_ADA003037.pdf
+- Patterson's sighting time: ONI text says about 0143; ONI footnote 10 says Patterson 0146, Bagley 0144, Canberra 0143, Chicago saw Canberra turn 0145; Bates uses 0146 for Patterson and 0144 for Bagley. https://www.ibiblio.org/hyperwar/USN/USN-CN-Savo/USN-CN-Savo-4.html
+- Range of Patterson's sighting: Patterson estimated 5,000 yd; Bates plot gives 3,700 yd (FURUTAKA). ONI repeats 5,000 yd.
+- Patterson's firing: Bates says Patterson ceased about 0150; ONI says she fired until about 0200.
+- Time of Vincennes group course change: Bates 0140 (Vincennes) and Astoria 0144; ONI footnote 17 quotes Riefkohl and Heneberger 0120, Topper 0140. https://www.ibiblio.org/hyperwar/USN/USN-CN-Savo/USN-CN-Savo-5.html
+- Chicago's lookout/first-fire: ONI lists Chicago saw first flare 0143 while Bates says "about 0145" for first flare sighted by CHICAGO (Bates p.139 "0143", p.141 northern group 0145).
+- Time Crutchley's group received the Hudson contact: Bates says CTF 62 received it 1645-1646 (p.102) but also about 1900 (p.88); ONI footnote says the news reached ships between 1600 and 2000 depending on the ship.
+- Ralph Talbot's later encounter: Bates gives Japanese first light 0210, fire 0214; ONI says searchlight about 10,000 yd at about 0215 then fire about 2 minutes later. ONI chronology says Japanese fire on Vincennes group ceased about 0215; Bates says 0215-0220 retirement ordered 0220.
+- Radar-range at which Blue, Ralph Talbot failed to see the enemy: Bates attributes to land interference and fatigue; ONI says the failure is "unexplained".
+- CHOKAI torpedoes: Bates says CHOKAI fired port torpedoes at 0138; the HyperWar-style OCR variant of the same page prints 0156 for the sighting (the PDF text layer prints 0136); the 0136 reading is used.
+
+## Savo Island: positions and tracks (second pass)
+
+Source for everything: https://archive.org/download/DTIC_ADA003037/DTIC_ADA003037.pdf (OCR text). OCR page markers are sparse and often misread (5/6/8 confusions); locator pages are interpolated and may be off by one.
+
+- **Order of ships in the Vincennes group.** Ch III (p.55) lists VINCENNES, ASTORIA, QUINCY; ch IX (p.111) and ch XIV (Astoria "in column behind the QUINCY") list VINCENNES, QUINCY, ASTORIA. Both rows recorded as disputed.
+- **Screening destroyers of the Vincennes group.** Ch III says JARVIS and HELM; ch IX says HELM and WILSON. Explained by Jarvis being replaced (ch VII, time garbled) but not stated as a conflict by Bates.
+- **Ralph Talbot position at 0000.** Ch VII 2400 list: bearing 010, seven miles from Savo centre; ch IX: bearing 015, seven miles. Both rows disputed.
+- **Time AUSTRALIA left the southern group.** Order given at 2055 (ch VII, brief narrative); "departed at 2125" (ch IX); CHICAGO confirmed formation at 2123. Both rows disputed.
+- **Blue sighted by Chokai.** Ch IX: about 0053, range 10,900 yd (Diagram K); ch X: about 0058 (printed 0068), range 8,700 yd. Both disputed.
+- **Chokai course at 0105-0112.** Ch IX says course 160 at 0105 then "continued on course 150"; recorded as one disputed row.
+- **Canberra position after the battle.** About seven miles southeast of Savo (Patterson message about 0315) versus five miles southeast (CTG 62.6 order at 0532). Two different statements; recorded, the later marked disputed.
+- **Jarvis loss.** Position 284 deg, 180 miles from Savo; time given as 1500 ("to have arrived at 1500 over the Jarvis"), "about 1530" (brief narrative), 1800 (OCR, probably a misread 1500) and an attack time of 1300 (ch XVIII p.277). Both time rows disputed.
+- **Hudson contact versus Japanese position, 8 Aug.** Hudson A16/218 at 1026 reported 06-49S 156-07E; Bates's Japanese-side position for the force at 1020 is 06-56S 156-30E (about 24 nm east). Different observers; both kept.
+- **Report forwarded 0758 8 Aug.** Bates identifies two destroyer-and-ships groups passing a point near 162-50E at 1100 and 2000 on 7 Aug with the Japanese Cruiser Force, but the force was off Rabaul and St. George's Channel then. Not recorded as a position row.
+- **Blue picket line.** Printed end points are inconsistent with the stated 6.5-mile length and courses; return course printed 281, 2S1 and 231(?) (241 expected).
+- **Cruiser Force speed on the run-in.** Signal Order 26 specifies 24 knots; Bates says 26 knots was used from 0000. Both recorded; not a conflict between sources.
+- **Chokai latitude at 2400 on 8 Aug.** Printed 06-43.5S is incompatible with the stated 320 deg, 37 miles; read as 08-43.5S.
+- **Aoba position at 2400 on 9 Aug.** Printed 08-40S 153-66E is incompatible with the course; read as about 03-40S 153-56E (low confidence).
+- Blue's second patrol-line end: ONI gives 09 09 S 159 37 E; its footnote 4 says Blue's own report gives 159 24 E and suggests a typographical error. https://www.ibiblio.org/hyperwar/USN/USN-CN-Savo/USN-CN-Savo-2.html
+- Time Mikawa sighted the Blue: USSBS says about 0130 (slowed to 12 kn, then 26 kn) https://www.ibiblio.org/hyperwar/AAF/USSBS/PTO-Campaigns/USSBS-PTO-7.html; the Wikipedia file description (citing Morison) says 00:54 https://en.wikipedia.org/wiki/File:SavoMikawaApproach.jpg. Wikipedia's article says 22 kn https://en.wikipedia.org/wiki/Battle_of_Savo_Island. (Wikipedia read through a summarising tool.)
+- Allied air sighting on 8 Aug: USSBS one sighting about 1130, contact held about an hour, Mikawa reversed course as a ruse; Wikipedia two Hudson sightings at 10:20 and 11:10. Same URLs as above.
+- Where Cruiser Division 6 was heading when Kako was sunk on 10 Aug: USSBS says entering Rabaul harbour; combinedfleet Kako record says CruDiv 6 was sent unescorted to Kavieng and Kako sank off Simbari Island at 02-28S 152-11E. https://www.combinedfleet.com/kako_t.htm
+- Departures: Bates says Chokai and CruDiv 6 left Silver Sound at 0615 on 7 Aug and Chokai reversed toward Rabaul; Chokai and CruDiv 6 reached Rabaul by separate routes (Yunagi escorting Chokai); combinedfleet says Chokai and CruDiv 6 left Moewe Passage together for Rabaul; USSBS says the cruiser force was dispatched from Kavieng and Rabaul on 8 Aug. https://www.ibiblio.org/hyperwar/USN/rep/Savo/NWC/NWC-Savo-4.html
+- Astoria sinking date: ONI and Wikipedia put her sinking on 9 Aug about noon; the combinedfleet Chokai record files it under 10 Aug at 1216. https://www.combinedfleet.com/chokai_t.htm
+- Bates' own text on Allied dispositions mixes 'square' and 'patrol line' for the Australia group; the OCR transcription is garbled in places (chapter V). https://www.ibiblio.org/hyperwar/USN/rep/Savo/NWC/NWC-Savo-5.html
+- Bates prints 'August 8th' for the 0110 time when the Japanese passed between the pickets; the context is 9 Aug. Same URL.
+
+## Savo Island: hits, losses and ammunition (second pass)
+
+URLs: Bates = https://archive.org/download/DTIC_ADA003037/DTIC_ADA003037.pdf ; ONI = https://www.ibiblio.org/hyperwar/USN/USN-CN-Savo/index.html (sections -4 to -11) ; WDR 29 = https://www.ibiblio.org/hyperwar/USN/rep/WDR/ ; combinedfleet = https://www.combinedfleet.com/<ship>_t.htm ; Wikipedia = https://en.wikipedia.org/wiki/Battle_of_Savo_Island ; AWM = https://www.awm.gov.au/encyclopedia/ww2_navy/savo/
+
+- **Astoria hits.** WDR 29 (1943): at least 65 known hits, all calibres. Bates (1950): 34 actual 8-inch/5.5-inch/4.7-inch hits, plus at least 29 probable, total 63. Likely different counting (all calibres vs large calibres) but the two numbers are not reconciled by either source.
+- **Quincy hits.** WDR 29 and Bates agree on 36 known hits; Bates adds at least 18 probable (54).
+- **Vincennes hits.** WDR 29 and Bates agree on 57 known; Bates adds 17 probable (74).
+- **Quincy torpedo hits.** WDR 29: two (No.3/No.4 firerooms and I.C. room). Bates: three. Wikipedia (low): three (two Tenryu, one Aoba).
+- **Vincennes torpedo hits.** WDR 29: one, possibly two. Bates: two. ONI: two or three at once, plus a later explosion at No.1 fireroom. Wikipedia: two (Chokai, Yubari).
+- **Canberra torpedo hit.** ONI: one or two struck the starboard side. Bates: she appears to have received none, despite statements to the contrary. Wikipedia (low): sources disagree (Frank doubts any; Loxton says Bagley's; Morison says Japanese). AWM page: no figure.
+- **Canberra killed.** AWM: 84. Wikipedia: 84 in one section, 85 in its notes. (Search snippets, not pages read: 83 in one AWM photo caption; wounded 109 vs 110.)
+- **Canberra's own fire.** Bates: no 8-inch, at most three 4-inch rounds. ONI: possibly one salvo from one gun of turret X, one or two salvos from port 4-inch guns, possibly two torpedoes.
+- **Canberra scuttling.** Bates and ONI: Selfridge 263 5-inch rounds and four torpedoes (one exploded), Ellet 106 rounds and one torpedo at 0756, sank 0800. Wikipedia: "some 300 shells and five torpedoes", which is smaller than Bates adds to (369 rounds, 5 torpedoes) but not stated per ship.
+- **Chokai hits.** Bates (from Japanese CRUDIV 6 report): 4. Combinedfleet Kako page: 10. Combinedfleet Furutaka page: 3. Combinedfleet Chokai page: "several". Same site, different counts. Aoba hit once per combinedfleet; Bates lists none for Aoba.
+- **Chokai killed.** Combinedfleet: 34. Bates: 30 killed in operations room by two Quincy shells. Wikipedia: 34 (36 killed or wounded).
+- **Japanese 8-inch rounds.** Bates lists Chokai 302, Aoba 183, Kako 192, Kinugasa 85, Furutaka 152 which sum to 914, but prints the total as 1014. His overall total 1867 only works with 1014. Either one ship's figure or the total is misprinted by 100. Combinedfleet agrees with Kako 192 and gives Furutaka 153.
+- **Kako secondary rounds.** Bates 130 (4.7-inch); combinedfleet 124 (12 cm).
+- **Kako torpedoes.** Bates narrative: four at 0201 and two at 0205 (6). Combinedfleet: ten.
+- **Kinugasa torpedoes.** Bates narrative: four at about 0153 (OCR line ~12636) and elsewhere two at 0153 (OCR line ~15475); internally inconsistent.
+- **Chokai first salvo range.** Bates 10000 yd; combinedfleet 5000 yd (both 0138).
+- **Patterson rounds.** ONI: 20 illuminating and 50 service rounds. Bates: 33 (query) 5-inch.
+- **Patterson searchlight.** ONI notes Chicago thought a ship she took for Patterson used a searchlight, but Patterson says she did not.
+- **Ralph Talbot torpedoes.** Bates summary: four fired, all missed; Bates narrative: three starboard torpedoes; ONI: one tube failed, one more fired by local control.
+- **Ralph Talbot hits and killed.** Bates summary: six 5.5-inch hits; Bates narrative: five numbered hits, last three killed twelve (OCR damaged). ONI: one hit killed two at a torpedo tube and the No.4 gun hit killed 21. Wikipedia: 14.
+- **Quincy sinking time.** WDR 29: capsized between 0235 and 0240. ONI: about 0235 or soon after. Bates: 0236. Wikipedia and the HyperWar Bates foreword : 0238.
+- **Astoria sinking time.** 1215 (WDR 29, ONI) vs 1216 (Bates, combinedfleet).
+- **Kako dead.** Combinedfleet 68; Wikipedia 71.
+- **Allied killed total.** Wikipedia gives 1077 in the infobox; its own Aftermath section gives lower figures for Quincy, Vincennes, Astoria. AWM (citing Gill): USN 939 killed, 1,593 casualties.
+- **Duration of the action.** ONI: half an hour (0145-0215), southern group engaged no more than 10 minutes. WDR 29: twenty minutes.
+
+## Savo Island: class fits and specifications (second pass)
+
+- **Yunagi's class.** Nishida (https://rikukaigun.org/Nishida/e/stc0421.html, table under "Kamikaze class 1st class destroyers": Yunagi ex-DD-17, plan FY1923, Sasebo NYd, laid down 1923.9.17, launch 1924.4.23, complete 1925.5.24) and Navypedia (https://navypedia.org/ships/japan/jap_dd_kamikaze.htm, ship list "Yunagi (No. 17)": 9.1923, 23.4.1924, 5/1925; page title "KAMIKAZE destroyers (1-GO)") agree: Yunagi was a Kamikaze-class destroyer. combinedfleet yunagi_t.htm names no class and no build dates.
+- **Furutaka-class main gun after rebuild.** combinedfleet kako_t.htm (4 July 1936-27 Dec 1937 entry) and Navypedia jap_cr_furutaka.htm ("203/50 3-shiki 2-go") say No.2 guns in three twin turrets; the earlier navweaps-based row says the No.1 guns from Haguro/Ashigara-type stock were reused. Nishida stc0329 says only 20cm/50 (2x3).
+- **Torpedo tubes removed from Northampton class.** Navypedia us_cr_northampton.htm: all 2x3 tubes removed 1931. Existing Wikipedia row: removed by 1936 (Friedman p.133). Jolie NUSC 5436 (p.31 of print): cruiser use of torpedoes discontinued 1936. No tubes aboard Chicago in Aug 1942 either way.
+- **HMAS Australia / Kent class tubes.** Navypedia aus_cv_australia.htm: Australia's 2x4 tubes removed December 1940; HMS Kent still listed with them in 1946. Existing Wikipedia row says tubes removed "from 1935" class-wide. No removal recorded for Canberra on navypedia.
+- **Kent class torpedo mark.** navweaps WTBR_PreWWII lists Mark V on "Kent Class Cruisers" and Mark VII on "8-inch cruisers" (no class). navweaps WTBR_WWII says Mark IX replaced Mark VII in some 8 in cruisers during the war. Not reconciled.
+- **Chokai Type 90 vs Type 93.** Wikipedia (https://en.wikipedia.org/wiki/Japanese_cruiser_Ch%C5%8Dkai): Type 90 originally, Type 93 later, undated. combinedfleet kinugasa_t, furuta_t, kako_t, tenryu_t: Chokai fired Type 93 at Savo (0138, 9 Aug 1942 Tokyo time). combinedfleet chokai_t has no torpedo entry. USNTMJ O-01-1 (PDF p.32): Type 90 was used on second-class destroyers in the war and discontinued at the end of 1942 (a statement on destroyers; says nothing of Chokai). The 1941 date in the earlier ship row has no source I could read.
+- **Takao-class reloads.** Wikipedia: 24 torpedoes, 16 reloads as built. Navypedia bracket figure (16) read as total gives 8 reloads. Bracket convention unverified.
+- **Tenryu-class mounts.** Existing Nishida row read "3x2" as three twin mounts. In Nishida's notation (tubes per mount x mounts: Takao 2x4 = four twins; Aoba 4x2 = two quads) it is two triple mounts, agreeing with Wikipedia and Navypedia (2 x 3 - 533 TT).
+- **Yubari displacement and tubes.** Nishida 2890 t standard (3141 t normal) vs Navypedia 3387 t standard / 4400 t full. Navypedia armament "2 x 2 - 610 TT (8)" vs Nishida 4 tubes (2x2).
+- **New Orleans-class main guns.** Existing class row says Mark 9. Navweaps (WNUS_8-55_mk12-15) and Navypedia put Quincy and Vincennes on the Mark 12 (Tuscaloosa sub-group); Astoria had a Mark 9-family gun. Rows added at ship level.
+- **New Orleans standard displacement.** historyofwar and Navypedia 10136 vs uboat.net/Wikipedia 9950 (unit of the first two uncertain).
+- **Bagley-class speed.** Navypedia 38.5 kn, historyofwar 38 design / 36.8 trial (Blue), HyperWar ship page 36.5 kn, uboat.net 38.5.
+- **Wilson's tubes.** Navypedia: tubes "reduced" in 1941 on Lang to Wilson; Wikipedia: after mounts landed on some ships; DANFS/Wikipedia list 16 as built. August 1942 count unknown.
+- **Type 93 in-service date.** navweaps 1935, USNTMJ O-01-1 gives service 1938 (production from 1936); earlier usntmj row 1936.
+- **Mark 15 warhead.** navweaps Mod 0 494 lb (224 kg) vs Jolie 825 lb (374 kg), probably the later Mod 3 head.
+- **Yunagi class rows.** No source for her 1942 armament; any class fit is an assumption.
+- **One website's displacement unit.** Navypedia prints "t" without saying which ton. A research pass first converted its figures as metric tonnes. They equal other sources' long-ton figures exactly (New Orleans class 12,463, Bagley class 2,245), so the rows now take them as long tons and say so.
+
+## Savo Island: radar and optics (second pass)
+
+- Canberra surface radar: Type 271 (Madsen https://navyhistory.au/radar-in-the-south-and-southwest-pacific-as-at-savo-island-in-august-1942/ ; Pfennigwerth letter https://ahoy.tk-jk.net/Letters/CanberraRadar.html ; Gregory, earlier row) versus Type 241 (Pacific Wrecks https://pacificwrecks.com/ship/hmas/canberra.html ; Wikipedia, earlier row).
+- Canberra A290 air warning: Madsen says acceptance trials; Pacific Wrecks says fitted in the refit; Pfennigwerth says it was overheating and not available at the 4 Jul 1942 trials. Whether it worked on 8 Aug is not settled by any source read.
+- Chokai's sighting of Blue: 10,900 yd at 0053 (Madsen, section Operations at Savo) versus about five miles at 0054 (Madsen, introduction). Both in the same article.
+- Tenryu radar: earlier USSBS NAV 61 row says none; combinedfleet and Kojinsha say radar installation on Japanese cruisers began 1943 or later, no conflict. combinedfleet radar.htm lists Type 21/22 "operational" dates (Aug 1943 and Sep 1944) later than its own fitting dates (earlier note).
+- Vincennes/Quincy radar: ONI says radar ranges were used; Madsen adds fire control radars. No source names the sets.
+
+## Found in the browser pass (third pass)
+
+Sources: the US Navy's online ship histories (https://www.history.navy.mil/research/histories/ship-histories/danfs.html) and the Australian Navy's unit histories (https://seapower.navy.gov.au/history/units).
+
+- **Canberra torpedoed or not.** The Australian Navy's history says two torpedoes struck her starboard side. The 1950 US analysis says none. The US Navy's history of Bagley says it is possible but unconfirmed that Bagley's four torpedoes hit Canberra, on the port side. Four accounts, three answers, two different sides of the ship.
+- **Patterson's warning.** Her Navy history says 0143, as the 1943 narrative does. The 1950 analysis and her own report say 0146.
+- **When Australia left the southern group.** 2130 by the Navy history of Bagley; 2055 and 2125 in two places in the 1950 analysis.
+- **Patterson's wounded.** 8 by her Navy history, 10 by the 1950 analysis. Both say 10 killed.
+- **Patterson laid down.** The Navy's current online entry still says 23 July 1933, so the odd date is in the entry itself and not a fault of the mirror read earlier. The other ships of the class were laid down in 1935.
+- **Canberra commissioned. Settled.** 9 July 1928 by the Australian Navy; 10 July by one website. The Navy's date is preferred.
+- **Hobart laid down.** 15 August 1934 by the Australian Navy's page, which also has her launched eight weeks later; 15 August 1933 by one website. Left disputed. The Navy page looks like the one in error.
+- **Chicago's radar set name.** Her Navy history calls the set fitted in 1940 the CXAM-1. Other sources call the first six sets CXAM and the later ones CXAM-1.
+

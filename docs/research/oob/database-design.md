@@ -1,6 +1,6 @@
 # Order-of-battle database: design proposal
 
-Status: approved by Amit on 2026-11-10 as the working format. To be recorded in `docs/decisions/` as the next numbered file.
+Status: approved by Amit on 2026-11-10 as the working format and recorded as decision 0015. The standing rules and engagement records added in the Savo Island pass await his review.
 
 Scope: the first slice only (South Pacific, August 1942 to February 1943). The design is sized so the full order of battle can use it in step 5 without a change of format.
 
@@ -77,7 +77,7 @@ Each entity type has a facts file beside its identity file: `ship_class_facts.cs
 | `accessed` | Date we read it. Required for online sources |
 | `confidence` | `high`, `medium` or `low`, see below |
 | `basis` | `stated` if the source says it directly. `inferred` if we reasoned to it, with the reasoning in `note` |
-| `standing` | `preferred`, `alternative` or `disputed`, see "Conflicting sources" |
+| `standing` | `preferred`, `unconfirmed`, `alternative` or `disputed`, see "Conflicting sources" |
 | `note` | Short. Why this row is `inferred`, `low` or not preferred |
 
 ### Attributes
@@ -185,6 +185,52 @@ Fact and fit rows have an optional `event` column naming the event that started 
 
 A ship that was in the task organisation but not in the fight (for example, a cruiser that had left before the action) is listed with a `role` that says so, not left out.
 
+## Engagement records
+
+Added for scenario 4c (Savo Island). A scenario needs more than who was present: where each force was, what state it was in, who saw whom first, and what happened, so the result can be checked against history. Three files hold this. Each row is one source's statement, with the same source columns and the same standing rules as a fact row.
+
+`engagement_events.csv`: what happened, in time order.
+
+| Column | Meaning |
+| --- | --- |
+| `id` | Whole number |
+| `engagement` | `key` in `engagements.csv` |
+| `time` | `YYYY-MM-DDTHH:MM` in the engagement's reference zone, which `engagements.csv` names. Empty if the source gives no time |
+| `kind` | `sighting`, `radar_contact`, `report_sent`, `report_received`, `order`, `readiness`, `course_change`, `illumination`, `open_fire`, `torpedo_launch`, `torpedo_hit`, `gun_hit`, `cease_fire`, `sunk`, `other` |
+| `actor`, `target` | A ship `key`, a formation name, or a few words for an aircraft or submarine |
+| `means` | `visual`, `radar`, `sound`, `aircraft`, `searchlight`, `starshell`, `flare`, `radio`, `tbs`, `blinker`, or empty |
+| `range_m`, `bearing_deg` | Range and true bearing from actor to target, if the source gives them |
+| `position` | Where, in the source's terms |
+| `value` | A count the event carries, such as torpedoes in a salvo |
+| `as_stated` | The source's own time, zone and figures |
+| Source columns | As for facts |
+
+`engagement_positions.csv`: patrol stations, anchorages, track points and sinking positions.
+
+| Column | Meaning |
+| --- | --- |
+| `id`, `engagement` | As above |
+| `subject` | A ship `key`, a formation name or a place |
+| `kind` | `patrol_station`, `patrol_line`, `anchorage`, `track_point`, `sinking_position`, `reference_point` |
+| `time` | As above, or empty for a standing station |
+| `lat`, `lon` | Signed decimal degrees as strings, south and west negative, only when the source gives latitude and longitude |
+| `ref_point`, `bearing_deg`, `distance_nm` | Otherwise: true bearing and distance from a named point |
+| `course_deg`, `speed_kn` | If the source gives them |
+| `as_stated` | The source's own words for the position |
+| Source columns | As for facts |
+
+`engagement_outcomes.csv`: totals for checking a result against history.
+
+| Column | Meaning |
+| --- | --- |
+| `id`, `engagement` | As above |
+| `ship` | A ship `key`, or a force name for a whole-force total |
+| `measure` | `gun_hits_received`, `torpedo_hits_received`, `killed`, `wounded`, `main_rounds_fired`, `secondary_rounds_fired`, `torpedoes_fired`, `time_first_hit`, `time_sunk`, `fate`, and others as sources give them |
+| `value`, `as_stated` | As for facts |
+| Source columns | As for facts |
+
+These rows are history to test against. They are never an input that makes the simulation reproduce the night: a scenario takes its starting positions and alert states from them, and its result is then compared with the outcomes.
+
 ## Sources
 
 ### sources.csv
@@ -227,10 +273,13 @@ Sources disagree often, especially on Japanese equipment and on what a ship carr
 | `standing` | Meaning |
 | --- | --- |
 | `preferred` | The value the ratings layer uses. All `preferred` rows in a group must carry the same value |
+| `unconfirmed` | Nothing contradicts the value, but it is too weakly supported to be `preferred`. See the rule below |
 | `alternative` | A differing value we judged less likely. The `note` on it says why |
 | `disputed` | We cannot choose. Every row in the group is `disputed`, and the ratings layer gets no value until someone settles it |
 
-- A group with one row needs no judgement: its row is `preferred`.
+- **A value has to earn `preferred`.** It needs one row at `medium` or `high` confidence, or two rows from different sources that agree, at least one of them from a source not graded `C`. A value with less support is `unconfirmed`. A lone Wikipedia row is `unconfirmed`, and so are two enthusiast sites repeating each other.
+- **The ratings layer does not read `unconfirmed` values by default.** A derivation rule may use one only if the rule says so, and the generated rating then carries a flag saying it rests on an unconfirmed fact. A better source turns the value into `preferred`; nothing else does.
+- **A dispute is settled by a person, with the reason in the note.** The guide: a primary document of the owning side, or of a technical examination of the equipment, that states the figure directly outranks a secondary compilation, and a compilation outranks a tertiary summary. A higher confidence grade alone does not settle a dispute, because the better source can carry a misprint. Rows that agree with the chosen value become `preferred`; the others become `alternative`.
 - Settling a dispute changes `standing` and `note` only. The losing row stays.
 - `docs/research/oob/conflicts.md` lists every group that has an `alternative` or `disputed` row, with a sentence on each. It is the reading list for a reviewer.
 
@@ -279,8 +328,9 @@ The format is only as good as its checker. These rules should be enforced by a t
 - Every reference (`entity`, `class`, `source`, `item`, `event`, `place`) resolves.
 - Every attribute is in `attributes.csv`, applies to that entity type, and its value parses as the declared type.
 - Every row has a source and locator. Online sources have `accessed`.
-- For `cardinality` `one`: within a group, all `preferred` rows agree, and a group is either all `disputed` or has at least one `preferred`.
-- `inferred`, `alternative` and `low` rows have a note.
+- For `cardinality` `one`: within a group, all `preferred` rows agree, and a group is all `disputed`, or has at least one `preferred`, or has at least one `unconfirmed` and no `preferred`.
+- A `preferred` value has the support the rule above asks for, and an `unconfirmed` value does not.
+- `inferred`, `alternative`, `unconfirmed` and `low` rows have a note.
 - Files are in the stated sort order.
 
 Proposed home: a loader and test in `sim-data`, or a small separate tool crate, since `sim-core` must not read files. That is Rust work outside this task. For the first data set I will run the same checks with a throwaway script and report the result, and not commit the script.
@@ -321,6 +371,7 @@ data/oob/
   fits.csv
   events.csv
   engagements.csv           engagement_forces.csv
+  engagement_events.csv     engagement_positions.csv     engagement_outcomes.csv
   gaps.csv
 docs/research/oob/
   database-design.md        this file
@@ -347,6 +398,15 @@ These are choices I would rather not make alone. My recommendation is first in e
 - `events.csv` was not started. Losses are `sunk` and `fate` facts and refits are dated fits. It is added when a scenario needs a change with a cause.
 - Sources graded `C` are capped at `low` confidence whatever the row says.
 - The link from a ship to its class has no source column. It should get one, or become a dated fact.
+
+## Changes made in the Savo Island pass
+
+- **A fourth standing, `unconfirmed`,** and the two rules under "Conflicting sources". Review found lone low-confidence rows marked `preferred` by default, and a primary figure left `disputed` beside weaker ones.
+- **`ship_class` is now an attribute of a ship,** so a source's statement of a ship's class is a fact row like any other. The `class` column in `ships.csv` holds the preferred value.
+- **Three engagement files,** described under "Engagement records". `engagements.csv` gains a `zone` column for the reference time zone.
+- **A fit row with `count` 0 also records "never fitted",** not only "removed", when a source says a ship or class had none.
+- **Night optics.** Sensor kinds `night_binocular` and `searchlight` and fit slots of the same names were added.
+- Notes no longer point at a `proposed_attributes.csv` file. That was a working file and was never part of the format.
 
 ## What this design does not cover
 
