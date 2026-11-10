@@ -11,7 +11,9 @@ Decision 0015 says no real ship gets an invented rating: a game figure is derive
 ### The tool
 
 1. **A tool reads the facts in `data/oob` and writes the ship classes a scenario loads.** It is given a list of ships and a date. The output is a generated file in `data/reference`, with a second file beside it that names, for every figure, the rule and the fact rows it came from.
-2. **It reads only rows whose standing is "preferred" and that are valid on the date.** A fact that is missing, disputed or unconfirmed is an error naming the ship and the fact. Nothing is filled in.
+2. **It reads only rows whose standing is "preferred" and that are valid on the date.** A fact that is missing, disputed or unconfirmed is an error naming the ship and the fact. Nothing is filled in. Several preferred rows that agree are all cited. Preferred rows that disagree are an error.
+
+   A ship's own row replaces its class's row only when the ship's row can itself be read. A ship row that is in doubt does not block the class row. It is listed beside the figure in the sources file, so the doubt stays in view.
 3. **An exception has to be written down.** The rules file may say "for this class and this fact, read the unconfirmed row", with a reason and the date the designer agreed. The tool lists every exception it used in the output.
 4. **One class row per distinct fit.** The simulation gives every ship of a class the same figures. Ships of one class that differ on the date, in radar or in torpedo type, get separate rows, named for the difference, such as "Bagley class, SC radar".
 5. **Generated IDs start at 1000,** so they cannot collide with placeholder classes.
@@ -27,7 +29,7 @@ Each figure the simulation needs, and where it comes from:
 | Cruise speed, endurance | The sourced endurance and the speed it is quoted at |
 | Fuel capacity | The sourced fuel capacity, in long tons |
 | Main guns | The number of guns of the main battery fitted on the date |
-| Rounds per gun per minute | The sourced rate of fire of that gun |
+| Rounds per gun per minute | The sourced practical rate of fire of that gun. A theoretical or maximum rate is not read |
 | Rounds per gun | The sourced ammunition carried per gun |
 | Torpedo tubes | The number fitted on the date |
 | Radar | Yes if a search radar is fitted on the date. Unknown is an error, unless the scenario's working assumption (decision 0019, 5) is given to the tool |
@@ -36,7 +38,7 @@ Each figure the simulation needs, and where it comes from:
 | Toughness | Standard displacement in long tons x the toughness constant |
 
 6. **A ton in the simulation is a long ton,** 2,240 lb, the unit the Allied sources use for fuel and displacement. No earlier scenario depended on which ton was meant.
-7. **Rate of fire becomes a decimal quantity** in the simulation. Real guns fire 3.5 rounds a minute, not 3 or 4.
+7. **Rate of fire, gun damage, torpedo damage and toughness become decimal quantities** in the simulation. Real guns fire 3.5 rounds a minute, and a 118 kg shell does 19.666666, not 19. Truncating to whole numbers would cost a small ship several percent. Whole-number figures give exactly the results they gave before.
 
 ### The constants
 

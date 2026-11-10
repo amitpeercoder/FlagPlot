@@ -167,6 +167,14 @@ fn raw_u64(value: Fixed) -> u64 {
     u64::try_from(value.raw()).expect("a chance is not negative")
 }
 
+/// Damage points one hit does: 100 x damage / toughness. The product comes
+/// first and there is one division, truncating, so whole-number figures give
+/// the same bits as before the figures could be decimals. Toughness is above
+/// zero (`ShipClass::problem`).
+fn damage_per_hit(damage: Fixed, toughness: Fixed) -> Fixed {
+    damage.mul_div(Fixed::from_int(100), toughness)
+}
+
 /// The gun shots a ship would fire in a round of `minutes`: guns x rate x
 /// minutes x the main battery factor, then capped by the ammunition aboard
 /// (decision 6 of `docs/decisions/0016-systems-and-stragglers.md`).
@@ -176,9 +184,9 @@ fn gun_shots(
     minutes: u32,
     figures: &SurfaceCombatFigures,
 ) -> Fixed {
-    let full = Fixed::from_int(
-        i64::from(class.main_guns) * i64::from(class.gun_rounds_per_min) * i64::from(minutes),
-    );
+    // Guns x minutes is a whole number; the exact `Fixed * i64` multiplies it
+    // into the rate before anything is divided.
+    let full = class.gun_rounds_per_min * (i64::from(class.main_guns) * i64::from(minutes));
     let factor = figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery);
     (full * factor).min(ship.gun_rounds)
 }
@@ -553,9 +561,7 @@ impl World {
         let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
         let fire_control =
             figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
-        let per_hit = |damage: u32| {
-            Fixed::from_ratio(100 * i64::from(damage), i64::from(target_class.toughness))
-        };
+        let per_hit = |damage: Fixed| damage_per_hit(damage, target_class.toughness);
         let gun = (shots > Fixed::ZERO).then(|| Shot {
             firer,
             target,
@@ -569,7 +575,7 @@ impl World {
             },
             shot_factors: [
                 Fixed::from_int(i64::from(class.main_guns)),
-                Fixed::from_int(i64::from(class.gun_rounds_per_min)),
+                class.gun_rounds_per_min,
                 Fixed::from_int(i64::from(figures.round_minutes)),
                 figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery),
             ],
@@ -1323,12 +1329,12 @@ mod tests {
                         endurance_nm: Fixed::from_int(8000),
                         cargo_capacity_t: Fixed::ZERO,
                         main_guns: guns,
-                        gun_rounds_per_min: rate,
+                        gun_rounds_per_min: Fixed::from_int(i64::from(rate)),
                         gun_rounds_per_gun: rounds,
-                        gun_damage,
+                        gun_damage: Fixed::from_int(i64::from(gun_damage)),
                         torpedo_tubes: tubes,
-                        torpedo_damage,
-                        toughness: tough,
+                        torpedo_damage: Fixed::from_int(i64::from(torpedo_damage)),
+                        toughness: Fixed::from_int(i64::from(tough)),
                         radar,
                     },
                 );
@@ -1428,6 +1434,52 @@ mod tests {
     }
 
     // ---- smoke tests ----
+
+    // Decimal figures. A gun damage of 19.666666 (118 kg / 6) against a
+    // toughness of 405.44 (10,136 long tons / 25):
+    //   100 x 19.666666 = 1966.6666, then / 405.44.
+    //   405.44 x 4.850697 = 1966.66659168, which is not above 1966.6666.
+    //   405.44 x 4.850698 = 1966.66699712, which is above it.
+    // So the truncated result is 4.850697 points per hit (the exact quotient
+    // is 4.8506970205...). Fixed raw values: 4_850_697.
+    #[test]
+    fn damage_per_hit_with_decimal_figures_multiplies_first_and_truncates() {
+        let damage = "19.666666".parse::<Fixed>().expect("decimal");
+        let toughness = "405.44".parse::<Fixed>().expect("decimal");
+        assert_eq!(damage_per_hit(damage, toughness).raw(), 4_850_697);
+        // Whole numbers are unchanged: 100 x 20 / 400 = 5.
+        assert_eq!(
+            damage_per_hit(Fixed::from_int(20), Fixed::from_int(400)),
+            Fixed::from_int(5)
+        );
+        assert_eq!(
+            damage_per_hit(Fixed::from_int(200), Fixed::from_int(400)),
+            Fixed::from_ratio(100 * 200, 400)
+        );
+    }
+
+    #[test]
+    fn a_decimal_rate_of_fire_gives_whole_shots_multiplied_before_any_division() {
+        // 8 guns x 3.5 rounds a minute x 5 minutes = 140 shots, at a main
+        // battery factor of 1 (fully working). The ship holds 800 rounds, so
+        // the ammunition cap does not bite.
+        let mut world = night_action(1).world();
+        world
+            .ref_data
+            .ship_classes
+            .get_mut(&ShipClassId::new(1))
+            .expect("class 1")
+            .gun_rounds_per_min = "3.5".parse().expect("3.5");
+        let figures = world.ref_data.surface_combat.clone().expect("figures");
+        assert_eq!(figures.round_minutes, 5);
+        let ship = ship(&world, 1);
+        let class = &world.ref_data.ship_classes[&ship.class];
+        assert_eq!(
+            figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery),
+            Fixed::ONE
+        );
+        assert_eq!(gun_shots(ship, class, 5, &figures), Fixed::from_int(140));
+    }
 
     #[test]
     fn two_opposing_forces_in_one_hex_at_night_fight_and_the_fight_ends() {

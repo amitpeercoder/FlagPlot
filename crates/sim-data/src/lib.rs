@@ -7,7 +7,8 @@
 //! File formats:
 //!
 //! - Ship classes: CSV, one class per row, with the weapons, toughness and
-//!   radar columns of surface combat (whole numbers, radar 0 or 1). Lines
+//!   radar columns of surface combat (counts are whole numbers; rate of fire,
+//!   damage and toughness may be whole numbers or decimals; radar 0 or 1). Lines
 //!   starting with `#` are comments.
 //! - Port sizes: CSV with the header
 //!   `port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h`, one row for
