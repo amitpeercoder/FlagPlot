@@ -18,6 +18,10 @@ belt_armour_max_mm,ship_class,integer,millimetres,one,Thickest part of the main 
 deck_armour_max_mm,ship_class,integer,millimetres,one,Thickest armoured deck
 complement,ship_class,integer,men,one,Designed or stated complement; the note says peace or war
 aircraft_capacity,ship_class,integer,aircraft,one,Aircraft normally carried
+main_rounds_per_gun,ship_class,integer,rounds,one,Main-battery rounds stowed per gun; the note says normal outfit or wartime maximum
+secondary_rounds_per_gun,ship_class,integer,rounds,one,Secondary-battery rounds stowed per gun
+torpedoes_carried,ship_class,integer,torpedoes,one,Torpedoes aboard including those in the tubes
+torpedo_reloads,ship_class,integer,torpedoes,one,Spare torpedoes beyond one per tube; 0 where a source says none were carried
 laid_down,ship,date,,one,Date the keel was laid
 launched,ship,date,,one,Date launched
 commissioned,ship,date,,one,Date first commissioned or completed
@@ -51,7 +55,8 @@ muzzle_velocity_mps,weapon,integer,metres per second,one,Muzzle velocity with th
 max_range_m,weapon,integer,metres,one,Maximum surface range at the elevation given by max_range_elevation_deg
 max_range_elevation_deg,weapon,decimal,degrees,one,Elevation at which max_range_m is quoted
 aa_ceiling_m,weapon,integer,metres,one,Maximum anti-aircraft ceiling
-rate_of_fire_rpm,weapon,decimal,rounds per minute,one,Rate of fire per barrel; the note says cyclic or practical
+rate_of_fire_rpm,weapon,decimal,rounds per minute,one,Rate of fire per barrel as designed or as a maximum; the note says which
+rate_of_fire_practical_rpm,weapon,decimal,rounds per minute,one,Rate of fire per barrel a source says was achieved or could be kept up in service; the note gives the circumstances
 diameter_mm,weapon,decimal,millimetres,one,Diameter of a torpedo
 weight_kg,weapon,decimal,kilograms,one,Total weight of a torpedo or bomb or depth charge
 warhead_kg,weapon,decimal,kilograms,one,Weight of the explosive charge
