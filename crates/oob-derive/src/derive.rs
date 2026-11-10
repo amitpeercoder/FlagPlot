@@ -56,6 +56,16 @@ pub const NO_RADAR_ITEMS: [&str; 1] = ["jp-radar-any"];
 /// could keep up in service. `rate_of_fire_rpm`, a design or maximum rate,
 /// is never read.
 const RATE_OF_FIRE: &str = "rate_of_fire_practical_rpm";
+/// A gun's designed rate, read only where the rules file names a row of it.
+const DESIGNED_RATE: &str = "rate_of_fire_rpm";
+const ROUNDS: &str = "main_rounds_per_gun";
+
+/// The rounds per gun written for a ship the list names in
+/// `main_gun_ammunition_not_limiting` when no `main_rounds_per_gun` row
+/// exists (decision 0023). It is a marker for "ammunition does not limit
+/// fire", far above any real outfit, not a sourced or invented outfit; the
+/// sources file says so beside the figure.
+pub const AMMUNITION_NOT_LIMITING_ROUNDS: i64 = 9999;
 
 const RADAR_SLOTS: [&str; 2] = ["air_search_radar", "surface_search_radar"];
 
@@ -88,6 +98,12 @@ pub struct ShipResult {
     pub figures: Vec<Figure>,
     /// Radar was unknown and the list says to treat it as not fitted.
     pub radar_assumed: bool,
+    /// No rounds-per-gun row exists and the list says to treat main-gun
+    /// ammunition as not limiting.
+    pub ammunition_assumed: bool,
+    /// The rate of fire is a designed rate (`rate_of_fire_rpm`) read
+    /// because the rules file names a row of it.
+    pub designed_rate: bool,
     /// Exceptions used: index into the rules' list, and the row read.
     pub used: Vec<(usize, Row)>,
 }
@@ -390,8 +406,55 @@ impl<'a> Env<'a> {
     /// `rate_of_fire_practical_rpm` row at all is `missing`, and the message
     /// says whether a `rate_of_fire_rpm` row (a theoretical or maximum rate,
     /// which is not read) exists. There is no fallback.
-    fn rate_of_fire(&self, w: &mut Work, fit: &Got<Fit>) -> Option<Got<Dec>> {
+    ///
+    /// The one way in for a designed rate: an exception of the rules file
+    /// naming a `rate_of_fire_rpm` row of the weapon. Then that row is read
+    /// instead of the practical rate, whatever its standing. The result says
+    /// whether the rate is a designed one.
+    fn rate_of_fire(&self, w: &mut Work, fit: &Got<Fit>) -> Option<(Got<Dec>, bool)> {
         let weapon = &fit.value.item;
+        if let Some((index, exception)) = self
+            .rules
+            .exceptions
+            .iter()
+            .enumerate()
+            .find(|(_, e)| e.entity == *weapon && e.fact == DESIGNED_RATE)
+        {
+            let got = self.weapon_fact(w, fit, DESIGNED_RATE, FIGURES[7])?;
+            let Some(named) = self
+                .index
+                .rows(Table::WeaponFacts, weapon, DESIGNED_RATE)
+                .iter()
+                .find(|r| exception.matches(r))
+            else {
+                w.fail(
+                    Kind::Missing,
+                    FIGURES[7],
+                    format!(
+                        "{DESIGNED_RATE} of weapon {weapon}: the exception names row {}, which is not a row of the weapon",
+                        exception.row
+                    ),
+                );
+                return None;
+            };
+            let cite = named.cite_key();
+            if !got.cites.contains(&cite) {
+                w.fail(
+                    Kind::Missing,
+                    FIGURES[7],
+                    format!(
+                        "{DESIGNED_RATE} of weapon {weapon}: the exception names row {}, which does not hold on {}",
+                        named.cite(),
+                        self.date
+                    ),
+                );
+                return None;
+            }
+            if !w.used.iter().any(|(i, r)| *i == index && r.id == named.id) {
+                w.used.push((index, named.clone()));
+            }
+            return Some((got, true));
+        }
         if self
             .index
             .rows(Table::WeaponFacts, weapon, RATE_OF_FIRE)
@@ -420,6 +483,37 @@ impl<'a> Env<'a> {
             return None;
         }
         self.weapon_fact(w, fit, RATE_OF_FIRE, FIGURES[7])
+            .map(|got| (got, false))
+    }
+
+    /// Rounds per gun. A ship the list names, with no `main_rounds_per_gun`
+    /// row of its own or its class at all, gets
+    /// [`AMMUNITION_NOT_LIMITING_ROUNDS`]; rows that exist but cannot be
+    /// read are still a problem. The flag says the figure is the assumption.
+    fn rounds_per_gun(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        assume_not_limiting: bool,
+    ) -> Option<(Got<Dec>, bool)> {
+        let (ship, class) = keys;
+        if assume_not_limiting
+            && self.index.rows(Table::ShipFacts, ship, ROUNDS).is_empty()
+            && self.index.rows(Table::ClassFacts, class, ROUNDS).is_empty()
+        {
+            let value = Dec::from_int(AMMUNITION_NOT_LIMITING_ROUNDS)?;
+            return Some((
+                Got {
+                    value,
+                    cites: BTreeSet::new(),
+                    excepted: false,
+                    doubts: BTreeSet::new(),
+                },
+                true,
+            ));
+        }
+        self.fact(w, keys, ROUNDS, FIGURES[8])
+            .map(|got| (got, false))
     }
 
     /// Derives every figure of a ship. All problems are returned, not the
@@ -428,6 +522,7 @@ impl<'a> Env<'a> {
         &self,
         ship: &str,
         assume_no_radar: bool,
+        assume_ammunition_not_limiting: bool,
     ) -> Result<ShipResult, Vec<Problem>> {
         let mut w = Work {
             subject: ship,
@@ -512,6 +607,8 @@ impl<'a> Env<'a> {
         );
 
         // main battery
+        let mut designed_rate = false;
+        let mut ammunition_assumed = false;
         let main = self.fit(&mut w, keys, "main_battery", "main_guns");
         if let Some(main) = &main {
             put(
@@ -520,12 +617,16 @@ impl<'a> Env<'a> {
                 Value::Num(Dec::from_int(i64::from(main.value.count)).unwrap_or(Dec::ZERO)),
                 main.bare(),
             );
-            if let Some(got) = self.rate_of_fire(&mut w, main) {
+            if let Some((got, designed)) = self.rate_of_fire(&mut w, main) {
+                designed_rate = designed;
                 let (v, sources) = num(got);
                 put(&mut figs, 7, v, sources);
             }
         }
-        if let Some(got) = self.fact(&mut w, keys, "main_rounds_per_gun", FIGURES[8]) {
+        if let Some((got, assumed)) =
+            self.rounds_per_gun(&mut w, keys, assume_ammunition_not_limiting)
+        {
+            ammunition_assumed = assumed;
             let (v, sources) = num(got);
             put(&mut figs, 8, v, sources);
         }
@@ -592,6 +693,8 @@ impl<'a> Env<'a> {
             class_name: class.name.clone(),
             figures,
             radar_assumed,
+            ammunition_assumed,
+            designed_rate,
             used: w.used,
         })
     }

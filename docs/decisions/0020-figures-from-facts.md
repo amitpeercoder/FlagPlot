@@ -29,7 +29,7 @@ Each figure the simulation needs, and where it comes from:
 | Cruise speed, endurance | The sourced endurance and the speed it is quoted at |
 | Fuel capacity | The sourced fuel capacity, in long tons |
 | Main guns | The number of guns of the main battery fitted on the date |
-| Rounds per gun per minute | The sourced practical rate of fire of that gun. A theoretical or maximum rate is not read |
+| Rounds per gun per minute | The sourced practical rate of fire of that gun. A theoretical or maximum rate is not read, unless a written exception names it (decision 0023) |
 | Rounds per gun | The sourced ammunition carried per gun |
 | Torpedo tubes | The number fitted on the date |
 | Radar | Yes if a search radar is fitted on the date. Unknown is an error, unless the scenario's working assumption (decision 0019, 5) is given to the tool |

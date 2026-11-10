@@ -28,8 +28,16 @@ ships = [
 #
 # - Bagley, Patterson, Helm, Wilson, Jarvis: no radar row of any kind.
 # - Vincennes: fire-control radar rows only, no search radar row.
-# - Canberra: stays here until her radar fit is settled in the facts.
+#
+# Canberra is no longer here: her Type 271 set is settled in the facts
+# (settlement sheet r1).
 radar_unknown_means_none = [
     "dd-386-bagley", "dd-392-patterson", "dd-388-helm", "dd-408-wilson", "dd-393-jarvis",
-    "ca-44-vincennes", "hmas-canberra",
+    "ca-44-vincennes",
 ]
+
+# Working assumption, not a fact (decision 0023): no source gives the
+# main-gun ammunition these three carried. Tenryu fired 80 rounds that night
+# and Yubari 96, far below any plausible outfit, so their main-gun
+# ammunition is treated as not limiting.
+main_gun_ammunition_not_limiting = ["tenryu", "yubari", "yunagi"]

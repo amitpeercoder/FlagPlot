@@ -18,12 +18,106 @@ torpedo_damage_per_warhead_kg = "0.4"
 displacement_lt_per_toughness = 25
 
 # Exceptions to "read only preferred rows" (decision 0020, 3). Each names a
-# class or ship, a fact, the row to read, the reason, and the date the
-# designer agreed. None yet.
-#
-# [[exception]]
-# entity = "us-bagley-class"
-# fact = "displacement_standard_lt"
-# row = 625
-# reason = "..."
-# agreed = "2026-11-10"
+# class, ship or weapon, a fact, the row to read, the reason, and the date
+# the designer agreed. These are the choices of the Savo Island settlement
+# sheet (docs/research/oob/savo-island-settlement.md) that rest on weak
+# sources only, and so cannot be preferred by the format's own rule. See
+# docs/decisions/0023-savo-island-ships.md.
+
+[[exception]]
+entity = "us-bagley-class"
+fact = "displacement_standard_lt"
+row = 625
+reason = "Settlement sheet b4: 1,624 tons. Every row for the class is low grade, so none can be preferred; two sources agree on this figure."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "us-benham-class"
+fact = "displacement_standard_lt"
+row = 612
+reason = "Settlement sheet b5: 1,657 tons. Low-grade rows only; the other real figure differs by one ton."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "us-northampton-class"
+fact = "displacement_standard_lt"
+row = 468
+reason = "Settlement sheet b3: 9,050 tons. The three figures are within 3 percent."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-kamikaze-class"
+fact = "displacement_standard_lt"
+row = 596
+reason = "Settlement sheet group 1: 1,270 tons, to keep to standard displacement. The better-graded row (1,378) is normal displacement."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-yubari-class"
+fact = "endurance_nm"
+row = 240
+reason = "Settlement sheet group 3: 3,310 nm at 14 knots, the figure achieved in service. Every row for it is low grade."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-yubari-class"
+fact = "endurance_speed_kn"
+row = 241
+reason = "Settlement sheet group 3: the speed of the 3,310 nm figure."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-yubari-class"
+fact = "fuel_capacity_lt"
+row = 243
+reason = "Settlement sheet group 4: 902 long tons, which is 916 metric tons of oil, given by three sources."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "us-northampton-class"
+fact = "main_battery"
+row = 254
+reason = "Settlement sheet group 7: nine 8-inch guns is not in doubt. The source does not say which mark of the gun family Chicago carried, and the facts hold one set of figures for the family."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-20cm-50-3ns-no2"
+fact = "rate_of_fire_practical_rpm"
+row = 431
+reason = "Settlement sheet e1: 2.4 rounds a minute, from a US technical mission table that does not say whether it is a design or an achieved rate. A lone row."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-14cm-50-3ns"
+fact = "rate_of_fire_practical_rpm"
+row = 432
+reason = "Settlement sheet e2: about 6 rounds a minute, from the same table. Nothing else exists."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "hmas-canberra"
+fact = "torpedo_tubes"
+row = 388
+reason = "Settlement sheet r2 and group 5: eight tubes is agreed by every row. The mark is disputed between Mark V and Mark VII, and only the Mark VII has a warhead figure. She fired none that night."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "jp-12cm-45-3ns"
+fact = "rate_of_fire_rpm"
+row = 44
+reason = "Settlement sheet e3: 5.5 rounds a minute, a designed rate. No practical rate exists for this gun."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "us-8in-55-mk12"
+fact = "rate_of_fire_rpm"
+row = 349
+reason = "Settlement sheet e4: 3 rounds a minute, a designed rate. No practical rate exists for this gun."
+agreed = "2026-11-10"
+
+[[exception]]
+entity = "us-8in-55-mk9"
+fact = "rate_of_fire_rpm"
+row = 358
+reason = "Settlement sheet e5: 3 rounds a minute, a designed rate, as for the Mark 12. The one practical figure (5, row 422) is one ship's best quarter-hour in another battle."
+agreed = "2026-11-10"

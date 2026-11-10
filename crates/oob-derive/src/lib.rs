@@ -26,7 +26,7 @@ use std::path::{Path, PathBuf};
 
 use oob_check::table::{Data, Table};
 
-pub use derive::NO_RADAR_ITEMS;
+pub use derive::{AMMUNITION_NOT_LIMITING_ROUNDS, NO_RADAR_ITEMS};
 pub use output::{companion_names, Outputs};
 pub use problem::{Kind, Problem};
 
@@ -114,7 +114,8 @@ pub fn derive_with(
     let mut results = Vec::new();
     for ship in &list.ships {
         let assume = list.radar_unknown_means_none.contains(ship);
-        match env.derive_ship(ship, assume) {
+        let ammunition = list.main_gun_ammunition_not_limiting.contains(ship);
+        match env.derive_ship(ship, assume, ammunition) {
             Ok(result) => results.push(result),
             Err(ship_problems) => problems.extend(ship_problems),
         }

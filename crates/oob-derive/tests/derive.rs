@@ -1727,3 +1727,242 @@ fn the_generated_classes_load_and_a_tiny_scenario_runs() {
     let truth = loaded.world.umpire();
     assert_eq!(truth.ships[&ShipId::new(1)].fuel_t, Fixed::from_int(1512));
 }
+
+// Designed rate of fire by exception, and ammunition not limiting.
+
+fn rules_with_designed_rate(row: u32) -> String {
+    format!(
+        "{RULES}\n[[exception]]\nentity = \"gun\"\nfact = \"rate_of_fire_rpm\"\n\
+         row = {row}\nreason = \"A designed rate, agreed\"\nagreed = \"2026-11-10\"\n"
+    )
+}
+
+fn list_with_ammunition(ships: &[&str], ammunition: &[&str]) -> String {
+    let quoted = |names: &[&str]| {
+        names
+            .iter()
+            .map(|n| format!("\"{n}\""))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    format!(
+        "{}main_gun_ammunition_not_limiting = [{}]\n",
+        list(ships, &[]),
+        quoted(ammunition)
+    )
+}
+
+fn derive_ammunition(
+    ships: &[&str],
+    ammunition: &[&str],
+    files: &Files,
+) -> Result<Outputs, Vec<String>> {
+    derive(
+        "list.toml",
+        &list_with_ammunition(ships, ammunition),
+        RULES,
+        files,
+    )
+    .map_err(|problems| problems.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn a_designed_rate_is_read_only_by_exception_when_there_is_no_practical_rate() {
+    let mut files = base();
+    remove_row(&mut files, "weapon_facts.csv", 2);
+    // Without the exception: the old error, unchanged.
+    assert_one(
+        &fails(&["shp"], &files),
+        &["rate_of_fire_practical_rpm of weapon gun: no rows in the facts"],
+    );
+    let outputs = derive_with_rules(&["shp"], &[], &rules_with_designed_rate(6), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    // The designed rate is 5, not the practical 3.5.
+    assert_eq!(
+        class_lines(&outputs),
+        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,5,150,19.666666,6,196,400,1"]
+    );
+    let source = source_of(&outputs, "1000", "gun_rounds_per_min");
+    assert!(
+        source[5].contains("designed rate, read by exception"),
+        "{source:?}"
+    );
+    assert!(source[4].contains("weapon_facts.csv:6"), "{source:?}");
+    // It is listed among the exceptions used even though the row is preferred.
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains("gun rate_of_fire_rpm: weapon_facts.csv row 6 (preferred); reason: A designed rate, agreed; agreed 2026-11-10"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_designed_rate_by_exception_replaces_a_practical_rate_that_is_not_preferred() {
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "weapon_facts.csv",
+        2,
+        fact_row(
+            2,
+            "gun",
+            "rate_of_fire_practical_rpm",
+            "3.5",
+            "",
+            "",
+            "low",
+            "unconfirmed",
+        ),
+    );
+    let outputs = derive_with_rules(&["shp"], &[], &rules_with_designed_rate(6), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert!(class_lines(&outputs)[0].contains(",8,5,150,"));
+}
+
+#[test]
+fn without_the_exception_a_designed_rate_is_still_not_read() {
+    let mut files = base();
+    remove_row(&mut files, "weapon_facts.csv", 2);
+    // An exception for another weapon, or another fact, does not help.
+    let rules = format!(
+        "{RULES}\n[[exception]]\nentity = \"big-gun\"\nfact = \"rate_of_fire_rpm\"\nrow = 6\n\
+         reason = \"x\"\nagreed = \"2026-11-10\"\n"
+    );
+    let problems = derive_with_rules(&["shp"], &[], &rules, &files).expect_err("problems");
+    let problems: Vec<String> = problems.iter().map(ToString::to_string).collect();
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("a theoretical or maximum rate, which the tool does not read")),
+        "{problems:#?}"
+    );
+}
+
+#[test]
+fn a_designed_rate_exception_naming_a_missing_row_is_a_problem() {
+    let mut files = base();
+    remove_row(&mut files, "weapon_facts.csv", 2);
+    let problems =
+        derive_with_rules(&["shp"], &[], &rules_with_designed_rate(99), &files).expect_err("p");
+    let problems: Vec<String> = problems.iter().map(ToString::to_string).collect();
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("rules: exception: rate_of_fire_rpm:") && p.contains("row 99")),
+        "{problems:#?}"
+    );
+}
+
+#[test]
+fn an_exception_naming_a_designed_rate_row_for_another_weapon_is_a_problem() {
+    // Row 6 is the gun's; naming it for the big gun names no row of it.
+    let rules = format!(
+        "{RULES}\n[[exception]]\nentity = \"big-gun\"\nfact = \"rate_of_fire_rpm\"\nrow = 6\n\
+         reason = \"x\"\nagreed = \"2026-11-10\"\n"
+    );
+    let problems = derive_with_rules(&["shp"], &[], &rules, &base()).expect_err("a problem");
+    assert_eq!(problems.len(), 1, "{problems:#?}");
+    assert!(problems[0].to_string().contains("row 6"));
+}
+
+#[test]
+fn ammunition_not_limiting_is_assumed_only_when_no_row_exists() {
+    let mut files = base();
+    remove_row(&mut files, "ship_class_facts.csv", 6);
+    // Not on the list: the usual missing problem.
+    assert_one(
+        &fails(&["shp"], &files),
+        &["shp: missing: gun_rounds_per_gun:"],
+    );
+    let outputs =
+        derive_ammunition(&["shp"], &["shp"], &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        class_lines(&outputs),
+        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,9999,19.666666,6,196,400,1"]
+    );
+    let source = source_of(&outputs, "1000", "gun_rounds_per_gun");
+    assert_eq!(source[4], "");
+    assert_eq!(
+        source[5],
+        "assumption, not a fact: main-gun ammunition is treated as not limiting (decision 0023); 9999 is a marker, not an outfit"
+    );
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains("shp: no main_rounds_per_gun row in the facts, main-gun ammunition treated as not limiting"),
+        "{header}"
+    );
+}
+
+#[test]
+fn the_ammunition_assumption_has_no_effect_when_a_row_is_readable() {
+    let outputs =
+        derive_ammunition(&["shp"], &["shp"], &base()).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+    assert!(
+        comments(&outputs.class_csv).contains("Ammunition assumptions used (decision 0023): none")
+    );
+    assert_eq!(source_of(&outputs, "1000", "gun_rounds_per_gun")[5], "");
+}
+
+#[test]
+fn a_disputed_ammunition_row_is_still_a_problem_for_a_ship_on_the_list() {
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "ship_class_facts.csv",
+        6,
+        fact_row(
+            6,
+            "us-test-class",
+            "main_rounds_per_gun",
+            "150",
+            "",
+            "",
+            "low",
+            "disputed",
+        ),
+    );
+    let problems = derive_ammunition(&["shp"], &["shp"], &files).expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "shp: not-preferred: gun_rounds_per_gun:",
+            "ship_class_facts.csv:6 (disputed",
+        ],
+    );
+}
+
+#[test]
+fn an_assumed_ship_gets_its_own_class_row_beside_one_that_reads_the_fact() {
+    let mut files = base();
+    add_row(
+        &mut files,
+        "attributes.csv",
+        "main_rounds_per_gun,ship,integer,one".to_string(),
+    );
+    // Move the class's rounds row to a ship row of shp alone, so shp2 has none.
+    remove_row(&mut files, "ship_class_facts.csv", 6);
+    add_row(
+        &mut files,
+        "ship_facts.csv",
+        fact(2, "shp", "main_rounds_per_gun", "150"),
+    );
+    let outputs =
+        derive_ammunition(&["shp", "shp2"], &["shp2"], &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    let lines = class_lines(&outputs);
+    assert_eq!(lines.len(), 2, "{lines:#?}");
+    assert!(lines.iter().any(|l| l.contains(",150,")));
+    assert!(lines.iter().any(|l| l.contains(",9999,")));
+}
+
+#[test]
+fn an_ammunition_name_that_is_not_in_ships_is_rejected() {
+    let problems = derive_ammunition(&["shp"], &["nosuch"], &base()).expect_err("a list problem");
+    assert_one(
+        &problems,
+        &[
+            "list: list: main_gun_ammunition_not_limiting:",
+            "`nosuch` is not in ships",
+        ],
+    );
+}
