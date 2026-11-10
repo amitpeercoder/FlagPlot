@@ -36,20 +36,20 @@ The figures are not all the same kind of thing. The table says what each one is,
 
 **How the picks were made.** The ship as she was in 1942 where a rebuild changed her; then a figure two sources give; then the better-graded source. Decision 0015 says a higher grade alone does not settle a dispute, and three of these picks (Kamikaze, New Orleans, Northampton) rest on little more than that. That is why they are proposals.
 
-## 2. Radar where no set is named: unknown, with a proposed treatment
+## 2. Radar where no set is named: unknown
 
-**The facts.** What radar Bagley, Patterson, Helm, Wilson, Jarvis and Australia carried on 8 August 1942 is **unknown**. No source read names a set for any of them and none says they had none. The data records it as a gap.
+**Decided.** Decision 0019 treats a ship as not fitted with search radar where no source says, as a named working assumption, for Bagley, Patterson, Helm, Wilson, Jarvis, Vincennes and Canberra. The assumption stops applying to a ship as soon as the facts hold a readable fit for her. What follows is the evidence, not a different choice.
 
-Two things are now sourced from the Australian official history:
+**The facts.** What search radar Bagley, Patterson, Helm, Wilson, Jarvis, Australia and Vincennes carried on 8 August 1942 is **unknown**. No source read names a set for any of them and none says they had none. The data records gaps.
 
-- **Canberra was using a Type 271 surface warning set that night,** and saw Blue on it at intervals. It had earlier picked up cruisers at 30 miles. That settles her set in the data, against websites that said Type 241.
-- **The pickets were chosen because, in their squadron commander's opinion, they had "the most effective radar and radar operating capability of the nine ships in his squadron".** That reads as the other seven destroyers, Bagley, Patterson and Helm among them, having some radar that was less effective or less well worked. The data has low-confidence rows for those three saying "a set, type not stated", marked as an inference. Nothing was found for Wilson; whether she is one of the nine was not established.
+Two things are sourced from the Australian official history:
 
-**Proposal for the scenario.** Treat every Allied ship in the fight as carrying a search radar no better than the pickets' set, except Wilson and Jarvis, which get none as a stated assumption. Vincennes, Quincy and Astoria also have a fire-control radar that ranges on a target already found.
+- **Canberra was using a Type 271 surface warning set that night,** and saw Blue on it at intervals. It had earlier picked up cruisers at 30 miles. Two websites say Type 241. The rows are disputed and the question is on the settlement sheet. If Type 271 is approved, the working assumption no longer applies to her.
+- **The pickets were chosen because, in their squadron commander's opinion, they had "the most effective radar and radar operating capability of the nine ships in his squadron".** That suggests the other destroyers of the squadron, Bagley, Patterson and Helm among them, had some set. It is an inference from one sentence. The data keeps it as low-grade, unconfirmed rows saying "a set, type not stated". Those rows are not a readable fit and do not change the working assumption. Nothing was found for Wilson; whether she is one of the nine was not established.
 
-**Why this and not "no radar".** An earlier draft gave five destroyers no radar, arguing that no contact by them is recorded. Review showed that was circular: Chicago, Canberra and both pickets had sets and also detected nothing. The official history now points the other way for three of the five.
+**A caution on arguing from the night.** That no radar contact by a ship is recorded says nothing about what she carried: Chicago, Canberra and both pickets had sets and detected nothing either.
 
-**What it means for the detection rule.** On this proposal nearly every Allied ship had a search radar and none detected the Japanese column. So the rule must make search radar close to useless in those waters that night, as the pickets' record shows, and the outcome should not turn on which ships are given a set.
+**What it means for the detection rule.** Every ship known to have a search radar failed to detect the Japanese column. The rule has to reproduce that from the ships that did have sets, so the outcome should not turn on which of the others are given one.
 
 ## 3. Torpedoes with no named type: a proposed reading
 

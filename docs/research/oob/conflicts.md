@@ -277,7 +277,7 @@ Sources: the US Navy's online ship histories (https://www.history.navy.mil/resea
 
 ## Savo Island: ammunition, torpedoes, guns and radar (fifth pass)
 
-- **Canberra's radar. Settled.** The Australian official history says she was using her Type 271 for surface warning. The Type 241 rows from two websites are kept as alternatives.
+- **Canberra's radar.** The Australian official history says she was using her Type 271 for surface warning. Two websites say Type 241. All rows are disputed until Amit settles it; the settlement sheet recommends Type 271.
 - **Canberra's torpedoes.** The Australian official history has her torpedo officer pressing triggers that did not respond, so none left the ship. The 1943 US narrative says she possibly fired two.
 - **Kinugasa's 8-inch rounds.** 85 as printed in the 1950 analysis; 185 if its printed total of 1,014 is right. The page image has a gap where a leading digit would be.
 - **Torpedoes carried, Takao class (Chokai).** Wikipedia (https://en.wikipedia.org/wiki/Takao-class_cruiser, citing Lacroix and Wells, not seen) says 8 tubes plus 16 reloads, 24 in all, as built. Navypedia (https://navypedia.org/ships/japan/jap_cr_takao.htm) says an armoured store for 8 spare torpedoes (16 in all counting the bracket figure). Both written as `disputed` rows. The 1938-39 rebuild of Atago and Takao (16 tubes plus 8 spares = 24) may be the source of the mix-up, but Chokai was not rebuilt that way.

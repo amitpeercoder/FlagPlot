@@ -2,7 +2,11 @@
 
 Status: **proposed.** Written by Claude on 2026-11-10 for Amit to approve in one pass. Nothing here is settled in the data. No row has been marked `preferred` to settle a dispute. After approval the rows are marked with the reason, and this sheet becomes a decision record.
 
-**Why it exists.** The derivation tool (`crates/oob-derive`, decision 0020) builds the ship classes a scenario loads from `preferred` fact rows that hold on 8 August 1942, and refuses anything else. Against this branch it reports 93 problems and derives no ship. Each group below is one decision that clears several of them.
+**Why it exists.** The derivation tool (`crates/oob-derive`, decision 0020) builds the ship classes a scenario loads from `preferred` fact rows that hold on 8 August 1942, and refuses anything else. Against this branch it reports 103 problems and derives no ship. Each group below is one decision that clears several of them.
+
+**Who settles.** Decision 0015 says a person settles a dispute. An earlier draft of this work marked some rows `preferred` or `alternative` on the researcher's judgement. Those have been put back to `disputed` or `unconfirmed`, and each is on this sheet (group 9). Where a standing in the data is `preferred` today, it is so only by the format's own rule: one row at medium grade or better with nothing against it, or two sources that agree.
+
+**What is already decided.** Decision 0019 records your choices on who was where, on standard displacement as the damage measure, and on treating unknown search radar as not fitted. This sheet does not reopen those. It asks for the figures.
 
 **How to read a row.** `id` is the row's number in the file named at the head of the group. Grade is confidence and basis: `m/s` is medium and stated, `l/i` is low and inferred. "Sure" is how confident the recommendation is: **confident**, **fair**, or **coin-toss**. A coin-toss that barely moves the game figure is marked **bulk**: those can be approved together.
 
@@ -98,7 +102,7 @@ What dates it: the Bureau of Ordnance's own history says the more powerful explo
 
 **Recommend 224 kg. Sure: fair.** The evidence points one way but is indirect. If you want it firmer, this is the single figure most worth a trip to a library.
 
-The 53 cm 6th Year Type warhead is bulk item b8. **Canberra's torpedo has no warhead figure at all:** the mark her class carried is itself disputed between the Mark V and the Mark VII, and only the Mark VII has a figure, 336 kg. She fired none that night. **Recommend treating her as carrying the Mark VII, 336 kg, by written exception. Sure: coin-toss, and it cannot affect the result unless the scenario lets her fire.**
+The 53 cm 6th Year Type warhead is bulk item b8. **Canberra's torpedo has no warhead figure at all:** the mark her class carried is itself disputed between the Mark V and the Mark VII, and only the Mark VII has a figure, 336 kg. She fired none that night. **Recommend treating her as carrying the Mark VII, 336 kg, by written exception. Sure: coin-toss, and it cannot affect the result unless the scenario lets her fire.** The rows are in group 9, r2 and r7.
 
 ## 6. Yubari's torpedo (`fits.csv`, `torpedo_tubes`)
 
@@ -115,15 +119,16 @@ The 53 cm 6th Year Type warhead is bulk item b8. **Canberra's torpedo has no war
 
 **Main guns (`fits.csv` row 254).** Nine 8-inch guns in three triple turrets is not in doubt. The row is `unconfirmed` because the source lists four marks of the same gun family for the class without saying which Chicago had. The data has one set of figures for the family. **Recommend accepting row 254 by written exception. Sure: confident on what matters to the rule.**
 
-**Rounds per gun (`ship_class_facts.csv`).**
+**Rounds per gun (`ship_class_facts.csv`).** All four rows are `disputed`.
 
 | Row | Value | What it is |
 | --- | --- | --- |
-| 657 | 167 | 1,500 rounds a ship "early in the war". Ends July 1942 in the data |
-| 658 | 144 | "Just over 1,300" a ship after refits that began after July 1942 |
-| 656 | 150 | The magazine capacity quoted for the gun, not an outfit |
+| 657 | 167 | 1,500 rounds a ship "early in the war", which the source says of the Northampton class by name |
+| 658 | 144 | "Just over 1,300" a ship after refits that began after July 1942. No source read says Chicago had been refitted by 8 August |
+| 656 | 150 | The stowage per gun quoted for the gun, not an outfit |
+| 659 | 100 | The peacetime outfit, to January 1942 |
 
-The July end date on row 657 came from the source's phrase about later refits. No source read says Chicago had been refitted by 8 August. **Recommend 167, with the end date removed. Sure: fair.**
+Row 657 carried an end date of July 1942 that no source supports for Chicago. It has been removed, which is a correction. **Recommend 167. Sure: fair.**
 
 ## 8. Single weak rows and missing figures
 
@@ -133,17 +138,35 @@ The July end date on row 657 came from the source's phrase about later refits. N
 | e2 | Rate of fire, Japanese 14 cm gun (Tenryu, Yubari) | Row 432: about 6, from the same table, for the twin mount | 6, by exception | Weak. Nothing else exists |
 | e3 | Rate of fire, Japanese 12 cm gun (Yunagi) | Only a designed rate: row 44, 5.5 | 5.5, by exception, flagged as a designed rate | Coin-toss. Yunagi's guns played almost no part |
 | e4 | Rate of fire, US 8-inch Mark 12 (Vincennes, Quincy) | No practical rate. Designed rate, row 349: 3 | 3, by exception | Fair |
-| e5 | Rate of fire, US 8-inch Mark 9 (Astoria, Chicago) | Row 422 is `preferred` at 5: the rate Houston kept up for a short time in another battle, "possibly" by an irregular loading method | Demote 422 to `alternative` and use 3 as for the Mark 12 | Fair. Leaving 5 would give two cruisers a rate two-thirds higher than their sisters on the strength of one ship's best quarter-hour |
+| e5 | Rate of fire, US 8-inch Mark 9 (Astoria, Chicago) | Row 422: 5, the rate Houston kept up for a short time in another battle, "possibly" by an irregular loading method. Graded low and `unconfirmed`. Designed rate, row 358: 3 | 3, by exception, as for the Mark 12 | Fair. Using 5 would give two cruisers a rate two-thirds higher than their sisters on one ship's best quarter-hour |
 | e6 | Rounds per gun, Tenryu, Yubari, Yunagi | **Nothing found.** The reference site says "not available" for both guns | No figure can be recommended. Tenryu fired 80 rounds that night and Yubari 96, far below any plausible outfit, so the scenario could treat their main-gun ammunition as not limiting, as a stated assumption | Your call |
 | e7 | Search radar, Vincennes | A fire-control radar is sourced (it gave a range of 8,250 yards). No source names a search set or says she had none. Her sister Astoria had an SC search set, and Quincy's radar picked up an aircraft | **Unknown.** If the scenario must choose, "fitted" is the better guess from her sisters | For you to place on the "unknown means" list either way |
 | e8 | Search radar, Jarvis | Nothing in any source read | **Unknown** | As e7. She took no part |
 
+## 9. Choices first made in the data, now put back for you
+
+Each of these was marked by the researcher and has been returned to `disputed` or `unconfirmed`.
+
+| # | What | Rows | What each is | Recommend | Sure |
+| --- | --- | --- | --- | --- | --- |
+| r1 | Canberra's surface radar (`fits.csv`) | 390 (Type 271, h/s); 102, 353, 103, 355 (Type 271, low); 351, 101 (Type 241, low) | 390: the Australian official history says she "was using her Type 271 radar set for surface warning" that night. The other 271 rows: two enthusiast sources. 241: a website and Wikipedia | Type 271 | Confident. Under decision 0019 the "not fitted" assumption stops applying to her once this is approved, because the facts then hold a fit |
+| r2 | Canberra's torpedo tubes (`fits.csv`) | 342, 343, 389 (Mark V, 8 tubes); 388 (Mark VII, 8); 104 (mark not named, 8) | Every row says eight tubes. The mark is the only difference, and every row is low grade and inferred from a statement about the class | Eight tubes. Mark VII for the warhead, as in group 5 | Confident on eight. Coin-toss on the mark |
+| r3 | New Orleans class rounds per gun | 662 (156, m/i); 661 (150, m/s); 663 (125, from September 1942) | 156: "1,400 rounds a ship" for most nine-gun cruisers, divided by nine. 150: the same page's stowage per gun, which the first figure exceeds. 125: after later refits | 150 | Coin-toss between the first two, 4% apart. Bulk |
+| r4 | Bagley and Benham rounds per gun | 665, 667 (300); 666, 668 (100, to 1940) | 300: a design outfit the page gives for a range of destroyer classes without naming these two. 100: the earlier peacetime outfit. The rows do not overlap in date, so nothing is disputed and 300 is `preferred` by rule | 300, knowing it is a design figure for a group of classes | Fair |
+| r5 | Practical rate of fire, US 5-inch/38 (seven destroyers) | 424 (15, m/s); 423 (25, m/s) | Both from a British ship's gunnery trials with this gun: 15 with the normal ammunition supply, 25 from ready-use rounds for a short burst. Neither is a rate recorded for US destroyers. The designed rate in the data is 12 | 15 | Weak. It is the right kind of figure from the wrong navy |
+| r6 | Practical rate of fire, British 8-inch (Canberra) | 426 (3.5, m/i); 427 (5, m/s) | 3.5: the midpoint of "3 to 4" sustained in action. 5: reached briefly in trials | 3.5 | Fair |
+| r7 | British Mark VII torpedo warhead | 411 (335.7 kg); 430 (340 kg) | The same 740 lb, exact and rounded | 335.7 | Bulk |
+| r8 | Torpedo type, Kinugasa (`fits.csv`) | 381 (Type 93, l/i) | Inferred: her class was given the quadruple mount that the US technical mission says fires the Type 93. No source names her torpedo. Her class row also says Type 93 | Type 93, by exception | Fair |
+| r9 | Torpedo type, Tenryu and Yunagi (`fits.csv`) | 377, 375 (a 21-inch torpedo, type not stated, l/s); 376 (6th Year Type, l/i, Yunagi) | The 1950 analysis gives each six 21-inch tubes and names no torpedo. The technical mission's table lists the 6th Year mount for Yunagi's class. The class rows say 6th Year Type by inference | 6th Year Type, by exception | Fair. It cannot be the Type 93, which is 24-inch |
+
+Torpedo reloads are not on this sheet because the tool does not read them. The data has eight for the Aoba and Furutaka classes as a low-grade inference, and Chokai's class disputed between 16 and 8.
+
 ## What approval would do
 
-If every recommendation is approved, the tool's remaining problems should be only the items marked "your call" and "unknown": rounds per gun for three ships (e6) and search radar for two (e7, e8). The check has not been run with the recommendations applied, because applying them is the settlement.
+If every recommendation is approved, the tool's remaining problems should be only the items marked "your call" and "unknown": rounds per gun for three ships (e6) and search radar for Vincennes and Jarvis (e7, e8), which decision 0019 already covers with its working assumption. The check has not been run with the recommendations applied, because applying them is the settlement.
 
 **Three things this sheet cannot fix and the rule should know.**
 
-- **The rates of fire are not one kind of figure.** Japanese 2.4 is from a table of unstated kind, British 3.5 is a sustained rate in action, US 3 is a designed rate. They are the best available and they are not comparable.
+- **The rates of fire are not one kind of figure.** Japanese 2.4 is from a table of unstated kind, British 3.5 is a sustained rate in action, US 8-inch 3 is a designed rate, and US 5-inch 15 is a British trial. They are the best available and they are not comparable.
 - **Displacement is not one condition** (group 1), and most Japanese figures rest on one website.
 - **Design speeds overstate 1942 service speeds** for every ship (group 2).

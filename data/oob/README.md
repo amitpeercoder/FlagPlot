@@ -68,7 +68,7 @@ Where the rows come from matters more than the count:
 
 ### Main gaps
 
-- **Savo Island radar.** Nothing found for Wilson, Jarvis or Australia. Bagley, Patterson and Helm have only an inference that they carried some set. Vincennes, Quincy, Astoria and Chicago had sets the sources describe in use but do not all name. Canberra's is settled as Type 271.
+- **Savo Island radar.** Nothing found for Wilson, Jarvis or Australia. Bagley, Patterson and Helm have only an inference that they carried some set. Vincennes, Quincy, Astoria and Chicago had sets the sources describe in use but do not all name. Canberra's is Type 271 on the Australian official history and awaits settlement.
 - **Savo Island torpedoes.** Yubari's type is open. Kinugasa's, Tenryu's and Yunagi's are inferences from their tubes. Reloads are unknown for the US destroyers, Canberra and Yunagi.
 - **Savo Island ammunition.** No rounds-per-gun figure for the 14 cm and 12 cm guns of Tenryu, Yubari and Yunagi.
 - **Displacement.** Disputed for nearly every Savo Island class, because sources quote different conditions.
