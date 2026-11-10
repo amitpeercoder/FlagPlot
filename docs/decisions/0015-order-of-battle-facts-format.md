@@ -22,8 +22,6 @@ The spec says real ships and aircraft come from open historical sources with the
 10. **A dispute is settled by a person, with the reason written on the row.** A primary document of the owning side, or of a technical examination, outranks a compilation, and a compilation outranks a summary. A higher confidence grade alone settles nothing, because a good source can carry a misprint.
 11. **Engagement records are history to test against.** Sightings, positions, alert states and outcomes of a battle are recorded as sourced rows. A scenario may take its starting positions and alert states from them. Its result is compared with the recorded outcome and is never scripted to match it.
 
-12. **Where a place is, is a sourced row too.** `places.csv` holds names only. `place_positions.csv` holds latitude and longitude, one row per source and per feature (the harbour, the airfield), because a name such as Espiritu Santo covers a hundred miles. Added for the real map of stage 4b.
-
 ## Not decided here
 
 - The derivation tool and the rating rules. They are designed with the combat and detection rules, scenario by scenario.

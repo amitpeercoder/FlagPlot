@@ -38,7 +38,7 @@ Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 
 | `engagement_events.csv` | 119 | Savo Island: sightings, warnings, readiness, open fire, by time |
 | `engagement_positions.csv` | 261 | Savo Island: patrol stations, Mikawa's track, sinking positions |
 | `engagement_outcomes.csv` | 168 | Savo Island: hits, losses, rounds and torpedoes fired |
-| `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature |
+| `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
 | `sources.csv` | 39 | Every source cited |
 | `gaps.csv` | 300 | What was not found |
 
@@ -92,3 +92,4 @@ Where the rows come from matters more than the count:
 - **A class row cannot say which ships it covers.** Where sisters differ (the 8-inch gun in the New Orleans class, the rebuilt and unrebuilt Takao class), the difference is carried by ship rows.
 - **Fact row ids** are assigned at first write and never change. Files are sorted by entity, so new rows do not sit at the end.
 - **The checks were run with a throwaway script** that is not in the repo. They need a permanent home in `sim-data` before the next data pass.
+- **`place_positions.csv` is not validated.** `oob-check` does not know the file yet. Its references and number forms were checked by hand once.
