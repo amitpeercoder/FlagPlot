@@ -87,7 +87,10 @@ struct Steamer {
     fuel_t: Fixed,
     /// The ship's own speed: its class speed at the task force's speed
     /// setting, times its propulsion factor (decision 7 of
-    /// `docs/decisions/0016-systems-and-stragglers.md`).
+    /// `docs/decisions/0016-systems-and-stragglers.md`). For a speed in
+    /// knots, the lower of the ordered speed and the ship's top speed times
+    /// its propulsion factor (decision 7 of
+    /// `docs/decisions/0021-readiness-and-alarm.md`).
     speed_kn: Fixed,
     /// 1, the degraded factor or 0, by the state of the ship's propulsion.
     propulsion_factor: Fixed,
@@ -137,6 +140,9 @@ impl World {
         self.intake_orders(day);
 
         for pulse in Pulse::ALL {
+            // Alert from belief comes before the pulse's first phase
+            // (decision 3 of `docs/decisions/0021-readiness-and-alarm.md`).
+            self.alert_from_belief(day, pulse);
             for phase in pulse_sequence(pulse) {
                 self.run_pulse_phase(day, pulse, *phase);
             }
@@ -299,7 +305,7 @@ impl World {
     /// Splits `ships` off `parent` into a new task force and returns its ID
     /// (decision 15 of `docs/decisions/0016-systems-and-stragglers.md`). The
     /// new force has the parent's side, mission, speed setting and speed
-    /// order, home port, alert flag, rules of engagement and rules order, and
+    /// order, home port, readiness and readiness order, alerted flag and the event that alerted it, rules of engagement and rules order, and
     /// its exact position. It is idle with no route and no other standing
     /// order. The ships move into it. Records no event: the caller does.
     /// Every ship must be in the parent.
@@ -325,7 +331,10 @@ impl World {
         force.speed = parent_force.speed;
         force.speed_order = parent_force.speed_order;
         force.home_port = parent_force.home_port;
-        force.alert = parent_force.alert;
+        force.readiness = parent_force.readiness;
+        force.readiness_order = parent_force.readiness_order;
+        force.alerted = parent_force.alerted;
+        force.alerted_by = parent_force.alerted_by;
         force.rules_of_engagement = parent_force.rules_of_engagement;
         force.rules_order = parent_force.rules_order;
         force.toward_hex = parent_force.toward_hex;
@@ -449,8 +458,16 @@ impl World {
                         }
                         Ok(())
                     }
+                    TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)) => {
+                        if *knots <= Fixed::ZERO {
+                            Err(RejectReason::SpeedNotAboveZero(*knots))
+                        } else {
+                            Ok(())
+                        }
+                    }
                     TaskForceOrder::SetSpeed(_)
                     | TaskForceOrder::SetMission(_)
+                    | TaskForceOrder::SetReadiness(_)
                     | TaskForceOrder::Unload => Ok(()),
                 }
             }
@@ -587,6 +604,10 @@ impl World {
                     TaskForceOrder::SetHomePort(base) => {
                         task_force.home_port = Some(*base);
                     }
+                    TaskForceOrder::SetReadiness(readiness) => {
+                        task_force.readiness = *readiness;
+                        task_force.readiness_order = Some(order.id);
+                    }
                     TaskForceOrder::DetachShips(_) => {
                         unreachable!("detach orders are applied above")
                     }
@@ -662,10 +683,6 @@ impl World {
             .map(|ship_id| {
                 let ship = &self.truth.ships[ship_id];
                 let class = &self.ref_data.ship_classes[&ship.class];
-                let setting_speed_kn = match task_force.speed {
-                    SpeedSetting::Cruise => class.cruise_speed_kn,
-                    SpeedSetting::Full => class.max_speed_kn,
-                };
                 // World::new rejects a damaged ship without figures, so
                 // with none every ship's propulsion works.
                 let propulsion_factor = match figures {
@@ -674,10 +691,18 @@ impl World {
                     }
                     None => Fixed::ONE,
                 };
+                let speed_kn = match task_force.speed {
+                    SpeedSetting::Cruise => class.cruise_speed_kn * propulsion_factor,
+                    SpeedSetting::Full => class.max_speed_kn * propulsion_factor,
+                    // Decision 7 of 0021: the ordered speed, or the best
+                    // speed of the ship (top speed times its propulsion
+                    // factor) if that is lower.
+                    SpeedSetting::Knots(knots) => knots.min(class.max_speed_kn * propulsion_factor),
+                };
                 Steamer {
                     ship: *ship_id,
                     fuel_t: ship.fuel_t,
-                    speed_kn: setting_speed_kn * propulsion_factor,
+                    speed_kn,
                     propulsion_factor,
                     cruise_speed_kn: class.cruise_speed_kn,
                     fuel_capacity_t: class.fuel_capacity_t,
@@ -952,7 +977,9 @@ mod tests {
     use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
-    use crate::orders::{AirMission, Mission, OrderRequest, Origin, Stance, StragglerInstruction};
+    use crate::orders::{
+        AirMission, Mission, OrderRequest, Origin, Readiness, Stance, StragglerInstruction,
+    };
     use crate::refdata::{
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
         SurfaceCombatFigures,
@@ -1096,6 +1123,252 @@ mod tests {
         assert_eq!(truth.task_forces[&TF].progress_nm, Fixed::ZERO);
         assert_eq!(truth.task_forces[&TF].position(), Hex::new(12, 0));
         assert_eq!(truth.ships[&SHIP].fuel_t, Fixed::from_int(2000 - 480));
+    }
+
+    fn knots(k: i64) -> OrderRequest {
+        order(TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm(k))))
+    }
+
+    #[test]
+    fn a_speed_in_knots_is_capped_by_the_best_speed_of_the_slowest_ship() {
+        // The class steams at 16 kn at cruise and 32 kn at full. The degraded
+        // factor is 1/2.
+        //   24 ordered, working:  min(24, 32 x 1)   = 24 kn
+        //   32 ordered, working:  min(32, 32 x 1)   = 32 kn
+        //   40 ordered, working:  min(40, 32 x 1)   = 32 kn (top speed)
+        //   24 ordered, degraded: min(24, 32 x 1/2) = 16 kn (best speed 16)
+        // A force goes at its slowest ship: a working ship and a degraded
+        // one, 24 ordered, give min(24, 32) = 24 and min(24, 16) = 16, so 16.
+        for (ordered, degraded_ships, expected) in
+            [(24, 0, 24), (32, 0, 32), (40, 0, 32), (24, 1, 16)]
+        {
+            let mut world = damage_world();
+            if degraded_ships == 1 {
+                add_ship(&mut world, 2, SystemState::Degraded);
+            }
+            world.submit_orders(Side::Allied, vec![route_to(12, 0), knots(ordered)]);
+            world.resolve_day().expect("day resolves");
+            let speeds = steamed_speeds(&world);
+            assert!(!speeds.is_empty());
+            assert!(
+                speeds.iter().all(|s| *s == nm(expected)),
+                "{ordered} kn ordered: {speeds:?}"
+            );
+            assert_eq!(
+                world.truth.task_forces[&TF].speed,
+                SpeedSetting::Knots(nm(ordered))
+            );
+        }
+        // A degraded ship alone, 24 ordered: min(24, 32 x 1/2) = 16 kn too.
+        let mut world = damage_world();
+        set_propulsion(&mut world, SHIP, SystemState::Degraded);
+        world.submit_orders(Side::Allied, vec![route_to(12, 0), knots(24)]);
+        world.resolve_day().expect("day resolves");
+        assert!(steamed_speeds(&world).iter().all(|s| *s == nm(16)));
+    }
+
+    #[test]
+    fn fuel_burn_in_knots_uses_the_speed_steamed_against_the_cruise_speed() {
+        // Cruise 16 kn, burn 2000 t / 8000 nm = 0.25 t/nm at cruise. The
+        // route to (6,0) is 6 hexes = 240 nm, so at cruise rate it takes
+        // 240 x 0.25 = 60 t.
+        //   24 kn: (24/16)^2 = 2.25, 0.5625 t/nm, 240 nm -> 135 t
+        //   32 kn: (32/16)^2 = 4,    1 t/nm,      240 nm -> 240 t
+        //   16 kn: multiplier 1,     0.25 t/nm,   240 nm -> 60 t
+        //   degraded, 24 ordered: steams 16 kn (best speed 32 x 1/2), so
+        //   multiplier 1 against its own cruise 16 kn -> 60 t
+        for (ordered, degraded, burned) in [
+            (24, false, 135),
+            (32, false, 240),
+            (16, false, 60),
+            (24, true, 60),
+        ] {
+            let mut world = damage_world();
+            if degraded {
+                set_propulsion(&mut world, SHIP, SystemState::Degraded);
+            }
+            world.submit_orders(Side::Allied, vec![route_to(6, 0), knots(ordered)]);
+            world.resolve_day().expect("day resolves");
+            let truth = world.umpire();
+            assert_eq!(truth.task_forces[&TF].status, TaskForceStatus::Arrived);
+            assert_eq!(
+                truth.ships[&SHIP].fuel_t,
+                nm(2000 - burned),
+                "{ordered} kn, degraded {degraded}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_speed_in_knots_must_be_above_zero() {
+        // 0 and -1 are rejected with the new reason and leave the speed as
+        // it was; 1 kn (and a fraction) is accepted.
+        let mut world = damage_world();
+        let fraction = order(TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm_frac(1, 2))));
+        world.submit_orders(Side::Allied, vec![knots(0), knots(-1), knots(1), fraction]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            rejections(&world),
+            vec![
+                RejectReason::SpeedNotAboveZero(nm(0)),
+                RejectReason::SpeedNotAboveZero(nm(-1)),
+            ]
+        );
+        assert_eq!(
+            world.truth.task_forces[&TF].speed,
+            SpeedSetting::Knots(nm_frac(1, 2))
+        );
+        assert_eq!(
+            RejectReason::SpeedNotAboveZero(nm(-1)).to_string(),
+            "speed -1 kn is not above 0"
+        );
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn the_speed_setting_is_part_of_the_state_hash() {
+        // Cruise, full and knots differ, and so do two knots values.
+        let hash_with = |speed: SpeedSetting| {
+            let mut world = damage_world();
+            world.truth.task_forces.get_mut(&TF).expect("force").speed = speed;
+            world.state_hash()
+        };
+        let hashes = [
+            hash_with(SpeedSetting::Cruise),
+            hash_with(SpeedSetting::Full),
+            hash_with(SpeedSetting::Knots(nm(24))),
+            hash_with(SpeedSetting::Knots(nm(25))),
+        ];
+        let distinct: BTreeSet<u64> = hashes.iter().copied().collect();
+        assert_eq!(distinct.len(), 4);
+    }
+
+    #[test]
+    fn a_readiness_order_sets_readiness_and_its_order_and_nothing_else() {
+        let mut world = damage_world();
+        {
+            // Alerted already; readiness must not touch it.
+            let force = world.truth.task_forces.get_mut(&TF).expect("force");
+            force.alerted = true;
+            force.alerted_by = Some(EventId::new(1));
+        }
+        // Alert from belief (decision 3 of 0021) runs at the start of every
+        // pulse and would stand the force down with no contact near it. So
+        // the Allied side holds a contact on the force that never ages out of
+        // the alert limit or drops, and the force stays alerted by it.
+        {
+            let position = world.truth.task_forces[&TF].position();
+            let mut search = world.ref_data.search.clone().expect("search figures");
+            search.confidence_decay_per_pulse = Fixed::ONE;
+            world.ref_data.search = Some(search.clone());
+            world
+                .ref_data
+                .surface_combat
+                .as_mut()
+                .expect("combat figures")
+                .alert_contact_max_age_pulses = 1000;
+            world
+                .beliefs
+                .get_mut(&Side::Allied)
+                .expect("belief")
+                .apply_report(
+                    &Report::Sighting(crate::belief::SightingReport {
+                        estimated_hex: position,
+                        estimated_ship_count: 1,
+                        estimated_kind: ShipKind::Cruiser,
+                        confidence: search.initial_confidence,
+                        received_event: EventId::new(1),
+                    }),
+                    &search,
+                );
+        }
+        let before = world.truth.task_forces[&TF].clone();
+        assert_eq!(before.readiness, Readiness::Normal);
+        assert_eq!(before.readiness_order, None);
+        // Orders are numbered from 1 in the order they are taken in.
+        world.submit_orders(
+            Side::Allied,
+            vec![order(TaskForceOrder::SetReadiness(Readiness::Battle))],
+        );
+        world.resolve_day().expect("day resolves");
+        assert!(rejections(&world).is_empty());
+        let after = &world.truth.task_forces[&TF];
+        assert_eq!(after.readiness, Readiness::Battle);
+        assert_eq!(after.readiness_order, Some(OrderId::new(1)));
+        // Everything else is as it was.
+        let mut expected = before;
+        expected.readiness = Readiness::Battle;
+        expected.readiness_order = Some(OrderId::new(1));
+        assert_eq!(*after, expected);
+        assert!(after.alerted);
+        assert_eq!(after.alerted_by, Some(EventId::new(1)));
+        assert_sound(&world);
+
+        // A later order back to normal replaces both; alerted stays.
+        world.submit_orders(
+            Side::Allied,
+            vec![order(TaskForceOrder::SetReadiness(Readiness::Normal))],
+        );
+        world.resolve_day().expect("day resolves");
+        let after = &world.truth.task_forces[&TF];
+        assert_eq!(after.readiness, Readiness::Normal);
+        assert_eq!(after.readiness_order, Some(OrderId::new(2)));
+        assert!(after.alerted);
+    }
+
+    #[test]
+    fn a_readiness_order_for_the_other_sides_force_is_rejected() {
+        let mut world = damage_world();
+        world.submit_orders(
+            Side::Japanese,
+            vec![order(TaskForceOrder::SetReadiness(Readiness::Battle))],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejections(&world), vec![RejectReason::NotYourUnit]);
+        let force = &world.truth.task_forces[&TF];
+        assert_eq!(force.readiness, Readiness::Normal);
+        assert_eq!(force.readiness_order, None);
+    }
+
+    #[test]
+    fn readiness_has_stable_codes_and_names() {
+        assert_eq!(Readiness::Normal.code(), 1);
+        assert_eq!(Readiness::Battle.code(), 2);
+        assert_eq!(Readiness::Normal.name(), "normal");
+        assert_eq!(Readiness::Battle.name(), "battle");
+        assert_eq!(Readiness::default(), Readiness::Normal);
+    }
+
+    #[test]
+    fn a_force_is_alert_at_battle_readiness_or_when_alerted() {
+        // is_alert = battle OR alerted.
+        //   normal, not alerted -> false     normal, alerted -> true
+        //   battle, not alerted -> true      battle, alerted -> true
+        let world = damage_world();
+        let mut force = world.truth.task_forces[&TF].clone();
+        for (readiness, alerted, expected) in [
+            (Readiness::Normal, false, false),
+            (Readiness::Normal, true, true),
+            (Readiness::Battle, false, true),
+            (Readiness::Battle, true, true),
+        ] {
+            force.readiness = readiness;
+            force.alerted = alerted;
+            assert_eq!(
+                force.is_alert(),
+                expected,
+                "{readiness:?}, alerted {alerted}"
+            );
+        }
+        // A new force is at normal readiness and not alerted.
+        assert!(!TaskForce::at(
+            TF,
+            "F".to_string(),
+            Side::Allied,
+            hx(0, 0),
+            Mission::Transport
+        )
+        .is_alert());
     }
 
     #[test]
@@ -1882,7 +2155,10 @@ mod tests {
         hash_after(&|w| ship(w).gun_rounds = nm(10));
         hash_after(&|w| ship(w).torpedoes_ready = true);
         hash_after(&|w| ship(w).location = ShipLocation::Sunk);
-        hash_after(&|w| force(w).alert = false);
+        hash_after(&|w| force(w).readiness = Readiness::Battle);
+        hash_after(&|w| force(w).readiness_order = Some(crate::ids::OrderId::new(1)));
+        hash_after(&|w| force(w).alerted = true);
+        hash_after(&|w| force(w).alerted_by = Some(EventId::new(1)));
         hash_after(&|w| force(w).rules_of_engagement.stance = Stance::Avoid);
         hash_after(&|w| force(w).rules_of_engagement.break_off = nm_frac(1, 10));
         hash_after(&|w| force(w).rules_order = Some(crate::ids::OrderId::new(1)));
@@ -2859,7 +3135,10 @@ mod tests {
                 waypoints: vec![hx(9, 0)],
                 next_index: 0,
             };
-            force.alert = false;
+            force.readiness = Readiness::Battle;
+            force.readiness_order = Some(crate::ids::OrderId::new(44));
+            force.alerted = true;
+            force.alerted_by = Some(EventId::new(4));
             force.home_port = Some(BaseId::new(1));
             force.mission = Mission::SurfaceCombat;
             force.speed = SpeedSetting::Full;
@@ -2902,7 +3181,10 @@ mod tests {
         assert_eq!(new.arrived_at_hours, None);
         assert_eq!(new.arrival_event, None);
         assert_eq!(new.noticed_sighted_at_hours, None);
-        assert!(!new.alert);
+        assert_eq!(new.readiness, Readiness::Battle);
+        assert_eq!(new.readiness_order, Some(crate::ids::OrderId::new(44)));
+        assert!(new.alerted);
+        assert_eq!(new.alerted_by, Some(EventId::new(4)));
         assert_eq!(new.home_port, Some(BaseId::new(1)));
         assert_eq!(new.mission, Mission::SurfaceCombat);
         assert_eq!(new.speed, SpeedSetting::Full);

@@ -28,5 +28,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0018 | A read-only replay viewer, as a debugging tool and not the game's interface | Confirmed |
 | 0019 | Savo Island: who was where, standard displacement, and unknown radar treated as not fitted | Confirmed |
 | 0020 | Game figures for real ships derived from facts by written rules, with three shared scaling constants | Confirmed; constants are placeholders |
+| 0021 | Readiness by order, alertness from belief and events, and an alarm roll when a fight breaks out nearby | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

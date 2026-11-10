@@ -37,5 +37,9 @@ path = "scenario_04a2_stragglers.rs"
 name = "scenario_04b_pathfinding"
 path = "scenario_04b_pathfinding.rs"
 
+[[test]]
+name = "scenario_04c_readiness"
+path = "scenario_04c_readiness.rs"
+
 [lints]
 workspace = true

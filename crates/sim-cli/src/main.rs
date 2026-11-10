@@ -175,6 +175,18 @@ fn run(args: &[String]) -> Result<(), String> {
             ),
             None => String::new(),
         };
+        // "Alert" is what the rules read. A force is alert by its readiness
+        // or because it is alerted (decision 0021). Saying which avoids a
+        // line that reads "battle readiness, not alerted".
+        let readiness = format!(
+            "readiness {}, {}",
+            task_force.readiness.name(),
+            match (task_force.is_alert(), task_force.alerted) {
+                (true, true) if task_force.readiness.name() == "normal" => "alert (alerted)",
+                (true, _) => "alert",
+                (false, _) => "not alert",
+            }
+        );
         let stance = match task_force.rules_of_engagement.stance {
             Stance::Engage => "engage",
             Stance::Avoid => "avoid",
@@ -187,11 +199,7 @@ fn run(args: &[String]) -> Result<(), String> {
             task_force.status,
             position,
             noticed,
-            if task_force.alert {
-                "alert"
-            } else {
-                "not alert"
-            },
+            readiness,
             stance,
             task_force.rules_of_engagement.break_off,
             task_force.rules_of_engagement.stragglers.name(),

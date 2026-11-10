@@ -34,6 +34,13 @@ torpedo_system_hit_chance = "0.5"
 degraded_factor = "0.5"
 fire_control_out_factor = "0.25"
 
+# Alertness (decision 0021). A force at normal readiness is alerted by a
+# contact this close and this fresh, and by a fight in its hex with this
+# chance.
+alert_contact_distance_hexes = 3
+alert_contact_max_age_pulses = 2
+alarm_chance = "0.5"
+
 # Flotation damage at which a ship counts as crippled, and fire damage at
 # which the enemy believes it is sinking.
 crippled_flotation = 50
