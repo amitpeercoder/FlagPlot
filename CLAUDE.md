@@ -17,9 +17,12 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
+cargo run -p sim-cli -- export data/scenarios/04a_night_action.toml --out viewer/replays/04a_night_action.json
 cargo run --release -p map-tool -- render
 cargo run -p oob-check -- data/oob
 ```
+
+`export` runs a scenario exactly as `run` does and writes it as one replay file for the viewer (decision 0018); it also takes `--seed N` and `--labels data/map/south_pacific_anchors.csv`. Open `viewer/index.html` in a browser and pick the file. `node viewer/check.js viewer/replays/*.json` checks replays against the page's own rebuild.
 
 The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides --hex q,r` (a hex's closed sides and neighbours), `water --lat --lon` (why a position's hex has the water it has) and `generate`, which rebuilds `data/map/south_pacific.csv` from the Natural Earth files under `references/` (the exact command is in the file's header). `generate --anchors data/map/south_pacific_anchors.csv` applies the listed anchorages (decision 0017, decision 6); without it hexes keep their largest body of water. `render` draws `#` land, `+` coast, `%` coast with a closed side toward water and `.` sea, each row labelled with its r and the q of its first hex.
 
@@ -41,6 +44,7 @@ All three checks must pass before a commit. CI runs the same three. `cargo test`
 | `data/oob` | Order-of-battle facts: sourced historical statements as CSV. Research, not simulation data. Start with its `README.md` |
 | `docs/research/oob` | The facts format, the source policy, where sources disagree, and a note per battle and per topic |
 | `tests` | One test file per scenario, each with its hand calculation written out |
+| `viewer` | The read-only replay viewer (decision 0018): one HTML page with no build step, its check script, and `replays/` (git-ignored) for exported runs |
 
 Crate boundaries:
 
@@ -48,6 +52,7 @@ Crate boundaries:
 - Only `sim-data` reads simulation data files. The simulation never reads `data/oob`; only `oob-check` does.
 - `sim-cli` and the tests are the umpire. They may read truth through `World::umpire()`.
 - Anything that plays the game (the staff planner, an agent, the UI) gets a `SideView` and nothing else.
+- The replay viewer (`viewer/`) is an umpire's tool like `sim-cli`: it shows the truth. Nothing that plays the game may use it or the replay files.
 
 ## Determinism rules
 
