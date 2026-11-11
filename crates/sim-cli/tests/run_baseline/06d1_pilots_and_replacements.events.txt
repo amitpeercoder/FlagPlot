@@ -2,12 +2,12 @@ Scenario 6d1: Pilots and replacements
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1399d5ed523bb74c  21 events
-day   2  hash 92f2f999e500cd16  18 events
-day   3  hash f3965578d41a544a  18 events
-day   4  hash 66d770c12f7c53fa  20 events
-day   5  hash 8eb5014553d8649a  19 events
-day   6  hash 18ab5d19801c659b  14 events
+day   1  hash c843e1144d27a5f8  21 events
+day   2  hash 26f5e5e23dd5ffe2  18 events
+day   3  hash 80ebf87e98a1f85e  18 events
+day   4  hash 252e710b487c4b16  20 events
+day   5  hash 5c68c763dc3e4d36  19 events
+day   6  hash a9e3fc170699a9e7  14 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -30,8 +30,8 @@ day   6  hash 18ab5d19801c659b  14 events
 #19 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #17
 #20 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #19
 #21 D1 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#22 D2 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 18 ready and 17 pilots
-#23 D2 night     air_group:3 received 2 aircraft and 0 pilots at base:2, 11 ready and 12 pilots
+#22 D2 night     air_group:3 received 2 aircraft and 0 pilots at base:2, 11 ready and 12 pilots
+#23 D2 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 18 ready and 17 pilots
 #24 D2 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #25 D2 morning   air_group:1 launched 17 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #26 D2 morning   air_group:2 sent 6 escorts with air_group:1  <- order:5, order:6, #25
@@ -48,9 +48,9 @@ day   6  hash 18ab5d19801c659b  14 events
 #37 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #36
 #38 D2 morning   base:2 lost 50 t of supply, 900 t left  <- #36
 #39 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#40 D3 night     air_group:1 received 1 aircraft and 1 pilots at base:1, 18 ready and 17 pilots
+#40 D3 night     air_group:4 received 1 aircraft and 0 pilots at base:2, 9 ready and 10 pilots
 #41 D3 night     air_group:3 received 2 aircraft and 0 pilots at base:2, 11 ready and 12 pilots
-#42 D3 night     air_group:4 received 1 aircraft and 0 pilots at base:2, 9 ready and 10 pilots
+#42 D3 night     air_group:1 received 1 aircraft and 1 pilots at base:1, 18 ready and 17 pilots
 #43 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #44 D3 morning   air_group:1 launched 17 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #45 D3 morning   air_group:2 sent 5 escorts with air_group:1  <- order:5, order:6, #44
@@ -66,9 +66,9 @@ day   6  hash 18ab5d19801c659b  14 events
 #55 D3 morning   air_group:1 lost 3 pilots, 11 left  <- #54
 #56 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #44, #52, #54
 #57 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#58 D4 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 14 ready and 12 pilots
+#58 D4 night     air_group:4 received 1 aircraft and 0 pilots at base:2, 10 ready and 10 pilots
 #59 D4 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 12 ready and 12 pilots
-#60 D4 night     air_group:4 received 1 aircraft and 0 pilots at base:2, 10 ready and 10 pilots
+#60 D4 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 14 ready and 12 pilots
 #61 D4 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #62 D4 morning   air_group:1 launched 12 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #63 D4 morning   air_group:2 sent 5 escorts with air_group:1  <- order:5, order:6, #62
@@ -86,9 +86,9 @@ day   6  hash 18ab5d19801c659b  14 events
 #75 D4 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 1 on aircraft, 0 on supply, 0 on nothing  <- #62, #71, #73
 #76 D4 morning   air_group:4 lost 1 aircraft on the ground at base:2, 9 left  <- #75
 #77 D4 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#78 D5 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 12 ready and 9 pilots
+#78 D5 night     air_group:4 received 1 aircraft and 0 pilots at base:2, 10 ready and 10 pilots
 #79 D5 night     air_group:3 received 2 aircraft and 0 pilots at base:2, 11 ready and 12 pilots
-#80 D5 night     air_group:4 received 1 aircraft and 0 pilots at base:2, 10 ready and 10 pilots
+#80 D5 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 12 ready and 9 pilots
 #81 D5 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #82 D5 morning   air_group:1 launched 9 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #83 D5 morning   air_group:2 sent 4 escorts with air_group:1  <- order:5, order:6, #82
@@ -105,8 +105,8 @@ day   6  hash 18ab5d19801c659b  14 events
 #94 D5 morning   air_group:1 lost 3 pilots, 2 left  <- #93
 #95 D5 morning   air_group:1 bombs at base:2: 2 shots x 0.2 = 0.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #82, #91, #93
 #96 D5 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#97 D6 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 7 ready and 3 pilots
-#98 D6 night     air_group:3 received 2 aircraft and 0 pilots at base:2, 11 ready and 12 pilots
+#97 D6 night     air_group:3 received 2 aircraft and 0 pilots at base:2, 11 ready and 12 pilots
+#98 D6 night     air_group:1 received 2 aircraft and 1 pilots at base:1, 7 ready and 3 pilots
 #99 D6 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #100 D6 morning   air_group:1 launched 3 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #101 D6 morning   air_group:2 sent 4 escorts with air_group:1  <- order:5, order:6, #100

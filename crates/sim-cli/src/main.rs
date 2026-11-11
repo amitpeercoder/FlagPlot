@@ -1,11 +1,11 @@
 //! Flag Plot command-line runner.
 //!
-//! Three commands so far: `run`, `export` and `batch`. The spec also lists
-//! `replay`, `hash` and `serve`. They arrive with the scenarios that need
-//! them.
+//! Commands: `run`, `export`, `batch`, `replay` and `hash`. The spec also
+//! lists `serve` and `query`. They arrive with the steps that need them.
 
 mod batch;
 mod export;
+mod save;
 
 use std::env;
 use std::path::Path;
@@ -18,12 +18,21 @@ use sim_core::DaySummary;
 use sim_data::Scenario;
 
 const USAGE: &str = "\
-Usage: sim-cli run <scenario.toml> [--events] [--seed N]
+Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
+       sim-cli replay <game.json>
+       sim-cli hash <scenario.toml> [--seed N]
        sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]
 
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up.
+  replay    Runs a saved game: loads the scenario the file names, refuses it if
+            the scenario file or any data file it names has changed, submits
+            the saved orders day by day in place of the scenario's own, prints
+            each day's hash and compares it with the saved one. Exits with an
+            error on the first day that differs.
+  hash      Runs a scenario and prints the state hash of each day, one a line
+            as `day N <hash>`, and nothing else.
   export    Runs a scenario the same way and writes the finished run as one
             JSON replay file: the map, the starting forces, every event with
             its causes, and the final state.
@@ -33,6 +42,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N]
             ships of every run. Prints a short summary.
   --events  (run) Also prints the full event log, with what caused each event.
   --seed N  Runs with seed N instead of the scenario's own seed.
+  --save F  (run) Also writes a saved game: the scenario's file and its hash
+            and those of its data files, the seed, the orders of each day with
+            their origin, and the daily hashes. It holds no state.
   --out F   (export, batch) The file to write.
   --runs N  (batch) Number of runs, at least 1. Default 1000.
   --first-seed S  (batch) Seed of the first run. Default 1.
@@ -84,6 +96,8 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("export") => export::command(&args[1..], USAGE),
         Some("batch") => batch::command(&args[1..], USAGE),
+        Some("replay") => replay(&args[1..]),
+        Some("hash") => hash(&args[1..]),
         _ => run(&args),
     };
     match result {
@@ -99,6 +113,7 @@ fn run(args: &[String]) -> Result<(), String> {
     let mut scenario_path: Option<&str> = None;
     let mut show_events = false;
     let mut seed: Option<u64> = None;
+    let mut save_path: Option<&str> = None;
 
     let mut words = args.iter().map(String::as_str);
     match words.next() {
@@ -113,6 +128,13 @@ fn run(args: &[String]) -> Result<(), String> {
         match word {
             "--events" => show_events = true,
             "--seed" => seed = Some(parse_seed(words.next())?),
+            "--save" => {
+                save_path = Some(
+                    words
+                        .next()
+                        .ok_or_else(|| format!("--save needs a file\n\n{USAGE}"))?,
+                )
+            }
             flag if flag.starts_with('-') => {
                 return Err(format!("unknown option \"{flag}\"\n\n{USAGE}"))
             }
@@ -122,11 +144,15 @@ fn run(args: &[String]) -> Result<(), String> {
     }
     let scenario_path = scenario_path.ok_or_else(|| format!("no scenario given\n\n{USAGE}"))?;
 
+    let mut remembered: Option<Result<save::Remembered, String>> = None;
     let Executed {
         scenario,
         summaries,
         initial: _,
     } = execute(scenario_path, seed, |scenario| {
+        if save_path.is_some() {
+            remembered = Some(save::remember(scenario));
+        }
         println!("{}", scenario.name);
         if scenario.placeholder {
             println!("PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.");
@@ -140,6 +166,16 @@ fn run(args: &[String]) -> Result<(), String> {
             "day {:>3}  hash {:016x}  {} events",
             summary.day, summary.state_hash, summary.event_count
         );
+    }
+
+    if let (Some(file), Some(remembered)) = (save_path, remembered) {
+        save::write(
+            file,
+            scenario_path,
+            scenario.world.seed(),
+            &remembered?,
+            &summaries,
+        )?;
     }
 
     let world = &scenario.world;
@@ -365,6 +401,59 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         if view.claims().is_empty() {
             println!("{}: no battle claims", side.name());
+        }
+    }
+    Ok(())
+}
+
+/// `sim-cli hash <scenario> [--seed N]`: the daily hashes and nothing else.
+fn hash(args: &[String]) -> Result<(), String> {
+    let mut scenario_path: Option<&str> = None;
+    let mut seed: Option<u64> = None;
+    let mut words = args.iter().map(String::as_str);
+    while let Some(word) = words.next() {
+        match word {
+            "--seed" => seed = Some(parse_seed(words.next())?),
+            flag if flag.starts_with('-') => {
+                return Err(format!("unknown option \"{flag}\"\n\n{USAGE}"))
+            }
+            path if scenario_path.is_none() => scenario_path = Some(path),
+            extra => return Err(format!("unexpected argument \"{extra}\"\n\n{USAGE}")),
+        }
+    }
+    let scenario_path = scenario_path.ok_or_else(|| format!("no scenario given\n\n{USAGE}"))?;
+    let executed = execute(scenario_path, seed, |_| {})?;
+    for summary in &executed.summaries {
+        println!("day {} {:016x}", summary.day, summary.state_hash);
+    }
+    Ok(())
+}
+
+/// `sim-cli replay <game.json>`: runs a saved game and compares every day's
+/// hash with the saved one.
+fn replay(args: &[String]) -> Result<(), String> {
+    let file = match args {
+        [file] if !file.starts_with('-') => file.as_str(),
+        _ => return Err(format!("replay needs one saved game\n\n{USAGE}")),
+    };
+    let saved = save::read(file)?;
+    let scenario = Scenario::load(Path::new(&saved.scenario_file)).map_err(|e| e.to_string())?;
+    saved.check_files(&scenario)?;
+    let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
+    scenario.replace_script(saved.script.clone());
+    println!("{}", scenario.name);
+    println!("seed {}", saved.seed);
+    for (day, hash) in &saved.hashes {
+        let summary = scenario
+            .next_day()
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| format!("the scenario has no day {day}"))?;
+        let now = format!("{:016x}", summary.state_hash);
+        println!("day {} {now}", summary.day);
+        if summary.day != *day || &now != hash {
+            return Err(format!(
+                "replay differs on day {day}: saved hash {hash}, replayed hash {now}"
+            ));
         }
     }
     Ok(())

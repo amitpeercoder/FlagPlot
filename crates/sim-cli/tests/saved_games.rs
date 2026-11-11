@@ -1,0 +1,319 @@
+//! Integration tests of `sim-cli run --save`, `replay` and `hash`, and of two
+//! separate processes of the runner giving identical output (decisions 5 to 9
+//! of `docs/decisions/0043-determinism-scenario.md`).
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
+
+fn binary(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_sim-cli"))
+        .args(args)
+        .current_dir(ROOT)
+        .output()
+        .expect("the binary starts")
+}
+
+fn temp_dir(label: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("flagplot-saved-{}-{label}", std::process::id()));
+    fs::create_dir_all(&dir).expect("make the temp dir");
+    dir
+}
+
+fn text(bytes: &[u8]) -> String {
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+fn ok(output: &Output, what: &str) {
+    assert!(
+        output.status.success(),
+        "{what} failed: {}",
+        text(&output.stderr)
+    );
+}
+
+/// Saves a run of `scenario` and returns the saved game's path.
+fn save(scenario: &str, label: &str, extra: &[&str]) -> PathBuf {
+    let file = temp_dir(label).join("game.json");
+    let file_text = file.to_string_lossy().into_owned();
+    let mut args = vec!["run", scenario, "--save", file_text.as_str()];
+    args.extend_from_slice(extra);
+    ok(&binary(&args), "run --save");
+    file
+}
+
+/// The hashes `hash` prints: `day N <hash>` lines.
+fn hash_lines(output: &Output) -> Vec<String> {
+    text(&output.stdout).lines().map(str::to_string).collect()
+}
+
+const SCENARIOS: [&str; 5] = [
+    "data/scenarios/01_transit.toml",
+    "data/scenarios/04a_night_action.toml",
+    "data/scenarios/05_eastern_solomons.toml",
+    "data/scenarios/06_rabaul_guadalcanal.toml",
+    "data/scenarios/07_full_slice.toml",
+];
+
+#[test]
+fn save_then_replay_reproduces_every_hash() {
+    for scenario in SCENARIOS {
+        let stem = Path::new(scenario)
+            .file_stem()
+            .expect("a stem")
+            .to_string_lossy()
+            .into_owned();
+        let game = save(scenario, &stem, &[]);
+        let game_text = game.to_string_lossy().into_owned();
+        let replayed = binary(&["replay", &game_text]);
+        ok(&replayed, &format!("replay of {scenario}"));
+        let direct = hash_lines(&binary(&["hash", scenario]));
+        let printed: Vec<String> = text(&replayed.stdout)
+            .lines()
+            .filter(|l| l.starts_with("day "))
+            .map(str::to_string)
+            .collect();
+        assert!(!direct.is_empty(), "{scenario}");
+        assert_eq!(printed, direct, "{scenario}");
+    }
+}
+
+#[test]
+fn a_saved_game_keeps_its_seed() {
+    let game = save(
+        "data/scenarios/05_eastern_solomons.toml",
+        "seeded",
+        &["--seed", "7"],
+    );
+    let game_text = game.to_string_lossy().into_owned();
+    let replayed = binary(&["replay", &game_text]);
+    ok(&replayed, "replay");
+    let direct = hash_lines(&binary(&[
+        "hash",
+        "data/scenarios/05_eastern_solomons.toml",
+        "--seed",
+        "7",
+    ]));
+    let printed: Vec<String> = text(&replayed.stdout)
+        .lines()
+        .filter(|l| l.starts_with("day "))
+        .map(str::to_string)
+        .collect();
+    assert_eq!(printed, direct);
+    let own = hash_lines(&binary(&[
+        "hash",
+        "data/scenarios/05_eastern_solomons.toml",
+    ]));
+    assert_ne!(direct, own);
+}
+
+#[test]
+fn a_tampered_hash_fails_on_that_day_and_names_both_hashes() {
+    let game = save("data/scenarios/02_supply_run.toml", "tamper", &[]);
+    let original = fs::read_to_string(&game).expect("the save reads");
+    let value: serde_json::Value = serde_json::from_str(&original).expect("JSON");
+    let hashes = value["hashes"].as_array().expect("hashes");
+    assert!(hashes.len() >= 5);
+    let day = 4;
+    let real = hashes[day - 1]["hash"]
+        .as_str()
+        .expect("a hash")
+        .to_string();
+    assert_eq!(hashes[day - 1]["day"], day);
+    let fake = "0123456789abcdef";
+    let tampered = original.replacen(&format!("\"{real}\""), &format!("\"{fake}\""), 1);
+    assert_ne!(tampered, original);
+    fs::write(&game, tampered).expect("write");
+    let replayed = binary(&["replay", &game.to_string_lossy()]);
+    assert!(!replayed.status.success());
+    let error = text(&replayed.stderr);
+    assert!(error.contains("day 4"), "{error}");
+    assert!(error.contains(fake), "{error}");
+    assert!(error.contains(&real), "{error}");
+    // Days 1 to 3 matched and were printed; day 4 was the first that failed.
+    let printed = text(&replayed.stdout);
+    assert!(printed.contains("day 3 "), "{printed}");
+    assert!(printed.contains("day 4 "), "{printed}");
+    assert!(!printed.contains("day 5 "), "{printed}");
+}
+
+/// A copy of `scenario` in a temp folder whose file names are absolute, so
+/// that it can be changed without touching the repository.
+fn standalone(scenario: &str, label: &str, copy_search_file: bool) -> (PathBuf, Option<PathBuf>) {
+    let dir = temp_dir(label);
+    let source = fs::read_to_string(Path::new(ROOT).join(scenario)).expect("reads");
+    let mut changed = source.replace("\"../", &format!("\"{ROOT}/data/"));
+    let mut copy = None;
+    if copy_search_file {
+        let target = dir.join("search_copy.toml");
+        fs::copy(Path::new(ROOT).join("data/reference/search.toml"), &target).expect("copy");
+        changed = changed.replace(
+            &format!("\"{ROOT}/data/reference/search.toml\""),
+            &format!("{:?}", target.to_string_lossy()),
+        );
+        copy = Some(target);
+    }
+    let path = dir.join("scenario.toml");
+    fs::write(&path, changed).expect("write");
+    (path, copy)
+}
+
+#[test]
+fn a_changed_scenario_file_or_data_file_is_refused_naming_the_file() {
+    let (scenario, search_copy) = standalone("data/scenarios/01_transit.toml", "changed", true);
+    let scenario_text = scenario.to_string_lossy().into_owned();
+    let game = save(&scenario_text, "changed-save", &[]);
+    let game_text = game.to_string_lossy().into_owned();
+    ok(
+        &binary(&["replay", &game_text]),
+        "replay of the untouched files",
+    );
+
+    // A data file the scenario names changes.
+    let search_copy = search_copy.expect("a copy");
+    let original = fs::read_to_string(&search_copy).expect("reads");
+    fs::write(&search_copy, format!("{original}\n# changed\n")).expect("write");
+    let refused = binary(&["replay", &game_text]);
+    assert!(!refused.status.success());
+    let error = text(&refused.stderr);
+    assert!(error.contains("search_copy.toml"), "{error}");
+    assert!(error.contains("changed"), "{error}");
+    assert!(!text(&refused.stdout).contains("day 1 "), "nothing ran");
+    fs::write(&search_copy, original).expect("restore");
+    ok(
+        &binary(&["replay", &game_text]),
+        "replay with the file restored",
+    );
+
+    // The scenario file changes.
+    let scenario_source = fs::read_to_string(&scenario).expect("reads");
+    fs::write(&scenario, format!("{scenario_source}\n# changed\n")).expect("write");
+    let refused = binary(&["replay", &game_text]);
+    assert!(!refused.status.success());
+    let error = text(&refused.stderr);
+    assert!(error.contains("scenario.toml"), "{error}");
+    assert!(error.contains("changed"), "{error}");
+}
+
+#[test]
+fn replay_submits_the_saved_orders_and_not_the_scenarios() {
+    let game = save("data/scenarios/02_supply_run.toml", "edited", &[]);
+    let original = fs::read_to_string(&game).expect("the save reads");
+    // Day 2 of the supply run orders cruise speed. Save the same order as
+    // full speed: the convoy then burns more fuel and the hashes differ from
+    // day 2 on, though the scenario file is unchanged.
+    let edited = original.replacen("\"speed\": \"cruise\"", "\"speed\": \"full\"", 1);
+    assert_ne!(edited, original);
+    fs::write(&game, edited).expect("write");
+    let replayed = binary(&["replay", &game.to_string_lossy()]);
+    assert!(!replayed.status.success());
+    let error = text(&replayed.stderr);
+    let printed = text(&replayed.stdout);
+    // Day 1 is the same (the order is on day 2); the first difference is
+    // day 2.
+    assert!(printed.contains("day 1 "), "{printed}");
+    assert!(error.contains("day 2"), "{error}");
+    assert!(!printed.contains("day 3 "), "{printed}");
+
+    // And the saved orders are what is run: an unedited save of the same
+    // scenario replays cleanly, so the scenario's own orders are not the
+    // difference.
+    let plain = save("data/scenarios/02_supply_run.toml", "unedited", &[]);
+    ok(&binary(&["replay", &plain.to_string_lossy()]), "replay");
+}
+
+#[test]
+fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
+    let game = save("data/scenarios/07_full_slice.toml", "format", &[]);
+    let value: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
+    assert_eq!(value["format"], "flagplot-saved-game");
+    assert_eq!(value["version"], 1);
+    assert_eq!(
+        value["scenario"]["file"],
+        "data/scenarios/07_full_slice.toml"
+    );
+    assert_eq!(value["seed"], 1942);
+    assert_eq!(value["data_files"].as_array().expect("files").len(), 12);
+    assert_eq!(value["hashes"].as_array().expect("hashes").len(), 14);
+    let orders = value["orders"].as_array().expect("orders");
+    assert!(orders.len() > 50);
+    assert_eq!(orders[0]["origin"]["issuer"], "player");
+    assert!(orders[0]["origin"]["intent"].is_null());
+}
+
+#[test]
+fn hash_prints_what_run_prints() {
+    for scenario in SCENARIOS {
+        let hashed = hash_lines(&binary(&["hash", scenario]));
+        let run = binary(&["run", scenario]);
+        ok(&run, "run");
+        let printed: Vec<String> = text(&run.stdout)
+            .lines()
+            .filter(|l| l.starts_with("day "))
+            .map(|l| {
+                // `day   1  hash 0123456789abcdef  53 events`
+                let words: Vec<&str> = l.split_whitespace().collect();
+                format!("day {} {}", words[1], words[3])
+            })
+            .collect();
+        assert_eq!(hashed, printed, "{scenario}");
+        assert!(hashed.iter().all(|l| l.split(' ').count() == 3));
+    }
+}
+
+#[test]
+fn two_processes_give_byte_identical_output() {
+    for scenario in SCENARIOS {
+        let a = binary(&["run", scenario, "--events"]);
+        let b = binary(&["run", scenario, "--events"]);
+        ok(&a, "first run");
+        ok(&b, "second run");
+        assert_eq!(a.stdout, b.stdout, "{scenario}");
+        assert_eq!(
+            binary(&["hash", scenario]).stdout,
+            binary(&["hash", scenario]).stdout
+        );
+    }
+    let a = binary(&[
+        "run",
+        "data/scenarios/07_full_slice.toml",
+        "--events",
+        "--seed",
+        "3",
+    ]);
+    let b = binary(&[
+        "run",
+        "data/scenarios/07_full_slice.toml",
+        "--events",
+        "--seed",
+        "3",
+    ]);
+    assert_eq!(a.stdout, b.stdout);
+}
+
+#[test]
+fn every_scenario_in_the_folder_saves_and_replays() {
+    let mut count = 0;
+    for entry in fs::read_dir(Path::new(ROOT).join("data/scenarios")).expect("the folder") {
+        let path = entry.expect("an entry").path();
+        if path.extension().is_none_or(|ext| ext != "toml") {
+            continue;
+        }
+        let name = path
+            .file_name()
+            .expect("a name")
+            .to_string_lossy()
+            .into_owned();
+        let scenario = format!("data/scenarios/{name}");
+        let game = save(&scenario, &format!("all-{name}"), &[]);
+        ok(
+            &binary(&["replay", &game.to_string_lossy()]),
+            &format!("replay of {scenario}"),
+        );
+        count += 1;
+    }
+    assert!(count >= 24, "{count} scenarios");
+}

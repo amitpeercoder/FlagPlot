@@ -2798,7 +2798,9 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
             (!stem.ends_with(".events")
                 && !stem.starts_with("06d2")
                 // Scenario 6 itself has pilots, replacements and supply.
-                && !stem.starts_with("06_"))
+                && !stem.starts_with("06_")
+                // So has the full slice of scenario 7 (decision 0043).
+                && !stem.starts_with("07_"))
             .then(|| stem.to_string())
         })
         .collect();
