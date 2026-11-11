@@ -2420,6 +2420,8 @@ mod tests {
             rest_above: None,
             rest_order: None,
             stood_down: false,
+            pilots: None,
+            strength: ready,
         };
         let world = run(&scene, |w| {
             flotation_only(w);

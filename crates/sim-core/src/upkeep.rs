@@ -58,6 +58,20 @@
 //! (`World::aircraft_able_to_fly` is none), and its aircraft are on the
 //! ground.
 //!
+//! # Replacements (0038)
+//!
+//! [`World::receive_replacements`] runs in the night pulse right after the
+//! repair and before the stand-down decisions, from day 2 on (day 1 has
+//! nothing to replace). For each of the scenario's streams, in the order
+//! given, if the base is still held by the stream's side: its aircraft go to
+//! the side's groups located at the base that fly the stream's type, lowest
+//! group first, each up to its strength less the aircraft it has (ready and
+//! damaged); its pilots go the same way, to groups whose pilots are tracked,
+//! up to strength less pilots. A replacement aircraft arrives ready. What
+//! cannot be placed is lost. `ReplacementsReceived` is recorded for each
+//! group that receives anything, with no cause (nothing orders it). No
+//! random number.
+//!
 //! # Repair
 //!
 //! [`World::repair_aircraft`] runs first in the night pulse, the start of the
@@ -512,6 +526,76 @@ impl World {
                         damaged,
                     },
                     causes,
+                    None,
+                );
+            }
+        }
+    }
+
+    /// The replacement step (decisions 6 to 8 and 10 of 0038). See the
+    /// module comment.
+    pub(crate) fn receive_replacements(&mut self, day: u32, pulse: Pulse) {
+        // Day 1 has nothing to replace.
+        if day < 2 {
+            return;
+        }
+        let streams = self.truth.replacements.clone();
+        for stream in streams {
+            let held = self
+                .truth
+                .bases
+                .get(&stream.base)
+                .is_some_and(|base| base.side == stream.side);
+            if !held {
+                continue;
+            }
+            let ids: Vec<AirGroupId> = self
+                .truth
+                .air_groups
+                .values()
+                .filter(|group| {
+                    group.location == AirGroupLocation::Base(stream.base)
+                        && group.side == stream.side
+                        && group.aircraft_type == stream.aircraft_type
+                })
+                .map(|group| group.id)
+                .collect();
+            let mut aircraft_left = stream.aircraft_per_day;
+            let mut pilots_left = stream.pilots_per_day;
+            for id in ids {
+                let group = self
+                    .truth
+                    .air_groups
+                    .get_mut(&id)
+                    .expect("the air group exists");
+                let aircraft =
+                    aircraft_left.min(group.strength.saturating_sub(group.ready + group.damaged));
+                let pilots = match group.pilots {
+                    Some(have) => pilots_left.min(group.strength.saturating_sub(have)),
+                    None => 0,
+                };
+                if aircraft == 0 && pilots == 0 {
+                    continue;
+                }
+                aircraft_left -= aircraft;
+                pilots_left -= pilots;
+                group.ready += aircraft;
+                if let Some(have) = group.pilots.as_mut() {
+                    *have += pilots;
+                }
+                let (ready, pilots_now) = (group.ready, group.pilots.unwrap_or(0));
+                self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::ReplacementsReceived {
+                        air_group: id,
+                        base: stream.base,
+                        aircraft,
+                        pilots,
+                        ready,
+                        pilots_now,
+                    },
+                    Vec::new(),
                     None,
                 );
             }

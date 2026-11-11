@@ -246,6 +246,11 @@ fn run(args: &[String]) -> Result<(), String> {
         if group.stood_down {
             tired.push_str(", stood down");
         }
+        // Pilots are shown only when the scenario tracks them (decision 0038).
+        let ready = match group.pilots {
+            Some(pilots) => format!("{ready}, {pilots} pilots"),
+            None => ready,
+        };
         println!(
             "{} \"{}\" ({}) {}: {}, mission {}{}{}, {}",
             group.id,

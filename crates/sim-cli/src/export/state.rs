@@ -121,6 +121,13 @@ pub struct AirGroupOut {
     /// Whether the staff stood the group down today. Left out when not.
     #[serde(skip_serializing_if = "is_false")]
     stood_down: bool,
+    /// Pilots (decision 0038). Left out when the group's pilots are not
+    /// tracked.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pilots: Option<u32>,
+    /// The ceiling for replacements; given only with pilots.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    strength: Option<u32>,
     arc: Option<ArcOut>,
 }
 
@@ -272,6 +279,8 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         fatigue: Num(group.fatigue),
         rest_above: group.rest_above.map(Num),
         stood_down: group.stood_down,
+        pilots: group.pilots,
+        strength: group.pilots.map(|_| group.strength),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,
