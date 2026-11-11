@@ -18,12 +18,13 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
 cargo run -p sim-cli -- export data/scenarios/04a_night_action.toml --out viewer/replays/04a_night_action.json
+cargo run --release -p sim-cli -- batch data/scenarios/04_savo_island.toml --out /tmp/savo.json
 cargo run --release -p map-tool -- render
 cargo run -p oob-check -- data/oob
 cargo run -p oob-derive -- data/derivation/savo_island.toml --check
 ```
 
-`export` runs a scenario exactly as `run` does and writes it as one replay file for the viewer (decision 0018); it also takes `--seed N` and `--labels data/map/south_pacific_anchors.csv`. Open `viewer/index.html` in a browser and pick the file. `node viewer/check.js viewer/replays/*.json` checks replays against the page's own rebuild.
+`export` runs a scenario exactly as `run` does and writes it as one replay file for the viewer (decision 0018); it also takes `--seed N` and `--labels data/map/south_pacific_anchors.csv`. `batch` runs a scenario over many seeds (`--runs N`, default 1000, `--first-seed S`, default 1) and writes one summary file of losses per side, per ship and per run, for step 2 to read. Open `viewer/index.html` in a browser and pick the file. `node viewer/check.js viewer/replays/*.json` checks replays against the page's own rebuild.
 
 The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides --hex q,r` (a hex's closed sides and neighbours), `water --lat --lon` (why a position's hex has the water it has) and `generate`, which rebuilds `data/map/south_pacific.csv` from the Natural Earth files under `references/` (the exact command is in the file's header). `generate --anchors data/map/south_pacific_anchors.csv` applies the listed anchorages (decision 0017, decision 6); without it hexes keep their largest body of water. `render` draws `#` land, `+` coast, `%` coast with a closed side toward water and `.` sea, each row labelled with its r and the q of its first hex.
 
@@ -157,6 +158,6 @@ Rules:
 
 ## Status
 
-Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Stage 4c1's tool is built (`oob-derive`, decision 0020), and stage 4c2a is done (readiness by order, alertness from belief and events, the alarm roll, speed orders in knots and starting contacts, decision 0021), and so is stage 4c2b (forces move in order of clock time and fight where they meet, inside the movement step; a force that breaks off avoids action for the rest of the pulse, decision 0022). The 20 Savo Island ships are derived (`data/reference/ship_classes_savo_island.csv`, decision 0023, from the settlement sheet `docs/research/oob/savo-island-settlement.md`). The Savo Island scenario itself, stage 4c2, is next. See the spec's "First test scenarios" table.
+Scenarios 1 (transit), 2 (supply run) and 3 (search), the movement change from decision 0005, and stages 4a, 4a2 and 4b of scenario 4 (the surface combat rule, decision 0014; damage to named systems and stragglers, decision 0016; the real map and pathfinding, decision 0017) are done. Stage 4c1's tool is built (`oob-derive`, decision 0020), and stage 4c2a is done (readiness by order, alertness from belief and events, the alarm roll, speed orders in knots and starting contacts, decision 0021), and so is stage 4c2b (forces move in order of clock time and fight where they meet, inside the movement step; a force that breaks off avoids action for the rest of the pulse, decision 0022). The 20 Savo Island ships are derived (`data/reference/ship_classes_savo_island.csv`, decision 0023, from the settlement sheet `docs/research/oob/savo-island-settlement.md`). The Savo Island scenario itself (stage 4c2, decision 0024) runs with the real ships and closes scenario 4. Its losses are not yet a plausible spread, for reasons decision 0024 lists; the combat figures are placeholders until step 2. Scenario 5 is next. See the spec's "First test scenarios" table.
 
 The order-of-battle facts cover what scenarios 4 to 6 need: the ships at Savo Island and Eastern Solomons, their classes, weapons and sensors, the aircraft of August and September 1942, and what happened at both battles. `data/oob/README.md` says how firm they are and what is missing.

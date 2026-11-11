@@ -537,8 +537,12 @@ impl World {
         let Some(figures) = step.figures.clone() else {
             return;
         };
+        // A meeting is held only if both forces are still in one hex when
+        // its turn comes (decision 7 of 0022): an earlier fight at the same
+        // moment may have sent one of them home, turning it out of the hex.
         if self.truth.task_forces[&a].ships.is_empty()
             || self.truth.task_forces[&b].ships.is_empty()
+            || self.truth.task_forces[&a].position() != self.truth.task_forces[&b].position()
             || !step.fought.insert((a, b))
         {
             return;

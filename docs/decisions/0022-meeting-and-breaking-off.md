@@ -20,7 +20,7 @@ The spec lists movement and surface engagements as two steps of a pulse. This de
 6. **A fight takes no time.** Up to six rounds of five minutes cost a force no steaming. This is a simplification.
 
    A second one: a force's steaming is accounted at its own changes of position. When a force under way is met part-way between two of them, its steaming since the last one, under 40 nm, is treated as still to come, and so is scaled by its speed after the fight. Where the force met is stopped, or changes position at the same moment, as in every scenario so far, nothing is lost. One visible result: a force that is met in the hex of its last waypoint after reaching the centre has its last 20 nm and its arrival recorded after the fight, with the arrival's own, earlier, hour, and if the fight leaves it unable to move it is not recorded as arrived.
-7. **Several meetings at the same moment** are taken in order of the lower task force ID, then the higher.
+7. **Several meetings at the same moment** are taken in order of the lower task force ID, then the higher. A meeting is held only if both forces are still in the hex when its turn comes: a force that an earlier fight at that moment sends home turns away, and may by that leave the hex before it meets the next.
 8. **The surface engagement step of a pulse is now empty.** It is kept as a slot.
 
 ### Breaking off

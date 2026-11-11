@@ -31,5 +31,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0021 | Readiness by order, alertness from belief and events, and an alarm roll when a fight breaks out nearby | Confirmed |
 | 0022 | Movement and fights in one time-ordered step; a force that breaks off avoids action for the rest of the pulse | Confirmed |
 | 0023 | The Savo Island ships: weak rows read by exception, designed rates of fire by named exception, and ammunition not limiting for three ships | Confirmed |
+| 0024 | The Savo Island scenario: one hex, three forces, the pickets and Jarvis left out; what the first runs show | Needs review |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

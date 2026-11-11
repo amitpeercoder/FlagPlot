@@ -131,8 +131,14 @@ fn every_scenario_exports_what_the_world_logged() {
             .iter()
             .map(|day| day["event_count"].as_u64().expect("a count"))
             .sum();
+        // Events recorded before day 1 (contacts held at the start, and
+        // their ageing to the start) belong to no day.
+        let before_day_1 = events
+            .iter()
+            .filter(|event| event["day"].as_u64() == Some(0))
+            .count();
         assert_eq!(
-            counted as usize,
+            counted as usize + before_day_1,
             events.len(),
             "{scenario}: days cover events"
         );

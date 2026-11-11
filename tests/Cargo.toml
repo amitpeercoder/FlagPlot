@@ -45,5 +45,9 @@ path = "scenario_04c_readiness.rs"
 name = "scenario_04c_meeting"
 path = "scenario_04c_meeting.rs"
 
+[[test]]
+name = "scenario_04_savo_island"
+path = "scenario_04_savo_island.rs"
+
 [lints]
 workspace = true
