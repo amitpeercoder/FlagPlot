@@ -65,6 +65,14 @@ A side can now be given its own events (decision 0047) and has always had its ow
 - Map output: areas of search covered, ranges drawn.
 - Advice, threat ranking and the enemy's likely intent (the staff planner).
 
+## The legibility test
+
+A cheap model was given the two briefings the game itself wrote for the Allied side of scenario 6a, for the start of days 2 and 3, and the rules, and no event log. From the briefings alone it worked out the six escorts of each day from the patrol's shots, the patrol of 12 on the first morning from the 9 ready and the 3 lost, why the bombers took 3 shots on the second day and not 6, and which group lost aircraft to what. It predicted the third morning as far as a side can: 7 fighters, 6 shots at the escorts and 1 at the bombers if six escorts come again, 20 shots from the guns. It listed what it could not know, and each was something the side should not know: how many escorts will come, how many bombers set out.
+
+It found three things unclear, and they are changed. "Own gunfire: none" stood two lines above the base's guns firing: the first now reads "Salvoes fired at sea" and the second "Anti-aircraft fire". The raid line gave aircraft without saying they were those that got through: it now says "attacked". It gave the hits on aircraft and on supply and left the rest to subtraction: it now gives the hits on nothing.
+
+Left as they are: a loss does not name what caused it in words, only by its event number, which `explain` follows; and "ready" is not defined in the briefing itself.
+
 ## Rule card
 
 No rule of the game is added. Reads a side's view. Writes nothing.

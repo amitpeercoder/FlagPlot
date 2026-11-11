@@ -21,13 +21,13 @@ CONTACTS
 
 ACTION YESTERDAY
 - Fights at sea: none
-- Own gunfire: none
+- Salvoes fired at sea: none
 - Patrol fire: air_group:1 "VF-6" at the escorts of air_group:11, 6 shots [event 21]
 - Patrol fire: air_group:1 "VF-6" at the bombers of air_group:12, 22 shots [event 22]
 - Patrol fire: air_group:1 "VF-6" at the escorts of air_group:14, 5 shots [event 25]
 - Patrol fire: air_group:1 "VF-6" at the bombers of air_group:15, 21 shots [event 26]
-- Guns: task_force:1 "Task Force 16" at the raid of air_group:12, 123 shots [event 23]
-- Guns: task_force:1 "Task Force 16" at the raid of air_group:15, 123 shots [event 27]
+- Anti-aircraft fire: task_force:1 "Task Force 16" at the raid of air_group:12, 123 shots [event 23]
+- Anti-aircraft fire: task_force:1 "Task Force 16" at the raid of air_group:15, 123 shots [event 27]
 - Naval strike launched: air_group:2 "VB-6" at contact:1, place (7,-10), 17 aircraft, 200 miles [event 16]
 - Naval strike launched: air_group:6 "VB-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 17]
 - Naval strike launched: air_group:7 "VS-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 18]

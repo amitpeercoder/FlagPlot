@@ -110,7 +110,7 @@ fn own_fire_lists_the_fighters_and_the_guns() {
     );
     assert!(
         text.contains(
-            "Guns: base:2 \"Placeholder airfield B\" at the raid of air_group:1, 20 shots [event "
+            "Anti-aircraft fire: base:2 \"Placeholder airfield B\" at the raid of air_group:1, 20 shots [event "
         ),
         "{text}"
     );
@@ -195,7 +195,7 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
         }
     });
     assert!(
-        day3.contains("by air_group:1: 15 aircraft, 4 hits, 2 on aircraft, 0 on supply"),
+        day3.contains("by air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
         "{day3}"
     );
 }

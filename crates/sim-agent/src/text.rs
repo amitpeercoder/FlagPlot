@@ -197,7 +197,7 @@ impl Briefing {
                 ev(x.event)
             )
         });
-        o.each("Own gunfire", &a.fired, |x| {
+        o.each("Salvoes fired at sea", &a.fired, |x| {
             format!(
                 "Gunfire: {} {} at {}: {}, {} shots",
                 x.firer.text(),
@@ -224,7 +224,7 @@ impl Briefing {
         });
         o.each("Own anti-aircraft fire", &a.guns, |x| {
             format!(
-                "Guns: {} at the raid of {}, {} shots{}",
+                "Anti-aircraft fire: {} at the raid of {}, {} shots{}",
                 x.by.text(),
                 x.raid.text(),
                 x.shots.0,
@@ -273,7 +273,7 @@ impl Briefing {
         }
         o.each("Raids on bases", &a.raids_on_bases, |x| {
             format!(
-                "Raid on {} by {}: {} aircraft, {} {}, {} on aircraft, {} on supply{}",
+                "Raid on {} by {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {} on nothing{}",
                 x.base.text(),
                 x.air_group.text(),
                 x.aircraft.0,
@@ -281,6 +281,7 @@ impl Briefing {
                 if x.hits == 1 { "hit" } else { "hits" },
                 x.hits_on_aircraft,
                 x.hits_on_supply,
+                x.hits - x.hits_on_aircraft - x.hits_on_supply,
                 ev(x.event)
             )
         });
