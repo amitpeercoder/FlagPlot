@@ -73,6 +73,8 @@ pub enum InvariantViolation {
     TaskForceHomePortOfOtherSide(TaskForceId, BaseId),
     /// The task force's share to keep is below 0 or above 1.
     TaskForceKeepShareOutOfRange(TaskForceId),
+    /// The task force's fatigue is below 0 or above 100 (decision 0037).
+    TaskForceFatigueOutOfRange(TaskForceId),
     /// The task force's `from_hex`, or its `toward_hex` when set, is on the
     /// map but ships cannot enter it. A force is always in a navigable hex.
     TaskForceNotNavigable(TaskForceId, Hex),
@@ -208,6 +210,9 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::TaskForceKeepShareOutOfRange(task_force) => {
                 write!(f, "{task_force} has a share to keep outside 0 to 1")
+            }
+            InvariantViolation::TaskForceFatigueOutOfRange(task_force) => {
+                write!(f, "{task_force} has a fatigue outside 0 to 100")
             }
             InvariantViolation::TaskForceHomePortOfOtherSide(task_force, base) => {
                 write!(
@@ -345,6 +350,11 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         let share = task_force.rules_of_engagement.keep_share;
         if share < Fixed::ZERO || share > Fixed::ONE {
             violations.push(InvariantViolation::TaskForceKeepShareOutOfRange(
+                task_force.id,
+            ));
+        }
+        if task_force.fatigue < Fixed::ZERO || task_force.fatigue > Fixed::from_int(100) {
+            violations.push(InvariantViolation::TaskForceFatigueOutOfRange(
                 task_force.id,
             ));
         }

@@ -858,6 +858,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 enemy,
                 chance,
                 sighted,
+                ..
             } => {
                 let fight = open_fight(&mut parsed, open, event);
                 assert_eq!(force_index(*task_force) + force_index(*enemy), 1);

@@ -53,6 +53,9 @@ pub struct TaskForceOut {
     /// "normal" or "battle" (decision 0021).
     readiness: &'static str,
     alerted: bool,
+    /// Fatigue (decision 0037). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    fatigue: Num,
     rules_of_engagement: RulesOut,
 }
 
@@ -216,6 +219,7 @@ fn task_force(force: &TaskForce) -> TaskForceOut {
         home_port: force.home_port.map(|port| port.raw()),
         readiness: force.readiness.name(),
         alerted: force.alerted,
+        fatigue: Num(force.fatigue),
         rules_of_engagement: RulesOut {
             stance: names::stance(roe.stance),
             break_off: Num(roe.break_off),

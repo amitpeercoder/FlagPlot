@@ -162,6 +162,8 @@ struct TaskForceSpec {
     /// The task force's readiness at the start (decision 0021): `normal` or
     /// `battle`. Defaults to normal.
     readiness: Option<ReadinessSpec>,
+    /// Fatigue at the start, 0 to 100 (decision 0037). Defaults to 0.
+    fatigue: Option<Quantity>,
     /// The base the force heads for when it retires or sends stragglers
     /// home. It must be a base of the force's own side. Defaults to none.
     home_port: Option<u32>,
@@ -521,6 +523,17 @@ impl Scenario {
                 spec.mission.into(),
             );
             task_force.readiness = spec.readiness.map_or(Readiness::Normal, Readiness::from);
+            if let Some(quantity) = &spec.fatigue {
+                let fatigue = quantity
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id} fatigue {e}")))?;
+                if fatigue < Fixed::ZERO || fatigue > Fixed::from_int(100) {
+                    return Err(fail(format!(
+                        "{id} has a fatigue of {fatigue}, not between 0 and 100"
+                    )));
+                }
+                task_force.fatigue = fatigue;
+            }
             if let Some(raw) = spec.home_port {
                 let port = BaseId::new(raw);
                 let base = truth
@@ -1523,9 +1536,35 @@ r = 0
             .expect("the figures are loaded");
         assert_eq!(figures.air_fatigue_per_sortie, Fixed::from_int(3));
         assert_eq!(figures.air_rest_per_pulse, Fixed::from_int(5));
+        assert_eq!(figures.force_fatigue_per_pulse_alert, Fixed::from_int(5));
+        assert_eq!(figures.force_rest_per_pulse, Fixed::from_int(3));
         let error = with_fatigue("fatigue = \"../reference/nothing.toml\"\n")
             .expect_err("a missing file is an error");
         assert!(error.to_string().contains("nothing.toml"), "{error}");
+    }
+
+    #[test]
+    fn a_task_force_takes_an_optional_fatigue_in_whole_numbers_or_decimal_strings() {
+        let fatigue = |extra: &str| {
+            parse_with(&task_force(&format!("at_base = 1\n{extra}")))
+                .map(|scenario| scenario.world.umpire().task_forces[&TaskForceId::new(1)].fatigue)
+        };
+        assert_eq!(fatigue("").expect("loads"), Fixed::ZERO);
+        assert_eq!(fatigue("fatigue = 35").expect("loads"), Fixed::from_int(35));
+        assert_eq!(
+            fatigue("fatigue = \"2.5\"").expect("loads"),
+            "2.5".parse::<Fixed>().expect("fixed")
+        );
+        assert_eq!(
+            fatigue("fatigue = 100").expect("loads"),
+            Fixed::from_int(100)
+        );
+        assert!(fatigue("fatigue = 101").is_err());
+        assert!(fatigue("fatigue = -1").is_err());
+        assert!(
+            fatigue("fatigue = 3.5").is_err(),
+            "a TOML float is rejected"
+        );
     }
 
     #[test]

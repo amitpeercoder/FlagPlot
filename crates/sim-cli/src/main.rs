@@ -189,6 +189,12 @@ fn run(args: &[String]) -> Result<(), String> {
                 (false, _) => "not alert",
             }
         );
+        // Fatigue is shown only when there is some (decision 0037).
+        let readiness = if task_force.fatigue != Fixed::ZERO {
+            format!("{readiness}, fatigue {}", task_force.fatigue)
+        } else {
+            readiness
+        };
         let stance = match task_force.rules_of_engagement.stance {
             Stance::Engage => "engage",
             Stance::Avoid => "avoid",
