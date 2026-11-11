@@ -29,3 +29,14 @@ Without it, a destroyer escorting a 10-knot convoy would burn 39% of its cruise 
 - **Before scenario 8: burn at anchor and stopped at sea.** Ships burn fuel keeping steam up. This belongs to the end-of-day logistics phase and needs a new figure per class. It is left out of scenario 2 so that scenario adds one logistics rule, not two.
 - **With the briefing work: a fuel warning.** An event that says a task force cannot reach its destination on the fuel aboard, raised at intake and each day. It feeds the briefing and the interrupt rules, and should make decision 5 rare.
 - **Later: detaching a dry ship and refuelling at sea.** Both need orders that do not exist yet. Until then decision 5 is the backstop.
+
+## Rule card
+
+Added at the complexity review after scenario 5. The rule runs inside movement (decisions 0005 and 0022).
+
+| | |
+| --- | --- |
+| Reads | A ship's fuel; its class's fuel capacity, endurance and cruise speed; the force's speed and the distance steamed |
+| Writes | The ship's fuel; the force's status, when a ship runs dry |
+| Events | A fuel event for each ship, caused by the steaming event; out of fuel |
+| Randomness | None |
