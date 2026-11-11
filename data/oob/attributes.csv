@@ -99,3 +99,8 @@ aircraft_on_hand,air_unit,integer,aircraft,many,Aircraft on strength on the date
 aircraft_operational,air_unit,integer,aircraft,many,Aircraft operational on the date; the note names the type if the unit is mixed
 name_native,air_unit,text,,one,Name in the service's own script
 alias,air_unit,text,,many,Another name found in sources
+drop_tank_l,aircraft_type,integer,litres,many,Capacity of the removable external fuel tank a source states; the note says how the tank was carried and which source
+internal_fuel_l,aircraft_type,integer,litres,one,"Fuel in the fixed tanks, without any drop tank"
+performance_note,aircraft_type,text,,many,"A source statement about range, radius, ceiling or another performance limit that gives no usable number, or compares two types; the note says who said it"
+aircraft_received,air_unit,integer,aircraft,many,"Aircraft that joined the unit or force on the date, or over the range of dates, given; the note names the type and where they came from"
+pilots_on_hand,air_unit,integer,pilots,many,Pilots on strength on the date; the note says which pilots are counted

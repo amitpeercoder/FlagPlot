@@ -4,3 +4,4 @@
 id,key,name,date_from,date_to,zone
 1000,eastern-solomons,Battle of the Eastern Solomons,1942-08-23,1942-08-25,-11.5
 1001,savo-island,Battle of Savo Island,1942-08-08,1942-08-09,-11
+1002,rabaul-guadalcanal-air,"Air attrition: Rabaul against Guadalcanal, 21 August to 17 September 1942",1942-08-21,1942-09-17,-11
