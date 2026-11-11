@@ -114,10 +114,18 @@ The game must stay something a person and a model can both reason about. A rule 
 - **No real ship, aircraft or weapon gets an invented rating.** A game figure for a real entity is derived from fact rows by a written rule, and can name the rule and the rows. The derivation now exists: `oob-derive`, with its rules in `data/derivation/rules.toml` and decision 0020. Until it can derive a ship, figures in `data/reference` stay placeholders.
 - **One row is one source's statement.** It carries its source, where in the source, the date read, a confidence and a standing. A missing fact is a missing row, listed in `gaps.csv`. Nothing is guessed.
 - **Cite what was read.** A figure a website quotes from a book cites the website. `docs/research/oob/source-policy.md` says which sources may be used.
-- **A source that disagrees gets its own row.** Rows are never overwritten to settle a disagreement. A person settles it and writes the reason on the row.
+- **A source that disagrees gets its own row.** Rows are never overwritten to settle a disagreement. The architect settles it and writes the reason on the row (see "Who settles data" below).
 - **A value has to earn `preferred`.** A lone weak row is `unconfirmed`, and a rule may read it only if the rule says so.
 - **Engagement rows are history to test against.** A scenario may take starting positions, readiness and contacts already held from them. Its result is compared with the recorded outcome and is never scripted to match it.
 - **Run `oob-check` after any change to `data/oob`.**
+
+### Who settles data
+
+- **The architect settles data, not the designer.** Which of two disputed rows to prefer, which weak row to read by exception, what to assume where the sources are silent: the architect decides these to the best of its knowledge and does not ask Amit to approve them. This replaces the earlier practice of a settlement sheet for his approval (decisions 0015, 0019, 0023).
+- **Every such choice is still written down:** the reason on the row, the exception in the rules file, the assumption in the scenario's ship list, and a decision record where a choice shapes a scenario. A choice is marked with who made it, so "settled by the architect" is never confused with "stated by a source".
+- **Ask for more research when it is worth it.** If a figure matters to a result and rests on a weak or single source, the architect sends researchers (cheaper agents, or the order-of-battle session) to look for a better one before settling, and says in the record what was looked for and not found.
+- **This is about data only.** What the game is, the spec, and rules that change how the game plays are still the product managers' to decide.
+- **Nothing here loosens the source rules.** No invented figures, no War in the Pacific data, every row cites what was read, and a missing fact stays a gap.
 
 ## Reference material
 
@@ -134,8 +142,8 @@ The game must stay something a person and a model can both reason about. A rule 
 
 | Role | Who | Owns |
 | --- | --- | --- |
-| Product manager | Amit, with the main session | What the game is, the spec, every decision marked "needs review", approval of each scenario plan |
-| Architect | The main session (the most capable model) | The plan for each scenario, crate boundaries, the determinism and traceability rules, the hand calculation, decision records, final review before a pull request |
+| Product manager | Amit, with the main session | What the game is, the spec, every decision marked "needs review", approval of each scenario plan. Not data: see "Who settles data" |
+| Architect | The main session (the most capable model) | Settling data, the plan for each scenario, crate boundaries, the determinism and traceability rules, the hand calculation, decision records, final review before a pull request |
 | Team lead | An Opus subagent | Turning an approved plan into tasks, briefing the developers, reviewing their work against the plan and this file, reporting back what was built, deferred and unclear |
 | Developers | Sonnet subagents | Implementation tasks, tests, bulk reading and summarising of reference material, code search |
 
