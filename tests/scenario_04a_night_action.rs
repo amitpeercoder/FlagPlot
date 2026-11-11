@@ -1913,6 +1913,7 @@ fn every_salvo_follows_the_figures() {
                     "surprised_factor",
                     "lit_factor",
                 ],
+                Weapon::Bomb => unreachable!("scenario 4a fires no bombs"),
             };
             let listed: Vec<&str> = salvo.factors.iter().map(|(name, _)| *name).collect();
             assert_eq!(listed, names, "seed {seed}");
@@ -1921,6 +1922,7 @@ fn every_salvo_follows_the_figures() {
                 (Weapon::Gun, false) => GUN_BASE_DAY,
                 (Weapon::Torpedo, true) => TORPEDO_BASE_NIGHT,
                 (Weapon::Torpedo, false) => TORPEDO_BASE_DAY,
+                (Weapon::Bomb, _) => unreachable!("scenario 4a fires no bombs"),
             };
             assert_eq!(salvo.factor("base_chance"), base, "seed {seed}");
             assert_eq!(
@@ -1969,6 +1971,7 @@ fn every_salvo_follows_the_figures() {
                     assert_eq!(salvo.factor("torpedo_mount_factor"), mounts, "seed {seed}");
                     assert_eq!(salvo.shots, fx(8) * mounts, "seed {seed}: torpedo shots");
                 }
+                Weapon::Bomb => unreachable!("scenario 4a fires no bombs"),
             }
             assert!(salvo.shots > Fixed::ZERO);
 
@@ -2101,6 +2104,7 @@ fn hits_and_where_they_land_stay_within_four_sigma() {
                         torpedo_on_flotation += hits;
                     }
                 }
+                Weapon::Bomb => unreachable!("scenario 4a fires no bombs"),
             }
         }
         // Each salvo's hits are all accounted for on the tracks.
@@ -2180,7 +2184,9 @@ fn system_hits_land_where_the_hand_calculation_says() {
     for (weapon, (shares, none_p, name)) in tables.into_iter().enumerate() {
         let n = hits[weapon];
         let none = n - counts[weapon].iter().sum::<i64>();
-        for (slot, system) in ShipSystem::ALL.iter().enumerate() {
+        // The tables of this scenario cover the four systems that existed
+        // when it was written; the flight deck (decision 0026) is never hit.
+        for (slot, system) in ShipSystem::ALL.iter().take(4).enumerate() {
             let k = counts[weapon][slot];
             assert!(
                 within_four_sigma(k, n, shares[slot]),
@@ -2276,6 +2282,7 @@ fn damage_adds_up_and_ships_sink_exactly_when_flotation_reaches_100() {
                         assert_eq!(damage.track, DamageTrack::Flotation);
                         TORPEDO_HIT_POINTS
                     }
+                    Weapon::Bomb => unreachable!("scenario 4a fires no bombs"),
                 };
                 assert!(damage.hits > 0);
                 assert_eq!(damage.points, fx(per_hit * i64::from(damage.hits)));
@@ -3434,6 +3441,7 @@ fn print_the_summary() {
         let none = n - counts[weapon].iter().sum::<i64>();
         let mut parts: Vec<String> = ShipSystem::ALL
             .iter()
+            .take(4)
             .enumerate()
             .map(|(slot, system)| {
                 format!(

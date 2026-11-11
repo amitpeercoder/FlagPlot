@@ -112,6 +112,8 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::WouldLeaveTaskForceEmpty => base("would_leave_task_force_empty"),
         RejectReason::WaypointUnreachable(hex) => base("waypoint_unreachable").hex("hex", *hex),
         RejectReason::SpeedNotAboveZero(knots) => base("speed_not_above_zero").num("knots", *knots),
+        RejectReason::NoAirCombatFigures => base("no_air_combat_figures"),
+        RejectReason::AircraftAttackWithNothing => base("aircraft_attack_with_nothing"),
     }
 }
 
@@ -259,6 +261,44 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             d.id("air_group", *air_group)
                 .id("ship", *ship)
                 .int("aircraft", *aircraft),
+        ),
+        EventKind::StrikeLaunched {
+            air_group,
+            contact,
+            hex,
+            aircraft,
+            distance_nm,
+        } => (
+            "strike_launched",
+            d.id("air_group", *air_group)
+                .id("contact", *contact)
+                .hex("hex", *hex)
+                .int("aircraft", *aircraft)
+                .num("distance_nm", *distance_nm),
+        ),
+        EventKind::StrikeFoundNothing { air_group, hex } => (
+            "strike_found_nothing",
+            d.id("air_group", *air_group).hex("hex", *hex),
+        ),
+        EventKind::AirAttack {
+            air_group,
+            task_force,
+            ship,
+            weapon,
+            shots,
+            chance,
+            expected,
+            hits,
+        } => (
+            "air_attack",
+            d.id("air_group", *air_group)
+                .id("task_force", *task_force)
+                .id("ship", *ship)
+                .text("weapon", names::weapon(*weapon))
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits),
         ),
         EventKind::SearchAttempt {
             air_group,

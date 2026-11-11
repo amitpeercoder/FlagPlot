@@ -54,6 +54,8 @@ pub enum AirMission {
     Rest,
     /// Searches its arc.
     Search,
+    /// Strikes enemy ships its side has a contact on (decision 0026).
+    NavalStrike,
 }
 
 impl AirMission {
@@ -63,6 +65,7 @@ impl AirMission {
         match self {
             AirMission::Rest => 1,
             AirMission::Search => 2,
+            AirMission::NavalStrike => 3,
         }
     }
 }
@@ -329,6 +332,12 @@ pub enum RejectReason {
     /// `docs/decisions/0021-readiness-and-alarm.md`). Added at the end of
     /// the enum.
     SpeedNotAboveZero(Fixed),
+    /// The naval strike mission needs the air combat figures, and the
+    /// scenario has none (decision 0026). Added at the end of the enum.
+    NoAirCombatFigures,
+    /// The naval strike mission needs an aircraft type that attacks with
+    /// something (decision 2 of 0026). Added at the end of the enum.
+    AircraftAttackWithNothing,
 }
 
 impl fmt::Display for RejectReason {
@@ -365,6 +374,12 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::SpeedNotAboveZero(knots) => {
                 write!(f, "speed {knots} kn is not above 0")
+            }
+            RejectReason::NoAirCombatFigures => {
+                f.write_str("this scenario has no air combat figures, so no air group can strike")
+            }
+            RejectReason::AircraftAttackWithNothing => {
+                f.write_str("the air group's aircraft type attacks with nothing")
             }
         }
     }

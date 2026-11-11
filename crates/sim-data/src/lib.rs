@@ -14,13 +14,18 @@
 //!   `port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h`, one row for
 //!   each size 0 to 10. Lines starting with `#` are comments.
 //! - Aircraft types: CSV with the header
-//!   `id,name,role,search_range_nm,sweep_width_nm`, one type per row. The only
-//!   role so far is `patrol`. Lines starting with `#` are comments.
+//!   `id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage`,
+//!   one type per row. The roles are `patrol` and `bomber`; the attack weapon
+//!   is `none`, `bomb` or `torpedo` (decision 0026). Lines starting with `#`
+//!   are comments.
 //! - Search figures: TOML. A `placeholder` flag, the report, contact and
 //!   notice figures, and a `[kind_confusion.<kind>]` table for each of the six
 //!   ship kinds giving the chance of each reported kind.
 //! - Surface combat figures: TOML. A `placeholder` flag and the figures of
 //!   the surface combat rule (`docs/decisions/0014-surface-combat.md`).
+//! - Air combat figures: TOML, named by the scenario's optional `air_combat`
+//!   key (`docs/decisions/0026-air-strikes.md`). Without it no air group can be
+//!   ordered to strike.
 //! - Maps: TOML, as rectangular regions plus single-hex overrides, or a
 //!   generated CSV with the columns `q,r,kind,land_percent,lat,lon` (decision
 //!   0017). The extension decides which.
@@ -45,7 +50,7 @@ mod scenario;
 pub use error::DataError;
 pub use map::load_map;
 pub use reference::{
-    load_aircraft_types, load_port_sizes, load_search_figures, load_ship_classes,
-    load_surface_combat_figures,
+    load_air_combat_figures, load_aircraft_types, load_port_sizes, load_search_figures,
+    load_ship_classes, load_surface_combat_figures,
 };
 pub use scenario::Scenario;

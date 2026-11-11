@@ -184,6 +184,9 @@ mod tests {
                 role: AircraftRole::Patrol,
                 search_range_nm: Fixed::from_int(600),
                 sweep_width_nm: Fixed::from_int(40),
+                strike_range_nm: Fixed::ZERO,
+                attack_weapon: crate::refdata::AttackWeapon::None,
+                attack_damage: Fixed::ZERO,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

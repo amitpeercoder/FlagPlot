@@ -3,6 +3,7 @@
 use core::fmt;
 use std::collections::BTreeMap;
 
+use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
 use crate::events::EventLog;
 use crate::hash;
@@ -91,6 +92,9 @@ pub struct World {
     pub(crate) pending: BTreeMap<Side, Vec<OrderRequest>>,
     pub(crate) events: EventLog,
     pub(crate) day_hashes: Vec<u64>,
+    /// Strikes launched in a pulse's decision step that have not landed yet.
+    /// Empty outside the air steps of one pulse, so not hashed.
+    pub(crate) strikes_in_flight: Vec<StrikeInFlight>,
 }
 
 impl World {
@@ -219,6 +223,7 @@ impl World {
             pending: BTreeMap::new(),
             events: EventLog::default(),
             day_hashes: Vec::new(),
+            strikes_in_flight: Vec::new(),
         })
     }
 

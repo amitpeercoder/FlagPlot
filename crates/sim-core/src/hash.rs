@@ -10,8 +10,11 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::orders::{Mission, SpeedSetting};
-use crate::state::{AirGroupLocation, ShipLocation, ShipSystem};
+use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState};
 use crate::world::World;
+
+/// Marks a flight deck that is degraded or out in the hash of a ship.
+const FLIGHT_DECK_TAG: u8 = 0xF1;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -102,6 +105,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// to the state, it must be added here too, or two different states could
 /// share a hash.
 pub(crate) fn hash_world(world: &World) -> u64 {
+    // A strike launched in a pulse lands in the same pulse.
+    debug_assert!(
+        world.strikes_in_flight.is_empty(),
+        "strikes were launched and have not landed"
+    );
     let mut h = StateHasher::new();
     h.bytes(b"flagplot-state-v1");
     h.u64(world.seed);
@@ -121,7 +129,20 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(ship.gun_rounds.raw());
         h.u8(u8::from(ship.torpedoes_ready));
         for system in ShipSystem::ALL {
-            h.u8(ship.systems.get(system).code());
+            // The flight deck (code 5, decision 0026) is hashed below, so
+            // that a ship whose flight deck works hashes as it did before
+            // the system existed.
+            if system != ShipSystem::FlightDeck {
+                h.u8(ship.systems.get(system).code());
+            }
+        }
+        // A flight deck that is not working: a tag byte, then its state.
+        // The tag 0xF1 cannot be taken for what follows, which is the
+        // location tag 1, 2 or 3, so every state has one reading. A working
+        // flight deck writes nothing.
+        if ship.systems.flight_deck != SystemState::Working {
+            h.u8(FLIGHT_DECK_TAG);
+            h.u8(ship.systems.flight_deck.code());
         }
         match ship.location {
             ShipLocation::TaskForce(id) => {

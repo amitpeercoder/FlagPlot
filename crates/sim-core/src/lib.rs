@@ -25,7 +25,9 @@ pub mod time;
 pub mod view;
 pub mod world;
 
+mod airstrike;
 mod cargo;
+mod damage;
 mod invariants;
 mod movement;
 mod resolve;
