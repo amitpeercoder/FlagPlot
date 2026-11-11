@@ -6,8 +6,8 @@ use serde::Deserialize;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
-    AirCombatFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon, FatigueFigures,
-    PortSize, RefData, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
+    AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
+    FatigueFigures, PortSize, RefData, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -600,6 +600,52 @@ fn parse_air_upkeep_figures(text: &str, path: &Path) -> Result<AirUpkeepFigures,
         wear_chance_per_100_nm: number("wear_chance_per_100_nm", &file.wear_chance_per_100_nm)?,
         write_off_share: number("write_off_share", &file.write_off_share)?,
         carrier_repairs_per_day: file.carrier_repairs_per_day,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AirSupplyFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    sortie_supply_t: Quantity,
+    sortie_supply_t_per_100_nm: Quantity,
+    daily_supply_t_per_aircraft: Quantity,
+    repair_supply_t: Quantity,
+}
+
+/// Loads the base supply figures from a TOML file (decision 0039).
+pub fn load_air_supply_figures(path: &Path) -> Result<AirSupplyFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_air_supply_figures(&text, path)
+}
+
+/// Parses base supply figures from TOML text. `path` is only used in
+/// messages.
+fn parse_air_supply_figures(text: &str, path: &Path) -> Result<AirSupplyFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: AirSupplyFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = AirSupplyFigures {
+        sortie_supply_t: number("sortie_supply_t", &file.sortie_supply_t)?,
+        sortie_supply_t_per_100_nm: number(
+            "sortie_supply_t_per_100_nm",
+            &file.sortie_supply_t_per_100_nm,
+        )?,
+        daily_supply_t_per_aircraft: number(
+            "daily_supply_t_per_aircraft",
+            &file.daily_supply_t_per_aircraft,
+        )?,
+        repair_supply_t: number("repair_supply_t", &file.repair_supply_t)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1498,6 +1544,56 @@ mod tests {
         .contains("-1"));
         assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
     }
+    fn supply_text() -> String {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/air_supply.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn air_supply_figures_parse_with_the_files_values() {
+        let figures = parse_air_supply_figures(&supply_text(), here()).expect("parses");
+        assert_eq!(
+            figures.sortie_supply_t,
+            "0.5".parse::<Fixed>().expect("fixed")
+        );
+        assert_eq!(
+            figures.sortie_supply_t_per_100_nm,
+            "0.25".parse::<Fixed>().expect("fixed")
+        );
+        assert_eq!(
+            figures.daily_supply_t_per_aircraft,
+            "0.2".parse::<Fixed>().expect("fixed")
+        );
+        assert_eq!(figures.repair_supply_t, Fixed::from_int(1));
+    }
+
+    #[test]
+    fn air_supply_figures_are_required_not_negative_and_not_floats() {
+        let bad = |from: &str, to: &str| {
+            let text = supply_text().replace(from, to);
+            assert_ne!(text, supply_text(), "{from} is in the file");
+            parse_air_supply_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("repair_supply_t = \"1\"", "repair_supply_t = 1.5").contains("repair_supply_t"));
+        assert!(bad("repair_supply_t = \"1\"", "repair_supply_t = -1").contains("repair"));
+        assert!(
+            bad("sortie_supply_t = \"0.5\"", "sortie_supply_t = \"-0.5\"").contains("negative")
+        );
+        assert!(bad("repair_supply_t = \"1\"", "").contains("repair_supply_t"));
+        assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
+        // Whole numbers are accepted.
+        let text = supply_text().replace("repair_supply_t = \"1\"", "repair_supply_t = 2");
+        assert_eq!(
+            parse_air_supply_figures(&text, here())
+                .expect("parses")
+                .repair_supply_t,
+            Fixed::from_int(2)
+        );
+    }
+
     fn fatigue_text() -> String {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/fatigue.toml");
         fs::read_to_string(path).expect("the shipped file reads")

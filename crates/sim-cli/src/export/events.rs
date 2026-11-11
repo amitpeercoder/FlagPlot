@@ -449,6 +449,22 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .num("destroyed_t", *destroyed_t)
                 .num("supply_t", *supply_t),
         ),
+        EventKind::BaseSupplySpent {
+            base,
+            reason,
+            aircraft,
+            asked_t,
+            paid_t,
+            left_t,
+        } => (
+            "base_supply_spent",
+            d.id("base", *base)
+                .text("reason", reason.name())
+                .int("aircraft", *aircraft)
+                .num("asked_t", *asked_t)
+                .num("paid_t", *paid_t)
+                .num("left_t", *left_t),
+        ),
         EventKind::StrikeFoundNothing { air_group, hex } => (
             "strike_found_nothing",
             d.id("air_group", *air_group).hex("hex", *hex),

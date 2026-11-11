@@ -1,13 +1,13 @@
 //! The game: reference data, truth, both sides' beliefs, orders and events.
 
 use core::fmt;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
 use crate::events::EventLog;
 use crate::hash;
-use crate::ids::{EntityRef, IdAllocator, OrderId, TaskForceId};
+use crate::ids::{BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
 use crate::invariants::{self, InvariantViolation};
 use crate::map::Map;
 use crate::orders::{Order, OrderRequest};
@@ -101,6 +101,10 @@ pub struct World {
     /// the wear figures are loaded, emptied by the wear step of the same
     /// pulse, so not hashed.
     pub(crate) sorties: Vec<Sortie>,
+    /// The bases with no supply at the start of the pulse (decision 7 of
+    /// 0039): their groups fly nothing in it. Worked out once at the start
+    /// of each pulse, so not hashed.
+    pub(crate) grounded_bases: BTreeSet<BaseId>,
 }
 
 impl World {
@@ -146,6 +150,13 @@ impl World {
         }
         if let Some(problem) = ref_data
             .fatigue
+            .as_ref()
+            .and_then(|figures| figures.problem())
+        {
+            return Err(SimError::InvalidSetup(problem));
+        }
+        if let Some(problem) = ref_data
+            .air_supply
             .as_ref()
             .and_then(|figures| figures.problem())
         {
@@ -245,6 +256,7 @@ impl World {
             day_hashes: Vec::new(),
             strikes_in_flight: Vec::new(),
             sorties: Vec::new(),
+            grounded_bases: BTreeSet::new(),
         })
     }
 

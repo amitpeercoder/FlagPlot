@@ -655,6 +655,54 @@ pub struct RefData {
     /// file: no air group tires or rests, none is stood down and nothing is
     /// recorded.
     pub fatigue: Option<FatigueFigures>,
+    /// The base supply figures of decision 0039. `None` if the scenario
+    /// names no file: nothing is spent, no base is out of supply and nothing
+    /// is recorded.
+    pub air_supply: Option<AirSupplyFigures>,
+}
+
+/// The figures of the base supply rule. See
+/// `docs/decisions/0039-base-supply-consumption.md`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct AirSupplyFigures {
+    /// Supply one aircraft's sortie costs its base, in tons.
+    pub sortie_supply_t: Fixed,
+    /// The supply added for each 100 nm of the sortie.
+    pub sortie_supply_t_per_100_nm: Fixed,
+    /// Supply each aircraft at a base, ready or damaged, costs it a day.
+    pub daily_supply_t_per_aircraft: Fixed,
+    /// Supply one repair at a base costs.
+    pub repair_supply_t: Fixed,
+}
+
+impl AirSupplyFigures {
+    /// What one aircraft's sortie of `distance_nm` costs its base (decision
+    /// 1 of 0039): the figure for the sortie plus the figure per 100 nm
+    /// times the distance over 100.
+    pub fn sortie_cost(&self, distance_nm: Fixed) -> Fixed {
+        self.sortie_supply_t
+            + self
+                .sortie_supply_t_per_100_nm
+                .mul_div(distance_nm, Fixed::from_int(100))
+    }
+
+    /// Describes what is wrong with the figures, if anything.
+    pub fn problem(&self) -> Option<String> {
+        for (label, value) in [
+            ("sortie supply", self.sortie_supply_t),
+            ("sortie supply per 100 nm", self.sortie_supply_t_per_100_nm),
+            (
+                "daily supply per aircraft",
+                self.daily_supply_t_per_aircraft,
+            ),
+            ("repair supply", self.repair_supply_t),
+        ] {
+            if value.is_negative() {
+                return Some(format!("air {label} {value} is negative"));
+            }
+        }
+        None
+    }
 }
 
 /// The figures of the fatigue rule. See
