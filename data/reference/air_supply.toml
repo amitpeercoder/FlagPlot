@@ -1,0 +1,16 @@
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0039-base-supply-consumption.md.
+
+placeholder = true
+
+# Supply one aircraft's sortie costs its base, in tons: this much, plus this
+# much for each 100 nm of the sortie.
+sortie_supply_t = "0.5"
+sortie_supply_t_per_100_nm = "0.25"
+
+# Supply each aircraft at a base costs it a day, ready or damaged.
+daily_supply_t_per_aircraft = "0.2"
+
+# Supply one repair costs.
+repair_supply_t = "1"

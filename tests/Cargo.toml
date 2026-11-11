@@ -85,5 +85,9 @@ path = "scenario_06c_fatigue_and_rest.rs"
 name = "scenario_06d1_pilots_and_replacements"
 path = "scenario_06d1_pilots_and_replacements.rs"
 
+[[test]]
+name = "scenario_06d2_base_supply"
+path = "scenario_06d2_base_supply.rs"
+
 [lints]
 workspace = true

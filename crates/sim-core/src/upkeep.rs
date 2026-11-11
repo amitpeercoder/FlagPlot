@@ -83,9 +83,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::damage::roll_shots;
-use crate::events::{Breakdown, Cause, EventKind, Factor, FatigueChange, SortieKind};
+use crate::events::{Breakdown, Cause, EventKind, Factor, FatigueChange, SortieKind, SupplyUse};
 use crate::fixed::Fixed;
-use crate::ids::{AirGroupId, EntityRef};
+use crate::ids::{AirGroupId, BaseId, EntityRef};
 use crate::rng::{RngStream, Subsystem};
 use crate::state::{AirGroupLocation, ShipLocation};
 use crate::time::Pulse;
@@ -134,12 +134,174 @@ impl World {
         sorties.sort_by_key(|sortie| sortie.air_group);
         self.roll_wear(day, pulse, &sorties);
         self.tire_and_rest_air_groups(day, pulse, &sorties);
+        self.pay_for_sorties(day, pulse, &sorties);
+    }
+
+    /// Works out which bases have no supply at the start of the pulse
+    /// (decision 7 of 0039): their groups fly nothing in it, whatever
+    /// happens to the stock during the pulse. Without the supply figures no
+    /// base is ever grounded.
+    pub(crate) fn work_out_grounded_bases(&mut self) {
+        self.grounded_bases = if self.ref_data.air_supply.is_some() {
+            self.truth
+                .bases
+                .values()
+                .filter(|base| base.supply_t.is_zero())
+                .map(|base| base.id)
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
+    }
+
+    /// Takes `asked` off the stock of `base`, as much as it can cover, and
+    /// returns what it paid and what is left (decision 6 of 0039).
+    fn take_supply(&mut self, base: BaseId, asked: Fixed) -> (Fixed, Fixed) {
+        let base = self.truth.bases.get_mut(&base).expect("the base exists");
+        let paid = asked.min(base.supply_t);
+        base.supply_t -= paid;
+        (paid, base.supply_t)
+    }
+
+    /// Each base pays for the sorties flown from it in the pulse (decisions
+    /// 1, 5 and 6 of 0039): for each base in order, the sum over the sorties
+    /// of the groups located at it of the aircraft sent times the cost of one
+    /// aircraft's sortie, taken once from its stock. One event for each base
+    /// that flew and asks for something, citing the events that say its
+    /// groups flew.
+    fn pay_for_sorties(&mut self, day: u32, pulse: Pulse, sorties: &[Sortie]) {
+        let Some(figures) = self.ref_data.air_supply else {
+            return;
+        };
+        let mut by_base: BTreeMap<BaseId, Vec<&Sortie>> = BTreeMap::new();
+        for sortie in sorties.iter().filter(|sortie| sortie.sent > 0) {
+            let Some(group) = self.truth.air_groups.get(&sortie.air_group) else {
+                continue;
+            };
+            if let AirGroupLocation::Base(base) = group.location {
+                by_base.entry(base).or_default().push(sortie);
+            }
+        }
+        for (base, flown) in by_base {
+            let mut asked = Fixed::ZERO;
+            let mut aircraft = 0;
+            let mut causes: Vec<Cause> = Vec::new();
+            let mut factors: Vec<Factor> = Vec::new();
+            let mut kinds: BTreeMap<SortieKind, (u32, Fixed)> = BTreeMap::new();
+            for sortie in &flown {
+                let cost = figures.sortie_cost(sortie.distance_nm)
+                    * Fixed::from_int(i64::from(sortie.sent));
+                asked += cost;
+                aircraft += sortie.sent;
+                let entry = kinds.entry(sortie.kind).or_insert((0, Fixed::ZERO));
+                entry.0 += sortie.sent;
+                entry.1 += cost;
+                for cause in &sortie.causes {
+                    if !causes.contains(cause) {
+                        causes.push(*cause);
+                    }
+                }
+            }
+            for (kind, (sent, cost)) in &kinds {
+                let (sent_name, cost_name) = match kind {
+                    SortieKind::Search => ("search_aircraft_sent", "search_t"),
+                    SortieKind::Strike => ("strike_aircraft_sent", "strike_t"),
+                    SortieKind::BaseStrike => ("base_strike_aircraft_sent", "base_strike_t"),
+                    SortieKind::Patrol => ("patrol_aircraft_sent", "patrol_t"),
+                    SortieKind::Escort => ("escort_aircraft_sent", "escort_t"),
+                };
+                factors.push(Factor {
+                    name: sent_name,
+                    value: Fixed::from_int(i64::from(*sent)),
+                });
+                factors.push(Factor {
+                    name: cost_name,
+                    value: *cost,
+                });
+            }
+            if asked.is_zero() {
+                continue;
+            }
+            let (paid, left) = self.take_supply(base, asked);
+            let breakdown = self.config.record_breakdowns.then_some(Breakdown {
+                factors,
+                result: asked,
+            });
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::BaseSupplySpent {
+                    base,
+                    reason: SupplyUse::Sorties,
+                    aircraft,
+                    asked_t: asked,
+                    paid_t: paid,
+                    left_t: left,
+                },
+                causes,
+                breakdown,
+            );
+        }
+    }
+
+    /// The daily cost, in the night pulse after the repair and the
+    /// replacements (decisions 2 and 5 of 0039): each base in order pays the
+    /// daily figure for each aircraft at it, ready or damaged, as much as its
+    /// stock covers. A base with no stock pays nothing and records nothing.
+    pub(crate) fn pay_daily_supply(&mut self, day: u32, pulse: Pulse) {
+        let Some(figures) = self.ref_data.air_supply else {
+            return;
+        };
+        let ids: Vec<BaseId> = self.truth.bases.keys().copied().collect();
+        for base in ids {
+            let aircraft: u32 = self
+                .truth
+                .air_groups
+                .values()
+                .filter(|group| group.location == AirGroupLocation::Base(base))
+                .map(|group| group.ready + group.damaged)
+                .sum();
+            let asked = figures.daily_supply_t_per_aircraft * Fixed::from_int(i64::from(aircraft));
+            if asked.is_zero() || self.truth.bases[&base].supply_t.is_zero() {
+                continue;
+            }
+            let (paid, left) = self.take_supply(base, asked);
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "aircraft_at_base",
+                        value: Fixed::from_int(i64::from(aircraft)),
+                    },
+                    Factor {
+                        name: "daily_supply_t_per_aircraft",
+                        value: figures.daily_supply_t_per_aircraft,
+                    },
+                ],
+                result: asked,
+            });
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::BaseSupplySpent {
+                    base,
+                    reason: SupplyUse::Upkeep,
+                    aircraft,
+                    asked_t: asked,
+                    paid_t: paid,
+                    left_t: left,
+                },
+                Vec::new(),
+                breakdown,
+            );
+        }
     }
 
     /// Whether the air and search steps note what each group flew: when the
-    /// wear figures or the fatigue figures are loaded.
+    /// wear, fatigue or supply figures are loaded.
     pub(crate) fn notes_sorties(&self) -> bool {
-        self.ref_data.air_upkeep.is_some() || self.ref_data.fatigue.is_some()
+        self.ref_data.air_upkeep.is_some()
+            || self.ref_data.fatigue.is_some()
+            || self.ref_data.air_supply.is_some()
     }
 
     fn roll_wear(&mut self, day: u32, pulse: Pulse, sorties: &[Sortie]) {
@@ -481,7 +643,12 @@ impl World {
             }));
         }
 
+        let supply = self.ref_data.air_supply;
         for (place, mut left) in places {
+            // Repairs paid for at a base: the count, and the events that
+            // say they were made (decision 3 of 0039).
+            let mut paid_for: u32 = 0;
+            let mut repair_events: Vec<Cause> = Vec::new();
             let groups: Vec<AirGroupId> = self
                 .truth
                 .air_groups
@@ -493,12 +660,32 @@ impl World {
                 if left == 0 {
                     break;
                 }
+                let damaged_now = self.truth.air_groups[&id].damaged;
+                let mut repaired = left.min(damaged_now);
+                // A base repairs an aircraft only while its stock covers the
+                // repair (decision 3 of 0039). A ship pays nothing (9).
+                if let (Some(figures), AirGroupLocation::Base(base)) = (supply, place) {
+                    if figures.repair_supply_t > Fixed::ZERO {
+                        let stock = self.truth.bases[&base].supply_t;
+                        let affordable = stock
+                            .mul_div(Fixed::from_int(1), figures.repair_supply_t)
+                            .trunc();
+                        let affordable = u32::try_from(affordable).unwrap_or(u32::MAX);
+                        repaired = repaired.min(affordable);
+                    }
+                    if repaired == 0 {
+                        break;
+                    }
+                    let cost = figures.repair_supply_t * Fixed::from_int(i64::from(repaired));
+                    let base_state = self.truth.bases.get_mut(&base).expect("the base exists");
+                    base_state.supply_t -= cost;
+                    paid_for += repaired;
+                }
                 let group = self
                     .truth
                     .air_groups
                     .get_mut(&id)
                     .expect("the air group exists");
-                let repaired = left.min(group.damaged);
                 left -= repaired;
                 group.damaged -= repaired;
                 group.ready += repaired;
@@ -515,7 +702,7 @@ impl World {
                     .map(Cause::Event)
                     .into_iter()
                     .collect();
-                self.events.record(
+                let repaired_event = self.events.record(
                     day,
                     Some(pulse),
                     EventKind::AircraftRepaired {
@@ -528,6 +715,42 @@ impl World {
                     causes,
                     None,
                 );
+                repair_events.push(Cause::Event(repaired_event));
+            }
+            if let (Some(figures), AirGroupLocation::Base(base)) = (supply, place) {
+                let asked = figures.repair_supply_t * Fixed::from_int(i64::from(paid_for));
+                if paid_for > 0 && asked > Fixed::ZERO {
+                    let left_t = self.truth.bases[&base].supply_t;
+                    let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                        factors: vec![
+                            Factor {
+                                name: "repairs",
+                                value: Fixed::from_int(i64::from(paid_for)),
+                            },
+                            Factor {
+                                name: "repair_supply_t",
+                                value: figures.repair_supply_t,
+                            },
+                        ],
+                        result: asked,
+                    });
+                    // The stock was checked before each repair, so this is
+                    // paid in full.
+                    self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::BaseSupplySpent {
+                            base,
+                            reason: SupplyUse::Repairs,
+                            aircraft: paid_for,
+                            asked_t: asked,
+                            paid_t: asked,
+                            left_t,
+                        },
+                        repair_events,
+                        breakdown,
+                    );
+                }
             }
         }
     }

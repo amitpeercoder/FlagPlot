@@ -432,8 +432,16 @@ impl World {
     /// down once. A stood-down group flies none. Without the fatigue
     /// figures a group is never tired or stood down. A group whose pilots
     /// are tracked starts from the smaller of its ready aircraft and its
-    /// pilots (decision 2 of 0038).
+    /// pilots (decision 2 of 0038). A group at a base with no supply at the
+    /// start of the pulse flies none (decision 7 of 0039).
     pub(crate) fn aircraft_able_to_fly(&self, group: &AirGroup) -> u32 {
+        // A base with no supply at the start of the pulse flies nothing
+        // (decision 7 of 0039). Groups aboard ships are never affected.
+        if let AirGroupLocation::Base(base) = group.location {
+            if self.grounded_bases.contains(&base) {
+                return 0;
+            }
+        }
         let crewed = group
             .pilots
             .map_or(group.ready, |pilots| group.ready.min(pilots));
@@ -8085,5 +8093,493 @@ mod tests {
             .push(stream(BaseId::new(9), Side::Japanese, 5, 2, 1));
         let error = world.resolve_day().expect_err("the day is refused");
         assert!(error.to_string().contains("replacement stream"), "{error}");
+    }
+    // ---- base supply (decision 0039) ----
+
+    use crate::events::SupplyUse;
+    use crate::refdata::AirSupplyFigures;
+
+    /// The figures of `data/reference/air_supply.toml`: 0.5 t a sortie, 0.25
+    /// more for each 100 nm, 0.2 t a day for each aircraft, 1 t a repair.
+    fn supply_figures(world: &mut World) {
+        world.ref_data.air_supply = Some(AirSupplyFigures {
+            sortie_supply_t: fixed(1, 2),
+            sortie_supply_t_per_100_nm: fixed(1, 4),
+            daily_supply_t_per_aircraft: fixed(1, 5),
+            repair_supply_t: Fixed::ONE,
+        });
+    }
+
+    fn set_supply(world: &mut World, base: BaseId, tons: Fixed) {
+        world
+            .truth
+            .bases
+            .get_mut(&base)
+            .expect("the base exists")
+            .supply_t = tons;
+    }
+
+    fn supply_of(world: &World, base: BaseId) -> Fixed {
+        world.truth.bases[&base].supply_t
+    }
+
+    /// The `BaseSupplySpent` events as (base, reason, aircraft, asked, paid,
+    /// left).
+    fn spent(world: &World) -> Vec<(u32, SupplyUse, u32, Fixed, Fixed, Fixed)> {
+        events_where(world, |k| matches!(k, EventKind::BaseSupplySpent { .. }))
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::BaseSupplySpent {
+                    base,
+                    reason,
+                    aircraft,
+                    asked_t,
+                    paid_t,
+                    left_t,
+                } => (base.raw(), reason, aircraft, asked_t, paid_t, left_t),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    fn tons(value: i64) -> Fixed {
+        Fixed::from_int(value)
+    }
+
+    /// Allied base 1 (100 t) sends 18 bombers on a base strike and keeps a
+    /// fighter group of 10 on patrol, half of it escorting; Japanese base 2
+    /// (1,000 t) has 6 scouts searching to 300 nm and 4 fighters on patrol.
+    /// No fighter or gun hits anything and every bomb hits aircraft.
+    fn supply_world() -> World {
+        let mut world = raid_world(1);
+        supply_figures(&mut world);
+        set_supply(&mut world, BASE_ALLIED, tons(100));
+        base_group(
+            &mut world,
+            2,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(2)).patrol_share = fixed(1, 2);
+        base_group(&mut world, 3, BASE_JAPANESE, 1, 6, AirMission::Search);
+        group_mut(&mut world, AirGroupId::new(3)).search = Some(SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(300),
+        });
+        base_group(
+            &mut world,
+            4,
+            BASE_JAPANESE,
+            5,
+            4,
+            AirMission::CombatAirPatrol,
+        );
+        sure_bombs(&mut world, Fixed::ONE, Fixed::ZERO);
+        air_figures(&mut world).fighter_hit_chance = Fixed::ZERO;
+        world.work_out_grounded_bases();
+        world
+    }
+
+    fn fly_pulse(world: &mut World, pulse: Pulse) {
+        world.work_out_grounded_bases();
+        world.search_from_the_air(1, pulse);
+        strike_pulse(world, pulse);
+        world.wear_aircraft(1, pulse);
+    }
+
+    #[test]
+    fn a_sortie_costs_the_figure_plus_the_figure_per_100_nm_for_its_distance() {
+        let mut world = world(1, vec![]);
+        supply_figures(&mut world);
+        let figures = world.ref_data.air_supply.expect("figures");
+        for (nm, cost) in [
+            (0, fixed(1, 2)),
+            (160, fixed(9, 10)),
+            (400, fixed(3, 2)),
+            (600, tons(2)),
+        ] {
+            assert_eq!(figures.sortie_cost(tons(nm)), cost, "{nm} nm");
+        }
+        assert!(figures.problem().is_none());
+        let negative = AirSupplyFigures {
+            repair_supply_t: fixed(-1, 1),
+            ..figures
+        };
+        assert!(negative.problem().expect("a problem").contains("repair"));
+    }
+
+    #[test]
+    fn each_base_pays_one_sum_for_the_sorties_of_the_pulse_on_the_aircraft_sent() {
+        let mut world = supply_world();
+        fly_pulse(&mut world, Pulse::Morning);
+        // Base 1: 18 bombers and 5 escorts at 0.5 + 0.25 x 4 = 1.5 t, and 5
+        // fighters on patrol at 0.5 t: 27 + 7.5 + 2.5 = 37 t. Base 2: 6
+        // scouts at 0.5 + 0.25 x 6 = 2 t and 4 fighters on patrol: 12 + 2.
+        assert_eq!(
+            spent(&world),
+            vec![
+                (1, SupplyUse::Sorties, 28, tons(37), tons(37), tons(63)),
+                (2, SupplyUse::Sorties, 10, tons(14), tons(14), tons(986)),
+            ]
+        );
+        assert_eq!(supply_of(&world, BASE_ALLIED), tons(63));
+        assert_eq!(supply_of(&world, BASE_JAPANESE), tons(986));
+        let events = events_where(&world, |k| matches!(k, EventKind::BaseSupplySpent { .. }));
+        let launched = base_launches(&world)[0].id;
+        assert!(events[0].causes.contains(&Cause::Event(launched)));
+        let first = events[0].kind.to_string();
+        assert_eq!(
+            first,
+            "base:1 spent 37 t of supply on 28 aircraft sent on sorties, 63 t left"
+        );
+        // The afternoon has no raid: the patrol of 10 at 0.5 t each (the
+        // bombers fly again, so the raid does too).
+        let before = spent(&world).len();
+        fly_pulse(&mut world, Pulse::Afternoon);
+        assert_eq!(spent(&world).len(), before + 2);
+    }
+
+    #[test]
+    fn the_aircraft_shot_down_are_paid_for_as_sent_and_a_night_pulse_pays_for_no_sortie() {
+        let mut world = supply_world();
+        air_figures(&mut world).fighter_hit_chance = Fixed::ONE;
+        fly_pulse(&mut world, Pulse::Morning);
+        assert!(!events_where(&world, |k| matches!(k, EventKind::AircraftLost { .. })).is_empty());
+        let sums = spent(&world);
+        assert_eq!(sums[0].3, tons(37));
+        assert_eq!(sums[0].2, 28);
+        assert_eq!(sums[1].3, tons(14));
+        // Nothing flies at night and no sortie is paid for.
+        let before = spent(&world).len();
+        world.search_from_the_air(1, Pulse::Night);
+        strike_pulse(&mut world, Pulse::Night);
+        world.wear_aircraft(1, Pulse::Night);
+        assert_eq!(spent(&world).len(), before);
+    }
+
+    #[test]
+    fn a_sum_the_stock_cannot_cover_takes_what_is_left_and_says_so() {
+        let mut world = supply_world();
+        set_supply(&mut world, BASE_ALLIED, tons(10));
+        fly_pulse(&mut world, Pulse::Morning);
+        assert_eq!(
+            spent(&world)[0],
+            (1, SupplyUse::Sorties, 28, tons(37), tons(10), Fixed::ZERO)
+        );
+        assert_eq!(supply_of(&world, BASE_ALLIED), Fixed::ZERO);
+        let events = events_where(&world, |k| matches!(k, EventKind::BaseSupplySpent { .. }));
+        assert_eq!(
+            events[0].kind.to_string(),
+            "base:1 spent 10 t of supply on 28 aircraft sent on sorties: 37 t was asked and the stock could not cover it, 0 t left: base:1 is out of supply"
+        );
+        // Spending exactly the stock leaves 0 and says the base is out.
+        let mut world = supply_world();
+        set_supply(&mut world, BASE_ALLIED, tons(37));
+        fly_pulse(&mut world, Pulse::Morning);
+        let events = events_where(&world, |k| matches!(k, EventKind::BaseSupplySpent { .. }));
+        assert_eq!(
+            events[0].kind.to_string(),
+            "base:1 spent 37 t of supply on 28 aircraft sent on sorties, 0 t left: base:1 is out of supply"
+        );
+    }
+
+    #[test]
+    fn the_daily_cost_counts_ready_and_damaged_aircraft_and_is_capped_at_the_stock() {
+        let mut world = base_world(1);
+        supply_figures(&mut world);
+        base_group(&mut world, 3, BASE_JAPANESE, 5, 4, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(3)).damaged = 2;
+        base_group(&mut world, 4, BASE_JAPANESE, 3, 5, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(4)).damaged = 3;
+        // A group aboard a ship costs no base anything (decision 9).
+        world.truth.air_groups.insert(
+            AirGroupId::new(20),
+            group(AirGroupId::new(20), Side::Allied, 1, 2, 9),
+        );
+        // Base 1 has aircraft but no stock: it pays nothing and records
+        // nothing.
+        base_group(&mut world, 5, BASE_ALLIED, 5, 3, AirMission::Rest);
+        world.pay_daily_supply(1, Pulse::Night);
+        assert_eq!(
+            spent(&world),
+            vec![(
+                2,
+                SupplyUse::Upkeep,
+                14,
+                fixed(14, 5),
+                fixed(14, 5),
+                fixed(4986, 5)
+            )]
+        );
+        assert_eq!(
+            events_where(&world, |k| matches!(k, EventKind::BaseSupplySpent { .. }))[0]
+                .kind
+                .to_string(),
+            "base:2 spent 2.8 t of supply on 14 aircraft at the base for the day, 997.2 t left"
+        );
+        // A stock of 1 t pays 1 t of the 2.8 t asked.
+        set_supply(&mut world, BASE_JAPANESE, tons(1));
+        world.pay_daily_supply(2, Pulse::Night);
+        assert_eq!(
+            spent(&world)[1],
+            (2, SupplyUse::Upkeep, 14, fixed(14, 5), tons(1), Fixed::ZERO)
+        );
+        // Out of supply: nothing to pay, nothing recorded.
+        world.pay_daily_supply(3, Pulse::Night);
+        assert_eq!(spent(&world).len(), 2);
+        // Without the figures nothing is spent.
+        let mut world = base_world(1);
+        base_group(&mut world, 3, BASE_JAPANESE, 5, 4, AirMission::Rest);
+        world.pay_daily_supply(1, Pulse::Night);
+        assert!(spent(&world).is_empty());
+        assert_eq!(supply_of(&world, BASE_JAPANESE), tons(1000));
+    }
+
+    #[test]
+    fn a_base_repairs_only_while_its_stock_covers_a_repair_and_pays_for_each() {
+        let mut world = base_world(1);
+        supply_figures(&mut world);
+        upkeep(&mut world, NEVER, NEVER, NEVER, 2);
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_JAPANESE)
+            .expect("base")
+            .aircraft_repairs_per_day = 5;
+        base_group(&mut world, 3, BASE_JAPANESE, 5, 4, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(3)).damaged = 4;
+        set_supply(&mut world, BASE_JAPANESE, fixed(5, 2));
+        world.repair_aircraft(2, Pulse::Night);
+        // 2.5 t covers 2 repairs, and 0.5 t is left.
+        assert_eq!(repaired(&world), vec![(3, 2, 6, 2)]);
+        assert_eq!(
+            spent(&world),
+            vec![(2, SupplyUse::Repairs, 2, tons(2), tons(2), fixed(1, 2))]
+        );
+        let events = events_where(&world, |k| matches!(k, EventKind::BaseSupplySpent { .. }));
+        let repair =
+            events_where(&world, |k| matches!(k, EventKind::AircraftRepaired { .. }))[0].id;
+        assert_eq!(events[0].causes, vec![Cause::Event(repair)]);
+        // With less than a repair's worth nothing is repaired and nothing is
+        // recorded.
+        world.repair_aircraft(3, Pulse::Night);
+        assert_eq!(repaired(&world).len(), 1);
+        assert_eq!(spent(&world).len(), 1);
+        assert_eq!(supply_of(&world, BASE_JAPANESE), fixed(1, 2));
+        // A base with no stock repairs nothing either.
+        set_supply(&mut world, BASE_JAPANESE, Fixed::ZERO);
+        world.repair_aircraft(4, Pulse::Night);
+        assert_eq!(repaired(&world).len(), 1);
+        // The daily cost comes after the repairs in the night.
+        set_supply(&mut world, BASE_JAPANESE, tons(100));
+        world.repair_aircraft(5, Pulse::Night);
+        world.pay_daily_supply(5, Pulse::Night);
+        let reasons: Vec<SupplyUse> = spent(&world).iter().map(|row| row.1).collect();
+        assert_eq!(
+            reasons,
+            vec![SupplyUse::Repairs, SupplyUse::Repairs, SupplyUse::Upkeep]
+        );
+        // 2 aircraft were left damaged: 2 more repairs, 2 t, and then the 8
+        // aircraft at 0.2 t.
+        assert_eq!(spent(&world)[1].3, tons(2));
+        assert_eq!(spent(&world)[2].3, fixed(8, 5));
+        // Without the supply figures repair is as before.
+        let mut world = base_world(1);
+        upkeep(&mut world, NEVER, NEVER, NEVER, 2);
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_JAPANESE)
+            .expect("base")
+            .aircraft_repairs_per_day = 5;
+        base_group(&mut world, 3, BASE_JAPANESE, 5, 4, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(3)).damaged = 4;
+        set_supply(&mut world, BASE_JAPANESE, Fixed::ZERO);
+        world.repair_aircraft(2, Pulse::Night);
+        assert_eq!(repaired(&world), vec![(3, 4, 8, 0)]);
+        assert!(spent(&world).is_empty());
+    }
+
+    #[test]
+    fn a_carriers_repairs_cost_no_base_anything() {
+        let mut world = world(1, vec![]);
+        supply_figures(&mut world);
+        world.truth.air_groups.clear();
+        world
+            .truth
+            .air_groups
+            .insert(BOMBERS, group(BOMBERS, Side::Allied, 1, 2, 10));
+        group_mut(&mut world, BOMBERS).damaged = 3;
+        upkeep(&mut world, NEVER, NEVER, NEVER, 5);
+        world.repair_aircraft(1, Pulse::Night);
+        assert_eq!(repaired(&world), vec![(1, 3, 13, 0)]);
+        assert!(spent(&world).is_empty());
+    }
+
+    /// The world of the grounded tests: Allied base 1 has no stock, 10
+    /// fighters on patrol, 6 scouts searching and 8 bombers on a base
+    /// strike, and 20 guns. Japanese base 2 sends 12 bombers at it.
+    fn grounded_world(stock: i64) -> World {
+        let mut world = base_world(1);
+        supply_figures(&mut world);
+        set_supply(&mut world, BASE_ALLIED, tons(stock));
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_ALLIED)
+            .expect("base")
+            .anti_aircraft = 20;
+        base_group(
+            &mut world,
+            1,
+            BASE_ALLIED,
+            2,
+            8,
+            AirMission::BaseStrike(BASE_JAPANESE),
+        );
+        base_group(
+            &mut world,
+            2,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(2)).patrol_share = fixed(1, 2);
+        base_group(&mut world, 6, BASE_ALLIED, 1, 6, AirMission::Search);
+        group_mut(&mut world, AirGroupId::new(6)).search = Some(SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(300),
+        });
+        base_group(
+            &mut world,
+            7,
+            BASE_JAPANESE,
+            2,
+            12,
+            AirMission::BaseStrike(BASE_ALLIED),
+        );
+        sure_bombs(&mut world, Fixed::ONE, Fixed::ZERO);
+        world
+    }
+
+    #[test]
+    fn a_base_with_no_supply_at_the_start_of_the_pulse_flies_nothing_but_its_guns_fire() {
+        let mut world = grounded_world(0);
+        fly_pulse(&mut world, Pulse::Morning);
+        // No search, no strike, no escorts, no patrol, no sorties paid for.
+        assert!(events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).is_empty());
+        let launched = base_launches(&world);
+        assert_eq!(launched.len(), 1, "only the Japanese raid");
+        assert_eq!(
+            launched[0].kind.entities()[0],
+            EntityRef::AirGroup(AirGroupId::new(7))
+        );
+        assert!(events_where(&world, |k| matches!(k, EventKind::EscortsSent { .. })).is_empty());
+        assert!(events_where(&world, |k| matches!(k, EventKind::AirFight { .. })).is_empty());
+        assert!(spent(&world).iter().all(|row| row.0 != 1));
+        // The guns still fire.
+        let guns = events_where(&world, |k| {
+            matches!(k, EventKind::BaseAntiAircraftFire { .. })
+        });
+        assert_eq!(guns.len(), 1);
+        // Every ready aircraft is on the ground, and the hits destroy them.
+        let lost: u32 = ground_losses(&world).iter().map(|row| row.1).sum();
+        assert!(lost > 0);
+        assert!(ground_losses(&world)
+            .iter()
+            .all(|row| [1, 2, 6].contains(&row.0)));
+        // With a stock the same base flies.
+        let mut world = grounded_world(100);
+        fly_pulse(&mut world, Pulse::Morning);
+        assert_eq!(
+            events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).len(),
+            1
+        );
+        assert_eq!(base_launches(&world).len(), 2);
+        assert_eq!(
+            events_where(&world, |k| matches!(k, EventKind::EscortsSent { .. })).len(),
+            1
+        );
+        assert!(spent(&world).iter().any(|row| row.0 == 1));
+    }
+
+    #[test]
+    fn a_base_that_runs_out_during_a_pulse_flew_it_and_is_grounded_from_the_next() {
+        // The raid's bombs all land on supply and destroy 50 t each.
+        let mut world = grounded_world(30);
+        sure_bombs(&mut world, Fixed::ZERO, Fixed::ONE);
+        fly_pulse(&mut world, Pulse::Morning);
+        assert_eq!(supply_of(&world, BASE_ALLIED), Fixed::ZERO);
+        // It searched, launched and patrolled in the morning, and the sum
+        // for its sorties asked what they cost and could pay nothing.
+        assert_eq!(
+            events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).len(),
+            1
+        );
+        let sums: Vec<_> = spent(&world).into_iter().filter(|row| row.0 == 1).collect();
+        assert_eq!(sums.len(), 1);
+        assert_eq!(sums[0].1, SupplyUse::Sorties);
+        assert!(sums[0].3 > Fixed::ZERO);
+        assert_eq!(sums[0].4, Fixed::ZERO);
+        // In the afternoon it flies nothing.
+        let searches = events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).len();
+        let launches_before = base_launches(&world).len();
+        fly_pulse(&mut world, Pulse::Afternoon);
+        assert!(world.grounded_bases.contains(&BASE_ALLIED));
+        assert_eq!(
+            events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).len(),
+            searches
+        );
+        // No raid is launched in the afternoon, and the base pays for no
+        // patrol: the sum of the morning is the only one.
+        assert_eq!(base_launches(&world).len(), launches_before);
+        assert_eq!(spent(&world).iter().filter(|row| row.0 == 1).count(), 1);
+        // It flies again from the first pulse that starts with stock.
+        set_supply(&mut world, BASE_ALLIED, tons(5));
+        world.work_out_grounded_bases();
+        assert!(world.grounded_bases.is_empty());
+    }
+
+    #[test]
+    fn groups_aboard_ships_are_never_grounded_and_pay_no_base() {
+        let mut world = world(1, vec![]);
+        supply_figures(&mut world);
+        world.truth.bases.insert(
+            BASE_ALLIED,
+            crate::state::Base {
+                id: BASE_ALLIED,
+                name: "Test base".to_string(),
+                side: Side::Allied,
+                hex: Hex::new(0, 0),
+                supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
+            },
+        );
+        world.work_out_grounded_bases();
+        assert!(world.grounded_bases.contains(&BASE_ALLIED));
+        assert_eq!(able(&world, BOMBERS.raw()), 18);
+        fly_pulse(&mut world, Pulse::Morning);
+        assert!(spent(&world).is_empty());
+    }
+
+    #[test]
+    fn a_scenario_without_supply_figures_spends_nothing_and_grounds_nothing() {
+        let mut world = grounded_world(0);
+        world.ref_data.air_supply = None;
+        fly_pulse(&mut world, Pulse::Morning);
+        assert!(world.grounded_bases.is_empty());
+        assert!(spent(&world).is_empty());
+        assert_eq!(supply_of(&world, BASE_ALLIED), Fixed::ZERO);
+        assert_eq!(
+            events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).len(),
+            1
+        );
+        assert!(world.sorties.is_empty());
     }
 }
