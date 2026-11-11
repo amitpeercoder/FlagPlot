@@ -124,7 +124,7 @@ use crate::events::{
     AirFirer, AirTarget, Breakdown, Cause, DamageTrack, EventKind, Factor, SortieKind, Weapon,
 };
 use crate::fixed::Fixed;
-use crate::hex::{Hex, HEX_NM};
+use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::AirMission;
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
@@ -531,7 +531,7 @@ impl World {
                 .filter(|contact| contact.age_pulses <= figures.strike_contact_max_age_pulses)
                 .filter_map(|contact| {
                     let distance_nm =
-                        Fixed::from_int(i64::from(origin.distance(contact.estimated_hex)) * HEX_NM);
+                        Fixed::from_int(i64::from(origin.air_distance_nm(contact.estimated_hex)));
                     (distance_nm <= strike_range_nm).then_some((
                         contact.estimated_kind,
                         distance_nm,
@@ -603,7 +603,7 @@ impl World {
             return;
         }
         let hex = target.hex;
-        let distance_nm = Fixed::from_int(i64::from(origin.distance(hex)) * HEX_NM);
+        let distance_nm = Fixed::from_int(i64::from(origin.air_distance_nm(hex)));
         if distance_nm > strike_range_nm {
             return;
         }
@@ -1976,7 +1976,7 @@ impl World {
 /// A sortie out to `to` and back from `from`: twice the distance (decision 4
 /// of 0035).
 fn out_and_back(from: Hex, to: Hex) -> Fixed {
-    Fixed::from_int(i64::from(from.distance(to)) * HEX_NM * 2)
+    Fixed::from_int(i64::from(from.air_distance_nm(to)) * 2)
 }
 
 /// Groups the strikes into raids (decision 4 of 0027): the same place and
@@ -2033,9 +2033,9 @@ fn send_escorts(raids: &mut [Raid], fighters: &mut [FighterGroup]) {
             .map(|(raid_index, _)| raid_index);
         if let Some(raid_index) = chosen {
             let within = group.hex.is_none_or(|hex| {
-                let distance_nm = Fixed::from_int(
-                    i64::from(hex.distance(raids[raid_index].strikes[0].hex)) * HEX_NM,
-                );
+                let distance_nm = Fixed::from_int(i64::from(
+                    hex.air_distance_nm(raids[raid_index].strikes[0].hex),
+                ));
                 distance_nm <= group.radius_nm
             });
             if within {

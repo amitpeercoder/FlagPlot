@@ -47,5 +47,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0037 | Fatigue at battle readiness: an alert force tires each pulse, and fatigue cuts its chance to sight | Confirmed |
 | 0038 | Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate | Confirmed; 4, 8 and 10 need review |
 | 0039 | Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing | Confirmed; 4, 6 and 8 need review |
+| 0040 | Air distance is a straight line between hex centres, in whole miles, for every rule that asks how far an aircraft flies. Ships are deferred | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

@@ -278,6 +278,7 @@ fn run_path(flags: &Flags) -> Result<(), String> {
     let (from, to) = (Hex::new(fq, fr), Hex::new(tq, tr));
     let map = load(flags)?;
     let straight = from.distance(to);
+    let air = from.air_distance_nm(to);
     println!(
         "from ({},{}) [{}] to ({},{}) [{}]",
         from.q,
@@ -290,7 +291,8 @@ fn run_path(flags: &Flags) -> Result<(), String> {
     let distances: BTreeMap<Hex, u32> = map.sea_distances_to(to);
     let Some(&steps) = distances.get(&from) else {
         println!("UNREACHABLE by sea: {}", why_unreachable(&map, from, to));
-        println!("straight-line distance: {straight} hexes");
+        println!("hex count with no land in the way: {straight} hexes");
+        println!("air distance: {air} nm (the game's measure for aircraft, decision 0040)");
         return Ok(());
     };
     let mut hex = from;
@@ -308,10 +310,11 @@ fn run_path(flags: &Flags) -> Result<(), String> {
         i64::from(steps) * HEX_NM
     );
     println!(
-        "straight-line distance: {straight} hexes = {} nm ({} hexes of detour)",
+        "hex count with no land in the way: {straight} hexes = {} nm ({} hexes of detour)",
         i64::from(straight) * HEX_NM,
         steps - straight
     );
+    println!("air distance: {air} nm (the game's measure for aircraft, decision 0040)");
     Ok(())
 }
 

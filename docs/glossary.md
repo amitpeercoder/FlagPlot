@@ -4,6 +4,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 
 | Word | Means | Does not mean |
 | --- | --- | --- |
+| **Air distance** | How far an aircraft flies between two hexes: the straight line between their centres, in whole miles (decision 0040). Every range, radius and sortie distance, and every tool that measures one, uses it | The number of hexes between them times 40, which is longer off the grid's axes |
+| **Sea distance** | How far a ship steams: the hexes on its path times 40 miles (decision 0017) | The air distance |
 | **Readiness** | What a force is ordered to be: normal or battle (decision 0021) | Whether it is alert at this moment |
 | **Alert** | The state of a force that will see and shoot at full effect. A force at battle readiness is always alert | An order |
 | **Alerted** | How a force at normal readiness came to be alert: by a fresh contact nearby, by being fired on, or by an alarm | |

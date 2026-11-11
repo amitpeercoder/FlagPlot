@@ -31,6 +31,21 @@ impl Hex {
         (dq.unsigned_abs() + dr.unsigned_abs() + (dq + dr).unsigned_abs()) / 2
     }
 
+    /// How far an aircraft flies between the centres of two hexes, in whole
+    /// nautical miles (decision 0040): the straight line, 40 times the
+    /// square root of dq^2 + dr^2 + dq*dr, to the nearest mile. Integer
+    /// arithmetic only. Along an axis it is 40 times [`Hex::distance`].
+    /// Ships do not use it: they move hex by hex.
+    pub fn air_distance_nm(self, other: Hex) -> u32 {
+        let dq = i64::from(self.q) - i64::from(other.q);
+        let dr = i64::from(self.r) - i64::from(other.r);
+        let n = dq * dq + dr * dr + dq * dr;
+        let x = (HEX_NM * HEX_NM) as u64 * n as u64;
+        // The nearest integer to sqrt(x) is (isqrt(4x) + 1) / 2.
+        let nearest = (4 * x).isqrt().div_ceil(2);
+        u32::try_from(nearest).expect("an air distance on a map fits in u32")
+    }
+
     /// The six neighbours, in [`Hex::DIRECTIONS`] order.
     pub fn neighbors(self) -> [Hex; 6] {
         Self::DIRECTIONS.map(|(dq, dr)| Hex::new(self.q + dq, self.r + dr))
@@ -91,6 +106,62 @@ mod tests {
         assert_eq!(Hex::new(8, 3).distance(origin), 11);
         for neighbor in origin.neighbors() {
             assert_eq!(origin.distance(neighbor), 1);
+        }
+    }
+
+    #[test]
+    fn air_distance_along_an_axis_is_forty_per_hex() {
+        let origin = Hex::new(0, 0);
+        for steps in 0..=30i32 {
+            for (dq, dr) in [(1, 0), (0, 1), (1, -1), (-1, 0), (0, -1), (-1, 1)] {
+                let hex = Hex::new(steps * dq, steps * dr);
+                assert_eq!(origin.air_distance_nm(hex), 40 * steps.unsigned_abs());
+                assert_eq!(hex.air_distance_nm(origin), 40 * steps.unsigned_abs());
+            }
+        }
+    }
+
+    #[test]
+    fn air_distance_known_values() {
+        let o = Hex::new(0, 0);
+        assert_eq!(Hex::new(1, -6).air_distance_nm(o), 223);
+        assert_eq!(Hex::new(5, -6).air_distance_nm(o), 223);
+        assert_eq!(Hex::new(1, -9).air_distance_nm(o), 342);
+        assert_eq!(Hex::new(5, -9).air_distance_nm(o), 312);
+        assert_eq!(Hex::new(-5, -13).air_distance_nm(Hex::new(2, -4)), 556);
+    }
+
+    #[test]
+    fn air_distance_is_between_the_line_and_the_staircase() {
+        for dq in -40..=40i32 {
+            for dr in -40..=40i32 {
+                let a = Hex::new(3, -2);
+                let b = Hex::new(3 + dq, -2 + dr);
+                let air = u64::from(a.air_distance_nm(b));
+                assert_eq!(air, u64::from(b.air_distance_nm(a)));
+                let staircase = 40 * u64::from(a.distance(b));
+                assert!(air <= staircase);
+                // 0.866 = 866 / 1000, and sqrt(3)/2 is 0.8660254, so allow
+                // the rounding of half a mile.
+                assert!(air * 1000 + 500 >= staircase * 866, "{dq},{dr}");
+            }
+        }
+    }
+
+    #[test]
+    fn air_distance_is_the_nearest_whole_mile() {
+        for dq in -40..=40i32 {
+            for dr in -40..=40i32 {
+                let n = i64::from(dq * dq + dr * dr + dq * dr);
+                let x4 = 4 * 1600 * n;
+                // The nearest whole k to sqrt(x) is the one with
+                // (2k - 1)^2 < 4x < (2k + 1)^2 (4x is even, so never equal).
+                let nearest = (0..=4000i64)
+                    .find(|k| x4 < (2 * k + 1) * (2 * k + 1))
+                    .expect("in range");
+                let got = Hex::new(0, 0).air_distance_nm(Hex::new(dq, dr));
+                assert_eq!(i64::from(got), nearest, "{dq},{dr}");
+            }
         }
     }
 
