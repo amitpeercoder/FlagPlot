@@ -512,6 +512,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         World::new(7, ref_data, map, truth).expect("valid setup")

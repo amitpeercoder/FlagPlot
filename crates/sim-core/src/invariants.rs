@@ -40,6 +40,10 @@ pub enum InvariantViolation {
     /// A ship carries more supply than its class's cargo capacity.
     ShipOverCargoCapacity(ShipId),
     NegativeBaseStock(BaseId),
+    /// The base has a negative fuel stock (decision 0045).
+    NegativeBaseFuel(BaseId),
+    /// The ship has more fuel than its class can hold (decision 0045).
+    ShipOverFuelCapacity(ShipId),
     /// `toward_hex` is set with no progress, or progress is made with no
     /// `toward_hex`.
     TaskForceLegStateInconsistent(TaskForceId),
@@ -143,6 +147,12 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::NegativeBaseStock(base) => {
                 write!(f, "{base} has negative supply stock")
+            }
+            InvariantViolation::NegativeBaseFuel(base) => {
+                write!(f, "{base} has negative fuel stock")
+            }
+            InvariantViolation::ShipOverFuelCapacity(ship) => {
+                write!(f, "{ship} has more fuel than its class can hold")
             }
             InvariantViolation::TaskForceLegStateInconsistent(task_force) => {
                 write!(
@@ -252,6 +262,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             ));
         }
         if let Some(class) = ref_data.ship_classes.get(&ship.class) {
+            if ship.fuel_t > class.fuel_capacity_t {
+                violations.push(InvariantViolation::ShipOverFuelCapacity(ship.id));
+            }
             if ship.supply_t > class.cargo_capacity_t {
                 violations.push(InvariantViolation::ShipOverCargoCapacity(ship.id));
             }
@@ -418,6 +431,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         if base.supply_t.is_negative() {
             violations.push(InvariantViolation::NegativeBaseStock(base.id));
         }
+        if base.fuel_t.is_negative() {
+            violations.push(InvariantViolation::NegativeBaseFuel(base.id));
+        }
     }
 
     for stream in &truth.replacements {
@@ -496,6 +512,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         truth.air_groups.insert(
@@ -789,6 +806,49 @@ mod tests {
                 InvariantViolation::ShipSystemNotInClass(SHIP, ShipSystem::MainBattery),
                 InvariantViolation::ShipSystemNotInClass(SHIP, ShipSystem::TorpedoMounts),
             ]
+        );
+    }
+
+    #[test]
+    fn fuel_above_the_class_capacity_or_a_negative_base_stock_is_caught() {
+        let (mut truth, map) = setup_with_ship();
+        let mut ref_data = RefData::default();
+        ref_data.ship_classes.insert(
+            ShipClassId::new(1),
+            ShipClass {
+                id: ShipClassId::new(1),
+                name: "Auxiliary".to_string(),
+                kind: ShipKind::Auxiliary,
+                cruise_speed_kn: Fixed::from_int(10),
+                max_speed_kn: Fixed::from_int(12),
+                fuel_capacity_t: Fixed::from_int(100),
+                endurance_nm: Fixed::from_int(1000),
+                cargo_capacity_t: Fixed::from_int(100),
+                main_guns: 0,
+                gun_rounds_per_min: Fixed::ZERO,
+                gun_rounds_per_gun: 0,
+                gun_damage: Fixed::ZERO,
+                torpedo_tubes: 0,
+                torpedo_damage: Fixed::ZERO,
+                toughness: Fixed::from_int(100),
+                radar: false,
+                aircraft_capacity: 0,
+                anti_aircraft: 0,
+            },
+        );
+        // A full tank is fine.
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
+        ship_mut(&mut truth).fuel_t = Fixed::from_raw(Fixed::from_int(100).raw() + 1);
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::ShipOverFuelCapacity(SHIP)]
+        );
+        ship_mut(&mut truth).fuel_t = Fixed::from_int(100);
+        let base = BaseId::new(1);
+        truth.bases.get_mut(&base).expect("base").fuel_t = Fixed::from_raw(-1);
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::NegativeBaseFuel(base)]
         );
     }
 

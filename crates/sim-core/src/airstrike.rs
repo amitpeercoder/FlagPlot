@@ -3004,6 +3004,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         group_mut(&mut world, BOMBERS).location =
@@ -3918,6 +3919,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         deck(&mut world, 1, SystemState::Out);
@@ -4368,6 +4370,7 @@ mod tests {
                     supply_t: Fixed::ZERO,
                     anti_aircraft: 0,
                     aircraft_repairs_per_day: 0,
+                    fuel_t: Fixed::ZERO,
                 },
             );
         }
@@ -4719,6 +4722,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         let mut fighters = group(AirGroupId::new(10), Side::Japanese, 2, 5, 12);
@@ -5070,6 +5074,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
@@ -5602,6 +5607,7 @@ mod tests {
                     supply_t: Fixed::from_int(supply),
                     anti_aircraft: 0,
                     aircraft_repairs_per_day: 0,
+                    fuel_t: Fixed::ZERO,
                 },
             );
         }
@@ -5879,6 +5885,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         group_mut(&mut world, AirGroupId::new(1)).ready = 12;
@@ -5944,6 +5951,7 @@ mod tests {
                         supply_t: Fixed::ZERO,
                         anti_aircraft: 0,
                         aircraft_repairs_per_day: 0,
+                        fuel_t: Fixed::ZERO,
                     },
                 );
                 base_group(
@@ -8826,6 +8834,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         world.work_out_grounded_bases();

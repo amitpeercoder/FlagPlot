@@ -11,6 +11,7 @@ use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 
+use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::orders::{AirMission, Stance};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
@@ -355,13 +356,26 @@ fn run(args: &[String]) -> Result<(), String> {
         } else {
             String::new()
         };
+        // Fuel is shown only for a base that has ever been given some. A
+        // stock only falls, so that is a stock above nothing now or one that
+        // refuelled a ship (decision 0045).
+        let had_fuel = base.fuel_t > Fixed::ZERO
+            || world.events().iter().any(|event| {
+                matches!(&event.kind, EventKind::ShipRefuelled { base: b, .. } if *b == base.id)
+            });
+        let fuel = if had_fuel {
+            format!(", {} t of fuel in stock", base.fuel_t)
+        } else {
+            String::new()
+        };
         println!(
-            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}",
+            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}",
             base.id,
             base.name,
             base.side.name(),
             base.hex,
             base.supply_t,
+            fuel,
             guns,
             repairs
         );

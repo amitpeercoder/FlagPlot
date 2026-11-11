@@ -626,6 +626,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         truth.air_groups.insert(

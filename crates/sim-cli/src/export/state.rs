@@ -155,6 +155,9 @@ pub struct BaseOut {
     /// Aircraft repaired a day (decision 0035). Left out when 0.
     #[serde(skip_serializing_if = "is_zero")]
     aircraft_repairs_per_day: u32,
+    /// Fuel stock for ships in tons (decision 0045). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    fuel: Num,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -200,6 +203,7 @@ fn base(base: &Base) -> BaseOut {
         supply: Num(base.supply_t),
         anti_aircraft: base.anti_aircraft,
         aircraft_repairs_per_day: base.aircraft_repairs_per_day,
+        fuel: Num(base.fuel_t),
     }
 }
 

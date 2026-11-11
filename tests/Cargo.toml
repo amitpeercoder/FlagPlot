@@ -18,6 +18,10 @@ name = "scenario_01_transit"
 path = "scenario_01_transit.rs"
 
 [[test]]
+name = "scenario_01b_refuel"
+path = "scenario_01b_refuel.rs"
+
+[[test]]
 name = "scenario_02_supply_run"
 path = "scenario_02_supply_run.rs"
 

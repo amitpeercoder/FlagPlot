@@ -1,0 +1,83 @@
+# Scenario 1b: a task force steams from Noumea to Espiritu Santo, refuels,
+# steams back and refuels again.
+#
+# It is scenario 1 carried on for two more days, with fuel at both bases:
+# too little at each to fill both ships. It proves refuelling in port
+# (decision 0045). The hand calculation is in tests/scenario_01b_refuel.rs.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Scenario 1b: Refuelling, Noumea to Espiritu Santo and back"
+placeholder = true
+seed = 1942
+days = 5
+map = "../map/placeholder_transit.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+[[base]]
+id = 1
+name = "Noumea"
+side = "allied"
+q = 0
+r = 0
+fuel_t = 100
+
+[[base]]
+id = 2
+name = "Espiritu Santo"
+side = "allied"
+q = 8
+r = 3
+fuel_t = 150
+
+[[task_force]]
+id = 1
+name = "Placeholder transit force"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# Day 1: steam to Espiritu Santo at cruise speed.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[8, 3]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+# Days 2 and 3 have no new orders. The standing ones continue.
+
+# On the third day, refuelled at Espiritu Santo, the force steams back.
+[[order]]
+day = 3
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[0, 0]]

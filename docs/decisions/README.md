@@ -52,5 +52,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0042 | The Rabaul against Guadalcanal scenario: who is there, what the aircraft can do, and what is a placeholder | Confirmed |
 | 0043 | The determinism scenario, saved games and replay: the full slice, what shuffled order means, `--save`, `replay` and `hash` | Confirmed |
 | 0044 | The soak scenario: the full slice carried on for 180 days, with every subsystem in use in each 30 days | Confirmed |
+| 0045 | Refuelling in port: a base has a fuel stock, and a force stopped at its own side's base at the start of a day fills up from it | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

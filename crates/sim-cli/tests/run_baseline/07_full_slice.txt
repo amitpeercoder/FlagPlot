@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f0ef2fa730438d42  56 events
-day   2  hash 2e3e1ffff5c6ade3  51 events
-day   3  hash 3a8fe3aaa725d6c5  46 events
-day   4  hash c887531fef37d5d2  237 events
-day   5  hash 9507dc2a0c01b637  138 events
-day   6  hash 03224c9e87739bdd  118 events
-day   7  hash 7075e2f286c2fe43  248 events
-day   8  hash 4e4006d155632387  123 events
-day   9  hash 4552609502990fad  124 events
-day  10  hash fc4c547ba0fff88a  77 events
-day  11  hash 1d7afd566c19fdf9  86 events
-day  12  hash 4695ab0d4d0b2e2d  88 events
-day  13  hash bb8c3e1bad7c0d64  64 events
-day  14  hash 7841801e48d63604  58 events
+day   1  hash 4470e5465712613e  56 events
+day   2  hash 8c8aa463f319b495  51 events
+day   3  hash 71f00bb125851b35  46 events
+day   4  hash 35b801755114f7d0  237 events
+day   5  hash 8f18b1388ae77041  141 events
+day   6  hash d8eb9a0241466130  118 events
+day   7  hash 5159bb33e66e0b3f  248 events
+day   8  hash 576cf4c7cf54c6bb  123 events
+day   9  hash 76193e77df734611  124 events
+day  10  hash cab04c3ce74cf019  77 events
+day  11  hash c0a8e6993f643e24  86 events
+day  12  hash fffffddfa19a4faf  88 events
+day  13  hash c0050f6209681d18  64 events
+day  14  hash 291111cee4e02521  58 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -96,9 +96,9 @@ ship:33 "Ryujo": SUNK; damage flotation 100, fire 17.830188; propulsion out, fli
 ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
-ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 936 t of fuel, 0 t of supply
-ship:38 "Placeholder cargo ship 2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 936 t of fuel, 0 t of supply
-ship:39 "Placeholder destroyer 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 420 t of fuel, 0 t of supply
+ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:38 "Placeholder cargo ship 2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:39 "Placeholder destroyer 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
 ship:40 "Placeholder cruiser A1": afloat in task_force:6; damage flotation 46.25, fire 20; propulsion degraded, main battery degraded; 320 gun rounds, torpedoes gone; 1488 t of fuel, 0 t of supply
 ship:41 "Placeholder cruiser A2": afloat in task_force:6; damage flotation 0, fire 0; all systems working; 80 gun rounds, torpedoes gone; 1488 t of fuel, 0 t of supply
 ship:42 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 30; propulsion out, fire control out, main battery out, torpedo mounts out; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
@@ -111,9 +111,9 @@ ship:48 "Placeholder cruiser D1": afloat in task_force:11; damage flotation 0, f
 ship:49 "Placeholder cruiser D2": afloat in task_force:11; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
 ship:50 "Placeholder cruiser E1": afloat in task_force:12; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
 ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
-base:1 "Henderson Field" (Allied) at (2,-4): 4300.955 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 4300.955 t of supply in stock, 192 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 8910.52 t of supply in stock, repairs 4 aircraft a day
-base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock
+base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 600 t of fuel in stock
 Allied: no contacts
 Allied claims 0 enemy ships sunk at (0,10), day 7 night
 Allied claims 0 enemy ships sunk at (0,10), day 7 morning

@@ -30,6 +30,7 @@ mod cargo;
 mod damage;
 mod invariants;
 mod movement;
+mod refuel;
 mod resolve;
 mod search;
 mod start;
