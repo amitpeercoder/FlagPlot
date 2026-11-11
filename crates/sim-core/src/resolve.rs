@@ -42,6 +42,9 @@ pub(crate) enum PulsePhase {
     /// Damaged aircraft are repaired, first in the night pulse (decision 9
     /// of 0035).
     AircraftRepair,
+    /// Replacement aircraft and pilots arrive at the bases the scenario names,
+    /// right after the repair, from day 2 (decisions 6 to 8 of 0038).
+    AirReplacement,
     /// Aircraft that flew roll for wear, after the air combat step of a
     /// daylight pulse (decisions 3 to 7 of 0035).
     AircraftWear,
@@ -59,8 +62,9 @@ enum EndOfDayPhase {
     IntelligenceUpdate,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 7] = [
+const NIGHT_SEQUENCE: [PulsePhase; 8] = [
     PulsePhase::AircraftRepair,
+    PulsePhase::AirReplacement,
     PulsePhase::AirGroupRest,
     PulsePhase::Movement,
     PulsePhase::NightSearch,
@@ -142,6 +146,7 @@ impl World {
             PulsePhase::AirCombat => self.resolve_strikes(day, pulse),
             PulsePhase::AircraftRepair => self.repair_aircraft(day, pulse),
             PulsePhase::AircraftWear => self.wear_aircraft(day, pulse),
+            PulsePhase::AirReplacement => self.receive_replacements(day, pulse),
             PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,
@@ -1438,6 +1443,8 @@ mod tests {
                 rest_above: None,
                 rest_order: None,
                 stood_down: false,
+                pilots: None,
+                strength: 3,
             },
         );
         assert_sound(&world);

@@ -532,6 +532,28 @@ pub struct AirGroup {
     /// Whether the staff stood the group down today: it flies nothing
     /// (decision 9 of 0036). The default is false.
     pub stood_down: bool,
+    /// The group's pilots, one for each aircraft it can fly, or `None` if
+    /// the scenario does not track them for this group (decision 0038). A
+    /// tracked group flies no more aircraft than it has pilots.
+    pub pilots: Option<u32>,
+    /// The ceiling for replacements, in aircraft (ready and damaged
+    /// together) and in pilots: what the group started with, or the figure
+    /// the scenario gives (decisions 7 and 10 of 0038). It is read by
+    /// nothing else.
+    pub strength: u32,
+}
+
+/// A stream of replacements a scenario gives a side at a base (decision 6 of
+/// `docs/decisions/0038-pilots-and-replacements.md`): each day, for one
+/// aircraft type, a number of aircraft and a number of pilots. Static: it is
+/// never changed by the rules.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Replacement {
+    pub side: Side,
+    pub base: BaseId,
+    pub aircraft_type: AircraftTypeId,
+    pub aircraft_per_day: u32,
+    pub pilots_per_day: u32,
 }
 
 /// The real state of the world.
@@ -543,6 +565,9 @@ pub struct TruthState {
     pub task_forces: BTreeMap<TaskForceId, TaskForce>,
     pub bases: BTreeMap<BaseId, Base>,
     pub air_groups: BTreeMap<AirGroupId, AirGroup>,
+    /// The scenario's replacement streams, in the order they are applied
+    /// (decision 0038). Empty in a scenario without replacements.
+    pub replacements: Vec<Replacement>,
 }
 
 impl TruthState {

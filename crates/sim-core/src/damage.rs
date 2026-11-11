@@ -239,7 +239,13 @@ impl World {
             let aircraft = group.ready + group.damaged;
             group.ready = 0;
             group.damaged = 0;
-            self.record_at(
+            // The pilots of a group lost with its ship go with it (decision
+            // 5 of 0038).
+            let pilots = group.pilots.unwrap_or(0);
+            if group.pilots.is_some() {
+                group.pilots = Some(0);
+            }
+            let lost = self.record_at(
                 site,
                 EventKind::AirGroupLost {
                     air_group,
@@ -248,6 +254,17 @@ impl World {
                 },
                 vec![Cause::Event(sunk)],
             );
+            if pilots > 0 {
+                self.record_at(
+                    site,
+                    EventKind::PilotsLost {
+                        air_group,
+                        lost: pilots,
+                        left: 0,
+                    },
+                    vec![Cause::Event(lost)],
+                );
+            }
         }
         sunk
     }

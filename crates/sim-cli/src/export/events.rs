@@ -535,6 +535,32 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .int("aircraft", *aircraft)
                 .int("remaining", *remaining),
         ),
+        EventKind::PilotsLost {
+            air_group,
+            lost,
+            left,
+        } => (
+            "pilots_lost",
+            d.id("air_group", *air_group)
+                .int("lost", *lost)
+                .int("left", *left),
+        ),
+        EventKind::ReplacementsReceived {
+            air_group,
+            base,
+            aircraft,
+            pilots,
+            ready,
+            pilots_now,
+        } => (
+            "replacements_received",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .int("aircraft", *aircraft)
+                .int("pilots", *pilots)
+                .int("ready", *ready)
+                .int("pilots_now", *pilots_now),
+        ),
         EventKind::SearchAttempt {
             air_group,
             task_force,
