@@ -67,6 +67,10 @@ Over seeds 1 to 1000, six days, at the end of each day on average. All figures a
 
 The bombers end with twice as many aircraft as pilots: the group received 9.55 aircraft and 4.94 pilots a run and lost one of each with every bomber shot down. The Japanese fighters, with no replacements, fall to a third. The Allied fighters, shot down over their own field, keep all twelve pilots and are back near strength by the sixth day on two aircraft a day.
 
+## The legibility test
+
+A cheap model was given a briefing for both sides and the log of the first two days of the scenario's own seed. It said which groups lost pilots and which lost aircraft only, and why. It saw that pilots, not aircraft, held the second raid to 17 bombers. It predicted the third night and morning exactly: one bomber and one pilot to group 1 with the second bomber lost against the ceiling, two fighters and one bomber to the Allies, 17 bombers launched, 5 escorts, a patrol of 11. It judged the Allied fighters the better placed over two weeks, and named fighter pilots as what the Japanese most lack. It found no gap in the log.
+
 ## Rule card
 
 | | |
