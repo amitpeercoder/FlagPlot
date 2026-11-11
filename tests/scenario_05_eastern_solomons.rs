@@ -59,12 +59,18 @@
 //! | 12:00 | (8,-11), 14 nm short of its centre | 306 nm | (7,-10), arrived at 12:00, hour 18 | 360 nm |
 //! | 18:00 | (8,-11), arrived at hour 18.823529 | 320 nm | (7,-10) | 360 nm |
 //!
-//! Distances between hex centres, in nm:
+//! Air distances, in nm: the straight line between hex centres, 40 times
+//! the square root of (dq x dq + dr x dr + dq x dr), to the nearest mile
+//! (decision 0040). The hex count times 40 is given beside each for
+//! comparison; the rules do not use it for aircraft.
 //!
 //! | At | American carriers to striking force | American carriers to Ryujo | Henderson Field to Ryujo |
 //! | -- | ----------------------------------- | -------------------------- | ------------------------ |
-//! | 06:00 | 9 hexes, 360 | 8 hexes, 320 | 9 hexes, 360 |
-//! | 12:00 | 6 hexes, 240 | 5 hexes, 200 | 6 hexes, 240 |
+//! | 06:00 | (1,-9): 40 x root 73 = 342 (by hexes 360) | (0,-8): 320 (320) | (5,-9): 40 x root 61 = 312 (360) |
+//! | 12:00 | (1,-6): 40 x root 31 = 223 (240) | (0,-5): 200 (200) | (5,-6): 40 x root 31 = 223 (240) |
+//!
+//! (Before decision 0040 every air distance here was the hex count times
+//! 40. The figures below that changed with it are marked.)
 //!
 //! ## Fuel
 //!
@@ -89,21 +95,21 @@
 //! | Searcher | From | Arc | Target | Bearing | Distance | Chance |
 //! | -------- | ---- | --- | ------ | ------- | -------- | ------ |
 //! | Group 3, 16 SBD-3 | (7,-5) | 290 to 090, 160 degrees, to 200 nm | Ryujo detachment | 330 | 200 | 0.572957 |
-//! | Group 3 | (7,-5) | | Striking force | | 240 | beyond 200 nm: no attempt |
-//! | Group 17, 5 E13A1 | (8,-11) | 110 to 200, 90 degrees, to 253 nm | Each American force | about 159 | 240 | 0.265258 |
+//! | Group 3 | (7,-5) | | Striking force | | 223 | beyond 200 nm: no attempt |
+//! | Group 17, 5 E13A1 | (8,-11) | 110 to 200, 90 degrees, to 253 nm | Each American force | about 159 | 223 | 57.295779 x 5 x 20 / (90 x 223) = 0.285479 |
 //! | Group 20, 5 E13A1 | (7,-10) | 110 to 200 | Each American force | 150 | 200 | 0.318309 |
 //!
 //! Each floatplane group rolls once for each of the two American forces, so
 //! the Japanese make four attempts. The chance that none sights is
-//! 0.734742 x 0.734742 x 0.681691 x 0.681691 = 0.250867, so the Japanese
-//! side holds a contact in the afternoon with chance 0.749133. (First
-//! written as 0.250869 and 0.749131, a slip in the multiplication. The mean
-//! and the band are unchanged.)
+//! 0.714521 x 0.714521 x 0.681691 x 0.681691 = 0.237248, so the Japanese
+//! side holds a contact in the afternoon with chance 0.762752. (At 240 nm,
+//! before decision 0040, group 17's chance was 0.265258 and the side's
+//! 0.749133.)
 //!
 //! | Count of runs, over seeds 1 to 1000 | p        | Mean   | Std dev | Allowed    |
 //! | ----------------------------------- | -------- | ------ | ------- | ---------- |
 //! | The Allied side sights the Ryujo detachment | 0.572957 | 572.96 | 15.64 | 511 to 635 |
-//! | The Japanese side sights an American force  | 0.749133 | 749.13 | 13.71 | 695 to 803 |
+//! | The Japanese side sights an American force  | 0.762752 | 762.75 | 13.45 | 709 to 816 |
 //!
 //! ## The afternoon: who launches
 //!
@@ -111,24 +117,31 @@
 //! the group is. A report names the true hex or one next to it.
 //!
 //! - **Groups 2, 6 and 7, the SBD-3s:** launch if the contact's hex is within
-//!   200 nm of (7,-5), which the true hex (7,-10) is, exactly. A report that
-//!   names a hex 240 nm away launches nothing.
-//! - **Groups 4 and 8, the TBF-1s:** radius 190 nm. They launch only at a
-//!   contact reported 160 nm away, a hex nearer than the truth, and find
-//!   nothing there.
-//! - **Group 10 at Henderson Field:** the Ryujo detachment's true hex is 240
-//!   nm from (2,-4). It launches only at a contact reported 200 nm away or
-//!   less, and finds nothing there.
+//!   200 nm of (7,-5), which the true hex (7,-10) is, exactly. Of the hexes
+//!   next to it, (7,-9) at 160 nm and (8,-10) and (6,-9) at 183 nm are in
+//!   reach and they find nothing there; (6,-10) and (8,-11) at 223 nm and
+//!   (7,-11) at 240 nm launch nothing.
+//! - **Groups 4 and 8, the TBF-1s:** radius 190 nm. The true hex, at 200 nm,
+//!   is out of reach. They launch only at a contact reported in (7,-9),
+//!   (8,-10) or (6,-9), and find nothing there. (Before decision 0040 only
+//!   (7,-9) was in reach: the other two were 200 nm by hexes.)
+//! - **Group 10 at Henderson Field:** the Ryujo detachment's true hex is 223
+//!   nm from (2,-4). It launches only at a contact reported in (7,-9), 200
+//!   nm away, or (6,-9), 183 nm, and finds nothing there.
 //! - **Groups 12 and 15, the D3A1s:** launch if the contact's hex is within
-//!   252 nm of (8,-11), which the true hex (7,-5) is.
+//!   252 nm of (8,-11), which the true hex (7,-5) is, at 223 nm. Of the
+//!   hexes next to it only (7,-4), at 262 nm, is out of reach. (Before
+//!   decision 0040 (6,-4), now 250 nm, was out of reach too, at 280 nm by
+//!   hexes.)
 //! - **Groups 13 and 16, the striking force's B5N2s:** radius 175 nm, and
-//!   every hex a report of the American forces can name is 200 nm or more
+//!   every hex a report of the American forces can name is 183 nm or more
 //!   from (8,-11). They never launch.
 //! - **Group 19, Ryujo's B5N2s:** the true hex is 200 nm from (7,-10). They
 //!   launch only at a contact reported in (7,-6), 160 nm away, and find
-//!   nothing there. Ryujo's 17 escorts go with them: the A6M2's radius
-//!   covers it. (The first version of this list said no B5N2 ever launches.
-//!   It missed the hex between the two forces.)
+//!   nothing there: (6,-5) and (8,-6) are 183 nm away. Ryujo's 17 escorts
+//!   go with them: the A6M2's radius covers it. (The first version of this
+//!   list said no B5N2 ever launches. It missed the hex between the two
+//!   forces.)
 //!
 //! A strike attacks only if it flew to the hex its target is really in.
 //!
@@ -180,7 +193,7 @@
 //! ## A Japanese raid on the American carriers
 //!
 //! Shokaku's raid is group 12, 27 D3A1, and Zuikaku's is group 15, 27 D3A1.
-//! They are two raids, because they leave from two ships. The target is 240
+//! They are two raids, because they leave from two ships. The target is 223
 //! nm away and the A6M2's radius is 261, so the escorts go: Shokaku's 26
 //! fighters keep 20 (20.8 rounded down) and send 6; Zuikaku's 25 keep 20 and
 //! send 5.
@@ -496,6 +509,12 @@ fn side_index(side: Side) -> usize {
 
 fn nm(hexes: u32) -> i64 {
     40 * i64::from(hexes)
+}
+
+/// How far an aircraft flies between two hexes: the function the
+/// simulation uses (decision 0040).
+fn air(from: Hex, to: Hex) -> i64 {
+    i64::from(from.air_distance_nm(to))
 }
 
 // ---------------------------------------------------------------------
@@ -1068,7 +1087,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             (110, 200),
             253,
             5,
-            &[(1, 240, 265_258), (2, 240, 265_258)],
+            &[(1, 223, 285_479), (2, 223, 285_479)],
         ),
         (
             20,
@@ -1189,7 +1208,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             .contacts
             .iter()
             .filter_map(|(id, held)| {
-                let distance = nm(origin.distance(held.hex));
+                let distance = air(origin, held.hex);
                 (Fixed::from_int(distance) <= ty.strike_range_nm).then_some((
                     held.kind,
                     distance,
@@ -1306,7 +1325,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             })
             .map(|(raid_index, _)| raid_index);
         if let Some(raid_index) = chosen {
-            let distance = nm(fighters[index].hex.distance(raids[raid_index].hex));
+            let distance = air(fighters[index].hex, raids[raid_index].hex);
             if Fixed::from_int(distance) <= fighters[index].radius {
                 raids[raid_index].escorts.push(index);
             } else {
@@ -2378,17 +2397,26 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
     let american = Hex::new(7, -5);
     // 06:00: (8,-14) and (7,-13).
     let (a3, a4) = (Hex::new(8, -14), Hex::new(7, -13));
+    // Air distance (hex count times 40 in brackets): 342 (360), 320 (320),
+    // 312 (360).
+    assert_eq!(air(american, a3), 342);
     assert_eq!(nm(american.distance(a3)), 360);
     assert_eq!(american.distance(a3), 9);
+    assert_eq!(air(american, a4), 320);
     assert_eq!(nm(american.distance(a4)), 320);
     assert_eq!(american.distance(a4), 8);
+    assert_eq!(air(HENDERSON, a4), 312);
     assert_eq!(nm(HENDERSON.distance(a4)), 360);
     assert_eq!(HENDERSON.distance(a4), 9);
     // 12:00: (8,-11) and (7,-10).
+    // Air distance: 223 (240), 200 (200), 223 (240).
+    assert_eq!(air(american, dest3), 223);
     assert_eq!(nm(american.distance(dest3)), 240);
     assert_eq!(american.distance(dest3), 6);
+    assert_eq!(air(american, dest4), 200);
     assert_eq!(nm(american.distance(dest4)), 200);
     assert_eq!(american.distance(dest4), 5);
+    assert_eq!(air(HENDERSON, dest4), 223);
     assert_eq!(nm(HENDERSON.distance(dest4)), 240);
     assert_eq!(HENDERSON.distance(dest4), 6);
 
@@ -2623,8 +2651,8 @@ fn the_morning_flies_every_search_and_finds_nothing_and_does_nothing() {
         (a4, 253, [american, american]),
     ] {
         for enemy in enemies {
-            assert!(nm(from.distance(enemy)) >= 320);
-            assert!(nm(from.distance(enemy)) > range);
+            assert!(air(from, enemy) >= 320);
+            assert!(air(from, enemy) > range);
         }
     }
     assert_eq!(cx.types[&SBD3].search_range_nm, Fixed::from_int(200));
@@ -2691,7 +2719,7 @@ fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands
     let (striking, ryujo) = (Hex::new(8, -11), Hex::new(7, -10));
     // Group 3, from (7,-5), arc 290 to 090, 160 degrees, to 200 nm: the
     // Ryujo detachment at bearing 330 and 200 nm, and the striking force at
-    // 240 nm, beyond 200: no attempt.
+    // 223 nm, beyond 200: no attempt.
     assert_eq!(bearing::arc_degrees(290, 90), 160);
     assert!(bearing::in_arc(american, ryujo, 290, 90));
     // Bearing 330 exactly: on the edge of 320-330 and of 330-340 and in no
@@ -2700,36 +2728,36 @@ fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands
     assert!(bearing::in_arc(american, ryujo, 330, 340));
     assert!(!bearing::in_arc(american, ryujo, 340, 350));
     assert!(!bearing::in_arc(american, ryujo, 310, 320));
-    assert_eq!(nm(american.distance(ryujo)), 200);
-    assert_eq!(nm(american.distance(striking)), 240);
-    assert!(nm(american.distance(striking)) > 200);
+    assert_eq!(air(american, ryujo), 200);
+    assert_eq!(air(american, striking), 223);
+    assert!(air(american, striking) > 200);
     // Group 17, from (8,-11), arc 110 to 200, 90 degrees, to 253 nm: about
-    // bearing 159, 240 nm.
+    // bearing 159, 223 nm.
     assert_eq!(bearing::arc_degrees(110, 200), 90);
     assert!(bearing::in_arc(striking, american, 150, 160));
     assert!(!bearing::in_arc(striking, american, 160, 170));
     assert!(!bearing::in_arc(striking, american, 140, 150));
     assert!(bearing::in_arc(striking, american, 110, 200));
-    assert_eq!(nm(striking.distance(american)), 240);
+    assert_eq!(air(striking, american), 223);
     // Group 20, from (7,-10): bearing 150 exactly, 200 nm.
     assert!(bearing::in_arc(ryujo, american, 150, 160));
     assert!(bearing::in_arc(ryujo, american, 140, 150));
     assert!(!bearing::in_arc(ryujo, american, 160, 170));
     assert!(!bearing::in_arc(ryujo, american, 130, 140));
     assert!(bearing::in_arc(ryujo, american, 110, 200));
-    assert_eq!(nm(ryujo.distance(american)), 200);
+    assert_eq!(air(ryujo, american), 200);
     // The chances, by the formula and as the table gives them.
     assert_eq!(search_chance(16, 160, 200), millionths(572_957));
-    assert_eq!(search_chance(5, 90, 240), millionths(265_258));
+    assert_eq!(search_chance(5, 90, 223), millionths(285_479));
     assert_eq!(search_chance(5, 90, 200), millionths(318_309));
     // The chance that none of the four attempts sights, and its complement.
-    // 0.734742 x 0.734742 x 0.681691 x 0.681691 = 0.250867 and 0.749133.
-    let none = (Fixed::ONE - millionths(265_258))
-        * (Fixed::ONE - millionths(265_258))
+    // 0.714521 x 0.714521 x 0.681691 x 0.681691 = 0.237248 and 0.762752.
+    let none = (Fixed::ONE - millionths(285_479))
+        * (Fixed::ONE - millionths(285_479))
         * (Fixed::ONE - millionths(318_309))
         * (Fixed::ONE - millionths(318_309));
-    assert_eq!(none, millionths(250_867));
-    assert_eq!(Fixed::ONE - none, millionths(749_133));
+    assert_eq!(none, millionths(237_248));
+    assert_eq!(Fixed::ONE - none, millionths(762_752));
 
     let mut allied = 0;
     let mut japanese = 0;
@@ -2751,11 +2779,11 @@ fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands
     // deviations of the exact chance).
     assert!((511..=635).contains(&allied), "Allied sightings {allied}");
     assert!(
-        (695..=803).contains(&japanese),
+        (709..=816).contains(&japanese),
         "Japanese sightings {japanese}"
     );
     assert!(within_four_sigma(allied, 1000, 572_957));
-    assert!(within_four_sigma(japanese, 1000, 749_133));
+    assert!(within_four_sigma(japanese, 1000, 762_752));
 }
 
 // ---------------------------------------------------------------------
@@ -2786,12 +2814,12 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
     // What the radii and the hexes say, before any run: a hex is reached if
     // its distance in nm is within the radius.
     let reaches = |from: Hex, to: Hex, ty: u32| {
-        Fixed::from_int(nm(from.distance(to))) <= cx.types[&ty].strike_range_nm
+        Fixed::from_int(air(from, to)) <= cx.types[&ty].strike_range_nm
     };
     assert!(reaches(american, ryujo, SBD3));
     assert!(!reaches(american, ryujo, TBF1));
     assert!(!reaches(HENDERSON, ryujo, SBD3));
-    assert_eq!(nm(HENDERSON.distance(ryujo)), 240);
+    assert_eq!(air(HENDERSON, ryujo), 223);
     assert!(reaches(striking, american, D3A1));
     assert!(!reaches(striking, american, B5N2));
     // A report of the American forces names (7,-5) or a navigable
@@ -2805,8 +2833,31 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
             .filter(|h| cx.map.is_navigable(*h)),
     );
     for hex in &named {
-        assert!(nm(striking.distance(*hex)) >= 200, "{hex}");
+        assert!(air(striking, *hex) >= 183, "{hex}");
     }
+    // The hexes next to the true hex (7,-10) and their distances from the
+    // SBD-3s' (7,-5) and from Henderson Field, and two hexes next to the
+    // true American hex from the D3A1s' (8,-11).
+    let at = |q: i32, r: i32| Hex::new(q, r);
+    for (hex, from_american, from_henderson) in [
+        (at(7, -9), 160, 200),
+        (at(8, -10), 183, 240),
+        (at(6, -9), 183, 183),
+        (at(6, -10), 223, 212),
+        (at(8, -11), 223, 262),
+        (at(7, -11), 240, 250),
+    ] {
+        assert_eq!(air(american, hex), from_american, "{hex}");
+        assert_eq!(air(HENDERSON, hex), from_henderson, "{hex}");
+    }
+    for (hex, nm_from_striking) in [(at(7, -4), 262), (at(6, -4), 250)] {
+        assert_eq!(air(striking, hex), nm_from_striking, "{hex}");
+    }
+    // The B5N2s' radius is 175: Ryujo's group 19 reaches (7,-6) at 160 and
+    // not (6,-5) or (8,-6) at 183.
+    assert_eq!(air(ryujo, at(7, -6)), 160);
+    assert_eq!(air(ryujo, at(6, -5)), 183);
+    assert_eq!(air(ryujo, at(8, -6)), 183);
 
     let mut counts: BTreeMap<&str, i64> = BTreeMap::new();
     let mut bump = |name: &'static str| *counts.entry(name).or_default() += 1;
@@ -2817,32 +2868,41 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
         // Groups 2, 6 and 7: launch if the contact's hex is within 200 nm of
         // (7,-5).
         for group in [2, 6, 7] {
-            let within = allied_hex.is_some_and(|hex| nm(american.distance(hex)) <= 200);
+            let within = allied_hex.is_some_and(|hex| air(american, hex) <= 200);
             assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
             if let Some(launch) = launched(work, group) {
                 assert_eq!(Some(launch.hex), allied_hex);
                 assert_eq!(launch.aircraft, spec_of(group).ready);
             }
         }
-        // The true hex is exactly 200 nm; a hex 240 nm away launches nothing.
+        // The true hex is exactly 200 nm; a hex 223 or 240 nm away launches
+        // nothing.
         if allied_hex == Some(ryujo) {
             assert_eq!(launched(work, 2).expect("launches").distance_nm, 200);
             bump("allied report names the true hex");
         }
-        if allied_hex.is_some_and(|hex| nm(american.distance(hex)) == 240) {
+        if allied_hex.is_some_and(|hex| air(american, hex) > 200) {
             assert!(launched(work, 2).is_none() && launched(work, 6).is_none());
             assert!(launched(work, 7).is_none());
-            bump("allied report 240 nm away, nothing launches");
+            bump("allied report beyond 200 nm, nothing launches");
         }
-        // Groups 4 and 8: radius 190. They launch only at a contact reported
-        // 160 nm away, a hex nearer than the truth, and find nothing there.
+        // Groups 4 and 8: radius 190. The true hex, at 200, is out of reach.
+        // They launch only at a contact reported in (7,-9) at 160 nm or
+        // (8,-10) or (6,-9) at 183, and find nothing there.
         for group in [4, 8] {
-            let within = allied_hex.is_some_and(|hex| nm(american.distance(hex)) <= 190);
+            let within = allied_hex.is_some_and(|hex| air(american, hex) <= 190);
             assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
             if let Some(launch) = launched(work, group) {
-                assert_eq!(launch.distance_nm, 160, "seed {seed}");
-                assert_eq!(nm(american.distance(ryujo)) - launch.distance_nm, 40);
-                assert!(american.distance(launch.hex) < american.distance(ryujo));
+                assert!(
+                    [(7, -9, 160), (8, -10, 183), (6, -9, 183)].contains(&(
+                        launch.hex.q,
+                        launch.hex.r,
+                        launch.distance_nm
+                    )),
+                    "seed {seed}: {}",
+                    launch.hex
+                );
+                assert!(air(american, ryujo) > launch.distance_nm);
                 assert_ne!(launch.hex, ryujo);
                 assert!(found_nothing(run, group), "seed {seed}");
                 assert!(!attacked(run, group), "seed {seed}");
@@ -2853,13 +2913,21 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
                 });
             }
         }
-        // Group 10 at Henderson Field: the true hex is 240 nm away. It
-        // launches only at a contact reported 200 nm away or less, and finds
-        // nothing there.
-        let within = allied_hex.is_some_and(|hex| nm(HENDERSON.distance(hex)) <= 200);
+        // Group 10 at Henderson Field: the true hex is 223 nm away. It
+        // launches only at a contact reported in (7,-9) at 200 nm or (6,-9)
+        // at 183, and finds nothing there.
+        let within = allied_hex.is_some_and(|hex| air(HENDERSON, hex) <= 200);
         assert_eq!(launched(work, 10).is_some(), within, "seed {seed}");
         if let Some(launch) = launched(work, 10) {
-            assert!(launch.distance_nm <= 200);
+            assert!(
+                [(7, -9, 200), (6, -9, 183)].contains(&(
+                    launch.hex.q,
+                    launch.hex.r,
+                    launch.distance_nm
+                )),
+                "seed {seed}: {}",
+                launch.hex
+            );
             assert_ne!(launch.hex, ryujo);
             assert!(found_nothing(run, 10), "seed {seed}");
             assert!(!attacked(run, 10), "seed {seed}");
@@ -2871,7 +2939,7 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
         // Groups 12 and 15: launch if the contact's hex is within 252 nm of
         // (8,-11), which the true hex (7,-5) is.
         for group in [12, 15] {
-            let within = japanese_hex.is_some_and(|hex| nm(striking.distance(hex)) <= 252);
+            let within = japanese_hex.is_some_and(|hex| air(striking, hex) <= 252);
             assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
             if let Some(launch) = launched(work, group) {
                 assert_eq!(Some(launch.hex), japanese_hex);
@@ -2879,7 +2947,7 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
             }
         }
         if japanese_hex == Some(american) {
-            assert_eq!(launched(work, 12).expect("launches").distance_nm, 240);
+            assert_eq!(launched(work, 12).expect("launches").distance_nm, 223);
             bump("japanese report names the true hex");
         }
         // Groups 13 and 16, the B5N2s of the striking force, never launch.
@@ -2911,7 +2979,7 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
     eprintln!("launch cases over 1000 seeds: {counts:?}");
     for name in [
         "allied report names the true hex",
-        "allied report 240 nm away, nothing launches",
+        "allied report beyond 200 nm, nothing launches",
         "group 4 launches and finds nothing",
         "group 8 launches and finds nothing",
         "group 10 launches and finds nothing",
@@ -3111,7 +3179,7 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
             assert_eq!(raid.strikes.len(), 1);
             assert_eq!(raid.strikes[0].1, 27, "27 D3A1");
             assert_eq!(raid.bombers, 27);
-            // The target is 240 nm away and the A6M2's radius is 261, so the
+            // The target is 223 nm away and the A6M2's radius is 261, so the
             // escorts go: Shokaku's 26 fighters keep 20 and send 6;
             // Zuikaku's 25 keep 20 and send 5.
             let (escort_group, escorts) = match raid.strikes[0].0 {
@@ -3575,7 +3643,7 @@ fn every_strike_is_launched_at_a_contact_its_own_side_holds_within_its_types_rad
             };
             assert_eq!(spec_of(air_group.raw()).side, spec.side);
             // Within the launching type's radius of where the group is.
-            let distance = nm(place_hex(spec.place).distance(launch.hex));
+            let distance = air(place_hex(spec.place), launch.hex);
             assert_eq!(distance, launch.distance_nm);
             assert!(Fixed::from_int(distance) <= cx.types[&spec.ty].strike_range_nm);
         }
@@ -3592,7 +3660,7 @@ fn every_escort_sent_is_within_its_types_radius_of_the_raids_target() {
             for &(group, _) in &raid.escorts {
                 sent += 1;
                 let spec = spec_of(group);
-                let distance = nm(place_hex(spec.place).distance(raid.hex));
+                let distance = air(place_hex(spec.place), raid.hex);
                 assert!(
                     Fixed::from_int(distance) <= cx.types[&spec.ty].strike_range_nm,
                     "seed {}: group {group} escorts {distance} nm",

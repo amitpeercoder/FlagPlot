@@ -579,7 +579,7 @@ fn a_strike_is_launched_only_at_a_contact_held_no_more_than_one_pulse_old_within
             assert_eq!(aircraft, 18);
             assert_eq!(
                 distance_nm,
-                Fixed::from_int(i64::from(HOME.distance(hex)) * 40)
+                Fixed::from_int(i64::from(HOME.air_distance_nm(hex)))
             );
             assert!(distance_nm <= Fixed::from_int(250), "seed {}", run.seed);
             // Every hex next to the target is five or six hexes out.

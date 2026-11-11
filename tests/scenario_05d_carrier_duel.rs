@@ -757,7 +757,7 @@ fn work_the_run(run: &Run) -> Worked {
             assert_eq!(aircraft, can_fly, "seed {seed}: all that can fly go");
             assert_eq!(
                 distance_nm,
-                Fixed::from_int(40 * i64::from(camp.home.distance(hex)))
+                Fixed::from_int(i64::from(camp.home.air_distance_nm(hex)))
             );
             assert!(distance_nm <= Fixed::from_int(250));
             assert_eq!(launch.causes.len(), 2, "seed {seed}");

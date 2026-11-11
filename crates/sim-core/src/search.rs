@@ -15,7 +15,7 @@ use crate::bearing;
 use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::events::{Breakdown, Cause, EventKind, Factor, SortieKind};
 use crate::fixed::Fixed;
-use crate::hex::{Hex, HEX_NM};
+use crate::hex::Hex;
 use crate::ids::{EntityRef, EventId, TaskForceId};
 use crate::map::Map;
 use crate::orders::AirMission;
@@ -259,7 +259,7 @@ impl World {
                     continue;
                 }
                 let distance_nm =
-                    Fixed::from_int(i64::from(origin.distance(target.position)) * HEX_NM);
+                    Fixed::from_int(i64::from(origin.air_distance_nm(target.position)));
                 if distance_nm > arc.range_nm {
                     continue;
                 }

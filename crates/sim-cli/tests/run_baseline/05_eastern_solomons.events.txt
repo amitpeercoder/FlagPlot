@@ -82,8 +82,8 @@ day   1  hash c945927a73e35497  162 events
 #76 D1 afternoon air_group:3 searched for task_force:4 at 200 nm, chance 0.572957: sighted  <- #75
 #77 D1 afternoon Allied report: 4 ships, carrier, at (7,-10): new contact:1  <- #76
 #78 D1 afternoon air_group:17 searched 110-200 out to 253 nm from ship:21 at (8,-11) with 5 aircraft  <- order:22, order:23
-#79 D1 afternoon air_group:17 searched for task_force:1 at 240 nm, chance 0.265258: not sighted  <- #78
-#80 D1 afternoon air_group:17 searched for task_force:2 at 240 nm, chance 0.265258: sighted  <- #78
+#79 D1 afternoon air_group:17 searched for task_force:1 at 223 nm, chance 0.285479: not sighted  <- #78
+#80 D1 afternoon air_group:17 searched for task_force:2 at 223 nm, chance 0.285479: sighted  <- #78
 #81 D1 afternoon Japanese report: 9 ships, transport, at (7,-5): new contact:1  <- #80
 #82 D1 afternoon air_group:20 searched 110-200 out to 253 nm from ship:34 at (7,-10) with 5 aircraft  <- order:24, order:25
 #83 D1 afternoon air_group:20 searched for task_force:1 at 200 nm, chance 0.318309: not sighted  <- #82
@@ -91,8 +91,8 @@ day   1  hash c945927a73e35497  162 events
 #85 D1 afternoon air_group:2 launched 17 aircraft at contact:1 at (7,-10), 200 nm  <- order:6, #77
 #86 D1 afternoon air_group:6 launched 15 aircraft at contact:1 at (7,-10), 200 nm  <- order:8, #77
 #87 D1 afternoon air_group:7 launched 15 aircraft at contact:1 at (7,-10), 200 nm  <- order:9, #77
-#88 D1 afternoon air_group:12 launched 27 aircraft at contact:1 at (7,-5), 240 nm  <- order:26, #81
-#89 D1 afternoon air_group:15 launched 27 aircraft at contact:1 at (7,-5), 240 nm  <- order:28, #81
+#88 D1 afternoon air_group:12 launched 27 aircraft at contact:1 at (7,-5), 223 nm  <- order:26, #81
+#89 D1 afternoon air_group:15 launched 27 aircraft at contact:1 at (7,-5), 223 nm  <- order:28, #81
 #90 D1 afternoon air_group:18 patrol at the bombers of air_group:2: 2 shots x 0.16875 = 0.3375 expected, 1 hit  <- #85
 #91 D1 afternoon task_force:4 guns at the raid of air_group:2: 26 shots x 0.028125 = 0.73125 expected, 0 hits  <- #85
 #92 D1 afternoon air_group:2 lost 1 aircraft, 16 left  <- #90
