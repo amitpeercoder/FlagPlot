@@ -49,5 +49,9 @@ path = "scenario_04c_meeting.rs"
 name = "scenario_04_savo_island"
 path = "scenario_04_savo_island.rs"
 
+[[test]]
+name = "scenario_05a_carrier_search"
+path = "scenario_05a_carrier_search.rs"
+
 [lints]
 workspace = true

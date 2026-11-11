@@ -447,6 +447,7 @@ mod tests {
                     torpedo_damage: Fixed::ZERO,
                     toughness: Fixed::from_int(300),
                     radar: false,
+                    aircraft_capacity: 0,
                 },
             );
         }

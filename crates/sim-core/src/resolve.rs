@@ -608,7 +608,8 @@ mod tests {
         SurfaceCombatFigures,
     };
     use crate::state::{
-        AirGroup, Base, Ship, ShipLocation, ShipSystems, Side, SystemState, TaskForce, TruthState,
+        AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystems, Side, SystemState,
+        TaskForce, TruthState,
     };
 
     const TF: TaskForceId = TaskForceId::new(1);
@@ -648,6 +649,7 @@ mod tests {
             torpedo_damage: Fixed::ZERO,
             toughness: Fixed::from_int(100),
             radar: false,
+            aircraft_capacity: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -1332,7 +1334,7 @@ mod tests {
                 id: GROUP,
                 name: "Test group".to_string(),
                 side: Side::Allied,
-                base: BaseId::new(1),
+                location: AirGroupLocation::Base(BaseId::new(1)),
                 aircraft_type: AircraftTypeId::new(1),
                 ready: 3,
                 mission: AirMission::Rest,
@@ -1555,6 +1557,60 @@ mod tests {
             t.air_groups.clear();
         })
         .is_ok());
+    }
+
+    #[test]
+    fn world_new_checks_air_groups_aboard_ships_against_capacity() {
+        // Ship 1 is an Allied ship of class 1 in the standard test world.
+        let good = world_with_air_group();
+        let ship = ShipId::new(1);
+        let build = |capacity: u32, location: AirGroupLocation| {
+            let mut ref_data = good.ref_data.clone();
+            ref_data
+                .ship_classes
+                .get_mut(&ShipClassId::new(1))
+                .expect("class")
+                .aircraft_capacity = capacity;
+            let mut truth = good.truth.clone();
+            truth.air_groups.get_mut(&GROUP).expect("group").location = location;
+            World::new(1, ref_data, good.map.clone(), truth)
+        };
+        // The group has 3 aircraft.
+        assert!(build(3, AirGroupLocation::Ship(ship)).is_ok());
+        assert!(build(36, AirGroupLocation::Ship(ship)).is_ok());
+        assert!(build(2, AirGroupLocation::Ship(ship)).is_err());
+        assert!(build(0, AirGroupLocation::Ship(ship)).is_err());
+        // A ship that does not exist.
+        assert!(build(36, AirGroupLocation::Ship(ShipId::new(9))).is_err());
+        // The capacity of a ship only matters to groups aboard it.
+        assert!(build(0, AirGroupLocation::Base(BaseId::new(1))).is_ok());
+    }
+
+    #[test]
+    fn where_an_air_group_is_based_is_part_of_the_state_hash() {
+        let at_base = world_with_air_group();
+        let mut aboard = at_base.clone();
+        aboard
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .location = AirGroupLocation::Ship(ShipId::new(1));
+        let mut aboard_other = aboard.clone();
+        aboard_other
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .location = AirGroupLocation::Ship(ShipId::new(2));
+        let hashes = [
+            at_base.state_hash(),
+            aboard.state_hash(),
+            aboard_other.state_hash(),
+        ];
+        assert_ne!(hashes[0], hashes[1]);
+        assert_ne!(hashes[1], hashes[2]);
+        assert_ne!(hashes[0], hashes[2]);
     }
 
     #[test]

@@ -12,7 +12,7 @@ use std::path::Path;
 use std::process::ExitCode;
 
 use sim_core::orders::Stance;
-use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState, TruthState};
+use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::time::ClockTime;
 use sim_core::DaySummary;
 use sim_data::Scenario;
@@ -228,11 +228,14 @@ fn run(args: &[String]) -> Result<(), String> {
             None => "no arc".to_string(),
         };
         println!(
-            "{} \"{}\" ({}) at {}: {} ready, mission {:?}, {}",
+            "{} \"{}\" ({}) {}: {} ready, mission {:?}, {}",
             group.id,
             group.name,
             group.side.name(),
-            group.base,
+            match group.location {
+                AirGroupLocation::Base(base) => format!("at {base}"),
+                AirGroupLocation::Ship(ship) => format!("aboard {ship}"),
+            },
             group.ready,
             group.mission,
             arc

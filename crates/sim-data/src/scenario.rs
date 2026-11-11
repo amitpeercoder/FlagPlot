@@ -13,8 +13,8 @@ use sim_core::orders::{
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::state::{
-    AirGroup, Base, Ship, ShipLocation, ShipSystem, ShipSystems, Side, SystemState, TaskForce,
-    TruthState,
+    AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, ShipSystems, Side,
+    SystemState, TaskForce, TruthState,
 };
 use sim_core::{DaySummary, StartingContact, World};
 
@@ -95,7 +95,9 @@ struct AirGroupSpec {
     id: u32,
     name: String,
     side: SideSpec,
-    base: u32,
+    /// Exactly one of `base` and `ship` must be given.
+    base: Option<u32>,
+    ship: Option<u32>,
     aircraft_type: u32,
     /// Aircraft ready to fly at the start.
     ready: u32,
@@ -428,45 +430,6 @@ impl Scenario {
             }
         }
 
-        for spec in &file.air_group {
-            let id = AirGroupId::new(spec.id);
-            let side: Side = spec.side.into();
-            let base_id = BaseId::new(spec.base);
-            let base = truth
-                .bases
-                .get(&base_id)
-                .ok_or_else(|| fail(format!("{id} is at unknown base {}", spec.base)))?;
-            if base.side != side {
-                return Err(fail(format!(
-                    "{id} is {} but its base {base_id} is {}",
-                    side.name(),
-                    base.side.name()
-                )));
-            }
-            let aircraft_type = AircraftTypeId::new(spec.aircraft_type);
-            if !ref_data.aircraft_types.contains_key(&aircraft_type) {
-                return Err(fail(format!(
-                    "{id} has unknown aircraft type {}",
-                    spec.aircraft_type
-                )));
-            }
-            let group = AirGroup {
-                id,
-                name: spec.name.clone(),
-                side,
-                base: base_id,
-                aircraft_type,
-                ready: spec.ready,
-                mission: AirMission::Rest,
-                search: None,
-                mission_order: None,
-                arc_order: None,
-            };
-            if truth.air_groups.insert(id, group).is_some() {
-                return Err(fail(format!("{id} appears twice")));
-            }
-        }
-
         for spec in &file.task_force {
             let id = TaskForceId::new(spec.id);
             let hex = match (spec.at_base, spec.q, spec.r) {
@@ -596,6 +559,77 @@ impl Scenario {
                 systems,
             };
             if truth.ships.insert(id, ship).is_some() {
+                return Err(fail(format!("{id} appears twice")));
+            }
+        }
+
+        // Air groups come after ships, since a group may be aboard one.
+        let mut aboard: BTreeMap<ShipId, u32> = BTreeMap::new();
+        for spec in &file.air_group {
+            let id = AirGroupId::new(spec.id);
+            let side: Side = spec.side.into();
+            let location = match (spec.base, spec.ship) {
+                (Some(raw), None) => {
+                    let base_id = BaseId::new(raw);
+                    let base = truth
+                        .bases
+                        .get(&base_id)
+                        .ok_or_else(|| fail(format!("{id} is at unknown base {raw}")))?;
+                    if base.side != side {
+                        return Err(fail(format!(
+                            "{id} is {} but its base {base_id} is {}",
+                            side.name(),
+                            base.side.name()
+                        )));
+                    }
+                    AirGroupLocation::Base(base_id)
+                }
+                (None, Some(raw)) => {
+                    let ship_id = ShipId::new(raw);
+                    let ship = truth
+                        .ships
+                        .get(&ship_id)
+                        .ok_or_else(|| fail(format!("{id} is aboard unknown ship {raw}")))?;
+                    if ship.side != side {
+                        return Err(fail(format!(
+                            "{id} is {} but its ship {ship_id} is {}",
+                            side.name(),
+                            ship.side.name()
+                        )));
+                    }
+                    let capacity = ref_data.ship_classes[&ship.class].aircraft_capacity;
+                    let total = aboard.entry(ship_id).or_insert(0);
+                    *total = total.saturating_add(spec.ready);
+                    if *total > capacity {
+                        return Err(fail(format!(
+                            "{id} puts {} aircraft aboard {ship_id}, whose class carries {capacity}",
+                            *total
+                        )));
+                    }
+                    AirGroupLocation::Ship(ship_id)
+                }
+                _ => return Err(fail(format!("{id} needs exactly one of base and ship"))),
+            };
+            let aircraft_type = AircraftTypeId::new(spec.aircraft_type);
+            if !ref_data.aircraft_types.contains_key(&aircraft_type) {
+                return Err(fail(format!(
+                    "{id} has unknown aircraft type {}",
+                    spec.aircraft_type
+                )));
+            }
+            let group = AirGroup {
+                id,
+                name: spec.name.clone(),
+                side,
+                location,
+                aircraft_type,
+                ready: spec.ready,
+                mission: AirMission::Rest,
+                search: None,
+                mission_order: None,
+                arc_order: None,
+            };
+            if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
         }
@@ -926,6 +960,109 @@ r = 0
         assert!(error_of(&air_group(1, 9)).contains("unknown aircraft type"));
         let twice = format!("{}{}", air_group(1, 1), air_group(1, 1));
         assert!(error_of(&twice).contains("appears twice"));
+    }
+
+    /// An Allied group aboard a ship, `extra` replacing the placement.
+    fn carried_group(id: u32, placement: &str, ready: u32, side: &str) -> String {
+        format!(
+            "[[air_group]]\nid = {id}\nname = \"AG\"\nside = \"{side}\"\n{placement}\naircraft_type = 1\nready = {ready}\n"
+        )
+    }
+
+    /// Task force 1 holding Allied ship 1 of the given class.
+    fn force_with_ship(class: u32) -> String {
+        with_force(&ship("").replace("class = 1", &format!("class = {class}")))
+    }
+
+    #[test]
+    fn an_air_group_may_be_aboard_a_ship_with_the_capacity() {
+        // Class 4 is the placeholder carrier, which carries 36.
+        let text = format!(
+            "{}{}",
+            force_with_ship(4),
+            carried_group(1, "ship = 1", 36, "allied")
+        );
+        let scenario = parse_with(&text).expect("a carried group loads");
+        let group = &scenario.world.umpire().air_groups[&AirGroupId::new(1)];
+        assert_eq!(group.location, AirGroupLocation::Ship(ShipId::new(1)));
+        assert_eq!(group.ready, 36);
+        // The group is where the ship's task force is.
+        assert_eq!(
+            scenario.world.umpire().air_group_hex(group),
+            Some(Hex::new(0, 0))
+        );
+        // Two groups may share a ship while they fit.
+        let two = format!(
+            "{}{}{}",
+            force_with_ship(4),
+            carried_group(1, "ship = 1", 30, "allied"),
+            carried_group(2, "ship = 1", 6, "allied")
+        );
+        parse_with(&two).expect("30 and 6 fit in 36");
+    }
+
+    #[test]
+    fn an_air_group_needs_exactly_one_of_base_and_ship() {
+        for placement in ["base = 1\nship = 1", ""] {
+            let text = format!(
+                "{}{}",
+                force_with_ship(4),
+                carried_group(1, placement, 3, "allied")
+            );
+            let message = error_of(&text);
+            assert!(message.contains("air_group:1"), "{placement}: {message}");
+            assert!(
+                message.contains("exactly one of base and ship"),
+                "{placement}: {message}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_carried_air_group_is_checked_against_its_ship() {
+        let carried = |class: u32, placement: &str, ready: u32, side: &str| {
+            error_of(&format!(
+                "{}{}",
+                force_with_ship(class),
+                carried_group(1, placement, ready, side)
+            ))
+        };
+        // A ship that is not in the scenario.
+        let message = carried(4, "ship = 9", 3, "allied");
+        assert!(
+            message.contains("air_group:1") && message.contains("unknown ship"),
+            "{message}"
+        );
+        // A ship of the other side.
+        let message = carried(4, "ship = 1", 3, "japanese");
+        assert!(
+            message.contains("air_group:1") && message.contains("its ship"),
+            "{message}"
+        );
+        // A ship whose class carries nothing (class 1 is a cruiser).
+        let message = carried(1, "ship = 1", 1, "allied");
+        assert!(
+            message.contains("air_group:1") && message.contains("carries 0"),
+            "{message}"
+        );
+        // One aircraft over the capacity of 36.
+        let message = carried(4, "ship = 1", 37, "allied");
+        assert!(
+            message.contains("air_group:1") && message.contains("carries 36"),
+            "{message}"
+        );
+        // Two groups that together are over it.
+        let text = format!(
+            "{}{}{}",
+            force_with_ship(4),
+            carried_group(1, "ship = 1", 30, "allied"),
+            carried_group(2, "ship = 1", 7, "allied")
+        );
+        let message = error_of(&text);
+        assert!(
+            message.contains("air_group:2") && message.contains("37 aircraft"),
+            "{message}"
+        );
     }
 
     fn order(target: &str, body: &str) -> String {

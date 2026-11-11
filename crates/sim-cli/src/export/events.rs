@@ -3,6 +3,7 @@
 use serde::Serialize;
 use sim_core::events::{Breakdown, Cause, Event, EventKind};
 use sim_core::orders::RejectReason;
+use sim_core::state::AirGroupLocation;
 
 use super::data::{Data, Field};
 use super::names;
@@ -231,18 +232,32 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
         ),
         EventKind::SearchFlown {
             air_group,
-            base,
+            from,
+            hex,
             from_deg,
             to_deg,
             range_nm,
             aircraft,
         } => (
             "search_flown",
+            match from {
+                AirGroupLocation::Base(base) => d.id("air_group", *air_group).id("base", *base),
+                AirGroupLocation::Ship(ship) => d.id("air_group", *air_group).id("ship", *ship),
+            }
+            .hex("hex", *hex)
+            .int("from_deg", *from_deg)
+            .int("to_deg", *to_deg)
+            .num("range_nm", *range_nm)
+            .int("aircraft", *aircraft),
+        ),
+        EventKind::AirGroupLost {
+            air_group,
+            ship,
+            aircraft,
+        } => (
+            "air_group_lost",
             d.id("air_group", *air_group)
-                .id("base", *base)
-                .int("from_deg", *from_deg)
-                .int("to_deg", *to_deg)
-                .num("range_nm", *range_nm)
+                .id("ship", *ship)
                 .int("aircraft", *aircraft),
         ),
         EventKind::SearchAttempt {

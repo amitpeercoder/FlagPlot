@@ -11,6 +11,7 @@
 //! use them.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
@@ -462,13 +463,31 @@ pub struct SearchArc {
     pub range_nm: Fixed,
 }
 
-/// A group of aircraft of one type, based at one base.
+/// Where an air group is based: at one base, or aboard one ship (decision 1
+/// of `docs/decisions/0025-carrier-air-groups.md`). Never both.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum AirGroupLocation {
+    Base(BaseId),
+    /// Aboard a ship. It is where the ship is, and is lost if the ship sinks.
+    Ship(ShipId),
+}
+
+impl fmt::Display for AirGroupLocation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AirGroupLocation::Base(base) => fmt::Display::fmt(base, f),
+            AirGroupLocation::Ship(ship) => fmt::Display::fmt(ship, f),
+        }
+    }
+}
+
+/// A group of aircraft of one type, based at one base or aboard one ship.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AirGroup {
     pub id: AirGroupId,
     pub name: String,
     pub side: Side,
-    pub base: BaseId,
+    pub location: AirGroupLocation,
     pub aircraft_type: AircraftTypeId,
     /// Aircraft ready to fly. Unsigned so that it cannot go negative.
     pub ready: u32,
@@ -489,4 +508,24 @@ pub struct TruthState {
     pub task_forces: BTreeMap<TaskForceId, TaskForce>,
     pub bases: BTreeMap<BaseId, Base>,
     pub air_groups: BTreeMap<AirGroupId, AirGroup>,
+}
+
+impl TruthState {
+    /// The hex an air group is in (decision 3 of
+    /// `docs/decisions/0025-carrier-air-groups.md`): its base's hex, or the
+    /// position of the task force its ship is in, or the hex of the base its
+    /// ship is in port at. A group aboard a sunk ship, or aboard a ship or at
+    /// a base that does not exist, has no position.
+    pub fn air_group_hex(&self, group: &AirGroup) -> Option<Hex> {
+        match group.location {
+            AirGroupLocation::Base(base) => self.bases.get(&base).map(|base| base.hex),
+            AirGroupLocation::Ship(ship) => match self.ships.get(&ship)?.location {
+                ShipLocation::TaskForce(task_force) => {
+                    self.task_forces.get(&task_force).map(TaskForce::position)
+                }
+                ShipLocation::Port(base) => self.bases.get(&base).map(|base| base.hex),
+                ShipLocation::Sunk => None,
+            },
+        }
+    }
 }
