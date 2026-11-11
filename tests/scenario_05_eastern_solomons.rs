@@ -139,8 +139,20 @@
 //! F4F-4's radius is 105 (decision 0030).
 //!
 //! Ryujo's fighters, 23 with a share of 0.3, keep 6 overhead (6.9 rounded
-//! down). The other 17 are escorts, and fly only if group 19 launches. Each
-//! American raid meets those 6, as they stood at the start of the pulse.
+//! down). The other 17 are escorts, and fly only if group 19 launches.
+//!
+//! The patrol over a hex is divided among the raids that attack there in a
+//! pulse (decision 0033): a raid's share is the patrol times its aircraft,
+//! bombers and escorts together, over the aircraft of all the raids,
+//! rounded down, and the fighters left over go one each to the raids in
+//! order of size, the largest first. The patrol and the raids are counted
+//! as they stood at the start of the pulse. A raid alone meets all 6. When
+//! both raids attack whole, of 17 and 30 aircraft:
+//!
+//! | Raid | Share of the 6 |
+//! | ---- | -------------- |
+//! | Enterprise's, 17 | 6 x 17 / 47 = 2.17: 2 |
+//! | Saratoga's, 30 | 6 x 30 / 47 = 3.83: 3, and the one left over: 4 |
 //!
 //! A shot at an SBD-3 has both protection factors against it: a fighter's
 //! 0.3 x 0.75 x 0.75 = 0.16875, a gun's 0.05 x 0.75 x 0.75 = 0.028125. The
@@ -148,15 +160,18 @@
 //!
 //! | Step | Shots | Chance | Expected | Std dev |
 //! | ---- | ----- | ------ | -------- | ------- |
-//! | Patrol at the bombers | 6 | 0.16875 | 1.0125 | 0.917410 |
-//! | Guns at the bombers | 26 | 0.028125 | 0.73125 | 0.843021 |
+//! | Patrol at Enterprise's bombers | 2 | 0.16875 | 0.3375 | 0.529668 |
+//! | Patrol at Saratoga's bombers | 4 | 0.16875 | 0.675 | 0.749065 |
+//! | Patrol at the bombers of a raid alone | 6 | 0.16875 | 1.0125 | 0.917410 |
+//! | Guns at the bombers, each raid | 26 | 0.028125 | 0.73125 | 0.843021 |
 //!
 //! Each shot is rolled on its own (decision 0033), so a roll scores from no
-//! hit to its shots. Of Enterprise's 17 bombers 17 less both losses attack,
-//! 15.25625 on average, and of Saratoga's 30, 28.25625 on average. Over the
-//! runs the hits of each roll are within four standard deviations of the
-//! expected figure times the number of such raids. (Before decision 0033
-//! the patrol shot down 1 or 2 and the guns 0 or 1.)
+//! hit to its shots. When both attack whole, of Enterprise's 17 bombers 17
+//! less both losses attack, 15.93125 on average, and of Saratoga's 30,
+//! 28.59375 on average. Over the runs the hits of each roll are within four
+//! standard deviations of its expected figure summed over the raids.
+//! (Before decision 0033 each raid met all 6 of the patrol, which shot down
+//! 1 or 2 of each, and the guns 0 or 1.)
 //! A group whose bombers are all shot down attacks nothing, and records
 //! neither an attack nor a strike that found nothing.
 //! Saratoga's losses come off group 6 first. Every bomber attacks Ryujo,
@@ -170,9 +185,18 @@
 //! fighters keep 20 (20.8 rounded down) and send 6; Zuikaku's 25 keep 20 and
 //! send 5.
 //!
-//! Each raid meets the whole American patrol over (7,-5) as it stood at the
-//! start of the pulse: groups 1 and 5, 54 fighters. Henderson Field's
-//! fighters are in another hex.
+//! The American patrol over (7,-5) as it stood at the start of the pulse is
+//! groups 1 and 5, 54 fighters. Henderson Field's fighters are in another
+//! hex. The two raids divide it (decision 0033). When both attack whole,
+//! Shokaku's has 27 + 6 = 33 aircraft and Zuikaku's 27 + 5 = 32:
+//!
+//! | Raid | Share of the 54 |
+//! | ---- | --------------- |
+//! | Shokaku's, 33 | 54 x 33 / 65 = 27.41: 27, and the one left over: 28 |
+//! | Zuikaku's, 32 | 54 x 32 / 65 = 26.58: 26 |
+//!
+//! Each raid's share fires at its escorts one for one, and what is left of
+//! the share at its bombers. A raid alone meets all 54.
 //!
 //! A shot at an F4F-4 is at 0.16875. A shot at an A6M2 or a D3A1, which have
 //! no protection, is at 0.3, and a gun's at 0.05. The strike attacks task
@@ -183,19 +207,20 @@
 //! | ---- | -------------- | -------------- |
 //! | Escorts at the patrol | 6 shots x 0.16875 = 1.0125 expected | 5 x 0.16875 = 0.84375 |
 //! | Patrol at the escorts | 6 x 0.3 = 1.8 | 5 x 0.3 = 1.5 |
-//! | Patrol at the bombers | 48 x 0.3 = 14.4 | 49 x 0.3 = 14.7 |
+//! | Patrol at the bombers | (28 - 6) = 22 x 0.3 = 6.6 | (26 - 5) = 21 x 0.3 = 6.3 |
 //! | Guns at the bombers | 123 x 0.05 = 6.15 | 6.15 |
-//! | Bombers that attack | 27 less both losses: 6.45 on average | 6.15 on average |
+//! | Bombers that attack | 27 less both losses: 14.25 on average | 14.55 on average |
 //!
 //! Each shot is rolled on its own (decision 0033): a roll of n shots at
 //! chance p scores from no hit to n, but no more than the aircraft it fires
 //! at, with a standard deviation of the square root of n x p x (1 - p):
 //! 0.917410 and 0.837477 for the escorts, 1.122497 and 1.024695 for the
-//! patrol at the escorts, 3.174902 and 3.207803 for the patrol at the
+//! patrol at the escorts, 2.149418 and 2.1 for the patrol at the
 //! bombers, 2.417126 for the guns. Over the runs the hits of each roll are
 //! within four standard deviations of its expected figure times the number
 //! of such raids. (Before decision 0033 each roll scored the whole part of
-//! its expected figure or one more, and 5 to 7 bombers attacked.)
+//! its expected figure or one more, each raid met all 54 of the patrol,
+//! and 5 to 7 bombers of each attacked.)
 //!
 //! Losses to the American patrol come off group 1 first. Every bomber
 //! attacks Enterprise, ship 1, at 0.2 a bomb. A hit does 100 x 41.666666 /
@@ -820,7 +845,13 @@ struct RaidWork {
     found: bool,
     target_force: Option<u32>,
     target_ship: Option<u32>,
+    /// The raid's share of the patrol over its hex (decision 0033, 7): what
+    /// it meets.
     patrol: u32,
+    /// The defending side's whole patrol over the hex.
+    patrol_over_hex: u32,
+    /// The aircraft of all the raids that attack forces of that side there.
+    all_raids_aircraft: u32,
     escort_count: u32,
     /// (shots, hits) of each roll, or `None` for a roll never made.
     escorts_at_patrol: Option<(u32, u32)>,
@@ -1286,9 +1317,101 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
     }
 
     // ---- The air combat step, raid by raid, on the start-of-step counts. ----
+    // The task force a raid finds: the one with the most important ship,
+    // then the lowest number.
+    let find_target = |raid: &Raid| {
+        (1..=4u32)
+            .filter(|&force| side_of_force(force) != raid.side && force_hex(force) == raid.hex)
+            .filter_map(|force| {
+                ships_of_force(force)
+                    .filter(|ship| afloat.contains(ship))
+                    .map(|ship| (cx.ships[&ship].kind, ship))
+                    .min()
+                    .map(|(kind, ship)| (kind, force, ship))
+            })
+            .min()
+    };
+    // Each raid's share of the patrol over its hex, from the counts at the
+    // start of the step, before any raid is worked (decision 0033, 7): the
+    // patrol times the raid's aircraft over the aircraft of all the raids
+    // that attack forces of that side in that hex, rounded down, and the
+    // fighters left over one each to the largest raids, the lower first
+    // group first. Written out here on its own, not by the rule's function.
+    // (patrol over the hex, raid aircraft, all raids' aircraft, share)
+    let mut meets: Vec<(u32, u32, u32, u32)> = vec![(0, 0, 0, 0); raids.len()];
+    {
+        let aircraft_of = |raid: &Raid| -> u32 {
+            let bombers: u32 = raid
+                .strikes
+                .iter()
+                .map(|&i| work.launches[i].aircraft)
+                .sum();
+            let escorts: u32 = raid.escorts.iter().map(|&i| fighters[i].escorts).sum();
+            bombers + escorts
+        };
+        let mut hexes: Vec<(Side, Hex)> = Vec::new();
+        for raid in &raids {
+            if let Some((_, force, _)) = find_target(raid) {
+                let key = (side_of_force(force), raid.hex);
+                if !hexes.contains(&key) {
+                    hexes.push(key);
+                }
+            }
+        }
+        for (defending, hex) in hexes {
+            let members: Vec<usize> = (0..raids.len())
+                .filter(|&i| {
+                    find_target(&raids[i])
+                        .is_some_and(|(_, force, _)| side_of_force(force) == defending)
+                        && raids[i].hex == hex
+                })
+                .collect();
+            let patrol: u32 = fighters
+                .iter()
+                .filter(|f| f.side == defending && f.hex == hex)
+                .map(|f| f.patrol)
+                .sum();
+            let all: u32 = members.iter().map(|&i| aircraft_of(&raids[i])).sum();
+            let mut shares: Vec<u32> = members
+                .iter()
+                .map(|&i| patrol * aircraft_of(&raids[i]) / all)
+                .collect();
+            let mut left = patrol - shares.iter().sum::<u32>();
+            let mut by_size: Vec<usize> = (0..members.len()).collect();
+            by_size.sort_by_key(|&m| {
+                (
+                    Reverse(aircraft_of(&raids[members[m]])),
+                    work.launches[raids[members[m]].strikes[0]].group,
+                )
+            });
+            for m in by_size {
+                if left == 0 {
+                    break;
+                }
+                shares[m] += 1;
+                left -= 1;
+            }
+            for (m, &i) in members.iter().enumerate() {
+                meets[i] = (patrol, aircraft_of(&raids[i]), all, shares[m]);
+            }
+        }
+    }
+    // The patrol of each side over each hex, from which the escorts' hits of
+    // all the raids are taken in turn, the lowest group first.
+    type Pool = (Side, Hex, Vec<(u32, u32)>);
+    let mut patrol_pools: Vec<Pool> = Vec::new();
+    for f in fighters.iter().filter(|f| f.patrol > 0) {
+        match patrol_pools
+            .iter_mut()
+            .find(|(side, hex, _)| *side == f.side && *hex == f.hex)
+        {
+            Some((_, _, pool)) => pool.push((f.group, f.patrol)),
+            None => patrol_pools.push((f.side, f.hex, vec![(f.group, f.patrol)])),
+        }
+    }
     let mut outcomes: BTreeMap<u32, Outcome> = BTreeMap::new();
     let mut loss_ids: BTreeMap<u32, Vec<EventId>> = BTreeMap::new();
-    for raid in &raids {
+    for (raid_index, raid) in raids.iter().enumerate() {
         let first = work.launches[raid.strikes[0]].clone();
         let mut raid_work = RaidWork {
             place: raid.place,
@@ -1308,6 +1431,8 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             target_force: None,
             target_ship: None,
             patrol: 0,
+            patrol_over_hex: 0,
+            all_raids_aircraft: 0,
             escort_count: 0,
             escorts_at_patrol: None,
             patrol_at_escorts: None,
@@ -1342,18 +1467,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             assert_eq!(event.causes, causes, "seed {seed}");
             escort_events.push(event.id);
         }
-        // The task force the raid finds: the one with the most important
-        // ship, then the lowest number.
-        let target = (1..=4u32)
-            .filter(|&force| side_of_force(force) != raid.side && force_hex(force) == raid.hex)
-            .filter_map(|force| {
-                ships_of_force(force)
-                    .filter(|ship| afloat.contains(ship))
-                    .map(|ship| (cx.ships[&ship].kind, ship))
-                    .min()
-                    .map(|(kind, ship)| (kind, force, ship))
-            })
-            .min();
+        let target = find_target(raid);
         let Some((_, force, ship)) = target else {
             for &(group, _) in &raid_work.strikes {
                 outcomes.insert(group, Outcome::Nothing);
@@ -1374,14 +1488,28 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             .copied()
             .filter(|(_, aircraft)| *aircraft > 0)
             .collect();
-        let patrol: Vec<(u32, u32)> = fighters
-            .iter()
-            .filter(|f| f.side == defending && f.hex == raid.hex && f.patrol > 0)
-            .map(|f| (f.group, f.patrol))
-            .collect();
+        let (whole, raid_aircraft, all_aircraft, share) = meets[raid_index];
+        // A raid with no share meets no patrol.
+        let patrol: Vec<(u32, u32)> = if share == 0 {
+            Vec::new()
+        } else {
+            fighters
+                .iter()
+                .filter(|f| f.side == defending && f.hex == raid.hex && f.patrol > 0)
+                .map(|f| (f.group, f.patrol))
+                .collect()
+        };
         let escort_count: u32 = escorts.iter().map(|(_, n)| n).sum();
-        let patrol_count: u32 = patrol.iter().map(|(_, n)| n).sum();
-        raid_work.patrol = patrol_count;
+        let patrol_count: u32 = share;
+        raid_work.patrol = share;
+        raid_work.patrol_over_hex = whole;
+        raid_work.all_raids_aircraft = all_aircraft;
+        let lead = vec![
+            ("patrol", int(whole)),
+            ("raid_aircraft", int(raid_aircraft)),
+            ("all_raids_aircraft", int(all_aircraft)),
+            ("patrol_share", int(share)),
+        ];
         raid_work.escort_count = escort_count;
 
         let mut rolls: Vec<Roll> = Vec::new();
@@ -1392,6 +1520,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                      at: AirTarget,
                      shots: u32,
                      chance: Fixed,
+                     lead: Vec<(&'static str, Fixed)>,
                      factors: Vec<(&'static str, Fixed)>,
                      hits: u32,
                      lost: Vec<(u32, u32)>|
@@ -1410,7 +1539,8 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             if firing == AirFirer::Escorts || at == AirTarget::Escorts {
                 causes.extend(escort_causes.iter().cloned());
             }
-            let mut all = vec![("shots", int(shots))];
+            let mut all = lead;
+            all.push(("shots", int(shots)));
             all.extend(factors);
             Roll {
                 event: EventKind::AirFight {
@@ -1453,9 +1583,19 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 AirTarget::Patrol,
                 escort_count,
                 chance,
+                Vec::new(),
                 factors,
                 hits,
-                take_hits(hits, &mut patrol.clone()),
+                // Taken from the whole patrol over the hex, over all the
+                // raids (decision 0033, 10).
+                {
+                    let pool = patrol_pools
+                        .iter_mut()
+                        .find(|(side, hex, _)| *side == defending && *hex == raid.hex)
+                        .map(|(_, _, pool)| pool)
+                        .expect("the patrol is in its pool");
+                    take_hits(hits, pool)
+                },
             ));
         }
         if let Some(&(first_patrol, _)) = patrol.first() {
@@ -1479,6 +1619,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     AirTarget::Escorts,
                     at_escorts,
                     chance,
+                    lead.clone(),
                     factors,
                     hits,
                     lost,
@@ -1497,6 +1638,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     AirTarget::Bombers,
                     at_bombers,
                     chance,
+                    lead.clone(),
                     factors,
                     hits,
                     lost,
@@ -2792,6 +2934,10 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
     // patrol at the bombers and of the guns.
     let mut patrol_total = (0i64, 0i64);
     let mut gun_total = (0i64, 0i64);
+    // The runs in which the two raids attacked whole, and those in which a
+    // raid met the patrol alone.
+    let mut both_whole = 0;
+    let mut alone = 0;
     for (run, work) in batch().iter().zip(worked()) {
         let seed = run.seed;
         let found: Vec<&RaidWork> = work
@@ -2810,6 +2956,7 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
             "seed {seed}: {shapes:?}"
         );
         both += i64::from(found.len() == 2);
+        let found_count = found.len();
         for raid in found {
             raids += 1;
             let bombers: u32 = raid.strikes.iter().map(|s| s.1).sum();
@@ -2832,18 +2979,46 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
             assert!(raid.escorts.is_empty(), "seed {seed}");
             assert_eq!(raid.escort_count, 0);
             assert!(raid.escorts_at_patrol.is_none() && raid.patrol_at_escorts.is_none());
-            // Ryujo's fighters: 23 with a share of 0.3 keep 6 overhead; each
-            // raid meets those 6, as they stood at the start of the pulse.
-            assert_eq!(raid.patrol, 6, "seed {seed}");
+            // Ryujo's fighters: 23 with a share of 0.3 keep 6 overhead, as
+            // they stood at the start of the pulse. Two raids divide them,
+            // 2 to Enterprise's of 17 aircraft and 4 to Saratoga's of 30; a
+            // raid alone meets all 6 (decision 0033).
+            assert_eq!(raid.patrol_over_hex, 6, "seed {seed}");
+            let expected_share = if found_count == 1 {
+                6
+            } else if bombers == 17 {
+                2
+            } else {
+                4
+            };
+            assert_eq!(raid.patrol, expected_share, "seed {seed}");
+            if found_count == 2 {
+                assert_eq!(raid.all_raids_aircraft, 47, "seed {seed}");
+            } else {
+                assert_eq!(raid.all_raids_aircraft, bombers, "seed {seed}");
+            }
             let (shots, patrol_hits) = raid.patrol_at_bombers.expect("a patrol roll");
-            assert_eq!(shots, 6);
-            // 6 shots at 0.16875 expect 1.0125; each is rolled on its own,
-            // so from no hit to six, and the loss is no more than the
-            // bombers there are.
+            assert_eq!(shots, expected_share);
+            // The shots at 0.16875 expect 0.3375, 0.675 or 1.0125 (a raid
+            // alone); each is rolled on its own, so from no hit to the
+            // shots, and the loss is no more than the bombers there are.
             let first_group = raid.strikes[0].0;
             let (chance, _) = shot_chance(cx, cx.air.fighter_hit_chance, first_group);
             assert_eq!(chance, millionths(168_750));
-            assert_eq!(int(shots) * chance, millionths(1_012_500));
+            assert_eq!(
+                int(shots) * chance,
+                match shots {
+                    2 => millionths(337_500),
+                    4 => millionths(675_000),
+                    6 => millionths(1_012_500),
+                    other => panic!("seed {seed}: {other} shots"),
+                }
+            );
+            if found_count == 2 {
+                both_whole += 1;
+            } else {
+                alone += 1;
+            }
             assert!(patrol_hits <= shots, "seed {seed}");
             patrol_total.0 += i64::from(shots);
             patrol_total.1 += i64::from(patrol_hits);
@@ -2903,6 +3078,8 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
     assert!(within_four_sigma(gun_total.1, gun_total.0, 28_125));
     assert!(raids > 500, "{raids} raids");
     assert!(both > 200, "{both} runs with both raids");
+    assert_eq!(both_whole, 2 * both);
+    eprintln!("American raids that met the patrol alone {alone}");
 }
 
 #[test]
@@ -2912,6 +3089,7 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
     let mut both = 0;
     // (shots, hits) over all raids of each roll, for the bands.
     let mut totals = [(0i64, 0i64); 4];
+    let mut alone = 0;
     for (run, work) in batch().iter().zip(worked()) {
         let seed = run.seed;
         let found: Vec<&RaidWork> = work
@@ -2927,6 +3105,7 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
             "seed {seed}: {firsts:?}"
         );
         both += i64::from(found.len() == 2);
+        let found_count = found.len();
         for raid in found {
             raids += 1;
             assert_eq!(raid.strikes.len(), 1);
@@ -2942,10 +3121,26 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
             };
             assert_eq!(raid.escorts, vec![(escort_group, escorts)], "seed {seed}");
             assert_eq!(raid.escort_count, escorts);
-            // Each raid meets the whole American patrol over (7,-5) as it
-            // stood at the start of the pulse: groups 1 and 5, 54 fighters.
-            // Henderson Field's fighters are in another hex.
-            assert_eq!(raid.patrol, 54, "seed {seed}");
+            // The American patrol over (7,-5) as it stood at the start of
+            // the pulse is groups 1 and 5, 54 fighters; Henderson Field's
+            // are in another hex. The two raids divide it, Shokaku's of 33
+            // aircraft 28 and Zuikaku's of 32 aircraft 26; a raid alone
+            // meets all 54 (decision 0033).
+            assert_eq!(raid.patrol_over_hex, 54, "seed {seed}");
+            let share = if found_count == 1 {
+                54
+            } else if escort_group == 11 {
+                28
+            } else {
+                26
+            };
+            assert_eq!(raid.patrol, share, "seed {seed}");
+            assert_eq!(
+                raid.all_raids_aircraft,
+                if found_count == 1 { 27 + escorts } else { 65 },
+                "seed {seed}"
+            );
+            alone += i32::from(found_count == 1);
             assert_eq!(raid.target_force, Some(1));
             assert_eq!(raid.target_ship, Some(1));
             assert_eq!(
@@ -2989,25 +3184,36 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
             assert!(at_escorts_hits <= shots, "seed {seed}");
             totals[1].0 += i64::from(shots);
             totals[1].1 += i64::from(at_escorts_hits);
-            // Patrol at the bombers: 48 x 0.3 = 14.4; 49 x 0.3 = 14.7.
+            // Patrol at the bombers: what is left of the share after the
+            // escorts, at 0.3 a shot: 22 x 0.3 = 6.6 and 21 x 0.3 = 6.3 when
+            // both raids attack, 48 x 0.3 = 14.4 and 49 x 0.3 = 14.7 alone.
             let (shots, at_bombers_hits) = raid.patrol_at_bombers.expect("patrol fires");
-            assert_eq!(shots, 54 - escorts);
-            assert_eq!(shots, if escorts == 6 { 48 } else { 49 });
+            assert_eq!(shots, share - escorts);
+            assert_eq!(
+                shots,
+                match (found_count, escorts) {
+                    (2, 6) => 22,
+                    (2, _) => 21,
+                    (_, 6) => 48,
+                    (_, _) => 49,
+                }
+            );
             assert_eq!(fighter(group), millionths(300_000));
             assert_eq!(
                 int(shots) * fighter(group),
-                if escorts == 6 {
-                    millionths(14_400_000)
-                } else {
-                    millionths(14_700_000)
+                match shots {
+                    22 => millionths(6_600_000),
+                    21 => millionths(6_300_000),
+                    48 => millionths(14_400_000),
+                    _ => millionths(14_700_000),
                 }
             );
             assert!(at_bombers_hits <= shots, "seed {seed}");
             totals[2].0 += i64::from(shots);
             totals[2].1 += i64::from(at_bombers_hits);
-            // The whole patrol is committed: shots at the escorts and at the
-            // bombers add to 54.
-            assert_eq!(raid.patrol_at_escorts.expect("fires").0 + shots, 54);
+            // The whole share is committed: shots at the escorts and at the
+            // bombers add to it.
+            assert_eq!(raid.patrol_at_escorts.expect("fires").0 + shots, share);
             // Guns at the bombers: 123 x 0.05 = 6.15.
             let (gun_shots, gun_hits) = raid.guns.expect("guns fire");
             assert_eq!(gun_shots, 123);
@@ -3040,6 +3246,7 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
     }
     eprintln!("Japanese raids {raids}, runs with both raids {both}, (shots, hits) {totals:?}");
     assert!(raids > 0 && both > 0);
+    eprintln!("Japanese raids that met the patrol alone {alone}");
     // Over the runs the hits of each roll are within four standard
     // deviations of the sum of the expected figures.
     for (total, chance) in totals.iter().zip([168_750, 300_000, 300_000, 50_000]) {
@@ -3094,10 +3301,14 @@ fn the_shot_numbers_and_chances_of_the_tables_are_in_the_events() {
             };
             match name {
                 "ryujo patrol at bombers" => {
-                    assert_eq!(
-                        (shots, chance, expected),
-                        (int(6), millionths(168_750), millionths(1_012_500))
+                    // Enterprise's raid meets 2 of the 6 and Saratoga's 4,
+                    // and a raid alone meets all 6.
+                    assert!(
+                        shots == int(2) || shots == int(4) || shots == int(6),
+                        "{shots}"
                     );
+                    assert_eq!(chance, millionths(168_750));
+                    assert_eq!(expected, shots * millionths(168_750));
                 }
                 "guns of task force 4" => {
                     assert_eq!(
@@ -3125,7 +3336,11 @@ fn the_shot_numbers_and_chances_of_the_tables_are_in_the_events() {
                 "patrol at bombers" => {
                     assert_eq!(chance, tenths(3));
                     assert!(
-                        (shots, expected) == (int(48), tenths(144))
+                        // Both raids attack: 22 and 21 of the shares. A raid
+                        // alone: 48 and 49.
+                        (shots, expected) == (int(22), tenths(66))
+                            || (shots, expected) == (int(21), tenths(63))
+                            || (shots, expected) == (int(48), tenths(144))
                             || (shots, expected) == (int(49), tenths(147)),
                         "{shots} {expected}"
                     );

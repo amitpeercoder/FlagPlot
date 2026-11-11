@@ -672,13 +672,27 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             assert_eq!(event.causes, causes, "seed {seed}");
             let breakdown = event.breakdown.as_ref().expect("breakdown");
             assert_eq!(breakdown.result, expected);
+            // The patrol's fire also records its share of the patrol
+            // (decision 0033, 7): one raid, so the whole patrol, of the
+            // bombers and the escorts sent.
+            let mut expected_factors = if *firing == AirFirer::Patrol {
+                vec![
+                    ("patrol", int(p)),
+                    ("raid_aircraft", int(b + e)),
+                    ("all_raids_aircraft", int(b + e)),
+                    ("patrol_share", int(p)),
+                ]
+            } else {
+                Vec::new()
+            };
+            expected_factors.extend([("shots", int(*shots)), ("hit_chance", chance)]);
             assert_eq!(
                 breakdown
                     .factors
                     .iter()
                     .map(|f| (f.name, f.value))
                     .collect::<Vec<_>>(),
-                vec![("shots", int(*shots)), ("hit_chance", chance)]
+                expected_factors
             );
             fight_events.push(event.id);
             // A group cannot lose more than it has.

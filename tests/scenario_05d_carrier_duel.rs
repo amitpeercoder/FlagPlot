@@ -505,14 +505,38 @@ fn check_fight(
     assert_eq!(event.causes, causes, "seed {seed}");
     let breakdown = event.breakdown.as_ref().expect("breakdown");
     assert_eq!(breakdown.result, expected);
+    let factors: Vec<(&str, Fixed)> = breakdown
+        .factors
+        .iter()
+        .map(|f| (f.name, f.value))
+        .collect();
+    let (share_factors, rest) = if firing == AirFirer::Patrol {
+        factors.split_at(4)
+    } else {
+        factors.split_at(0)
+    };
     assert_eq!(
-        breakdown
-            .factors
-            .iter()
-            .map(|f| (f.name, f.value))
-            .collect::<Vec<_>>(),
-        vec![("shots", int(shots)), ("hit_chance", chance)]
+        rest,
+        [("shots", int(shots)), ("hit_chance", chance)],
+        "seed {seed}"
     );
+    if firing == AirFirer::Patrol {
+        // Each side sends one raid, so it meets the whole patrol (decision
+        // 0033, 7): the share is the patrol, and the raid is all the raids.
+        let names: Vec<&str> = share_factors.iter().map(|f| f.0).collect();
+        assert_eq!(
+            names,
+            [
+                "patrol",
+                "raid_aircraft",
+                "all_raids_aircraft",
+                "patrol_share"
+            ]
+        );
+        assert_eq!(share_factors[0].1, share_factors[3].1, "seed {seed}");
+        assert_eq!(share_factors[1].1, share_factors[2].1, "seed {seed}");
+        assert!(share_factors[3].1 >= int(shots), "seed {seed}");
+    }
 }
 
 /// Works every daylight pulse of `run` by the rule of the hand calculation
