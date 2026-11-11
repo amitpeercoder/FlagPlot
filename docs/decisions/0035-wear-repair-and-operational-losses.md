@@ -54,6 +54,34 @@ Stage 6b adds aircraft that come back unfit to fly, their repair, and aircraft l
 - Supply and time for a repair by type of aircraft.
 - Small airfields that wear aircraft faster.
 
+## As built
+
+Three things the decisions above did not state, settled when the stage was built.
+
+- **A ship that sinks takes its damaged aircraft with it,** and a carrier's capacity counts ready and damaged aircraft together.
+- **A group that loses damaged and ready aircraft on the ground in one raid has two events,** the damaged first. The event of stage 6a is unchanged.
+- **A repair names as its cause the group's latest wear roll that left an aircraft damaged.** A patrol's wear roll names the group's mission and share orders, since no event says a patrol flew.
+
+## What the runs show
+
+Over seeds 1 to 1000, five days, an aircraft a run on average. All figures are placeholders.
+
+| Group | Starts with | Worn | Written off | Repaired | Ready at the end | Damaged at the end |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1, bombers raiding at 200 nm | 18 | 6.34 | 1.28 | 4.38 | 4.63 | 0.67 |
+| 2, their fighters | 12 | 3.68 | 0.72 | 1.94 | 4.01 | 1.01 |
+| 3, the defending fighters | 12 | 3.50 | 0.75 | 2.33 | 4.48 | 0.40 |
+| 4, resting on the ground | 10 | 0 | 0 | 0 | 7.01 | 0 |
+| 5, scouts searching to 300 nm twice a day | 6 | 8.08 | 1.55 | 5.22 | 3.13 | 1.31 |
+
+The scouts, which nobody shoots at, end with half their aircraft ready: they fly the longest sortie twice a day and stand last in the repair queue. Without repair at airfield B the defending fighters end with 2.75 ready, not 4.48.
+
+## The legibility test
+
+A cheap model was given the Allied briefing and the log of the first three days of the scenario's own seed. It accounted for every scout (seven worn, one written off, three repaired, two ready and three damaged) and said why they shrink faster than the fighters. It predicted the fourth night and morning exactly: one fighter and two scouts repaired, with the third scout left because the base's three were used up in group order; four scouts searching; nine enemy bombers launched. Asked how to keep more scouts ready it offered a shorter search arc and searching once a day, with what each costs. It found no gap in the log.
+
+Searching in one pulse only is not an order the game has. It is noted for the staff rules.
+
 ## Rule card
 
 | | |
