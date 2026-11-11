@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/not_known",
+  "title": "not_known: the answer to a question about something the side does not know of",
+  "$ref": "defs.schema.json#/$defs/not_known"
+}

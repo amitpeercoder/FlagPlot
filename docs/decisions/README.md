@@ -55,5 +55,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0045 | Refuelling in port: a base has a fuel stock, and a force stopped at its own side's base at the start of a day fills up from it | Confirmed |
 | 0046 | Fuel as a cargo: a ship carries fuel as cargo beside supply, a load order names its cargo, and fuel landed joins the base's stock | Confirmed |
 | 0047 | What a side may know of what happened: which events each side sees and what is cut from them | Confirmed |
+| 0048 | The briefing and the queries: a daily situation report for a side, list and detail queries, and explain, built only on a side's view, as JSON with schemas | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.
