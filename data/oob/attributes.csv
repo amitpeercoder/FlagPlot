@@ -36,6 +36,8 @@ cruise_speed_kn,aircraft_type,decimal,knots,one,Cruising speed
 range_normal_nm,aircraft_type,integer,nautical miles,one,Range on internal fuel with the normal load; the note gives the condition
 range_max_nm,aircraft_type,integer,nautical miles,one,Maximum or ferry range; the note gives the condition
 combat_radius_nm,aircraft_type,integer,nautical miles,many,"A radius of action a source states for a named load, or a distance actually flown on a dated mission; the note gives the load and which it is"
+endurance_h,aircraft_type,decimal,hours,one,Flight endurance a source states; the note gives the condition
+fuel_capacity_l,aircraft_type,integer,litres,one,Maximum fuel carried; the note gives the normal load and any removable tanks
 pilot_armour,aircraft_type,text,,one,yes or no or partial: whether pilot or crew armour was fitted in the period; the note gives weight or thickness if stated
 self_sealing_tanks,aircraft_type,text,,one,yes or no or partial: whether fuel tanks were self-sealing in the period
 structural_note,aircraft_type,text,,many,A short phrase a source uses about how rugged or vulnerable the type was; the note says who said it
@@ -64,6 +66,7 @@ rate_of_fire_practical_rpm,weapon,decimal,rounds per minute,one,Rate of fire per
 diameter_mm,weapon,decimal,millimetres,one,Diameter of a torpedo
 weight_kg,weapon,decimal,kilograms,one,Total weight of a torpedo or bomb or depth charge
 warhead_kg,weapon,decimal,kilograms,one,Weight of the explosive charge
+warhead_explosive,weapon,text,,one,Explosive filling of the warhead as the source names it
 speed_high_kn,weapon,decimal,knots,one,Torpedo speed at its fastest setting
 range_high_m,weapon,integer,metres,one,Torpedo range at its fastest setting
 speed_mid_kn,weapon,decimal,knots,one,Torpedo speed at its middle setting

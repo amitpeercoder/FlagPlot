@@ -21,3 +21,6 @@ id,key,name,nation,designation,role
 1017,sbd-3,Douglas SBD-3 Dauntless,us,SBD-3,dive_bomber
 1018,tbf-1,Grumman TBF-1 Avenger,us,TBF-1,torpedo_bomber
 1019,walrus,Supermarine Walrus,uk,Walrus,reconnaissance amphibian
+1020,e8n2,"Nakajima E8N2 ""Dave"" floatplane",jp,E8N2,floatplane_reconnaissance
+1021,e8n1,"Nakajima E8N1 ""Dave"" floatplane",jp,E8N1,floatplane_reconnaissance
+1022,e7k2,"Kawanishi E7K2 ""Alf"" floatplane",jp,E7K2,floatplane_reconnaissance
