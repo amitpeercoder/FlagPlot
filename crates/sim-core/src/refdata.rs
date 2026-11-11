@@ -383,10 +383,10 @@ pub struct SurfaceCombatFigures {
     /// Share of gun and bomb hits that land on flotation. The rest land on
     /// fire (decision 0032).
     pub gun_hit_flotation: Fixed,
-    /// Chance a gun hit also knocks a system down one level.
-    pub gun_system_hit_chance: Fixed,
-    /// The same for a torpedo hit.
-    pub torpedo_system_hit_chance: Fixed,
+    /// Chance, for each damage point a hit does, that the hit also knocks a
+    /// system down one level; 1 at most (decision 0033). Guns, torpedoes and
+    /// bombs alike. Not negative; may exceed 1.
+    pub system_hit_chance_per_point: Fixed,
     /// Multiplies what a degraded system gives.
     pub degraded_factor: Fixed,
     /// Multiplies the gun hit chance of a firer whose fire control is out.
@@ -436,8 +436,6 @@ impl SurfaceCombatFigures {
             ("night torpedo hit chance", self.torpedo_hit_chance_night),
             ("day torpedo hit chance", self.torpedo_hit_chance_day),
             ("gun hit flotation share", self.gun_hit_flotation),
-            ("gun system hit chance", self.gun_system_hit_chance),
-            ("torpedo system hit chance", self.torpedo_system_hit_chance),
             ("degraded factor", self.degraded_factor),
             ("fire control out factor", self.fire_control_out_factor),
         ];
@@ -452,6 +450,10 @@ impl SurfaceCombatFigures {
             ("not alert sighting factor", self.not_alert_sighting_factor),
             ("surprised target factor", self.surprised_target_factor),
             ("lit target factor", self.lit_target_factor),
+            (
+                "system hit chance per point",
+                self.system_hit_chance_per_point,
+            ),
         ];
         for (label, value) in factors {
             if value.is_negative() {
@@ -525,8 +527,6 @@ pub struct AirCombatFigures {
     /// What a shot's chance is multiplied by when the target type has
     /// self-sealing fuel tanks (decision 11 of 0029).
     pub self_sealing_tanks_factor: Fixed,
-    /// Chance a bomb hit also knocks a system down one level.
-    pub bomb_system_hit_chance: Fixed,
     /// Which system a bomb's system hit lands on: each system's share. A
     /// system absent from the table has share 0. The shares add to 1.
     pub bomb_system_hit: BTreeMap<ShipSystem, Fixed>,
@@ -541,7 +541,6 @@ impl AirCombatFigures {
             ("torpedo hit chance", self.torpedo_hit_chance),
             ("fighter hit chance", self.fighter_hit_chance),
             ("anti-aircraft hit chance", self.anti_aircraft_hit_chance),
-            ("bomb system hit chance", self.bomb_system_hit_chance),
             ("pilot armour factor", self.pilot_armour_factor),
             ("self-sealing tanks factor", self.self_sealing_tanks_factor),
         ];
@@ -631,7 +630,6 @@ impl AirCombatFigures {
             anti_aircraft_hit_chance: Fixed::from_ratio(5, 100),
             pilot_armour_factor: Fixed::from_ratio(75, 100),
             self_sealing_tanks_factor: Fixed::from_ratio(75, 100),
-            bomb_system_hit_chance: tenth(3),
             bomb_system_hit: [
                 (ShipSystem::FlightDeck, tenth(5)),
                 (ShipSystem::Propulsion, tenth(2)),
@@ -665,8 +663,7 @@ impl SurfaceCombatFigures {
             surprised_target_factor: hundredth(150),
             lit_target_factor: Fixed::from_int(2),
             gun_hit_flotation: hundredth(75),
-            gun_system_hit_chance: hundredth(30),
-            torpedo_system_hit_chance: hundredth(50),
+            system_hit_chance_per_point: hundredth(6),
             degraded_factor: hundredth(50),
             fire_control_out_factor: hundredth(25),
             gun_system_hit: [
@@ -848,15 +845,23 @@ mod tests {
     }
 
     #[test]
-    fn the_system_hit_chances_and_factors_must_be_between_zero_and_one() {
+    fn the_system_hit_factors_must_be_between_zero_and_one() {
         let over = Fixed::from_ratio(11, 10);
         let under = Fixed::from_ratio(-1, 10);
-        assert!(combat_problem_of(|f| f.gun_system_hit_chance = over).contains("gun system hit"));
-        assert!(combat_problem_of(|f| f.torpedo_system_hit_chance = under)
-            .contains("torpedo system hit"));
         assert!(combat_problem_of(|f| f.degraded_factor = over).contains("degraded factor"));
         assert!(combat_problem_of(|f| f.fire_control_out_factor = under)
             .contains("fire control out factor"));
+    }
+
+    #[test]
+    fn the_system_hit_chance_per_point_must_not_be_negative_but_may_exceed_one() {
+        let message = combat_problem_of(|f| {
+            f.system_hit_chance_per_point = Fixed::from_ratio(-1, 100);
+        });
+        assert!(message.contains("system hit chance per point"), "{message}");
+        let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+        figures.system_hit_chance_per_point = Fixed::from_int(5);
+        assert_eq!(figures.problem(), None);
     }
 
     #[test]
@@ -937,12 +942,6 @@ mod tests {
         let mut bad = good.clone();
         bad.bomb_hit_chance = Fixed::from_ratio(11, 10);
         assert!(bad.problem().expect("problem").contains("bomb hit chance"));
-        let mut bad = good.clone();
-        bad.bomb_system_hit_chance = Fixed::from_ratio(-1, 10);
-        assert!(bad
-            .problem()
-            .expect("problem")
-            .contains("bomb system hit chance"));
         let mut bad = good;
         bad.torpedo_hit_chance = Fixed::from_int(2);
         assert!(bad

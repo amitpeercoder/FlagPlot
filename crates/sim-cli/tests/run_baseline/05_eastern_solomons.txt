@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 29ab4d0db44580cd  154 events
+day   1  hash b1fca027f2fb1848  160 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -60,7 +60,7 @@ ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all syst
 ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
 ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
 ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; propulsion degraded, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
 ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply

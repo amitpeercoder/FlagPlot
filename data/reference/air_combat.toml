@@ -23,9 +23,8 @@ anti_aircraft_hit_chance = "0.05"
 pilot_armour_factor = "0.75"
 self_sealing_tanks_factor = "0.75"
 
-# Chance a bomb hit also knocks a system down one level. A torpedo from the
-# air uses the torpedo figures of surface_combat.toml.
-bomb_system_hit_chance = "0.3"
+# Whether a bomb or torpedo hit also knocks a system down one level follows
+# surface_combat.toml's system_hit_chance_per_point (decision 0033).
 
 # Which system a bomb's system hit lands on. Adds to 1.
 [bomb_system_hit]

@@ -369,8 +369,7 @@ struct SurfaceCombatFile {
     surprised_target_factor: Quantity,
     lit_target_factor: Quantity,
     gun_hit_flotation: Quantity,
-    gun_system_hit_chance: Quantity,
-    torpedo_system_hit_chance: Quantity,
+    system_hit_chance_per_point: Quantity,
     degraded_factor: Quantity,
     fire_control_out_factor: Quantity,
     crippled_flotation: Quantity,
@@ -468,10 +467,9 @@ fn parse_surface_combat_figures(
         surprised_target_factor: number("surprised_target_factor", &file.surprised_target_factor)?,
         lit_target_factor: number("lit_target_factor", &file.lit_target_factor)?,
         gun_hit_flotation: number("gun_hit_flotation", &file.gun_hit_flotation)?,
-        gun_system_hit_chance: number("gun_system_hit_chance", &file.gun_system_hit_chance)?,
-        torpedo_system_hit_chance: number(
-            "torpedo_system_hit_chance",
-            &file.torpedo_system_hit_chance,
+        system_hit_chance_per_point: number(
+            "system_hit_chance_per_point",
+            &file.system_hit_chance_per_point,
         )?,
         degraded_factor: number("degraded_factor", &file.degraded_factor)?,
         fire_control_out_factor: number("fire_control_out_factor", &file.fire_control_out_factor)?,
@@ -511,7 +509,6 @@ struct AirCombatFile {
     anti_aircraft_hit_chance: Quantity,
     pilot_armour_factor: Quantity,
     self_sealing_tanks_factor: Quantity,
-    bomb_system_hit_chance: Quantity,
     bomb_system_hit: SystemTable,
 }
 
@@ -545,7 +542,6 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             "self_sealing_tanks_factor",
             &file.self_sealing_tanks_factor,
         )?,
-        bomb_system_hit_chance: number("bomb_system_hit_chance", &file.bomb_system_hit_chance)?,
         bomb_system_hit: file.bomb_system_hit.to_map("bomb_system_hit", &number)?,
     };
     if let Some(problem) = figures.problem() {
@@ -735,7 +731,6 @@ mod tests {
             figures.self_sealing_tanks_factor,
             Fixed::from_ratio(75, 100)
         );
-        assert_eq!(figures.bomb_system_hit_chance, Fixed::from_ratio(3, 10));
         assert_eq!(
             figures.bomb_system_hit[&ShipSystem::FlightDeck],
             Fixed::from_ratio(5, 10)
@@ -1178,8 +1173,10 @@ mod tests {
         assert_eq!(figures.surprised_target_factor, Fixed::from_ratio(3, 2));
         assert_eq!(figures.lit_target_factor, Fixed::from_int(2));
         assert_eq!(figures.gun_hit_flotation, Fixed::from_ratio(3, 4));
-        assert_eq!(figures.gun_system_hit_chance, Fixed::from_ratio(3, 10));
-        assert_eq!(figures.torpedo_system_hit_chance, Fixed::from_ratio(1, 2));
+        assert_eq!(
+            figures.system_hit_chance_per_point,
+            Fixed::from_ratio(6, 100)
+        );
         assert_eq!(figures.degraded_factor, Fixed::from_ratio(1, 2));
         assert_eq!(figures.fire_control_out_factor, Fixed::from_ratio(1, 4));
         let tenths = |entries: &[(ShipSystem, i64)]| -> BTreeMap<ShipSystem, Fixed> {

@@ -31,7 +31,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::belief::{ApplyOutcome, BattleClaim, Report};
-use crate::damage::{damage_per_hit, raw_u64, system_for_draw, DamageSite, HitSet};
+use crate::damage::{
+    damage_per_hit, raw_u64, system_for_draw, system_hit_chance, DamageSite, HitSet,
+};
 use crate::events::{
     Breakdown, Cause, DamageTrack, EngagementEndReason, EventKind, Factor, Weapon,
 };
@@ -828,14 +830,14 @@ impl World {
         let hits = u32::try_from(whole).expect("expected hits are not negative")
             + u32::from(stream.chance(fraction));
 
-        let (system_chance, system_table) = match shot.weapon {
-            Weapon::Gun => (figures.gun_system_hit_chance, &figures.gun_system_hit),
-            Weapon::Torpedo => (
-                figures.torpedo_system_hit_chance,
-                &figures.torpedo_system_hit,
-            ),
+        let system_table = match shot.weapon {
+            Weapon::Gun => &figures.gun_system_hit,
+            Weapon::Torpedo => &figures.torpedo_system_hit,
             Weapon::Bomb => unreachable!("a surface fight fires no bombs"),
         };
+        // Decision 0033: the same per-point figure for every weapon.
+        let system_chance =
+            system_hit_chance(shot.damage_per_hit, figures.system_hit_chance_per_point);
         let mut track_hits = [0u32; 2];
         let mut system_hits = Vec::new();
         for _ in 0..hits {
@@ -1803,8 +1805,7 @@ mod tests {
     fn harmless(world: &mut World) {
         let figures = figures_mut(world);
         figures.gun_hit_flotation = Fixed::ZERO;
-        figures.gun_system_hit_chance = Fixed::ZERO;
-        figures.torpedo_system_hit_chance = Fixed::ZERO;
+        figures.system_hit_chance_per_point = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
         figures.torpedo_hit_chance_day = Fixed::ZERO;
     }
@@ -1814,8 +1815,7 @@ mod tests {
     fn flotation_only(world: &mut World) {
         let figures = figures_mut(world);
         figures.gun_hit_flotation = Fixed::ONE;
-        figures.gun_system_hit_chance = Fixed::ZERO;
-        figures.torpedo_system_hit_chance = Fixed::ZERO;
+        figures.system_hit_chance_per_point = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
         figures.torpedo_hit_chance_day = Fixed::ZERO;
     }
@@ -2713,7 +2713,7 @@ mod tests {
             let figures = figures_mut(w);
             figures.gun_hit_chance_day = Fixed::ONE;
             figures.gun_hit_flotation = Fixed::ONE;
-            figures.gun_system_hit_chance = Fixed::ONE;
+            figures.system_hit_chance_per_point = Fixed::from_int(100);
             figures.gun_system_hit = [(system, Fixed::ONE)].into_iter().collect();
             let attacker = ship_mut(w, 1);
             attacker.gun_rounds = Fixed::from_int(2);
@@ -2843,11 +2843,10 @@ mod tests {
         // gun in round 2.
         let world = run(&duel(), |w| {
             let figures = figures_mut(w);
-            figures.gun_system_hit_chance = Fixed::ONE;
+            figures.system_hit_chance_per_point = Fixed::from_int(100);
             figures.gun_system_hit = [(ShipSystem::MainBattery, Fixed::ONE)]
                 .into_iter()
                 .collect();
-            figures.torpedo_system_hit_chance = Fixed::ZERO;
             figures.torpedo_hit_chance_day = Fixed::ZERO;
         });
         for firer in [1, 2] {
@@ -3035,7 +3034,7 @@ mod tests {
 
     #[test]
     fn a_zero_system_chance_still_draws_but_never_hits() {
-        // harmless() sets both system chances to 0: hits land, nothing is
+        // harmless() sets the system chance per point to 0: hits land, nothing is
         // knocked down, no SystemHit event. The draws are still taken, so the
         // stream stays aligned (checked by the draw order tests below).
         let world = run(&duel(), harmless);
@@ -3340,8 +3339,7 @@ mod tests {
         let setup = |record: bool| {
             run(&scene, move |w| {
                 let figures = figures_mut(w);
-                figures.gun_system_hit_chance = Fixed::ONE;
-                figures.torpedo_system_hit_chance = Fixed::ONE;
+                figures.system_hit_chance_per_point = Fixed::from_int(100);
                 figures.torpedo_hit_chance_day = fx("0.125");
                 w.set_config(SimConfig {
                     record_breakdowns: record,
@@ -3498,6 +3496,7 @@ mod tests {
     fn replay_gun_hits(
         stream: &mut RngStream,
         figures: &SurfaceCombatFigures,
+        points: Fixed,
         hits: u32,
     ) -> ([u32; 2], Vec<ShipSystem>) {
         let flotation = u64::try_from(figures.gun_hit_flotation.raw()).unwrap();
@@ -3509,7 +3508,7 @@ mod tests {
             let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
             systems.extend(system_for_draw(
                 draw,
-                figures.gun_system_hit_chance,
+                system_hit_chance(points, figures.system_hit_chance_per_point),
                 &figures.gun_system_hit,
             ));
         }
@@ -3568,7 +3567,7 @@ mod tests {
         let mut stream = ship_1_stream(&world);
 
         assert!(!stream.chance(Fixed::ZERO));
-        let (tracks, systems) = replay_gun_hits(&mut stream, &figures, 6);
+        let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), 6);
         let gun = first_round_salvo(&world, 1, Weapon::Gun);
         assert_eq!(gun.expected, Fixed::from_int(6));
         assert_eq!(gun.hits, 6);
@@ -3578,7 +3577,8 @@ mod tests {
         let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
         let torpedo_system = system_for_draw(
             draw,
-            figures.torpedo_system_hit_chance,
+            // 200 x 100 / 400 = 50 points: chance 1 at the cap.
+            system_hit_chance(Fixed::from_int(50), figures.system_hit_chance_per_point),
             &figures.torpedo_system_hit,
         );
         let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
@@ -3605,7 +3605,8 @@ mod tests {
             only_ship_1_fires(w);
             ship_mut(w, 1).torpedoes_ready = false;
             let figures = figures_mut(w);
-            figures.gun_system_hit_chance = fx("0.5");
+            // 5 points x 0.1 = chance 0.5.
+            figures.system_hit_chance_per_point = fx("0.1");
             figures.gun_system_hit = [(ShipSystem::FireControl, Fixed::ONE)]
                 .into_iter()
                 .collect();
@@ -3614,7 +3615,7 @@ mod tests {
         let mut stream = ship_1_stream(&world);
         for round in 1..=2 {
             assert!(!stream.chance(Fixed::ZERO));
-            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, 6);
+            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), 6);
             let salvo = gun_salvos_of(&world, 1)
                 .into_iter()
                 .find(|s| s.round == round)
@@ -3627,6 +3628,69 @@ mod tests {
                 "round {round}"
             );
         }
+    }
+
+    #[test]
+    fn the_draws_are_the_same_whatever_the_chance_of_a_system_hit() {
+        // Decision 0033 changes the width of a band, never the number or
+        // order of draws: with the figure at 0 (chance 0), 0.06 (a gun hit
+        // 0.3, a torpedo hit 1) and 100 (1 for both), the stream replays
+        // the same way and the system hits follow the replay.
+        for per_point in ["0", "0.06", "0.2", "100"] {
+            let world = run(&duel(), |w| {
+                only_ship_1_fires(w);
+                figures_mut(w).system_hit_chance_per_point = fx(per_point);
+                figures_mut(w).torpedo_hit_chance_day = fx("0.125");
+            });
+            let figures = world.ref_data.surface_combat.clone().unwrap();
+            let mut stream = ship_1_stream(&world);
+            assert!(!stream.chance(Fixed::ZERO));
+            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), 6);
+            let gun = first_round_salvo(&world, 1, Weapon::Gun);
+            assert_eq!(
+                outcome_of_salvo(&world, gun.id),
+                (tracks, systems),
+                "figure {per_point}"
+            );
+            assert!(!stream.chance(Fixed::ZERO));
+            let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
+            let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+            let (_, torpedo_systems) = outcome_of_salvo(&world, torpedo.id);
+            let chance = system_hit_chance(Fixed::from_int(50), fx(per_point));
+            assert_eq!(
+                torpedo_systems,
+                system_for_draw(draw, chance, &figures.torpedo_system_hit)
+                    .into_iter()
+                    .collect::<Vec<_>>(),
+                "figure {per_point}"
+            );
+        }
+    }
+
+    #[test]
+    fn one_figure_per_point_serves_gun_and_torpedo_hits() {
+        // Placeholder cruiser: a gun hit is 5 points (chance 0.3), a torpedo
+        // hit 50 (chance 1). Over many seeds the torpedo hit always knocks a
+        // system down and the gun hit does not.
+        let mut gun_hits = 0u32;
+        let mut gun_system_hits = 0usize;
+        for seed in 1..=20 {
+            let mut scene = duel();
+            scene.seed = seed;
+            let world = run(&scene, |w| {
+                only_ship_1_fires(w);
+                figures_mut(w).torpedo_hit_chance_day = fx("0.125");
+            });
+            let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+            assert_eq!(torpedo.hits, 1);
+            let (_, torpedo_systems) = outcome_of_salvo(&world, torpedo.id);
+            assert_eq!(torpedo_systems.len(), 1, "seed {seed}");
+            let gun = first_round_salvo(&world, 1, Weapon::Gun);
+            gun_hits += gun.hits;
+            gun_system_hits += outcome_of_salvo(&world, gun.id).1.len();
+        }
+        // 120 gun hits at 0.3 is about 36, never all and never none.
+        assert!(gun_system_hits > 0 && gun_system_hits < usize::try_from(gun_hits).unwrap());
     }
 
     // ---- alertness and alarm (decision 0021) ----

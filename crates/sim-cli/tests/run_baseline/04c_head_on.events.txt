@@ -2,7 +2,7 @@ Scenario 4c2b: Head on
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2b73ba6aea3f3625  70 events
+day   1  hash cf214eb838e9d902  71 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2
@@ -34,46 +34,47 @@ day   1  hash 2b73ba6aea3f3625  70 events
 #28 D1 night     round 1: ship:5 took 1 hit on fire, 5 points, now 5  <- #19
 #29 D1 night     round 1: ship:5 fire control hit, working -> degraded  <- #19
 #30 D1 night     round 1: ship:5 took 1 hit on flotation, 50 points, now 70  <- #20
-#31 D1 night     round 1: ship:6 took 4 hits on flotation, 20 points, now 20  <- #21
-#32 D1 night     round 1: ship:6 took 1 hit on fire, 5 points, now 5  <- #21
-#33 D1 night     round 1: ship:6 fire control hit, working -> degraded  <- #21
-#34 D1 night     round 1: ship:6 took 1 hit on flotation, 50 points, now 70  <- #22
-#35 D1 night     round 1: ship:6 propulsion hit, working -> degraded  <- #22
-#36 D1 night     round 1: task_force:2 broke off, 0.666666 of its ships sunk or crippled  <- #23, #24, #27, #28, #30, #31, #32, #34, order:2
-#37 D1 night     engagement of task_force:1 and task_force:2 at (5,0) ended in round 1: a force broke off  <- #36
-#38 D1 night     Japanese report: 2 ships, destroyer, at (4,0): new contact:1  <- #37
-#39 D1 night     Japanese claims 0 enemy ships sunk at (5,0)  <- #37
-#40 D1 night     Allied report: 3 ships, cruiser, at (5,0): new contact:1  <- #37
-#41 D1 night     task_force:1 steamed 12 nm at 16 kn from (5,0) to (5,0)  <- order:3
-#42 D1 night     ship:1 burned 3 t, 1952 t remaining  <- #41
-#43 D1 night     ship:2 burned 3 t, 1952 t remaining  <- #41
-#44 D1 night     ship:3 burned 3 t, 1952 t remaining  <- #41
-#45 D1 night     task_force:2 steamed 6 nm at 8 kn from (5,0) to (5,0)  <- order:1
-#46 D1 night     ship:4 burned 1.5 t, 1953.5 t remaining  <- #45
-#47 D1 night     ship:5 burned 1.5 t, 1953.5 t remaining  <- #45
-#48 D1 night     ship:6 burned 1.5 t, 1953.5 t remaining  <- #45
-#49 D1 morning   task_force:1 alerted by contact:1  <- #38
-#50 D1 morning   task_force:2 alerted by contact:1  <- #40
-#51 D1 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:3
-#52 D1 morning   ship:1 burned 24 t, 1928 t remaining  <- #51
-#53 D1 morning   ship:2 burned 24 t, 1928 t remaining  <- #51
-#54 D1 morning   ship:3 burned 24 t, 1928 t remaining  <- #51
-#55 D1 morning   task_force:2 steamed 48 nm at 8 kn from (5,0) to (4,0)  <- order:1
-#56 D1 morning   ship:4 burned 12 t, 1941.5 t remaining  <- #55
-#57 D1 morning   ship:5 burned 12 t, 1941.5 t remaining  <- #55
-#58 D1 morning   ship:6 burned 12 t, 1941.5 t remaining  <- #55
-#59 D1 morning   Allied contact:1 aged to 1 pulses  <- #40
-#60 D1 morning   Japanese contact:1 aged to 1 pulses  <- #38
-#61 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:3
-#62 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #61
-#63 D1 afternoon ship:2 burned 24 t, 1904 t remaining  <- #61
-#64 D1 afternoon ship:3 burned 24 t, 1904 t remaining  <- #61
-#65 D1 afternoon task_force:2 steamed 48 nm at 8 kn from (4,0) to (3,0)  <- order:1
-#66 D1 afternoon ship:4 burned 12 t, 1929.5 t remaining  <- #65
-#67 D1 afternoon ship:5 burned 12 t, 1929.5 t remaining  <- #65
-#68 D1 afternoon ship:6 burned 12 t, 1929.5 t remaining  <- #65
-#69 D1 afternoon Allied contact:1 aged to 2 pulses  <- #40
-#70 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #38
+#31 D1 night     round 1: ship:5 fire control hit, degraded -> out  <- #20
+#32 D1 night     round 1: ship:6 took 4 hits on flotation, 20 points, now 20  <- #21
+#33 D1 night     round 1: ship:6 took 1 hit on fire, 5 points, now 5  <- #21
+#34 D1 night     round 1: ship:6 fire control hit, working -> degraded  <- #21
+#35 D1 night     round 1: ship:6 took 1 hit on flotation, 50 points, now 70  <- #22
+#36 D1 night     round 1: ship:6 propulsion hit, working -> degraded  <- #22
+#37 D1 night     round 1: task_force:2 broke off, 0.666666 of its ships sunk or crippled  <- #23, #24, #27, #28, #30, #32, #33, #35, order:2
+#38 D1 night     engagement of task_force:1 and task_force:2 at (5,0) ended in round 1: a force broke off  <- #37
+#39 D1 night     Japanese report: 2 ships, destroyer, at (4,0): new contact:1  <- #38
+#40 D1 night     Japanese claims 0 enemy ships sunk at (5,0)  <- #38
+#41 D1 night     Allied report: 3 ships, cruiser, at (5,0): new contact:1  <- #38
+#42 D1 night     task_force:1 steamed 12 nm at 16 kn from (5,0) to (5,0)  <- order:3
+#43 D1 night     ship:1 burned 3 t, 1952 t remaining  <- #42
+#44 D1 night     ship:2 burned 3 t, 1952 t remaining  <- #42
+#45 D1 night     ship:3 burned 3 t, 1952 t remaining  <- #42
+#46 D1 night     task_force:2 steamed 6 nm at 8 kn from (5,0) to (5,0)  <- order:1
+#47 D1 night     ship:4 burned 1.5 t, 1953.5 t remaining  <- #46
+#48 D1 night     ship:5 burned 1.5 t, 1953.5 t remaining  <- #46
+#49 D1 night     ship:6 burned 1.5 t, 1953.5 t remaining  <- #46
+#50 D1 morning   task_force:1 alerted by contact:1  <- #39
+#51 D1 morning   task_force:2 alerted by contact:1  <- #41
+#52 D1 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:3
+#53 D1 morning   ship:1 burned 24 t, 1928 t remaining  <- #52
+#54 D1 morning   ship:2 burned 24 t, 1928 t remaining  <- #52
+#55 D1 morning   ship:3 burned 24 t, 1928 t remaining  <- #52
+#56 D1 morning   task_force:2 steamed 48 nm at 8 kn from (5,0) to (4,0)  <- order:1
+#57 D1 morning   ship:4 burned 12 t, 1941.5 t remaining  <- #56
+#58 D1 morning   ship:5 burned 12 t, 1941.5 t remaining  <- #56
+#59 D1 morning   ship:6 burned 12 t, 1941.5 t remaining  <- #56
+#60 D1 morning   Allied contact:1 aged to 1 pulses  <- #41
+#61 D1 morning   Japanese contact:1 aged to 1 pulses  <- #39
+#62 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:3
+#63 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #62
+#64 D1 afternoon ship:2 burned 24 t, 1904 t remaining  <- #62
+#65 D1 afternoon ship:3 burned 24 t, 1904 t remaining  <- #62
+#66 D1 afternoon task_force:2 steamed 48 nm at 8 kn from (4,0) to (3,0)  <- order:1
+#67 D1 afternoon ship:4 burned 12 t, 1929.5 t remaining  <- #66
+#68 D1 afternoon ship:5 burned 12 t, 1929.5 t remaining  <- #66
+#69 D1 afternoon ship:6 burned 12 t, 1929.5 t remaining  <- #66
+#70 D1 afternoon Allied contact:1 aged to 2 pulses  <- #41
+#71 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #39
 
 task_force:1 "Placeholder eastbound force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder westbound force" (Allied): Underway at (3,0), 2 nm from (3,0) toward (2,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -81,7 +82,7 @@ ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 0, fir
 ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 20, fire 10; fire control out; 800 gun rounds, torpedoes ready; 1929.5 t of fuel, 0 t of supply
-ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control degraded; 800 gun rounds, torpedoes ready; 1929.5 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control out; 800 gun rounds, torpedoes ready; 1929.5 t of fuel, 0 t of supply
 ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 70, fire 5; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 1929.5 t of fuel, 0 t of supply
 Allied contact:1 at (5,0): 3 ships, cruiser, age 2 pulses
 Allied: no battle claims

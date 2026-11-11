@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 29ab4d0db44580cd  154 events
+day   1  hash b1fca027f2fb1848  160 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -124,40 +124,46 @@ day   1  hash 29ab4d0db44580cd  154 events
 #118 D1 afternoon air_group:12 bombs at ship:1: 7 shots x 0.2 = 1.4 expected, 1 hit  <- #88, #104, #105
 #119 D1 afternoon air_group:15 bombs at ship:1: 6 shots x 0.2 = 1.2 expected, 1 hit  <- #89, #113, #114
 #120 D1 afternoon ship:33 took 4 hits on flotation, 71.320752 points, now 71.320752  <- #115
-#121 D1 afternoon ship:33 flight deck hit, working -> degraded  <- #115
-#122 D1 afternoon ship:33 fire control hit, no change, still working  <- #115
-#123 D1 afternoon Allied report: 3 ships, carrier, at (7,-10): refreshed contact:1  <- #115
-#124 D1 afternoon ship:33 took 2 hits on flotation, 35.660376 points, now 100  <- #116
-#125 D1 afternoon ship:33 of task_force:4 sank  <- #124
-#126 D1 afternoon air_group:18 lost with ship:33: 23 aircraft  <- #125
-#127 D1 afternoon air_group:19 lost with ship:33: 6 aircraft  <- #125
-#128 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #116
-#129 D1 afternoon ship:33 flight deck hit, degraded -> out  <- #116
-#130 D1 afternoon Allied report: 4 ships, carrier, at (8,-10): refreshed contact:1  <- #116
-#131 D1 afternoon ship:33 took 2 hits on flotation, 35.660376 points, now 100  <- #117
-#132 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #117
-#133 D1 afternoon ship:33 flight deck hit, no change, still out  <- #117
-#134 D1 afternoon Allied report: 4 ships, battleship, at (7,-10): refreshed contact:1  <- #117
-#135 D1 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 5.260942  <- #118
-#136 D1 afternoon Japanese report: 10 ships, carrier, at (7,-4): refreshed contact:1  <- #118
-#137 D1 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 10.521884  <- #119
-#138 D1 afternoon Japanese report: 10 ships, carrier, at (7,-5): refreshed contact:1  <- #119
-#139 D1 afternoon task_force:3 steamed 14 nm at 17 kn from (8,-11) to (8,-11)  <- order:12, order:13
-#140 D1 afternoon ship:19 burned 5.917525 t, 3964.742269 t remaining  <- #139
-#141 D1 afternoon ship:20 burned 5.917525 t, 3964.742269 t remaining  <- #139
-#142 D1 afternoon ship:21 burned 4.7075 t, 2582.4 t remaining  <- #139
-#143 D1 afternoon ship:22 burned 8.862 t, 6127.44 t remaining  <- #139
-#144 D1 afternoon ship:23 burned 8.862 t, 6127.44 t remaining  <- #139
-#145 D1 afternoon ship:24 burned 4.214779 t, 2213.662193 t remaining  <- #139
-#146 D1 afternoon ship:25 burned 4.214779 t, 2213.662193 t remaining  <- #139
-#147 D1 afternoon ship:26 burned 3.776262 t, 1173.685431 t remaining  <- #139
-#148 D1 afternoon ship:27 burned 1.4 t, 468 t remaining  <- #139
-#149 D1 afternoon ship:28 burned 1.4 t, 468 t remaining  <- #139
-#150 D1 afternoon ship:29 burned 1.4 t, 468 t remaining  <- #139
-#151 D1 afternoon ship:30 burned 1.4 t, 468 t remaining  <- #139
-#152 D1 afternoon ship:31 burned 1.654601 t, 1033.180536 t remaining  <- #139
-#153 D1 afternoon ship:32 burned 1.4 t, 468 t remaining  <- #139
-#154 D1 afternoon task_force:3 arrived at (8,-11) at D1 12:49  <- #139
+#121 D1 afternoon ship:33 fire control hit, no change, still working  <- #115
+#122 D1 afternoon ship:33 flight deck hit, working -> degraded  <- #115
+#123 D1 afternoon ship:33 propulsion hit, working -> degraded  <- #115
+#124 D1 afternoon ship:33 flight deck hit, degraded -> out  <- #115
+#125 D1 afternoon Allied report: 3 ships, carrier, at (7,-10): refreshed contact:1  <- #115
+#126 D1 afternoon ship:33 took 2 hits on flotation, 35.660376 points, now 100  <- #116
+#127 D1 afternoon ship:33 of task_force:4 sank  <- #126
+#128 D1 afternoon air_group:18 lost with ship:33: 23 aircraft  <- #127
+#129 D1 afternoon air_group:19 lost with ship:33: 6 aircraft  <- #127
+#130 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #116
+#131 D1 afternoon ship:33 flight deck hit, no change, still out  <- #116
+#132 D1 afternoon ship:33 fire control hit, no change, still working  <- #116
+#133 D1 afternoon ship:33 flight deck hit, no change, still out  <- #116
+#134 D1 afternoon Allied report: 4 ships, carrier, at (8,-10): refreshed contact:1  <- #116
+#135 D1 afternoon ship:33 took 2 hits on flotation, 35.660376 points, now 100  <- #117
+#136 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #117
+#137 D1 afternoon ship:33 fire control hit, no change, still working  <- #117
+#138 D1 afternoon ship:33 main battery hit, no change, still working  <- #117
+#139 D1 afternoon ship:33 flight deck hit, no change, still out  <- #117
+#140 D1 afternoon Allied report: 4 ships, battleship, at (7,-10): refreshed contact:1  <- #117
+#141 D1 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 5.260942  <- #118
+#142 D1 afternoon Japanese report: 10 ships, carrier, at (7,-4): refreshed contact:1  <- #118
+#143 D1 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 10.521884  <- #119
+#144 D1 afternoon Japanese report: 10 ships, carrier, at (7,-5): refreshed contact:1  <- #119
+#145 D1 afternoon task_force:3 steamed 14 nm at 17 kn from (8,-11) to (8,-11)  <- order:12, order:13
+#146 D1 afternoon ship:19 burned 5.917525 t, 3964.742269 t remaining  <- #145
+#147 D1 afternoon ship:20 burned 5.917525 t, 3964.742269 t remaining  <- #145
+#148 D1 afternoon ship:21 burned 4.7075 t, 2582.4 t remaining  <- #145
+#149 D1 afternoon ship:22 burned 8.862 t, 6127.44 t remaining  <- #145
+#150 D1 afternoon ship:23 burned 8.862 t, 6127.44 t remaining  <- #145
+#151 D1 afternoon ship:24 burned 4.214779 t, 2213.662193 t remaining  <- #145
+#152 D1 afternoon ship:25 burned 4.214779 t, 2213.662193 t remaining  <- #145
+#153 D1 afternoon ship:26 burned 3.776262 t, 1173.685431 t remaining  <- #145
+#154 D1 afternoon ship:27 burned 1.4 t, 468 t remaining  <- #145
+#155 D1 afternoon ship:28 burned 1.4 t, 468 t remaining  <- #145
+#156 D1 afternoon ship:29 burned 1.4 t, 468 t remaining  <- #145
+#157 D1 afternoon ship:30 burned 1.4 t, 468 t remaining  <- #145
+#158 D1 afternoon ship:31 burned 1.654601 t, 1033.180536 t remaining  <- #145
+#159 D1 afternoon ship:32 burned 1.4 t, 468 t remaining  <- #145
+#160 D1 afternoon task_force:3 arrived at (8,-11) at D1 12:49  <- #145
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -215,7 +221,7 @@ ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all syst
 ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
 ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
 ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; propulsion degraded, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
 ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply

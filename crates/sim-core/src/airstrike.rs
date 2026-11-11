@@ -63,7 +63,9 @@
 //! attacked, the raid's first strike group), one roll for all the ships.
 
 use crate::belief::{ApplyOutcome, Report, SightingReport};
-use crate::damage::{damage_per_hit, raw_u64, system_for_draw, DamageSite, HitSet};
+use crate::damage::{
+    damage_per_hit, raw_u64, system_for_draw, system_hit_chance, DamageSite, HitSet,
+};
 use crate::events::{
     AirFirer, AirTarget, Breakdown, Cause, DamageTrack, EventKind, Factor, Weapon,
 };
@@ -981,21 +983,18 @@ impl World {
         let group = &self.truth.air_groups[&strike.air_group];
         let aircraft_type = &self.ref_data.aircraft_types[&group.aircraft_type];
         let toughness = self.ref_data.ship_classes[&self.truth.ships[&ship].class].toughness;
-        let (weapon, chance, system_chance, system_table) = match aircraft_type.attack_weapon {
-            AttackWeapon::Bomb => (
-                Weapon::Bomb,
-                air.bomb_hit_chance,
-                air.bomb_system_hit_chance,
-                &air.bomb_system_hit,
-            ),
+        let (weapon, chance, system_table) = match aircraft_type.attack_weapon {
+            AttackWeapon::Bomb => (Weapon::Bomb, air.bomb_hit_chance, &air.bomb_system_hit),
             AttackWeapon::Torpedo => (
                 Weapon::Torpedo,
                 air.torpedo_hit_chance,
-                surface.torpedo_system_hit_chance,
                 &surface.torpedo_system_hit,
             ),
             AttackWeapon::None => unreachable!("only groups that attack with something launch"),
         };
+        let points = damage_per_hit(aircraft_type.attack_damage, toughness);
+        // Decision 0033: the same per-point figure for every weapon.
+        let system_chance = system_hit_chance(points, surface.system_hit_chance_per_point);
 
         let shots = Fixed::from_int(i64::from(aircraft));
         let expected = shots * chance;
@@ -1068,7 +1067,7 @@ impl World {
             chance,
             expected,
             hits,
-            damage_per_hit: damage_per_hit(aircraft_type.attack_damage, toughness),
+            damage_per_hit: points,
             track_hits,
             system_hits,
             breakdown,
@@ -1689,8 +1688,8 @@ mod tests {
     /// hits, all on the flight deck. Makes the flight deck the only thing a
     /// strike can change besides the two damage tracks.
     fn every_hit_is_a_flight_deck_hit(world: &mut World) {
+        surface_figures(world).system_hit_chance_per_point = Fixed::from_int(100);
         let air = air_figures(world);
-        air.bomb_system_hit_chance = Fixed::ONE;
         air.bomb_system_hit = [(ShipSystem::FlightDeck, Fixed::ONE)].into_iter().collect();
     }
 
@@ -1936,7 +1935,7 @@ mod tests {
         air_figures(&mut world).torpedo_hit_chance = fixed(1, 2);
         {
             let surface = surface_figures(&mut world);
-            surface.torpedo_system_hit_chance = Fixed::ONE;
+            surface.system_hit_chance_per_point = Fixed::from_int(100);
             surface.torpedo_system_hit = [(ShipSystem::FireControl, Fixed::ONE)]
                 .into_iter()
                 .collect();
@@ -2547,6 +2546,56 @@ mod tests {
     }
 
     // ---- randomness ----
+
+    #[test]
+    fn a_bomb_hit_is_a_system_hit_with_chance_points_times_the_figure() {
+        // Decision 0033. A dive bomber's bomb is 100 x 60 / 600 = 10 points
+        // on the carrier: chance 10 x 0.06 = 0.6, so with the flight deck
+        // taking the whole table its band is the draws below 600,000. The
+        // draws are the same as ever: fraction, then track and system per
+        // hit. Replaying the stream counts the system hits.
+        for seed in 1..=25 {
+            let mut world = world_with_a_good_contact(seed);
+            air_figures(&mut world).bomb_system_hit =
+                [(ShipSystem::FlightDeck, Fixed::ONE)].into_iter().collect();
+            assert_eq!(
+                surface_figures(&mut world).system_hit_chance_per_point,
+                fixed(6, 100)
+            );
+            strike_pulse(&mut world, Pulse::Morning);
+            let mut stream = world.rng_pair(
+                1,
+                Some(Pulse::Morning),
+                Subsystem::AirCombat,
+                EntityRef::AirGroup(BOMBERS),
+                EntityRef::TaskForce(FORCE_B),
+            );
+            let hits = 3 + u32::from(stream.chance(fixed(6, 10)));
+            let mut expected = 0;
+            for _ in 0..hits {
+                stream.below(1_000_000);
+                expected += u32::from(stream.below(1_000_000) < 600_000);
+            }
+            assert_eq!(
+                system_hits(&world).len(),
+                usize::try_from(expected).expect("small"),
+                "seed {seed}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_torpedo_hit_from_the_air_always_hits_a_system_at_the_figure_of_the_file() {
+        // 100 x 200 / 400 = 50 points x 0.06 = 3, capped at 1: every hit.
+        let mut world = world_with_a_good_contact(1);
+        set_class(&mut world, 2, 1);
+        group_mut(&mut world, BOMBERS).aircraft_type = AircraftTypeId::new(3);
+        air_figures(&mut world).torpedo_hit_chance = fixed(1, 2);
+        strike_pulse(&mut world, Pulse::Morning);
+        let (_, _, _, _, _, _, _, hits) = attack_of(&attacks(&world)[0]);
+        assert!(hits > 0);
+        assert_eq!(system_hits(&world).len(), usize::try_from(hits).unwrap());
+    }
 
     #[test]
     fn the_attack_stream_draws_the_fraction_then_track_and_system_per_hit_then_the_report() {

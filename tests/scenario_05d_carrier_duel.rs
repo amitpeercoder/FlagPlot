@@ -31,12 +31,19 @@
 //! ## Each side on its own
 //!
 //! In every daylight pulse each side's scouts sight the other force with
-//! chance 0.509295, as in scenario 5b, and each side's rolls are its own.
+//! chance 0.509295, as in scenario 5b, while its carrier's flight deck
+//! works: with the deck degraded four scouts fly and the chance is
+//! 0.254647, and with it out none fly. Each side's rolls are its own.
 //!
 //! A side's bombers launch in a pulse if, and only if, that side holds a
-//! contact reported in that pulse or the one before. A report comes from a
+//! contact reported in that pulse or the one before and its flight deck lets
+//! at least one bomber fly. (The flight deck was left out of these two
+//! paragraphs when they were first written. On the first morning every deck
+//! works, so the counts below stand. No chance is given for an afternoon
+//! launch: it depends on what the morning did to the decks.) A report comes from a
 //! search sighting or from a strike that attacked, and a strike attacks only
-//! in a pulse in which it was launched. So:
+//! in a pulse in which it was launched. So, for a side whose deck lets it
+//! launch:
 //!
 //! - In a morning pulse a side launches if, and only if, its own search
 //!   sighted that morning. A contact from the afternoon before is too old.
@@ -1477,6 +1484,7 @@ fn each_side_launches_when_it_holds_a_contact_its_own_search_reported_and_never_
     // that its search is its own rolls.
     let mut morning_launches = [0i64; 2];
     let mut afternoon_launches = [0i64; 2];
+    let mut afternoon_working = [0i64; 2];
     // Pulses in which a side launched nothing though the other struck it.
     let mut struck_without_a_contact = [0i64; 2];
     let mut struck_and_never_sighted = [0i64; 2];
@@ -1505,8 +1513,9 @@ fn each_side_launches_when_it_holds_a_contact_its_own_search_reported_and_never_
                 if pulse.index == 0 {
                     morning_launches[c] += i64::from(pulse.launched[c].is_some());
                 }
-                if pulse.index == 1 {
+                if pulse.index == 1 && pulse.deck[c] == SystemState::Working {
                     afternoon_launches[c] += i64::from(pulse.launched[c].is_some());
+                    afternoon_working[c] += 1;
                 }
                 // Being struck gives no contact: a side that holds none
                 // launches nothing in a pulse in which the other strikes it.
@@ -1533,11 +1542,26 @@ fn each_side_launches_when_it_holds_a_contact_its_own_search_reported_and_never_
     for c in 0..2 {
         assert!(struck_without_a_contact[c] > 50);
         assert!(struck_and_never_sighted[c] > 5);
-        // A morning launch is a morning sighting, with chance 0.509295; an
-        // afternoon one a sighting that afternoon or an attack that morning,
-        // with chance 0.684234.
+        // A morning launch is a morning sighting, with chance 0.509295 (every
+        // deck works on the first morning). An afternoon launch is a
+        // sighting that afternoon or an attack that morning, and a side
+        // whose deck is hurt launches less or not at all, so the afternoon
+        // band is taken over the runs in which this side's deck was working
+        // at the start of the afternoon, 0.684234 for the hand calculation's
+        // case of working decks. ASSUMED: that a side's deck working then is
+        // independent of whether its own scouts sight and its own strike
+        // attacked (the deck is hit only by the other side's strike, whose
+        // launch rests on the other side's own sightings). The launch rule
+        // itself, whatever the decks, is asserted pulse by pulse above, and
+        // the search chance by deck in `work_the_run`.
         assert!(within_four_sigma(morning_launches[c], 1000, SEARCH_CHANCE));
-        assert!(within_four_sigma(afternoon_launches[c], 1000, 684_234));
+        assert!(afternoon_working[c] > 300, "{afternoon_working:?}");
+        assert!(
+            within_four_sigma(afternoon_launches[c], afternoon_working[c], 684_234),
+            "side {c}: {} of {} runs with a working deck",
+            afternoon_launches[c],
+            afternoon_working[c]
+        );
     }
 }
 

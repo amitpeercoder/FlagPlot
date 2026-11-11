@@ -2,7 +2,7 @@ Scenario 4a: Night action, an alert force meets one that is not
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 42e1f84283c8e502  54 events
+day   1  hash 8c2a2f96b626d15d  55 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -10,7 +10,7 @@ ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 0, fir
 ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 20, fire 10; fire control out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 70, fire 5; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (5,0): 3 ships, cruiser, age 2 pulses
 Allied: no battle claims

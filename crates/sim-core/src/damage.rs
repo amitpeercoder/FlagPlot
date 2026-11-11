@@ -75,6 +75,13 @@ pub(crate) fn track_value(ship: &mut Ship, track: DamageTrack) -> &mut Fixed {
     }
 }
 
+/// Chance a hit also knocks a system down one level (decision 0033): its
+/// damage points times `per_point`, 1 at most. The product is a [`Fixed`]
+/// product (truncating) and the cap comes after it.
+pub(crate) fn system_hit_chance(points: Fixed, per_point: Fixed) -> Fixed {
+    (points * per_point).min(Fixed::ONE)
+}
+
 /// Which system one system draw lands on, if any. `draw` is a uniform draw
 /// below one million, read as a [`Fixed`] in millionths. The systems take
 /// consecutive bands in [`ShipSystem::ALL`] order, each of width `chance` x
@@ -226,5 +233,76 @@ impl World {
     fn record_at(&mut self, site: DamageSite, kind: EventKind, causes: Vec<Cause>) -> EventId {
         self.events
             .record(site.day, Some(site.pulse), kind, causes, None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fx(text: &str) -> Fixed {
+        text.parse().expect("a decimal")
+    }
+
+    #[test]
+    fn the_system_hit_chance_is_points_times_the_figure() {
+        // Decision 0033's table at 0.06 a point.
+        let per_point = fx("0.06");
+        assert_eq!(system_hit_chance(Fixed::from_int(5), per_point), fx("0.3"));
+        assert_eq!(system_hit_chance(fx("1.25"), per_point), fx("0.075"));
+        assert_eq!(
+            system_hit_chance(Fixed::from_int(20), per_point),
+            Fixed::ONE
+        );
+        assert_eq!(
+            system_hit_chance(Fixed::from_int(50), per_point),
+            Fixed::ONE
+        );
+        assert_eq!(system_hit_chance(Fixed::from_int(10), per_point), fx("0.6"));
+    }
+
+    #[test]
+    fn the_system_hit_chance_is_capped_at_one_and_not_below_zero() {
+        let per_point = fx("0.06");
+        // 16.666666 x 0.06 = 0.99999996 truncates to 0.999999: below the cap.
+        assert_eq!(
+            system_hit_chance(fx("16.666666"), per_point),
+            Fixed::from_raw(999_999)
+        );
+        assert_eq!(system_hit_chance(fx("16.7"), per_point), Fixed::ONE);
+        assert_eq!(
+            system_hit_chance(Fixed::from_int(1000), fx("5")),
+            Fixed::ONE
+        );
+        // A hit that does no damage never hits a system, and a zero figure
+        // turns system hits off.
+        assert_eq!(system_hit_chance(Fixed::ZERO, per_point), Fixed::ZERO);
+        assert_eq!(
+            system_hit_chance(Fixed::from_int(50), Fixed::ZERO),
+            Fixed::ZERO
+        );
+        let table: BTreeMap<ShipSystem, Fixed> =
+            [(ShipSystem::Propulsion, Fixed::ONE)].into_iter().collect();
+        let none = system_hit_chance(Fixed::ZERO, per_point);
+        for raw in [0, 1, 500_000, 999_999] {
+            assert_eq!(system_for_draw(Fixed::from_raw(raw), none, &table), None);
+        }
+    }
+
+    #[test]
+    fn the_cap_leaves_the_bands_whole_at_one() {
+        // At the cap the table's shares are the bands: the draws are the
+        // same as for any other chance, only the width changes.
+        let table: BTreeMap<ShipSystem, Fixed> = [
+            (ShipSystem::Propulsion, fx("0.8")),
+            (ShipSystem::MainBattery, fx("0.2")),
+        ]
+        .into_iter()
+        .collect();
+        let chance = system_hit_chance(Fixed::from_int(50), fx("0.06"));
+        let draw = |raw: i64| system_for_draw(Fixed::from_raw(raw), chance, &table);
+        assert_eq!(draw(799_999), Some(ShipSystem::Propulsion));
+        assert_eq!(draw(800_000), Some(ShipSystem::MainBattery));
+        assert_eq!(draw(999_999), Some(ShipSystem::MainBattery));
     }
 }

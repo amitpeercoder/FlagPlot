@@ -2,7 +2,7 @@ Scenario 5b: Unopposed strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 814ef5ade0acc50c  12 events
+day   1  hash 9d1a5df8c4c93fce  15 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -15,7 +15,10 @@ day   1  hash 814ef5ade0acc50c  12 events
 #9 D1 afternoon air_group:2 launched 18 aircraft at contact:1 at (9,0), 200 nm  <- order:3, #8
 #10 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 4 hits  <- #9
 #11 D1 afternoon ship:3 took 4 hits on flotation, 40 points, now 40  <- #10
-#12 D1 afternoon Allied report: 4 ships, cruiser, at (9,0): refreshed contact:1  <- #10
+#12 D1 afternoon ship:3 flight deck hit, working -> degraded  <- #10
+#13 D1 afternoon ship:3 flight deck hit, degraded -> out  <- #10
+#14 D1 afternoon ship:3 flight deck hit, no change, still out  <- #10
+#15 D1 afternoon Allied report: 4 ships, cruiser, at (9,0): refreshed contact:1  <- #10
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -23,7 +26,7 @@ air_group:1 "Placeholder scouting squadron" (Allied) aboard ship:1: 8 ready, mis
 air_group:2 "Placeholder bombing squadron" (Allied) aboard ship:1: 18 ready, mission NavalStrike, no arc
 ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
-ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 40, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 40, fire 0; flight deck out; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (9,0): 4 ships, cruiser, age 0 pulses

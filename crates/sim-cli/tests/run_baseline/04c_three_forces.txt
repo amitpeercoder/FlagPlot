@@ -2,7 +2,7 @@ Scenario 4c2a: Readiness, one attacker and two defenders
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2f6cc2ab77adcd29  86 events
+day   1  hash 65486ebcd6072205  87 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Arrived at (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder first defending force" (Allied): Idle at (7,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -11,7 +11,7 @@ ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 0, fir
 ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1775 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1775 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 20, fire 10; fire control out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 70, fire 5; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:7 "Placeholder cruiser C1": afloat in task_force:3; damage flotation 20, fire 5; fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:8 "Placeholder cruiser C2": afloat in task_force:3; damage flotation 20, fire 10; torpedo mounts degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply

@@ -81,8 +81,9 @@
 //! and the carrier's flotation and fire damage together are 10 times the
 //! hits it has taken. Two attacks do 80 points at most, so carrier B is
 //! never sunk and is the target of every attack. Each hit is a system hit
-//! with chance 0.3, landing on the flight deck with chance 0.5, propulsion
-//! 0.2, fire control 0.1 and the main battery 0.2.
+//! with chance 10 x 0.06 = 0.6 (0.3 before decision 0033, when the chance
+//! was flat), landing on the flight deck with chance 0.5, propulsion 0.2,
+//! fire control 0.1 and the main battery 0.2.
 //!
 //! No aircraft is lost: air group 2 has 18 aircraft at the end of every run.
 //! Ships 1, 2, 4 and 5 are never damaged.
@@ -771,14 +772,15 @@ fn a_hit_does_10_points_on_flotation_at_0_75_and_fire_at_0_25_and_carrier_b_is_n
         "hits {hits}: flotation {flotation}, system hits {system_hits}, by system {by_system:?}"
     );
     assert!(within_four_sigma(flotation, hits, 750_000));
-    // A hit is a system hit with chance 0.3; the system with 0.5, 0.2, 0.1
-    // and 0.2 of those (flight deck, propulsion, fire control, main battery).
-    assert!(within_four_sigma(system_hits, hits, 300_000));
+    // A hit is a system hit with chance 10 x 0.06 = 0.6 (decision 0033); the
+    // system with 0.5, 0.2, 0.1 and 0.2 of those (flight deck, propulsion,
+    // fire control, main battery).
+    assert!(within_four_sigma(system_hits, hits, 600_000));
     let shares = [
-        (ShipSystem::FlightDeck, 150_000),
-        (ShipSystem::Propulsion, 60_000),
-        (ShipSystem::FireControl, 30_000),
-        (ShipSystem::MainBattery, 60_000),
+        (ShipSystem::FlightDeck, 300_000),
+        (ShipSystem::Propulsion, 120_000),
+        (ShipSystem::FireControl, 60_000),
+        (ShipSystem::MainBattery, 120_000),
     ];
     for (system, share) in shares {
         let slot = ShipSystem::ALL
