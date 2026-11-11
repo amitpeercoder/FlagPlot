@@ -430,9 +430,14 @@ impl World {
     /// works; the degraded factor if it is degraded; none if it is out) times
     /// 100 less its fatigue over 100, multiplied in fixed point and rounded
     /// down once. A stood-down group flies none. Without the fatigue
-    /// figures a group is never tired or stood down.
+    /// figures a group is never tired or stood down. A group whose pilots
+    /// are tracked starts from the smaller of its ready aircraft and its
+    /// pilots (decision 2 of 0038).
     pub(crate) fn aircraft_able_to_fly(&self, group: &AirGroup) -> u32 {
-        let mut able = Fixed::from_int(i64::from(group.ready));
+        let crewed = group
+            .pilots
+            .map_or(group.ready, |pilots| group.ready.min(pilots));
+        let mut able = Fixed::from_int(i64::from(crewed));
         if let AirGroupLocation::Ship(ship) = group.location {
             if let Some(ship) = self.truth.ships.get(&ship) {
                 // Without the figures no system can be damaged (World::new).
@@ -788,7 +793,9 @@ impl World {
                     _ => SortieKind::Strike,
                 };
                 for (group, lost) in lost_list {
-                    if let Some(event) = self.lose_aircraft(day, pulse, *group, *lost, cause) {
+                    if let Some(event) =
+                        self.lose_aircraft(day, pulse, *group, *lost, lost_from, cause)
+                    {
                         losses_of.push((*group, event));
                         self.note_loss(*group, lost_from, *lost);
                     }
@@ -1196,13 +1203,18 @@ impl World {
 
     /// Takes `aircraft` off the ready aircraft of `group`, but never more
     /// than it has (decision 12 of 0027), and records it, citing `cause`.
-    /// Records nothing if it has none to lose.
+    /// Records nothing if it has none to lose. If the group's pilots are
+    /// tracked, each aircraft lost takes its pilot with it (never below 0),
+    /// recorded as `PilotsLost` right after, unless the aircraft were the
+    /// group's patrol over its own hex, whose pilots are saved (decisions 3
+    /// and 4 of 0038). `lost_from` says which.
     fn lose_aircraft(
         &mut self,
         day: u32,
         pulse: Pulse,
         group: AirGroupId,
         aircraft: u32,
+        lost_from: SortieKind,
         cause: EventId,
     ) -> Option<EventId> {
         let air_group = self
@@ -1216,7 +1228,16 @@ impl World {
         }
         air_group.ready -= lost;
         let remaining = air_group.ready;
-        Some(self.events.record(
+        let pilots_lost = match air_group.pilots {
+            Some(pilots) if lost_from != SortieKind::Patrol => {
+                let taken = lost.min(pilots);
+                air_group.pilots = Some(pilots - taken);
+                taken
+            }
+            _ => 0,
+        };
+        let pilots_left = air_group.pilots.unwrap_or(0);
+        let event = self.events.record(
             day,
             Some(pulse),
             EventKind::AircraftLost {
@@ -1226,7 +1247,21 @@ impl World {
             },
             vec![Cause::Event(cause)],
             None,
-        ))
+        );
+        if pilots_lost > 0 {
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::PilotsLost {
+                    air_group: group,
+                    lost: pilots_lost,
+                    left: pilots_left,
+                },
+                vec![Cause::Event(event)],
+                None,
+            );
+        }
+        Some(event)
     }
 
     /// The enemy task force a strike of `side` finds at `hex`: the one with
@@ -2117,6 +2152,8 @@ mod tests {
             rest_above: None,
             rest_order: None,
             stood_down: false,
+            pilots: None,
+            strength: ready,
         }
     }
 
@@ -7443,5 +7480,612 @@ mod tests {
         world.submit_orders(Side::Japanese, vec![order(30)]);
         world.resolve_day().expect("day resolves");
         assert_eq!(rejections(&world), vec![RejectReason::NotYourUnit]);
+    }
+
+    // ---- pilots and replacements (decision 0038) ----
+
+    use crate::state::Replacement;
+
+    fn pilots_of(world: &World, id: u32) -> Option<u32> {
+        world.truth.air_groups[&AirGroupId::new(id)].pilots
+    }
+
+    fn pilot_losses(world: &World) -> Vec<(u32, u32, u32)> {
+        events_where(world, |k| matches!(k, EventKind::PilotsLost { .. }))
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::PilotsLost {
+                    air_group,
+                    lost,
+                    left,
+                } => (air_group.raw(), lost, left),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    /// A group at base 2 (Japanese) of `type_id` with `ready` aircraft,
+    /// `pilots` and a `strength`.
+    fn crewed(
+        world: &mut World,
+        id: u32,
+        type_id: u32,
+        ready: u32,
+        pilots: Option<u32>,
+        strength: u32,
+    ) {
+        base_group(world, id, BASE_JAPANESE, type_id, ready, AirMission::Rest);
+        let group = group_mut(world, AirGroupId::new(id));
+        group.pilots = pilots;
+        group.strength = strength;
+    }
+
+    fn stream(base: BaseId, side: Side, type_id: u32, aircraft: u32, pilots: u32) -> Replacement {
+        Replacement {
+            side,
+            base,
+            aircraft_type: AircraftTypeId::new(type_id),
+            aircraft_per_day: aircraft,
+            pilots_per_day: pilots,
+        }
+    }
+
+    /// (air group, aircraft, pilots, ready, pilots now) of each
+    /// `ReplacementsReceived`.
+    fn received(world: &World) -> Vec<(u32, u32, u32, u32, u32)> {
+        events_where(world, |k| {
+            matches!(k, EventKind::ReplacementsReceived { .. })
+        })
+        .iter()
+        .map(|event| match event.kind {
+            EventKind::ReplacementsReceived {
+                air_group,
+                aircraft,
+                pilots,
+                ready,
+                pilots_now,
+                ..
+            } => (air_group.raw(), aircraft, pilots, ready, pilots_now),
+            _ => unreachable!(),
+        })
+        .collect()
+    }
+
+    #[test]
+    fn a_group_flies_the_smaller_of_its_ready_aircraft_and_its_pilots_cut_once_by_deck_and_fatigue()
+    {
+        let mut world = world_with_a_good_contact(1);
+        tire(&mut world);
+        let id = BOMBERS.raw();
+        group_mut(&mut world, BOMBERS).ready = 7;
+        // Not tracked: as before.
+        assert_eq!(able(&world, id), 7);
+        // More pilots than aircraft: the aircraft.
+        group_mut(&mut world, BOMBERS).pilots = Some(9);
+        assert_eq!(able(&world, id), 7);
+        // Fewer: the pilots. None: none.
+        group_mut(&mut world, BOMBERS).pilots = Some(5);
+        assert_eq!(able(&world, id), 5);
+        group_mut(&mut world, BOMBERS).pilots = Some(0);
+        assert_eq!(able(&world, id), 0);
+        // 5 crewed, deck degraded (half) and fatigue 10: 5 x 0.5 x 0.9 =
+        // 2.25, rounded once: 2. Rounding the half first would give 1.
+        group_mut(&mut world, BOMBERS).pilots = Some(5);
+        deck(&mut world, 1, SystemState::Degraded);
+        set_fatigue(&mut world, id, Fixed::from_int(10));
+        assert_eq!(able(&world, id), 2);
+        // With 9 pilots the 7 ready: 3.15, 3 (as without pilots).
+        group_mut(&mut world, BOMBERS).pilots = Some(9);
+        assert_eq!(able(&world, id), 3);
+        // The cut reaches the strike decision, the search and the split.
+        group_mut(&mut world, BOMBERS).pilots = Some(5);
+        world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(launch_of(&launches(&world)[0]).3, 2);
+    }
+
+    #[test]
+    fn the_search_and_the_fighter_split_use_what_the_pilots_allow() {
+        let mut world = base_world(1);
+        base_group(&mut world, 2, BASE_ALLIED, 1, 6, AirMission::Search);
+        group_mut(&mut world, AirGroupId::new(2)).search = Some(SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(300),
+        });
+        group_mut(&mut world, AirGroupId::new(2)).pilots = Some(4);
+        base_group(
+            &mut world,
+            3,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(3)).pilots = Some(6);
+        group_mut(&mut world, AirGroupId::new(3)).patrol_share = fixed(1, 2);
+        world.search_from_the_air(1, Pulse::Morning);
+        let flown = events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. }));
+        assert_eq!(flown.len(), 1);
+        match flown[0].kind {
+            EventKind::SearchFlown { aircraft, .. } => assert_eq!(aircraft, 4),
+            _ => unreachable!(),
+        }
+        // 6 crewed fighters: half patrol, half escort; not 10.
+        let fighters = world.split_fighter_groups();
+        assert_eq!((fighters[0].patrol, fighters[0].escorts), (3, 3));
+    }
+
+    #[test]
+    fn an_aircraft_lost_away_from_home_takes_its_pilot_and_a_patrol_aircraft_lost_at_home_does_not()
+    {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 12, Some(12), 12);
+        crewed(&mut world, 11, 5, 12, None, 12);
+        let cause = EventId::new(1);
+        // A bomber or a scout lost on a strike, and an escort: the pilot is
+        // lost with each.
+        for (kind, lost, ready, pilots) in [
+            (SortieKind::BaseStrike, 3, 9, 9),
+            (SortieKind::Strike, 1, 8, 8),
+            (SortieKind::Escort, 2, 6, 6),
+            (SortieKind::Search, 1, 5, 5),
+            // A patrol over its own hex: the pilot is saved.
+            (SortieKind::Patrol, 2, 3, 5),
+        ] {
+            let event = world
+                .lose_aircraft(1, Pulse::Morning, AirGroupId::new(10), lost, kind, cause)
+                .expect("aircraft were lost");
+            let group = &world.truth.air_groups[&AirGroupId::new(10)];
+            assert_eq!(
+                (group.ready, group.pilots),
+                (ready, Some(pilots)),
+                "{kind:?}"
+            );
+            let log = world.events.iter().collect::<Vec<_>>();
+            let last = log.last().expect("an event");
+            if kind == SortieKind::Patrol {
+                // Nothing after the loss.
+                assert_eq!(last.id, event);
+                assert!(matches!(last.kind, EventKind::AircraftLost { .. }));
+            } else {
+                assert_eq!(last.causes, vec![Cause::Event(event)]);
+                assert_eq!(
+                    last.kind,
+                    EventKind::PilotsLost {
+                        air_group: AirGroupId::new(10),
+                        lost,
+                        left: pilots
+                    }
+                );
+            }
+        }
+        // The AircraftLost event reads as it did.
+        let first = events_where(&world, |k| matches!(k, EventKind::AircraftLost { .. }));
+        assert_eq!(
+            first[0].kind.to_string(),
+            "air_group:10 lost 3 aircraft, 9 left"
+        );
+        assert_eq!(first[0].causes, vec![Cause::Event(cause)]);
+        let texts: Vec<String> =
+            events_where(&world, |k| matches!(k, EventKind::PilotsLost { .. }))
+                .iter()
+                .map(|event| event.kind.to_string())
+                .collect();
+        assert_eq!(texts[0], "air_group:10 lost 3 pilots, 9 left");
+        assert_eq!(texts[1], "air_group:10 lost 1 pilot, 8 left");
+        // A group whose pilots are not tracked loses none and records none.
+        world
+            .lose_aircraft(
+                1,
+                Pulse::Morning,
+                AirGroupId::new(11),
+                4,
+                SortieKind::Escort,
+                cause,
+            )
+            .expect("lost");
+        assert_eq!(pilots_of(&world, 11), None);
+        assert_eq!(pilot_losses(&world).len(), 4);
+        // Never below 0: 3 ready and 1 pilot, 3 shot down.
+        crewed(&mut world, 12, 5, 3, Some(1), 3);
+        world
+            .lose_aircraft(
+                1,
+                Pulse::Morning,
+                AirGroupId::new(12),
+                3,
+                SortieKind::Escort,
+                cause,
+            )
+            .expect("lost");
+        assert_eq!(pilots_of(&world, 12), Some(0));
+        assert_eq!(pilot_losses(&world).last(), Some(&(12, 1, 0)));
+        // A group with nothing to lose records nothing.
+        let before = world.events.len();
+        assert!(world
+            .lose_aircraft(
+                1,
+                Pulse::Morning,
+                AirGroupId::new(12),
+                2,
+                SortieKind::Escort,
+                cause
+            )
+            .is_none());
+        assert_eq!(world.events.len(), before);
+    }
+
+    #[test]
+    fn in_a_raid_the_bombers_and_escorts_shot_down_lose_their_pilots_and_the_patrol_keeps_its_own()
+    {
+        // Every fighter shot hits. Allied bombers (6) and escorts (4) raid
+        // Japanese base 2, where 5 fighters are on patrol.
+        let mut world = raid_world(1);
+        sure_fighters(&mut world);
+        group_mut(&mut world, AirGroupId::new(1)).ready = 6;
+        group_mut(&mut world, AirGroupId::new(1)).pilots = Some(6);
+        cap_group(&mut world, 2, Side::Allied, 1, 4, Fixed::ZERO);
+        {
+            let escorts = group_mut(&mut world, AirGroupId::new(2));
+            escorts.location = AirGroupLocation::Base(BASE_ALLIED);
+            escorts.pilots = Some(4);
+        }
+        cap_group(&mut world, 3, Side::Japanese, 2, 5, Fixed::ONE);
+        {
+            let patrol = group_mut(&mut world, AirGroupId::new(3));
+            patrol.location = AirGroupLocation::Base(BASE_JAPANESE);
+            patrol.pilots = Some(5);
+        }
+        strike_pulse(&mut world, Pulse::Morning);
+        // The escorts' 4 shots bring down 4 of the patrol, whose pilots are
+        // saved; the patrol's 4 shots at the escorts bring down all 4, and
+        // the one left shoots a bomber: their pilots are lost.
+        let lost = losses(&world);
+        let per_group = |group: u32| -> u32 {
+            lost.iter()
+                .map(loss_of)
+                .filter(|(g, ..)| *g == group)
+                .map(|(_, aircraft, _)| aircraft)
+                .sum()
+        };
+        assert_eq!(per_group(3), 4);
+        assert_eq!(per_group(2), 4);
+        assert_eq!(per_group(1), 1);
+        assert_eq!(pilots_of(&world, 3), Some(5));
+        assert_eq!(pilots_of(&world, 2), Some(0));
+        assert_eq!(pilots_of(&world, 1), Some(5));
+        assert_eq!(group_mut(&mut world, AirGroupId::new(3)).ready, 1);
+        // Each PilotsLost follows the AircraftLost it is caused by.
+        let log: Vec<Event> = world.events.iter().cloned().collect();
+        let mut seen = 0;
+        for (index, event) in log.iter().enumerate() {
+            if let EventKind::PilotsLost {
+                air_group, lost, ..
+            } = event.kind
+            {
+                seen += 1;
+                assert_ne!(air_group.raw(), 3);
+                let before = &log[index - 1];
+                assert_eq!(event.causes, vec![Cause::Event(before.id)]);
+                match before.kind {
+                    EventKind::AircraftLost {
+                        air_group: g,
+                        aircraft,
+                        ..
+                    } => assert_eq!((g, aircraft), (air_group, lost)),
+                    _ => panic!("a pilot loss follows an aircraft loss"),
+                }
+            }
+        }
+        assert_eq!(seen, 2);
+    }
+
+    #[test]
+    fn aircraft_written_off_after_a_sortie_and_aircraft_destroyed_on_the_ground_lose_no_pilot() {
+        let mut world = ground_world(18);
+        for (id, pilots) in [(1, 18), (3, 4), (4, 5), (5, 2)] {
+            group_mut(&mut world, AirGroupId::new(id)).pilots = Some(pilots);
+        }
+        // Every aircraft that flies is worn and written off after the raid.
+        upkeep(&mut world, SURE, NEVER, SURE, 0);
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert!(!ground_events(&world).is_empty());
+        let written_off: u32 =
+            events_where(&world, |k| matches!(k, EventKind::AircraftWorn { .. }))
+                .iter()
+                .map(|event| match event.kind {
+                    EventKind::AircraftWorn { written_off, .. } => written_off,
+                    _ => unreachable!(),
+                })
+                .sum();
+        assert!(written_off > 0);
+        assert!(pilot_losses(&world).is_empty());
+        for (id, pilots) in [(1, 18), (3, 4), (4, 5), (5, 2)] {
+            assert_eq!(pilots_of(&world, id), Some(pilots), "group {id}");
+        }
+        // The groups really did lose aircraft.
+        assert!(group_mut(&mut world, AirGroupId::new(4)).ready < 5);
+        assert!(group_mut(&mut world, AirGroupId::new(1)).ready < 18);
+    }
+
+    #[test]
+    fn a_group_lost_with_its_ship_loses_all_its_pilots_and_says_so() {
+        let mut world = world_with_a_good_contact(1);
+        group_mut(&mut world, BOMBERS).aircraft_type = AircraftTypeId::new(3);
+        world
+            .ref_data
+            .aircraft_types
+            .get_mut(&AircraftTypeId::new(3))
+            .expect("type")
+            .attack_damage = Fixed::from_int(600);
+        air_figures(&mut world).torpedo_hit_chance = Fixed::ONE;
+        group_mut(&mut world, ENEMY_BOMBERS).pilots = Some(14);
+        // A second group aboard the sinking carrier whose pilots are not
+        // tracked.
+        let mut other = group(AirGroupId::new(30), Side::Japanese, 2, 5, 3);
+        other.pilots = None;
+        world.truth.air_groups.insert(other.id, other);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(ship_of(&world, 2).location, ShipLocation::Sunk);
+        assert_eq!(pilots_of(&world, ENEMY_BOMBERS.raw()), Some(0));
+        assert_eq!(pilots_of(&world, 30), None);
+        assert_eq!(pilot_losses(&world), vec![(ENEMY_BOMBERS.raw(), 14, 0)]);
+        let lost = events_where(&world, |k| matches!(k, EventKind::AirGroupLost { .. }));
+        let pilots = events_where(&world, |k| matches!(k, EventKind::PilotsLost { .. }));
+        assert_eq!(pilots[0].causes, vec![Cause::Event(lost[0].id)]);
+        assert_eq!(pilots[0].id.raw(), lost[0].id.raw() + 1);
+    }
+
+    #[test]
+    fn replacements_go_to_the_groups_of_the_type_at_the_base_lowest_first_each_up_to_its_strength()
+    {
+        let mut world = base_world(1);
+        // Two fighter groups at base 2: group 10 is 4 aircraft and 1 pilot
+        // short, group 11 is 1 aircraft and 3 pilots short.
+        crewed(&mut world, 10, 5, 8, Some(11), 12);
+        crewed(&mut world, 11, 5, 11, Some(9), 12);
+        // Others get nothing: another type here, and the same type at the
+        // other base.
+        crewed(&mut world, 12, 2, 1, Some(0), 12);
+        base_group(&mut world, 13, BASE_ALLIED, 5, 1, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(13)).strength = 12;
+        group_mut(&mut world, AirGroupId::new(13)).pilots = Some(0);
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 5, 3));
+        let hash = world.state_hash();
+        world.receive_replacements(2, Pulse::Night);
+        assert_ne!(hash, world.state_hash());
+        assert_eq!(
+            received(&world),
+            vec![(10, 4, 1, 12, 12), (11, 1, 2, 12, 11)]
+        );
+        let events = events_where(&world, |k| {
+            matches!(k, EventKind::ReplacementsReceived { .. })
+        });
+        assert!(events.iter().all(|e| e.causes.is_empty()));
+        assert!(events
+            .iter()
+            .all(|e| e.pulse == Some(Pulse::Night) && e.day == 2));
+        assert_eq!(
+            events[0].kind.to_string(),
+            "air_group:10 received 4 aircraft and 1 pilots at base:2, 12 ready and 12 pilots"
+        );
+        assert_eq!(
+            events[0].kind.entities(),
+            vec![
+                crate::ids::EntityRef::AirGroup(AirGroupId::new(10)),
+                crate::ids::EntityRef::Base(BASE_JAPANESE)
+            ]
+        );
+        for (id, ready, pilots) in [(10, 12, 12), (11, 12, 11), (12, 1, 0), (13, 1, 0)] {
+            let group = &world.truth.air_groups[&AirGroupId::new(id)];
+            assert_eq!(
+                (group.ready, group.pilots),
+                (ready, Some(pilots)),
+                "group {id}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_ceiling_counts_damaged_aircraft_and_replacements_arrive_ready() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 6, Some(12), 12);
+        group_mut(&mut world, AirGroupId::new(10)).damaged = 4;
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 5, 0));
+        world.receive_replacements(2, Pulse::Night);
+        let group = &world.truth.air_groups[&AirGroupId::new(10)];
+        // Room for 2 (12 less 6 ready and 4 damaged); they join ready.
+        assert_eq!((group.ready, group.damaged, group.pilots), (8, 4, Some(12)));
+        assert_eq!(received(&world), vec![(10, 2, 0, 8, 12)]);
+    }
+
+    #[test]
+    fn what_a_day_cannot_place_is_lost_and_nothing_is_held_over() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 10, Some(12), 12);
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 5, 4));
+        world.receive_replacements(2, Pulse::Night);
+        // 2 aircraft and 0 pilots placed; 3 and 4 lost.
+        assert_eq!(received(&world), vec![(10, 2, 0, 12, 12)]);
+        // The next day the group has lost one aircraft: it gets one, not one
+        // and the three held over.
+        group_mut(&mut world, AirGroupId::new(10)).ready = 11;
+        world.receive_replacements(3, Pulse::Night);
+        assert_eq!(
+            received(&world),
+            vec![(10, 2, 0, 12, 12), (10, 1, 0, 12, 12)]
+        );
+        // Nothing to place records nothing.
+        world.receive_replacements(4, Pulse::Night);
+        assert_eq!(received(&world).len(), 2);
+    }
+
+    #[test]
+    fn day_1_has_nothing_to_replace_and_an_untracked_group_takes_aircraft_but_no_pilot() {
+        let mut world = base_world(1);
+        // Group 10's pilots are not tracked and it is short 3 aircraft:
+        // the stream's 2 pilots pass it by to group 11.
+        crewed(&mut world, 10, 5, 9, None, 12);
+        crewed(&mut world, 11, 5, 12, Some(10), 12);
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 2, 2));
+        world.receive_replacements(1, Pulse::Night);
+        assert!(received(&world).is_empty());
+        world.receive_replacements(2, Pulse::Night);
+        assert_eq!(
+            received(&world),
+            vec![(10, 2, 0, 11, 0), (11, 0, 2, 12, 12)]
+        );
+        assert_eq!(pilots_of(&world, 10), None);
+    }
+
+    #[test]
+    fn a_stream_at_a_base_the_side_no_longer_holds_places_nothing_and_streams_apply_in_order() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 6, Some(6), 12);
+        for (aircraft, pilots) in [(2, 1), (3, 2)] {
+            world.truth.replacements.push(stream(
+                BASE_JAPANESE,
+                Side::Japanese,
+                5,
+                aircraft,
+                pilots,
+            ));
+        }
+        // The first stream's aircraft come first, then the second's.
+        world.receive_replacements(2, Pulse::Night);
+        assert_eq!(received(&world), vec![(10, 2, 1, 8, 7), (10, 3, 2, 11, 9)]);
+        // The base changes hands: nothing is placed for the Japanese.
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_JAPANESE)
+            .expect("base")
+            .side = Side::Allied;
+        world.receive_replacements(3, Pulse::Night);
+        assert_eq!(received(&world).len(), 2);
+        // Nor does a stream of the other side fill the group.
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Allied, 5, 3, 3));
+        world.receive_replacements(3, Pulse::Night);
+        assert_eq!(received(&world).len(), 2);
+    }
+
+    #[test]
+    fn replacements_arrive_at_night_from_day_2_in_a_resolved_day_and_draw_no_random_number() {
+        let build = |seed: u64| {
+            let mut world = base_world(seed);
+            crewed(&mut world, 10, 5, 8, Some(8), 12);
+            world
+                .truth
+                .replacements
+                .push(stream(BASE_JAPANESE, Side::Japanese, 5, 2, 1));
+            world
+        };
+        let mut world = build(1);
+        world.resolve_day().expect("day 1 resolves");
+        assert!(received(&world).is_empty());
+        world.resolve_day().expect("day 2 resolves");
+        world.resolve_day().expect("day 3 resolves");
+        let events = events_where(&world, |k| {
+            matches!(k, EventKind::ReplacementsReceived { .. })
+        });
+        assert_eq!(
+            events.iter().map(|e| (e.day, e.pulse)).collect::<Vec<_>>(),
+            vec![(2, Some(Pulse::Night)), (3, Some(Pulse::Night))]
+        );
+        assert_eq!(
+            received(&world),
+            vec![(10, 2, 1, 10, 9), (10, 2, 1, 12, 10)]
+        );
+        // The seed does not matter: no random number is drawn.
+        let mut other = build(99);
+        for _ in 0..3 {
+            other.resolve_day().expect("resolves");
+        }
+        assert_eq!(received(&other), received(&world));
+        assert_eq!(other.day_hashes().len(), 3);
+    }
+
+    #[test]
+    fn untracked_groups_and_scenarios_without_replacements_hash_and_fly_as_before() {
+        let mut plain = base_world(1);
+        crewed(&mut plain, 10, 5, 8, None, 12);
+        let hash = plain.state_hash();
+        // Strength is read by replacements alone: with none, it is not
+        // hashed.
+        let mut other = base_world(1);
+        crewed(&mut other, 10, 5, 8, None, 99);
+        assert_eq!(other.state_hash(), hash);
+        // Pilots, strength, and a stream are.
+        group_mut(&mut other, AirGroupId::new(10)).pilots = Some(8);
+        assert_ne!(other.state_hash(), hash);
+        let with_pilots = other.state_hash();
+        group_mut(&mut other, AirGroupId::new(10)).pilots = Some(7);
+        assert_ne!(other.state_hash(), with_pilots);
+        group_mut(&mut other, AirGroupId::new(10)).pilots = Some(8);
+        group_mut(&mut other, AirGroupId::new(10)).strength = 12;
+        assert_ne!(other.state_hash(), with_pilots);
+        let mut with_stream = base_world(1);
+        crewed(&mut with_stream, 10, 5, 8, None, 12);
+        with_stream
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 2, 0));
+        assert_ne!(with_stream.state_hash(), hash);
+        // No pilots, no stream: every group flies its ready aircraft.
+        assert_eq!(able(&plain, 10), 8);
+    }
+
+    #[test]
+    fn a_side_view_shows_the_sides_own_pilots_and_streams_and_not_the_enemys() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 8, Some(7), 12);
+        base_group(&mut world, 11, BASE_ALLIED, 5, 6, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(11)).pilots = Some(5);
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 2, 1));
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_ALLIED, Side::Allied, 5, 3, 0));
+        let allied = world.side_view(Side::Allied);
+        let streams: Vec<(Side, u32)> = allied
+            .replacements()
+            .map(|s| (s.side, s.aircraft_per_day))
+            .collect();
+        assert_eq!(streams, vec![(Side::Allied, 3)]);
+        let groups: Vec<(u32, Option<u32>, u32)> = allied
+            .air_groups()
+            .map(|g| (g.id.raw(), g.pilots, g.strength))
+            .collect();
+        assert_eq!(groups, vec![(11, Some(5), 6)]);
+        assert_eq!(world.side_view(Side::Japanese).replacements().count(), 1);
+    }
+
+    #[test]
+    fn a_replacement_stream_at_an_unknown_base_breaks_an_invariant() {
+        let mut world = base_world(1);
+        world
+            .truth
+            .replacements
+            .push(stream(BaseId::new(9), Side::Japanese, 5, 2, 1));
+        let error = world.resolve_day().expect_err("the day is refused");
+        assert!(error.to_string().contains("replacement stream"), "{error}");
     }
 }

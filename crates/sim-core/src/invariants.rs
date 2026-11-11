@@ -85,6 +85,8 @@ pub enum InvariantViolation {
     /// The air group's fatigue, or its rest threshold, is below 0 or above
     /// 100 (decision 0036). Added at the end of the enum.
     AirGroupFatigueOutOfRange(AirGroupId),
+    /// A replacement stream names a base that does not exist (decision 0038).
+    ReplacementAtUnknownBase(BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -114,6 +116,9 @@ impl fmt::Display for InvariantViolation {
                     f,
                     "{group} has a fatigue or a rest threshold outside 0 to 100"
                 )
+            }
+            InvariantViolation::ReplacementAtUnknownBase(base) => {
+                write!(f, "a replacement stream is at {base}, which does not exist")
             }
             InvariantViolation::TaskForceLegCrossesClosedSide(task_force, from, toward) => {
                 write!(
@@ -415,6 +420,12 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         }
     }
 
+    for stream in &truth.replacements {
+        if !truth.bases.contains_key(&stream.base) {
+            violations.push(InvariantViolation::ReplacementAtUnknownBase(stream.base));
+        }
+    }
+
     let mut aboard: BTreeMap<ShipId, u32> = BTreeMap::new();
     for group in truth.air_groups.values() {
         let in_range = |value: Fixed| value >= Fixed::ZERO && value <= full_damage;
@@ -507,6 +518,8 @@ mod tests {
                 rest_above: None,
                 rest_order: None,
                 stood_down: false,
+                pilots: None,
+                strength: 2,
             },
         );
         (truth, map)

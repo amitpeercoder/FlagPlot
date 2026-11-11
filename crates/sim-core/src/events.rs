@@ -610,6 +610,25 @@ pub enum EventKind {
         aircraft: u32,
         remaining: u32,
     },
+    /// An air group lost pilots with aircraft lost away from home, or with
+    /// its ship (decisions 3 and 5 of 0038). `left` is what it has after.
+    PilotsLost {
+        air_group: AirGroupId,
+        lost: u32,
+        left: u32,
+    },
+    /// An air group received replacement aircraft, pilots or both at its base
+    /// at the start of the day (decisions 6 to 8 of 0038). `ready` and
+    /// `pilots_now` are what it has after; `pilots_now` is 0 for a group
+    /// whose pilots are not tracked.
+    ReplacementsReceived {
+        air_group: AirGroupId,
+        base: BaseId,
+        aircraft: u32,
+        pilots: u32,
+        ready: u32,
+        pilots_now: u32,
+    },
     /// A strike that found nothing told its side so, and the side dropped the
     /// contact the strike was sent at (decision 0028).
     ContactNotThere {
@@ -819,7 +838,12 @@ impl EventKind {
                 EntityRef::TaskForce(*task_force),
                 EntityRef::AirGroup(*air_group),
             ],
-            EventKind::AircraftLost { air_group, .. } => vec![EntityRef::AirGroup(*air_group)],
+            EventKind::AircraftLost { air_group, .. } | EventKind::PilotsLost { air_group, .. } => {
+                vec![EntityRef::AirGroup(*air_group)]
+            }
+            EventKind::ReplacementsReceived {
+                air_group, base, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
             EventKind::SearchAttempt {
                 air_group,
                 task_force,
@@ -1225,6 +1249,26 @@ impl fmt::Display for EventKind {
                 aircraft,
                 remaining,
             } => write!(f, "{air_group} lost {aircraft} aircraft, {remaining} left"),
+            EventKind::PilotsLost {
+                air_group,
+                lost,
+                left,
+            } => write!(
+                f,
+                "{air_group} lost {lost} {}, {left} left",
+                if *lost == 1 { "pilot" } else { "pilots" }
+            ),
+            EventKind::ReplacementsReceived {
+                air_group,
+                base,
+                aircraft,
+                pilots,
+                ready,
+                pilots_now,
+            } => write!(
+                f,
+                "{air_group} received {aircraft} aircraft and {pilots} pilots at {base}, {ready} ready and {pilots_now} pilots"
+            ),
             EventKind::SearchAttempt {
                 air_group,
                 task_force,

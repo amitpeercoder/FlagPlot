@@ -13,8 +13,8 @@ use sim_core::orders::{
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::state::{
-    AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, ShipSystems, Side,
-    SystemState, TaskForce, TruthState,
+    AirGroup, AirGroupLocation, Base, Replacement, Ship, ShipLocation, ShipSystem, ShipSystems,
+    Side, SystemState, TaskForce, TruthState,
 };
 use sim_core::{DaySummary, StartingContact, World};
 
@@ -61,6 +61,8 @@ struct ScenarioFile {
     base: Vec<BaseSpec>,
     #[serde(default)]
     air_group: Vec<AirGroupSpec>,
+    #[serde(default)]
+    replacement: Vec<ReplacementSpec>,
     #[serde(default)]
     task_force: Vec<TaskForceSpec>,
     #[serde(default)]
@@ -121,6 +123,24 @@ struct AirGroupSpec {
     damaged: Option<u32>,
     /// Fatigue at the start, 0 to 100 (decision 0036). Defaults to 0.
     fatigue: Option<Quantity>,
+    /// Pilots at the start (decision 0038). Without it the group's pilots are
+    /// not tracked and it flies as before.
+    pilots: Option<u32>,
+    /// The ceiling for replacements, in aircraft and in pilots (decision 10
+    /// of 0038). Defaults to the aircraft the group starts with, ready and
+    /// damaged.
+    strength: Option<u32>,
+}
+
+/// A stream of replacements for a side at a base (decision 6 of 0038).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReplacementSpec {
+    side: SideSpec,
+    base: u32,
+    aircraft_type: u32,
+    aircraft_per_day: u32,
+    pilots_per_day: u32,
 }
 
 #[derive(Deserialize)]
@@ -712,10 +732,50 @@ impl Scenario {
                 rest_above: None,
                 rest_order: None,
                 stood_down: false,
+                pilots: spec.pilots,
+                strength: spec
+                    .strength
+                    .unwrap_or_else(|| spec.ready.saturating_add(spec.damaged.unwrap_or(0))),
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
+        }
+
+        // Replacements come after bases and air groups' types are known.
+        for (index, spec) in file.replacement.iter().enumerate() {
+            let side: Side = spec.side.into();
+            let base_id = BaseId::new(spec.base);
+            let base = truth.bases.get(&base_id).ok_or_else(|| {
+                fail(format!(
+                    "replacement {} is at unknown base {}",
+                    index + 1,
+                    spec.base
+                ))
+            })?;
+            if base.side != side {
+                return Err(fail(format!(
+                    "replacement {} is {} but its base {base_id} is {}",
+                    index + 1,
+                    side.name(),
+                    base.side.name()
+                )));
+            }
+            let aircraft_type = AircraftTypeId::new(spec.aircraft_type);
+            if !ref_data.aircraft_types.contains_key(&aircraft_type) {
+                return Err(fail(format!(
+                    "replacement {} has unknown aircraft type {}",
+                    index + 1,
+                    spec.aircraft_type
+                )));
+            }
+            truth.replacements.push(Replacement {
+                side,
+                base: base_id,
+                aircraft_type,
+                aircraft_per_day: spec.aircraft_per_day,
+                pilots_per_day: spec.pilots_per_day,
+            });
         }
 
         let mut script: BTreeMap<u32, Vec<(Side, OrderRequest)>> = BTreeMap::new();
@@ -1101,6 +1161,64 @@ r = 0
         assert!(error_of(&air_group(1, 9)).contains("unknown aircraft type"));
         let twice = format!("{}{}", air_group(1, 1), air_group(1, 1));
         assert!(error_of(&twice).contains("appears twice"));
+    }
+
+    #[test]
+    fn pilots_and_strength_load_and_a_group_without_them_is_untracked() {
+        let plain = parse_with(&air_group(1, 1)).expect("loads");
+        let group = &plain.world.umpire().air_groups[&AirGroupId::new(1)];
+        assert_eq!((group.pilots, group.strength), (None, 3));
+        let with = |extra: &str| parse_with(&format!("{}{extra}", air_group(1, 1))).expect("loads");
+        let tracked = with("pilots = 2\n");
+        let group = &tracked.world.umpire().air_groups[&AirGroupId::new(1)];
+        assert_eq!((group.pilots, group.strength), (Some(2), 3));
+        let given = with("pilots = 5\nstrength = 9\n");
+        let group = &given.world.umpire().air_groups[&AirGroupId::new(1)];
+        assert_eq!((group.pilots, group.strength), (Some(5), 9));
+        // The default strength counts damaged aircraft too.
+        let damaged = with("damaged = 4\n");
+        let group = &damaged.world.umpire().air_groups[&AirGroupId::new(1)];
+        assert_eq!(group.strength, 7);
+        assert!(parse_with(&format!("{}pilots = 1.5\n", air_group(1, 1))).is_err());
+    }
+
+    fn replacement(side: &str, base: u32, aircraft_type: u32) -> String {
+        format!(
+            "[[replacement]]\nside = \"{side}\"\nbase = {base}\naircraft_type = {aircraft_type}\naircraft_per_day = 2\npilots_per_day = 1\n"
+        )
+    }
+
+    #[test]
+    fn replacement_tables_load_in_order_and_are_checked() {
+        let none = parse_with("").expect("loads");
+        assert!(none.world.umpire().replacements.is_empty());
+        let both = format!(
+            "{}{}",
+            replacement("allied", 1, 1),
+            replacement("japanese", 2, 2)
+        );
+        let scenario = parse_with(&both).expect("loads");
+        let streams = &scenario.world.umpire().replacements;
+        assert_eq!(streams.len(), 2);
+        assert_eq!(
+            (
+                streams[0].side,
+                streams[0].base.raw(),
+                streams[0].aircraft_type.raw(),
+                streams[0].aircraft_per_day,
+                streams[0].pilots_per_day
+            ),
+            (Side::Allied, 1, 1, 2, 1)
+        );
+        assert_eq!(
+            (streams[1].side, streams[1].base.raw()),
+            (Side::Japanese, 2)
+        );
+        assert!(error_of(&replacement("allied", 9, 1)).contains("unknown base"));
+        assert!(error_of(&replacement("allied", 2, 1)).contains("its base"));
+        assert!(error_of(&replacement("allied", 1, 9)).contains("unknown aircraft type"));
+        assert!(parse_with(&replacement("allied", 1, 1).replace("= 2\n", "= 2.5\n")).is_err());
+        assert!(parse_with(&format!("{}extra = 1\n", replacement("allied", 1, 1))).is_err());
     }
 
     /// An Allied group aboard a ship, `extra` replacing the placement.

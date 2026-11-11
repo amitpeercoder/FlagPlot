@@ -45,6 +45,10 @@ Over seeds 1 to 1000, the night fight of scenario 6c2. All figures are placehold
 
 With no fatigue the fresh-arrived attacker loses more ships than the defender. With it the two days at battle readiness cost force B the advantage, and standing at normal readiness would have cost it more.
 
+## The legibility test
+
+A cheap model was given the Allied briefing and the log up to the first round of the night fight. It worked both sighting chances from the log, 0.325 and 0.475. It worked the two cases it was asked about: 0.25 for the force kept at normal readiness and 0.475 for one ordered to battle readiness on the third day. It found that after ten pulses at battle readiness a force sights no better than a rested one at normal readiness, and stated the trade-off. It asked one thing the briefing did not say: whether a force sighted in a round is alerted before its own roll. Decision 0014 answers it; the briefing for a real game must too.
+
 ## Rule card
 
 | | |

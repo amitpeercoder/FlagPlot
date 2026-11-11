@@ -27,8 +27,11 @@ const DAMAGED_TAG: u8 = 0xF5;
 /// Tag of an air group's fatigue, rest threshold and stand-down (decision
 /// 0036). See `hash_world`.
 const FATIGUE_TAG: u8 = 0xF6;
+/// Tag of an air group's pilots and strength, and of the replacement streams
+/// (decision 0038). See `hash_world`.
+const PILOTS_TAG: u8 = 0xF7;
 /// Tag of a task force's fatigue (decision 0037).
-const FORCE_FATIGUE_TAG: u8 = 0xF7;
+const FORCE_FATIGUE_TAG: u8 = 0xF8;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -298,6 +301,16 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.optional_u32(group.rest_order.map(|id| id.raw()));
             h.u8(u8::from(group.stood_down));
         }
+        // A scenario with no replacements and a group whose pilots are not
+        // tracked write nothing, so they hash as they did before pilots
+        // (decision 0038). Strength is read by replacements alone, so it is
+        // hashed only where there are some. The tag 0xF7 is followed by
+        // the mission code, 1 to 5.
+        if group.pilots.is_some() || !truth.replacements.is_empty() {
+            h.u8(PILOTS_TAG);
+            h.optional_u32(group.pilots);
+            h.u32(group.strength);
+        }
         h.u8(group.mission.code());
         // The base strike mission (code 5) is followed by its target base.
         if let AirMission::BaseStrike(base) = group.mission {
@@ -325,6 +338,19 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         h.optional_u32(group.mission_order.map(|id| id.raw()));
         h.optional_u32(group.arc_order.map(|id| id.raw()));
+    }
+
+    // The replacement streams: nothing at all without any (decision 0038).
+    if !truth.replacements.is_empty() {
+        h.u8(PILOTS_TAG);
+        h.count(truth.replacements.len());
+        for stream in &truth.replacements {
+            h.u8(stream.side.code());
+            h.u32(stream.base.raw());
+            h.u32(stream.aircraft_type.raw());
+            h.u32(stream.aircraft_per_day);
+            h.u32(stream.pilots_per_day);
+        }
     }
 
     h.count(world.beliefs.len());

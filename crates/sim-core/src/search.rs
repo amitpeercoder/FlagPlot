@@ -652,6 +652,8 @@ mod tests {
                 rest_above: None,
                 rest_order: None,
                 stood_down: false,
+                pilots: None,
+                strength: 4,
             },
         );
         let mut next_ship = 1;
