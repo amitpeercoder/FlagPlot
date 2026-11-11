@@ -284,6 +284,12 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             "strike_found_nothing",
             d.id("air_group", *air_group).hex("hex", *hex),
         ),
+        EventKind::ContactNotThere { side, contact, hex } => (
+            "contact_not_there",
+            d.text("side", names::side(*side))
+                .id("contact", *contact)
+                .hex("hex", *hex),
+        ),
         EventKind::AirAttack {
             air_group,
             task_force,

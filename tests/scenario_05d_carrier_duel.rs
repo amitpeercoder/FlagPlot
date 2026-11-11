@@ -41,7 +41,9 @@
 //! - In a morning pulse a side launches if, and only if, its own search
 //!   sighted that morning. A contact from the afternoon before is too old.
 //! - In an afternoon pulse it launches if, and only if, its own search
-//!   sighted that morning or that afternoon.
+//!   sighted that afternoon, or its own strike attacked that morning. A
+//!   morning strike that found nothing dropped the contact it was sent at
+//!   (decision 0028; before it, a morning sighting was enough).
 //! - Being struck gives a side no contact. A side that has sighted nothing
 //!   launches nothing, however hard it is hit.
 //!
@@ -571,6 +573,7 @@ fn work_the_run(run: &Run) -> Worked {
                         | EventKind::AircraftLost { .. }
                         | EventKind::AirAttack { .. }
                         | EventKind::StrikeFoundNothing { .. }
+                        | EventKind::ContactNotThere { .. }
                         | EventKind::ShipDamaged { .. }
                         | EventKind::SystemHit { .. }
                         | EventKind::ShipSunk { .. }
@@ -680,13 +683,18 @@ fn work_the_run(run: &Run) -> Worked {
                 .filter(|r| r.0 == index || (r.0 + 1 == index && index % 2 == 1))
                 .collect();
             // The same, by the hand calculation: its own search sighted this
-            // pulse, or, in an afternoon, that morning.
+            // pulse, or, in an afternoon, its own strike attacked that
+            // morning (one that found nothing dropped the contact, decision
+            // 0028).
             let by_search = work.sighted[c]
-                || (index % 2 == 1 && pulses.last().is_some_and(|before| before.sighted[c]));
+                || (index % 2 == 1
+                    && pulses
+                        .last()
+                        .is_some_and(|before| before.attack[c].is_some()));
             assert_eq!(
                 !eligible.is_empty(),
                 by_search,
-                "seed {seed} pulse {index}: a side holds a contact to strike only from its own search"
+                "seed {seed} pulse {index}: a side holds a contact to strike only from its own search or its own attack"
             );
             work.eligible[c] = !eligible.is_empty();
             let can_fly = flyable(ready0[&camp.bombers], deck0[c]);
@@ -1045,11 +1053,14 @@ fn work_the_run(run: &Run) -> Worked {
         // ---- What each strike found, in group order. ----
         let mut out_it = outs.iter().copied();
         let mut attack_ids: [Option<EventId>; 2] = [None, None];
+        // The finding of each strike that found nothing, with the contact it
+        // was sent at.
+        let mut nothing_ids: [Option<(EventId, ContactId)>; 2] = [None, None];
         for (c, camp) in CAMPS.iter().enumerate() {
             let Some(launch) = launch_of[c] else {
                 continue;
             };
-            let EventKind::StrikeLaunched { hex, .. } = launch.kind else {
+            let EventKind::StrikeLaunched { hex, contact, .. } = launch.kind else {
                 unreachable!()
             };
             let (left, found) = raid_left[c].expect("a raid");
@@ -1068,6 +1079,7 @@ fn work_the_run(run: &Run) -> Worked {
                     format!("air_group:{} found nothing at {hex}", camp.bombers.raw())
                 );
                 assert_eq!(event.causes, vec![Cause::Event(launch.id)]);
+                nothing_ids[c] = Some((event.id, contact));
                 continue;
             }
             // Fighters and guns never take all the bombers.
@@ -1137,11 +1149,38 @@ fn work_the_run(run: &Run) -> Worked {
                             | EventKind::ShipSunk { .. }
                             | EventKind::AirGroupLost { .. }
                             | EventKind::ReportReceived { .. }
+                            | EventKind::ContactNotThere { .. }
                     )
             })
             .collect();
         let mut tail_it = tail.iter().copied().peekable();
         for (c, camp) in CAMPS.iter().enumerate() {
+            // A strike that found nothing reports it, and its side drops the
+            // contact it was sent at: only its own side's reports come
+            // between, so the contact still names the hex.
+            if let Some((nothing, contact)) = nothing_ids[c] {
+                let launch = launch_of[c].expect("a launch");
+                let EventKind::StrikeLaunched { hex, .. } = launch.kind else {
+                    unreachable!()
+                };
+                let event = tail_it.next().expect("a contact dropped");
+                assert_eq!(
+                    event.kind,
+                    EventKind::ContactNotThere {
+                        side: camp.side,
+                        contact,
+                        hex
+                    },
+                    "seed {seed} pulse {index}"
+                );
+                assert_eq!(event.causes, vec![Cause::Event(nothing)], "seed {seed}");
+                assert!(
+                    held[c].iter().any(|r| r.3 == contact),
+                    "seed {seed}: the side held the contact"
+                );
+                held[c].retain(|r| r.3 != contact);
+                continue;
+            }
             let Some(attack_id) = attack_ids[c] else {
                 continue;
             };
@@ -1451,7 +1490,7 @@ fn each_side_launches_when_it_holds_a_contact_its_own_search_reported_and_never_
                 let by_hand = if pulse.index % 2 == 0 {
                     pulse.sighted[c]
                 } else {
-                    pulse.sighted[c] || run.pulses[pulse.index - 1].sighted[c]
+                    pulse.sighted[c] || run.pulses[pulse.index - 1].attack[c].is_some()
                 };
                 assert_eq!(pulse.eligible[c], by_hand, "seed {}", run.seed);
                 let can_launch = pulse.deck[c] != SystemState::Out
@@ -1496,9 +1535,10 @@ fn each_side_launches_when_it_holds_a_contact_its_own_search_reported_and_never_
         assert!(struck_without_a_contact[c] > 50);
         assert!(struck_and_never_sighted[c] > 5);
         // A morning launch is a morning sighting, with chance 0.509295; an
-        // afternoon one a sighting in either.
+        // afternoon one a sighting that afternoon or an attack that morning,
+        // with chance 0.684234.
         assert!(within_four_sigma(morning_launches[c], 1000, SEARCH_CHANCE));
-        assert!(within_four_sigma(afternoon_launches[c], 1000, 759_209));
+        assert!(within_four_sigma(afternoon_launches[c], 1000, 684_234));
     }
 }
 

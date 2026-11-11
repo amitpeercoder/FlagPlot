@@ -579,7 +579,8 @@ function buildModel(replay) {
           if (c) { c.age_pulses = d.age_pulses; c.confidence = d.confidence; }
           break;
         }
-        case 'contact_dropped': {
+        case 'contact_dropped':
+        case 'contact_not_there': {
           const m = contactSide(ev);
           if (m) m.delete(d.contact);
           break;
