@@ -40,7 +40,8 @@ pub enum RulesSource<'a> {
     Unknown,
 }
 
-/// Derives the three outputs from texts held in memory.
+/// Derives the outputs (the three ship class files, empty for a list with no
+/// ships, and the two aircraft files when the list has aircraft) from texts held in memory.
 ///
 /// `list_name` is the list file's name, for the header. The facts are file
 /// name to text, as for `oob_check::check_files`.
@@ -258,13 +259,14 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         Err(problems) => return Ok(Outcome::Problems(problems)),
     };
     let list = list.expect("a list that derives has parsed");
-    let class_path = dir.join(&list.output);
-    let (sources_name, ships_name) = companion_names(&list.output);
-    let mut files = vec![
-        (class_path.clone(), outputs.class_csv),
-        (class_path.with_file_name(sources_name), outputs.sources_csv),
-        (class_path.with_file_name(ships_name), outputs.ships_csv),
-    ];
+    let mut files = Vec::new();
+    if !list.ships.is_empty() {
+        let class_path = dir.join(&list.output);
+        let (sources_name, ships_name) = companion_names(&list.output);
+        files.push((class_path.with_file_name(sources_name), outputs.sources_csv));
+        files.push((class_path.with_file_name(ships_name), outputs.ships_csv));
+        files.insert(0, (class_path, outputs.class_csv));
+    }
     if let (Some(output), Some(csv), Some(sources)) = (
         &list.aircraft_output,
         outputs.aircraft_csv,

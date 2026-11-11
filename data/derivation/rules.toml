@@ -534,3 +534,27 @@ fact = "self_sealing_tanks"
 row = 499
 reason = "No: the same data sheet."
 agreed = "2026-11-11"
+
+# Stage 6e, Rabaul against Guadalcanal. Settled by the architect on
+# 2026-11-11 (CLAUDE.md, "Who settles data"), not approved row by row.
+
+[[exception]]
+entity = "g4m1-11"
+fact = "range_normal_nm"
+row = 532
+reason = "1,834 miles 'with normal fuel and bomb loads': the one row that states the condition a bombing radius needs. It is an Allied summary of late 1943 with no model number. A third of it is 611. No source read states a radius. Settled by the architect; researchers looked for a stated radius twice and found none."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "g4m1-11"
+fact = "pilot_armour"
+row = 536
+reason = "No: two low-grade sources agree and nothing read says otherwise for 1942. Protection was added from 1943. Settled by the architect."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "g4m1-11"
+fact = "bomb_load"
+row = 28
+reason = "Four 250 kg bombs: one weak source, with a second that gives the same total of 1,000 kg. The 250 kg bomb is also one of the two sizes a source names as dropped on Henderson Field. A raid on an airfield takes no account of the bomb's size (decision 0034, 10), so the choice changes no result here. Settled by the architect."
+agreed = "2026-11-11"

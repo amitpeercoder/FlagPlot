@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 
 use crate::derive::{number, overflow, Cite, Env, Fit, Got, Work};
-use crate::input::AircraftEntry;
+use crate::input::{AircraftEntry, RadiusChoice};
 use crate::problem::{Kind, Problem};
 use crate::reading::{resolve, Failure, Read, Row, Table};
 
@@ -59,6 +59,9 @@ pub struct AircraftResult {
     pub figures: Vec<AircraftFigure>,
     /// Exceptions used: index into the rules' list, and the row read.
     pub used: Vec<(usize, Row)>,
+    /// The list's own choice of the combat radius row, with its reason:
+    /// the row read and the reason the list gave.
+    pub radius_choice: Option<(Row, String)>,
 }
 
 fn figure(value: impl Into<String>, rule: impl Into<String>, got: Got<()>) -> AircraftFigure {
@@ -97,7 +100,15 @@ impl Env<'_> {
     /// radius that can be read, else the range with a normal load x the
     /// fraction of the rules file, rounded down. Returns the radius, the
     /// rule that gave it, its sources, and notes.
-    fn radius(&self, w: &mut Work, key: &str) -> Option<(i64, String, Got<()>, Vec<String>)> {
+    fn radius(
+        &self,
+        w: &mut Work,
+        key: &str,
+        choice: Option<&RadiusChoice>,
+    ) -> Option<(i64, String, Got<()>, Vec<String>)> {
+        if let Some(choice) = choice {
+            return self.chosen_radius(w, key, choice);
+        }
         let fraction = self.rules.strike_radius_fraction_of_range?;
         let name = AIRCRAFT_FIGURES[STRIKE];
         let mut notes = Vec::new();
@@ -191,6 +202,83 @@ impl Env<'_> {
                 doubts: BTreeSet::new(),
             },
             notes,
+        ))
+    }
+
+    /// The radius from the row the list names (its own choice, instead of the
+    /// usual rule and of any exception of the rules file for this attribute).
+    /// The row must exist and be a `combat_radius_nm` row of this type. Its
+    /// standing and its dates are not tested: the list's reason stands for
+    /// them, and the header says what the standing is.
+    fn chosen_radius(
+        &self,
+        w: &mut Work,
+        key: &str,
+        choice: &RadiusChoice,
+    ) -> Option<(i64, String, Got<()>, Vec<String>)> {
+        let name = AIRCRAFT_FIGURES[STRIKE];
+        let Some(row) = self.index.aircraft_fact(choice.row) else {
+            w.fail(
+                Kind::Exception,
+                name,
+                format!(
+                    "combat_radius_row {} is not a row of aircraft_type_facts.csv",
+                    choice.row
+                ),
+            );
+            return None;
+        };
+        if row.entity != key || row.name != "combat_radius_nm" {
+            w.fail(
+                Kind::Exception,
+                name,
+                format!(
+                    "combat_radius_row {} is a row about `{}` {}, not a combat_radius_nm row of `{key}`",
+                    choice.row, row.entity, row.name
+                ),
+            );
+            return None;
+        }
+        // The list names the row, so neither its standing nor its dates are
+        // tested: a radius flown on one day may be read for a scenario that
+        // starts on another. The header says what the standing is.
+        let read = Read {
+            rows: vec![row.clone()],
+            excepted: Vec::new(),
+            doubts: Vec::new(),
+        };
+        let value = match number(&read, "combat_radius_nm") {
+            Ok(value) => value,
+            Err(failure) => {
+                w.failed(name, failure);
+                return None;
+            }
+        };
+        if value.has_fraction() {
+            w.fail(
+                Kind::BadValue,
+                name,
+                format!("combat_radius_nm of aircraft type {key}: {value} is not a whole number"),
+            );
+            return None;
+        }
+        // Not through `take`: the choice is the list's, not an exception of
+        // the rules file, and is reported by its own header line.
+        let got = Got {
+            value: (),
+            cites: BTreeSet::from([row.cite_key()]),
+            excepted: false,
+            doubts: BTreeSet::new(),
+        };
+        Some((
+            value.whole(),
+            "combat_radius_nm of the row the list names (decision 0029, 6; the list's own choice)"
+                .to_string(),
+            got,
+            vec![format!(
+                "the list's own choice of row {} ({}): {}",
+                choice.row, row.standing, choice.reason
+            )],
         ))
     }
 
@@ -421,7 +509,9 @@ impl Env<'_> {
         }
 
         // radius, search and strike
-        if let Some((radius, rule, got, notes)) = self.radius(&mut w, key) {
+        if let Some((radius, rule, got, notes)) =
+            self.radius(&mut w, key, entry.radius_choice.as_ref())
+        {
             for i in [SEARCH, STRIKE] {
                 let mut fig = figure(radius.to_string(), rule.clone(), got.clone());
                 fig.notes.extend(notes.iter().cloned());
@@ -467,6 +557,11 @@ impl Env<'_> {
                 .map(|f| f.expect("every figure is set when there is no problem"))
                 .collect(),
             used: w.used,
+            radius_choice: entry.radius_choice.as_ref().and_then(|choice| {
+                self.index
+                    .aircraft_fact(choice.row)
+                    .map(|row| (row.clone(), choice.reason.clone()))
+            }),
         })
     }
 }

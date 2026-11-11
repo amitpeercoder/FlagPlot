@@ -15,8 +15,10 @@ struct RawList {
     name: String,
     date: String,
     rules: String,
-    output: String,
-    first_class_id: u32,
+    #[serde(default)]
+    output: Option<String>,
+    #[serde(default)]
+    first_class_id: Option<u32>,
     ships: Vec<String>,
     #[serde(default)]
     radar_unknown_means_none: Vec<String>,
@@ -49,6 +51,10 @@ struct RawAircraft {
     kind: String,
     #[serde(default)]
     load: Option<String>,
+    #[serde(default)]
+    combat_radius_row: Option<i64>,
+    #[serde(default)]
+    combat_radius_reason: Option<String>,
 }
 
 /// One aircraft type the list asks for (decision 0029, 7).
@@ -58,6 +64,17 @@ pub struct AircraftEntry {
     pub type_key: String,
     /// Key of the weapon it attacks with, if any.
     pub load: Option<String>,
+    /// For this list only, the row of `aircraft_type_facts.csv` the combat
+    /// radius is read from, and why (a choice of the list, not of the rules
+    /// file).
+    pub radius_choice: Option<RadiusChoice>,
+}
+
+/// A list's own choice of the row a type's radius is read from.
+#[derive(Clone, Debug)]
+pub struct RadiusChoice {
+    pub row: i64,
+    pub reason: String,
 }
 
 /// The list file, checked.
@@ -68,7 +85,8 @@ pub struct List {
     pub date: Day,
     /// Path of the rules file, relative to the list file.
     pub rules: String,
-    /// Path of the class CSV, relative to the list file.
+    /// Path of the class CSV, relative to the list file; empty when the list
+    /// has no ships.
     pub output: String,
     pub first_class_id: u32,
     /// Ship keys in list order, each once.
@@ -106,21 +124,48 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             return (None, problems);
         }
     };
-    for (field, value) in [
-        ("name", &raw.name),
-        ("rules", &raw.rules),
-        ("output", &raw.output),
-    ] {
+    for (field, value) in [("name", &raw.name), ("rules", &raw.rules)] {
         if value.trim().is_empty() {
             problems.push(list_problem(field, "must not be empty"));
         }
     }
-    let output = std::path::Path::new(&raw.output);
-    if output.file_stem().is_none() || output.extension().is_none_or(|e| e != "csv") {
-        problems.push(list_problem(
-            "output",
-            format!("`{}` is not the path of a .csv file", raw.output),
-        ));
+    if raw.ships.is_empty() {
+        for (field, given) in [
+            ("output", raw.output.is_some()),
+            ("first_class_id", raw.first_class_id.is_some()),
+        ] {
+            if given {
+                problems.push(list_problem(field, "the list has no ships"));
+            }
+        }
+        if raw.aircraft.is_empty() {
+            problems.push(list_problem(
+                "ships",
+                "the list has neither ships nor [[aircraft]] entries",
+            ));
+        }
+    } else {
+        match &raw.output {
+            None => problems.push(list_problem("output", "required when the list has ships")),
+            Some(output) if output.trim().is_empty() => {
+                problems.push(list_problem("output", "must not be empty"));
+            }
+            Some(output) => {
+                let path = std::path::Path::new(output);
+                if path.file_stem().is_none() || path.extension().is_none_or(|e| e != "csv") {
+                    problems.push(list_problem(
+                        "output",
+                        format!("`{output}` is not the path of a .csv file"),
+                    ));
+                }
+            }
+        }
+        if raw.first_class_id.is_none() {
+            problems.push(list_problem(
+                "first_class_id",
+                "required when the list has ships",
+            ));
+        }
     }
     let date = Day::parse_full(&raw.date);
     if date.is_none() {
@@ -190,9 +235,37 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
                 format!("type `{}` is listed more than once", entry.kind),
             ));
         } else {
+            let radius_choice = match (entry.combat_radius_row, &entry.combat_radius_reason) {
+                (None, None) => None,
+                (Some(row), Some(reason)) if !reason.trim().is_empty() => Some(RadiusChoice {
+                    row,
+                    reason: reason.clone(),
+                }),
+                (Some(_), Some(_)) => {
+                    problems.push(list_problem(
+                        "aircraft",
+                        format!(
+                            "type `{}`: combat_radius_reason must not be empty",
+                            entry.kind
+                        ),
+                    ));
+                    None
+                }
+                _ => {
+                    problems.push(list_problem(
+                        "aircraft",
+                        format!(
+                            "type `{}`: combat_radius_row and combat_radius_reason go together: give both or neither",
+                            entry.kind
+                        ),
+                    ));
+                    None
+                }
+            };
             aircraft.push(AircraftEntry {
                 type_key: entry.kind.clone(),
                 load: entry.load.clone(),
+                radius_choice,
             });
         }
     }
@@ -239,8 +312,8 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         date_text: raw.date,
         date,
         rules: raw.rules,
-        output: raw.output,
-        first_class_id: raw.first_class_id,
+        output: raw.output.unwrap_or_default(),
+        first_class_id: raw.first_class_id.unwrap_or(0),
         ships,
         radar_unknown_means_none: raw.radar_unknown_means_none.into_iter().collect(),
         main_gun_ammunition_not_limiting: raw

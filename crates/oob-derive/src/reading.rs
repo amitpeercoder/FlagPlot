@@ -169,6 +169,16 @@ impl Index {
             .map_or(&[], Vec::as_slice)
     }
 
+    /// The row of `aircraft_type_facts.csv` with this id, whatever it says.
+    pub fn aircraft_fact(&self, id: i64) -> Option<&Row> {
+        let id = id.to_string();
+        self.rows
+            .iter()
+            .filter(|((table, _, _), _)| *table == Table::AircraftFacts)
+            .flat_map(|(_, rows)| rows)
+            .find(|row| row.id == id)
+    }
+
     /// Whether some row of any facts file or fits.csv is the one named.
     pub fn has_row(&self, exception: &Exception) -> bool {
         let id = exception.row.to_string();
