@@ -46,3 +46,8 @@ id,key,name,nation,service,parent
 1042,zuikaku-attack-unit,Zuikaku torpedo bomber unit,jp,ijn,
 1043,zuikaku-bomber-unit,Zuikaku dive bomber unit,jp,ijn,
 1044,zuikaku-fighter-unit,Zuikaku fighter unit,jp,ijn,
+1045,air-group-3,"Air Group 3 (Saratoga air group, carrier total)",us,usn,
+1046,air-group-6,"Air Group 6 (Enterprise air group, carrier total)",us,usn,
+1047,11th-air-fleet,"11th Air Fleet (Rabaul land-based air, 25th and 26th Air Flotillas together)",jp,ijn,
+1048,chitose-floatplane-unit,Floatplanes embarked in seaplane carrier Chitose,jp,ijn,
+1049,carrier-division-1-strikes,Carrier Division 1 strike aircraft (both carriers together),jp,ijn,
