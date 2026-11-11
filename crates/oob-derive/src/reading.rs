@@ -27,6 +27,8 @@ pub enum Table {
     WeaponFacts,
     ShipFits,
     ClassFits,
+    AircraftFacts,
+    AircraftFits,
 }
 
 /// One row of a facts file or of `fits.csv`, reduced to what reading needs.
@@ -97,6 +99,7 @@ impl Index {
             ("ship_facts.csv", Table::ShipFacts),
             ("ship_class_facts.csv", Table::ClassFacts),
             ("weapon_facts.csv", Table::WeaponFacts),
+            ("aircraft_type_facts.csv", Table::AircraftFacts),
         ] {
             for rec in data.rows(file) {
                 let row = Row {
@@ -118,6 +121,7 @@ impl Index {
             let table = match rec.get("carrier_type") {
                 "ship" => Some(Table::ShipFits),
                 "ship_class" => Some(Table::ClassFits),
+                "aircraft_type" => Some(Table::AircraftFits),
                 _ => None,
             };
             let (item, count) = (rec.get("item"), rec.get("count"));
@@ -218,6 +222,14 @@ struct Seen<'a> {
 }
 
 impl Seen<'_> {
+    /// An exception names a row whose date is only known to the year or
+    /// month: it says the architect judged that the row holds on the date.
+    fn judged(&self) -> bool {
+        self.excepted.is_some() && self.tri == Tri::CannotTell
+    }
+}
+
+impl Seen<'_> {
     fn read(&self) -> bool {
         self.row.standing == "preferred" || self.excepted.is_some()
     }
@@ -239,7 +251,7 @@ pub fn resolve(
     }
     let unclear: Vec<&Seen> = seen
         .iter()
-        .filter(|s| s.read() && s.tri == Tri::CannotTell)
+        .filter(|s| s.read() && s.tri == Tri::CannotTell && !s.judged())
         .collect();
     if !unclear.is_empty() {
         return Err(Failure::new(
@@ -250,9 +262,9 @@ pub fn resolve(
             ),
         ));
     }
-    let read: Vec<&Seen> = seen
+    let mut read: Vec<&Seen> = seen
         .iter()
-        .filter(|s| s.read() && s.tri == Tri::Yes)
+        .filter(|s| s.read() && (s.tri == Tri::Yes || s.judged()))
         .collect();
     if read.is_empty() {
         if seen.is_empty() {
@@ -276,23 +288,88 @@ pub fn resolve(
         ));
     }
     let first = &read[0].row.value;
+    let mut settled = false;
     if read.iter().any(|s| s.row.value != *first) {
-        return Err(Failure::new(
-            Kind::Conflict,
-            format!(
-                "{what}: rows read on {date} disagree: {}",
-                list(read.iter().map(|s| describe(s.row, s.tri)))
-            ),
-        ));
+        // Rows that disagree: a row an exception names wins over the
+        // others, if the named rows agree with each other.
+        let named: Vec<&Seen> = read
+            .iter()
+            .filter(|s| s.excepted.is_some())
+            .copied()
+            .collect();
+        if named.is_empty() || named.iter().any(|s| s.row.value != named[0].row.value) {
+            return Err(Failure::new(
+                Kind::Conflict,
+                format!(
+                    "{what}: rows read on {date} disagree: {}",
+                    list(read.iter().map(|s| describe(s.row, s.tri)))
+                ),
+            ));
+        }
+        read = named;
+        settled = true;
     }
     Ok(Read {
         rows: read.iter().map(|s| s.row.clone()).collect(),
         excepted: read
             .iter()
-            .filter(|s| s.row.standing != "preferred")
+            .filter(|s| s.row.standing != "preferred" || s.judged() || settled)
             .filter_map(|s| s.excepted.map(|i| (i, s.row.clone())))
             .collect(),
         doubts: Vec::new(),
+    })
+}
+
+/// Which side of a ship-over-class reading applies.
+struct Side {
+    /// A ship row is readable and holds on the date, so the class rows do
+    /// not apply.
+    ship_holds: bool,
+    /// Ship rows that hold (or may) but are not readable.
+    doubts: Vec<String>,
+}
+
+/// Looks at a ship's rows for one attribute or slot: do any of them
+/// replace the class's rows? An exception naming a row that may hold, by a
+/// date known only to the year or month, makes it hold. A readable row
+/// that cannot be placed relative to the date, with none that holds, is an
+/// `ambiguous-date` failure: it is not known whether the class applies.
+fn ship_side(
+    ship_rows: &[Row],
+    ship_what: &str,
+    date: Day,
+    exceptions: &[Exception],
+) -> Result<Side, Failure> {
+    let mut holds = false;
+    let mut unclear = Vec::new();
+    let mut doubts = Vec::new();
+    for row in ship_rows {
+        let tri = valid_on(&row.from, &row.to, date).map_err(|text| bad_date(row, &text))?;
+        let named = exceptions.iter().any(|e| e.matches(row));
+        let readable = row.standing == "preferred" || named;
+        match (tri, readable) {
+            (Tri::No, _) => {}
+            (Tri::Yes, true) => holds = true,
+            (Tri::CannotTell, true) if named => holds = true,
+            (Tri::CannotTell, true) => unclear.push(row),
+            (Tri::Yes, false) => doubts.push(format!("{} ({})", row.cite(), row.standing)),
+            (Tri::CannotTell, false) => {
+                doubts.push(format!("{} ({}, may hold)", row.cite(), row.standing))
+            }
+        }
+    }
+    if !holds && !unclear.is_empty() {
+        return Err(Failure::new(
+            Kind::AmbiguousDate,
+            format!(
+                "{ship_what}: cannot tell whether a ship row holds on {date}, so cannot tell whether the class rows apply: {}",
+                list(unclear.iter().map(|r| describe(r, Tri::CannotTell)))
+            ),
+        ));
+    }
+    Ok(Side {
+        ship_holds: holds,
+        doubts,
     })
 }
 
@@ -311,34 +388,11 @@ pub fn resolve_over(
     date: Day,
     exceptions: &[Exception],
 ) -> Result<Read, Failure> {
-    let mut holds = false;
-    let mut unclear = Vec::new();
-    let mut doubts = Vec::new();
-    for row in ship_rows {
-        let tri = valid_on(&row.from, &row.to, date).map_err(|text| bad_date(row, &text))?;
-        let readable = row.standing == "preferred" || exceptions.iter().any(|e| e.matches(row));
-        match (tri, readable) {
-            (Tri::No, _) => {}
-            (Tri::Yes, true) => holds = true,
-            (Tri::CannotTell, true) => unclear.push(row),
-            (Tri::Yes, false) => doubts.push(format!("{} ({})", row.cite(), row.standing)),
-            (Tri::CannotTell, false) => {
-                doubts.push(format!("{} ({}, may hold)", row.cite(), row.standing))
-            }
-        }
-    }
-    if holds {
+    let side = ship_side(ship_rows, ship_what, date, exceptions)?;
+    if side.ship_holds {
         return resolve(ship_rows, ship_what, date, exceptions);
     }
-    if !unclear.is_empty() {
-        return Err(Failure::new(
-            Kind::AmbiguousDate,
-            format!(
-                "{ship_what}: cannot tell whether a ship row holds on {date}, so cannot tell whether the class rows apply: {}",
-                list(unclear.iter().map(|r| describe(r, Tri::CannotTell)))
-            ),
-        ));
-    }
+    let doubts = side.doubts;
     match resolve(class_rows, class_what, date, exceptions) {
         Ok(mut read) => {
             read.doubts = doubts;
@@ -355,4 +409,69 @@ pub fn resolve_over(
             Err(failure)
         }
     }
+}
+
+/// What a slot that holds several items says (decision 0029, 1 and 3).
+#[derive(Debug)]
+pub struct SlotRead {
+    /// Each item that holds on the date, in item order, with what reading
+    /// its rows gave. An item none of whose rows holds on the date is not
+    /// listed: it was not fitted.
+    pub items: Vec<(String, Result<Read, Failure>)>,
+    /// Ship rows that hold but are not readable, when the class's rows
+    /// were used.
+    pub doubts: Vec<String>,
+    /// Rows with no count that hold or may hold on the date, set aside.
+    pub blank: Vec<String>,
+}
+
+/// Reads a slot that holds several items, ship over class by the whole
+/// slot: if the ship has any readable row in the slot that holds on the
+/// date, the ship's rows are the slot; otherwise the class's. Each item's
+/// rows are then read as one fact. With `set_aside_blank`, a row with a
+/// blank count is not a count: it is neither readable nor able to replace
+/// the class's rows, and is listed in `blank`.
+pub fn resolve_slot(
+    ship_rows: &[Row],
+    ship_what: &str,
+    class_rows: &[Row],
+    class_what: &str,
+    date: Day,
+    exceptions: &[Exception],
+    set_aside_blank: bool,
+) -> Result<SlotRead, Failure> {
+    let usable = |row: &Row| !(set_aside_blank && row.count.trim().is_empty());
+    let mut blank = Vec::new();
+    for row in ship_rows.iter().chain(class_rows) {
+        if !usable(row) {
+            let tri = valid_on(&row.from, &row.to, date).map_err(|text| bad_date(row, &text))?;
+            if tri != Tri::No {
+                blank.push(format!("{} count not given", row.cite()));
+            }
+        }
+    }
+    let ship_rows: Vec<Row> = ship_rows.iter().filter(|r| usable(r)).cloned().collect();
+    let class_rows: Vec<Row> = class_rows.iter().filter(|r| usable(r)).cloned().collect();
+    let side = ship_side(&ship_rows, ship_what, date, exceptions)?;
+    let (rows, what, doubts) = if side.ship_holds {
+        (ship_rows, ship_what, Vec::new())
+    } else {
+        (class_rows, class_what, side.doubts)
+    };
+    let mut by_item: BTreeMap<String, Vec<Row>> = BTreeMap::new();
+    for row in rows {
+        by_item.entry(row.item.clone()).or_default().push(row);
+    }
+    let mut items = Vec::new();
+    for (item, rows) in by_item {
+        match resolve(&rows, &format!("{what}, item {item}"), date, exceptions) {
+            Err(failure) if failure.kind == Kind::NotOnDate => {}
+            read => items.push((item, read)),
+        }
+    }
+    Ok(SlotRead {
+        items,
+        doubts,
+        blank,
+    })
 }

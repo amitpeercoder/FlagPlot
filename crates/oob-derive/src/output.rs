@@ -3,15 +3,17 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use crate::aircraft::{AircraftResult, AIRCRAFT_FIGURES};
 use crate::derive::{
-    ShipResult, Value, AMMUNITION_NOT_LIMITING_ROUNDS, CARGO, FIGURES, KIND, RADAR, WHOLE,
+    ShipResult, Value, AIR_FIGURES, AMMUNITION_NOT_LIMITING_ROUNDS, CARGO, FIGURES, KIND, RADAR,
+    SURFACE_WEAPONS, WHOLE,
 };
 use crate::input::{List, Rules};
 use crate::problem::{Kind, Problem};
 use crate::reading::Row;
 
 /// The rule behind each figure, in words, in the order of `FIGURES`.
-const RULES: [&str; 14] = [
+const RULES: [&str; 16] = [
     "type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",
     "endurance_speed_kn of the ship, else of its class",
     "max_speed_kn of the ship, else of its class",
@@ -26,7 +28,19 @@ const RULES: [&str; 14] = [
     "warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted",
     "displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",
     "1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0",
+    "aircraft_capacity of the ship, else of its class; 0 where no row exists (an error for a carrier) (decision 0029, 2)",
+    "heavy guns (counts of the weapons in the heavy_aa slot) x anti_aircraft_heavy_weight + light barrels (light_aa slot) x anti_aircraft_light_weight, rounded down (decision 0029, 1); the slot of the ship if it has a readable row there, else of its class",
 ];
+
+/// The name of figure `i` of a class row: the 14 of decision 0020, then
+/// the two air figures.
+fn figure_name(i: usize) -> &'static str {
+    if i < FIGURES.len() {
+        FIGURES[i]
+    } else {
+        AIR_FIGURES[i - FIGURES.len()]
+    }
+}
 
 /// The three files, as text.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -34,6 +48,19 @@ pub struct Outputs {
     pub class_csv: String,
     pub sources_csv: String,
     pub ships_csv: String,
+    /// The aircraft type file and its sources file, when the list has
+    /// aircraft.
+    pub aircraft_csv: Option<String>,
+    pub aircraft_sources_csv: Option<String>,
+}
+
+/// `<stem>.sources.csv`, the sources file beside an aircraft CSV.
+pub fn aircraft_sources_name(output: &str) -> String {
+    let stem = Path::new(output).file_stem().map_or_else(
+        || "aircraft_types".to_string(),
+        |s| s.to_string_lossy().into_owned(),
+    );
+    format!("{stem}.sources.csv")
 }
 
 /// `<stem>.sources.csv` and `<stem>.ships.csv`, the names of the companions
@@ -124,7 +151,8 @@ fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Prob
     }
     for indexes in by_class.values() {
         let base = results[rows[indexes[0]].members[0]].class_name.clone();
-        let differing: Vec<usize> = (0..FIGURES.len())
+        let figure_count = rows[indexes[0]].figures.len();
+        let differing: Vec<usize> = (0..figure_count)
             .filter(|&f| {
                 indexes
                     .iter()
@@ -133,13 +161,29 @@ fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Prob
             .collect();
         for &i in indexes {
             let mut name = base.clone();
+            let not_modelled = results[rows[i].members[0]].weapons_not_modelled;
             if indexes.len() > 1 {
+                if not_modelled && differing.iter().any(|f| SURFACE_WEAPONS.contains(f)) {
+                    name.push_str(", surface weapons not modelled");
+                }
                 for &f in &differing {
+                    // The surface weapon figures of a ship not modelled are
+                    // named by the one phrase above; for a modelled ship
+                    // only a difference among the modelled rows is named.
+                    if SURFACE_WEAPONS.contains(&f)
+                        && (not_modelled
+                            || !indexes
+                                .iter()
+                                .filter(|&&j| !results[rows[j].members[0]].weapons_not_modelled)
+                                .any(|&j| rows[j].figures[f] != rows[i].figures[f]))
+                    {
+                        continue;
+                    }
                     match (&rows[i].figures[f], f) {
                         (Value::Flag(true), RADAR) => name.push_str(", radar"),
                         (Value::Flag(false), RADAR) => name.push_str(", no radar"),
                         (value, _) => {
-                            name.push_str(&format!(", {} {}", FIGURES[f], shown(value)));
+                            name.push_str(&format!(", {} {}", figure_name(f), shown(value)));
                         }
                     }
                 }
@@ -162,6 +206,9 @@ pub struct Context<'a> {
     pub results: &'a [ShipResult],
     /// Exceptions used, deduplicated, in rules order.
     pub used: &'a BTreeMap<(usize, String, u64), Row>,
+    pub aircraft: &'a [AircraftResult],
+    /// Exceptions the aircraft types used.
+    pub aircraft_used: &'a BTreeMap<(usize, String, u64), Row>,
 }
 
 pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
@@ -171,7 +218,18 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         rules,
         results,
         used,
+        aircraft,
+        aircraft_used,
     } = ctx;
+    let air = list.air_figures;
+    let names: Vec<&str> = (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 })
+        .map(figure_name)
+        .collect();
+    let not_modelled: Vec<&str> = results
+        .iter()
+        .filter(|r| r.weapons_not_modelled)
+        .map(|r| r.ship.as_str())
+        .collect();
     let rows = class_rows(list, results)?;
     let (sources_name, ships_name) = companion_names(&list.output);
     let class_name = Path::new(&list.output)
@@ -219,6 +277,20 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         "  displacement_lt_per_toughness = {}",
         rules.displacement_lt_per_toughness
     ));
+    if air {
+        line(format!(
+            "  anti_aircraft_heavy_weight = {}",
+            rules
+                .anti_aircraft_heavy_weight
+                .map_or_else(String::new, |d| d.to_string())
+        ));
+        line(format!(
+            "  anti_aircraft_light_weight = {}",
+            rules
+                .anti_aircraft_light_weight
+                .map_or_else(String::new, |d| d.to_string())
+        ));
+    }
     line("Counts and rounds carried are whole numbers. The other figures are exact decimals of up to six places, trailing zeros trimmed; a division truncates toward zero at the sixth place.".to_string());
     if used.is_empty() {
         line("Exceptions used (decision 0020, 3): none".to_string());
@@ -258,7 +330,13 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             ));
         }
     }
-    let class_header: Vec<&str> = [&["id", "name"][..], &FIGURES[..]].concat();
+    if !not_modelled.is_empty() {
+        line("Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:".to_string());
+        for ship in &not_modelled {
+            line(format!("  {ship}"));
+        }
+    }
+    let class_header: Vec<&str> = [&["id", "name"][..], &names[..]].concat();
     let class_body: Vec<Vec<String>> = rows
         .iter()
         .map(|row| {
@@ -283,7 +361,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
     }
     let mut source_rows = Vec::new();
     for row in &rows {
-        for (i, figure) in FIGURES.iter().enumerate() {
+        for (i, figure) in names.iter().enumerate() {
             let cites: BTreeSet<_> = row
                 .members
                 .iter()
@@ -311,6 +389,12 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                     doubts.into_iter().collect::<Vec<_>>().join(", ")
                 ));
             }
+            let extra: BTreeSet<&str> = row
+                .members
+                .iter()
+                .flat_map(|&m| results[m].figures[i].notes.iter().map(String::as_str))
+                .collect();
+            notes.extend(extra.into_iter().map(str::to_string));
             if i == 7 && row.members.iter().any(|&m| results[m].designed_rate) {
                 notes.push(
                     "designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
@@ -380,9 +464,132 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         "{ships_text}{}",
         csv_text(&["ship", "class_id", "class_name"], &ship_rows)
     );
+    let (aircraft_csv, aircraft_sources_csv) = if aircraft.is_empty() {
+        (None, None)
+    } else {
+        let (csv, sources) = render_aircraft(list, list_name, rules, aircraft, aircraft_used);
+        (Some(csv), Some(sources))
+    };
     Ok(Outputs {
         class_csv,
         sources_csv,
         ships_csv,
+        aircraft_csv,
+        aircraft_sources_csv,
     })
+}
+
+/// The aircraft type file and its sources file.
+fn render_aircraft(
+    list: &List,
+    list_name: &str,
+    rules: &Rules,
+    aircraft: &[AircraftResult],
+    used: &BTreeMap<(usize, String, u64), Row>,
+) -> (String, String) {
+    let output = list.aircraft_output.as_deref().unwrap_or_default();
+    let file_name = Path::new(output)
+        .file_name()
+        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+    let sources_name = aircraft_sources_name(output);
+    let fraction = rules
+        .strike_radius_fraction_of_range
+        .map_or_else(String::new, |d| d.to_string());
+    let sweep = rules
+        .search_sweep_width_nm
+        .map_or_else(String::new, |d| d.to_string());
+    let mut text = String::new();
+    let mut line = |t: String| {
+        text.push_str("# ");
+        text.push_str(&t);
+        text.push('\n');
+    };
+    line("GENERATED by oob-derive from the facts in data/oob. Do not edit.".to_string());
+    line(format!(
+        "List: {list_name}: {} (as of {})",
+        one_line(&list.name),
+        list.date_text
+    ));
+    line(format!("Rules: {}", list.rules));
+    line(format!(
+        "Companion: {sources_name} (the rule and fact rows behind every figure)"
+    ));
+    line(
+        "Constants, MODEL PARAMETERS AND PLACEHOLDERS, not history (decisions 0020, 8 and 0029):"
+            .to_string(),
+    );
+    line(format!(
+        "  gun_shell_kg_per_damage = {}",
+        rules.gun_shell_kg_per_damage
+    ));
+    line(format!(
+        "  torpedo_damage_per_warhead_kg = {}",
+        rules.torpedo_damage_per_warhead_kg
+    ));
+    line(format!("  strike_radius_fraction_of_range = {fraction}"));
+    line(format!("  search_sweep_width_nm = {sweep}"));
+    line("Ranges are whole nautical miles. attack_damage is an exact decimal of up to six places, trailing zeros trimmed. pilot_armour and self_sealing_tanks are 1 for yes and 0 for no.".to_string());
+    if used.is_empty() {
+        line("Exceptions used (decision 0020, 3 and 0029, 5): none".to_string());
+    } else {
+        line("Exceptions used (decision 0020, 3 and 0029, 5):".to_string());
+        for ((index, _, _), row) in used.iter() {
+            let e = &rules.exceptions[*index];
+            line(format!(
+                "  {} {}: {} row {} ({}); reason: {}; agreed {}",
+                e.entity,
+                e.fact,
+                row.file,
+                row.id,
+                row.standing,
+                one_line(&e.reason),
+                e.agreed
+            ));
+        }
+    }
+    let header: Vec<&str> = [&["id", "name"][..], &AIRCRAFT_FIGURES[..]].concat();
+    let mut body = Vec::new();
+    let mut source_rows = Vec::new();
+    for (n, result) in aircraft.iter().enumerate() {
+        let id = u64::from(list.first_aircraft_type_id) + n as u64;
+        let mut cells = vec![id.to_string(), result.name.clone()];
+        cells.extend(result.figures.iter().map(|f| f.value.clone()));
+        body.push(cells);
+        for (name, fig) in AIRCRAFT_FIGURES.iter().zip(&result.figures) {
+            let facts = fig
+                .cites
+                .iter()
+                .map(|(file, id)| format!("{file}:{id}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            source_rows.push(vec![
+                id.to_string(),
+                (*name).to_string(),
+                fig.value.clone(),
+                fig.rule.clone(),
+                facts,
+                fig.notes.join("; "),
+            ]);
+        }
+    }
+    let csv = format!("{text}{}", csv_text(&header, &body));
+    let mut sources_text = String::new();
+    for t in [
+        "GENERATED by oob-derive. Do not edit.".to_string(),
+        format!("For each type of {file_name} and each of its figures: the value as written there, the rule, the fact rows read, and a note."),
+        "facts: file:id of each row read, files in data/oob. Constants and fixed values cite no row.".to_string(),
+        "The note says which radius rule was used and why, gives the exact value where a figure was rounded down, and says where a figure rests on an exception.".to_string(),
+    ] {
+        sources_text.push_str("# ");
+        sources_text.push_str(&t);
+        sources_text.push('\n');
+    }
+    let sources = format!(
+        "{sources_text}{}",
+        csv_text(
+            &["type_id", "figure", "value", "rule", "facts", "note"],
+            &source_rows
+        )
+    );
+    (csv, sources)
 }

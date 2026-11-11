@@ -20,6 +20,7 @@ pub enum Kind {
     BadValue,
     ZeroToughness,
     Exception,
+    UnknownType,
 }
 
 impl Kind {
@@ -40,6 +41,7 @@ impl Kind {
             Kind::BadValue => "bad-value",
             Kind::ZeroToughness => "zero-toughness",
             Kind::Exception => "exception",
+            Kind::UnknownType => "unknown-type",
         }
     }
 }

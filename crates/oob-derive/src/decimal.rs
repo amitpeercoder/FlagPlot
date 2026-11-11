@@ -67,6 +67,11 @@ impl Dec {
             .map_err(|_| ParseError::TooLarge)
     }
 
+    /// `self + other`. `None` on overflow.
+    pub fn checked_add(self, other: Dec) -> Option<Dec> {
+        self.0.checked_add(other.0).map(Dec)
+    }
+
     /// `self x other`, truncated toward zero. `None` on overflow.
     pub fn mul(self, other: Dec) -> Option<Dec> {
         let wide = i128::from(self.0) * i128::from(other.0) / i128::from(SCALE);

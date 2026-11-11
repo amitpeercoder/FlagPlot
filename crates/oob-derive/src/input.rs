@@ -22,6 +22,42 @@ struct RawList {
     radar_unknown_means_none: Vec<String>,
     #[serde(default)]
     main_gun_ammunition_not_limiting: Vec<String>,
+    #[serde(default)]
+    air_figures: bool,
+    #[serde(default)]
+    surface_weapons_not_modelled: Option<RawNotModelled>,
+    #[serde(default)]
+    aircraft: Vec<RawAircraft>,
+    #[serde(default)]
+    aircraft_output: Option<String>,
+    #[serde(default)]
+    first_aircraft_type_id: Option<u32>,
+}
+
+/// Either the string "all" or a list of ship names.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum RawNotModelled {
+    Text(String),
+    Names(Vec<String>),
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawAircraft {
+    #[serde(rename = "type")]
+    kind: String,
+    #[serde(default)]
+    load: Option<String>,
+}
+
+/// One aircraft type the list asks for (decision 0029, 7).
+#[derive(Clone, Debug)]
+pub struct AircraftEntry {
+    /// Key in `aircraft_types.csv`.
+    pub type_key: String,
+    /// Key of the weapon it attacks with, if any.
+    pub load: Option<String>,
 }
 
 /// The list file, checked.
@@ -41,6 +77,14 @@ pub struct List {
     /// Ships whose main-gun ammunition is treated as not limiting while no
     /// `main_rounds_per_gun` row exists (decision 0023).
     pub main_gun_ammunition_not_limiting: BTreeSet<String>,
+    /// Write `aircraft_capacity` and `anti_aircraft` columns (decision 0029).
+    pub air_figures: bool,
+    /// Ships whose surface weapons are not modelled (decision 0029, 4).
+    pub surface_weapons_not_modelled: BTreeSet<String>,
+    pub aircraft: Vec<AircraftEntry>,
+    /// Path of the aircraft CSV, relative to the list file; with aircraft.
+    pub aircraft_output: Option<String>,
+    pub first_aircraft_type_id: u32,
 }
 
 fn list_problem(figure: &str, message: impl Into<String>) -> Problem {
@@ -112,6 +156,81 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             ));
         }
     }
+    let mut not_modelled = BTreeSet::new();
+    match &raw.surface_weapons_not_modelled {
+        None => {}
+        Some(RawNotModelled::Text(text)) if text == "all" => {
+            not_modelled.extend(ships.iter().cloned());
+        }
+        Some(RawNotModelled::Text(text)) => problems.push(list_problem(
+            "surface_weapons_not_modelled",
+            format!("`{text}` is not \"all\" or a list of ship names"),
+        )),
+        Some(RawNotModelled::Names(names)) => {
+            for ship in names {
+                if ships.contains(ship) {
+                    not_modelled.insert(ship.clone());
+                } else {
+                    problems.push(list_problem(
+                        "surface_weapons_not_modelled",
+                        format!("`{ship}` is not in ships"),
+                    ));
+                }
+            }
+        }
+    }
+    let mut aircraft = Vec::new();
+    for entry in &raw.aircraft {
+        if aircraft
+            .iter()
+            .any(|a: &AircraftEntry| a.type_key == entry.kind)
+        {
+            problems.push(list_problem(
+                "aircraft",
+                format!("type `{}` is listed more than once", entry.kind),
+            ));
+        } else {
+            aircraft.push(AircraftEntry {
+                type_key: entry.kind.clone(),
+                load: entry.load.clone(),
+            });
+        }
+    }
+    if aircraft.is_empty() {
+        for (field, given) in [
+            ("aircraft_output", raw.aircraft_output.is_some()),
+            (
+                "first_aircraft_type_id",
+                raw.first_aircraft_type_id.is_some(),
+            ),
+        ] {
+            if given {
+                problems.push(list_problem(field, "the list has no [[aircraft]] entries"));
+            }
+        }
+    } else {
+        match &raw.aircraft_output {
+            None => problems.push(list_problem(
+                "aircraft_output",
+                "required when the list has [[aircraft]] entries",
+            )),
+            Some(path) => {
+                let path = std::path::Path::new(path);
+                if path.file_stem().is_none() || path.extension().is_none_or(|e| e != "csv") {
+                    problems.push(list_problem(
+                        "aircraft_output",
+                        format!("`{}` is not the path of a .csv file", path.display()),
+                    ));
+                }
+            }
+        }
+        if raw.first_aircraft_type_id.is_none() {
+            problems.push(list_problem(
+                "first_aircraft_type_id",
+                "required when the list has [[aircraft]] entries",
+            ));
+        }
+    }
     let Some(date) = date else {
         return (None, problems);
     };
@@ -128,6 +247,11 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             .main_gun_ammunition_not_limiting
             .into_iter()
             .collect(),
+        air_figures: raw.air_figures,
+        surface_weapons_not_modelled: not_modelled,
+        aircraft,
+        aircraft_output: raw.aircraft_output,
+        first_aircraft_type_id: raw.first_aircraft_type_id.unwrap_or(0),
     };
     (Some(list), problems)
 }
@@ -139,6 +263,14 @@ struct RawRules {
     gun_shell_kg_per_damage: toml::Value,
     torpedo_damage_per_warhead_kg: toml::Value,
     displacement_lt_per_toughness: toml::Value,
+    #[serde(default)]
+    anti_aircraft_heavy_weight: Option<toml::Value>,
+    #[serde(default)]
+    anti_aircraft_light_weight: Option<toml::Value>,
+    #[serde(default)]
+    strike_radius_fraction_of_range: Option<toml::Value>,
+    #[serde(default)]
+    search_sweep_width_nm: Option<toml::Value>,
     #[serde(default)]
     exception: Vec<RawException>,
 }
@@ -177,6 +309,11 @@ pub struct Rules {
     pub gun_shell_kg_per_damage: Dec,
     pub torpedo_damage_per_warhead_kg: Dec,
     pub displacement_lt_per_toughness: Dec,
+    /// The constants of decision 0029; read only when the list needs them.
+    pub anti_aircraft_heavy_weight: Option<Dec>,
+    pub anti_aircraft_light_weight: Option<Dec>,
+    pub strike_radius_fraction_of_range: Option<Dec>,
+    pub search_sweep_width_nm: Option<Dec>,
     pub exceptions: Vec<Exception>,
 }
 
@@ -237,6 +374,29 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
         &raw.displacement_lt_per_toughness,
         &mut problems,
     );
+    let optional = |name: &str, value: &Option<toml::Value>, problems: &mut Vec<Problem>| {
+        value.as_ref().and_then(|v| constant(name, v, problems))
+    };
+    let aa_heavy = optional(
+        "anti_aircraft_heavy_weight",
+        &raw.anti_aircraft_heavy_weight,
+        &mut problems,
+    );
+    let aa_light = optional(
+        "anti_aircraft_light_weight",
+        &raw.anti_aircraft_light_weight,
+        &mut problems,
+    );
+    let fraction = optional(
+        "strike_radius_fraction_of_range",
+        &raw.strike_radius_fraction_of_range,
+        &mut problems,
+    );
+    let sweep = optional(
+        "search_sweep_width_nm",
+        &raw.search_sweep_width_nm,
+        &mut problems,
+    );
     let mut exceptions = Vec::new();
     for (i, e) in raw.exception.into_iter().enumerate() {
         let figure = format!("exception {}", i + 1);
@@ -274,6 +434,10 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
             gun_shell_kg_per_damage: gun,
             torpedo_damage_per_warhead_kg: torpedo,
             displacement_lt_per_toughness: toughness,
+            anti_aircraft_heavy_weight: aa_heavy,
+            anti_aircraft_light_weight: aa_light,
+            strike_radius_fraction_of_range: fraction,
+            search_sweep_width_nm: sweep,
             exceptions,
         }),
         _ => None,

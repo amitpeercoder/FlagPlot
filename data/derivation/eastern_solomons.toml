@@ -1,0 +1,71 @@
+# The ships and aircraft of the carrier forces at the Eastern Solomons, 24
+# August 1942, for stage 5e. The derivation tool turns this list into
+# data/reference/ship_classes_eastern_solomons.csv and
+# data/reference/aircraft_types_eastern_solomons.csv.
+# Who is here follows docs/decisions/0030-eastern-solomons-scenario.md; how
+# the figures are worked follows docs/decisions/0029 and 0020.
+
+name = "Eastern Solomons"
+date = "1942-08-24"
+rules = "rules.toml"
+output = "../reference/ship_classes_eastern_solomons.csv"
+aircraft_output = "../reference/aircraft_types_eastern_solomons.csv"
+first_class_id = 2000
+first_aircraft_type_id = 2000
+air_figures = true
+
+ships = [
+    # Task Force 11 (the Navy narrative's "Fox"): Saratoga.
+    "cv-3-saratoga", "ca-32-new-orleans", "ca-36-minneapolis",
+    "dd-348-farragut", "dd-351-macdonough", "dd-352-worden", "dd-353-dale", "dd-360-phelps",
+    # Task Force 16 ("King"): Enterprise.
+    "cv-6-enterprise", "bb-55-north-carolina", "ca-33-portland", "cl-51-atlanta",
+    "dd-363-balch", "dd-397-benham", "dd-398-ellet", "dd-401-maury", "dd-435-grayson", "dd-436-monssen",
+    # Nagumo's carriers and the ships with them.
+    "shokaku", "zuikaku", "chikuma", "hiei", "kirishima", "kumano", "suzuya", "nagara",
+    "akigumo", "kazagumo", "makigumo", "yugumo", "akizuki", "hatsukaze",
+    # The Ryujo group.
+    "ryujo", "tone", "amatsukaze", "tokitsukaze",
+]
+
+# Assumption of the scenario, not a fact (decision 0029, 4): no ship fired at
+# another in this battle, and the facts do not hold the guns, ammunition and
+# torpedoes of most of these ships in full. Their surface weapons are not
+# modelled: every such figure is written as 0.
+surface_weapons_not_modelled = "all"
+
+# Working assumption, not a fact (decision 0019, 5): no source read says
+# whether these ships carried a search radar on the date, and they are
+# treated as not fitted. The list only matters while the facts are silent.
+radar_unknown_means_none = [
+    "ca-32-new-orleans", "ca-36-minneapolis",
+    "dd-348-farragut", "dd-351-macdonough", "dd-352-worden", "dd-353-dale", "dd-360-phelps",
+    "dd-363-balch", "dd-397-benham", "dd-398-ellet", "dd-401-maury", "dd-435-grayson", "dd-436-monssen",
+    "hiei", "kirishima", "akigumo", "kazagumo", "makigumo", "yugumo", "akizuki", "hatsukaze",
+    "ryujo", "amatsukaze", "tokitsukaze",
+]
+
+# The aircraft types that flew from the carriers and from Henderson Field,
+# each with the load it attacks with in this scenario (decision 0029, 7).
+# A fighter attacks nothing on the surface.
+[[aircraft]]
+type = "f4f-4"
+
+[[aircraft]]
+type = "sbd-3"
+load = "us-bomb-1000lb-gp"
+
+[[aircraft]]
+type = "tbf-1"
+load = "us-torpedo-mk13"
+
+[[aircraft]]
+type = "a6m2-21"
+
+[[aircraft]]
+type = "d3a1-11"
+load = "jp-bomb-250kg"
+
+[[aircraft]]
+type = "b5n2"
+load = "jp-torpedo-type91"

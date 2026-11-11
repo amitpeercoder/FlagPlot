@@ -18,6 +18,11 @@ torpedo_hit_chance = "0.15"
 fighter_hit_chance = "0.3"
 anti_aircraft_hit_chance = "0.05"
 
+# What either chance is multiplied by when the target type has pilot armour,
+# and again when it has self-sealing fuel tanks (decision 0029, 11).
+pilot_armour_factor = "0.75"
+self_sealing_tanks_factor = "0.75"
+
 # Chance a bomb hit also knocks a system down one level. A torpedo from the
 # air uses the torpedo figures of surface_combat.toml.
 bomb_system_hit_chance = "0.3"
