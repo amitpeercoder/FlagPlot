@@ -2113,7 +2113,9 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 // Scenario 6 itself has pilots, replacements and supply.
                 && !stem.starts_with("06_")
                 // So has the full slice of scenario 7 (decision 0043).
-                && !stem.starts_with("07_"))
+                && !stem.starts_with("07_")
+                // And the soak, which carries it on for 180 days (decision 0044).
+                && !stem.starts_with("08_"))
             .then(|| stem.to_string())
         })
         .collect();

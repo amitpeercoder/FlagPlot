@@ -767,6 +767,20 @@ pub enum EventKind {
         amount: Fixed,
         fatigue: Fixed,
     },
+    /// A route order turned a task force round between two hexes (decision 5
+    /// of 0005, `TaskForce::turn_back`): the hex it left and the hex ahead
+    /// swapped and its progress became the miles still to go. `from` and
+    /// `toward` are the two hexes as they are afterwards, `progress_nm` is
+    /// the progress along that leg, and `position` is the hex the force is in
+    /// afterwards (the hex ahead from the midpoint on, so exactly 20 nm is in
+    /// `toward`). Added at the end of the enum.
+    TaskForceTurnedBack {
+        task_force: TaskForceId,
+        from: Hex,
+        toward: Hex,
+        progress_nm: Fixed,
+        position: Hex,
+    },
 }
 
 impl EventKind {
@@ -956,7 +970,8 @@ impl EventKind {
                 );
                 entities
             }
-            EventKind::TaskForceFatigue { task_force, .. } => {
+            EventKind::TaskForceFatigue { task_force, .. }
+            | EventKind::TaskForceTurnedBack { task_force, .. } => {
                 vec![EntityRef::TaskForce(*task_force)]
             }
             EventKind::ForceRetired { task_force } | EventKind::ForceStoodDown { task_force } => {
@@ -1578,6 +1593,16 @@ impl fmt::Display for EventKind {
                     "{task_force} rested {amount} fatigue, not alert at the start of the pulse, now {fatigue}"
                 ),
             },
+            EventKind::TaskForceTurnedBack {
+                task_force,
+                from,
+                toward,
+                progress_nm,
+                position,
+            } => write!(
+                f,
+                "{task_force} turned back toward {toward}, {progress_nm} nm from {from}, now in {position}"
+            ),
             EventKind::AlarmRoll {
                 task_force,
                 by_a,

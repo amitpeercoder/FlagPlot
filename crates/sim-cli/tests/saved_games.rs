@@ -244,6 +244,28 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
     assert!(orders[0]["origin"]["intent"].is_null());
 }
 
+/// The soak (decision 0044): 180 days saved and replayed, and every one of
+/// the 180 hashes the replay prints is the one a direct run prints.
+#[test]
+fn the_soak_saves_and_replays_all_180_hashes() {
+    let scenario = "data/scenarios/08_soak.toml";
+    let game = save(scenario, "soak", &[]);
+    let value: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
+    assert_eq!(value["hashes"].as_array().expect("hashes").len(), 180);
+    assert!(value["orders"].as_array().expect("orders").len() > 250);
+    let replayed = binary(&["replay", &game.to_string_lossy()]);
+    ok(&replayed, "replay of the soak");
+    let printed: Vec<String> = text(&replayed.stdout)
+        .lines()
+        .filter(|l| l.starts_with("day "))
+        .map(str::to_string)
+        .collect();
+    let direct = hash_lines(&binary(&["hash", scenario]));
+    assert_eq!(direct.len(), 180);
+    assert_eq!(printed, direct);
+}
+
 #[test]
 fn hash_prints_what_run_prints() {
     for scenario in SCENARIOS {

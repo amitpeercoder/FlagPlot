@@ -270,9 +270,10 @@ impl World {
         let target = order.kind.target();
         let result = self.validate_order(&order);
         let accepted = result.is_ok();
+        let mut turned_back: Option<EventKind> = None;
         let kind = match result {
             Ok(()) => {
-                self.apply_order(&order);
+                turned_back = self.apply_order(&order);
                 EventKind::OrderAccepted { order: id, target }
             }
             Err(reason) => EventKind::OrderRejected {
@@ -284,6 +285,12 @@ impl World {
         let mut causes = vec![Cause::Order(id)];
         causes.extend(extra_causes);
         let event = self.events.record(day, pulse, kind, causes, None);
+        // A route order that turned the force round between two hexes changed
+        // its leg and maybe its position: say so, citing the order.
+        if let Some(turned_back) = turned_back {
+            self.events
+                .record(day, pulse, turned_back, vec![Cause::Order(id)], None);
+        }
         self.orders.insert(id, order);
         (id, event, accepted)
     }
@@ -358,6 +365,10 @@ impl World {
                     .ok_or(RejectReason::NotYourUnit)?;
                 if task_force.side != order.side {
                     return Err(RejectReason::NotYourUnit);
+                }
+                // A force whose every ship is sunk has nothing to order.
+                if task_force.ships.is_empty() {
+                    return Err(RejectReason::NoShipAfloat);
                 }
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
@@ -471,6 +482,18 @@ impl World {
                 if group.side != order.side {
                     return Err(RejectReason::NotYourUnit);
                 }
+                // A group lost with the ship it was aboard has nothing to
+                // order.
+                if let crate::state::AirGroupLocation::Ship(ship) = group.location {
+                    let afloat = self
+                        .truth
+                        .ships
+                        .get(&ship)
+                        .is_some_and(|ship| ship.location != ShipLocation::Sunk);
+                    if !afloat {
+                        return Err(RejectReason::AirGroupLost);
+                    }
+                }
                 match air_group_order {
                     AirGroupOrder::SetAirMission(AirMission::NavalStrike) => {
                         // Decision 2 of 0026. World::new checked that every
@@ -572,7 +595,11 @@ impl World {
 
     /// Makes an accepted order the standing one. It stays in force until
     /// another order replaces it.
-    fn apply_order(&mut self, order: &Order) {
+    ///
+    /// Returns the event to record after the order's own, if the order turned
+    /// a task force round between two hexes (a route order does: see
+    /// `TaskForce::turn_back`).
+    fn apply_order(&mut self, order: &Order) -> Option<EventKind> {
         match &order.kind {
             OrderKind::TaskForce {
                 target,
@@ -597,13 +624,14 @@ impl World {
                         vec![Cause::Order(order.id)],
                         None,
                     );
-                    return;
+                    return None;
                 }
                 let task_force = self
                     .truth
                     .task_forces
                     .get_mut(target)
                     .expect("order was validated against this task force");
+                let mut turned_back = None;
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
                         // Turning back is decided on the state the order
@@ -613,6 +641,15 @@ impl World {
                             .expect("order was validated: the first waypoint is reachable");
                         if turns_back {
                             task_force.turn_back();
+                            if let Some(toward) = task_force.toward_hex {
+                                turned_back = Some(EventKind::TaskForceTurnedBack {
+                                    task_force: task_force.id,
+                                    from: task_force.from_hex,
+                                    toward,
+                                    progress_nm: task_force.progress_nm,
+                                    position: task_force.position(),
+                                });
+                            }
                         }
                         task_force.route = Route {
                             waypoints: waypoints.clone(),
@@ -667,6 +704,7 @@ impl World {
                         unreachable!("detach orders are applied above")
                     }
                 }
+                turned_back
             }
             OrderKind::AirGroup {
                 target,
@@ -703,6 +741,7 @@ impl World {
                         group.arc_order = Some(order.id);
                     }
                 }
+                None
             }
         }
     }
@@ -2064,12 +2103,14 @@ mod tests {
         world.submit_orders(Side::Allied, vec![route_to(12, 0)]);
         world.resolve_day().expect("day resolves");
 
+        // The order is refused because the force has no ship afloat.
+        assert_eq!(rejection(&world), Some(RejectReason::NoShipAfloat));
         let truth = world.umpire();
         let task_force = &truth.task_forces[&TF];
         assert_eq!(task_force.position(), hx(0, 0));
         assert_eq!(task_force.toward_hex, None);
         assert_eq!(task_force.progress_nm, Fixed::ZERO);
-        assert_eq!(task_force.route.waypoints, vec![hx(12, 0)]);
+        assert!(task_force.route.waypoints.is_empty());
         assert_eq!(steamed(&world), 0);
         assert!(world
             .events()
@@ -2374,6 +2415,160 @@ mod tests {
         world.intake_orders(2);
         assert_eq!(leg(&world), original);
         assert_sound(&world);
+    }
+
+    /// The turn-back events in the log, as (task force, from, toward,
+    /// progress, position, causes).
+    fn turned_back(world: &World) -> Vec<(TaskForceId, Hex, Hex, Fixed, Hex, Vec<Cause>)> {
+        world
+            .events()
+            .iter()
+            .filter_map(|event| match &event.kind {
+                EventKind::TaskForceTurnedBack {
+                    task_force,
+                    from,
+                    toward,
+                    progress_nm,
+                    position,
+                } => Some((
+                    *task_force,
+                    *from,
+                    *toward,
+                    *progress_nm,
+                    *position,
+                    event.causes.clone(),
+                )),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_turn_back_mid_leg_records_an_event_that_cites_the_order() {
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        // (0,1) is nearer by turning back (see the test above): the force
+        // goes from (1,0) toward (0,0), 30 nm along.
+        take_in(&mut world, vec![route_to(0, 1)]);
+        assert_eq!(leg(&world), (hx(1, 0), Some(hx(0, 0)), nm(30)));
+        let order = world.orders().next().expect("an order").id;
+        assert_eq!(
+            turned_back(&world),
+            vec![(
+                TF,
+                hx(1, 0),
+                hx(0, 0),
+                nm(30),
+                hx(0, 0),
+                vec![Cause::Order(order)]
+            )]
+        );
+        // It follows the acceptance of the order in the log, and reads in the
+        // plain style of the movement events.
+        let log: Vec<&EventKind> = world.events().iter().map(|e| &e.kind).collect();
+        assert!(matches!(log[0], EventKind::OrderAccepted { .. }));
+        assert_eq!(
+            log[1].to_string(),
+            "task_force:1 turned back toward (0,0), 30 nm from (1,0), now in (0,0)"
+        );
+        assert_eq!(log.len(), 2);
+    }
+
+    #[test]
+    fn at_exactly_20_nm_the_position_in_the_event_is_the_hex_now_ahead() {
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(20));
+        // At 20 nm the force is in the hex ahead, (1,0).
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(1, 0));
+        // (-1,0) is nearer by turning back: from (1,0) toward (0,0), 20 nm.
+        take_in(&mut world, vec![route_to(-1, 0)]);
+        assert_eq!(leg(&world), (hx(1, 0), Some(hx(0, 0)), nm(20)));
+        // The same point on the sea is now in the hex it is heading for.
+        assert_eq!(world.truth.task_forces[&TF].position(), hx(0, 0));
+        let events = turned_back(&world);
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].4, hx(0, 0));
+    }
+
+    #[test]
+    fn a_route_order_at_a_centre_records_no_turn_back() {
+        let mut world = world_with_fuel(2000);
+        take_in(&mut world, vec![route_to(3, 0)]);
+        assert!(turned_back(&world).is_empty());
+        // Going on rather than back records none either.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        take_in(&mut world, vec![route_to(4, 0)]);
+        assert_eq!(leg(&world).0, hx(0, 0));
+        assert!(turned_back(&world).is_empty());
+    }
+
+    /// An order for a task force with no ship afloat is rejected, whatever
+    /// its kind, and changes nothing.
+    #[test]
+    fn every_order_for_a_force_with_no_ship_afloat_is_rejected_and_changes_nothing() {
+        let mut world = world_with_fuel(2000);
+        sink(&mut world, SHIP);
+        let before = world.truth.task_forces[&TF].clone();
+        let orders = vec![
+            route_to(3, 0),
+            order_for(1, TaskForceOrder::SetSpeed(SpeedSetting::Full)),
+            order_for(1, TaskForceOrder::Unload),
+            order_for(1, TaskForceOrder::SetReadiness(Readiness::Battle)),
+            order_for(1, TaskForceOrder::SetHomePort(BaseId::new(1))),
+        ];
+        let count = orders.len();
+        take_in(&mut world, orders);
+        let reasons: Vec<RejectReason> = world
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::OrderRejected { reason, .. } => Some(reason.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(reasons, vec![RejectReason::NoShipAfloat; count]);
+        assert_eq!(world.truth.task_forces[&TF], before);
+        assert_eq!(
+            RejectReason::NoShipAfloat.to_string(),
+            "the task force has no ship afloat"
+        );
+    }
+
+    #[test]
+    fn an_order_for_an_air_group_lost_with_its_ship_is_rejected() {
+        let mut world = world_with_air_group();
+        // Aboard the ship, which is afloat: accepted.
+        world
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .location = AirGroupLocation::Ship(SHIP);
+        take_in(
+            &mut world,
+            vec![air_order(
+                GROUP,
+                AirGroupOrder::SetAirMission(AirMission::Search),
+            )],
+        );
+        assert_eq!(rejection(&world), None);
+        // The ship sinks and the group with it: refused, and the mission it
+        // had stays.
+        sink(&mut world, SHIP);
+        take_in(
+            &mut world,
+            vec![air_order(
+                GROUP,
+                AirGroupOrder::SetAirMission(AirMission::Rest),
+            )],
+        );
+        assert_eq!(rejection(&world), Some(RejectReason::AirGroupLost));
+        assert_eq!(world.truth.air_groups[&GROUP].mission, AirMission::Search);
+        assert_eq!(
+            RejectReason::AirGroupLost.to_string(),
+            "the air group was lost with its ship"
+        );
     }
 
     #[test]
@@ -3338,16 +3533,20 @@ mod tests {
     fn two_force_world() -> World {
         let mut world = world_with(7, 2000);
         let mut truth = world.umpire().clone();
-        truth.task_forces.insert(
+        let mut second = TaskForce::at(
             TaskForceId::new(2),
-            TaskForce::at(
-                TaskForceId::new(2),
-                "Second".to_string(),
-                Side::Allied,
-                Hex::new(0, 1),
-                Mission::Transport,
-            ),
+            "Second".to_string(),
+            Side::Allied,
+            Hex::new(0, 1),
+            Mission::Transport,
         );
+        // A force with no ship afloat takes no orders, so it has a ship.
+        let mut ship = truth.ships[&SHIP].clone();
+        ship.id = ShipId::new(2);
+        ship.location = ShipLocation::TaskForce(TaskForceId::new(2));
+        second.ships.insert(ship.id);
+        truth.ships.insert(ship.id, ship);
+        truth.task_forces.insert(TaskForceId::new(2), second);
         world.truth = truth;
         world.task_force_ids.reserve(TaskForceId::new(2));
         world

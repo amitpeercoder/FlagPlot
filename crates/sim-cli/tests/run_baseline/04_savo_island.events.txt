@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 70b28100cd33341d  289 events
+day   1  hash f44df8409589036e  290 events
 
 #1 D0 -         Allied report: 8 ships, cruiser, at (-1,-9), held at the start: new contact:1
 #2 D0 -         Allied contact:1 aged to 1 pulses  <- #1
@@ -202,100 +202,101 @@ day   1  hash 70b28100cd33341d  289 events
 #196 D1 night     Allied claims 1 enemy ship sunk at (2,-5)  <- #192
 #197 D1 night     task_force:1 sent ship:1, ship:2 home as task_force:4 with escorts ship:4, ship:8  <- order:5
 #198 D1 night     order:6 accepted for task_force:4  <- order:6, #197  [issued by the staff]
-#199 D1 night     task_force:1 left ship:3, ship:5 behind as task_force:5  <- order:5
-#200 D1 night     task_force:1 steamed 108 nm at 24 kn from (2,-5) to (2,-7)  <- order:3, order:4
-#201 D1 night     ship:6 burned 57.447134 t, 751.807642 t remaining  <- #200
-#202 D1 night     ship:7 burned 86.490484 t, 671.358707 t remaining  <- #200
-#203 D1 night     task_force:4 steamed 74.25 nm at 16.5 kn from (2,-6) to (2,-7)  <- order:6, order:4
-#204 D1 night     ship:1 burned 32.603679 t, 2329.172791 t remaining  <- #203
-#205 D1 night     ship:2 burned 26.299527 t, 1878.810793 t remaining  <- #203
-#206 D1 night     ship:4 burned 26.299527 t, 1878.810793 t remaining  <- #203
-#207 D1 night     ship:8 burned 11.831922 t, 340.482416 t remaining  <- #203
-#208 D1 night     Allied contact:1 aged to 3 pulses  <- #1
-#209 D1 morning   task_force:1 alerted by contact:1  <- #193
-#210 D1 morning   task_force:4 alerted by contact:1  <- #193
-#211 D1 morning   task_force:5 alerted by contact:1  <- #193
-#212 D1 morning   task_force:2 and task_force:5 met at (2,-5) at D1 06:00: engagement begun  <- order:1, order:5
-#213 D1 morning   round 1: task_force:2 looked for task_force:5, chance 1: sighted  <- #212
-#214 D1 morning   round 1: task_force:5 looked for task_force:2, chance 1: sighted  <- #212
-#215 D1 morning   round 1: ship:10 guns at ship:3: 135 shots x 0.0125 = 1.6875 expected, 3 hits  <- #212
-#216 D1 morning   round 1: ship:12 guns at ship:5: 150 shots x 0.025 = 3.75 expected, 7 hits  <- #212
-#217 D1 morning   round 1: ship:12 torpedoes at ship:5: 8 shots x 0.02 = 0.16 expected, 0 hits  <- #212
-#218 D1 morning   round 1: ship:3 guns at ship:10: 72 shots x 0.025 = 1.8 expected, 3 hits  <- #212
-#219 D1 morning   round 1: ship:3 took 2 hits on flotation, 11.473782 points, now 80.316474  <- #215
-#220 D1 morning   round 1: ship:3 took 1 hit on fire, 5.736891 points, now 40.158237  <- #215
-#221 D1 morning   round 1: ship:3 torpedo mounts hit, working -> degraded  <- #215
-#222 D1 morning   round 1: ship:5 took 3 hits on flotation, 3.649419 points, now 79.695546  <- #216
-#223 D1 morning   round 1: ship:5 took 4 hits on fire, 4.865892 points, now 20.680041  <- #216
-#224 D1 morning   round 1: ship:10 took 3 hits on flotation, 17.382594 points, now 35.969146  <- #218
-#225 D1 morning   round 1: ship:10 propulsion hit, working -> degraded  <- #218
-#226 D1 morning   round 1: ship:10 torpedo mounts hit, no change, still working  <- #218
-#227 D1 morning   round 1: task_force:2 broke off, 0.5 of its ships sunk or crippled  <- #224, order:1
-#228 D1 morning   round 1: task_force:5 broke off, 1 of its ships sunk or crippled  <- #219, #220, #222, #223, order:5
-#229 D1 morning   engagement of task_force:2 and task_force:5 at (2,-5) ended in round 1: a force broke off  <- #227, #228
-#230 D1 morning   Allied report: 1 ship, cruiser, at (1,-5): refreshed contact:2  <- #229
-#231 D1 morning   Allied claims 1 enemy ship sunk at (2,-5)  <- #229
-#232 D1 morning   Japanese report: 2 ships, cruiser, at (2,-5): refreshed contact:1  <- #229
-#233 D1 morning   Japanese claims 0 enemy ships sunk at (2,-5)  <- #229
-#234 D1 morning   task_force:3 and task_force:5 met at (2,-5) at D1 06:00: engagement begun  <- order:2, order:5
-#235 D1 morning   round 1: task_force:3 looked for task_force:5, chance 1: sighted  <- #234
-#236 D1 morning   round 1: task_force:5 looked for task_force:3, chance 1: sighted  <- #234
-#237 D1 morning   round 1: ship:14 guns at ship:5: 67.5 shots x 0.05 = 3.375 expected, 3 hits  <- #234
-#238 D1 morning   round 1: ship:15 guns at ship:3: 135 shots x 0.025 = 3.375 expected, 2 hits  <- #234
-#239 D1 morning   round 1: ship:16 guns at ship:5: 300 shots x 0.05 = 15 expected, 12 hits  <- #234
-#240 D1 morning   round 1: ship:17 guns at ship:3: 300 shots x 0.05 = 15 expected, 8 hits  <- #234
-#241 D1 morning   round 1: ship:3 guns at ship:13: 72 shots x 0.025 = 1.8 expected, 3 hits  <- #234
-#242 D1 morning   round 1: ship:5 took 3 hits on flotation, 17.210673 points, now 96.906219  <- #237
-#243 D1 morning   round 1: ship:5 propulsion hit, no change, still out  <- #237
-#244 D1 morning   round 1: ship:3 took 2 hits on flotation, 11.473782 points, now 91.790256  <- #238
-#245 D1 morning   round 1: ship:3 fire control hit, degraded -> out  <- #238
-#246 D1 morning   round 1: ship:5 took 9 hits on flotation, 10.948257 points, now 100  <- #239
-#247 D1 morning   round 1: ship:5 of task_force:5 sank  <- #246
-#248 D1 morning   round 1: ship:5 took 3 hits on fire, 3.649419 points, now 24.32946  <- #239
-#249 D1 morning   round 1: ship:3 took 5 hits on flotation, 6.082365 points, now 97.872621  <- #240
-#250 D1 morning   round 1: ship:3 took 3 hits on fire, 3.649419 points, now 43.807656  <- #240
-#251 D1 morning   round 1: ship:3 main battery hit, working -> degraded  <- #240
-#252 D1 morning   round 1: ship:13 took 3 hits on flotation, 15.8103 points, now 59.664979  <- #241
-#253 D1 morning   round 1: task_force:5 broke off, 1 of its ships sunk or crippled  <- #242, #244, #246, #248, #249, #250, order:5
-#254 D1 morning   engagement of task_force:3 and task_force:5 at (2,-5) ended in round 1: a force broke off  <- #253
-#255 D1 morning   Allied report: 2 ships, cruiser, at (2,-5): refreshed contact:2  <- #254
-#256 D1 morning   Allied claims 2 enemy ships sunk at (2,-5)  <- #254
-#257 D1 morning   Japanese report: 5 ships, battleship, at (2,-5): refreshed contact:1  <- #254
-#258 D1 morning   Japanese claims 0 enemy ships sunk at (2,-5)  <- #254
-#259 D1 morning   task_force:1 steamed 112 nm at 24 kn from (2,-7) to (-1,-7)  <- order:3, order:4
-#260 D1 morning   ship:6 burned 59.574806 t, 692.232836 t remaining  <- #259
-#261 D1 morning   ship:7 burned 89.693835 t, 581.664872 t remaining  <- #259
-#262 D1 morning   task_force:1 arrived at (-1,-7) at D1 10:40  <- #259
-#263 D1 morning   task_force:4 steamed 99 nm at 16.5 kn from (2,-7) to (1,-9)  <- order:6, order:4
-#264 D1 morning   ship:1 burned 43.471572 t, 2285.701219 t remaining  <- #263
-#265 D1 morning   ship:2 burned 35.066037 t, 1843.744756 t remaining  <- #263
-#266 D1 morning   ship:4 burned 35.066037 t, 1843.744756 t remaining  <- #263
-#267 D1 morning   ship:8 burned 15.775896 t, 324.70652 t remaining  <- #263
-#268 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
-#269 D1 afternoon task_force:1 stood down  <- #209
-#270 D1 afternoon task_force:4 stood down  <- #210
-#271 D1 afternoon task_force:2 and task_force:5 met at (2,-5) at D1 12:00: engagement begun  <- order:1, order:5
-#272 D1 afternoon round 1: task_force:2 looked for task_force:5, chance 1: sighted  <- #271
-#273 D1 afternoon round 1: task_force:5 looked for task_force:2, chance 1: sighted  <- #271
-#274 D1 afternoon round 1: ship:10 guns at ship:3: 135 shots x 0.0125 = 1.6875 expected, 3 hits  <- #271
-#275 D1 afternoon round 1: ship:12 guns at ship:3: 150 shots x 0.025 = 3.75 expected, 3 hits  <- #271
-#276 D1 afternoon round 1: ship:3 guns at ship:10: 36 shots x 0.0125 = 0.45 expected, 0 hits  <- #271
-#277 D1 afternoon round 1: ship:3 took 2 hits on flotation, 11.473782 points, now 100  <- #274
-#278 D1 afternoon round 1: ship:3 of task_force:5 sank  <- #277
-#279 D1 afternoon round 1: ship:3 took 1 hit on fire, 5.736891 points, now 49.544547  <- #274
-#280 D1 afternoon round 1: ship:3 took 1 hit on flotation, 1.216473 points, now 100  <- #275
-#281 D1 afternoon round 1: ship:3 took 2 hits on fire, 2.432946 points, now 51.977493  <- #275
-#282 D1 afternoon engagement of task_force:2 and task_force:5 at (2,-5) ended in round 1: a force was sunk  <- #278
-#283 D1 afternoon Allied report: 1 ship, cruiser, at (2,-5): refreshed contact:2  <- #282
-#284 D1 afternoon Allied claims 1 enemy ship sunk at (2,-5)  <- #282
-#285 D1 afternoon Japanese report: 2 ships, carrier, at (1,-4): refreshed contact:1  <- #282
-#286 D1 afternoon Japanese claims 0 enemy ships sunk at (2,-5)  <- #282
-#287 D1 afternoon task_force:4 steamed 99 nm at 16.5 kn from (1,-9) to (1,-11)  <- order:6, order:4
-#288 D1 afternoon ship:1 burned 43.471572 t, 2242.229647 t remaining  <- #287
-#289 D1 afternoon ship:2 burned 35.066037 t, 1808.678719 t remaining  <- #287
-#290 D1 afternoon ship:4 burned 35.066037 t, 1808.678719 t remaining  <- #287
-#291 D1 afternoon ship:8 burned 15.775896 t, 308.930624 t remaining  <- #287
-#292 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
+#199 D1 night     task_force:4 turned back toward (2,-6), 20 nm from (2,-5), now in (2,-6)  <- order:6
+#200 D1 night     task_force:1 left ship:3, ship:5 behind as task_force:5  <- order:5
+#201 D1 night     task_force:1 steamed 108 nm at 24 kn from (2,-5) to (2,-7)  <- order:3, order:4
+#202 D1 night     ship:6 burned 57.447134 t, 751.807642 t remaining  <- #201
+#203 D1 night     ship:7 burned 86.490484 t, 671.358707 t remaining  <- #201
+#204 D1 night     task_force:4 steamed 74.25 nm at 16.5 kn from (2,-6) to (2,-7)  <- order:6, order:4
+#205 D1 night     ship:1 burned 32.603679 t, 2329.172791 t remaining  <- #204
+#206 D1 night     ship:2 burned 26.299527 t, 1878.810793 t remaining  <- #204
+#207 D1 night     ship:4 burned 26.299527 t, 1878.810793 t remaining  <- #204
+#208 D1 night     ship:8 burned 11.831922 t, 340.482416 t remaining  <- #204
+#209 D1 night     Allied contact:1 aged to 3 pulses  <- #1
+#210 D1 morning   task_force:1 alerted by contact:1  <- #193
+#211 D1 morning   task_force:4 alerted by contact:1  <- #193
+#212 D1 morning   task_force:5 alerted by contact:1  <- #193
+#213 D1 morning   task_force:2 and task_force:5 met at (2,-5) at D1 06:00: engagement begun  <- order:1, order:5
+#214 D1 morning   round 1: task_force:2 looked for task_force:5, chance 1: sighted  <- #213
+#215 D1 morning   round 1: task_force:5 looked for task_force:2, chance 1: sighted  <- #213
+#216 D1 morning   round 1: ship:10 guns at ship:3: 135 shots x 0.0125 = 1.6875 expected, 3 hits  <- #213
+#217 D1 morning   round 1: ship:12 guns at ship:5: 150 shots x 0.025 = 3.75 expected, 7 hits  <- #213
+#218 D1 morning   round 1: ship:12 torpedoes at ship:5: 8 shots x 0.02 = 0.16 expected, 0 hits  <- #213
+#219 D1 morning   round 1: ship:3 guns at ship:10: 72 shots x 0.025 = 1.8 expected, 3 hits  <- #213
+#220 D1 morning   round 1: ship:3 took 2 hits on flotation, 11.473782 points, now 80.316474  <- #216
+#221 D1 morning   round 1: ship:3 took 1 hit on fire, 5.736891 points, now 40.158237  <- #216
+#222 D1 morning   round 1: ship:3 torpedo mounts hit, working -> degraded  <- #216
+#223 D1 morning   round 1: ship:5 took 3 hits on flotation, 3.649419 points, now 79.695546  <- #217
+#224 D1 morning   round 1: ship:5 took 4 hits on fire, 4.865892 points, now 20.680041  <- #217
+#225 D1 morning   round 1: ship:10 took 3 hits on flotation, 17.382594 points, now 35.969146  <- #219
+#226 D1 morning   round 1: ship:10 propulsion hit, working -> degraded  <- #219
+#227 D1 morning   round 1: ship:10 torpedo mounts hit, no change, still working  <- #219
+#228 D1 morning   round 1: task_force:2 broke off, 0.5 of its ships sunk or crippled  <- #225, order:1
+#229 D1 morning   round 1: task_force:5 broke off, 1 of its ships sunk or crippled  <- #220, #221, #223, #224, order:5
+#230 D1 morning   engagement of task_force:2 and task_force:5 at (2,-5) ended in round 1: a force broke off  <- #228, #229
+#231 D1 morning   Allied report: 1 ship, cruiser, at (1,-5): refreshed contact:2  <- #230
+#232 D1 morning   Allied claims 1 enemy ship sunk at (2,-5)  <- #230
+#233 D1 morning   Japanese report: 2 ships, cruiser, at (2,-5): refreshed contact:1  <- #230
+#234 D1 morning   Japanese claims 0 enemy ships sunk at (2,-5)  <- #230
+#235 D1 morning   task_force:3 and task_force:5 met at (2,-5) at D1 06:00: engagement begun  <- order:2, order:5
+#236 D1 morning   round 1: task_force:3 looked for task_force:5, chance 1: sighted  <- #235
+#237 D1 morning   round 1: task_force:5 looked for task_force:3, chance 1: sighted  <- #235
+#238 D1 morning   round 1: ship:14 guns at ship:5: 67.5 shots x 0.05 = 3.375 expected, 3 hits  <- #235
+#239 D1 morning   round 1: ship:15 guns at ship:3: 135 shots x 0.025 = 3.375 expected, 2 hits  <- #235
+#240 D1 morning   round 1: ship:16 guns at ship:5: 300 shots x 0.05 = 15 expected, 12 hits  <- #235
+#241 D1 morning   round 1: ship:17 guns at ship:3: 300 shots x 0.05 = 15 expected, 8 hits  <- #235
+#242 D1 morning   round 1: ship:3 guns at ship:13: 72 shots x 0.025 = 1.8 expected, 3 hits  <- #235
+#243 D1 morning   round 1: ship:5 took 3 hits on flotation, 17.210673 points, now 96.906219  <- #238
+#244 D1 morning   round 1: ship:5 propulsion hit, no change, still out  <- #238
+#245 D1 morning   round 1: ship:3 took 2 hits on flotation, 11.473782 points, now 91.790256  <- #239
+#246 D1 morning   round 1: ship:3 fire control hit, degraded -> out  <- #239
+#247 D1 morning   round 1: ship:5 took 9 hits on flotation, 10.948257 points, now 100  <- #240
+#248 D1 morning   round 1: ship:5 of task_force:5 sank  <- #247
+#249 D1 morning   round 1: ship:5 took 3 hits on fire, 3.649419 points, now 24.32946  <- #240
+#250 D1 morning   round 1: ship:3 took 5 hits on flotation, 6.082365 points, now 97.872621  <- #241
+#251 D1 morning   round 1: ship:3 took 3 hits on fire, 3.649419 points, now 43.807656  <- #241
+#252 D1 morning   round 1: ship:3 main battery hit, working -> degraded  <- #241
+#253 D1 morning   round 1: ship:13 took 3 hits on flotation, 15.8103 points, now 59.664979  <- #242
+#254 D1 morning   round 1: task_force:5 broke off, 1 of its ships sunk or crippled  <- #243, #245, #247, #249, #250, #251, order:5
+#255 D1 morning   engagement of task_force:3 and task_force:5 at (2,-5) ended in round 1: a force broke off  <- #254
+#256 D1 morning   Allied report: 2 ships, cruiser, at (2,-5): refreshed contact:2  <- #255
+#257 D1 morning   Allied claims 2 enemy ships sunk at (2,-5)  <- #255
+#258 D1 morning   Japanese report: 5 ships, battleship, at (2,-5): refreshed contact:1  <- #255
+#259 D1 morning   Japanese claims 0 enemy ships sunk at (2,-5)  <- #255
+#260 D1 morning   task_force:1 steamed 112 nm at 24 kn from (2,-7) to (-1,-7)  <- order:3, order:4
+#261 D1 morning   ship:6 burned 59.574806 t, 692.232836 t remaining  <- #260
+#262 D1 morning   ship:7 burned 89.693835 t, 581.664872 t remaining  <- #260
+#263 D1 morning   task_force:1 arrived at (-1,-7) at D1 10:40  <- #260
+#264 D1 morning   task_force:4 steamed 99 nm at 16.5 kn from (2,-7) to (1,-9)  <- order:6, order:4
+#265 D1 morning   ship:1 burned 43.471572 t, 2285.701219 t remaining  <- #264
+#266 D1 morning   ship:2 burned 35.066037 t, 1843.744756 t remaining  <- #264
+#267 D1 morning   ship:4 burned 35.066037 t, 1843.744756 t remaining  <- #264
+#268 D1 morning   ship:8 burned 15.775896 t, 324.70652 t remaining  <- #264
+#269 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
+#270 D1 afternoon task_force:1 stood down  <- #210
+#271 D1 afternoon task_force:4 stood down  <- #211
+#272 D1 afternoon task_force:2 and task_force:5 met at (2,-5) at D1 12:00: engagement begun  <- order:1, order:5
+#273 D1 afternoon round 1: task_force:2 looked for task_force:5, chance 1: sighted  <- #272
+#274 D1 afternoon round 1: task_force:5 looked for task_force:2, chance 1: sighted  <- #272
+#275 D1 afternoon round 1: ship:10 guns at ship:3: 135 shots x 0.0125 = 1.6875 expected, 3 hits  <- #272
+#276 D1 afternoon round 1: ship:12 guns at ship:3: 150 shots x 0.025 = 3.75 expected, 3 hits  <- #272
+#277 D1 afternoon round 1: ship:3 guns at ship:10: 36 shots x 0.0125 = 0.45 expected, 0 hits  <- #272
+#278 D1 afternoon round 1: ship:3 took 2 hits on flotation, 11.473782 points, now 100  <- #275
+#279 D1 afternoon round 1: ship:3 of task_force:5 sank  <- #278
+#280 D1 afternoon round 1: ship:3 took 1 hit on fire, 5.736891 points, now 49.544547  <- #275
+#281 D1 afternoon round 1: ship:3 took 1 hit on flotation, 1.216473 points, now 100  <- #276
+#282 D1 afternoon round 1: ship:3 took 2 hits on fire, 2.432946 points, now 51.977493  <- #276
+#283 D1 afternoon engagement of task_force:2 and task_force:5 at (2,-5) ended in round 1: a force was sunk  <- #279
+#284 D1 afternoon Allied report: 1 ship, cruiser, at (2,-5): refreshed contact:2  <- #283
+#285 D1 afternoon Allied claims 1 enemy ship sunk at (2,-5)  <- #283
+#286 D1 afternoon Japanese report: 2 ships, carrier, at (1,-4): refreshed contact:1  <- #283
+#287 D1 afternoon Japanese claims 0 enemy ships sunk at (2,-5)  <- #283
+#288 D1 afternoon task_force:4 steamed 99 nm at 16.5 kn from (1,-9) to (1,-11)  <- order:6, order:4
+#289 D1 afternoon ship:1 burned 43.471572 t, 2242.229647 t remaining  <- #288
+#290 D1 afternoon ship:2 burned 35.066037 t, 1808.678719 t remaining  <- #288
+#291 D1 afternoon ship:4 burned 35.066037 t, 1808.678719 t remaining  <- #288
+#292 D1 afternoon ship:8 burned 15.775896 t, 308.930624 t remaining  <- #288
+#293 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-7); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

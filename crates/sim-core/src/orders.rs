@@ -372,6 +372,12 @@ pub enum RejectReason {
     /// A rest threshold is not between 0 and 100 (decision 7 of 0036). Added
     /// at the end of the enum.
     FatigueOutOfRange(Fixed),
+    /// The task force has no ship afloat: every ship it had is sunk, so there
+    /// is nothing to give an order to. Added at the end of the enum.
+    NoShipAfloat,
+    /// The air group was lost with the ship it was aboard, so there is
+    /// nothing to give an order to. Added at the end of the enum.
+    AirGroupLost,
 }
 
 impl fmt::Display for RejectReason {
@@ -427,6 +433,8 @@ impl fmt::Display for RejectReason {
             RejectReason::FatigueOutOfRange(fatigue) => {
                 write!(f, "rest threshold {fatigue} is not between 0 and 100")
             }
+            RejectReason::NoShipAfloat => f.write_str("the task force has no ship afloat"),
+            RejectReason::AirGroupLost => f.write_str("the air group was lost with its ship"),
         }
     }
 }
