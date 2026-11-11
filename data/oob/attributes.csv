@@ -35,6 +35,10 @@ max_speed_altitude_m,aircraft_type,integer,metres,one,Altitude at which max_spee
 cruise_speed_kn,aircraft_type,decimal,knots,one,Cruising speed
 range_normal_nm,aircraft_type,integer,nautical miles,one,Range on internal fuel with the normal load; the note gives the condition
 range_max_nm,aircraft_type,integer,nautical miles,one,Maximum or ferry range; the note gives the condition
+combat_radius_nm,aircraft_type,integer,nautical miles,many,"A radius of action a source states for a named load, or a distance actually flown on a dated mission; the note gives the load and which it is"
+pilot_armour,aircraft_type,text,,one,yes or no or partial: whether pilot or crew armour was fitted in the period; the note gives weight or thickness if stated
+self_sealing_tanks,aircraft_type,text,,one,yes or no or partial: whether fuel tanks were self-sealing in the period
+structural_note,aircraft_type,text,,many,A short phrase a source uses about how rugged or vulnerable the type was; the note says who said it
 service_ceiling_m,aircraft_type,integer,metres,one,Service ceiling
 crew,aircraft_type,integer,men,one,Normal crew
 engine,aircraft_type,text,,one,Engine model and number of engines

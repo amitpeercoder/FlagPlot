@@ -7,7 +7,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - Where sources disagree: `docs/research/oob/conflicts.md`
 - What was looked for and not found: `gaps.csv`
 - Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`. The disputed facts its ships need, for one-pass approval: `savo-island-settlement.md`
-- Eastern Solomons, the same: `docs/research/oob/eastern-solomons.md`
+- Eastern Solomons, the same: `docs/research/oob/eastern-solomons.md`. The disputed facts scenario 5 needs, for approval: `eastern-solomons-settlement.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.
 
@@ -29,19 +29,19 @@ Scope: what test scenarios 4 to 6 need. The ships at Savo Island (8 to 9 August 
 | File | Rows | Holds |
 | --- | --- | --- |
 | `ships.csv`, `ship_facts.csv` | 122, 612 | 53 US, 66 Japanese and 3 Australian ships with build dates and fates |
-| `ship_classes.csv`, `ship_class_facts.csv` | 44, 731 | Dimensions, speed, fuel, endurance, armour |
-| `aircraft_types.csv`, `aircraft_type_facts.csv` | 20, 240 | Performance and weights |
-| `weapons.csv`, `weapon_facts.csv` | 60, 432 | Guns, torpedoes, bombs, depth charges |
-| `sensors.csv`, `sensor_facts.csv` | 26, 103 | Radar, sonar, and Japanese rangefinders, binoculars and searchlights |
-| `air_units.csv`, `air_unit_facts.csv` | 45, 206 | Equipment, base and strength by date |
-| `fits.csv` | 392 | Armament by class, radar by ship, aircraft guns and loads |
+| `ship_classes.csv`, `ship_class_facts.csv` | 44, 975 | Dimensions, speed, fuel, endurance, armour |
+| `aircraft_types.csv`, `aircraft_type_facts.csv` | 20, 492 | Performance and weights |
+| `weapons.csv`, `weapon_facts.csv` | 62, 432 | Guns, torpedoes, bombs, depth charges |
+| `sensors.csv`, `sensor_facts.csv` | 29, 103 | Radar, sonar, and Japanese rangefinders, binoculars and searchlights |
+| `air_units.csv`, `air_unit_facts.csv` | 50, 265 | Equipment, base and strength by date |
+| `fits.csv` | 617 | Armament by class, radar by ship, aircraft guns and loads |
 | `engagement_forces.csv` | 278 | Who was present at the two battles, by formation |
 | `engagement_events.csv` | 265 | Both battles: sightings, reports, readiness, strikes, by time |
-| `engagement_positions.csv` | 347 | Both battles: stations, tracks, reported positions, sinkings |
-| `engagement_outcomes.csv` | 332 | Both battles: hits, losses, ammunition, aircraft |
+| `engagement_positions.csv` | 429 | Both battles: stations, tracks, reported positions, sinkings |
+| `engagement_outcomes.csv` | 440 | Both battles: hits, losses, ammunition, aircraft |
 | `place_positions.csv` | 47 | Latitude and longitude of the slice's bases and landmarks, by feature. **Not yet checked by `oob-check`** |
-| `sources.csv` | 47 | Every source cited |
-| `gaps.csv` | 409 | What was not found |
+| `sources.csv` | 66 | Every source cited |
+| `gaps.csv` | 511 | What was not found |
 
 Every row has a source and a locator. About 30 values from the first pass and about 15 from the second were re-read against the cited pages. One error was found and corrected: a website's displacement figures had been converted as metric tonnes when they are long tons.
 
@@ -49,20 +49,20 @@ Every row has a source and a locator. About 30 values from the first pass and ab
 
 | Confidence | Rows | Share |
 | --- | --- | --- |
-| high | 874 | 22% |
-| medium | 1,860 | 47% |
-| low | 1,249 | 31% |
+| high | 1,042 | 21% |
+| medium | 2,364 | 48% |
+| low | 1,549 | 31% |
 
 | Standing | Rows | Share |
 | --- | --- | --- |
-| preferred | 2,392 | 60% |
-| unconfirmed | 767 | 19% |
-| disputed | 710 | 18% |
-| alternative | 114 | 3% |
+| preferred | 2,745 | 55% |
+| unconfirmed | 827 | 17% |
+| disputed | 1,266 | 26% |
+| alternative | 117 | 2% |
 
 Where the rows come from matters more than the count:
 
-- **Wikipedia is still the largest single source: 829 rows, 21%.** All are `low` confidence and none is `preferred` on its own.
+- **Wikipedia is still the largest single source: 856 rows, 17%.** All are `low` confidence and none is `preferred` on its own.
 - **The Naval War College analysis of Savo Island (1950) is second: 465 rows.** The second pass found a complete scan. It was read through machine-read text, which misreads some digits. Rows with a doubtful digit say so and are graded down. Its diagrams were not read.
 - **Websites carry most of the class and weapon data:** combinedfleet.com (401), navweaps.com (383), the Nishida class pages (285), uboat.net (224) and navypedia.org (76). Nishida and Navypedia give no sources.
 - **Two official sites load in a browser and not otherwise.** The US Navy's online ship histories and the Australian Navy's unit histories were read that way for the Savo Island ships (30 rows). They gave firm dates, casualties and Chicago's radar, and nothing on the radar of the six ships still missing. Most ship histories in the data still come from a mirror of the older printed entries. NavSource refuses the browser too.

@@ -372,3 +372,161 @@ URLs: ONI = https://www.ibiblio.org/hyperwar/USN/USN-CN-ESols/ (chapter 4 = USN-
 ## Settled by Amit on 2026-11-10
 
 The disputes over the facts the 20 Savo Island ships need were settled in one pass from `savo-island-settlement.md`: displacement, speed, endurance, fuel, the Mark 15 and 6th Year torpedo warheads, Yubari's torpedo, Chicago's rounds per gun, Canberra's radar and tubes, and the practical rates of fire that have a source. Each settled row says so in its note. The entries above describe the disagreements as found and are kept for the record.
+
+## Eastern Solomons, fifth pass: US ships
+
+FTP 218 = https://www.ibiblio.org/hyperwar/USN/ref/Fuel/index.html (section pages Fuel-BB, -CA, -CL, -CV, -DD).
+
+## Earlier-pass notes that the primary documents contradict
+- **Atlanta class is in FTP 218.** An earlier gap says the CL 55 section is the Cleveland class and Atlanta is absent. The relevant section is CL 53 class (San Diego CL 53, San Juan CL 54, Oakland group CL 95-98, 119-121), https://www.ibiblio.org/hyperwar/USN/ref/Fuel/Fuel-CL.html, data period 1943-1944, 8,200 tons. CL 51 Atlanta herself is not named.
+- **New Orleans class data period.** An earlier row calls the CA 32 figures "1944-45 era". The section heading says data period 1941-1943 (Fuel-CA.html). Only BB 55 (1944-45) and DD 397 (1944) are 1944-45.
+- **Table IA is not the normal fuel load.** Existing New Orleans, Portland and North Carolina endurance rows quote Table IA (maximum capacity 95%, emergency fill). Table this pass (radius oil, the "full load" figure) gives smaller radii: New Orleans 6,500 vs 7,620 at 15 kn; Portland 8,640 vs 9,790; North Carolina 13,530 vs 16,320; Saratoga 8,210 vs 9,490. Both are in the new rows.
+- **Destroyer "emergency" fuel.** The earlier Benham note calls 528 t the emergency maximum. Table V of DD 397 shows full-load oil 491 + diesel 37 = 528 = radius oil = maximum capacity, with 0 additional emergency fuel (https://www.ibiblio.org/hyperwar/USN/ref/Fuel/Fuel-DD.html, DD 397 class, Table V). The same is true for every destroyer class here.
+- **Saratoga 5-inch guns.** The earlier class row counts 8 (four twins). navweaps (https://www.navweaps.com/Weapons/WNUS_5-38_mk12.php) says four twin Mark 32 Mod 2 plus eight single Mark 30 mountings (16 guns); Navypedia (https://www.navypedia.org/ships/usa/us_cv_lexington.htm) lists 4 x 2 + 8 x 1 127/38 in 5/1942. Two sources agree on 16.
+
+## North Carolina anti-aircraft guns, 24 August 1942
+- 1.1-inch: ONI says four quadruple mounts in action (https://www.ibiblio.org/hyperwar/USN/USN-CN-ESols/USN-CN-ESolomons-4.html, p. 68); Navypedia lists five quads from late 1941 (https://www.navypedia.org/ships/usa/us_bb_ncarolina.htm); Wikipedia (earlier row) says design called for four and two more were added.
+- .50 cal: ONI 26; Navypedia 28 from 7/1942 (12 before); Wikipedia (earlier) 12 in April 1942.
+- 20 mm: ONI 40, Navypedia 40 (4/1942), Wikipedia 40 (April 1942). Agree.
+- Radar: Navypedia has CXAM, 2 Mk 3 and 3 Mk 4 from 3/1942, SG only from 11/1942; the earlier Wikipedia rows (Nov 1942 list incl. SG and 4 Mk 4) describe the later fit.
+
+## Enterprise
+- **.50 cal on 24 August.** The Davis report (http://www.cv6.org/ship/logs/action19420824.htm) lists 880 rounds .50 cal fired by AA batteries. cv6.org's armament page (http://www.cv6.org/ship/armament.htm) shows no .50 cal for 7/42-9/42; Navypedia says all 24 were removed mid-1942.
+- **Fire-control radar.** The Davis report says a fire control radar on the forward director was ineffective. cv6.org (http://www.cv6.org/ship/camo-radar.htm) says the Mk 33 directors had none until late 1942 and then Mk 4. Navypedia (https://www.navypedia.org/ships/usa/us_cv_yorktown.htm) has 2x Mk 4 from "mid-1942".
+- **SC-2.** cv6.org: late 1942. Navypedia: 8/1942.
+- **CXAM-1.** Navypedia: 1940. cv6.org: CXAM-1 installations began late 1941, no Enterprise date.
+- **1.1-inch.** cv6.org: 5 quads for 7/42-9/42; Navypedia: 4, fifth added 8/1942; Davis report names mounts No. 1-4 only.
+- **20 mm.** cv6.org 40 (7/42-9/42; 32 in 4/42-7/42); Navypedia 32 mid-1942, 38 from 8/1942.
+- **Fuel and endurance.** cv6.org (http://www.cv6.org/ship/big_e.htm): 6,500 tons, 10,400 nm at 15 kn, 7,900 at 20 kn. Navypedia: oil 2,754-4,360 t (6,511 t after the 1943 refit), 12,000 nm at 15 kn. Wikipedia (earlier): 4,280 t, 12,000 nm. No FTP 218 data for CV 6.
+- **Displacement:** cv6.org 19,800 standard; Navypedia 19,875; uboat.net and Wikipedia (earlier) 19,800.
+
+## Saratoga
+- **Standard displacement.** navsource (http://www.navsource.net/archives/02/03.htm) 36,000; Navypedia 37,681 class, 40,000 after the 5/1942 refit; uboat.net (earlier) 40,000; Wikipedia 36,000.
+- **CXAM-1 date.** navsource: refit 6 Jan-28 Apr 1941. Navypedia: spring 1940. Wikipedia (earlier): Feb 1941.
+- **Aircraft.** navsource 90 design (a 1925 caption says 72); Navypedia 63 (class) and 88 embarked in 8/1942; Wikipedia says designed for 78.
+- **Light AA 1942.** Navypedia's own refit lines for Saratoga do not reconcile (a 5/1942 "+4 x 4 40/56" next to "+5 x 4 40/56" in 10/1942); counts written as inferred.
+
+## Destroyers
+- **Porter class 1.1-inch.** navsource (http://www.navsource.net/archives/05/357.htm) and Navypedia (https://www.navypedia.org/ships/usa/us_dd_porter.htm) give two quad 1.1-inch mounts as built; the earlier Wikipedia row lists none. Navypedia 20 mm: 3 (mid-1941 to early 1942); Wikipedia: 6.
+- **Gleaves 5-inch guns.** navsource (http://www.navsource.net/archives/05/435.htm): 4 as built; Navypedia (https://www.navypedia.org/ships/usa/us_dd_benson.htm): 5; navweaps mount list: 3 + 2 singles (5).
+- **6,500 nm at 12 kn.** navsource and Navypedia give this identical figure for Farragut, Porter, Mahan, Bagley, Benham, Gridley, Sims and Gleaves classes; FTP 218 (Table IAA, 12 kn) gives 5,250-6,940 and differs by class.
+- **Porter group split.** FTP 218 splits the Porter class into DD 356 (5,670 at 15 kn) and DD 360 (5,620); the two differ slightly and both are written.
+- **Standard displacement.** Navypedia Mahan 1,488, Gridley 1,590, Sims 1,764, Gleaves 1,838-1,911, Farragut 1,358 and Porter 1,834 differ from earlier uboat.net and Wikipedia rows.
+- **Estimated speed at designed shp** (FTP 218 footnote) is 31.6-35.2 kn, well below design 35-38.5 kn; it is a war-displacement estimate, not a trial.
+
+## HMAS Australia and Hobart
+- Navypedia gives Australia a Type 286 radar from 12/1940 to late 1943; the earlier row (from Madsen) records only that no Type 271 was fitted at Savo.
+- Navypedia Hobart/Australia refits are dated 10/1942; not known whether before 24 August. Hobart endurance: Navypedia 7,000 nm at 14 kn; Wikipedia (earlier) 7,000 at 16 and 5,730 at 13.
+
+## Eastern Solomons, fifth pass: Japanese ships
+
+- **Shokaku 25 mm in Aug 1942**: Kojinsha No. 6 (https://combinedfleet.com/kojinshavolume6.pdf) implies at least 42 barrels (two triples added by 16 Aug, 18 triples planned); navypedia (https://www.navypedia.org/ships/japan/jap_cv_shokaku.htm) says 48 (+4 triples in 1942, month not given); English Wikipedia says 54 (six triples added June 1942). Three dates for the refit: Wikipedia June, Kojinsha memo 20 July and decision 21 Aug.
+- **Zuikaku radar**: navypedia says a radar on both carriers in 1942 (undated); Kojinsha caption (p. 55) says Zuikaku had no radar at Santa Cruz (26 Oct 1942); combinedfleet Zuikak.htm (https://web.archive.org/web/2024/http://www.combinedfleet.com/Zuikak.htm) says fitted Dec 1942 (or Feb 1944 per other sources), certainly by May 1943. Wikipedia says date of first radar unknown.
+- **Shokaku speed**: Kojinsha 34 (design), 34.4 (trial); navypedia/Nishida 34.2; Wikipedia 34.5.
+- **Shokaku fuel**: navypedia/Nishida oil 4100 t; Wikipedia 5,000 metric t (4,900 long).
+- **Ryujo refit date**: combinedfleet and Nishida 1934; navypedia and Wikipedia 1936. Same 10,600 t figure. Combinedfleet puts Type 96 25 mm in 1934, but navypedia dates the first 25 mm to 1940.
+- **Ryujo 13 mm in Aug 1942**: navypedia adds 12 twin mounts in 1942; Wikipedia says the machine guns were replaced by triple 25 mm mounts in April-May 1942. 25 mm barrels agree at 22 (different mount layouts: 9 twins vs 6 triples).
+- **Suzuya/Kumano standard displacement**: navypedia 11200 (as completed); Nishida 12400 (after 20.3 cm rebuild); USNTMJ S-01-4 trial 12,450 metric t for the 1935 design.
+- **Suzuya/Kumano endurance and fuel**: navypedia 8150 nm at 14 kn, fuel 2215-2302; USNTMJ S-01-2 (Mogami) 7,673 miles at 18 kn, fuel 2,310 tons.
+- **Nagara endurance**: navypedia 6000 nm at 15 kn; Nishida 5000 nm at 36 kn (rejected earlier).
+- **Akizuki class** (Terutsuki as the USNTMJ representative): speed 33 vs 33.7; radius 8300 vs 9,062 at 18 kn; fuel 1097 vs 1,071 t; full displacement 3700 vs approx. 3,400. Navypedia and Nishida give identical figures, probably one origin.
+- **Kirishima radar**: navypedia attaches the first Type 21 in Aug 1942 to Kongo only; earlier combinedfleet footnote for Kirishima says several sources suggest a Type 21.
+- **Shokaku displacement**: no conflict; Kojinsha and navypedia print the same 25,675 and 32,105.
+
+## Eastern Solomons, fifth pass: aircraft
+
+Existing rows in aircraft_type_facts.csv are named "earlier". Distances in miles are statute unless said.
+
+## F4F-4
+- Range with 144 gal, clean: BuAer ACP sheet of 1 July 1943 gives 830 st mi at 161 mph (5,000 ft, +15 percent fuel margin); Grumman detail spec of 21 Oct 1942 estimates 925 mi (overload fighter, 144 gal). http://www.wwiiaircraftperformance.org/f4f/f4f-4.pdf , http://www.wwiiaircraftperformance.org/f4f/f4f-4-detail-specification.pdf
+- Maximum speed: ACP 320 mph at 18,800 ft (normal power); Grumman estimate 318.0 mph at 19,400 ft; Navy trial airplane 4058 (24 Mar 1942) 319 mph; test of 10 Sep 1942 318 mph; 19 Sep 1942 316 mph at military power, 17,200 ft. Existing: NHHC 278.1 kn (320 mph), Wikipedia 276.3 kn (318 mph). http://www.wwiiaircraftperformance.org/f4f/f4f.html
+- Service ceiling: 34,000 ft (ACP, clean), 34,800 (Grumman estimate), 35,000 (24 Mar 1942 trial), 34,300 (10 Sep 1942), 33,100 (19 Sep 1942). Existing: historyofwar 10,272 m.
+- The ACP sheet is dated 1 July 1943, not August 1942; it supersedes a 16 Aug 1942 sheet that was not found.
+- Grumman spec lists 4 guns with 800 rounds in one table (early weights) but six guns with 1,440 rounds elsewhere; the ACP says six guns, 1,440 rounds.
+
+## SBD-3
+- Range: pwencycl 1,370 mi as scout and 1,130 mi with bomb load; earlier NWWIIM 826 nm (about 950 mi). Max speed pwencycl 253 mph at 16,000 ft against NWWIIM 217.2 kn (250 mph). http://pwencycl.kgbudge.com/S/b/SBD_Dauntless.htm
+- Flexible guns: pwencycl one .30 (twin .30 only from SBD-4); earlier NWWIIM two .30.
+- Max bomb load: pwencycl 1,000 lb plus two 100 lb; earlier NWWIIM 454 kg (1,000 lb).
+- Search sector of the 24 Aug afternoon search: ONI 270 to 090 degrees true, launch 1315; Enterprise report 290 to 090 degrees, launch 1309. https://www.ibiblio.org/hyperwar/USN/USN-CN-ESols/USN-CN-ESolomons-4.html , https://web.archive.org/web/2024/http://www.cv6.org/ship/logs/action19420824.htm
+
+## TBF-1
+- Combat radius 259 mi (pwencycl only). Range 1,215 mi (pwencycl, historyofwar) against earlier Wikipedia 786 nm. Cruise 145 mph against Wikipedia 186.8 kn. Ceiling 22,400 or 22,500 ft against Wikipedia 6,888 m (22,600 ft). Max bomb: 1,600 lb (pwencycl) against 2,000 lb (historyofwar, Wikipedia). Max speed altitude 11,200 ft (pwencycl) against 12,000 ft (historyofwar).
+- Fixed gun: NASM and historyofwar give one .30 in the cowling for the TBF-1; earlier Wikipedia row gives two wing .50 (the -1C fit, per NASM). https://airandspace.si.edu/collection-objects/grumman-tarpon-i-tbf-1-avenger/nasm_A19610117000
+- ONI says VT-3 TBFs dropped "four 500-pound bombs" (two aircraft); per-aircraft count is ambiguous.
+
+## PBY-5 / PBY-5A
+- Flexible guns: pwencycl four .50 (nose, two waist, ventral); NWWIIM and earlier Wikipedia three .30 plus two .50 waist. Ranges: pwencycl 3,100 mi patrol, 1,433 mi with 2,000 lb bombs; earlier Wikipedia 2,190 nm; NWWIIM "over 2,000 miles". Cruise 117 mph against earlier 108.6 kn. Ceiling 18,100 ft against earlier 4,816 m (15,800 ft).
+
+## B-17E
+- Range: USAAF chart figures (1,405 mi at 70 percent power, 1,500 gal; 3,060 mi at 50 percent, 2,500 gal, 55,000 lb start) against 3,200 mi (NWWIIM), 3,300 mi (historyofwar), up to 3,400 mi (pwencycl), 2,000 mi with 4,000 lb of bombs (pwencycl).
+- Max speed: 317 mph at 25,200 ft with 1,200 bhp per engine (Nov 1941 test) against 300 mph at 25,000 ft with 1,000 bhp per engine (May 1942 comparison), 318 mph (NWWIIM, historyofwar). Cruise 210 mph (pwencycl) against 226 mph (NWWIIM, historyofwar).
+- Armament: 6 x .50 fitted on the 1941 test aircraft (nose guns not installed); NWWIIM ten .50 plus one .30; pwencycl eight .50 plus one .30. Max bomb: 4,200 lb (NWWIIM, historyofwar 14 x 300 lb) against 4,000 lb (pwencycl). Empty weight 32,251 lb (historyofwar) against 33,280 lb (pwencycl).
+
+## A6M2 Model 21 (Zero)
+- Radius: Lundstrom quoted by j-aircraft: up to 300 mi from a carrier, well over 500 mi from a land base, nearly 600 mi. https://j-aircraft.com/research/zerofacts.htm
+- Normal range: 500 mi (TTT No. 5, Aug 1942); 1,175 mi internal fuel (USAAF memo 23 Oct 1942); 1,207 mi at 251 mph with 215 gal (Aug 1942 sheet); 1,162 mi (pwencycl); earlier j-aircraft 1,160 mi (1,008 nm) normal. Max with belly tank 1,150 mi (TTT) against 1,930 mi (pwencycl, pacificwrecks, j-aircraft).
+- Max speed: 344 mph (TTT No. 5, no altitude), 335 mph at 16,000 ft (USAAF memo), 326 mph (IIS 85, critical altitude), 332 mph at 14,930 ft (pwencycl, pacificwrecks), 314 mph at 9,840 ft (Aug 1942 sheet). Existing: 295.5, 275, 285.0, 288.1, 291.1, 288.5, 287.8 kn.
+- Ceiling: 33,000 ft (TTT), 37,000 ft (USAAF memo), 38,500 ft (IIS 85), 33,800 ft (pwencycl), earlier j-aircraft 10,001 m. Gross weight: 5,216 lb (TTT), 5,210 lb (Aug sheet), 5,555 lb (USAAF memo and IIS 85), about 5,600 lb with belly tank (23rd FG). Empty: 3,782 lb (TTT), 3,775 lb (Aug sheet), 3,704 lb (pwencycl, j-aircraft). Fuel: 54+54+37 gal (IIS 85), 55+55+37 (+88 belly, 23rd FG), 183 gal (pwencycl).
+- TTT No. 6 says the Zero fought was the longer-winged "Mitsubishi-Nagoya" type at 344 mph, with an older "stubby" type at 298 mph: No. 5 describes the Akutan wreck; whether No. 6 means the same aircraft is not stated.
+
+## D3A1 Model 11 (Val)
+- Bomb load: 1,100 lb (TTT No. 6, Aug 1942) against 370 kg (250 + 2 x 60, j-aircraft and pwencycl). Range 450 to 1,300 mi (TTT), 915 mi (pwencycl), 840 mi (j-aircraft). Max speed 256 mph top of range (TTT), 242 mph at 9,845 ft (pwencycl), 237 mph (j-aircraft).
+
+## B5N2 (Kate)
+- Bomb load: three 250 kg (pwencycl) against two 250 kg (pacificwrecks, earlier Wikipedia). Pacificwrecks calls the 800 kg torpedo a Type 95; the data uses Type 91. Pacificwrecks lists six bombs as "132 kg (293 lb)", inconsistent units. pwencycl block is for the B5N1.
+
+## H6K4 (Mavis)
+- Max speed 179 kn (pacificwrecks), 211 mph = 183.4 kn (pwencycl), 183.6 kn (earlier Wikipedia). Range 2,230 mi (pacificwrecks), 3,779 mi (pwencycl), 2,590 nm (Wikipedia). Bomb load 1,000 lb (pacificwrecks), 1,000 kg (pwencycl), 1,600 kg (earlier). Flexible guns: two 7.7 mm plus a 20 mm tail gun (pacificwrecks), two 7.7 mm only on H6K4 (pwencycl), four 7.7 plus one 20 mm (earlier Wikipedia).
+
+## Eastern Solomons, fifth pass: air strengths and Japanese tracks
+
+Aircraft strength
+- VF-6 on 24 Aug: 28 (27 operational) in navweaps https://navweaps.com/index_oob/OOB_WWII_Pacific/OOB_WWII_Eastern-Solomons.php; 29 in the earlier Wikipedia row. With VF-5 at 27, only the 27 operational figure gives the ONI total of 54 F4F-4 (https://www.ibiblio.org/hyperwar/USN/USN-CN-ESols/USN-CN-ESolomons-4.html).
+- Wasp squadrons: navweaps VF-71 25, VS-71 13, VS-72 13, VT-7 9; earlier Wikipedia rows 28, 18, 18, 15. Wasp was not in the battle.
+- Ryujo B5N2: 9 on 16 Aug in combinedfleet (https://www.combinedfleet.com/ryujo.htm, earlier row); 6 in navweaps on 24 Aug; the same combinedfleet page has only 6 B5N2 launching on 24 Aug. Could be a real change over eight days; not resolved.
+- Zuikaku dive bombers: 18 in the earlier row (USSBS Nav 16, normal complement), 27 in navweaps and Wikipedia. Launches of 9 + 18 = 27 on 24 Aug (https://www.combinedfleet.com/Zuikak.htm) fit 27.
+- Shokaku and Zuikaku complement: the Kojinsha volume (https://combinedfleet.com/kojinshavolume6.pdf) gives the design complement as 18 + 2 reserve fighters, 27 + 5 dive bombers, 27 + 5 torpedo bombers (72 + 12). Navweaps gives 27 / 27 / 18 per carrier. Different quantities (design against wartime), not a contradiction, but the fighter and torpedo bomber numbers are reversed between the two.
+- VMF-223 on 24 Aug: 13 in navweaps (squadron name blank on the page, identified by its commander); 19 on 20 Aug in Shaw and Miller (earlier rows). Plausible with losses, but not confirmed by a source on 21 to 24 Aug.
+- Strike size from Henderson raid: Ryujo launched 6 B5N2 + 5 A6M2, then 9 A6M2 (combinedfleet Ryujo page); Hough, Ludwig and Shaw (https://www.ibiblio.org/hyperwar/USMC/I/USMC-I-VI-4.html, p.292) say 15 bombers and 12 fighters were intercepted.
+- Second strike, per carrier: the Zuikaku and Shokaku pages say Shokaku sent 9 dive bombers and 3 fighters and Zuikaku 18 and 6 (27 + 9); Kojinsha mentions only the first strike. Japanese Wikipedia has 27 dive bombers and 9 Zero in total, which agrees. The Shokaku page also says the first strike lost 18 dive bombers and 6 fighters, and later says Shokaku lost 10 dive bombers and 3 fighters; both appear on the page.
+
+Japanese tracks
+- Time Ryujo detached: 0000 (ja Wikipedia https://ja.wikipedia.org/wiki/第二次ソロモン海戦); 0145 (earlier Wikipedia en row); 0200 (combinedfleet Shokaku, Zuikaku pages); 0400 (combinedfleet Tone_t, Chikuma_t pages; USSBS chart mark 0400/24; earlier combinedfleet row); "dawn" (JM-98 p.15).
+- Time Ryujo's Guadalcanal strike left: 1030 (JM-98 p.15), 1120 (combinedfleet Ryujo), 1130 (ja Wikipedia).
+- First strike launch from Shokaku: 1250 (combinedfleet Shokaku), 1300 (JM-98, ja Wikipedia, combinedfleet Zuikaku for Zuikaku).
+- Ryujo capsized: about 1755 (combinedfleet Ryujo), 1800 (Jintsu page, JM-98, ja Wikipedia).
+- Convoy date left Truk: 16 Aug (combinedfleet Jintsu page, earlier row); 19 Aug (ja Wikipedia); USSBS Campaigns says it left Rabaul on 19 Aug (earlier row).
+- Convoy distance north of Guadalcanal on 23 Aug: 200 mi (combinedfleet Jintsu); 350 mi (JM-98 p.14, and the US accounts in Hough and Miller).
+- Convoy position on 25 Aug: 150 mi north at 0600 (Jintsu page, Hough); about 100 mi north at about 0700 Tokyo time (USSBS Nav 60, https://www.ibiblio.org/hyperwar/AAF/USSBS/IJO/IJO-60.html).
+- Ichiki echelon reached the Shortlands: night of 25 Aug (Jintsu page); 26 Aug (JM-98 p.16).
+- Carrier force departure: 16 Aug from Hashirajima at 1800 (Shokaku, Zuikaku, Tone, Chikuma pages); Hiei page says Yokosuka 18 Aug; Kirishima page says Kure via Yokosuka 16 Aug.
+- Kondo's Advance Force left Truk: 20 Aug (Atago page, ja Wikipedia, earlier row); 23 Aug (Chitose page, https://web.archive.org/web/2024/http://www.combinedfleet.com/chitose_t.htm).
+- Ryujo position on 23 Aug: 7 S 161 E (USSBS Nav 8, https://www.ibiblio.org/hyperwar/AAF/USSBS/IJO/IJO-8.html). The Japanese track chart (USSBS Appendix 41) has the Main Body near 4.7 S 161.6 E at 1625 on 23 Aug and Ryujo not south of about 4.7 S before the 24th. About 140 nm apart.
+- Chart clock: the chart's Ryujo mark at 1200/24 (about 6.0 S 161.3 E) is 2 to 4 hours before the Saratoga group's report of Ryujo at 06-30 S 160-45 E at 1606 US clock (1406 Tokyo). Either the chart marks are noon positions rather than event times, or the chart clock differs. The chart does not state its clock.
+- Time zone: combinedfleet's Tone and Chikuma pages give 1550 and 1642 for the Ryujo and Enterprise attacks, which match neither Tokyo time (about 1406 and 1441) nor local time (1606 and 1711) exactly; the Ryujo page times for the strike match Tokyo time.
+
+## Eastern Solomons, fifth pass: aircraft protection and strike results
+
+- **SBD-3 start date of armour and self-sealing tanks.** NHHC says by spring 1941 (https://web.archive.org/web/2023/https://www.history.navy.mil/content/history/museums/nnam/explore/collections/aircraft/s/sbd-dauntless-buno-2106.html); Wikipedia says early 1941 (https://en.wikipedia.org/wiki/Douglas_SBD_Dauntless); historyofwar.org says the SBD-3 appeared in early 1942 (https://www.historyofwar.org/articles/weapons_SBD_Dauntless.html).
+- **F4F-4 empty weight.** Grumman estimate 5,778.9 lb (http://www.wwiiaircraftperformance.org/f4f/f4f-4-detail-specification.pdf); Navy chart July 1943 actual 5,895 lb (http://www.wwiiaircraftperformance.org/f4f/f4f-4.pdf); aero-web 5,758 lb; earlier NHHC-based row 5,785 lb.
+- **F4F armour already in F4F-3?** The F4F-3 Grumman specification (Report 1469A) lists armour plate 155 lb and tank protection; Wikipedia says the F4F-3 was delivered without pilot armour and self-sealing tanks (https://en.wikipedia.org/wiki/Grumman_F4F_Wildcat). NHHC says they came 'later'.
+- **Zero construction.** Tactical and Technical Trends No. 19 calls it 'exceptionally sturdy' and 'intentionally designed for light construction' in the same text (http://wiki.lonesentry.com/articles/ttt07/japanese-fighter-aircraft.html); Intelligence Summary 85 and the 23rd Fighter Group report stress very light material.
+- **Zero empty weight.** Data plate on the Akutan Zero 1,715 kg (https://www.lonesentry.com/articles/ttt08/zero-fighter.html) against earlier 1,778 kg and 1,680 kg.
+- **TBF-1 empty weight.** aero-web 10,555 lb (https://aero-web.org/specs/grumman/tbf-1.htm) against historyofwar 10,080 lb (https://www.historyofwar.org/articles/weapons_grumman_TBF-1_Avenger.html).
+- **PBY self-sealing.** Wikipedia variant text 'partial self-sealing protection' for the PBY-5 against 'with self-sealing liner' in the PBY-5A table (https://en.wikipedia.org/wiki/Consolidated_PBY_Catalina).
+- **Saratoga strike on Ryujo, bomb hits.** ONI claims up to 6 (3 VB-3, 1 Felt, 2 VS-3), USSBS says the air group claimed 4; USSBS says the Japanese reported 10; combinedfleet says 4 (https://www.ibiblio.org/hyperwar/USN/USN-CN-ESols/USN-CN-ESolomons-4.html; https://www.ibiblio.org/hyperwar/AAF/USSBS/PTO-Campaigns/USSBS-PTO-7.html; http://web.archive.org/web/20260918113606/https://www.combinedfleet.com/ryujo.htm).
+- **US losses in that strike.** ONI: none; combinedfleet's Ryujo page: CAP shot down one TBF.
+- **Saratoga second group target.** ONI: a battleship (believed Mutsu), one hit and one possible; USSBS: Chitose reports two dive-bombers, hits; combinedfleet Chitose: a near miss of a 1,000-lb bomb.
+- **Size of Japanese first wave on Enterprise.** ONI estimate 75 planes, about 30 dive bombers, 12 torpedo planes; Enterprise report 20 to 40 dive bombers, about 30; Japanese records 27 D3A and 10 A6M, no torpedo planes.
+- **Japanese dive-bomber loss, first wave.** combinedfleet 18; Kojinsha figures sum to 19 (Shokaku 10 + Zuikaku 9).
+- **Fighter claims against Japanese records.** VF-5 and VF-6 claimed 43 in the fleet action, more Zeros and torpedo planes than the Japanese records show present.
+- **AA claims.** Enterprise report 24 (Enterprise 15, North Carolina 6, Portland 2, Atlanta 1); ONI per-ship list sums to 27.
+- **Marine night attack on destroyers.** ONI: hits on one destroyer, possibly sunk; USSBS: not damaged.
+- **25 Aug Marine strike size.** ONI 8 SBD, USSBS 12, combinedfleet 6.
+- **B-17 hits on 25 Aug.** ONI: one ship broke in two; USSBS: three hits on Mutsuki; combinedfleet: one direct hit.
+- **Enterprise bombs on targets.** ONI itemises 8 five-hundred-pound bombs by the search planes; the Enterprise report says 10.
+
+## Settled by Amit on 2026-11-11
+
+The facts scenario 5 needs for Eastern Solomons were settled in one pass from `eastern-solomons-settlement.md`: displacement, speed and aircraft capacity of the carriers and escorts; endurance and fuel as matched pairs; anti-aircraft guns and radar for the ships with sources; aircraft speeds and ranges; two air strengths. Three Savo Island classes settled on 2026-11-10 were moved to matched full-load pairs, because the earlier New Orleans pair mixed two fuel conditions. Each settled row says so in its note.

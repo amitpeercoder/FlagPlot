@@ -27,3 +27,6 @@ id,key,name,nation,kind
 1023,jp-binocular-12cm,12 cm (120 mm) large binocular,jp,night_binocular
 1024,jp-binocular-15cm,15 cm (150 mm) large binocular,jp,night_binocular
 1025,jp-binocular-18cm,"18 cm large binocular (listed as shipped to the US, role not stated)",jp,night_binocular
+1026,us-air-search-radar-type-unstated,"US air search radar, set type not stated by the source",us,air_search_radar
+1027,us-fire-control-radar-type-unstated,"US fire control radar, set type not stated by the source",us,fire_control_radar
+1028,uk-type286-radar,British Type 286 air warning radar (as named by Navypedia for HMAS Australia),uk,air_search_radar
