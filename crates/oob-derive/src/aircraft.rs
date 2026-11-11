@@ -31,13 +31,14 @@ const ARMOUR: usize = 6;
 const TANKS: usize = 7;
 
 /// The facts role of a type, mapped to a simulation role (decision 0029, 9).
-const ROLE_FOR_FACTS_ROLE: [(&str, &str); 7] = [
+const ROLE_FOR_FACTS_ROLE: [(&str, &str); 8] = [
     ("fighter", "fighter"),
     ("dive_bomber", "bomber"),
     ("torpedo_bomber", "bomber"),
     ("heavy_bomber", "bomber"),
     ("land_attack_bomber", "bomber"),
     ("patrol_flying_boat", "patrol"),
+    ("floatplane_reconnaissance", "patrol"),
     ("patrol_amphibian", "patrol"),
 ];
 
@@ -405,7 +406,7 @@ impl Env<'_> {
                 };
                 figs[ROLE] = Some(figure(
                     role,
-                    "role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",
+                    "role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",
                     got,
                 ));
             }

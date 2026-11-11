@@ -1,0 +1,71 @@
+Scenario 5: Eastern Solomons, 24 August 1942
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash c0d1371d2e798973  155 events
+
+task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-10), last noticed sighted at D1 12:00; readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "VF-6" (Allied) aboard ship:1: 25 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:2 "VB-6" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
+air_group:3 "VS-5" (Allied) aboard ship:1: 16 ready, mission Search, arc 290-090 to 200 nm
+air_group:4 "VT-3" (Allied) aboard ship:1: 14 ready, mission NavalStrike, no arc
+air_group:5 "VF-5" (Allied) aboard ship:11: 27 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:6 "VB-3" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:7 "VS-3" (Allied) aboard ship:11: 15 ready, mission NavalStrike, no arc
+air_group:8 "VT-8" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:9 "VMF-223" (Allied) at base:1: 13 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:10 "VMSB-232" (Allied) at base:1: 11 ready, mission NavalStrike, no arc
+air_group:11 "Shokaku fighter unit" (Japanese) aboard ship:19: 24 ready, mission CombatAirPatrol, patrol share 0.8, no arc
+air_group:12 "Shokaku bomber unit" (Japanese) aboard ship:19: 7 ready, mission NavalStrike, no arc
+air_group:13 "Shokaku attack unit" (Japanese) aboard ship:19: 18 ready, mission NavalStrike, no arc
+air_group:14 "Zuikaku fighter unit" (Japanese) aboard ship:20: 24 ready, mission CombatAirPatrol, patrol share 0.8, no arc
+air_group:15 "Zuikaku bomber unit" (Japanese) aboard ship:20: 6 ready, mission NavalStrike, no arc
+air_group:16 "Zuikaku attack unit" (Japanese) aboard ship:20: 18 ready, mission NavalStrike, no arc
+air_group:17 "Chikuma floatplanes" (Japanese) aboard ship:21: 5 ready, mission Search, arc 110-200 to 253 nm
+air_group:18 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.3, no arc
+air_group:19 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission NavalStrike, no arc
+air_group:20 "Tone floatplanes" (Japanese) aboard ship:34: 5 ready, mission Search, arc 110-200 to 253 nm
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 10.521884, fire 0; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
+ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
+ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
+ship:5 "USS Balch": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
+ship:6 "USS Benham": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:7 "USS Ellet": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:8 "USS Maury": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 525 t of fuel, 0 t of supply
+ship:9 "USS Grayson": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 467 t of fuel, 0 t of supply
+ship:10 "USS Monssen": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 467 t of fuel, 0 t of supply
+ship:11 "USS Saratoga": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 8400 t of fuel, 0 t of supply
+ship:12 "USS New Orleans": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:13 "USS Minneapolis": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:14 "USS Farragut": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:15 "USS Macdonough": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:16 "USS Worden": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:17 "USS Dale": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:18 "USS Phelps": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
+ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
+ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
+ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2582.4 t of fuel, 0 t of supply
+ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
+ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
+ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
+ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
+ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1173.685431 t of fuel, 0 t of supply
+ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
+ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
+ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
+Allied contact:1 at (7,-10): 4 ships, battleship, age 0 pulses, confidence 0.8
+Allied: no battle claims
+Japanese contact:1 at (7,-5): 10 ships, carrier, age 0 pulses, confidence 0.8
+Japanese: no battle claims

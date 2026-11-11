@@ -462,14 +462,14 @@ agreed = "2026-11-11"
 entity = "us-torpedo-mk13"
 fact = "warhead_kg"
 row = 381
-reason = "183 kg, about 400 lb: the early warhead. The 272 kg figure is the later, heavier one."
+reason = "183 kg, about 400 lb. The Navy pamphlet on the torpedo, dated 27 August 1942 (row 434, 181.4 kg), gives the Mark 13 and Mark 13-1 a 400 lb charge; the 600 lb head is a later model. Row 434 is dated to one day after the battle, so this row is read for the same charge."
 agreed = "2026-11-11"
 
 [[exception]]
 entity = "jp-torpedo-type91"
 fact = "warhead_kg"
-row = 226
-reason = "205 kg: the warhead of the model in service through 1942. The 235 and 240 kg figures are later models."
+row = 455
+reason = "204.1 kg: Modification 2, dated 1941 by the US Naval Technical Mission report. Modification 3, 240 kg, is dated 1942 with no month, and the report says carrier aircraft used the lighter heads. Which the carriers held in August 1942 is not sourced; the older model is read."
 agreed = "2026-11-11"
 
 [[exception]]
@@ -512,4 +512,25 @@ entity = "ryujo"
 fact = "light_aa"
 row = 468
 reason = "The second source for row 467's 22 guns."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "e13a1"
+fact = "range_normal_nm"
+row = 494
+reason = "760 miles on normal fuel, from the US intelligence data sheet of December 1944. The 1,128 of the other row matches no condition on the sheet and is probably a maximum-fuel figure."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "e13a1"
+fact = "pilot_armour"
+row = 498
+reason = "No: the same data sheet, in a hedged sentence. Nothing read says otherwise."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "e13a1"
+fact = "self_sealing_tanks"
+row = 499
+reason = "No: the same data sheet."
 agreed = "2026-11-11"

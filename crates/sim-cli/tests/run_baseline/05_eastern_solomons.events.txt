@@ -1,0 +1,227 @@
+Scenario 5: Eastern Solomons, 24 August 1942
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash c0d1371d2e798973  155 events
+
+#1 D1 -         order:1 accepted for air_group:1  <- order:1
+#2 D1 -         order:2 accepted for air_group:5  <- order:2
+#3 D1 -         order:3 accepted for air_group:9  <- order:3
+#4 D1 -         order:4 accepted for air_group:3  <- order:4
+#5 D1 -         order:5 accepted for air_group:3  <- order:5
+#6 D1 -         order:6 accepted for air_group:2  <- order:6
+#7 D1 -         order:7 accepted for air_group:4  <- order:7
+#8 D1 -         order:8 accepted for air_group:6  <- order:8
+#9 D1 -         order:9 accepted for air_group:7  <- order:9
+#10 D1 -         order:10 accepted for air_group:8  <- order:10
+#11 D1 -         order:11 accepted for air_group:10  <- order:11
+#12 D1 -         order:12 accepted for task_force:3  <- order:12
+#13 D1 -         order:13 accepted for task_force:3  <- order:13
+#14 D1 -         order:14 accepted for task_force:4  <- order:14
+#15 D1 -         order:15 accepted for task_force:4  <- order:15
+#16 D1 -         order:16 accepted for air_group:11  <- order:16
+#17 D1 -         order:17 accepted for air_group:11  <- order:17
+#18 D1 -         order:18 accepted for air_group:14  <- order:18
+#19 D1 -         order:19 accepted for air_group:14  <- order:19
+#20 D1 -         order:20 accepted for air_group:18  <- order:20
+#21 D1 -         order:21 accepted for air_group:18  <- order:21
+#22 D1 -         order:22 accepted for air_group:17  <- order:22
+#23 D1 -         order:23 accepted for air_group:17  <- order:23
+#24 D1 -         order:24 accepted for air_group:20  <- order:24
+#25 D1 -         order:25 accepted for air_group:20  <- order:25
+#26 D1 -         order:26 accepted for air_group:12  <- order:26
+#27 D1 -         order:27 accepted for air_group:13  <- order:27
+#28 D1 -         order:28 accepted for air_group:15  <- order:28
+#29 D1 -         order:29 accepted for air_group:16  <- order:29
+#30 D1 -         order:30 accepted for air_group:19  <- order:30
+#31 D1 night     task_force:3 steamed 204 nm at 17 kn from (9,-19) to (8,-14)  <- order:12, order:13
+#32 D1 night     ship:19 burned 86.226804 t, 4013.773196 t remaining  <- #31
+#33 D1 night     ship:20 burned 86.226804 t, 4013.773196 t remaining  <- #31
+#34 D1 night     ship:21 burned 68.595 t, 2621.405 t remaining  <- #31
+#35 D1 night     ship:22 burned 129.132 t, 6200.868 t remaining  <- #31
+#36 D1 night     ship:23 burned 129.132 t, 6200.868 t remaining  <- #31
+#37 D1 night     ship:24 burned 61.415352 t, 2248.584648 t remaining  <- #31
+#38 D1 night     ship:25 burned 61.415352 t, 2248.584648 t remaining  <- #31
+#39 D1 night     ship:26 burned 55.025538 t, 1204.974462 t remaining  <- #31
+#40 D1 night     ship:27 burned 20.4 t, 479.6 t remaining  <- #31
+#41 D1 night     ship:28 burned 20.4 t, 479.6 t remaining  <- #31
+#42 D1 night     ship:29 burned 20.4 t, 479.6 t remaining  <- #31
+#43 D1 night     ship:30 burned 20.4 t, 479.6 t remaining  <- #31
+#44 D1 night     ship:31 burned 24.109909 t, 1046.890091 t remaining  <- #31
+#45 D1 night     ship:32 burned 20.4 t, 479.6 t remaining  <- #31
+#46 D1 night     task_force:4 steamed 240 nm at 20 kn from (10,-19) to (7,-13)  <- order:14, order:15
+#47 D1 night     ship:33 burned 121.959104 t, 2368.040896 t remaining  <- #46
+#48 D1 night     ship:34 burned 99.629556 t, 2590.370444 t remaining  <- #46
+#49 D1 night     ship:35 burned 29.629608 t, 470.370392 t remaining  <- #46
+#50 D1 night     ship:36 burned 29.629608 t, 470.370392 t remaining  <- #46
+#51 D1 morning   air_group:3 searched 290-090 out to 200 nm from ship:1 at (7,-5) with 16 aircraft  <- order:4, order:5
+#52 D1 morning   air_group:17 searched 110-200 out to 253 nm from ship:21 at (8,-14) with 5 aircraft  <- order:22, order:23
+#53 D1 morning   air_group:20 searched 110-200 out to 253 nm from ship:34 at (7,-13) with 5 aircraft  <- order:24, order:25
+#54 D1 morning   task_force:3 steamed 102 nm at 17 kn from (8,-14) to (8,-11)  <- order:12, order:13
+#55 D1 morning   ship:19 burned 43.113402 t, 3970.659794 t remaining  <- #54
+#56 D1 morning   ship:20 burned 43.113402 t, 3970.659794 t remaining  <- #54
+#57 D1 morning   ship:21 burned 34.2975 t, 2587.1075 t remaining  <- #54
+#58 D1 morning   ship:22 burned 64.566 t, 6136.302 t remaining  <- #54
+#59 D1 morning   ship:23 burned 64.566 t, 6136.302 t remaining  <- #54
+#60 D1 morning   ship:24 burned 30.707676 t, 2217.876972 t remaining  <- #54
+#61 D1 morning   ship:25 burned 30.707676 t, 2217.876972 t remaining  <- #54
+#62 D1 morning   ship:26 burned 27.512769 t, 1177.461693 t remaining  <- #54
+#63 D1 morning   ship:27 burned 10.2 t, 469.4 t remaining  <- #54
+#64 D1 morning   ship:28 burned 10.2 t, 469.4 t remaining  <- #54
+#65 D1 morning   ship:29 burned 10.2 t, 469.4 t remaining  <- #54
+#66 D1 morning   ship:30 burned 10.2 t, 469.4 t remaining  <- #54
+#67 D1 morning   ship:31 burned 12.054954 t, 1034.835137 t remaining  <- #54
+#68 D1 morning   ship:32 burned 10.2 t, 469.4 t remaining  <- #54
+#69 D1 morning   task_force:4 steamed 120 nm at 20 kn from (7,-13) to (7,-10)  <- order:14, order:15
+#70 D1 morning   ship:33 burned 60.979552 t, 2307.061344 t remaining  <- #69
+#71 D1 morning   ship:34 burned 49.814778 t, 2540.555666 t remaining  <- #69
+#72 D1 morning   ship:35 burned 14.814804 t, 455.555588 t remaining  <- #69
+#73 D1 morning   ship:36 burned 14.814804 t, 455.555588 t remaining  <- #69
+#74 D1 morning   task_force:4 arrived at (7,-10) at D1 12:00  <- #69
+#75 D1 afternoon air_group:3 searched 290-090 out to 200 nm from ship:1 at (7,-5) with 16 aircraft  <- order:4, order:5
+#76 D1 afternoon air_group:3 searched for task_force:4 at 200 nm, chance 0.572957: sighted  <- #75
+#77 D1 afternoon Allied report: 4 ships, carrier, at (7,-10), confidence 0.8: new contact:1  <- #76
+#78 D1 afternoon task_force:4 noticed it was sighted by air_group:3 at D1 12:00  <- #76
+#79 D1 afternoon air_group:17 searched 110-200 out to 253 nm from ship:21 at (8,-11) with 5 aircraft  <- order:22, order:23
+#80 D1 afternoon air_group:17 searched for task_force:1 at 240 nm, chance 0.265258: not sighted  <- #79
+#81 D1 afternoon air_group:17 searched for task_force:2 at 240 nm, chance 0.265258: sighted  <- #79
+#82 D1 afternoon Japanese report: 9 ships, transport, at (7,-5), confidence 0.8: new contact:1  <- #81
+#83 D1 afternoon air_group:20 searched 110-200 out to 253 nm from ship:34 at (7,-10) with 5 aircraft  <- order:24, order:25
+#84 D1 afternoon air_group:20 searched for task_force:1 at 200 nm, chance 0.318309: not sighted  <- #83
+#85 D1 afternoon air_group:20 searched for task_force:2 at 200 nm, chance 0.318309: not sighted  <- #83
+#86 D1 afternoon air_group:2 launched 17 aircraft at contact:1 at (7,-10), 200 nm  <- order:6, #77
+#87 D1 afternoon air_group:6 launched 15 aircraft at contact:1 at (7,-10), 200 nm  <- order:8, #77
+#88 D1 afternoon air_group:7 launched 15 aircraft at contact:1 at (7,-10), 200 nm  <- order:9, #77
+#89 D1 afternoon air_group:12 launched 27 aircraft at contact:1 at (7,-5), 240 nm  <- order:26, #82
+#90 D1 afternoon air_group:15 launched 27 aircraft at contact:1 at (7,-5), 240 nm  <- order:28, #82
+#91 D1 afternoon air_group:18 patrol at the bombers of air_group:2: 6 shots x 0.16875 = 1.0125 expected, 1 hit  <- #86
+#92 D1 afternoon task_force:4 guns at the raid of air_group:2: 26 shots x 0.028125 = 0.73125 expected, 0 hits  <- #86
+#93 D1 afternoon air_group:2 lost 1 aircraft, 16 left  <- #91
+#94 D1 afternoon air_group:18 patrol at the bombers of air_group:6: 6 shots x 0.16875 = 1.0125 expected, 1 hit  <- #87
+#95 D1 afternoon task_force:4 guns at the raid of air_group:6: 26 shots x 0.028125 = 0.73125 expected, 1 hit  <- #87
+#96 D1 afternoon air_group:6 lost 1 aircraft, 14 left  <- #94
+#97 D1 afternoon air_group:6 lost 1 aircraft, 13 left  <- #95
+#98 D1 afternoon air_group:11 sent 6 escorts with air_group:12  <- order:16, order:17, #89
+#99 D1 afternoon air_group:11 escorts at the patrol of air_group:1: 6 shots x 0.16875 = 1.0125 expected, 1 hit  <- #89, #98
+#100 D1 afternoon air_group:1 patrol at the escorts of air_group:11: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #89, #98
+#101 D1 afternoon air_group:1 patrol at the bombers of air_group:12: 48 shots x 0.3 = 14.4 expected, 14 hits  <- #89
+#102 D1 afternoon task_force:1 guns at the raid of air_group:12: 123 shots x 0.05 = 6.15 expected, 6 hits  <- #89
+#103 D1 afternoon air_group:1 lost 1 aircraft, 26 left  <- #99
+#104 D1 afternoon air_group:11 lost 2 aircraft, 24 left  <- #100
+#105 D1 afternoon air_group:12 lost 14 aircraft, 13 left  <- #101
+#106 D1 afternoon air_group:12 lost 6 aircraft, 7 left  <- #102
+#107 D1 afternoon air_group:14 sent 5 escorts with air_group:15  <- order:18, order:19, #90
+#108 D1 afternoon air_group:14 escorts at the patrol of air_group:1: 5 shots x 0.16875 = 0.84375 expected, 1 hit  <- #90, #107
+#109 D1 afternoon air_group:1 patrol at the escorts of air_group:14: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #90, #107
+#110 D1 afternoon air_group:1 patrol at the bombers of air_group:15: 49 shots x 0.3 = 14.7 expected, 15 hits  <- #90
+#111 D1 afternoon task_force:1 guns at the raid of air_group:15: 123 shots x 0.05 = 6.15 expected, 6 hits  <- #90
+#112 D1 afternoon air_group:1 lost 1 aircraft, 25 left  <- #108
+#113 D1 afternoon air_group:14 lost 1 aircraft, 24 left  <- #109
+#114 D1 afternoon air_group:15 lost 15 aircraft, 12 left  <- #110
+#115 D1 afternoon air_group:15 lost 6 aircraft, 6 left  <- #111
+#116 D1 afternoon air_group:2 bombs at ship:33: 16 shots x 0.2 = 3.2 expected, 4 hits  <- #86, #93
+#117 D1 afternoon air_group:6 bombs at ship:33: 13 shots x 0.2 = 2.6 expected, 3 hits  <- #87, #96, #97
+#118 D1 afternoon air_group:7 bombs at ship:33: 15 shots x 0.2 = 3 expected, 3 hits  <- #88
+#119 D1 afternoon air_group:12 bombs at ship:1: 7 shots x 0.2 = 1.4 expected, 1 hit  <- #89, #105, #106
+#120 D1 afternoon air_group:15 bombs at ship:1: 6 shots x 0.2 = 1.2 expected, 1 hit  <- #90, #114, #115
+#121 D1 afternoon ship:33 took 4 hits on flotation, 71.320752 points, now 71.320752  <- #116
+#122 D1 afternoon ship:33 flight deck hit, working -> degraded  <- #116
+#123 D1 afternoon ship:33 fire control hit, no change, still working  <- #116
+#124 D1 afternoon Allied report: 3 ships, carrier, at (7,-10), confidence 0.8: refreshed contact:1  <- #116
+#125 D1 afternoon ship:33 took 2 hits on flotation, 35.660376 points, now 100  <- #117
+#126 D1 afternoon ship:33 of task_force:4 sank  <- #125
+#127 D1 afternoon air_group:18 lost with ship:33: 23 aircraft  <- #126
+#128 D1 afternoon air_group:19 lost with ship:33: 6 aircraft  <- #126
+#129 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #117
+#130 D1 afternoon ship:33 flight deck hit, degraded -> out  <- #117
+#131 D1 afternoon Allied report: 4 ships, carrier, at (8,-10), confidence 0.8: refreshed contact:1  <- #117
+#132 D1 afternoon ship:33 took 2 hits on flotation, 35.660376 points, now 100  <- #118
+#133 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #118
+#134 D1 afternoon ship:33 flight deck hit, no change, still out  <- #118
+#135 D1 afternoon Allied report: 4 ships, battleship, at (7,-10), confidence 0.8: refreshed contact:1  <- #118
+#136 D1 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 5.260942  <- #119
+#137 D1 afternoon Japanese report: 10 ships, carrier, at (7,-4), confidence 0.8: refreshed contact:1  <- #119
+#138 D1 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 10.521884  <- #120
+#139 D1 afternoon Japanese report: 10 ships, carrier, at (7,-5), confidence 0.8: refreshed contact:1  <- #120
+#140 D1 afternoon task_force:3 steamed 14 nm at 17 kn from (8,-11) to (8,-11)  <- order:12, order:13
+#141 D1 afternoon ship:19 burned 5.917525 t, 3964.742269 t remaining  <- #140
+#142 D1 afternoon ship:20 burned 5.917525 t, 3964.742269 t remaining  <- #140
+#143 D1 afternoon ship:21 burned 4.7075 t, 2582.4 t remaining  <- #140
+#144 D1 afternoon ship:22 burned 8.862 t, 6127.44 t remaining  <- #140
+#145 D1 afternoon ship:23 burned 8.862 t, 6127.44 t remaining  <- #140
+#146 D1 afternoon ship:24 burned 4.214779 t, 2213.662193 t remaining  <- #140
+#147 D1 afternoon ship:25 burned 4.214779 t, 2213.662193 t remaining  <- #140
+#148 D1 afternoon ship:26 burned 3.776262 t, 1173.685431 t remaining  <- #140
+#149 D1 afternoon ship:27 burned 1.4 t, 468 t remaining  <- #140
+#150 D1 afternoon ship:28 burned 1.4 t, 468 t remaining  <- #140
+#151 D1 afternoon ship:29 burned 1.4 t, 468 t remaining  <- #140
+#152 D1 afternoon ship:30 burned 1.4 t, 468 t remaining  <- #140
+#153 D1 afternoon ship:31 burned 1.654601 t, 1033.180536 t remaining  <- #140
+#154 D1 afternoon ship:32 burned 1.4 t, 468 t remaining  <- #140
+#155 D1 afternoon task_force:3 arrived at (8,-11) at D1 12:49  <- #140
+
+task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-10), last noticed sighted at D1 12:00; readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "VF-6" (Allied) aboard ship:1: 25 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:2 "VB-6" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
+air_group:3 "VS-5" (Allied) aboard ship:1: 16 ready, mission Search, arc 290-090 to 200 nm
+air_group:4 "VT-3" (Allied) aboard ship:1: 14 ready, mission NavalStrike, no arc
+air_group:5 "VF-5" (Allied) aboard ship:11: 27 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:6 "VB-3" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:7 "VS-3" (Allied) aboard ship:11: 15 ready, mission NavalStrike, no arc
+air_group:8 "VT-8" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:9 "VMF-223" (Allied) at base:1: 13 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:10 "VMSB-232" (Allied) at base:1: 11 ready, mission NavalStrike, no arc
+air_group:11 "Shokaku fighter unit" (Japanese) aboard ship:19: 24 ready, mission CombatAirPatrol, patrol share 0.8, no arc
+air_group:12 "Shokaku bomber unit" (Japanese) aboard ship:19: 7 ready, mission NavalStrike, no arc
+air_group:13 "Shokaku attack unit" (Japanese) aboard ship:19: 18 ready, mission NavalStrike, no arc
+air_group:14 "Zuikaku fighter unit" (Japanese) aboard ship:20: 24 ready, mission CombatAirPatrol, patrol share 0.8, no arc
+air_group:15 "Zuikaku bomber unit" (Japanese) aboard ship:20: 6 ready, mission NavalStrike, no arc
+air_group:16 "Zuikaku attack unit" (Japanese) aboard ship:20: 18 ready, mission NavalStrike, no arc
+air_group:17 "Chikuma floatplanes" (Japanese) aboard ship:21: 5 ready, mission Search, arc 110-200 to 253 nm
+air_group:18 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.3, no arc
+air_group:19 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission NavalStrike, no arc
+air_group:20 "Tone floatplanes" (Japanese) aboard ship:34: 5 ready, mission Search, arc 110-200 to 253 nm
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 10.521884, fire 0; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
+ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
+ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
+ship:5 "USS Balch": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
+ship:6 "USS Benham": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:7 "USS Ellet": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:8 "USS Maury": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 525 t of fuel, 0 t of supply
+ship:9 "USS Grayson": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 467 t of fuel, 0 t of supply
+ship:10 "USS Monssen": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 467 t of fuel, 0 t of supply
+ship:11 "USS Saratoga": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 8400 t of fuel, 0 t of supply
+ship:12 "USS New Orleans": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:13 "USS Minneapolis": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:14 "USS Farragut": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:15 "USS Macdonough": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:16 "USS Worden": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:17 "USS Dale": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:18 "USS Phelps": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
+ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
+ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
+ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2582.4 t of fuel, 0 t of supply
+ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
+ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
+ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
+ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
+ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1173.685431 t of fuel, 0 t of supply
+ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
+ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:33 "Ryujo": SUNK; damage flotation 100, fire 35.660376; flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
+ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
+Allied contact:1 at (7,-10): 4 ships, battleship, age 0 pulses, confidence 0.8
+Allied: no battle claims
+Japanese contact:1 at (7,-5): 10 ships, carrier, age 0 pulses, confidence 0.8
+Japanese: no battle claims
