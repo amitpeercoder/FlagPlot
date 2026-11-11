@@ -4,6 +4,8 @@ Status: **proposed.** Written by Claude on 2026-11-11 for Amit to approve. Nothi
 
 **What scenario 5 needs.** The carrier duel of 24 to 25 August 1942: the ships of both carrier forces, the aircraft that flew, how many aircraft each side had, and where the forces were. This sheet covers, in the order the architect asked for them: what was found and how firm it is, what is disputed and my recommendation, and what was not found.
 
+**Reviewed by the architect on 2026-11-11.** Two faults in the first draft are corrected here: several US endurance recommendations did not follow the sheet's own policy, and endurance and fuel were chosen separately when they have to be a matched pair. Section 1a now gives them as pairs. The architect agrees with k1, k2 and k3 as recommended, and with moving the three Savo classes if Amit approves. The missing combat radius for the D3A1 and B5N2, and the choice of a measure of aircraft toughness, will be settled by a rule in stage 5e and not on this sheet.
+
 **How to read it.** `id` is a row number in the file named at the head of each group. Grade is confidence: `h`, `m` or `l`, with `/i` where the row is an inference. "Sure" is **Fair**, **Coin-toss** or **Weak**. **Bulk** means the candidates lie within 3 per cent of each other, so the choice barely moves a game figure and the items can be approved together.
 
 **What a tick on this sheet means.** For each item, the recommended value becomes the one the derivation tool reads. Where the recommended row rests on a lone weak source it cannot be marked `preferred` under decision 0015; it stays `unconfirmed` and needs a written exception in the tool's rules file, as at Savo Island.
@@ -18,25 +20,23 @@ These are choices about kinds of figure. Each one settles many rows below at onc
 | k2 | Maximum speed for US ships | (a) Design speed. (b) The fuel tables' estimate at war-service weight, 2 to 4 knots lower | (a) | As at Savo Island. Japanese ships have only design or trial speeds, so (b) would handicap one side |
 | k3 | Aircraft capacity of a carrier | (a) The designed capacity. (b) What was embarked on 24 August | (a) as the class fact; (b) comes from the air group strengths in section 5 | The two answer different questions. The rule should fill the hangar from section 5, not from the design figure |
 
-**A correction to a Savo Island figure is offered, not made.** Reading the Navy's fuel tables again turned up a second table: radius with a normal "full load" of fuel, where the Savo rows used the table for tanks 95 per cent full. For three classes you settled on 2026-11-10, the full-load figures differ. They are in the data as `alternative` and your settled figures stand unless you say otherwise:
+**A correction to three Savo Island figures is offered, not made.** Reading the Navy's fuel tables again turned up their second table: radius with a normal full load of fuel, where the Savo rows used the table for tanks 95 per cent full, or a 12-knot line. Your settled figures stand in the data unless you say otherwise. Each row below gives the matched fuel figure as well:
 
-| Class | Settled for Savo | The full-load table | Row |
-| --- | --- | --- | --- |
-| New Orleans | 7,620 at 15 knots | 6,500 at 15 knots | 834 |
-| Bagley | 6,940 at 12 knots | 6,080 at 15 knots | 862 |
-| Benham | 5,390 at 12 knots | 4,860 at 15 knots | 869 |
+| Class | Settled for Savo | What is wrong with it | Offered instead: endurance and fuel, full load at 15 knots | Rows |
+| --- | --- | --- | --- | --- |
+| New Orleans | 7,620 at 15 kn, with 1,900 tons | The endurance is on 95% tanks (2,256 tons) and the fuel is the full load, so the pair understates her burn by 16% | 6,500 with 1,900 | 834, 712 |
+| Bagley | 6,940 at 12 kn, with fuel then disputed | A 12-knot figure where the other US ships are at 15 | 6,080 with 506 | 862, 864 |
+| Benham | 5,390 at 12 kn, with 484 tons | A 12-knot figure, and the fuel is from a different source | 4,860 with 491, both from 1944 data | 869, 728 |
 
-If k1 is approved as recommended, the consistent thing is to move these three to the full-load table at 15 knots as well. **Recommend: yes. Sure: fair.**
+**Recommend: move all three. Sure: fair.** The New Orleans case is an error in what I put to you on 2026-11-10, not a matter of taste.
 
 ## 1. Ship classes (`ship_class_facts.csv`)
 
-Seventy-four open items. The recommendation in each row follows one stated policy, so that it can be checked:
+Displacement, speed and aircraft capacity are in the tables of this section. **Endurance and fuel are in section 1a, as matched pairs.** The recommendation in each row follows one stated policy, so that it can be checked:
 
-- **Endurance and fuel, US classes:** the Navy's fuel tables (k1). Where the tables give two fuel conditions, the normal full load.
 - **Speed:** the design figure most sources give (k2). The fuel tables' estimate is listed and not chosen.
 - **Everything else:** the value given by the most sources that are not Wikipedia; on a tie, the better-graded source. For Japanese ships the order of trust is the Kojinsha volume and the US technical mission, then Navypedia and combinedfleet, then the Nishida pages, then Wikipedia.
 
-Cruise speed goes with the endurance row chosen and is not listed separately. Where a row says "at 10 kn" or "at 18 kn" the figure is not comparable with one at 15, and I say so below the tables.
 
 ### Carriers
 
@@ -46,8 +46,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 40000: 403 (uboat.net, m), 885 (Navypedia, m)<br>36000: 404 (Wikipedia, l), 879 (NavSource, m)<br>37681: 884 (Navypedia, m) | 40000 | Fair | 11% |
 | Speed | 33.25: 410 (Wikipedia, l), 880 (NavSource, m)<br>33: 409 (uboat.net, m)<br>31.2: 829 (Navy fuel tables, h; estimate at war-service weight)<br>33.2: 886 (Navypedia, m) | 33.25 | Bulk | 1% |
-| Endurance | 10000: 405 (Wikipedia, l; at 10 kn), 881 (NavSource, m; at 10 kn)<br>8210: 823 (Navy fuel tables, h; full load)<br>9490: 825 (Navy fuel tables, h; tanks 95% full, at 15 kn)<br>10500: 887 (Navypedia, m) | 8210 | Fair | 28% |
-| Fuel | 9748: 828 (Navy fuel tables, h; tanks 95% full), 889 (Navypedia, m)<br>6688: 407 (Wikipedia, l)<br>8400: 827 (Navy fuel tables, h; full load) | 9748 | Fair | 46% |
 | Aircraft capacity | 90: 395 (uboat.net, m), 396 (Wikipedia, l), 883 (NavSource, m)<br>63: 890 (Navypedia, l) | 90 | Fair | 43% |
 
 **us-yorktown-class** (Enterprise)
@@ -56,8 +54,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 19800: 560 (uboat.net, m), 561 (Wikipedia, l), 891 (cv6.org, m)<br>19875: 898 (Navypedia, m) | 19800 | Bulk | 0% |
 | Speed | 32.5: 566 (uboat.net, m), 567 (Wikipedia, l), 892 (cv6.org, m), 899 (Navypedia, m)<br>33.65: 893 (cv6.org, m) | 32.5 | Fair | 4% |
-| Endurance | 12000: 562 (Wikipedia, l; at 15 kn), 900 (Navypedia, m; at 15 kn)<br>10400: 894 (cv6.org, m; at 15 kn) | 12000 | Coin-toss | 15% |
-| Fuel | 4280: 564 (Wikipedia, l)<br>6500: 896 (cv6.org, m)<br>4360: 902 (Navypedia, m) | 6500 | Coin-toss | 52% |
 | Aircraft capacity | 90: 551 (uboat.net, m), 552 (Wikipedia, l)<br>96: 897 (cv6.org, m), 903 (Navypedia, m) | 96 | Fair | 7% |
 
 **jp-shokaku-class** (Shokaku, Zuikaku)
@@ -66,7 +62,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 25675: 732 (Navypedia, m), 733 (Kojinsha, m)<br>25270: 188 (Nishida, m) | 25675 | Bulk | 2% |
 | Speed | 34.2: 191 (Nishida, m), 740 (Navypedia, m)<br>34: 738 (Kojinsha, m)<br>34.4: 739 (Kojinsha, m)<br>34.5: 741 (Wikipedia, l) | 34.2 | Bulk | 1% |
-| Fuel | 4035: 189 (Nishida, m)<br>4100: 747 (Navypedia, m)<br>4900: 748 (Wikipedia, l) | 4100 | Coin-toss | 21% |
 
 **jp-ryujo-class** (Ryujo)
 
@@ -74,7 +69,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 10600: 752 (Navypedia, m), 753 (combinedfleet, m)<br>10433: 153 (Nishida, m)<br>10400: 754 (Wikipedia, l) | 10600 | Bulk | 2% |
 | Speed | 29: 156 (Nishida, m), 757 (Navypedia, m)<br>29.5: 758 (Wikipedia, l) | 29 | Bulk | 2% |
-| Fuel | 2451: 154 (Nishida, m)<br>2490: 763 (Navypedia, m) | 2490 | Bulk | 2% |
 
 ### US escorts, Task Forces 11 and 16
 
@@ -84,8 +78,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 36600: 453 (Wikipedia, l)<br>37484: 904 (Navypedia, m) | 37484 | Bulk | 2% |
 | Speed | 28: 459 (Wikipedia, l), 905 (Navypedia, m) | 28 | Fair |  |
-| Endurance | 17450: 455 (Wikipedia, l; at 15 kn), 906 (Navypedia, m; at 15 kn)<br>16320: 454 (Navy fuel tables, m; tanks 95% full, at 15 kn) | 16320 | Fair | 7% |
-| Fuel | 7554: 457 (Navy fuel tables, m; tanks 95% full)<br>6260: 908 (Navypedia, m) | 7554 | Fair | 21% |
 
 **us-atlanta-class** (Atlanta, San Juan)
 
@@ -93,8 +85,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 6718: 303 (Wikipedia, l)<br>6590: 909 (Navypedia, m)<br>6000: 914 (NavSource, m) | 6590 | Coin-toss | 12% |
 | Speed | 32.5: 307 (Wikipedia, l), 913 (Navypedia, m), 915 (NavSource, m) | 32.5 | Fair |  |
-| Endurance | 8500: 304 (Wikipedia, l; at 15 kn), 910 (Navypedia, m) | 8500 | Fair |  |
-| Fuel | 1360: 912 (Navypedia, m) | 1360 | Fair |  |
 
 **us-portland-class** (Portland)
 
@@ -102,16 +92,12 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 9950: 504 (uboat.net, m), 506 (Wikipedia, l), 922 (NavSource, m)<br>10096: 505 (Wikipedia, l)<br>10258: 916 (Navypedia, m) | 9950 | Fair | 3% |
 | Speed | 32.5: 513 (uboat.net, m), 917 (Navypedia, m)<br>32.7: 514 (Wikipedia, l), 923 (NavSource, m)<br>30.8: 841 (Navy fuel tables, h; estimate at war-service weight) | 32.5 | Bulk | 1% |
-| Endurance | 7210: 507 (Navy fuel tables, m; tanks 95% full, at 20 kn)<br>8640: 836 (Navy fuel tables, h; full load, at 15 kn)<br>9790: 838 (Navy fuel tables, h; tanks 95% full, at 15 kn)<br>10000: 918 (Navypedia, m; at 15 kn) | 7210 | Fair | 39% |
-| Fuel | 3061: 509 (Navy fuel tables, m; tanks 95% full)<br>1500: 510 (Wikipedia, l)<br>2614: 840 (Navy fuel tables, h; tanks 95% full)<br>2125: 920 (Navypedia, m) | 3061 | Fair | 104% |
 
 **uk-leander-modified-class** (Hobart)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 6830: 286 (uboat.net, m)<br>7003: 287 (Wikipedia, l)<br>7270: 288 (Wikipedia, l)<br>7105: 972 (Navypedia, m) | 6830 | Coin-toss | 6% |
-| Endurance | 5730: 289 (Wikipedia, l; at 13 kn)<br>7000: 974 (Navypedia, m) | 7000 | Coin-toss | 22% |
-| Fuel | 1837: 976 (Navypedia, m) | 1837 | Fair |  |
 
 **us-farragut-class** (Farragut, Dewey, MacDonough, Worden, Dale)
 
@@ -119,8 +105,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 1365: 351 (Wikipedia, l), 928 (NavSource, m)<br>1395: 350 (uboat.net, m)<br>1358: 932 (Navypedia, m) | 1365 | Bulk | 3% |
 | Speed | 36.5: 929 (NavSource, m), 933 (Navypedia, m)<br>36: 358 (uboat.net, m)<br>37: 359 (Wikipedia, l)<br>31.6: 849 (Navy fuel tables, h; estimate at war-service weight) | 36.5 | Bulk | 3% |
-| Endurance | 5980: 352 (Navy fuel tables, m; tanks 95% full, at 12 kn), 353 (Wikipedia, l; at 12 kn)<br>6500: 930 (NavSource, m; at 12 kn), 934 (Navypedia, m)<br>5240: 846 (Navy fuel tables, h; tanks 95% full, at 15 kn) | 5980 | Fair | 24% |
-| Fuel | 608: 355 (Navy fuel tables, m; tanks 95% full)<br>607: 848 (Navy fuel tables, h; tanks 95% full)<br>600: 936 (Navypedia, m) | 608 | Bulk | 1% |
 
 **us-porter-class** (Selfridge, Phelps, Balch)
 
@@ -128,8 +112,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 1825: 483 (uboat.net, m)<br>1850: 484 (Wikipedia, l)<br>1834: 940 (Navypedia, m) | 1825 | Bulk | 1% |
 | Speed | 37: 491 (uboat.net, m), 492 (Wikipedia, l), 937 (NavSource, m), 941 (Navypedia, m)<br>33.5: 853 (Navy fuel tables, h; estimate at war-service weight)<br>33.8: 857 (Navy fuel tables, h; estimate at war-service weight) | 37 | Bulk |  |
-| Endurance | 6380: 485 (Navy fuel tables, m; tanks 95% full, at 12 kn), 486 (Wikipedia, l; at 12 kn)<br>6500: 938 (NavSource, m; at 12 kn), 942 (Navypedia, m; at 12 kn)<br>5670: 850 (Navy fuel tables, h; tanks 95% full, at 15 kn)<br>5620: 854 (Navy fuel tables, h; tanks 95% full, at 15 kn) | 6380 | Fair | 16% |
-| Fuel | 651: 852 (Navy fuel tables, h; tanks 95% full), 856 (Navy fuel tables, h; tanks 95% full)<br>675: 488 (Navy fuel tables, m; tanks 95% full)<br>635: 944 (Navypedia, m) | 651 | Fair | 6% |
 
 **us-gleaves-class** (Grayson, Monssen, Aaron Ward, Buchanan, Farenholt)
 
@@ -137,8 +119,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 1620: 366 (uboat.net, m)<br>1630: 367 (Wikipedia, l)<br>1838: 963 (Navypedia, m) | 1620 | Coin-toss | 13% |
 | Speed | 35: 964 (Navypedia, m), 968 (NavSource, m)<br>37: 374 (uboat.net, m)<br>37.4: 375 (Wikipedia, l)<br>31.9: 878 (Navy fuel tables, h; estimate at war-service weight) | 35 | Fair | 7% |
-| Endurance | 6500: 369 (Wikipedia, l; at 12 kn), 969 (NavSource, m; at 12 kn)<br>5250: 368 (Navy fuel tables, m; tanks 95% full, at 12 kn)<br>4730: 875 (Navy fuel tables, h; tanks 95% full, at 15 kn)<br>3880: 965 (Navypedia, m) | 5250 | Fair | 68% |
-| Fuel | 503: 371 (Navy fuel tables, m; tanks 95% full)<br>467: 877 (Navy fuel tables, h; tanks 95% full)<br>453: 967 (Navypedia, m) | 503 | Fair | 11% |
 
 **us-benham-class** (Benham, Ellet, Lang, Stack, Sterett)
 
@@ -151,7 +131,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 1624: 625 (History of War, l), 315 (Wikipedia, l) | 1624 | Weak: one source |  |
-| Fuel | 544: 320 (Navy fuel tables, m; tanks 95% full)<br>506: 864 (Navy fuel tables, h; tanks 95% full)<br>504: 949 (Navypedia, m) | 544 | Fair | 8% |
 
 **us-gridley-class** (Maury)
 
@@ -159,8 +138,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 1590: 384 (Wikipedia, l), 950 (Navypedia, m)<br>1860: 383 (uboat.net, m) | 1590 | Coin-toss | 17% |
 | Speed | 38.5: 392 (Wikipedia, l), 951 (Navypedia, m), 955 (NavSource, m)<br>38.6: 391 (uboat.net, m)<br>35.2: 868 (Navy fuel tables, h; estimate at war-service weight) | 38.5 | Bulk | 0% |
-| Endurance | 5520: 385 (Navy fuel tables, m; tanks 95% full, at 12 kn), 386 (Wikipedia, l; at 12 kn)<br>6500: 952 (Navypedia, m), 956 (NavSource, m; at 12 kn)<br>4910: 865 (Navy fuel tables, h; tanks 95% full, at 15 kn) | 5520 | Fair | 32% |
-| Fuel | 525: 867 (Navy fuel tables, h; tanks 95% full), 954 (Navypedia, m)<br>563: 388 (Navy fuel tables, m; tanks 95% full) | 525 | Fair | 7% |
 
 ### Japanese carrier screen, Vanguard Force and Ryujo group
 
@@ -169,7 +146,6 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 31219: 85 (Nishida, m)<br>32350: 765 (Navypedia, m)<br>31980: 766 (Navypedia, m) | 32350 | Coin-toss | 4% |
-| Fuel | 6230: 87 (Nishida, m)<br>6330: 771 (Navypedia, m) | 6330 | Bulk | 2% |
 
 **jp-tone-class** (Chikuma, Tone)
 
@@ -182,29 +158,24 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Speed | 35: 783 (Navypedia, m), 784 (US technical mission, h)<br>34.9: 100 (Nishida, m) | 35 | Bulk | 0% |
-| Endurance | 8150: 785 (Navypedia, m; at 14 kn)<br>7673: 787 (US technical mission, h; at 18 kn) | 7673 | Fair | 6% |
-| Fuel | 1243: 98 (Nishida, l)<br>2302: 789 (Navypedia, m)<br>2310: 790 (US technical mission, h) | 2310 | Fair | 86% |
 
 **jp-nagara-class** (Nagara, Yura)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 5482: 129 (Nishida, m)<br>5570: 792 (Navypedia, m) | 5570 | Bulk | 2% |
-| Fuel | 1240: 130 (Nishida, m)<br>1260: 797 (Navypedia, m) | 1260 | Bulk | 2% |
 
 **jp-kagero-class** (Akigumo, Amatsukaze, Hatsukaze, Hayashio, Isokaze, Kagero and 7 more)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 2001: 61 (Nishida, m)<br>2033: 799 (Navypedia, m) | 2033 | Bulk | 2% |
-| Fuel | 500: 805 (Navypedia, l) | 500 | Weak: one source |  |
 
 **jp-yugumo-class** (Kazagumo, Makigumo, Yugumo)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 2044: 251 (Nishida, m)<br>2077: 806 (Navypedia, m) | 2077 | Bulk | 2% |
-| Fuel | 500: 811 (Navypedia, l) | 500 | Weak: one source |  |
 
 **jp-akizuki-class** (Akizuki)
 
@@ -212,22 +183,8 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | 2658: 4 (Nishida, m)<br>2701: 812 (Navypedia, m) | 2701 | Bulk | 2% |
 | Speed | 33: 9 (Nishida, m), 814 (Navypedia, m)<br>33.7: 815 (US technical mission, h) | 33 | Bulk | 2% |
-| Endurance | 8300: 5 (Nishida, m), 816 (Navypedia, m; at 18 kn)<br>9062: 818 (US technical mission, h; at 18 kn) | 8300 | Fair | 9% |
-| Fuel | 1080: 7 (Nishida, m)<br>1097: 820 (Navypedia, m)<br>1071: 821 (US technical mission, h) | 1071 | Bulk | 2% |
 
 ### Advance Force, convoy and the absent Wasp group (lower priority)
-
-**jp-myoko-class** (Haguro, Myoko)
-
-| Fact | Rows by value | Recommend | Sure | Spread |
-| --- | --- | --- | --- | --- |
-| Endurance | None |  | **Not found.** See `gaps.csv` |  |
-
-**jp-nagato-class** (Mutsu)
-
-| Fact | Rows by value | Recommend | Sure | Spread |
-| --- | --- | --- | --- | --- |
-| Endurance | 8650: 143 (Wikipedia, l) | 8650 | Weak: one source |  |
 
 **jp-chitose-class** (Chitose)
 
@@ -235,41 +192,23 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | None |  | **Not found.** See `gaps.csv` |  |
 | Speed | 28.9: 37 (Nishida, l) | 28.9 | Weak: one source |  |
-| Endurance | None |  | **Not found.** See `gaps.csv` |  |
-| Fuel | None |  | **Not found.** See `gaps.csv` |  |
 
 **jp-sendai-class** (Jintsu)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 5113: 166 (Nishida, m)<br>5195: 167 (Wikipedia, l) | 5113 | Bulk | 2% |
-| Endurance | 5000: 168 (Wikipedia, l) | 5000 | Weak: one source |  |
-
-**jp-shiratsuyu-class** (Harusame, Kawakaze, Murasame, Samidare, Suzukaze, Umikaze)
-
-| Fact | Rows by value | Recommend | Sure | Spread |
-| --- | --- | --- | --- | --- |
-| Endurance | None |  | **Not found.** See `gaps.csv` |  |
-
-**jp-fubuki-class** (Shikinami, Uranami)
-
-| Fact | Rows by value | Recommend | Sure | Spread |
-| --- | --- | --- | --- | --- |
-| Endurance | None |  | **Not found.** See `gaps.csv` |  |
 
 **jp-mutsuki-class** (Mutsuki, Uzuki, Yayoi)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
 | Displacement | 1294: 106 (Nishida, m)<br>1315: 107 (Wikipedia, l) | 1294 | Bulk | 2% |
-| Endurance | 3600: 108 (Wikipedia, l) | 3600 | Weak: one source |  |
 
 **us-wasp-class** (Wasp)
 
 | Fact | Rows by value | Recommend | Sure | Spread |
 | --- | --- | --- | --- | --- |
-| Endurance | 12000: 543 (Wikipedia, l; at 15 kn) | 12000 | Weak: one source |  |
-| Fuel | None |  | **Not found.** See `gaps.csv` |  |
 | Aircraft capacity | 84: 534 (uboat.net, m)<br>100: 535 (Wikipedia, l) | 84 | Coin-toss | 19% |
 
 **us-pensacola-class** (Salt Lake City)
@@ -278,15 +217,58 @@ Cruise speed goes with the endurance row chosen and is not listed separately. Wh
 | --- | --- | --- | --- | --- |
 | Displacement | None |  | **Not found.** See `gaps.csv` |  |
 | Speed | None |  | **Not found.** See `gaps.csv` |  |
-| Endurance | None |  | **Not found.** See `gaps.csv` |  |
-| Fuel | None |  | **Not found.** See `gaps.csv` |  |
+
+## 1a. Endurance and fuel, as matched pairs
+
+The simulation works fuel burned per mile as fuel capacity divided by endurance, so the two figures for a class must describe the same load of fuel at the same speed. An earlier draft of this sheet chose them separately and mismatched several. Every pair below is from one source and one condition, and the condition is stated. `ship_class_facts.csv` rows.
+
+**US classes, from the Navy's war-service fuel tables (policy k1: normal full load, 15 knots).** The tables give radius on "radius oil", the normal full load, and separately on every tank 95 per cent full. For destroyers the two loads are the same.
+
+| Class | Endurance row | Fuel row | Condition of the pair | Note |
+| --- | --- | --- | --- | --- |
+| Lexington (Saratoga) | 823: 8,210 | 827: 8,400 | Full load, 15 kn, data of 1942 to 1943 | The earlier draft paired 8,210 with the 95% fuel figure, 9,748 (row 828), which overstated her burn by 16%. The 95% pair is 9,490 (row 825) with 9,748 |
+| North Carolina | 830: 13,530 | 832: 5,550 | Full load, 15 kn, data of 1944 to 1945 | The 95% pair is 16,320 (454) with 7,554 (457) |
+| Atlanta | 842: 7,690 | 844: 1,481 | Full load, 15 kn, data of 1943 to 1944 | The table covers her later sisters, not Atlanta herself |
+| Portland | 836: 8,640 | 840: 2,614 | Full load, 15 kn, data of 1941 to 1943 | The earlier draft recommended 7,210 (row 507), which is 20 knots on 95% tanks. Corrected |
+| New Orleans | 834: 6,500 | 712: 1,900 | Full load, 15 kn, data of 1941 to 1943 | **Settled for Savo as 7,620 with 1,900. That pair is mismatched:** 7,620 is on 95% tanks (2,256 tons), 1,900 is the full load. See section 0 |
+| Farragut | 846: 5,240 | 848: 607 | Full load, 15 kn | The earlier draft recommended 5,980 (row 352), a 12-knot figure. Corrected |
+| Porter (Phelps, Balch) | 854: 5,620 | 856: 651 | Full load, 15 kn | The table splits the class in two groups; this is the group with the ships present. The other group is 5,670 (row 850). The earlier draft recommended 6,380, a 12-knot figure. Corrected |
+| Gleaves | 875: 4,730 | 877: 467 | Full load, 15 kn | The earlier draft recommended 5,250, a 12-knot figure. Corrected |
+| Gridley (Maury) | 865: 4,910 | 867: 525 | Full load, 15 kn | The earlier draft recommended 5,520, a 12-knot figure. Corrected |
+| Bagley | 862: 6,080 | 864: 506 | Full load, 15 kn | Settled for Savo as 6,940 at 12 knots. See section 0 |
+| Benham | 869: 4,860 | 728: 491 | Full load, 15 kn, **data of 1944** | Settled for Savo as 5,390 at 12 knots with 484 tons. See section 0 |
+
+**US classes with no matched full-load pair at 15 knots:**
+
+| Class | What exists | Nearest pair and its condition | Recommend |
+| --- | --- | --- | --- |
+| Northampton (Chicago; at this battle, none of the class) | 469: 7,330 at 20 kn; 471: 2,987 | Matched to each other, but on 95% tanks at 20 knots. The 15-knot full-load line of the same table was not read | Not needed for scenario 5. For Savo, a 15-knot full-load pair should be read from the table |
+| Yorktown (Enterprise) | The tables have no section for the class. Navypedia: 900: 12,000 at 15 kn with 902: 4,360. The ship's website: 894: 10,400 at 15 kn with 896: 6,500. Wikipedia: 12,000 with 4,280 | Three design-figure pairs from three websites. None is a service figure | The Navypedia pair, 12,000 with 4,360. **Sure: coin-toss.** It is a design figure set beside Saratoga's measured one, so the two carriers' burn per mile will not be comparable |
+| Wasp | 543: 12,000 at 15 kn, one weak row. No fuel row | No pair | None. She was absent |
+
+**Japanese and British classes, paired within one source.** None of these is a service figure, and no source says what fuel load its endurance assumes.
+
+| Class | Endurance row | Fuel row | Source and speed | Sure |
+| --- | --- | --- | --- | --- |
+| Shokaku | 744: 9,700 | 747: 4,100 | Navypedia, 18 kn. Two other sources agree on 9,700. Fuel is 4,035 by another website and 4,900 by Wikipedia | Fair on endurance, coin-toss on fuel |
+| Ryujo | 759: 10,000 | 763: 2,490 | Navypedia, 14 kn | Fair |
+| Kongo (Hiei, Kirishima) | 769: 10,000 | 771: 6,330 | Navypedia, 18 kn | Fair |
+| Tone | 776: 8,000 | 778: 2,690 | Navypedia, 18 kn. Already `preferred` by rule | Fair |
+| Mogami (Kumano, Suzuya) | 787: 7,673 | 790: 2,310 | The US technical mission, 18 kn. Navypedia's pair is 8,150 at 14 kn with 2,302 | Fair. The official pair is preferred to the website's |
+| Nagara | 795: 6,000 | 797: 1,260 | Navypedia, 15 kn | Weak: one source |
+| Kagero | 803: 5,000 | 805: 500 | Navypedia, 18 kn. A second source agrees on 5,000 | Fair on endurance, weak on fuel |
+| Yugumo | 809: 5,000 | 811: 500 | Navypedia, 18 kn | Weak: one source |
+| Akizuki | 818: 9,062 | 821: 1,071 | The US technical mission, 18 kn. Two websites give 8,300 with 1,080 or 1,097 | Coin-toss between the official pair and the figure two websites share |
+| County, Kent (Australia) | 702: 13,300 | 707: 3,400 | Navypedia, 12 kn. Settled for Savo | Settled |
+| Leander, modified (Hobart) | 974: 7,000 | 976: 1,837 | Navypedia, 14 kn. Wikipedia gives 5,730 at 13 kn with no fuel figure | Coin-toss |
+
+**Cruise speeds differ across this table:** 15 knots for US ships, 18 for most Japanese ships, 12 to 14 for others. Each is the speed its source quotes. A rule that compares burn per mile across classes is comparing figures at different speeds.
+
+**Classes with no pair at all:** Myoko, Fubuki, Shiratsuyu and Chitose have no endurance row; Nagato, Sendai and Mutsuki have one weak endurance row. These are the Advance Force and convoy, which the architect ranked lowest.
 
 **Read these with care.**
 
-- **Saratoga's displacement** is 36,000 (the treaty design figure), 37,681 or 40,000 depending on source and date. No source read gives her displacement in August 1942. The policy picks 40,000 on source count; it is a coin-toss.
-- **Enterprise's fuel** is 4,280 or 4,360 by two sources and 6,500 by the ship's own website, which may be quoting a different condition. The policy picks on grade and the result is a coin-toss. The fuel tables have no section for her class.
-- **Endurance at mixed speeds.** Saratoga's design figure is at 10 knots and Shokaku's at 18. A cruise speed of 10 knots for a carrier is not how she was run. The rule may want one cruise speed for all carriers and a consumption curve, which the fuel tables give for US ships only.
-- **Japanese classes with no endurance at all:** Myoko, Fubuki, Shiratsuyu, Chitose. Four more have one weak row. These are in `gaps.csv`.
+- **Saratoga's displacement** is 36,000 (the treaty design figure), 37,681 or 40,000 depending on source and date. She was rebuilt in early 1942 after torpedo damage. No source read gives her displacement in August 1942. The policy picks 40,000 on source count; it is a coin-toss.
 - **Pensacola class** (Salt Lake City, in the Wasp group) has no rows of any kind. The Wasp group was away fuelling on the day.
 
 ## 2. Anti-aircraft guns on 24 August (`fits.csv`, slots `heavy_aa` and `light_aa`)
@@ -332,7 +314,7 @@ The tool will be extended to read these. What the sources give:
 | A6M2 Zero | Radius 261, 434 or 521 nautical miles by one website quoting a book, for carrier, land-based and extreme cases. Range 1,000 to 1,050 by four sources including two captured-aircraft reports; 1,677 with drop tank by three | 361 to 363; 30, 371, 382, 385 | Carrier radius 261; range 1,010 clean | Coin-toss on radius: one secondary source |
 | D3A1 Val | **No combat radius found.** Range 730 to 795 by three weak sources; 391 by a wartime US estimate. The first wave flew about 200 miles to its target | 98, 99, 393, 400 | Range 760; radius as flown, about 200 | Weak |
 | B5N2 Kate | **No combat radius found.** Range 528 with torpedo (two weak sources), 1,075 maximum | 79, 412; 78, 408, 413 | Range 528 with torpedo | Weak |
-| PBY-5 and 5A | No radius. Range 1,245 normal, 2,190 or 2,694 maximum, from one unsourced website and Wikipedia. | 314, 324; 215, 313, 323 | Range 2,190; search radius as flown | Weak |
+| PBY-5 and 5A | No radius. Range 1,245 normal, 2,190 or 2,694 maximum, from one unsourced website and Wikipedia. Patrols on the day reached about 650 miles from Ndeni | 314, 324; 215, 313, 323 | Range 2,190; search radius as flown | Weak |
 | H6K4 Mavis | Range 1,938 (two rows, one source), 2,590, 3,284 | 186, 420, 187, 426 | 2,590 | Coin-toss |
 | B-17E | Range 1,221 with bombs and 2,659 maximum, from Army Air Forces reports of 1941 to 1942 | 341, 342 | The Army figures | Fair |
 
