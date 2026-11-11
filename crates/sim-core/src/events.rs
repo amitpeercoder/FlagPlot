@@ -525,6 +525,56 @@ pub enum EventKind {
         contact: ContactId,
         hex: Hex,
     },
+    /// An air group on the base strike mission launched at the base it was
+    /// ordered to strike (decision 3 of
+    /// `docs/decisions/0034-raids-on-a-base.md`). `hex` is the base's hex.
+    BaseStrikeLaunched {
+        air_group: AirGroupId,
+        base: BaseId,
+        hex: Hex,
+        aircraft: u32,
+        distance_nm: Fixed,
+    },
+    /// A base fired its anti-aircraft guns at the bombers of a raid on it
+    /// (decision 5 of 0034). `air_group` is the raid's first strike group.
+    BaseAntiAircraftFire {
+        base: BaseId,
+        air_group: AirGroupId,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+    },
+    /// A strike group's bombs fell on a base (decisions 6 and 7 of 0034).
+    /// `hits` is the bombs that hit, and `hits_on_aircraft` and
+    /// `hits_on_supply` how many of them landed on each; the rest landed on
+    /// nothing.
+    BaseAttacked {
+        air_group: AirGroupId,
+        base: BaseId,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+        hits_on_aircraft: u32,
+        hits_on_supply: u32,
+    },
+    /// Hits on aircraft destroyed aircraft of an air group on the ground
+    /// (decision 8 of 0034). `remaining` is what the group has ready
+    /// afterwards.
+    AircraftDestroyedOnGround {
+        air_group: AirGroupId,
+        base: BaseId,
+        aircraft: u32,
+        remaining: u32,
+    },
+    /// Hits on supply destroyed supply of a base (decision 9 of 0034).
+    /// `supply_t` is what the base has afterwards, in tons.
+    BaseSupplyDestroyed {
+        base: BaseId,
+        destroyed_t: Fixed,
+        supply_t: Fixed,
+    },
 }
 
 impl EventKind {
@@ -586,6 +636,19 @@ impl EventKind {
                 vec![EntityRef::AirGroup(*air_group)]
             }
             EventKind::ContactNotThere { contact, .. } => vec![EntityRef::Contact(*contact)],
+            EventKind::BaseStrikeLaunched {
+                air_group, base, ..
+            }
+            | EventKind::BaseAttacked {
+                air_group, base, ..
+            }
+            | EventKind::AircraftDestroyedOnGround {
+                air_group, base, ..
+            }
+            | EventKind::BaseAntiAircraftFire {
+                air_group, base, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            EventKind::BaseSupplyDestroyed { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirAttack {
                 air_group,
                 task_force,
@@ -836,6 +899,59 @@ impl fmt::Display for EventKind {
             EventKind::ContactNotThere { side, contact, hex } => {
                 write!(f, "{} {contact} not there at {hex}: dropped", side.name())
             }
+            EventKind::BaseStrikeLaunched {
+                air_group,
+                base,
+                hex,
+                aircraft,
+                distance_nm,
+            } => write!(
+                f,
+                "{air_group} launched {aircraft} aircraft at {base} at {hex}, {distance_nm} nm"
+            ),
+            EventKind::BaseAntiAircraftFire {
+                base,
+                air_group,
+                shots,
+                chance,
+                expected,
+                hits,
+            } => write!(
+                f,
+                "{base} guns at the raid of {air_group}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            EventKind::BaseAttacked {
+                air_group,
+                base,
+                shots,
+                chance,
+                expected,
+                hits,
+                hits_on_aircraft,
+                hits_on_supply,
+            } => write!(
+                f,
+                "{air_group} bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply",
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            EventKind::AircraftDestroyedOnGround {
+                air_group,
+                base,
+                aircraft,
+                remaining,
+            } => write!(
+                f,
+                "{air_group} lost {aircraft} aircraft on the ground at {base}, {remaining} left"
+            ),
+            EventKind::BaseSupplyDestroyed {
+                base,
+                destroyed_t,
+                supply_t,
+            } => write!(
+                f,
+                "{base} lost {destroyed_t} t of supply, {supply_t} t left"
+            ),
             EventKind::AirAttack {
                 air_group,
                 ship,

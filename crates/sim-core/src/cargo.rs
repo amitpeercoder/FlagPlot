@@ -394,6 +394,7 @@ mod tests {
                     side: Side::Allied,
                     hex,
                     supply_t: Fixed::from_int(stock),
+                    anti_aircraft: 0,
                 },
             );
         }

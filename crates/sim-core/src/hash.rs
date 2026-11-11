@@ -10,7 +10,7 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::fixed::Fixed;
-use crate::orders::{Mission, SpeedSetting};
+use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState};
 use crate::world::World;
 
@@ -18,6 +18,8 @@ use crate::world::World;
 const FLIGHT_DECK_TAG: u8 = 0xF1;
 /// Tag of an air group's patrol share (decision 0027). See `hash_world`.
 const PATROL_SHARE_TAG: u8 = 0xF2;
+/// Tag of a base's anti-aircraft shots (decision 0034). See `hash_world`.
+const BASE_GUNS_TAG: u8 = 0xF3;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -228,6 +230,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i32(base.hex.q);
         h.i32(base.hex.r);
         h.i64(base.supply_t.raw());
+        // A base with no guns writes nothing, so it hashes as it did before
+        // bases had guns (decision 0034).
+        if base.anti_aircraft != 0 {
+            h.u8(BASE_GUNS_TAG);
+            h.u32(base.anti_aircraft);
+        }
     }
 
     h.count(truth.air_groups.len());
@@ -247,6 +255,10 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
         h.u8(group.mission.code());
+        // The base strike mission (code 5) is followed by its target base.
+        if let AirMission::BaseStrike(base) = group.mission {
+            h.u32(base.raw());
+        }
         // A patrol share that is not the default 1, or that an order set:
         // a tag byte, the share, then the order. The tag 0xF2 follows the
         // mission code (1 to 4) and so can only be taken for the search

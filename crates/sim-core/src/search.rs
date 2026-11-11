@@ -611,6 +611,7 @@ mod tests {
                 side: Side::Allied,
                 hex: BASE_HEX,
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         truth.air_groups.insert(

@@ -1,7 +1,7 @@
 //! Orders as JSON.
 
 use serde::Serialize;
-use sim_core::orders::{AirGroupOrder, Order, OrderKind, TaskForceOrder};
+use sim_core::orders::{AirGroupOrder, AirMission, Order, OrderKind, TaskForceOrder};
 
 use super::names;
 
@@ -58,6 +58,9 @@ fn text(kind: &OrderKind) -> String {
             }
         },
         OrderKind::AirGroup { order, .. } => match order {
+            AirGroupOrder::SetAirMission(AirMission::BaseStrike(base)) => {
+                format!("air mission base_strike on {base}")
+            }
             AirGroupOrder::SetAirMission(mission) => {
                 format!("air mission {}", names::air_mission(*mission))
             }

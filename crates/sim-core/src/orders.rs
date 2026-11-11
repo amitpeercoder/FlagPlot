@@ -59,6 +59,8 @@ pub enum AirMission {
     /// Fights over its own hex and escorts strikes (decision 0027). Added at
     /// the end.
     CombatAirPatrol,
+    /// Strikes the named enemy base (decision 0034). Added at the end.
+    BaseStrike(BaseId),
 }
 
 impl AirMission {
@@ -70,6 +72,7 @@ impl AirMission {
             AirMission::Search => 2,
             AirMission::NavalStrike => 3,
             AirMission::CombatAirPatrol => 4,
+            AirMission::BaseStrike(_) => 5,
         }
     }
 }
@@ -355,6 +358,10 @@ pub enum RejectReason {
     /// A patrol share is not between 0 and 1 (decision 2 of 0027). Added at
     /// the end of the enum.
     PatrolShareOutOfRange(Fixed),
+    /// The base strike mission names a base that does not exist or is held by
+    /// the group's own side (decision 1 of 0034). Added at the end of the
+    /// enum.
+    NotAnEnemyBase,
 }
 
 impl fmt::Display for RejectReason {
@@ -403,6 +410,9 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::PatrolShareOutOfRange(share) => {
                 write!(f, "patrol share {share} is not between 0 and 1")
+            }
+            RejectReason::NotAnEnemyBase => {
+                f.write_str("the base does not exist or is held by your side")
             }
         }
     }

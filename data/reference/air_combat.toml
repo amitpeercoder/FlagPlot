@@ -26,9 +26,20 @@ self_sealing_tanks_factor = "0.75"
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 
+# Raids on a base (decision 0034). PLACEHOLDER figures.
+# A hit on a base's supply destroys this many tons, and no more than the base
+# has (decision 9).
+base_supply_destroyed_per_hit_t = 50
+
 # Which system a bomb's system hit lands on. Adds to 1.
 [bomb_system_hit]
 flight_deck = "0.5"
 propulsion = "0.2"
 fire_control = "0.1"
 main_battery = "0.2"
+
+# Where a bomb hit on a base lands (decision 7 of 0034): one draw for each hit.
+# The two chances add to 1 at most; the rest of the hits land on nothing.
+[base_hit]
+aircraft = "0.3"
+supply = "0.3"

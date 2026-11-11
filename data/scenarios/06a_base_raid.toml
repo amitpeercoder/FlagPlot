@@ -1,0 +1,127 @@
+# Scenario 6a: bombers with an escort raid an airfield for three days.
+#
+# Stage 6a of scenario 6. It proves the base strike mission, a base's
+# anti-aircraft fire, and hits on aircraft on the ground and on supply
+# (decision 0034). The hand calculation is in tests/scenario_06a_base_raid.rs.
+# The test runs this file with seeds 1 to 1000.
+#
+# PLACEHOLDER DATA. The bases, aircraft, figures and map are invented.
+
+name = "Scenario 6a: A raid on an airfield"
+placeholder = true
+seed = 1942
+days = 3
+map = "../map/placeholder_two_airfields.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder airfield A"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 0
+
+# 200 nm east of airfield A.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "allied"
+q = 5
+r = 0
+supply_t = 1000
+anti_aircraft = 20
+
+[[air_group]]
+id = 1
+name = "Placeholder bomber group"
+side = "japanese"
+base = 1
+aircraft_type = 3
+ready = 18
+
+[[air_group]]
+id = 2
+name = "Placeholder escort group"
+side = "japanese"
+base = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 3
+name = "Placeholder defending fighters"
+side = "allied"
+base = 2
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 4
+name = "Placeholder resting bombers"
+side = "allied"
+base = 2
+aircraft_type = 3
+ready = 10
+
+[[air_group]]
+id = 5
+name = "Placeholder scouts"
+side = "allied"
+base = 2
+aircraft_type = 2
+ready = 6
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 2
+
+# Half the escort group stays over airfield A, half goes with the raid.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_patrol_share"
+share = "0.5"
+
+# All the defending fighters stay overhead.
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+# The scouts are in the air each daylight pulse. Group 4 has no order and
+# rests on the ground.
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 5
+kind = "set_search_arc"
+from_deg = 40
+to_deg = 130
+range_nm = 300

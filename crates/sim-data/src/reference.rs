@@ -510,6 +510,17 @@ struct AirCombatFile {
     pilot_armour_factor: Quantity,
     self_sealing_tanks_factor: Quantity,
     bomb_system_hit: SystemTable,
+    base_supply_destroyed_per_hit_t: Quantity,
+    base_hit: BaseHitTable,
+}
+
+/// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
+/// hits land on nothing.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BaseHitTable {
+    aircraft: Quantity,
+    supply: Quantity,
 }
 
 /// Loads the air combat figures from a TOML file.
@@ -543,6 +554,12 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             &file.self_sealing_tanks_factor,
         )?,
         bomb_system_hit: file.bomb_system_hit.to_map("bomb_system_hit", &number)?,
+        base_supply_destroyed_per_hit_t: number(
+            "base_supply_destroyed_per_hit_t",
+            &file.base_supply_destroyed_per_hit_t,
+        )?,
+        base_hit_aircraft: number("base_hit.aircraft", &file.base_hit.aircraft)?,
+        base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -740,6 +757,33 @@ mod tests {
             Fixed::from_ratio(2, 10)
         );
         assert_eq!(figures.bomb_system_hit.len(), 4);
+        assert_eq!(figures.base_supply_destroyed_per_hit_t, Fixed::from_int(50));
+        assert_eq!(figures.base_hit_aircraft, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.base_hit_supply, Fixed::from_ratio(3, 10));
+    }
+
+    #[test]
+    fn the_base_raid_figures_are_required_in_range_and_not_floats() {
+        let bad = |from: &str, to: &str| {
+            let text = air_combat_text().replace(from, to);
+            assert_ne!(text, air_combat_text(), "{from} is in the file");
+            parse_air_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("base_supply_destroyed_per_hit_t = 50\n", "")
+            .contains("base_supply_destroyed_per_hit_t"));
+        assert!(bad(
+            "base_supply_destroyed_per_hit_t = 50",
+            "base_supply_destroyed_per_hit_t = -5"
+        )
+        .contains("negative"));
+        assert!(bad("[base_hit]\naircraft = \"0.3\"\nsupply = \"0.3\"\n", "").contains("base_hit"));
+        assert!(bad("aircraft = \"0.3\"", "aircraft = 0.3").contains("aircraft = 0.3"));
+        assert!(bad("aircraft = \"0.3\"", "aircraft = \"1.5\"").contains("base hit chance"));
+        assert!(bad("supply = \"0.3\"", "supply = \"-0.1\"").contains("base hit chance"));
+        // Together they may not pass 1.
+        assert!(bad("aircraft = \"0.3\"", "aircraft = \"0.8\"").contains("add to"));
     }
 
     #[test]

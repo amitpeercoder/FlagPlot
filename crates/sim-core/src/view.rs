@@ -204,6 +204,7 @@ mod tests {
                     side,
                     hex: Hex::new(hex, 0),
                     supply_t: Fixed::ZERO,
+                    anti_aircraft: 0,
                 },
             );
             truth
