@@ -1442,6 +1442,7 @@ mod tests {
                         toughness: Fixed::from_int(i64::from(tough)),
                         radar,
                         aircraft_capacity: 0,
+                        anti_aircraft: 0,
                     },
                 );
             }
@@ -2402,6 +2403,8 @@ mod tests {
             search: None,
             mission_order: None,
             arc_order: None,
+            patrol_share: Fixed::ONE,
+            share_order: None,
         };
         let world = run(&scene, |w| {
             flotation_only(w);

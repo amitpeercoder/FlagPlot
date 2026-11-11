@@ -9,12 +9,15 @@
 //! It detects divergence. It is not a security feature. See
 //! `docs/decisions/0004-state-hash.md`.
 
+use crate::fixed::Fixed;
 use crate::orders::{Mission, SpeedSetting};
 use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState};
 use crate::world::World;
 
 /// Marks a flight deck that is degraded or out in the hash of a ship.
 const FLIGHT_DECK_TAG: u8 = 0xF1;
+/// Tag of an air group's patrol share (decision 0027). See `hash_world`.
+const PATROL_SHARE_TAG: u8 = 0xF2;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -251,6 +254,17 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
         h.u8(group.mission.code());
+        // A patrol share that is not the default 1, or that an order set:
+        // a tag byte, the share, then the order. The tag 0xF2 follows the
+        // mission code (1 to 4) and so can only be taken for the search
+        // tag, which is 0 or 1: every state has one reading. A group on the
+        // default share with no order writes nothing, so it hashes as it did
+        // before the share existed.
+        if group.patrol_share != Fixed::ONE || group.share_order.is_some() {
+            h.u8(PATROL_SHARE_TAG);
+            h.i64(group.patrol_share.raw());
+            h.optional_u32(group.share_order.map(|id| id.raw()));
+        }
         match group.search {
             Some(arc) => {
                 h.u8(1);

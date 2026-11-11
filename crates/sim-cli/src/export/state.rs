@@ -2,6 +2,7 @@
 
 use serde::Serialize;
 use sim_core::hex::Hex;
+use sim_core::orders::AirMission;
 use sim_core::refdata::RefData;
 use sim_core::state::{
     AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, TaskForce, TruthState,
@@ -104,6 +105,9 @@ pub struct AirGroupOut {
     aircraft_type: String,
     ready: u32,
     mission: &'static str,
+    /// Set for a group on combat air patrol (decision 0027).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    patrol_share: Option<Num>,
     arc: Option<ArcOut>,
 }
 
@@ -229,6 +233,8 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         aircraft_type: ref_data.aircraft_types[&group.aircraft_type].name.clone(),
         ready: group.ready,
         mission: names::air_mission(group.mission),
+        patrol_share: (group.mission == AirMission::CombatAirPatrol)
+            .then_some(Num(group.patrol_share)),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,

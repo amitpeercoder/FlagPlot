@@ -11,6 +11,11 @@ strike_contact_max_age_pulses = 1
 bomb_hit_chance = "0.2"
 torpedo_hit_chance = "0.15"
 
+# Chance one fighter's shot brings down an aircraft, and chance one
+# anti-aircraft shot does (decision 0027).
+fighter_hit_chance = "0.3"
+anti_aircraft_hit_chance = "0.05"
+
 # Chance a bomb hit also knocks a system down one level. A torpedo from the
 # air uses the torpedo figures of surface_combat.toml.
 bomb_system_hit_chance = "0.3"

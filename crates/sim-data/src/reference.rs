@@ -39,6 +39,10 @@ struct ShipClassRow {
     /// there, every row needs a whole number.
     #[serde(default)]
     aircraft_capacity: u32,
+    /// Optional column (decision 0027), after `aircraft_capacity`: a file
+    /// without it gives every class no anti-aircraft shots.
+    #[serde(default)]
+    anti_aircraft: u32,
 }
 
 #[derive(Deserialize)]
@@ -112,6 +116,7 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
                 }
             },
             aircraft_capacity: row.aircraft_capacity,
+            anti_aircraft: row.anti_aircraft,
             name: row.name,
         };
         if let Some(problem) = class.problem() {
@@ -228,6 +233,7 @@ fn parse_aircraft_types(
         let role = match row.role.as_str() {
             "patrol" => AircraftRole::Patrol,
             "bomber" => AircraftRole::Bomber,
+            "fighter" => AircraftRole::Fighter,
             other => {
                 return Err(DataError::in_file(
                     path,
@@ -500,6 +506,8 @@ struct AirCombatFile {
     strike_contact_max_age_pulses: u32,
     bomb_hit_chance: Quantity,
     torpedo_hit_chance: Quantity,
+    fighter_hit_chance: Quantity,
+    anti_aircraft_hit_chance: Quantity,
     bomb_system_hit_chance: Quantity,
     bomb_system_hit: SystemTable,
 }
@@ -524,6 +532,11 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         strike_contact_max_age_pulses: file.strike_contact_max_age_pulses,
         bomb_hit_chance: number("bomb_hit_chance", &file.bomb_hit_chance)?,
         torpedo_hit_chance: number("torpedo_hit_chance", &file.torpedo_hit_chance)?,
+        fighter_hit_chance: number("fighter_hit_chance", &file.fighter_hit_chance)?,
+        anti_aircraft_hit_chance: number(
+            "anti_aircraft_hit_chance",
+            &file.anti_aircraft_hit_chance,
+        )?,
         bomb_system_hit_chance: number("bomb_system_hit_chance", &file.bomb_system_hit_chance)?,
         bomb_system_hit: file.bomb_system_hit.to_map("bomb_system_hit", &number)?,
     };
@@ -627,7 +640,7 @@ mod tests {
                 .expect_err("rejected")
                 .message
         };
-        assert!(bad("1,A,fighter,600,40,0,none,0\n").contains("unknown role"));
+        assert!(bad("1,A,interceptor,600,40,0,none,0\n").contains("unknown role"));
         assert!(
             bad("1,A,patrol,600,40,0,none,0\n1,B,patrol,600,40,0,none,0\n")
                 .contains("appears twice")
@@ -661,6 +674,8 @@ mod tests {
         assert_eq!(figures.strike_contact_max_age_pulses, 1);
         assert_eq!(figures.bomb_hit_chance, Fixed::from_ratio(2, 10));
         assert_eq!(figures.torpedo_hit_chance, Fixed::from_ratio(15, 100));
+        assert_eq!(figures.fighter_hit_chance, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.anti_aircraft_hit_chance, Fixed::from_ratio(5, 100));
         assert_eq!(figures.bomb_system_hit_chance, Fixed::from_ratio(3, 10));
         assert_eq!(
             figures.bomb_system_hit[&ShipSystem::FlightDeck],
@@ -699,6 +714,25 @@ mod tests {
             "torpedo_hit_chance = \"-0.1\""
         )
         .contains("torpedo hit chance"));
+        assert!(bad(
+            "fighter_hit_chance = \"0.3\"",
+            "fighter_hit_chance = \"1.5\""
+        )
+        .contains("fighter hit chance"));
+        assert!(bad(
+            "anti_aircraft_hit_chance = \"0.05\"",
+            "anti_aircraft_hit_chance = \"-0.05\""
+        )
+        .contains("anti-aircraft hit chance"));
+        // Both are required, and neither may be a float.
+        assert!(bad("fighter_hit_chance = \"0.3\"\n", "").contains("fighter_hit_chance"));
+        assert!(
+            bad("anti_aircraft_hit_chance = \"0.05\"\n", "").contains("anti_aircraft_hit_chance")
+        );
+        assert!(
+            bad("fighter_hit_chance = \"0.3\"", "fighter_hit_chance = 0.3")
+                .contains("fighter_hit_chance")
+        );
         assert!(bad("flight_deck = \"0.5\"", "flight_deck = \"0.6\"").contains("add to"));
         assert!(bad("[bomb_system_hit]", "[bomb_system_hits]").contains("bomb_system_hits"));
     }
@@ -942,6 +976,73 @@ mod tests {
         }
         // A row that stops before the column is not read as 0.
         assert!(with_column("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n").is_err());
+    }
+
+    #[test]
+    fn the_anti_aircraft_column_is_optional_and_read_when_there() {
+        // Absent: no shots, whether or not the capacity column is there.
+        let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n")
+            .expect("parses without the columns");
+        assert_eq!(data.ship_classes[&ShipClassId::new(1)].anti_aircraft, 0);
+
+        let with_column = |rows: &str| {
+            parse_ship_classes(
+                &format!(
+                    "{}{rows}",
+                    CLASS_HEADER.trim_end().to_string() + ",aircraft_capacity,anti_aircraft\n"
+                ),
+                here(),
+            )
+        };
+        let data = with_column(
+            "1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,8\n\
+             2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36,20\n",
+        )
+        .expect("parses with the column");
+        assert_eq!(data.ship_classes[&ShipClassId::new(1)].anti_aircraft, 8);
+        assert_eq!(data.ship_classes[&ShipClassId::new(2)].anti_aircraft, 20);
+        assert_eq!(
+            data.ship_classes[&ShipClassId::new(2)].aircraft_capacity,
+            36
+        );
+        for bad in ["", "-1", "2.5", "many"] {
+            let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,{bad}\n");
+            assert!(with_column(&row).is_err(), "anti_aircraft \"{bad}\"");
+        }
+
+        // The shipped classes: 1 to 4 have none, 5 and 6 have guns.
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ship_classes.csv");
+        let data = load_ship_classes(&path).expect("the shipped classes load");
+        for id in 1..=4 {
+            assert_eq!(data.ship_classes[&ShipClassId::new(id)].anti_aircraft, 0);
+        }
+        assert_eq!(data.ship_classes[&ShipClassId::new(5)].anti_aircraft, 20);
+        assert_eq!(data.ship_classes[&ShipClassId::new(6)].anti_aircraft, 8);
+    }
+
+    #[test]
+    fn a_fighter_type_loads_and_must_attack_with_nothing() {
+        let types = parse_aircraft_types(
+            &format!("{AIRCRAFT_HEADER}4,Fighter,fighter,0,0,0,none,0\n"),
+            here(),
+        )
+        .expect("parses");
+        assert_eq!(types[&AircraftTypeId::new(4)].role, AircraftRole::Fighter);
+        let shipped = load_aircraft_types(
+            &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/aircraft_types.csv"),
+        )
+        .expect("the shipped types load");
+        assert_eq!(shipped[&AircraftTypeId::new(4)].role, AircraftRole::Fighter);
+        let error = parse_aircraft_types(
+            &format!("{AIRCRAFT_HEADER}4,Fighter,fighter,0,0,250,bomb,60\n"),
+            here(),
+        )
+        .expect_err("a fighter that bombs is rejected");
+        assert!(
+            error.message.contains("must attack with nothing"),
+            "{error}"
+        );
     }
 
     #[test]

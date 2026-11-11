@@ -213,6 +213,11 @@ enum ActionSpec {
         to_deg: i32,
         range_nm: Quantity,
     },
+    /// The share of its aircraft a group on combat air patrol keeps over
+    /// its hex (decision 0027).
+    SetPatrolShare {
+        share: Quantity,
+    },
     SetRulesOfEngagement {
         stance: StanceSpec,
         break_off: Quantity,
@@ -290,6 +295,7 @@ enum AirMissionSpec {
     Rest,
     Search,
     NavalStrike,
+    CombatAirPatrol,
 }
 
 impl From<AirMissionSpec> for AirMission {
@@ -298,6 +304,7 @@ impl From<AirMissionSpec> for AirMission {
             AirMissionSpec::Rest => AirMission::Rest,
             AirMissionSpec::Search => AirMission::Search,
             AirMissionSpec::NavalStrike => AirMission::NavalStrike,
+            AirMissionSpec::CombatAirPatrol => AirMission::CombatAirPatrol,
         }
     }
 }
@@ -638,6 +645,8 @@ impl Scenario {
                 search: None,
                 mission_order: None,
                 arc_order: None,
+                patrol_share: Fixed::ONE,
+                share_order: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -721,6 +730,9 @@ impl Scenario {
                         ActionSpec::SetSearchArc { .. } => {
                             return Err(wrong_target("set_search_arc", "air_group"))
                         }
+                        ActionSpec::SetPatrolShare { .. } => {
+                            return Err(wrong_target("set_patrol_share", "air_group"))
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -743,9 +755,14 @@ impl Scenario {
                                 .to_fixed()
                                 .map_err(|e| fail(format!("range_nm on day {day} {e}")))?,
                         },
+                        ActionSpec::SetPatrolShare { share } => AirGroupOrder::SetPatrolShare {
+                            share: share
+                                .to_fixed()
+                                .map_err(|e| fail(format!("share on day {day} {e}")))?,
+                        },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission or set_search_arc"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc or set_patrol_share"
                             )))
                         }
                     };
@@ -1108,6 +1125,30 @@ r = 0
         parse_with(&order("air_group = 1", mission)).expect("naval_strike loads");
         let typo = mission.replace("naval_strike", "naval strike");
         assert!(parse_with(&order("air_group = 1", &typo)).is_err());
+    }
+
+    #[test]
+    fn the_combat_air_patrol_mission_and_the_patrol_share_load_for_an_air_group() {
+        let mission = "kind = \"set_air_mission\"\nmission = \"combat_air_patrol\"";
+        parse_with(&order("air_group = 1", mission)).expect("combat_air_patrol loads");
+        let typo = mission.replace("combat_air_patrol", "combat air patrol");
+        assert!(parse_with(&order("air_group = 1", &typo)).is_err());
+
+        let share = "kind = \"set_patrol_share\"\nshare = \"0.5\"";
+        parse_with(&order("air_group = 1", share)).expect("share loads");
+        // A share is a decimal string, never a float, and has a field.
+        let float = share.replace("\"0.5\"", "0.5");
+        assert!(parse_with(&order("air_group = 1", &float)).is_err());
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_patrol_share\"")).is_err());
+        // It is for an air group, not a task force.
+        assert!(error_of(&order("task_force = 1", share)).contains("air_group"));
+        // The value is checked when the order reaches intake, not here: a
+        // share above 1 loads.
+        parse_with(&order(
+            "air_group = 1",
+            "kind = \"set_patrol_share\"\nshare = \"1.5\"",
+        ))
+        .expect("a share out of range is rejected by the world, not the loader");
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.

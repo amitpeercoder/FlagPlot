@@ -159,6 +159,8 @@ mod tests {
             search: None,
             mission_order: None,
             arc_order: None,
+            patrol_share: Fixed::ONE,
+            share_order: None,
         }
     }
 
@@ -262,6 +264,7 @@ mod tests {
                 toughness: Fixed::from_int(400),
                 radar: false,
                 aircraft_capacity: 0,
+                anti_aircraft: 0,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

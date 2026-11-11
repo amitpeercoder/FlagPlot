@@ -19,7 +19,7 @@ use crate::orders::{
     AirGroupOrder, AirMission, CargoAction, Order, OrderKind, OrderRequest, RejectReason,
     SpeedSetting, TaskForceOrder,
 };
-use crate::refdata::AttackWeapon;
+use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
     CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, Side, TaskForce, TaskForceStatus,
 };
@@ -448,7 +448,30 @@ impl World {
                         }
                         Ok(())
                     }
+                    AirGroupOrder::SetAirMission(AirMission::CombatAirPatrol) => {
+                        // Decision 1 of 0027.
+                        if self.ref_data.air_combat.is_none() {
+                            return Err(RejectReason::NoAirCombatFigures);
+                        }
+                        let role = self
+                            .ref_data
+                            .aircraft_types
+                            .get(&group.aircraft_type)
+                            .expect("air group has a known aircraft type")
+                            .role;
+                        if role != AircraftRole::Fighter {
+                            return Err(RejectReason::NotAFighter);
+                        }
+                        Ok(())
+                    }
                     AirGroupOrder::SetAirMission(_) => Ok(()),
+                    AirGroupOrder::SetPatrolShare { share } => {
+                        if *share < Fixed::ZERO || *share > Fixed::ONE {
+                            Err(RejectReason::PatrolShareOutOfRange(*share))
+                        } else {
+                            Ok(())
+                        }
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -591,6 +614,10 @@ impl World {
                         group.mission = *mission;
                         group.mission_order = Some(order.id);
                     }
+                    AirGroupOrder::SetPatrolShare { share } => {
+                        group.patrol_share = *share;
+                        group.share_order = Some(order.id);
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -667,6 +694,7 @@ mod tests {
             toughness: Fixed::from_int(100),
             radar: false,
             aircraft_capacity: 0,
+            anti_aircraft: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -1361,6 +1389,8 @@ mod tests {
                 search: None,
                 mission_order: None,
                 arc_order: None,
+                patrol_share: Fixed::ONE,
+                share_order: None,
             },
         );
         assert_sound(&world);

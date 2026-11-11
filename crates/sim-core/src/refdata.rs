@@ -105,6 +105,10 @@ pub struct ShipClass {
     /// of `docs/decisions/0025-carrier-air-groups.md`). 0 for a ship that
     /// carries none.
     pub aircraft_capacity: u32,
+    /// Anti-aircraft shots the ship fires at a raid on its task force
+    /// (decision 7 of `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`).
+    /// 0 for a ship that has none.
+    pub anti_aircraft: u32,
 }
 
 impl ShipClass {
@@ -163,6 +167,9 @@ pub enum AircraftRole {
     Patrol,
     /// Aircraft that strike ships (decision 0026).
     Bomber,
+    /// Fighters: combat air patrol and escort, attacking nothing on the
+    /// surface (decision 0027). Added at the end.
+    Fighter,
 }
 
 impl AircraftRole {
@@ -172,6 +179,7 @@ impl AircraftRole {
         match self {
             AircraftRole::Patrol => 1,
             AircraftRole::Bomber => 2,
+            AircraftRole::Fighter => 3,
         }
     }
 }
@@ -245,6 +253,12 @@ impl AircraftType {
             if value.is_negative() {
                 return Some(format!("{} has a negative {label}", self.id));
             }
+        }
+        if self.role == AircraftRole::Fighter && self.attack_weapon != AttackWeapon::None {
+            return Some(format!(
+                "{} is a fighter and must attack with nothing",
+                self.id
+            ));
         }
         if self.attack_weapon != AttackWeapon::None
             && (self.strike_range_nm <= Fixed::ZERO || self.attack_damage <= Fixed::ZERO)
@@ -509,6 +523,12 @@ pub struct AirCombatFigures {
     pub bomb_hit_chance: Fixed,
     /// Chance one aircraft's torpedo hits.
     pub torpedo_hit_chance: Fixed,
+    /// Chance one fighter's shot brings down an aircraft (decision 6 of
+    /// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`).
+    pub fighter_hit_chance: Fixed,
+    /// Chance one anti-aircraft shot brings down an aircraft (decision 7 of
+    /// 0027).
+    pub anti_aircraft_hit_chance: Fixed,
     /// Chance a bomb hit also knocks a system down one level.
     pub bomb_system_hit_chance: Fixed,
     /// Which system a bomb's system hit lands on: each system's share. A
@@ -523,6 +543,8 @@ impl AirCombatFigures {
         let chances = [
             ("bomb hit chance", self.bomb_hit_chance),
             ("torpedo hit chance", self.torpedo_hit_chance),
+            ("fighter hit chance", self.fighter_hit_chance),
+            ("anti-aircraft hit chance", self.anti_aircraft_hit_chance),
             ("bomb system hit chance", self.bomb_system_hit_chance),
         ];
         for (label, value) in chances {
@@ -607,6 +629,8 @@ impl AirCombatFigures {
             strike_contact_max_age_pulses: 1,
             bomb_hit_chance: tenth(2),
             torpedo_hit_chance: Fixed::from_ratio(15, 100),
+            fighter_hit_chance: tenth(3),
+            anti_aircraft_hit_chance: Fixed::from_ratio(5, 100),
             bomb_system_hit_chance: tenth(3),
             bomb_system_hit: [
                 (ShipSystem::FlightDeck, tenth(5)),
@@ -1000,6 +1024,7 @@ mod tests {
             toughness: Fixed::from_int(400),
             radar: false,
             aircraft_capacity: 0,
+            anti_aircraft: 0,
         }
     }
 

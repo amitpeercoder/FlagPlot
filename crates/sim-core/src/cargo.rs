@@ -339,6 +339,7 @@ mod tests {
             toughness: Fixed::from_int(100),
             radar: false,
             aircraft_capacity: 0,
+            anti_aircraft: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);

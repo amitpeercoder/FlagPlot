@@ -608,6 +608,7 @@ mod tests {
                     toughness: Fixed::from_int(100),
                     radar: false,
                     aircraft_capacity: 0,
+                    anti_aircraft: 0,
                 },
             );
         }
@@ -662,6 +663,8 @@ mod tests {
                 }),
                 mission_order: None,
                 arc_order: None,
+                patrol_share: Fixed::ONE,
+                share_order: None,
             },
         );
         let mut next_ship = 1;
