@@ -631,6 +631,8 @@ mod tests {
                 strike_range_nm: Fixed::ZERO,
                 attack_weapon: crate::refdata::AttackWeapon::None,
                 attack_damage: Fixed::ZERO,
+                pilot_armour: false,
+                self_sealing_tanks: false,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

@@ -41,6 +41,10 @@ Decision 0020 says the derivation tool reads only `preferred` fact rows, and tha
 
 4. **Canberra is off the "unknown radar means not fitted" list.** Her Type 271 set is now a settled fact (sheet r1), so the facts are read. Vincennes and Jarvis stay on it: no source read says whether they had a search set.
 
+## Changed on Nov 11, 2026
+
+The Eastern Solomons settlement sheet (`docs/research/oob/eastern-solomons-settlement.md`), approved by the designer, moved three Savo Island classes to the Navy fuel tables' normal full load at 15 knots, so that endurance and fuel come from one condition: New Orleans 6,500 nm with 1,900 tons, Bagley 6,080 nm with 506 tons, Benham 4,860 nm with 491 tons. The class file was regenerated and the scenario's starting fuel follows it. No Allied ship moves at Savo Island, so only the fuel shown, and so the state hash, changed. A scenario ship that starts with more fuel than its class holds now fails to load.
+
 ## Known weaknesses
 
 The architect's review of the sheet. None blocks the scenario; each bears on how far its result can be trusted.

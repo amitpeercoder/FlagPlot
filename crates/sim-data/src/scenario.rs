@@ -553,15 +553,24 @@ impl Scenario {
                 }
                 systems.set(system, state);
             }
+            let fuel_t = spec
+                .fuel_t
+                .to_fixed()
+                .map_err(|e| fail(format!("{id}: fuel_t {e}")))?;
+            // A ship cannot start with more fuel than its class holds. This
+            // catches a scenario left behind when a class's figures change.
+            if fuel_t > ship_class.fuel_capacity_t {
+                return Err(fail(format!(
+                    "{id} starts with {fuel_t} t of fuel but its class {} holds {} t",
+                    spec.class, ship_class.fuel_capacity_t
+                )));
+            }
             let ship = Ship {
                 id,
                 name: spec.name.clone(),
                 class,
                 side: spec.side.into(),
-                fuel_t: spec
-                    .fuel_t
-                    .to_fixed()
-                    .map_err(|e| fail(format!("{id}: fuel_t {e}")))?,
+                fuel_t,
                 supply_t: match &spec.supply_t {
                     Some(quantity) => quantity
                         .to_fixed()
@@ -1637,6 +1646,19 @@ r = 0
             "kind = \"set_rules_of_engagement\"\nstance = \"engage\"\nbreak_off = \"0.5\"",
         );
         assert!(error_of(&to_group).contains("air_group"));
+    }
+
+    #[test]
+    fn a_ship_with_more_fuel_than_its_class_holds_is_rejected() {
+        // The helper's ship has 100 t, which its class holds. One with far
+        // more does not load.
+        assert!(parse_with(&with_force(&ship(""))).is_ok());
+        let overfull = ship("").replace("fuel_t = 100", "fuel_t = 999999");
+        let message = error_of(&with_force(&overfull));
+        assert!(
+            message.contains("of fuel but its class"),
+            "unexpected message: {message}"
+        );
     }
 
     #[test]

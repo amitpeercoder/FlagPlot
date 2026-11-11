@@ -14,9 +14,10 @@
 //!   `port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h`, one row for
 //!   each size 0 to 10. Lines starting with `#` are comments.
 //! - Aircraft types: CSV with the header
-//!   `id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage`,
+//!   `id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks`,
 //!   one type per row. The roles are `patrol` and `bomber`; the attack weapon
-//!   is `none`, `bomb` or `torpedo` (decision 0026). Lines starting with `#`
+//!   is `none`, `bomb` or `torpedo` (decision 0026); the last two columns are
+//!   `0` or `1` and required (decision 0029). Lines starting with `#`
 //!   are comments.
 //! - Search figures: TOML. A `placeholder` flag, the report, contact and
 //!   notice figures, and a `[kind_confusion.<kind>]` table for each of the six

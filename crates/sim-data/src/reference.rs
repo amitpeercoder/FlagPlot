@@ -201,6 +201,8 @@ struct AircraftTypeRow {
     strike_range_nm: String,
     attack_weapon: String,
     attack_damage: String,
+    pilot_armour: String,
+    self_sealing_tanks: String,
 }
 
 /// Loads aircraft types from a CSV file.
@@ -252,8 +254,20 @@ fn parse_aircraft_types(
                 ))
             }
         };
+        let flag = |field: &str, text: &str| -> Result<bool, DataError> {
+            match text {
+                "0" => Ok(false),
+                "1" => Ok(true),
+                other => Err(DataError::in_file(
+                    path,
+                    format!("{id}: {field} \"{other}\" must be 0 or 1"),
+                )),
+            }
+        };
         let aircraft_type = AircraftType {
             id,
+            pilot_armour: flag("pilot_armour", &row.pilot_armour)?,
+            self_sealing_tanks: flag("self_sealing_tanks", &row.self_sealing_tanks)?,
             role,
             strike_range_nm: number("strike_range_nm", &row.strike_range_nm)?,
             attack_weapon,
@@ -508,6 +522,8 @@ struct AirCombatFile {
     torpedo_hit_chance: Quantity,
     fighter_hit_chance: Quantity,
     anti_aircraft_hit_chance: Quantity,
+    pilot_armour_factor: Quantity,
+    self_sealing_tanks_factor: Quantity,
     bomb_system_hit_chance: Quantity,
     bomb_system_hit: SystemTable,
 }
@@ -536,6 +552,11 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         anti_aircraft_hit_chance: number(
             "anti_aircraft_hit_chance",
             &file.anti_aircraft_hit_chance,
+        )?,
+        pilot_armour_factor: number("pilot_armour_factor", &file.pilot_armour_factor)?,
+        self_sealing_tanks_factor: number(
+            "self_sealing_tanks_factor",
+            &file.self_sealing_tanks_factor,
         )?,
         bomb_system_hit_chance: number("bomb_system_hit_chance", &file.bomb_system_hit_chance)?,
         bomb_system_hit: file.bomb_system_hit.to_map("bomb_system_hit", &number)?,
@@ -578,12 +599,12 @@ mod tests {
     }
 
     const AIRCRAFT_HEADER: &str =
-        "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage\n";
+        "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks\n";
 
     #[test]
     fn aircraft_types_parse() {
         let types = parse_aircraft_types(
-            &format!("# c\n{AIRCRAFT_HEADER}1, Flying boat ,patrol,600,\"40.5\",0,none,0\n"),
+            &format!("# c\n{AIRCRAFT_HEADER}1, Flying boat ,patrol,600,\"40.5\",0,none,0,0,0\n"),
             here(),
         )
         .expect("parses");
@@ -595,13 +616,59 @@ mod tests {
         assert_eq!(one.strike_range_nm, Fixed::ZERO);
         assert_eq!(one.attack_weapon, AttackWeapon::None);
         assert_eq!(one.attack_damage, Fixed::ZERO);
+        assert!(!one.pilot_armour && !one.self_sealing_tanks);
+    }
+
+    #[test]
+    fn the_protection_columns_are_read_and_required() {
+        let types = parse_aircraft_types(
+            &format!(
+                "{AIRCRAFT_HEADER}1,A,fighter,0,0,0,none,0,1,0\n2,B,fighter,0,0,0,none,0,0,1\n"
+            ),
+            here(),
+        )
+        .expect("parses");
+        let a = &types[&AircraftTypeId::new(1)];
+        assert!(a.pilot_armour && !a.self_sealing_tanks);
+        let b = &types[&AircraftTypeId::new(2)];
+        assert!(!b.pilot_armour && b.self_sealing_tanks);
+        // A file without the columns is rejected, each one named.
+        for header in [
+            "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage\n1,A,fighter,0,0,0,none,0\n",
+            "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour\n1,A,fighter,0,0,0,none,0,0\n",
+        ] {
+            let error = parse_aircraft_types(header, here()).expect_err("rejected");
+            assert!(
+                error.message.contains("pilot_armour")
+                    || error.message.contains("self_sealing_tanks"),
+                "{error}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_protection_value_other_than_0_or_1_names_the_row() {
+        for (row, field) in [
+            ("1,A,fighter,0,0,0,none,0,2,0\n", "pilot_armour"),
+            ("1,A,fighter,0,0,0,none,0,0,yes\n", "self_sealing_tanks"),
+            ("1,A,fighter,0,0,0,none,0,,0\n", "pilot_armour"),
+        ] {
+            let error = parse_aircraft_types(&format!("{AIRCRAFT_HEADER}{row}"), here())
+                .expect_err("rejected");
+            assert!(error.message.contains(field), "{error}");
+            assert!(error.message.contains("0 or 1"), "{error}");
+            assert!(
+                error.message.contains(&AircraftTypeId::new(1).to_string()),
+                "{error}"
+            );
+        }
     }
 
     #[test]
     fn the_strike_columns_parse_for_a_bomber_and_a_torpedo_bomber() {
         let types = parse_aircraft_types(
             &format!(
-                "{AIRCRAFT_HEADER}1,Dive bomber,bomber,0,0,250,bomb,60\n2,Torpedo bomber,bomber,0,0,\"200.5\",torpedo,\"120.5\"\n"
+                "{AIRCRAFT_HEADER}1,Dive bomber,bomber,0,0,250,bomb,60,0,0\n2,Torpedo bomber,bomber,0,0,\"200.5\",torpedo,\"120.5\",1,1\n"
             ),
             here(),
         )
@@ -640,22 +707,22 @@ mod tests {
                 .expect_err("rejected")
                 .message
         };
-        assert!(bad("1,A,interceptor,600,40,0,none,0\n").contains("unknown role"));
+        assert!(bad("1,A,interceptor,600,40,0,none,0,0,0\n").contains("unknown role"));
         assert!(
-            bad("1,A,patrol,600,40,0,none,0\n1,B,patrol,600,40,0,none,0\n")
+            bad("1,A,patrol,600,40,0,none,0,0,0\n1,B,patrol,600,40,0,none,0,0,0\n")
                 .contains("appears twice")
         );
-        assert!(bad("1,A,patrol,0,40,0,none,0\n").contains("search range"));
-        assert!(bad("1,A,patrol,600,x,0,none,0\n").contains("sweep_width_nm"));
-        assert!(bad("1,A,bomber,0,0,250,cannon,60\n").contains("unknown attack weapon"));
-        assert!(bad("1,A,bomber,0,0,x,bomb,60\n").contains("strike_range_nm"));
-        assert!(bad("1,A,bomber,0,0,250,bomb,y\n").contains("attack_damage"));
+        assert!(bad("1,A,patrol,0,40,0,none,0,0,0\n").contains("search range"));
+        assert!(bad("1,A,patrol,600,x,0,none,0,0,0\n").contains("sweep_width_nm"));
+        assert!(bad("1,A,bomber,0,0,250,cannon,60,0,0\n").contains("unknown attack weapon"));
+        assert!(bad("1,A,bomber,0,0,x,bomb,60,0,0\n").contains("strike_range_nm"));
+        assert!(bad("1,A,bomber,0,0,250,bomb,y,0,0\n").contains("attack_damage"));
         // A weapon needs a range and damage to go with it.
-        assert!(bad("1,A,bomber,0,0,0,bomb,60\n").contains("strike range"));
-        assert!(bad("1,A,bomber,0,0,250,torpedo,0\n").contains("attack damage"));
-        assert!(bad("1,A,bomber,0,0,-1,none,0\n").contains("negative strike range"));
+        assert!(bad("1,A,bomber,0,0,0,bomb,60,0,0\n").contains("strike range"));
+        assert!(bad("1,A,bomber,0,0,250,torpedo,0,0,0\n").contains("attack damage"));
+        assert!(bad("1,A,bomber,0,0,-1,none,0,0,0\n").contains("negative strike range"));
         let extra = parse_aircraft_types(
-            "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,extra\n1,A,patrol,600,40,0,none,0,9\n",
+            "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks,extra\n1,A,patrol,600,40,0,none,0,0,0,9\n",
             here(),
         )
         .expect_err("rejected");
@@ -676,6 +743,11 @@ mod tests {
         assert_eq!(figures.torpedo_hit_chance, Fixed::from_ratio(15, 100));
         assert_eq!(figures.fighter_hit_chance, Fixed::from_ratio(3, 10));
         assert_eq!(figures.anti_aircraft_hit_chance, Fixed::from_ratio(5, 100));
+        assert_eq!(figures.pilot_armour_factor, Fixed::from_ratio(75, 100));
+        assert_eq!(
+            figures.self_sealing_tanks_factor,
+            Fixed::from_ratio(75, 100)
+        );
         assert_eq!(figures.bomb_system_hit_chance, Fixed::from_ratio(3, 10));
         assert_eq!(
             figures.bomb_system_hit[&ShipSystem::FlightDeck],
@@ -733,6 +805,26 @@ mod tests {
             bad("fighter_hit_chance = \"0.3\"", "fighter_hit_chance = 0.3")
                 .contains("fighter_hit_chance")
         );
+        // The two protection factors are required, in range, and not floats.
+        assert!(bad("pilot_armour_factor = \"0.75\"\n", "").contains("pilot_armour_factor"));
+        assert!(
+            bad("self_sealing_tanks_factor = \"0.75\"\n", "").contains("self_sealing_tanks_factor")
+        );
+        assert!(bad(
+            "pilot_armour_factor = \"0.75\"",
+            "pilot_armour_factor = \"1.5\""
+        )
+        .contains("pilot armour factor"));
+        assert!(bad(
+            "self_sealing_tanks_factor = \"0.75\"",
+            "self_sealing_tanks_factor = \"-0.1\""
+        )
+        .contains("self-sealing tanks factor"));
+        assert!(bad(
+            "pilot_armour_factor = \"0.75\"",
+            "pilot_armour_factor = 0.75"
+        )
+        .contains("pilot_armour_factor"));
         assert!(bad("flight_deck = \"0.5\"", "flight_deck = \"0.6\"").contains("add to"));
         assert!(bad("[bomb_system_hit]", "[bomb_system_hits]").contains("bomb_system_hits"));
     }
@@ -1024,7 +1116,7 @@ mod tests {
     #[test]
     fn a_fighter_type_loads_and_must_attack_with_nothing() {
         let types = parse_aircraft_types(
-            &format!("{AIRCRAFT_HEADER}4,Fighter,fighter,0,0,0,none,0\n"),
+            &format!("{AIRCRAFT_HEADER}4,Fighter,fighter,0,0,0,none,0,0,0\n"),
             here(),
         )
         .expect("parses");
@@ -1035,7 +1127,7 @@ mod tests {
         .expect("the shipped types load");
         assert_eq!(shipped[&AircraftTypeId::new(4)].role, AircraftRole::Fighter);
         let error = parse_aircraft_types(
-            &format!("{AIRCRAFT_HEADER}4,Fighter,fighter,0,0,250,bomb,60\n"),
+            &format!("{AIRCRAFT_HEADER}4,Fighter,fighter,0,0,250,bomb,60,0,0\n"),
             here(),
         )
         .expect_err("a fighter that bombs is rejected");
