@@ -286,7 +286,15 @@ impl World {
             .beliefs
             .get(&side)
             .expect("both sides have a belief state");
-        SideView::new(side, &self.truth, belief, &self.map, &self.ref_data)
+        SideView::new(
+            side,
+            &self.truth,
+            belief,
+            &self.map,
+            &self.ref_data,
+            &self.events,
+            &self.orders,
+        )
     }
 
     /// The truth. For tests, the command-line runner and hashing only. Never

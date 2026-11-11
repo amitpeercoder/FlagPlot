@@ -5,15 +5,24 @@
 //! as contacts. It has no method that returns enemy truth, so code holding a
 //! `SideView` cannot read it.
 //!
+//! The events a side may see come from [`SideView::events`], each cut down to
+//! what the side may know (decision 0047, [`crate::side_events`]). The full log
+//! stays with the umpire.
+//!
 //! The umpire's view is [`crate::World::umpire`]. It is for tests, the
 //! command-line runner and hashing, and must never be passed to anything that
 //! plays the game.
 
+use std::collections::BTreeMap;
+
 use crate::belief::{BattleClaim, BeliefState, Contact};
+use crate::events::EventLog;
 use crate::hex::Hex;
-use crate::ids::{AircraftTypeId, ShipClassId};
+use crate::ids::{AircraftTypeId, EventId, OrderId, ShipClassId};
 use crate::map::{HexData, Map};
+use crate::orders::Order;
 use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
+use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{AirGroup, Arrival, Base, Replacement, Ship, Side, TaskForce, TruthState};
 
 /// One side's view of the game.
@@ -28,6 +37,8 @@ pub struct SideView<'a> {
     belief: &'a BeliefState,
     map: &'a Map,
     ref_data: &'a RefData,
+    log: &'a EventLog,
+    orders: &'a BTreeMap<OrderId, Order>,
 }
 
 impl std::fmt::Debug for SideView<'_> {
@@ -45,6 +56,8 @@ impl<'a> SideView<'a> {
         belief: &'a BeliefState,
         map: &'a Map,
         ref_data: &'a RefData,
+        log: &'a EventLog,
+        orders: &'a BTreeMap<OrderId, Order>,
     ) -> SideView<'a> {
         SideView {
             side,
@@ -52,6 +65,8 @@ impl<'a> SideView<'a> {
             belief,
             map,
             ref_data,
+            log,
+            orders,
         }
     }
 
@@ -134,6 +149,30 @@ impl<'a> SideView<'a> {
     /// shown.
     pub fn claims(&self) -> &'a [BattleClaim] {
         self.belief.claims()
+    }
+
+    /// The events the side may see, each cut down to what it may know, in
+    /// log order (decision 0047). Each keeps its number in the full log, so
+    /// a gap in the numbers is something that happened that the side may not
+    /// see. This is the only way events leave for anything that plays the
+    /// game; the full log stays with the umpire.
+    pub fn events(&self) -> Vec<SideEvent> {
+        let owners = Owners::from_state(self.truth, self.orders);
+        side_events::project(self.side, self.log.from_index(0), &owners)
+    }
+
+    /// The events of one day the side may see, in log order.
+    pub fn events_on_day(&self, day: u32) -> Vec<SideEvent> {
+        let mut events = self.events();
+        events.retain(|event| event.day == day);
+        events
+    }
+
+    /// One event the side may see, by its number in the full log. `None` if
+    /// there is no such event or the side may not see it. Its causes are the
+    /// ones the side may see, and `hidden_causes` says if there are more.
+    pub fn event(&self, id: EventId) -> Option<SideEvent> {
+        self.events().into_iter().find(|event| event.id == id)
     }
 
     /// The map is common knowledge.
