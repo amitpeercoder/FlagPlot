@@ -144,6 +144,13 @@ impl World {
         {
             return Err(SimError::InvalidSetup(problem));
         }
+        if let Some(problem) = ref_data
+            .fatigue
+            .as_ref()
+            .and_then(|figures| figures.problem())
+        {
+            return Err(SimError::InvalidSetup(problem));
+        }
         for group in truth.air_groups.values() {
             if !ref_data.aircraft_types.contains_key(&group.aircraft_type) {
                 return Err(SimError::InvalidSetup(format!(

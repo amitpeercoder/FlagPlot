@@ -1,7 +1,7 @@
 //! The event log as JSON.
 
 use serde::Serialize;
-use sim_core::events::{Breakdown, Cause, Event, EventKind};
+use sim_core::events::{Breakdown, Cause, Event, EventKind, FatigueChange};
 use sim_core::orders::RejectReason;
 use sim_core::state::AirGroupLocation;
 
@@ -119,6 +119,9 @@ fn reject_reason(reason: &RejectReason) -> Data {
             base("patrol_share_out_of_range").num("share", *share)
         }
         RejectReason::NotAnEnemyBase => base("not_an_enemy_base"),
+        RejectReason::FatigueOutOfRange(fatigue) => {
+            base("fatigue_out_of_range").num("fatigue", *fatigue)
+        }
     }
 }
 
@@ -308,6 +311,47 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             .int("repaired", *repaired)
             .int("ready", *ready)
             .int("damaged", *damaged),
+        ),
+        EventKind::AirGroupFatigue {
+            air_group,
+            change,
+            amount,
+            fatigue,
+        } => (
+            "air_group_fatigue",
+            match change {
+                FatigueChange::Gained {
+                    sortie,
+                    distance_nm,
+                } => d
+                    .id("air_group", *air_group)
+                    .text("change", "gained")
+                    .text("sortie", sortie.name())
+                    .num("distance_nm", *distance_nm),
+                FatigueChange::Rested => d.id("air_group", *air_group).text("change", "rested"),
+            }
+            .num("amount", *amount)
+            .num("fatigue", *fatigue),
+        ),
+        EventKind::AirGroupStoodDown {
+            air_group,
+            fatigue,
+            threshold,
+        } => (
+            "air_group_stood_down",
+            d.id("air_group", *air_group)
+                .num("fatigue", *fatigue)
+                .num("threshold", *threshold),
+        ),
+        EventKind::AirGroupReturned {
+            air_group,
+            fatigue,
+            threshold,
+        } => (
+            "air_group_returned",
+            d.id("air_group", *air_group)
+                .num("fatigue", *fatigue)
+                .num("threshold", *threshold),
         ),
         EventKind::AirGroupLost {
             air_group,

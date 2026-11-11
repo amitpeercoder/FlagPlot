@@ -88,6 +88,19 @@
 //! group hit, `DamagedAircraftDestroyedOnGround` and then
 //! `AircraftDestroyedOnGround`.
 //!
+//! # Fatigue (0036)
+//!
+//! What a group can fly in every step is [`World::aircraft_able_to_fly`]: its
+//! ready aircraft times the flight deck's factor times 100 less its fatigue
+//! over 100, rounded down once, and none if it is stood down. Search, strike
+//! launch and the fighters' split into patrol and escorts all use it. The
+//! aircraft on the ground at a raided base are, for each group located there
+//! in order of group number, its damaged aircraft and then its ready aircraft
+//! that are not flying in the pulse ([`World::aircraft_flying`]): a search
+//! group's aircraft that search, the aircraft a strike launched, and a fighter
+//! group's patrol and the escorts that go. The sorties noted for the wear
+//! step are noted too when only the fatigue figures are loaded.
+//!
 //! # Random streams
 //!
 //! All in the air combat subsystem. A group's attack: (air group, task
@@ -412,24 +425,31 @@ fn take_ground(hits: u32, pool: &mut [(AirGroupId, Stock, u32)]) -> Vec<(AirGrou
 
 impl World {
     /// The aircraft of `group` that can be flown this pulse (decision 14 of
-    /// 0026): all its ready aircraft from a base, or from a ship whose flight
-    /// deck works; the ready aircraft times the degraded factor, rounded
-    /// down, if the deck is degraded; none if it is out.
+    /// 0026 and decision 2 of 0036): its ready aircraft times the flight
+    /// deck's factor (all of them from a base, or from a ship whose deck
+    /// works; the degraded factor if it is degraded; none if it is out) times
+    /// 100 less its fatigue over 100, multiplied in fixed point and rounded
+    /// down once. A stood-down group flies none. Without the fatigue
+    /// figures a group is never tired or stood down.
     pub(crate) fn aircraft_able_to_fly(&self, group: &AirGroup) -> u32 {
-        let AirGroupLocation::Ship(ship) = group.location else {
-            return group.ready;
-        };
-        let Some(ship) = self.truth.ships.get(&ship) else {
-            return group.ready;
-        };
-        let state = ship.systems.get(ShipSystem::FlightDeck);
-        let Some(figures) = &self.ref_data.surface_combat else {
-            // Without the figures no system can be damaged (World::new).
-            return group.ready;
-        };
-        let factor = figures.system_factor(ShipSystem::FlightDeck, state);
-        let flown = (Fixed::from_int(i64::from(group.ready)) * factor).trunc();
-        u32::try_from(flown).expect("a share of the aircraft is not negative")
+        let mut able = Fixed::from_int(i64::from(group.ready));
+        if let AirGroupLocation::Ship(ship) = group.location {
+            if let Some(ship) = self.truth.ships.get(&ship) {
+                // Without the figures no system can be damaged (World::new).
+                if let Some(figures) = &self.ref_data.surface_combat {
+                    let state = ship.systems.get(ShipSystem::FlightDeck);
+                    able = able * figures.system_factor(ShipSystem::FlightDeck, state);
+                }
+            }
+        }
+        if self.ref_data.fatigue.is_some() {
+            if group.stood_down {
+                return 0;
+            }
+            let hundred = Fixed::from_int(100);
+            able = able.mul_div(hundred - group.fatigue, hundred);
+        }
+        u32::try_from(able.trunc()).expect("a share of the aircraft is not negative")
     }
 
     /// The strike decision step of one daylight pulse (decisions 3 to 6 of
@@ -612,7 +632,7 @@ impl World {
         let strikes = std::mem::take(&mut self.strikes_in_flight);
         if strikes.is_empty() {
             // A patrol flies whether or not a raid came (decision 7 of 0035).
-            if self.ref_data.air_upkeep.is_some() {
+            if self.notes_sorties() {
                 let fighters = self.split_fighter_groups();
                 self.note_patrols(&fighters, pulse);
             }
@@ -620,12 +640,14 @@ impl World {
         }
 
         // Everything is worked out on the state at the start of the step.
-        let mut ground = self.aircraft_on_the_ground(&strikes);
-        let fighters = self.split_fighter_groups();
         let mut raids = group_raids(&strikes);
-        let mut fighters = fighters;
+        let mut fighters = self.split_fighter_groups();
         send_escorts(&mut raids, &mut fighters);
-        if self.ref_data.air_upkeep.is_some() {
+        let mut ground = {
+            let flying = self.aircraft_flying(pulse, &strikes, &raids, &fighters);
+            self.aircraft_on_the_ground(&strikes, &flying)
+        };
+        if self.notes_sorties() {
             // What flew, for the wear step: the patrols and the strikes now;
             // the escorts as they are recorded; the losses as they are taken.
             self.note_patrols(&fighters, pulse);
@@ -677,7 +699,7 @@ impl World {
                     causes,
                     None,
                 ));
-                if self.ref_data.air_upkeep.is_some() {
+                if self.notes_sorties() {
                     self.note_escorts(
                         group,
                         aircraft,
@@ -942,13 +964,57 @@ impl World {
         }
     }
 
+    /// The aircraft each group flies in this pulse, on the state at the
+    /// start of the air combat step, after the escorts are sent (decision 11
+    /// of 0036): the aircraft a group on search sends, the aircraft a strike
+    /// launched, and the patrol and the escorts that go of a fighter group.
+    /// A group not in the map flies none.
+    fn aircraft_flying(
+        &self,
+        pulse: Pulse,
+        strikes: &[StrikeInFlight],
+        raids: &[Raid],
+        fighters: &[FighterGroup],
+    ) -> BTreeMap<AirGroupId, u32> {
+        let mut flying: BTreeMap<AirGroupId, u32> = BTreeMap::new();
+        for group in self.truth.air_groups.values() {
+            // The search step: a group with an arc and light sends all it
+            // can fly (see `search_from_the_air`).
+            if group.mission == AirMission::Search
+                && group.ready > 0
+                && group.search.is_some()
+                && self
+                    .truth
+                    .air_group_hex(group)
+                    .is_some_and(|hex| !time::is_dark(hex, pulse))
+            {
+                flying.insert(group.id, self.aircraft_able_to_fly(group));
+            }
+        }
+        for strike in strikes {
+            *flying.entry(strike.air_group).or_insert(0) += strike.aircraft;
+        }
+        for (index, group) in fighters.iter().enumerate() {
+            let sent = raids.iter().any(|raid| raid.escorts.contains(&index));
+            let aircraft = group.patrol + if sent { group.escorts } else { 0 };
+            *flying.entry(group.air_group).or_insert(0) += aircraft;
+        }
+        flying
+    }
+
     /// The aircraft on the ground at each base that a base strike was sent
-    /// at, on the state at the start of the air combat step (decision 8 of
-    /// 0034): the ready aircraft of the groups located at the base that rest,
-    /// and of those on a strike mission that did not launch in this pulse.
-    /// Groups that search or are on combat air patrol are in the air. By
-    /// group, in order of group number.
-    fn aircraft_on_the_ground(&self, strikes: &[StrikeInFlight]) -> Ground {
+    /// at, on the state at the start of the air combat step (decision 11 of
+    /// 0036, which restates decision 8 of 0034): for each group located at
+    /// the base, in order of group number, its damaged aircraft (whatever
+    /// the group is doing, decision 11 of 0035) and then its ready aircraft
+    /// that are not flying in this pulse, whatever the group's mission. So
+    /// the aircraft a tired group leaves behind, the fighters that neither
+    /// patrol nor escort, and a stood-down group are all on the ground.
+    fn aircraft_on_the_ground(
+        &self,
+        strikes: &[StrikeInFlight],
+        flying: &BTreeMap<AirGroupId, u32>,
+    ) -> Ground {
         let mut ground = Ground::new();
         for strike in strikes {
             let Aim::Base(base) = strike.aim else {
@@ -962,19 +1028,14 @@ impl World {
                     .values()
                     .filter(|group| group.location == AirGroupLocation::Base(base))
                 {
-                    // Damaged aircraft are on the ground whatever the group
-                    // is doing (decision 11 of 0035).
                     if group.damaged > 0 {
                         pool.push((group.id, Stock::Damaged, group.damaged));
                     }
-                    if group.ready > 0
-                        && matches!(
-                            group.mission,
-                            AirMission::Rest | AirMission::NavalStrike | AirMission::BaseStrike(_)
-                        )
-                        && !strikes.iter().any(|strike| strike.air_group == group.id)
-                    {
-                        pool.push((group.id, Stock::Ready, group.ready));
+                    let resting = group
+                        .ready
+                        .saturating_sub(flying.get(&group.id).copied().unwrap_or(0));
+                    if resting > 0 {
+                        pool.push((group.id, Stock::Ready, resting));
                     }
                 }
                 pool
@@ -1805,6 +1866,7 @@ impl World {
                     air_group: group.air_group,
                     kind: SortieKind::Patrol,
                     aircraft: group.patrol,
+                    sent: group.patrol,
                     distance_nm: Fixed::ZERO,
                     causes: group.orders.clone(),
                 });
@@ -1832,6 +1894,7 @@ impl World {
                 air_group: strike.air_group,
                 kind,
                 aircraft: strike.aircraft,
+                sent: strike.aircraft,
                 distance_nm: out_and_back(from, strike.hex),
                 causes: vec![Cause::Event(strike.launched)],
             });
@@ -1856,6 +1919,7 @@ impl World {
             air_group: group,
             kind: SortieKind::Escort,
             aircraft,
+            sent: aircraft,
             distance_nm: out_and_back(from, raid_hex),
             causes: vec![Cause::Event(sent)],
         });
@@ -2049,6 +2113,10 @@ mod tests {
             arc_order: None,
             patrol_share: Fixed::ONE,
             share_order: None,
+            fatigue: Fixed::ZERO,
+            rest_above: None,
+            rest_order: None,
+            stood_down: false,
         }
     }
 
@@ -5689,6 +5757,17 @@ mod tests {
         assert!(events_where(&world, |_| true).is_empty());
     }
 
+    /// The ground pool the air combat step works on, for the strikes in
+    /// flight in a morning pulse.
+    fn ground_of(world: &World) -> Ground {
+        let strikes = &world.strikes_in_flight;
+        let mut raids = group_raids(strikes);
+        let mut fighters = world.split_fighter_groups();
+        send_escorts(&mut raids, &mut fighters);
+        let flying = world.aircraft_flying(Pulse::Morning, strikes, &raids, &fighters);
+        world.aircraft_on_the_ground(strikes, &flying)
+    }
+
     #[test]
     fn aircraft_on_the_ground_are_those_resting_and_those_on_a_strike_that_did_not_launch() {
         let mut world = raid_world(1);
@@ -5710,6 +5789,12 @@ mod tests {
         }
         // A group at the other base, resting, is not at base 2.
         base_group(&mut world, 27, BASE_ALLIED, 2, 9, AirMission::Rest);
+        // Group 21 flies a search because it has an arc.
+        group_mut(&mut world, AirGroupId::new(21)).search = Some(crate::state::SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(300),
+        });
         world.decide_strikes(1, Pulse::Morning);
         let strikes: Vec<AirGroupId> = world
             .strikes_in_flight
@@ -5717,7 +5802,7 @@ mod tests {
             .map(|strike| strike.air_group)
             .collect();
         assert_eq!(strikes, vec![AirGroupId::new(1), AirGroupId::new(24)]);
-        let ground = world.aircraft_on_the_ground(&world.strikes_in_flight);
+        let ground = ground_of(&world);
         assert_eq!(
             ground[&BASE_JAPANESE],
             vec![
@@ -6621,6 +6706,15 @@ mod tests {
         ] {
             base_group(&mut world, id, BASE_JAPANESE, type_id, ready, mission);
             group_mut(&mut world, AirGroupId::new(id)).damaged = damaged;
+            if mission == AirMission::Search {
+                // A group on search flies only with an arc (decision 11 of
+                // 0036: a group that does not fly is on the ground).
+                group_mut(&mut world, AirGroupId::new(id)).search = Some(SearchArc {
+                    from_deg: 0,
+                    to_deg: 350,
+                    range_nm: Fixed::from_int(300),
+                });
+            }
         }
         sure_bombs(&mut world, Fixed::ONE, Fixed::ZERO);
         // The fighters and the guns do nothing.
@@ -6734,7 +6828,7 @@ mod tests {
             AirMission::BaseStrike(BASE_ALLIED),
         );
         world.decide_strikes(1, Pulse::Morning);
-        let ground = world.aircraft_on_the_ground(&world.strikes_in_flight);
+        let ground = ground_of(&world);
         assert_eq!(
             ground[&BASE_ALLIED],
             vec![(AirGroupId::new(1), Stock::Damaged, 3)]
@@ -6761,5 +6855,591 @@ mod tests {
         );
         let group = group_mut(&mut world, ENEMY_BOMBERS);
         assert_eq!((group.ready, group.damaged), (0, 0));
+    }
+    // ---- fatigue and rest (decision 0036) ----
+
+    use crate::events::FatigueChange;
+    use crate::refdata::FatigueFigures;
+
+    /// Fatigue figures of 3 a sortie, 2 for each 100 nm and 5 rest a pulse:
+    /// those of `data/reference/fatigue.toml`.
+    fn tire(world: &mut World) {
+        world.ref_data.fatigue = Some(FatigueFigures {
+            air_fatigue_per_sortie: Fixed::from_int(3),
+            air_fatigue_per_100_nm: Fixed::from_int(2),
+            air_rest_per_pulse: Fixed::from_int(5),
+        });
+    }
+
+    fn set_fatigue(world: &mut World, id: u32, fatigue: Fixed) {
+        group_mut(world, AirGroupId::new(id)).fatigue = fatigue;
+    }
+
+    fn fatigue_of(world: &mut World, id: u32) -> Fixed {
+        group_mut(world, AirGroupId::new(id)).fatigue
+    }
+
+    /// The `AirGroupFatigue` events as (group, change, amount, fatigue).
+    fn fatigue_events(world: &World) -> Vec<(u32, FatigueChange, Fixed, Fixed)> {
+        events_where(world, |k| matches!(k, EventKind::AirGroupFatigue { .. }))
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::AirGroupFatigue {
+                    air_group,
+                    change,
+                    amount,
+                    fatigue,
+                } => (air_group.raw(), change, amount, fatigue),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    fn gained(sortie: SortieKind, nm: i64) -> FatigueChange {
+        FatigueChange::Gained {
+            sortie,
+            distance_nm: Fixed::from_int(nm),
+        }
+    }
+
+    fn able(world: &World, id: u32) -> u32 {
+        world.aircraft_able_to_fly(&world.truth.air_groups[&AirGroupId::new(id)])
+    }
+
+    #[test]
+    fn fatigue_cuts_the_aircraft_that_fly_and_a_degraded_deck_multiplies_it_with_one_rounding() {
+        // 7 ready aboard a carrier whose deck is degraded (half): 3.5, times
+        // 90 over 100, is 3.15: 3. Rounding the half first would give 2.
+        let mut world = world_with_a_good_contact(1);
+        tire(&mut world);
+        group_mut(&mut world, BOMBERS).ready = 7;
+        deck(&mut world, 1, SystemState::Degraded);
+        set_fatigue(&mut world, BOMBERS.raw(), Fixed::from_int(10));
+        assert_eq!(able(&world, BOMBERS.raw()), 3);
+        // The same group, deck working: 7 x 0.9 = 6.3: 6; deck out: none.
+        deck(&mut world, 1, SystemState::Working);
+        assert_eq!(able(&world, BOMBERS.raw()), 6);
+        deck(&mut world, 1, SystemState::Out);
+        assert_eq!(able(&world, BOMBERS.raw()), 0);
+        // The cut reaches the strike decision.
+        deck(&mut world, 1, SystemState::Degraded);
+        world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(launch_of(&launches(&world)[0]).3, 3);
+    }
+
+    #[test]
+    fn a_group_flies_its_ready_aircraft_times_100_less_its_fatigue_over_100_rounded_down() {
+        let mut world = base_world(1);
+        base_group(&mut world, 2, BASE_ALLIED, 1, 6, AirMission::Search);
+        tire(&mut world);
+        let flies = |world: &mut World, ready: u32, fatigue: Fixed| {
+            group_mut(world, AirGroupId::new(2)).ready = ready;
+            set_fatigue(world, 2, fatigue);
+            able(world, 2)
+        };
+        let n = Fixed::from_int;
+        // 6 scouts at fatigue 1 fly 5.
+        assert_eq!(flies(&mut world, 6, n(0)), 6);
+        assert_eq!(flies(&mut world, 6, n(1)), 5);
+        assert_eq!(flies(&mut world, 6, n(30)), 4);
+        assert_eq!(flies(&mut world, 6, n(85)), 0);
+        assert_eq!(flies(&mut world, 6, n(100)), 0);
+        assert_eq!(flies(&mut world, 0, n(0)), 0);
+        // A fatigue with decimals: 5 x 93.8 / 100 = 4.69.
+        assert_eq!(
+            flies(&mut world, 5, "6.2".parse::<Fixed>().expect("fixed")),
+            4
+        );
+        // It never rises with the fatigue.
+        for ready in 0..=30 {
+            let mut last = u32::MAX;
+            for fatigue in 0..=100 {
+                let now = flies(&mut world, ready, n(fatigue));
+                assert!(now <= last && now <= ready, "{ready} at {fatigue}");
+                last = now;
+            }
+        }
+        // Without the figures fatigue cuts nothing, and nobody is stood down.
+        world.ref_data.fatigue = None;
+        group_mut(&mut world, AirGroupId::new(2)).stood_down = true;
+        assert_eq!(flies(&mut world, 6, n(50)), 6);
+        // With them a stood-down group flies none, tired or not.
+        tire(&mut world);
+        assert_eq!(flies(&mut world, 6, n(0)), 0);
+    }
+
+    #[test]
+    fn each_kind_of_sortie_gains_fatigue_for_its_distance_citing_what_says_it_flew() {
+        // A search out to 300 nm: 600 nm, 3 + 2 x 6 = 15.
+        let mut world = base_world(1);
+        base_group(&mut world, 2, BASE_ALLIED, 1, 6, AirMission::Search);
+        group_mut(&mut world, AirGroupId::new(2)).search = Some(SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(300),
+        });
+        tire(&mut world);
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert_eq!(
+            fatigue_events(&world),
+            vec![(
+                2,
+                gained(SortieKind::Search, 600),
+                Fixed::from_int(15),
+                Fixed::from_int(15)
+            )]
+        );
+        let search = events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. }))[0].id;
+        let event = &events_where(&world, |k| matches!(k, EventKind::AirGroupFatigue { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Event(search)]);
+        assert_eq!(
+            event.kind.to_string(),
+            "air_group:2 gained 15 fatigue from its search sortie of 600 nm, now 15"
+        );
+
+        // A strike at a contact 200 nm away: 400 nm, 11.
+        let mut world = world_with_a_good_contact(1);
+        tire(&mut world);
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        let bombers = fatigue_events(&world)
+            .into_iter()
+            .filter(|event| event.0 == BOMBERS.raw())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            bombers,
+            vec![(
+                BOMBERS.raw(),
+                gained(SortieKind::Strike, 400),
+                Fixed::from_int(11),
+                Fixed::from_int(11)
+            )]
+        );
+
+        // A strike at a base 200 nm away: 11.
+        let mut world = raid_world(1);
+        tire(&mut world);
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        assert_eq!(
+            fatigue_events(&world),
+            vec![(
+                1,
+                gained(SortieKind::BaseStrike, 400),
+                Fixed::from_int(11),
+                Fixed::from_int(11)
+            )]
+        );
+        let launch = base_launches(&world)[0].id;
+        let event = &events_where(&world, |k| matches!(k, EventKind::AirGroupFatigue { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Event(launch)]);
+
+        // A patrol with no raid: no distance, 3, citing the group's orders.
+        let mut world = base_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(5)).mission_order = Some(OrderId::new(3));
+        tire(&mut world);
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert_eq!(
+            fatigue_events(&world),
+            vec![(
+                5,
+                gained(SortieKind::Patrol, 0),
+                Fixed::from_int(3),
+                Fixed::from_int(3)
+            )]
+        );
+        let event = &events_where(&world, |k| matches!(k, EventKind::AirGroupFatigue { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Order(OrderId::new(3))]);
+    }
+
+    #[test]
+    fn a_fighter_group_that_kept_a_patrol_and_sent_escorts_gains_for_the_longer_once() {
+        let mut world = raid_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(5)).patrol_share = fixed(1, 2);
+        group_mut(&mut world, AirGroupId::new(5)).mission_order = Some(OrderId::new(3));
+        tire(&mut world);
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        let sent = events_where(&world, |k| matches!(k, EventKind::EscortsSent { .. }))[0].id;
+        let events: Vec<_> = fatigue_events(&world)
+            .into_iter()
+            .filter(|event| event.0 == 5)
+            .collect();
+        // 11 for the escorts' 400 nm, once, not 3 + 11.
+        assert_eq!(
+            events,
+            vec![(
+                5,
+                gained(SortieKind::Escort, 400),
+                Fixed::from_int(11),
+                Fixed::from_int(11)
+            )]
+        );
+        let event = events_where(&world, |k| matches!(k, EventKind::AirGroupFatigue { .. }))
+            .into_iter()
+            .find(|event| matches!(event.kind, EventKind::AirGroupFatigue { air_group, .. } if air_group.raw() == 5))
+            .expect("the fighters' event");
+        // Both sorties say it flew: the patrol's order, the escorts' event.
+        assert_eq!(
+            event.causes,
+            vec![Cause::Order(OrderId::new(3)), Cause::Event(sent)]
+        );
+    }
+
+    #[test]
+    fn a_group_whose_aircraft_were_all_shot_down_still_gained_for_the_sortie() {
+        let mut world = raid_world(1);
+        // 30 defending fighters, sure to hit: the 18 bombers all fall.
+        base_group(
+            &mut world,
+            9,
+            BASE_JAPANESE,
+            5,
+            30,
+            AirMission::CombatAirPatrol,
+        );
+        air_figures(&mut world).fighter_hit_chance = Fixed::ONE;
+        tire(&mut world);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(ready_of(&world, 1), 0, "every bomber was shot down");
+        assert!(base_attacks(&world).is_empty());
+        world.wear_aircraft(1, Pulse::Morning);
+        let events: Vec<_> = fatigue_events(&world)
+            .into_iter()
+            .filter(|event| event.0 == 1)
+            .collect();
+        assert_eq!(
+            events,
+            vec![(
+                1,
+                gained(SortieKind::BaseStrike, 400),
+                Fixed::from_int(11),
+                Fixed::from_int(11)
+            )]
+        );
+    }
+
+    #[test]
+    fn rest_never_goes_below_0_and_a_gain_never_passes_100_and_neither_records_nothing_at_the_limit(
+    ) {
+        // Resting: 3 loses 3 (not 5), then at 0 nothing is recorded.
+        let mut world = base_world(1);
+        base_group(&mut world, 4, BASE_ALLIED, 2, 10, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(4)).mission_order = Some(OrderId::new(2));
+        tire(&mut world);
+        set_fatigue(&mut world, 4, Fixed::from_int(3));
+        world.wear_aircraft(1, Pulse::Morning);
+        assert_eq!(
+            fatigue_events(&world),
+            vec![(4, FatigueChange::Rested, Fixed::from_int(3), Fixed::ZERO)]
+        );
+        // With no stand-down the cause is the mission order.
+        let event = &events_where(&world, |k| matches!(k, EventKind::AirGroupFatigue { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Order(OrderId::new(2))]);
+        world.wear_aircraft(1, Pulse::Afternoon);
+        assert_eq!(fatigue_events(&world).len(), 1);
+        assert_eq!(fatigue_of(&mut world, 4), Fixed::ZERO);
+
+        // Flying: 98 + 3 stops at 100 (a gain of 2). It can fly only 2 of 100.
+        let mut world = base_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            100,
+            AirMission::CombatAirPatrol,
+        );
+        tire(&mut world);
+        set_fatigue(&mut world, 5, Fixed::from_int(98));
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert_eq!(
+            fatigue_events(&world),
+            vec![(
+                5,
+                gained(SortieKind::Patrol, 0),
+                Fixed::from_int(2),
+                Fixed::from_int(100)
+            )]
+        );
+        // At 100 it flies nothing (100 x 0 = 0) and rests: 95.
+        fly_and_wear(&mut world, Pulse::Afternoon);
+        assert_eq!(fatigue_of(&mut world, 5), Fixed::from_int(95));
+    }
+
+    #[test]
+    fn a_group_stands_down_above_its_threshold_and_returns_at_or_under_it() {
+        let mut world = base_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        base_group(
+            &mut world,
+            6,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        {
+            let group = group_mut(&mut world, AirGroupId::new(5));
+            group.rest_above = Some(Fixed::from_int(30));
+            group.rest_order = Some(OrderId::new(9));
+        }
+        tire(&mut world);
+        let standing = |world: &World| {
+            events_where(world, |k| {
+                matches!(
+                    k,
+                    EventKind::AirGroupStoodDown { .. } | EventKind::AirGroupReturned { .. }
+                )
+            })
+        };
+        // Equal to the threshold is not above it.
+        set_fatigue(&mut world, 5, Fixed::from_int(30));
+        set_fatigue(&mut world, 6, Fixed::from_int(100));
+        world.stand_down_and_return_air_groups(2, Pulse::Night);
+        assert!(standing(&world).is_empty());
+        assert!(!group_mut(&mut world, AirGroupId::new(5)).stood_down);
+        // A hair above is. Group 6 has no threshold and is never stood down.
+        set_fatigue(&mut world, 5, Fixed::from_raw(30_000_001));
+        world.stand_down_and_return_air_groups(3, Pulse::Night);
+        let events = standing(&world);
+        assert_eq!(events.len(), 1);
+        assert_eq!(
+            events[0].kind,
+            EventKind::AirGroupStoodDown {
+                air_group: AirGroupId::new(5),
+                fatigue: Fixed::from_raw(30_000_001),
+                threshold: Fixed::from_int(30),
+            }
+        );
+        assert_eq!(events[0].causes, vec![Cause::Order(OrderId::new(9))]);
+        assert!(group_mut(&mut world, AirGroupId::new(5)).stood_down);
+        assert!(!group_mut(&mut world, AirGroupId::new(6)).stood_down);
+        // Still above: nothing more is recorded.
+        world.stand_down_and_return_air_groups(4, Pulse::Night);
+        assert_eq!(standing(&world).len(), 1);
+        // Back to the threshold: returned.
+        set_fatigue(&mut world, 5, Fixed::from_int(30));
+        world.stand_down_and_return_air_groups(5, Pulse::Night);
+        let events = standing(&world);
+        assert_eq!(events.len(), 2);
+        assert_eq!(
+            events[1].kind,
+            EventKind::AirGroupReturned {
+                air_group: AirGroupId::new(5),
+                fatigue: Fixed::from_int(30),
+                threshold: Fixed::from_int(30),
+            }
+        );
+        assert_eq!(events[1].causes, vec![Cause::Order(OrderId::new(9))]);
+        assert!(!group_mut(&mut world, AirGroupId::new(5)).stood_down);
+        // Without the figures nobody is stood down.
+        world.ref_data.fatigue = None;
+        set_fatigue(&mut world, 5, Fixed::from_int(90));
+        world.stand_down_and_return_air_groups(6, Pulse::Night);
+        assert_eq!(standing(&world).len(), 2);
+    }
+
+    #[test]
+    fn a_stood_down_group_flies_nothing_keeps_its_mission_rests_and_is_on_the_ground() {
+        let mut world = raid_world(1);
+        // Scouts at the raided base: stood down, they send none and sit on
+        // the ground; not stood down, they search and are in the air.
+        base_group(&mut world, 20, BASE_JAPANESE, 1, 6, AirMission::Search);
+        group_mut(&mut world, AirGroupId::new(20)).search = Some(SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(300),
+        });
+        tire(&mut world);
+        world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(ground_of(&world).get(&BASE_JAPANESE), Some(&Vec::new()));
+        group_mut(&mut world, AirGroupId::new(20)).stood_down = true;
+        set_fatigue(&mut world, 20, Fixed::from_int(60));
+        assert_eq!(
+            ground_of(&world)[&BASE_JAPANESE],
+            vec![(AirGroupId::new(20), Stock::Ready, 6)]
+        );
+        world.search_from_the_air(1, Pulse::Morning);
+        assert!(events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. })).is_empty());
+        assert_eq!(
+            group_mut(&mut world, AirGroupId::new(20)).mission,
+            AirMission::Search
+        );
+        // It did not fly, so it rests the figure, citing its stand-down.
+        world.stand_down_and_return_air_groups(1, Pulse::Night);
+        world.strikes_in_flight.clear();
+        world.wear_aircraft(1, Pulse::Morning);
+        assert_eq!(
+            fatigue_events(&world),
+            vec![(
+                20,
+                FatigueChange::Rested,
+                Fixed::from_int(5),
+                Fixed::from_int(55)
+            )]
+        );
+        // A stood-down group's patrol and escorts are none either.
+        let mut world = base_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        tire(&mut world);
+        group_mut(&mut world, AirGroupId::new(5)).stood_down = true;
+        let fighters = world.split_fighter_groups();
+        assert_eq!((fighters[0].patrol, fighters[0].escorts), (0, 0));
+    }
+
+    #[test]
+    fn the_ground_holds_the_ready_aircraft_not_flying_and_the_damaged_ones() {
+        let mut world = raid_world(1);
+        tire(&mut world);
+        // A tired fighter group on patrol (share 1) at the raided base: 12
+        // ready at fatigue 50 patrol 6 and leave 6 on the ground.
+        base_group(
+            &mut world,
+            20,
+            BASE_JAPANESE,
+            5,
+            12,
+            AirMission::CombatAirPatrol,
+        );
+        set_fatigue(&mut world, 20, Fixed::from_int(50));
+        group_mut(&mut world, AirGroupId::new(20)).damaged = 2;
+        // Half of a fighter group with no raid at its place stays on the
+        // ground: share 0.5 of 8, 4 patrol, the other 4 do not fly.
+        base_group(
+            &mut world,
+            21,
+            BASE_JAPANESE,
+            5,
+            8,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(21)).patrol_share = fixed(1, 2);
+        // A group that flies everything is not on the ground at all.
+        base_group(
+            &mut world,
+            22,
+            BASE_JAPANESE,
+            5,
+            5,
+            AirMission::CombatAirPatrol,
+        );
+        world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(
+            ground_of(&world)[&BASE_JAPANESE],
+            vec![
+                (AirGroupId::new(20), Stock::Damaged, 2),
+                (AirGroupId::new(20), Stock::Ready, 6),
+                (AirGroupId::new(21), Stock::Ready, 4),
+            ]
+        );
+    }
+
+    #[test]
+    fn without_the_figures_nothing_is_noted_recorded_or_changed_by_fatigue() {
+        let mut world = raid_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        // A threshold is stored and does nothing; the group's own fatigue is
+        // ignored.
+        {
+            let group = group_mut(&mut world, AirGroupId::new(5));
+            group.rest_above = Some(Fixed::ZERO);
+            group.fatigue = Fixed::from_int(80);
+        }
+        for pulse in Pulse::ALL {
+            world.stand_down_and_return_air_groups(1, pulse);
+            fly_and_wear(&mut world, pulse);
+            assert!(world.sorties.is_empty());
+        }
+        assert!(fatigue_events(&world).is_empty());
+        assert!(!group_mut(&mut world, AirGroupId::new(5)).stood_down);
+        assert_eq!(fatigue_of(&mut world, 5), Fixed::from_int(80));
+        assert_eq!(able(&world, 5), 10);
+        // A group with no fatigue state hashes as it did before fatigue.
+        let plain = raid_world(1);
+        let mut same = raid_world(1);
+        assert_eq!(plain.state_hash(), same.state_hash());
+        set_fatigue(&mut same, 1, Fixed::from_int(1));
+        assert_ne!(plain.state_hash(), same.state_hash());
+        set_fatigue(&mut same, 1, Fixed::ZERO);
+        assert_eq!(plain.state_hash(), same.state_hash());
+        group_mut(&mut same, AirGroupId::new(1)).rest_above = Some(Fixed::ZERO);
+        assert_ne!(plain.state_hash(), same.state_hash());
+        group_mut(&mut same, AirGroupId::new(1)).rest_above = None;
+        group_mut(&mut same, AirGroupId::new(1)).stood_down = true;
+        assert_ne!(plain.state_hash(), same.state_hash());
+    }
+
+    #[test]
+    fn the_rest_threshold_order_is_accepted_stored_and_rejected_out_of_range() {
+        let order = |fatigue: i64| OrderRequest {
+            kind: OrderKind::AirGroup {
+                target: BOMBERS,
+                order: AirGroupOrder::SetRestThreshold {
+                    fatigue: Fixed::from_int(fatigue),
+                },
+            },
+            origin: Origin::PLAYER,
+        };
+        // Stored without the figures too.
+        let mut world = self::world(1, vec![]);
+        world.submit_orders(Side::Allied, vec![order(30), order(100), order(0)]);
+        world.resolve_day().expect("day resolves");
+        assert!(rejections(&world).is_empty());
+        assert_eq!(group_mut(&mut world, BOMBERS).rest_above, Some(Fixed::ZERO));
+        assert!(group_mut(&mut world, BOMBERS).rest_order.is_some());
+        let mut world = self::world(1, vec![]);
+        world.submit_orders(Side::Allied, vec![order(101), order(-1)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            rejections(&world),
+            vec![
+                RejectReason::FatigueOutOfRange(Fixed::from_int(101)),
+                RejectReason::FatigueOutOfRange(Fixed::from_int(-1))
+            ]
+        );
+        assert_eq!(group_mut(&mut world, BOMBERS).rest_above, None);
+        // An enemy group is not yours.
+        let mut world = self::world(1, vec![]);
+        world.submit_orders(Side::Japanese, vec![order(30)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejections(&world), vec![RejectReason::NotYourUnit]);
     }
 }

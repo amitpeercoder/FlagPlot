@@ -11,6 +11,7 @@ use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 
+use sim_core::fixed::Fixed;
 use sim_core::orders::{AirMission, Stance};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::DaySummary;
@@ -233,8 +234,20 @@ fn run(args: &[String]) -> Result<(), String> {
         } else {
             format!("{} ready", group.ready)
         };
+        // Fatigue, the rest threshold and a stand-down are shown only when
+        // there is something to show (decision 0036).
+        let mut tired = String::new();
+        if group.fatigue != Fixed::ZERO {
+            tired.push_str(&format!(", fatigue {}", group.fatigue));
+        }
+        if let Some(level) = group.rest_above {
+            tired.push_str(&format!(", rests above {level}"));
+        }
+        if group.stood_down {
+            tired.push_str(", stood down");
+        }
         println!(
-            "{} \"{}\" ({}) {}: {}, mission {}{}, {}",
+            "{} \"{}\" ({}) {}: {}, mission {}{}{}, {}",
             group.id,
             group.name,
             group.side.name(),
@@ -245,6 +258,7 @@ fn run(args: &[String]) -> Result<(), String> {
             ready,
             mission,
             share,
+            tired,
             arc
         );
     }

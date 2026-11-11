@@ -174,6 +174,10 @@ mod tests {
             arc_order: None,
             patrol_share: Fixed::ONE,
             share_order: None,
+            fatigue: Fixed::ZERO,
+            rest_above: None,
+            rest_order: None,
+            stood_down: false,
         }
     }
 

@@ -80,6 +80,9 @@ pub enum InvariantViolation {
     /// crosses a closed side (decision 0017, decision 7). Reported only when
     /// the hexes are adjacent, on the map and navigable.
     TaskForceLegCrossesClosedSide(TaskForceId, Hex, Hex),
+    /// The air group's fatigue, or its rest threshold, is below 0 or above
+    /// 100 (decision 0036). Added at the end of the enum.
+    AirGroupFatigueOutOfRange(AirGroupId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -103,6 +106,12 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::TaskForceNotNavigable(task_force, hex) => {
                 write!(f, "{task_force} is at {hex}, which ships cannot enter")
+            }
+            InvariantViolation::AirGroupFatigueOutOfRange(group) => {
+                write!(
+                    f,
+                    "{group} has a fatigue or a rest threshold outside 0 to 100"
+                )
             }
             InvariantViolation::TaskForceLegCrossesClosedSide(task_force, from, toward) => {
                 write!(
@@ -398,6 +407,10 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
 
     let mut aboard: BTreeMap<ShipId, u32> = BTreeMap::new();
     for group in truth.air_groups.values() {
+        let in_range = |value: Fixed| value >= Fixed::ZERO && value <= full_damage;
+        if !in_range(group.fatigue) || group.rest_above.is_some_and(|level| !in_range(level)) {
+            violations.push(InvariantViolation::AirGroupFatigueOutOfRange(group.id));
+        }
         match group.location {
             AirGroupLocation::Base(base_id) => match truth.bases.get(&base_id) {
                 None => {
@@ -480,6 +493,10 @@ mod tests {
                 arc_order: None,
                 patrol_share: Fixed::ONE,
                 share_order: None,
+                fatigue: Fixed::ZERO,
+                rest_above: None,
+                rest_order: None,
+                stood_down: false,
             },
         );
         (truth, map)
@@ -489,6 +506,34 @@ mod tests {
     fn a_sound_air_group_breaks_nothing() {
         let (truth, map) = setup();
         assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+    }
+
+    #[test]
+    fn a_fatigue_or_threshold_outside_0_to_100_is_caught() {
+        for (fatigue, threshold, bad) in [
+            (Fixed::ZERO, None, false),
+            (Fixed::from_int(100), Some(Fixed::from_int(100)), false),
+            (Fixed::from_int(-1), None, true),
+            (Fixed::from_raw(100_000_001), None, true),
+            (Fixed::ZERO, Some(Fixed::from_int(101)), true),
+            (Fixed::ZERO, Some(Fixed::from_int(-1)), true),
+        ] {
+            let (mut truth, map) = setup();
+            let group = truth
+                .air_groups
+                .get_mut(&AirGroupId::new(1))
+                .expect("group");
+            group.fatigue = fatigue;
+            group.rest_above = threshold;
+            let expected = if bad {
+                vec![InvariantViolation::AirGroupFatigueOutOfRange(
+                    AirGroupId::new(1),
+                )]
+            } else {
+                Vec::new()
+            };
+            assert_eq!(check(&truth, &map, &RefData::default()), expected);
+        }
     }
 
     #[test]

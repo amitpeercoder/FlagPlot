@@ -261,6 +261,13 @@ pub enum AirGroupOrder {
     SetPatrolShare {
         share: Fixed,
     },
+    /// The fatigue above which the staff stands the group down at the start
+    /// of the day, from 0 to 100 (decision 7 of
+    /// `docs/decisions/0036-fatigue-and-rest.md`). A standing order of its
+    /// own kind. Added at the end.
+    SetRestThreshold {
+        fatigue: Fixed,
+    },
 }
 
 /// An order together with the unit it is for.
@@ -362,6 +369,9 @@ pub enum RejectReason {
     /// the group's own side (decision 1 of 0034). Added at the end of the
     /// enum.
     NotAnEnemyBase,
+    /// A rest threshold is not between 0 and 100 (decision 7 of 0036). Added
+    /// at the end of the enum.
+    FatigueOutOfRange(Fixed),
 }
 
 impl fmt::Display for RejectReason {
@@ -413,6 +423,9 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::NotAnEnemyBase => {
                 f.write_str("the base does not exist or is held by your side")
+            }
+            RejectReason::FatigueOutOfRange(fatigue) => {
+                write!(f, "rest threshold {fatigue} is not between 0 and 100")
             }
         }
     }
