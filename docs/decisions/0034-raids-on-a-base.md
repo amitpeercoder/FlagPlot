@@ -50,6 +50,12 @@ Stage 6a adds the raid itself. Damaged aircraft and repair, operational losses, 
 - A second raid a day at short range.
 - Night raids.
 
+## The legibility test
+
+A cheap model was given the Allied briefing and the log of the first two days of the scenario's own seed. It explained why the patrol fired fewer shots at the bombers on the second day, and why only the resting group lost aircraft on the ground. It predicted the third morning exactly: 15 bombers, 5 escorts, and the shots and expected hits of all four rolls. It saw that the patrol is worn down until every fighter is held by an escort, and that the resting group is safe only off the ground.
+
+It found one gap. The attack event gave the hits on aircraft and on supply and left the reader to work out the rest. The event now says how many landed on nothing.
+
 ## Rule card
 
 | | |

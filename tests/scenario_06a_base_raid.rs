@@ -817,8 +817,9 @@ fn work_the_run(run: &Run, config: &Config) -> Vec<Raid> {
             assert_eq!(
                 attacked[0].kind.to_string(),
                 format!(
-                    "air_group:1 bombs at base:2: {}: {on_aircraft} on aircraft, {on_supply} on supply",
-                    shots_text(bombers_left, config.bomb, expected, hits)
+                    "air_group:1 bombs at base:2: {}: {on_aircraft} on aircraft, {on_supply} on supply, {} on nothing",
+                    shots_text(bombers_left, config.bomb, expected, hits),
+                    hits - on_aircraft - on_supply
                 ),
                 "seed {seed}"
             );

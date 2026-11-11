@@ -22,7 +22,7 @@ day   3  hash f3a52f67142b0df6  12 events
 #14 D1 morning   air_group:3 lost 3 aircraft, 9 left  <- #10
 #15 D1 morning   air_group:2 lost 1 aircraft, 11 left  <- #11
 #16 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
-#17 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply  <- #8, #16
+#17 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #16
 #18 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #17
 #19 D1 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #20 D2 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
@@ -35,7 +35,7 @@ day   3  hash f3a52f67142b0df6  12 events
 #27 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #23
 #28 D2 morning   air_group:2 lost 1 aircraft, 10 left  <- #24
 #29 D2 morning   air_group:1 lost 1 aircraft, 15 left  <- #25
-#30 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply  <- #21, #29
+#30 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #21, #29
 #31 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #30
 #32 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #33 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
@@ -48,7 +48,7 @@ day   3  hash f3a52f67142b0df6  12 events
 #40 D3 morning   air_group:2 lost 1 aircraft, 9 left  <- #37
 #41 D3 morning   air_group:1 lost 1 aircraft, 14 left  <- #38
 #42 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #39
-#43 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply  <- #34, #41, #42
+#43 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #34, #41, #42
 #44 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 11 ready, mission BaseStrike on base:2, no arc

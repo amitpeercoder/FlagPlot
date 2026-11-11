@@ -932,8 +932,9 @@ impl fmt::Display for EventKind {
                 hits_on_supply,
             } => write!(
                 f,
-                "{air_group} bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply",
-                if *hits == 1 { "hit" } else { "hits" }
+                "{air_group} bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {} on nothing",
+                if *hits == 1 { "hit" } else { "hits" },
+                hits - hits_on_aircraft - hits_on_supply
             ),
             EventKind::AircraftDestroyedOnGround {
                 air_group,
