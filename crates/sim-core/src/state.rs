@@ -334,10 +334,6 @@ pub struct TaskForce {
     pub arrived_at_hours: Option<Fixed>,
     /// The `TaskForceArrived` event of that arrival.
     pub arrival_event: Option<EventId>,
-    /// Elapsed hours since the scenario began at the start of the pulse of
-    /// the latest sighting this task force noticed (decision 17 of
-    /// `docs/decisions/0012-search-and-contacts.md`).
-    pub noticed_sighted_at_hours: Option<Fixed>,
     /// The standing readiness (decision 1 of
     /// `docs/decisions/0021-readiness-and-alarm.md`).
     pub readiness: Readiness,
@@ -452,7 +448,6 @@ impl TaskForce {
             cargo_order: None,
             arrived_at_hours: None,
             arrival_event: None,
-            noticed_sighted_at_hours: None,
             readiness: Readiness::Normal,
             readiness_order: None,
             alerted: false,

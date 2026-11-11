@@ -288,31 +288,20 @@ pub enum EventKind {
         hex: Hex,
         ship_count: u32,
         kind: ShipKind,
-        confidence: Fixed,
         /// True if the report made a new contact, false if it refreshed one.
         created: bool,
-    },
-    /// A sighted task force noticed the aircraft that sighted it.
-    SightingNoticed {
-        task_force: TaskForceId,
-        air_group: AirGroupId,
-        /// Elapsed hours since the scenario began, at the start of the pulse.
-        elapsed_hours: Fixed,
     },
     /// A contact went a pulse without a fresh report.
     ContactAged {
         side: Side,
         contact: ContactId,
         age_pulses: u32,
-        confidence: Fixed,
     },
-    /// A contact's confidence fell below the floor and it was forgotten.
-    /// The age and confidence are what it would have had.
+    /// A contact reached the age at which it is forgotten and was dropped.
     ContactDropped {
         side: Side,
         contact: ContactId,
         age_pulses: u32,
-        confidence: Fixed,
     },
     /// Two opposing task forces met in one hex and a fight began.
     EngagementBegun {
@@ -638,14 +627,6 @@ impl EventKind {
             EventKind::ReportReceived { contact, .. }
             | EventKind::ContactAged { contact, .. }
             | EventKind::ContactDropped { contact, .. } => vec![EntityRef::Contact(*contact)],
-            EventKind::SightingNoticed {
-                task_force,
-                air_group,
-                ..
-            } => vec![
-                EntityRef::TaskForce(*task_force),
-                EntityRef::AirGroup(*air_group),
-            ],
             EventKind::EngagementBegun { a, b, .. }
             | EventKind::ForcesPassedUnseen { a, b, .. }
             | EventKind::EngagementEnded { a, b, .. } => {
@@ -925,41 +906,29 @@ impl fmt::Display for EventKind {
                 hex,
                 ship_count,
                 kind,
-                confidence,
                 created,
             } => write_report(
                 f,
-                (*side, *contact, *hex, *ship_count, *kind, *confidence),
+                (*side, *contact, *hex, *ship_count, *kind),
                 *created,
                 false,
-            ),
-            EventKind::SightingNoticed {
-                task_force,
-                air_group,
-                elapsed_hours,
-            } => write!(
-                f,
-                "{task_force} noticed it was sighted by {air_group} at {}",
-                ClockTime::from_elapsed(*elapsed_hours)
             ),
             EventKind::ContactAged {
                 side,
                 contact,
                 age_pulses,
-                confidence,
             } => write!(
                 f,
-                "{} {contact} aged to {age_pulses} pulses, confidence {confidence}",
+                "{} {contact} aged to {age_pulses} pulses",
                 side.name()
             ),
             EventKind::ContactDropped {
                 side,
                 contact,
                 age_pulses,
-                confidence,
             } => write!(
                 f,
-                "{} {contact} dropped at {age_pulses} pulses, confidence {confidence}",
+                "{} {contact} dropped at {age_pulses} pulses",
                 side.name()
             ),
             EventKind::EngagementBegun {
@@ -1158,20 +1127,13 @@ pub struct Event {
 /// report reads as before.
 fn write_report(
     f: &mut fmt::Formatter<'_>,
-    (side, contact, hex, ship_count, kind, confidence): (
-        Side,
-        ContactId,
-        Hex,
-        u32,
-        ShipKind,
-        Fixed,
-    ),
+    (side, contact, hex, ship_count, kind): (Side, ContactId, Hex, u32, ShipKind),
     created: bool,
     held_at_start: bool,
 ) -> fmt::Result {
     write!(
         f,
-        "{} report: {ship_count} {}, {}, at {hex}, confidence {confidence}{}: {} {contact}",
+        "{} report: {ship_count} {}, {}, at {hex}{}: {} {contact}",
         side.name(),
         if ship_count == 1 { "ship" } else { "ships" },
         kind.name(),
@@ -1195,11 +1157,10 @@ impl fmt::Display for Event {
                 hex,
                 ship_count,
                 kind,
-                confidence,
                 created,
             } if self.day == 0 => write_report(
                 f,
-                (*side, *contact, *hex, *ship_count, *kind, *confidence),
+                (*side, *contact, *hex, *ship_count, *kind),
                 *created,
                 true,
             )?,

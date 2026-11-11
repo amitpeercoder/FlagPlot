@@ -19,8 +19,7 @@
 //!   is `none`, `bomb` or `torpedo` (decision 0026); the last two columns are
 //!   `0` or `1` and required (decision 0029). Lines starting with `#`
 //!   are comments.
-//! - Search figures: TOML. A `placeholder` flag, the report, contact and
-//!   notice figures, and a `[kind_confusion.<kind>]` table for each of the six
+//! - Search figures: TOML. A `placeholder` flag, the report and contact figures, and a `[kind_confusion.<kind>]` table for each of the six
 //!   ship kinds giving the chance of each reported kind.
 //! - Surface combat figures: TOML. A `placeholder` flag and the figures of
 //!   the surface combat rule (`docs/decisions/0014-surface-combat.md`).

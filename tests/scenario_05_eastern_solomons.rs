@@ -1115,7 +1115,6 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     hex,
                     ship_count,
                     kind,
-                    confidence: cx.search.initial_confidence,
                     created,
                 },
                 "seed {seed}"
@@ -1130,27 +1129,6 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 },
             );
             work.last_report[side_index(side)] = Some(hex);
-            // The sighted force may notice, on a stream of its own.
-            let mut notice = stream_of(
-                seed,
-                pulse,
-                Subsystem::Search,
-                EntityRef::TaskForce(TaskForceId::new(force)),
-                EntityRef::AirGroup(AirGroupId::new(group)),
-            );
-            if notice.chance(cx.search.notice_chance) {
-                let noticed = cur.next("a sighting noticed");
-                assert_eq!(
-                    noticed.kind,
-                    EventKind::SightingNoticed {
-                        task_force: TaskForceId::new(force),
-                        air_group: AirGroupId::new(group),
-                        elapsed_hours: time::pulse_start(1, pulse),
-                    },
-                    "seed {seed}"
-                );
-                assert_eq!(noticed.causes, vec![Cause::Event(attempt.id)]);
-            }
         }
     }
 
@@ -1877,7 +1855,6 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                         hex: report.0,
                         ship_count: report.1,
                         kind: report.2,
-                        confidence: cx.search.initial_confidence,
                         created,
                     },
                     "seed {seed}"
@@ -2535,7 +2512,6 @@ fn the_morning_flies_every_search_and_finds_nothing_and_does_nothing() {
                         | EventKind::StrikeLaunched { .. }
                         | EventKind::AirAttack { .. }
                         | EventKind::AircraftLost { .. }
-                        | EventKind::SightingNoticed { .. }
                         | EventKind::ContactAged { .. }
                 ),
                 "seed {seed}"
@@ -3197,8 +3173,7 @@ fn what_cannot_happen_never_does() {
                     // striking force.
                     assert!(!matches!(task_force.raw(), 2 | 3), "seed {seed}");
                 }
-                EventKind::SearchAttempt { task_force, .. }
-                | EventKind::SightingNoticed { task_force, .. } => {
+                EventKind::SearchAttempt { task_force, .. } => {
                     // The striking force is never sighted.
                     assert_ne!(task_force.raw(), 3, "seed {seed}");
                 }

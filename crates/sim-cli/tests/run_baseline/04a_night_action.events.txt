@@ -2,7 +2,7 @@ Scenario 4a: Night action, an alert force meets one that is not
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1b51315561dea14c  54 events
+day   1  hash 42e1f84283c8e502  54 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -38,9 +38,9 @@ day   1  hash 1b51315561dea14c  54 events
 #32 D1 night     round 1: task_force:2 became alert  <- #13
 #33 D1 night     round 1: task_force:2 broke off, 0.666666 of its ships sunk or crippled  <- #19, #20, #23, #24, #26, #27, #28, #30, order:1
 #34 D1 night     engagement of task_force:1 and task_force:2 at (5,0) ended in round 1: a force broke off  <- #33
-#35 D1 night     Japanese report: 2 ships, destroyer, at (4,0), confidence 0.8: new contact:1  <- #34
+#35 D1 night     Japanese report: 2 ships, destroyer, at (4,0): new contact:1  <- #34
 #36 D1 night     Japanese claims 0 enemy ships sunk at (5,0)  <- #34
-#37 D1 night     Allied report: 3 ships, cruiser, at (5,0), confidence 0.8: new contact:1  <- #34
+#37 D1 night     Allied report: 3 ships, cruiser, at (5,0): new contact:1  <- #34
 #38 D1 night     task_force:1 steamed 12 nm at 16 kn from (5,0) to (5,0)  <- order:2, order:3
 #39 D1 night     ship:1 burned 3 t, 1952 t remaining  <- #38
 #40 D1 night     ship:2 burned 3 t, 1952 t remaining  <- #38
@@ -50,14 +50,14 @@ day   1  hash 1b51315561dea14c  54 events
 #44 D1 morning   ship:1 burned 24 t, 1928 t remaining  <- #43
 #45 D1 morning   ship:2 burned 24 t, 1928 t remaining  <- #43
 #46 D1 morning   ship:3 burned 24 t, 1928 t remaining  <- #43
-#47 D1 morning   Allied contact:1 aged to 1 pulses, confidence 0.64  <- #37
-#48 D1 morning   Japanese contact:1 aged to 1 pulses, confidence 0.64  <- #35
+#47 D1 morning   Allied contact:1 aged to 1 pulses  <- #37
+#48 D1 morning   Japanese contact:1 aged to 1 pulses  <- #35
 #49 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:2, order:3
 #50 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #49
 #51 D1 afternoon ship:2 burned 24 t, 1904 t remaining  <- #49
 #52 D1 afternoon ship:3 burned 24 t, 1904 t remaining  <- #49
-#53 D1 afternoon Allied contact:1 aged to 2 pulses, confidence 0.512  <- #37
-#54 D1 afternoon Japanese contact:1 aged to 2 pulses, confidence 0.512  <- #35
+#53 D1 afternoon Allied contact:1 aged to 2 pulses  <- #37
+#54 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #35
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -67,7 +67,7 @@ ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fir
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 20, fire 10; fire control out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 70, fire 5; fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 70, fire 5; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-Allied contact:1 at (5,0): 3 ships, cruiser, age 2 pulses, confidence 0.512
+Allied contact:1 at (5,0): 3 ships, cruiser, age 2 pulses
 Allied: no battle claims
-Japanese contact:1 at (4,0): 2 ships, destroyer, age 2 pulses, confidence 0.512
+Japanese contact:1 at (4,0): 2 ships, destroyer, age 2 pulses
 Japanese claims 0 enemy ships sunk at (5,0), day 1 night

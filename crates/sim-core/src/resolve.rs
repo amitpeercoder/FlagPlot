@@ -174,14 +174,12 @@ impl World {
                         side,
                         contact: outcome.contact,
                         age_pulses: outcome.age_pulses,
-                        confidence: outcome.confidence,
                     }
                 } else {
                     EventKind::ContactAged {
                         side,
                         contact: outcome.contact,
                         age_pulses: outcome.age_pulses,
-                        confidence: outcome.confidence,
                     }
                 };
                 self.events.record(
@@ -929,14 +927,9 @@ mod tests {
         {
             let position = world.truth.task_forces[&TF].position();
             let mut search = world.ref_data.search.clone().expect("search figures");
-            search.confidence_decay_per_pulse = Fixed::ONE;
+            search.contact_drop_age_pulses = 1000;
+            search.fresh_contact_max_age_pulses = 1000;
             world.ref_data.search = Some(search.clone());
-            world
-                .ref_data
-                .surface_combat
-                .as_mut()
-                .expect("combat figures")
-                .alert_contact_max_age_pulses = 1000;
             world
                 .beliefs
                 .get_mut(&Side::Allied)
@@ -946,7 +939,6 @@ mod tests {
                         estimated_hex: position,
                         estimated_ship_count: 1,
                         estimated_kind: ShipKind::Cruiser,
-                        confidence: search.initial_confidence,
                         received_event: EventId::new(1),
                     }),
                     &search,
@@ -1595,7 +1587,7 @@ mod tests {
         })
         .is_err());
         assert!(build(&|r, _| {
-            r.search.as_mut().expect("search").notice_chance = nm(2);
+            r.search.as_mut().expect("search").position_error_chance = nm(2);
         })
         .is_err());
         assert!(build(&|_, t| {
@@ -1666,7 +1658,7 @@ mod tests {
     }
 
     #[test]
-    fn the_new_air_group_and_notice_fields_are_part_of_the_state_hash() {
+    fn the_new_air_group_fields_are_part_of_the_state_hash() {
         let base = world_with_air_group();
         let mut fewer_ready = base.clone();
         fewer_ready
@@ -1676,23 +1668,6 @@ mod tests {
             .expect("group")
             .ready = 2;
         assert_ne!(base.state_hash(), fewer_ready.state_hash());
-
-        let mut noticed = base.clone();
-        noticed
-            .truth
-            .task_forces
-            .get_mut(&TF)
-            .expect("task force")
-            .noticed_sighted_at_hours = Some(nm(8));
-        assert_ne!(base.state_hash(), noticed.state_hash());
-        let mut noticed_later = noticed.clone();
-        noticed_later
-            .truth
-            .task_forces
-            .get_mut(&TF)
-            .expect("task force")
-            .noticed_sighted_at_hours = Some(nm(16));
-        assert_ne!(noticed.state_hash(), noticed_later.state_hash());
     }
 
     // ---- Rules of engagement and surface combat state (decision 0014) ----
@@ -1849,7 +1824,7 @@ mod tests {
         assert!(build(&|r| {
             r.search = Some(SearchFigures::from_search_toml());
             let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
-            figures.gun_hit_fire = Fixed::ZERO;
+            figures.gun_hit_flotation = nm(2);
             r.surface_combat = Some(figures);
         })
         .is_err());
@@ -2888,7 +2863,6 @@ mod tests {
             });
             force.arrived_at_hours = Some(nm(5));
             force.arrival_event = Some(EventId::new(3));
-            force.noticed_sighted_at_hours = Some(nm(6));
         }
         assert_sound(&world);
         let parent_before = world.truth.task_forces[&TF].clone();
@@ -2911,7 +2885,6 @@ mod tests {
         assert_eq!(new.cargo_order, None);
         assert_eq!(new.arrived_at_hours, None);
         assert_eq!(new.arrival_event, None);
-        assert_eq!(new.noticed_sighted_at_hours, None);
         assert_eq!(new.readiness, Readiness::Battle);
         assert_eq!(new.readiness_order, Some(crate::ids::OrderId::new(44)));
         assert!(new.alerted);

@@ -112,44 +112,33 @@
 //! than one from the truth, a count outside 2 to 4, or a kind outside the
 //! four above.
 //!
-//! ## Noticing a sighting
-//!
-//! Each sighting gives the task force a 0.5 chance to notice. With n
-//! sightings and k notices across the runs, (k - 0.5n)^2 <= 4n. In every
-//! run, the hour the task force records is the hour of the last search whose
-//! sighting it noticed (18, 36, 42, 60 or 66), or nothing if it noticed
-//! none.
-//!
 //! ## Contacts: ageing, merging and dropping
 //!
-//! A fresh report has confidence 0.8. At the end of each pulse a contact that
-//! was not created or refreshed in that pulse ages by one, and its
-//! confidence is multiplied by 0.8. Below 0.3 it is dropped.
+//! At the end of each pulse a contact that was not created or refreshed in
+//! that pulse ages by one. A contact that reaches an age of 5 pulses is
+//! dropped.
 //!
-//! | Age in pulses | Confidence         |
-//! | ------------- | ------------------ |
-//! | 0             | 0.8                |
-//! | 1             | 0.64               |
-//! | 2             | 0.512              |
-//! | 3             | 0.4096             |
-//! | 4             | 0.32768            |
-//! | 5             | 0.262144: dropped  |
+//! (Rewritten at the complexity review after scenario 5, decision 0032. A
+//! contact used to carry a confidence, 0.8 when fresh and multiplied by 0.8
+//! each pulse, and was dropped below 0.3: that is at an age of 5, so nothing
+//! here happens at a different time. A sighted task force used to roll to
+//! notice the aircraft; that roll is cut, and its section with it.)
 //!
 //! The scenario has 12 pulses. A contact last created or refreshed in pulse
 //! k has age 12 - k at the end. The searches fall in pulses 3, 5, 6, 8 and 9.
 //!
 //! | Last report in  | Pulse | At the end of day 4                |
 //! | --------------- | ----- | ---------------------------------- |
-//! | Day 3 afternoon | 9     | age 3, confidence 0.4096           |
-//! | Day 3 morning   | 8     | age 4, confidence 0.32768          |
+//! | Day 3 afternoon | 9     | age 3                              |
+//! | Day 3 morning   | 8     | age 4                              |
 //! | Day 2 afternoon | 6     | dropped at the end of pulse 11     |
 //! | Day 2 morning   | 5     | dropped at the end of pulse 10     |
 //! | Day 1 afternoon | 3     | dropped at the end of pulse 8      |
 //!
 //! So at the end of every run the Allied side holds at most two contacts,
-//! and each has one of the two states in the first two rows. The test
-//! replays each run's reports through the rules below and asserts the
-//! contacts, their ages and their confidences exactly.
+//! and each has one of the two ages in the first two rows. The test replays
+//! each run's reports through the rules below and asserts the contacts and
+//! their ages exactly.
 //!
 //! Merging: a report refreshes the nearest contact that is within 2 hexes of
 //! the reported hex and no more than 2 pulses old (the lowest ID on a tie).
@@ -186,7 +175,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, TaskForceId};
 use sim_core::refdata::ShipKind;
 use sim_core::state::Side;
-use sim_core::time::{pulse_start, Pulse};
+use sim_core::time::Pulse;
 use sim_data::Scenario;
 
 const TASK_FORCE: TaskForceId = TaskForceId::new(1);
@@ -451,7 +440,6 @@ struct ReportRecord {
     hex: Hex,
     count: u32,
     kind: ShipKind,
-    confidence: Fixed,
     created: bool,
 }
 
@@ -462,7 +450,6 @@ struct ContactRecord {
     count: u32,
     kind: ShipKind,
     age: u32,
-    confidence: Fixed,
 }
 
 #[derive(Clone, Debug)]
@@ -470,9 +457,6 @@ struct RunSummary {
     seed: u64,
     attempts: Vec<AttemptRecord>,
     reports: Vec<ReportRecord>,
-    /// (day, pulse, hours) of each notice.
-    notices: Vec<(u32, Pulse, Fixed)>,
-    noticed_hours: Option<Fixed>,
     final_contacts: Vec<ContactRecord>,
     japanese_contacts: usize,
 }
@@ -483,8 +467,6 @@ fn summarize(seed: u64, scenario: &Scenario) -> RunSummary {
         seed,
         attempts: Vec::new(),
         reports: Vec::new(),
-        notices: Vec::new(),
-        noticed_hours: world.umpire().task_forces[&TASK_FORCE].noticed_sighted_at_hours,
         final_contacts: Vec::new(),
         japanese_contacts: world.side_view(Side::Japanese).contacts().count(),
     };
@@ -508,7 +490,6 @@ fn summarize(seed: u64, scenario: &Scenario) -> RunSummary {
                 hex,
                 ship_count,
                 kind,
-                confidence,
                 created,
             } => {
                 assert_eq!(*side, Side::Allied);
@@ -519,20 +500,8 @@ fn summarize(seed: u64, scenario: &Scenario) -> RunSummary {
                     hex: *hex,
                     count: *ship_count,
                     kind: *kind,
-                    confidence: *confidence,
                     created: *created,
                 });
-            }
-            EventKind::SightingNoticed {
-                task_force,
-                air_group,
-                elapsed_hours,
-            } => {
-                assert_eq!(*task_force, TASK_FORCE);
-                assert_eq!(*air_group, AIR_GROUP);
-                summary
-                    .notices
-                    .push((event.day, pulse_of(event), *elapsed_hours));
             }
             _ => {}
         }
@@ -546,7 +515,6 @@ fn summarize(seed: u64, scenario: &Scenario) -> RunSummary {
             count: contact.estimated_ship_count,
             kind: contact.estimated_kind,
             age: contact.age_pulses,
-            confidence: contact.confidence,
         })
         .collect();
     summary
@@ -666,7 +634,6 @@ fn report_errors_occur_as_often_as_the_figures_say() {
                 ShipKind::Carrier => carrier += 1,
                 other => panic!("report names kind {other:?}"),
             }
-            assert_eq!(report.confidence, millionths(800_000));
         }
     }
     eprintln!("reports n = {n}");
@@ -693,41 +660,6 @@ fn report_errors_occur_as_often_as_the_figures_say() {
     }
 }
 
-#[test]
-fn the_task_force_notices_half_the_sightings_and_records_the_hour() {
-    let runs = batch();
-    let (mut n, mut k) = (0i64, 0i64);
-    for run in runs {
-        let sightings = run.attempts.iter().filter(|a| a.sighted).count();
-        n += i64::try_from(sightings).expect("small");
-        k += i64::try_from(run.notices.len()).expect("small");
-        // A notice follows a sighting in the same pulse and gives the hour
-        // at the start of that pulse.
-        for (day, pulse, hours) in &run.notices {
-            let attempt = run
-                .attempts
-                .iter()
-                .find(|a| a.day == *day && a.pulse == *pulse)
-                .expect("a notice follows an attempt");
-            assert!(attempt.sighted);
-            let index = search_index(*day, *pulse).expect("a listed search");
-            assert_eq!(*hours, nm(SEARCHES[index].5));
-            assert_eq!(*hours, pulse_start(*day, *pulse));
-        }
-        // The recorded hour is that of the last notice, or nothing.
-        assert_eq!(
-            run.noticed_hours,
-            run.notices.last().map(|(_, _, hours)| *hours),
-            "seed {}",
-            run.seed
-        );
-    }
-    eprintln!("sightings n = {n}, notices k = {k}");
-    let (two_k, n128) = (i128::from(2 * k), i128::from(n));
-    let off = two_k - n128;
-    assert!(off * off <= 16 * n128, "{k} notices of {n} sightings");
-}
-
 fn hex_distance(a: Hex, b: Hex) -> u32 {
     let dq = a.q - b.q;
     let dr = a.r - b.r;
@@ -742,15 +674,13 @@ struct ModelContact {
     count: u32,
     kind: ShipKind,
     age: u32,
-    confidence: Fixed,
 }
 
 /// Replays a run's reports through the merge and ageing rules, written out
 /// here from decisions 13 and 14 and the hand calculation. Asserts that each
 /// report's contact ID and created flag are what the model decides.
 fn replay_belief(reports: &[ReportRecord]) -> Vec<ModelContact> {
-    let decay = millionths(800_000);
-    let floor = millionths(300_000);
+    let drop_age = 5;
     let mut contacts: Vec<ModelContact> = Vec::new();
     let mut next_id = 1u32;
     for day in 1..=4u32 {
@@ -788,7 +718,6 @@ fn replay_belief(reports: &[ReportRecord]) -> Vec<ModelContact> {
                     count: report.count,
                     kind: report.kind,
                     age: 0,
-                    confidence: millionths(800_000),
                 };
                 match contacts.iter_mut().find(|c| c.id == id) {
                     Some(existing) => *existing = fresh,
@@ -796,13 +725,12 @@ fn replay_belief(reports: &[ReportRecord]) -> Vec<ModelContact> {
                 }
                 touched.push(id);
             }
-            // End of the pulse: age what was not touched, drop what falls
-            // below the floor.
+            // End of the pulse: age what was not touched, drop what reaches
+            // the drop age.
             for contact in contacts.iter_mut().filter(|c| !touched.contains(&c.id)) {
                 contact.age += 1;
-                contact.confidence = contact.confidence * decay;
             }
-            contacts.retain(|c| c.confidence >= floor);
+            contacts.retain(|c| c.age < drop_age);
         }
     }
     contacts
@@ -812,7 +740,7 @@ fn replay_belief(reports: &[ReportRecord]) -> Vec<ModelContact> {
 fn contacts_age_merge_and_drop_by_the_rules() {
     let runs = batch();
     let mut by_final_state = [0i64; 3]; // none, one, two contacts
-    let mut states = [0i64; 4]; // (3, 0.4096) only, (4, 0.32768) only, both, other
+    let mut states = [0i64; 4]; // age 3 only, age 4 only, both, other
     for run in runs {
         let model = replay_belief(&run.reports);
         let expected: Vec<ContactRecord> = model
@@ -823,7 +751,6 @@ fn contacts_age_merge_and_drop_by_the_rules() {
                 count: c.count,
                 kind: c.kind,
                 age: c.age,
-                confidence: c.confidence,
             })
             .collect();
         assert_eq!(run.final_contacts, expected, "seed {}", run.seed);
@@ -833,9 +760,9 @@ fn contacts_age_merge_and_drop_by_the_rules() {
         by_final_state[run.final_contacts.len()] += 1;
         let mut seen = [false, false];
         for contact in &run.final_contacts {
-            if (contact.age, contact.confidence) == (3, millionths(409_600)) {
+            if contact.age == 3 {
                 seen[0] = true;
-            } else if (contact.age, contact.confidence) == (4, millionths(327_680)) {
+            } else if contact.age == 4 {
                 seen[1] = true;
             } else {
                 panic!("seed {}: contact in state {contact:?}", run.seed);
@@ -866,7 +793,7 @@ fn contacts_age_merge_and_drop_by_the_rules() {
         assert_eq!(run.japanese_contacts, 0);
     }
     eprintln!("runs ending with 0, 1, 2 contacts: {by_final_state:?}");
-    eprintln!("final states [(3,0.4096) only, (4,0.32768) only, both, none]: {states:?}");
+    eprintln!("final states [age 3 only, age 4 only, both, none]: {states:?}");
 }
 
 // ---------------------------------------------------------------------

@@ -209,13 +209,6 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             None => h.u8(0),
         }
         h.optional_u32(task_force.arrival_event.map(|id| id.raw()));
-        match task_force.noticed_sighted_at_hours {
-            Some(hours) => {
-                h.u8(1);
-                h.i64(hours.raw());
-            }
-            None => h.u8(0),
-        }
         h.u8(task_force.readiness.code());
         h.optional_u32(task_force.readiness_order.map(|id| id.raw()));
         h.u8(u8::from(task_force.alerted));
@@ -296,7 +289,6 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u32(contact.estimated_ship_count);
             h.u8(contact.estimated_kind.code());
             h.u32(contact.age_pulses);
-            h.i64(contact.confidence.raw());
             h.u32(contact.last_report_event.raw());
         }
         h.count(belief.claims().len());

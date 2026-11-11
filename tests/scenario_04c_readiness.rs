@@ -184,9 +184,8 @@
 //! | At (5,0), 2 pulses old         | 2                | 2                             | yes             | 0.5        |
 //! | At (5,0), 3 pulses old         | 2                | 3                             | no              | 0.25       |
 //!
-//! A contact 3 pulses old has confidence 0.8 x 0.8 x 0.8 x 0.8 = 0.4096 and
-//! is still held, so the last row tests the age limit and not a dropped
-//! contact. In the rows where B and C are alerted, an event records each
+//! A contact 3 pulses old is still held (it is dropped at 5), so the last row
+//! tests the age limit and not a dropped contact. In the rows where B and C are alerted, an event records each
 //! being alerted and cites the report behind the contact, and force C needs
 //! no alarm and gets no alarm roll.
 //!
@@ -1710,11 +1709,6 @@ fn run_belief_row(index: usize, row: &BeliefRow) -> BeliefResult {
             assert_eq!(held[0].estimated_hex, Hex::new(q, r), "{}", row.label);
             assert_eq!(held[0].age_pulses, age, "{}", row.label);
             assert_eq!(held[0].estimated_ship_count, 3, "{}", row.label);
-            if age == 3 {
-                // 0.8 x 0.8 x 0.8 x 0.8: still held, so the last row tests
-                // the age limit and not a dropped contact.
-                assert_eq!(held[0].confidence, millionths(409_600), "{}", row.label);
-            }
         }
     }
     assert!(

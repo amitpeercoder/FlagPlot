@@ -23,9 +23,9 @@ torpedo_hit_chance_day = "0.02"
 surprised_target_factor = "1.5"
 lit_target_factor = "2"
 
-# Where a gun hit lands. The two add to 1. A torpedo hit lands on flotation.
+# The chance a gun or bomb hit lands on flotation. The rest land on fire. A
+# torpedo hit lands on flotation.
 gun_hit_flotation = "0.75"
-gun_hit_fire = "0.25"
 
 # Chance a hit also knocks a system down one level, and the factor a degraded
 # system applies. Fire control that is out still gives this much.
@@ -35,10 +35,9 @@ degraded_factor = "0.5"
 fire_control_out_factor = "0.25"
 
 # Alertness (decision 0021). A force at normal readiness is alerted by a
-# contact this close and this fresh, and by a fight in its hex with this
-# chance.
+# contact this close and fresh (fresh_contact_max_age_pulses in search.toml),
+# and by a fight in its hex with this chance.
 alert_contact_distance_hexes = 3
-alert_contact_max_age_pulses = 2
 alarm_chance = "0.5"
 
 # Flotation damage at which a ship counts as crippled, and fire damage at

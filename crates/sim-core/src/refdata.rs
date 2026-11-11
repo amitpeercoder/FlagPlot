@@ -282,25 +282,20 @@ impl AircraftType {
 /// between 0 and 1.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SearchFigures {
-    /// Confidence of a fresh report.
-    pub initial_confidence: Fixed,
-    /// A contact's confidence is multiplied by this each pulse it goes
-    /// unrefreshed.
-    pub confidence_decay_per_pulse: Fixed,
-    /// A contact whose confidence falls below this is dropped.
-    pub drop_below_confidence: Fixed,
+    /// A contact that reaches this age in pulses, unrefreshed, is dropped
+    /// (decision 0032).
+    pub contact_drop_age_pulses: u32,
     /// A report refreshes a contact at most this many hexes away...
     pub merge_distance_hexes: u32,
-    /// ...and no older than this many pulses.
-    pub merge_max_age_pulses: u32,
+    /// ...and no older than this many pulses. The same figure says how old a
+    /// contact may be and still alert a force (decision 0032).
+    pub fresh_contact_max_age_pulses: u32,
     /// Chance a report names a neighbouring hex.
     pub position_error_chance: Fixed,
     /// Chance a report counts one ship too many.
     pub count_over_chance: Fixed,
     /// Chance a report counts one ship too few.
     pub count_under_chance: Fixed,
-    /// Chance a sighted task force notices the aircraft that sighted it.
-    pub notice_chance: Fixed,
     /// True kind, then reported kind, then the chance of that report. Each
     /// true kind's row adds to exactly 1.
     pub kind_confusion: BTreeMap<ShipKind, BTreeMap<ShipKind, Fixed>>,
@@ -311,18 +306,17 @@ impl SearchFigures {
     pub fn problem(&self) -> Option<String> {
         let in_unit = |value: Fixed| value >= Fixed::ZERO && value <= Fixed::ONE;
         let chances = [
-            ("initial confidence", self.initial_confidence),
-            ("confidence decay", self.confidence_decay_per_pulse),
-            ("drop-below confidence", self.drop_below_confidence),
             ("position error chance", self.position_error_chance),
             ("count over chance", self.count_over_chance),
             ("count under chance", self.count_under_chance),
-            ("notice chance", self.notice_chance),
         ];
         for (label, value) in chances {
             if !in_unit(value) {
                 return Some(format!("search {label} {value} is not between 0 and 1"));
             }
+        }
+        if self.contact_drop_age_pulses == 0 {
+            return Some("search contact drop age is 0 pulses".to_string());
         }
         if self.count_over_chance + self.count_under_chance > Fixed::ONE {
             return Some("search count over and under chances add to more than 1".to_string());
@@ -368,10 +362,9 @@ pub struct SurfaceCombatFigures {
     pub not_alert_sighting_factor: Fixed,
     /// A force at normal readiness is alerted by a contact its side holds
     /// within this many hexes of it (decision 3 of
-    /// `docs/decisions/0021-readiness-and-alarm.md`).
+    /// `docs/decisions/0021-readiness-and-alarm.md`) and no older than
+    /// `SearchFigures::fresh_contact_max_age_pulses` (decision 0032).
     pub alert_contact_distance_hexes: u32,
-    /// ... and no older than this many pulses.
-    pub alert_contact_max_age_pulses: u32,
     /// Chance the alarm of a finished fight alerts another force in its hex
     /// (decision 5 of 0021). From 0 to 1.
     pub alarm_chance: Fixed,
@@ -387,10 +380,9 @@ pub struct SurfaceCombatFigures {
     pub surprised_target_factor: Fixed,
     /// Multiplies the chance to hit a target lit by fire, at night.
     pub lit_target_factor: Fixed,
-    /// Share of gun hits that land on flotation.
+    /// Share of gun and bomb hits that land on flotation. The rest land on
+    /// fire (decision 0032).
     pub gun_hit_flotation: Fixed,
-    /// Share of gun hits that land on fire. The two shares add to 1.
-    pub gun_hit_fire: Fixed,
     /// Chance a gun hit also knocks a system down one level.
     pub gun_system_hit_chance: Fixed,
     /// The same for a torpedo hit.
@@ -444,7 +436,6 @@ impl SurfaceCombatFigures {
             ("night torpedo hit chance", self.torpedo_hit_chance_night),
             ("day torpedo hit chance", self.torpedo_hit_chance_day),
             ("gun hit flotation share", self.gun_hit_flotation),
-            ("gun hit fire share", self.gun_hit_fire),
             ("gun system hit chance", self.gun_system_hit_chance),
             ("torpedo system hit chance", self.torpedo_system_hit_chance),
             ("degraded factor", self.degraded_factor),
@@ -466,12 +457,6 @@ impl SurfaceCombatFigures {
             if value.is_negative() {
                 return Some(format!("surface combat {label} {value} is negative"));
             }
-        }
-        let shares = self.gun_hit_flotation + self.gun_hit_fire;
-        if shares != Fixed::ONE {
-            return Some(format!(
-                "surface combat gun hit shares add to {shares}, not 1"
-            ));
         }
         let tables = [
             ("gun system hit", &self.gun_system_hit),
@@ -672,7 +657,6 @@ impl SurfaceCombatFigures {
             radar_sighting_bonus: hundredth(20),
             not_alert_sighting_factor: hundredth(50),
             alert_contact_distance_hexes: 3,
-            alert_contact_max_age_pulses: 2,
             alarm_chance: hundredth(50),
             gun_hit_chance_night: hundredth(3),
             gun_hit_chance_day: hundredth(5),
@@ -681,7 +665,6 @@ impl SurfaceCombatFigures {
             surprised_target_factor: hundredth(150),
             lit_target_factor: Fixed::from_int(2),
             gun_hit_flotation: hundredth(75),
-            gun_hit_fire: hundredth(25),
             gun_system_hit_chance: hundredth(30),
             torpedo_system_hit_chance: hundredth(50),
             degraded_factor: hundredth(50),
@@ -773,15 +756,12 @@ impl SearchFigures {
             row(&[(ShipKind::Auxiliary, 7), (ShipKind::Transport, 3)]),
         );
         SearchFigures {
-            initial_confidence: tenth(8),
-            confidence_decay_per_pulse: tenth(8),
-            drop_below_confidence: tenth(3),
+            contact_drop_age_pulses: 5,
             merge_distance_hexes: 2,
-            merge_max_age_pulses: 2,
+            fresh_contact_max_age_pulses: 2,
             position_error_chance: tenth(3),
             count_over_chance: tenth(2),
             count_under_chance: tenth(2),
-            notice_chance: tenth(5),
             kind_confusion,
         }
     }
@@ -860,16 +840,10 @@ mod tests {
     }
 
     #[test]
-    fn the_gun_hit_shares_must_add_to_one() {
-        let message = combat_problem_of(|f| f.gun_hit_flotation = Fixed::from_ratio(6, 10));
-        assert!(message.contains("not 1"), "{message}");
-        let message = combat_problem_of(|f| f.gun_hit_fire = Fixed::from_ratio(1, 10));
-        assert!(message.contains("not 1"), "{message}");
-        // Each share is also a chance, so one outside 0 to 1 is named.
-        let message = combat_problem_of(|f| {
-            f.gun_hit_flotation = Fixed::from_ratio(-1, 10);
-            f.gun_hit_fire = Fixed::from_ratio(11, 10);
-        });
+    fn the_gun_hit_flotation_share_must_be_between_zero_and_one() {
+        let message = combat_problem_of(|f| f.gun_hit_flotation = Fixed::from_ratio(-1, 10));
+        assert!(message.contains("flotation share"), "{message}");
+        let message = combat_problem_of(|f| f.gun_hit_flotation = Fixed::from_ratio(11, 10));
         assert!(message.contains("flotation share"), "{message}");
     }
 
@@ -1092,18 +1066,14 @@ mod tests {
     fn each_chance_must_be_between_zero_and_one() {
         let over = Fixed::from_ratio(11, 10);
         let under = Fixed::from_ratio(-1, 10);
-        assert!(problem_of(|f| f.initial_confidence = over).contains("initial confidence"));
-        assert!(problem_of(|f| f.initial_confidence = under).contains("initial confidence"));
-        assert!(problem_of(|f| f.confidence_decay_per_pulse = over).contains("decay"));
-        assert!(problem_of(|f| f.drop_below_confidence = under).contains("drop-below"));
         assert!(problem_of(|f| f.position_error_chance = over).contains("position error"));
         assert!(problem_of(|f| f.count_over_chance = under).contains("count over"));
         assert!(problem_of(|f| f.count_under_chance = over).contains("count under"));
-        assert!(problem_of(|f| f.notice_chance = over).contains("notice"));
         // 0 and 1 themselves are allowed.
         let mut edge = SearchFigures::from_search_toml();
-        edge.notice_chance = Fixed::ZERO;
-        edge.initial_confidence = Fixed::ONE;
+        edge.position_error_chance = Fixed::ZERO;
+        edge.count_over_chance = Fixed::ONE;
+        edge.count_under_chance = Fixed::ZERO;
         assert_eq!(edge.problem(), None);
     }
 

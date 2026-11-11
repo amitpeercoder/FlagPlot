@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2ce3ee76c5bdceea  324 events
+day   1  hash b00b97adac8f6e56  324 events
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-7); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -27,10 +27,10 @@ ship:15 "USS Astoria": afloat in task_force:3; damage flotation 14.621013, fire 
 ship:16 "USS Helm": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
 ship:17 "USS Wilson": afloat in task_force:3; damage flotation 31.646047, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
 base:1 "Rabaul" (Japanese) at (-5,-13): 0 t of supply in stock
-Allied contact:2 at (2,-5): 1 ships, cruiser, age 0 pulses, confidence 0.8
+Allied contact:2 at (2,-5): 1 ships, cruiser, age 0 pulses
 Allied claims 3 enemy ships sunk at (2,-5), day 1 night
 Allied claims 1 enemy ship sunk at (2,-5), day 1 morning
 Allied claims 1 enemy ship sunk at (2,-5), day 1 afternoon
-Japanese contact:1 at (2,-5): 6 ships, cruiser, age 0 pulses, confidence 0.8
+Japanese contact:1 at (2,-5): 6 ships, cruiser, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-5), day 1 night
 Japanese claims 0 enemy ships sunk at (2,-5), day 1 night

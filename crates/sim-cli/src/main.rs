@@ -13,7 +13,6 @@ use std::process::ExitCode;
 
 use sim_core::orders::{AirMission, Stance};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
-use sim_core::time::ClockTime;
 use sim_core::DaySummary;
 use sim_data::Scenario;
 
@@ -177,13 +176,6 @@ fn run(args: &[String]) -> Result<(), String> {
             ),
             None => task_force.position().to_string(),
         };
-        let noticed = match task_force.noticed_sighted_at_hours {
-            Some(hours) => format!(
-                ", last noticed sighted at {}",
-                ClockTime::from_elapsed(hours)
-            ),
-            None => String::new(),
-        };
         // "Alert" is what the rules read. A force is alert by its readiness
         // or because it is alerted (decision 0021). Saying which avoids a
         // line that reads "battle readiness, not alerted".
@@ -201,13 +193,12 @@ fn run(args: &[String]) -> Result<(), String> {
             Stance::Avoid => "avoid",
         };
         println!(
-            "{} \"{}\" ({}): {:?} at {}{}; {}, rules of engagement: {}, break off at {}, stragglers: {}, keep {}; {}",
+            "{} \"{}\" ({}): {:?} at {}; {}, rules of engagement: {}, break off at {}, stragglers: {}, keep {}; {}",
             task_force.id,
             task_force.name,
             task_force.side.name(),
             task_force.status,
             position,
-            noticed,
             readiness,
             stance,
             task_force.rules_of_engagement.break_off,
@@ -298,14 +289,13 @@ fn run(args: &[String]) -> Result<(), String> {
         for contact in view.contacts() {
             any = true;
             println!(
-                "{} {} at {}: {} ships, {}, age {} pulses, confidence {}",
+                "{} {} at {}: {} ships, {}, age {} pulses",
                 side.name(),
                 contact.id,
                 contact.estimated_hex,
                 contact.estimated_ship_count,
                 contact.estimated_kind.name(),
-                contact.age_pulses,
-                contact.confidence
+                contact.age_pulses
             );
         }
         if !any {

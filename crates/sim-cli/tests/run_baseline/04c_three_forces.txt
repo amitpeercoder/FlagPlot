@@ -2,7 +2,7 @@ Scenario 4c2a: Readiness, one attacker and two defenders
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 12ea0f4b08f811e9  86 events
+day   1  hash 2f6cc2ab77adcd29  86 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Arrived at (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder first defending force" (Allied): Idle at (7,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -16,8 +16,8 @@ ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 70, fi
 ship:7 "Placeholder cruiser C1": afloat in task_force:3; damage flotation 20, fire 5; fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:8 "Placeholder cruiser C2": afloat in task_force:3; damage flotation 20, fire 10; torpedo mounts degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:9 "Placeholder cruiser C3": afloat in task_force:3; damage flotation 30, fire 0; propulsion degraded, fire control out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-Allied contact:1 at (7,0): 3 ships, cruiser, age 2 pulses, confidence 0.512
+Allied contact:1 at (7,0): 3 ships, cruiser, age 2 pulses
 Allied: no battle claims
-Japanese contact:1 at (7,0): 3 ships, cruiser, age 2 pulses, confidence 0.512
+Japanese contact:1 at (7,0): 3 ships, cruiser, age 2 pulses
 Japanese claims 0 enemy ships sunk at (7,0), day 1 night
 Japanese claims 0 enemy ships sunk at (7,0), day 1 night
