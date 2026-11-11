@@ -526,3 +526,7 @@ Japanese tracks
 - **25 Aug Marine strike size.** ONI 8 SBD, USSBS 12, combinedfleet 6.
 - **B-17 hits on 25 Aug.** ONI: one ship broke in two; USSBS: three hits on Mutsuki; combinedfleet: one direct hit.
 - **Enterprise bombs on targets.** ONI itemises 8 five-hundred-pound bombs by the search planes; the Enterprise report says 10.
+
+## Settled by Amit on 2026-11-11
+
+The facts scenario 5 needs for Eastern Solomons were settled in one pass from `eastern-solomons-settlement.md`: displacement, speed and aircraft capacity of the carriers and escorts; endurance and fuel as matched pairs; anti-aircraft guns and radar for the ships with sources; aircraft speeds and ranges; two air strengths. Three Savo Island classes settled on 2026-11-10 were moved to matched full-load pairs, because the earlier New Orleans pair mixed two fuel conditions. Each settled row says so in its note.

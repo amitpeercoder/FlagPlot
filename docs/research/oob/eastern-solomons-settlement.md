@@ -1,6 +1,6 @@
 # Eastern Solomons: settlement sheet for scenario 5
 
-Status: **proposed.** Written by Claude on 2026-11-11 for Amit to approve. Nothing here is settled in the data. No standing has been set on the researcher's judgement: a row is `preferred` today only by the format's own rule (one row at medium grade or better with nothing against it, or two sources that agree), and everything in dispute is `disputed`.
+Status: **approved by Amit on 2026-11-11, as recommended,** including the three questions in section 0 and the move of three Savo Island classes to matched full-load pairs. The rows are marked in the data with "Settled by Amit on 2026-11-11" and the section of this sheet. The sheet below is kept as it was put to him, apart from this paragraph and the last section. It is for the architect to turn into a numbered decision record.
 
 **What scenario 5 needs.** The carrier duel of 24 to 25 August 1942: the ships of both carrier forces, the aircraft that flew, how many aircraft each side had, and where the forces were. This sheet covers, in the order the architect asked for them: what was found and how firm it is, what is disputed and my recommendation, and what was not found.
 
@@ -394,6 +394,44 @@ All of these are in `gaps.csv`.
 - **The Advance Force and convoy classes** were not researched in this pass beyond what was already held.
 - **Saratoga's own action report.**
 
-## What approval would do
+## What approval did
 
-If the three questions in section 0 and the recommendations are approved, the rows are marked as at Savo Island: the chosen row `preferred` where the format allows it, the others `alternative`, each with a note naming the item. Rows chosen that rest on a lone weak source are listed for a written exception. The derivation tool does not yet read aircraft, air strengths or anti-aircraft fits, so its problem count for this battle cannot be given.
+Applied on 2026-11-11. Chosen rows are `preferred` and the others `alternative`, each with a note naming the section. The data checker passes and the workspace tests pass.
+
+**Marked in the data:**
+
+- **Section 1:** displacement, speed and aircraft capacity for every class listed, 37 items. The Bagley and Benham displacements were already chosen at Savo Island and are unchanged.
+- **Section 1a:** endurance, cruise speed and fuel as the matched pairs listed, for 21 classes. Four chosen rows from the Navy's tables carried a date range that was the period of the data, not of validity; the range is removed so the rows hold in 1942.
+- **Section 0, Savo Island:** New Orleans, Bagley and Benham moved to the full-load pairs at 15 knots. The rows settled on 2026-11-10 are now `alternative` and say they were replaced.
+- **Sections 2 and 3:** anti-aircraft guns for North Carolina, Enterprise, Saratoga, Atlanta, Shokaku and Ryujo; radar for Enterprise, Saratoga and Zuikaku.
+- **Section 4:** the F4F-4, Zero and B-17E speeds from official documents; the most-quoted speed for the TBF-1, B5N2, H6K4 and PBY; ranges for the Zero, D3A1, B5N2, PBY, H6K4 and B-17E; the Zero's carrier radius.
+- **Section 5:** VF-6 at 28 on hand; Ryujo's attack planes at 9 on hand and 6 operational.
+
+**Consequence for Savo Island.** With the three classes moved, the derivation tool reports no problems for Savo Island and would rewrite five class rows: the Bagley classes to 6,080 miles at 15 knots with 506 tons, the Benham class to 4,860 with 491, and the New Orleans classes to 6,500 with 1,900. The generated reference files were not regenerated here; that and any change to scenario 4's expected numbers are the architect's.
+
+**Chosen rows that cannot be `preferred` under the format's rule,** because each rests on a lone weak source. They stay `unconfirmed`, say "chosen" in their note, and need a written exception when the tool reads them:
+
+| File | Rows | What |
+| --- | --- | --- |
+| `ship_class_facts.csv` | 37 | Chitose class speed |
+| `ship_class_facts.csv` | 805, 811 | Kagero and Yugumo class fuel |
+| `fits.csv` | 77, 81 | CXAM radar, Saratoga and Enterprise: these two rows only; the fit itself is `preferred` on other rows |
+| `fits.csv` | 135 | Zuikaku, no radar: this row only; the fit is `preferred` on another |
+| `fits.csv` | 458 | Shokaku class, 48 guns of 25 mm |
+| `fits.csv` | 467, 468 | Ryujo, 22 guns of 25 mm |
+| `fits.csv` | 516, 517, 518 | Saratoga's light anti-aircraft guns |
+| `aircraft_type_facts.csv` | 385; 98; 79, 412; 215; 187 | Range of the Zero, D3A1, B5N2, PBY-5A and H6K4 |
+| `aircraft_type_facts.csv` | 292, 301 | TBF-1 speed |
+| `air_unit_facts.csv` | 59 | Ryujo attack planes on hand |
+
+**Approved on the sheet and not expressed as a row standing,** because each is a choice for the scenario and not a fact:
+
+- **Radius as flown** for the SBD-3 and TBF-1 (250 miles on search with a 500 lb bomb, about 200 on strike), and about 200 for the D3A1. The rows that record the distances flown are in the data. The architect has said the bombers' radius will be set by a rule in stage 5e.
+- **Loads:** as flown for US types; one 250 kg bomb for the D3A1; one torpedo for the B5N2.
+- **Henderson Field strengths** on 24 August: 13 fighters, 11 dive bombers, 5 Army fighters, and 11 Enterprise dive bombers after dusk. The rows were already `preferred` by rule.
+- **Japanese positions** from the post-war track chart, read by eye to about one hex.
+- **Radar "by exception"** for Atlanta, Portland, Ryujo and Hiei, and "unknown" for the US destroyers and Kirishima.
+
+**Left disputed, because the sheet's rule did not pick a winner:** maximum speed of the SBD-3 (217 or 220 knots, one source each) and of the D3A1 (five sources, five figures from 206 to 244).
+
+**One lead turned up while applying this, and it touches Savo Island.** A website says the whole New Orleans class received an SC search radar in "mid-1942". If so, Vincennes and Quincy had one on 8 August, which decision 0019 treats as unknown. The row (`fits.csv` 604) is graded low, because it gives only a year and no source, and it changes nothing as it stands. It is worth a look before the question is closed.
