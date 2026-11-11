@@ -6,8 +6,8 @@ use serde::Deserialize;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
-    AirCombatFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon, PortSize,
-    RefData, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
+    AirCombatFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon, FatigueFigures,
+    PortSize, RefData, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -600,6 +600,43 @@ fn parse_air_upkeep_figures(text: &str, path: &Path) -> Result<AirUpkeepFigures,
         wear_chance_per_100_nm: number("wear_chance_per_100_nm", &file.wear_chance_per_100_nm)?,
         write_off_share: number("write_off_share", &file.write_off_share)?,
         carrier_repairs_per_day: file.carrier_repairs_per_day,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FatigueFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    air_fatigue_per_sortie: Quantity,
+    air_fatigue_per_100_nm: Quantity,
+    air_rest_per_pulse: Quantity,
+}
+
+/// Loads the fatigue figures from a TOML file (decision 0036).
+pub fn load_fatigue_figures(path: &Path) -> Result<FatigueFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_fatigue_figures(&text, path)
+}
+
+/// Parses fatigue figures from TOML text. `path` is only used in messages.
+fn parse_fatigue_figures(text: &str, path: &Path) -> Result<FatigueFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: FatigueFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = FatigueFigures {
+        air_fatigue_per_sortie: number("air_fatigue_per_sortie", &file.air_fatigue_per_sortie)?,
+        air_fatigue_per_100_nm: number("air_fatigue_per_100_nm", &file.air_fatigue_per_100_nm)?,
+        air_rest_per_pulse: number("air_rest_per_pulse", &file.air_rest_per_pulse)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1460,5 +1497,45 @@ mod tests {
         )
         .contains("-1"));
         assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
+    }
+    fn fatigue_text() -> String {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/fatigue.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn fatigue_figures_parse_with_the_files_values() {
+        let figures = parse_fatigue_figures(&fatigue_text(), here()).expect("parses");
+        assert_eq!(figures.air_fatigue_per_sortie, Fixed::from_int(3));
+        assert_eq!(figures.air_fatigue_per_100_nm, Fixed::from_int(2));
+        assert_eq!(figures.air_rest_per_pulse, Fixed::from_int(5));
+    }
+
+    #[test]
+    fn fatigue_figures_are_required_not_negative_and_not_floats() {
+        let bad = |from: &str, to: &str| {
+            let text = fatigue_text().replace(from, to);
+            assert_ne!(text, fatigue_text(), "{from} is in the file");
+            parse_fatigue_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(
+            bad("air_fatigue_per_sortie = 3", "air_fatigue_per_sortie = 3.5")
+                .contains("air_fatigue_per_sortie")
+        );
+        assert!(
+            bad("air_fatigue_per_100_nm = 2", "air_fatigue_per_100_nm = -2").contains("per 100 nm")
+        );
+        assert!(bad("air_rest_per_pulse = 5", "air_rest_per_pulse = \"101\"").contains("rest"));
+        assert!(bad("air_rest_per_pulse = 5\n", "").contains("air_rest_per_pulse"));
+        assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
+        // A decimal string is accepted.
+        let text = fatigue_text().replace("air_rest_per_pulse = 5", "air_rest_per_pulse = \"2.5\"");
+        let figures = parse_fatigue_figures(&text, here()).expect("parses");
+        assert_eq!(
+            figures.air_rest_per_pulse,
+            "2.5".parse::<Fixed>().expect("fixed")
+        );
     }
 }

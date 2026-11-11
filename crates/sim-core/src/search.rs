@@ -240,11 +240,12 @@ impl World {
             );
             // The wear step rolls what flew (decision 0035): out to the range
             // of the arc and back.
-            if self.ref_data.air_upkeep.is_some() {
+            if self.notes_sorties() {
                 self.sorties.push(Sortie {
                     air_group: group.id,
                     kind: SortieKind::Search,
                     aircraft: flown_aircraft,
+                    sent: flown_aircraft,
                     distance_nm: arc.range_nm * Fixed::from_int(2),
                     causes: vec![Cause::Event(flown)],
                 });
@@ -647,6 +648,10 @@ mod tests {
                 arc_order: None,
                 patrol_share: Fixed::ONE,
                 share_order: None,
+                fatigue: Fixed::ZERO,
+                rest_above: None,
+                rest_order: None,
+                stood_down: false,
             },
         );
         let mut next_ship = 1;

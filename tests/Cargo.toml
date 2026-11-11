@@ -77,5 +77,9 @@ path = "scenario_06a_base_raid.rs"
 name = "scenario_06b_wear_and_repair"
 path = "scenario_06b_wear_and_repair.rs"
 
+[[test]]
+name = "scenario_06c_fatigue_and_rest"
+path = "scenario_06c_fatigue_and_rest.rs"
+
 [lints]
 workspace = true

@@ -1,0 +1,13 @@
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0036-fatigue-and-rest.md.
+
+placeholder = true
+
+# Fatigue an air group gains in a daylight pulse in which it flew: this much
+# for the sortie, plus this much for each 100 nm of it.
+air_fatigue_per_sortie = 3
+air_fatigue_per_100_nm = 2
+
+# Fatigue an air group loses in a daylight pulse in which it did not fly.
+air_rest_per_pulse = 5

@@ -24,6 +24,9 @@ const BASE_GUNS_TAG: u8 = 0xF3;
 const BASE_REPAIRS_TAG: u8 = 0xF4;
 /// Tag of an air group's damaged aircraft (decision 0035). See `hash_world`.
 const DAMAGED_TAG: u8 = 0xF5;
+/// Tag of an air group's fatigue, rest threshold and stand-down (decision
+/// 0036). See `hash_world`.
+const FATIGUE_TAG: u8 = 0xF6;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -270,6 +273,28 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         if group.damaged != 0 {
             h.u8(DAMAGED_TAG);
             h.u32(group.damaged);
+        }
+        // A group that is not tired, has no rest threshold and is not stood
+        // down writes nothing, so it hashes as it did before fatigue
+        // (decision 0036). The tag 0xF6 follows the damaged count (or the
+        // ready count) and the mission code that follows it is 1 to 5, so
+        // every state has one reading.
+        if group.fatigue != Fixed::ZERO
+            || group.rest_above.is_some()
+            || group.rest_order.is_some()
+            || group.stood_down
+        {
+            h.u8(FATIGUE_TAG);
+            h.i64(group.fatigue.raw());
+            match group.rest_above {
+                Some(level) => {
+                    h.u8(1);
+                    h.i64(level.raw());
+                }
+                None => h.u8(0),
+            }
+            h.optional_u32(group.rest_order.map(|id| id.raw()));
+            h.u8(u8::from(group.stood_down));
         }
         h.u8(group.mission.code());
         // The base strike mission (code 5) is followed by its target base.

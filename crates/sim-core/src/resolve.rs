@@ -45,6 +45,9 @@ pub(crate) enum PulsePhase {
     /// Aircraft that flew roll for wear, after the air combat step of a
     /// daylight pulse (decisions 3 to 7 of 0035).
     AircraftWear,
+    /// The staff stands tired groups down and returns rested ones, right
+    /// after the repair at the start of the day (decision 8 of 0036).
+    AirGroupRest,
 }
 
 /// A step after the last pulse.
@@ -56,8 +59,9 @@ enum EndOfDayPhase {
     IntelligenceUpdate,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 6] = [
+const NIGHT_SEQUENCE: [PulsePhase; 7] = [
     PulsePhase::AircraftRepair,
+    PulsePhase::AirGroupRest,
     PulsePhase::Movement,
     PulsePhase::NightSearch,
     PulsePhase::SurfaceEngagements,
@@ -138,6 +142,7 @@ impl World {
             PulsePhase::AirCombat => self.resolve_strikes(day, pulse),
             PulsePhase::AircraftRepair => self.repair_aircraft(day, pulse),
             PulsePhase::AircraftWear => self.wear_aircraft(day, pulse),
+            PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,
             // decision 8). The slot stays, like night search.
@@ -500,6 +505,13 @@ impl World {
                             Ok(())
                         }
                     }
+                    AirGroupOrder::SetRestThreshold { fatigue } => {
+                        if *fatigue < Fixed::ZERO || *fatigue > Fixed::from_int(100) {
+                            Err(RejectReason::FatigueOutOfRange(*fatigue))
+                        } else {
+                            Ok(())
+                        }
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -645,6 +657,10 @@ impl World {
                     AirGroupOrder::SetPatrolShare { share } => {
                         group.patrol_share = *share;
                         group.share_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetRestThreshold { fatigue } => {
+                        group.rest_above = Some(*fatigue);
+                        group.rest_order = Some(order.id);
                     }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
@@ -1418,6 +1434,10 @@ mod tests {
                 arc_order: None,
                 patrol_share: Fixed::ONE,
                 share_order: None,
+                fatigue: Fixed::ZERO,
+                rest_above: None,
+                rest_order: None,
+                stood_down: false,
             },
         );
         assert_sound(&world);

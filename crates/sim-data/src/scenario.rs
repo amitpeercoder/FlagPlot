@@ -22,8 +22,9 @@ use crate::error::DataError;
 use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
-    load_air_combat_figures, load_air_upkeep_figures, load_aircraft_types, load_port_sizes,
-    load_search_figures, load_ship_classes, load_surface_combat_figures, parse_kind,
+    load_air_combat_figures, load_air_upkeep_figures, load_aircraft_types, load_fatigue_figures,
+    load_port_sizes, load_search_figures, load_ship_classes, load_surface_combat_figures,
+    parse_kind,
 };
 
 #[derive(Deserialize)]
@@ -53,6 +54,9 @@ struct ScenarioFile {
     /// Path to the wear and repair figures, relative to the scenario file.
     /// Optional: without it no aircraft is worn or repaired (decision 0035).
     air_upkeep: Option<String>,
+    /// Path to the fatigue figures, relative to the scenario file. Optional:
+    /// without it no air group tires or rests (decision 0036).
+    fatigue: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -115,6 +119,8 @@ struct AirGroupSpec {
     ready: u32,
     /// Damaged aircraft at the start (decision 0035). Defaults to 0.
     damaged: Option<u32>,
+    /// Fatigue at the start, 0 to 100 (decision 0036). Defaults to 0.
+    fatigue: Option<Quantity>,
 }
 
 #[derive(Deserialize)]
@@ -231,6 +237,11 @@ enum ActionSpec {
     /// its hex (decision 0027).
     SetPatrolShare {
         share: Quantity,
+    },
+    /// The fatigue above which the staff stands the group down (decision
+    /// 0036).
+    SetRestThreshold {
+        fatigue: Quantity,
     },
     SetRulesOfEngagement {
         stance: StanceSpec,
@@ -430,6 +441,9 @@ impl Scenario {
         }
         if let Some(air_upkeep) = &file.air_upkeep {
             ref_data.air_upkeep = Some(load_air_upkeep_figures(&folder.join(air_upkeep))?);
+        }
+        if let Some(fatigue) = &file.fatigue {
+            ref_data.fatigue = Some(load_fatigue_figures(&folder.join(fatigue))?);
         }
 
         let mut truth = TruthState::default();
@@ -668,6 +682,23 @@ impl Scenario {
                 arc_order: None,
                 patrol_share: Fixed::ONE,
                 share_order: None,
+                fatigue: match &spec.fatigue {
+                    Some(quantity) => {
+                        let fatigue = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id} fatigue {e}")))?;
+                        if fatigue < Fixed::ZERO || fatigue > Fixed::from_int(100) {
+                            return Err(fail(format!(
+                                "{id} has a fatigue of {fatigue}, not between 0 and 100"
+                            )));
+                        }
+                        fatigue
+                    }
+                    None => Fixed::ZERO,
+                },
+                rest_above: None,
+                rest_order: None,
+                stood_down: false,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -754,6 +785,9 @@ impl Scenario {
                         ActionSpec::SetPatrolShare { .. } => {
                             return Err(wrong_target("set_patrol_share", "air_group"))
                         }
+                        ActionSpec::SetRestThreshold { .. } => {
+                            return Err(wrong_target("set_rest_threshold", "air_group"))
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -820,9 +854,16 @@ impl Scenario {
                                 .to_fixed()
                                 .map_err(|e| fail(format!("share on day {day} {e}")))?,
                         },
+                        ActionSpec::SetRestThreshold { fatigue } => {
+                            AirGroupOrder::SetRestThreshold {
+                                fatigue: fatigue
+                                    .to_fixed()
+                                    .map_err(|e| fail(format!("fatigue on day {day} {e}")))?,
+                            }
+                        }
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc or set_patrol_share"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share or set_rest_threshold"
                             )))
                         }
                     };
@@ -1329,6 +1370,86 @@ r = 0
         let error = with_air_upkeep("air_upkeep = \"../reference/nothing.toml\"\n")
             .expect_err("a missing file is an error");
         assert!(error.to_string().contains("nothing.toml"), "{error}");
+    }
+
+    /// `HEAD` with the fatigue key added after the surface combat key.
+    fn with_fatigue(key: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let head = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            &format!("surface_combat = \"../reference/surface_combat.toml\"\n{key}"),
+        );
+        Scenario::parse(&head, &path)
+    }
+
+    #[test]
+    fn the_fatigue_key_is_optional_and_loads_the_figures() {
+        assert!(parse_with("")
+            .expect("loads")
+            .world
+            .ref_data()
+            .fatigue
+            .is_none());
+        let with = with_fatigue("fatigue = \"../reference/fatigue.toml\"\n").expect("loads");
+        let figures = with
+            .world
+            .ref_data()
+            .fatigue
+            .expect("the figures are loaded");
+        assert_eq!(figures.air_fatigue_per_sortie, Fixed::from_int(3));
+        assert_eq!(figures.air_rest_per_pulse, Fixed::from_int(5));
+        let error = with_fatigue("fatigue = \"../reference/nothing.toml\"\n")
+            .expect_err("a missing file is an error");
+        assert!(error.to_string().contains("nothing.toml"), "{error}");
+    }
+
+    #[test]
+    fn an_air_group_takes_an_optional_fatigue_in_whole_numbers_or_decimal_strings() {
+        let fatigue = |extra: &str| {
+            let text = air_group(1, 3).replace("ready = ", &format!("{extra}ready = "));
+            parse_with(&text)
+                .map(|scenario| scenario.world.umpire().air_groups[&AirGroupId::new(1)].fatigue)
+        };
+        assert_eq!(fatigue("").expect("loads"), Fixed::ZERO);
+        assert_eq!(
+            fatigue("fatigue = 40\n").expect("loads"),
+            Fixed::from_int(40)
+        );
+        assert_eq!(
+            fatigue("fatigue = \"6.2\"\n").expect("loads"),
+            "6.2".parse::<Fixed>().expect("fixed")
+        );
+        assert!(fatigue("fatigue = 6.2\n").is_err());
+        assert!(fatigue("fatigue = -1\n").is_err());
+        assert!(fatigue("fatigue = 101\n").is_err());
+        assert_eq!(
+            fatigue("fatigue = 100\n").expect("loads"),
+            Fixed::from_int(100)
+        );
+    }
+
+    #[test]
+    fn the_rest_threshold_order_loads_for_an_air_group_and_is_checked_at_intake() {
+        let rest = "kind = \"set_rest_threshold\"\nfatigue = 30";
+        parse_with(&order("air_group = 1", rest)).expect("a whole number loads");
+        parse_with(&order(
+            "air_group = 1",
+            "kind = \"set_rest_threshold\"\nfatigue = \"12.5\"",
+        ))
+        .expect("a decimal string loads");
+        // Never a float, always a value, and for an air group.
+        let float = rest.replace("= 30", "= 30.5");
+        assert!(parse_with(&order("air_group = 1", &float)).is_err());
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_rest_threshold\"")).is_err());
+        assert!(error_of(&order("task_force = 1", rest)).contains("air_group"));
+        // The range is checked when the order reaches intake, not here.
+        parse_with(&order(
+            "air_group = 1",
+            "kind = \"set_rest_threshold\"\nfatigue = 150",
+        ))
+        .expect("a threshold out of range is rejected by the world, not the loader");
+        // An unknown key is rejected.
+        assert!(parse_with(&order("air_group = 1", &format!("{rest}\nextra = 1"))).is_err());
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.

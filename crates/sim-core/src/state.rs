@@ -521,6 +521,17 @@ pub struct AirGroup {
     pub patrol_share: Fixed,
     /// The standing order that set the share, if any.
     pub share_order: Option<OrderId>,
+    /// How tired the group is, from 0 to 100 (decision 0036). It cuts the
+    /// aircraft the group can fly. The default is 0.
+    pub fatigue: Fixed,
+    /// The fatigue above which the staff stands the group down at the start
+    /// of the day (decision 7 of 0036). `None`: never stood down.
+    pub rest_above: Option<Fixed>,
+    /// The standing order that set the threshold, if any.
+    pub rest_order: Option<OrderId>,
+    /// Whether the staff stood the group down today: it flies nothing
+    /// (decision 9 of 0036). The default is false.
+    pub stood_down: bool,
 }
 
 /// The real state of the world.

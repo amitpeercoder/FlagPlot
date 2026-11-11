@@ -133,6 +133,19 @@ impl SortieKind {
     }
 }
 
+/// How an air group's fatigue changed (decisions 4 and 5 of
+/// `docs/decisions/0036-fatigue-and-rest.md`).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum FatigueChange {
+    /// It flew: the longest of its sorties in the pulse, and its distance.
+    Gained {
+        sortie: SortieKind,
+        distance_nm: Fixed,
+    },
+    /// It did not fly.
+    Rested,
+}
+
 /// One of the two damage tracks of a ship. Named systems are separate
 /// (decision 0016).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -639,6 +652,30 @@ pub enum EventKind {
         destroyed_t: Fixed,
         supply_t: Fixed,
     },
+    /// An air group's fatigue changed in a daylight pulse (decisions 4 and 5
+    /// of 0036). `amount` is what it actually gained or lost, after the cap
+    /// at 100 or the floor at 0; `fatigue` is what it has afterwards.
+    AirGroupFatigue {
+        air_group: AirGroupId,
+        change: FatigueChange,
+        amount: Fixed,
+        fatigue: Fixed,
+    },
+    /// The staff stood an air group down at the start of the day, because
+    /// its fatigue is above its rest threshold (decision 8 of 0036).
+    AirGroupStoodDown {
+        air_group: AirGroupId,
+        fatigue: Fixed,
+        threshold: Fixed,
+    },
+    /// The staff returned a stood-down air group to flying at the start of
+    /// the day, its fatigue being no longer above its rest threshold
+    /// (decision 8 of 0036).
+    AirGroupReturned {
+        air_group: AirGroupId,
+        fatigue: Fixed,
+        threshold: Fixed,
+    },
 }
 
 impl EventKind {
@@ -716,7 +753,12 @@ impl EventKind {
             EventKind::DamagedAircraftDestroyedOnGround {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
-            EventKind::AircraftWorn { air_group, .. } => vec![EntityRef::AirGroup(*air_group)],
+            EventKind::AircraftWorn { air_group, .. }
+            | EventKind::AirGroupFatigue { air_group, .. }
+            | EventKind::AirGroupStoodDown { air_group, .. }
+            | EventKind::AirGroupReturned { air_group, .. } => {
+                vec![EntityRef::AirGroup(*air_group)]
+            }
             EventKind::AircraftRepaired { air_group, at, .. } => vec![
                 EntityRef::AirGroup(*air_group),
                 match at {
@@ -1044,6 +1086,40 @@ impl fmt::Display for EventKind {
                 f,
                 "{air_group} {} sortie of {distance_nm} nm: {aircraft} aircraft x {chance} = {expected} expected worn, {worn} worn, {written_off} written off, {ready} ready and {damaged} damaged left",
                 sortie.name()
+            ),
+            EventKind::AirGroupFatigue {
+                air_group,
+                change,
+                amount,
+                fatigue,
+            } => match change {
+                FatigueChange::Gained {
+                    sortie,
+                    distance_nm,
+                } => write!(
+                    f,
+                    "{air_group} gained {amount} fatigue from its {} sortie of {distance_nm} nm, now {fatigue}",
+                    sortie.name()
+                ),
+                FatigueChange::Rested => {
+                    write!(f, "{air_group} rested {amount} fatigue, now {fatigue}")
+                }
+            },
+            EventKind::AirGroupStoodDown {
+                air_group,
+                fatigue,
+                threshold,
+            } => write!(
+                f,
+                "{air_group} stood down: fatigue {fatigue} is above its threshold of {threshold}"
+            ),
+            EventKind::AirGroupReturned {
+                air_group,
+                fatigue,
+                threshold,
+            } => write!(
+                f,
+                "{air_group} returned to flying: fatigue {fatigue} is not above its threshold of {threshold}"
             ),
             EventKind::AircraftRepaired {
                 air_group,

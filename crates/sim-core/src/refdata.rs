@@ -651,6 +651,50 @@ pub struct RefData {
     /// names no file: no air group is worn, none is repaired and nothing is
     /// recorded.
     pub air_upkeep: Option<AirUpkeepFigures>,
+    /// The fatigue figures of decision 0036. `None` if the scenario names no
+    /// file: no air group tires or rests, none is stood down and nothing is
+    /// recorded.
+    pub fatigue: Option<FatigueFigures>,
+}
+
+/// The figures of the fatigue rule. See
+/// `docs/decisions/0036-fatigue-and-rest.md`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct FatigueFigures {
+    /// Fatigue an air group gains in a daylight pulse in which it flew, for
+    /// the sortie.
+    pub air_fatigue_per_sortie: Fixed,
+    /// The fatigue added for each 100 nm of the sortie.
+    pub air_fatigue_per_100_nm: Fixed,
+    /// Fatigue an air group loses in a daylight pulse in which it did not
+    /// fly.
+    pub air_rest_per_pulse: Fixed,
+}
+
+impl FatigueFigures {
+    /// The fatigue a group gains for a sortie of `distance_nm` (decision 4
+    /// of 0036): the figure for the sortie plus the figure per 100 nm times
+    /// the distance over 100.
+    pub fn gain(&self, distance_nm: Fixed) -> Fixed {
+        self.air_fatigue_per_sortie
+            + self
+                .air_fatigue_per_100_nm
+                .mul_div(distance_nm, Fixed::from_int(100))
+    }
+
+    /// Describes what is wrong with the figures, if anything.
+    pub fn problem(&self) -> Option<String> {
+        for (label, value) in [
+            ("fatigue per sortie", self.air_fatigue_per_sortie),
+            ("fatigue per 100 nm", self.air_fatigue_per_100_nm),
+            ("rest per pulse", self.air_rest_per_pulse),
+        ] {
+            if value < Fixed::ZERO || value > Fixed::from_int(100) {
+                return Some(format!("air {label} {value} is not between 0 and 100"));
+            }
+        }
+        None
+    }
 }
 
 /// The figures of the wear and repair rule. See

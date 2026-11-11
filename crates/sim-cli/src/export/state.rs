@@ -111,6 +111,16 @@ pub struct AirGroupOut {
     /// Set for a group on combat air patrol (decision 0027).
     #[serde(skip_serializing_if = "Option::is_none")]
     patrol_share: Option<Num>,
+    /// Fatigue (decision 0036). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    fatigue: Num,
+    /// The fatigue above which the staff stands the group down. Left out
+    /// when the group has no threshold.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rest_above: Option<Num>,
+    /// Whether the staff stood the group down today. Left out when not.
+    #[serde(skip_serializing_if = "is_false")]
+    stood_down: bool,
     arc: Option<ArcOut>,
 }
 
@@ -139,6 +149,14 @@ pub struct BaseOut {
 
 fn is_zero(n: &u32) -> bool {
     *n == 0
+}
+
+fn num_is_zero(n: &Num) -> bool {
+    n.0 == sim_core::fixed::Fixed::ZERO
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 pub fn snapshot(truth: &TruthState, ref_data: &RefData) -> Snapshot {
@@ -251,6 +269,9 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         mission: names::air_mission(group.mission),
         patrol_share: (group.mission == AirMission::CombatAirPatrol)
             .then_some(Num(group.patrol_share)),
+        fatigue: Num(group.fatigue),
+        rest_above: group.rest_above.map(Num),
+        stood_down: group.stood_down,
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,
