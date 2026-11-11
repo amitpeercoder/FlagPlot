@@ -44,3 +44,15 @@ One clock is wrong far from its meridian. When it is 18:00 at Guadalcanal it is 
 - Start the day at 06:00 and resolve morning, afternoon, night. Orders are given at dawn. A night action is then ordered 12 hours before it happens, and it changes the spec's pulse order.
 - Start at 00:00 with a split night. This needs four pulses and splits every night action across two days.
 - Local-time pulses per zone. Two forces either side of a zone line would fight in different pulses.
+
+## Rule card
+
+Added at the complexity review after scenario 5.
+
+| | |
+| --- | --- |
+| Reads | A hex and a pulse |
+| Writes | Nothing. Darkness is worked out, not stored |
+| Read by | Air search (0012), surface fights (0014), strikes (0026) |
+| Events | None |
+| Randomness | None |

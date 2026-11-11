@@ -32,3 +32,14 @@ The spec says orders are validated against truth at intake, that they persist un
 
 - **Only three orders exist:** set route, set speed, set mission. The spec lists many more. Each arrives with the scenario that needs it.
 - **Mission is stored but does nothing yet.**
+
+## Rule card
+
+Added at the complexity review after scenario 5.
+
+| | |
+| --- | --- |
+| Reads | The orders issued for the day; for each, only what its issuer's side can see of the target |
+| Writes | The standing orders of a force or air group: route, speed, mission, cargo order, rules of engagement, readiness, search arc, patrol share |
+| Events | Accepted or rejected, for every order, with the reason |
+| Randomness | None |
