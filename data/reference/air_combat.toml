@@ -4,8 +4,10 @@
 
 placeholder = true
 
-# A group strikes a contact no older than this.
-strike_contact_max_age_pulses = 1
+# A group strikes a contact no older than this. A contact keeps age 0 through
+# the pulse after the one it was reported in (decision 0012, 14), so 0 means
+# reported in this pulse or the one before.
+strike_contact_max_age_pulses = 0
 
 # Chance one aircraft's weapon hits.
 bomb_hit_chance = "0.2"

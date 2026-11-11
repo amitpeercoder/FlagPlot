@@ -16,7 +16,7 @@ The spec's daylight pulse has three air steps: search, strike decisions by local
 ### The decision
 
 3. **In the strike decision step of a daylight pulse, each group on naval strike decides for itself.** It comes after search, so a sighting made that morning can be struck that morning. A group decides only if it has aircraft, has a position, it is not dark there, and it can launch at least one aircraft (decision 10).
-4. **It strikes a contact its side holds that is no more than one pulse old and within its strike range** of where the group is. Among several it takes the one whose reported kind is the most important (carriers first, in the order of decision 0012), then the nearest, then the lowest contact number. With none, it does nothing, and nothing is recorded.
+4. **It strikes a contact its side holds that was reported in this pulse or the one before, and is within its strike range** of where the group is. Among several it takes the one whose reported kind is the most important (carriers first, in the order of decision 0012), then the nearest, then the lowest contact number. With none, it does nothing, and nothing is recorded.
 5. **It sends every aircraft it can launch.** Holding some back is stage 5c.
 6. **The decision is made on belief.** The group flies to the hex the contact names. Nothing in the decision reads the truth.
 
@@ -46,7 +46,7 @@ The spec's daylight pulse has three air steps: search, strike decisions by local
 
 ## Why
 
-- **One pulse old** stops a group flying at a sighting from yesterday, and still lets an afternoon strike follow a morning sighting. It is a placeholder figure in the air combat file.
+- **This pulse or the one before** stops a group flying at a sighting from yesterday, and still lets an afternoon strike follow a morning sighting. In the figures file it is a greatest age of 0: by decision 0012 a contact is not aged at the end of the pulse it was reported in, so it has age 0 through the next pulse as well. (Corrected in stage 5d. The figure was first 1, which let a dawn strike fly at the afternoon before's contact, 18 hours old, against what this paragraph says. No one-day scenario could show it.)
 - **Only the named hex** is the simple rule. It makes report errors matter, which is the point of flying on belief, and it is harsher than what happened: real strikes searched around the reported position. The complexity review should weigh a search of the neighbouring hexes against that.
 - **One ship** is what dive bombers did to a carrier. It wastes aircraft on a ship already sinking and never touches the escorts. Spreading a strike is deferred.
 - **The same damage path as gunfire** is the rule-complexity rule at work: one mechanism, and a ship does not care what hit it.

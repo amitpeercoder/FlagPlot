@@ -1172,7 +1172,7 @@ r = 0
             .air_combat
             .as_ref()
             .expect("the figures are loaded");
-        assert_eq!(figures.strike_contact_max_age_pulses, 1);
+        assert_eq!(figures.strike_contact_max_age_pulses, 0);
         assert_eq!(figures.bomb_hit_chance, Fixed::from_ratio(2, 10));
         let missing = HEAD.replace(
             "surface_combat = \"../reference/surface_combat.toml\"\n",
