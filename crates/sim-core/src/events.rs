@@ -146,6 +146,16 @@ pub enum FatigueChange {
     Rested,
 }
 
+/// How a task force's fatigue changed (decision 2 of
+/// `docs/decisions/0037-fatigue-at-battle-readiness.md`).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ForceFatigueChange {
+    /// The force was alert at the start of the pulse.
+    Gained,
+    /// The force was not alert at the start of the pulse.
+    Rested,
+}
+
 /// One of the two damage tracks of a ship. Named systems are separate
 /// (decision 0016).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -361,7 +371,12 @@ pub enum EventKind {
         round: u32,
         task_force: TaskForceId,
         enemy: TaskForceId,
+        /// The chance after every factor, fatigue's included.
         chance: Fixed,
+        /// The factor of the force's fatigue, (100 less fatigue) over 100
+        /// (decision 3 of 0037). One where the scenario has no fatigue, and
+        /// then neither the text nor the export mentions it.
+        fatigue_factor: Fixed,
         sighted: bool,
     },
     /// A force that has not sighted the enemy is fired on by an enemy that
@@ -676,6 +691,15 @@ pub enum EventKind {
         fatigue: Fixed,
         threshold: Fixed,
     },
+    /// A task force's fatigue changed at the start of a pulse (decision 2 of
+    /// 0037). `amount` is what it actually gained or lost, after the cap at
+    /// 100 or the floor at 0; `fatigue` is what it has afterwards.
+    TaskForceFatigue {
+        task_force: TaskForceId,
+        change: ForceFatigueChange,
+        amount: Fixed,
+        fatigue: Fixed,
+    },
 }
 
 impl EventKind {
@@ -857,6 +881,9 @@ impl EventKind {
                         .map(|ship| EntityRef::Ship(*ship)),
                 );
                 entities
+            }
+            EventKind::TaskForceFatigue { task_force, .. } => {
+                vec![EntityRef::TaskForce(*task_force)]
             }
             EventKind::ForceRetired { task_force } | EventKind::ForceStoodDown { task_force } => {
                 vec![EntityRef::TaskForce(*task_force)]
@@ -1255,12 +1282,19 @@ impl fmt::Display for EventKind {
                 task_force,
                 enemy,
                 chance,
+                fatigue_factor,
                 sighted,
-            } => write!(
-                f,
-                "round {round}: {task_force} looked for {enemy}, chance {chance}: {}",
-                if *sighted { "sighted" } else { "not sighted" }
-            ),
+            } => {
+                write!(
+                    f,
+                    "round {round}: {task_force} looked for {enemy}, chance {chance}"
+                )?;
+                // Shown only where fatigue is in play (decision 0037).
+                if *fatigue_factor != Fixed::ONE {
+                    write!(f, " (fatigue factor {fatigue_factor})")?;
+                }
+                write!(f, ": {}", if *sighted { "sighted" } else { "not sighted" })
+            }
             EventKind::ForceSurprised {
                 round,
                 task_force,
@@ -1396,6 +1430,21 @@ impl fmt::Display for EventKind {
                 contact,
             } => write!(f, "{task_force} alerted by {contact}"),
             EventKind::ForceStoodDown { task_force } => write!(f, "{task_force} stood down"),
+            EventKind::TaskForceFatigue {
+                task_force,
+                change,
+                amount,
+                fatigue,
+            } => match change {
+                ForceFatigueChange::Gained => write!(
+                    f,
+                    "{task_force} gained {amount} fatigue, alert at the start of the pulse, now {fatigue}"
+                ),
+                ForceFatigueChange::Rested => write!(
+                    f,
+                    "{task_force} rested {amount} fatigue, not alert at the start of the pulse, now {fatigue}"
+                ),
+            },
             EventKind::AlarmRoll {
                 task_force,
                 by_a,

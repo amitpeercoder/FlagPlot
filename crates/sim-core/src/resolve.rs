@@ -107,6 +107,9 @@ impl World {
             // Alert from belief comes before the pulse's first phase
             // (decision 3 of `docs/decisions/0021-readiness-and-alarm.md`).
             self.alert_from_belief(day, pulse);
+            // Then fatigue of the forces, which reads who is alert
+            // (decision 2 of `docs/decisions/0037-fatigue-at-battle-readiness.md`).
+            self.tire_and_rest_forces(day, pulse);
             for phase in pulse_sequence(pulse) {
                 self.run_pulse_phase(day, pulse, *phase);
             }
@@ -265,8 +268,9 @@ impl World {
     /// Splits `ships` off `parent` into a new task force and returns its ID
     /// (decision 15 of `docs/decisions/0016-systems-and-stragglers.md`). The
     /// new force has the parent's side, mission, speed setting and speed
-    /// order, home port, readiness and readiness order, alerted flag and the event that alerted it, rules of engagement and rules order, and
-    /// its exact position. It is idle with no route and no other standing
+    /// order, home port, readiness and readiness order, alerted flag and the event that alerted it,
+    /// fatigue (decision 0037), rules of engagement and rules order, and its
+    /// exact position. It is idle with no route and no other standing
     /// order. The ships move into it. Records no event: the caller does.
     /// Every ship must be in the parent.
     pub(crate) fn split_task_force(
@@ -295,6 +299,7 @@ impl World {
         force.readiness_order = parent_force.readiness_order;
         force.alerted = parent_force.alerted;
         force.alerted_by = parent_force.alerted_by;
+        force.fatigue = parent_force.fatigue;
         force.rules_of_engagement = parent_force.rules_of_engagement;
         force.rules_order = parent_force.rules_order;
         force.toward_hex = parent_force.toward_hex;
@@ -1918,6 +1923,7 @@ mod tests {
         hash_after(&|w| force(w).readiness_order = Some(crate::ids::OrderId::new(1)));
         hash_after(&|w| force(w).alerted = true);
         hash_after(&|w| force(w).alerted_by = Some(EventId::new(1)));
+        hash_after(&|w| force(w).fatigue = nm(1));
         hash_after(&|w| force(w).rules_of_engagement.stance = Stance::Avoid);
         hash_after(&|w| force(w).rules_of_engagement.break_off = nm_frac(1, 10));
         hash_after(&|w| force(w).rules_order = Some(crate::ids::OrderId::new(1)));
@@ -2900,6 +2906,7 @@ mod tests {
             force.readiness_order = Some(crate::ids::OrderId::new(44));
             force.alerted = true;
             force.alerted_by = Some(EventId::new(4));
+            force.fatigue = nm(35);
             force.home_port = Some(BaseId::new(1));
             force.mission = Mission::SurfaceCombat;
             force.speed = SpeedSetting::Full;
@@ -2944,6 +2951,8 @@ mod tests {
         assert_eq!(new.readiness_order, Some(crate::ids::OrderId::new(44)));
         assert!(new.alerted);
         assert_eq!(new.alerted_by, Some(EventId::new(4)));
+        // A detachment is as tired as the force it left (decision 0037).
+        assert_eq!(new.fatigue, nm(35));
         assert_eq!(new.home_port, Some(BaseId::new(1)));
         assert_eq!(new.mission, Mission::SurfaceCombat);
         assert_eq!(new.speed, SpeedSetting::Full);

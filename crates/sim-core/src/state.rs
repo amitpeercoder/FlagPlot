@@ -360,6 +360,11 @@ pub struct TaskForce {
     /// The base the force heads for when it retires or sends stragglers home
     /// (decision 0016). It must be a base of the force's own side.
     pub home_port: Option<BaseId>,
+    /// The force's fatigue, 0 to 100 (decision 0037). Gained at the start of
+    /// each pulse in which the force is alert and lost in each in which it is
+    /// not; it cuts the force's chance to sight the enemy and does nothing
+    /// else. Stays 0 where the scenario names no fatigue figures.
+    pub fatigue: Fixed,
 }
 
 impl TaskForce {
@@ -463,6 +468,7 @@ impl TaskForce {
             rules_of_engagement: RulesOfEngagement::DEFAULT,
             rules_order: None,
             home_port: None,
+            fatigue: Fixed::ZERO,
         }
     }
 }

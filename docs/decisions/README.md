@@ -44,5 +44,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed; 3 and 6 need review |
 | 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2, 9 and 12 need review |
 | 0036 | Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies | Confirmed; 4, 5 and 9 need review |
+| 0037 | Fatigue at battle readiness: an alert force tires each pulse, and fatigue cuts its chance to sight | Confirmed; 3 and 5 need review |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

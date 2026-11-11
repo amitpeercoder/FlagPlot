@@ -1,0 +1,133 @@
+# Scenario 6c2: a force that has stood at battle readiness for two days is
+# met at night by one that came to it that evening.
+#
+# Stage 6c2 of scenario 6. It is scenario 4a's two cruiser forces with the
+# fatigue figures. Force B lies at battle readiness from the first day. Force
+# A stays at normal readiness until the third day, when it is ordered to
+# battle readiness and to steam east; it meets force B that night. It proves
+# fatigue gained by an alert force, lost by one that is not, and its cut in
+# the chance to sight (decision 0037). The hand calculation is in
+# tests/scenario_06c2_tired_lookouts.rs. The test runs this file with seeds 1
+# to 1000.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Scenario 6c2: Tired lookouts"
+placeholder = true
+seed = 1942
+days = 3
+map = "../map/placeholder_night_action.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+fatigue = "../reference/fatigue.toml"
+
+# The attacking force lies at (0,0) at normal readiness for two days. On the
+# third it is ordered to battle readiness and steams east through (5,0).
+[[task_force]]
+id = 1
+name = "Placeholder attacking force"
+side = "japanese"
+q = 0
+r = 0
+mission = "surface_combat"
+
+# The defending force lies stopped at (5,0), 200 nm east, at battle
+# readiness from the first day.
+[[task_force]]
+id = 2
+name = "Placeholder defending force"
+side = "allied"
+q = 5
+r = 0
+mission = "surface_combat"
+readiness = "battle"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser A3"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cruiser B3"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+# Day 1, Japanese: steam east to (10,0) at cruise speed, and fight.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# On the third day force A comes to battle readiness and steams east.
+[[order]]
+day = 3
+side = "japanese"
+task_force = 1
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 3
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[10, 0]]
+
+[[order]]
+day = 3
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"

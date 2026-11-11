@@ -1,7 +1,8 @@
 //! The event log as JSON.
 
 use serde::Serialize;
-use sim_core::events::{Breakdown, Cause, Event, EventKind, FatigueChange};
+use sim_core::events::{Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange};
+use sim_core::fixed::Fixed;
 use sim_core::orders::RejectReason;
 use sim_core::state::AirGroupLocation;
 
@@ -602,15 +603,22 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             task_force,
             enemy,
             chance,
+            fatigue_factor,
             sighted,
-        } => (
-            "sighting_roll",
-            d.int("round", *round)
+        } => {
+            let d = d
+                .int("round", *round)
                 .id("task_force", *task_force)
                 .id("enemy", *enemy)
-                .num("chance", *chance)
-                .flag("sighted", *sighted),
-        ),
+                .num("chance", *chance);
+            // Left out where fatigue is not in play (decision 0037).
+            let d = if *fatigue_factor == Fixed::ONE {
+                d
+            } else {
+                d.num("fatigue_factor", *fatigue_factor)
+            };
+            ("sighting_roll", d.flag("sighted", *sighted))
+        }
         EventKind::ForceSurprised {
             round,
             task_force,
@@ -760,6 +768,24 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
         EventKind::ForceStoodDown { task_force } => {
             ("force_stood_down", d.id("task_force", *task_force))
         }
+        EventKind::TaskForceFatigue {
+            task_force,
+            change,
+            amount,
+            fatigue,
+        } => (
+            "task_force_fatigue",
+            d.id("task_force", *task_force)
+                .text(
+                    "change",
+                    match change {
+                        ForceFatigueChange::Gained => "gained",
+                        ForceFatigueChange::Rested => "rested",
+                    },
+                )
+                .num("amount", *amount)
+                .num("fatigue", *fatigue),
+        ),
         EventKind::AlarmRoll {
             task_force,
             by_a,

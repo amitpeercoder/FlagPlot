@@ -616,6 +616,8 @@ struct FatigueFile {
     air_fatigue_per_sortie: Quantity,
     air_fatigue_per_100_nm: Quantity,
     air_rest_per_pulse: Quantity,
+    force_fatigue_per_pulse_alert: Quantity,
+    force_rest_per_pulse: Quantity,
 }
 
 /// Loads the fatigue figures from a TOML file (decision 0036).
@@ -637,6 +639,11 @@ fn parse_fatigue_figures(text: &str, path: &Path) -> Result<FatigueFigures, Data
         air_fatigue_per_sortie: number("air_fatigue_per_sortie", &file.air_fatigue_per_sortie)?,
         air_fatigue_per_100_nm: number("air_fatigue_per_100_nm", &file.air_fatigue_per_100_nm)?,
         air_rest_per_pulse: number("air_rest_per_pulse", &file.air_rest_per_pulse)?,
+        force_fatigue_per_pulse_alert: number(
+            "force_fatigue_per_pulse_alert",
+            &file.force_fatigue_per_pulse_alert,
+        )?,
+        force_rest_per_pulse: number("force_rest_per_pulse", &file.force_rest_per_pulse)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1509,6 +1516,8 @@ mod tests {
         assert_eq!(figures.air_fatigue_per_sortie, Fixed::from_int(3));
         assert_eq!(figures.air_fatigue_per_100_nm, Fixed::from_int(2));
         assert_eq!(figures.air_rest_per_pulse, Fixed::from_int(5));
+        assert_eq!(figures.force_fatigue_per_pulse_alert, Fixed::from_int(5));
+        assert_eq!(figures.force_rest_per_pulse, Fixed::from_int(3));
     }
 
     #[test]
@@ -1529,6 +1538,22 @@ mod tests {
         );
         assert!(bad("air_rest_per_pulse = 5", "air_rest_per_pulse = \"101\"").contains("rest"));
         assert!(bad("air_rest_per_pulse = 5\n", "").contains("air_rest_per_pulse"));
+        // The two force figures (decision 0037) are required, whole numbers
+        // or decimal strings, and between 0 and 100.
+        assert!(bad("force_rest_per_pulse = 3\n", "").contains("force_rest_per_pulse"));
+        assert!(bad("force_fatigue_per_pulse_alert = 5\n", "")
+            .contains("force_fatigue_per_pulse_alert"));
+        assert!(bad(
+            "force_fatigue_per_pulse_alert = 5",
+            "force_fatigue_per_pulse_alert = 5.5"
+        )
+        .contains("force_fatigue_per_pulse_alert"));
+        assert!(bad("force_rest_per_pulse = 3", "force_rest_per_pulse = -3").contains("force rest"));
+        assert!(bad(
+            "force_fatigue_per_pulse_alert = 5",
+            "force_fatigue_per_pulse_alert = \"101\""
+        )
+        .contains("force fatigue"));
         assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
         // A decimal string is accepted.
         let text = fatigue_text().replace("air_rest_per_pulse = 5", "air_rest_per_pulse = \"2.5\"");
@@ -1536,6 +1561,13 @@ mod tests {
         assert_eq!(
             figures.air_rest_per_pulse,
             "2.5".parse::<Fixed>().expect("fixed")
+        );
+        let text =
+            fatigue_text().replace("force_rest_per_pulse = 3", "force_rest_per_pulse = \"1.5\"");
+        let figures = parse_fatigue_figures(&text, here()).expect("parses");
+        assert_eq!(
+            figures.force_rest_per_pulse,
+            "1.5".parse::<Fixed>().expect("fixed")
         );
     }
 }

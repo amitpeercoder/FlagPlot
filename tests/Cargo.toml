@@ -81,5 +81,9 @@ path = "scenario_06b_wear_and_repair.rs"
 name = "scenario_06c_fatigue_and_rest"
 path = "scenario_06c_fatigue_and_rest.rs"
 
+[[test]]
+name = "scenario_06c2_tired_lookouts"
+path = "scenario_06c2_tired_lookouts.rs"
+
 [lints]
 workspace = true

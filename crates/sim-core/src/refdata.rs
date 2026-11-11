@@ -669,6 +669,12 @@ pub struct FatigueFigures {
     /// Fatigue an air group loses in a daylight pulse in which it did not
     /// fly.
     pub air_rest_per_pulse: Fixed,
+    /// Fatigue a task force gains at the start of a pulse in which it is
+    /// alert (decision 0037).
+    pub force_fatigue_per_pulse_alert: Fixed,
+    /// Fatigue a task force loses at the start of a pulse in which it is not
+    /// alert (decision 0037).
+    pub force_rest_per_pulse: Fixed,
 }
 
 impl FatigueFigures {
@@ -685,12 +691,17 @@ impl FatigueFigures {
     /// Describes what is wrong with the figures, if anything.
     pub fn problem(&self) -> Option<String> {
         for (label, value) in [
-            ("fatigue per sortie", self.air_fatigue_per_sortie),
-            ("fatigue per 100 nm", self.air_fatigue_per_100_nm),
-            ("rest per pulse", self.air_rest_per_pulse),
+            ("air fatigue per sortie", self.air_fatigue_per_sortie),
+            ("air fatigue per 100 nm", self.air_fatigue_per_100_nm),
+            ("air rest per pulse", self.air_rest_per_pulse),
+            (
+                "force fatigue per alert pulse",
+                self.force_fatigue_per_pulse_alert,
+            ),
+            ("force rest per pulse", self.force_rest_per_pulse),
         ] {
             if value < Fixed::ZERO || value > Fixed::from_int(100) {
-                return Some(format!("air {label} {value} is not between 0 and 100"));
+                return Some(format!("{label} {value} is not between 0 and 100"));
             }
         }
         None

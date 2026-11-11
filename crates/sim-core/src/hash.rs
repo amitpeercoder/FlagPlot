@@ -27,6 +27,8 @@ const DAMAGED_TAG: u8 = 0xF5;
 /// Tag of an air group's fatigue, rest threshold and stand-down (decision
 /// 0036). See `hash_world`.
 const FATIGUE_TAG: u8 = 0xF6;
+/// Tag of a task force's fatigue (decision 0037).
+const FORCE_FATIGUE_TAG: u8 = 0xF7;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -360,6 +362,18 @@ pub(crate) fn hash_world(world: &World) -> u64 {
     h.u32(world.order_ids.next_raw());
     h.u32(world.task_force_ids.next_raw());
     h.count(world.events.len());
+
+    // Task force fatigue (decision 0037) comes last, so that nothing after
+    // it can be mistaken for it: for each tired force, in ID order, the tag
+    // 0xF7, its ID and its fatigue. A world with no tired force writes
+    // nothing and hashes as it did before.
+    for task_force in truth.task_forces.values() {
+        if task_force.fatigue != Fixed::ZERO {
+            h.u8(FORCE_FATIGUE_TAG);
+            h.u32(task_force.id.raw());
+            h.i64(task_force.fatigue.raw());
+        }
+    }
 
     h.finish()
 }
