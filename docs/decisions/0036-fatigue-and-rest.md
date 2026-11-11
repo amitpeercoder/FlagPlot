@@ -52,6 +52,28 @@ Stage 6b made flying cost aircraft. It still costs the people nothing: a group f
 - Rest that is better at a well-found base.
 - Weather and climate.
 
+## As built
+
+- **Without the fatigue file nothing of this applies.** A starting fatigue is ignored and a rest order is accepted and stored but does nothing.
+- **A group flew if it sent an aircraft,** whether or not any came back.
+- **An event is recorded only when a fatigue changes.** A group at 0 that rests records nothing.
+- **A search group with no arc does not fly** and is on the ground.
+
+## What the runs show
+
+Over seeds 1 to 1000, eight days. All figures are placeholders.
+
+| Day | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Bombers launched, on average | 18.00 | 14.05 | 10.78 | 8.33 | 5.81 | 4.47 | none | 3.66 |
+| Escort | yes | yes | yes | none | yes | none | | none |
+
+The raid shrinks from 18 to under 4 in a week: losses in the air, and a few aircraft more left behind each day as fatigue rises. A run destroys 3.03 aircraft on the ground on average, more than half of them fighters the tired defending group left behind, and 154 t of supply. The day-by-day tables of the hand calculation hold in 852 runs for the bombers, 848 for the escort group, 929 for the defending fighters and all 1,000 for the scouts; in the others a group ran out of aircraft to fly and the test works the rule.
+
+## The legibility test
+
+A cheap model was given the Japanese briefing and the log of the first three days of the scenario's own seed. It explained from the log's numbers why 15 bombers and 5 escorts flew on the second day where 16 and 11 were ready. It predicted the fourth day exactly: the escort group stood down at 42 against a threshold of 40, nine bombers launched without escort, the enemy patrol's four shots all at the bombers, and both groups' fatigue after each pulse. Asked for a change of orders it raised the threshold to 45, worked out the three escorts that would fly, and saw the cost: the group would be stood down the next day instead. It found no gap in the log.
+
 ## Rule card
 
 | | |
