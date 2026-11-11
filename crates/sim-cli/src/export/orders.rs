@@ -66,6 +66,7 @@ fn text(kind: &OrderKind) -> String {
                 to_deg,
                 range_nm,
             } => format!("search {from_deg:03}-{to_deg:03} out to {range_nm} nm"),
+            AirGroupOrder::SetPatrolShare { share } => format!("patrol share {share}"),
         },
     }
 }

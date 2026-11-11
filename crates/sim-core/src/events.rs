@@ -64,6 +64,46 @@ impl Weapon {
     }
 }
 
+/// Who fires in a fight in the air (decision 6 of
+/// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum AirFirer {
+    /// The fighters that went with a raid.
+    Escorts,
+    /// The fighters kept over their own hex.
+    Patrol,
+}
+
+impl AirFirer {
+    /// The name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            AirFirer::Escorts => "escorts",
+            AirFirer::Patrol => "patrol",
+        }
+    }
+}
+
+/// Who is fired at in a fight in the air (decision 6 of 0027).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum AirTarget {
+    Patrol,
+    Escorts,
+    /// The bombers of the raid.
+    Bombers,
+}
+
+impl AirTarget {
+    /// The name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            AirTarget::Patrol => "patrol",
+            AirTarget::Escorts => "escorts",
+            AirTarget::Bombers => "bombers",
+        }
+    }
+}
+
 /// One of the two damage tracks of a ship. Named systems are separate
 /// (decision 0016).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -450,6 +490,45 @@ pub enum EventKind {
         expected: Fixed,
         hits: u32,
     },
+    /// A fighter group sent escorts with a raid (decision 5 of
+    /// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`).
+    /// `with_air_group` is the first strike group of the raid.
+    EscortsSent {
+        air_group: AirGroupId,
+        with_air_group: AirGroupId,
+        aircraft: u32,
+    },
+    /// Fighters fired at fighters or bombers over the hex a raid attacked
+    /// (decision 6 of 0027). `firer` is the first group of the firing
+    /// fighters and `target` the first group of those fired at.
+    AirFight {
+        firer: AirGroupId,
+        target: AirGroupId,
+        firing: AirFirer,
+        at: AirTarget,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+    },
+    /// The ships of a task force fired their anti-aircraft guns at the
+    /// bombers of a raid (decision 7 of 0027). `air_group` is the raid's
+    /// first strike group.
+    AntiAircraftFire {
+        task_force: TaskForceId,
+        air_group: AirGroupId,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+    },
+    /// An air group lost aircraft to one fight or one round of fire
+    /// (decision 11 of 0027). `remaining` is what it has ready afterwards.
+    AircraftLost {
+        air_group: AirGroupId,
+        aircraft: u32,
+        remaining: u32,
+    },
 }
 
 impl EventKind {
@@ -520,6 +599,26 @@ impl EventKind {
                 EntityRef::TaskForce(*task_force),
                 EntityRef::Ship(*ship),
             ],
+            EventKind::EscortsSent {
+                air_group,
+                with_air_group,
+                ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::AirGroup(*with_air_group),
+            ],
+            EventKind::AirFight { firer, target, .. } => {
+                vec![EntityRef::AirGroup(*firer), EntityRef::AirGroup(*target)]
+            }
+            EventKind::AntiAircraftFire {
+                task_force,
+                air_group,
+                ..
+            } => vec![
+                EntityRef::TaskForce(*task_force),
+                EntityRef::AirGroup(*air_group),
+            ],
+            EventKind::AircraftLost { air_group, .. } => vec![EntityRef::AirGroup(*air_group)],
             EventKind::SearchAttempt {
                 air_group,
                 task_force,
@@ -760,6 +859,44 @@ impl fmt::Display for EventKind {
                 weapon.name(),
                 if *hits == 1 { "hit" } else { "hits" }
             ),
+            EventKind::EscortsSent {
+                air_group,
+                with_air_group,
+                aircraft,
+            } => write!(f, "{air_group} sent {aircraft} escorts with {with_air_group}"),
+            EventKind::AirFight {
+                firer,
+                target,
+                firing,
+                at,
+                shots,
+                chance,
+                expected,
+                hits,
+            } => write!(
+                f,
+                "{firer} {} at the {} of {target}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                firing.name(),
+                at.name(),
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            EventKind::AntiAircraftFire {
+                task_force,
+                air_group,
+                shots,
+                chance,
+                expected,
+                hits,
+            } => write!(
+                f,
+                "{task_force} guns at the raid of {air_group}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            EventKind::AircraftLost {
+                air_group,
+                aircraft,
+                remaining,
+            } => write!(f, "{air_group} lost {aircraft} aircraft, {remaining} left"),
             EventKind::SearchAttempt {
                 air_group,
                 task_force,

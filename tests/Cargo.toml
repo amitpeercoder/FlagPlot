@@ -57,5 +57,9 @@ path = "scenario_05a_carrier_search.rs"
 name = "scenario_05b_strike"
 path = "scenario_05b_strike.rs"
 
+[[test]]
+name = "scenario_05c_air_combat"
+path = "scenario_05c_air_combat.rs"
+
 [lints]
 workspace = true

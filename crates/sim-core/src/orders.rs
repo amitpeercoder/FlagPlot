@@ -56,6 +56,9 @@ pub enum AirMission {
     Search,
     /// Strikes enemy ships its side has a contact on (decision 0026).
     NavalStrike,
+    /// Fights over its own hex and escorts strikes (decision 0027). Added at
+    /// the end.
+    CombatAirPatrol,
 }
 
 impl AirMission {
@@ -66,6 +69,7 @@ impl AirMission {
             AirMission::Rest => 1,
             AirMission::Search => 2,
             AirMission::NavalStrike => 3,
+            AirMission::CombatAirPatrol => 4,
         }
     }
 }
@@ -247,6 +251,13 @@ pub enum AirGroupOrder {
         to_deg: i32,
         range_nm: Fixed,
     },
+    /// The share of its flyable aircraft a group on combat air patrol keeps
+    /// over its own hex, from 0 to 1 (decision 2 of
+    /// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`). A standing
+    /// order of its own kind. Added at the end.
+    SetPatrolShare {
+        share: Fixed,
+    },
 }
 
 /// An order together with the unit it is for.
@@ -338,6 +349,12 @@ pub enum RejectReason {
     /// The naval strike mission needs an aircraft type that attacks with
     /// something (decision 2 of 0026). Added at the end of the enum.
     AircraftAttackWithNothing,
+    /// The combat air patrol mission is for fighter types only (decision 1
+    /// of 0027). Added at the end of the enum.
+    NotAFighter,
+    /// A patrol share is not between 0 and 1 (decision 2 of 0027). Added at
+    /// the end of the enum.
+    PatrolShareOutOfRange(Fixed),
 }
 
 impl fmt::Display for RejectReason {
@@ -380,6 +397,12 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::AircraftAttackWithNothing => {
                 f.write_str("the air group's aircraft type attacks with nothing")
+            }
+            RejectReason::NotAFighter => {
+                f.write_str("the air group's aircraft type is not a fighter")
+            }
+            RejectReason::PatrolShareOutOfRange(share) => {
+                write!(f, "patrol share {share} is not between 0 and 1")
             }
         }
     }

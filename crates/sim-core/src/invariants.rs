@@ -474,6 +474,8 @@ mod tests {
                 search: None,
                 mission_order: None,
                 arc_order: None,
+                patrol_share: Fixed::ONE,
+                share_order: None,
             },
         );
         (truth, map)
@@ -701,6 +703,7 @@ mod tests {
                 toughness: Fixed::from_int(100),
                 radar: false,
                 aircraft_capacity: 0,
+                anti_aircraft: 0,
             },
         );
         // Propulsion may be damaged.
@@ -837,6 +840,7 @@ mod tests {
                 toughness: Fixed::from_int(100),
                 radar: false,
                 aircraft_capacity: 10,
+                anti_aircraft: 0,
             },
         );
         truth

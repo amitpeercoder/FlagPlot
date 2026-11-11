@@ -507,6 +507,13 @@ pub struct AirGroup {
     pub mission_order: Option<OrderId>,
     /// The standing order that set the search arc, if any.
     pub arc_order: Option<OrderId>,
+    /// The share of its flyable aircraft the group keeps over its own hex
+    /// when it is on combat air patrol, from 0 to 1 (decision 2 of
+    /// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`). The
+    /// default is 1.
+    pub patrol_share: Fixed,
+    /// The standing order that set the share, if any.
+    pub share_order: Option<OrderId>,
 }
 
 /// The real state of the world.
