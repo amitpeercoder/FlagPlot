@@ -39,6 +39,7 @@ fn text(kind: &OrderKind) -> String {
             TaskForceOrder::SetSpeed(speed) => format!("speed {}", names::speed(*speed)),
             TaskForceOrder::SetMission(mission) => format!("mission {}", names::mission(*mission)),
             TaskForceOrder::Load => "load supply from the base here".to_string(),
+            TaskForceOrder::LoadFuel => "load fuel cargo from the base here".to_string(),
             TaskForceOrder::Unload => "unload supply into the base here".to_string(),
             TaskForceOrder::SetRulesOfEngagement {
                 stance,

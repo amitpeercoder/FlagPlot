@@ -182,20 +182,52 @@ impl StragglerInstruction {
     }
 }
 
+/// A kind of cargo a ship carries (decision 0046). A ship carries supply and
+/// fuel together, up to its class's cargo capacity.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Cargo {
+    Supply,
+    Fuel,
+}
+
+impl Cargo {
+    /// The cargo's name as scenario files and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Cargo::Supply => "supply",
+            Cargo::Fuel => "fuel",
+        }
+    }
+}
+
 /// What a standing cargo order does at a port.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum CargoAction {
+    /// Load supply.
     Load,
+    /// Unload everything aboard: supply first, then fuel.
     Unload,
+    /// Load fuel as cargo (decision 0046). Added at the end.
+    LoadFuel,
 }
 
 impl CargoAction {
     /// A stable number for the action. Part of the state hash. Never
-    /// renumber it.
+    /// renumber it; add new actions at the end.
     pub const fn code(self) -> u8 {
         match self {
             CargoAction::Load => 1,
             CargoAction::Unload => 2,
+            CargoAction::LoadFuel => 3,
+        }
+    }
+
+    /// The cargo a load action takes aboard, or `None` for an unload.
+    pub const fn loads(self) -> Option<Cargo> {
+        match self {
+            CargoAction::Load => Some(Cargo::Supply),
+            CargoAction::LoadFuel => Some(Cargo::Fuel),
+            CargoAction::Unload => None,
         }
     }
 }
@@ -238,6 +270,11 @@ pub enum TaskForceOrder {
     /// own kind: it replaces the readiness and nothing else, and does not
     /// touch whether the force is alerted. Added at the end.
     SetReadiness(Readiness),
+    /// Fill every ship to its remaining cargo capacity with fuel from the
+    /// fuel stock of the base here (decision 0046). The load order that names
+    /// fuel: `Load` names supply. A standing order of the "cargo" kind,
+    /// accepted under the same conditions as `Load`. Added at the end.
+    LoadFuel,
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new

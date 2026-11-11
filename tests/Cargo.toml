@@ -26,6 +26,10 @@ name = "scenario_02_supply_run"
 path = "scenario_02_supply_run.rs"
 
 [[test]]
+name = "scenario_02b_fuel_run"
+path = "scenario_02b_fuel_run.rs"
+
+[[test]]
 name = "scenario_03_search"
 path = "scenario_03_search.rs"
 

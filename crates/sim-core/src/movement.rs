@@ -1022,6 +1022,7 @@ mod tests {
                         side: spec.side,
                         fuel_t: Fixed::from_int(2000),
                         supply_t: Fixed::ZERO,
+                        cargo_fuel_t: Fixed::ZERO,
                         location: ShipLocation::TaskForce(id),
                         flotation_damage: Fixed::ZERO,
                         fire_damage: Fixed::ZERO,

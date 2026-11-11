@@ -492,6 +492,7 @@ mod tests {
                     side: Side::Allied,
                     fuel_t: Fixed::from_int(2000),
                     supply_t: Fixed::ZERO,
+                    cargo_fuel_t: Fixed::ZERO,
                     location: ShipLocation::TaskForce(TF),
                     flotation_damage: Fixed::ZERO,
                     fire_damage: Fixed::ZERO,

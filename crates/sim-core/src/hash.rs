@@ -24,6 +24,8 @@ const BASE_GUNS_TAG: u8 = 0xF3;
 const BASE_REPAIRS_TAG: u8 = 0xF4;
 /// Marks a base's fuel stock, hashed only when above nothing (decision 0045).
 const BASE_FUEL_TAG: u8 = 0xFA;
+/// Marks a ship's fuel cargo, hashed only when above nothing (decision 0046).
+const SHIP_FUEL_CARGO_TAG: u8 = 0xFB;
 /// Tag of an air group's damaged aircraft (decision 0035). See `hash_world`.
 const DAMAGED_TAG: u8 = 0xF5;
 /// Tag of an air group's fatigue, rest threshold and stand-down (decision
@@ -164,6 +166,13 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         if ship.systems.flight_deck != SystemState::Working {
             h.u8(FLIGHT_DECK_TAG);
             h.u8(ship.systems.flight_deck.code());
+        }
+        // Fuel carried as cargo: nothing when there is none, so a ship that
+        // carries none hashes as it did before decision 0046. The tag cannot
+        // be taken for the location tag that follows.
+        if ship.cargo_fuel_t != Fixed::ZERO {
+            h.u8(SHIP_FUEL_CARGO_TAG);
+            h.i64(ship.cargo_fuel_t.raw());
         }
         match ship.location {
             ShipLocation::TaskForce(id) => {

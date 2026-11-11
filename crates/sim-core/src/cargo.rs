@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::ids::{BaseId, EventId, ShipId, TaskForceId};
-use crate::orders::CargoAction;
+use crate::orders::{Cargo, CargoAction};
 use crate::refdata::PortSize;
 use crate::state::{CargoOrder, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
@@ -85,7 +85,12 @@ impl World {
         let mut berths_used: BTreeMap<BaseId, u32> = BTreeMap::new();
         let mut berthed: Vec<ShipId> = Vec::new();
         for participant in &participants {
-            let stock = self.truth.bases[&participant.base].supply_t;
+            let base = &self.truth.bases[&participant.base];
+            // The stock a load draws on: supply or fuel (decision 0046).
+            let stock = match participant.cargo.action.loads() {
+                Some(Cargo::Fuel) => base.fuel_t,
+                _ => base.supply_t,
+            };
             for ship_id in &participant.ships {
                 let used = berths_used.entry(participant.base).or_insert(0);
                 if *used >= participant.port.berths {
@@ -94,10 +99,13 @@ impl World {
                 let ship = &self.truth.ships[ship_id];
                 let capacity = self.ref_data.ship_classes[&ship.class].cargo_capacity_t;
                 let has_cargo_to_move = match participant.cargo.action {
-                    CargoAction::Load => {
-                        capacity - ship.supply_t > Fixed::ZERO && stock > Fixed::ZERO
+                    CargoAction::Load | CargoAction::LoadFuel => {
+                        capacity - ship.supply_t - ship.cargo_fuel_t > Fixed::ZERO
+                            && stock > Fixed::ZERO
                     }
-                    CargoAction::Unload => ship.supply_t > Fixed::ZERO,
+                    CargoAction::Unload => {
+                        ship.supply_t > Fixed::ZERO || ship.cargo_fuel_t > Fixed::ZERO
+                    }
                 };
                 if has_cargo_to_move {
                     *used += 1;
@@ -119,6 +127,7 @@ impl World {
         let mut cargo_events: Vec<Cause> = Vec::new();
         let mut longest = Fixed::ZERO;
         let mut moved_any = false;
+        let loading = p.cargo.action.loads();
 
         for ship_id in &p.ships {
             let on_berth = berthed.contains(ship_id);
@@ -130,58 +139,81 @@ impl World {
             let capacity_by_time = rate * p.hours;
             let ship = &self.truth.ships[ship_id];
             let capacity_t = self.ref_data.ship_classes[&ship.class].cargo_capacity_t;
-            let aboard_before = ship.supply_t;
-            let room = capacity_t - aboard_before;
-            let stock_before = self.truth.bases[&p.base].supply_t;
+            let supply_before = ship.supply_t;
+            let fuel_before = ship.cargo_fuel_t;
+            let room = capacity_t - supply_before - fuel_before;
 
-            let moved = match p.cargo.action {
-                CargoAction::Unload => capacity_by_time.min(aboard_before),
-                CargoAction::Load => capacity_by_time.min(room).min(stock_before),
-            };
-            if moved <= Fixed::ZERO {
-                continue;
+            // What moves this pulse for this ship, in order: one entry per
+            // cargo. A load moves one cargo. An unload moves supply and then
+            // fuel, within the tons the berth or lighter allows (decisions 3
+            // and 4 of 0046).
+            let mut moves: Vec<(Cargo, Fixed)> = Vec::new();
+            match loading {
+                Some(Cargo::Supply) => {
+                    let stock = self.truth.bases[&p.base].supply_t;
+                    moves.push((Cargo::Supply, capacity_by_time.min(room).min(stock)));
+                }
+                Some(Cargo::Fuel) => {
+                    let stock = self.truth.bases[&p.base].fuel_t;
+                    moves.push((Cargo::Fuel, capacity_by_time.min(room).min(stock)));
+                }
+                None => {
+                    let supply_moved = capacity_by_time.min(supply_before);
+                    let fuel_moved = (capacity_by_time - supply_moved).min(fuel_before);
+                    moves.push((Cargo::Supply, supply_moved));
+                    moves.push((Cargo::Fuel, fuel_moved));
+                }
             }
 
-            let (aboard_after, stock_after) = match p.cargo.action {
-                CargoAction::Unload => (aboard_before - moved, stock_before + moved),
-                CargoAction::Load => (aboard_before + moved, stock_before - moved),
-            };
-            self.truth
-                .ships
-                .get_mut(ship_id)
-                .expect("ship exists")
-                .supply_t = aboard_after;
-            self.truth
-                .bases
-                .get_mut(&p.base)
-                .expect("base exists")
-                .supply_t = stock_after;
+            let mut ship_total = Fixed::ZERO;
+            let mut supply_moved = Fixed::ZERO;
+            for (cargo, moved) in moves {
+                if moved <= Fixed::ZERO {
+                    continue;
+                }
+                let ship_record = self.truth.ships.get_mut(ship_id).expect("ship exists");
+                let base_record = self.truth.bases.get_mut(&p.base).expect("base exists");
+                let (aboard_before, stock_before) = match cargo {
+                    Cargo::Supply => (supply_before, base_record.supply_t),
+                    Cargo::Fuel => (fuel_before, base_record.fuel_t),
+                };
+                let (aboard_after, stock_after) = if loading.is_some() {
+                    (aboard_before + moved, stock_before - moved)
+                } else {
+                    (aboard_before - moved, stock_before + moved)
+                };
+                match cargo {
+                    Cargo::Supply => {
+                        ship_record.supply_t = aboard_after;
+                        base_record.supply_t = stock_after;
+                        supply_moved = moved;
+                    }
+                    Cargo::Fuel => {
+                        ship_record.cargo_fuel_t = aboard_after;
+                        base_record.fuel_t = stock_after;
+                    }
+                }
 
-            let breakdown = self.config.record_breakdowns.then(|| {
-                let mut factors = vec![
-                    Factor {
-                        name: "hours_worked",
-                        value: p.hours,
-                    },
-                    Factor {
-                        name: "on_berth",
-                        value: if on_berth { Fixed::ONE } else { Fixed::ZERO },
-                    },
-                    Factor {
-                        name: "rate_t_per_h",
-                        value: rate,
-                    },
-                    Factor {
-                        name: "capacity_by_time_t",
-                        value: capacity_by_time,
-                    },
-                ];
-                match p.cargo.action {
-                    CargoAction::Unload => factors.push(Factor {
-                        name: "supply_aboard_t",
-                        value: aboard_before,
-                    }),
-                    CargoAction::Load => {
+                let breakdown = self.config.record_breakdowns.then(|| {
+                    let mut factors = vec![
+                        Factor {
+                            name: "hours_worked",
+                            value: p.hours,
+                        },
+                        Factor {
+                            name: "on_berth",
+                            value: if on_berth { Fixed::ONE } else { Fixed::ZERO },
+                        },
+                        Factor {
+                            name: "rate_t_per_h",
+                            value: rate,
+                        },
+                        Factor {
+                            name: "capacity_by_time_t",
+                            value: capacity_by_time,
+                        },
+                    ];
+                    if loading.is_some() {
                         factors.push(Factor {
                             name: "room_t",
                             value: room,
@@ -190,52 +222,78 @@ impl World {
                             name: "base_stock_t",
                             value: stock_before,
                         });
+                    } else if cargo == Cargo::Supply {
+                        factors.push(Factor {
+                            name: "supply_aboard_t",
+                            value: aboard_before,
+                        });
+                    } else {
+                        factors.push(Factor {
+                            name: "supply_unloaded_t",
+                            value: supply_moved,
+                        });
+                        factors.push(Factor {
+                            name: "fuel_cargo_aboard_t",
+                            value: aboard_before,
+                        });
                     }
-                }
-                Breakdown {
-                    factors,
-                    result: moved,
-                }
-            });
-            let kind = match p.cargo.action {
-                CargoAction::Unload => EventKind::CargoUnloaded {
-                    ship: *ship_id,
-                    task_force: p.task_force,
-                    base: p.base,
-                    unloaded_t: moved,
-                    aboard_t: aboard_after,
-                    base_stock_t: stock_after,
-                },
-                CargoAction::Load => EventKind::CargoLoaded {
-                    ship: *ship_id,
-                    task_force: p.task_force,
-                    base: p.base,
-                    loaded_t: moved,
-                    aboard_t: aboard_after,
-                    base_stock_t: stock_after,
-                },
-            };
-            let event = self
-                .events
-                .record(day, Some(pulse), kind, causes.clone(), breakdown);
-            cargo_events.push(Cause::Event(event));
-            moved_any = true;
-            longest = longest.max(moved / rate);
+                    Breakdown {
+                        factors,
+                        result: moved,
+                    }
+                });
+                let kind = if loading.is_some() {
+                    EventKind::CargoLoaded {
+                        ship: *ship_id,
+                        task_force: p.task_force,
+                        base: p.base,
+                        cargo,
+                        loaded_t: moved,
+                        aboard_t: aboard_after,
+                        base_stock_t: stock_after,
+                    }
+                } else {
+                    EventKind::CargoUnloaded {
+                        ship: *ship_id,
+                        task_force: p.task_force,
+                        base: p.base,
+                        cargo,
+                        unloaded_t: moved,
+                        aboard_t: aboard_after,
+                        base_stock_t: stock_after,
+                    }
+                };
+                let event = self
+                    .events
+                    .record(day, Some(pulse), kind, causes.clone(), breakdown);
+                cargo_events.push(Cause::Event(event));
+                ship_total += moved;
+                moved_any = true;
+            }
+            if ship_total > Fixed::ZERO {
+                longest = longest.max(ship_total / rate);
+            }
         }
 
         if !moved_any {
             return;
         }
-        let nothing_remains = match p.cargo.action {
-            CargoAction::Unload => p
-                .ships
-                .iter()
-                .all(|id| self.truth.ships[id].supply_t.is_zero()),
-            CargoAction::Load => {
-                self.truth.bases[&p.base].supply_t.is_zero()
+        let nothing_remains = match loading {
+            None => p.ships.iter().all(|id| {
+                let ship = &self.truth.ships[id];
+                ship.supply_t.is_zero() && ship.cargo_fuel_t.is_zero()
+            }),
+            Some(cargo) => {
+                let base = &self.truth.bases[&p.base];
+                let stock = match cargo {
+                    Cargo::Supply => base.supply_t,
+                    Cargo::Fuel => base.fuel_t,
+                };
+                stock.is_zero()
                     || p.ships.iter().all(|id| {
                         let ship = &self.truth.ships[id];
-                        ship.supply_t == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
+                        ship.supply_t + ship.cargo_fuel_t
+                            == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
                     })
             }
         };
@@ -243,15 +301,16 @@ impl World {
             return;
         }
         let elapsed_hours = p.work_start + longest;
-        let kind = match p.cargo.action {
-            CargoAction::Unload => EventKind::UnloadingComplete {
+        let kind = match loading {
+            None => EventKind::UnloadingComplete {
                 task_force: p.task_force,
                 base: p.base,
                 elapsed_hours,
             },
-            CargoAction::Load => EventKind::LoadingComplete {
+            Some(cargo) => EventKind::LoadingComplete {
                 task_force: p.task_force,
                 base: p.base,
+                cargo,
                 elapsed_hours,
             },
         };
@@ -374,6 +433,7 @@ mod tests {
                         side: Side::Allied,
                         fuel_t: Fixed::from_int(2000),
                         supply_t: Fixed::from_int(*supply),
+                        cargo_fuel_t: Fixed::ZERO,
                         location: ShipLocation::TaskForce(tf(*id)),
                         flotation_damage: Fixed::ZERO,
                         fire_damage: Fixed::ZERO,
@@ -460,6 +520,7 @@ mod tests {
             EventKind::LoadingComplete {
                 task_force: tf(1),
                 base: BaseId::new(1),
+                cargo: Cargo::Supply,
                 elapsed_hours: Fixed::from_int(12),
             }
         );
@@ -643,6 +704,7 @@ mod tests {
                 ship: ship(1),
                 task_force: tf(1),
                 base: BaseId::new(2),
+                cargo: Cargo::Supply,
                 unloaded_t: Fixed::from_int(100),
                 aboard_t: Fixed::from_int(900),
                 base_stock_t: Fixed::from_int(100),
@@ -693,5 +755,275 @@ mod tests {
         assert!(with_all);
         assert!(without_none);
         assert_eq!(with_hash, without_hash);
+    }
+
+    fn set_fuel_stock(world: &mut World, base: u32, tons: i64) {
+        world
+            .truth
+            .bases
+            .get_mut(&BaseId::new(base))
+            .expect("base")
+            .fuel_t = Fixed::from_int(tons);
+    }
+
+    fn set_fuel_cargo(world: &mut World, id: u32, tons: i64) {
+        world
+            .truth
+            .ships
+            .get_mut(&ship(id))
+            .expect("ship")
+            .cargo_fuel_t = Fixed::from_int(tons);
+    }
+
+    fn fuel_stock(world: &World, base: u32) -> Fixed {
+        world.umpire().bases[&BaseId::new(base)].fuel_t
+    }
+
+    fn fuel_cargo(world: &World, id: u32) -> Fixed {
+        world.umpire().ships[&ship(id)].cargo_fuel_t
+    }
+
+    /// The cargo events of a pulse as (ship, cargo, tons, aboard, stock).
+    fn moves_in(world: &World, pulse: Pulse) -> Vec<(ShipId, Cargo, i64, i64, i64)> {
+        world
+            .events()
+            .iter()
+            .filter(|event| event.pulse == Some(pulse))
+            .filter_map(|event| match event.kind {
+                EventKind::CargoLoaded {
+                    ship,
+                    cargo,
+                    loaded_t,
+                    aboard_t,
+                    base_stock_t,
+                    ..
+                } => Some((ship, cargo, loaded_t, aboard_t, base_stock_t)),
+                EventKind::CargoUnloaded {
+                    ship,
+                    cargo,
+                    unloaded_t,
+                    aboard_t,
+                    base_stock_t,
+                    ..
+                } => Some((ship, cargo, unloaded_t, aboard_t, base_stock_t)),
+                _ => None,
+            })
+            .map(|(ship, cargo, a, b, c)| (ship, cargo, a.trunc(), b.trunc(), c.trunc()))
+            .collect()
+    }
+
+    #[test]
+    fn a_load_of_fuel_fills_only_the_remaining_capacity() {
+        // Ship 1 carries 1000 t of supply, so it has room for 2000 t of
+        // fuel. Port size 2 moves 250 t/h: 3000 t in the night pulse, so the
+        // room is the limit. Ship 2 is empty and takes 3000 t. Supply is
+        // not touched.
+        let mut world = world(2, 1, 0, &[(1, Hex::new(0, 0), &[(1, 1000), (2, 0)])]);
+        set_fuel_stock(&mut world, 1, 10_000);
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::LoadFuel)]);
+        world.resolve_day().expect("day resolves");
+
+        assert_eq!(fuel_cargo(&world, 1), Fixed::from_int(2000));
+        assert_eq!(fuel_cargo(&world, 2), Fixed::from_int(3000));
+        assert_eq!(
+            world.umpire().ships[&ship(1)].supply_t,
+            Fixed::from_int(1000)
+        );
+        assert_eq!(fuel_stock(&world, 1), Fixed::from_int(5000));
+        assert_eq!(world.umpire().bases[&BaseId::new(1)].supply_t, Fixed::ZERO);
+        // Their own tanks are not touched.
+        assert_eq!(world.umpire().ships[&ship(1)].fuel_t, Fixed::from_int(2000));
+        assert_eq!(
+            moves_in(&world, Pulse::Night),
+            vec![
+                (ship(1), Cargo::Fuel, 2000, 2000, 8000),
+                (ship(2), Cargo::Fuel, 3000, 3000, 5000),
+            ]
+        );
+        let complete = world
+            .events()
+            .iter()
+            .find(|event| matches!(event.kind, EventKind::LoadingComplete { .. }))
+            .expect("loading completes");
+        assert_eq!(
+            complete.kind,
+            EventKind::LoadingComplete {
+                task_force: tf(1),
+                base: BaseId::new(1),
+                cargo: Cargo::Fuel,
+                elapsed_hours: Fixed::from_int(12),
+            }
+        );
+    }
+
+    #[test]
+    fn a_load_of_supply_leaves_room_for_the_fuel_already_aboard() {
+        let mut world = world(2, 1, 10_000, &[(1, Hex::new(0, 0), &[(1, 0)])]);
+        set_fuel_cargo(&mut world, 1, 1000);
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::Load)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            world.umpire().ships[&ship(1)].supply_t,
+            Fixed::from_int(2000)
+        );
+        assert_eq!(fuel_cargo(&world, 1), Fixed::from_int(1000));
+        assert!(crate::invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+    }
+
+    #[test]
+    fn a_load_that_names_no_cargo_is_supply() {
+        let mut world = world(2, 1, 4000, &[(1, Hex::new(0, 0), &[(1, 0)])]);
+        set_fuel_stock(&mut world, 1, 5000);
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::Load)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            world.umpire().ships[&ship(1)].supply_t,
+            Fixed::from_int(3000)
+        );
+        assert_eq!(fuel_cargo(&world, 1), Fixed::ZERO);
+        assert_eq!(fuel_stock(&world, 1), Fixed::from_int(5000));
+    }
+
+    #[test]
+    fn fuel_running_short_mid_phase_follows_ship_order() {
+        // 4000 t of fuel: ship 1 takes 3000 t, ship 2 the 1000 t left.
+        let mut world = world(2, 1, 0, &[(1, Hex::new(0, 0), &[(1, 0), (2, 0)])]);
+        set_fuel_stock(&mut world, 1, 4000);
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::LoadFuel)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(fuel_cargo(&world, 1), Fixed::from_int(3000));
+        assert_eq!(fuel_cargo(&world, 2), Fixed::from_int(1000));
+        assert_eq!(fuel_stock(&world, 1), Fixed::ZERO);
+        let complete = world
+            .events()
+            .iter()
+            .find(|event| matches!(event.kind, EventKind::LoadingComplete { .. }))
+            .expect("loading completes");
+        assert_eq!(complete.pulse, Some(Pulse::Night));
+    }
+
+    #[test]
+    fn an_unload_lands_supply_first_and_then_fuel_within_the_pulse_tons() {
+        // One berth at 50 t/h. The force is held to the morning pulse (6 h:
+        // 300 t) by an arrival hour of 12. Ship 1 has 100 t of supply and
+        // 1000 t of fuel: it lands 100 t of supply and 200 t of fuel.
+        let mut world = world(1, 1, 0, &[(1, Hex::new(0, 0), &[(1, 100)])]);
+        set_fuel_cargo(&mut world, 1, 1000);
+        set_fuel_stock(&mut world, 1, 7);
+        world
+            .truth
+            .task_forces
+            .get_mut(&tf(1))
+            .expect("task force")
+            .arrived_at_hours = Some(Fixed::from_int(12));
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::Unload)]);
+        world.resolve_day().expect("day resolves");
+
+        assert_eq!(moves_in(&world, Pulse::Night), Vec::new());
+        assert_eq!(
+            moves_in(&world, Pulse::Morning),
+            vec![
+                (ship(1), Cargo::Supply, 100, 0, 100),
+                (ship(1), Cargo::Fuel, 200, 800, 207),
+            ]
+        );
+        // The afternoon moves 300 t more of fuel.
+        assert_eq!(
+            moves_in(&world, Pulse::Afternoon),
+            vec![(ship(1), Cargo::Fuel, 300, 500, 507)]
+        );
+        assert_eq!(
+            world.umpire().bases[&BaseId::new(1)].supply_t,
+            Fixed::from_int(100)
+        );
+        assert_eq!(fuel_stock(&world, 1), Fixed::from_int(507));
+        assert_eq!(fuel_cargo(&world, 1), Fixed::from_int(500));
+        // Not complete while fuel is aboard.
+        assert!(!world
+            .events()
+            .iter()
+            .any(|event| matches!(event.kind, EventKind::UnloadingComplete { .. })));
+    }
+
+    #[test]
+    fn an_unload_is_complete_when_nothing_of_either_kind_is_aboard() {
+        let mut world = world(1, 1, 0, &[(1, Hex::new(0, 0), &[(1, 100)])]);
+        set_fuel_cargo(&mut world, 1, 200);
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::Unload)]);
+        world.resolve_day().expect("day resolves");
+        // 300 t in 6 hours at 50 t/h: done in the night pulse.
+        let complete = world
+            .events()
+            .iter()
+            .find(|event| matches!(event.kind, EventKind::UnloadingComplete { .. }))
+            .expect("unloading completes");
+        assert_eq!(complete.pulse, Some(Pulse::Night));
+        assert_eq!(
+            complete.kind,
+            EventKind::UnloadingComplete {
+                task_force: tf(1),
+                base: BaseId::new(1),
+                elapsed_hours: Fixed::from_int(6),
+            }
+        );
+        assert_eq!(fuel_stock(&world, 1), Fixed::from_int(200));
+    }
+
+    #[test]
+    fn nothing_is_unloaded_or_loaded_at_an_enemy_base() {
+        let mut world = world(1, 1, 500, &[(1, Hex::new(0, 0), &[(1, 100)])]);
+        set_fuel_cargo(&mut world, 1, 200);
+        set_fuel_stock(&mut world, 1, 900);
+        world
+            .truth
+            .bases
+            .get_mut(&BaseId::new(1))
+            .expect("base")
+            .side = Side::Japanese;
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::Unload)]);
+        world.resolve_day().expect("day resolves");
+        assert!(!world.events().iter().any(|event| matches!(
+            event.kind,
+            EventKind::CargoUnloaded { .. } | EventKind::UnloadingComplete { .. }
+        )));
+        assert_eq!(
+            world.umpire().ships[&ship(1)].supply_t,
+            Fixed::from_int(100)
+        );
+        assert_eq!(fuel_cargo(&world, 1), Fixed::from_int(200));
+        assert_eq!(fuel_stock(&world, 1), Fixed::from_int(900));
+        assert_eq!(
+            world.umpire().bases[&BaseId::new(1)].supply_t,
+            Fixed::from_int(500)
+        );
+    }
+
+    #[test]
+    fn a_ship_cannot_burn_its_cargo() {
+        // 10 t of fuel at 0.25 t/nm lasts 40 nm. A hold full of fuel does not
+        // help: the force runs dry and the cargo is as it was.
+        let mut world = world(1, 1, 0, &[(1, Hex::new(0, 0), &[(1, 0)])]);
+        set_fuel_cargo(&mut world, 1, 3000);
+        world.truth.ships.get_mut(&ship(1)).expect("ship").fuel_t = Fixed::from_int(10);
+        world.submit_orders(
+            Side::Allied,
+            vec![order(1, TaskForceOrder::SetRoute(vec![Hex::new(8, 0)]))],
+        );
+        world.resolve_day().expect("day resolves");
+        let truth = world.umpire();
+        assert_eq!(truth.task_forces[&tf(1)].status, TaskForceStatus::OutOfFuel);
+        assert_eq!(truth.ships[&ship(1)].fuel_t, Fixed::ZERO);
+        assert_eq!(truth.ships[&ship(1)].cargo_fuel_t, Fixed::from_int(3000));
+        assert!(crate::invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+    }
+
+    #[test]
+    fn carrying_no_fuel_cargo_leaves_the_hash_as_it_was() {
+        let mut world = world(2, 1, 4000, &[(1, Hex::new(0, 0), &[(1, 0)])]);
+        let before = world.state_hash();
+        set_fuel_cargo(&mut world, 1, 1);
+        assert_ne!(world.state_hash(), before);
+        set_fuel_cargo(&mut world, 1, 0);
+        assert_eq!(world.state_hash(), before);
     }
 }
