@@ -44,6 +44,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed; 3 and 6 need review |
 | 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2, 9 and 12 need review |
 | 0036 | Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies | Confirmed; 4, 5 and 9 need review |
+| 0037 | Fatigue at battle readiness: an alert force tires each pulse, and fatigue cuts its chance to sight | Confirmed |
 | 0038 | Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate | Confirmed; 4, 8 and 10 need review |
 | 0039 | Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing | Confirmed; 4, 6 and 8 need review |
 

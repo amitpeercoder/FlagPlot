@@ -6913,6 +6913,8 @@ mod tests {
             air_fatigue_per_sortie: Fixed::from_int(3),
             air_fatigue_per_100_nm: Fixed::from_int(2),
             air_rest_per_pulse: Fixed::from_int(5),
+            force_fatigue_per_pulse_alert: Fixed::from_int(5),
+            force_rest_per_pulse: Fixed::from_int(3),
         });
     }
 

@@ -35,7 +35,8 @@ use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
 use crate::events::{
-    Breakdown, Cause, DamageTrack, EngagementEndReason, EventKind, Factor, Weapon,
+    Breakdown, Cause, DamageTrack, EngagementEndReason, EventKind, Factor, ForceFatigueChange,
+    Weapon,
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
@@ -402,6 +403,98 @@ impl World {
         }
     }
 
+    /// Fatigue of the task forces (decision 2 of
+    /// `docs/decisions/0037-fatigue-at-battle-readiness.md`), at the start of
+    /// every pulse, right after alert from belief has settled which forces
+    /// are alert. Each task force with a ship afloat, in ID order, that is
+    /// alert gains the alert figure, 100 at most; one that is not loses the
+    /// rest figure, 0 at least. An event is recorded only when the fatigue
+    /// changes. It cites the readiness order when the force is at battle
+    /// readiness by order, and otherwise the event that alerted it; a force
+    /// resting cites its readiness order if it has one. Does nothing where
+    /// the scenario names no fatigue figures. No randomness.
+    pub(crate) fn tire_and_rest_forces(&mut self, day: u32, pulse: Pulse) {
+        let Some(figures) = self.ref_data.fatigue else {
+            return;
+        };
+        let full = Fixed::from_int(100);
+        let ids: Vec<TaskForceId> = self
+            .truth
+            .task_forces
+            .values()
+            .filter(|force| !force.ships.is_empty())
+            .map(|force| force.id)
+            .collect();
+        for id in ids {
+            let force = &self.truth.task_forces[&id];
+            let before = force.fatigue;
+            let alert = force.is_alert();
+            let (change, after, figure, causes) = if alert {
+                let cause = if force.readiness == Readiness::Battle {
+                    force.readiness_order.map(Cause::Order)
+                } else {
+                    force.alerted_by.map(Cause::Event)
+                };
+                (
+                    ForceFatigueChange::Gained,
+                    (before + figures.force_fatigue_per_pulse_alert).min(full),
+                    figures.force_fatigue_per_pulse_alert,
+                    cause.into_iter().collect::<Vec<_>>(),
+                )
+            } else {
+                (
+                    ForceFatigueChange::Rested,
+                    (before - figures.force_rest_per_pulse).max(Fixed::ZERO),
+                    figures.force_rest_per_pulse,
+                    force
+                        .readiness_order
+                        .map(Cause::Order)
+                        .into_iter()
+                        .collect::<Vec<_>>(),
+                )
+            };
+            if after == before {
+                continue;
+            }
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "fatigue_before",
+                        value: before,
+                    },
+                    Factor {
+                        name: match change {
+                            ForceFatigueChange::Gained => "force_fatigue_per_pulse_alert",
+                            ForceFatigueChange::Rested => "force_rest_per_pulse",
+                        },
+                        value: figure,
+                    },
+                ],
+                result: after,
+            });
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::TaskForceFatigue {
+                    task_force: id,
+                    change,
+                    amount: match change {
+                        ForceFatigueChange::Gained => after - before,
+                        ForceFatigueChange::Rested => before - after,
+                    },
+                    fatigue: after,
+                },
+                causes,
+                breakdown,
+            );
+            self.truth
+                .task_forces
+                .get_mut(&id)
+                .expect("task force exists")
+                .fatigue = after;
+        }
+    }
+
     /// Opposing task forces with the same position, lower ID first, in order.
     pub(crate) fn opposing_pairs_in_one_hex(&self) -> Vec<(TaskForceId, TaskForceId)> {
         let forces: Vec<_> = self.truth.task_forces.values().collect();
@@ -545,11 +638,22 @@ impl World {
             } else {
                 figures.not_alert_sighting_factor
             };
-            let chance = ((base + radar_bonus) * alert_factor).min(Fixed::ONE);
+            // Fatigue cuts the chance to sight, and only that (decision 3 of
+            // `docs/decisions/0037-fatigue-at-battle-readiness.md`). The
+            // force's fatigue is as it stood at the start of the pulse. With
+            // no fatigue figures the factor is one and is left out of the
+            // breakdown.
+            let fatigue_in_play = self.ref_data.fatigue.is_some();
+            let fatigue_factor = if fatigue_in_play {
+                (Fixed::from_int(100) - self.truth.task_forces[&id].fatigue) / Fixed::from_int(100)
+            } else {
+                Fixed::ONE
+            };
+            let chance = ((base + radar_bonus) * alert_factor).min(Fixed::ONE) * fatigue_factor;
             let sighted = fight.forces[index].sighting_stream.chance(chance);
 
-            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                factors: vec![
+            let breakdown = self.config.record_breakdowns.then(|| {
+                let mut factors = vec![
                     Factor {
                         name: "base",
                         value: base,
@@ -562,8 +666,17 @@ impl World {
                         name: "alert_factor",
                         value: alert_factor,
                     },
-                ],
-                result: chance,
+                ];
+                if fatigue_in_play {
+                    factors.push(Factor {
+                        name: "fatigue_factor",
+                        value: fatigue_factor,
+                    });
+                }
+                Breakdown {
+                    factors,
+                    result: chance,
+                }
             });
             let event = self.record_in_fight(
                 fight,
@@ -572,6 +685,7 @@ impl World {
                     task_force: id,
                     enemy,
                     chance,
+                    fatigue_factor,
                     sighted,
                 },
                 vec![Cause::Event(fight.begun)],
@@ -4818,5 +4932,306 @@ mod tests {
             .find(|e| matches!(e.kind, EventKind::ContactAged { .. }) && e.day == 1)
             .expect("aged on day 1");
         assert_eq!(aged.pulse, Some(Pulse::Night));
+    }
+
+    // ---- fatigue of a task force (decision 0037) ----
+
+    use crate::events::ForceFatigueChange;
+    use crate::ids::OrderId;
+    use crate::refdata::FatigueFigures;
+
+    /// The figures of `data/reference/fatigue.toml`: 5 gained a pulse by an
+    /// alert force, 3 lost by one that is not.
+    fn tire(world: &mut World) {
+        world.ref_data.fatigue = Some(FatigueFigures {
+            air_fatigue_per_sortie: Fixed::from_int(3),
+            air_fatigue_per_100_nm: Fixed::from_int(2),
+            air_rest_per_pulse: Fixed::from_int(5),
+            force_fatigue_per_pulse_alert: Fixed::from_int(5),
+            force_rest_per_pulse: Fixed::from_int(3),
+        });
+    }
+
+    /// The `TaskForceFatigue` events as (force, change, amount, fatigue).
+    fn force_fatigue_events(world: &World) -> Vec<(u32, ForceFatigueChange, Fixed, Fixed)> {
+        world
+            .events()
+            .iter()
+            .filter_map(|event| match event.kind {
+                EventKind::TaskForceFatigue {
+                    task_force,
+                    change,
+                    amount,
+                    fatigue,
+                } => Some((task_force.raw(), change, amount, fatigue)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn at_fatigue(world: &mut World, id: u32, fatigue: i64) {
+        force_mut(world, id).fatigue = Fixed::from_int(fatigue);
+    }
+
+    fn fatigue_of(world: &World, id: u32) -> Fixed {
+        force(world, id).fatigue
+    }
+
+    #[test]
+    fn a_force_at_battle_readiness_gains_fatigue_citing_its_readiness_order() {
+        // Battle readiness is alert: it gains 5 at the start of a pulse. With
+        // a readiness order the event cites it; a force that started at
+        // battle readiness has no order and no cause.
+        let mut world = lone_allied();
+        force_mut(&mut world, 1).readiness = Readiness::Battle;
+        tire(&mut world);
+        world.tire_and_rest_forces(1, Pulse::Night);
+        assert_eq!(fatigue_of(&world, 1), Fixed::from_int(5));
+        assert_eq!(
+            force_fatigue_events(&world),
+            vec![(
+                1,
+                ForceFatigueChange::Gained,
+                Fixed::from_int(5),
+                Fixed::from_int(5)
+            )]
+        );
+        assert!(world
+            .events()
+            .iter()
+            .next()
+            .expect("event")
+            .causes
+            .is_empty());
+
+        force_mut(&mut world, 1).readiness_order = Some(OrderId::new(7));
+        world.tire_and_rest_forces(1, Pulse::Morning);
+        assert_eq!(fatigue_of(&world, 1), Fixed::from_int(10));
+        let last = world.events().iter().last().expect("event");
+        assert_eq!(last.causes, vec![Cause::Order(OrderId::new(7))]);
+        assert_eq!(last.pulse, Some(Pulse::Morning));
+    }
+
+    #[test]
+    fn a_force_alerted_by_a_contact_at_normal_readiness_gains_fatigue() {
+        let mut world = lone_allied();
+        force_mut(&mut world, 1).readiness = Readiness::Normal;
+        tire(&mut world);
+        // Not alert: nothing to rest at 0, so no event.
+        world.tire_and_rest_forces(1, Pulse::Night);
+        assert!(force_fatigue_events(&world).is_empty());
+        // A contact two hexes away alerts it at the start of the next pulse,
+        // and the fatigue event cites the event that alerted it.
+        give_contact(&mut world, Side::Allied, Hex::new(2, 0));
+        world.alert_from_belief(1, Pulse::Morning);
+        let alerted_by = force(&world, 1).alerted_by.expect("alerted");
+        world.tire_and_rest_forces(1, Pulse::Morning);
+        assert_eq!(fatigue_of(&world, 1), Fixed::from_int(5));
+        let last = world.events().iter().last().expect("event");
+        assert_eq!(last.causes, vec![Cause::Event(alerted_by)]);
+    }
+
+    #[test]
+    fn a_force_that_is_not_alert_rests_and_stops_at_zero() {
+        let mut world = lone_allied();
+        force_mut(&mut world, 1).readiness = Readiness::Normal;
+        force_mut(&mut world, 1).readiness_order = Some(OrderId::new(9));
+        tire(&mut world);
+        at_fatigue(&mut world, 1, 7);
+        for expected in [4, 1, 0] {
+            world.tire_and_rest_forces(1, Pulse::Night);
+            assert_eq!(fatigue_of(&world, 1), Fixed::from_int(expected));
+        }
+        // 7 to 4 to 1 to 0: the last rest is 1, not 3. At 0 nothing more.
+        world.tire_and_rest_forces(1, Pulse::Morning);
+        let events = force_fatigue_events(&world);
+        assert_eq!(
+            events,
+            vec![
+                (
+                    1,
+                    ForceFatigueChange::Rested,
+                    Fixed::from_int(3),
+                    Fixed::from_int(4)
+                ),
+                (
+                    1,
+                    ForceFatigueChange::Rested,
+                    Fixed::from_int(3),
+                    Fixed::from_int(1)
+                ),
+                (
+                    1,
+                    ForceFatigueChange::Rested,
+                    Fixed::from_int(1),
+                    Fixed::ZERO
+                ),
+            ]
+        );
+        let first = world.events().iter().next().expect("event");
+        assert_eq!(first.causes, vec![Cause::Order(OrderId::new(9))]);
+    }
+
+    #[test]
+    fn fatigue_stops_at_100() {
+        let mut world = lone_allied();
+        force_mut(&mut world, 1).readiness = Readiness::Battle;
+        tire(&mut world);
+        at_fatigue(&mut world, 1, 98);
+        world.tire_and_rest_forces(1, Pulse::Night);
+        world.tire_and_rest_forces(1, Pulse::Morning);
+        assert_eq!(fatigue_of(&world, 1), Fixed::from_int(100));
+        assert_eq!(
+            force_fatigue_events(&world),
+            vec![(
+                1,
+                ForceFatigueChange::Gained,
+                Fixed::from_int(2),
+                Fixed::from_int(100)
+            )]
+        );
+    }
+
+    #[test]
+    fn without_the_fatigue_figures_nothing_is_gained_rested_or_recorded() {
+        let mut world = lone_allied();
+        at_fatigue(&mut world, 1, 40);
+        world.tire_and_rest_forces(1, Pulse::Night);
+        assert_eq!(fatigue_of(&world, 1), Fixed::from_int(40));
+        assert_eq!(world.events().len(), 0);
+        // And a starting fatigue cuts no chance to sight.
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, Hex::new(5, 0), &[1]),
+            ForceSpec::new(2, Side::Allied, Hex::new(5, 0), &[1]),
+        ]);
+        let world = run(&scene, |w| at_fatigue(w, 1, 40));
+        assert_eq!(first_round_chances(&world), [fx("0.5"), fx("0.5")]);
+        assert_eq!(
+            count(&world, |k| matches!(
+                k,
+                EventKind::SightingRoll { fatigue_factor, .. } if *fatigue_factor != Fixed::ONE
+            )),
+            0
+        );
+    }
+
+    #[test]
+    fn a_force_with_no_ship_afloat_neither_tires_nor_rests() {
+        let mut world = lone_allied();
+        force_mut(&mut world, 1).readiness = Readiness::Battle;
+        tire(&mut world);
+        at_fatigue(&mut world, 1, 20);
+        force_mut(&mut world, 1).ships.clear();
+        world.tire_and_rest_forces(1, Pulse::Night);
+        assert_eq!(fatigue_of(&world, 1), Fixed::from_int(20));
+        assert!(force_fatigue_events(&world).is_empty());
+    }
+
+    #[test]
+    fn forces_are_worked_in_id_order_each_with_its_own_alertness() {
+        let scene = Scene::new(
+            1,
+            Pulse::Night,
+            vec![
+                ForceSpec::new(2, Side::Allied, Hex::new(0, 0), &[1]),
+                ForceSpec::new(1, Side::Japanese, Hex::new(3, 0), &[1]).not_alert(),
+            ],
+        );
+        let mut world = scene.world();
+        tire(&mut world);
+        at_fatigue(&mut world, 1, 10);
+        world.tire_and_rest_forces(1, Pulse::Night);
+        assert_eq!(
+            force_fatigue_events(&world),
+            vec![
+                (
+                    1,
+                    ForceFatigueChange::Rested,
+                    Fixed::from_int(3),
+                    Fixed::from_int(7)
+                ),
+                (
+                    2,
+                    ForceFatigueChange::Gained,
+                    Fixed::from_int(5),
+                    Fixed::from_int(5)
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn fatigue_cuts_the_chance_to_sight_by_100_less_fatigue_over_100() {
+        // Night base 0.5 for an alert force: x 1.00 at fatigue 0, x 0.65 at
+        // 35 (0.325), x 0 at 100. The other force is untouched. The event
+        // carries the factor and the chance is the final one.
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, Hex::new(5, 0), &[1]),
+            ForceSpec::new(2, Side::Allied, Hex::new(5, 0), &[1]),
+        ]);
+        for (fatigue, chance, factor) in [(0, "0.5", "1"), (35, "0.325", "0.65"), (100, "0", "0")] {
+            let world = run(&scene, |w| {
+                tire(w);
+                at_fatigue(w, 1, fatigue);
+                w.set_config(SimConfig {
+                    record_breakdowns: true,
+                });
+            });
+            assert_eq!(
+                first_round_chances(&world),
+                [fx(chance), fx("0.5")],
+                "fatigue {fatigue}"
+            );
+            let roll = world
+                .events()
+                .iter()
+                .find(|e| {
+                    matches!(
+                        e.kind,
+                        EventKind::SightingRoll { round: 1, task_force, .. }
+                            if task_force == TaskForceId::new(1)
+                    )
+                })
+                .expect("force 1 rolled");
+            assert!(matches!(
+                roll.kind,
+                EventKind::SightingRoll { fatigue_factor, .. } if fatigue_factor == fx(factor)
+            ));
+            let factors: Vec<(&str, Fixed)> = roll
+                .breakdown
+                .as_ref()
+                .expect("breakdown")
+                .factors
+                .iter()
+                .map(|f| (f.name, f.value))
+                .collect();
+            assert_eq!(
+                factors,
+                vec![
+                    ("base", fx("0.5")),
+                    ("radar_bonus", Fixed::ZERO),
+                    ("alert_factor", Fixed::ONE),
+                    ("fatigue_factor", fx(factor)),
+                ]
+            );
+        }
+    }
+
+    #[test]
+    fn the_fatigue_factor_multiplies_after_the_cap_and_the_alert_factor() {
+        // By day, not alert with radar: min(1, 1.2 x 0.5) = 0.6, times 0.7
+        // at fatigue 30 is 0.42. Alert with radar by day: min(1, 1.2) = 1,
+        // times 0.7 is 0.7.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[4]),
+            ForceSpec::new(2, Side::Allied, hex, &[4]).not_alert(),
+        ]);
+        let world = run(&scene, |w| {
+            tire(w);
+            at_fatigue(w, 1, 30);
+            at_fatigue(w, 2, 30);
+        });
+        assert_eq!(first_round_chances(&world), [fx("0.7"), fx("0.42")]);
     }
 }

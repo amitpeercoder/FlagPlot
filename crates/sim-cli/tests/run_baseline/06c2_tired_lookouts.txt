@@ -1,0 +1,20 @@
+Scenario 6c2: Tired lookouts
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash f35afab78083f72e  5 events
+day   2  hash dac68e58992ab5cc  3 events
+day   3  hash 326d4c5adfae7dc0  58 events
+
+task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, fatigue 15, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness battle, alert, fatigue 45, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
+ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 65, fire 5; propulsion degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 75, fire 0; propulsion degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 75, fire 5; fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+Allied contact:1 at (5,0): 4 ships, cruiser, age 2 pulses
+Allied: no battle claims
+Japanese contact:1 at (5,0): 3 ships, carrier, age 2 pulses
+Japanese claims 0 enemy ships sunk at (5,0), day 3 night

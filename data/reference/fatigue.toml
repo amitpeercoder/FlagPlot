@@ -11,3 +11,8 @@ air_fatigue_per_100_nm = 2
 
 # Fatigue an air group loses in a daylight pulse in which it did not fly.
 air_rest_per_pulse = 5
+
+# Fatigue a task force gains at the start of a pulse in which it is alert,
+# and loses at the start of one in which it is not (decision 0037).
+force_fatigue_per_pulse_alert = 5
+force_rest_per_pulse = 3
