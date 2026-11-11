@@ -21,8 +21,8 @@
 //! ship 3, with cruisers 4 and 5, lies stopped at (9,0), 200 nm east. The
 //! search chance, when a strike is launched and whether it finds task force
 //! 2 are exactly as in scenario 5b: 0.509295 a pulse, a launch in every
-//! daylight pulse in which the Allied side holds a contact no more than one
-//! pulse old, and an attack only if the strike flew to (9,0).
+//! daylight pulse in which the Allied side holds a contact reported in that
+//! pulse or the one before, and an attack only if the strike flew to (9,0).
 //!
 //! What is new:
 //!

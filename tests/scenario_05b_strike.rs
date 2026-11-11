@@ -37,8 +37,10 @@
 //!
 //! ## The decision
 //!
-//! The dive bomber strikes out to 250 nm, and strikes a contact no more than
-//! one pulse old. Every hex next to (9,0) is five or six hexes from (4,0),
+//! The dive bomber strikes out to 250 nm, and strikes a contact reported in
+//! this pulse or the one before. (First written as "no more than one pulse
+//! old", which by the way age is counted would also allow a contact from
+//! the afternoon before. No figure of this one-day scenario changed.) Every hex next to (9,0) is five or six hexes from (4,0),
 //! 240 nm at most, so any contact made by a sighting of task force 2 is in
 //! range. The Allied side holds at most one contact: a second report falls
 //! within two hexes and two pulses of the first and refreshes it.
@@ -95,8 +97,8 @@
 //!
 //! # Properties
 //!
-//! - A strike is launched only at a contact the launching side holds, no
-//!   more than one pulse old, within 250 nm.
+//! - A strike is launched only at a contact the launching side holds,
+//!   reported in that pulse or the one before, within 250 nm.
 //! - A strike attacks only a task force whose position is the hex it flew
 //!   to. Otherwise it finds nothing, and nothing is damaged.
 //! - Every damage event of the day is caused by an attack, and every attack
@@ -536,8 +538,8 @@ fn a_strike_is_launched_only_at_a_contact_held_no_more_than_one_pulse_old_within
                 panic!("a launch cites a report");
             };
             assert_eq!((reported, reported_hex), (contact, hex));
-            // No more than one pulse old: this pulse's, or the morning's for
-            // an afternoon strike.
+            // Reported in this pulse or the one before: this pulse's, or the
+            // morning's for an afternoon strike.
             let this = pulse_of(event);
             let then = pulse_of(report_event);
             assert!(

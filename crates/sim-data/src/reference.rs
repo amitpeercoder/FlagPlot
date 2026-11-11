@@ -671,7 +671,7 @@ mod tests {
     #[test]
     fn air_combat_figures_parse_with_the_files_values() {
         let figures = parse_air_combat_figures(&air_combat_text(), here()).expect("parses");
-        assert_eq!(figures.strike_contact_max_age_pulses, 1);
+        assert_eq!(figures.strike_contact_max_age_pulses, 0);
         assert_eq!(figures.bomb_hit_chance, Fixed::from_ratio(2, 10));
         assert_eq!(figures.torpedo_hit_chance, Fixed::from_ratio(15, 100));
         assert_eq!(figures.fighter_hit_chance, Fixed::from_ratio(3, 10));

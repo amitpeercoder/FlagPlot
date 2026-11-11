@@ -1,0 +1,215 @@
+# Scenario 5d: two carrier forces search for and strike each other.
+#
+# Stage 5d of scenario 5. The two forces are alike: a carrier with scouts,
+# dive bombers and fighters, and two cruisers. It proves that both sides
+# search, decide and strike in the same pulse, each on its own belief, and
+# that both strikes are launched before either lands (decision 0026, 8). It
+# adds no rule. The hand calculation is in tests/scenario_05d_carrier_duel.rs.
+# The test runs this file with seeds 1 to 1000.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
+
+name = "Scenario 5d: Carrier duel"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_search.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# The Allied force lies stopped at (4,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force A"
+side = "allied"
+q = 4
+r = 0
+mission = "carrier"
+
+# The Japanese force lies stopped at (9,0), 200 nm east.
+[[task_force]]
+id = 2
+name = "Placeholder carrier force B"
+side = "japanese"
+q = 9
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier A"
+class = 5
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser A1"
+class = 6
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser A2"
+class = 6
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder carrier B"
+class = 5
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B1"
+class = 6
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cruiser B2"
+class = 6
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+# Each carrier has eight scouts, eighteen dive bombers and twelve fighters.
+
+[[air_group]]
+id = 1
+name = "Placeholder scouting squadron A"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 8
+
+[[air_group]]
+id = 2
+name = "Placeholder bombing squadron A"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 18
+
+[[air_group]]
+id = 3
+name = "Placeholder fighting squadron A"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 4
+name = "Placeholder scouting squadron B"
+side = "japanese"
+ship = 4
+aircraft_type = 2
+ready = 8
+
+[[air_group]]
+id = 5
+name = "Placeholder bombing squadron B"
+side = "japanese"
+ship = 4
+aircraft_type = 3
+ready = 18
+
+[[air_group]]
+id = 6
+name = "Placeholder fighting squadron B"
+side = "japanese"
+ship = 4
+aircraft_type = 4
+ready = 12
+
+# Both sides: search toward the enemy, strike what is found, and keep half
+# the fighters overhead.
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 40
+to_deg = 130
+range_nm = 300
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_patrol_share"
+share = "0.5"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 4
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 4
+kind = "set_search_arc"
+from_deg = 220
+to_deg = 310
+range_nm = 300
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 5
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 6
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 6
+kind = "set_patrol_share"
+share = "0.5"
