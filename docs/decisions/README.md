@@ -37,5 +37,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0027 | Fighters on patrol and escort, anti-aircraft fire, and aircraft lost: escort against patrol one for one, then guns, then the attack | Confirmed |
 | 0028 | A strike that finds nothing drops the contact it was sent at | Confirmed |
 | 0029 | Figures for carriers, anti-aircraft guns and aircraft from facts: gun weights, strike radius, protection, and ships whose guns are not modelled | Confirmed |
+| 0030 | Escorts have a radius: fighters go with a raid only within their type's radius, and otherwise stay on patrol | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

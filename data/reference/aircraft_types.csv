@@ -14,4 +14,4 @@ id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack
 1,Placeholder flying boat,patrol,600,40,0,none,0,0,0
 2,Placeholder carrier scout,patrol,300,20,0,none,0,0,0
 3,Placeholder dive bomber,bomber,0,0,250,bomb,60,0,0
-4,Placeholder fighter,fighter,0,0,0,none,0,0,0
+4,Placeholder fighter,fighter,0,0,250,none,0,0,0

@@ -115,6 +115,17 @@
 //! | Group 3 keeps a share of 1: no escort  | none              | none              | 12 shots, 3.6: 3 or 4 | 1.8: 1 or 2 | 12 to 14 |
 //! | Group 3 keeps a share of 0: 12 escorts | 12 shots, 3.6: 3 or 4 | 12 shots, 3.6: 3 or 4 | none        | 1.8: 1 or 2 | 16 or 17 |
 //! | Group 4 is not on patrol               | none              | none              | none              | 1.8: 1 or 2 | 16 or 17 |
+//! | The fighters' radius is 190 nm, not 250 | none             | none              | 12 shots, 3.6: 3 or 4 | 1.8: 1 or 2 | 12 to 14 |
+//!
+//! In the last variant a strike sent to (9,0), 200 nm away, is beyond the
+//! fighters' radius: group 3 sends no escort with it and all twelve of its
+//! fighters stay over carrier A (decision 0030). Every attack is such a
+//! strike, so every attack meets the whole Japanese patrol, as it does when
+//! group 3 keeps a share of 1. A report can name a hex 160 nm away; a
+//! strike sent there is within the radius and takes its six escorts, and
+//! finds nothing. (The first version of this paragraph said group 3 never
+//! sends an escort. The row's figures were right.) In the scenario itself
+//! the placeholder fighter's radius is 250 nm and the escorts go.
 //!
 //! # Properties
 //!
@@ -1217,6 +1228,12 @@ fn carrier_b_is_never_sunk_the_cruisers_are_never_attacked_and_the_guns_always_f
 /// makes each exact, asserted-unique text replacement in the copied scenario
 /// file, and loads it. Nothing in the repository's data folder is touched.
 fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
+    variant_of_data(tag, edits, &[])
+}
+
+/// As `variant`, and makes the same kind of replacement in the copied
+/// aircraft types file, for a variant that changes a figure and not an order.
+fn variant_of_data(tag: &str, edits: &[(&str, &str)], aircraft_edits: &[(&str, &str)]) -> Scenario {
     let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
     // Tests run in parallel: each variant has a folder of its own.
     static NEXT: AtomicUsize = AtomicUsize::new(0);
@@ -1239,6 +1256,17 @@ fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
     ] {
         fs::copy(data.join(file), root.join(file)).expect("copy a data file");
     }
+    let types_path = root.join("reference/aircraft_types.csv");
+    let mut types = fs::read_to_string(&types_path).expect("read the aircraft types");
+    for (original, changed) in aircraft_edits {
+        assert_eq!(
+            types.matches(original).count(),
+            1,
+            "the text {original:?} appears exactly once"
+        );
+        types = types.replace(original, changed);
+    }
+    fs::write(&types_path, types).expect("write the aircraft types");
     let mut text =
         fs::read_to_string(data.join("scenarios/05c_air_combat.toml")).expect("read the scenario");
     for (original, changed) in edits {
@@ -1269,6 +1297,20 @@ fn group_4_at_rest() -> Scenario {
         &[(
             GROUP_4_MISSION,
             "side = \"japanese\"\nair_group = 4\nkind = \"set_air_mission\"\nmission = \"rest\"",
+        )],
+    )
+}
+
+/// The placeholder fighter's radius is 190 nm, not 250.
+const FIGHTER_ROW: &str = "4,Placeholder fighter,fighter,0,0,250,none,0,0,0";
+
+fn short_legged_fighters() -> Scenario {
+    variant_of_data(
+        "radius_190",
+        &[],
+        &[(
+            FIGHTER_ROW,
+            "4,Placeholder fighter,fighter,0,0,190,none,0,0,0",
         )],
     )
 }
@@ -1335,6 +1377,87 @@ fn a_share_of_1_sends_no_escorts_and_the_patrol_of_12_fires_all_its_shots_at_the
             bombers_attacking.insert(first.bombers_attacking);
         }
     }
+    assert_eq!(bombers_attacking, BTreeSet::from([12, 13, 14]));
+}
+
+#[test]
+fn with_a_radius_of_190_group_3_sends_no_escorts_and_keeps_all_12_over_carrier_a() {
+    let variant = short_legged_fighters();
+    // The share order is still 0.5: it is the radius that keeps the escorts
+    // home, and everything flyable is patrol, as with a share of 1.
+    let config = Config {
+        share_tenths: 10,
+        group_4_on_patrol: true,
+    };
+    let mut bombers_attacking = BTreeSet::new();
+    let mut runs_out_of_reach = 0;
+    for run in batch_of(&variant, SEEDS) {
+        assert_eq!(run.share_of_3, tenths(5));
+        // A report can put the contact a hex off, so a strike can be 160,
+        // 200 or 240 nm out. Escorts go with each strike within 190 nm and
+        // with none beyond it (decision 0030).
+        let distances: Vec<i64> = run
+            .of(|k| matches!(k, EventKind::StrikeLaunched { .. }))
+            .iter()
+            .map(|launch| match launch.kind {
+                EventKind::StrikeLaunched { distance_nm, .. } => distance_nm.trunc(),
+                _ => unreachable!(),
+            })
+            .collect();
+        let sent = run.of(|k| matches!(k, EventKind::EscortsSent { .. })).len();
+        assert_eq!(
+            sent,
+            distances
+                .iter()
+                .filter(|distance| **distance <= 190)
+                .count(),
+            "seed {}",
+            run.seed
+        );
+        // The figures of the row are for a run whose strikes are all beyond
+        // the radius.
+        if sent > 0 {
+            continue;
+        }
+        runs_out_of_reach += 1;
+        // Group 3 never leaves carrier A and loses no aircraft.
+        assert_eq!(run.ready[2], 12, "seed {}", run.seed);
+        for (index, fight) in run
+            .of(|k| matches!(k, EventKind::AirFight { .. }))
+            .iter()
+            .enumerate()
+        {
+            let EventKind::AirFight {
+                firer,
+                target,
+                firing,
+                at,
+                shots,
+                ..
+            } = fight.kind
+            else {
+                unreachable!()
+            };
+            assert_eq!(
+                (firer, target, firing, at),
+                (FIGHTERS_B, BOMBERS, AirFirer::Patrol, AirTarget::Bombers)
+            );
+            if index == 0 {
+                assert_eq!(shots, Fixed::from_int(12));
+            }
+        }
+        for first in work_the_run(&run, config).iter().take(1) {
+            let hits = first.patrol_at_bombers.expect("the patrol fired");
+            assert!(hits == 3 || hits == 4);
+            let guns = first.guns.expect("the guns fired");
+            assert!(guns == 1 || guns == 2);
+            assert_eq!(first.bombers_attacking, 18 - hits - guns);
+            assert!(matches!(first.bombers_attacking, 12..=14));
+            assert!(first.escorts_at_patrol.is_none() && first.patrol_at_escorts.is_none());
+            bombers_attacking.insert(first.bombers_attacking);
+        }
+    }
+    assert!(runs_out_of_reach > 500);
     assert_eq!(bombers_attacking, BTreeSet::from([12, 13, 14]));
 }
 
