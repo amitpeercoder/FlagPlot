@@ -51,15 +51,19 @@ The review found three rules whose results nobody would defend: results that har
 
 ## What the runs show
 
-Over seeds 1 to 1000, as each change went in. The third column is filled when the patrol is divided.
+Over seeds 1 to 1000, as each change went in. Savo Island has no aircraft, so the last change does not touch it.
 
-| | Before | System hits by damage | Each shot rolled |
-| --- | --- | --- | --- |
-| Savo Island: Japanese ships sunk, in all | 1,694 | 1,360 | 1,685 |
-| Savo Island: Allied ships sunk, in all | | | 2,638 |
-| Eastern Solomons: runs in which Ryujo is sunk | 304 | | 252 |
-| Eastern Solomons: American carriers sunk | 0 | | 0 |
-| Eastern Solomons: aircraft lost a run, Allied and Japanese | | | 2.27 and 30.35 |
+| | Before | System hits by damage | Each shot rolled | Patrol divided |
+| --- | --- | --- | --- | --- |
+| Savo Island: Japanese ships sunk, in all | 1,694 | 1,360 | 1,685 | 1,685 |
+| Savo Island: Allied ships sunk, in all | | | 2,638 | 2,638 |
+| Eastern Solomons: runs in which Ryujo is sunk | 304 | | 252 | 265 |
+| Eastern Solomons: American carriers sunk | 0 | | 0 | 0 |
+| Eastern Solomons: runs in which Enterprise ends crippled | | | | 9 |
+| Eastern Solomons: bomb hits on Enterprise a run | | | 1.28 | 2.95 |
+| Eastern Solomons: aircraft lost a run, Allied and Japanese | | | 2.27 and 30.35 | 1.88 and 22.55 |
+
+The Japanese attack in 518 runs, so in a run with an attack Enterprise takes 5.7 hits on average. On the day she took three. In all 1,000 runs every raid that found its target came with its partner from the other carrier, so the scenario never shows a raid alone; that case is covered by a unit test.
 
 Rolling each shot showed three things the old rule had hidden. None is a new rule; each is now written in the hand calculation of the scenario where it was found.
 

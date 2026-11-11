@@ -26,16 +26,21 @@
 //! most bombers, then the lowest first group.
 //!
 //! Every raid is worked out on the start-of-step counts, whatever the other
-//! raids do: escorts fire at the patrol, the patrol fires at the escorts and
-//! then at the bombers, the ships of the force attacked fire at the bombers
-//! that are left, and the bombers that are left attack. A raid that finds no
-//! task force meets nobody.
+//! raids do. The patrol of a side over a hex is divided among the raids that
+//! attack that side's forces there, in proportion to their aircraft
+//! (decision 0033, 7 to 10; [`divide_patrol`]). Each raid fights its share:
+//! escorts fire at the patrol, the share fires at the escorts and then at the
+//! bombers, the ships of the force attacked fire at the bombers that are
+//! left, and the bombers that are left attack. A raid that finds no task
+//! force meets nobody and takes no share. The losses the raids' escorts do
+//! to a patrol are added up and taken from its groups, the lowest first.
 //!
 //! The log of the step, in this order:
 //!
 //! 1. For each raid, in order of its first strike group: `EscortsSent` for
 //!    each fighter group that sends escorts, then `AirFight` (escorts at
-//!    the patrol, patrol at the escorts, patrol at the bombers), then
+//!    the patrol, the raid's share of the patrol at the escorts, at the
+//!    bombers), then
 //!    `AntiAircraftFire`, then an `AircraftLost` for each group and each of
 //!    those events that cost it aircraft, which are taken off `ready` as
 //!    they are recorded.
@@ -57,8 +62,8 @@
 //!
 //! All in the air combat subsystem. A group's attack: (air group, task
 //! force attacked), as in 0026. The escorts' fire: (the first escort group,
-//! task force attacked). The patrol's fire: (the first patrol group, the
-//! raid's first strike group), the roll at the escorts first, then the roll
+//! task force attacked). The patrol's fire: (the first patrol group over the
+//! hex, the raid's first strike group), the roll at the escorts first, then the roll
 //! at the bombers. The guns: (the lowest-numbered ship afloat in the force
 //! attacked, the raid's first strike group), one roll for all the ships.
 
@@ -160,6 +165,51 @@ struct Raid {
     escorts: Vec<usize>,
 }
 
+/// The patrol of one side over one hex, by group: the pool the escorts' hits
+/// on it are taken from.
+type PatrolPool = ((Side, Hex), Vec<(AirGroupId, u32)>);
+
+/// What a raid meets of the patrol over its hex (decision 0033, 7).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct PatrolShare {
+    /// The defending side's whole patrol over the hex.
+    patrol: u32,
+    /// The raid's aircraft, bombers and escorts, as sent.
+    raid_aircraft: u32,
+    /// The aircraft of all the raids on that side and hex.
+    all_aircraft: u32,
+    /// The raid's share of the patrol.
+    share: u32,
+}
+
+/// Divides `patrol` fighters among raids, each given as its aircraft and
+/// the id of its first strike group (decision 0033, 7). A raid's share is
+/// the patrol times its aircraft over all the aircraft, rounded down, in
+/// integers. Fighters left over go one each to the raids in order of
+/// size, the largest first and, on a tie, the lower first group. Returns the
+/// shares in the order the raids were given; the shares add up to the
+/// patrol, and do not depend on that order.
+pub(crate) fn divide_patrol(patrol: u32, raids: &[(u32, AirGroupId)]) -> Vec<u32> {
+    let total: u64 = raids.iter().map(|(aircraft, _)| u64::from(*aircraft)).sum();
+    if total == 0 {
+        return vec![0; raids.len()];
+    }
+    let mut shares: Vec<u32> = raids
+        .iter()
+        .map(|(aircraft, _)| {
+            u32::try_from(u64::from(patrol) * u64::from(*aircraft) / total)
+                .expect("a share is no more than the patrol")
+        })
+        .collect();
+    let given: u32 = shares.iter().sum();
+    let mut order: Vec<usize> = (0..raids.len()).collect();
+    order.sort_by_key(|index| (std::cmp::Reverse(raids[*index].0), raids[*index].1));
+    for index in order.into_iter().take((patrol - given) as usize) {
+        shares[index] += 1;
+    }
+    shares
+}
+
 /// Who fired a roll.
 enum Fire {
     Fighters {
@@ -182,7 +232,12 @@ struct FireRoll {
     expected: Fixed,
     hits: u32,
     /// The aircraft lost, by group, in order of group number (decision 9).
+    /// Empty for the escorts' fire at a patrol: those losses are added up
+    /// over the raids and taken from the patrol of `patrol_of` when the
+    /// rolls are recorded (decision 0033, 10).
     lost: Vec<(AirGroupId, u32)>,
+    /// For the escorts' fire at a patrol: the defending side and hex.
+    patrol_of: Option<(Side, Hex)>,
     breakdown: Option<Breakdown>,
 }
 
@@ -387,10 +442,28 @@ impl World {
         let mut raids = group_raids(&strikes);
         let mut fighters = fighters;
         send_escorts(&mut raids, &mut fighters);
+        let shares = self.patrol_shares(&raids, &fighters);
         let results: Vec<RaidResult> = raids
             .iter()
-            .map(|raid| self.work_out_raid(day, pulse, raid, &fighters))
+            .zip(&shares)
+            .map(|(raid, share)| self.work_out_raid(day, pulse, raid, &fighters, *share))
             .collect();
+        // The patrol of each side over each hex, as it stood at the start of
+        // the step: the escorts' hits on it from all the raids come off it
+        // in turn, the lowest group first.
+        let mut patrol_pools: Vec<PatrolPool> = Vec::new();
+        for group in fighters.iter().filter(|group| group.patrol > 0) {
+            if let Some(hex) = group.hex {
+                match patrol_pools
+                    .iter_mut()
+                    .find(|(key, _)| *key == (group.side, hex))
+                {
+                    Some((_, pool)) => pool.push((group.air_group, group.patrol)),
+                    None => patrol_pools
+                        .push(((group.side, hex), vec![(group.air_group, group.patrol)])),
+                }
+            }
+        }
 
         // Record the fights, then the losses, of each raid in turn.
         let mut outcomes: Vec<(AirGroupId, Outcome)> = Vec::new();
@@ -461,7 +534,20 @@ impl World {
                 ));
             }
             for (roll, cause) in result.rolls.iter().zip(recorded) {
-                for (group, lost) in &roll.lost {
+                let taken;
+                let lost_list = match roll.patrol_of {
+                    Some(key) => {
+                        let pool = patrol_pools
+                            .iter_mut()
+                            .find(|(pool_key, _)| *pool_key == key)
+                            .map(|(_, pool)| pool)
+                            .expect("a patrol that is fired at is in the pools");
+                        taken = take_hits(roll.hits, pool);
+                        &taken
+                    }
+                    None => &roll.lost,
+                };
+                for (group, lost) in lost_list {
                     if let Some(event) = self.lose_aircraft(day, pulse, *group, *lost, cause) {
                         losses_of.push((*group, event));
                     }
@@ -710,6 +796,59 @@ impl World {
         )
     }
 
+    /// What each raid meets of the patrol over its hex (decision 0033, 7):
+    /// the raids that attack forces of one side in one hex divide that
+    /// side's patrol there. Worked out on the start-of-step counts for all
+    /// the raids before any is resolved. A raid that finds nothing takes no
+    /// share.
+    fn patrol_shares(&self, raids: &[Raid], fighters: &[FighterGroup]) -> Vec<PatrolShare> {
+        let mut shares = vec![PatrolShare::default(); raids.len()];
+        // (defending side, hex) -> the raids that attack there.
+        let mut places: Vec<((Side, Hex), Vec<usize>)> = Vec::new();
+        for (index, raid) in raids.iter().enumerate() {
+            let first = &raid.strikes[0];
+            let Some((_, task_force, _)) = self.find_target(first.side, first.hex) else {
+                continue;
+            };
+            let key = (self.truth.task_forces[&task_force].side, first.hex);
+            match places.iter_mut().find(|(place, _)| *place == key) {
+                Some((_, members)) => members.push(index),
+                None => places.push((key, vec![index])),
+            }
+        }
+        for ((side, hex), members) in places {
+            let patrol: u32 = fighters
+                .iter()
+                .filter(|group| group.side == side && group.hex == Some(hex))
+                .map(|group| group.patrol)
+                .sum();
+            let aircraft: Vec<(u32, AirGroupId)> = members
+                .iter()
+                .map(|index| {
+                    let raid = &raids[*index];
+                    let bombers: u32 = raid.strikes.iter().map(|strike| strike.aircraft).sum();
+                    let escorts: u32 = raid
+                        .escorts
+                        .iter()
+                        .map(|group| fighters[*group].escorts)
+                        .sum();
+                    (bombers + escorts, raid.strikes[0].air_group)
+                })
+                .collect();
+            let all_aircraft: u32 = aircraft.iter().map(|(count, _)| count).sum();
+            let divided = divide_patrol(patrol, &aircraft);
+            for ((index, (raid_aircraft, _)), share) in members.iter().zip(&aircraft).zip(divided) {
+                shares[*index] = PatrolShare {
+                    patrol,
+                    raid_aircraft: *raid_aircraft,
+                    all_aircraft,
+                    share,
+                };
+            }
+        }
+        shares
+    }
+
     /// Works out one raid on the state at the start of the step: the
     /// escorts it has, the fights in the air, the guns, and then what each
     /// strike group that has bombers left does. Reads truth, which the
@@ -720,6 +859,7 @@ impl World {
         pulse: Pulse,
         raid: &Raid,
         fighters: &[FighterGroup],
+        meets: PatrolShare,
     ) -> RaidResult {
         let first = &raid.strikes[0];
         let escorts_sent: Vec<(AirGroupId, u32, Vec<Cause>)> = raid
@@ -782,7 +922,9 @@ impl World {
             .map(|group| (group.air_group, group.patrol))
             .collect();
         let escort_count: u32 = escorts.iter().map(|(_, aircraft)| aircraft).sum();
-        let patrol_count: u32 = patrol.iter().map(|(_, aircraft)| aircraft).sum();
+        // The raid meets its share of the patrol and no more (decision 0033).
+        let patrol_count = meets.share;
+        let patrol: Vec<(AirGroupId, u32)> = if patrol_count > 0 { patrol } else { Vec::new() };
 
         let mut rolls = Vec::new();
         let breakdown = |shots: Fixed, chance: ShotChance, expected: Fixed| {
@@ -816,6 +958,34 @@ impl World {
             })
         };
 
+        // The factors of the share go on the patrol's own fire (decision
+        // 0033, 7), before the shots and chance.
+        let patrol_breakdown = |breakdown: Option<Breakdown>| {
+            breakdown.map(|mut breakdown| {
+                let mut factors = vec![
+                    Factor {
+                        name: "patrol",
+                        value: Fixed::from_int(i64::from(meets.patrol)),
+                    },
+                    Factor {
+                        name: "raid_aircraft",
+                        value: Fixed::from_int(i64::from(meets.raid_aircraft)),
+                    },
+                    Factor {
+                        name: "all_raids_aircraft",
+                        value: Fixed::from_int(i64::from(meets.all_aircraft)),
+                    },
+                    Factor {
+                        name: "patrol_share",
+                        value: Fixed::from_int(i64::from(meets.share)),
+                    },
+                ];
+                factors.append(&mut breakdown.factors);
+                breakdown.factors = factors;
+                breakdown
+            })
+        };
+
         if let (Some((first_escort, _)), Some((first_patrol, _))) =
             (escorts.first().copied(), patrol.first().copied())
         {
@@ -841,7 +1011,8 @@ impl World {
                 chance: shot.chance,
                 expected,
                 hits,
-                lost: take_hits(hits, &mut patrol.clone()),
+                lost: Vec::new(),
+                patrol_of: Some((defending_side, first.hex)),
                 breakdown: breakdown(shots, shot, expected),
             });
         }
@@ -869,7 +1040,8 @@ impl World {
                     expected,
                     hits,
                     lost: take_hits(hits, &mut escorts),
-                    breakdown: breakdown(shots, shot, expected),
+                    patrol_of: None,
+                    breakdown: patrol_breakdown(breakdown(shots, shot, expected)),
                 });
             }
             let at_bombers = patrol_count - at_escorts;
@@ -888,7 +1060,8 @@ impl World {
                     expected,
                     hits,
                     lost: take_hits(hits, &mut bombers),
-                    breakdown: breakdown(shots, shot, expected),
+                    patrol_of: None,
+                    breakdown: patrol_breakdown(breakdown(shots, shot, expected)),
                 });
             }
         }
@@ -923,6 +1096,7 @@ impl World {
                 expected,
                 hits,
                 lost: take_hits(hits, &mut bombers),
+                patrol_of: None,
                 breakdown: breakdown(shots, shot, expected),
             });
         }
@@ -3289,10 +3463,32 @@ mod tests {
         assert_eq!(ready_of(&world, 1), 10);
         assert_eq!((ready_of(&world, 5), ready_of(&world, 10)), (0, 0));
         // Fights and guns carry breakdowns (breakdowns are on).
-        for fight in &fights {
+        for (index, fight) in fights.iter().enumerate() {
             let breakdown = fight.breakdown.as_ref().expect("breakdown");
             let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
-            assert_eq!(names, vec!["shots", "hit_chance"]);
+            if index == 0 {
+                // The escorts' fire does not depend on the share.
+                assert_eq!(names, vec!["shots", "hit_chance"]);
+            } else {
+                // The patrol's fire says what share of the patrol it is.
+                assert_eq!(
+                    names,
+                    vec![
+                        "patrol",
+                        "raid_aircraft",
+                        "all_raids_aircraft",
+                        "patrol_share",
+                        "shots",
+                        "hit_chance"
+                    ]
+                );
+                let values: Vec<i64> = breakdown.factors[..4]
+                    .iter()
+                    .map(|f| f.value.trunc())
+                    .collect();
+                // 12 patrol, a raid of 12 escorts and 18 bombers and no other.
+                assert_eq!(values, vec![12, 30, 30, 12]);
+            }
         }
         assert_eq!(
             guns[0].breakdown.as_ref().expect("breakdown").result,
@@ -3520,7 +3716,7 @@ mod tests {
     }
 
     #[test]
-    fn two_raids_in_one_pulse_each_meet_the_full_patrol_and_the_guns_of_the_start_of_the_step() {
+    fn two_raids_in_one_pulse_divide_the_patrol_and_each_meet_the_guns_of_the_start_of_the_step() {
         let mut world = with_fighters(1, 6, Fixed::ZERO, 8);
         with_a_second_raid(&mut world);
         cap_group(&mut world, 8, Side::Allied, 6, 6, Fixed::ZERO);
@@ -3539,9 +3735,166 @@ mod tests {
         strike_pulse(&mut world, Pulse::Morning);
         assert_eq!(launches(&world).len(), 2);
 
-        // Each raid's escorts (6) and the whole patrol (8) fire: 6 shots
-        // each way, in both raids, though the first raid's escorts kill
-        // the patrol.
+        // Both raids have 24 aircraft (6 escorts and 18 bombers), so each
+        // meets 4 of the patrol of 8. Each raid's escorts fire 6 shots, and
+        // its share fires 4, all at the escorts: none is left for the
+        // bombers.
+        let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
+        assert_eq!(
+            fights,
+            vec![
+                (5, 10, AirFirer::Escorts, AirTarget::Patrol, 6, 6),
+                (10, 5, AirFirer::Patrol, AirTarget::Escorts, 4, 4),
+                (8, 10, AirFirer::Escorts, AirTarget::Patrol, 6, 6),
+                (10, 8, AirFirer::Patrol, AirTarget::Escorts, 4, 4),
+            ]
+        );
+        // 12 hits on a patrol of 8, added up: the first raid's 6 come off
+        // group 10, and the second raid's 6 are cut to the 2 that are left.
+        let lost: Vec<_> = losses(&world).iter().map(loss_of).collect();
+        assert_eq!(lost, vec![(10, 6, 2), (5, 4, 2), (10, 2, 0), (8, 4, 2)]);
+        assert_eq!(ready_of(&world, 10), 0);
+        // Both raids' guns: 36 shots each (chance 0), at the 18 bombers.
+        let guns: Vec<_> = gun_fires(&world).iter().map(guns_of).collect();
+        assert_eq!(guns, vec![(2, 1, 36, 0), (2, 7, 36, 0)]);
+        // Both attacked with 18, though the first sank the carrier.
+        let shots: Vec<_> = attacks(&world)
+            .iter()
+            .map(|e| (attack_of(e).0, attack_of(e).4.trunc()))
+            .collect();
+        assert_eq!(shots, vec![(1, 18), (7, 18)]);
+        assert_eq!(ship_of(&world, 2).location, ShipLocation::Sunk);
+    }
+
+    fn gid(id: u32) -> AirGroupId {
+        AirGroupId::new(id)
+    }
+
+    #[test]
+    fn the_patrol_divides_in_proportion_rounded_down_with_the_leftover_to_the_largest() {
+        // One raid meets all of it, and none, and a patrol of none.
+        assert_eq!(divide_patrol(12, &[(30, gid(1))]), vec![12]);
+        assert_eq!(divide_patrol(0, &[(30, gid(1)), (17, gid(2))]), vec![0, 0]);
+        assert_eq!(divide_patrol(5, &[]), Vec::<u32>::new());
+        // The hand calculation of the Americans: 6 over 17 and 30 aircraft
+        // is 2 (2.17) and 3 (3.83), and the leftover one goes to the larger.
+        assert_eq!(divide_patrol(6, &[(17, gid(1)), (30, gid(2))]), vec![2, 4]);
+        // The Japanese: 54 over 33 and 32 is 27 (27.4) and 26 (26.6), and
+        // the leftover one goes to the larger.
+        assert_eq!(
+            divide_patrol(54, &[(33, gid(1)), (32, gid(2))]),
+            vec![28, 26]
+        );
+        // The same raids the other way round: the shares follow the raids.
+        assert_eq!(
+            divide_patrol(54, &[(32, gid(2)), (33, gid(1))]),
+            vec![26, 28]
+        );
+        // A tie in size: the leftover goes to the lower first group, in
+        // whatever order the raids are given.
+        assert_eq!(divide_patrol(5, &[(10, gid(3)), (10, gid(2))]), vec![2, 3]);
+        assert_eq!(divide_patrol(5, &[(10, gid(2)), (10, gid(3))]), vec![3, 2]);
+        // Fewer fighters than raids: one each to the largest first, the
+        // rest none.
+        assert_eq!(
+            divide_patrol(2, &[(10, gid(1)), (30, gid(2)), (20, gid(3)), (5, gid(4))]),
+            vec![0, 1, 1, 0]
+        );
+        assert_eq!(
+            divide_patrol(1, &[(20, gid(1)), (20, gid(2)), (20, gid(3))]),
+            vec![1, 0, 0]
+        );
+    }
+
+    #[test]
+    fn the_shares_add_up_to_the_patrol_and_a_bigger_raid_never_has_a_smaller_share() {
+        let sizes = [1u32, 2, 3, 7, 17, 30, 32, 33, 60];
+        for patrol in 0..=60u32 {
+            for &a in &sizes {
+                for &b in &sizes {
+                    for &c in &[0u32, 5, 33] {
+                        let raids = if c == 0 {
+                            vec![(a, gid(1)), (b, gid(2))]
+                        } else {
+                            vec![(a, gid(1)), (b, gid(2)), (c, gid(3))]
+                        };
+                        let shares = divide_patrol(patrol, &raids);
+                        assert_eq!(shares.iter().sum::<u32>(), patrol, "{patrol} {raids:?}");
+                        for (i, x) in raids.iter().enumerate() {
+                            for (j, y) in raids.iter().enumerate() {
+                                if x.0 > y.0 {
+                                    assert!(shares[i] >= shares[j], "{patrol} {raids:?}");
+                                }
+                            }
+                        }
+                        // Taken in the opposite order, each raid gets the
+                        // same share.
+                        let mut reversed = raids.clone();
+                        reversed.reverse();
+                        let mut back = divide_patrol(patrol, &reversed);
+                        back.reverse();
+                        assert_eq!(shares, back, "{patrol} {raids:?}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn two_raids_of_unequal_size_fire_the_shots_their_shares_give_in_either_order() {
+        let run = |reversed: bool| {
+            // Raid A (group 1 and 6 escorts): 24 aircraft. Raid B (group 7,
+            // 6 bombers and the 6 escorts of group 8): 12 aircraft. A
+            // patrol of 9 is divided 6 and 3.
+            let mut world = with_fighters(1, 6, Fixed::ZERO, 9);
+            with_a_second_raid(&mut world);
+            group_mut(&mut world, gid(7)).ready = 6;
+            cap_group(&mut world, 8, Side::Allied, 6, 6, Fixed::ZERO);
+            set_guns(&mut world, 2, 0);
+            set_guns(&mut world, 1, 0);
+            world.decide_strikes(1, Pulse::Morning);
+            if reversed {
+                world.strikes_in_flight.reverse();
+            }
+            world.resolve_strikes(1, Pulse::Morning);
+            world
+        };
+        let world = run(false);
+        let mut fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
+        assert_eq!(
+            fights,
+            vec![
+                (5, 10, AirFirer::Escorts, AirTarget::Patrol, 6, 6),
+                (10, 5, AirFirer::Patrol, AirTarget::Escorts, 6, 6),
+                (8, 10, AirFirer::Escorts, AirTarget::Patrol, 6, 6),
+                (10, 8, AirFirer::Patrol, AirTarget::Escorts, 3, 3),
+            ]
+        );
+        // 12 hits on a patrol of 9: 9 are lost, 3 wasted.
+        assert_eq!(ready_of(&world, 10), 0);
+        assert_eq!(ready_of(&world, 5), 0);
+        assert_eq!(ready_of(&world, 8), 3);
+
+        // Taken the other way round, the shots, the losses and the
+        // outcome are the same.
+        let other = run(true);
+        fights.sort();
+        let mut fights_other: Vec<_> = air_fights(&other).iter().map(fight_of).collect();
+        fights_other.sort();
+        assert_eq!(fights, fights_other);
+        for id in [1, 5, 7, 8, 10] {
+            assert_eq!(ready_of(&world, id), ready_of(&other, id), "group {id}");
+        }
+        assert_eq!(format!("{:?}", world.truth), format!("{:?}", other.truth));
+        assert_eq!(world.events.len(), other.events.len());
+    }
+
+    #[test]
+    fn a_raid_alone_meets_the_whole_patrol_and_a_raid_that_finds_nothing_takes_no_share() {
+        // One raid: the whole patrol of 8 fires, 6 at the escorts and 2 at
+        // the bombers (the same as before the patrol was divided).
+        let mut world = with_fighters(1, 6, Fixed::ZERO, 8);
+        strike_pulse(&mut world, Pulse::Morning);
         let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
         assert_eq!(
             fights,
@@ -3549,35 +3902,27 @@ mod tests {
                 (5, 10, AirFirer::Escorts, AirTarget::Patrol, 6, 6),
                 (10, 5, AirFirer::Patrol, AirTarget::Escorts, 6, 6),
                 (10, 1, AirFirer::Patrol, AirTarget::Bombers, 2, 2),
-                (8, 10, AirFirer::Escorts, AirTarget::Patrol, 6, 6),
-                (10, 8, AirFirer::Patrol, AirTarget::Escorts, 6, 6),
-                (10, 7, AirFirer::Patrol, AirTarget::Bombers, 2, 2),
             ]
         );
-        // 12 hits on a patrol of 8: the second loss is cut to what is left.
-        let lost: Vec<_> = losses(&world).iter().map(loss_of).collect();
-        assert_eq!(
-            lost,
-            vec![
-                (10, 6, 2),
-                (5, 6, 0),
-                (1, 2, 16),
-                (10, 2, 0),
-                (8, 6, 0),
-                (7, 2, 16)
-            ]
-        );
-        assert_eq!(ready_of(&world, 10), 0);
-        // Both raids' guns: 36 shots each (chance 0), at the 16 left.
-        let guns: Vec<_> = gun_fires(&world).iter().map(guns_of).collect();
-        assert_eq!(guns, vec![(2, 1, 36, 0), (2, 7, 36, 0)]);
-        // Both attacked with 16, though the first sank the carrier.
-        let shots: Vec<_> = attacks(&world)
-            .iter()
-            .map(|e| (attack_of(e).0, attack_of(e).4.trunc()))
-            .collect();
-        assert_eq!(shots, vec![(1, 16), (7, 16)]);
-        assert_eq!(ship_of(&world, 2).location, ShipLocation::Sunk);
+        // A second raid on a hex where nothing is takes no share: the
+        // first still meets the whole patrol.
+        let mut world = with_fighters(1, 6, Fixed::ZERO, 8);
+        add_force(&mut world, 3, Side::Allied, Hex::new(0, 1), &[(6, 2)]);
+        let mut bombers = group(AirGroupId::new(7), Side::Allied, 6, 2, 18);
+        bombers.mission = AirMission::NavalStrike;
+        world.truth.air_groups.insert(bombers.id, bombers);
+        world.decide_strikes(1, Pulse::Morning);
+        for strike in world.strikes_in_flight.iter_mut() {
+            if strike.air_group == AirGroupId::new(7) {
+                strike.hex = Hex::new(-4, 0);
+            }
+        }
+        world.resolve_strikes(1, Pulse::Morning);
+        assert_eq!(found_nothing(&world).len(), 1);
+        let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
+        assert_eq!(fights.len(), 3);
+        assert_eq!(fights[1].4, 6);
+        assert_eq!(fights[2].4, 2);
     }
 
     #[test]
