@@ -11,7 +11,8 @@
 # 100 x damage / toughness points. gun_rounds_per_min, gun_damage,
 # torpedo_damage and toughness may be decimals such as 19.666666. radar: 1 if fitted. See
 # docs/decisions/0014-surface-combat.md.
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar
-1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0
-2,Placeholder destroyer,destroyer,16,36,500,4000,0,4,6,150,5,8,200,100,0
-3,Placeholder cargo ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,300,0
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar,aircraft_capacity
+1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0
+2,Placeholder destroyer,destroyer,16,36,500,4000,0,4,6,150,5,8,200,100,0,0
+3,Placeholder cargo ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,300,0,0
+4,Placeholder carrier,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36

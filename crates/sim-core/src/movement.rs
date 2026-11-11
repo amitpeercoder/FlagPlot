@@ -974,6 +974,7 @@ mod tests {
                 torpedo_damage: Fixed::from_int(200),
                 toughness: Fixed::from_int(400),
                 radar: false,
+                aircraft_capacity: 0,
             },
         );
         ref_data.port_sizes.insert(

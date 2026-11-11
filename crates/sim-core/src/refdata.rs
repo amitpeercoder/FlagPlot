@@ -101,6 +101,10 @@ pub struct ShipClass {
     pub toughness: Fixed,
     /// True if the class carries radar.
     pub radar: bool,
+    /// Aircraft the ship can carry, in all the air groups aboard (decision 2
+    /// of `docs/decisions/0025-carrier-air-groups.md`). 0 for a ship that
+    /// carries none.
+    pub aircraft_capacity: u32,
 }
 
 impl ShipClass {
@@ -833,6 +837,7 @@ mod tests {
             torpedo_damage: Fixed::from_int(200),
             toughness: Fixed::from_int(400),
             radar: false,
+            aircraft_capacity: 0,
         }
     }
 

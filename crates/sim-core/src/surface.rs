@@ -36,12 +36,12 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Readiness, Stance};
 use crate::refdata::{ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{RngStream, Subsystem};
 use crate::search::build_sighting_report;
-use crate::state::{Ship, ShipLocation, ShipSystem, Side};
+use crate::state::{AirGroupLocation, Ship, ShipLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
 use crate::world::World;
 
@@ -1049,7 +1049,7 @@ impl World {
             .ships
             .remove(&ship);
         fight.forces[force].sunk_in_fight.insert(ship);
-        self.record_in_fight(
+        let sunk = self.record_in_fight(
             fight,
             EventKind::ShipSunk {
                 round: round.number,
@@ -1058,7 +1058,37 @@ impl World {
             },
             vec![Cause::Event(cause)],
             None,
-        )
+        );
+        // Decision 5 of 0025: every air group aboard is lost with the ship.
+        // The group stays aboard in the state, with no aircraft and no
+        // position.
+        let aboard: Vec<AirGroupId> = self
+            .truth
+            .air_groups
+            .values()
+            .filter(|group| group.location == AirGroupLocation::Ship(ship))
+            .map(|group| group.id)
+            .collect();
+        for air_group in aboard {
+            let group = self
+                .truth
+                .air_groups
+                .get_mut(&air_group)
+                .expect("air group exists");
+            let aircraft = group.ready;
+            group.ready = 0;
+            self.record_in_fight(
+                fight,
+                EventKind::AirGroupLost {
+                    air_group,
+                    ship,
+                    aircraft,
+                },
+                vec![Cause::Event(sunk)],
+                None,
+            );
+        }
+        sunk
     }
 
     /// A force that sighted the enemy this round, or was fired on this
@@ -1556,6 +1586,7 @@ mod tests {
                         torpedo_damage: Fixed::from_int(i64::from(torpedo_damage)),
                         toughness: Fixed::from_int(i64::from(tough)),
                         radar,
+                        aircraft_capacity: 0,
                     },
                 );
             }
@@ -2489,6 +2520,86 @@ mod tests {
         assert_eq!(endings(&world), vec![(2, EngagementEndReason::BrokeOff)]);
         assert_eq!(ship(&world, 5).flotation_damage, Fixed::from_int(90));
         assert_eq!(ship(&world, 6).flotation_damage, Fixed::from_int(60));
+    }
+
+    #[test]
+    fn air_groups_aboard_a_ship_that_sinks_are_lost_with_it() {
+        use crate::ids::{AirGroupId, AircraftTypeId};
+        use crate::orders::AirMission;
+        use crate::state::{AirGroup, AirGroupLocation};
+
+        // The sinking of ship 4 in round 1 as in the test above. Two groups
+        // are aboard it (8 aircraft and none) and one aboard ship 5, which
+        // survives.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1, 1, 1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1, 1, 1]),
+        ]);
+        let group = |id: u32, ship: u32, ready: u32| AirGroup {
+            id: AirGroupId::new(id),
+            name: format!("Group {id}"),
+            side: Side::Allied,
+            location: AirGroupLocation::Ship(ShipId::new(ship)),
+            aircraft_type: AircraftTypeId::new(1),
+            ready,
+            mission: AirMission::Rest,
+            search: None,
+            mission_order: None,
+            arc_order: None,
+        };
+        let world = run(&scene, |w| {
+            flotation_only(w);
+            ship_mut(w, 4).flotation_damage = Fixed::from_int(95);
+            for (id, ship, ready) in [(1, 4, 8), (2, 4, 0), (3, 5, 6)] {
+                w.truth
+                    .air_groups
+                    .insert(AirGroupId::new(id), group(id, ship, ready));
+            }
+        });
+
+        let sunk = events_of(&world, |k| matches!(k, EventKind::ShipSunk { .. }));
+        assert_eq!(sunk.len(), 1);
+        let lost = events_of(&world, |k| matches!(k, EventKind::AirGroupLost { .. }));
+        assert_eq!(lost.len(), 2, "only groups aboard the sunk ship are lost");
+        let summary: Vec<(AirGroupId, ShipId, u32)> = lost
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::AirGroupLost {
+                    air_group,
+                    ship,
+                    aircraft,
+                } => (air_group, ship, aircraft),
+                _ => unreachable!(),
+            })
+            .collect();
+        assert_eq!(
+            summary,
+            vec![
+                (AirGroupId::new(1), ShipId::new(4), 8),
+                (AirGroupId::new(2), ShipId::new(4), 0),
+            ]
+        );
+        for event in &lost {
+            assert_eq!(event.causes, vec![Cause::Event(sunk[0].id)]);
+        }
+        assert_eq!(
+            lost[0].kind.to_string(),
+            "air_group:1 lost with ship:4: 8 aircraft"
+        );
+        // The groups stay aboard the sunk ship with no aircraft; the other
+        // ship's group is untouched.
+        let groups = &world.truth.air_groups;
+        assert_eq!(groups[&AirGroupId::new(1)].ready, 0);
+        assert_eq!(
+            groups[&AirGroupId::new(1)].location,
+            AirGroupLocation::Ship(ShipId::new(4))
+        );
+        assert_eq!(groups[&AirGroupId::new(3)].ready, 6);
+        assert_eq!(
+            world.truth.air_group_hex(&groups[&AirGroupId::new(1)]),
+            None
+        );
     }
 
     // ---- 6. matching ----

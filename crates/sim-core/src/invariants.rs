@@ -18,7 +18,7 @@ use crate::hex::{Hex, HEX_NM};
 use crate::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
-use crate::state::{ShipLocation, ShipSystem, SystemState, TruthState};
+use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState, TruthState};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum InvariantViolation {
@@ -51,6 +51,13 @@ pub enum InvariantViolation {
     AirGroupAtUnknownBase(AirGroupId, BaseId),
     /// The air group is based at a base of the other side.
     AirGroupAtOtherSidesBase(AirGroupId, BaseId),
+    /// The air group is aboard a ship that does not exist.
+    AirGroupOnUnknownShip(AirGroupId, ShipId),
+    /// The air group is aboard a ship of the other side.
+    AirGroupOnOtherSidesShip(AirGroupId, ShipId),
+    /// The ready aircraft of the groups aboard a ship exceed its class's
+    /// aircraft capacity (decision 2 of 0025).
+    ShipOverAircraftCapacity(ShipId),
     /// A flotation, system or fire damage track is below 0 or above 100.
     ShipDamageOutOfRange(ShipId),
     NegativeGunRounds(ShipId),
@@ -146,6 +153,21 @@ impl fmt::Display for InvariantViolation {
                 write!(
                     f,
                     "{group} is based at {base}, which belongs to the other side"
+                )
+            }
+            InvariantViolation::AirGroupOnUnknownShip(group, ship) => {
+                write!(f, "{group} is aboard {ship}, which does not exist")
+            }
+            InvariantViolation::AirGroupOnOtherSidesShip(group, ship) => {
+                write!(
+                    f,
+                    "{group} is aboard {ship}, which belongs to the other side"
+                )
+            }
+            InvariantViolation::ShipOverAircraftCapacity(ship) => {
+                write!(
+                    f,
+                    "{ship} carries more aircraft than its class's aircraft capacity"
                 )
             }
             InvariantViolation::ShipDamageOutOfRange(ship) => {
@@ -374,15 +396,42 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         }
     }
 
+    let mut aboard: BTreeMap<ShipId, u32> = BTreeMap::new();
     for group in truth.air_groups.values() {
-        match truth.bases.get(&group.base) {
-            None => violations.push(InvariantViolation::AirGroupAtUnknownBase(
-                group.id, group.base,
-            )),
-            Some(base) if base.side != group.side => violations.push(
-                InvariantViolation::AirGroupAtOtherSidesBase(group.id, group.base),
-            ),
-            Some(_) => {}
+        match group.location {
+            AirGroupLocation::Base(base_id) => match truth.bases.get(&base_id) {
+                None => {
+                    violations.push(InvariantViolation::AirGroupAtUnknownBase(group.id, base_id))
+                }
+                Some(base) if base.side != group.side => violations.push(
+                    InvariantViolation::AirGroupAtOtherSidesBase(group.id, base_id),
+                ),
+                Some(_) => {}
+            },
+            AirGroupLocation::Ship(ship_id) => match truth.ships.get(&ship_id) {
+                None => {
+                    violations.push(InvariantViolation::AirGroupOnUnknownShip(group.id, ship_id))
+                }
+                Some(ship) => {
+                    if ship.side != group.side {
+                        violations.push(InvariantViolation::AirGroupOnOtherSidesShip(
+                            group.id, ship_id,
+                        ));
+                    }
+                    *aboard.entry(ship_id).or_insert(0) += group.ready;
+                }
+            },
+        }
+    }
+    for (ship_id, aircraft) in aboard {
+        // A ship of an unknown class is reported by `World::new`.
+        let capacity = truth
+            .ships
+            .get(&ship_id)
+            .and_then(|ship| ref_data.ship_classes.get(&ship.class))
+            .map_or(0, |class| class.aircraft_capacity);
+        if aircraft > capacity {
+            violations.push(InvariantViolation::ShipOverAircraftCapacity(ship_id));
         }
     }
 
@@ -396,7 +445,7 @@ mod tests {
     use crate::map::HexData;
     use crate::orders::{AirMission, Mission};
     use crate::refdata::{ShipClass, ShipKind};
-    use crate::state::{AirGroup, Base, Ship, ShipSystems, Side, TaskForce};
+    use crate::state::{AirGroup, AirGroupLocation, Base, Ship, ShipSystems, Side, TaskForce};
 
     fn setup() -> (TruthState, Map) {
         let mut map = Map::new();
@@ -418,7 +467,7 @@ mod tests {
                 id: AirGroupId::new(1),
                 name: "Group".to_string(),
                 side: Side::Allied,
-                base: BaseId::new(1),
+                location: AirGroupLocation::Base(BaseId::new(1)),
                 aircraft_type: AircraftTypeId::new(1),
                 ready: 2,
                 mission: AirMission::Rest,
@@ -443,7 +492,7 @@ mod tests {
             .air_groups
             .get_mut(&AirGroupId::new(1))
             .expect("group")
-            .base = BaseId::new(9);
+            .location = AirGroupLocation::Base(BaseId::new(9));
         assert_eq!(
             check(&truth, &map, &RefData::default()),
             vec![InvariantViolation::AirGroupAtUnknownBase(
@@ -651,6 +700,7 @@ mod tests {
                 torpedo_damage: Fixed::ZERO,
                 toughness: Fixed::from_int(100),
                 radar: false,
+                aircraft_capacity: 0,
             },
         );
         // Propulsion may be damaged.
@@ -758,5 +808,114 @@ mod tests {
         set(&mut truth, None);
         truth.bases.get_mut(&BaseId::new(1)).expect("base").side = Side::Allied;
         assert_eq!(violations_of(&truth, &map), Vec::new());
+    }
+
+    // ---- air groups aboard ships (decisions 1 and 2 of 0025) ----
+
+    /// The setup with Allied ship 1 (class 1, capacity 10) in task force 1,
+    /// and the air group aboard it instead of at the base.
+    fn setup_aboard() -> (TruthState, Map, RefData) {
+        let (mut truth, map) = setup_with_ship();
+        let mut ref_data = RefData::default();
+        ref_data.ship_classes.insert(
+            ShipClassId::new(1),
+            ShipClass {
+                id: ShipClassId::new(1),
+                name: "Carrier".to_string(),
+                kind: ShipKind::Carrier,
+                cruise_speed_kn: Fixed::from_int(16),
+                max_speed_kn: Fixed::from_int(30),
+                fuel_capacity_t: Fixed::from_int(100),
+                endurance_nm: Fixed::from_int(1000),
+                cargo_capacity_t: Fixed::ZERO,
+                main_guns: 0,
+                gun_rounds_per_min: Fixed::ZERO,
+                gun_rounds_per_gun: 0,
+                gun_damage: Fixed::ZERO,
+                torpedo_tubes: 0,
+                torpedo_damage: Fixed::ZERO,
+                toughness: Fixed::from_int(100),
+                radar: false,
+                aircraft_capacity: 10,
+            },
+        );
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .location = AirGroupLocation::Ship(SHIP);
+        (truth, map, ref_data)
+    }
+
+    #[test]
+    fn a_group_aboard_a_ship_within_capacity_breaks_nothing() {
+        let (mut truth, map, ref_data) = setup_aboard();
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
+        // Exactly at capacity: 8 and 2 aircraft in two groups.
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .ready = 8;
+        let mut second = truth.air_groups[&AirGroupId::new(1)].clone();
+        second.id = AirGroupId::new(2);
+        second.ready = 2;
+        truth.air_groups.insert(second.id, second);
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
+    }
+
+    #[test]
+    fn aircraft_aboard_a_ship_over_its_capacity_are_caught() {
+        let (mut truth, map, ref_data) = setup_aboard();
+        // 8 and 3 aircraft against a capacity of 10.
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .ready = 8;
+        let mut second = truth.air_groups[&AirGroupId::new(1)].clone();
+        second.id = AirGroupId::new(2);
+        second.ready = 3;
+        truth.air_groups.insert(second.id, second);
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::ShipOverAircraftCapacity(SHIP)]
+        );
+    }
+
+    #[test]
+    fn a_group_aboard_a_ship_of_no_capacity_is_caught() {
+        let (truth, map, mut ref_data) = setup_aboard();
+        ref_data
+            .ship_classes
+            .get_mut(&ShipClassId::new(1))
+            .expect("class")
+            .aircraft_capacity = 0;
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::ShipOverAircraftCapacity(SHIP)]
+        );
+    }
+
+    #[test]
+    fn a_group_aboard_an_unknown_or_other_sides_ship_is_caught() {
+        let (mut truth, map, ref_data) = setup_aboard();
+        truth.ships.get_mut(&ShipId::new(1)).expect("ship").side = Side::Japanese;
+        assert!(check(&truth, &map, &ref_data).contains(
+            &InvariantViolation::AirGroupOnOtherSidesShip(AirGroupId::new(1), SHIP)
+        ));
+        truth.ships.get_mut(&SHIP).expect("ship").side = Side::Allied;
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .location = AirGroupLocation::Ship(ShipId::new(9));
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::AirGroupOnUnknownShip(
+                AirGroupId::new(1),
+                ShipId::new(9)
+            )]
+        );
     }
 }

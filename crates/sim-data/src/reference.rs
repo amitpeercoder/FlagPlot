@@ -34,6 +34,11 @@ struct ShipClassRow {
     toughness: String,
     /// 0 or 1.
     radar: u8,
+    /// Optional column (decision 8 of `docs/decisions/0025-carrier-air-groups.md`):
+    /// a file without it gives every class a capacity of 0. If the column is
+    /// there, every row needs a whole number.
+    #[serde(default)]
+    aircraft_capacity: u32,
 }
 
 #[derive(Deserialize)]
@@ -106,6 +111,7 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
                     ))
                 }
             },
+            aircraft_capacity: row.aircraft_capacity,
             name: row.name,
         };
         if let Some(problem) = class.problem() {
@@ -735,6 +741,56 @@ mod tests {
     }
 
     #[test]
+    fn the_aircraft_capacity_column_is_optional() {
+        // Without the column every class carries no aircraft (decision 8 of
+        // 0025).
+        let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n")
+            .expect("parses without the column");
+        assert_eq!(data.ship_classes[&ShipClassId::new(1)].aircraft_capacity, 0);
+
+        // With the column, each row's whole number is read.
+        let with_column = |rows: &str| {
+            parse_ship_classes(
+                &format!(
+                    "{}{rows}",
+                    CLASS_HEADER.trim_end().to_string() + ",aircraft_capacity\n"
+                ),
+                here(),
+            )
+        };
+        let data = with_column(
+            "1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0\n\
+             2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36\n",
+        )
+        .expect("parses with the column");
+        assert_eq!(data.ship_classes[&ShipClassId::new(1)].aircraft_capacity, 0);
+        assert_eq!(
+            data.ship_classes[&ShipClassId::new(2)].aircraft_capacity,
+            36
+        );
+
+        // With the column, every row needs a whole number.
+        for bad in ["", "-1", "2.5", "many"] {
+            let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0,{bad}\n");
+            assert!(with_column(&row).is_err(), "capacity \"{bad}\"");
+        }
+        // A row that stops before the column is not read as 0.
+        assert!(with_column("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n").is_err());
+    }
+
+    #[test]
+    fn the_savo_island_classes_have_no_capacity_column_and_load_with_none() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/reference/ship_classes_savo_island.csv");
+        let data = load_ship_classes(&path).expect("the generated classes load");
+        assert!(!data.ship_classes.is_empty());
+        assert!(data
+            .ship_classes
+            .values()
+            .all(|class| class.aircraft_capacity == 0));
+    }
+
+    #[test]
     fn the_real_ship_classes_load() {
         let path =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ship_classes.csv");
@@ -746,6 +802,10 @@ mod tests {
             .ship_classes
             .values()
             .all(|class| class.toughness > Fixed::ZERO));
+        assert_eq!(
+            data.ship_classes[&ShipClassId::new(4)].aircraft_capacity,
+            36
+        );
     }
 
     fn combat_text() -> String {

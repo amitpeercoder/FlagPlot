@@ -141,7 +141,8 @@ mod tests {
     };
     use crate::resolve::PulsePhase;
     use crate::state::{
-        AirGroup, Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState,
+        AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystems, Side, TaskForce,
+        TruthState,
     };
     use crate::time::Pulse;
     use crate::world::World;
@@ -151,7 +152,7 @@ mod tests {
             id: AirGroupId::new(id),
             name: format!("Group {id}"),
             side,
-            base: BaseId::new(base),
+            location: AirGroupLocation::Base(BaseId::new(base)),
             aircraft_type: AircraftTypeId::new(1),
             ready: 4,
             mission: AirMission::Rest,
@@ -257,6 +258,7 @@ mod tests {
                 torpedo_damage: Fixed::ZERO,
                 toughness: Fixed::from_int(400),
                 radar: false,
+                aircraft_capacity: 0,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

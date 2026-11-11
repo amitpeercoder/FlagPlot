@@ -6,3 +6,4 @@
 # See docs/decisions/0012-search-and-contacts.md.
 id,name,role,search_range_nm,sweep_width_nm
 1,Placeholder flying boat,patrol,600,40
+2,Placeholder carrier scout,patrol,300,20
