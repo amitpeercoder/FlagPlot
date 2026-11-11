@@ -1,14 +1,14 @@
 //! Air search: air groups look for enemy task forces in their arcs, sightings
-//! become reports, and a sighted task force may notice the aircraft.
+//! become reports.
 //!
 //! This is the `AirSearch` phase of a pulse. The rules are decisions 1 to 11
-//! and 16 to 19 of `docs/decisions/0012-search-and-contacts.md`, and the
+//! of `docs/decisions/0012-search-and-contacts.md` (decisions 17 and 18, the
+//! sighted force noticing, were withdrawn by decision 0032), and the
 //! random number keys are those of
 //! `docs/decisions/0013-random-keys-for-pairs.md`.
 //!
-//! Search writes nothing in truth except the hour a task force last noticed
-//! a sighting. It reads truth (the enemy's position, ship count and kinds)
-//! only to make a report, and the report goes into belief through
+//! Search writes nothing in truth. It reads truth (the enemy's position, ship
+//! count and kinds) only to make a report, and the report goes into belief through
 //! [`BeliefState::apply_report`](crate::belief::BeliefState::apply_report).
 
 use crate::bearing;
@@ -141,7 +141,6 @@ pub(crate) fn build_sighting_report(
         estimated_hex,
         estimated_ship_count,
         estimated_kind,
-        confidence: figures.initial_confidence,
         received_event,
     }
 }
@@ -335,7 +334,6 @@ impl World {
                         hex: estimated_hex,
                         ship_count: estimated_ship_count,
                         kind: estimated_kind,
-                        confidence: report.confidence,
                         created: outcome.created,
                     },
                     vec![Cause::Event(attempt)],
@@ -345,35 +343,6 @@ impl World {
                     received, report.received_event,
                     "the report cites the event that records it"
                 );
-
-                // Decisions 16 to 19: the sighted force may notice, on a
-                // stream of its own.
-                let mut notice = self.rng_pair(
-                    day,
-                    Some(pulse),
-                    Subsystem::Search,
-                    EntityRef::TaskForce(target.id),
-                    EntityRef::AirGroup(group.id),
-                );
-                if notice.chance(figures.notice_chance) {
-                    let elapsed_hours = time::pulse_start(day, pulse);
-                    self.truth
-                        .task_forces
-                        .get_mut(&target.id)
-                        .expect("target exists")
-                        .noticed_sighted_at_hours = Some(elapsed_hours);
-                    self.events.record(
-                        day,
-                        Some(pulse),
-                        EventKind::SightingNoticed {
-                            task_force: target.id,
-                            air_group: group.id,
-                            elapsed_hours,
-                        },
-                        vec![Cause::Event(attempt)],
-                        None,
-                    );
-                }
             }
         }
     }
@@ -395,10 +364,6 @@ mod tests {
 
     const GROUP: AirGroupId = AirGroupId::new(1);
     const BASE_HEX: Hex = Hex::new(0, 0);
-
-    fn fixed(num: i64, den: i64) -> Fixed {
-        Fixed::from_ratio(num, den)
-    }
 
     // ---- sighting_chance ----
 
@@ -1006,12 +971,8 @@ mod tests {
                                 hex,
                                 ship_count,
                                 kind,
-                                confidence,
                                 ..
-                            } => record.push(format!(
-                                "report {hex} {ship_count} {} {confidence}",
-                                kind.name()
-                            )),
+                            } => record.push(format!("report {hex} {ship_count} {}", kind.name())),
                             other => record.push(format!("{other}")),
                         }
                     }
@@ -1092,7 +1053,6 @@ mod tests {
             side,
             contact,
             created,
-            confidence,
             ..
         } = report.kind
         else {
@@ -1100,7 +1060,6 @@ mod tests {
         };
         assert_eq!(side, Side::Allied);
         assert!(created);
-        assert_eq!(confidence, fixed(8, 10));
         let belief = &world.beliefs[&Side::Allied];
         // Both pulses reported, and the second refreshed the first contact.
         assert_eq!(belief.contacts().count(), 1);
@@ -1125,8 +1084,8 @@ mod tests {
         // A target at the base is sighted with certainty in both day 1
         // pulses. Then the group rests, so the contact ages every pulse from
         // the end of day 1's afternoon: that pulse refreshed it, so no ageing.
-        // Day 2 night 0.8 x 0.8 = 0.64, morning 0.512, afternoon 0.4096,
-        // day 3 night 0.32768, day 3 morning 0.262144 < 0.3: dropped.
+        // Day 2 night age 1, morning 2, afternoon 3, day 3 night 4, and day 3
+        // morning age 5: dropped.
         let mut world = world(5, target_at(0, 0));
         resolve_days(&mut world, 1);
         world.submit_orders(
@@ -1154,36 +1113,22 @@ mod tests {
                 EventKind::ContactAged { .. } | EventKind::ContactDropped { .. }
             )
         });
-        let summary: Vec<(u32, Option<Pulse>, u32, Fixed, bool)> = ageing
+        let summary: Vec<(u32, Option<Pulse>, u32, bool)> = ageing
             .iter()
             .map(|e| match e.kind {
-                EventKind::ContactAged {
-                    age_pulses,
-                    confidence,
-                    ..
-                } => (e.day, e.pulse, age_pulses, confidence, false),
-                EventKind::ContactDropped {
-                    age_pulses,
-                    confidence,
-                    ..
-                } => (e.day, e.pulse, age_pulses, confidence, true),
+                EventKind::ContactAged { age_pulses, .. } => (e.day, e.pulse, age_pulses, false),
+                EventKind::ContactDropped { age_pulses, .. } => (e.day, e.pulse, age_pulses, true),
                 _ => unreachable!(),
             })
             .collect();
         assert_eq!(
             summary,
             vec![
-                (2, Some(Pulse::Night), 1, Fixed::from_raw(640_000), false),
-                (2, Some(Pulse::Morning), 2, Fixed::from_raw(512_000), false),
-                (
-                    2,
-                    Some(Pulse::Afternoon),
-                    3,
-                    Fixed::from_raw(409_600),
-                    false
-                ),
-                (3, Some(Pulse::Night), 4, Fixed::from_raw(327_680), false),
-                (3, Some(Pulse::Morning), 5, Fixed::from_raw(262_144), true),
+                (2, Some(Pulse::Night), 1, false),
+                (2, Some(Pulse::Morning), 2, false),
+                (2, Some(Pulse::Afternoon), 3, false),
+                (3, Some(Pulse::Night), 4, false),
+                (3, Some(Pulse::Morning), 5, true),
             ]
         );
         for event in &ageing {
@@ -1194,87 +1139,6 @@ mod tests {
             .to_string()
             .starts_with("Allied contact:1 dropped at 5 pulses"));
         assert_eq!(world.beliefs[&Side::Allied].contacts().count(), 0);
-    }
-
-    // ---- noticing ----
-
-    #[test]
-    fn a_noticed_sighting_records_the_pulse_start_and_cites_the_attempt() {
-        let mut noticed_runs = 0;
-        let mut unnoticed_runs = 0;
-        for seed in 1..=100 {
-            // At the base, so both searches sight.
-            let mut world = world(seed, target_at(0, 0));
-            resolve_days(&mut world, 1);
-            let notices = events_where(&world, |e| {
-                matches!(e.kind, EventKind::SightingNoticed { .. })
-            });
-            let recorded = world.truth.task_forces[&TaskForceId::new(1)].noticed_sighted_at_hours;
-            for notice in &notices {
-                let EventKind::SightingNoticed {
-                    task_force,
-                    air_group,
-                    elapsed_hours,
-                } = notice.kind
-                else {
-                    unreachable!()
-                };
-                assert_eq!((task_force, air_group), (TaskForceId::new(1), GROUP));
-                let expected = match notice.pulse {
-                    Some(Pulse::Morning) => Fixed::from_int(12),
-                    Some(Pulse::Afternoon) => Fixed::from_int(18),
-                    other => panic!("noticed in {other:?}"),
-                };
-                assert_eq!(elapsed_hours, expected);
-                let attempt = world
-                    .events()
-                    .get(match notice.causes[..] {
-                        [Cause::Event(id)] => id,
-                        _ => panic!("one cause"),
-                    })
-                    .expect("cited event");
-                assert!(matches!(
-                    attempt.kind,
-                    EventKind::SearchAttempt { sighted: true, .. }
-                ));
-                assert_eq!(attempt.pulse, notice.pulse);
-            }
-            match notices.last() {
-                Some(last) => {
-                    noticed_runs += 1;
-                    let EventKind::SightingNoticed { elapsed_hours, .. } = last.kind else {
-                        unreachable!()
-                    };
-                    assert_eq!(recorded, Some(elapsed_hours));
-                }
-                None => {
-                    unnoticed_runs += 1;
-                    assert_eq!(recorded, None);
-                }
-            }
-            if let Some(event) = notices.first() {
-                assert!(event
-                    .kind
-                    .to_string()
-                    .starts_with("task_force:1 noticed it was sighted by air_group:1 at D1 "));
-            }
-        }
-        // Two sightings at 0.5 each: about 75 of 100 runs notice at least once.
-        assert!(noticed_runs > 0 && unnoticed_runs > 0);
-    }
-
-    #[test]
-    fn a_noticed_sighting_reads_as_the_clock_time_of_the_pulse_start() {
-        // Elapsed hour 12 is 06:00 on day 1 (the day starts at 18:00).
-        let kind = EventKind::SightingNoticed {
-            task_force: TaskForceId::new(1),
-            air_group: GROUP,
-            elapsed_hours: Fixed::from_int(18),
-        };
-        assert_eq!(
-            kind.to_string(),
-            "task_force:1 noticed it was sighted by air_group:1 at D1 12:00"
-        );
     }
 
     // ---- recording and determinism ----
@@ -1354,12 +1218,11 @@ mod tests {
             hex: Hex::new(15, 0),
             ship_count: 3,
             kind: ShipKind::Cruiser,
-            confidence: fixed(8, 10),
             created: true,
         };
         assert_eq!(
             report.to_string(),
-            "Allied report: 3 ships, cruiser, at (15,0), confidence 0.8: new contact:1"
+            "Allied report: 3 ships, cruiser, at (15,0): new contact:1"
         );
         assert_eq!(
             report.entities(),

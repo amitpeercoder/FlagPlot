@@ -2,8 +2,8 @@ Scenario 5a: Carrier search
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 05cd7d479e5c26ed  17 events
-day   2  hash 50f69fa4190a1162  12 events
+day   1  hash 7ddf176aec27237f  16 events
+day   2  hash e692f36b82db3c2e  11 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -17,32 +17,30 @@ day   2  hash 50f69fa4190a1162  12 events
 #10 D1 morning   ship:2 burned 12 t, 464 t remaining  <- #8
 #11 D1 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (7,0) with 8 aircraft  <- order:2, order:3
 #12 D1 afternoon air_group:1 searched for task_force:2 at 280 nm, chance 0.363782: sighted  <- #11
-#13 D1 afternoon Allied report: 2 ships, carrier, at (14,0), confidence 0.8: new contact:1  <- #12
-#14 D1 afternoon task_force:2 noticed it was sighted by air_group:1 at D1 12:00  <- #12
-#15 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:1
-#16 D1 afternoon ship:1 burned 32 t, 2872 t remaining  <- #15
-#17 D1 afternoon ship:2 burned 12 t, 452 t remaining  <- #15
-#18 D2 night     task_force:1 steamed 16 nm at 16 kn from (10,0) to (10,0)  <- order:1
-#19 D2 night     ship:1 burned 5.333333 t, 2866.666667 t remaining  <- #18
-#20 D2 night     ship:2 burned 2 t, 450 t remaining  <- #18
-#21 D2 night     task_force:1 arrived at (10,0) at D2 19:00  <- #18
-#22 D2 night     Allied contact:1 aged to 1 pulses, confidence 0.64  <- #13
-#23 D2 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (10,0) with 8 aircraft  <- order:2, order:3
-#24 D2 morning   air_group:1 searched for task_force:2 at 160 nm, chance 0.636619: sighted  <- #23
-#25 D2 morning   Allied report: 3 ships, destroyer, at (15,-1), confidence 0.8: refreshed contact:1  <- #24
-#26 D2 morning   task_force:2 noticed it was sighted by air_group:1 at D2 06:00  <- #24
-#27 D2 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (10,0) with 8 aircraft  <- order:2, order:3
-#28 D2 afternoon air_group:1 searched for task_force:2 at 160 nm, chance 0.636619: not sighted  <- #27
-#29 D2 afternoon Allied contact:1 aged to 1 pulses, confidence 0.64  <- #25
+#13 D1 afternoon Allied report: 2 ships, carrier, at (14,0): new contact:1  <- #12
+#14 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:1
+#15 D1 afternoon ship:1 burned 32 t, 2872 t remaining  <- #14
+#16 D1 afternoon ship:2 burned 12 t, 452 t remaining  <- #14
+#17 D2 night     task_force:1 steamed 16 nm at 16 kn from (10,0) to (10,0)  <- order:1
+#18 D2 night     ship:1 burned 5.333333 t, 2866.666667 t remaining  <- #17
+#19 D2 night     ship:2 burned 2 t, 450 t remaining  <- #17
+#20 D2 night     task_force:1 arrived at (10,0) at D2 19:00  <- #17
+#21 D2 night     Allied contact:1 aged to 1 pulses  <- #13
+#22 D2 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (10,0) with 8 aircraft  <- order:2, order:3
+#23 D2 morning   air_group:1 searched for task_force:2 at 160 nm, chance 0.636619: sighted  <- #22
+#24 D2 morning   Allied report: 3 ships, destroyer, at (15,-1): refreshed contact:1  <- #23
+#25 D2 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (10,0) with 8 aircraft  <- order:2, order:3
+#26 D2 afternoon air_group:1 searched for task_force:2 at 160 nm, chance 0.636619: not sighted  <- #25
+#27 D2 afternoon Allied contact:1 aged to 1 pulses  <- #24
 
 task_force:1 "Placeholder carrier force" (Allied): Arrived at (10,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:2 "Placeholder cruiser force" (Japanese): Idle at (14,0), last noticed sighted at D2 06:00; readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder cruiser force" (Japanese): Idle at (14,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder scouting squadron" (Allied) aboard ship:1: 8 ready, mission Search, arc 040-130 to 300 nm
 ship:1 "Placeholder carrier 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2866.666667 t of fuel, 0 t of supply
 ship:2 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 450 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser 1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser 2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-Allied contact:1 at (15,-1): 3 ships, destroyer, age 1 pulses, confidence 0.64
+Allied contact:1 at (15,-1): 3 ships, destroyer, age 1 pulses
 Allied: no battle claims
 Japanese: no contacts
 Japanese: no battle claims

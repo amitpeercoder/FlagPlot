@@ -593,7 +593,6 @@ impl World {
                     hex: report.estimated_hex,
                     ship_count: report.estimated_ship_count,
                     kind: report.estimated_kind,
-                    confidence: report.confidence,
                     created: outcome.created,
                 },
                 vec![Cause::Event(attack_event)],
@@ -2483,7 +2482,7 @@ mod tests {
             let mut world = two_groups_two_contacts(seed, true, 1);
             let search = world.ref_data.search.as_mut().expect("search");
             search.merge_distance_hexes = 4;
-            search.merge_max_age_pulses = 0;
+            search.fresh_contact_max_age_pulses = 0;
             air_figures(&mut world).strike_contact_max_age_pulses = 1;
             strike_pulse(&mut world, Pulse::Morning);
             assert_eq!(launches(&world).len(), 2, "seed {seed}");

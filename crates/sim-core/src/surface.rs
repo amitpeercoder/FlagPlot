@@ -325,13 +325,20 @@ impl World {
     /// `docs/decisions/0021-readiness-and-alarm.md`), at the very start of
     /// every pulse, before its first phase. A task force with a ship afloat
     /// is alerted by a contact when its side's belief holds one no older than
-    /// `alert_contact_max_age_pulses` within `alert_contact_distance_hexes`
+    /// `fresh_contact_max_age_pulses` within `alert_contact_distance_hexes`
     /// of the force. The contact cited is the nearest, the lowest ID on a
     /// tie. Reads belief only, never the truth of enemy units.
     pub(crate) fn alert_from_belief(&mut self, day: u32, pulse: Pulse) {
         let Some(figures) = self.ref_data.surface_combat.clone() else {
             return;
         };
+        // Without search figures no side can hold a contact, so the age
+        // limit is never read.
+        let fresh_max_age = self
+            .ref_data
+            .search
+            .as_ref()
+            .map_or(0, |search| search.fresh_contact_max_age_pulses);
         let decisions: Vec<(TaskForceId, Option<(ContactId, EventId)>)> = self
             .truth
             .task_forces
@@ -344,7 +351,7 @@ impl World {
                 let nearest = self.beliefs[&force.side]
                     .contacts()
                     .filter(|contact| {
-                        contact.age_pulses <= figures.alert_contact_max_age_pulses
+                        contact.age_pulses <= fresh_max_age
                             && contact.estimated_hex.distance(position)
                                 <= figures.alert_contact_distance_hexes
                     })
@@ -1219,7 +1226,6 @@ impl World {
                 hex: report.estimated_hex,
                 ship_count: report.estimated_ship_count,
                 kind: report.estimated_kind,
-                confidence: report.confidence,
                 created: outcome.created,
             },
             vec![Cause::Event(ended)],
@@ -1797,7 +1803,6 @@ mod tests {
     fn harmless(world: &mut World) {
         let figures = figures_mut(world);
         figures.gun_hit_flotation = Fixed::ZERO;
-        figures.gun_hit_fire = Fixed::ONE;
         figures.gun_system_hit_chance = Fixed::ZERO;
         figures.torpedo_system_hit_chance = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
@@ -1809,7 +1814,6 @@ mod tests {
     fn flotation_only(world: &mut World) {
         let figures = figures_mut(world);
         figures.gun_hit_flotation = Fixed::ONE;
-        figures.gun_hit_fire = Fixed::ZERO;
         figures.gun_system_hit_chance = Fixed::ZERO;
         figures.torpedo_system_hit_chance = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
@@ -2709,7 +2713,6 @@ mod tests {
             let figures = figures_mut(w);
             figures.gun_hit_chance_day = Fixed::ONE;
             figures.gun_hit_flotation = Fixed::ONE;
-            figures.gun_hit_fire = Fixed::ZERO;
             figures.gun_system_hit_chance = Fixed::ONE;
             figures.gun_system_hit = [(system, Fixed::ONE)].into_iter().collect();
             let attacker = ship_mut(w, 1);
@@ -3645,7 +3648,6 @@ mod tests {
             estimated_hex: hex,
             estimated_ship_count: 1,
             estimated_kind: ShipKind::Cruiser,
-            confidence: figures.initial_confidence,
             received_event: received,
         });
         let ApplyOutcome::Contact(outcome) = world
@@ -3665,7 +3667,6 @@ mod tests {
                 hex,
                 ship_count: 1,
                 kind: ShipKind::Cruiser,
-                confidence: figures.initial_confidence,
                 created: outcome.created,
             },
             Vec::new(),
@@ -3677,8 +3678,8 @@ mod tests {
 
     /// Ages every contact by `pulses` pulses. The first call only clears the
     /// "refreshed this pulse" mark of contacts just made, so it takes one more
-    /// call than the age wanted. With the placeholder decay of 0.8 a contact
-    /// of confidence 0.8 is still held at age 4 (0.328 is not below 0.3).
+    /// call than the age wanted. A contact is still held at age 4 and dropped
+    /// at age 5.
     fn age_contacts_by(world: &mut World, pulses: u32) {
         let figures = world.ref_data.search.clone().expect("search figures");
         for _ in 0..=pulses {
@@ -3825,6 +3826,29 @@ mod tests {
         assert!(alerted_by_contact_at(Hex::new(1, 0), 0));
         assert!(alerted_by_contact_at(Hex::new(1, 0), 2));
         assert!(!alerted_by_contact_at(Hex::new(1, 0), 3));
+    }
+
+    #[test]
+    fn the_alert_reads_the_one_freshness_figure_the_merge_reads() {
+        // The age limit for alerting is `fresh_contact_max_age_pulses` in
+        // the search figures (decision 0032): moving it moves the alert.
+        let alerted_with = |limit: u32, age: u32| {
+            let mut world = lone_allied();
+            world
+                .ref_data
+                .search
+                .as_mut()
+                .expect("search figures")
+                .fresh_contact_max_age_pulses = limit;
+            give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+            age_contacts_by(&mut world, age);
+            world.alert_from_belief(1, Pulse::Night);
+            force(&world, 1).alerted
+        };
+        assert!(alerted_with(2, 2));
+        assert!(!alerted_with(2, 3));
+        assert!(alerted_with(3, 3));
+        assert!(!alerted_with(1, 2));
     }
 
     #[test]
@@ -4399,10 +4423,8 @@ mod tests {
 
     // ---- starting contacts (decision 0021, 8; `start.rs`) ----
     //
-    // The placeholder search figures: confidence of a fresh report 0.8, decay
-    // 0.8 a pulse, dropped below 0.3 (0.8 x 0.8^4 = 0.32768 is held at age 4,
-    // 0.8 x 0.8^5 = 0.262144 is not at age 5), merge distance 2 hexes and age 2 pulses. Every
-    // product below is exact in millionths.
+    // The placeholder search figures: a contact is dropped at age 5 (held at
+    // age 4), merge distance 2 hexes and age 2 pulses.
 
     use crate::start::StartingContact;
 
@@ -4438,8 +4460,7 @@ mod tests {
 
     #[test]
     fn a_fresh_starting_contact_is_one_report_at_age_zero() {
-        // One Allied contact, age 0: one report (confidence 0.8, the figures'
-        // fresh-report confidence), no ageing events, age 0.
+        // One Allied contact, age 0: one report, no ageing events, age 0.
         let mut world = lone_allied();
         world
             .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
@@ -4451,7 +4472,6 @@ mod tests {
         assert_eq!(contact.estimated_ship_count, 3);
         assert_eq!(contact.estimated_kind, ShipKind::Cruiser);
         assert_eq!(contact.age_pulses, 0);
-        assert_eq!(contact.confidence, Fixed::from_ratio(8, 10));
         assert_eq!(day_zero_kinds(&world), ["report"]);
         let event = world.events().iter().next().expect("one event");
         assert_eq!(event.id, EventId::new(1));
@@ -4459,7 +4479,7 @@ mod tests {
         assert_eq!(contact.last_report_event, event.id);
         assert_eq!(
             event.to_string(),
-            "#1 D0 -         Allied report: 3 ships, cruiser, at (3,0), confidence 0.8, held at the start: new contact:1"
+            "#1 D0 -         Allied report: 3 ships, cruiser, at (3,0), held at the start: new contact:1"
         );
         assert!(contacts_of(&world, Side::Japanese).is_empty());
         // Nothing is left refreshed, so the state can be hashed.
@@ -4468,28 +4488,22 @@ mod tests {
 
     #[test]
     fn a_starting_contact_has_exactly_its_age() {
-        // Age 2: the report, then 2 ageing events citing it. Confidence
-        // 0.8 x 0.8 x 0.8 = 0.512. Age 3: 0.512 x 0.8 = 0.4096.
+        // Age 2: the report, then 2 ageing events citing it.
         let mut world = lone_allied();
         world
             .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 2)])
             .expect("held");
         let contact = &contacts_of(&world, Side::Allied)[0];
         assert_eq!(contact.age_pulses, 2);
-        assert_eq!(contact.confidence, Fixed::from_ratio(512, 1000));
         assert_eq!(day_zero_kinds(&world), ["report", "aged", "aged"]);
         let events: Vec<Event> = world.events().iter().cloned().collect();
-        for (event, (age, confidence)) in events[1..].iter().zip([
-            (1, Fixed::from_ratio(64, 100)),
-            (2, Fixed::from_ratio(512, 1000)),
-        ]) {
+        for (event, age) in events[1..].iter().zip([1, 2]) {
             assert_eq!(
                 event.kind,
                 EventKind::ContactAged {
                     side: Side::Allied,
                     contact: contact.id,
-                    age_pulses: age,
-                    confidence
+                    age_pulses: age
                 }
             );
             assert_eq!(event.causes, vec![Cause::Event(events[0].id)]);
@@ -4501,24 +4515,20 @@ mod tests {
             .expect("held");
         let contact = &contacts_of(&world, Side::Allied)[0];
         assert_eq!(contact.age_pulses, 3);
-        assert_eq!(contact.confidence, Fixed::from_ratio(4096, 10_000));
         assert_eq!(day_zero_kinds(&world), ["report", "aged", "aged", "aged"]);
 
-        // Age 4 is the oldest held: 0.8 x 0.8^4 = 0.32768 is not below 0.3.
+        // Age 4 is the oldest held: age 5 would be dropped.
         let mut world = lone_allied();
         world
             .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 4)])
             .expect("held");
-        assert_eq!(
-            contacts_of(&world, Side::Allied)[0].confidence,
-            Fixed::from_ratio(32768, 100_000)
-        );
+        assert_eq!(contacts_of(&world, Side::Allied)[0].age_pulses, 4);
     }
 
     #[test]
     fn a_starting_contact_that_would_be_dropped_is_an_error_naming_it() {
-        // Age 6: 0.8 x 0.8^6 = 0.2097152 is below 0.3 (it already is at age 5). The error names the entry and
-        // nothing is left behind.
+        // Age 6 is past the drop age of 5 (it already is dropped at age 5).
+        // The error names the entry and nothing is left behind.
         let mut world = lone_allied();
         let hash = world.state_hash();
         let error = world
@@ -4545,7 +4555,7 @@ mod tests {
         // Allied A (3,0) age 3 and B (-3,0) age 1, 6 hexes apart (no merge).
         // Virtual pulse 3: A is reported. Pulse 2: A ages to 1. Pulse 1: B is
         // reported, A ages to 2 and B is skipped. Pulse 0: A ages to 3, B to
-        // 1. So A ends at 3 (0.4096) and B at 1 (0.64): 2 reports and 4
+        // 1. So A ends at 3 and B at 1: 2 reports and 4
         // ageing events, in the order they happened.
         let mut world = lone_allied();
         world
@@ -4557,10 +4567,8 @@ mod tests {
         let contacts = contacts_of(&world, Side::Allied);
         assert_eq!(contacts[0].estimated_hex, Hex::new(3, 0));
         assert_eq!(contacts[0].age_pulses, 3);
-        assert_eq!(contacts[0].confidence, Fixed::from_ratio(4096, 10_000));
         assert_eq!(contacts[1].estimated_hex, Hex::new(-3, 0));
         assert_eq!(contacts[1].age_pulses, 1);
-        assert_eq!(contacts[1].confidence, Fixed::from_ratio(64, 100));
         assert_eq!(
             day_zero_kinds(&world),
             ["report", "aged", "report", "aged", "aged", "aged"]
@@ -4663,7 +4671,7 @@ mod tests {
     #[test]
     fn the_state_hash_includes_starting_contacts() {
         // hash_world hashes each side's contacts (id, hex, count, kind, age,
-        // confidence, last report event), so a contact, and its age, change
+        // last report event), so a contact, and its age, change
         // the hash.
         let bare = lone_allied().state_hash();
         let hash_with = |age: u32| {

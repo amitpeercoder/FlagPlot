@@ -112,7 +112,6 @@ impl World {
                     estimated_hex: entry.hex,
                     estimated_ship_count: entry.ship_count,
                     estimated_kind: entry.kind,
-                    confidence: figures.initial_confidence,
                     received_event: self.events.next_id(),
                 };
                 let ApplyOutcome::Contact(outcome) = self
@@ -138,7 +137,6 @@ impl World {
                         hex: report.estimated_hex,
                         ship_count: report.estimated_ship_count,
                         kind: report.estimated_kind,
-                        confidence: report.confidence,
                         created: true,
                     },
                     Vec::new(),
@@ -159,11 +157,9 @@ impl World {
                 if outcome.dropped {
                     let entry = made.get(&outcome.contact).expect("every contact was made");
                     return Err(SimError::InvalidSetup(format!(
-                        "{} would be dropped before day 1: at {} pulses its confidence {} is below {}",
+                        "{} would be dropped before day 1: it reaches {} pulses, the age at which a contact is dropped",
                         entry.describe(),
-                        outcome.age_pulses,
-                        outcome.confidence,
-                        figures.drop_below_confidence
+                        figures.contact_drop_age_pulses
                     )));
                 }
                 self.events.record(
@@ -173,7 +169,6 @@ impl World {
                         side,
                         contact: outcome.contact,
                         age_pulses: outcome.age_pulses,
-                        confidence: outcome.confidence,
                     },
                     vec![Cause::Event(outcome.last_report_event)],
                     None,

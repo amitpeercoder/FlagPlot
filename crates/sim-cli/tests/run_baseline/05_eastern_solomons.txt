@@ -2,12 +2,12 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c0d1371d2e798973  155 events
+day   1  hash 29ab4d0db44580cd  154 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-10), last noticed sighted at D1 12:00; readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-10); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "VF-6" (Allied) aboard ship:1: 25 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:2 "VB-6" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
 air_group:3 "VS-5" (Allied) aboard ship:1: 16 ready, mission Search, arc 290-090 to 200 nm
@@ -65,7 +65,7 @@ ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems 
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
-Allied contact:1 at (7,-10): 4 ships, battleship, age 0 pulses, confidence 0.8
+Allied contact:1 at (7,-10): 4 ships, battleship, age 0 pulses
 Allied: no battle claims
-Japanese contact:1 at (7,-5): 10 ships, carrier, age 0 pulses, confidence 0.8
+Japanese contact:1 at (7,-5): 10 ships, carrier, age 0 pulses
 Japanese: no battle claims

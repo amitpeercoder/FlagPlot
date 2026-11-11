@@ -430,7 +430,6 @@ struct ContactEnd {
     count: u32,
     kind: ShipKind,
     age: u32,
-    confidence: Fixed,
     last_event: u32,
 }
 
@@ -469,7 +468,6 @@ fn snapshot(seed: u64, scenario: &Scenario) -> RunData {
                     count: contact.estimated_ship_count,
                     kind: contact.estimated_kind,
                     age: contact.age_pulses,
-                    confidence: contact.confidence,
                     last_event: contact.last_report_event.raw(),
                 })
                 .collect::<Vec<_>>(),
@@ -638,7 +636,6 @@ struct ReportRec {
     hex: Hex,
     count: u32,
     kind: ShipKind,
-    confidence: Fixed,
     created: bool,
     cause: u32,
 }
@@ -994,7 +991,6 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 hex,
                 ship_count,
                 kind,
-                confidence,
                 created,
             } => {
                 let fight = closed_fight(&mut parsed, open, event);
@@ -1006,7 +1002,6 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                     hex: *hex,
                     count: *ship_count,
                     kind: *kind,
-                    confidence: *confidence,
                     created: *created,
                     cause: cause_event(event),
                 });
@@ -2655,7 +2650,6 @@ fn reports_and_claims_say_what_the_fight_says() {
                         report.hex
                     );
                     assert!(cruiser_row.contains(&report.kind), "seed {seed}");
-                    assert_eq!(report.confidence, figures.initial_confidence);
                     assert_eq!(report.cause, f.ended.event);
                 }
 
@@ -2711,7 +2705,7 @@ fn reports_and_claims_say_what_the_fight_says() {
                 assert!(first.created, "seed {seed}");
             }
             // A side with one report holds that contact, aged by the pulses
-            // left in the day (confidence 0.8, times 0.8 for each).
+            // left in the day.
             if let [report] = reports[..] {
                 let pulse =
                     an.p.fights
@@ -2728,10 +2722,6 @@ fn reports_and_claims_say_what_the_fight_says() {
                 assert_eq!(contact.kind, report.kind);
                 assert_eq!(contact.last_event, report.event);
                 assert_eq!(contact.age, age, "seed {seed}");
-                assert_eq!(
-                    contact.confidence,
-                    millionths([800_000, 640_000, 512_000][usize::try_from(age).expect("small")])
-                );
             }
         }
     }

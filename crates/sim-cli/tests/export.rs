@@ -349,7 +349,7 @@ fn starting_contacts_are_events_before_day_one_in_no_days_range() {
     assert!(events[0]["text"]
         .as_str()
         .expect("text")
-        .contains("confidence 0.8, held at the start: new contact:1"));
+        .contains("held at the start: new contact:1"));
 
     let days = replay["days"].as_array().expect("days");
     assert_eq!(days[0]["first_event"], 3);

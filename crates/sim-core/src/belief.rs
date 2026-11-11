@@ -28,7 +28,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{ContactId, EventId, IdAllocator};
 use crate::refdata::{SearchFigures, ShipKind};
@@ -54,8 +53,6 @@ pub struct SightingReport {
     pub estimated_ship_count: u32,
     /// The most important kind of ship the report claims to have seen.
     pub estimated_kind: ShipKind,
-    /// How sure the observer is, where `Fixed::ONE` is certain.
-    pub confidence: Fixed,
     /// The event that records this report's arrival.
     pub received_event: EventId,
 }
@@ -83,7 +80,6 @@ pub struct Contact {
     pub estimated_kind: ShipKind,
     /// Pulses since the last fresh sighting.
     pub age_pulses: u32,
-    pub confidence: Fixed,
     /// The event that recorded the arrival of the report that last created or
     /// refreshed this contact.
     pub last_report_event: EventId,
@@ -117,8 +113,6 @@ pub struct AgeOutcome {
     pub contact: ContactId,
     /// The age the contact has, or would have had if it was dropped.
     pub age_pulses: u32,
-    /// The confidence the contact has, or would have had if it was dropped.
-    pub confidence: Fixed,
     pub dropped: bool,
     pub last_report_event: EventId,
 }
@@ -181,7 +175,7 @@ impl BeliefState {
     /// created or refreshed or a claim stored (decision 13).
     ///
     /// A sighting: among contacts within `merge_distance_hexes` of the
-    /// reported hex and no older than `merge_max_age_pulses`, the nearest is
+    /// reported hex and no older than `fresh_contact_max_age_pulses`, the nearest is
     /// refreshed, the lowest ID on a tie. Otherwise the report makes a new
     /// contact. A battle claim is appended to the claims. A "nothing there"
     /// report removes the contact if it exists and names that hex (decision
@@ -227,7 +221,7 @@ impl BeliefState {
             .values()
             .filter(|contact| {
                 contact.estimated_hex.distance(report.estimated_hex) <= figures.merge_distance_hexes
-                    && contact.age_pulses <= figures.merge_max_age_pulses
+                    && contact.age_pulses <= figures.fresh_contact_max_age_pulses
             })
             .min_by_key(|contact| contact.estimated_hex.distance(report.estimated_hex))
             .map(|contact| contact.id);
@@ -244,7 +238,6 @@ impl BeliefState {
                 estimated_ship_count: report.estimated_ship_count,
                 estimated_kind: report.estimated_kind,
                 age_pulses: 0,
-                confidence: report.confidence,
                 last_report_event: report.received_event,
             },
         );
@@ -256,7 +249,7 @@ impl BeliefState {
     }
 
     /// Ages every contact not created or refreshed this pulse, drops those
-    /// whose confidence falls below the floor, and clears the refreshed set
+    /// that reach `contact_drop_age_pulses`, and clears the refreshed set
     /// (decision 14). Takes no truth. Returns one outcome per aged or dropped
     /// contact, in contact ID order.
     pub(crate) fn age_contacts(&mut self, figures: &SearchFigures) -> Vec<AgeOutcome> {
@@ -267,15 +260,13 @@ impl BeliefState {
                 continue;
             }
             contact.age_pulses = contact.age_pulses.saturating_add(1);
-            contact.confidence = contact.confidence * figures.confidence_decay_per_pulse;
-            let drop = contact.confidence < figures.drop_below_confidence;
+            let drop = contact.age_pulses >= figures.contact_drop_age_pulses;
             if drop {
                 dropped.push(contact.id);
             }
             outcomes.push(AgeOutcome {
                 contact: contact.id,
                 age_pulses: contact.age_pulses,
-                confidence: contact.confidence,
                 dropped: drop,
                 last_report_event: contact.last_report_event,
             });
@@ -301,7 +292,6 @@ mod tests {
             estimated_hex: Hex::new(q, r),
             estimated_ship_count: count,
             estimated_kind: ShipKind::Cruiser,
-            confidence: figures().initial_confidence,
             received_event: EventId::new(event),
         })
     }
@@ -326,7 +316,6 @@ mod tests {
                 estimated_ship_count: 1,
                 estimated_kind: ShipKind::Destroyer,
                 age_pulses: age,
-                confidence: Fixed::from_ratio(1, 2),
                 last_report_event: EventId::new(1),
             },
         );
@@ -423,7 +412,6 @@ mod tests {
         assert_eq!(contact.estimated_ship_count, 3);
         assert_eq!(contact.estimated_kind, ShipKind::Cruiser);
         assert_eq!(contact.age_pulses, 0);
-        assert_eq!(contact.confidence, Fixed::from_ratio(8, 10));
         assert_eq!(contact.last_report_event, EventId::new(17));
         assert_eq!(belief.contacts().count(), 1);
         assert!(belief.has_pending_refreshes());
@@ -447,7 +435,6 @@ mod tests {
         assert_eq!(contact.estimated_ship_count, 4);
         assert_eq!(contact.estimated_kind, ShipKind::Cruiser);
         assert_eq!(contact.age_pulses, 0);
-        assert_eq!(contact.confidence, Fixed::from_ratio(8, 10));
         assert_eq!(contact.last_report_event, EventId::new(20));
         assert_eq!(belief.contacts().count(), 1);
     }
@@ -515,47 +502,38 @@ mod tests {
     }
 
     #[test]
-    fn a_lone_contact_ages_and_is_dropped_by_the_figures() {
+    fn a_lone_contact_ages_and_is_dropped_when_its_age_reaches_the_figure() {
         let mut belief = BeliefState::new(Side::Allied);
         let figures = figures();
+        assert_eq!(figures.contact_drop_age_pulses, 5);
         let id = apply(&mut belief, &report(0, 0, 1, 9)).contact;
         // The pulse that made it ages nothing.
         assert!(belief.age_contacts(&figures).is_empty());
         assert!(!belief.has_pending_refreshes());
 
-        // Each ageing multiplies by 0.8, truncating to six decimals.
-        // 0.8 x 0.8 = 0.64, x 0.8 = 0.512, x 0.8 = 0.4096, x 0.8 = 0.32768.
-        let expected = [
-            Fixed::from_ratio(64, 100),
-            Fixed::from_ratio(512, 1000),
-            Fixed::from_ratio(4096, 10_000),
-            Fixed::from_ratio(32768, 100_000),
-        ];
-        for (index, confidence) in expected.into_iter().enumerate() {
+        // Ages 1 to 4 are kept.
+        for age in 1..=4 {
             let outcomes = belief.age_contacts(&figures);
-            let age = u32::try_from(index + 1).expect("small");
             assert_eq!(
                 outcomes,
                 vec![AgeOutcome {
                     contact: id,
                     age_pulses: age,
-                    confidence,
                     dropped: false,
                     last_report_event: EventId::new(9),
                 }]
             );
-            assert_eq!(belief.contact(id).expect("kept").confidence, confidence);
+            assert_eq!(belief.contact(id).expect("kept").age_pulses, age);
         }
 
-        // 0.32768 x 0.8 = 0.262144, which is below 0.3: dropped, and the
-        // outcome still reports age 5 and the confidence it would have had.
+        // At the end of the pulse in which its age reaches 5 it is dropped,
+        // and the outcome still reports age 5.
         let outcomes = belief.age_contacts(&figures);
         assert_eq!(
             outcomes,
             vec![AgeOutcome {
                 contact: id,
                 age_pulses: 5,
-                confidence: Fixed::from_ratio(262_144, 1_000_000),
                 dropped: true,
                 last_report_event: EventId::new(9),
             }]
@@ -568,27 +546,29 @@ mod tests {
     fn a_contact_refreshed_this_pulse_is_not_aged_until_the_next() {
         let mut belief = BeliefState::new(Side::Allied);
         let figures = figures();
-        let old = put_contact(&mut belief, 20, 20, 0);
+        let old = put_contact(&mut belief, 20, 20, 3);
         let fresh = apply(&mut belief, &report(0, 0, 1, 9)).contact;
 
-        // Only the old contact ages: 0.5 x 0.8 = 0.4 (>= 0.3, kept).
+        // Only the old contact ages: 3 to 4, kept.
         let outcomes = belief.age_contacts(&figures);
         assert_eq!(outcomes.len(), 1);
         assert_eq!(outcomes[0].contact, old);
-        assert_eq!(outcomes[0].age_pulses, 1);
-        assert_eq!(outcomes[0].confidence, Fixed::from_ratio(4, 10));
+        assert_eq!(outcomes[0].age_pulses, 4);
+        assert!(!outcomes[0].dropped);
         assert_eq!(belief.contact(fresh).expect("fresh").age_pulses, 0);
 
-        // Next pulse the fresh one ages too: 0.8 x 0.8 = 0.64. The old one
-        // goes 0.4 x 0.8 = 0.32, still kept.
+        // Next pulse the fresh one ages too, to 1. The old one reaches 5 and
+        // is dropped.
         let outcomes = belief.age_contacts(&figures);
         assert_eq!(
             outcomes.iter().map(|o| o.contact).collect::<Vec<_>>(),
             vec![old, fresh]
         );
         assert_eq!(outcomes[1].age_pulses, 1);
-        assert_eq!(outcomes[1].confidence, Fixed::from_ratio(64, 100));
-        assert_eq!(outcomes[0].confidence, Fixed::from_ratio(32, 100));
+        assert!(!outcomes[1].dropped);
+        assert_eq!(outcomes[0].age_pulses, 5);
+        assert!(outcomes[0].dropped);
+        assert!(belief.contact(old).is_none());
     }
 
     #[test]
@@ -596,14 +576,33 @@ mod tests {
         let mut belief = BeliefState::new(Side::Allied);
         let figures = figures();
         let id = put_contact(&mut belief, 0, 0, 2);
-        belief.contacts.get_mut(&id).expect("contact").confidence = Fixed::from_ratio(31, 100);
         apply(&mut belief, &report(0, 0, 1, 9));
-        // Refreshed: no ageing, so no drop, and confidence is the report's.
+        // Refreshed: no ageing, so no drop, and the age is back to 0.
         assert!(belief.age_contacts(&figures).is_empty());
-        assert_eq!(
-            belief.contact(id).expect("kept").confidence,
-            Fixed::from_ratio(8, 10)
-        );
+        assert_eq!(belief.contact(id).expect("kept").age_pulses, 0);
+    }
+
+    #[test]
+    fn the_one_freshness_figure_gates_merging() {
+        let mut belief = BeliefState::new(Side::Allied);
+        let mut figures = figures();
+        assert_eq!(figures.fresh_contact_max_age_pulses, 2);
+        // A contact aged 3 does not merge at 2, and does at 3.
+        put_contact(&mut belief, 0, 0, 3);
+        let outcome = match belief.apply_report(&report(0, 0, 1, 5), &figures) {
+            ApplyOutcome::Contact(outcome) => outcome,
+            other => panic!("a sighting made no contact: {other:?}"),
+        };
+        assert!(outcome.created);
+        let mut belief = BeliefState::new(Side::Allied);
+        let id2 = put_contact(&mut belief, 0, 0, 3);
+        figures.fresh_contact_max_age_pulses = 3;
+        let outcome = match belief.apply_report(&report(0, 0, 1, 5), &figures) {
+            ApplyOutcome::Contact(outcome) => outcome,
+            other => panic!("a sighting made no contact: {other:?}"),
+        };
+        assert_eq!(outcome.contact, id2);
+        assert!(!outcome.created);
     }
 
     #[test]

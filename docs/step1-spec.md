@@ -71,14 +71,14 @@ Every entity has a stable ID that never changes or gets reused. Orders, events a
 The simulation keeps three separate worlds: the truth, and what each side believes. Nothing a side sees is read from the truth directly.
 
 - **Truth state:** the real position and condition of everything.
-- **Belief state, one per side:** contacts with an estimated position, composition, course, age and confidence.
+- **Belief state, one per side:** contacts with an estimated position, composition, course and age. (Confidence was cut at the complexity review after scenario 5, decision 0032: it only ever tracked age. It returns when a report can be more or less sure of what it saw.)
 - **Reports:** generated from truth through a detection and error model, then written into belief.
 
 Rules:
 
 - A side's own units are known exactly. Enemy units exist for that side only as contacts.
 - A contact can be wrong about type and number. Two cruisers reported as a carrier group is a valid report.
-- Contacts age and lose confidence each pulse without a fresh sighting.
+- Contacts age each pulse without a fresh sighting, and are dropped when too old.
 - Combat results are also reports. Claimed hits and sinkings go into belief. Actual damage goes into truth.
 
 This split is in step 1 because it cannot be added later. The staff planner in step 3 and the UI in step 4 must read only belief state, and the type system should make reading truth from a side's view impossible.

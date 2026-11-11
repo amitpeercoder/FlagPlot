@@ -2,10 +2,10 @@ Scenario 3: Search, flying boats against an approaching force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a3fabe606de35a6e  19 events
-day   2  hash 14296ed2c2e2aab6  22 events
-day   3  hash 1a8af91c0bb31e7e  11 events
-day   4  hash 37f3761e6acc039f  7 events
+day   1  hash 1b8f796b46420a2a  19 events
+day   2  hash 2394ad07334e4ddc  20 events
+day   3  hash a437c09516eb8862  10 events
+day   4  hash aabdf3fd87a34af5  7 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -32,48 +32,45 @@ day   4  hash 37f3761e6acc039f  7 events
 #23 D2 night     ship:3 burned 24 t, 428 t remaining  <- #20
 #24 D2 morning   air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
 #25 D2 morning   air_group:1 searched for task_force:1 at 320 nm, chance 0.477464: sighted  <- #24
-#26 D2 morning   Allied report: 3 ships, cruiser, at (8,0), confidence 0.8: new contact:1  <- #25
-#27 D2 morning   task_force:1 noticed it was sighted by air_group:1 at D2 06:00  <- #25
-#28 D2 morning   task_force:1 steamed 96 nm at 16 kn from (8,0) to (5,0)  <- order:3, order:4
-#29 D2 morning   ship:1 burned 24 t, 1832 t remaining  <- #28
-#30 D2 morning   ship:2 burned 24 t, 1832 t remaining  <- #28
-#31 D2 morning   ship:3 burned 12 t, 416 t remaining  <- #28
-#32 D2 afternoon air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
-#33 D2 afternoon air_group:1 searched for task_force:1 at 200 nm, chance 0.763943: sighted  <- #32
-#34 D2 afternoon Allied report: 3 ships, cruiser, at (5,0), confidence 0.8: new contact:2  <- #33
-#35 D2 afternoon task_force:1 noticed it was sighted by air_group:1 at D2 12:00  <- #33
-#36 D2 afternoon task_force:1 steamed 48 nm at 16 kn from (5,0) to (4,0)  <- order:3, order:4
-#37 D2 afternoon ship:1 burned 12 t, 1820 t remaining  <- #36
-#38 D2 afternoon ship:2 burned 12 t, 1820 t remaining  <- #36
-#39 D2 afternoon ship:3 burned 6 t, 410 t remaining  <- #36
-#40 D2 afternoon task_force:1 arrived at (4,0) at D2 15:00  <- #36
-#41 D2 afternoon Allied contact:1 aged to 1 pulses, confidence 0.64  <- #26
-#42 D3 night     Allied contact:1 aged to 2 pulses, confidence 0.512  <- #26
-#43 D3 night     Allied contact:2 aged to 1 pulses, confidence 0.64  <- #34
-#44 D3 morning   air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
-#45 D3 morning   air_group:1 searched for task_force:1 at 160 nm, chance 0.954929: sighted  <- #44
-#46 D3 morning   Allied report: 3 ships, cruiser, at (4,0), confidence 0.8: refreshed contact:2  <- #45
-#47 D3 morning   task_force:1 noticed it was sighted by air_group:1 at D3 06:00  <- #45
-#48 D3 morning   Allied contact:1 aged to 3 pulses, confidence 0.4096  <- #26
-#49 D3 afternoon air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
-#50 D3 afternoon air_group:1 searched for task_force:1 at 160 nm, chance 0.954929: sighted  <- #49
-#51 D3 afternoon Allied report: 3 ships, cruiser, at (4,0), confidence 0.8: refreshed contact:2  <- #50
-#52 D3 afternoon Allied contact:1 aged to 4 pulses, confidence 0.32768  <- #26
-#53 D4 -         order:5 accepted for air_group:1  <- order:5
-#54 D4 night     Allied contact:1 dropped at 5 pulses, confidence 0.262144  <- #26
-#55 D4 night     Allied contact:2 aged to 1 pulses, confidence 0.64  <- #51
-#56 D4 morning   air_group:1 searched 240-300 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:5
-#57 D4 morning   Allied contact:2 aged to 2 pulses, confidence 0.512  <- #51
-#58 D4 afternoon air_group:1 searched 240-300 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:5
-#59 D4 afternoon Allied contact:2 aged to 3 pulses, confidence 0.4096  <- #51
+#26 D2 morning   Allied report: 3 ships, cruiser, at (8,0): new contact:1  <- #25
+#27 D2 morning   task_force:1 steamed 96 nm at 16 kn from (8,0) to (5,0)  <- order:3, order:4
+#28 D2 morning   ship:1 burned 24 t, 1832 t remaining  <- #27
+#29 D2 morning   ship:2 burned 24 t, 1832 t remaining  <- #27
+#30 D2 morning   ship:3 burned 12 t, 416 t remaining  <- #27
+#31 D2 afternoon air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
+#32 D2 afternoon air_group:1 searched for task_force:1 at 200 nm, chance 0.763943: sighted  <- #31
+#33 D2 afternoon Allied report: 3 ships, cruiser, at (5,0): new contact:2  <- #32
+#34 D2 afternoon task_force:1 steamed 48 nm at 16 kn from (5,0) to (4,0)  <- order:3, order:4
+#35 D2 afternoon ship:1 burned 12 t, 1820 t remaining  <- #34
+#36 D2 afternoon ship:2 burned 12 t, 1820 t remaining  <- #34
+#37 D2 afternoon ship:3 burned 6 t, 410 t remaining  <- #34
+#38 D2 afternoon task_force:1 arrived at (4,0) at D2 15:00  <- #34
+#39 D2 afternoon Allied contact:1 aged to 1 pulses  <- #26
+#40 D3 night     Allied contact:1 aged to 2 pulses  <- #26
+#41 D3 night     Allied contact:2 aged to 1 pulses  <- #33
+#42 D3 morning   air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
+#43 D3 morning   air_group:1 searched for task_force:1 at 160 nm, chance 0.954929: sighted  <- #42
+#44 D3 morning   Allied report: 3 ships, cruiser, at (4,0): refreshed contact:2  <- #43
+#45 D3 morning   Allied contact:1 aged to 3 pulses  <- #26
+#46 D3 afternoon air_group:1 searched 060-120 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:2
+#47 D3 afternoon air_group:1 searched for task_force:1 at 160 nm, chance 0.954929: sighted  <- #46
+#48 D3 afternoon Allied report: 3 ships, cruiser, at (4,0): refreshed contact:2  <- #47
+#49 D3 afternoon Allied contact:1 aged to 4 pulses  <- #26
+#50 D4 -         order:5 accepted for air_group:1  <- order:5
+#51 D4 night     Allied contact:1 dropped at 5 pulses  <- #26
+#52 D4 night     Allied contact:2 aged to 1 pulses  <- #48
+#53 D4 morning   air_group:1 searched 240-300 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:5
+#54 D4 morning   Allied contact:2 aged to 2 pulses  <- #48
+#55 D4 afternoon air_group:1 searched 240-300 out to 600 nm from base:1 with 4 aircraft  <- order:1, order:5
+#56 D4 afternoon Allied contact:2 aged to 3 pulses  <- #48
 
-task_force:1 "Placeholder cruiser force" (Japanese): Arrived at (4,0), last noticed sighted at D3 06:00; readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:1 "Placeholder cruiser force" (Japanese): Arrived at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder patrol squadron" (Allied) at base:1: 4 ready, mission Search, arc 240-300 to 600 nm
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1820 t of fuel, 0 t of supply
 ship:2 "Placeholder cruiser 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1820 t of fuel, 0 t of supply
 ship:3 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 410 t of fuel, 0 t of supply
 base:1 "Placeholder seaplane base" (Allied) at (0,0): 0 t of supply in stock
-Allied contact:2 at (4,0): 3 ships, cruiser, age 3 pulses, confidence 0.4096
+Allied contact:2 at (4,0): 3 ships, cruiser, age 3 pulses
 Allied: no battle claims
 Japanese: no contacts
 Japanese: no battle claims

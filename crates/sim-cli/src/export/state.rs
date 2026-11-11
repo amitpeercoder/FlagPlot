@@ -267,7 +267,6 @@ struct ContactOut {
     ship_count: u32,
     kind: &'static str,
     age_pulses: u32,
-    confidence: Num,
 }
 
 #[derive(Serialize)]
@@ -298,7 +297,6 @@ pub fn final_state(world: &World) -> FinalOut {
                 ship_count: contact.estimated_ship_count,
                 kind: contact.estimated_kind.name(),
                 age_pulses: contact.age_pulses,
-                confidence: Num(contact.confidence),
             })
             .collect()
     };

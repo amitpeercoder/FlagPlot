@@ -1727,7 +1727,7 @@ r = 0
 
     #[test]
     fn a_starting_contact_is_held_at_the_given_age() {
-        // Age 2: confidence 0.8 x 0.8 x 0.8 = 0.512.
+        // Age 2: two pulses old.
         let scenario = parse_with(&contact("kind = \"cruiser\"\nage_pulses = 2")).expect("loads");
         let view = scenario.world.side_view(Side::Allied);
         let held: Vec<_> = view.contacts().collect();
@@ -1735,7 +1735,6 @@ r = 0
         assert_eq!(held[0].estimated_hex, Hex::new(3, 0));
         assert_eq!(held[0].estimated_ship_count, 3);
         assert_eq!(held[0].age_pulses, 2);
-        assert_eq!(held[0].confidence, Fixed::from_ratio(512, 1000));
         // One report and two ageing events, all on day 0.
         assert_eq!(scenario.world.events().len(), 3);
 
@@ -1755,7 +1754,7 @@ r = 0
         );
         let message = error_of(&contact("kind = \"cruiser\"\nspeed = 3"));
         assert!(message.contains("speed"), "{message}");
-        // Age 6 is below the drop floor: 0.8 x 0.8^6 = 0.2097152 < 0.3.
+        // Age 6 is past the drop age of 5.
         let message = error_of(&contact("kind = \"cruiser\"\nage_pulses = 6"));
         assert!(message.contains("would be dropped"), "{message}");
         let message = error_of(&format!(

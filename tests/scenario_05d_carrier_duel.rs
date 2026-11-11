@@ -565,7 +565,6 @@ fn work_the_run(run: &Run) -> Worked {
                     EventKind::SearchFlown { .. }
                         | EventKind::SearchAttempt { .. }
                         | EventKind::ReportReceived { .. }
-                        | EventKind::SightingNoticed { .. }
                         | EventKind::StrikeLaunched { .. }
                         | EventKind::EscortsSent { .. }
                         | EventKind::AirFight { .. }

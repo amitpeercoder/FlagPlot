@@ -292,15 +292,12 @@ struct SearchFile {
     /// Required, and ignored once read: the scenario carries the flag.
     #[allow(dead_code)]
     placeholder: bool,
-    initial_confidence: Quantity,
-    confidence_decay_per_pulse: Quantity,
-    drop_below_confidence: Quantity,
+    contact_drop_age_pulses: u32,
     merge_distance_hexes: u32,
-    merge_max_age_pulses: u32,
+    fresh_contact_max_age_pulses: u32,
     position_error_chance: Quantity,
     count_over_chance: Quantity,
     count_under_chance: Quantity,
-    notice_chance: Quantity,
     /// True kind name, then reported kind name, then the chance.
     kind_confusion: BTreeMap<String, BTreeMap<String, Quantity>>,
 }
@@ -337,18 +334,12 @@ fn parse_search_figures(text: &str, path: &Path) -> Result<SearchFigures, DataEr
     }
 
     let figures = SearchFigures {
-        initial_confidence: number("initial_confidence", &file.initial_confidence)?,
-        confidence_decay_per_pulse: number(
-            "confidence_decay_per_pulse",
-            &file.confidence_decay_per_pulse,
-        )?,
-        drop_below_confidence: number("drop_below_confidence", &file.drop_below_confidence)?,
+        contact_drop_age_pulses: file.contact_drop_age_pulses,
         merge_distance_hexes: file.merge_distance_hexes,
-        merge_max_age_pulses: file.merge_max_age_pulses,
+        fresh_contact_max_age_pulses: file.fresh_contact_max_age_pulses,
         position_error_chance: number("position_error_chance", &file.position_error_chance)?,
         count_over_chance: number("count_over_chance", &file.count_over_chance)?,
         count_under_chance: number("count_under_chance", &file.count_under_chance)?,
-        notice_chance: number("notice_chance", &file.notice_chance)?,
         kind_confusion,
     };
     if let Some(problem) = figures.problem() {
@@ -370,7 +361,6 @@ struct SurfaceCombatFile {
     radar_sighting_bonus: Quantity,
     not_alert_sighting_factor: Quantity,
     alert_contact_distance_hexes: u32,
-    alert_contact_max_age_pulses: u32,
     alarm_chance: Quantity,
     gun_hit_chance_night: Quantity,
     gun_hit_chance_day: Quantity,
@@ -379,7 +369,6 @@ struct SurfaceCombatFile {
     surprised_target_factor: Quantity,
     lit_target_factor: Quantity,
     gun_hit_flotation: Quantity,
-    gun_hit_fire: Quantity,
     gun_system_hit_chance: Quantity,
     torpedo_system_hit_chance: Quantity,
     degraded_factor: Quantity,
@@ -468,7 +457,6 @@ fn parse_surface_combat_figures(
             &file.not_alert_sighting_factor,
         )?,
         alert_contact_distance_hexes: file.alert_contact_distance_hexes,
-        alert_contact_max_age_pulses: file.alert_contact_max_age_pulses,
         alarm_chance: number("alarm_chance", &file.alarm_chance)?,
         gun_hit_chance_night: number("gun_hit_chance_night", &file.gun_hit_chance_night)?,
         gun_hit_chance_day: number("gun_hit_chance_day", &file.gun_hit_chance_day)?,
@@ -480,7 +468,6 @@ fn parse_surface_combat_figures(
         surprised_target_factor: number("surprised_target_factor", &file.surprised_target_factor)?,
         lit_target_factor: number("lit_target_factor", &file.lit_target_factor)?,
         gun_hit_flotation: number("gun_hit_flotation", &file.gun_hit_flotation)?,
-        gun_hit_fire: number("gun_hit_fire", &file.gun_hit_fire)?,
         gun_system_hit_chance: number("gun_system_hit_chance", &file.gun_system_hit_chance)?,
         torpedo_system_hit_chance: number(
             "torpedo_system_hit_chance",
@@ -837,9 +824,9 @@ mod tests {
     #[test]
     fn search_figures_parse_with_the_files_values() {
         let figures = parse_search_figures(&search_text(), here()).expect("parses");
-        assert_eq!(figures.initial_confidence, Fixed::from_ratio(8, 10));
+        assert_eq!(figures.contact_drop_age_pulses, 5);
         assert_eq!(figures.merge_distance_hexes, 2);
-        assert_eq!(figures.merge_max_age_pulses, 2);
+        assert_eq!(figures.fresh_contact_max_age_pulses, 2);
         let cruiser = &figures.kind_confusion[&ShipKind::Cruiser];
         assert_eq!(cruiser[&ShipKind::Cruiser], Fixed::from_ratio(7, 10));
         assert_eq!(cruiser[&ShipKind::Battleship], Fixed::from_ratio(1, 10));
@@ -847,7 +834,7 @@ mod tests {
 
     #[test]
     fn a_float_in_search_figures_is_rejected() {
-        let text = search_text().replace("\"0.8\"", "0.8");
+        let text = search_text().replace("\"0.3\"", "0.3");
         assert!(parse_search_figures(&text, here()).is_err());
     }
 
@@ -1183,7 +1170,6 @@ mod tests {
         assert_eq!(figures.radar_sighting_bonus, Fixed::from_ratio(1, 5));
         assert_eq!(figures.not_alert_sighting_factor, Fixed::from_ratio(1, 2));
         assert_eq!(figures.alert_contact_distance_hexes, 3);
-        assert_eq!(figures.alert_contact_max_age_pulses, 2);
         assert_eq!(figures.alarm_chance, Fixed::from_ratio(1, 2));
         assert_eq!(figures.gun_hit_chance_night, Fixed::from_ratio(3, 100));
         assert_eq!(figures.gun_hit_chance_day, Fixed::from_ratio(5, 100));
@@ -1192,7 +1178,6 @@ mod tests {
         assert_eq!(figures.surprised_target_factor, Fixed::from_ratio(3, 2));
         assert_eq!(figures.lit_target_factor, Fixed::from_int(2));
         assert_eq!(figures.gun_hit_flotation, Fixed::from_ratio(3, 4));
-        assert_eq!(figures.gun_hit_fire, Fixed::from_ratio(1, 4));
         assert_eq!(figures.gun_system_hit_chance, Fixed::from_ratio(3, 10));
         assert_eq!(figures.torpedo_system_hit_chance, Fixed::from_ratio(1, 2));
         assert_eq!(figures.degraded_factor, Fixed::from_ratio(1, 2));
@@ -1267,7 +1252,11 @@ mod tests {
                 .expect_err("rejected")
                 .message
         };
-        assert!(bad("gun_hit_fire = \"0.25\"", "gun_hit_fire = \"0.3\"").contains("not 1"));
+        assert!(bad(
+            "gun_hit_flotation = \"0.75\"",
+            "gun_hit_flotation = \"1.5\""
+        )
+        .contains("flotation share"));
         assert!(bad("propulsion = \"0.2\"", "propulsion = \"0.3\"").contains("gun system hit"));
         assert!(
             bad("degraded_factor = \"0.5\"", "degraded_factor = \"1.5\"")

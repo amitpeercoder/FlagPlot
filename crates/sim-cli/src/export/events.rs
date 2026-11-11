@@ -386,7 +386,6 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             hex,
             ship_count,
             kind,
-            confidence,
             created,
         } => (
             "report_received",
@@ -395,42 +394,27 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .hex("hex", *hex)
                 .int("ship_count", *ship_count)
                 .text("kind", kind.name())
-                .num("confidence", *confidence)
                 .flag("created", *created),
-        ),
-        EventKind::SightingNoticed {
-            task_force,
-            air_group,
-            elapsed_hours,
-        } => (
-            "sighting_noticed",
-            d.id("task_force", *task_force)
-                .id("air_group", *air_group)
-                .num("elapsed_hours", *elapsed_hours),
         ),
         EventKind::ContactAged {
             side,
             contact,
             age_pulses,
-            confidence,
         } => (
             "contact_aged",
             d.text("side", names::side(*side))
                 .id("contact", *contact)
-                .int("age_pulses", *age_pulses)
-                .num("confidence", *confidence),
+                .int("age_pulses", *age_pulses),
         ),
         EventKind::ContactDropped {
             side,
             contact,
             age_pulses,
-            confidence,
         } => (
             "contact_dropped",
             d.text("side", names::side(*side))
                 .id("contact", *contact)
-                .int("age_pulses", *age_pulses)
-                .num("confidence", *confidence),
+                .int("age_pulses", *age_pulses),
         ),
         EventKind::EngagementBegun {
             a,

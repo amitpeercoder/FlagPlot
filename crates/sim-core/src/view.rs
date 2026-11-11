@@ -272,7 +272,6 @@ mod tests {
         ref_data.search = Some(SearchFigures::from_search_toml());
         let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
         figures.gun_hit_flotation = Fixed::ONE;
-        figures.gun_hit_fire = Fixed::ZERO;
         ref_data.surface_combat = Some(figures);
 
         let mut truth = TruthState::default();
