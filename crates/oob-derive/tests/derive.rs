@@ -1966,3 +1966,1610 @@ fn an_ammunition_name_that_is_not_in_ships_is_rejected() {
         ],
     );
 }
+
+// Decision 0029: carrier, anti-aircraft and aircraft figures.
+//
+// # The air figures of the base ship, worked by hand
+//
+// `air_base()` adds to the base data set: heavy anti-aircraft `aa-h` x 8;
+// light `aa-l` x 8 and `aa-l2` x 10; weights 1 and 0.25.
+//
+// anti_aircraft = 8 x 1 + (8 + 10) x 0.25 = 8 + 4.5 = 12.5, rounded down: 12.
+// aircraft_capacity: no row on a cruiser: 0.
+// So the class row is the base row with `,0,12` added.
+//
+// # The aircraft, worked by hand
+//
+// Rules: gun 6 kg per damage, torpedo 0.4 per kg, fraction 0.333333, sweep 20.
+//
+// | Type | Radius | Attack | Protection |
+// | --- | --- | --- | --- |
+// | fighter-a | combat radius 300 | none, 0 | armour 1, tanks 0 |
+// | dive-a | no radius; range 528 x 0.333333 = 175.999824, down: 175 | bomb-a 250 kg / 6 = 41.666666 | 1, 1 |
+// | torp-a-plane | no radius; range 759 x 0.333333 = 252.999747, down: 252 | torp-a 200 kg x 0.4 = 80 | 0, 0 |
+
+const AIR_RULES_EXTRA: &str = "anti_aircraft_heavy_weight = \"1\"\n\
+    anti_aircraft_light_weight = \"0.25\"\n\
+    strike_radius_fraction_of_range = \"0.333333\"\n\
+    search_sweep_width_nm = 20\n";
+
+fn air_rules(exceptions: &str) -> String {
+    format!("{RULES}{AIR_RULES_EXTRA}{exceptions}")
+}
+
+fn exception_text(entity: &str, fact: &str, row: u32) -> String {
+    format!(
+        "\n[[exception]]\nentity = \"{entity}\"\nfact = \"{fact}\"\nrow = {row}\n\
+         reason = \"The architect judged it\"\nagreed = \"2026-11-11\"\n"
+    )
+}
+
+fn append_lines(files: &mut Files, file: &str, text: &str) {
+    files.get_mut(file).expect("a file").push_str(text);
+}
+
+/// A fit row whose standing is not preferred, with the low confidence the
+/// checker wants for it.
+fn weak_fit(line: String) -> String {
+    line.replace(",medium,stated,", ",low,stated,")
+}
+
+fn air_base() -> Files {
+    let mut files = base();
+    append_lines(
+        &mut files,
+        "ship_classes.csv",
+        "1002,us-carrier-class,Carrier class,us,carrier\n",
+    );
+    append_lines(
+        &mut files,
+        "ships.csv",
+        "1003,cvx,Cvx,us,us-carrier-class,\n",
+    );
+    files.insert(
+        "aircraft_types.csv".to_string(),
+        "id,key,name,nation,designation,role\n\
+         1000,fighter-a,Fighter A,us,F-A,fighter\n\
+         1001,dive-a,Dive A,us,D-A,dive_bomber\n\
+         1002,torp-a-plane,Torpedo A,us,T-A,torpedo_bomber\n\
+         1003,boat-a,Boat A,us,B-A,patrol_flying_boat\n\
+         1004,odd-a,Odd A,us,O-A,floatplane_fighter\n\
+         1005,heavy-a,Heavy A,us,H-A,heavy_bomber\n\
+         1006,land-a,Land A,jp,L-A,land_attack_bomber\n\
+         1007,amph-a,Amph A,us,M-A,patrol_amphibian\n"
+            .to_string(),
+    );
+    append_lines(
+        &mut files,
+        "attributes.csv",
+        "aircraft_capacity,ship_class,integer,one\n\
+         aircraft_capacity,ship,integer,one\n\
+         combat_radius_nm,aircraft_type,integer,many\n\
+         range_normal_nm,aircraft_type,integer,one\n\
+         pilot_armour,aircraft_type,text,one\n\
+         self_sealing_tanks,aircraft_type,text,one\n\
+         weight_kg,weapon,decimal,one\n",
+    );
+    files.insert(
+        "weapons.csv".to_string(),
+        "id,key,kind\n1000,gun,aa_gun\n1001,tube,torpedo\n1002,big-gun,gun\n\
+         1003,bomb-a,bomb\n1004,torp-a,torpedo\n1005,aa-h,aa_gun\n1006,aa-l,aa_gun\n\
+         1007,aa-l2,aa_gun\n1008,mg-a,machine_gun\n1009,odd-w,gun\n"
+            .to_string(),
+    );
+    append_lines(
+        &mut files,
+        "weapon_facts.csv",
+        &format!(
+            "{}\n{}\n",
+            fact(7, "bomb-a", "weight_kg", "250"),
+            fact(8, "torp-a", "warhead_kg", "200")
+        ),
+    );
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n{}\n{}\n",
+            class_fit(4, "heavy_aa", "weapon", "aa-h", "8"),
+            class_fit(5, "light_aa", "weapon", "aa-l", "8"),
+            class_fit(6, "light_aa", "weapon", "aa-l2", "10"),
+        ),
+    );
+    // Aircraft facts.
+    let mut n = 0;
+    let mut add = |files: &mut Files, entity: &str, attribute: &str, value: &str| {
+        n += 1;
+        append_lines(
+            files,
+            "aircraft_type_facts.csv",
+            &format!("{}\n", fact(n, entity, attribute, value)),
+        );
+    };
+    add(&mut files, "fighter-a", "combat_radius_nm", "300");
+    add(&mut files, "fighter-a", "pilot_armour", "yes");
+    add(&mut files, "fighter-a", "self_sealing_tanks", "no");
+    add(&mut files, "dive-a", "range_normal_nm", "528");
+    add(&mut files, "dive-a", "pilot_armour", "yes");
+    add(&mut files, "dive-a", "self_sealing_tanks", "yes");
+    add(&mut files, "torp-a-plane", "range_normal_nm", "759");
+    add(&mut files, "torp-a-plane", "pilot_armour", "no");
+    add(&mut files, "torp-a-plane", "self_sealing_tanks", "no");
+    for plane in ["boat-a", "heavy-a", "land-a", "amph-a"] {
+        add(&mut files, plane, "range_normal_nm", "600");
+        add(&mut files, plane, "pilot_armour", "no");
+        add(&mut files, plane, "self_sealing_tanks", "no");
+    }
+    add(&mut files, "odd-a", "range_normal_nm", "600");
+    add(&mut files, "odd-a", "pilot_armour", "no");
+    add(&mut files, "odd-a", "self_sealing_tanks", "no");
+    for (id, plane, slot, weapon, count) in [
+        (7, "dive-a", "bomb_load", "bomb-a", "1"),
+        (8, "torp-a-plane", "torpedo_load", "torp-a", "1"),
+        (9, "heavy-a", "bomb_load", "bomb-a", "4"),
+        (10, "land-a", "torpedo_load", "torp-a", "1"),
+        (11, "dive-a", "bomb_load", "aa-h", "2"),
+    ] {
+        append_lines(
+            &mut files,
+            "fits.csv",
+            &format!(
+                "{}\n",
+                fit_row(
+                    id,
+                    "aircraft_type",
+                    plane,
+                    slot,
+                    "weapon",
+                    weapon,
+                    count,
+                    ("", ""),
+                    "a",
+                    "preferred"
+                )
+            ),
+        );
+    }
+    files
+}
+
+/// A list text with extra top-level keys and extra tables.
+fn air_list(ships: &[&str], keys: &str, tables: &str) -> String {
+    format!("{}{keys}\n{tables}", list(ships, &[]))
+}
+
+fn derive_text(list_text: &str, rules: &str, files: &Files) -> Result<Outputs, Vec<String>> {
+    derive("list.toml", list_text, rules, files)
+        .map_err(|problems| problems.iter().map(ToString::to_string).collect())
+}
+
+#[track_caller]
+fn ok_text(list_text: &str, rules: &str, files: &Files) -> Outputs {
+    derive_text(list_text, rules, files).unwrap_or_else(|p| panic!("{p:#?}"))
+}
+
+fn air_ship(ships: &[&str], files: &Files) -> Result<Outputs, Vec<String>> {
+    derive_text(
+        &air_list(ships, "air_figures = true\n", ""),
+        &air_rules(""),
+        files,
+    )
+}
+
+#[track_caller]
+fn air_ok(ships: &[&str], files: &Files) -> Outputs {
+    air_ship(ships, files).unwrap_or_else(|p| panic!("{p:#?}"))
+}
+
+#[test]
+fn the_air_base_data_set_passes_the_checker() {
+    let report = oob_check::check_files(&air_base());
+    assert!(report.problems.is_empty(), "{:#?}", report.problems);
+}
+
+#[test]
+fn a_list_without_air_figures_writes_no_new_columns() {
+    let files = air_base();
+    let outputs = ok_text(&list(&["shp"], &[]), &air_rules(""), &files);
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+    let header = outputs
+        .class_csv
+        .lines()
+        .find(|l| l.starts_with("id,"))
+        .unwrap();
+    assert!(header.ends_with(",toughness,radar"), "{header}");
+    assert!(!comments(&outputs.class_csv).contains("anti_aircraft"));
+    assert!(!comments(&outputs.class_csv).contains("not modelled"));
+    assert!(outputs.aircraft_csv.is_none());
+    assert!(outputs.aircraft_sources_csv.is_none());
+}
+
+#[test]
+fn air_figures_add_the_two_columns_last() {
+    let outputs = air_ok(&["shp"], &air_base());
+    let header = outputs
+        .class_csv
+        .lines()
+        .find(|l| l.starts_with("id,"))
+        .unwrap();
+    assert!(
+        header.ends_with(",radar,aircraft_capacity,anti_aircraft"),
+        "{header}"
+    );
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains("anti_aircraft_heavy_weight = 1"),
+        "{header}"
+    );
+    assert!(
+        header.contains("anti_aircraft_light_weight = 0.25"),
+        "{header}"
+    );
+}
+
+#[test]
+fn anti_aircraft_adds_every_weapon_of_each_slot_and_cites_them_all() {
+    let outputs = air_ok(&["shp"], &air_base());
+    let row = source_of(&outputs, "1000", "anti_aircraft");
+    assert_eq!(row[2], "12");
+    assert_eq!(row[4], "fits.csv:4 fits.csv:5 fits.csv:6");
+    assert!(row[5].contains("8 heavy, 18 light"), "{row:?}");
+    assert!(row[5].contains("exact 12.5, rounded down"), "{row:?}");
+}
+
+#[test]
+fn a_slot_with_no_rows_is_zero() {
+    let mut files = air_base();
+    for id in [4, 5, 6] {
+        remove_row(&mut files, "fits.csv", id);
+    }
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,0")]);
+    let row = source_of(&outputs, "1000", "anti_aircraft");
+    assert_eq!(row[4], "");
+    assert!(row[5].contains("0 heavy, 0 light"), "{row:?}");
+}
+
+#[test]
+fn a_ships_own_row_in_a_slot_replaces_the_classs_rows_of_that_slot_only() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            ship_fit(20, "shp", "heavy_aa", "weapon", "aa-h", "4")
+        ),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    // 4 x 1 + 18 x 0.25 = 8.5: 8.
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,8")]);
+    let row = source_of(&outputs, "1000", "anti_aircraft");
+    assert_eq!(row[4], "fits.csv:5 fits.csv:6 fits.csv:20");
+    assert!(row[5].contains("4 heavy, 18 light"), "{row:?}");
+}
+
+#[test]
+fn a_ships_own_row_for_another_item_replaces_the_whole_slot() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            ship_fit(20, "shp", "light_aa", "weapon", "aa-l2", "4")
+        ),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    // 8 + 4 x 0.25 = 9.
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,9")]);
+}
+
+#[test]
+fn a_ship_row_that_is_not_readable_does_not_replace_the_slot_and_is_noted() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            weak_fit(fit_row(
+                20,
+                "ship",
+                "shp",
+                "heavy_aa",
+                "weapon",
+                "aa-h",
+                "2",
+                ("", ""),
+                "a",
+                "unconfirmed"
+            ))
+        ),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+    let row = source_of(&outputs, "1000", "anti_aircraft");
+    assert!(row[5].contains("fits.csv:20 (unconfirmed)"), "{row:?}");
+}
+
+#[test]
+fn rows_for_one_item_that_agree_are_all_cited_and_counted_once() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!("{}\n", class_fit(21, "heavy_aa", "weapon", "aa-h", "8")),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+    assert_eq!(
+        source_of(&outputs, "1000", "anti_aircraft")[4],
+        "fits.csv:4 fits.csv:5 fits.csv:6 fits.csv:21"
+    );
+}
+
+#[test]
+fn rows_for_one_item_that_disagree_are_a_conflict_naming_them() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!("{}\n", class_fit(21, "heavy_aa", "weapon", "aa-h", "6")),
+    );
+    let problems = air_ship(&["shp"], &files).expect_err("a conflict");
+    assert_one(
+        &problems,
+        &[
+            "shp: conflict: anti_aircraft:",
+            "heavy_aa fit of class us-test-class, item aa-h",
+            "fits.csv:4",
+            "fits.csv:21",
+        ],
+    );
+}
+
+#[test]
+fn an_exception_naming_one_of_two_disagreeing_rows_settles_it() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!("{}\n", class_fit(21, "heavy_aa", "weapon", "aa-h", "6")),
+    );
+    let rules = air_rules(&exception_text("us-test-class", "heavy_aa", 21));
+    let outputs = derive_text(
+        &air_list(&["shp"], "air_figures = true\n", ""),
+        &rules,
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    // 6 + 4.5 = 10.5: 10.
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,10")]);
+    assert_eq!(
+        source_of(&outputs, "1000", "anti_aircraft")[4],
+        "fits.csv:5 fits.csv:6 fits.csv:21"
+    );
+    assert!(comments(&outputs.class_csv)
+        .contains("us-test-class heavy_aa: fits.csv row 21 (preferred)"));
+}
+
+#[test]
+fn an_item_that_holds_but_is_not_preferred_is_a_problem_and_one_that_does_not_hold_is_ignored() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n{}\n",
+            fit_row(
+                22,
+                "ship_class",
+                "us-test-class",
+                "light_aa",
+                "weapon",
+                "aa-l",
+                "9",
+                ("1930", "1931"),
+                "a",
+                "preferred"
+            ),
+            weak_fit(fit_row(
+                23,
+                "ship_class",
+                "us-test-class",
+                "heavy_aa",
+                "weapon",
+                "gun",
+                "3",
+                ("", ""),
+                "a",
+                "unconfirmed"
+            )),
+        ),
+    );
+    let problems = air_ship(&["shp"], &files).expect_err("a problem");
+    // The 1930 row is a different row of an item that holds by row 5; only
+    // item `gun` (unconfirmed, holds) is a problem. Item aa-l has rows 5
+    // (holds) and 22 (does not): read as 8.
+    assert_one(
+        &problems,
+        &[
+            "shp: not-preferred: anti_aircraft:",
+            "item gun",
+            "fits.csv:23 (unconfirmed",
+        ],
+    );
+}
+
+#[test]
+fn an_item_none_of_whose_rows_holds_on_the_date_is_not_fitted() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            weak_fit(fit_row(
+                22,
+                "ship_class",
+                "us-test-class",
+                "heavy_aa",
+                "weapon",
+                "gun",
+                "3",
+                ("1930", "1931"),
+                "a",
+                "unconfirmed"
+            )),
+        ),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+}
+
+#[test]
+fn a_row_with_no_count_is_not_a_count_and_is_listed() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!("{}\n", class_fit(24, "light_aa", "weapon", "gun", "")),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+    let row = source_of(&outputs, "1000", "anti_aircraft");
+    assert!(row[5].contains("fits.csv:24 count not given"), "{row:?}");
+    assert!(!row[4].contains("fits.csv:24"), "{row:?}");
+}
+
+#[test]
+fn a_ship_row_with_no_count_does_not_replace_the_classs_rows() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            ship_fit(25, "shp", "heavy_aa", "weapon", "aa-h", "")
+        ),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+}
+
+#[test]
+fn a_cruiser_with_no_capacity_row_carries_none_and_a_carrier_with_none_is_missing() {
+    let outputs = air_ok(&["shp"], &air_base());
+    let row = source_of(&outputs, "1000", "aircraft_capacity");
+    assert_eq!(row[2], "0");
+    assert!(row[5].contains("none carried"), "{row:?}");
+
+    // A carrier needs the fact; give it the other figures too.
+    let mut files = air_base();
+    for (id, attribute, value) in [
+        (20, "max_speed_kn", "32"),
+        (21, "endurance_speed_kn", "15"),
+        (22, "endurance_nm", "9000"),
+        (23, "fuel_capacity_lt", "5000"),
+        (24, "displacement_standard_lt", "20000"),
+    ] {
+        append_lines(
+            &mut files,
+            "ship_class_facts.csv",
+            &format!("{}\n", fact(id, "us-carrier-class", attribute, value)),
+        );
+    }
+    let problems = air_ship(&["cvx"], &files).expect_err("missing");
+    let capacity: Vec<&String> = problems
+        .iter()
+        .filter(|p| p.contains("aircraft_capacity"))
+        .collect();
+    assert_eq!(capacity.len(), 1, "{problems:#?}");
+    assert!(
+        capacity[0].contains("cvx: missing: aircraft_capacity:"),
+        "{problems:#?}"
+    );
+}
+
+#[test]
+fn a_carriers_capacity_is_read_from_its_class_fact() {
+    let mut files = air_base();
+    for (id, attribute, value) in [
+        (20, "max_speed_kn", "32"),
+        (21, "endurance_speed_kn", "15"),
+        (22, "endurance_nm", "9000"),
+        (23, "fuel_capacity_lt", "5000"),
+        (24, "displacement_standard_lt", "20000"),
+        (25, "aircraft_capacity", "72"),
+        (26, "main_rounds_per_gun", "100"),
+    ] {
+        append_lines(
+            &mut files,
+            "ship_class_facts.csv",
+            &format!("{}\n", fact(id, "us-carrier-class", attribute, value)),
+        );
+    }
+    for (id, slot, item, count) in [
+        (30, "main_battery", "gun", "8"),
+        (31, "torpedo_tubes", "tube", "0"),
+        (32, "surface_search_radar", "radar-a", "1"),
+    ] {
+        append_lines(
+            &mut files,
+            "fits.csv",
+            &format!(
+                "{}\n",
+                fit_row(
+                    id,
+                    "ship_class",
+                    "us-carrier-class",
+                    slot,
+                    if slot == "surface_search_radar" {
+                        "sensor"
+                    } else {
+                        "weapon"
+                    },
+                    item,
+                    count,
+                    ("", ""),
+                    "a",
+                    "preferred"
+                )
+            ),
+        );
+    }
+    let outputs = air_ok(&["cvx"], &files);
+    let row = source_of(&outputs, "1000", "aircraft_capacity");
+    assert_eq!(row[2], "72");
+    assert_eq!(row[4], "ship_class_facts.csv:25");
+    assert!(
+        class_lines(&outputs)[0].ends_with(",72,0"),
+        "{:?}",
+        class_lines(&outputs)
+    );
+}
+
+#[test]
+fn a_capacity_row_that_cannot_be_read_is_a_problem_even_without_a_carrier() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "ship_class_facts.csv",
+        &format!(
+            "{}\n",
+            fact_row(
+                30,
+                "us-test-class",
+                "aircraft_capacity",
+                "3",
+                "",
+                "",
+                "low",
+                "unconfirmed"
+            )
+        ),
+    );
+    let problems = air_ship(&["shp"], &files).expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "shp: not-preferred: aircraft_capacity:",
+            "ship_class_facts.csv:30",
+        ],
+    );
+}
+
+#[test]
+fn two_different_radar_sets_do_not_conflict() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            class_fit(40, "surface_search_radar", "sensor", "radar-b", "1")
+        ),
+    );
+    let outputs = derive_text(&list(&["shp"], &[]), &air_rules(""), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+    assert_eq!(
+        source_of(&outputs, "1000", "radar")[4],
+        "fits.csv:3 fits.csv:40"
+    );
+}
+
+#[test]
+fn a_fitted_set_and_a_sourced_none_at_once_are_a_conflict() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            class_fit(40, "air_search_radar", "sensor", "jp-radar-any", "0")
+        ),
+    );
+    let problems = derive_text(&list(&["shp"], &[]), &air_rules(""), &files).expect_err("conflict");
+    assert_one(
+        &problems,
+        &["shp: conflict: radar:", "fits.csv:3", "fits.csv:40"],
+    );
+}
+
+#[test]
+fn a_row_naming_a_real_set_with_no_count_means_radar() {
+    let mut files = air_base();
+    remove_row(&mut files, "fits.csv", 3);
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            class_fit(40, "air_search_radar", "sensor", "radar-a", "")
+        ),
+    );
+    let outputs = derive_text(&list(&["shp"], &[]), &air_rules(""), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+    assert_eq!(source_of(&outputs, "1000", "radar")[4], "fits.csv:40");
+}
+
+// Surface weapons not modelled.
+
+fn not_modelled_ok(ships: &[&str], keys: &str, files: &Files) -> Outputs {
+    ok_text(&air_list(ships, keys, ""), &air_rules(""), files)
+}
+
+const NOT_MODELLED_ROW_TAIL: &str = "0,0,0,0,0,0,400,1";
+
+#[test]
+fn all_ships_not_modelled_get_zero_surface_weapons_without_reading_any_fact() {
+    let mut files = base();
+    // No weapons facts or fits at all for the main battery or tubes.
+    remove_row(&mut files, "fits.csv", 1);
+    remove_row(&mut files, "fits.csv", 2);
+    let outputs = not_modelled_ok(
+        &["shp", "shp2"],
+        "surface_weapons_not_modelled = \"all\"\n",
+        &files,
+    );
+    assert_eq!(
+        class_lines(&outputs),
+        [format!(
+            "1000,Test class,cruiser,15,32.5,1600,8000,0,{NOT_MODELLED_ROW_TAIL}"
+        )]
+    );
+    for figure in [
+        "main_guns",
+        "gun_rounds_per_min",
+        "gun_rounds_per_gun",
+        "gun_damage",
+        "torpedo_tubes",
+        "torpedo_damage",
+    ] {
+        let row = source_of(&outputs, "1000", figure);
+        assert_eq!(row[2], "0", "{figure}");
+        assert_eq!(row[4], "", "{figure}");
+        assert_eq!(
+            row[5],
+            "assumption of the scenario, not a fact: surface weapons not modelled (decision 0029)",
+            "{figure}"
+        );
+    }
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains("Surface weapons not modelled (decision 0029, 4)"),
+        "{header}"
+    );
+    assert!(
+        header.contains("  shp\n# ") || header.contains("  shp"),
+        "{header}"
+    );
+    assert!(header.contains("  shp2"), "{header}");
+    assert_eq!(source_of(&outputs, "1000", "toughness")[5], "");
+}
+
+#[test]
+fn ships_not_modelled_by_name_get_a_separate_class_row() {
+    let outputs = not_modelled_ok(
+        &["shp", "shp2"],
+        "surface_weapons_not_modelled = [\"shp2\"]\n",
+        &base(),
+    );
+    let lines: Vec<String> = class_lines(&outputs)
+        .iter()
+        .map(|l| l.split_once(',').expect("an id").1.to_string())
+        .collect();
+    assert_eq!(lines.len(), 2, "{lines:#?}");
+    assert!(
+        lines.contains(&BASE_ROW.split_once(',').unwrap().1.to_string()),
+        "{lines:#?}"
+    );
+    assert!(
+        lines.contains(&format!(
+            "\"Test class, surface weapons not modelled\",cruiser,15,32.5,1600,8000,0,{NOT_MODELLED_ROW_TAIL}"
+        )),
+        "{lines:#?}"
+    );
+    let ships = records(&outputs.ships_csv);
+    assert_eq!(ships[0][0], "shp");
+    assert_eq!(ships[1][0], "shp2");
+    assert_ne!(ships[0][1], ships[1][1]);
+    let header = comments(&outputs.class_csv);
+    assert!(header.contains("  shp2"), "{header}");
+    assert!(
+        !header.contains("  shp\n") && !header.ends_with("  shp"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_not_modelled_name_that_is_not_in_ships_is_rejected() {
+    let problems = derive_text(
+        &air_list(
+            &["shp"],
+            "surface_weapons_not_modelled = [\"nobody\"]\n",
+            "",
+        ),
+        &air_rules(""),
+        &base(),
+    )
+    .expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "list: list: surface_weapons_not_modelled:",
+            "`nobody` is not in ships",
+        ],
+    );
+    let problems = derive_text(
+        &air_list(&["shp"], "surface_weapons_not_modelled = \"some\"\n", ""),
+        &air_rules(""),
+        &base(),
+    )
+    .expect_err("a problem");
+    assert_one(&problems, &["surface_weapons_not_modelled", "\"all\""]);
+}
+
+// Exceptions and years.
+
+fn speed_row(from: &str, to: &str, standing: &str, confidence: &str) -> String {
+    fact_row(
+        1,
+        "us-test-class",
+        "max_speed_kn",
+        "32.5",
+        from,
+        to,
+        confidence,
+        standing,
+    )
+}
+
+#[test]
+fn a_year_only_row_is_ambiguous_until_an_exception_names_it() {
+    let files = with_class_speed_validity("1942", "1943");
+    let problems = fails(&["shp"], &files);
+    assert_one(
+        &problems,
+        &[
+            "shp: ambiguous-date: max_speed_kn:",
+            "ship_class_facts.csv:1",
+        ],
+    );
+
+    let rules = format!(
+        "{RULES}{}",
+        exception_text("us-test-class", "max_speed_kn", 1)
+    );
+    let outputs =
+        derive_with_rules(&["shp"], &[], &rules, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+    let row = source_of(&outputs, "1000", "max_speed_kn");
+    assert_eq!(row[4], "ship_class_facts.csv:1");
+    assert_eq!(row[5], "rests on an exception");
+    assert!(
+        comments(&outputs.class_csv)
+            .contains("us-test-class max_speed_kn: ship_class_facts.csv row 1 (preferred); reason: The architect judged it; agreed 2026-11-11"),
+        "{}",
+        comments(&outputs.class_csv)
+    );
+}
+
+#[test]
+fn an_exception_does_not_make_a_year_only_row_hold_when_it_clearly_does_not() {
+    let rules = format!(
+        "{RULES}{}",
+        exception_text("us-test-class", "max_speed_kn", 1)
+    );
+    for (from, to) in [("1943", "1944"), ("", "1941"), ("1943", "")] {
+        let files = with_class_speed_validity(from, to);
+        let problems = derive_with_rules(&["shp"], &[], &rules, &files).expect_err("not on date");
+        assert_one(
+            &problems,
+            &["shp: not-on-date: max_speed_kn:", "ship_class_facts.csv:1"],
+        );
+    }
+}
+
+#[test]
+fn an_exception_on_a_year_only_row_that_is_not_preferred_is_read_too() {
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "ship_class_facts.csv",
+        1,
+        speed_row("1942", "1943", "unconfirmed", "low"),
+    );
+    let rules = format!(
+        "{RULES}{}",
+        exception_text("us-test-class", "max_speed_kn", 1)
+    );
+    let outputs =
+        derive_with_rules(&["shp"], &[], &rules, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+}
+
+#[test]
+fn a_ship_row_with_a_year_only_date_named_by_an_exception_replaces_the_class_row() {
+    let mut files = base();
+    append_lines(
+        &mut files,
+        "ship_facts.csv",
+        &format!(
+            "{}\n",
+            fact_row(
+                1,
+                "shp",
+                "max_speed_kn",
+                "30",
+                "1942",
+                "1943",
+                "medium",
+                "preferred"
+            )
+        ),
+    );
+    let problems = fails(&["shp"], &files);
+    assert_one(
+        &problems,
+        &["shp: ambiguous-date: max_speed_kn:", "ship_facts.csv:1"],
+    );
+    let rules = format!("{RULES}{}", exception_text("shp", "max_speed_kn", 1));
+    let outputs =
+        derive_with_rules(&["shp"], &[], &rules, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert!(
+        class_lines(&outputs)[0].contains(",30,"),
+        "{:?}",
+        class_lines(&outputs)
+    );
+}
+
+// Aircraft types.
+
+const AIRCRAFT_HEADER: &str =
+    "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks";
+
+fn plane_list(planes: &[(&str, Option<&str>)]) -> String {
+    let tables: String = planes
+        .iter()
+        .map(|(kind, load)| match load {
+            Some(load) => format!("[[aircraft]]\ntype = \"{kind}\"\nload = \"{load}\"\n"),
+            None => format!("[[aircraft]]\ntype = \"{kind}\"\n"),
+        })
+        .collect();
+    air_list(
+        &["shp"],
+        "aircraft_output = \"../reference/test_aircraft.csv\"\nfirst_aircraft_type_id = 2000\n",
+        &tables,
+    )
+}
+
+fn planes(planes: &[(&str, Option<&str>)], files: &Files) -> Result<Outputs, Vec<String>> {
+    derive_text(&plane_list(planes), &air_rules(""), files)
+}
+
+#[track_caller]
+fn planes_ok(list: &[(&str, Option<&str>)], files: &Files) -> Outputs {
+    planes(list, files).unwrap_or_else(|p| panic!("{p:#?}"))
+}
+
+fn aircraft_lines(outputs: &Outputs) -> Vec<String> {
+    outputs
+        .aircraft_csv
+        .as_ref()
+        .expect("an aircraft file")
+        .lines()
+        .filter(|l| !l.starts_with('#'))
+        .map(str::to_string)
+        .collect()
+}
+
+fn plane_source(outputs: &Outputs, type_id: &str, figure: &str) -> Vec<String> {
+    records(
+        outputs
+            .aircraft_sources_csv
+            .as_ref()
+            .expect("a sources file"),
+    )
+    .into_iter()
+    .find(|r| r[0] == type_id && r[1] == figure)
+    .unwrap_or_else(|| panic!("no sources row for {type_id} {figure}"))
+}
+
+#[test]
+fn the_aircraft_file_has_its_header_and_a_row_per_type_with_hand_worked_figures() {
+    let outputs = planes_ok(
+        &[
+            ("fighter-a", None),
+            ("dive-a", Some("bomb-a")),
+            ("torp-a-plane", Some("torp-a")),
+        ],
+        &air_base(),
+    );
+    assert_eq!(
+        aircraft_lines(&outputs),
+        [
+            AIRCRAFT_HEADER,
+            "2000,Fighter A,fighter,300,20,300,none,0,1,0",
+            "2001,Dive A,bomber,175,20,175,bomb,41.666666,1,1",
+            "2002,Torpedo A,bomber,252,20,252,torpedo,80,0,0",
+        ]
+    );
+    let csv = outputs.aircraft_csv.as_ref().unwrap();
+    assert!(csv.starts_with("# GENERATED by oob-derive from the facts in data/oob. Do not edit.\n"));
+    let header = comments(csv);
+    assert!(
+        header.contains("strike_radius_fraction_of_range = 0.333333"),
+        "{header}"
+    );
+    assert!(header.contains("search_sweep_width_nm = 20"), "{header}");
+    assert!(
+        header.contains("Exceptions used (decision 0020, 3 and 0029, 5): none"),
+        "{header}"
+    );
+    let sources = outputs.aircraft_sources_csv.as_ref().unwrap();
+    assert!(sources.starts_with("# GENERATED by oob-derive. Do not edit.\n"));
+    assert!(sources.contains("type_id,figure,value,rule,facts,note"));
+
+    // The sources.
+    let radius = plane_source(&outputs, "2000", "strike_range_nm");
+    assert_eq!(radius[2], "300");
+    assert!(
+        radius[3].starts_with("combat_radius_nm of the type"),
+        "{radius:?}"
+    );
+    assert_eq!(radius[4], "aircraft_type_facts.csv:1");
+    let radius = plane_source(&outputs, "2001", "search_range_nm");
+    assert_eq!(radius[2], "175");
+    assert!(radius[3].contains("range_normal_nm"), "{radius:?}");
+    assert_eq!(radius[4], "aircraft_type_facts.csv:4");
+    assert!(
+        radius[5].contains("exact 175.999824, rounded down"),
+        "{radius:?}"
+    );
+    assert!(
+        radius[5].contains("combat_radius_nm not readable"),
+        "{radius:?}"
+    );
+    let radius = plane_source(&outputs, "2002", "strike_range_nm");
+    assert!(
+        radius[5].contains("exact 252.999747, rounded down"),
+        "{radius:?}"
+    );
+    let damage = plane_source(&outputs, "2001", "attack_damage");
+    assert_eq!(damage[2], "41.666666");
+    assert_eq!(damage[4], "fits.csv:7 weapon_facts.csv:7");
+    let damage = plane_source(&outputs, "2002", "attack_damage");
+    assert_eq!(damage[4], "fits.csv:8 weapon_facts.csv:8");
+    let weapon = plane_source(&outputs, "2001", "attack_weapon");
+    assert_eq!(
+        weapon[4], "fits.csv:7",
+        "rows for other weapons are not cited"
+    );
+    assert_eq!(plane_source(&outputs, "2000", "attack_weapon")[2], "none");
+    assert_eq!(plane_source(&outputs, "2000", "sweep_width_nm")[4], "");
+    assert_eq!(
+        plane_source(&outputs, "2001", "pilot_armour")[4],
+        "aircraft_type_facts.csv:5"
+    );
+    assert_eq!(
+        plane_source(&outputs, "2000", "role")[4],
+        "aircraft_types.csv:1000"
+    );
+}
+
+#[test]
+fn every_facts_role_maps_to_a_simulation_role() {
+    let outputs = planes_ok(
+        &[
+            ("boat-a", None),
+            ("amph-a", None),
+            ("heavy-a", Some("bomb-a")),
+            ("land-a", Some("torp-a")),
+        ],
+        &air_base(),
+    );
+    let lines = aircraft_lines(&outputs);
+    assert_eq!(lines[1], "2000,Boat A,patrol,199,20,199,none,0,0,0");
+    assert_eq!(lines[2], "2001,Amph A,patrol,199,20,199,none,0,0,0");
+    assert_eq!(
+        lines[3],
+        "2002,Heavy A,bomber,199,20,199,bomb,41.666666,0,0"
+    );
+    assert_eq!(lines[4], "2003,Land A,bomber,199,20,199,torpedo,80,0,0");
+}
+
+#[test]
+fn a_role_with_no_simulation_role_is_a_problem_naming_it() {
+    let problems = planes(&[("odd-a", None)], &air_base()).expect_err("a problem");
+    assert_one(
+        &problems,
+        &["odd-a: unmapped-type: role:", "floatplane_fighter"],
+    );
+}
+
+#[test]
+fn a_patrol_aircraft_may_carry_a_load() {
+    let outputs = planes_ok(&[("boat-a", Some("bomb-a"))], &{
+        let mut files = air_base();
+        append_lines(
+            &mut files,
+            "fits.csv",
+            &format!(
+                "{}\n",
+                fit_row(
+                    12,
+                    "aircraft_type",
+                    "boat-a",
+                    "bomb_load",
+                    "weapon",
+                    "bomb-a",
+                    "2",
+                    ("", ""),
+                    "a",
+                    "preferred"
+                )
+            ),
+        );
+        files
+    });
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Boat A,patrol,199,20,199,bomb,41.666666,0,0"
+    );
+}
+
+#[test]
+fn a_fighter_with_a_load_and_a_bomber_without_one_are_problems() {
+    let problems = planes(&[("fighter-a", Some("bomb-a"))], &air_base()).expect_err("a problem");
+    assert_one(
+        &problems,
+        &["fighter-a: bad-value: attack_weapon:", "fighter"],
+    );
+    let problems = planes(&[("dive-a", None)], &air_base()).expect_err("a problem");
+    assert_one(
+        &problems,
+        &["dive-a: bad-value: attack_weapon:", "bomber", "no load"],
+    );
+}
+
+#[test]
+fn a_load_the_facts_do_not_hold_for_the_type_is_a_problem() {
+    // bomb-a is in the facts, but not as a load of the torpedo bomber.
+    let problems = planes(&[("torp-a-plane", Some("bomb-a"))], &air_base()).expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "torp-a-plane: missing: attack_weapon:",
+            "no bomb_load or torpedo_load fit row names `bomb-a`",
+        ],
+    );
+    // A weapon that is not a weapon at all.
+    let problems = planes(&[("dive-a", Some("nothing"))], &air_base()).expect_err("a problem");
+    assert_one(&problems, &["dive-a: unknown-type: load:", "`nothing`"]);
+    let problems = planes(&[("no-such-plane", None)], &air_base()).expect_err("a problem");
+    assert_one(&problems, &["no-such-plane: unknown-type: aircraft:"]);
+}
+
+#[test]
+fn a_load_whose_weapon_has_no_weight_is_missing_its_damage() {
+    // dive-a has a bomb_load row for aa-h, which has no weight_kg.
+    let problems = planes(&[("dive-a", Some("aa-h"))], &air_base()).expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: missing: attack_damage:",
+            "weight_kg of weapon aa-h",
+        ],
+    );
+}
+
+#[test]
+fn rows_of_a_load_that_differ_only_in_count_agree() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n",
+            fit_row(
+                12,
+                "aircraft_type",
+                "dive-a",
+                "bomb_load",
+                "weapon",
+                "bomb-a",
+                "2",
+                ("", ""),
+                "b",
+                "preferred"
+            )
+        ),
+    );
+    let outputs = planes_ok(&[("dive-a", Some("bomb-a"))], &files);
+    assert_eq!(
+        plane_source(&outputs, "2000", "attack_weapon")[4],
+        "fits.csv:7 fits.csv:12"
+    );
+}
+
+#[test]
+fn a_sourced_radius_is_used_where_exactly_one_value_can_be_read() {
+    let mut files = air_base();
+    // Two preferred rows that agree are fine, and both are cited.
+    append_lines(
+        &mut files,
+        "aircraft_type_facts.csv",
+        &format!("{}\n", fact(30, "dive-a", "combat_radius_nm", "210")),
+    );
+    append_lines(
+        &mut files,
+        "aircraft_type_facts.csv",
+        &format!("{}\n", fact(31, "dive-a", "combat_radius_nm", "210")),
+    );
+    let outputs = planes_ok(&[("dive-a", Some("bomb-a"))], &files);
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,210,20,210,bomb,41.666666,1,1"
+    );
+    assert_eq!(
+        plane_source(&outputs, "2000", "strike_range_nm")[4],
+        "aircraft_type_facts.csv:30 aircraft_type_facts.csv:31"
+    );
+}
+
+#[test]
+fn preferred_radii_that_disagree_are_a_conflict_until_an_exception_names_one() {
+    let mut files = air_base();
+    for (id, value) in [(30, "210"), (31, "250")] {
+        append_lines(
+            &mut files,
+            "aircraft_type_facts.csv",
+            &format!("{}\n", fact(id, "dive-a", "combat_radius_nm", value)),
+        );
+    }
+    let problems = planes(&[("dive-a", Some("bomb-a"))], &files).expect_err("a conflict");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: conflict: strike_range_nm:",
+            "aircraft_type_facts.csv:30",
+            "aircraft_type_facts.csv:31",
+        ],
+    );
+    let rules = air_rules(&exception_text("dive-a", "combat_radius_nm", 31));
+    let outputs = derive_text(&plane_list(&[("dive-a", Some("bomb-a"))]), &rules, &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,250,20,250,bomb,41.666666,1,1"
+    );
+    let radius = plane_source(&outputs, "2000", "search_range_nm");
+    assert_eq!(radius[4], "aircraft_type_facts.csv:31");
+    assert_eq!(radius[5], "rests on an exception");
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains("dive-a combat_radius_nm: aircraft_type_facts.csv row 31 (preferred)"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_radius_row_that_is_not_readable_falls_back_to_the_range_and_says_so() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "aircraft_type_facts.csv",
+        &format!(
+            "{}\n",
+            fact_row(
+                30,
+                "dive-a",
+                "combat_radius_nm",
+                "999",
+                "",
+                "",
+                "low",
+                "unconfirmed"
+            )
+        ),
+    );
+    let outputs = planes_ok(&[("dive-a", Some("bomb-a"))], &files);
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    let note = &plane_source(&outputs, "2000", "strike_range_nm")[5];
+    assert!(note.contains("combat_radius_nm not readable"), "{note}");
+    assert!(
+        note.contains("aircraft_type_facts.csv:30 (unconfirmed"),
+        "{note}"
+    );
+}
+
+#[test]
+fn the_range_fraction_rounds_down_and_759_gives_252() {
+    // 528 x 0.333333 = 175.999824; 759 x 0.333333 = 252.999747.
+    let outputs = planes_ok(
+        &[("dive-a", Some("bomb-a")), ("torp-a-plane", Some("torp-a"))],
+        &air_base(),
+    );
+    let lines = aircraft_lines(&outputs);
+    assert!(
+        lines[1].starts_with("2000,Dive A,bomber,175,20,175,"),
+        "{lines:?}"
+    );
+    assert!(
+        lines[2].starts_with("2001,Torpedo A,bomber,252,20,252,"),
+        "{lines:?}"
+    );
+}
+
+#[test]
+fn with_neither_a_radius_nor_a_range_there_is_a_problem() {
+    let mut files = air_base();
+    remove_row(&mut files, "aircraft_type_facts.csv", 4);
+    let problems = planes(&[("dive-a", Some("bomb-a"))], &files).expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: missing: strike_range_nm:",
+            "combat_radius_nm",
+            "range_normal_nm",
+        ],
+    );
+}
+
+#[test]
+fn protection_flags_are_yes_or_no_and_anything_else_is_a_problem() {
+    let mut files = air_base();
+    replace_row(
+        &mut files,
+        "aircraft_type_facts.csv",
+        5,
+        fact(5, "dive-a", "pilot_armour", "partial"),
+    );
+    let problems = planes(&[("dive-a", Some("bomb-a"))], &files).expect_err("a problem");
+    assert_one(
+        &problems,
+        &["dive-a: bad-value: pilot_armour:", "`partial`"],
+    );
+
+    let mut files = air_base();
+    remove_row(&mut files, "aircraft_type_facts.csv", 3);
+    let problems = planes(&[("fighter-a", None)], &files).expect_err("missing");
+    assert_one(&problems, &["fighter-a: missing: self_sealing_tanks:"]);
+}
+
+#[test]
+fn a_year_only_protection_row_needs_an_exception() {
+    let mut files = air_base();
+    replace_row(
+        &mut files,
+        "aircraft_type_facts.csv",
+        5,
+        fact_row(
+            5,
+            "dive-a",
+            "pilot_armour",
+            "yes",
+            "1942",
+            "",
+            "medium",
+            "preferred",
+        ),
+    );
+    let problems = planes(&[("dive-a", Some("bomb-a"))], &files).expect_err("ambiguous");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: ambiguous-date: pilot_armour:",
+            "aircraft_type_facts.csv:5",
+        ],
+    );
+    let rules = air_rules(&exception_text("dive-a", "pilot_armour", 5));
+    let outputs = derive_text(&plane_list(&[("dive-a", Some("bomb-a"))]), &rules, &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    assert_eq!(
+        plane_source(&outputs, "2000", "pilot_armour")[5],
+        "rests on an exception"
+    );
+}
+
+#[test]
+fn exceptions_may_name_rows_of_the_aircraft_facts_and_must_name_real_ones() {
+    let rules = air_rules(&exception_text("dive-a", "pilot_armour", 99));
+    let problems = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &rules,
+        &air_base(),
+    )
+    .expect_err("a problem");
+    assert_one(&problems, &["rules: exception: pilot_armour:", "row 99"]);
+    let rules = air_rules(&exception_text("dive-a", "pilot_armour", 5));
+    derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &rules,
+        &air_base(),
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+}
+
+#[test]
+fn an_exception_may_read_an_unconfirmed_weapon_weight() {
+    let mut files = air_base();
+    replace_row(
+        &mut files,
+        "weapon_facts.csv",
+        7,
+        fact_row(
+            7,
+            "bomb-a",
+            "weight_kg",
+            "250",
+            "",
+            "",
+            "low",
+            "unconfirmed",
+        ),
+    );
+    let problems = planes(&[("dive-a", Some("bomb-a"))], &files).expect_err("not preferred");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: not-preferred: attack_damage:",
+            "weapon_facts.csv:7",
+        ],
+    );
+    let rules = air_rules(&exception_text("bomb-a", "weight_kg", 7));
+    let outputs = derive_text(&plane_list(&[("dive-a", Some("bomb-a"))]), &rules, &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        plane_source(&outputs, "2000", "attack_damage")[5],
+        "rests on an exception; load bomb-a"
+    );
+}
+
+#[test]
+fn aircraft_list_problems_are_reported() {
+    // Entries without an output path and an id.
+    let problems = derive_text(
+        &air_list(&["shp"], "", "[[aircraft]]\ntype = \"fighter-a\"\n"),
+        &air_rules(""),
+        &air_base(),
+    )
+    .expect_err("problems");
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("list: list: aircraft_output:")),
+        "{problems:#?}"
+    );
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("list: list: first_aircraft_type_id:")),
+        "{problems:#?}"
+    );
+    // Twice the same type.
+    let problems =
+        planes(&[("fighter-a", None), ("fighter-a", None)], &air_base()).expect_err("problems");
+    assert_one(&problems, &["list: list: aircraft:", "more than once"]);
+    // An output without entries.
+    let problems = derive_text(
+        &air_list(&["shp"], "aircraft_output = \"../reference/x.csv\"\n", ""),
+        &air_rules(""),
+        &air_base(),
+    )
+    .expect_err("problems");
+    assert_one(
+        &problems,
+        &["list: list: aircraft_output:", "no [[aircraft]]"],
+    );
+}
+
+#[test]
+fn the_rules_file_must_hold_the_constants_a_list_needs() {
+    let problems =
+        derive_text(&plane_list(&[("fighter-a", None)]), RULES, &air_base()).expect_err("problems");
+    for name in ["strike_radius_fraction_of_range", "search_sweep_width_nm"] {
+        assert!(
+            problems
+                .iter()
+                .any(|p| p.contains(&format!("rules: rules: {name}:"))),
+            "{problems:#?}"
+        );
+    }
+    let problems = derive_text(
+        &air_list(&["shp"], "air_figures = true\n", ""),
+        RULES,
+        &air_base(),
+    )
+    .expect_err("problems");
+    assert_eq!(problems.len(), 2, "{problems:#?}");
+    // A constant that is not a number is a rules problem.
+    let rules = format!("{RULES}strike_radius_fraction_of_range = 0.5\n");
+    let problems =
+        derive_text(&plane_list(&[("fighter-a", None)]), &rules, &air_base()).expect_err("a float");
+    assert!(
+        problems.iter().any(|p| p.contains("TOML float")),
+        "{problems:#?}"
+    );
+}
+
+#[test]
+fn a_run_writes_the_aircraft_file_and_its_sources_beside_the_others() {
+    let dir = scratch("aircraft");
+    std::fs::write(
+        dir.join("derivation/list.toml"),
+        plane_list(&[("fighter-a", None), ("dive-a", Some("bomb-a"))]),
+    )
+    .unwrap();
+    std::fs::write(dir.join("derivation/rules.toml"), air_rules("")).unwrap();
+    for (name, text) in &air_base() {
+        std::fs::write(dir.join("oob").join(name), text).unwrap();
+    }
+    match go(&dir, true) {
+        Outcome::Clean { written, files } => {
+            assert!(!written);
+            assert_eq!(files.len(), 5, "{files:?}");
+        }
+        other => panic!("{other:?}"),
+    }
+    assert!(reference_files(&dir).is_empty());
+    match go(&dir, false) {
+        Outcome::Clean { written, files } => {
+            assert!(written);
+            assert_eq!(files.len(), 5);
+        }
+        other => panic!("{other:?}"),
+    }
+    assert_eq!(
+        reference_files(&dir),
+        [
+            "test_aircraft.csv",
+            "test_aircraft.sources.csv",
+            "test_out.csv",
+            "test_out.ships.csv",
+            "test_out.sources.csv"
+        ]
+    );
+    let text = std::fs::read_to_string(dir.join("reference/test_aircraft.csv")).unwrap();
+    assert!(!text.contains("/Users"));
+    let first = std::fs::read(dir.join("reference/test_aircraft.sources.csv")).unwrap();
+    assert!(matches!(go(&dir, false), Outcome::Clean { .. }));
+    assert_eq!(
+        first,
+        std::fs::read(dir.join("reference/test_aircraft.sources.csv")).unwrap()
+    );
+}
+
+#[test]
+fn the_savo_island_list_still_derives_exactly_the_files_in_data_reference() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        "savo_island.toml",
+        &read("data/derivation/savo_island.toml"),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        outputs.class_csv,
+        read("data/reference/ship_classes_savo_island.csv")
+    );
+    assert_eq!(
+        outputs.sources_csv,
+        read("data/reference/ship_classes_savo_island.sources.csv")
+    );
+    assert_eq!(
+        outputs.ships_csv,
+        read("data/reference/ship_classes_savo_island.ships.csv")
+    );
+    assert!(outputs.aircraft_csv.is_none());
+}
+
+#[test]
+fn machine_guns_are_not_counted_and_their_rows_are_not_read() {
+    let mut files = air_base();
+    // A machine gun in the slot, with a disputed row and a blank count.
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!(
+            "{}\n{}\n",
+            weak_fit(fit_row(
+                50,
+                "ship_class",
+                "us-test-class",
+                "light_aa",
+                "weapon",
+                "mg-a",
+                "24",
+                ("", ""),
+                "a",
+                "disputed"
+            )),
+            class_fit(51, "light_aa", "weapon", "mg-a", ""),
+        ),
+    );
+    let outputs = air_ok(&["shp"], &files);
+    assert_eq!(class_lines(&outputs), [format!("{BASE_ROW},0,12")]);
+    let row = source_of(&outputs, "1000", "anti_aircraft");
+    assert!(
+        row[5].contains("machine guns not counted: fits.csv:50 fits.csv:51"),
+        "{row:?}"
+    );
+    assert!(!row[4].contains("fits.csv:50"), "{row:?}");
+    assert!(!row[5].contains("count not given"), "{row:?}");
+}
+
+#[test]
+fn a_weapon_of_another_kind_or_unknown_in_an_aa_slot_is_a_problem() {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &format!("{}\n", class_fit(50, "light_aa", "weapon", "odd-w", "2")),
+    );
+    let problems = air_ship(&["shp"], &files).expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "shp: unknown-type: anti_aircraft:",
+            "`odd-w` has kind `gun`",
+            "fits.csv:50",
+        ],
+    );
+}

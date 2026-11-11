@@ -8,7 +8,9 @@ use crate::date::Day;
 use crate::decimal::Dec;
 use crate::input::Rules;
 use crate::problem::{Kind, Problem};
-use crate::reading::{resolve, resolve_over, Failure, Index, Read, Row, Table};
+use crate::reading::{
+    resolve, resolve_over, resolve_slot, Failure, Index, Read, Row, SlotRead, Table,
+};
 
 /// The figures of a class row, in the column order of the class CSV after
 /// `id` and `name`.
@@ -29,13 +31,25 @@ pub const FIGURES: [&str; 14] = [
     "radar",
 ];
 
+/// The two figures added when the list asks for `air_figures`, after
+/// `radar` (decision 0029).
+pub const AIR_FIGURES: [&str; 2] = ["aircraft_capacity", "anti_aircraft"];
+
+/// Indexes of the surface weapon figures a ship the list names in
+/// `surface_weapons_not_modelled` has written as 0: main guns, rate of
+/// fire, rounds per gun, gun damage, torpedo tubes, torpedo damage.
+pub const SURFACE_WEAPONS: std::ops::RangeInclusive<usize> = 6..=11;
+
+pub const NOT_MODELLED_NOTE: &str =
+    "assumption of the scenario, not a fact: surface weapons not modelled (decision 0029)";
+
 pub const KIND: usize = 0;
 pub const CARGO: usize = 5;
 pub const RADAR: usize = 13;
 
 /// Figures that are whole numbers in the class CSV: the counts and the
 /// rounds carried. The rest are written as exact decimals.
-pub const WHOLE: [usize; 3] = [6, 8, 10];
+pub const WHOLE: [usize; 5] = [6, 8, 10, 14, 15];
 
 /// The class types the simulation has a kind for.
 const KIND_FOR_TYPE: [(&str, &str); 6] = [
@@ -68,6 +82,7 @@ const ROUNDS: &str = "main_rounds_per_gun";
 pub const AMMUNITION_NOT_LIMITING_ROUNDS: i64 = 9999;
 
 const RADAR_SLOTS: [&str; 2] = ["air_search_radar", "surface_search_radar"];
+const AA_SLOTS: [&str; 2] = ["heavy_aa", "light_aa"];
 
 /// A fact row cited by a figure: file and id.
 pub type Cite = (String, u64);
@@ -88,6 +103,20 @@ pub struct Figure {
     /// Ship rows that hold on the date but are not readable, so the class's
     /// rows were read instead: `file:id (standing)`.
     pub doubts: BTreeSet<String>,
+    /// Other things to say beside the figure in the sources file.
+    pub notes: BTreeSet<String>,
+}
+
+/// What the list says about one ship.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ShipOpts {
+    /// The working assumption that unknown radar means none.
+    pub assume_no_radar: bool,
+    pub assume_ammunition_not_limiting: bool,
+    /// Derive `aircraft_capacity` and `anti_aircraft` too.
+    pub air_figures: bool,
+    /// Write the surface weapon figures as 0 without reading any fact.
+    pub surface_weapons_not_modelled: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -104,56 +133,69 @@ pub struct ShipResult {
     /// The rate of fire is a designed rate (`rate_of_fire_rpm`) read
     /// because the rules file names a row of it.
     pub designed_rate: bool,
+    /// The surface weapon figures are the scenario's assumption of 0.
+    pub weapons_not_modelled: bool,
     /// Exceptions used: index into the rules' list, and the row read.
     pub used: Vec<(usize, Row)>,
 }
 
-struct ShipInfo {
+pub(crate) struct ShipInfo {
     row_id: String,
     class: String,
 }
 
-struct ClassInfo {
+pub(crate) struct ClassInfo {
     row_id: String,
     name: String,
     kind_type: String,
 }
 
 pub struct Env<'a> {
-    index: Index,
+    pub(crate) index: Index,
     ships: BTreeMap<String, ShipInfo>,
     classes: BTreeMap<String, ClassInfo>,
-    date: Day,
-    rules: &'a Rules,
+    pub(crate) aircraft: BTreeMap<String, AircraftInfo>,
+    /// Weapon key to its `kind` in weapons.csv.
+    pub(crate) weapons: BTreeMap<String, String>,
+    pub(crate) date: Day,
+    pub(crate) rules: &'a Rules,
+}
+
+/// A row of `aircraft_types.csv`.
+pub(crate) struct AircraftInfo {
+    pub row_id: String,
+    pub name: String,
+    pub role: String,
 }
 
 /// Where a figure's value came from.
-struct Got<T> {
-    value: T,
-    cites: BTreeSet<Cite>,
-    excepted: bool,
-    doubts: BTreeSet<String>,
+#[derive(Clone)]
+pub(crate) struct Got<T> {
+    pub value: T,
+    pub cites: BTreeSet<Cite>,
+    pub excepted: bool,
+    pub doubts: BTreeSet<String>,
 }
 
-struct Work<'a> {
-    subject: &'a str,
-    problems: Vec<Problem>,
-    used: Vec<(usize, Row)>,
+pub(crate) struct Work<'a> {
+    pub subject: &'a str,
+    pub problems: Vec<Problem>,
+    pub used: Vec<(usize, Row)>,
 }
 
 impl Work<'_> {
-    fn fail(&mut self, kind: Kind, figure: &str, message: String) {
+    pub(crate) fn fail(&mut self, kind: Kind, figure: &str, message: String) {
         self.problems
             .push(Problem::new(self.subject, kind, figure, message));
     }
 
-    fn failed(&mut self, figure: &str, failure: Failure) {
+    pub(crate) fn failed(&mut self, figure: &str, failure: Failure) {
         self.fail(failure.kind, figure, failure.message);
     }
 
     /// Notes the exceptions a read used and returns the rows cited, whether
     /// an exception was used, and the ship rows passed over.
-    fn take(&mut self, read: &Read) -> (BTreeSet<Cite>, bool, BTreeSet<String>) {
+    pub(crate) fn take(&mut self, read: &Read) -> (BTreeSet<Cite>, bool, BTreeSet<String>) {
         self.used.extend(read.excepted.iter().cloned());
         (
             read.rows.iter().map(Row::cite_key).collect(),
@@ -163,7 +205,7 @@ impl Work<'_> {
     }
 }
 
-fn number(read: &Read, fact: &str) -> Result<Dec, Failure> {
+pub(crate) fn number(read: &Read, fact: &str) -> Result<Dec, Failure> {
     let row = &read.rows[0];
     let bad = |why: &str| Failure {
         kind: Kind::BadValue,
@@ -200,12 +242,13 @@ fn put(figs: &mut [Option<Figure>], i: usize, value: Value, got: Got<()>) {
         cites: got.cites,
         excepted: got.excepted,
         doubts: got.doubts,
+        notes: BTreeSet::new(),
     });
 }
 
 impl<T> Got<T> {
     /// The sources of this value, for a figure derived from it.
-    fn bare(&self) -> Got<()> {
+    pub(crate) fn bare(&self) -> Got<()> {
         Got {
             value: (),
             cites: self.cites.clone(),
@@ -215,7 +258,7 @@ impl<T> Got<T> {
     }
 }
 
-fn overflow(what: &str) -> Failure {
+pub(crate) fn overflow(what: &str) -> Failure {
     Failure {
         kind: Kind::BadValue,
         message: format!("{what} does not fit"),
@@ -223,9 +266,9 @@ fn overflow(what: &str) -> Failure {
 }
 
 /// What a fit says: how many, of what.
-struct Fit {
-    count: u32,
-    item: String,
+pub(crate) struct Fit {
+    pub count: u32,
+    pub item: String,
 }
 
 impl<'a> Env<'a> {
@@ -251,10 +294,28 @@ impl<'a> Env<'a> {
                 },
             );
         }
+        let mut aircraft = BTreeMap::new();
+        for rec in data.rows("aircraft_types.csv") {
+            aircraft.insert(
+                rec.get("key").to_string(),
+                AircraftInfo {
+                    row_id: rec.get("id").to_string(),
+                    name: rec.get("name").to_string(),
+                    role: rec.get("role").to_string(),
+                },
+            );
+        }
+        let weapons = data
+            .rows("weapons.csv")
+            .into_iter()
+            .map(|rec| (rec.get("key").to_string(), rec.get("kind").to_string()))
+            .collect();
         Env {
             index: Index::build(data),
             ships,
             classes,
+            aircraft,
+            weapons,
             date,
             rules,
         }
@@ -362,7 +423,7 @@ impl<'a> Env<'a> {
 
     /// A fact about the weapon of a fit. The fit's rows are cited too, since
     /// they say which weapon.
-    fn weapon_fact(
+    pub(crate) fn weapon_fact(
         &self,
         w: &mut Work,
         fit: &Got<Fit>,
@@ -518,12 +579,13 @@ impl<'a> Env<'a> {
 
     /// Derives every figure of a ship. All problems are returned, not the
     /// first. `assume_no_radar` is the list's working assumption.
-    pub fn derive_ship(
-        &self,
-        ship: &str,
-        assume_no_radar: bool,
-        assume_ammunition_not_limiting: bool,
-    ) -> Result<ShipResult, Vec<Problem>> {
+    pub fn derive_ship(&self, ship: &str, opts: ShipOpts) -> Result<ShipResult, Vec<Problem>> {
+        let ShipOpts {
+            assume_no_radar,
+            assume_ammunition_not_limiting,
+            air_figures,
+            surface_weapons_not_modelled,
+        } = opts;
         let mut w = Work {
             subject: ship,
             problems: Vec::new(),
@@ -551,7 +613,8 @@ impl<'a> Env<'a> {
             return Err(w.problems);
         };
         let keys = (ship, class_key);
-        let mut figs: Vec<Option<Figure>> = vec![None; FIGURES.len()];
+        let figure_count = FIGURES.len() + if air_figures { AIR_FIGURES.len() } else { 0 };
+        let mut figs: Vec<Option<Figure>> = vec![None; figure_count];
         let num = |got: Got<Dec>| (Value::Num(got.value), got.bare());
 
         // kind
@@ -606,53 +669,74 @@ impl<'a> Env<'a> {
             },
         );
 
-        // main battery
+        // main battery, ammunition and torpedoes
         let mut designed_rate = false;
         let mut ammunition_assumed = false;
-        let main = self.fit(&mut w, keys, "main_battery", "main_guns");
-        if let Some(main) = &main {
-            put(
-                &mut figs,
-                6,
-                Value::Num(Dec::from_int(i64::from(main.value.count)).unwrap_or(Dec::ZERO)),
-                main.bare(),
-            );
-            if let Some((got, designed)) = self.rate_of_fire(&mut w, main) {
-                designed_rate = designed;
-                let (v, sources) = num(got);
-                put(&mut figs, 7, v, sources);
-            }
-        }
-        if let Some((got, assumed)) =
-            self.rounds_per_gun(&mut w, keys, assume_ammunition_not_limiting)
-        {
-            ammunition_assumed = assumed;
-            let (v, sources) = num(got);
-            put(&mut figs, 8, v, sources);
-        }
-        if let Some(main) = &main {
-            if let Some(got) = self.weapon_fact(&mut w, main, "shell_weight_kg", FIGURES[9]) {
-                match got.value.div(self.rules.gun_shell_kg_per_damage) {
-                    Some(damage) => put(&mut figs, 9, Value::Num(damage), got.bare()),
-                    None => w.failed(FIGURES[9], overflow("gun damage")),
+        if surface_weapons_not_modelled {
+            for i in SURFACE_WEAPONS {
+                put(
+                    &mut figs,
+                    i,
+                    Value::Num(Dec::ZERO),
+                    Got {
+                        value: (),
+                        cites: BTreeSet::new(),
+                        excepted: false,
+                        doubts: BTreeSet::new(),
+                    },
+                );
+                if let Some(figure) = figs[i].as_mut() {
+                    figure.notes.insert(NOT_MODELLED_NOTE.to_string());
                 }
             }
-        }
+        } else {
+            let main = self.fit(&mut w, keys, "main_battery", "main_guns");
+            if let Some(main) = &main {
+                put(
+                    &mut figs,
+                    6,
+                    Value::Num(Dec::from_int(i64::from(main.value.count)).unwrap_or(Dec::ZERO)),
+                    main.bare(),
+                );
+                if let Some((got, designed)) = self.rate_of_fire(&mut w, main) {
+                    designed_rate = designed;
+                    let (v, sources) = num(got);
+                    put(&mut figs, 7, v, sources);
+                }
+            }
+            if let Some((got, assumed)) =
+                self.rounds_per_gun(&mut w, keys, assume_ammunition_not_limiting)
+            {
+                ammunition_assumed = assumed;
+                let (v, sources) = num(got);
+                put(&mut figs, 8, v, sources);
+            }
+            if let Some(main) = &main {
+                if let Some(got) = self.weapon_fact(&mut w, main, "shell_weight_kg", FIGURES[9]) {
+                    match got.value.div(self.rules.gun_shell_kg_per_damage) {
+                        Some(damage) => put(&mut figs, 9, Value::Num(damage), got.bare()),
+                        None => w.failed(FIGURES[9], overflow("gun damage")),
+                    }
+                }
+            }
 
-        // torpedoes
-        if let Some(tubes) = self.fit(&mut w, keys, "torpedo_tubes", "torpedo_tubes") {
-            put(
-                &mut figs,
-                10,
-                Value::Num(Dec::from_int(i64::from(tubes.value.count)).unwrap_or(Dec::ZERO)),
-                tubes.bare(),
-            );
-            if tubes.value.count == 0 {
-                put(&mut figs, 11, Value::Num(Dec::ZERO), tubes.bare());
-            } else if let Some(got) = self.weapon_fact(&mut w, &tubes, "warhead_kg", FIGURES[11]) {
-                match got.value.mul(self.rules.torpedo_damage_per_warhead_kg) {
-                    Some(damage) => put(&mut figs, 11, Value::Num(damage), got.bare()),
-                    None => w.failed(FIGURES[11], overflow("torpedo damage")),
+            // torpedoes
+            if let Some(tubes) = self.fit(&mut w, keys, "torpedo_tubes", "torpedo_tubes") {
+                put(
+                    &mut figs,
+                    10,
+                    Value::Num(Dec::from_int(i64::from(tubes.value.count)).unwrap_or(Dec::ZERO)),
+                    tubes.bare(),
+                );
+                if tubes.value.count == 0 {
+                    put(&mut figs, 11, Value::Num(Dec::ZERO), tubes.bare());
+                } else if let Some(got) =
+                    self.weapon_fact(&mut w, &tubes, "warhead_kg", FIGURES[11])
+                {
+                    match got.value.mul(self.rules.torpedo_damage_per_warhead_kg) {
+                        Some(damage) => put(&mut figs, 11, Value::Num(damage), got.bare()),
+                        None => w.failed(FIGURES[11], overflow("torpedo damage")),
+                    }
                 }
             }
         }
@@ -680,6 +764,12 @@ impl<'a> Env<'a> {
             put(&mut figs, RADAR, Value::Flag(fitted.0), sources);
         }
 
+        // aircraft capacity and anti-aircraft shots (decision 0029)
+        if air_figures {
+            self.aircraft_capacity(&mut w, keys, class, &mut figs);
+            self.anti_aircraft(&mut w, keys, &mut figs);
+        }
+
         if !w.problems.is_empty() {
             return Err(w.problems);
         }
@@ -695,62 +785,345 @@ impl<'a> Env<'a> {
             radar_assumed,
             ammunition_assumed,
             designed_rate,
+            weapons_not_modelled: surface_weapons_not_modelled,
             used: w.used,
         })
     }
 
-    /// Radar: the figure and whether it is the list's assumption.
-    fn radar(
+    fn slot_read(
+        &self,
+        keys: (&str, &str),
+        slot: &str,
+        set_aside_blank: bool,
+    ) -> Result<SlotRead, Failure> {
+        let (ship, class) = keys;
+        resolve_slot(
+            self.index.rows(Table::ShipFits, ship, slot),
+            &format!("{slot} fit of ship {ship}"),
+            self.index.rows(Table::ClassFits, class, slot),
+            &format!("{slot} fit of class {class}"),
+            self.date,
+            &self.rules.exceptions,
+            set_aside_blank,
+        )
+    }
+
+    /// Aircraft capacity (decision 0029, 2): the sourced fact; no row at
+    /// all means none carried, except for a carrier, where it is missing.
+    fn aircraft_capacity(
         &self,
         w: &mut Work,
         keys: (&str, &str),
-        assume_no_radar: bool,
-    ) -> Option<((bool, bool), Got<()>)> {
-        let mut found: Vec<(&str, Read, u32)> = Vec::new();
-        let mut absent: Vec<(&str, Failure)> = Vec::new();
-        let mut hard = false;
-        for slot in RADAR_SLOTS {
-            match self.fit_read(keys, slot) {
-                Ok(read) => match count(&read, slot) {
-                    Ok(n) => found.push((slot, read, n)),
-                    Err(failure) => {
-                        w.failed(FIGURES[RADAR], failure);
-                        hard = true;
-                    }
-                },
-                Err(failure)
-                    if matches!(
-                        failure.kind,
-                        Kind::Missing | Kind::NotPreferred | Kind::NotOnDate
-                    ) =>
-                {
-                    absent.push((slot, failure));
-                }
-                Err(failure) => {
-                    w.failed(FIGURES[RADAR], failure);
-                    hard = true;
-                }
+        class: &ClassInfo,
+        figs: &mut [Option<Figure>],
+    ) {
+        let (ship, class_key) = keys;
+        let name = AIR_FIGURES[0];
+        let slot = FIGURES.len();
+        let no_rows = self.index.rows(Table::ShipFacts, ship, name).is_empty()
+            && self
+                .index
+                .rows(Table::ClassFacts, class_key, name)
+                .is_empty();
+        if no_rows {
+            if KIND_FOR_TYPE
+                .iter()
+                .any(|(t, kind)| *t == class.kind_type && *kind == "carrier")
+            {
+                w.fail(
+                    Kind::Missing,
+                    name,
+                    format!(
+                        "{name} of ship {ship} and of class {class_key}: no rows in the facts, and a carrier must have one"
+                    ),
+                );
+                return;
             }
+            put(
+                figs,
+                slot,
+                Value::Num(Dec::ZERO),
+                Got {
+                    value: (),
+                    cites: BTreeSet::new(),
+                    excepted: false,
+                    doubts: BTreeSet::new(),
+                },
+            );
+            if let Some(figure) = figs[slot].as_mut() {
+                figure
+                    .notes
+                    .insert("no aircraft_capacity row in the facts: none carried".to_string());
+            }
+            return;
         }
-        if hard {
-            return None;
+        let Some(got) = self.fact(w, keys, name, name) else {
+            return;
+        };
+        if got.value.has_fraction() {
+            w.fail(
+                Kind::BadValue,
+                name,
+                format!("{name} of {ship}: {} is not a whole number", got.value),
+            );
+            return;
         }
-        let fitted = found.iter().any(|(_, _, n)| *n > 0);
-        let stand_in = found
-            .iter()
-            .any(|(_, read, n)| *n == 0 && NO_RADAR_ITEMS.contains(&read.rows[0].item.as_str()));
-        let both_empty = found.len() == RADAR_SLOTS.len() && found.iter().all(|(_, _, n)| *n == 0);
+        put(figs, slot, Value::Num(got.value), got.bare());
+    }
+
+    /// Anti-aircraft shots (decision 0029, 1): heavy guns x heavy weight +
+    /// light barrels x light weight, rounded down. Each slot holds several
+    /// weapons, added; a slot with no rows is 0.
+    fn anti_aircraft(&self, w: &mut Work, keys: (&str, &str), figs: &mut [Option<Figure>]) {
+        let name = AIR_FIGURES[1];
+        let slot_index = FIGURES.len() + 1;
+        let mut sums = [0i64; 2];
         let mut sources = Got {
             value: (),
             cites: BTreeSet::new(),
             excepted: false,
             doubts: BTreeSet::new(),
         };
-        for (_, read, _) in &found {
+        let mut notes = BTreeSet::new();
+        let mut ok = true;
+        for (n, slot) in AA_SLOTS.iter().enumerate() {
+            // Machine guns are not counted and their rows are not read;
+            // any other kind than aa_gun is a problem.
+            let (ship, class) = keys;
+            let mut passed = BTreeSet::new();
+            let mut slot_rows: [Vec<Row>; 2] = [Vec::new(), Vec::new()];
+            for (k, (table, entity)) in [(Table::ShipFits, ship), (Table::ClassFits, class)]
+                .into_iter()
+                .enumerate()
+            {
+                for row in self.index.rows(table, entity, slot) {
+                    match self.weapons.get(&row.item).map(String::as_str) {
+                        Some("aa_gun") => slot_rows[k].push(row.clone()),
+                        Some("machine_gun") => {
+                            passed.insert(row.cite_key());
+                        }
+                        other => {
+                            w.fail(
+                                Kind::UnknownType,
+                                name,
+                                match other {
+                                    None => format!(
+                                        "{slot} fit row {}: weapon `{}` is not in weapons.csv",
+                                        row.cite(),
+                                        row.item
+                                    ),
+                                    Some(kind) => format!(
+                                        "{slot} fit row {}: weapon `{}` has kind `{kind}`, not aa_gun or machine_gun",
+                                        row.cite(),
+                                        row.item
+                                    ),
+                                },
+                            );
+                            ok = false;
+                        }
+                    }
+                }
+            }
+            if !passed.is_empty() {
+                notes.insert(format!(
+                    "machine guns not counted: {}",
+                    passed
+                        .iter()
+                        .map(|(f, i)| format!("{f}:{i}"))
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                ));
+            }
+            let slot_read = match resolve_slot(
+                &slot_rows[0],
+                &format!("{slot} fit of ship {ship}"),
+                &slot_rows[1],
+                &format!("{slot} fit of class {class}"),
+                self.date,
+                &self.rules.exceptions,
+                true,
+            ) {
+                Ok(slot_read) => slot_read,
+                Err(failure) => {
+                    w.failed(name, failure);
+                    ok = false;
+                    continue;
+                }
+            };
+            notes.extend(slot_read.blank);
+            if !slot_read.items.is_empty() {
+                sources.doubts.extend(slot_read.doubts);
+            }
+            for (_, read) in slot_read.items {
+                let counted = read.and_then(|read| count(&read, slot).map(|c| (read, c)));
+                match counted {
+                    Ok((read, c)) => {
+                        sums[n] += i64::from(c);
+                        let (cites, excepted, doubts) = w.take(&read);
+                        sources.cites.extend(cites);
+                        sources.excepted |= excepted;
+                        sources.doubts.extend(doubts);
+                    }
+                    Err(failure) => {
+                        w.failed(name, failure);
+                        ok = false;
+                    }
+                }
+            }
+        }
+        let (Some(heavy_weight), Some(light_weight)) = (
+            self.rules.anti_aircraft_heavy_weight,
+            self.rules.anti_aircraft_light_weight,
+        ) else {
+            return;
+        };
+        if !ok {
+            return;
+        }
+        let total = Dec::from_int(sums[0])
+            .and_then(|h| h.mul(heavy_weight))
+            .zip(Dec::from_int(sums[1]).and_then(|l| l.mul(light_weight)))
+            .and_then(|(h, l)| h.checked_add(l));
+        let Some(total) = total else {
+            w.failed(name, overflow("anti-aircraft shots"));
+            return;
+        };
+        let Some(whole) = Dec::from_int(total.whole()) else {
+            w.failed(name, overflow("anti-aircraft shots"));
+            return;
+        };
+        notes.insert(format!("{} heavy, {} light", sums[0], sums[1]));
+        if total.has_fraction() {
+            notes.insert(format!("exact {total}, rounded down"));
+        }
+        put(figs, slot_index, Value::Num(whole), sources);
+        if let Some(figure) = figs[slot_index].as_mut() {
+            figure.notes = notes;
+        }
+    }
+
+    /// Radar (decision 0020 as changed by decision 0029, 3): the figure and
+    /// whether it is the list's assumption. Yes if any readable row in
+    /// either slot holds on the date with a count above 0 (or no count, for
+    /// a real set); the sets need not agree. A sourced "none" (a no-radar
+    /// stand-in item at count 0) beside a fitted set is a conflict.
+    fn radar(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        assume_no_radar: bool,
+    ) -> Option<((bool, bool), Got<()>)> {
+        let mut reads: Vec<Read> = Vec::new();
+        let mut fitted = false;
+        let mut stand_in = false;
+        let mut slots_found = 0;
+        let mut absent: Vec<String> = Vec::new();
+        let mut doubts: Vec<String> = Vec::new();
+        let mut hard = false;
+        let mut fitted_items: Vec<String> = Vec::new();
+        let mut none_items: Vec<String> = Vec::new();
+        for slot in RADAR_SLOTS {
+            let slot_read = match self.slot_read(keys, slot, false) {
+                Ok(slot_read) => slot_read,
+                Err(failure) => {
+                    w.failed(FIGURES[RADAR], failure);
+                    hard = true;
+                    continue;
+                }
+            };
+            let slot_doubts = slot_read.doubts;
+            let mut found = false;
+            let had_items = !slot_read.items.is_empty();
+            for (item, read) in slot_read.items {
+                match read {
+                    Ok(read) => {
+                        let text = read.rows[0].count.trim().to_string();
+                        let n = if text.is_empty() {
+                            None
+                        } else {
+                            match count(&read, slot) {
+                                Ok(n) => Some(n),
+                                Err(failure) => {
+                                    w.failed(FIGURES[RADAR], failure);
+                                    hard = true;
+                                    continue;
+                                }
+                            }
+                        };
+                        let none_item = NO_RADAR_ITEMS.contains(&item.as_str());
+                        match n {
+                            Some(0) if none_item => {
+                                stand_in = true;
+                                none_items.push(read.rows[0].cite());
+                            }
+                            None if none_item => continue,
+                            Some(0) => {}
+                            _ => {
+                                fitted = true;
+                                fitted_items.push(format!("{item} ({})", read.rows[0].cite()));
+                            }
+                        }
+                        found = true;
+                        reads.push(read);
+                    }
+                    Err(failure)
+                        if matches!(
+                            failure.kind,
+                            Kind::Missing | Kind::NotPreferred | Kind::NotOnDate
+                        ) =>
+                    {
+                        absent.push(failure.message);
+                    }
+                    Err(failure) => {
+                        w.failed(FIGURES[RADAR], failure);
+                        hard = true;
+                    }
+                }
+            }
+            if found {
+                slots_found += 1;
+                doubts.extend(slot_doubts);
+            } else if had_items {
+                // The failures of the items were noted above.
+            } else if self.index.rows(Table::ShipFits, keys.0, slot).is_empty()
+                && self.index.rows(Table::ClassFits, keys.1, slot).is_empty()
+            {
+                absent.push(format!(
+                    "{slot} fit of class {}: no rows in the facts",
+                    keys.1
+                ));
+            } else {
+                absent.push(format!("{slot}: no row holds on {}", self.date));
+            }
+        }
+        if hard {
+            return None;
+        }
+        let both_empty = slots_found == RADAR_SLOTS.len() && !fitted;
+        let mut sources = Got {
+            value: (),
+            cites: BTreeSet::new(),
+            excepted: false,
+            doubts: doubts.into_iter().collect(),
+        };
+        for read in &reads {
             let (c, e, d) = w.take(read);
             sources.cites.extend(c);
             sources.excepted |= e;
             sources.doubts.extend(d);
+        }
+        if fitted && stand_in {
+            w.fail(
+                Kind::Conflict,
+                FIGURES[RADAR],
+                format!(
+                    "radar on {}: a fitted set ({}) and a sourced none ({}) are both read",
+                    self.date,
+                    fitted_items.join(", "),
+                    none_items.join(", ")
+                ),
+            );
+            return None;
         }
         if fitted {
             return Some(((true, false), sources));
@@ -761,21 +1134,23 @@ impl<'a> Env<'a> {
         if assume_no_radar {
             return Some(((false, true), sources));
         }
-        let mut found_text: Vec<String> = found
+        let mut found_text: Vec<String> = reads
             .iter()
-            .map(|(slot, read, n)| {
+            .map(|read| {
                 format!(
-                    "{slot}: {} says {} x {n} (a specific set absent, not all radar)",
+                    "{}: {} says {} x {} (a specific set absent, not all radar)",
+                    read.rows[0].name,
                     read.rows
                         .iter()
                         .map(Row::cite)
                         .collect::<Vec<_>>()
                         .join(" "),
-                    read.rows[0].item
+                    read.rows[0].item,
+                    read.rows[0].count
                 )
             })
             .collect();
-        found_text.extend(absent.iter().map(|(_, f)| f.message.clone()));
+        found_text.extend(absent);
         w.fail(
             Kind::RadarUnknown,
             FIGURES[RADAR],

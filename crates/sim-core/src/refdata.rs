@@ -226,6 +226,11 @@ pub struct AircraftType {
     /// The damage one hit of the attack weapon does, before the target's
     /// toughness. Zero for a type that attacks with nothing.
     pub attack_damage: Fixed,
+    /// Whether the type's pilots are armoured (decision 11 of
+    /// `docs/decisions/0029-figures-for-carriers-and-aircraft.md`).
+    pub pilot_armour: bool,
+    /// Whether the type's fuel tanks are self-sealing (decision 11 of 0029).
+    pub self_sealing_tanks: bool,
 }
 
 impl AircraftType {
@@ -529,6 +534,12 @@ pub struct AirCombatFigures {
     /// Chance one anti-aircraft shot brings down an aircraft (decision 7 of
     /// 0027).
     pub anti_aircraft_hit_chance: Fixed,
+    /// What a shot's chance is multiplied by when the target type has pilot
+    /// armour (decision 11 of 0029).
+    pub pilot_armour_factor: Fixed,
+    /// What a shot's chance is multiplied by when the target type has
+    /// self-sealing fuel tanks (decision 11 of 0029).
+    pub self_sealing_tanks_factor: Fixed,
     /// Chance a bomb hit also knocks a system down one level.
     pub bomb_system_hit_chance: Fixed,
     /// Which system a bomb's system hit lands on: each system's share. A
@@ -546,6 +557,8 @@ impl AirCombatFigures {
             ("fighter hit chance", self.fighter_hit_chance),
             ("anti-aircraft hit chance", self.anti_aircraft_hit_chance),
             ("bomb system hit chance", self.bomb_system_hit_chance),
+            ("pilot armour factor", self.pilot_armour_factor),
+            ("self-sealing tanks factor", self.self_sealing_tanks_factor),
         ];
         for (label, value) in chances {
             if !in_unit(value) {
@@ -631,6 +644,8 @@ impl AirCombatFigures {
             torpedo_hit_chance: Fixed::from_ratio(15, 100),
             fighter_hit_chance: tenth(3),
             anti_aircraft_hit_chance: Fixed::from_ratio(5, 100),
+            pilot_armour_factor: Fixed::from_ratio(75, 100),
+            self_sealing_tanks_factor: Fixed::from_ratio(75, 100),
             bomb_system_hit_chance: tenth(3),
             bomb_system_hit: [
                 (ShipSystem::FlightDeck, tenth(5)),
@@ -1055,6 +1070,8 @@ mod tests {
             strike_range_nm: Fixed::ZERO,
             attack_weapon: AttackWeapon::None,
             attack_damage: Fixed::ZERO,
+            pilot_armour: false,
+            self_sealing_tanks: false,
         };
         assert_eq!(good.problem(), None);
         let mut bad = good.clone();

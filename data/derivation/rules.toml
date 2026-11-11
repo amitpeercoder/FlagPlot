@@ -17,6 +17,23 @@ torpedo_damage_per_warhead_kg = "0.4"
 # Toughness = standard displacement in long tons / this.
 displacement_lt_per_toughness = 25
 
+# Constants of decision 0029, also MODEL PARAMETERS and PLACEHOLDERS, not
+# history. They are read only by a list that asks for air figures or
+# aircraft types.
+
+# Anti-aircraft shots = heavy guns x this + light barrels x the next one,
+# rounded down.
+anti_aircraft_heavy_weight = "1"
+anti_aircraft_light_weight = "0.25"
+
+# Strike and search radius, where no sourced combat radius can be read =
+# range with a normal load x this, rounded down.
+strike_radius_fraction_of_range = "0.333333"
+
+# Width of the strip an aircraft searches, in nautical miles. No source
+# gives one.
+search_sweep_width_nm = 20
+
 # Exceptions to "read only preferred rows" (decision 0020, 3). Each names a
 # class, ship or weapon, a fact, the row to read, the reason, and the date
 # the designer agreed. These are the choices of the Savo Island settlement
@@ -121,3 +138,378 @@ fact = "rate_of_fire_rpm"
 row = 358
 reason = "Settlement sheet e5: 3 rounds a minute, a designed rate, as for the Mark 12. The one practical figure (5, row 422) is one ship's best quarter-hour in another battle."
 agreed = "2026-11-10"
+
+# Eastern Solomons, stage 5e. Settled by the architect on 2026-11-11 (CLAUDE.md,
+# "Who settles data"), following docs/research/oob/eastern-solomons-settlement.md
+# where it chose a row. See docs/decisions/0029 and 0030.
+
+[[exception]]
+entity = "us-lexington-class"
+fact = "endurance_nm"
+row = 823
+reason = "Navy fuel tables, dated 1942 to 1944: the tables describe the ship in war service through the period, so the row holds on 24 August 1942."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-lexington-class"
+fact = "endurance_speed_kn"
+row = 824
+reason = "The speed of row 823."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-lexington-class"
+fact = "fuel_capacity_lt"
+row = 827
+reason = "Navy fuel tables, normal full load, the pair of row 823."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-lexington-class"
+fact = "displacement_standard_lt"
+row = 885
+reason = "Dated from 1942: Saratoga's rebuild ended in May 1942, before the battle."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-farragut-class"
+fact = "endurance_nm"
+row = 846
+reason = "Navy fuel tables, dated 1942 to 1945: holds through the period."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-farragut-class"
+fact = "endurance_speed_kn"
+row = 847
+reason = "The speed of row 846."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-farragut-class"
+fact = "fuel_capacity_lt"
+row = 848
+reason = "Navy fuel tables, the pair of row 846."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "endurance_nm"
+row = 854
+reason = "Navy fuel tables, dated 1942 to 1944: holds through the period."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "endurance_speed_kn"
+row = 855
+reason = "The speed of row 854."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "fuel_capacity_lt"
+row = 856
+reason = "Navy fuel tables, the pair of row 854."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "jp-kagero-class"
+fact = "fuel_capacity_lt"
+row = 805
+reason = "Chosen on the Eastern Solomons sheet: 500 tons, one low-grade source, nothing against it."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "jp-yugumo-class"
+fact = "fuel_capacity_lt"
+row = 811
+reason = "Chosen on the Eastern Solomons sheet: 500 tons, one low-grade source, nothing against it."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-portland-class"
+fact = "aircraft_capacity"
+row = 921
+reason = "Four floatplanes: four of the five rows say 4. It does not bear on the scenario, which gives her no air group."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cv-3-saratoga"
+fact = "heavy_aa"
+row = 514
+reason = "Dated 1942: the rearmament with 5-inch/38 guns was done in the refit that ended in May 1942. Row 515 says the same from May."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cv-3-saratoga"
+fact = "light_aa"
+row = 516
+reason = "Chosen on the Eastern Solomons sheet: 20 barrels of 1.1-inch, worked from one refit list."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cv-3-saratoga"
+fact = "light_aa"
+row = 517
+reason = "Chosen on the Eastern Solomons sheet: 30 guns of 20 mm, worked from one refit list."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cv-6-enterprise"
+fact = "light_aa"
+row = 507
+reason = "Twenty barrels of 1.1-inch. Dated August 1942 by month only; the ship's own page (row 502) gives the same 20 for July to September."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cv-6-enterprise"
+fact = "light_aa"
+row = 509
+reason = "Chosen on the Eastern Solomons sheet: 38 guns of 20 mm. Dated August 1942 by month only. The other figures are 32 and 40; the three are within a fifth of each other and count a quarter each."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "ca-33-portland"
+fact = "light_aa"
+row = 526
+reason = "Dated 1942: the source says early 1942, before the battle."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "ca-33-portland"
+fact = "light_aa"
+row = 527
+reason = "Dated 1942: the source says early 1942, before the battle."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cl-51-atlanta"
+fact = "light_aa"
+row = 521
+reason = "Dated 1942: the source says early 1942, before the battle."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-farragut-class"
+fact = "light_aa"
+row = 538
+reason = "Eight guns of 20 mm, added in refits between May and September 1942. No source gives a ship's own date, so the class figure is read for all five."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "light_aa"
+row = 542
+reason = "Eight barrels of 1.1-inch: both sources agree."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "light_aa"
+row = 544
+reason = "Three guns of 20 mm, added by early 1942. The other row is a December 1942 fit."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-benham-class"
+fact = "light_aa"
+row = 220
+reason = "Six guns of 20 mm from 1941: the only row."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-gleaves-class"
+fact = "heavy_aa"
+row = 565
+reason = "Four 5-inch guns. Sources differ between four and five, and some ships gave up the fifth in 1942. The lower figure is read: no source gives Grayson's or Monssen's own."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "bb-55-north-carolina"
+fact = "air_search_radar"
+row = 595
+reason = "Dated 1942: row 592 has the same set fitted from March to November 1942."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "ca-33-portland"
+fact = "air_search_radar"
+row = 599
+reason = "Dated 1942: the source says early 1942."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cl-51-atlanta"
+fact = "air_search_radar"
+row = 596
+reason = "Dated 1942: the source says mid-1942, and she was at sea with the fleet from June."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "cl-51-atlanta"
+fact = "surface_search_radar"
+row = 597
+reason = "The same line of the source as row 596."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "shokaku"
+fact = "air_search_radar"
+row = 117
+reason = "Dated 1942: row 118 dates the fitting to June 1942."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "f4f-4"
+fact = "combat_radius_nm"
+row = 244
+reason = "The Navy data sheet gives three radii: 105 miles without drop tanks, 245 and 325 with one and two. No source read says the fighters carried tanks on 24 August, so the figure without them is read."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "sbd-3"
+fact = "combat_radius_nm"
+row = 280
+reason = "200 miles, the distance of the morning search and about that of Saratoga's strike. The afternoon search went to 250 with a lighter bomb."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "tbf-1"
+fact = "combat_radius_nm"
+row = 310
+reason = "190 miles, flown with a torpedo by Saratoga's strike. No official radius was found."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "d3a1-11"
+fact = "range_normal_nm"
+row = 98
+reason = "Chosen on the Eastern Solomons sheet: 759 miles, the middle of three weak sources. A third of it is 252; the first wave flew about 200."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "b5n2"
+fact = "range_normal_nm"
+row = 79
+reason = "Chosen on the Eastern Solomons sheet: 528 miles with a torpedo, two weak sources that agree."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "sbd-3"
+fact = "pilot_armour"
+row = 443
+reason = "Dated from 1942: the other two rows say the same without a date."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "sbd-3"
+fact = "self_sealing_tanks"
+row = 446
+reason = "Dated from 1942: the other two rows say the same without a date."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "tbf-1"
+fact = "pilot_armour"
+row = 449
+reason = "Yes: one source, by inference. Nothing read says otherwise."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "tbf-1"
+fact = "self_sealing_tanks"
+row = 450
+reason = "Yes: one source, by inference. Nothing read says otherwise."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "d3a1-11"
+fact = "pilot_armour"
+row = 473
+reason = "No: one source. The tanks are unprotected on better evidence."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "b5n2"
+fact = "pilot_armour"
+row = 477
+reason = "No: one weak source. Nothing read says otherwise."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "b5n2"
+fact = "self_sealing_tanks"
+row = 478
+reason = "No: one weak source. Nothing read says otherwise."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-bomb-1000lb-gp"
+fact = "weight_kg"
+row = 363
+reason = "453.6 kg is 1,000 lb, the bomb's name."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "jp-bomb-250kg"
+fact = "weight_kg"
+row = 214
+reason = "250 kg, the bomb's name."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-torpedo-mk13"
+fact = "warhead_kg"
+row = 381
+reason = "183 kg, about 400 lb: the early warhead. The 272 kg figure is the later, heavier one."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "jp-torpedo-type91"
+fact = "warhead_kg"
+row = 226
+reason = "205 kg: the warhead of the model in service through 1942. The 235 and 240 kg figures are later models."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-lexington-class"
+fact = "endurance_speed_kn"
+row = 826
+reason = "The same 15 knots as row 824, from the same tables."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "endurance_speed_kn"
+row = 851
+reason = "The same 15 knots as row 855, from the same tables."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "us-porter-class"
+fact = "fuel_capacity_lt"
+row = 852
+reason = "The same 651 tons as row 856, from the same tables."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "jp-shokaku-class"
+fact = "light_aa"
+row = 458
+reason = "Chosen on the Eastern Solomons sheet: 48 guns of 25 mm in August 1942. The other figures are 42 and 54."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "ryujo"
+fact = "light_aa"
+row = 467
+reason = "Chosen on the Eastern Solomons sheet: 22 guns of 25 mm, two low-grade sources that agree. The class row's 4 is her fit as built."
+agreed = "2026-11-11"
+
+[[exception]]
+entity = "ryujo"
+fact = "light_aa"
+row = 468
+reason = "The second source for row 467's 22 guns."
+agreed = "2026-11-11"

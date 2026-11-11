@@ -71,7 +71,7 @@ use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{AirGroupId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::AirMission;
-use crate::refdata::{AttackWeapon, ShipKind};
+use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
 use crate::rng::{RngStream, Subsystem};
 use crate::search::build_sighting_report;
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
@@ -201,6 +201,36 @@ fn roll_hits(stream: &mut RngStream, shots: u32, chance: Fixed) -> (Fixed, Fixed
     let hits = u32::try_from(whole).expect("expected hits are not negative")
         + u32::from(stream.chance(fraction));
     (shots, expected, hits)
+}
+
+/// The chance of one shot at aircraft: the base chance and the protection
+/// factors of the target type that were applied (decision 11 of 0029).
+#[derive(Clone, Copy)]
+struct ShotChance {
+    base: Fixed,
+    armour: Option<Fixed>,
+    tanks: Option<Fixed>,
+    /// Base times armour factor times tanks factor, in that order, each
+    /// step truncated.
+    chance: Fixed,
+}
+
+impl ShotChance {
+    fn new(base: Fixed, armour: Option<Fixed>, tanks: Option<Fixed>) -> ShotChance {
+        let mut chance = base;
+        if let Some(factor) = armour {
+            chance = chance * factor;
+        }
+        if let Some(factor) = tanks {
+            chance = chance * factor;
+        }
+        ShotChance {
+            base,
+            armour,
+            tanks,
+            chance,
+        }
+    }
 }
 
 /// Takes `hits` from the pool, the lowest group first, each until it has
@@ -658,6 +688,24 @@ impl World {
             .min()
     }
 
+    /// The chance of a shot at aircraft of the type `group` flies: `base`
+    /// times the pilot armour factor if the type has pilot armour, times the
+    /// self-sealing tanks factor if it has them (decision 11 of 0029). The
+    /// caller passes the first group of the target pool.
+    fn shot_chance(&self, base: Fixed, group: AirGroupId, air: &AirCombatFigures) -> ShotChance {
+        let aircraft_type =
+            &self.ref_data.aircraft_types[&self.truth.air_groups[&group].aircraft_type];
+        ShotChance::new(
+            base,
+            aircraft_type
+                .pilot_armour
+                .then_some(air.pilot_armour_factor),
+            aircraft_type
+                .self_sealing_tanks
+                .then_some(air.self_sealing_tanks_factor),
+        )
+    }
+
     /// Works out one raid on the state at the start of the step: the
     /// escorts it has, the fights in the air, the guns, and then what each
     /// strike group that has bombers left does. Reads truth, which the
@@ -733,19 +781,34 @@ impl World {
         let patrol_count: u32 = patrol.iter().map(|(_, aircraft)| aircraft).sum();
 
         let mut rolls = Vec::new();
-        let breakdown = |shots: Fixed, chance: Fixed, expected: Fixed| {
-            self.config.record_breakdowns.then(|| Breakdown {
-                factors: vec![
+        let breakdown = |shots: Fixed, chance: ShotChance, expected: Fixed| {
+            self.config.record_breakdowns.then(|| {
+                let mut factors = vec![
                     Factor {
                         name: "shots",
                         value: shots,
                     },
                     Factor {
                         name: "hit_chance",
-                        value: chance,
+                        value: chance.base,
                     },
-                ],
-                result: expected,
+                ];
+                if let Some(value) = chance.armour {
+                    factors.push(Factor {
+                        name: "pilot_armour_factor",
+                        value,
+                    });
+                }
+                if let Some(value) = chance.tanks {
+                    factors.push(Factor {
+                        name: "self_sealing_tanks_factor",
+                        value,
+                    });
+                }
+                Breakdown {
+                    factors,
+                    result: expected,
+                }
             })
         };
 
@@ -761,8 +824,8 @@ impl World {
                 EntityRef::AirGroup(first_escort),
                 EntityRef::TaskForce(task_force),
             );
-            let (shots, expected, hits) =
-                roll_hits(&mut stream, escort_count, air.fighter_hit_chance);
+            let shot = self.shot_chance(air.fighter_hit_chance, first_patrol, air);
+            let (shots, expected, hits) = roll_hits(&mut stream, escort_count, shot.chance);
             rolls.push(FireRoll {
                 fire: Fire::Fighters {
                     firer: first_escort,
@@ -771,11 +834,11 @@ impl World {
                     at: AirTarget::Patrol,
                 },
                 shots,
-                chance: air.fighter_hit_chance,
+                chance: shot.chance,
                 expected,
                 hits,
                 lost: take_hits(hits, &mut patrol.clone()),
-                breakdown: breakdown(shots, air.fighter_hit_chance, expected),
+                breakdown: breakdown(shots, shot, expected),
             });
         }
         if let Some((first_patrol, _)) = patrol.first().copied() {
@@ -788,8 +851,8 @@ impl World {
             );
             let at_escorts = patrol_count.min(escort_count);
             if let Some((first_escort, _)) = escorts.first().copied() {
-                let (shots, expected, hits) =
-                    roll_hits(&mut stream, at_escorts, air.fighter_hit_chance);
+                let shot = self.shot_chance(air.fighter_hit_chance, first_escort, air);
+                let (shots, expected, hits) = roll_hits(&mut stream, at_escorts, shot.chance);
                 rolls.push(FireRoll {
                     fire: Fire::Fighters {
                         firer: first_patrol,
@@ -798,17 +861,17 @@ impl World {
                         at: AirTarget::Escorts,
                     },
                     shots,
-                    chance: air.fighter_hit_chance,
+                    chance: shot.chance,
                     expected,
                     hits,
                     lost: take_hits(hits, &mut escorts),
-                    breakdown: breakdown(shots, air.fighter_hit_chance, expected),
+                    breakdown: breakdown(shots, shot, expected),
                 });
             }
             let at_bombers = patrol_count - at_escorts;
             if at_bombers > 0 {
-                let (shots, expected, hits) =
-                    roll_hits(&mut stream, at_bombers, air.fighter_hit_chance);
+                let shot = self.shot_chance(air.fighter_hit_chance, first.air_group, air);
+                let (shots, expected, hits) = roll_hits(&mut stream, at_bombers, shot.chance);
                 rolls.push(FireRoll {
                     fire: Fire::Fighters {
                         firer: first_patrol,
@@ -817,11 +880,11 @@ impl World {
                         at: AirTarget::Bombers,
                     },
                     shots,
-                    chance: air.fighter_hit_chance,
+                    chance: shot.chance,
                     expected,
                     hits,
                     lost: take_hits(hits, &mut bombers),
-                    breakdown: breakdown(shots, air.fighter_hit_chance, expected),
+                    breakdown: breakdown(shots, shot, expected),
                 });
             }
         }
@@ -844,19 +907,19 @@ impl World {
                 EntityRef::Ship(*lowest_ship),
                 EntityRef::AirGroup(first.air_group),
             );
-            let (shots, expected, hits) =
-                roll_hits(&mut stream, gun_shots, air.anti_aircraft_hit_chance);
+            let shot = self.shot_chance(air.anti_aircraft_hit_chance, first.air_group, air);
+            let (shots, expected, hits) = roll_hits(&mut stream, gun_shots, shot.chance);
             rolls.push(FireRoll {
                 fire: Fire::Guns {
                     task_force,
                     air_group: first.air_group,
                 },
                 shots,
-                chance: air.anti_aircraft_hit_chance,
+                chance: shot.chance,
                 expected,
                 hits,
                 lost: take_hits(hits, &mut bombers),
-                breakdown: breakdown(shots, air.anti_aircraft_hit_chance, expected),
+                breakdown: breakdown(shots, shot, expected),
             });
         }
 
@@ -1142,6 +1205,8 @@ mod tests {
             }),
             attack_weapon: weapon,
             attack_damage: Fixed::from_int(damage),
+            pilot_armour: false,
+            self_sealing_tanks: false,
         }
     }
 
@@ -3802,5 +3867,278 @@ mod tests {
                 loss_of(&losses(&world)[0]).0
             ))]
         );
+    }
+
+    // ---- protection of the target type (decision 11 of 0029) ----
+
+    /// Sets the two protection facts of aircraft type `type_id`.
+    fn protect(world: &mut World, type_id: u32, armour: bool, tanks: bool) {
+        let aircraft_type = world
+            .ref_data
+            .aircraft_types
+            .get_mut(&AircraftTypeId::new(type_id))
+            .expect("type");
+        aircraft_type.pilot_armour = armour;
+        aircraft_type.self_sealing_tanks = tanks;
+    }
+
+    /// Adds fighter type 7, a copy of type 5.
+    fn add_fighter_type_7(world: &mut World) {
+        let mut copy = world.ref_data.aircraft_types[&AircraftTypeId::new(5)].clone();
+        copy.id = AircraftTypeId::new(7);
+        world.ref_data.aircraft_types.insert(copy.id, copy);
+    }
+
+    /// (chance, expected, breakdown factor names and values) of an
+    /// `AirFight` or an `AntiAircraftFire`.
+    fn chance_of(event: &Event) -> (Fixed, Fixed) {
+        match event.kind {
+            EventKind::AirFight {
+                chance, expected, ..
+            }
+            | EventKind::AntiAircraftFire {
+                chance, expected, ..
+            } => (chance, expected),
+            _ => panic!("not a shot"),
+        }
+    }
+
+    /// Fighters at their placeholder 0.3 and guns at 0.05, the figures of
+    /// the file, and the protection factors of the file, 0.75.
+    fn file_figures(world: &mut World) {
+        air_figures(world).fighter_hit_chance = fixed(3, 10);
+        air_figures(world).anti_aircraft_hit_chance = fixed(5, 100);
+    }
+
+    /// 12 escorts (group 5, type 5) against 12 patrol (group 10, type 5),
+    /// eight gun shots, the figures of the file.
+    fn protection_world(seed: u64) -> World {
+        let mut world = with_fighters(seed, 12, Fixed::ZERO, 12);
+        set_guns(&mut world, 2, 8);
+        file_figures(&mut world);
+        world
+    }
+
+    /// The chances of the three kinds of roll, in a fight with escorts:
+    /// escorts at the patrol, patrol at the escorts, guns.
+    fn three_chances(world: &mut World) -> [Fixed; 3] {
+        strike_pulse(world, Pulse::Morning);
+        let fights = air_fights(world);
+        let guns = gun_fires(world);
+        assert_eq!((fights.len(), guns.len()), (2, 1));
+        [
+            chance_of(&fights[0]).0,
+            chance_of(&fights[1]).0,
+            chance_of(&guns[0]).0,
+        ]
+    }
+
+    #[test]
+    fn protection_multiplies_the_chance_of_a_fighters_shot_and_a_gun_shot() {
+        // Fighters of type 5 on both sides, bombers of type 2.
+        let with = |armour: bool, tanks: bool| {
+            let mut world = protection_world(1);
+            protect(&mut world, 5, armour, tanks);
+            protect(&mut world, 2, armour, tanks);
+            three_chances(&mut world)
+        };
+        let (base, gun) = (fixed(3, 10), fixed(5, 100));
+        assert_eq!(with(false, false), [base, base, gun]);
+        // 0.3 x 0.75 = 0.225 and 0.05 x 0.75 = 0.0375.
+        assert_eq!(
+            with(true, false),
+            [fixed(225, 1000), fixed(225, 1000), fixed(375, 10000)]
+        );
+        assert_eq!(
+            with(false, true),
+            [fixed(225, 1000), fixed(225, 1000), fixed(375, 10000)]
+        );
+        // 0.3 x 0.75 x 0.75 = 0.16875 and 0.05 x 0.75 x 0.75 = 0.028125.
+        assert_eq!(
+            with(true, true),
+            [
+                fixed(16875, 100000),
+                fixed(16875, 100000),
+                fixed(28125, 1000000)
+            ]
+        );
+    }
+
+    #[test]
+    fn the_events_chance_and_expected_hits_are_the_modified_ones() {
+        let mut world = protection_world(1);
+        protect(&mut world, 5, true, true);
+        protect(&mut world, 2, true, true);
+        strike_pulse(&mut world, Pulse::Morning);
+        let fight = &air_fights(&world)[0];
+        // 12 shots x 0.16875 = 2.025 expected.
+        assert_eq!(chance_of(fight), (fixed(16875, 100000), fixed(2025, 1000)));
+        assert!(fight
+            .kind
+            .to_string()
+            .contains("12 shots x 0.16875 = 2.025 expected"));
+        // 8 shots x 0.028125 = 0.225 expected.
+        let fire = &gun_fires(&world)[0];
+        assert_eq!(chance_of(fire), (fixed(28125, 1000000), fixed(225, 1000)));
+        assert!(fire
+            .kind
+            .to_string()
+            .contains("8 shots x 0.028125 = 0.225 expected"));
+    }
+
+    #[test]
+    fn the_target_pools_first_group_sets_the_factor_for_each_roll() {
+        // Escorts group 5 (type 5), patrol group 10. Patrol of type 7 with
+        // armour: escorts firing at it use 0.225; the patrol firing at the
+        // unprotected escorts uses 0.3.
+        let mut world = protection_world(1);
+        add_fighter_type_7(&mut world);
+        group_mut(&mut world, AirGroupId::new(10)).aircraft_type = AircraftTypeId::new(7);
+        protect(&mut world, 7, true, false);
+        let [escorts_at_patrol, patrol_at_escorts, _] = three_chances(&mut world);
+        assert_eq!(escorts_at_patrol, fixed(225, 1000));
+        assert_eq!(patrol_at_escorts, fixed(3, 10));
+        // The other way round: the escorts are the armoured type.
+        let mut world = protection_world(1);
+        add_fighter_type_7(&mut world);
+        group_mut(&mut world, PATROL_A).aircraft_type = AircraftTypeId::new(7);
+        protect(&mut world, 7, true, false);
+        let [escorts_at_patrol, patrol_at_escorts, _] = three_chances(&mut world);
+        assert_eq!(escorts_at_patrol, fixed(3, 10));
+        assert_eq!(patrol_at_escorts, fixed(225, 1000));
+
+        // A raid of two bomber groups of different types: the first group's
+        // type sets the factor for the patrol and the guns, in both orders.
+        let bomber_chances = |first_type: u32, second_type: u32| {
+            // No escorts, so the whole patrol fires at the bombers.
+            let mut world = with_fighters(1, 12, Fixed::ONE, 12);
+            set_guns(&mut world, 2, 8);
+            file_figures(&mut world);
+            let mut second = group(AirGroupId::new(6), Side::Allied, 1, second_type, 18);
+            second.mission = AirMission::NavalStrike;
+            world.truth.air_groups.insert(second.id, second);
+            group_mut(&mut world, BOMBERS).aircraft_type = AircraftTypeId::new(first_type);
+            // Type 2 is armoured and has tanks, type 3 has nothing.
+            protect(&mut world, 2, true, true);
+            strike_pulse(&mut world, Pulse::Morning);
+            assert_eq!(launches(&world).len(), 2);
+            let fights = air_fights(&world);
+            let guns = gun_fires(&world);
+            assert_eq!((fights.len(), guns.len()), (1, 1));
+            assert_eq!(guns_of(&guns[0]).1, 1, "the guns name the first group");
+            (chance_of(&fights[0]).0, chance_of(&guns[0]).0)
+        };
+        assert_eq!(
+            bomber_chances(2, 3),
+            (fixed(16875, 100000), fixed(28125, 1000000))
+        );
+        assert_eq!(bomber_chances(3, 2), (fixed(3, 10), fixed(5, 100)));
+    }
+
+    #[test]
+    fn breakdowns_list_the_base_chance_and_each_factor_applied() {
+        let names = |armour: bool, tanks: bool| {
+            let mut world = protection_world(1);
+            world.set_config(crate::world::SimConfig {
+                record_breakdowns: true,
+            });
+            protect(&mut world, 5, armour, tanks);
+            protect(&mut world, 2, armour, tanks);
+            strike_pulse(&mut world, Pulse::Morning);
+            let breakdown = |event: &Event| {
+                let b = event.breakdown.clone().expect("a breakdown");
+                (
+                    b.factors
+                        .iter()
+                        .map(|f| (f.name, f.value))
+                        .collect::<Vec<_>>(),
+                    b.result,
+                )
+            };
+            (
+                breakdown(&air_fights(&world)[0]),
+                breakdown(&gun_fires(&world)[0]),
+            )
+        };
+        let (fight, gun) = names(false, false);
+        assert_eq!(
+            fight.0,
+            vec![("shots", Fixed::from_int(12)), ("hit_chance", fixed(3, 10))]
+        );
+        assert_eq!(fight.1, fixed(36, 10));
+        assert_eq!(gun.0.len(), 2);
+        let (fight, gun) = names(true, true);
+        assert_eq!(
+            fight.0,
+            vec![
+                ("shots", Fixed::from_int(12)),
+                ("hit_chance", fixed(3, 10)),
+                ("pilot_armour_factor", fixed(3, 4)),
+                ("self_sealing_tanks_factor", fixed(3, 4)),
+            ]
+        );
+        assert_eq!(fight.1, fixed(2025, 1000));
+        assert_eq!(
+            gun.0,
+            vec![
+                ("shots", Fixed::from_int(8)),
+                ("hit_chance", fixed(5, 100)),
+                ("pilot_armour_factor", fixed(3, 4)),
+                ("self_sealing_tanks_factor", fixed(3, 4)),
+            ]
+        );
+        assert_eq!(gun.1, fixed(225, 1000));
+        let (fight, _) = names(false, true);
+        assert_eq!(fight.0.len(), 3);
+        assert_eq!(fight.0[2].0, "self_sealing_tanks_factor");
+    }
+
+    #[test]
+    fn recording_breakdowns_with_protection_changes_neither_the_outcome_nor_the_hash() {
+        let run = |record: bool, seed: u64| {
+            let mut world = protection_world(seed);
+            world.set_config(crate::world::SimConfig {
+                record_breakdowns: record,
+            });
+            protect(&mut world, 5, true, true);
+            protect(&mut world, 2, true, false);
+            strike_pulse(&mut world, Pulse::Morning);
+            world.age_contacts_at_end_of_pulse(1, Pulse::Morning);
+            (world.state_hash(), world.events().len())
+        };
+        for seed in 1..=10 {
+            assert_eq!(run(true, seed), run(false, seed), "seed {seed}");
+        }
+    }
+
+    #[test]
+    fn protection_never_raises_a_chance() {
+        let chances = |armour: bool, tanks: bool| {
+            let mut world = protection_world(3);
+            protect(&mut world, 5, armour, tanks);
+            protect(&mut world, 2, armour, tanks);
+            three_chances(&mut world)
+        };
+        let none = chances(false, false);
+        let armour = chances(true, false);
+        let tanks = chances(false, true);
+        let both = chances(true, true);
+        for i in 0..3 {
+            assert!(armour[i] <= none[i] && tanks[i] <= none[i]);
+            assert!(both[i] <= armour[i] && both[i] <= tanks[i]);
+            assert!(both[i] > Fixed::ZERO);
+        }
+        // The same holds for any factor in 0..=1.
+        for (num, den) in [(0, 1), (1, 4), (1, 2), (9, 10), (1, 1)] {
+            let mut world = protection_world(3);
+            air_figures(&mut world).pilot_armour_factor = fixed(num, den);
+            air_figures(&mut world).self_sealing_tanks_factor = fixed(num, den);
+            protect(&mut world, 5, true, true);
+            protect(&mut world, 2, true, true);
+            let protected = three_chances(&mut world);
+            for i in 0..3 {
+                assert!(protected[i] <= none[i]);
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@
 //!
 //! [`derive`] is a pure function over text. [`run`] does the file access.
 
+mod aircraft;
 mod date;
 mod decimal;
 mod derive;
@@ -27,7 +28,7 @@ use std::path::{Path, PathBuf};
 use oob_check::table::{Data, Table};
 
 pub use derive::{AMMUNITION_NOT_LIMITING_ROUNDS, NO_RADAR_ITEMS};
-pub use output::{companion_names, Outputs};
+pub use output::{aircraft_sources_name, companion_names, Outputs};
 pub use problem::{Kind, Problem};
 
 /// Where the rules text comes from, when it is not simply given.
@@ -111,13 +112,66 @@ pub fn derive_with(
 
     let env = derive::Env::build(&data, list.date, &rules);
     problems.extend(env.exception_problems());
+    let needs = |name: &str, given: bool, wanted: bool| {
+        (wanted && !given).then(|| {
+            Problem::new(
+                "rules",
+                Kind::Rules,
+                name,
+                "required by this list (decision 0029) and not in the rules file",
+            )
+        })
+    };
+    let air = list.air_figures;
+    let planes = !list.aircraft.is_empty();
+    problems.extend(
+        [
+            needs(
+                "anti_aircraft_heavy_weight",
+                rules.anti_aircraft_heavy_weight.is_some(),
+                air,
+            ),
+            needs(
+                "anti_aircraft_light_weight",
+                rules.anti_aircraft_light_weight.is_some(),
+                air,
+            ),
+            needs(
+                "strike_radius_fraction_of_range",
+                rules.strike_radius_fraction_of_range.is_some(),
+                planes,
+            ),
+            needs(
+                "search_sweep_width_nm",
+                rules.search_sweep_width_nm.is_some(),
+                planes,
+            ),
+        ]
+        .into_iter()
+        .flatten(),
+    );
+    if problems.iter().any(|p| p.kind == Kind::Rules) {
+        // Nothing can be derived without the constants the list needs.
+        return Err(problems);
+    }
     let mut results = Vec::new();
     for ship in &list.ships {
-        let assume = list.radar_unknown_means_none.contains(ship);
-        let ammunition = list.main_gun_ammunition_not_limiting.contains(ship);
-        match env.derive_ship(ship, assume, ammunition) {
+        let opts = derive::ShipOpts {
+            assume_no_radar: list.radar_unknown_means_none.contains(ship),
+            assume_ammunition_not_limiting: list.main_gun_ammunition_not_limiting.contains(ship),
+            air_figures: air,
+            surface_weapons_not_modelled: list.surface_weapons_not_modelled.contains(ship),
+        };
+        match env.derive_ship(ship, opts) {
             Ok(result) => results.push(result),
             Err(ship_problems) => problems.extend(ship_problems),
+        }
+    }
+    let mut aircraft_results = Vec::new();
+    for entry in &list.aircraft {
+        match env.derive_aircraft(entry) {
+            Ok(result) => aircraft_results.push(result),
+            Err(type_problems) => problems.extend(type_problems),
         }
     }
     if !problems.is_empty() {
@@ -129,12 +183,20 @@ pub fn derive_with(
             used.insert((*index, row.file.clone(), row.cite_key().1), row.clone());
         }
     }
+    let mut aircraft_used = BTreeMap::new();
+    for result in &aircraft_results {
+        for (index, row) in &result.used {
+            aircraft_used.insert((*index, row.file.clone(), row.cite_key().1), row.clone());
+        }
+    }
     let context = output::Context {
         list: &list,
         list_name,
         rules: &rules,
         results: &results,
         used: &used,
+        aircraft: &aircraft_results,
+        aircraft_used: &aircraft_used,
     };
     output::render(&context).map_err(|problem| vec![problem])
 }
@@ -198,11 +260,21 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
     let list = list.expect("a list that derives has parsed");
     let class_path = dir.join(&list.output);
     let (sources_name, ships_name) = companion_names(&list.output);
-    let files = vec![
+    let mut files = vec![
         (class_path.clone(), outputs.class_csv),
         (class_path.with_file_name(sources_name), outputs.sources_csv),
         (class_path.with_file_name(ships_name), outputs.ships_csv),
     ];
+    if let (Some(output), Some(csv), Some(sources)) = (
+        &list.aircraft_output,
+        outputs.aircraft_csv,
+        outputs.aircraft_sources_csv,
+    ) {
+        let path = dir.join(output);
+        let sources_path = path.with_file_name(aircraft_sources_name(output));
+        files.push((path, csv));
+        files.push((sources_path, sources));
+    }
     let paths: Vec<PathBuf> = files.iter().map(|(p, _)| p.clone()).collect();
     if check_only {
         return Ok(Outcome::Clean {
