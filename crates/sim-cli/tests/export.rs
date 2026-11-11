@@ -272,9 +272,16 @@ fn a_bad_command_line_fails_without_writing() {
 #[test]
 fn run_output_matches_the_golden_files() {
     let golden = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run_baseline");
+    // Scenarios whose event log is too large to keep as a baseline file: the
+    // soak's is 1.98 MB (decision 0044). Their summary file, with every
+    // day's hash, is still compared.
+    const NO_EVENTS_BASELINE: [&str; 1] = ["08_soak"];
     for scenario in scenarios() {
         let name = stem(&scenario);
         for (suffix, extra) in [("", None), (".events", Some("--events"))] {
+            if extra.is_some() && NO_EVENTS_BASELINE.contains(&name.as_str()) {
+                continue;
+            }
             let file = golden.join(format!("{name}{suffix}.txt"));
             let expected = fs::read(&file)
                 .unwrap_or_else(|_| panic!("{scenario} has no golden file {}", file.display()));

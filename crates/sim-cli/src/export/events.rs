@@ -123,6 +123,8 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::FatigueOutOfRange(fatigue) => {
             base("fatigue_out_of_range").num("fatigue", *fatigue)
         }
+        RejectReason::NoShipAfloat => base("no_ship_afloat"),
+        RejectReason::AirGroupLost => base("air_group_lost"),
     }
 }
 
@@ -843,6 +845,20 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 )
                 .num("amount", *amount)
                 .num("fatigue", *fatigue),
+        ),
+        EventKind::TaskForceTurnedBack {
+            task_force,
+            from,
+            toward,
+            progress_nm,
+            position,
+        } => (
+            "task_force_turned_back",
+            d.id("task_force", *task_force)
+                .hex("from", *from)
+                .hex("toward", *toward)
+                .num("progress_nm", *progress_nm)
+                .hex("position", *position),
         ),
         EventKind::AlarmRoll {
             task_force,

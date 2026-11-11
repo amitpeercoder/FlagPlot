@@ -24,6 +24,10 @@
 #     Its orders are all on day 1.
 #   - Ships and air groups of the Eastern Solomons scenario start in the
 #     hexes that scenario gives them and sit there until day 4.
+#   - Force A (task force 6) is sent north on day 5 and back on day 6, so that
+#     the log has a turn-back event (decision 5 of 0005). It is there only for
+#     coverage, as the damaged fighters of group 10 and the order sent to the
+#     wrong side's force are. It is home again at the end of day 6.
 #
 # PLACEHOLDER DATA. The figures files are placeholders. The convoy, its
 # escort, the night-action forces, a bystander and a dry destroyer are
@@ -1388,6 +1392,25 @@ side = "allied"
 task_force = 9
 kind = "set_route"
 waypoints = [[4, 14]]
+
+# Coverage only: a turn-back. On day 5 force A is sent north toward (-8,0), ten
+# hexes at its cruising 16 knots, so that at the start of day 6 it is 24 nm
+# along a leg between two hexes. On day 6 it is ordered back to (-8,10), which
+# turns it round mid-leg and records a turn-back event (decision 5 of 0005).
+# It is home again long before its day-7 steam for force B.
+[[order]]
+day = 5
+side = "japanese"
+task_force = 6
+kind = "set_route"
+waypoints = [[-8, 0]]
+
+[[order]]
+day = 6
+side = "japanese"
+task_force = 6
+kind = "set_route"
+waypoints = [[-8, 10]]
 
 # The second night action, on day 9: force D avoids.
 [[order]]

@@ -1,0 +1,415 @@
+Scenario 8: The soak, 180 days from 21 August 1942
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash c3b44e6362bf8fc1  81 events
+day   2  hash 9791ab97c7cc1aa9  72 events
+day   3  hash 4fe032711fc7145b  66 events
+day   4  hash 7c7b9400594e353e  247 events
+day   5  hash 10356fd73c4e1d41  146 events
+day   6  hash dd58735abc77e459  124 events
+day   7  hash 970ee6604a530ef5  263 events
+day   8  hash c8347c1d5e8f3152  125 events
+day   9  hash 84c3cac9fe7c82c7  161 events
+day  10  hash f7d67069e850615f  129 events
+day  11  hash 70e90a604f442436  131 events
+day  12  hash 1a491ea3d44ad6af  121 events
+day  13  hash 9194b677b8727dd8  87 events
+day  14  hash 51220714ad6792f9  81 events
+day  15  hash 0d3daabf2efab02e  97 events
+day  16  hash 550b9eebe35f63ba  87 events
+day  17  hash 9c4826c97c1be27d  68 events
+day  18  hash 48ac8083f0bfe36b  101 events
+day  19  hash 31277da168d129fb  73 events
+day  20  hash 34d24f8d9c8d9c68  62 events
+day  21  hash d31a23ac5cc74d1e  89 events
+day  22  hash bff378e48505005b  87 events
+day  23  hash 79aa3a3195191fe3  76 events
+day  24  hash 70c82adccfbc7875  104 events
+day  25  hash f756302e3d9b4b84  78 events
+day  26  hash f7dbaecec6017cee  78 events
+day  27  hash 29e0481e53c36bed  114 events
+day  28  hash 4005b86185354d5c  79 events
+day  29  hash 3ff4c845ead1b74b  88 events
+day  30  hash bf233e273e335bf2  104 events
+day  31  hash 718459cc355b2d62  80 events
+day  32  hash 9a72c3599128dc1d  77 events
+day  33  hash 34d51d4292aefd8c  165 events
+day  34  hash cf05ddebc4ee9378  108 events
+day  35  hash c9449ad0db51a821  121 events
+day  36  hash 2f4458d73e7cb2aa  103 events
+day  37  hash dbbe507c76206208  80 events
+day  38  hash d0097dc5f3bc2314  78 events
+day  39  hash 4d308eedf0d3a789  105 events
+day  40  hash 3566ccf29f0db75f  145 events
+day  41  hash 0fc66f5c18d30ebe  83 events
+day  42  hash 705944270d8882da  173 events
+day  43  hash 640f29cada610d4d  135 events
+day  44  hash 2522f55177b262d2  88 events
+day  45  hash 3e68f38d5c457ef5  112 events
+day  46  hash db054deba6f67718  103 events
+day  47  hash abfa97cd569dd9c9  79 events
+day  48  hash c531bb2dcb304a4e  107 events
+day  49  hash c11709a558a1eddf  77 events
+day  50  hash 8286c7225fe0cca0  141 events
+day  51  hash 6e961b58e947e972  116 events
+day  52  hash 23604e0a2f46ef55  117 events
+day  53  hash 5714b995ba0ab10f  89 events
+day  54  hash 772771da319cacd1  105 events
+day  55  hash 68a7a3028a7ded0f  131 events
+day  56  hash 9ee21940951c79cb  138 events
+day  57  hash 457143031aa1f365  109 events
+day  58  hash 44e252eedc0e883d  98 events
+day  59  hash 79f62ec54aa71b89  77 events
+day  60  hash 2e3c9b4ef8ee57d2  70 events
+day  61  hash e9347ea78108f1cb  92 events
+day  62  hash dfa8117d01c9f629  78 events
+day  63  hash 1cd9891f3bb486b8  133 events
+day  64  hash 53000d26ade44ba2  113 events
+day  65  hash 619f2d4f1434b6bd  115 events
+day  66  hash b453b78282ae666c  89 events
+day  67  hash b29fdfb9d69d25b1  106 events
+day  68  hash b945d9af9a62f5f8  82 events
+day  69  hash 10561c1c369ece9e  81 events
+day  70  hash a97248afea3a5e67  120 events
+day  71  hash d5b9f3ca65d2369b  130 events
+day  72  hash dfc8f85a1e2ffdeb  141 events
+day  73  hash e7909e017c17555a  112 events
+day  74  hash e377437ffad49774  127 events
+day  75  hash 3f6e2d25187a2ad7  108 events
+day  76  hash 7541bee033a0decc  105 events
+day  77  hash 01611165470b5da0  95 events
+day  78  hash 9cfd163b06ce4cf5  86 events
+day  79  hash ecd78cee52f83e29  103 events
+day  80  hash 9648e9225062636f  204 events
+day  81  hash 4fc8a054d7ce0d98  125 events
+day  82  hash 336cd043fdb732c4  143 events
+day  83  hash 6f1e176efed8666d  88 events
+day  84  hash 310b16c4709897ec  77 events
+day  85  hash 36bd324351a3ad41  116 events
+day  86  hash eed6379f9677ed05  85 events
+day  87  hash ef8d469c14446b90  147 events
+day  88  hash 05e162456a46a500  122 events
+day  89  hash c750bab75d45b994  79 events
+day  90  hash c94ccff72b89d4f7  91 events
+day  91  hash 6cbf0e1b93db2f3d  98 events
+day  92  hash 48ae8f38a520eedf  84 events
+day  93  hash 8094fd3d2b5e6635  145 events
+day  94  hash cdd96e6dd948903c  120 events
+day  95  hash fff28080ce03cc4f  116 events
+day  96  hash d216b939a978d8e0  78 events
+day  97  hash ac21ac6ee224c70f  93 events
+day  98  hash 3cdefd35c831db24  76 events
+day  99  hash 0a27d538acc66121  86 events
+day 100  hash cc437fc969b870f8  105 events
+day 101  hash e22e783e43c76a40  145 events
+day 102  hash a796fd3130e84cb8  87 events
+day 103  hash a287a5c1fc1ea228  135 events
+day 104  hash 1760a59a099250c0  148 events
+day 105  hash 3383ca44abbeb078  86 events
+day 106  hash 513627fa632f3a1b  124 events
+day 107  hash 6a3cc650eb194d09  87 events
+day 108  hash 81fba5702fe8ed92  79 events
+day 109  hash ff1088d2d5b5f9bc  91 events
+day 110  hash 4af9eb0a6b6d920b  134 events
+day 111  hash 7067a77dd92e6e75  90 events
+day 112  hash e92f79e29abd909c  107 events
+day 113  hash bf5a33431d224d08  77 events
+day 114  hash f87a55bd1a5f2290  75 events
+day 115  hash 1a92639b78841f0f  152 events
+day 116  hash 83b341d3b959fc0d  87 events
+day 117  hash ad88fec02da2dd7f  120 events
+day 118  hash 3c7ffc4c9de0763b  108 events
+day 119  hash 2a6422ec3f11c3ce  143 events
+day 120  hash a4ac5b29b885b7c6  108 events
+day 121  hash 16cc8a0d2aa86cde  107 events
+day 122  hash 86afe21b7c69c56f  105 events
+day 123  hash 3be25fe9dcc44af3  133 events
+day 124  hash e95c4be217bf39e5  107 events
+day 125  hash fa4816303b371eb5  82 events
+day 126  hash b8632f7b2101b1ba  78 events
+day 127  hash 13f42da8fe174856  86 events
+day 128  hash f89b298d7fde224a  81 events
+day 129  hash 151ba367546c2439  62 events
+day 130  hash 54ed6d9702404ad3  169 events
+day 131  hash d8bf359fdafa38e5  119 events
+day 132  hash 633fa88e6686ec4d  80 events
+day 133  hash dd5e5dd243c1f19e  135 events
+day 134  hash 993e51c5ae9ae28d  85 events
+day 135  hash 4bcb94c11f37a95e  86 events
+day 136  hash 9880cc0676007696  96 events
+day 137  hash ed47c4eb67b64c76  71 events
+day 138  hash dc16454bc84aa50a  65 events
+day 139  hash 36e7d9642131e54d  105 events
+day 140  hash e94d9c2aad16ea39  158 events
+day 141  hash 4c24d446472531b9  77 events
+day 142  hash 2339ae1dd396bee8  141 events
+day 143  hash 6b7ac30a7e1c7dd6  79 events
+day 144  hash 1637aeb6f99bdcce  89 events
+day 145  hash feba2d8eb27224cd  96 events
+day 146  hash 695af3068a5962bc  124 events
+day 147  hash 75605f9000cec98c  149 events
+day 148  hash fd7b40bcc191326e  104 events
+day 149  hash c3c8b2506ef49575  110 events
+day 150  hash fbbe35f2aafc435a  86 events
+day 151  hash 123927cb7fc2e0e8  101 events
+day 152  hash b2944a27d00346d5  78 events
+day 153  hash 7931ba885b3804f9  130 events
+day 154  hash d41872ff4a9cc876  103 events
+day 155  hash d3a7f4422cef3097  88 events
+day 156  hash eef817d3a8cd632e  71 events
+day 157  hash bbe9f0fb95278770  90 events
+day 158  hash 8be4f7e9e48101c8  82 events
+day 159  hash 5f4164ab94b56e51  66 events
+day 160  hash f2bd24cfd5abbee2  178 events
+day 161  hash aff48ac4e12177cf  82 events
+day 162  hash e6b99ff423139286  87 events
+day 163  hash bc33d5ca49681ff3  87 events
+day 164  hash 31cf4ca8b23db28b  70 events
+day 165  hash aeea7ff69b9940be  67 events
+day 166  hash 9c12da8d1c17a334  86 events
+day 167  hash 42ee653421046fc8  75 events
+day 168  hash bbf9df2caa33c47d  84 events
+day 169  hash 14428aa029ab65ec  74 events
+day 170  hash f36e0dea37a37b19  149 events
+day 171  hash ac712d93df0debfe  88 events
+day 172  hash 47d37af31eaeb31d  95 events
+day 173  hash 8ad2615b87b1f0aa  65 events
+day 174  hash 56c37ea03ca6ef20  55 events
+day 175  hash ffc340fea38279c8  72 events
+day 176  hash 636c7a98eeae222f  124 events
+day 177  hash cab863bc782a00a2  70 events
+day 178  hash 2d8a5c362f9825bf  124 events
+day 179  hash 0f9cea0a4ade6ffc  77 events
+day 180  hash c3ed3bca2bbb4617  74 events
+
+task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-10); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:5 "Placeholder supply convoy" (Allied): OutOfFuel at (7,2); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:3
+task_force:6 "Placeholder night force A" (Japanese): Idle at (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:7 "Placeholder night force B" (Allied): Idle at (0,10); readiness normal, alert (alerted), fatigue 25, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:8 "Placeholder bystander" (Allied): Idle at (0,10); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:9 "Placeholder dry destroyer" (Allied): OutOfFuel at (4,13); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:10 "Placeholder night force C" (Japanese): Arrived at (0,14); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:11 "Placeholder night force D" (Allied): Arrived at (-8,14); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:12 "Placeholder night force E" (Japanese): Arrived at (0,12); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:13 "Placeholder night force F" (Allied): Arrived at (-8,12); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:21 "Placeholder supply convoy 2" (Allied): OutOfFuel at (7,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:3
+task_force:22 "Placeholder supply convoy 3" (Allied): Underway at (7,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:3
+task_force:30 "Placeholder raiding force A" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:31 "Placeholder raiding force B" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:32 "Placeholder raiding force C" (Japanese): Arrived at (-9,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:33 "Placeholder raiding force D" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:34 "Placeholder raiding force E" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:35 "Placeholder raiding force F" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:36 "Placeholder raiding force G" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:37 "Placeholder raiding force H" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:38 "Placeholder raiding force I" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:39 "Placeholder raiding force J" (Japanese): Arrived at (0,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:50 "Placeholder surface force 4J" (Japanese): Arrived at (-8,3); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:51 "Placeholder surface force 4A" (Allied): Arrived at (0,3); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:52 "Placeholder surface force 5J" (Japanese): Arrived at (-8,5); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:53 "Placeholder surface force 5A" (Allied): Arrived at (0,5); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:54 "Placeholder surface force 6J" (Japanese): Arrived at (-8,7); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:55 "Placeholder surface force 6A" (Allied): Arrived at (0,7); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:56 "Placeholder surface force 7J" (Japanese): Arrived at (-8,9); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:57 "Placeholder surface force 7A" (Allied): Arrived at (0,9); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:58 "Placeholder surface force 8J" (Japanese): Arrived at (-12,15); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:59 "Placeholder surface force 8A" (Allied): Arrived at (-4,15); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:60 "Placeholder surface force 9J" (Japanese): Underway at (-8,16), 20 nm from (-9,16) toward (-8,16); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:61 "Placeholder surface force 9A" (Allied): Arrived at (-4,16); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:62 "Placeholder surface force 10J" (Japanese): Arrived at (-12,17); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:63 "Placeholder surface force 10A" (Allied): Underway at (-8,17), 20 nm from (-7,17) toward (-8,17); readiness battle, alert, fatigue 50, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:64 "Placeholder surface force 11J" (Japanese): Arrived at (-12,18); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:65 "Placeholder surface force 11A" (Allied): Arrived at (-4,18); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:66 "Placeholder surface force 12J" (Japanese): Underway at (-8,19), 20 nm from (-9,19) toward (-8,19); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:67 "Placeholder surface force 12A" (Allied): Arrived at (-4,19); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:68 "Placeholder surface force 13J" (Japanese): Arrived at (-12,20); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:69 "Placeholder surface force 13A" (Allied): Arrived at (-4,20); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:70 "Placeholder battle picket" (Japanese): Idle at (-12,1); readiness battle, alert, fatigue 100, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:71 "Placeholder dry cruiser" (Allied): OutOfFuel at (-11,0), 20 nm from (-12,0) toward (-11,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:72 "Placeholder night force B, left behind" (Allied): Idle at (0,10); readiness normal, alert (alerted), fatigue 5, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:73 "Placeholder surface force 7J, left behind" (Japanese): Idle at (-4,9), 20 nm from (-5,9) toward (-4,9); readiness battle, alert, fatigue 65, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:74 "Placeholder surface force 11J, left behind" (Japanese): Idle at (-8,18), 20 nm from (-9,18) toward (-8,18); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:75 "Placeholder surface force 13A, left behind" (Allied): Idle at (-8,20), 20 nm from (-7,20) toward (-8,20); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 37 ready, 4 damaged, 41 pilots, mission BaseStrike on base:1, rests above 45, no arc
+air_group:2 "Tainan Air Group" (Japanese) at base:2: 61 ready, 3 damaged, 64 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
+air_group:3 "6th Air Group" (Japanese) at base:2: 5 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
+air_group:4 "Placeholder Henderson fighter flight, no pilots" (Allied) at base:1: 0 ready, 0 pilots, mission CombatAirPatrol, patrol share 1, no arc
+air_group:5 "Placeholder Rabaul bomber flight" (Japanese) at base:2: 8 ready, 8 pilots, mission BaseStrike on base:1, rests above 45, no arc
+air_group:6 "Placeholder Henderson scout flight 1" (Allied) at base:1: 8 ready, 8 pilots, mission Search, fatigue 24, rests above 30, stood down, arc 240-300 to 200 nm
+air_group:7 "Placeholder Henderson scout flight 2" (Allied) at base:1: 8 ready, 8 pilots, mission Search, fatigue 56, rests above 45, stood down, arc 240-300 to 200 nm
+air_group:10 "VMF-223" (Allied) at base:1: 65 ready, 2 damaged, 67 pilots, mission CombatAirPatrol, patrol share 1, fatigue 40, rests above 40, no arc
+air_group:11 "VMSB-232" (Allied) at base:1: 27 ready, 1 damaged, 28 pilots, mission NavalStrike, no arc
+air_group:12 "Flight 300" (Allied) at base:1: 16 ready, 3 damaged, 19 pilots, mission NavalStrike, no arc
+air_group:13 "VMF-224" (Allied) at base:1: 17 ready, 38 damaged, 55 pilots, mission CombatAirPatrol, patrol share 1, fatigue 34, rests above 40, stood down, no arc
+air_group:14 "VMSB-231" (Allied) at base:1: 4 ready, 18 damaged, 22 pilots, mission NavalStrike, no arc
+air_group:15 "VF-5" (Allied) at base:1: 3 ready, 49 damaged, 52 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
+air_group:16 "Fighters from Hornet and Wasp" (Allied) at base:1: 5 ready, 37 damaged, 42 pilots, mission CombatAirPatrol, patrol share 1, fatigue 46, rests above 40, no arc
+air_group:17 "VS-3" (Allied) at base:1: 7 ready, 13 damaged, 20 pilots, mission NavalStrike, no arc
+air_group:101 "VF-6" (Allied) aboard ship:1: 17 ready, mission CombatAirPatrol, patrol share 1, fatigue 86, no arc
+air_group:102 "VB-6" (Allied) aboard ship:1: 13 ready, mission NavalStrike, no arc
+air_group:103 "VS-5" (Allied) aboard ship:1: 14 ready, mission Search, fatigue 86, arc 290-090 to 200 nm
+air_group:104 "VT-3" (Allied) aboard ship:1: 14 ready, mission NavalStrike, no arc
+air_group:105 "VF-5" (Allied) aboard ship:11: 20 ready, mission CombatAirPatrol, patrol share 1, fatigue 94, no arc
+air_group:106 "VB-3" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:107 "VS-3" (Allied) aboard ship:11: 14 ready, mission NavalStrike, no arc
+air_group:108 "VT-8" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:111 "Shokaku fighter unit" (Japanese) aboard ship:19: 19 ready, mission CombatAirPatrol, patrol share 0.8, fatigue 88.08, no arc
+air_group:112 "Shokaku bomber unit" (Japanese) aboard ship:19: 0 ready, mission NavalStrike, no arc
+air_group:113 "Shokaku attack unit" (Japanese) aboard ship:19: 18 ready, mission NavalStrike, no arc
+air_group:114 "Zuikaku fighter unit" (Japanese) aboard ship:20: 19 ready, mission CombatAirPatrol, patrol share 0.8, fatigue 88.08, no arc
+air_group:115 "Zuikaku bomber unit" (Japanese) aboard ship:20: 0 ready, mission NavalStrike, no arc
+air_group:116 "Zuikaku attack unit" (Japanese) aboard ship:20: 18 ready, mission NavalStrike, no arc
+air_group:117 "Chikuma floatplanes" (Japanese) aboard ship:21: 3 ready, mission Search, fatigue 78.24, arc 110-200 to 253 nm
+air_group:118 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.3, fatigue 3, no arc
+air_group:119 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission NavalStrike, no arc
+air_group:120 "Tone floatplanes" (Japanese) aboard ship:34: 1 ready, mission Search, arc 110-200 to 253 nm
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 31.565652, fire 10.521884; propulsion out, flight deck degraded; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
+ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
+ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
+ship:5 "USS Balch": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
+ship:6 "USS Benham": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:7 "USS Ellet": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:8 "USS Maury": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 525 t of fuel, 0 t of supply
+ship:9 "USS Grayson": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 467 t of fuel, 0 t of supply
+ship:10 "USS Monssen": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 467 t of fuel, 0 t of supply
+ship:11 "USS Saratoga": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 8400 t of fuel, 0 t of supply
+ship:12 "USS New Orleans": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:13 "USS Minneapolis": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:14 "USS Farragut": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:15 "USS Macdonough": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:16 "USS Worden": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:17 "USS Dale": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
+ship:18 "USS Phelps": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
+ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
+ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
+ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2582.4 t of fuel, 0 t of supply
+ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
+ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
+ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
+ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
+ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1173.685431 t of fuel, 0 t of supply
+ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
+ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:33 "Ryujo": SUNK; damage flotation 100, fire 17.830188; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:34 "Tone": afloat in task_force:4; damage flotation 84.262145, fire 0; propulsion out, flight deck degraded; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
+ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 600 t of fuel, 960 t of supply
+ship:38 "Placeholder cargo ship 2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 600 t of fuel, 960 t of supply
+ship:39 "Placeholder destroyer 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
+ship:40 "Placeholder cruiser A1": afloat in task_force:6; damage flotation 46.25, fire 20; propulsion degraded, main battery degraded; 380 gun rounds, torpedoes gone; 1680 t of fuel, 0 t of supply
+ship:41 "Placeholder cruiser A2": afloat in task_force:6; damage flotation 0, fire 0; all systems working; 200 gun rounds, torpedoes gone; 1680 t of fuel, 0 t of supply
+ship:42 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 20; propulsion out, main battery degraded, torpedo mounts degraded; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:43 "Placeholder cruiser B2": SUNK; damage flotation 100, fire 30; fire control out, main battery out, torpedo mounts out; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:44 "Placeholder destroyer bystander": SUNK; damage flotation 100, fire 40; propulsion out, fire control out, main battery degraded, torpedo mounts out; 360 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+ship:45 "Placeholder dry destroyer": afloat in task_force:9; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
+ship:46 "Placeholder cruiser C1": afloat in task_force:10; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
+ship:47 "Placeholder cruiser C2": afloat in task_force:10; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
+ship:48 "Placeholder cruiser D1": afloat in task_force:11; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
+ship:49 "Placeholder cruiser D2": afloat in task_force:11; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
+ship:50 "Placeholder cruiser E1": afloat in task_force:12; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
+ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
+ship:60 "Placeholder raider cruiser A1": SUNK; damage flotation 100, fire 75.6; propulsion out, fire control out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:61 "Placeholder raider destroyer A2": SUNK; damage flotation 100, fire 100; main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:62 "Placeholder raider cruiser B1": SUNK; damage flotation 100, fire 56.7; propulsion out, fire control degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:63 "Placeholder raider destroyer B2": SUNK; damage flotation 100, fire 75.6; propulsion degraded, fire control degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:64 "Placeholder raider cruiser C1": SUNK; damage flotation 100, fire 37.8; propulsion degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:65 "Placeholder raider destroyer C2": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 297.5 t of fuel, 0 t of supply
+ship:66 "Placeholder raider cruiser D1": SUNK; damage flotation 100, fire 0; propulsion out, fire control degraded; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:67 "Placeholder raider destroyer D2": SUNK; damage flotation 100, fire 100; propulsion out, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:68 "Placeholder raider cruiser E1": SUNK; damage flotation 100, fire 75.6; propulsion out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:69 "Placeholder raider destroyer E2": SUNK; damage flotation 100, fire 75.6; propulsion out, fire control degraded, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:70 "Placeholder raider cruiser F1": SUNK; damage flotation 100, fire 56.7; propulsion out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:71 "Placeholder raider destroyer F2": SUNK; damage flotation 100, fire 100; propulsion degraded, fire control degraded, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:72 "Placeholder raider cruiser G1": SUNK; damage flotation 100, fire 94.5; propulsion out, fire control degraded, main battery out; 800 gun rounds, torpedoes ready; 1838 t of fuel, 0 t of supply
+ship:73 "Placeholder raider destroyer G2": SUNK; damage flotation 100, fire 0; main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:74 "Placeholder raider cruiser H1": SUNK; damage flotation 100, fire 56.7; propulsion out, fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:75 "Placeholder raider destroyer H2": SUNK; damage flotation 100, fire 100; propulsion degraded, fire control degraded, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:76 "Placeholder raider cruiser I1": SUNK; damage flotation 100, fire 56.7; propulsion degraded, fire control out, main battery out; 800 gun rounds, torpedoes ready; 1838 t of fuel, 0 t of supply
+ship:77 "Placeholder raider destroyer I2": SUNK; damage flotation 100, fire 75.6; propulsion out, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:78 "Placeholder raider cruiser J1": SUNK; damage flotation 100, fire 18.9; propulsion out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:79 "Placeholder raider destroyer J2": SUNK; damage flotation 100, fire 100; propulsion out, fire control out, main battery degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:80 "Placeholder convoy 2 cargo ship 1": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 0 t of fuel, 0 t of supply
+ship:81 "Placeholder convoy 2 cargo ship 2": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 0 t of fuel, 0 t of supply
+ship:82 "Placeholder convoy 3 cargo ship 1": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 336 t of fuel, 960 t of supply
+ship:83 "Placeholder convoy 3 cargo ship 2": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 336 t of fuel, 960 t of supply
+ship:84 "Placeholder cruiser 4J1": afloat in task_force:50; damage flotation 55, fire 35; fire control out, main battery out, torpedo mounts degraded; 740 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:85 "Placeholder cruiser 4J2": afloat in task_force:50; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:86 "Placeholder cruiser 4A1": afloat in task_force:51; damage flotation 25, fire 10; propulsion degraded, main battery degraded; 560 gun rounds, torpedoes gone; 1825 t of fuel, 0 t of supply
+ship:87 "Placeholder cruiser 5J1": afloat in task_force:52; damage flotation 38.75, fire 6.25; propulsion degraded, main battery degraded, torpedo mounts degraded; 740 gun rounds, torpedoes gone; 1735 t of fuel, 0 t of supply
+ship:88 "Placeholder destroyer 5A1": SUNK; damage flotation 100, fire 0; propulsion degraded, main battery degraded; 360 gun rounds, torpedoes gone; 430 t of fuel, 0 t of supply
+ship:89 "Placeholder destroyer 5A2": afloat in task_force:53; damage flotation 0, fire 0; all systems working; 360 gun rounds, torpedoes gone; 180 t of fuel, 0 t of supply
+ship:90 "Placeholder destroyer 6J1": SUNK; damage flotation 100, fire 20; propulsion out, fire control out, main battery out, torpedo mounts degraded; 600 gun rounds, torpedoes ready; 430 t of fuel, 0 t of supply
+ship:91 "Placeholder destroyer 6J2": afloat in task_force:54; damage flotation 20, fire 0; main battery degraded; 600 gun rounds, torpedoes ready; 180 t of fuel, 0 t of supply
+ship:92 "Placeholder cruiser 6A1": afloat in task_force:55; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:93 "Placeholder cruiser 6A2": afloat in task_force:55; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:94 "Placeholder cruiser 7J1": SUNK; damage flotation 100, fire 56.25; propulsion out, fire control out, main battery out, torpedo mounts degraded; 560 gun rounds, torpedoes gone; 1860 t of fuel, 0 t of supply
+ship:95 "Placeholder destroyer 7J2": afloat in task_force:56; damage flotation 70, fire 15; propulsion degraded, fire control out; 480 gun rounds, torpedoes gone; 407.851563 t of fuel, 0 t of supply
+ship:96 "Placeholder cruiser 7A1": afloat in task_force:57; damage flotation 10, fire 0; propulsion degraded; 320 gun rounds, torpedoes gone; 1825 t of fuel, 0 t of supply
+ship:97 "Placeholder destroyer 7A2": afloat in task_force:57; damage flotation 10, fire 10; all systems working; 120 gun rounds, torpedoes gone; 412.5 t of fuel, 0 t of supply
+ship:98 "Placeholder cruiser 8J1": afloat in task_force:58; damage flotation 25, fire 0; all systems working; 440 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:99 "Placeholder cruiser 8A1": afloat in task_force:59; damage flotation 60, fire 5; propulsion degraded, fire control degraded, main battery degraded, torpedo mounts degraded; 620 gun rounds, torpedoes gone; 1735 t of fuel, 0 t of supply
+ship:100 "Placeholder destroyer 9J1": SUNK; damage flotation 100, fire 100; propulsion degraded, fire control degraded, main battery out, torpedo mounts degraded; 600 gun rounds, torpedoes ready; 430 t of fuel, 0 t of supply
+ship:101 "Placeholder cruiser 9A1": afloat in task_force:61; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:102 "Placeholder cruiser 9A2": afloat in task_force:61; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:103 "Placeholder cruiser 10J1": afloat in task_force:62; damage flotation 0, fire 5; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:104 "Placeholder cruiser 10J2": afloat in task_force:62; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:105 "Placeholder destroyer 10A1": SUNK; damage flotation 100, fire 20; propulsion out, fire control out, main battery out, torpedo mounts degraded; 480 gun rounds, torpedoes gone; 430 t of fuel, 0 t of supply
+ship:106 "Placeholder destroyer 11J1": SUNK; damage flotation 100, fire 40; propulsion out, fire control out, torpedo mounts degraded; 600 gun rounds, torpedoes ready; 430 t of fuel, 0 t of supply
+ship:107 "Placeholder destroyer 11J2": afloat in task_force:74; damage flotation 80, fire 60; propulsion out, fire control degraded, main battery degraded, torpedo mounts out; 420 gun rounds, torpedoes gone; 430 t of fuel, 0 t of supply
+ship:108 "Placeholder destroyer 11J3": afloat in task_force:64; damage flotation 0, fire 0; all systems working; 360 gun rounds, torpedoes gone; 180 t of fuel, 0 t of supply
+ship:109 "Placeholder cruiser 11A1": afloat in task_force:65; damage flotation 21.25, fire 10; main battery out, torpedo mounts degraded; 440 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:110 "Placeholder cruiser 12J1": SUNK; damage flotation 100, fire 3.75; propulsion degraded, main battery degraded; 560 gun rounds, torpedoes gone; 1860 t of fuel, 0 t of supply
+ship:111 "Placeholder destroyer 12A1": SUNK; damage flotation 100, fire 0; propulsion out, fire control out, main battery out, torpedo mounts degraded; 600 gun rounds, torpedoes ready; 430 t of fuel, 0 t of supply
+ship:112 "Placeholder destroyer 12A2": afloat in task_force:67; damage flotation 40, fire 0; fire control degraded, torpedo mounts degraded; 480 gun rounds, torpedoes gone; 180 t of fuel, 0 t of supply
+ship:113 "Placeholder destroyer 12A3": afloat in task_force:67; damage flotation 0, fire 0; all systems working; 480 gun rounds, torpedoes gone; 180 t of fuel, 0 t of supply
+ship:114 "Placeholder cruiser 13J1": SUNK; damage flotation 100, fire 0; propulsion out; 560 gun rounds, torpedoes gone; 1860 t of fuel, 0 t of supply
+ship:115 "Placeholder cruiser 13J2": afloat in task_force:68; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
+ship:116 "Placeholder cruiser 13A1": afloat in task_force:75; damage flotation 50, fire 5; propulsion out, fire control degraded, main battery degraded; 740 gun rounds, torpedoes gone; 1860 t of fuel, 0 t of supply
+ship:117 "Placeholder cruiser 13A2": afloat in task_force:69; damage flotation 55, fire 10; propulsion degraded, fire control degraded, main battery out; 800 gun rounds, torpedoes gone; 1825 t of fuel, 0 t of supply
+ship:118 "Placeholder picket destroyer": afloat in task_force:70; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:119 "Placeholder dry cruiser": afloat in task_force:71; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
+base:1 "Henderson Field" (Allied) at (2,-4): 13672.37 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:2 "Rabaul" (Japanese) at (-5,-13): 0 t of supply in stock, repairs 4 aircraft a day
+base:3 "Espiritu Santo" (Allied) at (7,6): 6400 t of supply in stock
+Allied: no contacts
+Allied claims 0 enemy ships sunk at (0,10), day 7 night
+Allied claims 0 enemy ships sunk at (0,10), day 7 morning
+Allied claims 0 enemy ships sunk at (0,10), day 7 morning
+Allied claims 1 enemy ship sunk at (-4,3), day 33 night
+Allied claims 0 enemy ships sunk at (-4,5), day 50 night
+Allied claims 1 enemy ship sunk at (-4,7), day 63 night
+Allied claims 0 enemy ships sunk at (-4,9), day 80 night
+Allied claims 1 enemy ship sunk at (-4,9), day 80 morning
+Allied claims 1 enemy ship sunk at (-4,9), day 81 night
+Allied claims 0 enemy ships sunk at (-8,15), day 93 night
+Allied claims 1 enemy ship sunk at (-8,16), day 110 night
+Allied claims 0 enemy ships sunk at (-8,17), day 123 night
+Allied claims 2 enemy ships sunk at (-8,18), day 140 night
+Allied claims 1 enemy ship sunk at (-8,19), day 153 night
+Allied claims 1 enemy ship sunk at (-8,20), day 170 night
+Japanese: no contacts
+Japanese claims 0 enemy ships sunk at (0,10), day 7 night
+Japanese claims 1 enemy ship sunk at (0,10), day 7 night
+Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
+Japanese claims 1 enemy ship sunk at (0,10), day 7 morning
+Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
+Japanese claims 0 enemy ships sunk at (-4,3), day 33 night
+Japanese claims 1 enemy ship sunk at (-4,5), day 50 night
+Japanese claims 0 enemy ships sunk at (-4,9), day 80 night
+Japanese claims 0 enemy ships sunk at (-4,9), day 80 morning
+Japanese claims 0 enemy ships sunk at (-4,9), day 81 night
+Japanese claims 0 enemy ships sunk at (-8,15), day 93 night
+Japanese claims 1 enemy ship sunk at (-8,17), day 123 night
+Japanese claims 0 enemy ships sunk at (-8,18), day 140 night
+Japanese claims 1 enemy ship sunk at (-8,19), day 153 night
+Japanese claims 0 enemy ships sunk at (-8,20), day 170 night

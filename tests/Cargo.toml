@@ -101,5 +101,9 @@ path = "scenario_06_rabaul_guadalcanal.rs"
 name = "scenario_07_determinism"
 path = "scenario_07_determinism.rs"
 
+[[test]]
+name = "scenario_08_soak"
+path = "scenario_08_soak.rs"
+
 [lints]
 workspace = true

@@ -526,6 +526,15 @@ function buildModel(replay) {
           aux.moves.get(f.id).push(path);
           break;
         }
+        // A route order that turned a force round between two hexes can change the hex it is in (at exactly
+        // 20 nm the hex ahead is the other one), with no steaming: the event says where it is now.
+        case 'task_force_turned_back': {
+          const f = cur.forces.get(d.task_force);
+          if (!f || !Array.isArray(d.position)) break;
+          if (f.q !== d.position[0] || f.r !== d.position[1]) f.trail.push([d.position[0], d.position[1]]);
+          f.q = d.position[0]; f.r = d.position[1];
+          break;
+        }
         case 'ships_detached': {
           const parent = cur.forces.get(d.parent);
           const ships = [...(d.ships || []), ...(d.escorts || [])];
