@@ -146,12 +146,19 @@
 //! 0.3 x 0.75 x 0.75 = 0.16875, a gun's 0.05 x 0.75 x 0.75 = 0.028125. The
 //! detachment's ships have 13 + 11 + 1 + 1 = 26 anti-aircraft shots.
 //!
-//! | Step | Shots | Chance | Expected | Lost |
-//! | ---- | ----- | ------ | -------- | ---- |
-//! | Patrol at the bombers | 6 | 0.16875 | 1.0125 | 1 or 2 |
-//! | Guns at the bombers | 26 | 0.028125 | 0.73125 | 0 or 1 |
+//! | Step | Shots | Chance | Expected | Std dev |
+//! | ---- | ----- | ------ | -------- | ------- |
+//! | Patrol at the bombers | 6 | 0.16875 | 1.0125 | 0.917410 |
+//! | Guns at the bombers | 26 | 0.028125 | 0.73125 | 0.843021 |
 //!
-//! So 14 to 16 of Enterprise's 17 attack, and 27 to 29 of Saratoga's 30.
+//! Each shot is rolled on its own (decision 0033), so a roll scores from no
+//! hit to its shots. Of Enterprise's 17 bombers 17 less both losses attack,
+//! 15.25625 on average, and of Saratoga's 30, 28.25625 on average. Over the
+//! runs the hits of each roll are within four standard deviations of the
+//! expected figure times the number of such raids. (Before decision 0033
+//! the patrol shot down 1 or 2 and the guns 0 or 1.)
+//! A group whose bombers are all shot down attacks nothing, and records
+//! neither an attack nor a strike that found nothing.
 //! Saratoga's losses come off group 6 first. Every bomber attacks Ryujo,
 //! ship 33, at 0.2 a bomb. A hit does 100 x 75.6 / 424 = 17.830188 points.
 //!
@@ -174,11 +181,21 @@
 //!
 //! | Step | Shokaku's raid | Zuikaku's raid |
 //! | ---- | -------------- | -------------- |
-//! | Escorts at the patrol | 6 shots x 0.16875 = 1.0125: 1 or 2 | 5 x 0.16875 = 0.84375: 0 or 1 |
-//! | Patrol at the escorts | 6 x 0.3 = 1.8: 1 or 2 | 5 x 0.3 = 1.5: 1 or 2 |
-//! | Patrol at the bombers | 48 x 0.3 = 14.4: 14 or 15 | 49 x 0.3 = 14.7: 14 or 15 |
-//! | Guns at the bombers | 123 x 0.05 = 6.15: 6 or 7 | 6.15: 6 or 7 |
-//! | Bombers that attack | 27 less those: 5 to 7 | 5 to 7 |
+//! | Escorts at the patrol | 6 shots x 0.16875 = 1.0125 expected | 5 x 0.16875 = 0.84375 |
+//! | Patrol at the escorts | 6 x 0.3 = 1.8 | 5 x 0.3 = 1.5 |
+//! | Patrol at the bombers | 48 x 0.3 = 14.4 | 49 x 0.3 = 14.7 |
+//! | Guns at the bombers | 123 x 0.05 = 6.15 | 6.15 |
+//! | Bombers that attack | 27 less both losses: 6.45 on average | 6.15 on average |
+//!
+//! Each shot is rolled on its own (decision 0033): a roll of n shots at
+//! chance p scores from no hit to n, but no more than the aircraft it fires
+//! at, with a standard deviation of the square root of n x p x (1 - p):
+//! 0.917410 and 0.837477 for the escorts, 1.122497 and 1.024695 for the
+//! patrol at the escorts, 3.174902 and 3.207803 for the patrol at the
+//! bombers, 2.417126 for the guns. Over the runs the hits of each roll are
+//! within four standard deviations of its expected figure times the number
+//! of such raids. (Before decision 0033 each roll scored the whole part of
+//! its expected figure or one more, and 5 to 7 bombers attacked.)
 //!
 //! Losses to the American patrol come off group 1 first. Every bomber
 //! attacks Enterprise, ship 1, at 0.2 a bomb. A hit does 100 x 41.666666 /
@@ -497,13 +514,11 @@ fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
     off * off <= 16 * n * p * (scale - p)
 }
 
-/// The hits a roll of `shots` at `chance` gives from its stream: the whole
-/// part of shots x chance, plus one with chance equal to the fraction.
+/// The hits a roll of `shots` at `chance` gives from its stream: one draw at
+/// the chance for each shot (decision 0033), before any cap at what the
+/// target has.
 fn hits_from(stream: &mut RngStream, shots: u32, chance: Fixed) -> u32 {
-    let expected = int(shots) * chance;
-    let whole = expected.trunc();
-    let fraction = expected - Fixed::from_int(whole);
-    u32::try_from(whole).expect("small") + u32::from(stream.chance(fraction))
+    (0..shots).map(|_| u32::from(stream.chance(chance))).sum()
 }
 
 fn stream_of(
@@ -2738,8 +2753,17 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
                 american
             };
             let attack = attacked(run, launch.group);
-            assert_eq!(attack, launch.hex == enemy_hex, "seed {seed}");
-            assert_eq!(found_nothing(run, launch.group), !attack, "seed {seed}");
+            if launch.hex == enemy_hex {
+                // At the right hex it attacks, unless every one of its
+                // bombers was shot down on the way in (each shot is rolled
+                // on its own, decision 0033): then it records nothing.
+                let left = launch.aircraft - work.lost.get(&launch.group).copied().unwrap_or(0);
+                assert_eq!(attack, left > 0, "seed {seed}");
+                assert!(!found_nothing(run, launch.group), "seed {seed}");
+            } else {
+                assert!(!attack, "seed {seed}");
+                assert!(found_nothing(run, launch.group), "seed {seed}");
+            }
         }
     }
     eprintln!("launch cases over 1000 seeds: {counts:?}");
@@ -2761,8 +2785,13 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
 
 #[test]
 fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
+    let cx = ctx();
     let mut raids = 0;
     let mut both = 0;
+    // Shots and hits over all raids, for the bands: (shots, hits) of the
+    // patrol at the bombers and of the guns.
+    let mut patrol_total = (0i64, 0i64);
+    let mut gun_total = (0i64, 0i64);
     for (run, work) in batch().iter().zip(worked()) {
         let seed = run.seed;
         let found: Vec<&RaidWork> = work
@@ -2808,18 +2837,30 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
             assert_eq!(raid.patrol, 6, "seed {seed}");
             let (shots, patrol_hits) = raid.patrol_at_bombers.expect("a patrol roll");
             assert_eq!(shots, 6);
-            assert!((1..=2).contains(&patrol_hits), "seed {seed}");
+            // 6 shots at 0.16875 expect 1.0125; each is rolled on its own,
+            // so from no hit to six, and the loss is no more than the
+            // bombers there are.
+            let first_group = raid.strikes[0].0;
+            let (chance, _) = shot_chance(cx, cx.air.fighter_hit_chance, first_group);
+            assert_eq!(chance, millionths(168_750));
+            assert_eq!(int(shots) * chance, millionths(1_012_500));
+            assert!(patrol_hits <= shots, "seed {seed}");
+            patrol_total.0 += i64::from(shots);
+            patrol_total.1 += i64::from(patrol_hits);
+            let lost_to_patrol = patrol_hits.min(bombers);
             let (gun_shots, gun_hits) = raid.guns.expect("a gun roll");
             assert_eq!(gun_shots, 26);
-            assert!(gun_hits <= 1, "seed {seed}");
-            // 14 to 16 of Enterprise's 17 attack, 27 to 29 of Saratoga's 30.
-            let attacking = bombers - patrol_hits - gun_hits;
+            // 26 shots at 0.028125 expect 0.73125.
+            let (chance, _) = shot_chance(cx, cx.air.anti_aircraft_hit_chance, first_group);
+            assert_eq!(chance, millionths(28_125));
+            assert_eq!(int(gun_shots) * chance, millionths(731_250));
+            assert!(gun_hits <= gun_shots, "seed {seed}");
+            gun_total.0 += i64::from(gun_shots);
+            gun_total.1 += i64::from(gun_hits);
+            let lost_to_guns = gun_hits.min(bombers - lost_to_patrol);
+            // Of 17 (or 30) bombers, those less both losses attack.
+            let attacking = bombers - lost_to_patrol - lost_to_guns;
             assert_eq!(raid.bombers_attacking, attacking, "seed {seed}");
-            if bombers == 17 {
-                assert!((14..=16).contains(&attacking), "seed {seed}");
-            } else {
-                assert!((27..=29).contains(&attacking), "seed {seed}");
-            }
         }
         // Every bomber that attacks attacks Ryujo, ship 33.
         let attacks: Vec<&AttackWork> = work
@@ -2833,28 +2874,44 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
             assert!(attack.hits <= attack.shots);
         }
         // Saratoga's losses come off group 6 first: group 7 attacks with all
-        // 15, group 6 with what the raid lost fewer.
-        if let Some(seven) = attacks.iter().find(|a| a.group == 7) {
-            let six = attacks.iter().find(|a| a.group == 6).expect("group 6");
-            assert_eq!(seven.shots, 15, "seed {seed}");
-            let saratoga = work
-                .raids
-                .iter()
-                .find(|r| r.strikes.first().is_some_and(|s| s.0 == 6))
-                .expect("Saratoga's raid");
-            assert_eq!(six.shots + seven.shots, saratoga.bombers_attacking);
-            assert!((12..15).contains(&six.shots), "seed {seed}");
+        // 15 unless the raid lost more than group 6 had, and group 6 with
+        // what is left of it.
+        if let Some(saratoga) = work
+            .raids
+            .iter()
+            .find(|r| r.found && r.strikes.first().is_some_and(|s| s.0 == 6))
+        {
+            let lost = 30 - saratoga.bombers_attacking;
+            let shots_of = |group: u32| {
+                attacks
+                    .iter()
+                    .find(|a| a.group == group)
+                    .map_or(0, |a| a.shots)
+            };
+            assert_eq!(shots_of(6), 15 - lost.min(15), "seed {seed}");
+            assert_eq!(shots_of(7), 15 - lost.saturating_sub(15), "seed {seed}");
         }
     }
-    eprintln!("American raids on Ryujo {raids}, runs with both raids {both}");
+    eprintln!(
+        "American raids on Ryujo {raids}, runs with both raids {both}, \
+         patrol hits {} of {} shots, gun hits {} of {}",
+        patrol_total.1, patrol_total.0, gun_total.1, gun_total.0
+    );
+    // Over the runs the hits of each roll are within four standard
+    // deviations of the sum of the expected figures.
+    assert!(within_four_sigma(patrol_total.1, patrol_total.0, 168_750));
+    assert!(within_four_sigma(gun_total.1, gun_total.0, 28_125));
     assert!(raids > 500, "{raids} raids");
     assert!(both > 200, "{both} runs with both raids");
 }
 
 #[test]
 fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
+    let cx = ctx();
     let mut raids = 0;
     let mut both = 0;
+    // (shots, hits) over all raids of each roll, for the bands.
+    let mut totals = [(0i64, 0i64); 4];
     for (run, work) in batch().iter().zip(worked()) {
         let seed = run.seed;
         let found: Vec<&RaidWork> = work
@@ -2878,9 +2935,9 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
             // The target is 240 nm away and the A6M2's radius is 261, so the
             // escorts go: Shokaku's 26 fighters keep 20 and send 6;
             // Zuikaku's 25 keep 20 and send 5.
-            let (escort_group, escorts, e_p_max) = match raid.strikes[0].0 {
-                12 => (11, 6, 2),
-                15 => (14, 5, 1),
+            let (escort_group, escorts) = match raid.strikes[0].0 {
+                12 => (11, 6),
+                15 => (14, 5),
                 other => panic!("seed {seed}: raid of group {other}"),
             };
             assert_eq!(raid.escorts, vec![(escort_group, escorts)], "seed {seed}");
@@ -2896,36 +2953,79 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
                 Place::Ship(if escort_group == 11 { 19 } else { 20 })
             );
             assert_eq!(raid.hex, Hex::new(7, -5));
-            // Escorts at the patrol: 6 x 0.16875 = 1.0125 (1 or 2); 5 x
-            // 0.16875 = 0.84375 (0 or 1).
+            // Every roll is one draw for each shot (decision 0033): the
+            // shots and chance are the table's, the expected figure is their
+            // product, and the hits are from none to the shots.
+            let group = raid.strikes[0].0;
+            let fighter = |target: u32| shot_chance(cx, cx.air.fighter_hit_chance, target).0;
+            // Escorts at the patrol: 6 x 0.16875 = 1.0125; 5 x 0.16875 =
+            // 0.84375.
             let (shots, hits) = raid.escorts_at_patrol.expect("escorts fire");
             assert_eq!(shots, escorts);
-            assert!(hits <= e_p_max && hits >= e_p_max - 1, "seed {seed}");
-            // Patrol at the escorts: 6 x 0.3 = 1.8 (1 or 2); 5 x 0.3 = 1.5
-            // (1 or 2).
+            assert_eq!(fighter(1), millionths(168_750));
+            assert_eq!(
+                int(shots) * fighter(1),
+                if escorts == 6 {
+                    millionths(1_012_500)
+                } else {
+                    millionths(843_750)
+                }
+            );
+            assert!(hits <= shots, "seed {seed}");
+            totals[0].0 += i64::from(shots);
+            totals[0].1 += i64::from(hits);
+            // Patrol at the escorts: 6 x 0.3 = 1.8; 5 x 0.3 = 1.5.
             let (shots, at_escorts_hits) = raid.patrol_at_escorts.expect("patrol fires");
             assert_eq!(shots, escorts);
-            assert!((1..=2).contains(&at_escorts_hits), "seed {seed}");
-            // Patrol at the bombers: 48 x 0.3 = 14.4 (14 or 15); 49 x 0.3 =
-            // 14.7 (14 or 15).
+            assert_eq!(fighter(escort_group), millionths(300_000));
+            assert_eq!(
+                int(shots) * fighter(escort_group),
+                if escorts == 6 {
+                    millionths(1_800_000)
+                } else {
+                    millionths(1_500_000)
+                }
+            );
+            assert!(at_escorts_hits <= shots, "seed {seed}");
+            totals[1].0 += i64::from(shots);
+            totals[1].1 += i64::from(at_escorts_hits);
+            // Patrol at the bombers: 48 x 0.3 = 14.4; 49 x 0.3 = 14.7.
             let (shots, at_bombers_hits) = raid.patrol_at_bombers.expect("patrol fires");
             assert_eq!(shots, 54 - escorts);
             assert_eq!(shots, if escorts == 6 { 48 } else { 49 });
-            assert!((14..=15).contains(&at_bombers_hits), "seed {seed}");
+            assert_eq!(fighter(group), millionths(300_000));
+            assert_eq!(
+                int(shots) * fighter(group),
+                if escorts == 6 {
+                    millionths(14_400_000)
+                } else {
+                    millionths(14_700_000)
+                }
+            );
+            assert!(at_bombers_hits <= shots, "seed {seed}");
+            totals[2].0 += i64::from(shots);
+            totals[2].1 += i64::from(at_bombers_hits);
             // The whole patrol is committed: shots at the escorts and at the
             // bombers add to 54.
             assert_eq!(raid.patrol_at_escorts.expect("fires").0 + shots, 54);
-            // Guns at the bombers: 123 x 0.05 = 6.15 (6 or 7).
+            // Guns at the bombers: 123 x 0.05 = 6.15.
             let (gun_shots, gun_hits) = raid.guns.expect("guns fire");
             assert_eq!(gun_shots, 123);
-            assert!((6..=7).contains(&gun_hits), "seed {seed}");
-            // Bombers that attack: 27 less those, 5 to 7.
+            let (chance, _) = shot_chance(cx, cx.air.anti_aircraft_hit_chance, group);
+            assert_eq!(chance, millionths(50_000));
+            assert_eq!(int(gun_shots) * chance, millionths(6_150_000));
+            assert!(gun_hits <= gun_shots, "seed {seed}");
+            totals[3].0 += i64::from(gun_shots);
+            totals[3].1 += i64::from(gun_hits);
+            // Bombers that attack: 27 less both losses, each loss no more
+            // than the bombers there are.
+            let lost_to_patrol = at_bombers_hits.min(27);
+            let lost_to_guns = gun_hits.min(27 - lost_to_patrol);
             assert_eq!(
                 raid.bombers_attacking,
-                27 - at_bombers_hits - gun_hits,
+                27 - lost_to_patrol - lost_to_guns,
                 "seed {seed}"
             );
-            assert!((5..=7).contains(&raid.bombers_attacking), "seed {seed}");
         }
         // Every bomber attacks Enterprise, ship 1.
         for attack in work
@@ -2935,11 +3035,16 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
         {
             assert_eq!(attack.flotation_hits + attack.fire_hits, attack.hits);
             assert_eq!(attack.ship, 1, "seed {seed}");
-            assert!((5..=7).contains(&attack.shots), "seed {seed}");
+            assert!(attack.shots <= 27, "seed {seed}");
         }
     }
-    eprintln!("Japanese raids {raids}, runs with both raids {both}");
+    eprintln!("Japanese raids {raids}, runs with both raids {both}, (shots, hits) {totals:?}");
     assert!(raids > 0 && both > 0);
+    // Over the runs the hits of each roll are within four standard
+    // deviations of the sum of the expected figures.
+    for (total, chance) in totals.iter().zip([168_750, 300_000, 300_000, 50_000]) {
+        assert!(within_four_sigma(total.1, total.0, chance), "{total:?}");
+    }
 }
 
 #[test]

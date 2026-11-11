@@ -160,14 +160,20 @@
 //! sights C before C sights it, and otherwise the fight ends no later than
 //! the end of the first round in which A is fired on.
 //!
-//! In these runs it ends sooner still. Force A broke off from B because half
-//! or more of its ships were sunk or crippled, and they still are when it
-//! meets C. A force over its break-off level breaks off at the end of a
-//! round whatever happened in it (decision 0014), so unless A slips away in
-//! round 1 the fight with C ends at the end of round 1: with A breaking
-//! off, fired on or not, or, checked first, because C's fire sank the last
-//! ship A had afloat. (Corrected after the code was run: the first version of
-//! this section left the break-off level out.)
+//! It often ends sooner still. A force over its break-off level breaks off
+//! at the end of a round whatever happened in it (decision 0014), and the
+//! level is counted over the ships the force has when the fight begins. If
+//! half or more of the ships force A brings to C are crippled, then unless
+//! A slips away in round 1 the fight ends at the end of round 1: with A
+//! breaking off, fired on or not, or, checked first, because C's fire sank
+//! the last ship A had afloat. A ship sunk in the fight with B has left the
+//! force and is not counted against it again, so a force A that lost ships
+//! outright to B may be under its level when it meets C; that fight ends
+//! with the first round in which A is fired on, which can be later than
+//! round 1. (Corrected twice after the code was run: the first version left
+//! the break-off level out, and the second took the ships lost to B to
+//! count still, which was true in every run only while ships sank slowly,
+//! before decision 0033.)
 //!
 //! ## Alertness from belief
 //!
@@ -1372,15 +1378,20 @@ struct BreakingOff {
     free_rounds_otherwise: usize,
 }
 
+/// A free round for force A: a round in which A fires and the other force
+/// has not yet sighted it. (A round in which the other force has sighted A
+/// and cannot fire, its guns being out, is not a free round.)
 fn a_has_a_free_round(fight: &Fight) -> bool {
     (1..=6).any(|round| {
-        let fired = |a_side: bool| {
-            fight
-                .salvos
-                .iter()
-                .any(|s| s.round == round && A_SHIPS.contains(&s.firer) == a_side)
-        };
-        fired(true) && !fired(false)
+        let a_fired = fight
+            .salvos
+            .iter()
+            .any(|s| s.round == round && A_SHIPS.contains(&s.firer));
+        let a_is_sighted = fight
+            .rolls
+            .iter()
+            .any(|r| r.round <= round && r.force != 1 && r.sighted);
+        a_fired && !a_is_sighted
     })
 }
 
@@ -1406,11 +1417,23 @@ fn breaking_off() -> BreakingOff {
                 !a_has_a_free_round(ac),
                 "seed {seed} {pulse:?}: A has a free round against C"
             );
-            // No such fight goes past round 1.
-            assert_eq!(ac.ended_round, 1, "seed {seed} {pulse:?}: ends in round 1");
-            // Either A slips away in round 1, with no fire and no break-off,
-            // or the fight ends at the end of round 1 with A breaking off,
-            // fired on or not.
+            // The fight ends with the first round in which A is fired on,
+            // if there is one.
+            let first_fire_on_a = ac
+                .salvos
+                .iter()
+                .filter(|s| !A_SHIPS.contains(&s.firer))
+                .map(|s| s.round)
+                .min();
+            if let Some(round) = first_fire_on_a {
+                assert_eq!(
+                    ac.ended_round, round,
+                    "seed {seed} {pulse:?}: ends with the first round A is fired on"
+                );
+            }
+            // Either A slips away, with no fire and no break-off, or C's
+            // fire sinks its last ship, or the fight ends with A breaking
+            // off, fired on or not.
             if ac.reason == EngagementEndReason::SlippedAway {
                 out.slipped += 1;
                 assert_eq!(ac.slipped, vec![1], "seed {seed}");
@@ -1429,7 +1452,7 @@ fn breaking_off() -> BreakingOff {
                 );
                 assert!(ac.broke_off.contains(&1), "seed {seed}: A breaks off");
                 assert!(ac.slipped.is_empty(), "seed {seed}");
-                out.broke_off_in_round_1 += 1;
+                out.broke_off_in_round_1 += usize::from(ac.ended_round == 1);
             }
         }
     }
@@ -1876,8 +1899,21 @@ fn a_ordered_to_40_kn_steams_at_32_kn_and_fights_both_forces_in_passing() {
         "forty",
         &[(SCENARIO_FILE, "knots = \"24\"", "knots = \"40\"")],
     );
-    let run = run_scenario(&scenario, FILE_SEED);
-    let p = parse(FILE_SEED, &run.events);
+    // The hand calculation is for the force that comes through with its
+    // propulsion working. With each shot rolled (decision 0033) the scenario's
+    // own seed no longer gives that, so the test takes the first seed from
+    // the file's that does.
+    let (seed, run) = (FILE_SEED..FILE_SEED + 100)
+        .map(|seed| (seed, run_scenario(&scenario, seed)))
+        .find(|(_, run)| {
+            A_SHIPS.iter().all(|ship| {
+                run.ships[ship].propulsion == SystemState::Working
+                    && run.ships[ship].location != ShipLocation::Sunk
+            })
+        })
+        .expect("a seed in which A comes through undamaged");
+    eprintln!("40 kn: seed {seed}");
+    let p = parse(seed, &run.events);
     // 32 kn, the top speed. It enters (7,0) after 260 nm, 260 / 32 = 8.125
     // hours into the night pulse, and meets and fights both forces there,
     // one after the other.
@@ -1889,7 +1925,8 @@ fn a_ordered_to_40_kn_steams_at_32_kn_and_fights_both_forces_in_passing() {
         assert_eq!(fight.elapsed_hours, hours);
     }
     // Burn per mile is multiplied by 4: 1 t a nm, so 260 t at the meeting.
-    // At this seed no ship of A is sunk or loses propulsion, so it comes
+    // At this seed no ship of A is sunk or loses propulsion (the seed was
+    // chosen for it), so it comes
     // through at 32 kn with 384 - 260 = 124 nm of the night left, ends the
     // night nine hexes and 24 nm along, with its position (10,0).
     for ship in A_SHIPS {

@@ -64,7 +64,7 @@
 
 use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::damage::{
-    damage_per_hit, raw_u64, system_for_draw, system_hit_chance, DamageSite, HitSet,
+    damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
 use crate::events::{
     AirFirer, AirTarget, Breakdown, Cause, DamageTrack, EventKind, Factor, Weapon,
@@ -197,14 +197,12 @@ struct RaidResult {
 }
 
 /// The shots times chance of a roll: shots, expected hits, hits (decision 10
-/// of 0027). Draws once from `stream`, for the fraction.
+/// of 0027, decision 0033, 3). Each shot is one draw from `stream`
+/// ([`roll_shots`]).
 fn roll_hits(stream: &mut RngStream, shots: u32, chance: Fixed) -> (Fixed, Fixed, u32) {
     let shots = Fixed::from_int(i64::from(shots));
     let expected = shots * chance;
-    let whole = expected.trunc();
-    let fraction = expected - Fixed::from_int(whole);
-    let hits = u32::try_from(whole).expect("expected hits are not negative")
-        + u32::from(stream.chance(fraction));
+    let hits = roll_shots(stream, shots, chance);
     (shots, expected, hits)
 }
 
@@ -952,7 +950,7 @@ impl World {
     /// Rolls the attack of one strike group with `aircraft` bombers at the
     /// target its raid found. Reads truth, which the umpire may; writes
     /// nothing. Draws, from one stream keyed on the air group and the task
-    /// force attacked: the fraction of the expected hits, then for each hit
+    /// force attacked: one draw for each shot, then for each hit
     /// its track (a bomb only: a torpedo always hits flotation) and then its
     /// system, then the sighting report.
     fn work_out_attack(
@@ -998,8 +996,6 @@ impl World {
 
         let shots = Fixed::from_int(i64::from(aircraft));
         let expected = shots * chance;
-        let whole = expected.trunc();
-        let fraction = expected - Fixed::from_int(whole);
         let mut stream = self.rng_pair(
             day,
             Some(pulse),
@@ -1007,8 +1003,7 @@ impl World {
             EntityRef::AirGroup(strike.air_group),
             EntityRef::TaskForce(task_force),
         );
-        let hits = u32::try_from(whole).expect("expected hits are not negative")
-            + u32::from(stream.chance(fraction));
+        let hits = roll_shots(&mut stream, shots, chance);
 
         let mut track_hits = [0u32; 2];
         let mut system_hits = Vec::new();
@@ -1801,8 +1796,10 @@ mod tests {
     }
 
     #[test]
-    fn hits_are_the_whole_part_of_the_expectation_or_one_more() {
-        // 18 shots at 0.2 expect 3.6 hits: 3 or 4, over many seeds both.
+    fn each_shot_of_a_strike_is_rolled_on_its_own() {
+        // 18 shots at 0.2 expect 3.6 hits (decision 0033, 3): the hits are
+        // the shots that hit, so they are what 18 draws at 0.2 give, and over
+        // many seeds they are not always 3 or 4.
         let mut seen = std::collections::BTreeSet::new();
         for seed in 1..=60 {
             let mut world = world_with_a_good_contact(seed);
@@ -1812,17 +1809,20 @@ mod tests {
             assert_eq!(shots, Fixed::from_int(18));
             assert_eq!(chance, fixed(2, 10));
             assert_eq!(expected, fixed(36, 10));
-            assert!(hits == 3 || hits == 4, "{hits}");
+            let mut stream = world.rng_pair(
+                1,
+                Some(Pulse::Morning),
+                Subsystem::AirCombat,
+                EntityRef::AirGroup(BOMBERS),
+                EntityRef::TaskForce(FORCE_B),
+            );
+            let replayed: u32 = (0..18)
+                .map(|_| u32::from(stream.chance(fixed(2, 10))))
+                .sum();
+            assert_eq!(hits, replayed, "seed {seed}");
             seen.insert(hits);
         }
-        assert_eq!(seen.len(), 2);
-        // A whole expectation never gets the one more: 18 x 0.5 is 9.
-        for seed in 1..=30 {
-            let mut world = world_with_a_good_contact(seed);
-            air_figures(&mut world).bomb_hit_chance = fixed(1, 2);
-            strike_pulse(&mut world, Pulse::Morning);
-            assert_eq!(attack_of(&attacks(&world)[0]).7, 9);
-        }
+        assert!(seen.len() > 2, "{seen:?}");
         // Certain hits and no hits.
         for (chance, hits) in [(Fixed::ONE, 18), (Fixed::ZERO, 0)] {
             let mut world = world_with_a_good_contact(1);
@@ -1942,6 +1942,16 @@ mod tests {
         }
         strike_pulse(&mut world, Pulse::Morning);
         let (_, _, ship, weapon, shots, chance, expected, hits) = attack_of(&attacks(&world)[0]);
+        // Decision 0033: 18 draws at 0.5 give the hits; replay them.
+        let mut stream = world.rng_pair(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::AirCombat,
+            EntityRef::AirGroup(BOMBERS),
+            EntityRef::TaskForce(FORCE_B),
+        );
+        let replayed: u32 = (0..18).map(|_| u32::from(stream.chance(fixed(1, 2)))).sum();
+        assert!(replayed >= 3, "enough hits to walk fire control down");
         assert_eq!(
             (ship, weapon, shots, chance, expected, hits),
             (
@@ -1950,20 +1960,22 @@ mod tests {
                 Fixed::from_int(18),
                 fixed(1, 2),
                 Fixed::from_int(9),
-                9
+                replayed
             )
         );
-        assert!(attacks(&world)[0]
-            .kind
-            .to_string()
-            .starts_with("air_group:1 torpedoes at ship:2: 18 shots x 0.5 = 9 expected, 9 hits"));
-        // All on flotation: 9 x 2 points, no fire.
-        assert_eq!(ship_of(&world, 2).flotation_damage, Fixed::from_int(18));
+        assert!(attacks(&world)[0].kind.to_string().starts_with(&format!(
+            "air_group:1 torpedoes at ship:2: 18 shots x 0.5 = 9 expected, {replayed} hits"
+        )));
+        // All on flotation: 2 points a hit, no fire.
+        assert_eq!(
+            ship_of(&world, 2).flotation_damage,
+            Fixed::from_int(2 * i64::from(replayed))
+        );
         assert_eq!(ship_of(&world, 2).fire_damage, Fixed::ZERO);
-        // Nine system hits on fire control: working -> degraded -> out, and
-        // then seven that change nothing and say so.
+        // One system hit on fire control for each hit: working -> degraded ->
+        // out, and then the rest change nothing and say so.
         let hits = system_hits(&world);
-        assert_eq!(hits.len(), 9);
+        assert_eq!(hits.len(), usize::try_from(replayed).expect("small"));
         assert_eq!(
             hits[0],
             (
@@ -1998,7 +2010,10 @@ mod tests {
             .map(|e| e.kind.to_string())
             .collect();
         assert_eq!(texts[0], "ship:2 fire control hit, working -> degraded");
-        assert_eq!(texts[8], "ship:2 fire control hit, no change, still out");
+        assert_eq!(
+            texts[usize::try_from(replayed).expect("small") - 1],
+            "ship:2 fire control hit, no change, still out"
+        );
         assert_eq!(ship_of(&world, 2).systems.fire_control, SystemState::Out);
     }
 
@@ -2150,8 +2165,9 @@ mod tests {
         world.resolve_strikes(1, Pulse::Morning);
         world.age_contacts_at_end_of_pulse(1, Pulse::Morning);
         let hits = attack_of(&attacks(&world)[0]).7;
-        // 18 x 0.1 = 1.8 expected: one or two hits.
-        assert!(hits == 1 || hits == 2);
+        // 18 x 0.1 = 1.8 expected; each shot is rolled (decision 0033), so the
+        // hits are what 18 draws at 0.1 give. This seed has at least one.
+        assert!(hits >= 1, "{hits}");
         let expected = if hits == 1 {
             SystemState::Degraded
         } else {
@@ -2226,14 +2242,27 @@ mod tests {
             let split = ships
                 .iter()
                 .position(|ship| *ship == 1)
-                .expect("ship 1 is hit");
+                .unwrap_or(ships.len());
             assert!(ships[..split].iter().all(|ship| *ship == 2));
             assert!(ships[split..].iter().all(|ship| *ship == 1));
             assert_eq!(ships[..split].len(), first.7 as usize);
             assert_eq!(ships[split..].len(), second.7 as usize);
-            // Three or four hits take either deck to out.
-            assert_eq!(ship_of(&world, 1).systems.flight_deck, SystemState::Out);
-            assert_eq!(ship_of(&world, 2).systems.flight_deck, SystemState::Out);
+            // No hit leaves a deck working, one degrades it, two take it out.
+            let deck_after = |hits: u32| match hits {
+                0 => SystemState::Working,
+                1 => SystemState::Degraded,
+                _ => SystemState::Out,
+            };
+            assert_eq!(
+                ship_of(&world, 2).systems.flight_deck,
+                deck_after(first.7),
+                "seed {seed}"
+            );
+            assert_eq!(
+                ship_of(&world, 1).systems.flight_deck,
+                deck_after(second.7),
+                "seed {seed}"
+            );
         }
     }
 
@@ -2552,7 +2581,7 @@ mod tests {
         // Decision 0033. A dive bomber's bomb is 100 x 60 / 600 = 10 points
         // on the carrier: chance 10 x 0.06 = 0.6, so with the flight deck
         // taking the whole table its band is the draws below 600,000. The
-        // draws are the same as ever: fraction, then track and system per
+        // draws are one per shot, then track and system per
         // hit. Replaying the stream counts the system hits.
         for seed in 1..=25 {
             let mut world = world_with_a_good_contact(seed);
@@ -2570,7 +2599,9 @@ mod tests {
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
-            let hits = 3 + u32::from(stream.chance(fixed(6, 10)));
+            let hits: u32 = (0..18)
+                .map(|_| u32::from(stream.chance(fixed(2, 10))))
+                .sum();
             let mut expected = 0;
             for _ in 0..hits {
                 stream.below(1_000_000);
@@ -2598,7 +2629,7 @@ mod tests {
     }
 
     #[test]
-    fn the_attack_stream_draws_the_fraction_then_track_and_system_per_hit_then_the_report() {
+    fn the_attack_stream_draws_each_shot_then_track_and_system_per_hit_then_the_report() {
         for seed in 1..=25 {
             let mut world = world_with_a_good_contact(seed);
             every_hit_is_a_flight_deck_hit(&mut world);
@@ -2612,7 +2643,9 @@ mod tests {
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
-            let expected_hits = 3 + u32::from(stream.chance(fixed(6, 10)));
+            let expected_hits: u32 = (0..18)
+                .map(|_| u32::from(stream.chance(fixed(2, 10))))
+                .sum();
             assert_eq!(hits, expected_hits, "seed {seed}");
             let mut flotation = 0;
             let mut fire = 0;
@@ -2685,13 +2718,21 @@ mod tests {
                 .iter()
                 .filter(|e| e.breakdown.is_some())
                 .count();
-            (world.state_hash(), world.events().len(), breakdowns)
+            (
+                world.state_hash(),
+                world.events().len(),
+                breakdowns,
+                attacks(&world).len(),
+            )
         };
         for seed in 1..=10 {
             let on = run(true, seed);
             let off = run(false, seed);
             assert_eq!((on.0, on.1), (off.0, off.1), "seed {seed}");
-            assert_eq!((on.2, off.2), (2, 0));
+            // Every attack carries its breakdown when they are on, and none
+            // when off (how many attacks there are depends on the hits).
+            assert!(on.3 >= 2, "seed {seed}");
+            assert_eq!((on.2, off.2), (on.3, 0), "seed {seed}");
         }
     }
 
@@ -3167,15 +3208,26 @@ mod tests {
             "air_group:5 escorts at the patrol of air_group:10: 12 shots x 1 = 12 expected, 12 hits"
         );
         // Every fighter shot hits here (chance 1). With the figure of the
-        // file, 0.3, 12 shots expect 3.6 hits.
+        // file, 0.3, 12 shots expect 3.6 hits and each is rolled.
         let mut world_text = with_fighters(1, 12, Fixed::ZERO, 12);
         air_figures(&mut world_text).fighter_hit_chance = fixed(3, 10);
         strike_pulse(&mut world_text, Pulse::Morning);
         let text = air_fights(&world_text)[0].kind.to_string();
-        assert!(
-            text == "air_group:5 escorts at the patrol of air_group:10: 12 shots x 0.3 = 3.6 expected, 3 hits"
-                || text == "air_group:5 escorts at the patrol of air_group:10: 12 shots x 0.3 = 3.6 expected, 4 hits",
-            "{text}"
+        let mut stream = world_text.rng_pair(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::AirCombat,
+            EntityRef::AirGroup(PATROL_A),
+            EntityRef::TaskForce(FORCE_B),
+        );
+        let replayed: u32 = (0..12)
+            .map(|_| u32::from(stream.chance(fixed(3, 10))))
+            .sum();
+        assert_eq!(
+            text,
+            format!(
+                "air_group:5 escorts at the patrol of air_group:10: 12 shots x 0.3 = 3.6 expected, {replayed} hits"
+            )
         );
         // Both fights with escorts cite the escorts and the launch.
         for fight in &fights {
@@ -3427,7 +3479,8 @@ mod tests {
         strike_pulse(&mut world, Pulse::Morning);
         assert!(gun_fires(&world).is_empty());
         assert!(losses(&world).is_empty());
-        // 36 x 0.05 = 1.8: 1 or 2 hits, and the bombers lost are the hits.
+        // 36 shots at 0.05, each rolled: the hits are what 36 draws give, and
+        // the bombers lost are the hits.
         let mut seen = std::collections::BTreeSet::new();
         for seed in 1..=40 {
             let mut world = world_with_a_good_contact(seed);
@@ -3436,7 +3489,17 @@ mod tests {
             strike_pulse(&mut world, Pulse::Morning);
             let (_, _, shots, hits) = guns_of(&gun_fires(&world)[0]);
             assert_eq!(shots, 36);
-            assert!(hits == 1 || hits == 2, "{hits}");
+            let mut stream = world.rng_pair(
+                1,
+                Some(Pulse::Morning),
+                Subsystem::AirCombat,
+                EntityRef::Ship(ShipId::new(2)),
+                EntityRef::AirGroup(BOMBERS),
+            );
+            let replayed: u32 = (0..36)
+                .map(|_| u32::from(stream.chance(fixed(5, 100))))
+                .sum();
+            assert_eq!(hits, replayed, "seed {seed}");
             seen.insert(hits);
             assert_eq!(ready_of(&world, 1), 18 - hits);
             assert_eq!(
@@ -3444,7 +3507,7 @@ mod tests {
                 Fixed::from_int(i64::from(18 - hits))
             );
         }
-        assert_eq!(seen.len(), 2);
+        assert!(seen.len() > 2, "{seen:?}");
     }
 
     /// An Allied carrier (ship 6, task force 3 at (0,1)) with 18 bombers
@@ -3622,8 +3685,11 @@ mod tests {
 
     #[test]
     fn the_rolls_come_from_the_streams_the_decision_names() {
-        // 6 escorts and 12 patrol at 0.3 and 36 gun shots at 0.05: each
-        // roll is 1.8 expected, so 1 plus a draw at 0.8.
+        // 6 escorts and 12 patrol at 0.3 and 36 gun shots at 0.05 (decision
+        // 0033: each shot is a draw, one after another from the stream).
+        let draws = |stream: &mut RngStream, shots: u32, chance: Fixed| -> u32 {
+            (0..shots).map(|_| u32::from(stream.chance(chance))).sum()
+        };
         for seed in 1..=25 {
             let mut world = world_with_a_good_contact(seed);
             cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
@@ -3633,6 +3699,7 @@ mod tests {
             strike_pulse(&mut world, Pulse::Morning);
             let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
             assert_eq!(fights.len(), 3);
+            assert_eq!((fights[0].4, fights[1].4, fights[2].4), (6, 6, 6));
             let key = |a: EntityRef, b: EntityRef| {
                 world.rng_pair(1, Some(Pulse::Morning), Subsystem::AirCombat, a, b)
             };
@@ -3640,7 +3707,7 @@ mod tests {
             let mut stream = key(EntityRef::AirGroup(PATROL_A), EntityRef::TaskForce(FORCE_B));
             assert_eq!(
                 fights[0].5,
-                1 + u32::from(stream.chance(fixed(8, 10))),
+                draws(&mut stream, 6, fixed(3, 10)),
                 "seed {seed}"
             );
             // Patrol: the first patrol group and the raid's first group,
@@ -3648,12 +3715,12 @@ mod tests {
             let mut stream = key(EntityRef::AirGroup(PATROL_B), EntityRef::AirGroup(BOMBERS));
             assert_eq!(
                 fights[1].5,
-                1 + u32::from(stream.chance(fixed(8, 10))),
+                draws(&mut stream, 6, fixed(3, 10)),
                 "seed {seed}"
             );
             assert_eq!(
                 fights[2].5,
-                1 + u32::from(stream.chance(fixed(8, 10))),
+                draws(&mut stream, 6, fixed(3, 10)),
                 "seed {seed}"
             );
             // Guns: the lowest ship afloat in the force and the raid's
@@ -3664,20 +3731,14 @@ mod tests {
             );
             let (_, _, shots, hits) = guns_of(&gun_fires(&world)[0]);
             assert_eq!(shots, 36);
-            assert_eq!(
-                hits,
-                1 + u32::from(stream.chance(fixed(8, 10))),
-                "seed {seed}"
-            );
+            assert_eq!(hits, draws(&mut stream, 36, fixed(5, 100)), "seed {seed}");
             // The attack's own stream is untouched: it is keyed as in 0026
-            // and draws its fraction first.
-            let left = attack_of(&attacks(&world)[0]).4.trunc();
+            // and draws one for each bomber left first.
+            let left = u32::try_from(attack_of(&attacks(&world)[0]).4.trunc()).expect("small");
             let mut stream = key(EntityRef::AirGroup(BOMBERS), EntityRef::TaskForce(FORCE_B));
-            let expected_hits = (Fixed::from_int(left) * fixed(2, 10)).trunc();
-            let fraction = Fixed::from_int(left) * fixed(2, 10) - Fixed::from_int(expected_hits);
             assert_eq!(
                 attack_of(&attacks(&world)[0]).7,
-                u32::try_from(expected_hits).expect("small") + u32::from(stream.chance(fraction)),
+                draws(&mut stream, left, fixed(2, 10)),
                 "seed {seed}"
             );
         }

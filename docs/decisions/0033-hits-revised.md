@@ -49,6 +49,24 @@ The review found three rules whose results nobody would defend: results that har
 - A torpedo hit always damages a system, four times in five the engines. That is harsher than before and nearer what a torpedo did.
 - Every pinned output of every scenario with a fight changes.
 
+## What the runs show
+
+Over seeds 1 to 1000, as each change went in. The third column is filled when the patrol is divided.
+
+| | Before | System hits by damage | Each shot rolled |
+| --- | --- | --- | --- |
+| Savo Island: Japanese ships sunk, in all | 1,694 | 1,360 | 1,685 |
+| Savo Island: Allied ships sunk, in all | | | 2,638 |
+| Eastern Solomons: runs in which Ryujo is sunk | 304 | | 252 |
+| Eastern Solomons: American carriers sunk | 0 | | 0 |
+| Eastern Solomons: aircraft lost a run, Allied and Japanese | | | 2.27 and 30.35 |
+
+Rolling each shot showed three things the old rule had hidden. None is a new rule; each is now written in the hand calculation of the scenario where it was found.
+
+- **A carrier can be sunk in one attack.** In scenario 5b carrier B is sunk in 13 runs of 1,000, in 5c in 1, and in 5d a carrier is sunk on the first day in 7. A later strike then attacks the lower-numbered cruiser afloat, as decision 0026 has it.
+- **A raid can lose every bomber.** It then attacks nothing and records neither an attack nor a strike that found nothing, so the contact it flew at stays as it was.
+- **A force can be under its break-off level in its second fight of a pulse.** The level is counted over the ships a force has when a fight begins (decision 0014). A ship sunk in the first fight has left the force, so a force that broke off after losing ships outright may not break off at once from the next enemy. It still avoids action (decision 0022), and the fight still ends with the first round in which it is fired on.
+
 ## Rule card
 
 | | |

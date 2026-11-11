@@ -59,9 +59,11 @@
 //!   the bombers left.
 //! - Then the bombers left attack carrier B: one shot each.
 //!
-//! Each of these is shots x chance expected hits: the whole part, plus one
-//! more with a chance equal to the fraction. A hit is an aircraft lost, and
-//! a group cannot lose more than it has.
+//! Each shot is rolled on its own (decision 0033): a roll of n shots at
+//! chance p scores anything from no hit to n, n x p on average, with a
+//! standard deviation of the square root of n x p x (1 - p). A hit is an
+//! aircraft lost, and a group cannot lose more than it has. (Before decision
+//! 0033 a roll scored the whole part of n x p, or one more.)
 //!
 //! A strike that finds nothing meets no fighters and no guns, and loses
 //! nothing.
@@ -71,28 +73,27 @@
 //! Until the first attack every group is whole and every flight deck works:
 //! F = 12, so 6 stay over carrier A and E = 6. P = 12. B = 18.
 //!
-//! | Step                       | Shots | Chance | Expected | Lost            |
-//! | -------------------------- | ----- | ------ | -------- | --------------- |
-//! | Escorts at the patrol      | 6     | 0.3    | 1.8      | 1 or 2 of group 4 |
-//! | Patrol at the escorts      | 6     | 0.3    | 1.8      | 1 or 2 of group 3 |
-//! | Patrol at the bombers      | 6     | 0.3    | 1.8      | 1 or 2 of group 2 |
-//! | Guns at the bombers        | 36    | 0.05   | 1.8      | 1 or 2 of group 2 |
+//! | Step                       | Shots | Chance | Expected | Std dev  | Lost               |
+//! | -------------------------- | ----- | ------ | -------- | -------- | ------------------ |
+//! | Escorts at the patrol      | 6     | 0.3    | 1.8      | 1.122497 | 0 to 6 of group 4  |
+//! | Patrol at the escorts      | 6     | 0.3    | 1.8      | 1.122497 | 0 to 6 of group 3  |
+//! | Patrol at the bombers      | 6     | 0.3    | 1.8      | 1.122497 | 0 to 6 of group 2  |
+//! | Guns at the bombers        | 36    | 0.05   | 1.8      | 1.307670 | 0 to those left of group 2 |
 //!
-//! Each is 2 with chance 0.8. So 16, 15 or 14 bombers attack:
+//! The bombers that attack are 18 less the two losses of group 2: 14.4 on
+//! average. Each drops one bomb at 0.2, so an attack by b bombers scores
+//! from 0 to b hits, 0.2 x b on average.
 //!
-//! | Bombers attacking | Expected hits | Hits      |
-//! | ----------------- | ------------- | --------- |
-//! | 16                | 3.2           | 3 or 4    |
-//! | 15                | 3             | exactly 3 |
-//! | 14                | 2.8           | 2 or 3    |
+//! After it group 2 has the bombers that attacked, group 3 has 12 less its
+//! loss and group 4 has 12 less its loss.
 //!
-//! After it group 2 has 16, 15 or 14 aircraft, group 3 has 11 or 10, and
-//! group 4 has 11 or 10.
-//!
-//! Over seeds 1 to 1000, among the runs with an attack, the number in which
-//! the first attack costs the patrol 2 is within four standard deviations of
-//! 0.8 of them, and likewise the escorts 2, the bombers 2 to fighters, and
-//! the bombers 2 to guns.
+//! Over seeds 1 to 1000, among the runs with an attack, the hits of each of
+//! the four rolls of the first attack, summed over those runs, are within
+//! four standard deviations of 1.8 times their number: the standard
+//! deviation of the sum is the figure in the table times the square root of
+//! the number of runs. The bomb hits of the first attacks are within four
+//! standard deviations of 0.2 times the bombers that attacked, summed the
+//! same way.
 //!
 //! ## A second attack
 //!
@@ -102,8 +103,15 @@
 //! works every attack of every run from the counts and flight decks at the
 //! start of its pulse.
 //!
-//! Two attacks do at most 4 + 4 hits, 80 points, so carrier B is never sunk,
-//! and the cruisers are never attacked: the guns always fire 36 shots.
+//! Carrier B is sunk by ten hits on flotation, which two attacks can now
+//! do, though rarely: two attacks average under 6 hits, and a quarter of
+//! them start fires instead. While she is afloat every attack is on her and
+//! the guns fire 36 shots. If a morning attack sinks her, air group 4 is
+//! lost with her (decision 0025), so the afternoon strike meets no patrol
+//! and group 3's escorts fire at nothing; the cruisers fire 16 shots; and
+//! the bombers attack the lower-numbered cruiser afloat, at 15 points a hit.
+//! (Before decision 0033 two attacks did 80 points at most and she could
+//! not be sunk.)
 //!
 //! ## Variants
 //!
@@ -112,10 +120,16 @@
 //!
 //! | Variant                                | Escorts at patrol | Patrol at escorts | Patrol at bombers | Guns | Bombers attacking |
 //! | -------------------------------------- | ----------------- | ----------------- | ----------------- | ---- | ----------------- |
-//! | Group 3 keeps a share of 1: no escort  | none              | none              | 12 shots, 3.6: 3 or 4 | 1.8: 1 or 2 | 12 to 14 |
-//! | Group 3 keeps a share of 0: 12 escorts | 12 shots, 3.6: 3 or 4 | 12 shots, 3.6: 3 or 4 | none        | 1.8: 1 or 2 | 16 or 17 |
-//! | Group 4 is not on patrol               | none              | none              | none              | 1.8: 1 or 2 | 16 or 17 |
-//! | The fighters' radius is 190 nm, not 250 | none             | none              | 12 shots, 3.6: 3 or 4 | 1.8: 1 or 2 | 12 to 14 |
+//! | Group 3 keeps a share of 1: no escort  | none              | none              | 12 shots, 3.6 expected | 36 shots, 1.8 | 12.6 on average |
+//! | Group 3 keeps a share of 0: 12 escorts | 12 shots, 3.6 expected | 12 shots, 3.6 expected | none        | 36 shots, 1.8 | 16.2 on average |
+//! | Group 4 is not on patrol               | none              | none              | none              | 36 shots, 1.8 | 16.2 on average |
+//! | The fighters' radius is 190 nm, not 250 | none             | none              | 12 shots, 3.6 expected | 36 shots, 1.8 | 12.6 on average |
+//!
+//! In each variant the shots and the chance of every roll of a first attack
+//! are exactly those of its row, the bombers attacking are 18 less the
+//! losses of group 2, and over the runs the hits of each roll are within
+//! four standard deviations of the expected figure times the number of
+//! first attacks.
 //!
 //! In the last variant a strike sent to (9,0), 200 nm away, is beyond the
 //! fighters' radius: group 3 sends no escort with it and all twelve of its
@@ -140,13 +154,13 @@
 //!   lost to fighters and guns in that attack.
 //! - A replay of any seed reproduces the daily hash.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::OnceLock;
 
-use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind, Weapon};
+use sim_core::events::{AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
@@ -294,17 +308,6 @@ impl Run {
             .expect("the ship")
             .1
     }
-
-    /// Hits of all the attacks of the run.
-    fn hits(&self) -> u32 {
-        self.attacks()
-            .iter()
-            .map(|event| match event.kind {
-                EventKind::AirAttack { hits, .. } => hits,
-                _ => unreachable!(),
-            })
-            .sum()
-    }
 }
 
 fn run_of(base: &Scenario, seed: u64) -> Run {
@@ -367,11 +370,14 @@ struct Config {
     share_tenths: u32,
     /// Whether group 4 is on combat air patrol.
     group_4_on_patrol: bool,
+    /// A bomb's chance to hit, in tenths (2 in the scenario).
+    bomb_tenths: i64,
 }
 
 const SCENARIO: Config = Config {
     share_tenths: 5,
     group_4_on_patrol: true,
+    bomb_tenths: 2,
 };
 
 /// One attack as the rule works it, with what it found in the events.
@@ -387,22 +393,30 @@ struct Worked {
     patrol_at_escorts: Option<u32>,
     patrol_at_bombers: Option<u32>,
     shots_at_bombers: u32,
+    /// The anti-aircraft shots of the ships afloat at the start of the
+    /// pulse, and the hits of the guns, or `None` if they had no target.
+    gun_shots: u32,
     guns: Option<u32>,
     bombers_attacking: u32,
     attack_hits: u32,
-    /// The aircraft of groups 2, 3 and 4 afterwards.
+    /// The ship the attack was on: carrier B while she is afloat, else the
+    /// lower-numbered cruiser afloat.
+    target: ShipId,
+    /// Whether the attack sank carrier B, taking air group 4 with her.
+    sank_b: bool,
+    /// The aircraft of groups 2, 3 and 4 after the fights and the bombs, and
+    /// after the attack's damage has landed (the same unless carrier B sank:
+    /// then group 4 is lost with her).
+    after_fight: [u32; 3],
     after: [u32; 3],
     /// Whether carrier B's flight deck was degraded or out at the start.
     deck_b: SystemState,
 }
 
-/// The hits a roll of `shots` at `chance` gives from its stream: the whole
-/// part of shots x chance, plus one with chance equal to the fraction.
+/// The hits a roll of `shots` at `chance` gives from its stream: one draw for
+/// each shot (decision 0033).
 fn hits_from(stream: &mut RngStream, shots: u32, chance: Fixed) -> u32 {
-    let expected = int(shots) * chance;
-    let whole = expected.trunc();
-    let fraction = expected - Fixed::from_int(whole);
-    u32::try_from(whole).expect("small") + u32::from(stream.chance(fraction))
+    (0..shots).map(|_| u32::from(stream.chance(chance))).sum()
 }
 
 fn stream_of(seed: u64, pulse: Pulse, entity: EntityRef, other: EntityRef) -> RngStream {
@@ -443,6 +457,11 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
     let seed = run.seed;
     let mut ready = [18u32, 12, 12];
     let mut deck_b = SystemState::Working;
+    // The ships of task force 2 (carrier B, then the cruisers) still afloat,
+    // and the flotation damage each has taken, from the damage events.
+    let mut afloat: BTreeSet<ShipId> = [3, 4, 5].map(ShipId::new).into();
+    let mut flotation: BTreeMap<ShipId, Fixed> =
+        [3, 4, 5].map(|id| (ShipId::new(id), Fixed::ZERO)).into();
     let mut worked = Vec::new();
     let events = &run.events;
     for (index, launch) in events.iter().enumerate() {
@@ -492,6 +511,9 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
         let lost = kinds(|k| matches!(k, EventKind::AircraftLost { .. }));
         let attacked = kinds(|k| matches!(k, EventKind::AirAttack { .. }));
         let nothing = kinds(|k| matches!(k, EventKind::StrikeFoundNothing { .. }));
+        let damaged = kinds(|k| matches!(k, EventKind::ShipDamaged { .. }));
+        let sunk = kinds(|k| matches!(k, EventKind::ShipSunk { .. }));
+        let groups_lost = kinds(|k| matches!(k, EventKind::AirGroupLost { .. }));
 
         // The escorts go if there are any, whether or not the strike
         // finds anything: group 3 with the strike of group 2.
@@ -523,7 +545,11 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
         }
 
         // A strike that finds nothing meets nobody and loses nothing.
-        if attacked.is_empty() {
+        let EventKind::StrikeLaunched { hex, .. } = launch.kind else {
+            unreachable!()
+        };
+        if hex != TARGET {
+            assert!(attacked.is_empty(), "seed {seed}");
             assert_eq!(nothing.len(), 1, "seed {seed}");
             assert_eq!(
                 nothing[0].causes,
@@ -531,13 +557,17 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
                 "seed {seed}"
             );
             assert!(
-                fights.is_empty() && guns.is_empty() && lost.is_empty(),
+                fights.is_empty()
+                    && guns.is_empty()
+                    && lost.is_empty()
+                    && damaged.is_empty()
+                    && sunk.is_empty()
+                    && groups_lost.is_empty(),
                 "seed {seed}: a strike that finds nothing fights nobody"
             );
             continue;
         }
         assert!(nothing.is_empty(), "seed {seed}");
-        assert_eq!(attacked.len(), 1, "seed {seed}");
 
         // The fights, worked by decision 6 on the counts at the start.
         let chance = tenths(3);
@@ -683,9 +713,17 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             }
         }
 
-        // The guns: every ship afloat in task force 2 (the carrier's 20 and
-        // two cruisers' 8 each: none is ever attacked, so none is sunk),
-        // at the bombers left.
+        // The guns: every ship afloat in task force 2 at the start of the
+        // pulse (the carrier's 20 and each cruiser's 8: 36 while carrier B is
+        // afloat, 16 once she is sunk), at the bombers left. The stream is
+        // that of the lowest-numbered ship afloat.
+        let gun_shots: u32 = afloat
+            .iter()
+            .map(|ship| if *ship == CARRIER_B { 20 } else { 8 })
+            .sum();
+        let lowest = *afloat.iter().next().expect("a ship afloat");
+        // The target of the attack is the same ship.
+        let target = lowest;
         let left_after_fighters = now[0] - (ready[0] - b);
         assert_eq!(left_after_fighters, now[0], "the bombers are group 2's own");
         let bombers_left = b - (ready[0] - now[0]);
@@ -695,18 +733,17 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             let mut stream = stream_of(
                 seed,
                 pulse,
-                EntityRef::Ship(CARRIER_B),
+                EntityRef::Ship(lowest),
                 EntityRef::AirGroup(BOMBERS),
             );
-            let hits = hits_from(&mut stream, 36, hundredths(5));
-            let expected = int(36) * hundredths(5);
-            assert_eq!(expected, tenths(18));
+            let hits = hits_from(&mut stream, gun_shots, hundredths(5));
+            let expected = int(gun_shots) * hundredths(5);
             assert_eq!(
                 guns[0].kind,
                 EventKind::AntiAircraftFire {
                     task_force: ENEMY_FORCE,
                     air_group: BOMBERS,
-                    shots: int(36),
+                    shots: int(gun_shots),
                     chance: hundredths(5),
                     expected,
                     hits
@@ -717,7 +754,7 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
                 guns[0].kind.to_string(),
                 format!(
                     "task_force:2 guns at the raid of air_group:2: {}",
-                    shots_text(36, "0.05", expected, hits)
+                    shots_text(gun_shots, "0.05", expected, hits)
                 ),
                 "seed {seed}"
             );
@@ -764,27 +801,40 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
         // The attack is of the bombers left, one shot each, at carrier B.
         let bombers_attacking = now[0];
         assert_eq!(bombers_attacking, b - (ready[0] - now[0]));
-        assert!(
-            bombers_attacking > 0,
-            "seed {seed}: fighters and guns never take all 18"
-        );
+        if bombers_attacking == 0 {
+            // Fighters and guns took every bomber (a second strike of a few,
+            // against a patrol of 12): nothing attacks, so there is no attack,
+            // no damage and no finding.
+            assert!(
+                attacked.is_empty()
+                    && nothing.is_empty()
+                    && damaged.is_empty()
+                    && sunk.is_empty()
+                    && groups_lost.is_empty(),
+                "seed {seed}"
+            );
+            ready = now;
+            continue;
+        }
+        assert_eq!(attacked.len(), 1, "seed {seed}");
         let mut stream = stream_of(
             seed,
             pulse,
             EntityRef::AirGroup(BOMBERS),
             EntityRef::TaskForce(ENEMY_FORCE),
         );
-        let attack_hits = hits_from(&mut stream, bombers_attacking, tenths(2));
-        let attack_expected = int(bombers_attacking) * tenths(2);
+        let bomb_chance = tenths(config.bomb_tenths);
+        let attack_hits = hits_from(&mut stream, bombers_attacking, bomb_chance);
+        let attack_expected = int(bombers_attacking) * bomb_chance;
         assert_eq!(
             attacked[0].kind,
             EventKind::AirAttack {
                 air_group: BOMBERS,
                 task_force: ENEMY_FORCE,
-                ship: CARRIER_B,
+                ship: target,
                 weapon: Weapon::Bomb,
                 shots: int(bombers_attacking),
-                chance: tenths(2),
+                chance: bomb_chance,
                 expected: attack_expected,
                 hits: attack_hits
             },
@@ -793,7 +843,8 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
         assert_eq!(
             attacked[0].kind.to_string(),
             format!(
-                "air_group:2 bombs at ship:3: {bombers_attacking} shots x 0.2 = {attack_expected} expected, {attack_hits} {}",
+                "air_group:2 bombs at ship:{}: {bombers_attacking} shots x {bomb_chance} = {attack_expected} expected, {attack_hits} {}",
+                target.raw(),
                 if attack_hits == 1 { "hit" } else { "hits" }
             )
         );
@@ -820,6 +871,94 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             "seed {seed}"
         );
 
+        // The damage lands: the hits are 10 points each on the carrier and 15
+        // on a cruiser, flotation or fire; flotation of 100 sinks the ship,
+        // and a sunk carrier takes the air group aboard it.
+        let per_hit = if target == CARRIER_B {
+            Fixed::from_int(10)
+        } else {
+            Fixed::from_int(15)
+        };
+        let mut track_hits = 0;
+        let mut last_flotation = None;
+        let mut sinks = false;
+        let mut last_track: Option<DamageTrack> = None;
+        for event in &damaged {
+            let EventKind::ShipDamaged {
+                round,
+                ship,
+                track,
+                hits: hits_on_track,
+                points,
+                value_after,
+            } = event.kind
+            else {
+                unreachable!()
+            };
+            assert_eq!(event.causes, vec![Cause::Event(attacked[0].id)]);
+            assert_eq!((round, ship), (0, target), "seed {seed}");
+            assert!(hits_on_track > 0);
+            assert!(last_track.is_none_or(|before| (before as usize) < (track as usize)));
+            last_track = Some(track);
+            assert_eq!(points, per_hit * i64::from(hits_on_track), "seed {seed}");
+            track_hits += hits_on_track;
+            if track == DamageTrack::Flotation {
+                let before = flotation[&target];
+                let after = (before + points).min(Fixed::from_int(100));
+                assert_eq!(value_after, after, "seed {seed}");
+                flotation.insert(target, after);
+                sinks = after >= Fixed::from_int(100);
+                last_flotation = Some(event.id);
+            }
+        }
+        assert_eq!(
+            track_hits, attack_hits,
+            "seed {seed}: every hit is on a track"
+        );
+        let mut after_sinking = now;
+        let mut sank_b = false;
+        if sinks {
+            assert_eq!(sunk.len(), 1, "seed {seed}");
+            assert_eq!(
+                sunk[0].kind,
+                EventKind::ShipSunk {
+                    round: 0,
+                    ship: target,
+                    task_force: ENEMY_FORCE
+                },
+                "seed {seed}"
+            );
+            assert_eq!(
+                sunk[0].causes,
+                vec![Cause::Event(last_flotation.expect("a flotation hit"))]
+            );
+            afloat.remove(&target);
+            if target == CARRIER_B {
+                // Air group 4 is the only one aboard, and is lost with her.
+                assert_eq!(groups_lost.len(), 1, "seed {seed}");
+                assert_eq!(
+                    groups_lost[0].kind,
+                    EventKind::AirGroupLost {
+                        air_group: FIGHTERS_B,
+                        ship: CARRIER_B,
+                        aircraft: now[2]
+                    },
+                    "seed {seed}"
+                );
+                assert_eq!(
+                    groups_lost[0].kind.to_string(),
+                    format!("air_group:4 lost with ship:3: {} aircraft", now[2])
+                );
+                assert_eq!(groups_lost[0].causes, vec![Cause::Event(sunk[0].id)]);
+                after_sinking[2] = 0;
+                sank_b = true;
+            } else {
+                assert!(groups_lost.is_empty(), "seed {seed}");
+            }
+        } else {
+            assert!(sunk.is_empty() && groups_lost.is_empty(), "seed {seed}");
+        }
+
         worked.push(Worked {
             pulse,
             flyable_3: flown_3,
@@ -830,13 +969,17 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             patrol_at_escorts: h_patrol_e,
             patrol_at_bombers: h_patrol_b,
             shots_at_bombers: at_bombers,
+            gun_shots,
             guns: gun_hits,
             bombers_attacking,
             attack_hits,
-            after: now,
+            target,
+            sank_b,
+            after_fight: now,
+            after: after_sinking,
             deck_b,
         });
-        ready = now;
+        ready = after_sinking;
     }
     // The end of the day: every group's aircraft are those at the start
     // less the losses of its events, and nobody gained.
@@ -845,6 +988,21 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
         ready,
         "seed {seed}"
     );
+    // The ships of task force 2 are as the damage events leave them; nobody
+    // else was ever hit.
+    for id in [3, 4, 5] {
+        let ship = ShipId::new(id);
+        let last = run.ship(id);
+        assert_eq!(last.flotation, flotation[&ship], "seed {seed}, ship {id}");
+        assert_eq!(last.sunk, !afloat.contains(&ship), "seed {seed}, ship {id}");
+    }
+    for id in [1, 2] {
+        let other = run.ship(id);
+        assert_eq!(other.flotation, Fixed::ZERO, "ship {id}");
+        assert_eq!(other.fire, Fixed::ZERO, "ship {id}");
+        assert!(!other.sunk);
+        assert_eq!(other.systems, ALL_WORKING, "ship {id}");
+    }
     worked
 }
 
@@ -1034,17 +1192,78 @@ fn the_search_and_the_launches_are_as_in_scenario_5b() {
 // The first attack.
 // ---------------------------------------------------------------------
 
+/// Asserts that over `firsts` the hits of one kind of roll are within four
+/// standard deviations of their expected figure. The shots of all the attacks
+/// are independent draws at one chance, so the hits summed over them are a
+/// binomial count of all the shots: the expected figure is the shots x the
+/// chance, the variance the shots x chance x (1 - chance). Each attack's hits
+/// must also be from none to its shots, and a roll with no shots has no hits.
+fn assert_in_band(
+    name: &str,
+    firsts: &[Worked],
+    chance_millionths: i64,
+    roll: impl Fn(&Worked) -> (u32, Option<u32>),
+) {
+    let (mut shots_total, mut hits_total) = (0i64, 0i64);
+    for first in firsts {
+        let (shots, hits) = roll(first);
+        match hits {
+            Some(hits) => {
+                assert!(hits <= shots, "{name}: {hits} hits of {shots} shots");
+                hits_total += i64::from(hits);
+            }
+            None => assert_eq!(shots, 0, "{name}: a roll with shots was made"),
+        }
+        shots_total += i64::from(shots);
+    }
+    eprintln!("{name}: {hits_total} hits of {shots_total} shots");
+    assert!(
+        within_four_sigma(hits_total, shots_total, chance_millionths),
+        "{name}: {hits_total} hits of {shots_total} shots at {chance_millionths} millionths"
+    );
+}
+
+/// What every first attack of a set satisfies, for any variant: the bombers
+/// attacking are 18 less the losses of group 2 to the patrol's fire at them
+/// and to the guns (a group cannot lose more than it has), and the hits of
+/// each roll over the runs are within four standard deviations of shots x
+/// chance.
+fn assert_first_attacks_by_the_rule(firsts: &[Worked]) {
+    for first in firsts {
+        let at_bombers = first.patrol_at_bombers.unwrap_or(0);
+        let lost_to_fighters = at_bombers.min(18);
+        let lost_to_guns = first.guns.unwrap_or(0).min(18 - lost_to_fighters);
+        assert_eq!(
+            first.bombers_attacking,
+            18 - lost_to_fighters - lost_to_guns
+        );
+        assert!(first.attack_hits <= first.bombers_attacking);
+    }
+    assert_in_band("escorts at the patrol", firsts, 300_000, |w| {
+        (
+            if w.patrol > 0 { w.escorts } else { 0 },
+            w.escorts_at_patrol,
+        )
+    });
+    assert_in_band("patrol at the escorts", firsts, 300_000, |w| {
+        (w.escorts.min(w.patrol), w.patrol_at_escorts)
+    });
+    assert_in_band("patrol at the bombers", firsts, 300_000, |w| {
+        (w.shots_at_bombers, w.patrol_at_bombers)
+    });
+    assert_in_band("guns at the bombers", firsts, 50_000, |w| {
+        (w.gun_shots, w.guns)
+    });
+    assert_in_band("bombs", firsts, 200_000, |w| {
+        (w.bombers_attacking, Some(w.attack_hits))
+    });
+}
+
 #[test]
 fn the_first_attack_meets_6_escorts_12_patrol_and_36_gun_shots_by_the_table() {
-    let mut firsts = 0i64;
-    let mut patrol_two = 0i64;
-    let mut escorts_two = 0i64;
-    let mut bombers_two_fighters = 0i64;
-    let mut bombers_two_guns = 0i64;
-    let mut attacking = BTreeSet::new();
+    let mut firsts = Vec::new();
     for run in batch() {
-        let worked = work_the_run(run, SCENARIO);
-        let Some(first) = worked.first() else {
+        let Some(first) = work_the_run(run, SCENARIO).into_iter().next() else {
             assert!(run.attacks().is_empty());
             continue;
         };
@@ -1056,8 +1275,13 @@ fn the_first_attack_meets_6_escorts_12_patrol_and_36_gun_shots_by_the_table() {
             run.seed
         );
         assert_eq!(first.deck_b, SystemState::Working);
-        // Each roll is 6 shots at 0.3 (1.8 expected: 1 or 2 hits), and the
-        // guns 36 at 0.05 (1.8).
+        // Carrier B is afloat, so the attack is on her and the guns fire 36.
+        assert_eq!(first.target, CARRIER_B);
+        assert_eq!(first.gun_shots, 36);
+        // Each roll is shot by shot (decision 0033): 6 shots at 0.3 for the
+        // escorts, 6 for the patrol at the escorts and 6 at the bombers, the
+        // guns 36 at 0.05; each scores from none to its shots. (The shots and
+        // the chance of each are asserted event by event in `work_the_run`.)
         assert_eq!(first.shots_at_bombers, 6);
         let hits = |roll: Option<u32>| roll.expect("the roll was made");
         let (e_p, p_e, p_b, g) = (
@@ -1066,45 +1290,26 @@ fn the_first_attack_meets_6_escorts_12_patrol_and_36_gun_shots_by_the_table() {
             hits(first.patrol_at_bombers),
             hits(first.guns),
         );
-        for roll in [e_p, p_e, p_b, g] {
-            assert!(roll == 1 || roll == 2, "seed {}: {roll}", run.seed);
-        }
-        // 16, 15 or 14 attack, with 3 or 4, exactly 3, and 2 or 3 hits.
-        assert_eq!(first.bombers_attacking, 18 - p_b - g);
-        match first.bombers_attacking {
-            16 => assert!(first.attack_hits == 3 || first.attack_hits == 4),
-            15 => assert_eq!(first.attack_hits, 3),
-            14 => assert!(first.attack_hits == 2 || first.attack_hits == 3),
-            other => panic!("seed {}: {other} bombers attacked", run.seed),
-        }
-        attacking.insert(first.bombers_attacking);
-        // Afterwards group 2 has what attacked, groups 3 and 4 have 11 or 10.
-        assert_eq!(first.after[0], first.bombers_attacking);
-        assert_eq!(first.after[1], 12 - p_e);
-        assert_eq!(first.after[2], 12 - e_p);
-        assert!(matches!(first.after[1], 10 | 11) && matches!(first.after[2], 10 | 11));
-        firsts += 1;
-        patrol_two += i64::from(e_p == 2);
-        escorts_two += i64::from(p_e == 2);
-        bombers_two_fighters += i64::from(p_b == 2);
-        bombers_two_guns += i64::from(g == 2);
+        assert!(e_p <= 6 && p_e <= 6 && p_b <= 6 && g <= 36);
+        // The bombers that attack are 18 less the two losses of group 2.
+        assert_eq!(first.bombers_attacking, 18 - p_b - g.min(18 - p_b));
+        // Afterwards group 2 has what attacked, group 3 has 12 less its loss
+        // and group 4 12 less its loss (before the attack's damage lands).
+        assert_eq!(first.after_fight[0], first.bombers_attacking);
+        assert_eq!(first.after_fight[1], 12 - p_e);
+        assert_eq!(first.after_fight[2], 12 - e_p);
+        firsts.push(first);
     }
+    assert!(firsts.len() > 400);
+    // Over the runs, the hits of each roll are within four standard
+    // deviations of shots x chance, and the attack is not always 14 to 16.
+    assert_first_attacks_by_the_rule(&firsts);
+    let attacking: BTreeSet<u32> = firsts.iter().map(|w| w.bombers_attacking).collect();
     eprintln!(
-        "first attacks {firsts}: patrol 2 {patrol_two}, escorts 2 {escorts_two}, bombers 2 to fighters {bombers_two_fighters}, to guns {bombers_two_guns}; attacking {attacking:?}"
+        "first attacks {}; bombers attacking {attacking:?}",
+        firsts.len()
     );
-    assert!(firsts > 400);
-    for twos in [
-        patrol_two,
-        escorts_two,
-        bombers_two_fighters,
-        bombers_two_guns,
-    ] {
-        assert!(
-            within_four_sigma(twos, firsts, 800_000),
-            "{twos} of {firsts}"
-        );
-    }
-    assert_eq!(attacking, BTreeSet::from([14, 15, 16]));
+    assert!(attacking.len() > 3, "{attacking:?}");
 }
 
 #[test]
@@ -1123,9 +1328,9 @@ fn every_attack_of_every_run_is_worked_by_the_rule_from_the_counts_at_the_start_
             assert_eq!(first.pulse, Pulse::Morning);
             assert_eq!(second.pulse, Pulse::Afternoon);
             // The second attack is worked from what the groups had left:
-            // the bombers that flew are the 14 to 16 that came home.
+            // the bombers that flew are those that came home from the first.
             assert_eq!(second.bombers, first.after[0], "seed {}", run.seed);
-            assert!(matches!(second.bombers, 14..=16));
+            assert!(second.bombers <= 18);
             assert_eq!(second.flyable_3, first.after[1]);
         }
         deck_hit += worked
@@ -1163,8 +1368,12 @@ fn a_second_attack_meets_the_patrol_carrier_b_can_still_fly_and_the_escorts_left
         assert_eq!(second.flyable_3, first.after[1], "seed {}", run.seed);
         assert_eq!(second.escorts, second.flyable_3 - second.flyable_3 / 2);
         // Group 4's patrol: all it has, half if the deck was hit once, none
-        // if twice.
+        // if twice, and none if carrier B was sunk by the first attack (group
+        // 4 is lost with her: `after` has it at 0).
         let kept = first.after[2];
+        if first.sank_b {
+            assert_eq!((kept, second.patrol), (0, 0), "seed {}", run.seed);
+        }
         let expected_patrol = match second.deck_b {
             SystemState::Working => kept,
             SystemState::Degraded => kept / 2,
@@ -1184,40 +1393,112 @@ fn a_second_attack_meets_the_patrol_carrier_b_can_still_fly_and_the_escorts_left
 // What a run leaves.
 // ---------------------------------------------------------------------
 
-#[test]
-fn carrier_b_is_never_sunk_the_cruisers_are_never_attacked_and_the_guns_always_fire_36() {
-    for run in batch() {
-        // Two attacks do 4 + 4 hits of 10 points at most: 80 points.
-        assert!(run.hits() <= 8, "seed {}", run.seed);
-        let carrier = run.ship(3);
-        assert!(!carrier.sunk);
-        assert_eq!(
-            carrier.flotation + carrier.fire,
-            Fixed::from_int(10) * i64::from(run.hits()),
-            "seed {}",
-            run.seed
-        );
-        assert!(carrier.flotation + carrier.fire <= Fixed::from_int(80));
-        for ship in [1, 2, 4, 5] {
+/// What a run that sank carrier B must show, and what every run shows while
+/// she is afloat. Returns whether she was sunk, whether by the morning
+/// attack, and how many attacks followed a sinking.
+fn check_sinking(run: &Run, worked: &[Worked]) -> (bool, bool, usize) {
+    let mut sunk_before = false;
+    let mut sunk_in_the_morning = false;
+    let mut after_a_sinking = 0;
+    for attack in worked {
+        let EventKind::AirAttack { ship, .. } = run
+            .attacks()
+            .into_iter()
+            .find(|event| pulse_of(event) == attack.pulse)
+            .expect("the attack")
+            .kind
+        else {
+            unreachable!()
+        };
+        assert_eq!(ship, attack.target);
+        if sunk_before {
+            // She was sunk by the morning attack: air group 4 went with her
+            // (decision 0025), so the afternoon strike meets no patrol and
+            // group 3's escorts fire at nothing; the cruisers fire 16
+            // shots; the bombers attack the lower-numbered cruiser afloat,
+            // at 15 points a hit (asserted in `work_the_run`).
+            assert_eq!(attack.pulse, Pulse::Afternoon);
+            assert_eq!(attack.patrol, 0, "seed {}", run.seed);
+            assert!(attack.escorts_at_patrol.is_none());
+            assert!(attack.patrol_at_escorts.is_none());
+            assert!(attack.patrol_at_bombers.is_none());
+            assert_eq!(attack.gun_shots, 16, "seed {}", run.seed);
+            assert_eq!(attack.target, ShipId::new(4), "seed {}", run.seed);
+            assert_eq!(attack.after[2], 0);
+            after_a_sinking += 1;
+        } else {
+            // While she is afloat every attack is on her and the guns fire
+            // 36 shots.
+            assert_eq!(attack.target, CARRIER_B, "seed {}", run.seed);
+            assert_eq!(attack.gun_shots, 36, "seed {}", run.seed);
+        }
+        if attack.sank_b {
+            sunk_in_the_morning |= attack.pulse == Pulse::Morning;
+            sunk_before = true;
+        }
+    }
+    // The carrier is sunk in the run if, and only if, an attack sank her.
+    assert_eq!(run.ship(3).sunk, sunk_before, "seed {}", run.seed);
+    // Carrier A and the destroyer are never touched; the cruisers only after
+    // the carrier is sunk.
+    for ship in [1, 2] {
+        assert_eq!(run.ship(ship).flotation, Fixed::ZERO, "ship {ship}");
+    }
+    if !sunk_before {
+        for ship in [4, 5] {
             let other = run.ship(ship);
             assert_eq!(other.flotation, Fixed::ZERO, "ship {ship}");
             assert_eq!(other.fire, Fixed::ZERO, "ship {ship}");
             assert!(!other.sunk);
             assert_eq!(other.systems, ALL_WORKING, "ship {ship}");
         }
-        for attack in run.attacks() {
-            let EventKind::AirAttack { ship, .. } = attack.kind else {
-                unreachable!()
-            };
-            assert_eq!(ship, CARRIER_B);
-        }
-        for guns in run.of(|k| matches!(k, EventKind::AntiAircraftFire { .. })) {
-            let EventKind::AntiAircraftFire { shots, .. } = guns.kind else {
-                unreachable!()
-            };
-            assert_eq!(shots, Fixed::from_int(36));
-        }
     }
+    // Group 4 is lost with her: its aircraft at the end are none.
+    if sunk_before {
+        assert_eq!(run.ready[3], 0, "seed {}", run.seed);
+    }
+    (sunk_before, sunk_in_the_morning, after_a_sinking)
+}
+
+#[test]
+fn carrier_b_can_be_sunk_rarely_and_while_afloat_every_attack_is_on_her_and_the_guns_fire_36() {
+    let mut sunk_runs = 0;
+    for run in batch() {
+        // `work_the_run` asserts the damage, the sinking and the loss of
+        // group 4 event by event, and the ships of the run as it leaves them.
+        let worked = work_the_run(run, SCENARIO);
+        sunk_runs += i32::from(check_sinking(run, &worked).0);
+    }
+    eprintln!("carrier B sunk in {sunk_runs} of {SEEDS} runs");
+    // Rarely: two attacks average under 6 hits and ten on flotation sink her.
+    assert!(sunk_runs > 0 && sunk_runs < 100, "{sunk_runs}");
+}
+
+#[test]
+fn a_morning_attack_that_sinks_carrier_b_takes_group_4_and_the_afternoon_meets_the_cruisers() {
+    // At the scenario's bomb chance of 0.2 a morning sinking does not turn up
+    // in 1,000 seeds (ten flotation hits from 14 bombers or so). With a bomb
+    // chance of 0.8 it does, and every rule of it can be worked.
+    let variant = variant_of_data(
+        "bombs_0_8",
+        &[],
+        &[],
+        &[("bomb_hit_chance = \"0.2\"", "bomb_hit_chance = \"0.8\"")],
+    );
+    let config = Config {
+        bomb_tenths: 8,
+        ..SCENARIO
+    };
+    let (mut sunk_runs, mut morning, mut afternoons) = (0, 0, 0);
+    for run in batch_of(&variant, SEEDS) {
+        let worked = work_the_run(&run, config);
+        let (sunk, in_the_morning, after) = check_sinking(&run, &worked);
+        sunk_runs += i32::from(sunk);
+        morning += i32::from(in_the_morning);
+        afternoons += after;
+    }
+    eprintln!("bombs at 0.8: carrier B sunk in {sunk_runs} runs, {morning} by the morning attack, {afternoons} afternoon attacks after it");
+    assert!(morning > 50 && afternoons > 50, "{morning} {afternoons}");
 }
 
 // ---------------------------------------------------------------------
@@ -1228,12 +1509,17 @@ fn carrier_b_is_never_sunk_the_cruisers_are_never_attacked_and_the_guns_always_f
 /// makes each exact, asserted-unique text replacement in the copied scenario
 /// file, and loads it. Nothing in the repository's data folder is touched.
 fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
-    variant_of_data(tag, edits, &[])
+    variant_of_data(tag, edits, &[], &[])
 }
 
 /// As `variant`, and makes the same kind of replacement in the copied
 /// aircraft types file, for a variant that changes a figure and not an order.
-fn variant_of_data(tag: &str, edits: &[(&str, &str)], aircraft_edits: &[(&str, &str)]) -> Scenario {
+fn variant_of_data(
+    tag: &str,
+    edits: &[(&str, &str)],
+    aircraft_edits: &[(&str, &str)],
+    air_combat_edits: &[(&str, &str)],
+) -> Scenario {
     let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
     // Tests run in parallel: each variant has a folder of its own.
     static NEXT: AtomicUsize = AtomicUsize::new(0);
@@ -1267,6 +1553,17 @@ fn variant_of_data(tag: &str, edits: &[(&str, &str)], aircraft_edits: &[(&str, &
         types = types.replace(original, changed);
     }
     fs::write(&types_path, types).expect("write the aircraft types");
+    let air_path = root.join("reference/air_combat.toml");
+    let mut air = fs::read_to_string(&air_path).expect("read the air combat figures");
+    for (original, changed) in air_combat_edits {
+        assert_eq!(
+            air.matches(original).count(),
+            1,
+            "the text {original:?} appears exactly once"
+        );
+        air = air.replace(original, changed);
+    }
+    fs::write(&air_path, air).expect("write the air combat figures");
     let mut text =
         fs::read_to_string(data.join("scenarios/05c_air_combat.toml")).expect("read the scenario");
     for (original, changed) in edits {
@@ -1312,6 +1609,7 @@ fn short_legged_fighters() -> Scenario {
             FIGHTER_ROW,
             "4,Placeholder fighter,fighter,0,0,190,none,0,0,0",
         )],
+        &[],
     )
 }
 
@@ -1333,8 +1631,9 @@ fn a_share_of_1_sends_no_escorts_and_the_patrol_of_12_fires_all_its_shots_at_the
     let config = Config {
         share_tenths: 10,
         group_4_on_patrol: true,
+        bomb_tenths: 2,
     };
-    let mut bombers_attacking = BTreeSet::new();
+    let mut firsts = Vec::new();
     for run in batch_of(&variant, SEEDS) {
         assert!(run
             .of(|k| matches!(k, EventKind::EscortsSent { .. }))
@@ -1364,20 +1663,20 @@ fn a_share_of_1_sends_no_escorts_and_the_patrol_of_12_fires_all_its_shots_at_the
         }
         // Group 3 loses nothing, and keeps all 12.
         assert_eq!(run.ready[2], 12);
-        for first in work_the_run(&run, config).iter().take(1) {
-            // 12 shots at 0.3 = 3.6: 3 or 4 hits, and the guns 1 or 2:
-            // 12 to 14 bombers attack.
-            let hits = first.patrol_at_bombers.expect("the patrol fired");
-            assert!(hits == 3 || hits == 4);
-            let guns = first.guns.expect("the guns fired");
-            assert!(guns == 1 || guns == 2);
-            assert_eq!(first.bombers_attacking, 18 - hits - guns);
-            assert!(matches!(first.bombers_attacking, 12..=14));
+        for first in work_the_run(&run, config).into_iter().take(1) {
+            // 12 shots at 0.3 for the patrol and 36 at 0.05 for the guns:
+            // 12.6 bombers attack on average.
+            assert_eq!(first.shots_at_bombers, 12);
+            assert_eq!(first.gun_shots, 36);
+            assert!(first.patrol_at_bombers.is_some() && first.guns.is_some());
             assert!(first.escorts_at_patrol.is_none() && first.patrol_at_escorts.is_none());
-            bombers_attacking.insert(first.bombers_attacking);
+            firsts.push(first);
         }
     }
-    assert_eq!(bombers_attacking, BTreeSet::from([12, 13, 14]));
+    assert!(firsts.len() > 400);
+    assert_first_attacks_by_the_rule(&firsts);
+    let attacking: BTreeSet<u32> = firsts.iter().map(|w| w.bombers_attacking).collect();
+    assert!(attacking.len() > 3, "{attacking:?}");
 }
 
 #[test]
@@ -1388,8 +1687,9 @@ fn with_a_radius_of_190_group_3_sends_no_escorts_and_keeps_all_12_over_carrier_a
     let config = Config {
         share_tenths: 10,
         group_4_on_patrol: true,
+        bomb_tenths: 2,
     };
-    let mut bombers_attacking = BTreeSet::new();
+    let mut firsts = Vec::new();
     let mut runs_out_of_reach = 0;
     for run in batch_of(&variant, SEEDS) {
         assert_eq!(run.share_of_3, tenths(5));
@@ -1446,19 +1746,18 @@ fn with_a_radius_of_190_group_3_sends_no_escorts_and_keeps_all_12_over_carrier_a
                 assert_eq!(shots, Fixed::from_int(12));
             }
         }
-        for first in work_the_run(&run, config).iter().take(1) {
-            let hits = first.patrol_at_bombers.expect("the patrol fired");
-            assert!(hits == 3 || hits == 4);
-            let guns = first.guns.expect("the guns fired");
-            assert!(guns == 1 || guns == 2);
-            assert_eq!(first.bombers_attacking, 18 - hits - guns);
-            assert!(matches!(first.bombers_attacking, 12..=14));
+        for first in work_the_run(&run, config).into_iter().take(1) {
+            assert_eq!(first.shots_at_bombers, 12);
+            assert_eq!(first.gun_shots, 36);
+            assert!(first.patrol_at_bombers.is_some() && first.guns.is_some());
             assert!(first.escorts_at_patrol.is_none() && first.patrol_at_escorts.is_none());
-            bombers_attacking.insert(first.bombers_attacking);
+            firsts.push(first);
         }
     }
     assert!(runs_out_of_reach > 500);
-    assert_eq!(bombers_attacking, BTreeSet::from([12, 13, 14]));
+    assert_first_attacks_by_the_rule(&firsts);
+    let attacking: BTreeSet<u32> = firsts.iter().map(|w| w.bombers_attacking).collect();
+    assert!(attacking.len() > 3, "{attacking:?}");
 }
 
 #[test]
@@ -1467,24 +1766,23 @@ fn a_share_of_0_sends_12_escorts_and_the_patrol_leaves_the_bombers_alone() {
     let config = Config {
         share_tenths: 0,
         group_4_on_patrol: true,
+        bomb_tenths: 2,
     };
     let firsts = first_attacks(&variant, config);
-    let mut bombers_attacking = BTreeSet::new();
     for first in &firsts {
         assert_eq!((first.escorts, first.patrol), (12, 12));
-        // 12 shots each way at 0.3 = 3.6: 3 or 4 hits.
-        for roll in [first.escorts_at_patrol, first.patrol_at_escorts] {
-            let hits = roll.expect("both fought");
-            assert!(hits == 3 || hits == 4);
-        }
-        // None at the bombers, and the guns 1 or 2: 16 or 17 attack.
+        // 12 shots each way at 0.3 (3.6 expected each way); both fought.
+        assert!(first.escorts_at_patrol.is_some() && first.patrol_at_escorts.is_some());
+        // None at the bombers, and the guns 36 shots at 0.05: 16.2 attack on
+        // average.
+        assert_eq!(first.shots_at_bombers, 0);
         assert!(first.patrol_at_bombers.is_none());
-        let guns = first.guns.expect("the guns fired");
-        assert!(guns == 1 || guns == 2);
-        assert!(matches!(first.bombers_attacking, 16 | 17));
-        bombers_attacking.insert(first.bombers_attacking);
+        assert_eq!(first.gun_shots, 36);
+        assert!(first.guns.is_some());
     }
-    assert_eq!(bombers_attacking, BTreeSet::from([16, 17]));
+    assert_first_attacks_by_the_rule(&firsts);
+    let attacking: BTreeSet<u32> = firsts.iter().map(|w| w.bombers_attacking).collect();
+    assert!(attacking.len() > 3, "{attacking:?}");
 }
 
 #[test]
@@ -1493,29 +1791,34 @@ fn with_group_4_not_on_patrol_nothing_fights_and_only_the_guns_cost_bombers() {
     let config = Config {
         share_tenths: 5,
         group_4_on_patrol: false,
+        bomb_tenths: 2,
     };
     let runs = batch_of(&variant, SEEDS);
-    let mut bombers_attacking = BTreeSet::new();
+    let mut firsts = Vec::new();
     for run in &runs {
         assert!(run
             .of(|k| matches!(k, EventKind::AirFight { .. }))
             .is_empty());
-        // Group 4 loses nothing.
-        assert_eq!(run.ready[3], 12);
         let worked = work_the_run(run, config);
-        if let Some(first) = worked.first() {
+        // Group 4 loses nothing unless carrier B is sunk, and then it is
+        // lost with her.
+        let sunk = worked.iter().any(|attack| attack.sank_b);
+        assert_eq!(run.ready[3], if sunk { 0 } else { 12 }, "seed {}", run.seed);
+        if let Some(first) = worked.into_iter().next() {
             assert!(
                 first.escorts_at_patrol.is_none()
                     && first.patrol_at_escorts.is_none()
                     && first.patrol_at_bombers.is_none()
             );
-            let guns = first.guns.expect("the guns fired");
-            assert!(guns == 1 || guns == 2);
-            assert!(matches!(first.bombers_attacking, 16 | 17));
-            bombers_attacking.insert(first.bombers_attacking);
+            assert_eq!(first.gun_shots, 36);
+            assert!(first.guns.is_some());
+            firsts.push(first);
         }
     }
-    assert_eq!(bombers_attacking, BTreeSet::from([16, 17]));
+    assert!(firsts.len() > 400);
+    assert_first_attacks_by_the_rule(&firsts);
+    let attacking: BTreeSet<u32> = firsts.iter().map(|w| w.bombers_attacking).collect();
+    assert!(attacking.len() > 2, "{attacking:?}");
 }
 
 // ---------------------------------------------------------------------
@@ -1525,11 +1828,18 @@ fn with_group_4_not_on_patrol_nothing_fights_and_only_the_guns_cost_bombers() {
 #[test]
 fn every_groups_aircraft_at_the_end_are_those_at_the_start_less_its_recorded_losses() {
     for run in batch() {
+        // The aircraft a group lost: its loss events, and all it had left
+        // if its carrier was sunk (air group 4 with carrier B).
         let lost = |group: AirGroupId| -> u32 {
-            run.of(|k| matches!(k, EventKind::AircraftLost { .. }))
+            run.events
                 .iter()
                 .map(|event| match event.kind {
                     EventKind::AircraftLost {
+                        air_group,
+                        aircraft,
+                        ..
+                    }
+                    | EventKind::AirGroupLost {
                         air_group,
                         aircraft,
                         ..
@@ -1552,7 +1862,8 @@ fn every_groups_aircraft_at_the_end_are_those_at_the_start_less_its_recorded_los
             );
         }
         // The scouts and the six fighters over carrier A never lose any:
-        // group 3 loses only its escorts, at most 6 an attack.
+        // group 3 loses only its escorts, at most 6 an attack and no more
+        // than the escorts sent.
         assert_eq!(lost(SCOUTS), 0);
         // The six kept over carrier A are never fired at: nobody attacks
         // carrier A.
@@ -1565,7 +1876,12 @@ fn every_groups_aircraft_at_the_end_are_those_at_the_start_less_its_recorded_los
             })
             .sum();
         assert!(lost(FIGHTERS_A) <= escorts_sent, "seed {}", run.seed);
-        assert!(run.ready[2] >= 6, "seed {}", run.seed);
+        assert_eq!(
+            run.ready[2],
+            12 - lost(FIGHTERS_A),
+            "seed {}: the aircraft kept over carrier A are not fired at",
+            run.seed
+        );
     }
 }
 
@@ -1606,9 +1922,11 @@ fn more_escorts_never_mean_more_patrol_shots_at_the_bombers() {
     let with = |share_tenths| Config {
         share_tenths,
         group_4_on_patrol: true,
+        bomb_tenths: 2,
     };
     // Share 1: no escorts, the patrol of 12 fires all 12 at the bombers.
     // Share 0.5: 6 escorts, 6 at the bombers. Share 0: 12 escorts, none.
+    // The shots are exact given the counts, attack by attack.
     assert_eq!(shots_at_bombers("1", with(10)), BTreeSet::from([12]));
     let half: BTreeSet<u32> = batch()
         .iter()
@@ -1624,27 +1942,46 @@ fn more_escorts_never_mean_more_patrol_shots_at_the_bombers() {
 
 #[test]
 fn more_escorts_never_cost_the_bombers_more_to_the_fighters() {
-    // The mean number of bombers attacking in 1000 first attacks rises
-    // as the share falls: 13.x, 15.x, 16.x.
-    let mean = |scenario: &Scenario, config: Config| -> i64 {
+    // Each shot is rolled (decision 0033), so one seed can go either way and
+    // no run-by-run statement holds. What does hold attack by attack is the
+    // expectation: the patrol's shots at the bombers x 0.3 never rises with
+    // the escorts (3.6, 1.8, 0). The losses themselves are compared as
+    // totals over the 1,000 seeds: the mean number of bombers attacking in
+    // the first attacks rises as the share falls, 12.6, 14.4, 16.2.
+    let summary = |scenario: &Scenario, config: Config| -> (Fixed, i64) {
         let firsts = first_attacks(scenario, config);
+        let expected_to_fighters: BTreeSet<Fixed> = firsts
+            .iter()
+            .map(|w| int(w.shots_at_bombers) * tenths(3))
+            .collect();
+        assert_eq!(expected_to_fighters.len(), 1);
         let total: i64 = firsts.iter().map(|w| i64::from(w.bombers_attacking)).sum();
-        total * 1000 / count(firsts.len())
+        (
+            *expected_to_fighters.first().expect("one"),
+            total * 1000 / count(firsts.len()),
+        )
     };
     let with = |share_tenths| Config {
         share_tenths,
         group_4_on_patrol: true,
+        bomb_tenths: 2,
     };
-    let share_1 = mean(&share_variant("1"), with(10));
-    let share_half = mean(&load(), SCENARIO);
-    let share_0 = mean(&share_variant("0"), with(0));
-    let rested = mean(
+    let (expected_1, share_1) = summary(&share_variant("1"), with(10));
+    let (expected_half, share_half) = summary(&load(), SCENARIO);
+    let (expected_0, share_0) = summary(&share_variant("0"), with(0));
+    let (expected_rested, rested) = summary(
         &group_4_at_rest(),
         Config {
             share_tenths: 5,
             group_4_on_patrol: false,
+            bomb_tenths: 2,
         },
     );
+    assert_eq!(
+        [expected_1, expected_half, expected_0, expected_rested],
+        [tenths(36), tenths(18), Fixed::ZERO, Fixed::ZERO]
+    );
+    assert!(expected_1 >= expected_half && expected_half >= expected_0);
     eprintln!("mean bombers attacking x1000: share 1 {share_1}, 0.5 {share_half}, 0 {share_0}, group 4 at rest {rested}");
     assert!(share_1 < share_half && share_half < share_0);
     // With nobody to fight, only the guns: 18 - 1.8 = 16.2.

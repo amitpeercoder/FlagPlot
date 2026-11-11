@@ -32,7 +32,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::belief::{ApplyOutcome, BattleClaim, Report};
 use crate::damage::{
-    damage_per_hit, raw_u64, system_for_draw, system_hit_chance, DamageSite, HitSet,
+    damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
 use crate::events::{
     Breakdown, Cause, DamageTrack, EngagementEndReason, EventKind, Factor, Weapon,
@@ -799,8 +799,8 @@ impl World {
         fight.fire_streams.insert(firer, stream);
     }
 
-    /// Rolls one salvo and records it. Draws, in order: the fraction of the
-    /// expected hits, then for each hit of a gun its track and then its
+    /// Rolls one salvo and records it. Draws, in order: one for each shot (and
+    /// one more for a part of a shot), then for each hit of a gun its track and then its
     /// system, and for each hit of a torpedo its system (a torpedo hit is
     /// always on flotation, so it has no track draw).
     fn fire_weapon(
@@ -825,10 +825,7 @@ impl World {
         };
         let chance = shot.base_chance * surprised_factor * lit_factor * shot.fire_control_factor;
         let expected = shot.shots * chance;
-        let whole = expected.trunc();
-        let fraction = expected - Fixed::from_int(whole);
-        let hits = u32::try_from(whole).expect("expected hits are not negative")
-            + u32::from(stream.chance(fraction));
+        let hits = roll_shots(stream, shot.shots, chance);
 
         let system_table = match shot.weapon {
             Weapon::Gun => &figures.gun_system_hit,
@@ -1811,9 +1808,16 @@ mod tests {
     }
 
     /// Every gun hit lands on flotation and torpedoes always miss, so by
-    /// day a salvo of 120 shots does exactly 6 hits x 5 points = 30.
+    /// day a salvo does exactly 6 hits x 5 points = 30. Each shot is rolled
+    /// (decision 0033), so to keep the 6 hits sure the day chance is 1 and a
+    /// salvo is 6 shots: 8 guns x 0.15 rounds a minute x 5 minutes, in every
+    /// class.
     fn flotation_only(world: &mut World) {
+        for class in world.ref_data.ship_classes.values_mut() {
+            class.gun_rounds_per_min = fx("0.15");
+        }
         let figures = figures_mut(world);
+        figures.gun_hit_chance_day = Fixed::ONE;
         figures.gun_hit_flotation = Fixed::ONE;
         figures.system_hit_chance_per_point = Fixed::ZERO;
         figures.torpedo_hit_chance_night = Fixed::ZERO;
@@ -2324,8 +2328,10 @@ mod tests {
     fn a_ship_sunk_in_a_round_fires_in_that_round_and_not_after() {
         // Day, both sight in round 1. Three cruisers each. Gun hits all land
         // on flotation, torpedoes miss. A gun salvo is 8 x 3 x 5 = 120 shots
-        // x 0.05 = 6 hits (a whole number, so no fraction roll hits), each 100
-        // x 20 / 400 = 5 points: 30 points per salvo.
+        // x 0.05 = 6 expected hits. Each shot is rolled (decision 0033), so
+        // the test sets the day chance to 1 and the salvo to 6 shots
+        // (`flotation_only`): 6 sure hits, each 100 x 20 / 400 = 5 points:
+        // 30 points per salvo.
         //
         // Ship 4 (force 2) starts at flotation 95. Round 1: ship 1 -> 4,
         // 2 -> 5, 3 -> 6 and 4 -> 1, 5 -> 2, 6 -> 3. Ship 4 takes 30:
@@ -2551,9 +2557,10 @@ mod tests {
         let guns = gun_salvos_of(&world, 1);
         assert_eq!(guns.len(), 1);
         assert_eq!((guns[0].round, guns[0].shots), (1, Fixed::from_int(50)));
-        // 50 x 0.05 = 2.5 expected: 2 whole hits, and 3 if the fraction hits.
+        // 50 x 0.05 = 2.5 expected; the hits are what 50 draws at 0.05 give.
         assert_eq!(guns[0].expected, fx("2.5"));
-        assert!(guns[0].hits == 2 || guns[0].hits == 3);
+        let mut stream = ship_1_stream(&world);
+        assert_eq!(guns[0].hits, replay_shots(&mut stream, 50, fx("0.05")));
         assert_eq!(ship(&world, 1).gun_rounds, Fixed::ZERO);
     }
 
@@ -2836,11 +2843,12 @@ mod tests {
     #[test]
     fn system_hits_land_at_the_end_of_the_round_and_bite_in_the_next() {
         // Day. Every gun hit knocks the main battery down one level. Ship 1
-        // fires 120 shots x 0.05 = exactly 6 hits at ship 2 in round 1, and
-        // ship 2 the same at ship 1, so both main batteries are out at the
-        // end of round 1 (working -> degraded -> out -> out ...). Both
-        // still fired their full 120 shots in round 1, and neither fires a
-        // gun in round 2.
+        // fires 120 shots at 0.05 (6 expected, each shot rolled) at ship 2
+        // in round 1, and ship 2 the same at ship 1. Each gun hit knocks the
+        // main battery down a level, so with at least two hits (as both have
+        // with this seed) both main batteries are out at the end of round 1
+        // (working -> degraded -> out -> out ...). Both still fired their
+        // full 120 shots in round 1, and neither fires a gun in round 2.
         let world = run(&duel(), |w| {
             let figures = figures_mut(w);
             figures.system_hit_chance_per_point = Fixed::from_int(100);
@@ -2853,7 +2861,7 @@ mod tests {
             let guns = gun_salvos_of(&world, firer);
             assert_eq!(guns.len(), 1, "ship {firer}");
             assert_eq!(guns[0].shots, Fixed::from_int(120));
-            assert_eq!(guns[0].hits, 6);
+            assert!(guns[0].hits >= 2, "ship {firer}: {}", guns[0].hits);
             assert_eq!(ship(&world, firer).systems.main_battery, SystemState::Out);
         }
     }
@@ -3489,6 +3497,28 @@ mod tests {
 
     // ---- 16. the fire stream draw order ----
 
+    /// Replays the shot draws of a salvo of a whole number of `shots` at
+    /// `chance` (decision 0033): one draw each. Returns the hits.
+    fn replay_shots(stream: &mut RngStream, shots: u32, chance: Fixed) -> u32 {
+        (0..shots).map(|_| u32::from(stream.chance(chance))).sum()
+    }
+
+    /// Replays the system draws of `hits` torpedo hits (one each, no track
+    /// draw) for a hit of 50 points, and returns the systems hit.
+    fn replay_torpedo_hits(
+        stream: &mut RngStream,
+        figures: &SurfaceCombatFigures,
+        hits: u32,
+    ) -> Vec<ShipSystem> {
+        let chance = system_hit_chance(Fixed::from_int(50), figures.system_hit_chance_per_point);
+        let mut systems = Vec::new();
+        for _ in 0..hits {
+            let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
+            systems.extend(system_for_draw(draw, chance, &figures.torpedo_system_hit));
+        }
+        systems
+    }
+
     /// Replays `hits` gun hits from `stream` as the fire rule draws them: for
     /// each, a track draw (flotation if below the flotation share, else
     /// fire), then a system draw. Returns the hits on flotation and fire and
@@ -3551,14 +3581,15 @@ mod tests {
     }
 
     #[test]
-    fn the_fire_stream_draws_fraction_then_track_and_system_per_gun_hit_then_the_torpedo() {
+    fn the_fire_stream_draws_each_shot_then_track_and_system_per_gun_hit_then_the_torpedo() {
         // Day, one cruiser each, ship 2 silent. Ship 1, round 1, from the
-        // stream keyed on ship 1 and task force 2:
-        //   gun fraction (120 x 0.05 = 6, fraction 0): 1 draw
-        //   6 gun hits, each a track draw then a system draw: 12 draws
-        //   torpedo fraction (8 x 0.125 = 1, fraction 0): 1 draw
-        //   1 torpedo hit: no track draw, one system draw
-        // The torpedo hit is on flotation whatever the stream says.
+        // stream keyed on ship 1 and task force 2 (decision 0033):
+        //   120 gun shots at 0.05 (6 expected, a whole number of shots, so
+        //   no draw for a part): 120 draws, n of them hits
+        //   n gun hits, each a track draw then a system draw: 2n draws
+        //   8 torpedo shots at 0.125 (1 expected): 8 draws, m of them hits
+        //   m torpedo hits: no track draw, one system draw each
+        // A torpedo hit is on flotation whatever the stream says.
         let world = run(&duel(), |w| {
             only_ship_1_fires(w);
             figures_mut(w).torpedo_hit_chance_day = fx("0.125");
@@ -3566,41 +3597,31 @@ mod tests {
         let figures = world.ref_data.surface_combat.clone().unwrap();
         let mut stream = ship_1_stream(&world);
 
-        assert!(!stream.chance(Fixed::ZERO));
-        let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), 6);
+        let n = replay_shots(&mut stream, 120, fx("0.05"));
+        let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), n);
         let gun = first_round_salvo(&world, 1, Weapon::Gun);
         assert_eq!(gun.expected, Fixed::from_int(6));
-        assert_eq!(gun.hits, 6);
+        assert_eq!(gun.hits, n);
         assert_eq!(outcome_of_salvo(&world, gun.id), (tracks, systems));
 
-        assert!(!stream.chance(Fixed::ZERO));
-        let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
-        let torpedo_system = system_for_draw(
-            draw,
-            // 200 x 100 / 400 = 50 points: chance 1 at the cap.
-            system_hit_chance(Fixed::from_int(50), figures.system_hit_chance_per_point),
-            &figures.torpedo_system_hit,
-        );
+        let m = replay_shots(&mut stream, 8, fx("0.125"));
+        let torpedo_systems = replay_torpedo_hits(&mut stream, &figures, m);
         let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
         assert_eq!(torpedo.expected, Fixed::ONE);
-        assert_eq!(torpedo.hits, 1);
-        let (torpedo_tracks, torpedo_systems) = outcome_of_salvo(&world, torpedo.id);
-        assert_eq!(torpedo_tracks, [1, 0]);
-        assert_eq!(
-            torpedo_systems,
-            torpedo_system.into_iter().collect::<Vec<_>>()
-        );
+        assert_eq!(torpedo.hits, m);
+        let (torpedo_tracks, recorded_systems) = outcome_of_salvo(&world, torpedo.id);
+        assert_eq!(torpedo_tracks, [m, 0]);
+        assert_eq!(recorded_systems, torpedo_systems);
     }
 
     #[test]
-    fn the_fire_stream_carries_on_in_the_next_round_even_when_the_fraction_is_zero() {
+    fn the_fire_stream_carries_on_in_the_next_round_one_draw_per_shot() {
         // Day, one cruiser each, ship 2 silent, ship 1's torpedoes gone and
         // every gun hit forced onto fire control with chance 0.5 (so some
-        // system draws miss). Each round: gun fraction (0, still one draw),
-        // then 6 x (track, system). Replaying the stream by hand over two
-        // rounds must give the same hits and system hits: it fails if the
-        // fraction draw is skipped when it is 0, or if either draw per hit is
-        // skipped.
+        // system draws miss). Each round: 120 shot draws at 0.05, then n x
+        // (track, system). Replaying the stream by hand over two rounds must
+        // give the same hits and system hits: it fails if a shot draw or
+        // either draw per hit is skipped.
         let world = run(&duel(), |w| {
             only_ship_1_fires(w);
             ship_mut(w, 1).torpedoes_ready = false;
@@ -3614,14 +3635,14 @@ mod tests {
         let figures = world.ref_data.surface_combat.clone().unwrap();
         let mut stream = ship_1_stream(&world);
         for round in 1..=2 {
-            assert!(!stream.chance(Fixed::ZERO));
-            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), 6);
+            let n = replay_shots(&mut stream, 120, fx("0.05"));
+            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), n);
             let salvo = gun_salvos_of(&world, 1)
                 .into_iter()
                 .find(|s| s.round == round)
                 .expect("a gun salvo this round");
             assert_eq!(salvo.expected, Fixed::from_int(6));
-            assert_eq!(salvo.hits, 6);
+            assert_eq!(salvo.hits, n);
             assert_eq!(
                 outcome_of_salvo(&world, salvo.id),
                 (tracks, systems),
@@ -3644,24 +3665,21 @@ mod tests {
             });
             let figures = world.ref_data.surface_combat.clone().unwrap();
             let mut stream = ship_1_stream(&world);
-            assert!(!stream.chance(Fixed::ZERO));
-            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), 6);
+            let n = replay_shots(&mut stream, 120, fx("0.05"));
+            let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), n);
             let gun = first_round_salvo(&world, 1, Weapon::Gun);
             assert_eq!(
                 outcome_of_salvo(&world, gun.id),
                 (tracks, systems),
                 "figure {per_point}"
             );
-            assert!(!stream.chance(Fixed::ZERO));
-            let draw = Fixed::from_raw(stream.below(Fixed::SCALE.unsigned_abs()) as i64);
+            let m = replay_shots(&mut stream, 8, fx("0.125"));
             let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+            assert_eq!(torpedo.hits, m, "figure {per_point}");
             let (_, torpedo_systems) = outcome_of_salvo(&world, torpedo.id);
-            let chance = system_hit_chance(Fixed::from_int(50), fx(per_point));
             assert_eq!(
                 torpedo_systems,
-                system_for_draw(draw, chance, &figures.torpedo_system_hit)
-                    .into_iter()
-                    .collect::<Vec<_>>(),
+                replay_torpedo_hits(&mut stream, &figures, m),
                 "figure {per_point}"
             );
         }
@@ -3670,8 +3688,9 @@ mod tests {
     #[test]
     fn one_figure_per_point_serves_gun_and_torpedo_hits() {
         // Placeholder cruiser: a gun hit is 5 points (chance 0.3), a torpedo
-        // hit 50 (chance 1). Over many seeds the torpedo hit always knocks a
+        // hit 50 (chance 1). Over many seeds each torpedo hit always knocks a
         // system down and the gun hit does not.
+        let mut torpedo_hits = 0u32;
         let mut gun_hits = 0u32;
         let mut gun_system_hits = 0usize;
         for seed in 1..=20 {
@@ -3682,13 +3701,18 @@ mod tests {
                 figures_mut(w).torpedo_hit_chance_day = fx("0.125");
             });
             let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
-            assert_eq!(torpedo.hits, 1);
             let (_, torpedo_systems) = outcome_of_salvo(&world, torpedo.id);
-            assert_eq!(torpedo_systems.len(), 1, "seed {seed}");
+            assert_eq!(
+                torpedo_systems.len(),
+                usize::try_from(torpedo.hits).unwrap(),
+                "seed {seed}"
+            );
+            torpedo_hits += torpedo.hits;
             let gun = first_round_salvo(&world, 1, Weapon::Gun);
             gun_hits += gun.hits;
             gun_system_hits += outcome_of_salvo(&world, gun.id).1.len();
         }
+        assert!(torpedo_hits > 0);
         // 120 gun hits at 0.3 is about 36, never all and never none.
         assert!(gun_system_hits > 0 && gun_system_hits < usize::try_from(gun_hits).unwrap());
     }
