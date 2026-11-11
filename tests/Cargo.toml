@@ -65,5 +65,9 @@ path = "scenario_05c_air_combat.rs"
 name = "scenario_05d_carrier_duel"
 path = "scenario_05d_carrier_duel.rs"
 
+[[test]]
+name = "scenario_05_eastern_solomons"
+path = "scenario_05_eastern_solomons.rs"
+
 [lints]
 workspace = true

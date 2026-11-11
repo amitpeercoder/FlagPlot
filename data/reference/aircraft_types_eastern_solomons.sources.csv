@@ -3,7 +3,7 @@
 # facts: file:id of each row read, files in data/oob. Constants and fixed values cite no row.
 # The note says which radius rule was used and why, gives the exact value where a figure was rounded down, and says where a figure rests on an exception.
 type_id,figure,value,rule,facts,note
-2000,role,fighter,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",aircraft_types.csv:1010,
+2000,role,fighter,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1010,
 2000,search_range_nm,105,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:244,rests on an exception
 2000,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
 2000,strike_range_nm,105,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:244,rests on an exception
@@ -11,7 +11,7 @@ type_id,figure,value,rule,facts,note
 2000,attack_damage,0,"no load named in the list: attacks with nothing (decision 0029, 7)",,
 2000,pilot_armour,1,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:433,
 2000,self_sealing_tanks,1,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:436,
-2001,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",aircraft_types.csv:1017,
+2001,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1017,
 2001,search_range_nm,200,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:280,rests on an exception
 2001,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
 2001,strike_range_nm,200,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:280,rests on an exception
@@ -19,7 +19,7 @@ type_id,figure,value,rule,facts,note
 2001,attack_damage,75.6,weight_kg of the load / gun_shell_kg_per_damage,fits.csv:44 fits.csv:399 fits.csv:400 fits.csv:401 weapon_facts.csv:363,rests on an exception; load us-bomb-1000lb-gp
 2001,pilot_armour,1,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:442 aircraft_type_facts.csv:443 aircraft_type_facts.csv:444,rests on an exception
 2001,self_sealing_tanks,1,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:445 aircraft_type_facts.csv:446 aircraft_type_facts.csv:447,rests on an exception
-2002,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",aircraft_types.csv:1018,
+2002,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1018,
 2002,search_range_nm,190,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:310,rests on an exception
 2002,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
 2002,strike_range_nm,190,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:310,rests on an exception
@@ -27,7 +27,7 @@ type_id,figure,value,rule,facts,note
 2002,attack_damage,73.2,warhead_kg of the load x torpedo_damage_per_warhead_kg,fits.csv:410 weapon_facts.csv:381,rests on an exception; load us-torpedo-mk13
 2002,pilot_armour,1,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:449,rests on an exception
 2002,self_sealing_tanks,1,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:450,rests on an exception
-2003,role,fighter,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",aircraft_types.csv:1000,
+2003,role,fighter,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1000,
 2003,search_range_nm,261,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:361,
 2003,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
 2003,strike_range_nm,261,"combat_radius_nm of the type: the one value that can be read (decision 0029, 6)",aircraft_type_facts.csv:361,
@@ -35,7 +35,7 @@ type_id,figure,value,rule,facts,note
 2003,attack_damage,0,"no load named in the list: attacks with nothing (decision 0029, 7)",,
 2003,pilot_armour,0,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:459,
 2003,self_sealing_tanks,0,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:465,
-2004,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",aircraft_types.csv:1006,
+2004,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1006,
 2004,search_range_nm,252,"range_normal_nm of the type x strike_radius_fraction_of_range, rounded down to a whole number (decision 0029, 6); no combat radius could be read",aircraft_type_facts.csv:98,"rests on an exception; combat_radius_nm not readable (combat_radius_nm of aircraft type d3a1-11: no rows in the facts); range_normal_nm 759 x 0.333333 = 252.999747; exact 252.999747, rounded down"
 2004,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
 2004,strike_range_nm,252,"range_normal_nm of the type x strike_radius_fraction_of_range, rounded down to a whole number (decision 0029, 6); no combat radius could be read",aircraft_type_facts.csv:98,"rests on an exception; combat_radius_nm not readable (combat_radius_nm of aircraft type d3a1-11: no rows in the facts); range_normal_nm 759 x 0.333333 = 252.999747; exact 252.999747, rounded down"
@@ -43,11 +43,19 @@ type_id,figure,value,rule,facts,note
 2004,attack_damage,41.666666,weight_kg of the load / gun_shell_kg_per_damage,fits.csv:17 fits.csv:437 weapon_facts.csv:214,rests on an exception; load jp-bomb-250kg
 2004,pilot_armour,0,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:473,rests on an exception
 2004,self_sealing_tanks,0,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:474 aircraft_type_facts.csv:475,
-2005,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian: patrol)",aircraft_types.csv:1005,
+2005,role,bomber,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1005,
 2005,search_range_nm,175,"range_normal_nm of the type x strike_radius_fraction_of_range, rounded down to a whole number (decision 0029, 6); no combat radius could be read",aircraft_type_facts.csv:79,"rests on an exception; combat_radius_nm not readable (combat_radius_nm of aircraft type b5n2: no rows in the facts); range_normal_nm 528 x 0.333333 = 175.999824; exact 175.999824, rounded down"
 2005,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
 2005,strike_range_nm,175,"range_normal_nm of the type x strike_radius_fraction_of_range, rounded down to a whole number (decision 0029, 6); no combat radius could be read",aircraft_type_facts.csv:79,"rests on an exception; combat_radius_nm not readable (combat_radius_nm of aircraft type b5n2: no rows in the facts); range_normal_nm 528 x 0.333333 = 175.999824; exact 175.999824, rounded down"
 2005,attack_weapon,torpedo,"the load named in the list, which the torpedo_load fit rows of the type hold: weapon `torpedo`",fits.csv:16 fits.csv:445,load jp-torpedo-type91
-2005,attack_damage,82,warhead_kg of the load x torpedo_damage_per_warhead_kg,fits.csv:16 fits.csv:445 weapon_facts.csv:226,rests on an exception; load jp-torpedo-type91
+2005,attack_damage,81.64,warhead_kg of the load x torpedo_damage_per_warhead_kg,fits.csv:16 fits.csv:445 weapon_facts.csv:455,rests on an exception; load jp-torpedo-type91
 2005,pilot_armour,0,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:477,rests on an exception
 2005,self_sealing_tanks,0,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:478,rests on an exception
+2006,role,patrol,"role of the type in aircraft_types.csv, mapped (fighter: fighter; dive_bomber, torpedo_bomber, heavy_bomber, land_attack_bomber: bomber; patrol_flying_boat, patrol_amphibian, floatplane_reconnaissance: patrol)",aircraft_types.csv:1007,
+2006,search_range_nm,253,"range_normal_nm of the type x strike_radius_fraction_of_range, rounded down to a whole number (decision 0029, 6); no combat radius could be read",aircraft_type_facts.csv:494,"rests on an exception; combat_radius_nm not readable (combat_radius_nm of aircraft type e13a1: no rows in the facts); range_normal_nm 760 x 0.333333 = 253.33308; exact 253.33308, rounded down"
+2006,sweep_width_nm,20,"search_sweep_width_nm of the rules file: a placeholder, no source gives a sweep width (decision 0029, 10)",,
+2006,strike_range_nm,253,"range_normal_nm of the type x strike_radius_fraction_of_range, rounded down to a whole number (decision 0029, 6); no combat radius could be read",aircraft_type_facts.csv:494,"rests on an exception; combat_radius_nm not readable (combat_radius_nm of aircraft type e13a1: no rows in the facts); range_normal_nm 760 x 0.333333 = 253.33308; exact 253.33308, rounded down"
+2006,attack_weapon,none,"no load named in the list: attacks with nothing (decision 0029, 7)",,
+2006,attack_damage,0,"no load named in the list: attacks with nothing (decision 0029, 7)",,
+2006,pilot_armour,0,"pilot_armour of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:498,rests on an exception
+2006,self_sealing_tanks,0,"self_sealing_tanks of the type: yes is 1, no is 0 (decision 0029, 11)",aircraft_type_facts.csv:499,rests on an exception

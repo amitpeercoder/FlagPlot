@@ -69,3 +69,7 @@ load = "jp-bomb-250kg"
 [[aircraft]]
 type = "b5n2"
 load = "jp-torpedo-type91"
+
+# The cruisers' reconnaissance floatplane, which flew the Japanese searches.
+[[aircraft]]
+type = "e13a1"
