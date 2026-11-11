@@ -2,8 +2,8 @@
 //!
 //! A side never reads the truth about the enemy. It holds contacts and battle
 //! claims, and both only ever come from a [`Report`].
-//! [`BeliefState::apply_report`] is the only way a contact is created or
-//! refreshed or a claim is stored, which keeps "belief is written only from
+//! [`BeliefState::apply_report`] is the only way a contact is created,
+//! refreshed or dropped by a strike that found nothing, or a claim is stored, which keeps "belief is written only from
 //! reports" true by construction.
 //!
 //! [`BeliefState::age_contacts`] is the second method. It takes no truth and
@@ -42,6 +42,9 @@ pub enum Report {
     Sighting(SightingReport),
     /// A force that fired claims enemy ships sunk.
     BattleClaim(BattleClaim),
+    /// A strike flew to a hex and found nothing (decision 0028): the side
+    /// drops `contact` if it still holds it and it still names `hex`.
+    NothingThere { contact: ContactId, hex: Hex },
 }
 
 /// What a sighting claims. It may be wrong about everything.
@@ -101,6 +104,11 @@ pub enum ApplyOutcome {
     Contact(ReportOutcome),
     /// A battle claim was stored.
     Claim,
+    /// A "nothing there" report dropped the contact.
+    Dropped,
+    /// A "nothing there" report changed nothing: the contact was gone or no
+    /// longer names the hex.
+    Unchanged,
 }
 
 /// What [`BeliefState::age_contacts`] did to one contact.
@@ -175,7 +183,9 @@ impl BeliefState {
     /// A sighting: among contacts within `merge_distance_hexes` of the
     /// reported hex and no older than `merge_max_age_pulses`, the nearest is
     /// refreshed, the lowest ID on a tie. Otherwise the report makes a new
-    /// contact. A battle claim is appended to the claims.
+    /// contact. A battle claim is appended to the claims. A "nothing there"
+    /// report removes the contact if it exists and names that hex (decision
+    /// 0028).
     pub(crate) fn apply_report(
         &mut self,
         report: &Report,
@@ -188,6 +198,19 @@ impl BeliefState {
             Report::BattleClaim(claim) => {
                 self.claims.push(claim.clone());
                 ApplyOutcome::Claim
+            }
+            Report::NothingThere { contact, hex } => {
+                let names_hex = self
+                    .contacts
+                    .get(contact)
+                    .is_some_and(|held| held.estimated_hex == *hex);
+                if names_hex {
+                    self.contacts.remove(contact);
+                    self.refreshed_this_pulse.remove(contact);
+                    ApplyOutcome::Dropped
+                } else {
+                    ApplyOutcome::Unchanged
+                }
             }
         }
     }
@@ -287,7 +310,7 @@ mod tests {
     fn apply(belief: &mut BeliefState, report: &Report) -> ReportOutcome {
         match belief.apply_report(report, &figures()) {
             ApplyOutcome::Contact(outcome) => outcome,
-            ApplyOutcome::Claim => panic!("a sighting is not a claim"),
+            other => panic!("a sighting made no contact: {other:?}"),
         }
     }
 
@@ -308,6 +331,83 @@ mod tests {
             },
         );
         id
+    }
+
+    fn nothing_there(belief: &mut BeliefState, contact: ContactId, q: i32, r: i32) -> ApplyOutcome {
+        belief.apply_report(
+            &Report::NothingThere {
+                contact,
+                hex: Hex::new(q, r),
+            },
+            &figures(),
+        )
+    }
+
+    #[test]
+    fn nothing_there_drops_the_contact_if_it_still_names_the_hex() {
+        let mut belief = BeliefState::new(Side::Allied);
+        let kept = put_contact(&mut belief, 0, 0, 0);
+        let target = put_contact(&mut belief, 4, 2, 0);
+        assert_eq!(
+            nothing_there(&mut belief, target, 4, 2),
+            ApplyOutcome::Dropped
+        );
+        assert!(belief.contact(target).is_none());
+        // Only that contact goes, and the ID is not reused.
+        assert!(belief.contact(kept).is_some());
+        assert_eq!(belief.contacts().count(), 1);
+        assert_eq!(belief.next_contact_raw(), 3);
+    }
+
+    #[test]
+    fn nothing_there_changes_nothing_if_the_contact_is_gone() {
+        let mut belief = BeliefState::new(Side::Allied);
+        let id = put_contact(&mut belief, 4, 2, 0);
+        assert_eq!(nothing_there(&mut belief, id, 4, 2), ApplyOutcome::Dropped);
+        // The second report finds nothing to drop, and so does one for a
+        // contact that never existed.
+        assert_eq!(
+            nothing_there(&mut belief, id, 4, 2),
+            ApplyOutcome::Unchanged
+        );
+        assert_eq!(
+            nothing_there(&mut belief, ContactId::new(99), 4, 2),
+            ApplyOutcome::Unchanged
+        );
+        assert_eq!(belief.contacts().count(), 0);
+    }
+
+    #[test]
+    fn nothing_there_changes_nothing_if_a_later_report_moved_the_contact() {
+        let mut belief = BeliefState::new(Side::Allied);
+        let id = put_contact(&mut belief, 4, 2, 0);
+        // A sighting one hex away refreshes the contact and moves it.
+        let moved = apply(&mut belief, &report(5, 2, 3, 20));
+        assert_eq!((moved.contact, moved.created), (id, false));
+        assert_eq!(
+            nothing_there(&mut belief, id, 4, 2),
+            ApplyOutcome::Unchanged
+        );
+        assert_eq!(
+            belief.contact(id).expect("kept").estimated_hex,
+            Hex::new(5, 2)
+        );
+        // A report for the hex it now names does drop it.
+        assert_eq!(nothing_there(&mut belief, id, 5, 2), ApplyOutcome::Dropped);
+    }
+
+    #[test]
+    fn dropping_a_contact_refreshed_this_pulse_leaves_no_pending_refresh() {
+        let mut belief = BeliefState::new(Side::Allied);
+        let outcome = apply(&mut belief, &report(4, 2, 3, 17));
+        assert!(belief.has_pending_refreshes());
+        assert_eq!(
+            nothing_there(&mut belief, outcome.contact, 4, 2),
+            ApplyOutcome::Dropped
+        );
+        assert!(!belief.has_pending_refreshes());
+        // Ageing then has nothing to age and nothing to report.
+        assert!(belief.age_contacts(&figures()).is_empty());
     }
 
     #[test]

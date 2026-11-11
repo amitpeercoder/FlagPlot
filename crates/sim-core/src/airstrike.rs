@@ -41,7 +41,13 @@
 //!    they are recorded.
 //! 2. For each strike group in order of group number, `StrikeFoundNothing`
 //!    or `AirAttack`. A group with no bombers left records neither.
-//! 3. Then, in group order, each attack's damage and its report, as in 0026.
+//! 3. Then, in group order, each attack's damage and its report, as in 0026,
+//!    and for each group that found nothing its report that nothing is
+//!    there: if the side still holds the contact the strike was sent at and
+//!    it still names the hex, `ContactNotThere`, caused by that group's
+//!    `StrikeFoundNothing`, and the contact is gone (decision 0028). An
+//!    earlier group's report in the same step may have moved the contact,
+//!    and then nothing is dropped or recorded. No random number is drawn.
 //!
 //! The attack writes truth only through [`World::apply_hit_set`], the same
 //! path a salvo's hits take, and belief only through
@@ -63,7 +69,7 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{AirGroupId, EntityRef, EventId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::AirMission;
 use crate::refdata::{AttackWeapon, ShipKind};
 use crate::rng::{RngStream, Subsystem};
@@ -81,6 +87,8 @@ pub(crate) struct StrikeInFlight {
     side: Side,
     /// The place the group launched from: with the hex, what makes a raid.
     origin: AirGroupLocation,
+    /// The contact the strike was launched at (decision 0028).
+    contact: ContactId,
     /// The hex the contact names: where the strike flies to.
     hex: Hex,
     /// The aircraft launched.
@@ -114,6 +122,9 @@ struct Attack {
 enum Outcome {
     Nothing {
         air_group: AirGroupId,
+        side: Side,
+        /// The contact the strike was sent at (decision 0028).
+        contact: ContactId,
         hex: Hex,
         launched: EventId,
     },
@@ -315,6 +326,7 @@ impl World {
                 air_group: group.id,
                 side: group.side,
                 origin: group.location,
+                contact,
                 hex,
                 aircraft,
                 launched,
@@ -426,15 +438,16 @@ impl World {
         outcomes.sort_by_key(|(group, _)| *group);
 
         // Record what each strike found, in group order.
-        let mut attack_events: Vec<Option<EventId>> = Vec::new();
+        let mut attack_events: Vec<EventId> = Vec::new();
         for (_, outcome) in &outcomes {
             match outcome {
                 Outcome::Nothing {
                     air_group,
                     hex,
                     launched,
+                    ..
                 } => {
-                    self.events.record(
+                    let found_nothing = self.events.record(
                         day,
                         Some(pulse),
                         EventKind::StrikeFoundNothing {
@@ -444,7 +457,7 @@ impl World {
                         vec![Cause::Event(*launched)],
                         None,
                     );
-                    attack_events.push(None);
+                    attack_events.push(found_nothing);
                 }
                 Outcome::Attack(attack) => {
                     // The aircraft that attack are those the fights left.
@@ -473,7 +486,7 @@ impl World {
                         causes,
                         attack.breakdown.clone(),
                     );
-                    attack_events.push(Some(event));
+                    attack_events.push(event);
                 }
             }
         }
@@ -490,10 +503,31 @@ impl World {
             .clone()
             .expect("World::new requires search figures with air groups");
         for ((_, outcome), event) in outcomes.into_iter().zip(attack_events) {
-            let Outcome::Attack(attack) = outcome else {
-                continue;
+            let attack = match outcome {
+                Outcome::Attack(attack) => attack,
+                Outcome::Nothing {
+                    side, contact, hex, ..
+                } => {
+                    // Decision 0028: the side learns the hex was empty, and
+                    // drops the contact if it still names that hex.
+                    let dropped = self
+                        .beliefs
+                        .get_mut(&side)
+                        .expect("both sides have a belief state")
+                        .apply_report(&Report::NothingThere { contact, hex }, &search);
+                    if dropped == ApplyOutcome::Dropped {
+                        self.events.record(
+                            day,
+                            Some(pulse),
+                            EventKind::ContactNotThere { side, contact, hex },
+                            vec![Cause::Event(event)],
+                            None,
+                        );
+                    }
+                    continue;
+                }
             };
-            let attack_event = event.expect("an attack was recorded");
+            let attack_event = event;
             self.apply_hit_set(
                 site,
                 &HitSet {
@@ -658,6 +692,8 @@ impl World {
                             strike.air_group,
                             Outcome::Nothing {
                                 air_group: strike.air_group,
+                                side: strike.side,
+                                contact: strike.contact,
                                 hex: strike.hex,
                                 launched: strike.launched,
                             },
@@ -2202,12 +2238,227 @@ mod tests {
     }
 
     #[test]
-    fn a_strike_that_finds_nothing_sends_no_report() {
+    fn a_strike_that_finds_nothing_sends_no_sighting_report() {
         let mut world = world(1, vec![held(Hex::new(4, 0), ShipKind::Cruiser, 0)]);
         let before = events_where(&world, |k| matches!(k, EventKind::ReportReceived { .. })).len();
         strike_pulse(&mut world, Pulse::Morning);
         let after = events_where(&world, |k| matches!(k, EventKind::ReportReceived { .. })).len();
         assert_eq!(before, after);
+    }
+
+    // ---- a strike that finds nothing drops its contact (decision 0028) ----
+
+    fn not_there(world: &World) -> Vec<Event> {
+        events_where(world, |k| matches!(k, EventKind::ContactNotThere { .. }))
+    }
+
+    /// A second Allied strike group on the same carrier, of type `type_id`.
+    fn add_allied_strike_group(world: &mut World, id: u32, type_id: u32) {
+        let mut second = group(AirGroupId::new(id), Side::Allied, 1, type_id, 18);
+        second.mission = AirMission::NavalStrike;
+        world.truth.air_groups.insert(second.id, second);
+    }
+
+    fn allied_contacts(world: &World) -> Vec<(u32, Hex)> {
+        world.beliefs[&Side::Allied]
+            .contacts()
+            .map(|contact| (contact.id.raw(), contact.estimated_hex))
+            .collect()
+    }
+
+    #[test]
+    fn a_strike_that_finds_nothing_drops_the_contact_citing_the_finding() {
+        let mut world = world(1, vec![held(Hex::new(4, 0), ShipKind::Cruiser, 0)]);
+        assert_eq!(allied_contacts(&world), vec![(1, Hex::new(4, 0))]);
+        strike_pulse(&mut world, Pulse::Morning);
+        let nothing = found_nothing(&world);
+        let dropped = not_there(&world);
+        assert_eq!((nothing.len(), dropped.len()), (1, 1));
+        assert_eq!(
+            dropped[0].kind,
+            EventKind::ContactNotThere {
+                side: Side::Allied,
+                contact: crate::ids::ContactId::new(1),
+                hex: Hex::new(4, 0)
+            }
+        );
+        assert_eq!(
+            dropped[0].kind.to_string(),
+            "Allied contact:1 not there at (4,0): dropped"
+        );
+        assert_eq!(dropped[0].causes, vec![Cause::Event(nothing[0].id)]);
+        assert!(dropped[0].id > nothing[0].id);
+        assert_eq!(dropped[0].pulse, Some(Pulse::Morning));
+        assert_eq!(
+            dropped[0].kind.entities(),
+            vec![EntityRef::Contact(crate::ids::ContactId::new(1))]
+        );
+        // The belief changed through the report: the side holds nothing.
+        assert!(allied_contacts(&world).is_empty());
+    }
+
+    #[test]
+    fn the_next_pulse_launches_nothing_at_the_dropped_contact() {
+        let mut world = world(1, vec![held(Hex::new(4, 0), ShipKind::Cruiser, 0)]);
+        // Let a contact that is a pulse old still be struck, so that only
+        // the drop stops the afternoon's strike.
+        air_figures(&mut world).strike_contact_max_age_pulses = 1;
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(launches(&world).len(), 1);
+        strike_pulse(&mut world, Pulse::Afternoon);
+        assert_eq!(launches(&world).len(), 1, "nothing is launched again");
+        assert_eq!(found_nothing(&world).len(), 1);
+        assert_eq!(not_there(&world).len(), 1);
+    }
+
+    #[test]
+    fn a_strike_that_attacks_drops_nothing() {
+        let mut world = world_with_a_good_contact(2);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(attacks(&world).len(), 1);
+        assert!(not_there(&world).is_empty());
+        assert_eq!(allied_contacts(&world).len(), 1);
+    }
+
+    #[test]
+    fn a_second_strike_sent_at_a_contact_already_dropped_changes_nothing_and_records_nothing() {
+        // Both groups are sent at the one contact, at a hex nobody holds.
+        let mut world = world(1, vec![held(Hex::new(4, 0), ShipKind::Cruiser, 0)]);
+        add_allied_strike_group(&mut world, 7, 2);
+        strike_pulse(&mut world, Pulse::Morning);
+        let nothing = found_nothing(&world);
+        assert_eq!(nothing.len(), 2);
+        // Group order: group 1 drops it; group 7 finds it gone.
+        let dropped = not_there(&world);
+        assert_eq!(dropped.len(), 1);
+        assert_eq!(dropped[0].causes, vec![Cause::Event(nothing[0].id)]);
+        assert!(allied_contacts(&world).is_empty());
+    }
+
+    /// Two strike groups of one side, from one carrier. Group 1 (range 250)
+    /// is sent at contact 1, a carrier at the enemy's true hex (5,0), and
+    /// attacks. Group 7 (range 100) can reach only contact 2, a cruiser at
+    /// (2,0), where nothing is. Both contacts are fresh: group 1's report
+    /// is applied first.
+    fn two_groups_two_contacts(seed: u64, with_second_group: bool, contact_1_age: u32) -> World {
+        let mut world = world(
+            seed,
+            vec![
+                held(Hex::new(5, 0), ShipKind::Carrier, contact_1_age),
+                held(Hex::new(2, 0), ShipKind::Cruiser, 0),
+            ],
+        );
+        if with_second_group {
+            add_allied_strike_group(&mut world, 7, 6);
+        }
+        world
+    }
+
+    #[test]
+    fn an_attack_report_that_does_not_reach_the_contact_leaves_the_drop_in_place() {
+        // (2,0) is three hexes from (5,0): too far for a report there to
+        // merge with it (the figure is two).
+        let mut world = two_groups_two_contacts(3, true, 0);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(attacks(&world).len(), 1);
+        let dropped = not_there(&world);
+        assert_eq!(dropped.len(), 1);
+        assert_eq!(
+            dropped[0].kind,
+            EventKind::ContactNotThere {
+                side: Side::Allied,
+                contact: crate::ids::ContactId::new(2),
+                hex: Hex::new(2, 0)
+            }
+        );
+        // Contact 1 was refreshed and is still held.
+        assert_eq!(allied_contacts(&world).len(), 1);
+        assert_eq!(allied_contacts(&world)[0].0, 1);
+        // The log: findings first, then group 1's damage and report, then
+        // group 7's report that nothing is there.
+        let last_attack = attacks(&world)[0].id;
+        let report = events_where(&world, |k| matches!(k, EventKind::ReportReceived { .. }))
+            .pop()
+            .expect("a report");
+        assert!(found_nothing(&world)[0].id > last_attack);
+        assert!(report.id > last_attack);
+        assert!(dropped[0].id > report.id);
+    }
+
+    #[test]
+    fn an_attack_report_that_moved_the_contact_first_means_nothing_is_dropped() {
+        // Wide merging (every hex a report can name is within four of
+        // (2,0)), and contact 1 a pulse old and so too old to merge,
+        // so group 1's report from (5,0) or next to it refreshes contact 2
+        // and moves it off (2,0). Group 7's report that nothing is at (2,0)
+        // then finds the contact somewhere else: the hex test decides, and
+        // the contact stays.
+        for seed in 1..=10 {
+            let mut world = two_groups_two_contacts(seed, true, 1);
+            let search = world.ref_data.search.as_mut().expect("search");
+            search.merge_distance_hexes = 4;
+            search.merge_max_age_pulses = 0;
+            air_figures(&mut world).strike_contact_max_age_pulses = 1;
+            strike_pulse(&mut world, Pulse::Morning);
+            assert_eq!(launches(&world).len(), 2, "seed {seed}");
+            assert_eq!(attacks(&world).len(), 1, "seed {seed}");
+            assert_eq!(found_nothing(&world).len(), 1, "seed {seed}");
+            assert!(not_there(&world).is_empty(), "seed {seed}");
+            // Contact 2 is held, where the attack's report put it.
+            let report = events_where(&world, |k| matches!(k, EventKind::ReportReceived { .. }))
+                .pop()
+                .expect("a report");
+            let EventKind::ReportReceived { contact, hex, .. } = report.kind else {
+                unreachable!()
+            };
+            assert_eq!(contact.raw(), 2, "seed {seed}");
+            assert!(allied_contacts(&world).contains(&(2, hex)), "seed {seed}");
+            assert_ne!(hex, Hex::new(2, 0));
+        }
+    }
+
+    #[test]
+    fn the_report_that_nothing_is_there_draws_no_random_number() {
+        // Every stream is keyed by group and force, so a draw by the empty
+        // strike could not move another's. What would show a draw is a
+        // change to anything else: group 1's attack, its damage and its
+        // report are the same with and without the empty strike of group 7.
+        for seed in 1..=10 {
+            let mut alone = two_groups_two_contacts(seed, false, 0);
+            let mut with_empty = two_groups_two_contacts(seed, true, 0);
+            strike_pulse(&mut alone, Pulse::Morning);
+            strike_pulse(&mut with_empty, Pulse::Morning);
+            let kinds = |world: &World| -> Vec<EventKind> {
+                events_where(world, |k| {
+                    matches!(
+                        k,
+                        EventKind::AirAttack { .. }
+                            | EventKind::ShipDamaged { .. }
+                            | EventKind::SystemHit { .. }
+                            | EventKind::ReportReceived { .. }
+                    )
+                })
+                .into_iter()
+                .map(|event| event.kind)
+                .collect()
+            };
+            assert_eq!(kinds(&alone), kinds(&with_empty), "seed {seed}");
+            assert!(not_there(&alone).is_empty());
+            assert_eq!(not_there(&with_empty).len(), 1);
+            // The only difference in belief is the dropped contact.
+            assert_eq!(allied_contacts(&alone).len(), 2);
+            assert_eq!(allied_contacts(&with_empty).len(), 1);
+            for id in 1..=4 {
+                assert_eq!(
+                    ship_of(&alone, id).flotation_damage,
+                    ship_of(&with_empty, id).flotation_damage
+                );
+                assert_eq!(
+                    ship_of(&alone, id).fire_damage,
+                    ship_of(&with_empty, id).fire_damage
+                );
+            }
+        }
     }
 
     // ---- randomness ----
@@ -2585,6 +2836,7 @@ mod tests {
             air_group: AirGroupId::new(group),
             side: Side::Allied,
             origin,
+            contact: ContactId::new(1),
             hex,
             aircraft: 1,
             launched: EventId::new(group),

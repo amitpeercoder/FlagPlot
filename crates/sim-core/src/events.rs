@@ -529,6 +529,13 @@ pub enum EventKind {
         aircraft: u32,
         remaining: u32,
     },
+    /// A strike that found nothing told its side so, and the side dropped the
+    /// contact the strike was sent at (decision 0028).
+    ContactNotThere {
+        side: Side,
+        contact: ContactId,
+        hex: Hex,
+    },
 }
 
 impl EventKind {
@@ -589,6 +596,7 @@ impl EventKind {
             EventKind::StrikeFoundNothing { air_group, .. } => {
                 vec![EntityRef::AirGroup(*air_group)]
             }
+            EventKind::ContactNotThere { contact, .. } => vec![EntityRef::Contact(*contact)],
             EventKind::AirAttack {
                 air_group,
                 task_force,
@@ -843,6 +851,9 @@ impl fmt::Display for EventKind {
             ),
             EventKind::StrikeFoundNothing { air_group, hex } => {
                 write!(f, "{air_group} found nothing at {hex}")
+            }
+            EventKind::ContactNotThere { side, contact, hex } => {
+                write!(f, "{} {contact} not there at {hex}: dropped", side.name())
             }
             EventKind::AirAttack {
                 air_group,

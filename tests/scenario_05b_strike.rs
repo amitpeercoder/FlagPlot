@@ -49,13 +49,19 @@
 //! side then holds a contact, and all 18 go, to the hex the contact names.
 //!
 //! - Morning: they launch if the morning search sighted, chance 0.509295.
-//! - Afternoon: they launch if either search sighted. The chance that
-//!   neither did is 0.490705 x 0.490705 = 0.240791, so 0.759209.
+//! - Afternoon: they launch if the afternoon search sighted, chance
+//!   0.509295, or if it did not but the morning's contact is still held. A
+//!   morning strike that found nothing dropped that contact (decision
+//!   0028), and one that attacked refreshed it. So the second case needs a
+//!   morning sighting, a morning strike that attacked and no afternoon
+//!   sighting: 0.509295 x 0.7 x 0.490705 = 0.174939. In all 0.684234.
+//!   (Corrected for decision 0028. Before it the morning's contact was kept
+//!   whatever the morning strike found, and the chance was 0.759209.)
 //!
 //! | Count of runs, over seeds 1 to 1000 | p        | Mean   | Std dev | Allowed    |
 //! | ----------------------------------- | -------- | ------ | ------- | ---------- |
 //! | A strike is launched in the morning | 0.509295 | 509.30 | 15.81   | 447 to 572 |
-//! | A strike is launched in the afternoon | 0.759209 | 759.21 | 13.52 | 706 to 813 |
+//! | A strike is launched in the afternoon | 0.684234 | 684.23 | 14.70 | 626 to 743 |
 //!
 //! ## The strike
 //!
@@ -82,7 +88,8 @@
 //! Ships 1, 2, 4 and 5 are never damaged.
 //!
 //! A strike that attacks sends a report of task force 2, which refreshes the
-//! contact. A strike that finds nothing sends none.
+//! contact. A strike that finds nothing reports that, and the Allied side
+//! drops the contact: after it the side holds none.
 //!
 //! ## The flight deck
 //!
@@ -243,6 +250,14 @@ impl Run {
 
     fn found_nothing(&self) -> Vec<&Event> {
         self.of(|k| matches!(k, EventKind::StrikeFoundNothing { .. }))
+    }
+
+    fn not_there(&self) -> Vec<&Event> {
+        self.of(|k| matches!(k, EventKind::ContactNotThere { .. }))
+    }
+
+    fn attacked_in(&self, pulse: Pulse) -> bool {
+        self.attacks().iter().any(|event| pulse_of(event) == pulse)
     }
 
     fn event(&self, id: EventId) -> &Event {
@@ -453,43 +468,62 @@ fn the_bombers_launch_if_and_only_if_the_allied_side_holds_a_contact_and_all_18_
             morning_sighted,
             "seed {seed}"
         );
+        // The afternoon: the afternoon search sighted, or the morning's
+        // contact is still held, which needs a morning strike that attacked
+        // (one that found nothing dropped the contact, decision 0028).
+        let afternoon_launch = afternoon_sighted || run.attacked_in(Pulse::Morning);
         assert_eq!(
             run.launched_in(Pulse::Afternoon).is_some(),
-            morning_sighted || afternoon_sighted,
+            afternoon_launch,
             "seed {seed}"
         );
+        // A morning strike that attacked needs a morning sighting.
+        if run.attacked_in(Pulse::Morning) {
+            assert!(morning_sighted, "seed {seed}");
+        }
         morning += i64::from(morning_sighted);
-        afternoon += i64::from(morning_sighted || afternoon_sighted);
+        afternoon += i64::from(afternoon_launch);
 
         // At most one launch a pulse, and the allied side never holds more
-        // than the one contact: every report refreshes contact 1.
+        // than the one contact: a report refreshes it, and one made after a
+        // strike dropped it is a new contact, number 2.
         assert!(run.launches().len() <= 2);
-        for event in run.of(|k| matches!(k, EventKind::ReportReceived { .. })) {
-            let EventKind::ReportReceived {
-                side,
-                contact,
-                created,
-                ..
-            } = event.kind
-            else {
-                unreachable!()
-            };
-            assert_eq!(side, Side::Allied);
-            assert_eq!(contact, ContactId::new(1));
-            let first = run
-                .of(|k| matches!(k, EventKind::ReportReceived { .. }))
-                .first()
-                .expect("a report")
-                .id;
-            assert_eq!(created, event.id == first, "seed {seed}");
+        // The first report makes contact 1. A report made while the side
+        // holds nothing, after a strike dropped the contact, makes contact 2.
+        // Every other report refreshes the one held.
+        let mut held = false;
+        let mut dropped = false;
+        for event in &run.events {
+            match event.kind {
+                EventKind::ReportReceived {
+                    side,
+                    contact,
+                    created,
+                    ..
+                } => {
+                    assert_eq!(side, Side::Allied);
+                    assert_eq!(
+                        contact,
+                        ContactId::new(if dropped { 2 } else { 1 }),
+                        "seed {seed}"
+                    );
+                    assert_eq!(created, !held, "seed {seed}");
+                    held = true;
+                }
+                EventKind::ContactNotThere { .. } => {
+                    held = false;
+                    dropped = true;
+                }
+                _ => {}
+            }
         }
     }
     eprintln!("launched in the morning {morning}, in the afternoon {afternoon}");
-    // 447 to 572 and 706 to 813, four standard deviations either side.
+    // 447 to 572 and 626 to 743, four standard deviations either side.
     assert!((447..=572).contains(&morning), "{morning}");
-    assert!((706..=813).contains(&afternoon), "{afternoon}");
+    assert!((626..=743).contains(&afternoon), "{afternoon}");
     assert!(within_four_sigma(morning, 1000, 509_295));
-    assert!(within_four_sigma(afternoon, 1000, 759_209));
+    assert!(within_four_sigma(afternoon, 1000, 684_234));
 }
 
 #[test]
@@ -507,7 +541,12 @@ fn a_strike_is_launched_only_at_a_contact_held_no_more_than_one_pulse_old_within
                 unreachable!()
             };
             assert_eq!(air_group, BOMBERS);
-            assert_eq!(contact, ContactId::new(1));
+            // Contact 1, or contact 2 if a strike dropped contact 1 first.
+            assert!(
+                contact == ContactId::new(1) || contact == ContactId::new(2),
+                "seed {}",
+                run.seed
+            );
             assert_eq!(aircraft, 18);
             assert_eq!(
                 distance_nm,
@@ -778,9 +817,20 @@ fn no_aircraft_is_lost_and_only_carrier_b_is_ever_damaged() {
 }
 
 #[test]
-fn a_strike_that_attacks_reports_the_force_and_one_that_finds_nothing_sends_no_report() {
+fn a_strike_that_attacks_reports_the_force_and_one_that_finds_nothing_drops_its_contact() {
+    let mut dropped = 0;
     for run in batch() {
         for attack in run.attacks() {
+            let launch = match attack.causes[..] {
+                [Cause::Event(launch)] => launch,
+                _ => panic!("an attack cites its launch"),
+            };
+            let EventKind::StrikeLaunched {
+                contact: sent_at, ..
+            } = run.event(launch).kind
+            else {
+                panic!("an attack cites a launch");
+            };
             let reports: Vec<&Event> = run
                 .caused_by(attack.id)
                 .into_iter()
@@ -797,30 +847,78 @@ fn a_strike_that_attacks_reports_the_force_and_one_that_finds_nothing_sends_no_r
             else {
                 unreachable!()
             };
-            // It refreshes the contact, and is after every damage event.
-            assert_eq!(
-                (side, contact, created),
-                (Side::Allied, ContactId::new(1), false)
-            );
+            // It refreshes the contact the strike was sent at, and is after
+            // every damage event.
+            assert_eq!((side, contact, created), (Side::Allied, sent_at, false));
             assert!(hex == TARGET || TARGET.neighbors().contains(&hex));
             assert!(run
                 .caused_by(attack.id)
                 .iter()
                 .all(|event| event.id <= reports[0].id));
+            // An attack does not drop anything.
+            assert!(run
+                .caused_by(attack.id)
+                .iter()
+                .all(|event| !matches!(event.kind, EventKind::ContactNotThere { .. })));
         }
+        // Each strike that found nothing reports it, and the one contact the
+        // Allied side holds is dropped: the event cites the finding, names
+        // the contact the strike was sent at and the hex it flew to.
+        assert_eq!(run.not_there().len(), run.found_nothing().len());
         for nothing in run.found_nothing() {
-            assert!(run.caused_by(nothing.id).is_empty(), "seed {}", run.seed);
             let launch = match nothing.causes[..] {
                 [Cause::Event(launch)] => launch,
                 _ => panic!("found nothing cites its launch"),
             };
+            let EventKind::StrikeLaunched { contact, hex, .. } = run.event(launch).kind else {
+                panic!("found nothing cites a launch");
+            };
+            let caused = run.caused_by(nothing.id);
+            assert_eq!(caused.len(), 1, "seed {}", run.seed);
+            assert_eq!(
+                caused[0].kind,
+                EventKind::ContactNotThere {
+                    side: Side::Allied,
+                    contact,
+                    hex
+                },
+                "seed {}",
+                run.seed
+            );
+            assert_eq!(caused[0].causes, vec![Cause::Event(nothing.id)]);
+            assert_eq!(pulse_of(caused[0]), pulse_of(nothing));
+            assert_eq!(
+                caused[0].kind.to_string(),
+                format!("Allied {contact} not there at {hex}: dropped")
+            );
+            // It comes straight after the finding.
+            assert!(nothing.id < caused[0].id);
+            dropped += 1;
+            // The side then holds no contact: nothing is launched at it
+            // again, and what is launched later is at a contact a later
+            // report made.
+            for later in run.launches() {
+                let EventKind::StrikeLaunched { contact: at, .. } = later.kind else {
+                    unreachable!()
+                };
+                if later.id > caused[0].id {
+                    assert_ne!(at, contact, "seed {}", run.seed);
+                    let [_, Cause::Event(report)] = later.causes[..] else {
+                        panic!("a launch cites an order and a report");
+                    };
+                    assert!(report > caused[0].id, "seed {}", run.seed);
+                }
+            }
             // No report cites the launch of a strike that found nothing.
             assert!(run
                 .caused_by(launch)
                 .iter()
                 .all(|event| matches!(event.kind, EventKind::StrikeFoundNothing { .. })));
+            assert!(run.caused_by(nothing.id).len() == 1);
         }
     }
+    eprintln!("contacts dropped by a strike that found nothing: {dropped}");
+    assert!(dropped > 100);
 }
 
 // ---------------------------------------------------------------------

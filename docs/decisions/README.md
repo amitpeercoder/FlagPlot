@@ -35,5 +35,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0025 | Air groups aboard ships: aircraft capacity, position from the ship, search from a carrier, lost with the ship | Confirmed |
 | 0026 | Air strikes on ships: decided on belief, resolved in the same pulse, one hit mechanism; the flight deck as a fifth system | Confirmed |
 | 0027 | Fighters on patrol and escort, anti-aircraft fire, and aircraft lost: escort against patrol one for one, then guns, then the attack | Confirmed |
+| 0028 | A strike that finds nothing drops the contact it was sent at | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

@@ -23,6 +23,7 @@
 //! 2 are exactly as in scenario 5b: 0.509295 a pulse, a launch in every
 //! daylight pulse in which the Allied side holds a contact reported in that
 //! pulse or the one before, and an attack only if the strike flew to (9,0).
+//! A strike that finds nothing drops the contact (decision 0028).
 //!
 //! What is new:
 //!
@@ -139,7 +140,7 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use sim_core::rng::{RngKey, RngStream, Subsystem};
-use sim_core::state::{ShipLocation, ShipSystem, SystemState};
+use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState};
 use sim_core::time::Pulse;
 use sim_data::Scenario;
 
@@ -931,14 +932,23 @@ fn the_search_and_the_launches_are_as_in_scenario_5b() {
             "seed {}",
             run.seed
         );
+        // As in 5b: the afternoon search sighted, or the morning's contact
+        // is still held, which needs a morning strike that attacked (one
+        // that found nothing dropped the contact, decision 0028). No raid
+        // here is shot out of the sky before it finds or misses its hex.
+        let morning_attacked = run
+            .attacks()
+            .iter()
+            .any(|event| event.pulse == Some(Pulse::Morning));
+        let afternoon_launch = afternoon_sighted || morning_attacked;
         assert_eq!(
             run.launched_in(Pulse::Afternoon).is_some(),
-            morning_sighted || afternoon_sighted,
+            afternoon_launch,
             "seed {}",
             run.seed
         );
         morning += i64::from(morning_sighted);
-        afternoon += i64::from(morning_sighted || afternoon_sighted);
+        afternoon += i64::from(afternoon_launch);
         // A strike attacks only if it flew to (9,0): it attacks and the
         // launch finds it, exactly as in 5b.
         for launch in run.launches() {
@@ -952,7 +962,13 @@ fn the_search_and_the_launches_are_as_in_scenario_5b() {
             else {
                 unreachable!()
             };
-            assert_eq!((air_group, contact), (BOMBERS, ContactId::new(1)));
+            // Contact 1, or contact 2 if a strike dropped contact 1 first.
+            assert_eq!(air_group, BOMBERS);
+            assert!(
+                contact == ContactId::new(1) || contact == ContactId::new(2),
+                "seed {}",
+                run.seed
+            );
             assert!(distance_nm <= Fixed::from_int(240));
             let landed: Vec<&Event> = run
                 .events
@@ -972,12 +988,35 @@ fn the_search_and_the_launches_are_as_in_scenario_5b() {
                 "seed {}",
                 run.seed
             );
+            // A strike that found nothing drops the contact it was sent at,
+            // citing the finding; one that attacked drops nothing.
+            let dropped: Vec<&Event> = run
+                .events
+                .iter()
+                .filter(|e| e.causes.contains(&Cause::Event(landed[0].id)))
+                .filter(|e| matches!(e.kind, EventKind::ContactNotThere { .. }))
+                .collect();
+            if hex == TARGET {
+                assert!(dropped.is_empty(), "seed {}", run.seed);
+            } else {
+                assert_eq!(dropped.len(), 1, "seed {}", run.seed);
+                assert_eq!(
+                    dropped[0].kind,
+                    EventKind::ContactNotThere {
+                        side: Side::Allied,
+                        contact,
+                        hex
+                    },
+                    "seed {}",
+                    run.seed
+                );
+            }
             // The launch cites the order that set the mission.
             assert_eq!(launch.causes[0], Cause::Order(OrderId::new(3)));
         }
     }
     assert!(within_four_sigma(morning, 1000, 509_295), "{morning}");
-    assert!(within_four_sigma(afternoon, 1000, 759_209), "{afternoon}");
+    assert!(within_four_sigma(afternoon, 1000, 684_234), "{afternoon}");
 }
 
 // ---------------------------------------------------------------------

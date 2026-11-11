@@ -27,7 +27,7 @@ The spec's daylight pulse has three air steps: search, strike decisions by local
 9. **All its aircraft attack one ship: the most important ship afloat in the force,** the lowest number on a tie. Each aircraft is one shot. Expected hits are shots times the chance to hit for its weapon, and hits are the whole part plus one more with a chance equal to the fraction, as in decision 0014.
 10. **A hit does damage exactly as a hit in a surface fight does** (decisions 0014 and 0016): 100 x the weapon's damage / the target's toughness points; a bomb lands on flotation or fire by the gun's split, and a torpedo on flotation; each hit may knock a system down one level. Bombs have their own table of which system. A ship that reaches 100 flotation sinks.
 11. **Nobody is lost on a strike yet.** Every aircraft comes home. Losses arrive with fighters and anti-aircraft fire in stage 5c.
-12. **A strike that attacks sends a sighting report of the force it attacked,** by the error model of decision 0012. A strike that finds nothing sends none.
+12. **A strike that attacks sends a sighting report of the force it attacked,** by the error model of decision 0012. A strike that finds nothing reports that, and its side drops the contact (decision 0028).
 
 ### The flight deck
 
@@ -55,7 +55,7 @@ The spec's daylight pulse has three air steps: search, strike decisions by local
 
 - Fighters, escorts, anti-aircraft fire and aircraft losses: stage 5c.
 - A share of aircraft held back, target priorities and range limits as orders.
-- Searching round a contact's hex. Telling the side that a contact was not there.
+- Searching round a contact's hex.
 - Strikes on bases and ground targets.
 - Ordnance stocks, and how many aircraft a deck can launch in a pulse.
 - A force attacked from the air becoming alert.
