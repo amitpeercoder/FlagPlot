@@ -113,5 +113,9 @@ path = "scenario_07_determinism.rs"
 name = "scenario_08_soak"
 path = "scenario_08_soak.rs"
 
+[[test]]
+name = "scenario_09a_side_events"
+path = "scenario_09a_side_events.rs"
+
 [lints]
 workspace = true

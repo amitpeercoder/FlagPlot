@@ -20,8 +20,8 @@
 //! Neither a [`Report`] nor a [`Contact`] nor a [`BattleClaim`] may ever hold
 //! a truth ID (a task force, ship or air group ID): that would let a side tell that two
 //! sightings were the same force. They do hold an [`EventId`]. That is a
-//! reference to an event in the log, not truth, and `SideView` does not
-//! expose events.
+//! reference to an event in the log, not truth. `SideView` gives a side only
+//! its own version of the events, with the causes it may see (decision 0047).
 //!
 //! Claims never age. See `docs/decisions/0012-search-and-contacts.md`,
 //! decisions 12 to 14, and `docs/decisions/0014-surface-combat.md`.

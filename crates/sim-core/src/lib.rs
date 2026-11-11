@@ -20,6 +20,7 @@ pub mod map;
 pub mod orders;
 pub mod refdata;
 pub mod rng;
+pub mod side_events;
 pub mod state;
 pub mod time;
 pub mod view;
