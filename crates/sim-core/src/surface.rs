@@ -31,22 +31,20 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::belief::{ApplyOutcome, BattleClaim, Report};
+use crate::damage::{damage_per_hit, raw_u64, system_for_draw, DamageSite, HitSet};
 use crate::events::{
     Breakdown, Cause, DamageTrack, EngagementEndReason, EventKind, Factor, Weapon,
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Readiness, Stance};
 use crate::refdata::{ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{RngStream, Subsystem};
 use crate::search::build_sighting_report;
-use crate::state::{AirGroupLocation, Ship, ShipLocation, ShipSystem, Side};
+use crate::state::{Ship, ShipLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
 use crate::world::World;
-
-/// A damage track at its limit.
-const FULL_DAMAGE: Fixed = Fixed::from_int(100);
 
 /// One force's side of a fight.
 struct ForceFight {
@@ -170,19 +168,6 @@ struct Shot {
     damage_per_hit: Fixed,
 }
 
-/// A chance as an unsigned number to compare a draw against.
-fn raw_u64(value: Fixed) -> u64 {
-    u64::try_from(value.raw()).expect("a chance is not negative")
-}
-
-/// Damage points one hit does: 100 x damage / toughness. The product comes
-/// first and there is one division, truncating, so whole-number figures give
-/// the same bits as before the figures could be decimals. Toughness is above
-/// zero (`ShipClass::problem`).
-fn damage_per_hit(damage: Fixed, toughness: Fixed) -> Fixed {
-    damage.mul_div(Fixed::from_int(100), toughness)
-}
-
 /// The gun shots a ship would fire in a round of `minutes`: guns x rate x
 /// minutes x the main battery factor, then capped by the ammunition aboard
 /// (decision 6 of `docs/decisions/0016-systems-and-stragglers.md`).
@@ -207,35 +192,6 @@ fn torpedo_shots(ship: &Ship, class: &ShipClass, figures: &SurfaceCombatFigures)
     }
     let factor = figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts);
     Fixed::from_int(i64::from(class.torpedo_tubes)) * factor
-}
-
-fn track_value(ship: &mut Ship, track: DamageTrack) -> &mut Fixed {
-    match track {
-        DamageTrack::Flotation => &mut ship.flotation_damage,
-        DamageTrack::Fire => &mut ship.fire_damage,
-    }
-}
-
-/// Which system one system draw lands on, if any. `draw` is a uniform draw
-/// below one million, read as a [`Fixed`] in millionths. The systems take
-/// consecutive bands in [`ShipSystem::ALL`] order, each of width `chance` x
-/// the system's share in `table` (a system absent from it has share 0). A
-/// draw at or above the end of the last band hits no system.
-fn system_for_draw(
-    draw: Fixed,
-    chance: Fixed,
-    table: &BTreeMap<ShipSystem, Fixed>,
-) -> Option<ShipSystem> {
-    let mut start = Fixed::ZERO;
-    for system in ShipSystem::ALL {
-        let share = table.get(&system).copied().unwrap_or(Fixed::ZERO);
-        let end = start + chance * share;
-        if draw >= start && draw < end {
-            return Some(system);
-        }
-        start = end;
-    }
-    None
 }
 
 impl World {
@@ -871,6 +827,7 @@ impl World {
                 figures.torpedo_system_hit_chance,
                 &figures.torpedo_system_hit,
             ),
+            Weapon::Bomb => unreachable!("a surface fight fires no bombs"),
         };
         let mut track_hits = [0u32; 2];
         let mut system_hits = Vec::new();
@@ -908,6 +865,7 @@ impl World {
                     factor("minutes", minutes),
                     factor("torpedo_mount_factor", system_factor),
                 ],
+                Weapon::Bomb => unreachable!("a surface fight fires no bombs"),
             };
             factors.push(factor("base_chance", shot.base_chance));
             factors.push(factor("surprised_factor", surprised_factor));
@@ -956,139 +914,36 @@ impl World {
 
     /// Damage lands, in salvo order: one `ShipDamaged` event per salvo per
     /// track that took hits, then one `SystemHit` event per system hit of the
-    /// salvo, in hit order. A ship whose flotation reaches 100 sinks.
+    /// salvo, in hit order. A ship whose flotation reaches 100 sinks. The
+    /// work is [`World::apply_hit_set`], shared with air attacks.
     fn apply_damage(&mut self, fight: &mut Fight, round: &mut Round) {
+        let site = DamageSite {
+            day: fight.day,
+            pulse: fight.pulse,
+            round: round.number,
+        };
         for salvo_index in 0..round.salvos.len() {
-            let (salvo_event, target, target_force, damage_per_hit, track_hits, system_hits) = {
+            let (target_force, hits) = {
                 let salvo = &round.salvos[salvo_index];
                 (
-                    salvo.event,
-                    salvo.target,
                     salvo.target_force,
-                    salvo.damage_per_hit,
-                    salvo.track_hits,
-                    salvo.system_hits.clone(),
+                    HitSet {
+                        cause: salvo.event,
+                        target: salvo.target,
+                        target_force: fight.forces[salvo.target_force].id,
+                        damage_per_hit: salvo.damage_per_hit,
+                        track_hits: salvo.track_hits,
+                        system_hits: salvo.system_hits.clone(),
+                    },
                 )
             };
-            for track in DamageTrack::ALL {
-                let hits = track_hits[track as usize];
-                if hits == 0 {
-                    continue;
-                }
-                let ship = self.truth.ships.get_mut(&target).expect("target exists");
-                let value = track_value(ship, track);
-                let before = *value;
-                let points = damage_per_hit * i64::from(hits);
-                let after = (before + points).min(FULL_DAMAGE);
-                *value = after;
-                let damaged = self.record_in_fight(
-                    fight,
-                    EventKind::ShipDamaged {
-                        round: round.number,
-                        ship: target,
-                        track,
-                        hits,
-                        points,
-                        value_after: after,
-                    },
-                    vec![Cause::Event(salvo_event)],
-                    None,
-                );
-                round.damaged[target_force].push(damaged);
-                if track == DamageTrack::Flotation && before < FULL_DAMAGE && after >= FULL_DAMAGE {
-                    let sunk = self.sink(fight, round, target_force, target, damaged);
-                    round.sunk.push(sunk);
-                }
-            }
-            for system in system_hits {
-                let class = self.class_of(target);
-                let has_system = class.has_system(system);
-                let ship = self.truth.ships.get_mut(&target).expect("target exists");
-                let before = ship.systems.get(system);
-                let after = if has_system {
-                    before.step_down()
-                } else {
-                    before
-                };
-                ship.systems.set(system, after);
-                self.record_in_fight(
-                    fight,
-                    EventKind::SystemHit {
-                        round: round.number,
-                        ship: target,
-                        system,
-                        before,
-                        after,
-                    },
-                    vec![Cause::Event(salvo_event)],
-                    None,
-                );
+            let applied = self.apply_hit_set(site, &hits);
+            round.damaged[target_force].extend(applied.damaged);
+            for (ship, sunk) in applied.sunk {
+                fight.forces[target_force].sunk_in_fight.insert(ship);
+                round.sunk.push(sunk);
             }
         }
-    }
-
-    /// Takes a ship out of its task force and records it.
-    fn sink(
-        &mut self,
-        fight: &mut Fight,
-        round: &Round,
-        force: usize,
-        ship: ShipId,
-        cause: EventId,
-    ) -> EventId {
-        let task_force = fight.forces[force].id;
-        self.truth
-            .ships
-            .get_mut(&ship)
-            .expect("ship exists")
-            .location = ShipLocation::Sunk;
-        self.truth
-            .task_forces
-            .get_mut(&task_force)
-            .expect("task force exists")
-            .ships
-            .remove(&ship);
-        fight.forces[force].sunk_in_fight.insert(ship);
-        let sunk = self.record_in_fight(
-            fight,
-            EventKind::ShipSunk {
-                round: round.number,
-                ship,
-                task_force,
-            },
-            vec![Cause::Event(cause)],
-            None,
-        );
-        // Decision 5 of 0025: every air group aboard is lost with the ship.
-        // The group stays aboard in the state, with no aircraft and no
-        // position.
-        let aboard: Vec<AirGroupId> = self
-            .truth
-            .air_groups
-            .values()
-            .filter(|group| group.location == AirGroupLocation::Ship(ship))
-            .map(|group| group.id)
-            .collect();
-        for air_group in aboard {
-            let group = self
-                .truth
-                .air_groups
-                .get_mut(&air_group)
-                .expect("air group exists");
-            let aircraft = group.ready;
-            group.ready = 0;
-            self.record_in_fight(
-                fight,
-                EventKind::AirGroupLost {
-                    air_group,
-                    ship,
-                    aircraft,
-                },
-                vec![Cause::Event(sunk)],
-                None,
-            );
-        }
-        sunk
     }
 
     /// A force that sighted the enemy this round, or was fired on this
@@ -1587,6 +1442,7 @@ mod tests {
                         toughness: Fixed::from_int(i64::from(tough)),
                         radar,
                         aircraft_capacity: 0,
+                        anti_aircraft: 0,
                     },
                 );
             }
@@ -2547,6 +2403,8 @@ mod tests {
             search: None,
             mission_order: None,
             arc_order: None,
+            patrol_share: Fixed::ONE,
+            share_order: None,
         };
         let world = run(&scene, |w| {
             flotation_only(w);

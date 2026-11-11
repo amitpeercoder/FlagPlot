@@ -64,6 +64,8 @@ pub fn air_mission(mission: AirMission) -> &'static str {
     match mission {
         AirMission::Rest => "rest",
         AirMission::Search => "search",
+        AirMission::NavalStrike => "naval_strike",
+        AirMission::CombatAirPatrol => "combat_air_patrol",
     }
 }
 
@@ -85,6 +87,7 @@ pub fn weapon(weapon: Weapon) -> &'static str {
     match weapon {
         Weapon::Gun => "gun",
         Weapon::Torpedo => "torpedo",
+        Weapon::Bomb => "bomb",
     }
 }
 
@@ -119,6 +122,7 @@ pub fn system(system: ShipSystem) -> &'static str {
         ShipSystem::FireControl => "fire_control",
         ShipSystem::MainBattery => "main_battery",
         ShipSystem::TorpedoMounts => "torpedo_mounts",
+        ShipSystem::FlightDeck => "flight_deck",
     }
 }
 

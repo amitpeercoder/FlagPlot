@@ -9,9 +9,15 @@
 //! It detects divergence. It is not a security feature. See
 //! `docs/decisions/0004-state-hash.md`.
 
+use crate::fixed::Fixed;
 use crate::orders::{Mission, SpeedSetting};
-use crate::state::{AirGroupLocation, ShipLocation, ShipSystem};
+use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState};
 use crate::world::World;
+
+/// Marks a flight deck that is degraded or out in the hash of a ship.
+const FLIGHT_DECK_TAG: u8 = 0xF1;
+/// Tag of an air group's patrol share (decision 0027). See `hash_world`.
+const PATROL_SHARE_TAG: u8 = 0xF2;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -102,6 +108,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// to the state, it must be added here too, or two different states could
 /// share a hash.
 pub(crate) fn hash_world(world: &World) -> u64 {
+    // A strike launched in a pulse lands in the same pulse.
+    debug_assert!(
+        world.strikes_in_flight.is_empty(),
+        "strikes were launched and have not landed"
+    );
     let mut h = StateHasher::new();
     h.bytes(b"flagplot-state-v1");
     h.u64(world.seed);
@@ -121,7 +132,20 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(ship.gun_rounds.raw());
         h.u8(u8::from(ship.torpedoes_ready));
         for system in ShipSystem::ALL {
-            h.u8(ship.systems.get(system).code());
+            // The flight deck (code 5, decision 0026) is hashed below, so
+            // that a ship whose flight deck works hashes as it did before
+            // the system existed.
+            if system != ShipSystem::FlightDeck {
+                h.u8(ship.systems.get(system).code());
+            }
+        }
+        // A flight deck that is not working: a tag byte, then its state.
+        // The tag 0xF1 cannot be taken for what follows, which is the
+        // location tag 1, 2 or 3, so every state has one reading. A working
+        // flight deck writes nothing.
+        if ship.systems.flight_deck != SystemState::Working {
+            h.u8(FLIGHT_DECK_TAG);
+            h.u8(ship.systems.flight_deck.code());
         }
         match ship.location {
             ShipLocation::TaskForce(id) => {
@@ -230,6 +254,17 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
         h.u8(group.mission.code());
+        // A patrol share that is not the default 1, or that an order set:
+        // a tag byte, the share, then the order. The tag 0xF2 follows the
+        // mission code (1 to 4) and so can only be taken for the search
+        // tag, which is 0 or 1: every state has one reading. A group on the
+        // default share with no order writes nothing, so it hashes as it did
+        // before the share existed.
+        if group.patrol_share != Fixed::ONE || group.share_order.is_some() {
+            h.u8(PATROL_SHARE_TAG);
+            h.i64(group.patrol_share.raw());
+            h.optional_u32(group.share_order.map(|id| id.raw()));
+        }
         match group.search {
             Some(arc) => {
                 h.u8(1);

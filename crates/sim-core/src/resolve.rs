@@ -16,9 +16,10 @@ use crate::fixed::Fixed;
 use crate::ids::{EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
-    AirGroupOrder, CargoAction, Order, OrderKind, OrderRequest, RejectReason, SpeedSetting,
-    TaskForceOrder,
+    AirGroupOrder, AirMission, CargoAction, Order, OrderKind, OrderRequest, RejectReason,
+    SpeedSetting, TaskForceOrder,
 };
+use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
     CargoOrder, Route, RulesOfEngagement, SearchArc, ShipLocation, Side, TaskForce, TaskForceStatus,
 };
@@ -125,6 +126,8 @@ impl World {
             PulsePhase::Movement => self.move_task_forces(day, pulse),
             PulsePhase::Loading => self.handle_cargo(day, pulse),
             PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
+            PulsePhase::StrikeDecisions => self.decide_strikes(day, pulse),
+            PulsePhase::AirCombat => self.resolve_strikes(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,
             // decision 8). The slot stays, like night search.
@@ -132,10 +135,7 @@ impl World {
             // Not implemented yet. Each arrives with the scenario that needs it.
             // Night search is decision 7 territory: there is no search where it
             // is dark, so this phase stays empty.
-            PulsePhase::NightSearch
-            | PulsePhase::StrikeDecisions
-            | PulsePhase::AirCombat
-            | PulsePhase::ShoreBombardment => {}
+            PulsePhase::NightSearch | PulsePhase::ShoreBombardment => {}
         }
     }
 
@@ -157,7 +157,7 @@ impl World {
     /// included (decision 14 of `docs/decisions/0012-search-and-contacts.md`).
     /// Each aged or dropped contact is an event citing the report that last
     /// refreshed it.
-    fn age_contacts_at_end_of_pulse(&mut self, day: u32, pulse: Pulse) {
+    pub(crate) fn age_contacts_at_end_of_pulse(&mut self, day: u32, pulse: Pulse) {
         // With no search figures there are no air groups, so no contacts.
         let Some(figures) = self.ref_data.search.clone() else {
             return;
@@ -431,7 +431,47 @@ impl World {
                     return Err(RejectReason::NotYourUnit);
                 }
                 match air_group_order {
+                    AirGroupOrder::SetAirMission(AirMission::NavalStrike) => {
+                        // Decision 2 of 0026. World::new checked that every
+                        // group's type exists.
+                        if self.ref_data.air_combat.is_none() {
+                            return Err(RejectReason::NoAirCombatFigures);
+                        }
+                        let weapon = self
+                            .ref_data
+                            .aircraft_types
+                            .get(&group.aircraft_type)
+                            .expect("air group has a known aircraft type")
+                            .attack_weapon;
+                        if weapon == AttackWeapon::None {
+                            return Err(RejectReason::AircraftAttackWithNothing);
+                        }
+                        Ok(())
+                    }
+                    AirGroupOrder::SetAirMission(AirMission::CombatAirPatrol) => {
+                        // Decision 1 of 0027.
+                        if self.ref_data.air_combat.is_none() {
+                            return Err(RejectReason::NoAirCombatFigures);
+                        }
+                        let role = self
+                            .ref_data
+                            .aircraft_types
+                            .get(&group.aircraft_type)
+                            .expect("air group has a known aircraft type")
+                            .role;
+                        if role != AircraftRole::Fighter {
+                            return Err(RejectReason::NotAFighter);
+                        }
+                        Ok(())
+                    }
                     AirGroupOrder::SetAirMission(_) => Ok(()),
+                    AirGroupOrder::SetPatrolShare { share } => {
+                        if *share < Fixed::ZERO || *share > Fixed::ONE {
+                            Err(RejectReason::PatrolShareOutOfRange(*share))
+                        } else {
+                            Ok(())
+                        }
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -574,6 +614,10 @@ impl World {
                         group.mission = *mission;
                         group.mission_order = Some(order.id);
                     }
+                    AirGroupOrder::SetPatrolShare { share } => {
+                        group.patrol_share = *share;
+                        group.share_order = Some(order.id);
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -650,6 +694,7 @@ mod tests {
             toughness: Fixed::from_int(100),
             radar: false,
             aircraft_capacity: 0,
+            anti_aircraft: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -1322,6 +1367,9 @@ mod tests {
             role: AircraftRole::Patrol,
             search_range_nm: nm(SEARCH_RANGE_NM),
             sweep_width_nm: nm(40),
+            strike_range_nm: Fixed::ZERO,
+            attack_weapon: crate::refdata::AttackWeapon::None,
+            attack_damage: Fixed::ZERO,
         };
         world
             .ref_data
@@ -1341,6 +1389,8 @@ mod tests {
                 search: None,
                 mission_order: None,
                 arc_order: None,
+                patrol_share: Fixed::ONE,
+                share_order: None,
             },
         );
         assert_sound(&world);

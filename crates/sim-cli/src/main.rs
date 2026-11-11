@@ -11,7 +11,7 @@ use std::env;
 use std::path::Path;
 use std::process::ExitCode;
 
-use sim_core::orders::Stance;
+use sim_core::orders::{AirMission, Stance};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::time::ClockTime;
 use sim_core::DaySummary;
@@ -227,8 +227,13 @@ fn run(args: &[String]) -> Result<(), String> {
             ),
             None => "no arc".to_string(),
         };
+        let share = if group.mission == AirMission::CombatAirPatrol {
+            format!(", patrol share {}", group.patrol_share)
+        } else {
+            String::new()
+        };
         println!(
-            "{} \"{}\" ({}) {}: {} ready, mission {:?}, {}",
+            "{} \"{}\" ({}) {}: {} ready, mission {:?}{}, {}",
             group.id,
             group.name,
             group.side.name(),
@@ -238,6 +243,7 @@ fn run(args: &[String]) -> Result<(), String> {
             },
             group.ready,
             group.mission,
+            share,
             arc
         );
     }

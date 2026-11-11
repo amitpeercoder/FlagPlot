@@ -112,6 +112,12 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::WouldLeaveTaskForceEmpty => base("would_leave_task_force_empty"),
         RejectReason::WaypointUnreachable(hex) => base("waypoint_unreachable").hex("hex", *hex),
         RejectReason::SpeedNotAboveZero(knots) => base("speed_not_above_zero").num("knots", *knots),
+        RejectReason::NoAirCombatFigures => base("no_air_combat_figures"),
+        RejectReason::AircraftAttackWithNothing => base("aircraft_attack_with_nothing"),
+        RejectReason::NotAFighter => base("not_a_fighter"),
+        RejectReason::PatrolShareOutOfRange(share) => {
+            base("patrol_share_out_of_range").num("share", *share)
+        }
     }
 }
 
@@ -259,6 +265,100 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             d.id("air_group", *air_group)
                 .id("ship", *ship)
                 .int("aircraft", *aircraft),
+        ),
+        EventKind::StrikeLaunched {
+            air_group,
+            contact,
+            hex,
+            aircraft,
+            distance_nm,
+        } => (
+            "strike_launched",
+            d.id("air_group", *air_group)
+                .id("contact", *contact)
+                .hex("hex", *hex)
+                .int("aircraft", *aircraft)
+                .num("distance_nm", *distance_nm),
+        ),
+        EventKind::StrikeFoundNothing { air_group, hex } => (
+            "strike_found_nothing",
+            d.id("air_group", *air_group).hex("hex", *hex),
+        ),
+        EventKind::AirAttack {
+            air_group,
+            task_force,
+            ship,
+            weapon,
+            shots,
+            chance,
+            expected,
+            hits,
+        } => (
+            "air_attack",
+            d.id("air_group", *air_group)
+                .id("task_force", *task_force)
+                .id("ship", *ship)
+                .text("weapon", names::weapon(*weapon))
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits),
+        ),
+        EventKind::EscortsSent {
+            air_group,
+            with_air_group,
+            aircraft,
+        } => (
+            "escorts_sent",
+            d.id("air_group", *air_group)
+                .id("with_air_group", *with_air_group)
+                .int("aircraft", *aircraft),
+        ),
+        EventKind::AirFight {
+            firer,
+            target,
+            firing,
+            at,
+            shots,
+            chance,
+            expected,
+            hits,
+        } => (
+            "air_fight",
+            d.id("firer", *firer)
+                .id("target", *target)
+                .text("firing", firing.name())
+                .text("at", at.name())
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits),
+        ),
+        EventKind::AntiAircraftFire {
+            task_force,
+            air_group,
+            shots,
+            chance,
+            expected,
+            hits,
+        } => (
+            "anti_aircraft_fire",
+            d.id("task_force", *task_force)
+                .id("air_group", *air_group)
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits),
+        ),
+        EventKind::AircraftLost {
+            air_group,
+            aircraft,
+            remaining,
+        } => (
+            "aircraft_lost",
+            d.id("air_group", *air_group)
+                .int("aircraft", *aircraft)
+                .int("remaining", *remaining),
         ),
         EventKind::SearchAttempt {
             air_group,

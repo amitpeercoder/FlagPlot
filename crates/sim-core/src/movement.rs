@@ -975,6 +975,7 @@ mod tests {
                 toughness: Fixed::from_int(400),
                 radar: false,
                 aircraft_capacity: 0,
+                anti_aircraft: 0,
             },
         );
         ref_data.port_sizes.insert(

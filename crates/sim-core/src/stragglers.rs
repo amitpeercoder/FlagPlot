@@ -448,6 +448,7 @@ mod tests {
                     toughness: Fixed::from_int(300),
                     radar: false,
                     aircraft_capacity: 0,
+                    anti_aircraft: 0,
                 },
             );
         }

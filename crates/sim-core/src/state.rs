@@ -90,15 +90,19 @@ pub enum ShipSystem {
     FireControl,
     MainBattery,
     TorpedoMounts,
+    /// Matters only on a ship whose class carries aircraft (decisions 13 to
+    /// 15 of `docs/decisions/0026-air-strikes.md`).
+    FlightDeck,
 }
 
 impl ShipSystem {
     /// Every system, in code order.
-    pub const ALL: [ShipSystem; 4] = [
+    pub const ALL: [ShipSystem; 5] = [
         ShipSystem::Propulsion,
         ShipSystem::FireControl,
         ShipSystem::MainBattery,
         ShipSystem::TorpedoMounts,
+        ShipSystem::FlightDeck,
     ];
 
     /// A stable number for the system. Part of the state hash and of the
@@ -110,6 +114,7 @@ impl ShipSystem {
             ShipSystem::FireControl => 2,
             ShipSystem::MainBattery => 3,
             ShipSystem::TorpedoMounts => 4,
+            ShipSystem::FlightDeck => 5,
         }
     }
 
@@ -120,6 +125,7 @@ impl ShipSystem {
             ShipSystem::FireControl => "fire control",
             ShipSystem::MainBattery => "main battery",
             ShipSystem::TorpedoMounts => "torpedo mounts",
+            ShipSystem::FlightDeck => "flight deck",
         }
     }
 }
@@ -168,6 +174,7 @@ pub struct ShipSystems {
     pub fire_control: SystemState,
     pub main_battery: SystemState,
     pub torpedo_mounts: SystemState,
+    pub flight_deck: SystemState,
 }
 
 impl ShipSystems {
@@ -177,6 +184,7 @@ impl ShipSystems {
         fire_control: SystemState::Working,
         main_battery: SystemState::Working,
         torpedo_mounts: SystemState::Working,
+        flight_deck: SystemState::Working,
     };
 
     pub const fn get(&self, system: ShipSystem) -> SystemState {
@@ -185,6 +193,7 @@ impl ShipSystems {
             ShipSystem::FireControl => self.fire_control,
             ShipSystem::MainBattery => self.main_battery,
             ShipSystem::TorpedoMounts => self.torpedo_mounts,
+            ShipSystem::FlightDeck => self.flight_deck,
         }
     }
 
@@ -194,6 +203,7 @@ impl ShipSystems {
             ShipSystem::FireControl => self.fire_control = state,
             ShipSystem::MainBattery => self.main_battery = state,
             ShipSystem::TorpedoMounts => self.torpedo_mounts = state,
+            ShipSystem::FlightDeck => self.flight_deck = state,
         }
     }
 }
@@ -497,6 +507,13 @@ pub struct AirGroup {
     pub mission_order: Option<OrderId>,
     /// The standing order that set the search arc, if any.
     pub arc_order: Option<OrderId>,
+    /// The share of its flyable aircraft the group keeps over its own hex
+    /// when it is on combat air patrol, from 0 to 1 (decision 2 of
+    /// `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`). The
+    /// default is 1.
+    pub patrol_share: Fixed,
+    /// The standing order that set the share, if any.
+    pub share_order: Option<OrderId>,
 }
 
 /// The real state of the world.

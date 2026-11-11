@@ -209,6 +209,13 @@ impl World {
             if time::is_dark(origin, pulse) {
                 continue;
             }
+            // Decision 14 of 0026: the flight deck of the ship the group is
+            // aboard limits the aircraft it can fly. A group that can fly
+            // none flies no search and records nothing.
+            let flown_aircraft = self.aircraft_able_to_fly(&group);
+            if flown_aircraft == 0 {
+                continue;
+            }
             let sweep_width_nm = self.ref_data.aircraft_types[&group.aircraft_type].sweep_width_nm;
 
             let causes: Vec<Cause> = [group.mission_order, group.arc_order]
@@ -226,7 +233,7 @@ impl World {
                     from_deg: arc.from_deg,
                     to_deg: arc.to_deg,
                     range_nm: arc.range_nm,
-                    aircraft: group.ready,
+                    aircraft: flown_aircraft,
                 },
                 causes,
                 None,
@@ -245,7 +252,7 @@ impl World {
                     continue;
                 }
 
-                let chance = sighting_chance(group.ready, sweep_width_nm, arc_deg, distance_nm);
+                let chance = sighting_chance(flown_aircraft, sweep_width_nm, arc_deg, distance_nm);
                 let mut stream = self.rng_pair(
                     day,
                     Some(pulse),
@@ -263,7 +270,7 @@ impl World {
                         },
                         Factor {
                             name: "aircraft",
-                            value: Fixed::from_int(i64::from(group.ready)),
+                            value: Fixed::from_int(i64::from(flown_aircraft)),
                         },
                         Factor {
                             name: "sweep_width_nm",
@@ -601,6 +608,7 @@ mod tests {
                     toughness: Fixed::from_int(100),
                     radar: false,
                     aircraft_capacity: 0,
+                    anti_aircraft: 0,
                 },
             );
         }
@@ -620,6 +628,9 @@ mod tests {
                 role: AircraftRole::Patrol,
                 search_range_nm: Fixed::from_int(600),
                 sweep_width_nm: Fixed::from_int(40),
+                strike_range_nm: Fixed::ZERO,
+                attack_weapon: crate::refdata::AttackWeapon::None,
+                attack_damage: Fixed::ZERO,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());
@@ -652,6 +663,8 @@ mod tests {
                 }),
                 mission_order: None,
                 arc_order: None,
+                patrol_share: Fixed::ONE,
+                share_order: None,
             },
         );
         let mut next_ship = 1;

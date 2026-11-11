@@ -4,6 +4,11 @@
 # search_range_nm: the furthest a search by this type can reach.
 # sweep_width_nm: the width of sea one aircraft covers as it flies.
 # See docs/decisions/0012-search-and-contacts.md.
-id,name,role,search_range_nm,sweep_width_nm
-1,Placeholder flying boat,patrol,600,40
-2,Placeholder carrier scout,patrol,300,20
+# strike_range_nm: how far the type can strike. attack_weapon: none, bomb or
+# torpedo. attack_damage: the damage of one hit. See
+# docs/decisions/0026-air-strikes.md.
+id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage
+1,Placeholder flying boat,patrol,600,40,0,none,0
+2,Placeholder carrier scout,patrol,300,20,0,none,0
+3,Placeholder dive bomber,bomber,0,0,250,bomb,60
+4,Placeholder fighter,fighter,0,0,0,none,0
