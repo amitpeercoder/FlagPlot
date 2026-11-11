@@ -56,6 +56,45 @@ It is not a reconstruction. The step asks for a run that works and a spread that
 - **Henderson Field's own strikes** on ships, and the ships that shelled it.
 - **Ditchings on the way home.** Wear and write-offs stand in for them (decision 0035).
 
+## What the runs show
+
+Over seeds 1 to 1000. The figures are placeholders, so this is the shape of the four weeks and not a result to quote.
+
+**The rhythm is right.** A raid flies on eleven mornings in every run: days 1, 2 and 3 and then every third day. The sources record about ten raids in the window, held down by weather and by Rabaul's other war; here fatigue alone does it.
+
+| Raid day | 1 | 2 | 3 | 6 | 9 | 12 | 15 | 18 | 21 | 24 | 27 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Bombers launched | 41.0 | 27.6 | 19.1 | 23.3 | 24.0 | 24.0 | 24.0 | 23.0 | 23.0 | 23.0 | 22.7 |
+| Escorts | 24.0 | 11.7 | 6.4 | 9.2 | 12.4 | 26.6 | 24.4 | 24.0 | 24.3 | 24.4 | 23.5 |
+| Allied fighters on patrol | 19.0 | 13.4 | 9.6 | 6.0 | 3.8 | 16.8 | 10.0 | 6.6 | 3.7 | 39.8 | 27.0 |
+
+After the first day a raid is about 23 bombers, which is the size the sources give for the raids of September (26, 27, 28). The escort collapses in the first week, to six on day 3, and recovers when the 6th Air Group arrives. The defence thins between arrivals and jumps with each one.
+
+| A run, on average (lowest to highest) | Japanese | Allied |
+| --- | --- | --- |
+| Bombers shot down | 11.8 (3 to 26) | |
+| Fighters shot down | 39.6 (22 to 61) | 33.7 (19 to 47) |
+| Destroyed on the ground | 0 | 15.7 (4 to 35) |
+| Written off after a sortie | 23.4 (8 to 43) | 6.5 (1 to 14) |
+| Pilots lost | 51.4 (30 to 85) | 0 |
+
+Bombs destroy 790 t of Henderson Field's 4,000 t a run, and it never runs out. Rabaul ends with 7,924 t of 10,000.
+
+For comparison, one source gives 27 Marine fighters and 9 pilots lost from 21 August to 11 September against 31 Japanese aircraft destroyed in ten raids (Wikipedia, citing Lundstrom). The Allied fighter loss here is of that order. Four things are not:
+
+- **No Allied pilot is ever lost.** A pilot shot down over his own field is always saved (decision 0038, 4). Nine were lost in three weeks.
+- **The Japanese lose three fighters for every bomber.** The patrol fires at the escorts first, one for one (decision 0027). It reaches the bombers in 31 percent of raids, nearly all of them when fresh squadrons have just arrived and outnumber the escort: on day 24 it shoots down 4.6 bombers, on most days none. The Wildcats in fact dived through the escort for the bombers. (The architect expected the patrol almost never to reach the bombers. It does when it outnumbers the escort, and the arrivals see to that.)
+- **VMF-223 is destroyed in every run,** by day 13 on average, and VMF-224 in 53. Losses to a patrol come off the lowest-numbered group first, and Henderson Field gets no aircraft but whole squadrons. In fact losses were spread and worn squadrons were kept up from the others.
+- **Half as many Japanese aircraft are written off as are shot down.** Operational losses on this route were heavy, but the placeholder wear figures were not set from a source.
+
+None of these is a fault in the code. Each is a rule or a placeholder doing what it says. They are the list for step 2, with Savo Island's.
+
+## The legibility test
+
+A cheap model was given a briefing as the Japanese air commander and the log of the first five days of the scenario's own seed, with every air subsystem running. It explained the two days without a raid from each group's fatigue. It split the shrinking of the third raid into its causes: for the bombers four fifths fatigue and one fifth damage, for the escort mostly damage. It predicted the sixth day exactly: four repairs, all to the fighters; one fighter and no pilot received; both groups returned at 40.72; 24 bombers and 10 escorts; 111.52 t for the raid. Asked what wears the force fastest it answered the distance, with the figures: 36 aircraft worn in three days against 7 shot down.
+
+It noticed two things. A group that stays stood down for a second day records nothing that day, so the reader has only the rest events to go by; that is left, since an event every day for every resting group is noise. And the escort was starved of repairs because Rabaul repairs the lowest-numbered group first and the bombers took all four a night. That is the rule (decision 0035, 9) and it is worth a look in step 2: a base might better repair the group with the most damaged aircraft.
+
 ## Rule card
 
 No rule is added. The scenario uses decisions 0027, 0030, 0033 to 0036 and 0038 to 0041.

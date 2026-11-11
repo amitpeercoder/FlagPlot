@@ -3744,6 +3744,29 @@ fn the_eastern_solomons_list_still_derives_exactly_the_files_in_data_reference()
 }
 
 #[test]
+fn the_rabaul_guadalcanal_list_still_derives_exactly_the_files_in_data_reference() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        "rabaul_guadalcanal.toml",
+        &read("data/derivation/rabaul_guadalcanal.toml"),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        outputs.aircraft_csv.as_deref(),
+        Some(read("data/reference/aircraft_types_rabaul_guadalcanal.csv").as_str())
+    );
+    assert_eq!(
+        outputs.aircraft_sources_csv.as_deref(),
+        Some(read("data/reference/aircraft_types_rabaul_guadalcanal.sources.csv").as_str())
+    );
+}
+
+#[test]
 fn the_savo_island_list_still_derives_exactly_the_files_in_data_reference() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
