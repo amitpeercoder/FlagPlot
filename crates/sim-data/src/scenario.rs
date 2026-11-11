@@ -13,8 +13,8 @@ use sim_core::orders::{
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::state::{
-    AirGroup, AirGroupLocation, Base, Replacement, Ship, ShipLocation, ShipSystem, ShipSystems,
-    Side, SystemState, TaskForce, TruthState,
+    AirGroup, AirGroupLocation, Arrival, Base, Replacement, Ship, ShipLocation, ShipSystem,
+    ShipSystems, Side, SystemState, TaskForce, TruthState,
 };
 use sim_core::{DaySummary, StartingContact, World};
 
@@ -67,6 +67,8 @@ struct ScenarioFile {
     air_group: Vec<AirGroupSpec>,
     #[serde(default)]
     replacement: Vec<ReplacementSpec>,
+    #[serde(default)]
+    arrival: Vec<ArrivalSpec>,
     #[serde(default)]
     task_force: Vec<TaskForceSpec>,
     #[serde(default)]
@@ -145,6 +147,17 @@ struct ReplacementSpec {
     aircraft_type: u32,
     aircraft_per_day: u32,
     pilots_per_day: u32,
+}
+
+/// Aircraft and pilots flown in to an air group on a day (decision 0041).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ArrivalSpec {
+    day: u32,
+    air_group: u32,
+    aircraft: u32,
+    /// Defaults to 0. Only for a group whose pilots are tracked.
+    pilots: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -785,6 +798,39 @@ impl Scenario {
             });
         }
 
+        // Arrivals come after the air groups are known (decision 0041).
+        for (index, spec) in file.arrival.iter().enumerate() {
+            let number = index + 1;
+            let group_id = AirGroupId::new(spec.air_group);
+            let group = truth.air_groups.get(&group_id).ok_or_else(|| {
+                fail(format!(
+                    "arrival {number} is for unknown air group {}",
+                    spec.air_group
+                ))
+            })?;
+            if spec.day == 0 || spec.day > file.days {
+                return Err(fail(format!(
+                    "arrival {number} is on day {}, outside days 1 to {}",
+                    spec.day, file.days
+                )));
+            }
+            let pilots = spec.pilots.unwrap_or(0);
+            if spec.aircraft == 0 && pilots == 0 {
+                return Err(fail(format!("arrival {number} brings nothing")));
+            }
+            if pilots > 0 && group.pilots.is_none() {
+                return Err(fail(format!(
+                    "arrival {number} brings pilots to {group_id}, whose pilots are not tracked"
+                )));
+            }
+            truth.arrivals.push(Arrival {
+                day: spec.day,
+                air_group: group_id,
+                aircraft: spec.aircraft,
+                pilots,
+            });
+        }
+
         let mut script: BTreeMap<u32, Vec<(Side, OrderRequest)>> = BTreeMap::new();
         for spec in &file.order {
             if spec.day == 0 || spec.day > file.days {
@@ -1226,6 +1272,55 @@ r = 0
         assert!(error_of(&replacement("allied", 1, 9)).contains("unknown aircraft type"));
         assert!(parse_with(&replacement("allied", 1, 1).replace("= 2\n", "= 2.5\n")).is_err());
         assert!(parse_with(&format!("{}extra = 1\n", replacement("allied", 1, 1))).is_err());
+    }
+
+    fn arrival(day: u32, group: u32, aircraft: u32, pilots: &str) -> String {
+        format!("[[arrival]]\nday = {day}\nair_group = {group}\naircraft = {aircraft}\n{pilots}")
+    }
+
+    #[test]
+    fn arrival_tables_load_in_order_and_are_checked() {
+        let none = parse_with("").expect("loads");
+        assert!(none.world.umpire().arrivals.is_empty());
+        let tracked = air_group(1, 1).replace("ready = 3", "ready = 0\npilots = 0");
+        let untracked = air_group(1, 1).replace("ready = 3", "ready = 0");
+        let text = format!(
+            "{tracked}{}{}",
+            arrival(2, 1, 6, "pilots = 5\n"),
+            arrival(1, 1, 2, "")
+        );
+        let scenario = parse_with(&text).expect("loads");
+        let truth = scenario.world.umpire();
+        let group = &truth.air_groups[&AirGroupId::new(1)];
+        assert_eq!((group.ready, group.pilots, group.strength), (0, Some(0), 0));
+        let listed: Vec<_> = truth
+            .arrivals
+            .iter()
+            .map(|a| (a.day, a.air_group.raw(), a.aircraft, a.pilots))
+            .collect();
+        assert_eq!(listed, vec![(2, 1, 6, 5), (1, 1, 2, 0)]);
+        // A group with no aircraft and no pilots key is loaded, untracked.
+        let loaded = parse_with(&untracked).expect("loads");
+        let group = &loaded.world.umpire().air_groups[&AirGroupId::new(1)];
+        assert_eq!((group.ready, group.pilots), (0, None));
+        // Aircraft alone, to an untracked group.
+        assert!(parse_with(&format!("{untracked}{}", arrival(1, 1, 4, ""))).is_ok());
+        let with = |arrival: String| error_of(&format!("{tracked}{arrival}"));
+        assert!(with(arrival(1, 9, 1, "")).contains("unknown air group"));
+        assert!(with(arrival(0, 1, 1, "")).contains("outside days"));
+        assert!(with(arrival(3, 1, 1, "")).contains("outside days"));
+        assert!(with(arrival(1, 1, 0, "")).contains("brings nothing"));
+        assert!(with(arrival(1, 1, 0, "pilots = 0\n")).contains("brings nothing"));
+        assert!(
+            error_of(&format!("{untracked}{}", arrival(1, 1, 2, "pilots = 1\n")))
+                .contains("not tracked")
+        );
+        assert!(parse_with(&format!("{tracked}{}extra = 1\n", arrival(1, 1, 1, ""))).is_err());
+        assert!(parse_with(
+            &format!("{tracked}{}", arrival(1, 1, 1, ""))
+                .replace("= 1\naircraft", "= 1.5\naircraft")
+        )
+        .is_err());
     }
 
     /// An Allied group aboard a ship, `extra` replacing the placement.

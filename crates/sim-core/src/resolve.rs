@@ -42,6 +42,9 @@ pub(crate) enum PulsePhase {
     /// Damaged aircraft are repaired, first in the night pulse (decision 9
     /// of 0035).
     AircraftRepair,
+    /// Aircraft the scenario flies in on the day arrive, after the repair
+    /// and before the replacements (decision 2 of 0041).
+    AirArrival,
     /// Replacement aircraft and pilots arrive at the bases the scenario names,
     /// right after the repair, from day 2 (decisions 6 to 8 of 0038).
     AirReplacement,
@@ -65,8 +68,9 @@ enum EndOfDayPhase {
     IntelligenceUpdate,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 9] = [
+const NIGHT_SEQUENCE: [PulsePhase; 10] = [
     PulsePhase::AircraftRepair,
+    PulsePhase::AirArrival,
     PulsePhase::AirReplacement,
     PulsePhase::AirSupplyUpkeep,
     PulsePhase::AirGroupRest,
@@ -156,6 +160,7 @@ impl World {
             PulsePhase::AirCombat => self.resolve_strikes(day, pulse),
             PulsePhase::AircraftRepair => self.repair_aircraft(day, pulse),
             PulsePhase::AircraftWear => self.wear_aircraft(day, pulse),
+            PulsePhase::AirArrival => self.receive_arrivals(day, pulse),
             PulsePhase::AirReplacement => self.receive_replacements(day, pulse),
             PulsePhase::AirSupplyUpkeep => self.pay_daily_supply(day, pulse),
             PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),

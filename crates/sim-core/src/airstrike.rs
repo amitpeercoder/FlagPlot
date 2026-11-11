@@ -8096,6 +8096,271 @@ mod tests {
         let error = world.resolve_day().expect_err("the day is refused");
         assert!(error.to_string().contains("replacement stream"), "{error}");
     }
+    // ---- arrivals (decision 0041) ----
+
+    use crate::state::Arrival;
+
+    fn arrival(day: u32, group: u32, aircraft: u32, pilots: u32) -> Arrival {
+        Arrival {
+            day,
+            air_group: AirGroupId::new(group),
+            aircraft,
+            pilots,
+        }
+    }
+
+    /// (day, air group, aircraft, pilots, ready, pilots now, strength) of
+    /// each `AircraftArrived`.
+    fn arrived(world: &World) -> Vec<(u32, u32, u32, u32, u32, u32, u32)> {
+        events_where(world, |k| matches!(k, EventKind::AircraftArrived { .. }))
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::AircraftArrived {
+                    air_group,
+                    aircraft,
+                    pilots,
+                    ready,
+                    pilots_now,
+                    strength,
+                } => (
+                    event.day,
+                    air_group.raw(),
+                    aircraft,
+                    pilots,
+                    ready,
+                    pilots_now,
+                    strength,
+                ),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    #[test]
+    fn an_arrival_adds_aircraft_pilots_and_strength_on_its_day_and_on_no_other() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 8, Some(7), 12);
+        world.truth.arrivals.push(arrival(3, 10, 6, 5));
+        world.receive_arrivals(2, Pulse::Night);
+        assert!(arrived(&world).is_empty());
+        assert_eq!(pilots_of(&world, 10), Some(7));
+        world.receive_arrivals(3, Pulse::Night);
+        let group = &world.truth.air_groups[&AirGroupId::new(10)];
+        assert_eq!(
+            (group.ready, group.pilots, group.strength),
+            (14, Some(12), 18)
+        );
+        assert_eq!(arrived(&world), vec![(3, 10, 6, 5, 14, 12, 18)]);
+        let event = &events_where(&world, |k| matches!(k, EventKind::AircraftArrived { .. }))[0];
+        assert!(event.causes.is_empty());
+        assert_eq!(
+            event.kind.to_string(),
+            "air_group:10 received 6 aircraft and 5 pilots by arrival, 14 ready, 12 pilots and strength 18"
+        );
+        world.receive_arrivals(4, Pulse::Night);
+        assert_eq!(arrived(&world).len(), 1);
+    }
+
+    #[test]
+    fn an_arrival_comes_before_the_replacements_that_night_and_raises_their_ceiling() {
+        // 10 aircraft, strength 12; an arrival of 6 makes the strength 18
+        // and 16 aircraft; the replacement stream of 2 fills the gap of 2:
+        // 18 aircraft and strength 18.
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 10, Some(10), 12);
+        world.truth.arrivals.push(arrival(2, 10, 6, 6));
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_JAPANESE, Side::Japanese, 5, 2, 2));
+        world.resolve_day().expect("day 1 resolves");
+        assert_eq!(arrived(&world).len(), 0);
+        let after_day_1 = world.truth.air_groups[&AirGroupId::new(10)].ready;
+        assert_eq!(after_day_1, 10);
+        world.resolve_day().expect("day 2 resolves");
+        let group = &world.truth.air_groups[&AirGroupId::new(10)];
+        assert_eq!(
+            (group.ready, group.strength, group.pilots),
+            (18, 18, Some(18))
+        );
+        assert_eq!(arrived(&world), vec![(2, 10, 6, 6, 16, 16, 18)]);
+        assert_eq!(received(&world), vec![(10, 2, 2, 18, 18)]);
+        let order: Vec<bool> = world
+            .events()
+            .iter()
+            .filter_map(|e| match e.kind {
+                EventKind::AircraftArrived { .. } => Some(true),
+                EventKind::ReplacementsReceived { .. } => Some(false),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(order, vec![true, false]);
+    }
+
+    #[test]
+    fn a_day_1_arrival_flies_that_morning() {
+        let mut world = raid_world(1);
+        group_mut(&mut world, AirGroupId::new(1)).ready = 0;
+        group_mut(&mut world, AirGroupId::new(1)).strength = 0;
+        world.truth.arrivals.push(arrival(1, 1, 6, 0));
+        world.resolve_day().expect("day 1 resolves");
+        assert_eq!(arrived(&world), vec![(1, 1, 6, 0, 6, 0, 6)]);
+        let launches = base_launches(&world);
+        assert_eq!(launches.len(), 1);
+        assert_eq!(launches[0].day, 1);
+        assert!(matches!(
+            launches[0].kind,
+            EventKind::BaseStrikeLaunched { aircraft: 6, .. }
+        ));
+    }
+
+    #[test]
+    fn a_group_that_starts_with_nothing_does_nothing_until_its_arrival() {
+        let mut world = raid_world(1);
+        tire(&mut world);
+        upkeep(&mut world, fixed(1, 10), fixed(1, 10), fixed(1, 2), 0);
+        supply_figures(&mut world);
+        set_supply(&mut world, BASE_ALLIED, Fixed::from_int(100));
+        {
+            let group = group_mut(&mut world, AirGroupId::new(1));
+            group.ready = 0;
+            group.strength = 0;
+        }
+        // It can be given orders before its aircraft come.
+        world.submit_orders(
+            Side::Allied,
+            vec![mission_order(
+                AirGroupId::new(1),
+                AirMission::BaseStrike(BASE_JAPANESE),
+            )],
+        );
+        // A replacement stream gives it nothing: its strength is nothing.
+        world
+            .truth
+            .replacements
+            .push(stream(BASE_ALLIED, Side::Allied, 2, 3, 0));
+        world.truth.arrivals.push(arrival(3, 1, 4, 0));
+        let hash_before = world.state_hash();
+        world.resolve_day().expect("day 1 resolves");
+        world.resolve_day().expect("day 2 resolves");
+        assert!(rejections(&world).is_empty());
+        let touched = |world: &World| {
+            world
+                .events()
+                .iter()
+                .filter(|e| {
+                    e.kind
+                        .entities()
+                        .contains(&EntityRef::AirGroup(AirGroupId::new(1)))
+                })
+                .map(|e| e.kind.to_string())
+                .collect::<Vec<_>>()
+        };
+        let events = touched(&world);
+        assert!(
+            events.iter().all(|text| text.contains("order")),
+            "{events:?}"
+        );
+        assert!(received(&world).is_empty());
+        assert!(base_launches(&world).is_empty());
+        assert!(ground_losses(&world).is_empty());
+        let group = &world.truth.air_groups[&AirGroupId::new(1)];
+        assert_eq!(
+            (group.ready, group.damaged, group.strength, group.fatigue),
+            (0, 0, 0, Fixed::ZERO)
+        );
+        assert_eq!(supply_of(&world, BASE_ALLIED), Fixed::from_int(100));
+        assert!(spent(&world).is_empty());
+        assert_ne!(world.state_hash(), hash_before);
+        world.resolve_day().expect("day 3 resolves");
+        assert_eq!(arrived(&world), vec![(3, 1, 4, 0, 4, 0, 4)]);
+        let launches = base_launches(&world);
+        assert_eq!(launches.len(), 1);
+        assert_eq!(launches[0].day, 3);
+        assert!(matches!(
+            launches[0].kind,
+            EventKind::BaseStrikeLaunched { aircraft: 4, .. }
+        ));
+    }
+
+    #[test]
+    fn arrivals_to_a_group_without_tracked_pilots_add_aircraft_and_strength_only() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 8, None, 12);
+        world.truth.arrivals.push(arrival(1, 10, 3, 0));
+        world.receive_arrivals(1, Pulse::Night);
+        let group = &world.truth.air_groups[&AirGroupId::new(10)];
+        assert_eq!((group.ready, group.pilots, group.strength), (11, None, 15));
+        assert_eq!(arrived(&world), vec![(1, 10, 3, 0, 11, 0, 15)]);
+    }
+
+    #[test]
+    fn a_group_lost_with_its_ship_receives_nothing_and_records_nothing() {
+        let mut world = world(1, vec![]);
+        let carried = world
+            .truth
+            .air_groups
+            .values()
+            .find_map(|group| match group.location {
+                AirGroupLocation::Ship(ship) => Some((group.id, ship)),
+                _ => None,
+            })
+            .expect("the standard world has a carried group");
+        world.truth.arrivals.push(arrival(1, carried.0.raw(), 4, 0));
+        // Afloat: delivered.
+        world.receive_arrivals(1, Pulse::Night);
+        assert_eq!(arrived(&world).len(), 1);
+        // Sunk: not.
+        world
+            .truth
+            .ships
+            .get_mut(&carried.1)
+            .expect("the ship")
+            .location = ShipLocation::Sunk;
+        let before = world.truth.air_groups[&carried.0].clone();
+        world.receive_arrivals(1, Pulse::Night);
+        assert_eq!(arrived(&world).len(), 1);
+        assert_eq!(world.truth.air_groups[&carried.0], before);
+    }
+
+    #[test]
+    fn no_arrivals_leaves_the_hash_as_it_was_and_arrivals_change_it() {
+        let mut plain = base_world(1);
+        crewed(&mut plain, 10, 5, 8, None, 12);
+        let hash = plain.state_hash();
+        let mut other = base_world(1);
+        crewed(&mut other, 10, 5, 8, None, 12);
+        other.truth.arrivals.push(arrival(2, 10, 1, 0));
+        assert_ne!(other.state_hash(), hash);
+        let with_one = other.state_hash();
+        other.truth.arrivals[0].aircraft = 2;
+        assert_ne!(other.state_hash(), with_one);
+        other.truth.arrivals.clear();
+        assert_eq!(other.state_hash(), hash);
+        // Strength is hashed only where something reads it: still not with
+        // no arrivals and no replacements.
+        group_mut(&mut other, AirGroupId::new(10)).strength = 99;
+        assert_eq!(other.state_hash(), hash);
+        // A side sees its own arrivals and not the enemy's.
+        crewed(&mut other, 11, 5, 2, None, 2);
+        other.truth.arrivals.push(arrival(2, 10, 1, 0));
+        assert_eq!(other.side_view(Side::Japanese).arrivals().count(), 1);
+        assert_eq!(other.side_view(Side::Allied).arrivals().count(), 0);
+    }
+
+    #[test]
+    fn two_arrivals_for_a_group_on_one_day_are_both_delivered_in_order() {
+        let mut world = base_world(1);
+        crewed(&mut world, 10, 5, 4, Some(4), 4);
+        world.truth.arrivals.push(arrival(2, 10, 3, 2));
+        world.truth.arrivals.push(arrival(2, 10, 5, 0));
+        world.receive_arrivals(2, Pulse::Night);
+        assert_eq!(
+            arrived(&world),
+            vec![(2, 10, 3, 2, 7, 6, 7), (2, 10, 5, 0, 12, 6, 12)]
+        );
+    }
+
     // ---- base supply (decision 0039) ----
 
     use crate::events::SupplyUse;

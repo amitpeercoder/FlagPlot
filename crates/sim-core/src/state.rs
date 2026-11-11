@@ -562,6 +562,16 @@ pub struct Replacement {
     pub pilots_per_day: u32,
 }
 
+/// Aircraft and pilots a scenario flies in to an air group on a named day
+/// (decision 0041). Static: it is never changed by the rules.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Arrival {
+    pub day: u32,
+    pub air_group: AirGroupId,
+    pub aircraft: u32,
+    pub pilots: u32,
+}
+
 /// The real state of the world.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct TruthState {
@@ -574,6 +584,9 @@ pub struct TruthState {
     /// The scenario's replacement streams, in the order they are applied
     /// (decision 0038). Empty in a scenario without replacements.
     pub replacements: Vec<Replacement>,
+    /// The scenario's arrivals, in the order they are delivered (decision
+    /// 0041). Empty in a scenario without any.
+    pub arrivals: Vec<Arrival>,
 }
 
 impl TruthState {
