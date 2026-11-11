@@ -1,0 +1,103 @@
+# Scenario 5a: a carrier steams east and its scouts search ahead of it.
+#
+# Stage 5a of scenario 5. It proves that an air group can be based aboard a
+# ship, that it is where the ship is, and that it searches from there by the
+# rule of scenario 3 (decisions 0012 and 0025). The hand calculation is in
+# tests/scenario_05a_carrier_search.rs. The test runs this file with seeds 1
+# to 1000.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
+
+name = "Scenario 5a: Carrier search"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_search.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# The carrier force, at (0,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force"
+side = "allied"
+q = 0
+r = 0
+mission = "carrier"
+
+# The force it is looking for lies stopped at (14,0), 560 nm east.
+[[task_force]]
+id = 2
+name = "Placeholder cruiser force"
+side = "japanese"
+q = 14
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser 1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser 2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+# Eight scouts aboard the carrier.
+[[air_group]]
+id = 1
+name = "Placeholder scouting squadron"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 8
+
+# Day 1: steam east to (10,0) at cruise speed, searching ahead.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[10, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 40
+to_deg = 130
+range_nm = 300

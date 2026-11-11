@@ -200,8 +200,13 @@ impl World {
             let Some(arc) = group.search else {
                 continue;
             };
-            let base_hex = self.truth.bases[&group.base].hex;
-            if time::is_dark(base_hex, pulse) {
+            // Decision 4 of 0025: the hex it flies from is its base's hex, or
+            // its ship's position at the start of the pulse. A group aboard a
+            // sunk ship has none and flies nothing.
+            let Some(origin) = self.truth.air_group_hex(&group) else {
+                continue;
+            };
+            if time::is_dark(origin, pulse) {
                 continue;
             }
             let sweep_width_nm = self.ref_data.aircraft_types[&group.aircraft_type].sweep_width_nm;
@@ -216,7 +221,8 @@ impl World {
                 Some(pulse),
                 EventKind::SearchFlown {
                     air_group: group.id,
-                    base: group.base,
+                    from: group.location,
+                    hex: origin,
                     from_deg: arc.from_deg,
                     to_deg: arc.to_deg,
                     range_nm: arc.range_nm,
@@ -229,12 +235,12 @@ impl World {
             let arc_deg = bearing::arc_degrees(arc.from_deg, arc.to_deg);
             for target in &targets {
                 if target.side == group.side
-                    || !bearing::in_arc(base_hex, target.position, arc.from_deg, arc.to_deg)
+                    || !bearing::in_arc(origin, target.position, arc.from_deg, arc.to_deg)
                 {
                     continue;
                 }
                 let distance_nm =
-                    Fixed::from_int(i64::from(base_hex.distance(target.position)) * HEX_NM);
+                    Fixed::from_int(i64::from(origin.distance(target.position)) * HEX_NM);
                 if distance_nm > arc.range_nm {
                     continue;
                 }
@@ -375,7 +381,8 @@ mod tests {
     use crate::orders::{AirGroupOrder, Mission, OrderKind, OrderRequest, Origin};
     use crate::refdata::{AircraftRole, AircraftType, PortSize, RefData, ShipClass};
     use crate::state::{
-        AirGroup, Base, SearchArc, Ship, ShipLocation, ShipSystems, TaskForce, TruthState,
+        AirGroup, AirGroupLocation, Base, SearchArc, Ship, ShipLocation, ShipSystems, TaskForce,
+        TruthState,
     };
     use crate::world::SimConfig;
 
@@ -593,6 +600,7 @@ mod tests {
                     torpedo_damage: Fixed::ZERO,
                     toughness: Fixed::from_int(100),
                     radar: false,
+                    aircraft_capacity: 0,
                 },
             );
         }
@@ -633,7 +641,7 @@ mod tests {
                 id: GROUP,
                 name: "Test group".to_string(),
                 side: Side::Allied,
-                base: BaseId::new(1),
+                location: AirGroupLocation::Base(BaseId::new(1)),
                 aircraft_type: AircraftTypeId::new(1),
                 ready: 4,
                 mission: AirMission::Search,
@@ -1341,6 +1349,151 @@ mod tests {
         assert_eq!(
             report.entities(),
             vec![EntityRef::Contact(crate::ids::ContactId::new(1))]
+        );
+    }
+
+    // ---- air groups aboard ships (decisions 3 and 4 of 0025) ----
+
+    /// A world with an Allied carrier force (task force 5, ship 1 of class 3)
+    /// at (3,0) steaming east to (9,0), and a Japanese force at (14,0). The
+    /// carrier's class carries 36 aircraft, and the base group is moved
+    /// aboard the carrier. Its arc is 060 to 120 out to 600 nm.
+    fn carrier_world(seed: u64) -> World {
+        let carrier = Force {
+            id: 5,
+            side: Side::Allied,
+            hex: Hex::new(3, 0),
+            classes: vec![3],
+        };
+        let mut world = world(seed, vec![carrier, japanese(1, Hex::new(14, 0), &[1])]);
+        world
+            .ref_data
+            .ship_classes
+            .get_mut(&ShipClassId::new(3))
+            .expect("class 3")
+            .aircraft_capacity = 36;
+        world
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .location = AirGroupLocation::Ship(ShipId::new(1));
+        world
+    }
+
+    #[test]
+    fn a_group_aboard_a_ship_searches_from_its_task_forces_position_at_the_start_of_the_pulse() {
+        let mut world = carrier_world(1);
+        // No route: the carrier lies stopped at (3,0).
+        resolve_days(&mut world, 1);
+        let flights = flown(&world);
+        assert_eq!(flights.len(), 2);
+        for flight in &flights {
+            assert_eq!(
+                flight.kind,
+                EventKind::SearchFlown {
+                    air_group: GROUP,
+                    from: AirGroupLocation::Ship(ShipId::new(1)),
+                    hex: Hex::new(3, 0),
+                    from_deg: 60,
+                    to_deg: 120,
+                    range_nm: Fixed::from_int(600),
+                    aircraft: 4,
+                }
+            );
+        }
+        assert_eq!(
+            flights[0].kind.to_string(),
+            "air_group:1 searched 060-120 out to 600 nm from ship:1 at (3,0) with 4 aircraft"
+        );
+        assert_eq!(
+            flights[0].kind.entities(),
+            vec![EntityRef::AirGroup(GROUP), EntityRef::Ship(ShipId::new(1))]
+        );
+        // The target is 11 hexes, 440 nm, due east of (3,0): in the arc and
+        // in range, so each flight has an attempt at that distance.
+        let distances: Vec<String> = attempts(&world)
+            .iter()
+            .map(|e| match &e.kind {
+                EventKind::SearchAttempt { distance_nm, .. } => distance_nm.to_string(),
+                _ => unreachable!(),
+            })
+            .collect();
+        assert_eq!(distances, vec!["440", "440"]);
+    }
+
+    #[test]
+    fn a_group_aboard_a_moving_ship_flies_from_where_the_force_was_when_the_pulse_began() {
+        use crate::orders::{OrderKind, TaskForceOrder};
+        let mut world = carrier_world(1);
+        // Steam east from (3,0) to (9,0), 240 nm, at cruise speed.
+        world.submit_orders(
+            Side::Allied,
+            vec![OrderRequest {
+                kind: OrderKind::TaskForce {
+                    target: TaskForceId::new(5),
+                    order: TaskForceOrder::SetRoute(vec![Hex::new(9, 0)]),
+                },
+                origin: Origin::PLAYER,
+            }],
+        );
+        resolve_days(&mut world, 1);
+        let hexes: Vec<(Option<Pulse>, Hex)> = flown(&world)
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::SearchFlown { hex, .. } => (e.pulse, hex),
+                _ => unreachable!(),
+            })
+            .collect();
+        // Night: 192 nm from (3,0) is 4.8 hexes, so the force is at (8,0)
+        // when the morning pulse begins. In the morning it covers the 48 nm
+        // left to (9,0), and the afternoon flight is from there.
+        assert_eq!(
+            hexes,
+            vec![
+                (Some(Pulse::Morning), Hex::new(8, 0)),
+                (Some(Pulse::Afternoon), Hex::new(9, 0)),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_group_aboard_a_sunk_ship_searches_nothing() {
+        let mut world = carrier_world(1);
+        let ship = world.truth.ships.get_mut(&ShipId::new(1)).expect("ship");
+        ship.location = ShipLocation::Sunk;
+        ship.flotation_damage = Fixed::from_int(100);
+        world
+            .truth
+            .task_forces
+            .get_mut(&TaskForceId::new(5))
+            .expect("force")
+            .ships
+            .remove(&ShipId::new(1));
+        assert_eq!(
+            world.truth.air_group_hex(&world.truth.air_groups[&GROUP]),
+            None
+        );
+        resolve_days(&mut world, 2);
+        assert!(flown(&world).is_empty());
+        assert!(attempts(&world).is_empty());
+    }
+
+    #[test]
+    fn a_group_aboard_a_ship_in_port_flies_from_the_ports_hex() {
+        let mut world = carrier_world(1);
+        let ship = world.truth.ships.get_mut(&ShipId::new(1)).expect("ship");
+        ship.location = ShipLocation::Port(BaseId::new(1));
+        world
+            .truth
+            .task_forces
+            .get_mut(&TaskForceId::new(5))
+            .expect("force")
+            .ships
+            .remove(&ShipId::new(1));
+        assert_eq!(
+            world.truth.air_group_hex(&world.truth.air_groups[&GROUP]),
+            Some(BASE_HEX)
         );
     }
 }

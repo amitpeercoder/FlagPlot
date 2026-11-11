@@ -587,8 +587,10 @@ function buildModel(replay) {
           if (Array.isArray(d.hex)) aux.fights.push({ q: d.hex[0], r: d.hex[1], a: d.a, b: d.b, kind: ev.kind, event: ev.id });
           break;
         case 'search_flown': {
-          const b = bases.get(d.base);
-          if (b) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, q: b.q, r: b.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b).side });
+          // From a base, the base's hex; from a ship, the hex the event records.
+          const b = d.base != null ? bases.get(d.base) : null;
+          const at = b ? { q: b.q, r: b.r } : (Array.isArray(d.hex) ? { q: d.hex[0], r: d.hex[1] } : null);
+          if (at) aux.searches.push({ event: ev.id, air_group: d.air_group, base: d.base, ship: d.ship, q: at.q, r: at.r, from_deg: d.from_deg, to_deg: d.to_deg, range_nm: d.range_nm, aircraft: d.aircraft, side: (airGroups.get(d.air_group) || b || {}).side });
           break;
         }
         default: break;
@@ -893,7 +895,7 @@ function renderDynamic() {
     let node;
     if (a.full) node = sv('circle', { class: cls, cx: c[0], cy: c[1], r: s.range_nm });
     else node = sv('path', { class: cls, d: 'M' + c[0] + ' ' + c[1] + 'L' + a.p1[0] + ' ' + a.p1[1] + 'A' + s.range_nm + ' ' + s.range_nm + ' 0 ' + (a.large ? 1 : 0) + ' 1 ' + a.p2[0] + ' ' + a.p2[1] + 'Z' });
-    node.append(sv('title', { text: 'Search by air_group:' + s.air_group + ' from base:' + s.base + ', ' + s.from_deg + ' to ' + s.to_deg + ' degrees, out to ' + s.range_nm + ' nm (event #' + s.event + ')' }));
+    node.append(sv('title', { text: 'Search by air_group:' + s.air_group + ' from ' + (s.base != null ? 'base:' + s.base : 'ship:' + s.ship) + ', ' + s.from_deg + ' to ' + s.to_deg + ' degrees, out to ' + s.range_nm + ' nm (event #' + s.event + ')' }));
     gDyn.append(node);
   }
   // Fights

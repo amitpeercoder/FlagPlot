@@ -10,7 +10,7 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::orders::{Mission, SpeedSetting};
-use crate::state::{ShipLocation, ShipSystem};
+use crate::state::{AirGroupLocation, ShipLocation, ShipSystem};
 use crate::world::World;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
@@ -217,7 +217,16 @@ pub(crate) fn hash_world(world: &World) -> u64 {
     for group in truth.air_groups.values() {
         h.u32(group.id.raw());
         h.u8(group.side.code());
-        h.u32(group.base.raw());
+        // A group at a base hashes exactly as it did when it could only be
+        // at a base: the base's id, four bytes. A group aboard a ship writes
+        // the marker u32::MAX, then the ship's id. No base has that id.
+        match group.location {
+            AirGroupLocation::Base(base) => h.u32(base.raw()),
+            AirGroupLocation::Ship(ship) => {
+                h.u32(u32::MAX);
+                h.u32(ship.raw());
+            }
+        }
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
         h.u8(group.mission.code());

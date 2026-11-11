@@ -11,7 +11,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::RejectReason;
 use crate::refdata::ShipKind;
-use crate::state::{ShipSystem, Side, SystemState};
+use crate::state::{AirGroupLocation, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
 
 /// Something that led to an event.
@@ -219,10 +219,12 @@ pub enum EventKind {
         /// Elapsed hours since the scenario began.
         elapsed_hours: Fixed,
     },
-    /// An air group flew its search arc from its base.
+    /// An air group flew its search arc from its base, or from the hex of the
+    /// ship it is aboard (decision 4 of 0025). `hex` is the hex it flew from.
     SearchFlown {
         air_group: AirGroupId,
-        base: BaseId,
+        from: AirGroupLocation,
+        hex: Hex,
         from_deg: u32,
         to_deg: u32,
         range_nm: Fixed,
@@ -410,6 +412,13 @@ pub enum EventKind {
         chance: Fixed,
         alarmed: bool,
     },
+    /// An air group aboard a ship that sank was lost with it (decision 5 of
+    /// 0025). `aircraft` is the number of ready aircraft it lost.
+    AirGroupLost {
+        air_group: AirGroupId,
+        ship: ShipId,
+        aircraft: u32,
+    },
 }
 
 impl EventKind {
@@ -450,8 +459,17 @@ impl EventKind {
                 task_force, base, ..
             } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
             EventKind::SearchFlown {
-                air_group, base, ..
-            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+                air_group, from, ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                match from {
+                    AirGroupLocation::Base(base) => EntityRef::Base(*base),
+                    AirGroupLocation::Ship(ship) => EntityRef::Ship(*ship),
+                },
+            ],
+            EventKind::AirGroupLost {
+                air_group, ship, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Ship(*ship)],
             EventKind::SearchAttempt {
                 air_group,
                 task_force,
@@ -628,15 +646,27 @@ impl fmt::Display for EventKind {
             ),
             EventKind::SearchFlown {
                 air_group,
-                base,
+                from,
+                hex,
                 from_deg,
                 to_deg,
                 range_nm,
                 aircraft,
-            } => write!(
-                f,
-                "{air_group} searched {from_deg:03}-{to_deg:03} out to {range_nm} nm from {base} with {aircraft} aircraft"
-            ),
+            } => match from {
+                AirGroupLocation::Base(base) => write!(
+                    f,
+                    "{air_group} searched {from_deg:03}-{to_deg:03} out to {range_nm} nm from {base} with {aircraft} aircraft"
+                ),
+                AirGroupLocation::Ship(ship) => write!(
+                    f,
+                    "{air_group} searched {from_deg:03}-{to_deg:03} out to {range_nm} nm from {ship} at {hex} with {aircraft} aircraft"
+                ),
+            },
+            EventKind::AirGroupLost {
+                air_group,
+                ship,
+                aircraft,
+            } => write!(f, "{air_group} lost with {ship}: {aircraft} aircraft"),
             EventKind::SearchAttempt {
                 air_group,
                 task_force,

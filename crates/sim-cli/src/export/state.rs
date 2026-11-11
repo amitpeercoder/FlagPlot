@@ -4,7 +4,7 @@ use serde::Serialize;
 use sim_core::hex::Hex;
 use sim_core::refdata::RefData;
 use sim_core::state::{
-    AirGroup, Base, Ship, ShipLocation, ShipSystem, Side, TaskForce, TruthState,
+    AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, TaskForce, TruthState,
 };
 use sim_core::World;
 
@@ -95,7 +95,12 @@ pub struct AirGroupOut {
     id: u32,
     name: String,
     side: &'static str,
-    base: u32,
+    /// Set for a group based at a base.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base: Option<u32>,
+    /// Set for a group aboard a ship.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ship: Option<u32>,
     aircraft_type: String,
     ready: u32,
     mission: &'static str,
@@ -213,7 +218,14 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         id: group.id.raw(),
         name: group.name.clone(),
         side: names::side(group.side),
-        base: group.base.raw(),
+        base: match group.location {
+            AirGroupLocation::Base(base) => Some(base.raw()),
+            AirGroupLocation::Ship(_) => None,
+        },
+        ship: match group.location {
+            AirGroupLocation::Base(_) => None,
+            AirGroupLocation::Ship(ship) => Some(ship.raw()),
+        },
         aircraft_type: ref_data.aircraft_types[&group.aircraft_type].name.clone(),
         ready: group.ready,
         mission: names::air_mission(group.mission),
