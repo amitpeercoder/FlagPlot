@@ -102,3 +102,33 @@ Henderson Field (Pacific Wrecks, -9.42806, 160.05472, the modern airport site), 
 ## Looked for, not found
 
 See the 18 new rows in `gaps.csv`: a stated radius for the escort; whether tanks were dropped; Japanese strength by type and date; raid composition for most days; Japanese losses by cause and the flight-home share; Japanese pilot losses in the window; US pilot replacements; fuel and bombs by date; Lakunai's own position.
+
+## Added for stage 6e
+
+Read on 2026-11-11. Three things were asked for. Nothing is settled here. Rows: `aircraft_type_facts.csv` 536 to 546, `weapons.csv` 1062, `weapon_facts.csv` 466 and 467, `engagement_events.csv` 290 to 296, `engagement_outcomes.csv` 497 to 499, `sources.csv` 1075 to 1078, six rows in `gaps.csv`.
+
+### G4M1 Model 11: armour and fuel tanks (rows 536 to 542)
+
+Every source read says the same thing: the type had no crew armour and unprotected wing tanks, left out to save weight for range. `pilot_armour` is `no` (Wikipedia, HistoryNet; both grade C, so the value stays `unconfirmed`). `self_sealing_tanks` is `no` (Pacific Wrecks, Wikipedia, HistoryNet, Pacific Eagles; Pacific Wrecks is graded B, so the rows read `preferred`). All are tertiary or enthusiast sources, so every row is `low`. No wartime Allied intelligence sheet on the Betty was found, though such sheets exist for the Zero (rows 455 to 465). The later fit is separate: Wikipedia's variants list gives March 1943 for rubber ply sheets under the wing outer surfaces and 5 mm plates for the tail gunner (row 540, a `performance_note`, because a `partial` value would have overlapped the `no` rows). HistoryNet and Pacific Wrecks say a later layer was added and give no date. Nothing read puts any protection on Model 11 before the window. Other sites give "the 663rd airframe" for the change; those were seen only as search summaries and are not entered. Wikipedia says self-sealing tanks came with the G4M2 and G4M3, but its own G4M2 entries do not describe them.
+
+### Guns defending Henderson Field (events 290 to 296, outcomes 497 to 499)
+
+`data/oob` has no table for the guns of a place or a land unit. `fits.csv` takes a ship class, ship or aircraft type as carrier, and `air_units` are flying units. The nearest fit used is `engagement_events.csv`: one row per statement, actor the battalion's antiaircraft group, target `henderson-field` (a `places.csv` key), `value` the count, the date in `as_stated` or `time` when the source gives one. This is a workable record of what was said, but it is not a base-defence table that a scenario can load by date. If the scenario needs the guns by date, a format decision is open: either a `land_units` identity file with its own facts, or `fits.csv` allowing `place` as a carrier type. Neither was done.
+
+What the sources give:
+
+| Fact | Value | Source | Date |
+| --- | --- | --- | --- |
+| First 90 mm battery | 4 guns, on the edge of the airfield | Zimmerman p.57 | None |
+| 90 mm batteries | 2, with 3 automatic weapons batteries | Miller ch V | Before the end of August |
+| Third 90 mm battery | 1 more, moved from Tulagi | Miller ch V; Hough VI-5 | Early September |
+| 37 mm and .50 cal guns | Emplaced for antiboat fire, no counts | Zimmerman p.56 | After 9 August |
+| Effect | Bombers forced to 25,000 ft; bombing still fairly accurate | Zimmerman pp.62-63 | August |
+
+Not found: the number of guns beyond the first battery (eight and twelve are inferences from four a battery and are not entered), any count of 40 mm, 20 mm or .50 cal guns in an antiaircraft role (the 3d Defense Battalion's report of 7 March 1943 that Miller cites, and Condition Red's printed pages, were not in hand), and any date for the batteries becoming operational. Zimmerman's 12 August map does not date the battery. A search summary gave 12 August for the first battery; it was not read on a page and is not entered.
+
+Antiaircraft kills: none is credited in the window. The histories give the window's kills to fighters. Two counts exist outside it: 2 by shore-based antiaircraft on 8 August (Hough, location of the guns not stated) and 5 of 27 on 25 October (Zimmerman). The 90 mm weapon has an entry (`us-90mm-m1-aa`) with calibre and a ceiling for the M1A1 (Wikipedia, `low`). The Marine histories read do not name the mark.
+
+### Radius and bomb load (rows 543 to 546)
+
+No source read gives a combat radius for the G4M1 with a bomb load, from Rabaul or anywhere. Wikipedia and HistoryNet give only the Navy's design requirement (3,700 km or 2,300 miles loaded, with an 800 kg torpedo or bombs), which is a target and not a result. The earlier rows stand: 1,540 nm with no condition, and 2,110 statute miles with normal fuel and bomb loads (late 1943, Allied summary). On the load: the maximum is 1,000 kg (earlier rows). For the Henderson raids of the window no load was found; the 8 August mission carried torpedoes. A forum post (row 545) says the standard Navy bomb was 60 kg, 6 x 60 kg was common on 1943 Solomons patrols, and mixed loads of one 250 kg and six 60 kg were used. Pacific Wrecks (row 546) says three Bettys dropped 60 kg and 250 kg bombs at Henderson on 23 March 1943, no count. All of these fall after the window.
