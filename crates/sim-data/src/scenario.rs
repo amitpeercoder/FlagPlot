@@ -22,8 +22,8 @@ use crate::error::DataError;
 use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
-    load_air_combat_figures, load_aircraft_types, load_port_sizes, load_search_figures,
-    load_ship_classes, load_surface_combat_figures, parse_kind,
+    load_air_combat_figures, load_air_upkeep_figures, load_aircraft_types, load_port_sizes,
+    load_search_figures, load_ship_classes, load_surface_combat_figures, parse_kind,
 };
 
 #[derive(Deserialize)]
@@ -50,6 +50,9 @@ struct ScenarioFile {
     /// Path to the air combat figures file, relative to the scenario file.
     /// Optional: without it no air group can be ordered to strike.
     air_combat: Option<String>,
+    /// Path to the wear and repair figures, relative to the scenario file.
+    /// Optional: without it no aircraft is worn or repaired (decision 0035).
+    air_upkeep: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -93,6 +96,9 @@ struct BaseSpec {
     /// Anti-aircraft shots at a raid on the base (decision 0034). Defaults
     /// to 0.
     anti_aircraft: Option<u32>,
+    /// Damaged aircraft the base repairs each day (decision 0035). Defaults
+    /// to 0.
+    aircraft_repairs_per_day: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -107,6 +113,8 @@ struct AirGroupSpec {
     aircraft_type: u32,
     /// Aircraft ready to fly at the start.
     ready: u32,
+    /// Damaged aircraft at the start (decision 0035). Defaults to 0.
+    damaged: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -420,6 +428,9 @@ impl Scenario {
         if let Some(air_combat) = &file.air_combat {
             ref_data.air_combat = Some(load_air_combat_figures(&folder.join(air_combat))?);
         }
+        if let Some(air_upkeep) = &file.air_upkeep {
+            ref_data.air_upkeep = Some(load_air_upkeep_figures(&folder.join(air_upkeep))?);
+        }
 
         let mut truth = TruthState::default();
 
@@ -437,6 +448,7 @@ impl Scenario {
                     None => Fixed::ZERO,
                 },
                 anti_aircraft: spec.anti_aircraft.unwrap_or(0),
+                aircraft_repairs_per_day: spec.aircraft_repairs_per_day.unwrap_or(0),
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -622,7 +634,9 @@ impl Scenario {
                     }
                     let capacity = ref_data.ship_classes[&ship.class].aircraft_capacity;
                     let total = aboard.entry(ship_id).or_insert(0);
-                    *total = total.saturating_add(spec.ready);
+                    *total = total
+                        .saturating_add(spec.ready)
+                        .saturating_add(spec.damaged.unwrap_or(0));
                     if *total > capacity {
                         return Err(fail(format!(
                             "{id} puts {} aircraft aboard {ship_id}, whose class carries {capacity}",
@@ -647,6 +661,7 @@ impl Scenario {
                 location,
                 aircraft_type,
                 ready: spec.ready,
+                damaged: spec.damaged.unwrap_or(0),
                 mission: AirMission::Rest,
                 search: None,
                 mission_order: None,
@@ -1250,6 +1265,70 @@ r = 0
         assert_eq!(shots(guns("anti_aircraft = 12\n").expect("loads")), 12);
         assert!(guns("anti_aircraft = 1.5\n").is_err());
         assert!(guns("anti_aircraft = -1\n").is_err());
+    }
+
+    #[test]
+    fn a_base_takes_an_optional_whole_number_of_repairs_a_day() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let repairs = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let figure = |scenario: Scenario| {
+            scenario.world.umpire().bases[&BaseId::new(2)].aircraft_repairs_per_day
+        };
+        assert_eq!(figure(repairs("").expect("loads")), 0);
+        assert_eq!(
+            figure(repairs("aircraft_repairs_per_day = 3\n").expect("loads")),
+            3
+        );
+        assert!(repairs("aircraft_repairs_per_day = 1.5\n").is_err());
+        assert!(repairs("aircraft_repairs_per_day = -1\n").is_err());
+    }
+
+    #[test]
+    fn an_air_group_takes_an_optional_whole_number_of_damaged_aircraft() {
+        let damaged = |extra: &str| {
+            let text = air_group(1, 3).replace("ready = ", &format!("{extra}ready = "));
+            parse_with(&text)
+                .map(|scenario| scenario.world.umpire().air_groups[&AirGroupId::new(1)].damaged)
+        };
+        assert_eq!(damaged("").expect("loads"), 0);
+        assert_eq!(damaged("damaged = 4\n").expect("loads"), 4);
+        assert!(damaged("damaged = 1.5\n").is_err());
+        assert!(damaged("damaged = -1\n").is_err());
+    }
+
+    /// `HEAD` with the air upkeep key added after the surface combat key.
+    fn with_air_upkeep(key: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let head = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            &format!("surface_combat = \"../reference/surface_combat.toml\"\n{key}"),
+        );
+        Scenario::parse(&head, &path)
+    }
+
+    #[test]
+    fn the_air_upkeep_key_is_optional_and_loads_the_figures() {
+        assert!(parse_with("")
+            .expect("loads")
+            .world
+            .ref_data()
+            .air_upkeep
+            .is_none());
+        let with =
+            with_air_upkeep("air_upkeep = \"../reference/air_upkeep.toml\"\n").expect("loads");
+        let figures = with
+            .world
+            .ref_data()
+            .air_upkeep
+            .expect("the figures are loaded");
+        assert_eq!(figures.wear_base_chance, Fixed::from_ratio(5, 100));
+        assert_eq!(figures.carrier_repairs_per_day, 2);
+        let error = with_air_upkeep("air_upkeep = \"../reference/nothing.toml\"\n")
+            .expect_err("a missing file is an error");
+        assert!(error.to_string().contains("nothing.toml"), "{error}");
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.

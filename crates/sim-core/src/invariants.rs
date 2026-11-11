@@ -55,7 +55,7 @@ pub enum InvariantViolation {
     AirGroupOnUnknownShip(AirGroupId, ShipId),
     /// The air group is aboard a ship of the other side.
     AirGroupOnOtherSidesShip(AirGroupId, ShipId),
-    /// The ready aircraft of the groups aboard a ship exceed its class's
+    /// The ready and damaged aircraft of the groups aboard a ship exceed its class's
     /// aircraft capacity (decision 2 of 0025).
     ShipOverAircraftCapacity(ShipId),
     /// A flotation, system or fire damage track is below 0 or above 100.
@@ -418,7 +418,8 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                             group.id, ship_id,
                         ));
                     }
-                    *aboard.entry(ship_id).or_insert(0) += group.ready;
+                    // Damaged aircraft take room aboard like ready ones (0035).
+                    *aboard.entry(ship_id).or_insert(0) += group.ready + group.damaged;
                 }
             },
         }
@@ -460,6 +461,7 @@ mod tests {
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         truth.air_groups.insert(
@@ -471,6 +473,7 @@ mod tests {
                 location: AirGroupLocation::Base(BaseId::new(1)),
                 aircraft_type: AircraftTypeId::new(1),
                 ready: 2,
+                damaged: 0,
                 mission: AirMission::Rest,
                 search: None,
                 mission_order: None,
@@ -882,6 +885,29 @@ mod tests {
         second.id = AirGroupId::new(2);
         second.ready = 3;
         truth.air_groups.insert(second.id, second);
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::ShipOverAircraftCapacity(SHIP)]
+        );
+    }
+
+    #[test]
+    fn damaged_aircraft_take_room_aboard_a_ship_like_ready_ones() {
+        let (mut truth, map, ref_data) = setup_aboard();
+        // 8 ready and 2 damaged fill a capacity of 10; one more damaged does
+        // not fit.
+        let group = truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group");
+        group.ready = 8;
+        group.damaged = 2;
+        assert!(check(&truth, &map, &ref_data).is_empty());
+        truth
+            .air_groups
+            .get_mut(&AirGroupId::new(1))
+            .expect("group")
+            .damaged = 3;
         assert_eq!(
             check(&truth, &map, &ref_data),
             vec![InvariantViolation::ShipOverAircraftCapacity(SHIP)]

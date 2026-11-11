@@ -13,7 +13,7 @@
 
 use crate::bearing;
 use crate::belief::{ApplyOutcome, Report, SightingReport};
-use crate::events::{Breakdown, Cause, EventKind, Factor};
+use crate::events::{Breakdown, Cause, EventKind, Factor, SortieKind};
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{EntityRef, EventId, TaskForceId};
@@ -23,6 +23,7 @@ use crate::refdata::{SearchFigures, ShipKind};
 use crate::rng::{RngStream, Subsystem};
 use crate::state::Side;
 use crate::time::{self, Pulse};
+use crate::upkeep::Sortie;
 use crate::world::World;
 
 /// Degrees in one radian, 57.295779 to six decimals (decision 0012,
@@ -237,6 +238,17 @@ impl World {
                 causes,
                 None,
             );
+            // The wear step rolls what flew (decision 0035): out to the range
+            // of the arc and back.
+            if self.ref_data.air_upkeep.is_some() {
+                self.sorties.push(Sortie {
+                    air_group: group.id,
+                    kind: SortieKind::Search,
+                    aircraft: flown_aircraft,
+                    distance_nm: arc.range_nm * Fixed::from_int(2),
+                    causes: vec![Cause::Event(flown)],
+                });
+            }
 
             let arc_deg = bearing::arc_degrees(arc.from_deg, arc.to_deg);
             for target in &targets {
@@ -612,6 +624,7 @@ mod tests {
                 hex: BASE_HEX,
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         truth.air_groups.insert(
@@ -623,6 +636,7 @@ mod tests {
                 location: AirGroupLocation::Base(BaseId::new(1)),
                 aircraft_type: AircraftTypeId::new(1),
                 ready: 4,
+                damaged: 0,
                 mission: AirMission::Search,
                 search: Some(SearchArc {
                     from_deg: 60,

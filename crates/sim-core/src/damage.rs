@@ -235,8 +235,10 @@ impl World {
                 .air_groups
                 .get_mut(&air_group)
                 .expect("air group exists");
-            let aircraft = group.ready;
+            // Damaged aircraft go down with the ship too (decision 0035).
+            let aircraft = group.ready + group.damaged;
             group.ready = 0;
+            group.damaged = 0;
             self.record_at(
                 site,
                 EventKind::AirGroupLost {

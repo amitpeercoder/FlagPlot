@@ -647,6 +647,50 @@ pub struct RefData {
     /// The air combat figures of decision 0026. `None` if the scenario names
     /// no file: no air group can then be given the naval strike mission.
     pub air_combat: Option<AirCombatFigures>,
+    /// The wear and repair figures of decision 0035. `None` if the scenario
+    /// names no file: no air group is worn, none is repaired and nothing is
+    /// recorded.
+    pub air_upkeep: Option<AirUpkeepFigures>,
+}
+
+/// The figures of the wear and repair rule. See
+/// `docs/decisions/0035-wear-repair-and-operational-losses.md`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct AirUpkeepFigures {
+    /// Chance an aircraft that flew comes back worn, before the distance.
+    pub wear_base_chance: Fixed,
+    /// The chance added for each 100 nm of the sortie.
+    pub wear_chance_per_100_nm: Fixed,
+    /// The share of the worn aircraft that are written off.
+    pub write_off_share: Fixed,
+    /// Damaged aircraft a carrier repairs each day, for the groups aboard it.
+    pub carrier_repairs_per_day: u32,
+}
+
+impl AirUpkeepFigures {
+    /// The chance an aircraft is worn on a sortie of `distance_nm`: the base
+    /// chance plus the chance per 100 nm times the distance over 100, 1 at
+    /// most (decision 4 of 0035).
+    pub fn wear_chance(&self, distance_nm: Fixed) -> Fixed {
+        let for_distance = self
+            .wear_chance_per_100_nm
+            .mul_div(distance_nm, Fixed::from_int(100));
+        (self.wear_base_chance + for_distance).min(Fixed::ONE)
+    }
+
+    /// Describes what is wrong with the figures, if anything.
+    pub fn problem(&self) -> Option<String> {
+        for (label, value) in [
+            ("wear base chance", self.wear_base_chance),
+            ("wear chance per 100 nm", self.wear_chance_per_100_nm),
+            ("write-off share", self.write_off_share),
+        ] {
+            if value < Fixed::ZERO || value > Fixed::ONE {
+                return Some(format!("air upkeep {label} {value} is not between 0 and 1"));
+            }
+        }
+        None
+    }
 }
 
 #[cfg(test)]

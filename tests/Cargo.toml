@@ -73,5 +73,9 @@ path = "scenario_05_eastern_solomons.rs"
 name = "scenario_06a_base_raid"
 path = "scenario_06a_base_raid.rs"
 
+[[test]]
+name = "scenario_06b_wear_and_repair"
+path = "scenario_06b_wear_and_repair.rs"
+
 [lints]
 workspace = true

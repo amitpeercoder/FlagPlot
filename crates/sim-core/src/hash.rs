@@ -20,6 +20,10 @@ const FLIGHT_DECK_TAG: u8 = 0xF1;
 const PATROL_SHARE_TAG: u8 = 0xF2;
 /// Tag of a base's anti-aircraft shots (decision 0034). See `hash_world`.
 const BASE_GUNS_TAG: u8 = 0xF3;
+/// Tag of a base's repairs a day (decision 0035). See `hash_world`.
+const BASE_REPAIRS_TAG: u8 = 0xF4;
+/// Tag of an air group's damaged aircraft (decision 0035). See `hash_world`.
+const DAMAGED_TAG: u8 = 0xF5;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -236,6 +240,11 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u8(BASE_GUNS_TAG);
             h.u32(base.anti_aircraft);
         }
+        // Likewise a base that repairs no aircraft (decision 0035).
+        if base.aircraft_repairs_per_day != 0 {
+            h.u8(BASE_REPAIRS_TAG);
+            h.u32(base.aircraft_repairs_per_day);
+        }
     }
 
     h.count(truth.air_groups.len());
@@ -254,6 +263,14 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
+        // A group with no damaged aircraft writes nothing, so it hashes as
+        // it did before damaged aircraft (decision 0035). The tag 0xF5
+        // follows the ready count and the mission code that follows it is 1
+        // to 5, so every state has one reading.
+        if group.damaged != 0 {
+            h.u8(DAMAGED_TAG);
+            h.u32(group.damaged);
+        }
         h.u8(group.mission.code());
         // The base strike mission (code 5) is followed by its target base.
         if let AirMission::BaseStrike(base) = group.mission {

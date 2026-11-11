@@ -6,8 +6,8 @@ use serde::Deserialize;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
-    AirCombatFigures, AircraftRole, AircraftType, AttackWeapon, PortSize, RefData, SearchFigures,
-    ShipClass, ShipKind, SurfaceCombatFigures,
+    AirCombatFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon, PortSize,
+    RefData, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -560,6 +560,46 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         )?,
         base_hit_aircraft: number("base_hit.aircraft", &file.base_hit.aircraft)?,
         base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AirUpkeepFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    wear_base_chance: Quantity,
+    wear_chance_per_100_nm: Quantity,
+    write_off_share: Quantity,
+    carrier_repairs_per_day: u32,
+}
+
+/// Loads the wear and repair figures from a TOML file (decision 0035).
+pub fn load_air_upkeep_figures(path: &Path) -> Result<AirUpkeepFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_air_upkeep_figures(&text, path)
+}
+
+/// Parses wear and repair figures from TOML text. `path` is only used in
+/// messages.
+fn parse_air_upkeep_figures(text: &str, path: &Path) -> Result<AirUpkeepFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: AirUpkeepFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = AirUpkeepFigures {
+        wear_base_chance: number("wear_base_chance", &file.wear_base_chance)?,
+        wear_chance_per_100_nm: number("wear_chance_per_100_nm", &file.wear_chance_per_100_nm)?,
+        write_off_share: number("write_off_share", &file.write_off_share)?,
+        carrier_repairs_per_day: file.carrier_repairs_per_day,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1370,5 +1410,55 @@ mod tests {
             .torpedo_system_hit
             .contains_key(&ShipSystem::FireControl));
         assert_eq!(figures.torpedo_system_hit.len(), 2);
+    }
+
+    fn air_upkeep_text() -> String {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/air_upkeep.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn air_upkeep_figures_parse_with_the_files_values() {
+        let figures = parse_air_upkeep_figures(&air_upkeep_text(), here()).expect("parses");
+        assert_eq!(figures.wear_base_chance, Fixed::from_ratio(5, 100));
+        assert_eq!(figures.wear_chance_per_100_nm, Fixed::from_ratio(2, 100));
+        assert_eq!(figures.write_off_share, Fixed::from_ratio(2, 10));
+        assert_eq!(figures.carrier_repairs_per_day, 2);
+    }
+
+    #[test]
+    fn air_upkeep_figures_are_required_in_range_and_not_floats() {
+        let bad = |from: &str, to: &str| {
+            let text = air_upkeep_text().replace(from, to);
+            assert_ne!(text, air_upkeep_text(), "{from} is in the file");
+            parse_air_upkeep_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(
+            bad("wear_base_chance = \"0.05\"", "wear_base_chance = 0.05")
+                .contains("wear_base_chance")
+        );
+        assert!(
+            bad("wear_base_chance = \"0.05\"", "wear_base_chance = \"1.5\"")
+                .contains("wear base chance")
+        );
+        assert!(bad(
+            "wear_chance_per_100_nm = \"0.02\"",
+            "wear_chance_per_100_nm = \"-0.02\""
+        )
+        .contains("per 100 nm"));
+        assert!(
+            bad("write_off_share = \"0.2\"", "write_off_share = \"2\"").contains("write-off share")
+        );
+        assert!(bad("write_off_share = \"0.2\"\n", "").contains("write_off_share"));
+        assert!(bad("carrier_repairs_per_day = 2\n", "").contains("carrier_repairs_per_day"));
+        assert!(bad(
+            "carrier_repairs_per_day = 2",
+            "carrier_repairs_per_day = -1"
+        )
+        .contains("-1"));
+        assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
     }
 }
