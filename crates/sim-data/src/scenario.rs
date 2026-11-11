@@ -22,9 +22,9 @@ use crate::error::DataError;
 use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
-    load_air_combat_figures, load_air_upkeep_figures, load_aircraft_types, load_fatigue_figures,
-    load_port_sizes, load_search_figures, load_ship_classes, load_surface_combat_figures,
-    parse_kind,
+    load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
+    load_fatigue_figures, load_port_sizes, load_search_figures, load_ship_classes,
+    load_surface_combat_figures, parse_kind,
 };
 
 #[derive(Deserialize)]
@@ -57,6 +57,10 @@ struct ScenarioFile {
     /// Path to the fatigue figures, relative to the scenario file. Optional:
     /// without it no air group tires or rests (decision 0036).
     fatigue: Option<String>,
+    /// Path to the base supply figures, relative to the scenario file.
+    /// Optional: without it nothing is spent and no base is out of supply
+    /// (decision 0039).
+    air_supply: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -466,6 +470,9 @@ impl Scenario {
         }
         if let Some(fatigue) = &file.fatigue {
             ref_data.fatigue = Some(load_fatigue_figures(&folder.join(fatigue))?);
+        }
+        if let Some(air_supply) = &file.air_supply {
+            ref_data.air_supply = Some(load_air_supply_figures(&folder.join(air_supply))?);
         }
 
         let mut truth = TruthState::default();
@@ -1558,6 +1565,29 @@ r = 0
             fatigue("fatigue = 3.5").is_err(),
             "a TOML float is rejected"
         );
+    }
+
+    #[test]
+    fn the_air_supply_key_is_optional_and_loads_the_figures() {
+        assert!(parse_with("")
+            .expect("loads")
+            .world
+            .ref_data()
+            .air_supply
+            .is_none());
+        let with = with_fatigue("air_supply = \"../reference/air_supply.toml\"\n").expect("loads");
+        let figures = with
+            .world
+            .ref_data()
+            .air_supply
+            .expect("the figures are loaded");
+        assert_eq!(figures.repair_supply_t, Fixed::from_int(1));
+        assert_eq!(figures.daily_supply_t_per_aircraft, Fixed::from_ratio(1, 5));
+        let error = with_fatigue("air_supply = \"../reference/nothing.toml\"\n")
+            .expect_err("a missing file is an error");
+        assert!(error.to_string().contains("nothing.toml"), "{error}");
+        // The key is spelled exactly: a near miss is an unknown key.
+        assert!(with_fatigue("air_supplies = \"../reference/air_supply.toml\"\n").is_err());
     }
 
     #[test]

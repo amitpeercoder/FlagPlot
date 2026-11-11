@@ -133,6 +133,29 @@ impl SortieKind {
     }
 }
 
+/// What a base spent supply on (decisions 1 to 3 of
+/// `docs/decisions/0039-base-supply-consumption.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SupplyUse {
+    /// The sorties flown from the base in a daylight pulse.
+    Sorties,
+    /// The aircraft at the base, for the day.
+    Upkeep,
+    /// Repairs made at the base.
+    Repairs,
+}
+
+impl SupplyUse {
+    /// The name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            SupplyUse::Sorties => "sorties",
+            SupplyUse::Upkeep => "upkeep",
+            SupplyUse::Repairs => "repairs",
+        }
+    }
+}
+
 /// How an air group's fatigue changed (decisions 4 and 5 of
 /// `docs/decisions/0036-fatigue-and-rest.md`).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -686,6 +709,19 @@ pub enum EventKind {
         destroyed_t: Fixed,
         supply_t: Fixed,
     },
+    /// A base spent supply (decisions 1 to 6 of 0039). `aircraft` is the
+    /// aircraft sent on sorties, the aircraft at the base for the day, or
+    /// the repairs paid for, by `reason`. `asked_t` is what the rule asked
+    /// for, `paid_t` what the stock covered, and `left_t` what the base has
+    /// afterwards.
+    BaseSupplySpent {
+        base: BaseId,
+        reason: SupplyUse,
+        aircraft: u32,
+        asked_t: Fixed,
+        paid_t: Fixed,
+        left_t: Fixed,
+    },
     /// An air group's fatigue changed in a daylight pulse (decisions 4 and 5
     /// of 0036). `amount` is what it actually gained or lost, after the cap
     /// at 100 or the floor at 0; `fatigue` is what it has afterwards.
@@ -792,7 +828,8 @@ impl EventKind {
             | EventKind::BaseAntiAircraftFire {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
-            EventKind::BaseSupplyDestroyed { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::BaseSupplyDestroyed { base, .. }
+            | EventKind::BaseSupplySpent { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::DamagedAircraftDestroyedOnGround {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
@@ -1196,6 +1233,32 @@ impl fmt::Display for EventKind {
                 f,
                 "{base} lost {destroyed_t} t of supply, {supply_t} t left"
             ),
+            EventKind::BaseSupplySpent {
+                base,
+                reason,
+                aircraft,
+                asked_t,
+                paid_t,
+                left_t,
+            } => {
+                let what = match reason {
+                    SupplyUse::Sorties => format!("{aircraft} aircraft sent on sorties"),
+                    SupplyUse::Upkeep => format!("{aircraft} aircraft at the base for the day"),
+                    SupplyUse::Repairs => format!("{aircraft} repairs"),
+                };
+                if paid_t < asked_t {
+                    write!(
+                        f,
+                        "{base} spent {paid_t} t of supply on {what}: {asked_t} t was asked and the stock could not cover it, {left_t} t left"
+                    )?;
+                } else {
+                    write!(f, "{base} spent {paid_t} t of supply on {what}, {left_t} t left")?;
+                }
+                if left_t.is_zero() {
+                    write!(f, ": {base} is out of supply")?;
+                }
+                Ok(())
+            }
             EventKind::AirAttack {
                 air_group,
                 ship,

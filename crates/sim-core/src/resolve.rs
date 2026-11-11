@@ -45,6 +45,9 @@ pub(crate) enum PulsePhase {
     /// Replacement aircraft and pilots arrive at the bases the scenario names,
     /// right after the repair, from day 2 (decisions 6 to 8 of 0038).
     AirReplacement,
+    /// Each base pays the daily supply for its aircraft, after the repair
+    /// and the replacements (decisions 2 and 5 of 0039).
+    AirSupplyUpkeep,
     /// Aircraft that flew roll for wear, after the air combat step of a
     /// daylight pulse (decisions 3 to 7 of 0035).
     AircraftWear,
@@ -62,9 +65,10 @@ enum EndOfDayPhase {
     IntelligenceUpdate,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 8] = [
+const NIGHT_SEQUENCE: [PulsePhase; 9] = [
     PulsePhase::AircraftRepair,
     PulsePhase::AirReplacement,
+    PulsePhase::AirSupplyUpkeep,
     PulsePhase::AirGroupRest,
     PulsePhase::Movement,
     PulsePhase::NightSearch,
@@ -114,6 +118,9 @@ impl World {
             // Then fatigue of the forces, which reads who is alert
             // (decision 2 of `docs/decisions/0037-fatigue-at-battle-readiness.md`).
             self.tire_and_rest_forces(day, pulse);
+            // A base with no supply at the start of the pulse flies nothing
+            // in it (decision 7 of 0039).
+            self.work_out_grounded_bases();
             for phase in pulse_sequence(pulse) {
                 self.run_pulse_phase(day, pulse, *phase);
             }
@@ -150,6 +157,7 @@ impl World {
             PulsePhase::AircraftRepair => self.repair_aircraft(day, pulse),
             PulsePhase::AircraftWear => self.wear_aircraft(day, pulse),
             PulsePhase::AirReplacement => self.receive_replacements(day, pulse),
+            PulsePhase::AirSupplyUpkeep => self.pay_daily_supply(day, pulse),
             PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,
@@ -692,6 +700,20 @@ impl World {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_night_pays_the_daily_supply_after_the_repair_and_replacements_and_before_the_rest() {
+        let at = |phase: PulsePhase| {
+            NIGHT_SEQUENCE
+                .iter()
+                .position(|p| *p == phase)
+                .expect("the phase is in the night")
+        };
+        assert!(at(PulsePhase::AircraftRepair) < at(PulsePhase::AirReplacement));
+        assert!(at(PulsePhase::AirReplacement) < at(PulsePhase::AirSupplyUpkeep));
+        assert!(at(PulsePhase::AirSupplyUpkeep) < at(PulsePhase::AirGroupRest));
+        assert!(!DAYLIGHT_SEQUENCE.contains(&PulsePhase::AirSupplyUpkeep));
+    }
+
     use super::*;
     use crate::belief::{BattleClaim, Report};
     use crate::hex::{Hex, HEX_NM};
