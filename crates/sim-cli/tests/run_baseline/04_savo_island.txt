@@ -2,37 +2,39 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 03979e1ffe037ecf  335 events
+day   1  hash 70b28100cd33341d  289 events
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-7); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Northern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:4 "Eighth Fleet striking force, sent home" (Japanese): Underway at (1,-11), 12.25 nm from (1,-11) toward (1,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:5 "Eighth Fleet striking force, left behind" (Japanese): Idle at (2,-5), 20 nm from (2,-6) toward (2,-5); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
-ship:1 "Chokai": afloat in task_force:1; damage flotation 47.610123, fire 64.922895; main battery out; 900 gun rounds, torpedoes gone; 2157.392156 t of fuel, 0 t of supply
-ship:2 "Aoba": SUNK; damage flotation 100, fire 44.366672; propulsion out, main battery out; 612 gun rounds, torpedoes gone; 1905.11032 t of fuel, 0 t of supply
-ship:3 "Kako": afloat in task_force:4; damage flotation 63.105801, fire 63.105801; propulsion degraded, fire control out, main battery out; 612 gun rounds, torpedoes gone; 1644.649324 t of fuel, 0 t of supply
-ship:4 "Kinugasa": SUNK; damage flotation 100, fire 16.463454; propulsion out, fire control degraded, main battery out, torpedo mounts degraded; 504 gun rounds, torpedoes gone; 1905.11032 t of fuel, 0 t of supply
-ship:5 "Furutaka": SUNK; damage flotation 100, fire 36.674241; propulsion out, main battery degraded, torpedo mounts out; 288 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
-ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39516 gun rounds, torpedoes gone; 692.232836 t of fuel, 0 t of supply
-ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59274 gun rounds, torpedoes gone; 581.664872 t of fuel, 0 t of supply
-ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39556 gun rounds, torpedoes gone; 308.930624 t of fuel, 0 t of supply
-ship:9 "HMAS Canberra": afloat in task_force:2; damage flotation 82.52564, fire 21.51282; propulsion out, fire control out; 900 gun rounds, torpedoes gone; 3400 t of fuel, 0 t of supply
-ship:10 "USS Chicago": afloat in task_force:2; damage flotation 24.926331, fire 24.38075; fire control out; 1368 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
-ship:11 "USS Patterson": SUNK; damage flotation 100, fire 61.537864; propulsion out, fire control out, main battery out, torpedo mounts out; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
-ship:12 "USS Bagley": SUNK; damage flotation 100, fire 5.208332; propulsion degraded, fire control degraded, main battery out, torpedo mounts degraded; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
-ship:13 "USS Vincennes": afloat in task_force:3; damage flotation 64.935079, fire 26.949323; propulsion out, fire control out, main battery degraded; 810 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:14 "USS Quincy": afloat in task_force:3; damage flotation 31.82578, fire 14.817834; propulsion degraded, main battery degraded; 810 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:15 "USS Astoria": afloat in task_force:3; damage flotation 14.621013, fire 1.700166; propulsion degraded, fire control degraded; 675 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:16 "USS Helm": afloat in task_force:3; damage flotation 64.5782, fire 32.2891; main battery out, torpedo mounts degraded; 450 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
-ship:17 "USS Wilson": SUNK; damage flotation 100, fire 94.938141; propulsion out, fire control out, main battery degraded, torpedo mounts out; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:1 "Chokai": afloat in task_force:4; damage flotation 34.625544, fire 0; propulsion degraded; 840 gun rounds, torpedoes gone; 2242.229647 t of fuel, 0 t of supply
+ship:2 "Aoba": afloat in task_force:4; damage flotation 83.18751, fire 16.637502; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 576 gun rounds, torpedoes gone; 1808.678719 t of fuel, 0 t of supply
+ship:3 "Kako": SUNK; damage flotation 100, fire 51.977493; propulsion out, fire control out, main battery degraded, torpedo mounts degraded; 324 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
+ship:4 "Kinugasa": afloat in task_force:4; damage flotation 54.094206, fire 7.055766; fire control out, main battery out; 612 gun rounds, torpedoes gone; 1808.678719 t of fuel, 0 t of supply
+ship:5 "Furutaka": SUNK; damage flotation 100, fire 24.32946; propulsion out, fire control degraded, main battery out, torpedo mounts out; 648 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
+ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39636 gun rounds, torpedoes gone; 692.232836 t of fuel, 0 t of supply
+ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59454 gun rounds, torpedoes gone; 581.664872 t of fuel, 0 t of supply
+ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39666 gun rounds, torpedoes gone; 308.930624 t of fuel, 0 t of supply
+ship:9 "HMAS Canberra": SUNK; damage flotation 100, fire 5.378205; propulsion degraded, main battery degraded; 1040 gun rounds, torpedoes ready; 3400 t of fuel, 0 t of supply
+ship:10 "USS Chicago": afloat in task_force:2; damage flotation 35.969146, fire 9.293276; propulsion degraded, fire control out; 1233 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
+ship:11 "USS Patterson": SUNK; damage flotation 100, fire 42.038688; propulsion degraded, fire control out, main battery out; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
+ship:12 "USS Bagley": afloat in task_force:2; damage flotation 85.411528, fire 10.416664; fire control degraded, main battery degraded, torpedo mounts degraded; 900 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
+ship:13 "USS Vincennes": afloat in task_force:3; damage flotation 59.664979, fire 18.992878; main battery out; 1012.5 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:14 "USS Quincy": afloat in task_force:3; damage flotation 11.139023, fire 12.730312; main battery degraded; 877.5 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:15 "USS Astoria": afloat in task_force:3; damage flotation 7.650747, fire 13.090449; fire control degraded; 810 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:16 "USS Helm": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
+ship:17 "USS Wilson": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
 base:1 "Rabaul" (Japanese) at (-5,-13): 0 t of supply in stock
-Allied contact:2 at (2,-5): 2 ships, cruiser, age 1 pulses
-Allied claims 3 enemy ships sunk at (2,-5), day 1 night
+Allied contact:2 at (2,-5): 1 ships, cruiser, age 0 pulses
+Allied claims 1 enemy ship sunk at (2,-5), day 1 night
 Allied claims 1 enemy ship sunk at (2,-5), day 1 morning
-Allied claims 1 enemy ship sunk at (2,-5), day 1 morning
-Japanese contact:1 at (2,-5): 4 ships, battleship, age 1 pulses
+Allied claims 2 enemy ships sunk at (2,-5), day 1 morning
+Allied claims 1 enemy ship sunk at (2,-5), day 1 afternoon
+Japanese contact:1 at (1,-4): 2 ships, carrier, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-5), day 1 night
-Japanese claims 2 enemy ships sunk at (2,-5), day 1 night
+Japanese claims 0 enemy ships sunk at (2,-5), day 1 night
 Japanese claims 0 enemy ships sunk at (2,-5), day 1 morning
-Japanese claims 1 enemy ship sunk at (2,-5), day 1 morning
+Japanese claims 0 enemy ships sunk at (2,-5), day 1 morning
+Japanese claims 0 enemy ships sunk at (2,-5), day 1 afternoon

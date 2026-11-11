@@ -71,22 +71,32 @@
 //! runs with a morning strike, the number that attack is within four
 //! standard deviations of 0.7 of them.
 //!
-//! An attack is on carrier B, ship 3, the most important ship of the force:
-//! 18 shots at a bomb's chance of 0.2 is 3.6 expected hits, so 3 hits with
-//! chance 0.4 and 4 with chance 0.6. Among all attacks, the number with 4
-//! hits is within four standard deviations of 0.6 of them.
+//! An attack is on carrier B, ship 3, the most important ship of the force,
+//! while she is afloat: 18 shots at a bomb's chance of 0.2 is 3.6 expected
+//! hits. Each bomb is rolled on its own (decision 0033), so an attack scores
+//! anything from 0 to 18 hits, with a standard deviation of 1.70. Over all
+//! attacks with 18 bombers, the hits in all are within four standard
+//! deviations of 3.6 times their number.
 //!
 //! A hit does 100 x 60 / 600 = 10 points, on flotation with chance 0.75 and
-//! on fire with chance 0.25. So an attack does 30 or 40 points in all,
-//! and the carrier's flotation and fire damage together are 10 times the
-//! hits it has taken. Two attacks do 80 points at most, so carrier B is
-//! never sunk and is the target of every attack. Each hit is a system hit
-//! with chance 10 x 0.06 = 0.6 (0.3 before decision 0033, when the chance
-//! was flat), landing on the flight deck with chance 0.5, propulsion 0.2,
-//! fire control 0.1 and the main battery 0.2.
+//! on fire with chance 0.25. So the carrier's flotation and fire damage
+//! together are 10 times the hits she has taken, until a track reaches 100.
+//! Each hit is a system hit with chance 10 x 0.06 = 0.6, landing on the
+//! flight deck with chance 0.5, propulsion 0.2, fire control 0.1 and the
+//! main battery 0.2.
+//!
+//! Ten hits on flotation sink her. That needs more than twice the average
+//! of two attacks, so it is rare, and it can only happen at the end of an
+//! attack. Should she be sunk by a morning attack, an afternoon strike
+//! attacks cruiser B1, ship 4, and a hit on a cruiser does 100 x 60 / 400 =
+//! 15 points. Ships 4 and 5 are damaged in no other case, and ships 1 and 2
+//! never.
+//!
+//! (Before decision 0033 an attack scored 3 or 4 hits, two attacks did 80
+//! points at most, and carrier B could not be sunk. The expected figures
+//! are as they were.)
 //!
 //! No aircraft is lost: air group 2 has 18 aircraft at the end of every run.
-//! Ships 1, 2, 4 and 5 are never damaged.
 //!
 //! A strike that attacks sends a report of task force 2, which refreshes the
 //! contact. A strike that finds nothing reports that, and the Allied side
@@ -100,7 +110,7 @@
 //! | Flight deck | Scouts flown | Search chance                       | Bombers launched |
 //! | ----------- | ------------ | ----------------------------------- | ---------------- |
 //! | Working     | 8            | 0.509295                            | 18               |
-//! | Degraded    | 4            | 57.295779 x 4 x 20 / 18000 = 0.254647 | 9: 1.8 expected hits, so 1 or 2 |
+//! | Degraded    | 4            | 57.295779 x 4 x 20 / 18000 = 0.254647 | 9: 1.8 expected hits, from 0 to 9 |
 //! | Out         | none: no search is flown | no attempt              | none: no strike is ever launched |
 //!
 //! # Properties
@@ -282,6 +292,24 @@ impl Run {
             .find(|(ship, _)| *ship == id)
             .expect("the ship")
             .1
+    }
+
+    /// The ship an attack must be on: carrier B while she is afloat, and
+    /// otherwise the lower-numbered cruiser of the force that is (4, then 5).
+    fn target_of(&self, attack: &Event) -> ShipId {
+        let sunk: BTreeSet<ShipId> = self
+            .events
+            .iter()
+            .take_while(|event| event.id != attack.id)
+            .filter_map(|event| match event.kind {
+                EventKind::ShipSunk { ship, .. } => Some(ship),
+                _ => None,
+            })
+            .collect();
+        [CARRIER_B, ShipId::new(4), ShipId::new(5)]
+            .into_iter()
+            .find(|ship| !sunk.contains(ship))
+            .expect("a ship of the force is afloat")
     }
 
     /// Hits of all the attacks of the run.
@@ -649,9 +677,10 @@ fn a_strike_attacks_if_the_force_is_in_the_hex_it_flew_to_and_otherwise_finds_no
 }
 
 #[test]
-fn an_attack_is_18_bombs_at_0_2_on_carrier_b_with_3_hits_at_0_4_and_4_at_0_6() {
+fn an_attack_is_18_bombs_at_0_2_each_rolled_on_carrier_b_while_she_is_afloat() {
     let mut attacks = 0;
-    let mut four_hits = 0;
+    let mut total_hits = 0i64;
+    let mut on_cruisers = 0;
     for run in batch() {
         for event in run.attacks() {
             let EventKind::AirAttack {
@@ -667,20 +696,29 @@ fn an_attack_is_18_bombs_at_0_2_on_carrier_b_with_3_hits_at_0_4_and_4_at_0_6() {
             else {
                 unreachable!()
             };
+            // Carrier B while afloat; if she is sunk, the next cruiser.
             assert_eq!(
                 (air_group, task_force, ship, weapon),
-                (BOMBERS, ENEMY_FORCE, CARRIER_B, Weapon::Bomb)
+                (BOMBERS, ENEMY_FORCE, run.target_of(event), Weapon::Bomb),
+                "seed {}",
+                run.seed
             );
+            on_cruisers += i32::from(ship != CARRIER_B);
             assert_eq!(
                 (shots, chance, expected),
                 (Fixed::from_int(18), tenths(2), tenths(36))
             );
-            assert!(hits == 3 || hits == 4, "seed {}: {hits}", run.seed);
+            // Each bomb is rolled on its own (decision 0033).
+            assert!(hits <= 18, "seed {}: {hits}", run.seed);
             attacks += 1;
-            four_hits += i64::from(hits == 4);
+            total_hits += i64::from(hits);
             assert_eq!(
                 event.kind.to_string(),
-                format!("air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, {hits} hits")
+                format!(
+                    "air_group:2 bombs at ship:{}: 18 shots x 0.2 = 3.6 expected, {hits} {}",
+                    ship.raw(),
+                    if hits == 1 { "hit" } else { "hits" }
+                )
             );
             // It cites its launch, and carries the breakdown of its chance.
             let launch = run
@@ -692,23 +730,36 @@ fn an_attack_is_18_bombs_at_0_2_on_carrier_b_with_3_hits_at_0_4_and_4_at_0_6() {
             assert_eq!(breakdown.result, tenths(36));
         }
     }
-    eprintln!("attacks {attacks}, with four hits {four_hits}");
+    eprintln!("attacks {attacks}, hits {total_hits}, on a cruiser {on_cruisers}");
     assert!(attacks > 500);
-    assert!(within_four_sigma(four_hits, attacks, 600_000));
+    // The hits in all are within four standard deviations of 3.6 an attack:
+    // 18 x attacks bombs at 0.2.
+    assert!(within_four_sigma(total_hits, 18 * attacks, 200_000));
 }
 
 #[test]
-fn a_hit_does_10_points_on_flotation_at_0_75_and_fire_at_0_25_and_carrier_b_is_never_sunk() {
+fn a_hit_does_10_points_on_flotation_at_0_75_and_fire_at_0_25_and_a_track_stops_at_100() {
+    // Hits on carrier B, which the chances below are stated for.
     let mut hits = 0i64;
     let mut flotation = 0i64;
     let mut system_hits = 0i64;
     let mut by_system = [0i64; 5];
+    let mut sunk_runs = 0;
     for run in batch() {
-        let mut points_total = Fixed::ZERO;
+        // Points a hit does, and the hits each track took, by ship.
+        let mut points_total = [Fixed::ZERO; 6];
+        let mut by_track = [[0i64; 2]; 6];
         for attack in run.attacks() {
-            let EventKind::AirAttack { hits: expected, .. } = attack.kind else {
+            let EventKind::AirAttack {
+                hits: expected,
+                ship: target,
+                ..
+            } = attack.kind
+            else {
                 unreachable!()
             };
+            assert_eq!(target, run.target_of(attack), "seed {}", run.seed);
+            let per_hit = if target == CARRIER_B { 10 } else { 15 };
             let mut counted = 0;
             for event in run.caused_by(attack.id) {
                 match event.kind {
@@ -720,11 +771,15 @@ fn a_hit_does_10_points_on_flotation_at_0_75_and_fire_at_0_25_and_carrier_b_is_n
                         points,
                         value_after: _,
                     } => {
-                        assert_eq!((round, ship), (0, CARRIER_B));
-                        assert_eq!(points, Fixed::from_int(10) * i64::from(track_hits));
-                        points_total += points;
+                        assert_eq!((round, ship), (0, target));
+                        // 100 x 60 / 600 on a carrier, 100 x 60 / 400 on a
+                        // cruiser; the points reported are not capped.
+                        assert_eq!(points, Fixed::from_int(per_hit) * i64::from(track_hits));
+                        points_total[target.raw() as usize] += points;
+                        by_track[target.raw() as usize][usize::from(track == DamageTrack::Fire)] +=
+                            i64::from(track_hits);
                         counted += track_hits;
-                        if track == DamageTrack::Flotation {
+                        if target == CARRIER_B && track == DamageTrack::Flotation {
                             flotation += i64::from(track_hits);
                         }
                     }
@@ -734,42 +789,80 @@ fn a_hit_does_10_points_on_flotation_at_0_75_and_fire_at_0_25_and_carrier_b_is_n
                         system,
                         ..
                     } => {
-                        assert_eq!((round, ship), (0, CARRIER_B));
-                        system_hits += 1;
-                        by_system[ShipSystem::ALL
-                            .iter()
-                            .position(|s| *s == system)
-                            .expect("a system")] += 1;
+                        assert_eq!((round, ship), (0, target));
+                        if target == CARRIER_B {
+                            system_hits += 1;
+                            by_system[ShipSystem::ALL
+                                .iter()
+                                .position(|s| *s == system)
+                                .expect("a system")] += 1;
+                        }
                     }
                     EventKind::ReportReceived { .. } => {}
+                    EventKind::ShipSunk { ship, .. } => assert_eq!(ship, target),
                     ref other => panic!("an attack caused {other:?}"),
                 }
             }
             assert_eq!(counted, expected, "seed {}", run.seed);
-            hits += i64::from(expected);
+            if target == CARRIER_B {
+                hits += i64::from(expected);
+            }
         }
-        // Damage, in total, is 10 a hit. Two attacks do 80 points at most.
+        // Each track is 10 (15 on a cruiser) a hit until it reaches 100.
+        for (id, per_hit) in [(3u32, 10i64), (4, 15), (5, 15)] {
+            let ship = run.ship(id);
+            let [on_flotation, on_fire] = by_track[id as usize];
+            let cap = |hits: i64| Fixed::from_int((per_hit * hits).min(100));
+            assert_eq!(
+                ship.flotation,
+                cap(on_flotation),
+                "seed {} ship {id}",
+                run.seed
+            );
+            assert_eq!(ship.fire, cap(on_fire), "seed {} ship {id}", run.seed);
+            assert!(ship.flotation <= Fixed::from_int(100));
+            assert!(ship.fire <= Fixed::from_int(100));
+            // Together they are 10 (15) times the hits taken, until a track
+            // reaches 100.
+            if ship.flotation < Fixed::from_int(100) && ship.fire < Fixed::from_int(100) {
+                assert_eq!(
+                    ship.flotation + ship.fire,
+                    points_total[id as usize],
+                    "seed {} ship {id}",
+                    run.seed
+                );
+            }
+            // A ship sinks exactly when its flotation reaches 100.
+            assert_eq!(
+                ship.sunk,
+                ship.flotation == Fixed::from_int(100),
+                "seed {} ship {id}",
+                run.seed
+            );
+        }
+        assert_eq!(
+            by_track.iter().flatten().sum::<i64>(),
+            i64::from(run.hits()),
+            "seed {}",
+            run.seed
+        );
         let carrier = run.ship(3);
+        sunk_runs += i32::from(carrier.sunk);
+        // Cruisers are hit only after carrier B is sunk.
+        if !carrier.sunk {
+            assert_eq!(points_total[4], Fixed::ZERO, "seed {}", run.seed);
+            assert_eq!(points_total[5], Fixed::ZERO, "seed {}", run.seed);
+        }
         assert_eq!(
-            carrier.flotation + carrier.fire,
-            points_total,
+            run.of(|k| matches!(k, EventKind::ShipSunk { .. })).len(),
+            run.ships.iter().filter(|(_, ship)| ship.sunk).count(),
             "seed {}",
             run.seed
         );
-        assert_eq!(
-            points_total,
-            Fixed::from_int(10) * i64::from(run.hits()),
-            "seed {}",
-            run.seed
-        );
-        assert!(points_total <= Fixed::from_int(80));
-        assert!(!carrier.sunk);
-        assert!(run
-            .of(|k| matches!(k, EventKind::ShipSunk { .. }))
-            .is_empty());
     }
+    eprintln!("runs with carrier B sunk: {sunk_runs}");
     eprintln!(
-        "hits {hits}: flotation {flotation}, system hits {system_hits}, by system {by_system:?}"
+        "hits on carrier B {hits}: flotation {flotation}, system hits {system_hits}, by system {by_system:?}"
     );
     assert!(within_four_sigma(flotation, hits, 750_000));
     // A hit is a system hit with chance 10 x 0.06 = 0.6 (decision 0033); the
@@ -803,7 +896,13 @@ fn no_aircraft_is_lost_and_only_carrier_b_is_ever_damaged() {
     for run in batch() {
         assert_eq!(run.bombers_ready, 18, "seed {}", run.seed);
         assert_eq!(run.scouts_ready, 8, "seed {}", run.seed);
+        // Ships 1 and 2 are never damaged; ships 4 and 5 only after
+        // carrier B has been sunk.
+        let carrier_sunk = run.ship(3).sunk;
         for id in [1, 2, 4, 5] {
+            if carrier_sunk && id >= 4 {
+                continue;
+            }
             let ship = run.ship(id);
             assert_eq!(ship.flotation, Fixed::ZERO, "seed {} ship {id}", run.seed);
             assert_eq!(ship.fire, Fixed::ZERO);
@@ -1127,7 +1226,7 @@ fn a_degraded_flight_deck_flies_4_scouts_at_0_254647_and_launches_9_bombers_for_
     let runs = batch_of(&degraded, SEEDS);
     let mut launches = 0;
     let mut attacks = 0;
-    let mut seen = BTreeSet::new();
+    let mut total_hits = 0i64;
     for run in &runs {
         // 57.295779 x 4 x 20 / 18000 = 4583.66232 / 18000.
         assert_eq!(
@@ -1157,17 +1256,19 @@ fn a_degraded_flight_deck_flies_4_scouts_at_0_254647_and_launches_9_bombers_for_
                 unreachable!()
             };
             assert_eq!((shots, expected), (Fixed::from_int(9), tenths(18)));
-            assert!(hits == 1 || hits == 2, "seed {}: {hits}", run.seed);
-            seen.insert(hits);
+            assert!(hits <= 9, "seed {}: {hits}", run.seed);
+            total_hits += i64::from(hits);
             attacks += 1;
         }
         // The deck of carrier A is hit by nobody: it stays degraded.
         assert_eq!(run.ship(1).systems[4], SystemState::Degraded);
         assert_eq!(run.bombers_ready, 18);
     }
-    eprintln!("degraded: launches {launches}, attacks {attacks}, hits seen {seen:?}");
+    eprintln!("degraded: launches {launches}, attacks {attacks}, hits {total_hits}");
     assert!(attacks > 0);
-    assert_eq!(seen, BTreeSet::from([1, 2]));
+    // 9 bombs at 0.2 an attack: the hits in all are within four standard
+    // deviations of 1.8 an attack.
+    assert!(within_four_sigma(total_hits, 9 * attacks, 200_000));
     // The launches follow the sightings, whose chance is now 0.254647.
     let sighted_morning = count(
         runs.iter()

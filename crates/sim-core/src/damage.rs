@@ -17,6 +17,7 @@ use crate::events::{Cause, DamageTrack, EventKind};
 use crate::fixed::Fixed;
 use crate::ids::{AirGroupId, EventId, ShipId, TaskForceId};
 use crate::refdata::ShipClass;
+use crate::rng::RngStream;
 use crate::state::{AirGroupLocation, Ship, ShipLocation, ShipSystem};
 use crate::time::Pulse;
 use crate::world::World;
@@ -73,6 +74,25 @@ pub(crate) fn track_value(ship: &mut Ship, track: DamageTrack) -> &mut Fixed {
         DamageTrack::Flotation => &mut ship.flotation_damage,
         DamageTrack::Fire => &mut ship.fire_damage,
     }
+}
+
+/// Rolls each shot of a salvo on its own (decision 0033, 3 and 4) and returns
+/// the hits. Each whole shot is one `stream.chance(chance)` draw. A part of a
+/// shot (`shots` is not a whole number) is one more draw after them, at
+/// `chance` times the part; with no part there is no extra draw. The number of
+/// draws depends only on `shots`, so a cap applied to the hits afterwards
+/// cannot change what the stream gives next.
+pub(crate) fn roll_shots(stream: &mut RngStream, shots: Fixed, chance: Fixed) -> u32 {
+    let whole = shots.trunc();
+    let part = shots - Fixed::from_int(whole);
+    let mut hits = 0;
+    for _ in 0..whole {
+        hits += u32::from(stream.chance(chance));
+    }
+    if !part.is_zero() {
+        hits += u32::from(stream.chance(chance * part));
+    }
+    hits
 }
 
 /// Chance a hit also knocks a system down one level (decision 0033): its
@@ -242,6 +262,77 @@ mod tests {
 
     fn fx(text: &str) -> Fixed {
         text.parse().expect("a decimal")
+    }
+
+    fn stream(entity: u32) -> RngStream {
+        use crate::ids::EntityRef;
+        use crate::rng::{RngKey, Subsystem};
+        RngKey {
+            seed: 7,
+            day: 1,
+            pulse: None,
+            subsystem: Subsystem::SurfaceCombat,
+            entity: EntityRef::Ship(ShipId::new(entity)),
+            other: None,
+        }
+        .stream()
+    }
+
+    #[test]
+    fn a_certain_chance_hits_every_whole_shot_and_a_part_at_the_chance_times_the_part() {
+        for entity in 1..=20 {
+            assert_eq!(
+                roll_shots(&mut stream(entity), Fixed::from_int(7), Fixed::ONE),
+                7
+            );
+            assert_eq!(
+                roll_shots(&mut stream(entity), Fixed::from_int(7), Fixed::ZERO),
+                0
+            );
+            assert_eq!(roll_shots(&mut stream(entity), Fixed::ZERO, Fixed::ONE), 0);
+        }
+        // 2.5 shots at 1: two sure hits and a third with chance 0.5.
+        let extra: u32 = (1..=1000)
+            .map(|entity| roll_shots(&mut stream(entity), fx("2.5"), Fixed::ONE) - 2)
+            .sum();
+        // 1,000 draws at 0.5: sd 15.8, so within 4 sd of 500.
+        assert!((437..=563).contains(&extra), "{extra}");
+    }
+
+    #[test]
+    fn the_draws_are_one_per_whole_shot_and_one_more_only_for_a_part() {
+        for (shots, draws) in [
+            ("0", 0),
+            ("1", 1),
+            ("6", 6),
+            ("6.5", 7),
+            ("0.25", 1),
+            ("67.5", 68),
+        ] {
+            for chance in ["0", "0.3", "1"] {
+                let mut used = stream(3);
+                roll_shots(&mut used, fx(shots), fx(chance));
+                let mut fresh = stream(3);
+                for _ in 0..draws {
+                    fresh.next_u64();
+                }
+                assert_eq!(
+                    used.next_u64(),
+                    fresh.next_u64(),
+                    "{shots} shots at {chance}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn twenty_shots_at_a_fifth_hit_four_a_salvo_on_average() {
+        // 1,000 streams: the sum of 20,000 draws at 0.2 has mean 4,000 and
+        // sd sqrt(1000 x 20 x 0.2 x 0.8) = 56.57; four sd is 226.
+        let total: u32 = (1..=1000)
+            .map(|entity| roll_shots(&mut stream(entity), Fixed::from_int(20), fx("0.2")))
+            .sum();
+        assert!((3774..=4226).contains(&total), "{total}");
     }
 
     #[test]

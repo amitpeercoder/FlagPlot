@@ -120,9 +120,12 @@
 //! | 11 Patterson | 3 Kako     | 4 x 15 x 5 = 300    | 13.5          | 1.216473     | 16    | 0.96          | 26.170734    |
 //! | 12 Bagley    | 4 Kinugasa | 300                 | 13.5          | 1.175961     | 16    | 0.96          | 25.299164    |
 //!
-//! In either table the hits a salvo scores are the whole part of the
-//! expected figure, or one more: 5 or 6 for Chokai's guns, 0 or 1 for any
-//! torpedo salvo here.
+//! Each shot is rolled on its own (decision 0033), so a salvo scores
+//! anything from no hit to its shots, the expected figure on average. Over
+//! the runs with such a free round the total hits of each salvo in either
+//! table are within four standard deviations of its expected figure times
+//! the number of runs. (Before decision 0033 a salvo scored the whole part
+//! of the expected figure or one more.)
 //!
 //! In a free round the side fired on fires nothing.
 //!
@@ -909,9 +912,10 @@ fn check_salvo(
     assert_eq!(salvo.chance, d(chance), "{who}");
     assert_eq!(salvo.expected, d(expected), "{who}");
     assert_eq!(salvo.shots * salvo.chance, salvo.expected, "{who}");
-    let whole = u32::try_from(d(expected).trunc()).expect("small");
+    // Each shot is rolled on its own (decision 0033): the hits are some
+    // number of the shots; the spread is checked over the runs.
     assert!(
-        salvo.hits == whole || salvo.hits == whole + 1,
+        Fixed::from_int(i64::from(salvo.hits)) <= shots,
         "{who}: {} hits of {expected} expected",
         salvo.hits
     );
@@ -931,7 +935,42 @@ fn check_salvo(
     }
 }
 
-fn check_free_round(seed: u64, fight: &Fight, rows: &[Row]) {
+/// Hits, expected hits (millionths) and variance (1e-12) of one salvo of a
+/// table, summed over the runs.
+#[derive(Default)]
+struct Totals {
+    hits: i128,
+    expected: i128,
+    variance: i128,
+}
+
+type Sums = BTreeMap<(u32, Weapon), Totals>;
+
+fn add_totals(sums: &mut Sums, salvo: &SalvoRec) {
+    let totals = sums.entry((salvo.firer, salvo.weapon)).or_default();
+    let p = i128::from(salvo.chance.raw());
+    totals.hits += i128::from(salvo.hits);
+    totals.expected += i128::from(salvo.expected.raw());
+    // n x p x (1 - p), with n whole shots and p in millionths.
+    totals.variance += i128::from(salvo.shots.trunc()) * p * (1_000_000 - p);
+}
+
+/// Over the runs, the hits of each salvo are within four standard
+/// deviations of the expected figure times the runs: (H - E)^2 <= 16 x var.
+fn check_four_sigma(sums: &Sums) {
+    for ((firer, weapon), t) in sums {
+        let diff = t.hits * 1_000_000 - t.expected;
+        assert!(
+            diff * diff <= 16 * t.variance,
+            "ship {firer} {weapon:?}: {} hits, {} expected (millionths), variance {}",
+            t.hits,
+            t.expected,
+            t.variance
+        );
+    }
+}
+
+fn check_free_round(seed: u64, fight: &Fight, rows: &[Row], sums: &mut Sums) {
     let round = fight.first_round().expect("somebody sighted");
     let in_round = fight.salvos_in(round);
     let mut expected_count = 0;
@@ -951,6 +990,7 @@ fn check_free_round(seed: u64, fight: &Fight, rows: &[Row]) {
             gun_exp,
             gun_pph,
         );
+        add_totals(sums, guns[0]);
         expected_count += 1;
         let torps: Vec<&&SalvoRec> = in_round
             .iter()
@@ -969,7 +1009,7 @@ fn check_free_round(seed: u64, fight: &Fight, rows: &[Row]) {
                 torp_exp,
                 torp_pph,
             );
-            assert!(torps[0].hits <= 1, "seed {seed}");
+            add_totals(sums, torps[0]);
             expected_count += 1;
         }
     }
@@ -984,29 +1024,33 @@ fn check_free_round(seed: u64, fight: &Fight, rows: &[Row]) {
 #[test]
 fn the_japanese_free_round_matches_the_first_table() {
     let mut checked = 0;
+    let mut sums = Sums::new();
     for run in batch() {
         let fight = run.southern_fight();
         if fight.opening() == Opening::AFreeRound {
-            check_free_round(run.seed, &fight, &JAPANESE_FIRST);
+            check_free_round(run.seed, &fight, &JAPANESE_FIRST, &mut sums);
             checked += 1;
         }
     }
     eprintln!("Japanese free rounds checked: {checked}");
     assert!(checked > 0);
+    check_four_sigma(&sums);
 }
 
 #[test]
 fn the_southern_free_round_matches_the_second_table() {
     let mut checked = 0;
+    let mut sums = Sums::new();
     for run in batch() {
         let fight = run.southern_fight();
         if fight.opening() == Opening::BFreeRound {
-            check_free_round(run.seed, &fight, &SOUTHERN_FIRST);
+            check_free_round(run.seed, &fight, &SOUTHERN_FIRST, &mut sums);
             checked += 1;
         }
     }
     eprintln!("southern free rounds checked: {checked}");
     assert!(checked > 0);
+    check_four_sigma(&sums);
 }
 
 // ---------------------------------------------------------------------

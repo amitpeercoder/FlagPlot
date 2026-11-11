@@ -134,25 +134,33 @@
 //! 200 / 400 = 50 points of flotation damage: one cripples a cruiser and two
 //! sink it. Torpedoes are fired once, in the first round the ship fires.
 //!
-//! | Salvo                          | Shots | Chance to hit    | Expected | Hits                 |
-//! | ------------------------------ | ----- | ---------------- | -------- | -------------------- |
-//! | Guns, target not surprised     | 120   | 0.03             | 3.6      | 3, or 4 at 0.6       |
-//! | Guns, target surprised         | 120   | 0.03 x 1.5       | 5.4      | 5, or 6 at 0.4       |
-//! | Guns, target lit               | 120   | 0.03 x 2         | 7.2      | 7, or 8 at 0.2       |
-//! | Torpedoes, target not surprised| 8     | 0.04             | 0.32     | 0, or 1 at 0.32      |
-//! | Torpedoes, target surprised    | 8     | 0.04 x 1.5       | 0.48     | 0, or 1 at 0.48      |
-//! | Torpedoes, target lit          | 8     | 0.04 x 2         | 0.64     | 0, or 1 at 0.64      |
-//! | Guns, main battery degraded    | 60    | 0.03             | 1.8      | 1, or 2 at 0.8       |
-//! | Guns, fire control degraded    | 120   | 0.03 x 0.5       | 1.8      | 1, or 2 at 0.8       |
-//! | Guns, fire control out         | 120   | 0.03 x 0.25      | 0.9      | 0, or 1 at 0.9       |
-//! | Guns, main battery out         | 0     | no salvo         |          |                      |
-//! | Torpedoes, mounts degraded     | 4     | 0.04             | 0.16     | 0, or 1 at 0.16      |
-//! | Torpedoes, mounts out          | 0     | no salvo         |          |                      |
+//! | Salvo                          | Shots | Chance to hit    | Expected | Std dev of the hits |
+//! | ------------------------------ | ----- | ---------------- | -------- | ------------------- |
+//! | Guns, target not surprised     | 120   | 0.03             | 3.6      | 1.87                |
+//! | Guns, target surprised         | 120   | 0.03 x 1.5       | 5.4      | 2.27                |
+//! | Guns, target lit               | 120   | 0.03 x 2         | 7.2      | 2.60                |
+//! | Torpedoes, target not surprised| 8     | 0.04             | 0.32     | 0.55                |
+//! | Torpedoes, target surprised    | 8     | 0.04 x 1.5       | 0.48     | 0.67                |
+//! | Torpedoes, target lit          | 8     | 0.04 x 2         | 0.64     | 0.77                |
+//! | Guns, main battery degraded    | 60    | 0.03             | 1.8      | 1.32                |
+//! | Guns, fire control degraded    | 120   | 0.03 x 0.5       | 1.8      | 1.33                |
+//! | Guns, fire control out         | 120   | 0.03 x 0.25      | 0.9      | 0.95                |
+//! | Guns, main battery out         | 0     | no salvo         |          |                     |
+//! | Torpedoes, mounts degraded     | 4     | 0.04             | 0.16     | 0.39                |
+//! | Torpedoes, mounts out          | 0     | no salvo         |          |                     |
 //!
-//! So in a free round every firing cruiser lands 5 or 6 gun hits on a
-//! target that cannot answer and, with chance 0.48, a torpedo hit that
-//! cripples it. When both fire from the start, each lands 3 or 4 gun hits
-//! and a torpedo hit with chance 0.32.
+//! Each shot is rolled on its own (decision 0033), so a salvo of n shots at
+//! chance p scores anything from no hit to n, np on average, with a standard
+//! deviation of the square root of np(1 - p). (Before decision 0033 a salvo
+//! scored the whole part of the expected figure or one more, and this table
+//! gave the two values. The shots, chances and expected figures are as they
+//! were.)
+//!
+//! So in a free round every firing cruiser lands 5.4 gun hits on average on
+//! a target that cannot answer and, with chance 1 - 0.94^8 = 0.390431, at
+//! least one torpedo hit, any one of which cripples it. When both fire from
+//! the start, each lands 3.6 gun hits on average and at least one torpedo
+//! hit with chance 1 - 0.96^8 = 0.278610.
 //!
 //! In every run and every salvo the test asserts, from the salvo's
 //! breakdown: gun shots = 120 x the firer's main battery factor (1, 0.5 or
@@ -160,7 +168,7 @@
 //! torpedo mount factor; the chance is the
 //! base times the factors that apply, and for guns also times the firer's
 //! fire control factor (1, 0.5 or 0.25);
-//! expected hits = shots x chance; and hits are the whole part or one more.
+//! expected hits = shots x chance; and the hits are no more than the shots.
 //! A ship fires 120 shots a round at most and has 800 rounds. One night
 //! fight uses 720 at most, so ammunition never limits fire at night. A ship
 //! that fights again by day can run short: it then fires the rounds it has
@@ -172,10 +180,10 @@
 //!
 //! ## Hits over 1,000 runs
 //!
-//! Each salvo's fraction is one roll. Summed over every gun salvo in the
-//! 1,000 runs, with H the hits, E the expected hits and f each salvo's
-//! fraction, the test asserts (H - E)^2 <= 16 x the sum of f(1 - f). The
-//! same holds for torpedo salvoes.
+//! Each shot is one roll. Summed over every gun salvo in the 1,000 runs,
+//! with H the hits, E the expected hits, and n and p each salvo's shots and
+//! chance, the test asserts (H - E)^2 <= 16 x the sum of np(1 - p). The same
+//! holds for torpedo salvoes.
 //!
 //! Of all gun hits, n, the numbers on flotation and fire must each be within
 //! four standard deviations of 0.75n and 0.25n: (k - np)^2 <= 16np(1 - p).
@@ -1984,14 +1992,13 @@ fn every_salvo_follows_the_figures() {
                 salvo.event
             );
             assert_eq!(salvo.expected, salvo.shots * salvo.chance, "seed {seed}");
-            let whole = salvo.expected.trunc();
-            let fraction = salvo.expected.raw() - whole * 1_000_000;
-            let hits = i64::from(salvo.hits);
-            if fraction == 0 {
-                assert_eq!(hits, whole, "seed {seed}");
-            } else {
-                assert!(hits == whole || hits == whole + 1, "seed {seed}");
-            }
+            // Each shot is rolled on its own (decision 0033): the hits are
+            // no more than the shots. The spread is checked over the runs in
+            // `hits_and_where_they_land_stay_within_four_sigma`.
+            assert!(
+                Fixed::from_int(i64::from(salvo.hits)) <= salvo.shots,
+                "seed {seed}"
+            );
         }
     }
     eprintln!("salvos checked: {count}, of them by day: {by_day}");
@@ -2039,7 +2046,7 @@ fn each_ship_ends_with_800_rounds_less_the_gun_shots_it_fired() {
 // Hits over 1,000 runs.
 // ---------------------------------------------------------------------
 
-/// Checks (H - E)^2 <= 16 x the sum of f(1 - f), in raw millionths.
+/// Checks (H - E)^2 <= 16 x the sum of np(1 - p), in raw millionths.
 fn salvo_sums_hold(salvos: &[&SalvoRec]) -> (i128, i128, i128, bool) {
     let mut hits = 0i128;
     let mut expected = 0i128;
@@ -2047,8 +2054,10 @@ fn salvo_sums_hold(salvos: &[&SalvoRec]) -> (i128, i128, i128, bool) {
     for salvo in salvos {
         hits += i128::from(salvo.hits) * 1_000_000;
         expected += i128::from(salvo.expected.raw());
-        let fraction = i128::from(salvo.expected.raw() % 1_000_000);
-        variance += fraction * (1_000_000 - fraction);
+        // Every salvo of scenario 4a has a whole number of shots.
+        assert_eq!(salvo.shots.raw() % 1_000_000, 0);
+        let p = i128::from(salvo.chance.raw());
+        variance += i128::from(salvo.shots.trunc()) * p * (1_000_000 - p);
     }
     let off = hits - expected;
     (hits, expected, variance, off * off <= 16 * variance)
@@ -2071,7 +2080,7 @@ fn hits_and_where_they_land_stay_within_four_sigma() {
     for (name, salvos) in [("gun", &guns), ("torpedo", &torpedoes)] {
         let (hits, expected, variance, holds) = salvo_sums_hold(salvos);
         eprintln!(
-            "{name} salvos {}: hits {} expected {} (millionths: H {hits}, E {expected}, sum f(1-f) {variance})",
+            "{name} salvos {}: hits {} expected {} (millionths: H {hits}, E {expected}, sum np(1-p) {variance})",
             salvos.len(),
             hits / 1_000_000,
             Fixed::from_raw(i64::try_from(expected).expect("fits"))

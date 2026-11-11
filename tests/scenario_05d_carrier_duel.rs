@@ -71,15 +71,19 @@
 //! either side runs like this. The attacker sends 18 bombers and 6 escorts.
 //! The defender has kept 6 fighters overhead.
 //!
-//! | Step                    | Shots | Chance | Expected | Lost |
-//! | ----------------------- | ----- | ------ | -------- | ---- |
-//! | Escorts at the patrol   | 6     | 0.3    | 1.8      | 1 or 2 of the defender's fighters |
-//! | Patrol at the escorts   | 6     | 0.3    | 1.8      | 1 or 2 of the attacker's fighters |
-//! | Patrol at the bombers   | none: the six escorts hold all six of the patrol | | | |
-//! | Guns at the bombers     | 36    | 0.05   | 1.8      | 1 or 2 bombers |
+//! | Step                    | Shots | Chance | Expected | Std dev  | Lost |
+//! | ----------------------- | ----- | ------ | -------- | -------- | ---- |
+//! | Escorts at the patrol   | 6     | 0.3    | 1.8      | 1.122497 | 0 to 6 of the defender's fighters |
+//! | Patrol at the escorts   | 6     | 0.3    | 1.8      | 1.122497 | 0 to 6 of the attacker's fighters |
+//! | Patrol at the bombers   | none: the six escorts hold all six of the patrol | | | | |
+//! | Guns at the bombers     | 36    | 0.05   | 1.8      | 1.307670 | 0 to 18 bombers |
 //!
-//! So 17 or 16 bombers attack the carrier: 3.4 or 3.2 expected hits, 3 or 4
-//! hits either way, at 10 points a hit.
+//! Each shot is rolled on its own (decision 0033). The bombers that attack
+//! the carrier are 18 less the guns' hits, 16.2 on average, and score 0.2
+//! of their number in hits on average, 3.24, at 10 points a hit. Over the
+//! runs, the hits of each roll of these first attacks are within four
+//! standard deviations of the expected figure times their number. (Before
+//! decision 0033 each roll lost 1 or 2 and an attack scored 3 or 4 hits.)
 //!
 //! ## Both at once
 //!
@@ -89,7 +93,7 @@
 //! bombers and 6 escorts and keeps 6 overhead, whatever the other's strike
 //! does to it in that pulse. A fighter group can then lose aircraft twice,
 //! its patrol to the enemy's escorts and its escorts to the enemy's patrol:
-//! 2 to 4 in all.
+//! up to 12 in all, 3.6 on average.
 //!
 //! A flight deck hit in a pulse changes nothing in that pulse. From the next
 //! pulse a degraded deck halves each group aboard, rounded down, and a deck
@@ -103,7 +107,8 @@
 //! sides.
 //!
 //! A carrier has a toughness of 600, so a hit does 10 points; a cruiser 400,
-//! so 15. A carrier can be sunk on the second day. If it is:
+//! so 15. A carrier can be sunk, on the first day too now that an attack
+//! can score ten hits (decision 0033), though that is rare. If it is:
 //!
 //! - Every air group aboard it loses all its aircraft, with an event citing
 //!   the sinking, and flies nothing afterwards.
@@ -250,13 +255,10 @@ fn flyable(ready: u32, deck: SystemState) -> u32 {
     }
 }
 
-/// The hits a roll of `shots` at `chance` gives from its stream: the whole
-/// part of shots x chance, plus one with chance equal to the fraction.
+/// The hits a roll of `shots` at `chance` gives from its stream: one draw for
+/// each shot (decision 0033).
 fn hits_from(stream: &mut RngStream, shots: u32, chance: Fixed) -> u32 {
-    let expected = int(shots) * chance;
-    let whole = expected.trunc();
-    let fraction = expected - Fixed::from_int(whole);
-    u32::try_from(whole).expect("small") + u32::from(stream.chance(fraction))
+    (0..shots).map(|_| u32::from(stream.chance(chance))).sum()
 }
 
 fn stream_of(seed: u64, day: u32, pulse: Pulse, entity: EntityRef, other: EntityRef) -> RngStream {
@@ -1590,9 +1592,12 @@ fn the_three_counts_of_the_first_morning_are_in_their_bands() {
 #[test]
 fn a_first_attack_by_either_side_meets_6_escorts_6_patrol_and_36_gun_shots_by_the_table() {
     let mut firsts = 0i64;
-    let mut patrol_two = 0i64;
-    let mut escorts_two = 0i64;
-    let mut guns_two = 0i64;
+    // Hits summed over the attacks, and the bombers that attacked.
+    let mut e_p_hits = 0i64;
+    let mut p_e_hits = 0i64;
+    let mut gun_hits = 0i64;
+    let mut bomb_hits = 0i64;
+    let mut bombers_attacking = 0i64;
     let mut attacking = BTreeSet::new();
     let mut by_side = [0i64; 2];
     for (run, pulse, c, attack) in all_attacks() {
@@ -1624,37 +1629,56 @@ fn a_first_attack_by_either_side_meets_6_escorts_6_patrol_and_36_gun_shots_by_th
             hits(attack.patrol_at_escorts),
             hits(attack.guns),
         );
-        // 6 shots at 0.3 = 1.8: 1 or 2. The guns, 36 shots at 0.05 = 1.8.
+        // Each roll is shot by shot (decision 0033): 6 shots at 0.3 for the
+        // escorts and for the patrol, the guns 36 shots at 0.05. Each scores
+        // anything from none to its shots.
         assert_eq!(attack.gun_shots, 36);
-        for roll in [e_p, p_e, g] {
-            assert!(roll == 1 || roll == 2, "seed {}: {roll}", run.seed);
-        }
-        // So 17 or 16 bombers attack: 3.4 or 3.2 expected hits, 3 or 4.
-        assert_eq!(attack.bombers_attacking, 18 - g);
-        assert!(matches!(attack.bombers_attacking, 16 | 17));
-        assert!(attack.hits == 3 || attack.hits == 4, "seed {}", run.seed);
+        assert!(e_p <= 6 && p_e <= 6 && g <= 36, "seed {}", run.seed);
+        // The bombers that attack are 18 less the guns' hits (a group cannot
+        // lose more than it has), and each drops one bomb at 0.2.
+        assert_eq!(attack.bombers_attacking, 18 - g.min(18));
+        assert!(attack.hits <= attack.bombers_attacking, "seed {}", run.seed);
         // The target is the carrier, which does 10 points a hit.
         assert_eq!(attack.ship, CAMPS[1 - c].carrier);
         attacking.insert(attack.bombers_attacking);
         firsts += 1;
         by_side[c] += 1;
-        patrol_two += i64::from(e_p == 2);
-        escorts_two += i64::from(p_e == 2);
-        guns_two += i64::from(g == 2);
+        e_p_hits += i64::from(e_p);
+        p_e_hits += i64::from(p_e);
+        gun_hits += i64::from(g);
+        bomb_hits += i64::from(attack.hits);
+        bombers_attacking += i64::from(attack.bombers_attacking);
     }
     eprintln!(
-        "whole-state attacks {firsts} (Allied {}, Japanese {}): patrol 2 {patrol_two}, escorts 2 {escorts_two}, guns 2 {guns_two}; attacking {attacking:?}",
-        by_side[0], by_side[1]
+        "whole-state attacks {firsts} (Allied {}, Japanese {}): escorts' hits {e_p_hits}, patrol's hits {p_e_hits}, guns' hits {gun_hits}, bomb hits {bomb_hits} of {bombers_attacking} bombers; attacking {} to {}",
+        by_side[0],
+        by_side[1],
+        attacking.first().expect("an attack"),
+        attacking.last().expect("an attack")
     );
     assert!(firsts > 400);
     assert!(by_side[0] > 200 && by_side[1] > 200);
-    for twos in [patrol_two, escorts_two, guns_two] {
-        assert!(
-            within_four_sigma(twos, firsts, 800_000),
-            "{twos} of {firsts}"
-        );
-    }
-    assert_eq!(attacking, BTreeSet::from([16, 17]));
+    // Over the runs each roll's hits are within four standard deviations of
+    // shots x chance: the shots of all the attacks are independent draws at
+    // one chance, so their hits are a binomial count of all the shots.
+    assert!(
+        within_four_sigma(e_p_hits, 6 * firsts, 300_000),
+        "{e_p_hits} of {firsts} x 6"
+    );
+    assert!(
+        within_four_sigma(p_e_hits, 6 * firsts, 300_000),
+        "{p_e_hits} of {firsts} x 6"
+    );
+    assert!(
+        within_four_sigma(gun_hits, 36 * firsts, 50_000),
+        "{gun_hits} of {firsts} x 36"
+    );
+    assert!(
+        within_four_sigma(bomb_hits, bombers_attacking, 200_000),
+        "{bomb_hits} of {bombers_attacking}"
+    );
+    // 18 less 1.8, 16.2 on average; the spread is more than 16 and 17.
+    assert!(attacking.len() > 2);
 }
 
 // ---------------------------------------------------------------------
@@ -1667,6 +1691,8 @@ fn when_both_sides_attack_in_one_pulse_each_attack_follows_the_start_of_the_puls
     let mut first_morning = 0;
     let mut two_causes = 0;
     let mut loss_totals = BTreeSet::new();
+    let mut first_morning_lost = 0i64;
+    let mut first_morning_groups = 0i64;
     let mut patrol_shot_down_still_fires = 0;
     for run in worked() {
         for pulse in &run.pulses {
@@ -1747,9 +1773,33 @@ fn when_both_sides_attack_in_one_pulse_each_attack_follows_the_start_of_the_puls
                     two_causes += 1;
                 }
                 if pulse.index == 0 {
-                    // 1 or 2 to each cause: 2 to 4 in all, in two events.
-                    assert_eq!(events, 2, "seed {}", run.seed);
-                    assert!((2..=4).contains(&lost), "seed {} {lost}", run.seed);
+                    // Decision 0033: each cause costs what its 6 shots at 0.3
+                    // hit, 0 to 6, 12 at most in all and 3.6 on average. A
+                    // cause that hit nothing records no loss event. The
+                    // group lost to the other side's escorts (its patrol) and
+                    // to the other side's patrol (its own escorts), as worked.
+                    let c = CAMPS
+                        .iter()
+                        .position(|other| other.fighters == camp.fighters)
+                        .expect("a camp");
+                    let to_escorts = pulse.attack[1 - c]
+                        .as_ref()
+                        .and_then(|attack| attack.escorts_at_patrol)
+                        .expect("the other side's escorts fired");
+                    let to_patrol = pulse.attack[c]
+                        .as_ref()
+                        .and_then(|attack| attack.patrol_at_escorts)
+                        .expect("the other side's patrol fired");
+                    assert_eq!(lost, to_escorts + to_patrol, "seed {}", run.seed);
+                    assert_eq!(
+                        events,
+                        u32::from(to_escorts > 0) + u32::from(to_patrol > 0),
+                        "seed {}",
+                        run.seed
+                    );
+                    assert!(lost <= 12, "seed {} {lost}", run.seed);
+                    first_morning_lost += i64::from(lost);
+                    first_morning_groups += 1;
                     loss_totals.insert(lost);
                 }
             }
@@ -1770,13 +1820,21 @@ fn when_both_sides_attack_in_one_pulse_each_attack_follows_the_start_of_the_puls
         }
     }
     eprintln!(
-        "pulses with both attacking {both_pulses}, of them the first morning {first_morning}; fighter groups losing aircraft to two causes in a pulse {two_causes}; first-morning totals {loss_totals:?}"
+        "pulses with both attacking {both_pulses}, of them the first morning {first_morning}; fighter groups losing aircraft to two causes in a pulse {two_causes}; first-morning losses of a group {loss_totals:?}"
     );
     assert!(both_pulses > 100);
     assert!(first_morning > 50);
     assert!(two_causes > 100);
     assert_eq!(patrol_shot_down_still_fires, 2 * first_morning);
-    assert_eq!(loss_totals, BTreeSet::from([2, 3, 4]));
+    // Each fighter group faces 12 shots at 0.3 on the first morning: its
+    // losses summed over the runs are within four standard deviations of 3.6
+    // for each, and they are not always 2 to 4.
+    assert_eq!(first_morning_groups, 2 * first_morning);
+    assert!(
+        within_four_sigma(first_morning_lost, 12 * first_morning_groups, 300_000),
+        "{first_morning_lost} of {first_morning_groups} groups x 12"
+    );
+    assert!(loss_totals.len() > 3, "{loss_totals:?}");
 }
 
 // ---------------------------------------------------------------------
@@ -1839,7 +1897,14 @@ fn a_hit_deck_halves_or_stops_search_strike_escort_and_patrol_from_the_next_puls
                         if let Some(escorts) = pulse.escorts_sent[c] {
                             let can = ready(camp.fighters) / 2;
                             assert_eq!(escorts, can - can / 2);
-                            assert!(escorts < ready(camp.fighters) - ready(camp.fighters) / 2);
+                            // Fewer than a working deck sends: strictly so
+                            // unless the group is down to two aircraft, when
+                            // one goes either way.
+                            let full = ready(camp.fighters) - ready(camp.fighters) / 2;
+                            assert!(escorts <= full);
+                            if ready(camp.fighters) != 2 {
+                                assert!(escorts < full);
+                            }
                             escort_halved += 1;
                         }
                     }
@@ -1911,6 +1976,8 @@ fn a_hit_deck_halves_or_stops_search_strike_escort_and_patrol_from_the_next_puls
 #[test]
 fn a_carrier_sunk_takes_its_groups_with_it_and_its_force_is_left_with_its_cruisers() {
     let mut sinkings = 0;
+    let mut day_1_sinkings = 0;
+    let mut runs_with_a_day_1_sinking = BTreeSet::new();
     let mut sinking_pulse_strike_attacked = 0;
     let mut later_attacks_on_cruisers = 0;
     for run in worked() {
@@ -1920,6 +1987,10 @@ fn a_carrier_sunk_takes_its_groups_with_it_and_its_force_is_left_with_its_cruise
                     continue;
                 };
                 sinkings += 1;
+                if pulse.index < 2 {
+                    day_1_sinkings += 1;
+                    runs_with_a_day_1_sinking.insert(run.seed);
+                }
                 let camp = &CAMPS[victim];
                 // The loss events of the groups aboard, citing the sinking,
                 // were asserted in `work_the_run`. After it every group
@@ -1962,20 +2033,15 @@ fn a_carrier_sunk_takes_its_groups_with_it_and_its_force_is_left_with_its_cruise
         }
     }
     eprintln!(
-        "carriers sunk {sinkings}; sunk in a pulse in which their own strike attacked {sinking_pulse_strike_attacked}; later attacks on cruisers {later_attacks_on_cruisers}"
+        "carriers sunk {sinkings}, on day 1 {day_1_sinkings} (in {} runs); sunk in a pulse in which their own strike attacked {sinking_pulse_strike_attacked}; later attacks on cruisers {later_attacks_on_cruisers}",
+        runs_with_a_day_1_sinking.len()
     );
-    // A carrier can be sunk on the second day, and not on the first: two
-    // attacks do at most 8 hits, 80 points.
+    // A carrier can be sunk on either day (decision 0033: ten hits do it),
+    // though rarely: well under one run in ten sinks one on the first day.
     assert!(sinkings > 0);
     assert!(sinking_pulse_strike_attacked > 0);
     assert!(later_attacks_on_cruisers > 0);
-    for run in worked() {
-        for pulse in &run.pulses {
-            if pulse.index < 2 {
-                assert!(pulse.sunk.is_empty(), "seed {}", run.seed);
-            }
-        }
-    }
+    assert!(runs_with_a_day_1_sinking.len() < 100);
 }
 
 // ---------------------------------------------------------------------
