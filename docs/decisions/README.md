@@ -40,5 +40,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0030 | Escorts have a radius: fighters go with a raid only within their type's radius, and otherwise stay on patrol | Confirmed |
 | 0031 | The Eastern Solomons scenario: one day, four forces and Henderson Field; positions, air groups and orders | Confirmed |
 | 0032 | What the complexity review cut and merged: noticing, contact confidence, two duplicate figures, and clock rounding | Confirmed |
+| 0033 | Hits revised: a system hit depends on the damage, each shot is rolled, and a patrol divides among the raids on its hex | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

@@ -27,10 +27,11 @@ lit_target_factor = "2"
 # torpedo hit lands on flotation.
 gun_hit_flotation = "0.75"
 
-# Chance a hit also knocks a system down one level, and the factor a degraded
-# system applies. Fire control that is out still gives this much.
-gun_system_hit_chance = "0.3"
-torpedo_system_hit_chance = "0.5"
+# A hit also knocks a system down one level with this chance for each point
+# of damage it does, 1 at most (decision 0033): guns, torpedoes and bombs
+# alike. Then the factor a degraded system applies. Fire control that is out
+# still gives the last figure.
+system_hit_chance_per_point = "0.06"
 degraded_factor = "0.5"
 fire_control_out_factor = "0.25"
 

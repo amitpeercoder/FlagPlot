@@ -32,8 +32,10 @@
 //!   the chance by 1.5 and a target lit by fire by 2. A gun hit lands on
 //!   flotation or fire with chances 0.75 and 0.25.
 //! - Systems (decision 0016, which replaced the system damage track this
-//!   scenario was first written for): a gun hit also knocks a system down a
-//!   level with chance 0.3, and a torpedo hit with chance 0.5. A degraded
+//!   scenario was first written for): a hit also knocks a system down a
+//!   level with a chance of 0.06 for each point of damage it does, 1 at
+//!   most (decision 0033). A cruiser's gun hit does 5 points here, so 0.3; a
+//!   torpedo hit does 50, so it always does. A degraded
 //!   system halves what it does. Fire control that is out gives a quarter.
 //!   Propulsion, a main battery or torpedo mounts that are out give nothing.
 //!
@@ -186,11 +188,15 @@
 //!
 //! | Outcome         | Per gun hit         | Per torpedo hit    |
 //! | --------------- | ------------------- | ------------------ |
-//! | Propulsion      | 0.3 x 0.2 = 0.06    | 0.5 x 0.8 = 0.4    |
-//! | Fire control    | 0.3 x 0.3 = 0.09    | 0.5 x 0.1 = 0.05   |
-//! | Main battery    | 0.3 x 0.35 = 0.105  | 0.5 x 0.1 = 0.05   |
+//! | Propulsion      | 0.3 x 0.2 = 0.06    | 1 x 0.8 = 0.8      |
+//! | Fire control    | 0.3 x 0.3 = 0.09    | 1 x 0.1 = 0.1      |
+//! | Main battery    | 0.3 x 0.35 = 0.105  | 1 x 0.1 = 0.1      |
 //! | Torpedo mounts  | 0.3 x 0.15 = 0.045  | none               |
-//! | No system       | 0.7                 | 0.5                |
+//! | No system       | 0.7                 | none               |
+//!
+//! (The torpedo column was 0.4, 0.05, 0.05 and 0.5 before decision 0033,
+//! when a torpedo hit knocked a system with a flat chance of 0.5. The gun
+//! column is unchanged: 5 points x 0.06 is the 0.3 it was.)
 //!
 //! Each count must be within four standard deviations of its share of the
 //! hits, by the same test. A hit on a system that is already out is counted
@@ -300,13 +306,14 @@ const NIGHT_HOURS: i64 = 12;
 /// Fuel a cruiser burns a mile, in millionths of a ton.
 const BURN_PER_NM: i64 = 250_000;
 
-/// Chance of a system hit on a gun hit and on a torpedo hit, and the share of
-/// each system, in millionths: propulsion, fire control, main battery, torpedo
-/// mounts. Written out from the hand calculation (chance x share).
+/// Chance of a system hit on a gun hit (5 points x 0.06 = 0.3) and on a
+/// torpedo hit (50 points x 0.06, capped at 1), and the share of each system,
+/// in millionths: propulsion, fire control, main battery, torpedo mounts.
+/// Written out from the hand calculation (chance x share).
 const GUN_SYSTEM_P: [i64; 4] = [60_000, 90_000, 105_000, 45_000];
 const GUN_NO_SYSTEM_P: i64 = 700_000;
-const TORPEDO_SYSTEM_P: [i64; 4] = [400_000, 50_000, 50_000, 0];
-const TORPEDO_NO_SYSTEM_P: i64 = 500_000;
+const TORPEDO_SYSTEM_P: [i64; 4] = [800_000, 100_000, 100_000, 0];
+const TORPEDO_NO_SYSTEM_P: i64 = 0;
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
