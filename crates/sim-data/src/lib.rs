@@ -26,6 +26,9 @@
 //! - Air combat figures: TOML, named by the scenario's optional `air_combat`
 //!   key (`docs/decisions/0026-air-strikes.md`). Without it no air group can be
 //!   ordered to strike.
+//! - Air upkeep figures: TOML, named by the scenario's optional `air_upkeep`
+//!   key (`docs/decisions/0035-wear-repair-and-operational-losses.md`). Without
+//!   it no aircraft is worn or repaired.
 //! - Maps: TOML, as rectangular regions plus single-hex overrides, or a
 //!   generated CSV with the columns `q,r,kind,land_percent,lat,lon` (decision
 //!   0017). The extension decides which.
@@ -50,7 +53,7 @@ mod scenario;
 pub use error::DataError;
 pub use map::load_map;
 pub use reference::{
-    load_air_combat_figures, load_aircraft_types, load_port_sizes, load_search_figures,
-    load_ship_classes, load_surface_combat_figures,
+    load_air_combat_figures, load_air_upkeep_figures, load_aircraft_types, load_port_sizes,
+    load_search_figures, load_ship_classes, load_surface_combat_figures,
 };
 pub use scenario::Scenario;

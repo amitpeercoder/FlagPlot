@@ -39,6 +39,12 @@ pub(crate) enum PulsePhase {
     SurfaceEngagements,
     ShoreBombardment,
     Loading,
+    /// Damaged aircraft are repaired, first in the night pulse (decision 9
+    /// of 0035).
+    AircraftRepair,
+    /// Aircraft that flew roll for wear, after the air combat step of a
+    /// daylight pulse (decisions 3 to 7 of 0035).
+    AircraftWear,
 }
 
 /// A step after the last pulse.
@@ -50,7 +56,8 @@ enum EndOfDayPhase {
     IntelligenceUpdate,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 5] = [
+const NIGHT_SEQUENCE: [PulsePhase; 6] = [
+    PulsePhase::AircraftRepair,
     PulsePhase::Movement,
     PulsePhase::NightSearch,
     PulsePhase::SurfaceEngagements,
@@ -58,10 +65,11 @@ const NIGHT_SEQUENCE: [PulsePhase; 5] = [
     PulsePhase::Loading,
 ];
 
-const DAYLIGHT_SEQUENCE: [PulsePhase; 6] = [
+const DAYLIGHT_SEQUENCE: [PulsePhase; 7] = [
     PulsePhase::AirSearch,
     PulsePhase::StrikeDecisions,
     PulsePhase::AirCombat,
+    PulsePhase::AircraftWear,
     PulsePhase::Movement,
     PulsePhase::SurfaceEngagements,
     PulsePhase::Loading,
@@ -128,6 +136,8 @@ impl World {
             PulsePhase::AirSearch => self.search_from_the_air(day, pulse),
             PulsePhase::StrikeDecisions => self.decide_strikes(day, pulse),
             PulsePhase::AirCombat => self.resolve_strikes(day, pulse),
+            PulsePhase::AircraftRepair => self.repair_aircraft(day, pulse),
+            PulsePhase::AircraftWear => self.wear_aircraft(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,
             // decision 8). The slot stays, like night search.
@@ -762,6 +772,7 @@ mod tests {
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
 
@@ -1400,6 +1411,7 @@ mod tests {
                 location: AirGroupLocation::Base(BaseId::new(1)),
                 aircraft_type: AircraftTypeId::new(1),
                 ready: 3,
+                damaged: 0,
                 mission: AirMission::Rest,
                 search: None,
                 mission_order: None,
@@ -2484,6 +2496,7 @@ mod tests {
                 hex: hx(1, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         World::new(7, ref_data, good.map.clone(), truth).expect("valid setup")

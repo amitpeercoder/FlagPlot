@@ -17,13 +17,25 @@ use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
 use crate::state::{AirGroup, Base, Ship, Side, TaskForce, TruthState};
 
 /// One side's view of the game.
-#[derive(Clone, Copy, Debug)]
+///
+/// `Debug` is written by hand and prints the side only. A derived one would
+/// print the whole truth state the view holds, enemy included, into whatever
+/// log, briefing or prompt the view was formatted for.
+#[derive(Clone, Copy)]
 pub struct SideView<'a> {
     side: Side,
     truth: &'a TruthState,
     belief: &'a BeliefState,
     map: &'a Map,
     ref_data: &'a RefData,
+}
+
+impl std::fmt::Debug for SideView<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SideView")
+            .field("side", &self.side)
+            .finish_non_exhaustive()
+    }
 }
 
 impl<'a> SideView<'a> {
@@ -155,6 +167,7 @@ mod tests {
             location: AirGroupLocation::Base(BaseId::new(base)),
             aircraft_type: AircraftTypeId::new(1),
             ready: 4,
+            damaged: 0,
             mission: AirMission::Rest,
             search: None,
             mission_order: None,
@@ -205,6 +218,7 @@ mod tests {
                     hex: Hex::new(hex, 0),
                     supply_t: Fixed::ZERO,
                     anti_aircraft: 0,
+                    aircraft_repairs_per_day: 0,
                 },
             );
             truth
@@ -229,6 +243,14 @@ mod tests {
         let view = world.side_view(Side::Allied);
         assert!(view.aircraft_type(AircraftTypeId::new(1)).is_some());
         assert!(view.search_figures().is_some());
+
+        // Formatting a view must not print the truth it holds.
+        for printed in [format!("{view:?}"), format!("{view:#?}")] {
+            assert!(printed.contains("Allied"), "{printed}");
+            assert!(!printed.contains("Base 2"), "{printed}");
+            assert!(!printed.contains("Group 2"), "{printed}");
+            assert!(!printed.contains("Japanese"), "{printed}");
+        }
     }
     /// A day fight in one hex: Allied task force 1 (ships 1 and 2) against
     /// Japanese task force 2 (ship 3). Every gun hit lands on flotation, there

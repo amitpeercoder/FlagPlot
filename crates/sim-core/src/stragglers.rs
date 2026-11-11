@@ -511,6 +511,7 @@ mod tests {
                 hex: hx(0, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         World::new(7, ref_data, map, truth).expect("valid setup")

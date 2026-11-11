@@ -225,6 +225,11 @@ pub struct Base {
     /// Anti-aircraft shots the base fires at a raid on it (decision 5 of
     /// `docs/decisions/0034-raids-on-a-base.md`). The default is 0.
     pub anti_aircraft: u32,
+    /// Damaged aircraft the base repairs each day, for the groups located
+    /// there, at the start of the day (decision 9 of
+    /// `docs/decisions/0035-wear-repair-and-operational-losses.md`). The
+    /// default is 0.
+    pub aircraft_repairs_per_day: u32,
 }
 
 /// What a task force is doing about its route.
@@ -499,6 +504,10 @@ pub struct AirGroup {
     pub aircraft_type: AircraftTypeId,
     /// Aircraft ready to fly. Unsigned so that it cannot go negative.
     pub ready: u32,
+    /// Aircraft that came back worn and are not fit to fly until repaired
+    /// (decision 0035). Everything that counts the aircraft a group can fly
+    /// counts `ready` only. The default is 0.
+    pub damaged: u32,
     pub mission: AirMission,
     pub search: Option<SearchArc>,
     /// The standing order that set the mission, if any.

@@ -104,6 +104,35 @@ impl AirTarget {
     }
 }
 
+/// What an air group flew when it rolled for wear (decision 4 of
+/// `docs/decisions/0035-wear-repair-and-operational-losses.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SortieKind {
+    /// A search out to the range of its arc and back.
+    Search,
+    /// A strike at a contact, out and back.
+    Strike,
+    /// A strike at a base, out and back.
+    BaseStrike,
+    /// A patrol over the group's own hex.
+    Patrol,
+    /// Escorts with a raid, out and back.
+    Escort,
+}
+
+impl SortieKind {
+    /// The name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            SortieKind::Search => "search",
+            SortieKind::Strike => "strike",
+            SortieKind::BaseStrike => "base strike",
+            SortieKind::Patrol => "patrol",
+            SortieKind::Escort => "escort",
+        }
+    }
+}
+
 /// One of the two damage tracks of a ship. Named systems are separate
 /// (decision 0016).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -444,8 +473,43 @@ pub enum EventKind {
         chance: Fixed,
         alarmed: bool,
     },
+    /// Aircraft of a group that were destroyed on the ground at a base were
+    /// damaged ones (decision 11 of 0035). `remaining` is what the group has
+    /// damaged afterwards. The ready aircraft destroyed in the same raid are
+    /// an `AircraftDestroyedOnGround` right after.
+    DamagedAircraftDestroyedOnGround {
+        air_group: AirGroupId,
+        base: BaseId,
+        aircraft: u32,
+        remaining: u32,
+    },
+    /// An air group rolled for wear after a sortie (decisions 3 to 7 of
+    /// 0035): `aircraft` flew and came back, each was worn at `chance`, and
+    /// `worn` of them were, of which `written_off` are lost for good. `ready`
+    /// and `damaged` are what the group has afterwards.
+    AircraftWorn {
+        air_group: AirGroupId,
+        sortie: SortieKind,
+        distance_nm: Fixed,
+        aircraft: u32,
+        chance: Fixed,
+        expected: Fixed,
+        worn: u32,
+        written_off: u32,
+        ready: u32,
+        damaged: u32,
+    },
+    /// A base or a carrier repaired damaged aircraft of a group at the start
+    /// of the day (decision 9 of 0035). `at` is where the group is.
+    AircraftRepaired {
+        air_group: AirGroupId,
+        at: AirGroupLocation,
+        repaired: u32,
+        ready: u32,
+        damaged: u32,
+    },
     /// An air group aboard a ship that sank was lost with it (decision 5 of
-    /// 0025). `aircraft` is the number of ready aircraft it lost.
+    /// 0025). `aircraft` is the number of aircraft it lost, ready and damaged.
     AirGroupLost {
         air_group: AirGroupId,
         ship: ShipId,
@@ -649,6 +713,17 @@ impl EventKind {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
             EventKind::BaseSupplyDestroyed { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::DamagedAircraftDestroyedOnGround {
+                air_group, base, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            EventKind::AircraftWorn { air_group, .. } => vec![EntityRef::AirGroup(*air_group)],
+            EventKind::AircraftRepaired { air_group, at, .. } => vec![
+                EntityRef::AirGroup(*air_group),
+                match at {
+                    AirGroupLocation::Base(base) => EntityRef::Base(*base),
+                    AirGroupLocation::Ship(ship) => EntityRef::Ship(*ship),
+                },
+            ],
             EventKind::AirAttack {
                 air_group,
                 task_force,
@@ -945,6 +1020,47 @@ impl fmt::Display for EventKind {
                 f,
                 "{air_group} lost {aircraft} aircraft on the ground at {base}, {remaining} left"
             ),
+            EventKind::DamagedAircraftDestroyedOnGround {
+                air_group,
+                base,
+                aircraft,
+                remaining,
+            } => write!(
+                f,
+                "{air_group} lost {aircraft} damaged aircraft on the ground at {base}, {remaining} damaged left"
+            ),
+            EventKind::AircraftWorn {
+                air_group,
+                sortie,
+                distance_nm,
+                aircraft,
+                chance,
+                expected,
+                worn,
+                written_off,
+                ready,
+                damaged,
+            } => write!(
+                f,
+                "{air_group} {} sortie of {distance_nm} nm: {aircraft} aircraft x {chance} = {expected} expected worn, {worn} worn, {written_off} written off, {ready} ready and {damaged} damaged left",
+                sortie.name()
+            ),
+            EventKind::AircraftRepaired {
+                air_group,
+                at,
+                repaired,
+                ready,
+                damaged,
+            } => match at {
+                AirGroupLocation::Base(base) => write!(
+                    f,
+                    "{air_group} had {repaired} aircraft repaired at {base}, {ready} ready and {damaged} damaged"
+                ),
+                AirGroupLocation::Ship(ship) => write!(
+                    f,
+                    "{air_group} had {repaired} aircraft repaired aboard {ship}, {ready} ready and {damaged} damaged"
+                ),
+            },
             EventKind::BaseSupplyDestroyed {
                 base,
                 destroyed_t,
@@ -1317,6 +1433,15 @@ impl EventLog {
             breakdown,
         });
         id
+    }
+
+    /// The latest event, if any, whose kind `keep` accepts.
+    pub(crate) fn latest_where(&self, keep: impl Fn(&EventKind) -> bool) -> Option<EventId> {
+        self.events
+            .iter()
+            .rev()
+            .find(|event| keep(&event.kind))
+            .map(|event| event.id)
     }
 
     /// The ID the next recorded event will get.

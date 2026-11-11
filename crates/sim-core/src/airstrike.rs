@@ -77,6 +77,17 @@
 //! then `AircraftDestroyedOnGround` for each group hit and
 //! `BaseSupplyDestroyed`. No report follows and no belief changes.
 //!
+//! # Wear (0035)
+//!
+//! When the wear figures are loaded the step also notes what each group flew
+//! for the wear step that follows it ([`crate::upkeep`]): the patrol each
+//! fighter group keeps (in every daylight pulse, raid or not), the escorts it
+//! sends, and each strike, less what the step shot down. A damaged aircraft
+//! is on the ground at a base whatever its group does, and is destroyed
+//! before the ready aircraft of its group; the log of the step has, for a
+//! group hit, `DamagedAircraftDestroyedOnGround` and then
+//! `AircraftDestroyedOnGround`.
+//!
 //! # Random streams
 //!
 //! All in the air combat subsystem. A group's attack: (air group, task
@@ -97,7 +108,7 @@ use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
 use crate::events::{
-    AirFirer, AirTarget, Breakdown, Cause, DamageTrack, EventKind, Factor, Weapon,
+    AirFirer, AirTarget, Breakdown, Cause, DamageTrack, EventKind, Factor, SortieKind, Weapon,
 };
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
@@ -108,6 +119,7 @@ use crate::rng::{RngStream, Subsystem};
 use crate::search::build_sighting_report;
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
+use crate::upkeep::Sortie;
 use crate::world::World;
 
 /// What a strike was launched at: the contact its side held (decision
@@ -199,7 +211,15 @@ enum RaidTarget {
 /// The aircraft of the groups on the ground at a base, by group in order of
 /// group number: the pool hits on aircraft are taken from (decision 8 of
 /// 0034).
-type Ground = BTreeMap<BaseId, Vec<(AirGroupId, u32)>>;
+type Ground = BTreeMap<BaseId, Vec<(AirGroupId, Stock, u32)>>;
+
+/// Which of a group's aircraft a ground pool entry counts (decision 11 of
+/// 0035).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Stock {
+    Damaged,
+    Ready,
+}
 
 /// A fighter group on combat air patrol, split into patrol and escorts on
 /// the state at the start of the air combat step (decision 2 of 0027).
@@ -368,6 +388,23 @@ fn take_hits(hits: u32, pool: &mut [(AirGroupId, u32)]) -> Vec<(AirGroupId, u32)
             *count -= now;
             left -= now;
             taken.push((*group, now));
+        }
+    }
+    taken
+}
+
+/// Takes `hits` from a ground pool in its order (decision 11 of 0035): the
+/// lowest group first, a group's damaged aircraft before its ready ones. Hits
+/// beyond what is there are wasted. Returns what was taken, in pool order.
+fn take_ground(hits: u32, pool: &mut [(AirGroupId, Stock, u32)]) -> Vec<(AirGroupId, Stock, u32)> {
+    let mut left = hits;
+    let mut taken = Vec::new();
+    for (group, stock, count) in pool.iter_mut() {
+        let now = left.min(*count);
+        if now > 0 {
+            *count -= now;
+            left -= now;
+            taken.push((*group, *stock, now));
         }
     }
     taken
@@ -574,6 +611,11 @@ impl World {
     pub(crate) fn resolve_strikes(&mut self, day: u32, pulse: Pulse) {
         let strikes = std::mem::take(&mut self.strikes_in_flight);
         if strikes.is_empty() {
+            // A patrol flies whether or not a raid came (decision 7 of 0035).
+            if self.ref_data.air_upkeep.is_some() {
+                let fighters = self.split_fighter_groups();
+                self.note_patrols(&fighters, pulse);
+            }
             return;
         }
 
@@ -583,6 +625,12 @@ impl World {
         let mut raids = group_raids(&strikes);
         let mut fighters = fighters;
         send_escorts(&mut raids, &mut fighters);
+        if self.ref_data.air_upkeep.is_some() {
+            // What flew, for the wear step: the patrols and the strikes now;
+            // the escorts as they are recorded; the losses as they are taken.
+            self.note_patrols(&fighters, pulse);
+            self.note_strikes(&strikes);
+        }
         let shares = self.patrol_shares(&raids, &fighters);
         let results: Vec<RaidResult> = raids
             .iter()
@@ -612,11 +660,12 @@ impl World {
         for (raid, result) in raids.iter().zip(results) {
             let first = &raid.strikes[0];
             let mut escort_events = Vec::new();
-            for (group, aircraft, orders) in result.escorts_sent {
+            for (index, (group, aircraft, orders)) in result.escorts_sent.into_iter().enumerate() {
                 let causes: Vec<Cause> = orders
                     .into_iter()
                     .chain([Cause::Event(first.launched)])
                     .collect();
+                let escort_hex = fighters[raid.escorts[index]].hex;
                 escort_events.push(self.events.record(
                     day,
                     Some(pulse),
@@ -628,6 +677,15 @@ impl World {
                     causes,
                     None,
                 ));
+                if self.ref_data.air_upkeep.is_some() {
+                    self.note_escorts(
+                        group,
+                        aircraft,
+                        escort_hex,
+                        first.hex,
+                        *escort_events.last().expect("just recorded"),
+                    );
+                }
             }
             let mut recorded = Vec::new();
             for roll in &result.rolls {
@@ -696,9 +754,21 @@ impl World {
                     }
                     None => &roll.lost,
                 };
+                let lost_from = match (&roll.fire, roll.patrol_of) {
+                    (_, Some(_)) => SortieKind::Patrol,
+                    (
+                        Fire::Fighters {
+                            at: AirTarget::Escorts,
+                            ..
+                        },
+                        None,
+                    ) => SortieKind::Escort,
+                    _ => SortieKind::Strike,
+                };
                 for (group, lost) in lost_list {
                     if let Some(event) = self.lose_aircraft(day, pulse, *group, *lost, cause) {
                         losses_of.push((*group, event));
+                        self.note_loss(*group, lost_from, *lost);
                     }
                 }
             }
@@ -885,22 +955,29 @@ impl World {
                 continue;
             };
             ground.entry(base).or_insert_with(|| {
-                self.truth
+                let mut pool = Vec::new();
+                for group in self
+                    .truth
                     .air_groups
                     .values()
-                    .filter(|group| {
-                        group.location == AirGroupLocation::Base(base)
-                            && group.ready > 0
-                            && matches!(
-                                group.mission,
-                                AirMission::Rest
-                                    | AirMission::NavalStrike
-                                    | AirMission::BaseStrike(_)
-                            )
-                            && !strikes.iter().any(|strike| strike.air_group == group.id)
-                    })
-                    .map(|group| (group.id, group.ready))
-                    .collect()
+                    .filter(|group| group.location == AirGroupLocation::Base(base))
+                {
+                    // Damaged aircraft are on the ground whatever the group
+                    // is doing (decision 11 of 0035).
+                    if group.damaged > 0 {
+                        pool.push((group.id, Stock::Damaged, group.damaged));
+                    }
+                    if group.ready > 0
+                        && matches!(
+                            group.mission,
+                            AirMission::Rest | AirMission::NavalStrike | AirMission::BaseStrike(_)
+                        )
+                        && !strikes.iter().any(|strike| strike.air_group == group.id)
+                    {
+                        pool.push((group.id, Stock::Ready, group.ready));
+                    }
+                }
+                pool
             });
         }
         ground
@@ -928,7 +1005,7 @@ impl World {
         let pool = ground
             .get_mut(&attack.base)
             .expect("a base that is attacked has its ground counted");
-        let on_ground: u32 = pool.iter().map(|(_, aircraft)| aircraft).sum();
+        let on_ground: u32 = pool.iter().map(|(_, _, aircraft)| aircraft).sum();
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: vec![
                 Factor {
@@ -942,24 +1019,40 @@ impl World {
             ],
             result: Fixed::from_int(i64::from(attack.hits_on_aircraft.min(on_ground))),
         });
-        for (group, destroyed) in take_hits(attack.hits_on_aircraft, pool) {
+        // The lowest group first, its damaged aircraft before its ready ones
+        // (decision 11 of 0035): one event for each kind of aircraft hit.
+        for (group, stock, destroyed) in take_ground(attack.hits_on_aircraft, pool) {
             let air_group = self
                 .truth
                 .air_groups
                 .get_mut(&group)
                 .expect("the air group exists");
-            let destroyed = destroyed.min(air_group.ready);
-            air_group.ready -= destroyed;
-            let remaining = air_group.ready;
+            let event = match stock {
+                Stock::Ready => {
+                    let destroyed = destroyed.min(air_group.ready);
+                    air_group.ready -= destroyed;
+                    EventKind::AircraftDestroyedOnGround {
+                        air_group: group,
+                        base: attack.base,
+                        aircraft: destroyed,
+                        remaining: air_group.ready,
+                    }
+                }
+                Stock::Damaged => {
+                    let destroyed = destroyed.min(air_group.damaged);
+                    air_group.damaged -= destroyed;
+                    EventKind::DamagedAircraftDestroyedOnGround {
+                        air_group: group,
+                        base: attack.base,
+                        aircraft: destroyed,
+                        remaining: air_group.damaged,
+                    }
+                }
+            };
             self.events.record(
                 day,
                 Some(pulse),
-                EventKind::AircraftDestroyedOnGround {
-                    air_group: group,
-                    base: attack.base,
-                    aircraft: destroyed,
-                    remaining,
-                },
+                event,
                 vec![Cause::Event(attack_event)],
                 breakdown.clone(),
             );
@@ -1701,9 +1794,82 @@ impl World {
         }))
     }
 
+    /// Notes for the wear step the patrol each fighter group keeps over its
+    /// hex (decision 7 of 0035): the aircraft it kept, no distance, caused by
+    /// its orders. A group with no position, or no patrol, notes nothing, and
+    /// nothing flies where it is dark.
+    fn note_patrols(&mut self, fighters: &[FighterGroup], pulse: Pulse) {
+        for group in fighters {
+            if group.patrol > 0 && group.hex.is_some_and(|hex| !time::is_dark(hex, pulse)) {
+                self.sorties.push(Sortie {
+                    air_group: group.air_group,
+                    kind: SortieKind::Patrol,
+                    aircraft: group.patrol,
+                    distance_nm: Fixed::ZERO,
+                    causes: group.orders.clone(),
+                });
+            }
+        }
+    }
+
+    /// Notes for the wear step each strike launched: out to the hex it was
+    /// sent to and back, caused by its launch.
+    fn note_strikes(&mut self, strikes: &[StrikeInFlight]) {
+        for strike in strikes {
+            let Some(from) = self
+                .truth
+                .air_groups
+                .get(&strike.air_group)
+                .and_then(|group| self.truth.air_group_hex(group))
+            else {
+                continue;
+            };
+            let kind = match strike.aim {
+                Aim::Contact(_) => SortieKind::Strike,
+                Aim::Base(_) => SortieKind::BaseStrike,
+            };
+            self.sorties.push(Sortie {
+                air_group: strike.air_group,
+                kind,
+                aircraft: strike.aircraft,
+                distance_nm: out_and_back(from, strike.hex),
+                causes: vec![Cause::Event(strike.launched)],
+            });
+        }
+    }
+
+    /// Notes for the wear step the escorts a fighter group sent with a raid
+    /// to `raid_hex`: out and back, caused by the event that says they were
+    /// sent.
+    fn note_escorts(
+        &mut self,
+        group: AirGroupId,
+        aircraft: u32,
+        from: Option<Hex>,
+        raid_hex: Hex,
+        sent: EventId,
+    ) {
+        let Some(from) = from else {
+            return;
+        };
+        self.sorties.push(Sortie {
+            air_group: group,
+            kind: SortieKind::Escort,
+            aircraft,
+            distance_nm: out_and_back(from, raid_hex),
+            causes: vec![Cause::Event(sent)],
+        });
+    }
+
     fn kind_of(&self, ship: ShipId) -> ShipKind {
         self.ref_data.ship_classes[&self.truth.ships[&ship].class].kind
     }
+}
+
+/// A sortie out to `to` and back from `from`: twice the distance (decision 4
+/// of 0035).
+fn out_and_back(from: Hex, to: Hex) -> Fixed {
+    Fixed::from_int(i64::from(from.distance(to)) * HEX_NM * 2)
 }
 
 /// Groups the strikes into raids (decision 4 of 0027): the same place and
@@ -1876,6 +2042,7 @@ mod tests {
             location: AirGroupLocation::Ship(ShipId::new(ship)),
             aircraft_type: AircraftTypeId::new(type_id),
             ready,
+            damaged: 0,
             mission: AirMission::Rest,
             search: None,
             mission_order: None,
@@ -2723,6 +2890,7 @@ mod tests {
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         group_mut(&mut world, BOMBERS).location =
@@ -3636,6 +3804,7 @@ mod tests {
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         deck(&mut world, 1, SystemState::Out);
@@ -4085,6 +4254,7 @@ mod tests {
                     hex,
                     supply_t: Fixed::ZERO,
                     anti_aircraft: 0,
+                    aircraft_repairs_per_day: 0,
                 },
             );
         }
@@ -4435,6 +4605,7 @@ mod tests {
                 hex: Hex::new(3, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         let mut fighters = group(AirGroupId::new(10), Side::Japanese, 2, 5, 12);
@@ -4785,6 +4956,7 @@ mod tests {
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
@@ -5316,6 +5488,7 @@ mod tests {
                     hex,
                     supply_t: Fixed::from_int(supply),
                     anti_aircraft: 0,
+                    aircraft_repairs_per_day: 0,
                 },
             );
         }
@@ -5548,14 +5721,17 @@ mod tests {
         assert_eq!(
             ground[&BASE_JAPANESE],
             vec![
-                (AirGroupId::new(20), 10),
-                (AirGroupId::new(23), 7),
-                (AirGroupId::new(25), 3)
+                (AirGroupId::new(20), Stock::Ready, 10),
+                (AirGroupId::new(23), Stock::Ready, 7),
+                (AirGroupId::new(25), Stock::Ready, 3)
             ]
         );
         // Base 1 is counted too, as group 24 strikes it: the bombers of
         // group 1 launched and are not there, the resting group 27 is.
-        assert_eq!(ground[&BASE_ALLIED], vec![(AirGroupId::new(27), 9)]);
+        assert_eq!(
+            ground[&BASE_ALLIED],
+            vec![(AirGroupId::new(27), Stock::Ready, 9)]
+        );
     }
 
     #[test]
@@ -5572,6 +5748,7 @@ mod tests {
                 hex: Hex::new(1, 0),
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
+                aircraft_repairs_per_day: 0,
             },
         );
         group_mut(&mut world, AirGroupId::new(1)).ready = 12;
@@ -5636,6 +5813,7 @@ mod tests {
                         hex: Hex::new(1, 0),
                         supply_t: Fixed::ZERO,
                         anti_aircraft: 0,
+                        aircraft_repairs_per_day: 0,
                     },
                 );
                 base_group(
@@ -5889,5 +6067,699 @@ mod tests {
             accepted(&|w| w.ref_data.air_combat = None, at(2)),
             (vec![RejectReason::NoAirCombatFigures], AirMission::Rest)
         );
+    }
+
+    // ---- wear and repair (decision 0035) ----
+
+    use crate::events::SortieKind;
+    use crate::refdata::AirUpkeepFigures;
+    use crate::state::SearchArc;
+
+    fn upkeep(world: &mut World, base: Fixed, per_100: Fixed, write_off: Fixed, carriers: u32) {
+        world.ref_data.air_upkeep = Some(AirUpkeepFigures {
+            wear_base_chance: base,
+            wear_chance_per_100_nm: per_100,
+            write_off_share: write_off,
+            carrier_repairs_per_day: carriers,
+        });
+    }
+
+    /// The `AircraftWorn` events as (group, sortie, distance, aircraft,
+    /// chance, worn, written off, ready, damaged).
+    #[allow(clippy::type_complexity)]
+    fn worn(world: &World) -> Vec<(u32, SortieKind, i64, u32, Fixed, u32, u32, u32, u32)> {
+        events_where(world, |k| matches!(k, EventKind::AircraftWorn { .. }))
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::AircraftWorn {
+                    air_group,
+                    sortie,
+                    distance_nm,
+                    aircraft,
+                    chance,
+                    worn,
+                    written_off,
+                    ready,
+                    damaged,
+                    ..
+                } => (
+                    air_group.raw(),
+                    sortie,
+                    distance_nm.trunc(),
+                    aircraft,
+                    chance,
+                    worn,
+                    written_off,
+                    ready,
+                    damaged,
+                ),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    fn repaired(world: &World) -> Vec<(u32, u32, u32, u32)> {
+        events_where(world, |k| matches!(k, EventKind::AircraftRepaired { .. }))
+            .iter()
+            .map(|event| match event.kind {
+                EventKind::AircraftRepaired {
+                    air_group,
+                    repaired,
+                    ready,
+                    damaged,
+                    ..
+                } => (air_group.raw(), repaired, ready, damaged),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    /// Both air steps of a pulse and then the wear step.
+    fn fly_and_wear(world: &mut World, pulse: Pulse) {
+        world.search_from_the_air(1, pulse);
+        strike_pulse(world, pulse);
+        world.wear_aircraft(1, pulse);
+    }
+
+    const SURE: Fixed = Fixed::ONE;
+    const NEVER: Fixed = Fixed::ZERO;
+
+    #[test]
+    fn the_wear_chance_is_the_base_plus_the_distance_over_100_and_never_more_than_1() {
+        let figures = AirUpkeepFigures {
+            wear_base_chance: fixed(5, 100),
+            wear_chance_per_100_nm: fixed(2, 100),
+            write_off_share: fixed(2, 10),
+            carrier_repairs_per_day: 2,
+        };
+        let chance = |nm: i64| figures.wear_chance(Fixed::from_int(nm));
+        assert_eq!(chance(0), fixed(5, 100));
+        assert_eq!(chance(160), fixed(82, 1000));
+        assert_eq!(chance(400), fixed(13, 100));
+        assert_eq!(chance(600), fixed(17, 100));
+        let steep = AirUpkeepFigures {
+            wear_base_chance: fixed(9, 10),
+            wear_chance_per_100_nm: fixed(1, 10),
+            ..figures
+        };
+        assert_eq!(steep.wear_chance(Fixed::from_int(100)), Fixed::ONE);
+        assert_eq!(steep.wear_chance(Fixed::from_int(4000)), Fixed::ONE);
+        assert!(figures.problem().is_none());
+        for bad in [
+            AirUpkeepFigures {
+                wear_base_chance: fixed(11, 10),
+                ..figures
+            },
+            AirUpkeepFigures {
+                wear_chance_per_100_nm: fixed(-1, 10),
+                ..figures
+            },
+            AirUpkeepFigures {
+                write_off_share: fixed(2, 1),
+                ..figures
+            },
+        ] {
+            assert!(bad.problem().is_some());
+        }
+    }
+
+    #[test]
+    fn without_the_figures_nothing_is_noted_worn_or_repaired_and_a_world_hashes_as_before() {
+        let scouts = |world: &mut World| {
+            base_group(world, 2, BASE_ALLIED, 1, 6, AirMission::Search);
+            group_mut(world, AirGroupId::new(2)).search = Some(SearchArc {
+                from_deg: 0,
+                to_deg: 350,
+                range_nm: Fixed::from_int(300),
+            });
+        };
+        let mut world = raid_world(1);
+        scouts(&mut world);
+        let before = world.state_hash();
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_ALLIED)
+            .expect("base")
+            .aircraft_repairs_per_day = 5;
+        group_mut(&mut world, AirGroupId::new(2)).damaged = 3;
+        // A damaged aircraft and a base's repairs are in the hash; with none
+        // of either, the hash is what it was.
+        assert_ne!(world.state_hash(), before);
+        for pulse in Pulse::ALL {
+            world.repair_aircraft(1, pulse);
+            fly_and_wear(&mut world, pulse);
+            assert!(world.sorties.is_empty());
+        }
+        assert!(worn(&world).is_empty() && repaired(&world).is_empty());
+        assert_eq!(group_mut(&mut world, AirGroupId::new(2)).damaged, 3);
+        let mut again = raid_world(1);
+        scouts(&mut again);
+        assert_eq!(again.state_hash(), before);
+        group_mut(&mut again, AirGroupId::new(2)).damaged = 3;
+        again
+            .truth
+            .bases
+            .get_mut(&BASE_ALLIED)
+            .expect("base")
+            .aircraft_repairs_per_day = 5;
+        group_mut(&mut again, AirGroupId::new(2)).damaged = 0;
+        again
+            .truth
+            .bases
+            .get_mut(&BASE_ALLIED)
+            .expect("base")
+            .aircraft_repairs_per_day = 0;
+        assert_eq!(again.state_hash(), before);
+    }
+
+    #[test]
+    fn a_patrol_flies_with_no_raid_at_distance_0_and_cites_the_group_orders() {
+        let mut world = base_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(5)).mission_order = Some(OrderId::new(3));
+        group_mut(&mut world, AirGroupId::new(5)).share_order = Some(OrderId::new(4));
+        group_mut(&mut world, AirGroupId::new(5)).patrol_share = fixed(1, 2);
+        upkeep(&mut world, SURE, Fixed::ONE, NEVER, 0);
+        fly_and_wear(&mut world, Pulse::Morning);
+        // Its share, 5, rounded down, flies; the rest do not. Distance 0, so
+        // the chance is the base chance, and every one is worn, none lost.
+        assert_eq!(
+            worn(&world),
+            vec![(5, SortieKind::Patrol, 0, 5, SURE, 5, 0, 5, 5)]
+        );
+        let event = &events_where(&world, |k| matches!(k, EventKind::AircraftWorn { .. }))[0];
+        assert_eq!(
+            event.causes,
+            vec![Cause::Order(OrderId::new(3)), Cause::Order(OrderId::new(4))]
+        );
+        assert_eq!(
+            event.kind.to_string(),
+            "air_group:5 patrol sortie of 0 nm: 5 aircraft x 1 = 5 expected worn, 5 worn, 0 written off, 5 ready and 5 damaged left"
+        );
+        let breakdown = event.breakdown.as_ref().expect("a breakdown");
+        assert_eq!(breakdown.result, Fixed::from_int(5));
+        assert_eq!(
+            breakdown.factors.iter().map(|f| f.name).collect::<Vec<_>>(),
+            vec![
+                "aircraft",
+                "wear_base_chance",
+                "wear_chance_per_100_nm",
+                "distance_nm",
+                "chance",
+                "write_off_share"
+            ]
+        );
+        assert_eq!(group_mut(&mut world, AirGroupId::new(5)).ready, 5);
+        assert_eq!(group_mut(&mut world, AirGroupId::new(5)).damaged, 5);
+    }
+
+    #[test]
+    fn a_sortie_of_no_aircraft_is_not_rolled_and_nothing_flies_at_night() {
+        // A patrol share of 0 keeps nobody up; a group with none ready flies
+        // nothing.
+        let mut world = base_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(5)).patrol_share = Fixed::ZERO;
+        base_group(
+            &mut world,
+            6,
+            BASE_ALLIED,
+            5,
+            0,
+            AirMission::CombatAirPatrol,
+        );
+        upkeep(&mut world, SURE, SURE, NEVER, 0);
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert!(worn(&world).is_empty());
+        // At night nothing flies and nothing rolls.
+        group_mut(&mut world, AirGroupId::new(5)).patrol_share = Fixed::ONE;
+        fly_and_wear(&mut world, Pulse::Night);
+        assert!(worn(&world).is_empty());
+        assert!(world.sorties.is_empty());
+    }
+
+    #[test]
+    fn a_search_is_twice_the_range_of_its_arc_and_cites_the_search_event() {
+        let mut world = base_world(1);
+        base_group(&mut world, 5, BASE_ALLIED, 1, 8, AirMission::Search);
+        group_mut(&mut world, AirGroupId::new(5)).search = Some(SearchArc {
+            from_deg: 0,
+            to_deg: 350,
+            range_nm: Fixed::from_int(240),
+        });
+        upkeep(&mut world, fixed(1, 10), fixed(1, 10), NEVER, 0);
+        fly_and_wear(&mut world, Pulse::Morning);
+        // 480 nm: 0.1 + 0.1 x 4.8 = 0.58.
+        let rolls = worn(&world);
+        assert_eq!(rolls.len(), 1);
+        let (group, sortie, distance, aircraft, chance, ..) = rolls[0];
+        assert_eq!(
+            (group, sortie, distance, aircraft, chance),
+            (5, SortieKind::Search, 480, 8, fixed(58, 100))
+        );
+        let flown = events_where(&world, |k| matches!(k, EventKind::SearchFlown { .. }));
+        let event = &events_where(&world, |k| matches!(k, EventKind::AircraftWorn { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Event(flown[0].id)]);
+    }
+
+    #[test]
+    fn a_strike_at_a_base_and_a_strike_at_a_contact_roll_the_aircraft_left_at_twice_the_distance() {
+        // A raid on a base 200 nm away: 400 nm, 0.1 + 0.1 x 4 = 0.5.
+        let mut world = raid_world(1);
+        upkeep(&mut world, fixed(1, 10), fixed(1, 10), NEVER, 0);
+        // The base's guns bring down some of the bombers.
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_JAPANESE)
+            .expect("base")
+            .anti_aircraft = 20;
+        air_figures(&mut world).anti_aircraft_hit_chance = fixed(1, 4);
+        fly_and_wear(&mut world, Pulse::Morning);
+        let lost: u32 = events_where(&world, |k| matches!(k, EventKind::AircraftLost { .. }))
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::AircraftLost { aircraft, .. } => aircraft,
+                _ => 0,
+            })
+            .sum();
+        assert!(lost > 0);
+        let rolls = worn(&world);
+        assert_eq!(rolls.len(), 1);
+        let (group, sortie, distance, aircraft, chance, worn_, off, ready, damaged) = rolls[0];
+        assert_eq!(
+            (group, sortie, distance, aircraft, chance),
+            (1, SortieKind::BaseStrike, 400, 18 - lost, fixed(5, 10))
+        );
+        assert_eq!((off, ready, damaged), (0, 18 - lost - worn_, worn_));
+        let launch = events_where(&world, |k| {
+            matches!(k, EventKind::BaseStrikeLaunched { .. })
+        });
+        let event = &events_where(&world, |k| matches!(k, EventKind::AircraftWorn { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Event(launch[0].id)]);
+
+        // A strike at a contact 200 nm away, in the standard world.
+        let mut world = world_with_a_good_contact(1);
+        upkeep(&mut world, fixed(1, 10), fixed(1, 10), NEVER, 0);
+        fly_and_wear(&mut world, Pulse::Morning);
+        let rolls = worn(&world);
+        let strike = rolls.iter().find(|roll| roll.0 == 1).expect("group 1 flew");
+        assert_eq!(
+            (strike.1, strike.2, strike.3, strike.4),
+            (SortieKind::Strike, 400, 18, fixed(5, 10))
+        );
+        let launch = launches(&world);
+        let event = &events_where(&world, |k| matches!(k, EventKind::AircraftWorn { .. }))[0];
+        assert_eq!(event.causes, vec![Cause::Event(launch[0].id)]);
+    }
+
+    /// The draws of one group's stream for a roll of `aircraft` at `chance`
+    /// and then of the worn at `share`: (worn, written off).
+    fn replay(
+        stream: &mut crate::rng::RngStream,
+        aircraft: u32,
+        chance: Fixed,
+        share: Fixed,
+    ) -> (u32, u32) {
+        let worn = (0..aircraft)
+            .map(|_| u32::from(stream.chance(chance)))
+            .sum::<u32>();
+        let off = (0..worn).map(|_| u32::from(stream.chance(share))).sum();
+        (worn, off)
+    }
+
+    #[test]
+    fn a_fighter_group_rolls_its_patrol_then_its_escorts_from_one_stream_of_its_own() {
+        for seed in 1..=20u64 {
+            let mut world = raid_world(seed);
+            base_group(
+                &mut world,
+                5,
+                BASE_ALLIED,
+                5,
+                11,
+                AirMission::CombatAirPatrol,
+            );
+            group_mut(&mut world, AirGroupId::new(5)).patrol_share = fixed(1, 2);
+            let (base, per_100, share) = (fixed(3, 10), fixed(1, 10), fixed(4, 10));
+            upkeep(&mut world, base, per_100, share, 0);
+            fly_and_wear(&mut world, Pulse::Morning);
+            // 11 x 0.5 = 5 patrol, 6 escorts, none of them shot down (no
+            // defenders, no guns). Patrol at 0.3; escorts out 200 nm and back
+            // at 0.3 + 0.1 x 4 = 0.7.
+            let mut stream = world.rng(
+                1,
+                Some(Pulse::Morning),
+                crate::rng::Subsystem::Upkeep,
+                EntityRef::AirGroup(AirGroupId::new(5)),
+            );
+            let (patrol_worn, patrol_off) = replay(&mut stream, 5, base, share);
+            let (escort_worn, escort_off) = replay(&mut stream, 6, fixed(7, 10), share);
+            let rolls: Vec<_> = worn(&world).into_iter().filter(|r| r.0 == 5).collect();
+            assert_eq!(rolls.len(), 2, "seed {seed}");
+            assert_eq!(
+                rolls[0],
+                (
+                    5,
+                    SortieKind::Patrol,
+                    0,
+                    5,
+                    base,
+                    patrol_worn,
+                    patrol_off,
+                    11 - patrol_worn,
+                    patrol_worn - patrol_off
+                ),
+                "seed {seed}"
+            );
+            assert_eq!(
+                rolls[1],
+                (
+                    5,
+                    SortieKind::Escort,
+                    400,
+                    6,
+                    fixed(7, 10),
+                    escort_worn,
+                    escort_off,
+                    11 - patrol_worn - escort_worn,
+                    patrol_worn - patrol_off + escort_worn - escort_off
+                ),
+                "seed {seed}"
+            );
+            // The escorts' event cites the event that sent them.
+            let sent = events_where(&world, |k| matches!(k, EventKind::EscortsSent { .. }));
+            let events = events_where(&world, |k| matches!(k, EventKind::AircraftWorn { .. }));
+            let escort_event = events
+                .iter()
+                .find(|e| {
+                    matches!(
+                        e.kind,
+                        EventKind::AircraftWorn {
+                            sortie: SortieKind::Escort,
+                            ..
+                        }
+                    )
+                })
+                .expect("escorts rolled");
+            assert_eq!(escort_event.causes, vec![Cause::Event(sent[0].id)]);
+        }
+    }
+
+    #[test]
+    fn escorts_kept_home_by_the_radius_are_patrol_and_roll_once_at_distance_0() {
+        let mut world = raid_world(1);
+        base_group(
+            &mut world,
+            5,
+            BASE_ALLIED,
+            5,
+            10,
+            AirMission::CombatAirPatrol,
+        );
+        group_mut(&mut world, AirGroupId::new(5)).patrol_share = fixed(1, 2);
+        // The raid's hex is 200 nm away, beyond a radius of 100 nm.
+        set_fighter_radius(&mut world, 100);
+        upkeep(&mut world, fixed(1, 2), Fixed::ONE, NEVER, 0);
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert!(events_where(&world, |k| matches!(k, EventKind::EscortsSent { .. })).is_empty());
+        let fighters: Vec<_> = worn(&world).into_iter().filter(|r| r.0 == 5).collect();
+        assert_eq!(fighters.len(), 1);
+        assert_eq!(
+            (fighters[0].1, fighters[0].2, fighters[0].3, fighters[0].4),
+            (SortieKind::Patrol, 0, 10, fixed(1, 2))
+        );
+    }
+
+    #[test]
+    fn a_group_aboard_a_ship_that_sank_in_the_pulse_rolls_nothing() {
+        let mut world = world_with_a_good_contact(1);
+        cap_group(&mut world, 10, Side::Japanese, 2, 6, Fixed::ONE);
+        upkeep(&mut world, SURE, NEVER, NEVER, 0);
+        // The strike sinks the Japanese carrier with the patrol aboard.
+        group_mut(&mut world, BOMBERS).aircraft_type = AircraftTypeId::new(3);
+        world
+            .ref_data
+            .aircraft_types
+            .get_mut(&AircraftTypeId::new(3))
+            .expect("type")
+            .attack_damage = Fixed::from_int(600);
+        air_figures(&mut world).torpedo_hit_chance = Fixed::ONE;
+        fly_and_wear(&mut world, Pulse::Morning);
+        assert_eq!(ship_of(&world, 2).location, ShipLocation::Sunk);
+        let rolls = worn(&world);
+        assert!(rolls.iter().all(|r| r.0 != 10), "{rolls:?}");
+        assert!(rolls.iter().any(|r| r.0 == 1));
+        assert_eq!(group_mut(&mut world, AirGroupId::new(10)).damaged, 0);
+    }
+
+    #[test]
+    fn a_base_repairs_up_to_its_figure_the_lowest_group_first_and_only_groups_located_there() {
+        let mut world = base_world(1);
+        for id in [4, 5, 6] {
+            base_group(&mut world, id, BASE_ALLIED, 2, 5, AirMission::Rest);
+            group_mut(&mut world, AirGroupId::new(id)).damaged = 2;
+        }
+        // A group at the other base is not repaired by this one.
+        base_group(&mut world, 7, BASE_JAPANESE, 2, 5, AirMission::Rest);
+        group_mut(&mut world, AirGroupId::new(7)).damaged = 2;
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_ALLIED)
+            .expect("base")
+            .aircraft_repairs_per_day = 3;
+        group_mut(&mut world, AirGroupId::new(5)).damaged = 1;
+        // Another group's wear is what the repair cites.
+        let wear = world.events.record(
+            1,
+            Some(Pulse::Afternoon),
+            EventKind::AircraftWorn {
+                air_group: AirGroupId::new(4),
+                sortie: SortieKind::Patrol,
+                distance_nm: Fixed::ZERO,
+                aircraft: 2,
+                chance: Fixed::ONE,
+                expected: Fixed::from_int(2),
+                worn: 2,
+                written_off: 0,
+                ready: 5,
+                damaged: 2,
+            },
+            vec![],
+            None,
+        );
+        upkeep(&mut world, fixed(1, 10), NEVER, NEVER, 9);
+        world.repair_aircraft(2, Pulse::Night);
+        assert_eq!(repaired(&world), vec![(4, 2, 7, 0), (5, 1, 6, 0)]);
+        let events = events_where(&world, |k| matches!(k, EventKind::AircraftRepaired { .. }));
+        assert_eq!(events[0].causes, vec![Cause::Event(wear)]);
+        assert!(events[1].causes.is_empty());
+        assert_eq!(
+            events[0].kind.to_string(),
+            "air_group:4 had 2 aircraft repaired at base:1, 7 ready and 0 damaged"
+        );
+        assert_eq!(group_mut(&mut world, AirGroupId::new(6)).damaged, 2);
+        assert_eq!(group_mut(&mut world, AirGroupId::new(7)).damaged, 2);
+        // The next day the third group is next in line.
+        world.repair_aircraft(3, Pulse::Night);
+        assert_eq!(repaired(&world)[2..].to_vec(), vec![(6, 2, 7, 0)]);
+    }
+
+    #[test]
+    fn a_carrier_repairs_its_groups_up_to_the_carrier_figure_unless_it_has_sunk() {
+        let mut world = world(1, vec![]);
+        group_mut(&mut world, BOMBERS).damaged = 3;
+        group_mut(&mut world, SCOUTS).damaged = 4;
+        group_mut(&mut world, ENEMY_BOMBERS).damaged = 5;
+        upkeep(&mut world, NEVER, NEVER, NEVER, 5);
+        world.repair_aircraft(1, Pulse::Night);
+        // Ship 1 carries groups 1 and 2: 5 in all, group 1 first. Ship 2 has
+        // 5 for its own group.
+        assert_eq!(
+            repaired(&world),
+            vec![(1, 3, 21, 0), (2, 2, 10, 2), (3, 5, 23, 0)]
+        );
+        let events = events_where(&world, |k| matches!(k, EventKind::AircraftRepaired { .. }));
+        assert_eq!(
+            events[0].kind.to_string(),
+            "air_group:1 had 3 aircraft repaired aboard ship:1, 21 ready and 0 damaged"
+        );
+        // A ship that sank repairs nothing.
+        ship_mut(&mut world, 1).location = ShipLocation::Sunk;
+        group_mut(&mut world, SCOUTS).damaged = 2;
+        world.repair_aircraft(2, Pulse::Night);
+        assert_eq!(repaired(&world).len(), 3);
+    }
+
+    /// Japanese base 2 with its groups: 3 on combat air patrol (ready 4,
+    /// damaged 2), 4 at rest (ready 5, damaged 3), 5 searching (ready 2,
+    /// damaged 1); and Allied bombers on a base strike with every bomb
+    /// landing on aircraft.
+    fn ground_world(bombers: u32) -> World {
+        let mut world = raid_world(1);
+        group_mut(&mut world, AirGroupId::new(1)).ready = bombers;
+        for (id, type_id, ready, damaged, mission) in [
+            (3, 5, 4, 2, AirMission::CombatAirPatrol),
+            (4, 3, 5, 3, AirMission::Rest),
+            (5, 1, 2, 1, AirMission::Search),
+        ] {
+            base_group(&mut world, id, BASE_JAPANESE, type_id, ready, mission);
+            group_mut(&mut world, AirGroupId::new(id)).damaged = damaged;
+        }
+        sure_bombs(&mut world, Fixed::ONE, Fixed::ZERO);
+        // The fighters and the guns do nothing.
+        air_figures(&mut world).fighter_hit_chance = Fixed::ZERO;
+        world
+    }
+
+    fn ground_events(world: &World) -> Vec<(bool, u32, u32, u32)> {
+        events_where(world, |k| {
+            matches!(
+                k,
+                EventKind::AircraftDestroyedOnGround { .. }
+                    | EventKind::DamagedAircraftDestroyedOnGround { .. }
+            )
+        })
+        .iter()
+        .map(|event| match event.kind {
+            EventKind::DamagedAircraftDestroyedOnGround {
+                air_group,
+                aircraft,
+                remaining,
+                ..
+            } => (true, air_group.raw(), aircraft, remaining),
+            EventKind::AircraftDestroyedOnGround {
+                air_group,
+                aircraft,
+                remaining,
+                ..
+            } => (false, air_group.raw(), aircraft, remaining),
+            _ => unreachable!(),
+        })
+        .collect()
+    }
+
+    #[test]
+    fn damaged_aircraft_are_on_the_ground_whatever_their_group_does_and_come_off_first() {
+        // The ground: group 3's damaged 2, group 4's damaged 3 and ready 5,
+        // group 5's damaged 1 (its ready aircraft are searching, group 3's
+        // are on patrol). 18 hits destroy all 11, in that order.
+        let mut world = ground_world(18);
+        let strikes_before = world.strikes_in_flight.len();
+        assert_eq!(strikes_before, 0);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(
+            ground_events(&world),
+            vec![
+                (true, 3, 2, 0),
+                (true, 4, 3, 0),
+                (false, 4, 5, 0),
+                (true, 5, 1, 0)
+            ]
+        );
+        for (id, ready, damaged) in [(3, 4, 0), (4, 0, 0), (5, 2, 0)] {
+            let group = group_mut(&mut world, AirGroupId::new(id));
+            assert_eq!((group.ready, group.damaged), (ready, damaged), "group {id}");
+        }
+        // The breakdown says how many were on the ground and how many hits.
+        let event = &events_where(&world, |k| {
+            matches!(k, EventKind::DamagedAircraftDestroyedOnGround { .. })
+        })[0];
+        assert_eq!(
+            event.kind.to_string(),
+            "air_group:3 lost 2 damaged aircraft on the ground at base:2, 0 damaged left"
+        );
+        let names: Vec<_> = event
+            .breakdown
+            .as_ref()
+            .expect("a breakdown")
+            .factors
+            .iter()
+            .map(|f| (f.name, f.value))
+            .collect();
+        assert_eq!(
+            names,
+            vec![
+                ("hits_on_aircraft", Fixed::from_int(18)),
+                ("aircraft_on_ground", Fixed::from_int(11))
+            ]
+        );
+    }
+
+    #[test]
+    fn four_hits_on_aircraft_destroy_group_3s_damaged_then_group_4s_damaged_and_no_more() {
+        let mut world = ground_world(4);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(
+            ground_events(&world),
+            vec![(true, 3, 2, 0), (true, 4, 2, 1)]
+        );
+        let g4 = group_mut(&mut world, AirGroupId::new(4));
+        assert_eq!((g4.ready, g4.damaged), (5, 1));
+        // The aircraft worn after the raid are not on the ground in it: the
+        // wear step comes after the air combat step.
+        upkeep(&mut world, SURE, NEVER, NEVER, 0);
+        world.wear_aircraft(1, Pulse::Morning);
+        assert_eq!(ground_events(&world).len(), 2);
+    }
+
+    #[test]
+    fn a_group_that_launched_has_its_damaged_aircraft_on_the_ground_but_not_its_ready_ones() {
+        // Group 1's damaged aircraft at base 1 are on the ground there; the
+        // raid on base 1 would destroy them.
+        let mut world = raid_world(1);
+        group_mut(&mut world, AirGroupId::new(1)).damaged = 3;
+        base_group(
+            &mut world,
+            9,
+            BASE_JAPANESE,
+            2,
+            18,
+            AirMission::BaseStrike(BASE_ALLIED),
+        );
+        world.decide_strikes(1, Pulse::Morning);
+        let ground = world.aircraft_on_the_ground(&world.strikes_in_flight);
+        assert_eq!(
+            ground[&BASE_ALLIED],
+            vec![(AirGroupId::new(1), Stock::Damaged, 3)]
+        );
+    }
+
+    #[test]
+    fn a_group_lost_with_its_ship_loses_its_damaged_aircraft_too() {
+        let mut world = world_with_a_good_contact(1);
+        group_mut(&mut world, ENEMY_BOMBERS).damaged = 4;
+        group_mut(&mut world, BOMBERS).aircraft_type = AircraftTypeId::new(3);
+        world
+            .ref_data
+            .aircraft_types
+            .get_mut(&AircraftTypeId::new(3))
+            .expect("type")
+            .attack_damage = Fixed::from_int(600);
+        air_figures(&mut world).torpedo_hit_chance = Fixed::ONE;
+        strike_pulse(&mut world, Pulse::Morning);
+        let lost = events_where(&world, |k| matches!(k, EventKind::AirGroupLost { .. }));
+        assert_eq!(
+            lost[0].kind.to_string(),
+            "air_group:3 lost with ship:2: 22 aircraft"
+        );
+        let group = group_mut(&mut world, ENEMY_BOMBERS);
+        assert_eq!((group.ready, group.damaged), (0, 0));
     }
 }

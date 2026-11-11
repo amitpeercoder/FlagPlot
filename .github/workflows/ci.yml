@@ -36,3 +36,13 @@ jobs:
 
       - name: Run scenario 1 from the command line
         run: cargo run --locked -p sim-cli -- run data/scenarios/01_transit.toml --events
+
+      # The viewer rebuilds state from the exported events on its own, in
+      # JavaScript. Export every scenario and check the two agree.
+      - name: Export every scenario and check the viewer rebuilds it
+        run: |
+          mkdir -p viewer/replays
+          for scenario in data/scenarios/*.toml; do
+            cargo run --locked -p sim-cli -- export "$scenario" --out "viewer/replays/$(basename "$scenario" .toml).json"
+          done
+          node viewer/check.js viewer/replays/*.json

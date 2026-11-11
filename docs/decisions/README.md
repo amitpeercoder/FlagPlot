@@ -42,5 +42,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0032 | What the complexity review cut and merged: noticing, contact confidence, two duplicate figures, and clock rounding | Confirmed |
 | 0033 | Hits revised: a system hit depends on the damage, each shot is rolled, and a patrol divides among the raids on its hex | Confirmed |
 | 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed; 3 and 6 need review |
+| 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2, 9 and 12 need review |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

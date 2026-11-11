@@ -15,6 +15,7 @@ use crate::refdata::RefData;
 use crate::rng::{RngKey, RngStream, Subsystem};
 use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
+use crate::upkeep::Sortie;
 use crate::view::SideView;
 
 /// Switches that change what is recorded, never what happens.
@@ -95,6 +96,11 @@ pub struct World {
     /// Strikes launched in a pulse's decision step that have not landed yet.
     /// Empty outside the air steps of one pulse, so not hashed.
     pub(crate) strikes_in_flight: Vec<StrikeInFlight>,
+    /// What each air group flew in the pulse so far, for the wear step
+    /// (decision 0035). Filled by the search and air combat steps only when
+    /// the wear figures are loaded, emptied by the wear step of the same
+    /// pulse, so not hashed.
+    pub(crate) sorties: Vec<Sortie>,
 }
 
 impl World {
@@ -126,6 +132,13 @@ impl World {
         }
         if let Some(problem) = ref_data
             .surface_combat
+            .as_ref()
+            .and_then(|figures| figures.problem())
+        {
+            return Err(SimError::InvalidSetup(problem));
+        }
+        if let Some(problem) = ref_data
+            .air_upkeep
             .as_ref()
             .and_then(|figures| figures.problem())
         {
@@ -224,6 +237,7 @@ impl World {
             events: EventLog::default(),
             day_hashes: Vec::new(),
             strikes_in_flight: Vec::new(),
+            sorties: Vec::new(),
         })
     }
 

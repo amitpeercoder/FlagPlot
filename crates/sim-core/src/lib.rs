@@ -35,6 +35,7 @@ mod search;
 mod start;
 mod stragglers;
 mod surface;
+mod upkeep;
 
 pub use invariants::InvariantViolation;
 pub use start::StartingContact;

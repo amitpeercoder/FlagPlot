@@ -395,6 +395,7 @@ mod tests {
                     hex,
                     supply_t: Fixed::from_int(stock),
                     anti_aircraft: 0,
+                    aircraft_repairs_per_day: 0,
                 },
             );
         }

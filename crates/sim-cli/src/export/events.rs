@@ -257,6 +257,58 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             .num("range_nm", *range_nm)
             .int("aircraft", *aircraft),
         ),
+        EventKind::DamagedAircraftDestroyedOnGround {
+            air_group,
+            base,
+            aircraft,
+            remaining,
+        } => (
+            "damaged_aircraft_destroyed_on_ground",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .int("aircraft", *aircraft)
+                .int("remaining", *remaining),
+        ),
+        EventKind::AircraftWorn {
+            air_group,
+            sortie,
+            distance_nm,
+            aircraft,
+            chance,
+            expected,
+            worn,
+            written_off,
+            ready,
+            damaged,
+        } => (
+            "aircraft_worn",
+            d.id("air_group", *air_group)
+                .text("sortie", sortie.name())
+                .num("distance_nm", *distance_nm)
+                .int("aircraft", *aircraft)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("worn", *worn)
+                .int("written_off", *written_off)
+                .int("ready", *ready)
+                .int("damaged", *damaged),
+        ),
+        EventKind::AircraftRepaired {
+            air_group,
+            at,
+            repaired,
+            ready,
+            damaged,
+        } => (
+            "aircraft_repaired",
+            match at {
+                AirGroupLocation::Base(base) => d.id("air_group", *air_group).id("base", *base),
+                AirGroupLocation::Ship(ship) => d.id("air_group", *air_group).id("ship", *ship),
+            }
+            .int("repaired", *repaired)
+            .int("ready", *ready)
+            .int("damaged", *damaged),
+        ),
         EventKind::AirGroupLost {
             air_group,
             ship,

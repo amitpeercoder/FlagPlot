@@ -2409,6 +2409,7 @@ mod tests {
             location: AirGroupLocation::Ship(ShipId::new(ship)),
             aircraft_type: AircraftTypeId::new(1),
             ready,
+            damaged: 0,
             mission: AirMission::Rest,
             search: None,
             mission_order: None,

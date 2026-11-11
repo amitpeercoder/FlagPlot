@@ -104,6 +104,9 @@ pub struct AirGroupOut {
     ship: Option<u32>,
     aircraft_type: String,
     ready: u32,
+    /// Damaged aircraft (decision 0035). Left out when 0.
+    #[serde(skip_serializing_if = "is_zero")]
+    damaged: u32,
     mission: &'static str,
     /// Set for a group on combat air patrol (decision 0027).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -129,6 +132,9 @@ pub struct BaseOut {
     /// Anti-aircraft shots (decision 0034). Left out when 0.
     #[serde(skip_serializing_if = "is_zero")]
     anti_aircraft: u32,
+    /// Aircraft repaired a day (decision 0035). Left out when 0.
+    #[serde(skip_serializing_if = "is_zero")]
+    aircraft_repairs_per_day: u32,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -165,6 +171,7 @@ fn base(base: &Base) -> BaseOut {
         r: base.hex.r,
         supply: Num(base.supply_t),
         anti_aircraft: base.anti_aircraft,
+        aircraft_repairs_per_day: base.aircraft_repairs_per_day,
     }
 }
 
@@ -240,6 +247,7 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         },
         aircraft_type: ref_data.aircraft_types[&group.aircraft_type].name.clone(),
         ready: group.ready,
+        damaged: group.damaged,
         mission: names::air_mission(group.mission),
         patrol_share: (group.mission == AirMission::CombatAirPatrol)
             .then_some(Num(group.patrol_share)),

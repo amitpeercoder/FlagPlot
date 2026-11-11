@@ -227,8 +227,14 @@ fn run(args: &[String]) -> Result<(), String> {
             AirMission::BaseStrike(base) => format!("BaseStrike on {base}"),
             other => format!("{other:?}"),
         };
+        // Damaged aircraft are shown only when there are some (decision 0035).
+        let ready = if group.damaged > 0 {
+            format!("{} ready, {} damaged", group.ready, group.damaged)
+        } else {
+            format!("{} ready", group.ready)
+        };
         println!(
-            "{} \"{}\" ({}) {}: {} ready, mission {}{}, {}",
+            "{} \"{}\" ({}) {}: {}, mission {}{}, {}",
             group.id,
             group.name,
             group.side.name(),
@@ -236,7 +242,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 AirGroupLocation::Base(base) => format!("at {base}"),
                 AirGroupLocation::Ship(ship) => format!("aboard {ship}"),
             },
-            group.ready,
+            ready,
             mission,
             share,
             arc
@@ -283,14 +289,20 @@ fn run(args: &[String]) -> Result<(), String> {
         } else {
             String::new()
         };
+        let repairs = if base.aircraft_repairs_per_day > 0 {
+            format!(", repairs {} aircraft a day", base.aircraft_repairs_per_day)
+        } else {
+            String::new()
+        };
         println!(
-            "{} \"{}\" ({}) at {}: {} t of supply in stock{}",
+            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}",
             base.id,
             base.name,
             base.side.name(),
             base.hex,
             base.supply_t,
-            guns
+            guns,
+            repairs
         );
     }
     for side in [Side::Allied, Side::Japanese] {
