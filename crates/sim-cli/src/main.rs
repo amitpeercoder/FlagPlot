@@ -1,9 +1,10 @@
 //! Flag Plot command-line runner.
 //!
-//! Two commands so far: `run` and `export`. The spec also lists `batch`,
+//! Three commands so far: `run`, `export` and `batch`. The spec also lists
 //! `replay`, `hash` and `serve`. They arrive with the scenarios that need
 //! them.
 
+mod batch;
 mod export;
 
 use std::env;
@@ -19,15 +20,22 @@ use sim_data::Scenario;
 const USAGE: &str = "\
 Usage: sim-cli run <scenario.toml> [--events] [--seed N]
        sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
+       sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]
 
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up.
   export    Runs a scenario the same way and writes the finished run as one
             JSON replay file: the map, the starting forces, every event with
             its causes, and the final state.
+  batch     Runs a scenario N times with seeds S, S+1, ... one after another
+            and writes one JSON summary file: ships sunk per side (a
+            histogram and totals), per ship, and the final hash and sunk
+            ships of every run. Prints a short summary.
   --events  (run) Also prints the full event log, with what caused each event.
   --seed N  Runs with seed N instead of the scenario's own seed.
-  --out F   (export) The replay file to write.
+  --out F   (export, batch) The file to write.
+  --runs N  (batch) Number of runs, at least 1. Default 1000.
+  --first-seed S  (batch) Seed of the first run. Default 1.
   --labels F  (export) An anchors CSV (place, feature, lat, lon) to put place
             names on the replay's map.";
 
@@ -75,6 +83,7 @@ fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
         Some("export") => export::command(&args[1..], USAGE),
+        Some("batch") => batch::command(&args[1..], USAGE),
         _ => run(&args),
     };
     match result {
