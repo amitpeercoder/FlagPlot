@@ -95,9 +95,10 @@
 //!    group's first, up to its repairs a day and while it has 1 t for each,
 //!    and pays 1 t for each.
 //! 2. Arrivals due that day.
-//! 3. Replacements, from day 2: at Rabaul up to two G4M1 and two pilots to
-//!    group 1, up to its strength in each; up to two A6M2 and two pilots to
-//!    group 2 and then group 3, up to each one's strength.
+//! 3. Replacements, from day 2, in order of aircraft type (decision 0043,
+//!    4e), so the fighters first: at Rabaul up to two A6M2 and two pilots
+//!    to group 2 and then group 3, up to each one's strength; then up to
+//!    two G4M1 and two pilots to group 1, up to its strength in each.
 //! 4. The daily cost: 0.2 t for each aircraft at the base, ready or
 //!    damaged.
 //! 5. The staff stands down each group whose fatigue is above its
@@ -1256,11 +1257,11 @@ fn work_the_night(run: &Run, cfg: &Cfg, day: u32, st: &mut State, rec: &mut Day)
         }
     }
 
-    // 3. Replacements from day 2: two bombers and two pilots to group 1; two
-    // fighters and two pilots to group 2, then group 3, each up to its
-    // strength.
+    // 3. Replacements from day 2, fighters first (decision 0043, 4e): two
+    // fighters and two pilots to group 2, then group 3; then two bombers and
+    // two pilots to group 1, each up to its strength.
     if cfg.replacements && day >= 2 {
-        for groups in [&[BOMBERS][..], &JAPANESE_FIGHTERS[..]] {
+        for groups in [&JAPANESE_FIGHTERS[..], &[BOMBERS][..]] {
             let mut aircraft_left = 2u32;
             let mut pilots_left = 2u32;
             for &g in groups {
@@ -2733,7 +2734,7 @@ fn the_setting_is_as_the_hand_calculation_says() {
     // Rabaul receives two G4M1 and two A6M2 a day, each with a pilot, and
     // Henderson Field nothing.
     assert_eq!(truth.replacements.len(), 2);
-    for (stream, id) in truth.replacements.iter().zip([2103, 2102]) {
+    for (stream, id) in truth.replacements.iter().zip([2102, 2103]) {
         assert_eq!(stream.side, Side::Japanese);
         assert_eq!(stream.base, RABAUL);
         assert_eq!(stream.aircraft_type, AircraftTypeId::new(id));

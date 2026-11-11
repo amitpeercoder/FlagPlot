@@ -41,7 +41,9 @@
 //! - Scenarios: TOML, with the starting state, the seed and the scripted
 //!   orders per day. A scenario file is therefore also a saved game. It names
 //!   its map and reference files, and may hold bases, air groups, task
-//!   forces, ships and orders. A task force may say `readiness = "battle"`
+//!   forces, ships and orders. `ship_classes` and `aircraft_types` may each
+//!   name one file or a list of files; an id in two files is an error naming
+//!   both (decision 0043). A task force may say `readiness = "battle"`
 //!   (the default is `"normal"`), and a
 //!   ship may give its `gun_rounds`. An order is addressed to exactly one of a
 //!   `task_force` or an `air_group`.

@@ -581,7 +581,20 @@ fn work_the_night(run: &Run, config: &Config, day: u32, state: &mut State, recor
     // (group, base, aircraft, pilots, ready after, pilots after)
     let mut expected: Vec<(u32, BaseId, u32, u32, u32, u32)> = Vec::new();
     if day >= 2 {
-        for stream in &config.streams {
+        // The streams are placed in the order the loader keeps them in
+        // (decision 0043, 4c): side, base, type, then the figures. Airfield B
+        // is the Allied one.
+        let mut streams = config.streams.clone();
+        streams.sort_by_key(|s| {
+            (
+                u8::from(s.base == AIRFIELD_A),
+                s.base,
+                s.aircraft_type,
+                s.aircraft,
+                s.pilots,
+            )
+        });
+        for stream in &streams {
             let mut aircraft_left = stream.aircraft;
             let mut pilots_left = stream.pilots;
             for g in GROUPS {
@@ -1420,9 +1433,9 @@ fn the_setting_is_as_the_hand_calculation_says() {
     assert_eq!(
         streams,
         vec![
-            (Side::Japanese, 1, 3, 2, 1),
-            (Side::Allied, 2, 4, 2, 0),
             (Side::Allied, 2, 3, 1, 0),
+            (Side::Allied, 2, 4, 2, 0),
+            (Side::Japanese, 1, 3, 2, 1),
         ]
     );
     // No wear and no fatigue: no file for either.
@@ -2098,7 +2111,9 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
             (!stem.ends_with(".events")
                 && !stem.starts_with("06d1")
                 // Scenario 6 itself has pilots, replacements and supply.
-                && !stem.starts_with("06_"))
+                && !stem.starts_with("06_")
+                // So has the full slice of scenario 7 (decision 0043).
+                && !stem.starts_with("07_"))
             .then(|| stem.to_string())
         })
         .collect();

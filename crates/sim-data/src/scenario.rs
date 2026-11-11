@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use sim_core::fixed::Fixed;
@@ -12,6 +12,7 @@ use sim_core::orders::{
     AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Readiness,
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
+use sim_core::refdata::RefData;
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Replacement, Ship, ShipLocation, ShipSystem,
     ShipSystems, Side, SystemState, TaskForce, TruthState,
@@ -27,6 +28,23 @@ use crate::reference::{
     load_surface_combat_figures, parse_kind,
 };
 
+/// One file name or a list of them (decision 0043).
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum FileList {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl FileList {
+    fn names(&self) -> Vec<&str> {
+        match self {
+            FileList::One(name) => vec![name.as_str()],
+            FileList::Many(names) => names.iter().map(String::as_str).collect(),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ScenarioFile {
@@ -38,12 +56,14 @@ struct ScenarioFile {
     days: u32,
     /// Path to the map file, relative to the scenario file.
     map: String,
-    /// Path to the ship class file, relative to the scenario file.
-    ship_classes: String,
+    /// Path to the ship class file, or a list of them, relative to the
+    /// scenario file. Ids must not repeat across files.
+    ship_classes: FileList,
     /// Path to the port size file, relative to the scenario file.
     port_sizes: String,
-    /// Path to the aircraft type file, relative to the scenario file.
-    aircraft_types: String,
+    /// Path to the aircraft type file, or a list of them, relative to the
+    /// scenario file. Ids must not repeat across files.
+    aircraft_types: FileList,
     /// Path to the search figures file, relative to the scenario file.
     search: String,
     /// Path to the surface combat figures file, relative to the scenario file.
@@ -448,6 +468,9 @@ pub struct Scenario {
     /// The contacts the sides start with, kept so that a world built afresh
     /// for another seed holds them too.
     contacts: Vec<StartingContact>,
+    /// Every file the scenario names, as the paths it reads them from, in a
+    /// fixed order (decision 0043, 9).
+    data_files: Vec<PathBuf>,
 }
 
 impl Scenario {
@@ -459,6 +482,14 @@ impl Scenario {
         Scenario::parse(&text, path)
     }
 
+    /// Builds a scenario from text that is not (or no longer) the file's own
+    /// bytes, for tests that load a file with its tables in another order
+    /// (decision 0043, 2). `path` says where the text would sit: the files it
+    /// names are read relative to it.
+    pub fn from_text(text: &str, path: &Path) -> Result<Scenario, DataError> {
+        Scenario::parse(text, path)
+    }
+
     /// Builds a scenario from its text. `path` says where the text came from:
     /// the files it names are read relative to it.
     fn parse(text: &str, path: &Path) -> Result<Scenario, DataError> {
@@ -468,9 +499,44 @@ impl Scenario {
 
         let folder = path.parent().unwrap_or_else(|| Path::new("."));
         let map = load_map(&folder.join(&file.map))?;
-        let mut ref_data = load_ship_classes(&folder.join(&file.ship_classes))?;
+        let class_files = file.ship_classes.names();
+        if class_files.is_empty() {
+            return Err(fail("ship_classes names no file".to_string()));
+        }
+        let type_files = file.aircraft_types.names();
+        if type_files.is_empty() {
+            return Err(fail("aircraft_types names no file".to_string()));
+        }
+        let mut ref_data = RefData::default();
+        let mut class_owner: BTreeMap<ShipClassId, PathBuf> = BTreeMap::new();
+        for name in &class_files {
+            let file_path = folder.join(name);
+            for (id, class) in load_ship_classes(&file_path)?.ship_classes {
+                if let Some(first) = class_owner.insert(id, file_path.clone()) {
+                    return Err(fail(format!(
+                        "ship class {id} is in both {} and {}",
+                        first.display(),
+                        file_path.display()
+                    )));
+                }
+                ref_data.ship_classes.insert(id, class);
+            }
+        }
         ref_data.port_sizes = load_port_sizes(&folder.join(&file.port_sizes))?;
-        ref_data.aircraft_types = load_aircraft_types(&folder.join(&file.aircraft_types))?;
+        let mut type_owner: BTreeMap<AircraftTypeId, PathBuf> = BTreeMap::new();
+        for name in &type_files {
+            let file_path = folder.join(name);
+            for (id, aircraft_type) in load_aircraft_types(&file_path)? {
+                if let Some(first) = type_owner.insert(id, file_path.clone()) {
+                    return Err(fail(format!(
+                        "aircraft type {id} is in both {} and {}",
+                        first.display(),
+                        file_path.display()
+                    )));
+                }
+                ref_data.aircraft_types.insert(id, aircraft_type);
+            }
+        }
         ref_data.search = Some(load_search_figures(&folder.join(&file.search))?);
         ref_data.surface_combat = Some(load_surface_combat_figures(
             &folder.join(&file.surface_combat),
@@ -486,6 +552,24 @@ impl Scenario {
         }
         if let Some(air_supply) = &file.air_supply {
             ref_data.air_supply = Some(load_air_supply_figures(&folder.join(air_supply))?);
+        }
+
+        let mut data_files: Vec<PathBuf> = vec![folder.join(&file.map)];
+        data_files.extend(class_files.iter().map(|name| folder.join(name)));
+        data_files.push(folder.join(&file.port_sizes));
+        data_files.extend(type_files.iter().map(|name| folder.join(name)));
+        data_files.push(folder.join(&file.search));
+        data_files.push(folder.join(&file.surface_combat));
+        for name in [
+            &file.air_combat,
+            &file.air_upkeep,
+            &file.fatigue,
+            &file.air_supply,
+        ]
+        .into_iter()
+        .flatten()
+        {
+            data_files.push(folder.join(name));
         }
 
         let mut truth = TruthState::default();
@@ -1011,6 +1095,23 @@ impl Scenario {
                 .push((spec.side.into(), request));
         }
 
+        // Replacements and arrivals are lists in the state and the hash, so
+        // they are kept in one order whatever order the file lists them in
+        // (decision 0043, 4c). Orders are put in order where they are taken
+        // in, in `sim-core`.
+        truth.replacements.sort_by_key(|r| {
+            (
+                r.side.code(),
+                r.base,
+                r.aircraft_type,
+                r.aircraft_per_day,
+                r.pilots_per_day,
+            )
+        });
+        truth
+            .arrivals
+            .sort_by_key(|a| (a.day, a.air_group, a.aircraft, a.pilots));
+
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
 
@@ -1042,7 +1143,25 @@ impl Scenario {
             world,
             script,
             contacts,
+            data_files,
         })
+    }
+
+    /// The files the scenario names (map, ship classes, port sizes, aircraft
+    /// types, then the figures files it has), as the paths they are read from.
+    pub fn data_files(&self) -> &[PathBuf] {
+        &self.data_files
+    }
+
+    /// The orders still to be given, by day, as they will be submitted.
+    pub fn scripted_orders(&self) -> &BTreeMap<u32, Vec<(Side, OrderRequest)>> {
+        &self.script
+    }
+
+    /// Replaces the scripted orders, for replaying a saved game: the orders
+    /// given are submitted day by day in place of the scenario's own.
+    pub fn replace_script(&mut self, script: BTreeMap<u32, Vec<(Side, OrderRequest)>>) {
+        self.script = script;
     }
 
     /// A copy of this scenario with a different seed, for a run of its own.
@@ -1073,6 +1192,7 @@ impl Scenario {
             world,
             script: self.script.clone(),
             contacts: self.contacts.clone(),
+            data_files: self.data_files.clone(),
         })
     }
 
@@ -1159,6 +1279,125 @@ r = 0
         Scenario::parse(&format!("{HEAD}{extra}"), &path)
     }
 
+    /// Parses `HEAD` with its two reference lines replaced, as if it sat in
+    /// the scenarios folder (decision 0043: a file or a list of files).
+    fn parse_files(classes: &str, types: &str) -> Result<Scenario, DataError> {
+        let head = HEAD
+            .replace(
+                "ship_classes = \"../reference/ship_classes.csv\"",
+                &format!("ship_classes = {classes}"),
+            )
+            .replace(
+                "aircraft_types = \"../reference/aircraft_types.csv\"",
+                &format!("aircraft_types = {types}"),
+            );
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        Scenario::parse(&head, &path)
+    }
+
+    fn temp_copy(from: &str, name: &str) -> String {
+        let dir = std::env::temp_dir().join(format!("flagplot-sim-data-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("make the temp dir");
+        let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/scenarios")
+            .join(from);
+        let target = dir.join(name);
+        fs::copy(source, &target).expect("copy the file");
+        target.to_string_lossy().into_owned()
+    }
+
+    #[test]
+    fn ship_classes_and_aircraft_types_may_be_lists_of_files() {
+        let scenario = parse_files(
+            "[\"../reference/ship_classes.csv\", \"../reference/ship_classes_eastern_solomons.csv\"]",
+            "[\"../reference/aircraft_types.csv\", \"../reference/aircraft_types_rabaul_guadalcanal.csv\"]",
+        )
+        .expect("two files each load");
+        let data = scenario.world.ref_data();
+        // Placeholder class 1 and a real class from the second file.
+        assert!(data.ship_classes.contains_key(&ShipClassId::new(1)));
+        assert!(data.ship_classes.contains_key(&ShipClassId::new(2020)));
+        assert!(data.aircraft_types.contains_key(&AircraftTypeId::new(1)));
+        assert!(data.aircraft_types.contains_key(&AircraftTypeId::new(2100)));
+        // The files it names are listed in a fixed order.
+        let names: Vec<String> = scenario
+            .data_files()
+            .iter()
+            .map(|p| {
+                p.file_name()
+                    .expect("a name")
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "placeholder_search.toml",
+                "ship_classes.csv",
+                "ship_classes_eastern_solomons.csv",
+                "port_sizes.csv",
+                "aircraft_types.csv",
+                "aircraft_types_rabaul_guadalcanal.csv",
+                "search.toml",
+                "surface_combat.toml",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_list_of_one_file_is_the_same_as_the_file() {
+        let one = parse_files(
+            "\"../reference/ship_classes.csv\"",
+            "\"../reference/aircraft_types.csv\"",
+        )
+        .expect("loads");
+        let listed = parse_files(
+            "[\"../reference/ship_classes.csv\"]",
+            "[\"../reference/aircraft_types.csv\"]",
+        )
+        .expect("loads");
+        assert_eq!(one.world.state_hash(), listed.world.state_hash());
+        assert_eq!(one.data_files(), listed.data_files());
+    }
+
+    #[test]
+    fn an_id_in_two_files_is_an_error_naming_both() {
+        let copy = temp_copy("../reference/ship_classes.csv", "classes_again.csv");
+        let error = parse_files(
+            &format!("[\"../reference/ship_classes.csv\", {copy:?}]"),
+            "\"../reference/aircraft_types.csv\"",
+        )
+        .expect_err("class 1 is in both");
+        let text = error.to_string();
+        assert!(text.contains("ship class"), "{text}");
+        assert!(text.contains("ship_classes.csv"), "{text}");
+        assert!(text.contains("classes_again.csv"), "{text}");
+
+        let copy = temp_copy("../reference/aircraft_types.csv", "types_again.csv");
+        let error = parse_files(
+            "\"../reference/ship_classes.csv\"",
+            &format!("[\"../reference/aircraft_types.csv\", {copy:?}]"),
+        )
+        .expect_err("type 1 is in both");
+        let text = error.to_string();
+        assert!(text.contains("aircraft type"), "{text}");
+        assert!(text.contains("aircraft_types.csv"), "{text}");
+        assert!(text.contains("types_again.csv"), "{text}");
+    }
+
+    #[test]
+    fn an_empty_list_of_files_is_an_error() {
+        let error = parse_files("[]", "\"../reference/aircraft_types.csv\"")
+            .expect_err("no ship classes")
+            .to_string();
+        assert!(error.contains("ship_classes names no file"), "{error}");
+        let error = parse_files("\"../reference/ship_classes.csv\"", "[]")
+            .expect_err("no aircraft types")
+            .to_string();
+        assert!(error.contains("aircraft_types names no file"), "{error}");
+    }
+
     fn error_of(extra: &str) -> String {
         parse_with(extra)
             .expect_err("the scenario is rejected")
@@ -1242,6 +1481,38 @@ r = 0
     }
 
     #[test]
+    fn replacement_streams_are_kept_in_one_order_whatever_the_file_gives() {
+        let a = format!(
+            "{}{}{}",
+            replacement("japanese", 2, 2),
+            replacement("allied", 1, 2),
+            replacement("allied", 1, 1)
+        );
+        let b = format!(
+            "{}{}{}",
+            replacement("allied", 1, 1),
+            replacement("japanese", 2, 2),
+            replacement("allied", 1, 2)
+        );
+        let (a, b) = (
+            parse_with(&a).expect("loads"),
+            parse_with(&b).expect("loads"),
+        );
+        let key = |s: &Scenario| -> Vec<(u8, u32, u32)> {
+            s.world
+                .umpire()
+                .replacements
+                .iter()
+                .map(|r| (r.side.code(), r.base.raw(), r.aircraft_type.raw()))
+                .collect()
+        };
+        // Side, then base, then type (decision 0043, 4c).
+        assert_eq!(key(&a), vec![(1, 1, 1), (1, 1, 2), (2, 2, 2)]);
+        assert_eq!(key(&a), key(&b));
+        assert_eq!(a.world.state_hash(), b.world.state_hash());
+    }
+
+    #[test]
     fn replacement_tables_load_in_order_and_are_checked() {
         let none = parse_with("").expect("loads");
         assert!(none.world.umpire().replacements.is_empty());
@@ -1279,7 +1550,7 @@ r = 0
     }
 
     #[test]
-    fn arrival_tables_load_in_order_and_are_checked() {
+    fn arrival_tables_load_in_one_order_whatever_the_file_gives_and_are_checked() {
         let none = parse_with("").expect("loads");
         assert!(none.world.umpire().arrivals.is_empty());
         let tracked = air_group(1, 1).replace("ready = 3", "ready = 0\npilots = 0");
@@ -1298,7 +1569,8 @@ r = 0
             .iter()
             .map(|a| (a.day, a.air_group.raw(), a.aircraft, a.pilots))
             .collect();
-        assert_eq!(listed, vec![(2, 1, 6, 5), (1, 1, 2, 0)]);
+        // Listed as day 2 then day 1; kept by day (decision 0043, 4c).
+        assert_eq!(listed, vec![(1, 1, 2, 0), (2, 1, 6, 5)]);
         // A group with no aircraft and no pilots key is loaded, untracked.
         let loaded = parse_with(&untracked).expect("loads");
         let group = &loaded.world.umpire().air_groups[&AirGroupId::new(1)];

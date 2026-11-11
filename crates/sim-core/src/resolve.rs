@@ -230,10 +230,15 @@ impl World {
     }
 
     /// Takes in every order submitted since the last day. Sides are handled
-    /// in a fixed order, and each side's orders in the order it gave them.
+    /// in a fixed order. Each side's orders are put in order of the unit they
+    /// are for (task forces before air groups, then by number) before they
+    /// are numbered, so the numbers do not depend on the order they were
+    /// handed in. One unit's orders keep their order, so a later one still
+    /// replaces an earlier one (decision 0043, 4a to 4b).
     fn intake_orders(&mut self, day: u32) {
         let pending = std::mem::take(&mut self.pending);
-        for (side, requests) in pending {
+        for (side, mut requests) in pending {
+            requests.sort_by_key(|request| request.kind.target());
             for request in requests {
                 self.take_in_order(day, None, side, request, Vec::new());
             }
@@ -3316,6 +3321,110 @@ mod tests {
         assert_eq!(
             crate::invariants::InvariantViolation::TaskForceNotNavigable(TF, hx(1, 0)).to_string(),
             format!("{TF} is at (1,0), which ships cannot enter")
+        );
+    }
+    // ---- the order orders are taken in (decision 0043, 4a to 4b) ----
+
+    fn order_for(target: u32, order: TaskForceOrder) -> OrderRequest {
+        OrderRequest {
+            kind: OrderKind::TaskForce {
+                target: TaskForceId::new(target),
+                order,
+            },
+            origin: Origin::PLAYER,
+        }
+    }
+
+    fn two_force_world() -> World {
+        let mut world = world_with(7, 2000);
+        let mut truth = world.umpire().clone();
+        truth.task_forces.insert(
+            TaskForceId::new(2),
+            TaskForce::at(
+                TaskForceId::new(2),
+                "Second".to_string(),
+                Side::Allied,
+                Hex::new(0, 1),
+                Mission::Transport,
+            ),
+        );
+        world.truth = truth;
+        world.task_force_ids.reserve(TaskForceId::new(2));
+        world
+    }
+
+    #[test]
+    fn orders_are_numbered_by_unit_whatever_order_they_were_handed_in() {
+        let route = |q| TaskForceOrder::SetRoute(vec![Hex::new(q, 0)]);
+        let knots_order = |k| TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm(k)));
+        let a = vec![
+            order_for(2, route(5)),
+            order_for(1, route(6)),
+            order_for(1, knots_order(16)),
+            order_for(2, knots_order(12)),
+        ];
+        let b = vec![
+            order_for(1, route(6)),
+            order_for(1, knots_order(16)),
+            order_for(2, route(5)),
+            order_for(2, knots_order(12)),
+        ];
+        let mut results = Vec::new();
+        for requests in [a, b] {
+            let mut world = two_force_world();
+            // Handed in as two calls, too: the split must not matter.
+            let (first, second) = requests.split_at(1);
+            world.submit_orders(Side::Allied, first.to_vec());
+            world.submit_orders(Side::Allied, second.to_vec());
+            world.resolve_day().expect("day resolves");
+            let events: Vec<_> = world.events().iter().cloned().collect();
+            let orders: Vec<_> = world.orders().cloned().collect();
+            results.push((world.state_hash(), events, orders));
+        }
+        assert_eq!(results[0], results[1]);
+        // Forces 1 first, each force's orders in the order given.
+        let orders = &results[0].2;
+        assert_eq!(orders[0].id, OrderId::new(1));
+        assert_eq!(
+            orders[0].kind.target(),
+            crate::ids::EntityRef::TaskForce(TF)
+        );
+        assert_eq!(
+            orders[1].kind.target(),
+            crate::ids::EntityRef::TaskForce(TF)
+        );
+        assert!(matches!(
+            orders[0].kind,
+            OrderKind::TaskForce {
+                order: TaskForceOrder::SetRoute(_),
+                ..
+            }
+        ));
+        assert_eq!(
+            orders[2].kind.target(),
+            crate::ids::EntityRef::TaskForce(TaskForceId::new(2))
+        );
+    }
+
+    #[test]
+    fn one_units_orders_keep_their_order_so_the_later_one_wins() {
+        let mut world = two_force_world();
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                order_for(1, TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm(10)))),
+                order_for(2, TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm(11)))),
+                order_for(1, TaskForceOrder::SetSpeed(SpeedSetting::Knots(nm(14)))),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            world.truth.task_forces[&TF].speed,
+            SpeedSetting::Knots(nm(14))
+        );
+        assert_eq!(
+            world.truth.task_forces[&TaskForceId::new(2)].speed,
+            SpeedSetting::Knots(nm(11))
         );
     }
 }

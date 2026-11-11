@@ -2196,7 +2196,9 @@ fn a_scenario_with_no_fatigue_file_has_no_fatigue_no_stand_down_and_is_scenario_
         let order_map = |order: OrderId| -> OrderId {
             OrderId::new(match order.raw() {
                 1..=3 => order.raw(),
-                5..=7 => order.raw() - 1,
+                5 => 4,
+                7 => 5,
+                8 => 6,
                 other => panic!("an order of 6a: {other}"),
             })
         };
