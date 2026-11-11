@@ -151,7 +151,7 @@ id = 11
 name = "USS Patterson"
 class = 1007
 side = "allied"
-fuel_t = 544
+fuel_t = 506
 task_force = 2
 
 [[ship]]
@@ -159,7 +159,7 @@ id = 12
 name = "USS Bagley"
 class = 1007
 side = "allied"
-fuel_t = 544
+fuel_t = 506
 task_force = 2
 
 [[ship]]
@@ -191,7 +191,7 @@ id = 16
 name = "USS Helm"
 class = 1007
 side = "allied"
-fuel_t = 544
+fuel_t = 506
 task_force = 3
 
 [[ship]]
@@ -199,7 +199,7 @@ id = 17
 name = "USS Wilson"
 class = 1009
 side = "allied"
-fuel_t = 484
+fuel_t = 491
 task_force = 3
 
 # The Hudson's 10:26 report of the column, as the Allied side held it at
