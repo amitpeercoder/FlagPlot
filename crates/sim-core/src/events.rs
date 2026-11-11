@@ -49,6 +49,8 @@ pub struct Breakdown {
 pub enum Weapon {
     Gun,
     Torpedo,
+    /// Dropped by aircraft (decision 0026). Added at the end of the enum.
+    Bomb,
 }
 
 impl Weapon {
@@ -57,6 +59,7 @@ impl Weapon {
         match self {
             Weapon::Gun => "guns",
             Weapon::Torpedo => "torpedoes",
+            Weapon::Bomb => "bombs",
         }
     }
 }
@@ -419,6 +422,34 @@ pub enum EventKind {
         ship: ShipId,
         aircraft: u32,
     },
+    /// An air group on the naval strike mission launched at a contact its
+    /// side holds (decisions 3 to 6 of `docs/decisions/0026-air-strikes.md`).
+    /// `hex` is the hex the contact names, and where the strike flies to.
+    StrikeLaunched {
+        air_group: AirGroupId,
+        contact: ContactId,
+        hex: Hex,
+        aircraft: u32,
+        distance_nm: Fixed,
+    },
+    /// A strike reached the hex it flew to and no enemy task force was there
+    /// (decision 7 of 0026).
+    StrikeFoundNothing {
+        air_group: AirGroupId,
+        hex: Hex,
+    },
+    /// A strike attacked one ship of an enemy task force (decisions 7 to 9
+    /// of 0026).
+    AirAttack {
+        air_group: AirGroupId,
+        task_force: TaskForceId,
+        ship: ShipId,
+        weapon: Weapon,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+    },
 }
 
 impl EventKind {
@@ -470,6 +501,25 @@ impl EventKind {
             EventKind::AirGroupLost {
                 air_group, ship, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Ship(*ship)],
+            EventKind::StrikeLaunched {
+                air_group, contact, ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::Contact(*contact),
+            ],
+            EventKind::StrikeFoundNothing { air_group, .. } => {
+                vec![EntityRef::AirGroup(*air_group)]
+            }
+            EventKind::AirAttack {
+                air_group,
+                task_force,
+                ship,
+                ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Ship(*ship),
+            ],
             EventKind::SearchAttempt {
                 air_group,
                 task_force,
@@ -560,6 +610,21 @@ impl EventKind {
                 EntityRef::TaskForce(*by_a),
                 EntityRef::TaskForce(*by_b),
             ],
+        }
+    }
+}
+
+/// "round N: " before the text of an event of a surface fight. Damage
+/// events carry round 0 when the hits fell outside a fight (an air attack,
+/// decision 0026), and then write nothing.
+struct RoundPrefix(u32);
+
+impl fmt::Display for RoundPrefix {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.0 == 0 {
+            Ok(())
+        } else {
+            write!(f, "round {}: ", self.0)
         }
     }
 }
@@ -667,6 +732,34 @@ impl fmt::Display for EventKind {
                 ship,
                 aircraft,
             } => write!(f, "{air_group} lost with {ship}: {aircraft} aircraft"),
+            EventKind::StrikeLaunched {
+                air_group,
+                contact,
+                hex,
+                aircraft,
+                distance_nm,
+            } => write!(
+                f,
+                "{air_group} launched {aircraft} aircraft at {contact} at {hex}, {distance_nm} nm"
+            ),
+            EventKind::StrikeFoundNothing { air_group, hex } => {
+                write!(f, "{air_group} found nothing at {hex}")
+            }
+            EventKind::AirAttack {
+                air_group,
+                ship,
+                weapon,
+                shots,
+                chance,
+                expected,
+                hits,
+                ..
+            } => write!(
+                f,
+                "{air_group} {} at {ship}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                weapon.name(),
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
             EventKind::SearchAttempt {
                 air_group,
                 task_force,
@@ -771,7 +864,8 @@ impl fmt::Display for EventKind {
                 value_after,
             } => write!(
                 f,
-                "round {round}: {ship} took {hits} {} on {}, {points} points, now {value_after}",
+                "{}{ship} took {hits} {} on {}, {points} points, now {value_after}",
+                RoundPrefix(*round),
                 if *hits == 1 { "hit" } else { "hits" },
                 track.name()
             ),
@@ -785,14 +879,16 @@ impl fmt::Display for EventKind {
                 if before == after {
                     write!(
                         f,
-                        "round {round}: {ship} {} hit, no change, still {}",
+                        "{}{ship} {} hit, no change, still {}",
+                        RoundPrefix(*round),
                         system.name(),
                         before.name()
                     )
                 } else {
                     write!(
                         f,
-                        "round {round}: {ship} {} hit, {} -> {}",
+                        "{}{ship} {} hit, {} -> {}",
+                        RoundPrefix(*round),
                         system.name(),
                         before.name(),
                         after.name()
@@ -803,7 +899,7 @@ impl fmt::Display for EventKind {
                 round,
                 ship,
                 task_force,
-            } => write!(f, "round {round}: {ship} of {task_force} sank"),
+            } => write!(f, "{}{ship} of {task_force} sank", RoundPrefix(*round)),
             EventKind::ForceBecameAlert { round, task_force } => {
                 write!(f, "round {round}: {task_force} became alert")
             }

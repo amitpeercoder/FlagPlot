@@ -6,8 +6,8 @@ use serde::Deserialize;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
-    AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
-    SurfaceCombatFigures,
+    AirCombatFigures, AircraftRole, AircraftType, AttackWeapon, PortSize, RefData, SearchFigures,
+    ShipClass, ShipKind, SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -193,6 +193,9 @@ struct AircraftTypeRow {
     role: String,
     search_range_nm: String,
     sweep_width_nm: String,
+    strike_range_nm: String,
+    attack_weapon: String,
+    attack_damage: String,
 }
 
 /// Loads aircraft types from a CSV file.
@@ -224,6 +227,7 @@ fn parse_aircraft_types(
         };
         let role = match row.role.as_str() {
             "patrol" => AircraftRole::Patrol,
+            "bomber" => AircraftRole::Bomber,
             other => {
                 return Err(DataError::in_file(
                     path,
@@ -231,9 +235,23 @@ fn parse_aircraft_types(
                 ))
             }
         };
+        let attack_weapon = match row.attack_weapon.as_str() {
+            "none" => AttackWeapon::None,
+            "bomb" => AttackWeapon::Bomb,
+            "torpedo" => AttackWeapon::Torpedo,
+            other => {
+                return Err(DataError::in_file(
+                    path,
+                    format!("{id}: unknown attack weapon \"{other}\""),
+                ))
+            }
+        };
         let aircraft_type = AircraftType {
             id,
             role,
+            strike_range_nm: number("strike_range_nm", &row.strike_range_nm)?,
+            attack_weapon,
+            attack_damage: number("attack_damage", &row.attack_damage)?,
             search_range_nm: number("search_range_nm", &row.search_range_nm)?,
             sweep_width_nm: number("sweep_width_nm", &row.sweep_width_nm)?,
             name: row.name,
@@ -361,6 +379,7 @@ struct SystemTable {
     fire_control: Option<Quantity>,
     main_battery: Option<Quantity>,
     torpedo_mounts: Option<Quantity>,
+    flight_deck: Option<Quantity>,
 }
 
 impl SystemTable {
@@ -374,6 +393,7 @@ impl SystemTable {
             (ShipSystem::FireControl, &self.fire_control),
             (ShipSystem::MainBattery, &self.main_battery),
             (ShipSystem::TorpedoMounts, &self.torpedo_mounts),
+            (ShipSystem::FlightDeck, &self.flight_deck),
         ];
         let mut map = BTreeMap::new();
         for (system, share) in entries {
@@ -471,6 +491,48 @@ fn parse_surface_combat_figures(
     Ok(figures)
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AirCombatFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    strike_contact_max_age_pulses: u32,
+    bomb_hit_chance: Quantity,
+    torpedo_hit_chance: Quantity,
+    bomb_system_hit_chance: Quantity,
+    bomb_system_hit: SystemTable,
+}
+
+/// Loads the air combat figures from a TOML file.
+pub fn load_air_combat_figures(path: &Path) -> Result<AirCombatFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_air_combat_figures(&text, path)
+}
+
+/// Parses air combat figures from TOML text. `path` is only used in
+/// messages.
+fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: AirCombatFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = AirCombatFigures {
+        strike_contact_max_age_pulses: file.strike_contact_max_age_pulses,
+        bomb_hit_chance: number("bomb_hit_chance", &file.bomb_hit_chance)?,
+        torpedo_hit_chance: number("torpedo_hit_chance", &file.torpedo_hit_chance)?,
+        bomb_system_hit_chance: number("bomb_system_hit_chance", &file.bomb_system_hit_chance)?,
+        bomb_system_hit: file.bomb_system_hit.to_map("bomb_system_hit", &number)?,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -502,12 +564,13 @@ mod tests {
         Path::new("test.file")
     }
 
-    const AIRCRAFT_HEADER: &str = "id,name,role,search_range_nm,sweep_width_nm\n";
+    const AIRCRAFT_HEADER: &str =
+        "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage\n";
 
     #[test]
     fn aircraft_types_parse() {
         let types = parse_aircraft_types(
-            &format!("# c\n{AIRCRAFT_HEADER}1, Flying boat ,patrol,600,\"40.5\"\n"),
+            &format!("# c\n{AIRCRAFT_HEADER}1, Flying boat ,patrol,600,\"40.5\",0,none,0\n"),
             here(),
         )
         .expect("parses");
@@ -516,6 +579,45 @@ mod tests {
         assert_eq!(one.role, AircraftRole::Patrol);
         assert_eq!(one.search_range_nm, Fixed::from_int(600));
         assert_eq!(one.sweep_width_nm, "40.5".parse::<Fixed>().expect("fixed"));
+        assert_eq!(one.strike_range_nm, Fixed::ZERO);
+        assert_eq!(one.attack_weapon, AttackWeapon::None);
+        assert_eq!(one.attack_damage, Fixed::ZERO);
+    }
+
+    #[test]
+    fn the_strike_columns_parse_for_a_bomber_and_a_torpedo_bomber() {
+        let types = parse_aircraft_types(
+            &format!(
+                "{AIRCRAFT_HEADER}1,Dive bomber,bomber,0,0,250,bomb,60\n2,Torpedo bomber,bomber,0,0,\"200.5\",torpedo,\"120.5\"\n"
+            ),
+            here(),
+        )
+        .expect("parses");
+        let dive = &types[&AircraftTypeId::new(1)];
+        assert_eq!(dive.role, AircraftRole::Bomber);
+        assert_eq!(dive.strike_range_nm, Fixed::from_int(250));
+        assert_eq!(dive.attack_weapon, AttackWeapon::Bomb);
+        assert_eq!(dive.attack_damage, Fixed::from_int(60));
+        let torpedo = &types[&AircraftTypeId::new(2)];
+        assert_eq!(torpedo.attack_weapon, AttackWeapon::Torpedo);
+        assert_eq!(
+            torpedo.strike_range_nm,
+            "200.5".parse::<Fixed>().expect("fixed")
+        );
+        assert_eq!(
+            torpedo.attack_damage,
+            "120.5".parse::<Fixed>().expect("fixed")
+        );
+    }
+
+    #[test]
+    fn the_strike_columns_are_required() {
+        let old = parse_aircraft_types(
+            "id,name,role,search_range_nm,sweep_width_nm\n1,A,patrol,600,40\n",
+            here(),
+        )
+        .expect_err("rejected");
+        assert!(old.message.contains("strike_range_nm"), "{old}");
     }
 
     #[test]
@@ -525,16 +627,80 @@ mod tests {
                 .expect_err("rejected")
                 .message
         };
-        assert!(bad("1,A,fighter,600,40\n").contains("unknown role"));
-        assert!(bad("1,A,patrol,600,40\n1,B,patrol,600,40\n").contains("appears twice"));
-        assert!(bad("1,A,patrol,0,40\n").contains("search range"));
-        assert!(bad("1,A,patrol,600,x\n").contains("sweep_width_nm"));
+        assert!(bad("1,A,fighter,600,40,0,none,0\n").contains("unknown role"));
+        assert!(
+            bad("1,A,patrol,600,40,0,none,0\n1,B,patrol,600,40,0,none,0\n")
+                .contains("appears twice")
+        );
+        assert!(bad("1,A,patrol,0,40,0,none,0\n").contains("search range"));
+        assert!(bad("1,A,patrol,600,x,0,none,0\n").contains("sweep_width_nm"));
+        assert!(bad("1,A,bomber,0,0,250,cannon,60\n").contains("unknown attack weapon"));
+        assert!(bad("1,A,bomber,0,0,x,bomb,60\n").contains("strike_range_nm"));
+        assert!(bad("1,A,bomber,0,0,250,bomb,y\n").contains("attack_damage"));
+        // A weapon needs a range and damage to go with it.
+        assert!(bad("1,A,bomber,0,0,0,bomb,60\n").contains("strike range"));
+        assert!(bad("1,A,bomber,0,0,250,torpedo,0\n").contains("attack damage"));
+        assert!(bad("1,A,bomber,0,0,-1,none,0\n").contains("negative strike range"));
         let extra = parse_aircraft_types(
-            "id,name,role,search_range_nm,sweep_width_nm,extra\n1,A,patrol,600,40,9\n",
+            "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,extra\n1,A,patrol,600,40,0,none,0,9\n",
             here(),
         )
         .expect_err("rejected");
         assert!(extra.message.contains("extra"), "{extra}");
+    }
+
+    fn air_combat_text() -> String {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/air_combat.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn air_combat_figures_parse_with_the_files_values() {
+        let figures = parse_air_combat_figures(&air_combat_text(), here()).expect("parses");
+        assert_eq!(figures.strike_contact_max_age_pulses, 1);
+        assert_eq!(figures.bomb_hit_chance, Fixed::from_ratio(2, 10));
+        assert_eq!(figures.torpedo_hit_chance, Fixed::from_ratio(15, 100));
+        assert_eq!(figures.bomb_system_hit_chance, Fixed::from_ratio(3, 10));
+        assert_eq!(
+            figures.bomb_system_hit[&ShipSystem::FlightDeck],
+            Fixed::from_ratio(5, 10)
+        );
+        assert_eq!(
+            figures.bomb_system_hit[&ShipSystem::MainBattery],
+            Fixed::from_ratio(2, 10)
+        );
+        assert_eq!(figures.bomb_system_hit.len(), 4);
+    }
+
+    #[test]
+    fn a_float_in_air_combat_figures_is_rejected() {
+        let text = air_combat_text().replace("\"0.2\"\ntorpedo", "0.2\ntorpedo");
+        assert_ne!(text, air_combat_text());
+        let error = parse_air_combat_figures(&text, here()).expect_err("rejected");
+        assert!(error.message.contains("bomb_hit_chance"), "{error}");
+    }
+
+    #[test]
+    fn air_combat_figures_are_checked() {
+        let bad = |from: &str, to: &str| {
+            let text = air_combat_text().replace(from, to);
+            assert_ne!(text, air_combat_text(), "{from} is in the file");
+            parse_air_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(
+            bad("bomb_hit_chance = \"0.2\"", "bomb_hit_chance = \"1.2\"")
+                .contains("bomb hit chance")
+        );
+        assert!(bad(
+            "torpedo_hit_chance = \"0.15\"",
+            "torpedo_hit_chance = \"-0.1\""
+        )
+        .contains("torpedo hit chance"));
+        assert!(bad("flight_deck = \"0.5\"", "flight_deck = \"0.6\"").contains("add to"));
+        assert!(bad("[bomb_system_hit]", "[bomb_system_hits]").contains("bomb_system_hits"));
     }
 
     fn search_text() -> String {

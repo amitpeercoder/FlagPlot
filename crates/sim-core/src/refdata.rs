@@ -111,12 +111,13 @@ impl ShipClass {
     /// True if ships of the class have the system (decision 2 of
     /// `docs/decisions/0016-systems-and-stragglers.md`): propulsion always;
     /// main battery and fire control if the class has main guns; torpedo
-    /// mounts if it has tubes.
+    /// mounts if it has tubes; the flight deck if it carries aircraft.
     pub fn has_system(&self, system: ShipSystem) -> bool {
         match system {
             ShipSystem::Propulsion => true,
             ShipSystem::FireControl | ShipSystem::MainBattery => self.main_guns > 0,
             ShipSystem::TorpedoMounts => self.torpedo_tubes > 0,
+            ShipSystem::FlightDeck => self.aircraft_capacity > 0,
         }
     }
 
@@ -160,6 +161,8 @@ impl ShipClass {
 pub enum AircraftRole {
     /// Long-range search aircraft.
     Patrol,
+    /// Aircraft that strike ships (decision 0026).
+    Bomber,
 }
 
 impl AircraftRole {
@@ -168,6 +171,29 @@ impl AircraftRole {
     pub const fn code(self) -> u8 {
         match self {
             AircraftRole::Patrol => 1,
+            AircraftRole::Bomber => 2,
+        }
+    }
+}
+
+/// What an aircraft type attacks ships with (decision 2 of
+/// `docs/decisions/0026-air-strikes.md`).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum AttackWeapon {
+    /// Nothing: the type cannot be given the naval strike mission.
+    None,
+    Bomb,
+    Torpedo,
+}
+
+impl AttackWeapon {
+    /// A stable number for the weapon. Never renumber it; add new weapons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            AttackWeapon::None => 1,
+            AttackWeapon::Bomb => 2,
+            AttackWeapon::Torpedo => 3,
         }
     }
 }
@@ -178,23 +204,55 @@ pub struct AircraftType {
     pub id: AircraftTypeId,
     pub name: String,
     pub role: AircraftRole,
-    /// The furthest a search by this type can reach, in nautical miles.
+    /// The furthest a search by this type can reach, in nautical miles. Zero
+    /// for a type that cannot search.
     pub search_range_nm: Fixed,
     /// The width of sea one aircraft covers as it flies, in nautical miles.
+    /// Zero for a type that cannot search.
     pub sweep_width_nm: Fixed,
+    /// The furthest a strike by this type can reach, in nautical miles. Zero
+    /// for a type that cannot strike.
+    pub strike_range_nm: Fixed,
+    /// What the type attacks ships with.
+    pub attack_weapon: AttackWeapon,
+    /// The damage one hit of the attack weapon does, before the target's
+    /// toughness. Zero for a type that attacks with nothing.
+    pub attack_damage: Fixed,
 }
 
 impl AircraftType {
     /// Describes what is wrong with the type's numbers, if anything.
     pub fn problem(&self) -> Option<String> {
-        let positive = [
+        // Only a type that cannot search may have no search range.
+        if self.role == AircraftRole::Patrol {
+            let positive = [
+                ("search range", self.search_range_nm),
+                ("sweep width", self.sweep_width_nm),
+            ];
+            for (label, value) in positive {
+                if value <= Fixed::ZERO {
+                    return Some(format!("{} has no positive {label}", self.id));
+                }
+            }
+        }
+        let not_negative = [
             ("search range", self.search_range_nm),
             ("sweep width", self.sweep_width_nm),
+            ("strike range", self.strike_range_nm),
+            ("attack damage", self.attack_damage),
         ];
-        for (label, value) in positive {
-            if value <= Fixed::ZERO {
-                return Some(format!("{} has no positive {label}", self.id));
+        for (label, value) in not_negative {
+            if value.is_negative() {
+                return Some(format!("{} has a negative {label}", self.id));
             }
+        }
+        if self.attack_weapon != AttackWeapon::None
+            && (self.strike_range_nm <= Fixed::ZERO || self.attack_damage <= Fixed::ZERO)
+        {
+            return Some(format!(
+                "{} attacks with a weapon but has no positive strike range and attack damage",
+                self.id
+            ));
         }
         None
     }
@@ -441,6 +499,56 @@ impl SurfaceCombatFigures {
     }
 }
 
+/// The figures of the air strike rule. See
+/// `docs/decisions/0026-air-strikes.md`.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct AirCombatFigures {
+    /// A group strikes a contact no more than this many pulses old.
+    pub strike_contact_max_age_pulses: u32,
+    /// Chance one aircraft's bomb hits.
+    pub bomb_hit_chance: Fixed,
+    /// Chance one aircraft's torpedo hits.
+    pub torpedo_hit_chance: Fixed,
+    /// Chance a bomb hit also knocks a system down one level.
+    pub bomb_system_hit_chance: Fixed,
+    /// Which system a bomb's system hit lands on: each system's share. A
+    /// system absent from the table has share 0. The shares add to 1.
+    pub bomb_system_hit: BTreeMap<ShipSystem, Fixed>,
+}
+
+impl AirCombatFigures {
+    /// Describes what is wrong with the figures, if anything.
+    pub fn problem(&self) -> Option<String> {
+        let in_unit = |value: Fixed| value >= Fixed::ZERO && value <= Fixed::ONE;
+        let chances = [
+            ("bomb hit chance", self.bomb_hit_chance),
+            ("torpedo hit chance", self.torpedo_hit_chance),
+            ("bomb system hit chance", self.bomb_system_hit_chance),
+        ];
+        for (label, value) in chances {
+            if !in_unit(value) {
+                return Some(format!("air combat {label} {value} is not between 0 and 1"));
+            }
+        }
+        let mut total = Fixed::ZERO;
+        for (system, share) in &self.bomb_system_hit {
+            if !in_unit(*share) {
+                return Some(format!(
+                    "air combat bomb system hit share for {} {share} is not between 0 and 1",
+                    system.name()
+                ));
+            }
+            total += *share;
+        }
+        if total != Fixed::ONE {
+            return Some(format!(
+                "air combat bomb system hit shares add to {total}, not 1"
+            ));
+        }
+        None
+    }
+}
+
 /// What a port of one size can handle. See
 /// `docs/decisions/0011-cargo-handling.md`.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -485,6 +593,31 @@ pub struct RefData {
     /// The surface combat figures. `None` only in unit tests that have no
     /// fights; the loader always supplies it.
     pub surface_combat: Option<SurfaceCombatFigures>,
+    /// The air combat figures of decision 0026. `None` if the scenario names
+    /// no file: no air group can then be given the naval strike mission.
+    pub air_combat: Option<AirCombatFigures>,
+}
+
+#[cfg(test)]
+impl AirCombatFigures {
+    /// The figures of `data/reference/air_combat.toml`, written out.
+    pub(crate) fn from_air_combat_toml() -> AirCombatFigures {
+        let tenth = |n: i64| Fixed::from_ratio(n, 10);
+        AirCombatFigures {
+            strike_contact_max_age_pulses: 1,
+            bomb_hit_chance: tenth(2),
+            torpedo_hit_chance: Fixed::from_ratio(15, 100),
+            bomb_system_hit_chance: tenth(3),
+            bomb_system_hit: [
+                (ShipSystem::FlightDeck, tenth(5)),
+                (ShipSystem::Propulsion, tenth(2)),
+                (ShipSystem::FireControl, tenth(1)),
+                (ShipSystem::MainBattery, tenth(2)),
+            ]
+            .into_iter()
+            .collect(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -781,11 +914,40 @@ mod tests {
     }
 
     #[test]
+    fn the_air_combat_figures_of_the_file_are_valid_and_a_bad_table_is_not() {
+        let good = AirCombatFigures::from_air_combat_toml();
+        assert_eq!(good.problem(), None);
+        let mut bad = good.clone();
+        bad.bomb_system_hit
+            .insert(ShipSystem::TorpedoMounts, Fixed::from_ratio(1, 10));
+        assert!(bad.problem().expect("problem").contains("add to"));
+        let mut bad = good.clone();
+        bad.bomb_hit_chance = Fixed::from_ratio(11, 10);
+        assert!(bad.problem().expect("problem").contains("bomb hit chance"));
+        let mut bad = good.clone();
+        bad.bomb_system_hit_chance = Fixed::from_ratio(-1, 10);
+        assert!(bad
+            .problem()
+            .expect("problem")
+            .contains("bomb system hit chance"));
+        let mut bad = good;
+        bad.torpedo_hit_chance = Fixed::from_int(2);
+        assert!(bad
+            .problem()
+            .expect("problem")
+            .contains("torpedo hit chance"));
+    }
+
+    #[test]
     fn a_class_has_the_systems_its_weapons_give_it() {
-        let armed = test_class();
+        let mut armed = test_class();
+        armed.aircraft_capacity = 10;
         for system in ShipSystem::ALL {
             assert!(armed.has_system(system));
         }
+        // The flight deck is the system of a class that carries aircraft.
+        armed.aircraft_capacity = 0;
+        assert!(!armed.has_system(ShipSystem::FlightDeck));
         let mut guns_only = test_class();
         guns_only.torpedo_tubes = 0;
         assert!(guns_only.has_system(ShipSystem::MainBattery));
@@ -865,6 +1027,9 @@ mod tests {
             role: AircraftRole::Patrol,
             search_range_nm: Fixed::from_int(600),
             sweep_width_nm: Fixed::from_int(40),
+            strike_range_nm: Fixed::ZERO,
+            attack_weapon: AttackWeapon::None,
+            attack_damage: Fixed::ZERO,
         };
         assert_eq!(good.problem(), None);
         let mut bad = good.clone();

@@ -22,8 +22,8 @@ use crate::error::DataError;
 use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
-    load_aircraft_types, load_port_sizes, load_search_figures, load_ship_classes,
-    load_surface_combat_figures, parse_kind,
+    load_air_combat_figures, load_aircraft_types, load_port_sizes, load_search_figures,
+    load_ship_classes, load_surface_combat_figures, parse_kind,
 };
 
 #[derive(Deserialize)]
@@ -47,6 +47,9 @@ struct ScenarioFile {
     search: String,
     /// Path to the surface combat figures file, relative to the scenario file.
     surface_combat: String,
+    /// Path to the air combat figures file, relative to the scenario file.
+    /// Optional: without it no air group can be ordered to strike.
+    air_combat: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -145,6 +148,7 @@ struct ShipSpec {
     fire_control: Option<SystemStateSpec>,
     main_battery: Option<SystemStateSpec>,
     torpedo_mounts: Option<SystemStateSpec>,
+    flight_deck: Option<SystemStateSpec>,
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -285,6 +289,7 @@ impl From<StanceSpec> for Stance {
 enum AirMissionSpec {
     Rest,
     Search,
+    NavalStrike,
 }
 
 impl From<AirMissionSpec> for AirMission {
@@ -292,6 +297,7 @@ impl From<AirMissionSpec> for AirMission {
         match spec {
             AirMissionSpec::Rest => AirMission::Rest,
             AirMissionSpec::Search => AirMission::Search,
+            AirMissionSpec::NavalStrike => AirMission::NavalStrike,
         }
     }
 }
@@ -408,6 +414,9 @@ impl Scenario {
         ref_data.surface_combat = Some(load_surface_combat_figures(
             &folder.join(&file.surface_combat),
         )?);
+        if let Some(air_combat) = &file.air_combat {
+            ref_data.air_combat = Some(load_air_combat_figures(&folder.join(air_combat))?);
+        }
 
         let mut truth = TruthState::default();
 
@@ -520,6 +529,7 @@ impl Scenario {
                 (ShipSystem::FireControl, spec.fire_control),
                 (ShipSystem::MainBattery, spec.main_battery),
                 (ShipSystem::TorpedoMounts, spec.torpedo_mounts),
+                (ShipSystem::FlightDeck, spec.flight_deck),
             ] {
                 let Some(wanted) = wanted else {
                     continue;
@@ -1090,6 +1100,72 @@ r = 0
         assert!(error_of(&order("", "kind = \"load\"")).contains("exactly one"));
         let float = arc.replace("range_nm = 600", "range_nm = 600.5");
         assert!(parse_with(&order("air_group = 1", &float)).is_err());
+    }
+
+    #[test]
+    fn the_naval_strike_mission_loads_for_an_air_group() {
+        let mission = "kind = \"set_air_mission\"\nmission = \"naval_strike\"";
+        parse_with(&order("air_group = 1", mission)).expect("naval_strike loads");
+        let typo = mission.replace("naval_strike", "naval strike");
+        assert!(parse_with(&order("air_group = 1", &typo)).is_err());
+    }
+
+    /// `HEAD` with the air combat key added after the surface combat key.
+    fn with_air_combat(extra: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let head = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            "surface_combat = \"../reference/surface_combat.toml\"\nair_combat = \"../reference/air_combat.toml\"\n",
+        );
+        Scenario::parse(&format!("{head}{extra}"), &path)
+    }
+
+    #[test]
+    fn the_air_combat_key_is_optional_and_loads_the_figures() {
+        let without = parse_with("").expect("loads");
+        assert!(without.world.ref_data().air_combat.is_none());
+        let with = with_air_combat("").expect("loads");
+        let figures = with
+            .world
+            .ref_data()
+            .air_combat
+            .as_ref()
+            .expect("the figures are loaded");
+        assert_eq!(figures.strike_contact_max_age_pulses, 1);
+        assert_eq!(figures.bomb_hit_chance, Fixed::from_ratio(2, 10));
+        let missing = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            "surface_combat = \"../reference/surface_combat.toml\"\nair_combat = \"../reference/nothing.toml\"\n",
+        );
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let error = Scenario::parse(&missing, &path).expect_err("a missing file is an error");
+        assert!(error.to_string().contains("nothing.toml"), "{error}");
+    }
+
+    #[test]
+    fn a_flight_deck_state_needs_a_class_that_carries_aircraft() {
+        // Class 4 is the placeholder carrier, class 1 a cruiser.
+        let carrier = |extra: &str| ship(extra).replace("class = 1", "class = 4");
+        let deck = |extra: &str| {
+            parse_with(&with_force(&carrier(extra)))
+                .expect("loads")
+                .world
+                .umpire()
+                .ships[&ShipId::new(1)]
+                .systems
+                .flight_deck
+        };
+        assert_eq!(deck(""), SystemState::Working);
+        assert_eq!(deck("flight_deck = \"degraded\""), SystemState::Degraded);
+        assert_eq!(deck("flight_deck = \"out\""), SystemState::Out);
+        parse_with(&with_force(&ship("flight_deck = \"working\""))).expect("working loads");
+        let message = error_of(&with_force(&ship("flight_deck = \"out\"")));
+        assert!(message.contains("ship:1"), "{message}");
+        assert!(
+            message.contains("flight deck") && message.contains("has no"),
+            "{message}"
+        );
+        assert!(parse_with(&with_force(&carrier("flight_deck = \"broken\""))).is_err());
     }
 
     #[test]

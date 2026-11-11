@@ -1,0 +1,23 @@
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0026-air-strikes.md.
+
+placeholder = true
+
+# A group strikes a contact no older than this.
+strike_contact_max_age_pulses = 1
+
+# Chance one aircraft's weapon hits.
+bomb_hit_chance = "0.2"
+torpedo_hit_chance = "0.15"
+
+# Chance a bomb hit also knocks a system down one level. A torpedo from the
+# air uses the torpedo figures of surface_combat.toml.
+bomb_system_hit_chance = "0.3"
+
+# Which system a bomb's system hit lands on. Adds to 1.
+[bomb_system_hit]
+flight_deck = "0.5"
+propulsion = "0.2"
+fire_control = "0.1"
+main_battery = "0.2"

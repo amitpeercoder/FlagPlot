@@ -1,0 +1,120 @@
+# Scenario 5b: a carrier's scouts find an enemy force and its bombers strike it.
+#
+# Stage 5b of scenario 5. It proves the strike decision, a strike that flies
+# on belief and finds its target or finds nothing, bomb hits through the
+# damage rules of surface combat, and the flight deck (decision 0026). Nobody
+# opposes the strike: fighters and anti-aircraft fire are stage 5c. The hand
+# calculation is in tests/scenario_05b_strike.rs. The test runs this file
+# with seeds 1 to 1000.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
+
+name = "Scenario 5b: Unopposed strike"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_search.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# The carrier force lies stopped at (4,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force"
+side = "allied"
+q = 4
+r = 0
+mission = "carrier"
+
+# The enemy force lies stopped at (9,0), 200 nm east.
+[[task_force]]
+id = 2
+name = "Placeholder enemy carrier force"
+side = "japanese"
+q = 9
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier A"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer A"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder carrier B"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+# Aboard carrier A: eight scouts and eighteen dive bombers.
+[[air_group]]
+id = 1
+name = "Placeholder scouting squadron"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 8
+
+[[air_group]]
+id = 2
+name = "Placeholder bombing squadron"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 18
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 40
+to_deg = 130
+range_nm = 300
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
