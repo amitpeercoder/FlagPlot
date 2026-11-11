@@ -192,6 +192,7 @@ mod tests {
                         side: *side,
                         fuel_t: tons(*fuel),
                         supply_t: Fixed::ZERO,
+                        cargo_fuel_t: Fixed::ZERO,
                         location: ShipLocation::TaskForce(tf(*id)),
                         flotation_damage: Fixed::ZERO,
                         fire_damage: Fixed::ZERO,

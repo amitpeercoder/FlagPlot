@@ -1,0 +1,63 @@
+Scenario 2b: Fuel run, Espiritu Santo to Guadalcanal
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 4951e08bff4db583  8 events
+day   2  hash ac0d34de53bac22f  15 events
+day   3  hash 686a3ddd7c0cf182  11 events
+day   4  hash 440a9bdab45750df  9 events
+
+#1 D1 -         order:1 accepted for task_force:1  <- order:1
+#2 D1 night     ship:1 loaded 1800 t of fuel cargo from base:1, 1800 t of fuel cargo aboard, 4700 t of fuel in stock  <- order:1
+#3 D1 night     ship:2 loaded 1800 t of fuel cargo from base:1, 1800 t of fuel cargo aboard, 2900 t of fuel in stock  <- order:1
+#4 D1 morning   ship:1 loaded 900 t of fuel cargo from base:1, 2700 t of fuel cargo aboard, 2000 t of fuel in stock  <- order:1
+#5 D1 morning   ship:2 loaded 900 t of fuel cargo from base:1, 2700 t of fuel cargo aboard, 1100 t of fuel in stock  <- order:1
+#6 D1 afternoon ship:1 loaded 300 t of fuel cargo from base:1, 3000 t of fuel cargo aboard, 800 t of fuel in stock  <- order:1
+#7 D1 afternoon ship:2 loaded 300 t of fuel cargo from base:1, 3000 t of fuel cargo aboard, 500 t of fuel in stock  <- order:1
+#8 D1 afternoon task_force:1 completed loading fuel at base:1 at D1 14:00  <- #6, #7
+#9 D2 -         order:2 accepted for task_force:1  <- order:2
+#10 D2 -         order:3 accepted for task_force:1  <- order:3
+#11 D2 -         order:4 accepted for task_force:1  <- order:4
+#12 D2 night     task_force:1 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:2, order:3
+#13 D2 night     ship:1 burned 12 t, 988 t remaining  <- #12
+#14 D2 night     ship:2 burned 12 t, 988 t remaining  <- #12
+#15 D2 night     ship:3 burned 15 t, 485 t remaining  <- #12
+#16 D2 morning   task_force:1 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:2, order:3
+#17 D2 morning   ship:1 burned 6 t, 982 t remaining  <- #16
+#18 D2 morning   ship:2 burned 6 t, 982 t remaining  <- #16
+#19 D2 morning   ship:3 burned 7.5 t, 477.5 t remaining  <- #16
+#20 D2 afternoon task_force:1 steamed 60 nm at 10 kn from (5,0) to (6,0)  <- order:2, order:3
+#21 D2 afternoon ship:1 burned 6 t, 976 t remaining  <- #20
+#22 D2 afternoon ship:2 burned 6 t, 976 t remaining  <- #20
+#23 D2 afternoon ship:3 burned 7.5 t, 470 t remaining  <- #20
+#24 D3 night     task_force:1 steamed 80 nm at 10 kn from (6,0) to (8,0)  <- order:2, order:3
+#25 D3 night     ship:1 burned 8 t, 968 t remaining  <- #24
+#26 D3 night     ship:2 burned 8 t, 968 t remaining  <- #24
+#27 D3 night     ship:3 burned 10 t, 460 t remaining  <- #24
+#28 D3 night     task_force:1 arrived at (8,0) at D3 02:00  <- #24
+#29 D3 night     ship:1 unloaded 200 t of fuel cargo at base:2, 2800 t of fuel cargo aboard, 200 t of fuel in stock  <- order:4, #28
+#30 D3 night     ship:2 unloaded 80 t of fuel cargo at base:2, 2920 t of fuel cargo aboard, 280 t of fuel in stock  <- order:4, #28
+#31 D3 morning   ship:1 unloaded 300 t of fuel cargo at base:2, 2500 t of fuel cargo aboard, 580 t of fuel in stock  <- order:4, #28
+#32 D3 morning   ship:2 unloaded 120 t of fuel cargo at base:2, 2800 t of fuel cargo aboard, 700 t of fuel in stock  <- order:4, #28
+#33 D3 afternoon ship:1 unloaded 300 t of fuel cargo at base:2, 2200 t of fuel cargo aboard, 1000 t of fuel in stock  <- order:4, #28
+#34 D3 afternoon ship:2 unloaded 120 t of fuel cargo at base:2, 2680 t of fuel cargo aboard, 1120 t of fuel in stock  <- order:4, #28
+#35 D4 -         ship:1 took 32 t of fuel at base:2, 1000 t aboard, base:2 has 1088 t left  <- #28
+#36 D4 -         ship:2 took 32 t of fuel at base:2, 1000 t aboard, base:2 has 1056 t left  <- #28
+#37 D4 -         ship:3 took 40 t of fuel at base:2, 500 t aboard, base:2 has 1016 t left  <- #28
+#38 D4 night     ship:1 unloaded 600 t of fuel cargo at base:2, 1600 t of fuel cargo aboard, 1616 t of fuel in stock  <- order:4, #28
+#39 D4 night     ship:2 unloaded 240 t of fuel cargo at base:2, 2440 t of fuel cargo aboard, 1856 t of fuel in stock  <- order:4, #28
+#40 D4 morning   ship:1 unloaded 300 t of fuel cargo at base:2, 1300 t of fuel cargo aboard, 2156 t of fuel in stock  <- order:4, #28
+#41 D4 morning   ship:2 unloaded 120 t of fuel cargo at base:2, 2320 t of fuel cargo aboard, 2276 t of fuel in stock  <- order:4, #28
+#42 D4 afternoon ship:1 unloaded 300 t of fuel cargo at base:2, 1000 t of fuel cargo aboard, 2576 t of fuel in stock  <- order:4, #28
+#43 D4 afternoon ship:2 unloaded 120 t of fuel cargo at base:2, 2200 t of fuel cargo aboard, 2696 t of fuel in stock  <- order:4, #28
+
+task_force:1 "Placeholder supply convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cargo ship 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 1000 t of fuel cargo
+ship:2 "Placeholder cargo ship 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 2200 t of fuel cargo
+ship:3 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+base:1 "Espiritu Santo" (Allied) at (0,0): 10000 t of supply in stock, 500 t of fuel in stock
+base:2 "Guadalcanal" (Allied) at (8,0): 500 t of supply in stock, 2696 t of fuel in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

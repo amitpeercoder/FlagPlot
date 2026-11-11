@@ -3,7 +3,7 @@
 use serde::Serialize;
 use sim_core::events::{Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange};
 use sim_core::fixed::Fixed;
-use sim_core::orders::RejectReason;
+use sim_core::orders::{Cargo, RejectReason};
 use sim_core::state::AirGroupLocation;
 
 use super::data::{Data, Field};
@@ -131,6 +131,15 @@ fn reject_reason(reason: &RejectReason) -> Data {
 /// The stable name of an event kind and every field it carries, under the
 /// field names of `EventKind`. Ids are integers, hexes `[q, r]`, quantities
 /// numbers, enums snake_case words. The match names every variant.
+/// Names the cargo in an event's data, for fuel only: the data of a supply
+/// event is what it was before fuel became a cargo (decision 0046).
+fn cargo_named(data: Data, cargo: Cargo) -> Data {
+    match cargo {
+        Cargo::Supply => data,
+        Cargo::Fuel => data.text("cargo", cargo.name()),
+    }
+}
+
 fn describe(kind: &EventKind) -> (&'static str, Data) {
     let d = Data::new();
     match kind {
@@ -213,42 +222,50 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             ship,
             task_force,
             base,
+            cargo,
             loaded_t,
             aboard_t,
             base_stock_t,
         } => (
             "cargo_loaded",
-            d.id("ship", *ship)
-                .id("task_force", *task_force)
-                .id("base", *base)
-                .num("loaded_t", *loaded_t)
-                .num("aboard_t", *aboard_t)
-                .num("base_stock_t", *base_stock_t),
+            cargo_named(
+                d.id("ship", *ship)
+                    .id("task_force", *task_force)
+                    .id("base", *base),
+                *cargo,
+            )
+            .num("loaded_t", *loaded_t)
+            .num("aboard_t", *aboard_t)
+            .num("base_stock_t", *base_stock_t),
         ),
         EventKind::CargoUnloaded {
             ship,
             task_force,
             base,
+            cargo,
             unloaded_t,
             aboard_t,
             base_stock_t,
         } => (
             "cargo_unloaded",
-            d.id("ship", *ship)
-                .id("task_force", *task_force)
-                .id("base", *base)
-                .num("unloaded_t", *unloaded_t)
-                .num("aboard_t", *aboard_t)
-                .num("base_stock_t", *base_stock_t),
+            cargo_named(
+                d.id("ship", *ship)
+                    .id("task_force", *task_force)
+                    .id("base", *base),
+                *cargo,
+            )
+            .num("unloaded_t", *unloaded_t)
+            .num("aboard_t", *aboard_t)
+            .num("base_stock_t", *base_stock_t),
         ),
         EventKind::LoadingComplete {
             task_force,
             base,
+            cargo,
             elapsed_hours,
         } => (
             "loading_complete",
-            d.id("task_force", *task_force)
-                .id("base", *base)
+            cargo_named(d.id("task_force", *task_force).id("base", *base), *cargo)
                 .num("elapsed_hours", *elapsed_hours),
         ),
         EventKind::UnloadingComplete {

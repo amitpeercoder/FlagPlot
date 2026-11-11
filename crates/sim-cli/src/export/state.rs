@@ -77,6 +77,9 @@ pub struct ShipOut {
     location: LocationOut,
     fuel: Num,
     supply: Num,
+    /// Fuel carried as cargo (decision 0046). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    cargo_fuel: Num,
     flotation_damage: Num,
     fire_damage: Num,
     /// Only the systems the ship's class has.
@@ -257,6 +260,7 @@ fn ship(ship: &Ship, ref_data: &RefData) -> ShipOut {
         },
         fuel: Num(ship.fuel_t),
         supply: Num(ship.supply_t),
+        cargo_fuel: Num(ship.cargo_fuel_t),
         flotation_damage: Num(ship.flotation_damage),
         fire_damage: Num(ship.fire_damage),
         systems,

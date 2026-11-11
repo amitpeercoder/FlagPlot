@@ -334,7 +334,7 @@ fn run(args: &[String]) -> Result<(), String> {
             damaged.join(", ")
         };
         println!(
-            "{} \"{}\": {state}; damage flotation {}, fire {}; {systems}; {} gun rounds, torpedoes {}; {} t of fuel, {} t of supply",
+            "{} \"{}\": {state}; damage flotation {}, fire {}; {systems}; {} gun rounds, torpedoes {}; {} t of fuel, {} t of supply{}",
             ship.id,
             ship.name,
             ship.flotation_damage,
@@ -342,7 +342,12 @@ fn run(args: &[String]) -> Result<(), String> {
             ship.gun_rounds,
             if ship.torpedoes_ready { "ready" } else { "gone" },
             ship.fuel_t,
-            ship.supply_t
+            ship.supply_t,
+            if ship.cargo_fuel_t > Fixed::ZERO {
+                format!(", {} t of fuel cargo", ship.cargo_fuel_t)
+            } else {
+                String::new()
+            }
         );
     }
     for base in truth.bases.values() {

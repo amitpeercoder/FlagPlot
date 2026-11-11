@@ -244,6 +244,40 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
     assert!(orders[0]["origin"]["intent"].is_null());
 }
 
+/// A load of supply is saved as it always was, so a game saved before fuel
+/// was a cargo still replays; a load of fuel names its cargo (decision 0046).
+#[test]
+fn a_load_order_is_saved_with_its_cargo_only_for_fuel() {
+    let load_orders = |scenario: &str, label: &str| -> (Vec<serde_json::Value>, PathBuf) {
+        let game = save(scenario, label, &[]);
+        let value: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
+        let orders = value["orders"]
+            .as_array()
+            .expect("orders")
+            .iter()
+            .map(|entry| entry["order"].clone())
+            .filter(|order| order["kind"] == "load")
+            .collect();
+        (orders, game)
+    };
+    let (supply, game) = load_orders("data/scenarios/02_supply_run.toml", "load-supply");
+    assert_eq!(supply, vec![serde_json::json!({ "kind": "load" })]);
+    ok(
+        &binary(&["replay", &game.to_string_lossy()]),
+        "replay of 02",
+    );
+    let (fuel, game) = load_orders("data/scenarios/02b_fuel_run.toml", "load-fuel");
+    assert_eq!(
+        fuel,
+        vec![serde_json::json!({ "kind": "load", "cargo": "fuel" })]
+    );
+    ok(
+        &binary(&["replay", &game.to_string_lossy()]),
+        "replay of 02b",
+    );
+}
+
 /// The soak (decision 0044): 180 days saved and replayed, and every one of
 /// the 180 hashes the replay prints is the one a direct run prints.
 #[test]

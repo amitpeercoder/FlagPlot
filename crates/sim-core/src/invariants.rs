@@ -37,13 +37,16 @@ pub enum InvariantViolation {
     TaskForceProgressOutOfRange(TaskForceId),
     BaseOffMap(BaseId, Hex),
     NegativeSupplyAboard(ShipId),
-    /// A ship carries more supply than its class's cargo capacity.
+    /// A ship carries more supply and fuel cargo together than its class's
+    /// cargo capacity.
     ShipOverCargoCapacity(ShipId),
     NegativeBaseStock(BaseId),
     /// The base has a negative fuel stock (decision 0045).
     NegativeBaseFuel(BaseId),
     /// The ship has more fuel than its class can hold (decision 0045).
     ShipOverFuelCapacity(ShipId),
+    /// The ship carries a negative tonnage of fuel as cargo (decision 0046).
+    NegativeFuelCargo(ShipId),
     /// `toward_hex` is set with no progress, or progress is made with no
     /// `toward_hex`.
     TaskForceLegStateInconsistent(TaskForceId),
@@ -143,13 +146,19 @@ impl fmt::Display for InvariantViolation {
                 write!(f, "{ship} has negative supply aboard")
             }
             InvariantViolation::ShipOverCargoCapacity(ship) => {
-                write!(f, "{ship} carries more supply than its class can hold")
+                write!(
+                    f,
+                    "{ship} carries more supply and fuel cargo than its class can hold"
+                )
             }
             InvariantViolation::NegativeBaseStock(base) => {
                 write!(f, "{base} has negative supply stock")
             }
             InvariantViolation::NegativeBaseFuel(base) => {
                 write!(f, "{base} has negative fuel stock")
+            }
+            InvariantViolation::NegativeFuelCargo(ship) => {
+                write!(f, "{ship} has negative fuel cargo aboard")
             }
             InvariantViolation::ShipOverFuelCapacity(ship) => {
                 write!(f, "{ship} has more fuel than its class can hold")
@@ -246,6 +255,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         if ship.supply_t.is_negative() {
             violations.push(InvariantViolation::NegativeSupplyAboard(ship.id));
         }
+        if ship.cargo_fuel_t.is_negative() {
+            violations.push(InvariantViolation::NegativeFuelCargo(ship.id));
+        }
         let tracks = [ship.flotation_damage, ship.fire_damage];
         if tracks
             .iter()
@@ -265,7 +277,7 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             if ship.fuel_t > class.fuel_capacity_t {
                 violations.push(InvariantViolation::ShipOverFuelCapacity(ship.id));
             }
-            if ship.supply_t > class.cargo_capacity_t {
+            if ship.supply_t + ship.cargo_fuel_t > class.cargo_capacity_t {
                 violations.push(InvariantViolation::ShipOverCargoCapacity(ship.id));
             }
             for system in ShipSystem::ALL {
@@ -634,6 +646,7 @@ mod tests {
                 side: Side::Allied,
                 fuel_t: Fixed::from_int(100),
                 supply_t: Fixed::ZERO,
+                cargo_fuel_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
                 flotation_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,
@@ -849,6 +862,50 @@ mod tests {
         assert_eq!(
             check(&truth, &map, &ref_data),
             vec![InvariantViolation::NegativeBaseFuel(base)]
+        );
+    }
+
+    #[test]
+    fn fuel_cargo_is_not_negative_and_shares_the_cargo_capacity_with_supply() {
+        // Same setup as the fuel test above: a class with 100 t of cargo.
+        let (mut truth, map) = setup_with_ship();
+        let mut ref_data = RefData::default();
+        ref_data.ship_classes.insert(
+            ShipClassId::new(1),
+            ShipClass {
+                id: ShipClassId::new(1),
+                name: "Auxiliary".to_string(),
+                kind: ShipKind::Auxiliary,
+                cruise_speed_kn: Fixed::from_int(10),
+                max_speed_kn: Fixed::from_int(12),
+                fuel_capacity_t: Fixed::from_int(100),
+                endurance_nm: Fixed::from_int(1000),
+                cargo_capacity_t: Fixed::from_int(100),
+                main_guns: 0,
+                gun_rounds_per_min: Fixed::ZERO,
+                gun_rounds_per_gun: 0,
+                gun_damage: Fixed::ZERO,
+                torpedo_tubes: 0,
+                torpedo_damage: Fixed::ZERO,
+                toughness: Fixed::from_int(100),
+                radar: false,
+                aircraft_capacity: 0,
+                anti_aircraft: 0,
+            },
+        );
+        ship_mut(&mut truth).supply_t = Fixed::from_int(60);
+        ship_mut(&mut truth).cargo_fuel_t = Fixed::from_int(40);
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
+        ship_mut(&mut truth).cargo_fuel_t = Fixed::from_int(41);
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::ShipOverCargoCapacity(SHIP)]
+        );
+        ship_mut(&mut truth).supply_t = Fixed::ZERO;
+        ship_mut(&mut truth).cargo_fuel_t = Fixed::from_raw(-1);
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::NegativeFuelCargo(SHIP)]
         );
     }
 

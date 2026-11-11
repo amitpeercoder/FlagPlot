@@ -215,6 +215,9 @@ struct ShipSpec {
     fuel_t: Quantity,
     /// Supply aboard at the start, in tons. Defaults to 0.
     supply_t: Option<Quantity>,
+    /// Fuel carried as cargo at the start, in tons (decision 0046). Defaults
+    /// to 0. With the supply aboard it must fit the class's cargo capacity.
+    cargo_fuel_t: Option<Quantity>,
     /// Exactly one of `task_force` and `port` must be given.
     task_force: Option<u32>,
     port: Option<u32>,
@@ -267,6 +270,14 @@ struct OrderSpec {
 // flattens this enum, which turns off its own unknown field check, so the
 // check lives here instead. It only works on struct variants, which is why
 // `Load` and `Unload` have empty braces.
+/// What a load order takes aboard.
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum CargoSpec {
+    Supply,
+    Fuel,
+}
+
 #[allow(clippy::enum_variant_names)]
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -282,7 +293,10 @@ enum ActionSpec {
     SetMission {
         mission: MissionSpec,
     },
-    Load {},
+    /// `cargo` is "supply" or "fuel" and defaults to supply (decision 0046).
+    Load {
+        cargo: Option<CargoSpec>,
+    },
     Unload {},
     /// `target_base` is required for `base_strike` and given for no other
     /// mission (decision 0034).
@@ -740,18 +754,37 @@ impl Scenario {
                     spec.class, ship_class.fuel_capacity_t
                 )));
             }
+            let supply_t = match &spec.supply_t {
+                Some(quantity) => quantity
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id}: supply_t {e}")))?,
+                None => Fixed::ZERO,
+            };
+            let cargo_fuel_t = match &spec.cargo_fuel_t {
+                Some(quantity) => quantity
+                    .to_fixed()
+                    .map_err(|e| fail(format!("{id}: cargo_fuel_t {e}")))?,
+                None => Fixed::ZERO,
+            };
+            if cargo_fuel_t.is_negative() {
+                return Err(fail(format!("{id}: cargo_fuel_t is negative")));
+            }
+            // Supply and fuel cargo share the class's cargo capacity
+            // (decision 0046).
+            if supply_t + cargo_fuel_t > ship_class.cargo_capacity_t {
+                return Err(fail(format!(
+                    "{id} starts with {supply_t} t of supply and {cargo_fuel_t} t of fuel cargo but its class {} carries {} t",
+                    spec.class, ship_class.cargo_capacity_t
+                )));
+            }
             let ship = Ship {
                 id,
                 name: spec.name.clone(),
                 class,
                 side: spec.side.into(),
                 fuel_t,
-                supply_t: match &spec.supply_t {
-                    Some(quantity) => quantity
-                        .to_fixed()
-                        .map_err(|e| fail(format!("{id}: supply_t {e}")))?,
-                    None => Fixed::ZERO,
-                },
+                supply_t,
+                cargo_fuel_t,
                 location,
                 flotation_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,
@@ -972,7 +1005,10 @@ impl Scenario {
                         ActionSpec::SetMission { mission } => {
                             TaskForceOrder::SetMission((*mission).into())
                         }
-                        ActionSpec::Load {} => TaskForceOrder::Load,
+                        ActionSpec::Load { cargo } => match cargo {
+                            None | Some(CargoSpec::Supply) => TaskForceOrder::Load,
+                            Some(CargoSpec::Fuel) => TaskForceOrder::LoadFuel,
+                        },
                         ActionSpec::Unload {} => TaskForceOrder::Unload,
                         ActionSpec::SetRulesOfEngagement {
                             stance,
@@ -2530,6 +2566,77 @@ r = 0
             "kind = \"set_rules_of_engagement\"\nstance = \"engage\"\nbreak_off = \"0.5\"",
         );
         assert!(error_of(&to_group).contains("air_group"));
+    }
+
+    /// The task force orders scripted for day 1 of a scenario with one load
+    /// order whose body is `body`.
+    fn loaded_orders(body: &str) -> Result<Vec<TaskForceOrder>, DataError> {
+        let scenario = parse_with(&order("task_force = 1", body))?;
+        Ok(scenario.scripted_orders()[&1]
+            .iter()
+            .filter_map(|(_, request)| match &request.kind {
+                OrderKind::TaskForce { order, .. } => Some(order.clone()),
+                _ => None,
+            })
+            .collect())
+    }
+
+    #[test]
+    fn a_load_order_names_its_cargo_and_defaults_to_supply() {
+        assert_eq!(
+            loaded_orders("kind = \"load\"").expect("loads"),
+            vec![TaskForceOrder::Load]
+        );
+        assert_eq!(
+            loaded_orders("kind = \"load\"\ncargo = \"supply\"").expect("loads"),
+            vec![TaskForceOrder::Load]
+        );
+        assert_eq!(
+            loaded_orders("kind = \"load\"\ncargo = \"fuel\"").expect("loads"),
+            vec![TaskForceOrder::LoadFuel]
+        );
+        for bad in ["\"oil\"", "\"Fuel\"", "1", "\"\""] {
+            assert!(
+                loaded_orders(&format!("kind = \"load\"\ncargo = {bad}")).is_err(),
+                "cargo = {bad} should not load"
+            );
+        }
+        // An unload names no cargo.
+        assert!(loaded_orders("kind = \"unload\"\ncargo = \"fuel\"").is_err());
+    }
+
+    #[test]
+    fn a_ship_may_start_with_fuel_cargo_that_fits_beside_its_supply() {
+        // Class 3 carries 3000 t.
+        let cargo = |extra: &str| with_force(&ship(extra).replace("class = 1", "class = 3"));
+        let aboard = |scenario: Scenario| {
+            let ship = scenario.world.umpire().ships[&ShipId::new(1)].clone();
+            (ship.supply_t, ship.cargo_fuel_t)
+        };
+        assert_eq!(
+            aboard(parse_with(&cargo("")).expect("loads")),
+            (Fixed::ZERO, Fixed::ZERO)
+        );
+        assert_eq!(
+            aboard(parse_with(&cargo("cargo_fuel_t = 3000")).expect("loads")),
+            (Fixed::ZERO, Fixed::from_int(3000))
+        );
+        assert_eq!(
+            aboard(parse_with(&cargo("supply_t = 2000\ncargo_fuel_t = 1000")).expect("loads")),
+            (Fixed::from_int(2000), Fixed::from_int(1000))
+        );
+        // Over the capacity together, though each is under it.
+        let message = error_of(&cargo("supply_t = 2000\ncargo_fuel_t = 1001"));
+        assert!(
+            message.contains("fuel cargo but its class"),
+            "unexpected message: {message}"
+        );
+        assert!(parse_with(&cargo("cargo_fuel_t = 3001")).is_err());
+        // Not negative, not a float.
+        assert!(parse_with(&cargo("cargo_fuel_t = -1")).is_err());
+        assert!(parse_with(&cargo("cargo_fuel_t = 1.5")).is_err());
+        // A class with no cargo space carries none.
+        assert!(parse_with(&with_force(&ship("cargo_fuel_t = 1"))).is_err());
     }
 
     #[test]

@@ -414,7 +414,7 @@ impl World {
                         }
                         Ok(())
                     }
-                    TaskForceOrder::Load => {
+                    TaskForceOrder::Load | TaskForceOrder::LoadFuel => {
                         if task_force.status == TaskForceStatus::Underway {
                             return Err(RejectReason::UnderWay);
                         }
@@ -675,6 +675,12 @@ impl World {
                             order: order.id,
                         });
                     }
+                    TaskForceOrder::LoadFuel => {
+                        task_force.cargo_order = Some(CargoOrder {
+                            action: CargoAction::LoadFuel,
+                            order: order.id,
+                        });
+                    }
                     TaskForceOrder::Unload => {
                         task_force.cargo_order = Some(CargoOrder {
                             action: CargoAction::Unload,
@@ -854,6 +860,7 @@ mod tests {
                 side: Side::Allied,
                 fuel_t: Fixed::from_int(fuel_t),
                 supply_t: Fixed::ZERO,
+                cargo_fuel_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
                 flotation_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,
@@ -1196,6 +1203,7 @@ mod tests {
                 side: Side::Allied,
                 fuel_t: Fixed::from_int(2000),
                 supply_t: Fixed::ZERO,
+                cargo_fuel_t: Fixed::ZERO,
                 location: ShipLocation::TaskForce(TF),
                 flotation_damage: Fixed::ZERO,
                 fire_damage: Fixed::ZERO,

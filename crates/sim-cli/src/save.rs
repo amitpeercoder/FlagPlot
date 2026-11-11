@@ -139,6 +139,9 @@ fn order_to_json(kind: &OrderKind) -> Value {
                 json!({ "kind": "set_mission", "mission": mission_name(*mission) })
             }
             TaskForceOrder::Load => json!({ "kind": "load" }),
+            // A load of supply is written as it always was: only fuel names
+            // its cargo, so a save of an old game is unchanged (decision 0046).
+            TaskForceOrder::LoadFuel => json!({ "kind": "load", "cargo": "fuel" }),
             TaskForceOrder::Unload => json!({ "kind": "unload" }),
             TaskForceOrder::SetRulesOfEngagement {
                 stance,
@@ -285,7 +288,14 @@ fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     }
                 }),
                 "set_mission" => TaskForceOrder::SetMission(mission_from(text(value, "mission")?)?),
-                "load" => TaskForceOrder::Load,
+                "load" => match value.get("cargo") {
+                    None => TaskForceOrder::Load,
+                    Some(_) => match text(value, "cargo")? {
+                        "supply" => TaskForceOrder::Load,
+                        "fuel" => TaskForceOrder::LoadFuel,
+                        other => return Err(format!("unknown cargo \"{other}\"")),
+                    },
+                },
                 "unload" => TaskForceOrder::Unload,
                 "set_rules_of_engagement" => TaskForceOrder::SetRulesOfEngagement {
                     stance: match text(value, "stance")? {
@@ -503,5 +513,55 @@ impl Saved {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn load_of(value: &Value) -> Result<TaskForceOrder, String> {
+        match order_from_json("task_force:1", value)? {
+            OrderKind::TaskForce { order, .. } => Ok(order),
+            other => Err(format!("not a task force order: {other:?}")),
+        }
+    }
+
+    fn written(order: TaskForceOrder) -> Value {
+        order_to_json(&OrderKind::TaskForce {
+            target: TaskForceId::new(1),
+            order,
+        })
+    }
+
+    #[test]
+    fn a_load_written_before_fuel_was_a_cargo_still_reads_as_supply() {
+        // The encoding of a load order in every saved game made before
+        // decision 0046: a kind and nothing else.
+        let old: Value = serde_json::from_str(r#"{"kind":"load"}"#).expect("JSON");
+        assert_eq!(load_of(&old), Ok(TaskForceOrder::Load));
+        let named: Value =
+            serde_json::from_str(r#"{"kind":"load","cargo":"supply"}"#).expect("JSON");
+        assert_eq!(load_of(&named), Ok(TaskForceOrder::Load));
+    }
+
+    #[test]
+    fn a_load_of_supply_is_still_written_as_it_was_and_fuel_names_its_cargo() {
+        assert_eq!(written(TaskForceOrder::Load), json!({ "kind": "load" }));
+        assert_eq!(
+            written(TaskForceOrder::LoadFuel),
+            json!({ "kind": "load", "cargo": "fuel" })
+        );
+        assert_eq!(
+            load_of(&written(TaskForceOrder::LoadFuel)),
+            Ok(TaskForceOrder::LoadFuel)
+        );
+        assert_eq!(written(TaskForceOrder::Unload), json!({ "kind": "unload" }));
+    }
+
+    #[test]
+    fn an_unknown_cargo_is_refused() {
+        let bad: Value = serde_json::from_str(r#"{"kind":"load","cargo":"oil"}"#).expect("JSON");
+        assert!(load_of(&bad).is_err());
     }
 }

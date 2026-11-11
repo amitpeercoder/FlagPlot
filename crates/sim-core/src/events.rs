@@ -9,7 +9,7 @@ use core::fmt;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
-use crate::orders::RejectReason;
+use crate::orders::{Cargo, RejectReason};
 use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
@@ -301,36 +301,43 @@ pub enum EventKind {
         task_force: TaskForceId,
         hex: Hex,
     },
-    /// A ship took supply aboard from a base.
+    /// A ship took supply or fuel cargo aboard from a base. `cargo` says
+    /// which (decision 0046); the tons, and the stock, are of that cargo.
     CargoLoaded {
         ship: ShipId,
         task_force: TaskForceId,
         base: BaseId,
+        cargo: Cargo,
         loaded_t: Fixed,
-        /// Tons aboard the ship after loading.
+        /// Tons of that cargo aboard the ship after loading.
         aboard_t: Fixed,
-        /// The base's stock after loading.
+        /// The base's stock of that cargo after loading.
         base_stock_t: Fixed,
     },
-    /// A ship put supply ashore into a base's stock.
+    /// A ship put supply or fuel cargo ashore into a base's stock. `cargo`
+    /// says which (decision 0046); the tons, and the stock, are of that cargo.
     CargoUnloaded {
         ship: ShipId,
         task_force: TaskForceId,
         base: BaseId,
+        cargo: Cargo,
         unloaded_t: Fixed,
-        /// Tons aboard the ship after unloading.
+        /// Tons of that cargo aboard the ship after unloading.
         aboard_t: Fixed,
-        /// The base's stock after unloading.
+        /// The base's stock of that cargo after unloading.
         base_stock_t: Fixed,
     },
-    /// Every ship of a task force is full, or the base has no stock left.
+    /// Every ship of a task force is full, or the base has no stock left of
+    /// the cargo loaded.
     LoadingComplete {
         task_force: TaskForceId,
         base: BaseId,
+        cargo: Cargo,
         /// Elapsed hours since the scenario began.
         elapsed_hours: Fixed,
     },
-    /// Every ship of a task force has put all its supply ashore.
+    /// Every ship of a task force has put all its supply and fuel cargo
+    /// ashore.
     UnloadingComplete {
         task_force: TaskForceId,
         base: BaseId,
@@ -1102,37 +1109,60 @@ impl fmt::Display for EventKind {
                 }
                 Ok(())
             }
+            // The text for supply is what it always was; fuel says so.
             EventKind::CargoLoaded {
                 ship,
                 base,
+                cargo,
                 loaded_t,
                 aboard_t,
                 base_stock_t,
                 ..
-            } => write!(
-                f,
-                "{ship} loaded {loaded_t} t from {base}, {aboard_t} t aboard, {base_stock_t} t in stock"
-            ),
+            } => match cargo {
+                Cargo::Supply => write!(
+                    f,
+                    "{ship} loaded {loaded_t} t from {base}, {aboard_t} t aboard, {base_stock_t} t in stock"
+                ),
+                Cargo::Fuel => write!(
+                    f,
+                    "{ship} loaded {loaded_t} t of fuel cargo from {base}, {aboard_t} t of fuel cargo aboard, {base_stock_t} t of fuel in stock"
+                ),
+            },
             EventKind::CargoUnloaded {
                 ship,
                 base,
+                cargo,
                 unloaded_t,
                 aboard_t,
                 base_stock_t,
                 ..
-            } => write!(
-                f,
-                "{ship} unloaded {unloaded_t} t at {base}, {aboard_t} t aboard, {base_stock_t} t in stock"
-            ),
+            } => match cargo {
+                Cargo::Supply => write!(
+                    f,
+                    "{ship} unloaded {unloaded_t} t at {base}, {aboard_t} t aboard, {base_stock_t} t in stock"
+                ),
+                Cargo::Fuel => write!(
+                    f,
+                    "{ship} unloaded {unloaded_t} t of fuel cargo at {base}, {aboard_t} t of fuel cargo aboard, {base_stock_t} t of fuel in stock"
+                ),
+            },
             EventKind::LoadingComplete {
                 task_force,
                 base,
+                cargo,
                 elapsed_hours,
-            } => write!(
-                f,
-                "{task_force} completed loading at {base} at {}",
-                ClockTime::from_elapsed(*elapsed_hours)
-            ),
+            } => match cargo {
+                Cargo::Supply => write!(
+                    f,
+                    "{task_force} completed loading at {base} at {}",
+                    ClockTime::from_elapsed(*elapsed_hours)
+                ),
+                Cargo::Fuel => write!(
+                    f,
+                    "{task_force} completed loading fuel at {base} at {}",
+                    ClockTime::from_elapsed(*elapsed_hours)
+                ),
+            },
             EventKind::UnloadingComplete {
                 task_force,
                 base,

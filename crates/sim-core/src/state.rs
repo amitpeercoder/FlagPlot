@@ -70,6 +70,10 @@ pub struct Ship {
     pub fuel_t: Fixed,
     /// Supply aboard, in tons.
     pub supply_t: Fixed,
+    /// Fuel carried as cargo, in tons (decision 0046). Not the fuel the ship
+    /// steams on: only landing it at a base makes it usable. Supply and fuel
+    /// cargo together never exceed the class's cargo capacity.
+    pub cargo_fuel_t: Fixed,
     pub location: ShipLocation,
     /// Flotation damage, 0 to 100. At 100 the ship sinks.
     pub flotation_damage: Fixed,
