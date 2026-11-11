@@ -230,6 +230,9 @@ pub struct Base {
     /// `docs/decisions/0035-wear-repair-and-operational-losses.md`). The
     /// default is 0.
     pub aircraft_repairs_per_day: u32,
+    /// Fuel stock for ships, in tons (decision 0045). The default is 0: a
+    /// base with none refuels nobody.
+    pub fuel_t: Fixed,
 }
 
 /// What a task force is doing about its route.

@@ -113,6 +113,8 @@ impl World {
         let day = self.truth.day + 1;
         let first_event = self.events.len();
 
+        // Fuel comes before the day's orders (decision 2 of 0045).
+        self.refuel_in_port(day);
         self.intake_orders(day);
 
         for pulse in Pulse::ALL {
@@ -870,6 +872,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
 
@@ -2757,6 +2760,7 @@ mod tests {
                 supply_t: Fixed::ZERO,
                 anti_aircraft: 0,
                 aircraft_repairs_per_day: 0,
+                fuel_t: Fixed::ZERO,
             },
         );
         World::new(7, ref_data, good.map.clone(), truth).expect("valid setup")

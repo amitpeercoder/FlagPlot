@@ -22,6 +22,8 @@ const PATROL_SHARE_TAG: u8 = 0xF2;
 const BASE_GUNS_TAG: u8 = 0xF3;
 /// Tag of a base's repairs a day (decision 0035). See `hash_world`.
 const BASE_REPAIRS_TAG: u8 = 0xF4;
+/// Marks a base's fuel stock, hashed only when above nothing (decision 0045).
+const BASE_FUEL_TAG: u8 = 0xFA;
 /// Tag of an air group's damaged aircraft (decision 0035). See `hash_world`.
 const DAMAGED_TAG: u8 = 0xF5;
 /// Tag of an air group's fatigue, rest threshold and stand-down (decision
@@ -254,6 +256,11 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         if base.aircraft_repairs_per_day != 0 {
             h.u8(BASE_REPAIRS_TAG);
             h.u32(base.aircraft_repairs_per_day);
+        }
+        // And a base with no fuel stock (decision 0045).
+        if base.fuel_t != Fixed::ZERO {
+            h.u8(BASE_FUEL_TAG);
+            h.i64(base.fuel_t.raw());
         }
     }
 

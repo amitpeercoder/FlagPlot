@@ -125,6 +125,9 @@ struct BaseSpec {
     r: i32,
     /// Supply stock at the start, in tons. Defaults to 0.
     supply_t: Option<Quantity>,
+    /// Fuel stock for ships at the start, in tons (decision 0045). Defaults
+    /// to 0. May not be negative.
+    fuel_t: Option<Quantity>,
     /// Anti-aircraft shots at a raid on the base (decision 0034). Defaults
     /// to 0.
     anti_aircraft: Option<u32>,
@@ -589,6 +592,18 @@ impl Scenario {
                 },
                 anti_aircraft: spec.anti_aircraft.unwrap_or(0),
                 aircraft_repairs_per_day: spec.aircraft_repairs_per_day.unwrap_or(0),
+                fuel_t: match &spec.fuel_t {
+                    Some(quantity) => {
+                        let fuel = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id}: fuel_t {e}")))?;
+                        if fuel < Fixed::ZERO {
+                            return Err(fail(format!("{id}: fuel_t is negative")));
+                        }
+                        fuel
+                    }
+                    None => Fixed::ZERO,
+                },
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1811,6 +1826,29 @@ r = 0
         assert_eq!(shots(guns("anti_aircraft = 12\n").expect("loads")), 12);
         assert!(guns("anti_aircraft = 1.5\n").is_err());
         assert!(guns("anti_aircraft = -1\n").is_err());
+    }
+
+    #[test]
+    fn a_base_takes_an_optional_fuel_stock_in_tons() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let fuel = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let stock = |scenario: Scenario| scenario.world.umpire().bases[&BaseId::new(2)].fuel_t;
+        assert_eq!(stock(fuel("").expect("loads")), Fixed::ZERO);
+        assert_eq!(
+            stock(fuel("fuel_t = 150\n").expect("loads")),
+            Fixed::from_int(150)
+        );
+        assert_eq!(
+            stock(fuel("fuel_t = \"0.25\"\n").expect("loads")),
+            Fixed::from_ratio(1, 4)
+        );
+        // A TOML float and a negative stock are both refused.
+        assert!(fuel("fuel_t = 1.5\n").is_err());
+        assert!(fuel("fuel_t = -1\n").is_err());
+        assert!(fuel("fuel_t = \"-0.5\"\n").is_err());
     }
 
     #[test]

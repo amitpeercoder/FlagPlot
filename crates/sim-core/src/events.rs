@@ -781,6 +781,22 @@ pub enum EventKind {
         progress_nm: Fixed,
         position: Hex,
     },
+    /// A ship took fuel aboard from a base at the start of a day (decision
+    /// 0045). `taken_t` is what it took, `fuel_t` what it has afterwards and
+    /// `base_fuel_t` what the base has left. Nothing is recorded for a ship
+    /// that takes nothing. `force_restored` is true on the first refuelling
+    /// of a task force that had run out of fuel in the hex of the base: the
+    /// force is idle again, with no route, and an order can move it
+    /// (decision 6 of 0045).
+    ShipRefuelled {
+        ship: ShipId,
+        task_force: TaskForceId,
+        base: BaseId,
+        taken_t: Fixed,
+        fuel_t: Fixed,
+        base_fuel_t: Fixed,
+        force_restored: bool,
+    },
 }
 
 impl EventKind {
@@ -798,6 +814,16 @@ impl EventKind {
             EventKind::FuelBurned {
                 ship, task_force, ..
             } => vec![EntityRef::Ship(*ship), EntityRef::TaskForce(*task_force)],
+            EventKind::ShipRefuelled {
+                ship,
+                task_force,
+                base,
+                ..
+            } => vec![
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Base(*base),
+            ],
             EventKind::CargoLoaded {
                 ship,
                 task_force,
@@ -1052,6 +1078,29 @@ impl fmt::Display for EventKind {
             ),
             EventKind::TaskForceOutOfFuel { task_force, hex } => {
                 write!(f, "{task_force} ran out of fuel at {hex}")
+            }
+            EventKind::ShipRefuelled {
+                ship,
+                base,
+                task_force,
+                taken_t,
+                fuel_t,
+                base_fuel_t,
+                force_restored,
+            } => {
+                write!(
+                    f,
+                    "{ship} took {taken_t} t of fuel at {base}, {fuel_t} t aboard, "
+                )?;
+                if *base_fuel_t == Fixed::ZERO {
+                    write!(f, "{base} is out of fuel")?;
+                } else {
+                    write!(f, "{base} has {base_fuel_t} t left")?;
+                }
+                if *force_restored {
+                    write!(f, "; {task_force} is no longer out of fuel")?;
+                }
+                Ok(())
             }
             EventKind::CargoLoaded {
                 ship,

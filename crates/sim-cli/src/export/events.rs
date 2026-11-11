@@ -191,6 +191,24 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
             "task_force_out_of_fuel",
             d.id("task_force", *task_force).hex("hex", *hex),
         ),
+        EventKind::ShipRefuelled {
+            ship,
+            task_force,
+            base,
+            taken_t,
+            fuel_t,
+            base_fuel_t,
+            force_restored,
+        } => (
+            "ship_refuelled",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .id("base", *base)
+                .num("taken_t", *taken_t)
+                .num("fuel_t", *fuel_t)
+                .num("base_fuel_t", *base_fuel_t)
+                .flag("force_restored", *force_restored),
+        ),
         EventKind::CargoLoaded {
             ship,
             task_force,

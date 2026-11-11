@@ -28,6 +28,11 @@
 #     the log has a turn-back event (decision 5 of 0005). It is there only for
 #     coverage, as the damaged fighters of group 10 and the order sent to the
 #     wrong side's force are. It is home again at the end of day 6.
+#   - Henderson Field has 400 t of fuel and Espiritu Santo 600 t, so that the
+#     log has refuelling in port (decision 0045): the convoy refuels at
+#     Henderson Field after it arrives. They are placeholders and there only
+#     for coverage, like the damaged fighters above. Without them the full
+#     slice has no fuel at its bases and no refuelling, as before.
 #
 # PLACEHOLDER DATA. The figures files are placeholders. The convoy, its
 # escort, the night-action forces, a bystander and a dry destroyer are
@@ -60,6 +65,7 @@ side = "allied"
 q = 2
 r = -4
 supply_t = 4000
+fuel_t = 400
 anti_aircraft = 8
 aircraft_repairs_per_day = 3
 
@@ -85,6 +91,7 @@ side = "allied"
 q = 7
 r = 6
 supply_t = 960
+fuel_t = 600
 
 [[task_force]]
 id = 1

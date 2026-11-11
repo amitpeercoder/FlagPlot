@@ -83,7 +83,7 @@ impl<'a> SideView<'a> {
             .filter(move |task_force| task_force.side == side)
     }
 
-    /// The side's own bases. Supply stock is visible only for the own side,
+    /// The side's own bases. Supply and fuel stock are visible only for the own side,
     /// because the filter hides every enemy base.
     pub fn bases(&self) -> impl Iterator<Item = &'a Base> + '_ {
         let side = self.side;
@@ -247,6 +247,7 @@ mod tests {
                     supply_t: Fixed::ZERO,
                     anti_aircraft: 0,
                     aircraft_repairs_per_day: 0,
+                    fuel_t: Fixed::ZERO,
                 },
             );
             truth

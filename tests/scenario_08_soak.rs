@@ -253,7 +253,12 @@ fn out_of_range(truth: &TruthState, before: Option<&TruthState>) -> Vec<String> 
             }
         }
         if let Some(old) = before.and_then(|b| b.ships.get(&ship.id)) {
-            if ship.fuel_t > old.fuel_t {
+            // A ship's fuel only falls, unless a base had fuel to give it the
+            // day before (decision 0045). The soak's bases have none, so for
+            // it nothing changes; scenario 7's two have, for its convoy.
+            let a_base_had_fuel =
+                before.is_some_and(|b| b.bases.values().any(|base| base.fuel_t > Fixed::ZERO));
+            if ship.fuel_t > old.fuel_t && !a_base_had_fuel {
                 problems.push(format!(
                     "{id} gained fuel: {} to {}",
                     old.fuel_t, ship.fuel_t
