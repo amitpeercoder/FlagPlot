@@ -652,6 +652,18 @@ pub enum EventKind {
         ready: u32,
         pilots_now: u32,
     },
+    /// Aircraft, pilots or both the scenario flew in to an air group at the
+    /// start of the day (decision 0041). `ready` and `pilots_now` are what
+    /// it has after, `strength` is its new ceiling; `pilots_now` is 0 for a
+    /// group whose pilots are not tracked.
+    AircraftArrived {
+        air_group: AirGroupId,
+        aircraft: u32,
+        pilots: u32,
+        ready: u32,
+        pilots_now: u32,
+        strength: u32,
+    },
     /// A strike that found nothing told its side so, and the side dropped the
     /// contact the strike was sent at (decision 0028).
     ContactNotThere {
@@ -878,6 +890,7 @@ impl EventKind {
             EventKind::AircraftLost { air_group, .. } | EventKind::PilotsLost { air_group, .. } => {
                 vec![EntityRef::AirGroup(*air_group)]
             }
+            EventKind::AircraftArrived { air_group, .. } => vec![EntityRef::AirGroup(*air_group)],
             EventKind::ReplacementsReceived {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
@@ -1320,6 +1333,19 @@ impl fmt::Display for EventKind {
                 f,
                 "{air_group} lost {lost} {}, {left} left",
                 if *lost == 1 { "pilot" } else { "pilots" }
+            ),
+            EventKind::AircraftArrived {
+                air_group,
+                aircraft,
+                pilots,
+                ready,
+                pilots_now,
+                strength,
+            } => write!(
+                f,
+                "{air_group} received {aircraft} aircraft and {pilots} {} by arrival, {ready} ready, {pilots_now} {} and strength {strength}",
+                if *pilots == 1 { "pilot" } else { "pilots" },
+                if *pilots_now == 1 { "pilot" } else { "pilots" },
             ),
             EventKind::ReplacementsReceived {
                 air_group,

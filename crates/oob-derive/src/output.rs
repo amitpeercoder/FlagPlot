@@ -218,10 +218,20 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         rules,
         results,
         used,
-        aircraft,
-        aircraft_used,
+        ..
     } = ctx;
     let air = list.air_figures;
+    if results.is_empty() {
+        // A list with no ships writes no class files.
+        let (aircraft_csv, aircraft_sources_csv) = aircraft_files(ctx);
+        return Ok(Outputs {
+            class_csv: String::new(),
+            sources_csv: String::new(),
+            ships_csv: String::new(),
+            aircraft_csv,
+            aircraft_sources_csv,
+        });
+    }
     let names: Vec<&str> = (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 })
         .map(figure_name)
         .collect();
@@ -464,12 +474,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         "{ships_text}{}",
         csv_text(&["ship", "class_id", "class_name"], &ship_rows)
     );
-    let (aircraft_csv, aircraft_sources_csv) = if aircraft.is_empty() {
-        (None, None)
-    } else {
-        let (csv, sources) = render_aircraft(list, list_name, rules, aircraft, aircraft_used);
-        (Some(csv), Some(sources))
-    };
+    let (aircraft_csv, aircraft_sources_csv) = aircraft_files(ctx);
     Ok(Outputs {
         class_csv,
         sources_csv,
@@ -477,6 +482,20 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         aircraft_csv,
         aircraft_sources_csv,
     })
+}
+
+fn aircraft_files(ctx: &Context) -> (Option<String>, Option<String>) {
+    if ctx.aircraft.is_empty() {
+        return (None, None);
+    }
+    let (csv, sources) = render_aircraft(
+        ctx.list,
+        ctx.list_name,
+        ctx.rules,
+        ctx.aircraft,
+        ctx.aircraft_used,
+    );
+    (Some(csv), Some(sources))
 }
 
 /// The aircraft type file and its sources file.
@@ -529,6 +548,16 @@ fn render_aircraft(
     line(format!("  strike_radius_fraction_of_range = {fraction}"));
     line(format!("  search_sweep_width_nm = {sweep}"));
     line("Ranges are whole nautical miles. attack_damage is an exact decimal of up to six places, trailing zeros trimmed. pilot_armour and self_sealing_tanks are 1 for yes and 0 for no.".to_string());
+    let own: Vec<(&str, &Row, &str)> = aircraft
+        .iter()
+        .zip(&list.aircraft)
+        .filter_map(|(result, entry)| {
+            result
+                .radius_choice
+                .as_ref()
+                .map(|(row, reason)| (entry.type_key.as_str(), row, reason.as_str()))
+        })
+        .collect();
     if used.is_empty() {
         line("Exceptions used (decision 0020, 3 and 0029, 5): none".to_string());
     } else {
@@ -544,6 +573,18 @@ fn render_aircraft(
                 row.standing,
                 one_line(&e.reason),
                 e.agreed
+            ));
+        }
+    }
+    if !own.is_empty() {
+        line("Radius rows chosen by this list itself, instead of the rules file's rule or exception for the same figure:".to_string());
+        for (entity, row, reason) in &own {
+            line(format!(
+                "  {entity} combat_radius_nm: {} row {} ({}); the list's own choice, reason: {}",
+                row.file,
+                row.id,
+                row.standing,
+                one_line(reason)
             ));
         }
     }

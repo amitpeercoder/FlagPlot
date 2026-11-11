@@ -58,6 +58,11 @@
 //! (`World::aircraft_able_to_fly` is none), and its aircraft are on the
 //! ground.
 //!
+//! # Arrivals (0041)
+//!
+//! [`World::receive_arrivals`] runs in the night pulse right after the
+//! repair and before the replacements, on day 1 too. See its comment.
+//!
 //! # Replacements (0038)
 //!
 //! [`World::receive_replacements`] runs in the night pulse right after the
@@ -752,6 +757,63 @@ impl World {
                     );
                 }
             }
+        }
+    }
+
+    /// The arrival step (decisions 2 to 6 of 0041): each of the scenario's
+    /// arrivals due today, in the order listed, adds its aircraft to the
+    /// group's ready aircraft and to its strength, and its pilots to the
+    /// group's pilots if they are tracked. Delivered on day 1 too. A group
+    /// that no longer exists or was lost with its ship receives nothing and
+    /// records nothing. `AircraftArrived` has no cause (nothing orders it).
+    /// No random number.
+    pub(crate) fn receive_arrivals(&mut self, day: u32, pulse: Pulse) {
+        let arrivals = self.truth.arrivals.clone();
+        for arrival in arrivals.into_iter().filter(|arrival| arrival.day == day) {
+            let Some(group) = self.truth.air_groups.get(&arrival.air_group) else {
+                continue;
+            };
+            if let AirGroupLocation::Ship(ship) = group.location {
+                let afloat = self
+                    .truth
+                    .ships
+                    .get(&ship)
+                    .is_some_and(|ship| ship.location != ShipLocation::Sunk);
+                if !afloat {
+                    continue;
+                }
+            }
+            let group = self
+                .truth
+                .air_groups
+                .get_mut(&arrival.air_group)
+                .expect("the air group exists");
+            group.ready += arrival.aircraft;
+            group.strength += arrival.aircraft;
+            if let Some(have) = group.pilots.as_mut() {
+                *have += arrival.pilots;
+            }
+            let pilots = if group.pilots.is_some() {
+                arrival.pilots
+            } else {
+                0
+            };
+            let (ready, pilots_now, strength) =
+                (group.ready, group.pilots.unwrap_or(0), group.strength);
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::AircraftArrived {
+                    air_group: arrival.air_group,
+                    aircraft: arrival.aircraft,
+                    pilots,
+                    ready,
+                    pilots_now,
+                    strength,
+                },
+                Vec::new(),
+                None,
+            );
         }
     }
 

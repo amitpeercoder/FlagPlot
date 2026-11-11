@@ -562,6 +562,22 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .int("lost", *lost)
                 .int("left", *left),
         ),
+        EventKind::AircraftArrived {
+            air_group,
+            aircraft,
+            pilots,
+            ready,
+            pilots_now,
+            strength,
+        } => (
+            "aircraft_arrived",
+            d.id("air_group", *air_group)
+                .int("aircraft", *aircraft)
+                .int("pilots", *pilots)
+                .int("ready", *ready)
+                .int("pilots_now", *pilots_now)
+                .int("strength", *strength),
+        ),
         EventKind::ReplacementsReceived {
             air_group,
             base,

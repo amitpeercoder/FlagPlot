@@ -1,0 +1,46 @@
+# The aircraft of the air battle between Rabaul and Guadalcanal, 21 August
+# to 17 September 1942, for stage 6e. The derivation tool turns this list
+# into data/reference/aircraft_types_rabaul_guadalcanal.csv. There are no
+# ships in the scenario.
+# Who is here follows docs/decisions/0042-rabaul-against-guadalcanal.md; how
+# the figures are worked follows docs/decisions/0029 and 0020.
+
+name = "Rabaul against Guadalcanal"
+# The date the facts are read at. It is 24 August, three days into the four
+# weeks: the day of the count of aircraft at Rabaul the scenario starts
+# from, and the first day the SBD-3's radius rows hold.
+date = "1942-08-24"
+rules = "rules.toml"
+aircraft_output = "../reference/aircraft_types_rabaul_guadalcanal.csv"
+first_aircraft_type_id = 2100
+air_figures = true
+
+ships = []
+
+# The Marine and Navy fighters at Henderson Field. They fly patrols over
+# their own field, so their radius decides nothing here.
+[[aircraft]]
+type = "f4f-4"
+
+# The dive bombers at Henderson Field. They attack ships, and there are
+# none in the scenario: they are aircraft on the ground.
+[[aircraft]]
+type = "sbd-3"
+load = "us-bomb-1000lb-gp"
+
+# The Zeros of the Tainan and 6th Air Groups, flying from Rabaul with a drop
+# tank. For this list the radius is read from the row that records the
+# escort flown from Rabaul to Guadalcanal on 7 August 1942, not from the
+# carrier radius the Eastern Solomons list uses. Settled by the architect.
+[[aircraft]]
+type = "a6m2-21"
+combat_radius_row = 517
+combat_radius_reason = "556 miles: the escort flown from Rabaul to Guadalcanal and back on 7 August 1942, the mission this scenario repeats. The 261 miles the Eastern Solomons list reads is the radius from a carrier."
+
+# The land attack bombers at Rabaul. A raid on an airfield takes no account
+# of the bomb's size (decision 0034, 10); the 250 kg bomb is named so that
+# the type has a weapon, and is one of the two sizes sources name for these
+# raids.
+[[aircraft]]
+type = "g4m1-11"
+load = "jp-bomb-250kg"

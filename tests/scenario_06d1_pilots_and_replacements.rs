@@ -2095,7 +2095,11 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
         .filter_map(|entry| {
             let name = entry.expect("an entry").file_name().into_string().ok()?;
             let stem = name.strip_suffix(".txt")?;
-            (!stem.ends_with(".events") && !stem.starts_with("06d1")).then(|| stem.to_string())
+            (!stem.ends_with(".events")
+                && !stem.starts_with("06d1")
+                // Scenario 6 itself has pilots, replacements and supply.
+                && !stem.starts_with("06_"))
+            .then(|| stem.to_string())
         })
         .collect();
     names.sort();

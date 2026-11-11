@@ -14,7 +14,7 @@ use crate::hex::Hex;
 use crate::ids::{AircraftTypeId, ShipClassId};
 use crate::map::{HexData, Map};
 use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
-use crate::state::{AirGroup, Base, Replacement, Ship, Side, TaskForce, TruthState};
+use crate::state::{AirGroup, Arrival, Base, Replacement, Ship, Side, TaskForce, TruthState};
 
 /// One side's view of the game.
 ///
@@ -110,6 +110,18 @@ impl<'a> SideView<'a> {
             .replacements
             .iter()
             .filter(move |stream| stream.side == side)
+    }
+
+    /// The arrivals due to the side's own air groups (decision 0041), known
+    /// exactly. The enemy's are not visible.
+    pub fn arrivals(&self) -> impl Iterator<Item = &'a Arrival> + '_ {
+        let side = self.side;
+        self.truth.arrivals.iter().filter(move |arrival| {
+            self.truth
+                .air_groups
+                .get(&arrival.air_group)
+                .is_some_and(|group| group.side == side)
+        })
     }
 
     /// What the side believes about the enemy.

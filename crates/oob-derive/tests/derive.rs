@@ -3492,6 +3492,280 @@ fn a_run_writes_the_aircraft_file_and_its_sources_beside_the_others() {
     );
 }
 
+// A list with no ships, and a radius read from a row the list names.
+//
+// # Worked by hand
+//
+// `dive-a` has range 528 and no readable radius, so the usual rule gives
+// 528 x 0.333333 = 175.999824, down: 175. A weak row 40 says 400 for
+// 1942-08-07 only (the list's date is 1942-08-08). The list names row 40
+// for `dive-a`: radius 400, search 400, strike 400, whatever the date and
+// standing of the row. A rules-file exception naming row 41 (preferred,
+// 300) for the same figure is not used for that list.
+
+fn shipless_list(tables: &str) -> String {
+    format!(
+        "name = \"Test planes\"\ndate = \"{DATE}\"\nrules = \"rules.toml\"\nships = []\n\
+         aircraft_output = \"../reference/test_aircraft.csv\"\nfirst_aircraft_type_id = 2100\n\
+         {tables}"
+    )
+}
+
+fn radius_files() -> Files {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "aircraft_type_facts.csv",
+        &format!(
+            "{}\n{}\n",
+            fact_row(
+                40,
+                "dive-a",
+                "combat_radius_nm",
+                "400",
+                "1942-08-07",
+                "1942-08-07",
+                "low",
+                "unconfirmed"
+            ),
+            fact(41, "dive-a", "combat_radius_nm", "300"),
+        ),
+    );
+    files
+}
+
+fn chosen(row: &str, reason: &str) -> String {
+    let mut text = String::from("[[aircraft]]\ntype = \"dive-a\"\nload = \"bomb-a\"\n");
+    if !row.is_empty() {
+        text.push_str(&format!("combat_radius_row = {row}\n"));
+    }
+    if !reason.is_empty() {
+        text.push_str(&format!("combat_radius_reason = \"{reason}\"\n"));
+    }
+    shipless_list(&text)
+}
+
+#[test]
+fn a_list_with_no_ships_writes_only_the_aircraft_files() {
+    let files = air_base();
+    let text = shipless_list("[[aircraft]]\ntype = \"fighter-a\"\n");
+    let outputs = ok_text(&text, &air_rules(""), &files);
+    assert!(outputs.class_csv.is_empty());
+    assert!(outputs.sources_csv.is_empty());
+    assert!(outputs.ships_csv.is_empty());
+    assert_eq!(
+        aircraft_lines(&outputs),
+        [
+            "id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks",
+            "2100,Fighter A,fighter,300,20,300,none,0,1,0"
+        ]
+    );
+    // A run writes two files, and a check names two.
+    let dir = scratch("shipless");
+    std::fs::write(dir.join("derivation/list.toml"), text).unwrap();
+    std::fs::write(dir.join("derivation/rules.toml"), air_rules("")).unwrap();
+    for (name, text) in &files {
+        std::fs::write(dir.join("oob").join(name), text).unwrap();
+    }
+    match go(&dir, true) {
+        Outcome::Clean { written, files } => {
+            assert!(!written);
+            assert_eq!(files.len(), 2, "{files:?}");
+        }
+        other => panic!("{other:?}"),
+    }
+    assert!(reference_files(&dir).is_empty());
+    assert!(matches!(go(&dir, false), Outcome::Clean { .. }));
+    assert_eq!(
+        reference_files(&dir),
+        ["test_aircraft.csv", "test_aircraft.sources.csv"]
+    );
+}
+
+#[test]
+fn a_list_with_neither_ships_nor_aircraft_is_a_problem() {
+    let text = shipless_list("");
+    let problems = derive_text(&text, &air_rules(""), &air_base()).expect_err("a problem");
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("list: list: ships:") && p.contains("neither ships nor")),
+        "{problems:#?}"
+    );
+}
+
+#[test]
+fn a_class_output_without_ships_and_ships_without_one_are_problems() {
+    let text = "name = \"t\"\ndate = \"1942-08-08\"\nrules = \"rules.toml\"\nships = []\n\
+        output = \"../reference/x.csv\"\nfirst_class_id = 1\n\
+        aircraft_output = \"../reference/a.csv\"\nfirst_aircraft_type_id = 1\n\
+        [[aircraft]]\ntype = \"fighter-a\"\n";
+    let problems = derive_text(text, &air_rules(""), &air_base()).expect_err("problems");
+    for field in ["output", "first_class_id"] {
+        assert!(
+            problems
+                .iter()
+                .any(|p| p.contains(&format!("list: list: {field}:")) && p.contains("no ships")),
+            "{problems:#?}"
+        );
+    }
+    let text = "name = \"t\"\ndate = \"1942-08-08\"\nrules = \"rules.toml\"\nships = [\"shp\"]\n";
+    let problems = derive_text(text, &air_rules(""), &air_base()).expect_err("problems");
+    for field in ["output", "first_class_id"] {
+        assert!(
+            problems
+                .iter()
+                .any(|p| p.contains(&format!("list: list: {field}:"))
+                    && p.contains("required when the list has ships")),
+            "{problems:#?}"
+        );
+    }
+}
+
+#[test]
+fn a_radius_row_named_by_the_list_is_read_whatever_its_date_and_standing() {
+    let files = radius_files();
+    // Without the choice: the usual rule, 175.
+    let plain = derive_text(
+        &shipless_list("[[aircraft]]\ntype = \"dive-a\"\nload = \"bomb-a\"\n"),
+        &air_rules(""),
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&plain)[1],
+        "2100,Dive A,bomber,300,20,300,bomb,41.666666,1,1"
+    );
+    // With the choice, and a rules exception for the same figure that the
+    // list's choice replaces.
+    let rules = air_rules(&exception_text("dive-a", "combat_radius_nm", 41));
+    let outputs = derive_text(&chosen("40", "flown on the seventh"), &rules, &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2100,Dive A,bomber,400,20,400,bomb,41.666666,1,1"
+    );
+    for figure in ["search_range_nm", "strike_range_nm"] {
+        let row = plane_source(&outputs, "2100", figure);
+        assert_eq!(row[4], "aircraft_type_facts.csv:40");
+        assert!(row[5].contains("flown on the seventh"), "{row:?}");
+        assert!(
+            row[5].contains("own choice of row 40 (unconfirmed)"),
+            "{row:?}"
+        );
+    }
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains(
+            "dive-a combat_radius_nm: aircraft_type_facts.csv row 40 (unconfirmed); the list's own choice, reason: flown on the seventh"
+        ),
+        "{header}"
+    );
+    // The rules exception for row 41 is not listed: the list did not use it.
+    assert!(!header.contains("row 41"), "{header}");
+}
+
+#[test]
+fn a_radius_row_that_does_not_exist_or_is_not_a_radius_of_the_type_is_a_problem() {
+    let files = radius_files();
+    let problems = derive_text(&chosen("999", "r"), &air_rules(""), &files).expect_err("missing");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: exception: strike_range_nm:",
+            "combat_radius_row 999 is not a row",
+        ],
+    );
+    // Row 1 is `fighter-a combat_radius_nm`: another type.
+    let problems = derive_text(&chosen("1", "r"), &air_rules(""), &files).expect_err("other type");
+    assert_one(
+        &problems,
+        &["combat_radius_row 1 is a row about `fighter-a`"],
+    );
+    // Row 5 is `fighter-a`'s pilot_armour in air_base; use dive-a's own
+    // range row (4: dive-a range_normal_nm) for the wrong attribute.
+    let problems = derive_text(&chosen("4", "r"), &air_rules(""), &files).expect_err("attribute");
+    assert_one(
+        &problems,
+        &["combat_radius_row 4 is a row about `dive-a` range_normal_nm"],
+    );
+}
+
+#[test]
+fn a_radius_row_and_its_reason_go_together_and_the_reason_is_not_empty() {
+    let files = radius_files();
+    let problems = derive_text(&chosen("40", ""), &air_rules(""), &files).expect_err("no reason");
+    assert_one(
+        &problems,
+        &["list: list: aircraft:", "give both or neither"],
+    );
+    let problems = derive_text(&chosen("", "because"), &air_rules(""), &files).expect_err("no row");
+    assert_one(
+        &problems,
+        &["list: list: aircraft:", "give both or neither"],
+    );
+    let problems = derive_text(&chosen("40", "  "), &air_rules(""), &files).expect_err("empty");
+    assert_one(&problems, &["list: list: aircraft:", "must not be empty"]);
+}
+
+#[test]
+fn the_eastern_solomons_list_still_derives_exactly_the_files_in_data_reference() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        "eastern_solomons.toml",
+        &read("data/derivation/eastern_solomons.toml"),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        outputs.class_csv,
+        read("data/reference/ship_classes_eastern_solomons.csv")
+    );
+    assert_eq!(
+        outputs.sources_csv,
+        read("data/reference/ship_classes_eastern_solomons.sources.csv")
+    );
+    assert_eq!(
+        outputs.ships_csv,
+        read("data/reference/ship_classes_eastern_solomons.ships.csv")
+    );
+    assert_eq!(
+        outputs.aircraft_csv.as_deref(),
+        Some(read("data/reference/aircraft_types_eastern_solomons.csv").as_str())
+    );
+    assert_eq!(
+        outputs.aircraft_sources_csv.as_deref(),
+        Some(read("data/reference/aircraft_types_eastern_solomons.sources.csv").as_str())
+    );
+}
+
+#[test]
+fn the_rabaul_guadalcanal_list_still_derives_exactly_the_files_in_data_reference() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        "rabaul_guadalcanal.toml",
+        &read("data/derivation/rabaul_guadalcanal.toml"),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        outputs.aircraft_csv.as_deref(),
+        Some(read("data/reference/aircraft_types_rabaul_guadalcanal.csv").as_str())
+    );
+    assert_eq!(
+        outputs.aircraft_sources_csv.as_deref(),
+        Some(read("data/reference/aircraft_types_rabaul_guadalcanal.sources.csv").as_str())
+    );
+}
+
 #[test]
 fn the_savo_island_list_still_derives_exactly_the_files_in_data_reference() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");

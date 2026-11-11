@@ -32,6 +32,8 @@ const FATIGUE_TAG: u8 = 0xF6;
 const PILOTS_TAG: u8 = 0xF7;
 /// Tag of a task force's fatigue (decision 0037).
 const FORCE_FATIGUE_TAG: u8 = 0xF8;
+/// Tag of the scenario's arrivals (decision 0041).
+const ARRIVALS_TAG: u8 = 0xF9;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -306,7 +308,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         // (decision 0038). Strength is read by replacements alone, so it is
         // hashed only where there are some. The tag 0xF7 is followed by
         // the mission code, 1 to 5.
-        if group.pilots.is_some() || !truth.replacements.is_empty() {
+        if group.pilots.is_some() || !truth.replacements.is_empty() || !truth.arrivals.is_empty() {
             h.u8(PILOTS_TAG);
             h.optional_u32(group.pilots);
             h.u32(group.strength);
@@ -350,6 +352,18 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u32(stream.aircraft_type.raw());
             h.u32(stream.aircraft_per_day);
             h.u32(stream.pilots_per_day);
+        }
+    }
+
+    // The arrivals: nothing at all without any (decision 0041).
+    if !truth.arrivals.is_empty() {
+        h.u8(ARRIVALS_TAG);
+        h.count(truth.arrivals.len());
+        for arrival in &truth.arrivals {
+            h.u32(arrival.day);
+            h.u32(arrival.air_group.raw());
+            h.u32(arrival.aircraft);
+            h.u32(arrival.pilots);
         }
     }
 
