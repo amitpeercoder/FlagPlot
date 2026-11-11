@@ -67,6 +67,12 @@ Over seeds 1 to 1000, six days. All figures are placeholders. Airfield A starts 
 
 It flies 4.41 raids a run on average, against 5.95 with 1,000 t and none with no supply. It spends 130 t on sorties and 20 t by the day. Airfield B spends 191 t on sorties and 27 t by the day and loses about 150 t to bombs. A base that loses more aircraft early lasts longer, because fewer aircraft fly and eat.
 
+## The legibility test
+
+A cheap model was given the Japanese briefing and the log of the first three days of the scenario's own seed. It rebuilt the first morning's 39 t from its three parts. It predicted the fourth day exactly: 4 t in the night leaving 15.6 t, a raid of 11 bombers with 5 escorts and a patrol of 4, sorties asking 26 t, the base paying the 15.6 t it had, and nothing flying from that afternoon on. Asked how to stretch the stock it dropped the escort or the afternoon patrol, and said what each gives up.
+
+It found one gap. No event says a patrol flew: the reader has to infer the six fighters over the airfield from the sum. With the wear or fatigue figures loaded their events name the patrol. With supply alone nothing does. An event for every patrol in every pulse would double the log of a quiet day, so the gap is left and noted: the supply event's breakdown lists the sorties by kind, and the briefing a side gets must show it.
+
 ## Rule card
 
 | | |
