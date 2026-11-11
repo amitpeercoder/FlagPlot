@@ -530,3 +530,17 @@ Japanese tracks
 ## Settled by Amit on 2026-11-11
 
 The facts scenario 5 needs for Eastern Solomons were settled in one pass from `eastern-solomons-settlement.md`: displacement, speed and aircraft capacity of the carriers and escorts; endurance and fuel as matched pairs; anti-aircraft guns and radar for the ships with sources; aircraft speeds and ranges; two air strengths. Three Savo Island classes settled on 2026-11-10 were moved to matched full-load pairs, because the earlier New Orleans pair mixed two fuel conditions. Each settled row says so in its note.
+
+## Rabaul and Guadalcanal, August to September 1942 (research pass of 2026-11-11)
+
+None of these is settled. The fuller list is in `rabaul-guadalcanal-air.md`.
+
+- **Distance Rabaul to Guadalcanal.** 565 nm (Miller, CARTWHEEL; Shaw and Kane, 650 statute miles); 675 miles (Craven and Cate); 556 miles each way for the 7 August escort (Wikipedia).
+- **24 August raid.** Sizes (15 bombers and 12 fighters, or 6 Kates and 15 Zeros), Japanese losses claimed (16 or 21) against recorded (6 aircraft), Cactus losses (3 or 4 aircraft; 2 or 3 pilots).
+- **Raids on 1 to 8 September.** Almost daily (Hough, Miller) or none (Wikipedia citing Lundstrom).
+- **10 and 11 September raids.** 27 bombers and 30 Zeros, or 26 bombers and 8 Zeros; possibly one raid.
+- **12 and 13 September.** Planes sent, claims and actual losses, times of the attacks.
+- **Arrival dates.** VF-5 on 4 or 11 September; VMF-224 and VMSB-231 on 30 August or a date read as 21 August.
+- **Shaw's 22 and 29 August entries** match no other source.
+- **14 September floatplane raid.** 3 or 8 Japanese aircraft lost.
+- **A6M3 Model 32 range reduction.** 20 percent (Lundstrom as quoted) or 620 miles (Nohara via Wikipedia). **Zero drop tank:** 330 L or 320 L.

@@ -57,3 +57,6 @@ id,key,name,nation,service,parent
 1053,kirishima-air-unit,Floatplanes embarked in battleship Kirishima,jp,ijn,
 1054,kumano-air-unit,Floatplanes embarked in heavy cruiser Kumano,jp,ijn,
 1055,suzuya-air-unit,Floatplanes embarked in heavy cruiser Suzuya,jp,ijn,
+1056,26th-air-flotilla,"26th Air Flotilla (Rabaul, Misawa and Kisarazu bomber groups)",jp,ijn,11th-air-fleet
+1057,toko-ku,"Toko Kokutai (flying-boat group, a detachment under the 25th Air Flotilla on 12 September 1942 per Wikipedia)",jp,ijn,
+1058,r-area-air-force,"R-Area Air Force (floatplane force from Shortland and Rekata, as Wikipedia calls it)",jp,ijn,
