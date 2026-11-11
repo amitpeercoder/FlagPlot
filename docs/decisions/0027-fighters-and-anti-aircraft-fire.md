@@ -17,7 +17,7 @@ Decision 0026 lets a strike fly and hit with nobody opposing it and nobody lost.
 ### Raids
 
 4. **The strikes launched in one pulse from one place at one hex are one raid.** A place is a ship or a base. The raid's bombers are those strike groups' aircraft.
-5. **The escorts at a place go with one raid from it,** as far as it goes: a fighter's own range is a fact for stage 5e. They go with the raid with the most bombers, and of those the one whose first group has the lowest number. If no raid leaves the place, its escorts fly nothing.
+5. **The escorts at a place go with one raid from it,** if it is within their radius (decision 0030). They go with the raid with the most bombers, and of those the one whose first group has the lowest number. If no raid leaves the place, its escorts fly nothing.
 
 ### The fight in the air
 

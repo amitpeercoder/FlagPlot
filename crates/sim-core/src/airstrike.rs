@@ -143,6 +143,9 @@ struct FighterGroup {
     patrol: u32,
     /// Aircraft that go with a raid.
     escorts: u32,
+    /// The fighter type's strike range: how far its escorts go (decision
+    /// 0030).
+    radius_nm: Fixed,
     /// The orders that set the mission and the share.
     orders: Vec<Cause>,
 }
@@ -382,7 +385,8 @@ impl World {
         // Everything is worked out on the state at the start of the step.
         let fighters = self.split_fighter_groups();
         let mut raids = group_raids(&strikes);
-        send_escorts(&mut raids, &fighters);
+        let mut fighters = fighters;
+        send_escorts(&mut raids, &mut fighters);
         let results: Vec<RaidResult> = raids
             .iter()
             .map(|raid| self.work_out_raid(day, pulse, raid, &fighters))
@@ -623,6 +627,7 @@ impl World {
                     hex: self.truth.air_group_hex(group),
                     patrol,
                     escorts: flyable - patrol,
+                    radius_nm: self.ref_data.aircraft_types[&group.aircraft_type].strike_range_nm,
                     orders: group
                         .mission_order
                         .into_iter()
@@ -1097,10 +1102,13 @@ fn group_raids(strikes: &[StrikeInFlight]) -> Vec<Raid> {
 }
 
 /// Sends the escorts at each place with the raid from it that has the most
-/// bombers, then the lowest first group (decision 5 of 0027). A place with
-/// no raid sends none.
-fn send_escorts(raids: &mut [Raid], fighters: &[FighterGroup]) {
-    for (index, group) in fighters.iter().enumerate() {
+/// bombers, then the lowest first group (decision 5 of 0027), if that raid's
+/// target hex is within the fighter type's radius of the group (decision 0030).
+/// A place with no raid sends none. A group whose escorts do not go keeps
+/// all it can fly as patrol (decision 2 of 0030). A group with no position
+/// cannot be measured and sends its escorts as before.
+fn send_escorts(raids: &mut [Raid], fighters: &mut [FighterGroup]) {
+    for (index, group) in fighters.iter_mut().enumerate() {
         if group.escorts == 0 {
             continue;
         }
@@ -1114,7 +1122,18 @@ fn send_escorts(raids: &mut [Raid], fighters: &[FighterGroup]) {
             })
             .map(|(raid_index, _)| raid_index);
         if let Some(raid_index) = chosen {
-            raids[raid_index].escorts.push(index);
+            let within = group.hex.is_none_or(|hex| {
+                let distance_nm = Fixed::from_int(
+                    i64::from(hex.distance(raids[raid_index].strikes[0].hex)) * HEX_NM,
+                );
+                distance_nm <= group.radius_nm
+            });
+            if within {
+                raids[raid_index].escorts.push(index);
+            } else {
+                group.patrol += group.escorts;
+                group.escorts = 0;
+            }
         }
     }
 }
@@ -1199,6 +1218,8 @@ mod tests {
             search_range_nm: Fixed::from_int(if scout { 300 } else { 0 }),
             sweep_width_nm: Fixed::from_int(if scout { 20 } else { 0 }),
             strike_range_nm: Fixed::from_int(match (weapon, id) {
+                // A fighter's radius covers every test target (decision 0030).
+                (AttackWeapon::None, _) if role == AircraftRole::Fighter => 250,
                 (AttackWeapon::None, _) => 0,
                 (_, 6) => 100,
                 _ => 250,
@@ -3663,6 +3684,206 @@ mod tests {
         deck(&mut world, 2, SystemState::Out);
         strike_pulse(&mut world, Pulse::Morning);
         assert!(air_fights(&world).is_empty());
+    }
+
+    // ---- the radius of escorts (decision 0030) ----
+
+    fn set_fighter_radius(world: &mut World, radius_nm: i64) {
+        world
+            .ref_data
+            .aircraft_types
+            .get_mut(&AircraftTypeId::new(5))
+            .expect("fighter type")
+            .strike_range_nm = Fixed::from_int(radius_nm);
+    }
+
+    /// (patrol, escorts) of the one fighter group after `send_escorts`, and
+    /// the raids' escorts, for a raid of `bombers` from `origin` at `hex`.
+    fn sent_to(
+        world: &World,
+        origin: AirGroupLocation,
+        raids_at: &[(u32, u32, Hex)],
+    ) -> (u32, u32, Vec<Vec<usize>>) {
+        let strikes: Vec<StrikeInFlight> = raids_at
+            .iter()
+            .map(|(group, bombers, hex)| StrikeInFlight {
+                air_group: AirGroupId::new(*group),
+                side: Side::Allied,
+                origin,
+                contact: ContactId::new(1),
+                hex: *hex,
+                aircraft: *bombers,
+                launched: EventId::new(*group),
+            })
+            .collect();
+        let mut raids = group_raids(&strikes);
+        let mut fighters = world.split_fighter_groups();
+        send_escorts(&mut raids, &mut fighters);
+        (
+            fighters[0].patrol,
+            fighters[0].escorts,
+            raids.iter().map(|raid| raid.escorts.clone()).collect(),
+        )
+    }
+
+    const SHIP_1: AirGroupLocation = AirGroupLocation::Ship(ShipId::new(1));
+
+    #[test]
+    fn escorts_go_at_exactly_the_radius_and_not_one_hex_beyond() {
+        // The carrier is at (0,0); the raid's hex (5,0) is 200 nm off.
+        for (radius, goes) in [
+            (250, true),
+            (200, true),
+            (199, false),
+            (160, false),
+            (0, false),
+        ] {
+            let mut world = with_fighters(1, 12, fixed(1, 2), 12);
+            set_fighter_radius(&mut world, radius);
+            let (patrol, escorts, raids) = sent_to(&world, SHIP_1, &[(1, 18, Hex::new(5, 0))]);
+            if goes {
+                assert_eq!((patrol, escorts, raids), (6, 6, vec![vec![0]]));
+            } else {
+                assert_eq!((patrol, escorts, raids), (12, 0, vec![vec![]]));
+            }
+            strike_pulse(&mut world, Pulse::Morning);
+            assert_eq!(escorts_sent(&world).len(), usize::from(goes), "{radius}");
+        }
+        // A hex nearer is within a radius of 160, a hex further is not.
+        let mut world = with_fighters(1, 12, fixed(1, 2), 12);
+        set_fighter_radius(&mut world, 160);
+        assert_eq!(sent_to(&world, SHIP_1, &[(1, 18, Hex::new(4, 0))]).1, 6);
+        assert_eq!(sent_to(&world, SHIP_1, &[(1, 18, Hex::new(5, 0))]).1, 0);
+        // A radius of nothing never escorts.
+        set_fighter_radius(&mut world, 0);
+        assert_eq!(sent_to(&world, SHIP_1, &[(1, 18, Hex::new(1, 0))]).1, 0);
+    }
+
+    #[test]
+    fn fighters_that_do_not_escort_are_all_patrol_and_meet_a_raid_on_their_hex() {
+        // The Allied fighters (group 5, 12 aboard the carrier at (0,0), half
+        // patrol) cannot reach the Allied strike at (5,0). The Japanese
+        // bombers strike the Allied carrier's hex from (5,0), 200 nm.
+        let raid_on_them = |radius: i64| {
+            let mut world = world(
+                1,
+                vec![
+                    held(Hex::new(5, 0), ShipKind::Cruiser, 0),
+                    StartingContact {
+                        side: Side::Japanese,
+                        hex: Hex::new(0, 0),
+                        ship_count: 3,
+                        kind: ShipKind::Cruiser,
+                        age_pulses: 0,
+                    },
+                ],
+            );
+            cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
+            group_mut(&mut world, ENEMY_BOMBERS).mission = AirMission::NavalStrike;
+            sure_fighters(&mut world);
+            set_fighter_radius(&mut world, radius);
+            strike_pulse(&mut world, Pulse::Morning);
+            world
+        };
+        let world = raid_on_them(160);
+        assert!(escorts_sent(&world).is_empty());
+        let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
+        assert_eq!(
+            fights,
+            vec![(
+                5,
+                ENEMY_BOMBERS.raw(),
+                AirFirer::Patrol,
+                AirTarget::Bombers,
+                12,
+                12
+            )]
+        );
+        // Within the radius half of them go: the patrol is 6.
+        let world = raid_on_them(250);
+        assert_eq!(escorts_sent(&world).len(), 1);
+        let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
+        assert_eq!(
+            fights,
+            vec![(
+                5,
+                ENEMY_BOMBERS.raw(),
+                AirFirer::Patrol,
+                AirTarget::Bombers,
+                6,
+                6
+            )]
+        );
+    }
+
+    #[test]
+    fn the_radius_is_tested_against_the_raid_chosen_by_the_most_bombers_only() {
+        // Group 1's raid (18 bombers) is at (5,0), 200 nm; group 6's (6, or
+        // 20) is at (2,0), 80 nm. A radius of 160 reaches only the second.
+        for (short_ready, goes) in [(6, false), (20, true)] {
+            let mut world = two_raids_from_one_carrier(6, short_ready);
+            set_fighter_radius(&mut world, 160);
+            strike_pulse(&mut world, Pulse::Morning);
+            assert_eq!(launches(&world).len(), 2);
+            assert_eq!(
+                escorts_sent(&world).len(),
+                usize::from(goes),
+                "{short_ready}"
+            );
+            let (patrol, escorts, raids) = sent_to(
+                &world,
+                SHIP_1,
+                &[(1, 18, Hex::new(5, 0)), (6, short_ready, Hex::new(2, 0))],
+            );
+            if goes {
+                assert_eq!((patrol, escorts, raids), (0, 6, vec![vec![], vec![0]]));
+            } else {
+                // No nearer raid is looked for.
+                assert_eq!((patrol, escorts, raids), (6, 0, vec![vec![], vec![]]));
+            }
+        }
+    }
+
+    #[test]
+    fn a_group_at_a_base_is_held_to_the_radius_too() {
+        let base = AirGroupLocation::Base(crate::ids::BaseId::new(1));
+        let mut world = world_with_a_good_contact(1);
+        world.truth.bases.insert(
+            crate::ids::BaseId::new(1),
+            crate::state::Base {
+                id: crate::ids::BaseId::new(1),
+                name: "Test base".to_string(),
+                side: Side::Allied,
+                hex: Hex::new(0, 0),
+                supply_t: Fixed::ZERO,
+            },
+        );
+        cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
+        group_mut(&mut world, PATROL_A).location = base;
+        set_fighter_radius(&mut world, 200);
+        assert_eq!(
+            sent_to(&world, base, &[(1, 18, Hex::new(5, 0))]),
+            (6, 6, vec![vec![0]])
+        );
+        set_fighter_radius(&mut world, 199);
+        assert_eq!(
+            sent_to(&world, base, &[(1, 18, Hex::new(5, 0))]),
+            (12, 0, vec![vec![]])
+        );
+    }
+
+    #[test]
+    fn the_flight_deck_still_limits_a_patrol_that_stays_for_want_of_range() {
+        let patrol_with = |state: SystemState| {
+            let mut world = with_fighters(1, 12, fixed(1, 2), 12);
+            set_fighter_radius(&mut world, 160);
+            deck(&mut world, 1, state);
+            let (patrol, escorts, _) = sent_to(&world, SHIP_1, &[(1, 18, Hex::new(5, 0))]);
+            (patrol, escorts)
+        };
+        assert_eq!(patrol_with(SystemState::Working), (12, 0));
+        assert_eq!(patrol_with(SystemState::Degraded), (6, 0));
+        assert_eq!(patrol_with(SystemState::Out), (0, 0));
     }
 
     // ---- orders and the hash ----
