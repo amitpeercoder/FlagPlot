@@ -1,6 +1,6 @@
 # 0037: Fatigue at battle readiness
 
-Status: confirmed. The designer chose on Nov 11, 2026 to give battle readiness a cost through the same fatigue number as air groups, so that a force held at battle readiness tires. Decisions 3 and 5 are choices that answer did not state and are marked for review. Decision 3 in particular: what tiredness does to a force.
+Status: confirmed by the designer on Nov 11, 2026. He had approved giving battle readiness a cost through the fatigue number, "so a force held at battle readiness tires and has to stand down". This record builds a graded effect and no forced stand-down; he was shown both and agreed with this one, with the three details as built: the staff does not stand a force down, a force alerted by a contact tires as one at battle readiness does, and a night pulse counts as any other.
 
 ## The gap
 
@@ -10,9 +10,9 @@ Battle readiness costs nothing (decision 0021). A player would order it for ever
 
 1. **A task force has a fatigue from 0 to 100,** as an air group has (decision 0036). It starts at 0 unless the scenario says otherwise.
 2. **At the start of each pulse, a force that is alert gains a figure and a force that is not loses a rest figure,** not above 100 and not below 0. Alert is as decision 0021 has it at the start of a pulse: at battle readiness, or at normal readiness and alerted by a contact. Night counts as any other pulse: a crew at its stations is at them in the dark too.
-3. **Fatigue cuts a force's chance to sight the enemy, and does nothing else** *(needs review)*. In each round of a fight the force's chance to sight is multiplied by (100 less its fatigue) over 100. It changes no gunnery, no speed and no alarm roll.
+3. **Fatigue cuts a force's chance to sight the enemy, and does nothing else**. In each round of a fight the force's chance to sight is multiplied by (100 less its fatigue) over 100. It changes no gunnery, no speed and no alarm roll.
 4. **The figures are in the fatigue file,** with the air groups'. A scenario without the file has no fatigue.
-5. **The staff does not stand a force down** *(needs review)*. The player orders readiness, and the order is the decision. A rest threshold for forces, as air groups have, can come with the staff rules if the order proves to be clerical work.
+5. **The staff does not stand a force down**. The player orders readiness, and the order is the decision. A rest threshold for forces, as air groups have, can come with the staff rules if the order proves to be clerical work.
 
 ## Why
 
