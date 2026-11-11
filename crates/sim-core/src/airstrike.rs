@@ -58,6 +58,25 @@
 //! path a salvo's hits take, and belief only through
 //! [`BeliefState::apply_report`](crate::belief::BeliefState::apply_report).
 //!
+//! # Raids on a base (0034)
+//!
+//! A group on the base strike mission ([`AirMission::BaseStrike`], which
+//! carries its target base) launches in the morning pulse only, with no
+//! contact and no belief read ([`World::decide_strikes`]), and its strike
+//! joins the raid machinery above unchanged. Strikes at ships and strikes at
+//! a base from one place at one hex are two raids, so each has its own escorts
+//! decision, patrol share and guns; the patrol of the base's side over the
+//! hex is divided among all the raids on that side there, ships and base
+//! together. The base's guns (`Base::anti_aircraft`) fire at the bombers of a
+//! raid on the base as a force's do, and ships in the hex do not. The bombers
+//! left each roll their shots at the bomb hit chance, then one draw for each
+//! hit says where it lands (aircraft on the ground, supply, or nothing). A
+//! group's hits are applied in group order after the fights, on the ground
+//! counts of the start of the step ([`World::aircraft_on_the_ground`]), and
+//! the log of the step ends with, for each base strike group: `BaseAttacked`,
+//! then `AircraftDestroyedOnGround` for each group hit and
+//! `BaseSupplyDestroyed`. No report follows and no belief changes.
+//!
 //! # Random streams
 //!
 //! All in the air combat subsystem. A group's attack: (air group, task
@@ -65,7 +84,13 @@
 //! task force attacked). The patrol's fire: (the first patrol group over the
 //! hex, the raid's first strike group), the roll at the escorts first, then the roll
 //! at the bombers. The guns: (the lowest-numbered ship afloat in the force
-//! attacked, the raid's first strike group), one roll for all the ships.
+//! attacked, the raid's first strike group), one roll for all the ships. In a
+//! raid on a base the escorts' stream is keyed on (the first escort group, the
+//! base), the guns on (the base, the raid's first strike group), and a group's
+//! attack on the base on (air group, base): one draw for each bomb, then one
+//! for each hit for where it lands.
+
+use std::collections::BTreeMap;
 
 use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::damage::{
@@ -76,7 +101,7 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{AirGroupId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::AirMission;
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
 use crate::rng::{RngStream, Subsystem};
@@ -84,6 +109,14 @@ use crate::search::build_sighting_report;
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
 use crate::world::World;
+
+/// What a strike was launched at: the contact its side held (decision
+/// 0026), or the base it was ordered to strike (decision 0034).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Aim {
+    Contact(ContactId),
+    Base(BaseId),
+}
 
 /// A strike launched in the decision step and not yet landed. It lives from
 /// the decision step to the air combat step of one pulse, and is empty
@@ -94,9 +127,10 @@ pub(crate) struct StrikeInFlight {
     side: Side,
     /// The place the group launched from: with the hex, what makes a raid.
     origin: AirGroupLocation,
-    /// The contact the strike was launched at (decision 0028).
-    contact: ContactId,
-    /// The hex the contact names: where the strike flies to.
+    /// What the strike was launched at.
+    aim: Aim,
+    /// The hex the contact names, or the base's hex: where the strike flies
+    /// to.
     hex: Hex,
     /// The aircraft launched.
     aircraft: u32,
@@ -136,7 +170,36 @@ enum Outcome {
         launched: EventId,
     },
     Attack(Box<Attack>),
+    BaseAttack(Box<BaseAttack>),
 }
+
+/// One strike group's bombs on a base, worked out and not yet applied
+/// (decisions 6 and 7 of 0034).
+struct BaseAttack {
+    air_group: AirGroupId,
+    base: BaseId,
+    launched: EventId,
+    shots: Fixed,
+    chance: Fixed,
+    expected: Fixed,
+    hits: u32,
+    hits_on_aircraft: u32,
+    hits_on_supply: u32,
+    breakdown: Option<Breakdown>,
+}
+
+/// What a raid attacks: the most important enemy task force at its hex
+/// (decision 7 of 0026), or a base (decision 0034).
+#[derive(Clone, Copy)]
+enum RaidTarget {
+    Ships(ShipKind, TaskForceId, ShipId),
+    Base(BaseId),
+}
+
+/// The aircraft of the groups on the ground at a base, by group in order of
+/// group number: the pool hits on aircraft are taken from (decision 8 of
+/// 0034).
+type Ground = BTreeMap<BaseId, Vec<(AirGroupId, u32)>>;
 
 /// A fighter group on combat air patrol, split into patrol and escorts on
 /// the state at the start of the air combat step (decision 2 of 0027).
@@ -222,6 +285,8 @@ enum Fire {
         task_force: TaskForceId,
         air_group: AirGroupId,
     },
+    /// The guns of a base (decision 5 of 0034).
+    BaseGuns { base: BaseId, air_group: AirGroupId },
 }
 
 /// One roll of fighters or guns, worked out and not yet recorded.
@@ -331,7 +396,8 @@ impl World {
     }
 
     /// The strike decision step of one daylight pulse (decisions 3 to 6 of
-    /// 0026). Each group on the naval strike mission, in group order, that
+    /// 0026, and 3 of 0034 for a group on the base strike mission, which
+    /// decides at [`World::decide_base_strike`]). Each group on the naval strike mission, in group order, that
     /// has aircraft, a position, light and a flight deck that lets it launch
     /// at least one aircraft, takes the contact its side holds that is no
     /// older than the figures allow and within the type's strike range: the
@@ -352,7 +418,12 @@ impl World {
             .truth
             .air_groups
             .values()
-            .filter(|group| group.mission == AirMission::NavalStrike && group.ready > 0)
+            .filter(|group| {
+                matches!(
+                    group.mission,
+                    AirMission::NavalStrike | AirMission::BaseStrike(_)
+                ) && group.ready > 0
+            })
             .cloned()
             .collect();
         for group in groups {
@@ -369,6 +440,19 @@ impl World {
             let strike_range_nm = aircraft_type.strike_range_nm;
             let aircraft = self.aircraft_able_to_fly(&group);
             if aircraft == 0 {
+                continue;
+            }
+
+            if let AirMission::BaseStrike(base) = group.mission {
+                self.decide_base_strike(
+                    day,
+                    pulse,
+                    &group,
+                    base,
+                    origin,
+                    strike_range_nm,
+                    aircraft,
+                );
                 continue;
             }
 
@@ -414,12 +498,68 @@ impl World {
                 air_group: group.id,
                 side: group.side,
                 origin: group.location,
-                contact,
+                aim: Aim::Contact(contact),
                 hex,
                 aircraft,
                 launched,
             });
         }
+    }
+
+    /// The decision of one group on the base strike mission (decision 3 of
+    /// 0034): it launches every aircraft it can fly in the morning pulse if
+    /// the base exists, is held by the other side and is within the type's
+    /// strike range. It reads no belief and needs no contact. The caller
+    /// has checked the light, that the type carries a weapon and that the
+    /// group can fly an aircraft.
+    #[allow(clippy::too_many_arguments)]
+    fn decide_base_strike(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        group: &AirGroup,
+        base: BaseId,
+        origin: Hex,
+        strike_range_nm: Fixed,
+        aircraft: u32,
+    ) {
+        if pulse != Pulse::Morning {
+            return;
+        }
+        let Some(target) = self.truth.bases.get(&base) else {
+            return;
+        };
+        if target.side == group.side {
+            return;
+        }
+        let hex = target.hex;
+        let distance_nm = Fixed::from_int(i64::from(origin.distance(hex)) * HEX_NM);
+        if distance_nm > strike_range_nm {
+            return;
+        }
+        let causes: Vec<Cause> = group.mission_order.map(Cause::Order).into_iter().collect();
+        let launched = self.events.record(
+            day,
+            Some(pulse),
+            EventKind::BaseStrikeLaunched {
+                air_group: group.id,
+                base,
+                hex,
+                aircraft,
+                distance_nm,
+            },
+            causes,
+            None,
+        );
+        self.strikes_in_flight.push(StrikeInFlight {
+            air_group: group.id,
+            side: group.side,
+            origin: group.location,
+            aim: Aim::Base(base),
+            hex,
+            aircraft,
+            launched,
+        });
     }
 
     /// The air combat step of one daylight pulse (decisions 7 to 12 and 16
@@ -438,6 +578,7 @@ impl World {
         }
 
         // Everything is worked out on the state at the start of the step.
+        let mut ground = self.aircraft_on_the_ground(&strikes);
         let fighters = self.split_fighter_groups();
         let mut raids = group_raids(&strikes);
         let mut fighters = fighters;
@@ -524,6 +665,14 @@ impl World {
                         expected: roll.expected,
                         hits: roll.hits,
                     },
+                    Fire::BaseGuns { base, air_group } => EventKind::BaseAntiAircraftFire {
+                        base: *base,
+                        air_group: *air_group,
+                        shots: roll.shots,
+                        chance: roll.chance,
+                        expected: roll.expected,
+                        hits: roll.hits,
+                    },
                 };
                 recorded.push(self.events.record(
                     day,
@@ -579,6 +728,34 @@ impl World {
                     );
                     attack_events.push(found_nothing);
                 }
+                Outcome::BaseAttack(attack) => {
+                    let causes: Vec<Cause> = [Cause::Event(attack.launched)]
+                        .into_iter()
+                        .chain(
+                            losses_of
+                                .iter()
+                                .filter(|(group, _)| *group == attack.air_group)
+                                .map(|(_, event)| Cause::Event(*event)),
+                        )
+                        .collect();
+                    let event = self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::BaseAttacked {
+                            air_group: attack.air_group,
+                            base: attack.base,
+                            shots: attack.shots,
+                            chance: attack.chance,
+                            expected: attack.expected,
+                            hits: attack.hits,
+                            hits_on_aircraft: attack.hits_on_aircraft,
+                            hits_on_supply: attack.hits_on_supply,
+                        },
+                        causes,
+                        attack.breakdown.clone(),
+                    );
+                    attack_events.push(event);
+                }
                 Outcome::Attack(attack) => {
                     // The aircraft that attack are those the fights left.
                     let causes: Vec<Cause> = [Cause::Event(attack.launched)]
@@ -625,6 +802,10 @@ impl World {
         for ((_, outcome), event) in outcomes.into_iter().zip(attack_events) {
             let attack = match outcome {
                 Outcome::Attack(attack) => attack,
+                Outcome::BaseAttack(attack) => {
+                    self.apply_base_hits(day, pulse, &attack, event, &mut ground);
+                    continue;
+                }
                 Outcome::Nothing {
                     side, contact, hex, ..
                 } => {
@@ -687,6 +868,141 @@ impl World {
             assert_eq!(
                 received, report.received_event,
                 "the report cites the event that records it"
+            );
+        }
+    }
+
+    /// The aircraft on the ground at each base that a base strike was sent
+    /// at, on the state at the start of the air combat step (decision 8 of
+    /// 0034): the ready aircraft of the groups located at the base that rest,
+    /// and of those on a strike mission that did not launch in this pulse.
+    /// Groups that search or are on combat air patrol are in the air. By
+    /// group, in order of group number.
+    fn aircraft_on_the_ground(&self, strikes: &[StrikeInFlight]) -> Ground {
+        let mut ground = Ground::new();
+        for strike in strikes {
+            let Aim::Base(base) = strike.aim else {
+                continue;
+            };
+            ground.entry(base).or_insert_with(|| {
+                self.truth
+                    .air_groups
+                    .values()
+                    .filter(|group| {
+                        group.location == AirGroupLocation::Base(base)
+                            && group.ready > 0
+                            && matches!(
+                                group.mission,
+                                AirMission::Rest
+                                    | AirMission::NavalStrike
+                                    | AirMission::BaseStrike(_)
+                            )
+                            && !strikes.iter().any(|strike| strike.air_group == group.id)
+                    })
+                    .map(|group| (group.id, group.ready))
+                    .collect()
+            });
+        }
+        ground
+    }
+
+    /// Applies the hits of one strike group's bombs on a base (decisions 8
+    /// and 9 of 0034): aircraft are destroyed on the ground, the lowest
+    /// group first, no more than `ground` says were there at the start of
+    /// the step, and supply is destroyed, no more than the base has. Records
+    /// each, citing `attack_event`.
+    fn apply_base_hits(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        attack: &BaseAttack,
+        attack_event: EventId,
+        ground: &mut Ground,
+    ) {
+        let per_hit = self
+            .ref_data
+            .air_combat
+            .as_ref()
+            .expect("a strike needs the air combat figures")
+            .base_supply_destroyed_per_hit_t;
+        let pool = ground
+            .get_mut(&attack.base)
+            .expect("a base that is attacked has its ground counted");
+        let on_ground: u32 = pool.iter().map(|(_, aircraft)| aircraft).sum();
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "hits_on_aircraft",
+                    value: Fixed::from_int(i64::from(attack.hits_on_aircraft)),
+                },
+                Factor {
+                    name: "aircraft_on_ground",
+                    value: Fixed::from_int(i64::from(on_ground)),
+                },
+            ],
+            result: Fixed::from_int(i64::from(attack.hits_on_aircraft.min(on_ground))),
+        });
+        for (group, destroyed) in take_hits(attack.hits_on_aircraft, pool) {
+            let air_group = self
+                .truth
+                .air_groups
+                .get_mut(&group)
+                .expect("the air group exists");
+            let destroyed = destroyed.min(air_group.ready);
+            air_group.ready -= destroyed;
+            let remaining = air_group.ready;
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::AircraftDestroyedOnGround {
+                    air_group: group,
+                    base: attack.base,
+                    aircraft: destroyed,
+                    remaining,
+                },
+                vec![Cause::Event(attack_event)],
+                breakdown.clone(),
+            );
+        }
+
+        let target = self
+            .truth
+            .bases
+            .get_mut(&attack.base)
+            .expect("the base exists");
+        let before = target.supply_t;
+        let wanted = per_hit * Fixed::from_int(i64::from(attack.hits_on_supply));
+        let destroyed = wanted.min(before);
+        if destroyed > Fixed::ZERO {
+            target.supply_t = before - destroyed;
+            let after = target.supply_t;
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "hits_on_supply",
+                        value: Fixed::from_int(i64::from(attack.hits_on_supply)),
+                    },
+                    Factor {
+                        name: "tons_per_hit",
+                        value: per_hit,
+                    },
+                    Factor {
+                        name: "supply_before",
+                        value: before,
+                    },
+                ],
+                result: destroyed,
+            });
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::BaseSupplyDestroyed {
+                    base: attack.base,
+                    destroyed_t: destroyed,
+                    supply_t: after,
+                },
+                vec![Cause::Event(attack_event)],
+                breakdown,
             );
         }
     }
@@ -778,6 +1094,33 @@ impl World {
             .min()
     }
 
+    /// What the raid whose first strike is `first` attacks, on the truth at
+    /// the start of the step: the enemy task force at its hex, or the base
+    /// it was sent at. A base strike always finds its base: the launch
+    /// checked it exists and is held by the other side, and nothing changes
+    /// that between the decision and the air combat step.
+    fn raid_target(&self, first: &StrikeInFlight) -> Option<RaidTarget> {
+        match first.aim {
+            Aim::Contact(_) => self
+                .find_target(first.side, first.hex)
+                .map(|(kind, task_force, ship)| RaidTarget::Ships(kind, task_force, ship)),
+            Aim::Base(base) => self
+                .truth
+                .bases
+                .get(&base)
+                .filter(|target| target.side != first.side)
+                .map(|_| RaidTarget::Base(base)),
+        }
+    }
+
+    /// The side a raid's target belongs to.
+    fn defender_of(&self, target: RaidTarget) -> Side {
+        match target {
+            RaidTarget::Ships(_, task_force, _) => self.truth.task_forces[&task_force].side,
+            RaidTarget::Base(base) => self.truth.bases[&base].side,
+        }
+    }
+
     /// The chance of a shot at aircraft of the type `group` flies: `base`
     /// times the pilot armour factor if the type has pilot armour, times the
     /// self-sealing tanks factor if it has them (decision 11 of 0029). The
@@ -807,10 +1150,10 @@ impl World {
         let mut places: Vec<((Side, Hex), Vec<usize>)> = Vec::new();
         for (index, raid) in raids.iter().enumerate() {
             let first = &raid.strikes[0];
-            let Some((_, task_force, _)) = self.find_target(first.side, first.hex) else {
+            let Some(target) = self.raid_target(first) else {
                 continue;
             };
-            let key = (self.truth.task_forces[&task_force].side, first.hex);
+            let key = (self.defender_of(target), first.hex);
             match places.iter_mut().find(|(place, _)| *place == key) {
                 Some((_, members)) => members.push(index),
                 None => places.push((key, vec![index])),
@@ -871,31 +1214,39 @@ impl World {
             })
             .collect();
 
-        let Some(target) = self.find_target(first.side, first.hex) else {
+        let Some(target) = self.raid_target(first) else {
             // A raid that finds nothing meets nobody (decision 13 of 0027).
+            // Only a strike at a contact can find nothing.
             return RaidResult {
                 escorts_sent,
                 rolls: Vec::new(),
                 outcomes: raid
                     .strikes
                     .iter()
-                    .map(|strike| {
-                        (
+                    .filter_map(|strike| {
+                        let Aim::Contact(contact) = strike.aim else {
+                            return None;
+                        };
+                        Some((
                             strike.air_group,
                             Outcome::Nothing {
                                 air_group: strike.air_group,
                                 side: strike.side,
-                                contact: strike.contact,
+                                contact,
                                 hex: strike.hex,
                                 launched: strike.launched,
                             },
-                        )
+                        ))
                     })
                     .collect(),
             };
         };
-        let (_, task_force, _) = target;
-        let defending_side = self.truth.task_forces[&task_force].side;
+        let defending_side = self.defender_of(target);
+        // What the fighters' streams are keyed on besides their group.
+        let target_entity = match target {
+            RaidTarget::Ships(_, task_force, _) => EntityRef::TaskForce(task_force),
+            RaidTarget::Base(base) => EntityRef::Base(base),
+        };
         let air = self
             .ref_data
             .air_combat
@@ -996,7 +1347,7 @@ impl World {
                 Some(pulse),
                 Subsystem::AirCombat,
                 EntityRef::AirGroup(first_escort),
-                EntityRef::TaskForce(task_force),
+                target_entity,
             );
             let shot = self.shot_chance(air.fighter_hit_chance, first_patrol, air);
             let (shots, expected, hits) = roll_hits(&mut stream, escort_count, shot.chance);
@@ -1066,39 +1417,63 @@ impl World {
             }
         }
 
-        // The guns of every ship afloat in the force, at the bombers left.
-        let force = &self.truth.task_forces[&task_force];
-        let gun_shots: u32 = force
-            .ships
-            .iter()
-            .map(|ship| self.ref_data.ship_classes[&self.truth.ships[ship].class].anti_aircraft)
-            .sum();
+        // The guns of the target, at the bombers left: of every ship afloat
+        // in the force attacked, or of the base attacked (decision 5 of
+        // 0034). Ships do not fire at a raid on the base, and the base does
+        // not fire at a raid on ships.
         let bombers_left: u32 = bombers.iter().map(|(_, aircraft)| aircraft).sum();
-        if let (true, true, Some(lowest_ship)) =
-            (gun_shots > 0, bombers_left > 0, force.ships.iter().next())
-        {
-            let mut stream = self.rng_pair(
-                day,
-                Some(pulse),
-                Subsystem::AirCombat,
-                EntityRef::Ship(*lowest_ship),
-                EntityRef::AirGroup(first.air_group),
-            );
-            let shot = self.shot_chance(air.anti_aircraft_hit_chance, first.air_group, air);
-            let (shots, expected, hits) = roll_hits(&mut stream, gun_shots, shot.chance);
-            rolls.push(FireRoll {
-                fire: Fire::Guns {
-                    task_force,
+        let guns = match target {
+            RaidTarget::Ships(_, task_force, _) => {
+                let force = &self.truth.task_forces[&task_force];
+                let gun_shots: u32 = force
+                    .ships
+                    .iter()
+                    .map(|ship| {
+                        self.ref_data.ship_classes[&self.truth.ships[ship].class].anti_aircraft
+                    })
+                    .sum();
+                force.ships.iter().next().map(|lowest_ship| {
+                    (
+                        gun_shots,
+                        EntityRef::Ship(*lowest_ship),
+                        Fire::Guns {
+                            task_force,
+                            air_group: first.air_group,
+                        },
+                    )
+                })
+            }
+            RaidTarget::Base(base) => Some((
+                self.truth.bases[&base].anti_aircraft,
+                EntityRef::Base(base),
+                Fire::BaseGuns {
+                    base,
                     air_group: first.air_group,
                 },
-                shots,
-                chance: shot.chance,
-                expected,
-                hits,
-                lost: take_hits(hits, &mut bombers),
-                patrol_of: None,
-                breakdown: breakdown(shots, shot, expected),
-            });
+            )),
+        };
+        if let Some((gun_shots, firer, fire)) = guns.filter(|(gun_shots, _, _)| *gun_shots > 0) {
+            if bombers_left > 0 {
+                let mut stream = self.rng_pair(
+                    day,
+                    Some(pulse),
+                    Subsystem::AirCombat,
+                    firer,
+                    EntityRef::AirGroup(first.air_group),
+                );
+                let shot = self.shot_chance(air.anti_aircraft_hit_chance, first.air_group, air);
+                let (shots, expected, hits) = roll_hits(&mut stream, gun_shots, shot.chance);
+                rolls.push(FireRoll {
+                    fire,
+                    shots,
+                    chance: shot.chance,
+                    expected,
+                    hits,
+                    lost: take_hits(hits, &mut bombers),
+                    patrol_of: None,
+                    breakdown: breakdown(shots, shot, expected),
+                });
+            }
         }
 
         // The bombers that are left attack, each group with what it has
@@ -1108,10 +1483,15 @@ impl World {
             .zip(&raid.strikes)
             .filter(|((_, left), _)| *left > 0)
             .map(|((group, left), strike)| {
-                (
-                    *group,
-                    self.work_out_attack(day, pulse, strike, *left, target),
-                )
+                let outcome = match target {
+                    RaidTarget::Ships(kind, task_force, ship) => {
+                        self.work_out_attack(day, pulse, strike, *left, (kind, task_force, ship))
+                    }
+                    RaidTarget::Base(base) => {
+                        self.work_out_base_attack(day, pulse, strike, *left, base)
+                    }
+                };
+                (*group, outcome)
             })
             .collect();
         RaidResult {
@@ -1244,6 +1624,83 @@ impl World {
         }))
     }
 
+    /// Rolls the attack of one strike group with `aircraft` bombers on a
+    /// base (decisions 6 and 7 of 0034). Reads truth, which the umpire may;
+    /// writes nothing. Draws, from one stream keyed on the air group and the
+    /// base: one draw for each bomb, at the bomb hit chance whatever the
+    /// type's weapon, then one for each hit, below the chance of landing on
+    /// aircraft, then below that and the chance of landing on supply, else on
+    /// nothing.
+    fn work_out_base_attack(
+        &self,
+        day: u32,
+        pulse: Pulse,
+        strike: &StrikeInFlight,
+        aircraft: u32,
+        base: BaseId,
+    ) -> Outcome {
+        let air = self
+            .ref_data
+            .air_combat
+            .as_ref()
+            .expect("a strike needs the air combat figures");
+        let chance = air.bomb_hit_chance;
+        let shots = Fixed::from_int(i64::from(aircraft));
+        let expected = shots * chance;
+        let mut stream = self.rng_pair(
+            day,
+            Some(pulse),
+            Subsystem::AirCombat,
+            EntityRef::AirGroup(strike.air_group),
+            EntityRef::Base(base),
+        );
+        let hits = roll_shots(&mut stream, shots, chance);
+        let on_aircraft_below = raw_u64(air.base_hit_aircraft);
+        let on_supply_below = on_aircraft_below + raw_u64(air.base_hit_supply);
+        let (mut hits_on_aircraft, mut hits_on_supply) = (0, 0);
+        for _ in 0..hits {
+            let draw = stream.below(Fixed::SCALE.unsigned_abs());
+            if draw < on_aircraft_below {
+                hits_on_aircraft += 1;
+            } else if draw < on_supply_below {
+                hits_on_supply += 1;
+            }
+        }
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "aircraft",
+                    value: shots,
+                },
+                Factor {
+                    name: "hit_chance",
+                    value: chance,
+                },
+                Factor {
+                    name: "hit_on_aircraft_chance",
+                    value: air.base_hit_aircraft,
+                },
+                Factor {
+                    name: "hit_on_supply_chance",
+                    value: air.base_hit_supply,
+                },
+            ],
+            result: expected,
+        });
+        Outcome::BaseAttack(Box::new(BaseAttack {
+            air_group: strike.air_group,
+            base,
+            launched: strike.launched,
+            shots,
+            chance,
+            expected,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
+            breakdown,
+        }))
+    }
+
     fn kind_of(&self, ship: ShipId) -> ShipKind {
         self.ref_data.ship_classes[&self.truth.ships[&ship].class].kind
     }
@@ -1256,7 +1713,9 @@ fn group_raids(strikes: &[StrikeInFlight]) -> Vec<Raid> {
     let mut raids: Vec<Raid> = Vec::new();
     for strike in strikes {
         match raids.iter_mut().find(|raid| {
-            raid.strikes[0].origin == strike.origin && raid.strikes[0].hex == strike.hex
+            raid.strikes[0].origin == strike.origin
+                && raid.strikes[0].hex == strike.hex
+                && same_kind_of_target(raid.strikes[0].aim, strike.aim)
         }) {
             Some(raid) => raid.strikes.push(strike.clone()),
             None => raids.push(Raid {
@@ -1266,6 +1725,17 @@ fn group_raids(strikes: &[StrikeInFlight]) -> Vec<Raid> {
         }
     }
     raids
+}
+
+/// Whether two strikes at one hex are at one kind of target: both at
+/// contacts, or both at the same base (decision 4 of 0034). A strike at ships
+/// and a strike at a base from one place at one hex are two raids.
+fn same_kind_of_target(a: Aim, b: Aim) -> bool {
+    match (a, b) {
+        (Aim::Contact(_), Aim::Contact(_)) => true,
+        (Aim::Base(a), Aim::Base(b)) => a == b,
+        _ => false,
+    }
 }
 
 /// Sends the escorts at each place with the raid from it that has the most
@@ -2252,6 +2722,7 @@ mod tests {
                 side: Side::Allied,
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         group_mut(&mut world, BOMBERS).location =
@@ -3164,6 +3635,7 @@ mod tests {
                 side: Side::Allied,
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         deck(&mut world, 1, SystemState::Out);
@@ -3185,7 +3657,7 @@ mod tests {
             air_group: AirGroupId::new(group),
             side: Side::Allied,
             origin,
-            contact: ContactId::new(1),
+            aim: Aim::Contact(ContactId::new(1)),
             hex,
             aircraft: 1,
             launched: EventId::new(group),
@@ -3612,6 +4084,7 @@ mod tests {
                     side: Side::Japanese,
                     hex,
                     supply_t: Fixed::ZERO,
+                    anti_aircraft: 0,
                 },
             );
         }
@@ -3961,6 +4434,7 @@ mod tests {
                 side: Side::Japanese,
                 hex: Hex::new(3, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         let mut fighters = group(AirGroupId::new(10), Side::Japanese, 2, 5, 12);
@@ -4164,7 +4638,7 @@ mod tests {
                 air_group: AirGroupId::new(*group),
                 side: Side::Allied,
                 origin,
-                contact: ContactId::new(1),
+                aim: Aim::Contact(ContactId::new(1)),
                 hex: *hex,
                 aircraft: *bombers,
                 launched: EventId::new(*group),
@@ -4310,6 +4784,7 @@ mod tests {
                 side: Side::Allied,
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
@@ -4815,5 +5290,604 @@ mod tests {
                 assert!(protected[i] <= none[i]);
             }
         }
+    }
+    // ---- raids on a base (decision 0034) ----
+    //
+    // Allied base 1 at (0,0) and Japanese base 2 at (5,0), 200 nm apart.
+    // The standard world's task forces are still there, and no air group
+    // but the ones a test adds. Base 2 has 1,000 t and no guns.
+
+    const BASE_ALLIED: BaseId = BaseId::new(1);
+    const BASE_JAPANESE: BaseId = BaseId::new(2);
+
+    fn base_world(seed: u64) -> World {
+        let mut world = world(seed, vec![]);
+        world.truth.air_groups.clear();
+        for (id, side, hex, supply) in [
+            (BASE_ALLIED, Side::Allied, Hex::new(0, 0), 0),
+            (BASE_JAPANESE, Side::Japanese, Hex::new(5, 0), 1000),
+        ] {
+            world.truth.bases.insert(
+                id,
+                crate::state::Base {
+                    id,
+                    name: format!("Test base {}", id.raw()),
+                    side,
+                    hex,
+                    supply_t: Fixed::from_int(supply),
+                    anti_aircraft: 0,
+                },
+            );
+        }
+        world
+    }
+
+    /// Adds a group at `base` with `mission`.
+    fn base_group(
+        world: &mut World,
+        id: u32,
+        base: BaseId,
+        type_id: u32,
+        ready: u32,
+        mission: AirMission,
+    ) {
+        let side = world.truth.bases[&base].side;
+        let mut added = group(AirGroupId::new(id), side, 1, type_id, ready);
+        added.location = AirGroupLocation::Base(base);
+        added.mission = mission;
+        world.truth.air_groups.insert(added.id, added);
+    }
+
+    /// The figures that make every bomb hit and every hit land on `lands`.
+    fn sure_bombs(world: &mut World, aircraft: Fixed, supply: Fixed) {
+        let figures = air_figures(world);
+        figures.bomb_hit_chance = Fixed::ONE;
+        figures.base_hit_aircraft = aircraft;
+        figures.base_hit_supply = supply;
+    }
+
+    fn base_launches(world: &World) -> Vec<Event> {
+        events_where(world, |k| matches!(k, EventKind::BaseStrikeLaunched { .. }))
+    }
+
+    fn base_attacks(world: &World) -> Vec<Event> {
+        events_where(world, |k| matches!(k, EventKind::BaseAttacked { .. }))
+    }
+
+    fn ground_losses(world: &World) -> Vec<(u32, u32, u32)> {
+        events_where(world, |k| {
+            matches!(k, EventKind::AircraftDestroyedOnGround { .. })
+        })
+        .iter()
+        .map(|event| match event.kind {
+            EventKind::AircraftDestroyedOnGround {
+                air_group,
+                aircraft,
+                remaining,
+                ..
+            } => (air_group.raw(), aircraft, remaining),
+            _ => unreachable!(),
+        })
+        .collect()
+    }
+
+    fn supply_losses(world: &World) -> Vec<(i64, i64)> {
+        events_where(world, |k| {
+            matches!(k, EventKind::BaseSupplyDestroyed { .. })
+        })
+        .iter()
+        .map(|event| match event.kind {
+            EventKind::BaseSupplyDestroyed {
+                destroyed_t,
+                supply_t,
+                ..
+            } => (destroyed_t.trunc(), supply_t.trunc()),
+            _ => unreachable!(),
+        })
+        .collect()
+    }
+
+    /// A world with Allied dive bombers (group 1, 18) on a base strike on
+    /// base 2.
+    fn raid_world(seed: u64) -> World {
+        let mut world = base_world(seed);
+        base_group(
+            &mut world,
+            1,
+            BASE_ALLIED,
+            2,
+            18,
+            AirMission::BaseStrike(BASE_JAPANESE),
+        );
+        group_mut(&mut world, AirGroupId::new(1)).mission_order = Some(OrderId::new(7));
+        world
+    }
+
+    #[test]
+    fn a_base_strike_launches_every_aircraft_in_the_morning_citing_its_order_and_needing_no_contact(
+    ) {
+        let mut world = raid_world(1);
+        world.decide_strikes(1, Pulse::Morning);
+        let launched = base_launches(&world);
+        assert_eq!(launched.len(), 1);
+        assert_eq!(
+            launched[0].kind,
+            EventKind::BaseStrikeLaunched {
+                air_group: AirGroupId::new(1),
+                base: BASE_JAPANESE,
+                hex: Hex::new(5, 0),
+                aircraft: 18,
+                distance_nm: Fixed::from_int(200),
+            }
+        );
+        assert_eq!(launched[0].causes, vec![Cause::Order(OrderId::new(7))]);
+        assert_eq!(world.strikes_in_flight.len(), 1);
+        // Nobody holds a contact, and no contact strike was launched.
+        assert!(launches(&world).is_empty());
+    }
+
+    #[test]
+    fn each_launch_condition_alone_stops_a_base_strike_and_a_base_at_the_range_is_struck() {
+        type Change = Box<dyn Fn(&mut World)>;
+        let stops: Vec<(&str, Change, Pulse)> = vec![
+            ("night", Box::new(|_| {}), Pulse::Night),
+            ("afternoon", Box::new(|_| {}), Pulse::Afternoon),
+            (
+                "no aircraft",
+                Box::new(|w| group_mut(w, AirGroupId::new(1)).ready = 0),
+                Pulse::Morning,
+            ),
+            (
+                "a type with no weapon",
+                Box::new(|w| {
+                    group_mut(w, AirGroupId::new(1)).aircraft_type = AircraftTypeId::new(4)
+                }),
+                Pulse::Morning,
+            ),
+            (
+                "no such base",
+                Box::new(|w| {
+                    group_mut(w, AirGroupId::new(1)).mission =
+                        AirMission::BaseStrike(BaseId::new(9))
+                }),
+                Pulse::Morning,
+            ),
+            (
+                "the base is held by the group's own side",
+                Box::new(|w| {
+                    w.truth.bases.get_mut(&BASE_JAPANESE).expect("base").side = Side::Allied
+                }),
+                Pulse::Morning,
+            ),
+            (
+                "beyond the radius",
+                Box::new(|w| {
+                    w.truth.bases.get_mut(&BASE_JAPANESE).expect("base").hex = Hex::new(7, 0)
+                }),
+                Pulse::Morning,
+            ),
+            (
+                "a short-range type",
+                Box::new(|w| {
+                    group_mut(w, AirGroupId::new(1)).aircraft_type = AircraftTypeId::new(6)
+                }),
+                Pulse::Morning,
+            ),
+        ];
+        for (label, change, pulse) in stops {
+            let mut world = raid_world(1);
+            change(&mut world);
+            world.decide_strikes(1, pulse);
+            assert!(world.strikes_in_flight.is_empty(), "{label} launched");
+            assert!(
+                base_launches(&world).is_empty(),
+                "{label} recorded a launch"
+            );
+        }
+        // 6 hexes, 240 nm, is within the 250; 7 hexes is not.
+        let mut world = raid_world(1);
+        world.truth.bases.get_mut(&BASE_JAPANESE).expect("base").hex = Hex::new(6, 0);
+        world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(base_launches(&world).len(), 1);
+    }
+
+    #[test]
+    fn a_base_strike_never_goes_for_a_contact_and_a_naval_strike_never_for_a_base() {
+        // A fresh contact on the Japanese force at (5,0), and the base too.
+        let mut world = world_with_a_good_contact(1);
+        world.truth.air_groups.clear();
+        world.truth.bases = base_world(1).truth.bases;
+        base_group(
+            &mut world,
+            1,
+            BASE_ALLIED,
+            2,
+            18,
+            AirMission::BaseStrike(BASE_JAPANESE),
+        );
+        world.decide_strikes(1, Pulse::Morning);
+        assert!(launches(&world).is_empty());
+        assert_eq!(base_launches(&world).len(), 1);
+
+        let mut world = base_world(1);
+        base_group(&mut world, 1, BASE_ALLIED, 2, 18, AirMission::NavalStrike);
+        world.decide_strikes(1, Pulse::Morning);
+        assert!(world.strikes_in_flight.is_empty());
+        assert!(events_where(&world, |_| true).is_empty());
+    }
+
+    #[test]
+    fn aircraft_on_the_ground_are_those_resting_and_those_on_a_strike_that_did_not_launch() {
+        let mut world = raid_world(1);
+        let strike_back = AirMission::BaseStrike(BASE_ALLIED);
+        for (id, type_id, ready, mission) in [
+            (20, 2, 10, AirMission::Rest),
+            (21, 1, 6, AirMission::Search),
+            (22, 5, 12, AirMission::CombatAirPatrol),
+            // On a naval strike with no contact: stays on the ground.
+            (23, 2, 7, AirMission::NavalStrike),
+            // Launches at base 1 in this pulse: in the air.
+            (24, 2, 4, strike_back),
+            // A base strike out of its type's radius: stays on the ground.
+            (25, 6, 3, strike_back),
+            // Resting, but nothing ready.
+            (26, 2, 0, AirMission::Rest),
+        ] {
+            base_group(&mut world, id, BASE_JAPANESE, type_id, ready, mission);
+        }
+        // A group at the other base, resting, is not at base 2.
+        base_group(&mut world, 27, BASE_ALLIED, 2, 9, AirMission::Rest);
+        world.decide_strikes(1, Pulse::Morning);
+        let strikes: Vec<AirGroupId> = world
+            .strikes_in_flight
+            .iter()
+            .map(|strike| strike.air_group)
+            .collect();
+        assert_eq!(strikes, vec![AirGroupId::new(1), AirGroupId::new(24)]);
+        let ground = world.aircraft_on_the_ground(&world.strikes_in_flight);
+        assert_eq!(
+            ground[&BASE_JAPANESE],
+            vec![
+                (AirGroupId::new(20), 10),
+                (AirGroupId::new(23), 7),
+                (AirGroupId::new(25), 3)
+            ]
+        );
+        // Base 1 is counted too, as group 24 strikes it: the bombers of
+        // group 1 launched and are not there, the resting group 27 is.
+        assert_eq!(ground[&BASE_ALLIED], vec![(AirGroupId::new(27), 9)]);
+    }
+
+    #[test]
+    fn hits_on_aircraft_come_off_the_lowest_group_first_across_raids_and_never_pass_what_was_there()
+    {
+        let mut world = raid_world(1);
+        // A second Allied place and raid on the same base.
+        world.truth.bases.insert(
+            BaseId::new(3),
+            crate::state::Base {
+                id: BaseId::new(3),
+                name: "Test base 3".to_string(),
+                side: Side::Allied,
+                hex: Hex::new(1, 0),
+                supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
+            },
+        );
+        group_mut(&mut world, AirGroupId::new(1)).ready = 12;
+        base_group(
+            &mut world,
+            9,
+            BaseId::new(3),
+            2,
+            6,
+            AirMission::BaseStrike(BASE_JAPANESE),
+        );
+        base_group(&mut world, 20, BASE_JAPANESE, 2, 10, AirMission::Rest);
+        base_group(&mut world, 21, BASE_JAPANESE, 2, 7, AirMission::Rest);
+        sure_bombs(&mut world, Fixed::ONE, Fixed::ZERO);
+        strike_pulse(&mut world, Pulse::Morning);
+        // Group 1's 12 hits: 10 from group 20, 2 from group 21. Group 9's 6
+        // hits: the 5 left of group 21, and one wasted.
+        assert_eq!(
+            ground_losses(&world),
+            vec![(20, 10, 0), (21, 2, 5), (21, 5, 0)]
+        );
+        assert_eq!(ready_of(&world, 20), 0);
+        assert_eq!(ready_of(&world, 21), 0);
+        let attacks = base_attacks(&world);
+        assert_eq!(attacks.len(), 2);
+        // Each loss cites the attack that did it.
+        let losses = events_where(&world, |k| {
+            matches!(k, EventKind::AircraftDestroyedOnGround { .. })
+        });
+        assert_eq!(losses[0].causes, vec![Cause::Event(attacks[0].id)]);
+        assert_eq!(losses[2].causes, vec![Cause::Event(attacks[1].id)]);
+        // Nothing else was lost: no supply hit, no loss in the air.
+        assert!(supply_losses(&world).is_empty());
+        assert!(self::losses(&world).is_empty());
+    }
+
+    #[test]
+    fn hits_on_supply_destroy_the_fixed_weight_and_never_more_than_the_base_has() {
+        for (supply, bombers, expected) in [
+            // 18 hits would destroy 900 t: only the 120 there.
+            (120, vec![18], vec![(120, 0)]),
+            // 2 hits of 50 t, then 2 more with 20 t left.
+            (120, vec![2, 2], vec![(100, 20), (20, 0)]),
+            // Nothing left: nothing destroyed, nothing recorded.
+            (0, vec![5], vec![]),
+        ] {
+            let mut world = raid_world(1);
+            world
+                .truth
+                .bases
+                .get_mut(&BASE_JAPANESE)
+                .expect("base")
+                .supply_t = Fixed::from_int(supply);
+            group_mut(&mut world, AirGroupId::new(1)).ready = bombers[0];
+            if let Some(second) = bombers.get(1) {
+                world.truth.bases.insert(
+                    BaseId::new(3),
+                    crate::state::Base {
+                        id: BaseId::new(3),
+                        name: "Test base 3".to_string(),
+                        side: Side::Allied,
+                        hex: Hex::new(1, 0),
+                        supply_t: Fixed::ZERO,
+                        anti_aircraft: 0,
+                    },
+                );
+                base_group(
+                    &mut world,
+                    9,
+                    BaseId::new(3),
+                    2,
+                    *second,
+                    AirMission::BaseStrike(BASE_JAPANESE),
+                );
+            }
+            sure_bombs(&mut world, Fixed::ZERO, Fixed::ONE);
+            strike_pulse(&mut world, Pulse::Morning);
+            assert_eq!(supply_losses(&world), expected, "{supply} t, {bombers:?}");
+            let left = world.truth.bases[&BASE_JAPANESE].supply_t;
+            assert_eq!(left.trunc(), expected.last().map_or(supply, |last| last.1));
+            assert!(!left.is_negative());
+        }
+    }
+
+    #[test]
+    fn a_base_raid_and_a_ship_raid_on_one_hex_divide_the_patrol_and_meet_only_their_own_guns() {
+        let mut world = world_with_a_good_contact(1);
+        world.truth.air_groups.clear();
+        world.truth.bases = base_world(1).truth.bases;
+        // The base shares the hex of the Japanese force.
+        {
+            let base = world.truth.bases.get_mut(&BASE_JAPANESE).expect("base");
+            base.anti_aircraft = 20;
+        }
+        base_group(
+            &mut world,
+            1,
+            BASE_ALLIED,
+            2,
+            12,
+            AirMission::BaseStrike(BASE_JAPANESE),
+        );
+        base_group(&mut world, 11, BASE_ALLIED, 2, 6, AirMission::NavalStrike);
+        base_group(
+            &mut world,
+            4,
+            BASE_JAPANESE,
+            5,
+            12,
+            AirMission::CombatAirPatrol,
+        );
+        sure_fighters(&mut world);
+        // Nobody is lost to guns: only the division is under test.
+        air_figures(&mut world).anti_aircraft_hit_chance = Fixed::ZERO;
+        set_guns(&mut world, 1, 5);
+        strike_pulse(&mut world, Pulse::Morning);
+
+        assert_eq!(launches(&world).len(), 1);
+        assert_eq!(base_launches(&world).len(), 1);
+        // 12 patrol over 18 aircraft: 8 at the base raid, 4 at the ships.
+        let fights: Vec<_> = air_fights(&world).iter().map(fight_of).collect();
+        assert_eq!(
+            fights,
+            vec![
+                (4, 1, AirFirer::Patrol, AirTarget::Bombers, 8, 8),
+                (4, 11, AirFirer::Patrol, AirTarget::Bombers, 4, 4),
+            ]
+        );
+        // The base's guns fire at the base raid only, the ships' at the ships'.
+        let base_guns = events_where(&world, |k| {
+            matches!(k, EventKind::BaseAntiAircraftFire { .. })
+        });
+        assert_eq!(base_guns.len(), 1);
+        match base_guns[0].kind {
+            EventKind::BaseAntiAircraftFire {
+                base,
+                air_group,
+                shots,
+                ..
+            } => assert_eq!(
+                (base, air_group, shots.trunc()),
+                (BASE_JAPANESE, AirGroupId::new(1), 20)
+            ),
+            _ => unreachable!(),
+        }
+        // Two cruisers of 5 shots each.
+        let ship_guns: Vec<_> = gun_fires(&world).iter().map(guns_of).collect();
+        assert_eq!(ship_guns, vec![(2, 11, 10, 0)]);
+        // 4 and 2 bombers are left to attack: the base is bombed by group 1
+        // and the ships by group 11.
+        assert_eq!(base_attacks(&world).len(), 1);
+        assert_eq!(attacks(&world).len(), 1);
+    }
+
+    #[test]
+    fn a_base_with_no_guns_fires_none_and_a_raid_with_no_bombers_left_attacks_nothing() {
+        let mut world = raid_world(1);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert!(events_where(&world, |k| {
+            matches!(k, EventKind::BaseAntiAircraftFire { .. })
+        })
+        .is_empty());
+        // Every bomber shot down: no attack and nothing destroyed.
+        let mut world = raid_world(1);
+        world
+            .truth
+            .bases
+            .get_mut(&BASE_JAPANESE)
+            .expect("base")
+            .anti_aircraft = 40;
+        air_figures(&mut world).anti_aircraft_hit_chance = Fixed::ONE;
+        base_group(&mut world, 20, BASE_JAPANESE, 2, 10, AirMission::Rest);
+        sure_bombs(&mut world, Fixed::ONE, Fixed::ZERO);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(ready_of(&world, 1), 0);
+        assert!(base_attacks(&world).is_empty());
+        assert!(ground_losses(&world).is_empty());
+        assert_eq!(ready_of(&world, 20), 10);
+    }
+
+    #[test]
+    fn the_base_attack_event_reads_plainly_and_a_hit_lands_where_its_draw_says() {
+        let mut world = raid_world(3);
+        world.config.record_breakdowns = true;
+        base_group(&mut world, 20, BASE_JAPANESE, 2, 10, AirMission::Rest);
+        strike_pulse(&mut world, Pulse::Morning);
+        let attack = &base_attacks(&world)[0];
+        match attack.kind {
+            EventKind::BaseAttacked {
+                shots,
+                hits,
+                hits_on_aircraft,
+                hits_on_supply,
+                ..
+            } => {
+                assert_eq!(shots, Fixed::from_int(18));
+                assert!(hits_on_aircraft + hits_on_supply <= hits);
+            }
+            _ => unreachable!(),
+        }
+        assert!(attack.breakdown.is_some());
+        let text = attack.kind.to_string();
+        assert!(
+            text.starts_with("air_group:1 bombs at base:2: 18 shots x 0.2 = 3.6 expected, "),
+            "{text}"
+        );
+        // The draw per hit is from the stream of (group, base): replay it.
+        let mut stream = world.rng_pair(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::AirCombat,
+            EntityRef::AirGroup(AirGroupId::new(1)),
+            EntityRef::Base(BASE_JAPANESE),
+        );
+        let hits = roll_shots(&mut stream, Fixed::from_int(18), fixed(2, 10));
+        let (mut aircraft, mut supply) = (0, 0);
+        for _ in 0..hits {
+            let draw = stream.below(Fixed::SCALE.unsigned_abs());
+            if draw < raw_u64(fixed(3, 10)) {
+                aircraft += 1;
+            } else if draw < raw_u64(fixed(6, 10)) {
+                supply += 1;
+            }
+        }
+        match attack.kind {
+            EventKind::BaseAttacked {
+                hits: recorded,
+                hits_on_aircraft,
+                hits_on_supply,
+                ..
+            } => assert_eq!(
+                (recorded, hits_on_aircraft, hits_on_supply),
+                (hits, aircraft, supply)
+            ),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn recording_breakdowns_changes_neither_the_base_raid_nor_the_hash() {
+        let run = |record: bool| {
+            let mut world = raid_world(5);
+            world.config.record_breakdowns = record;
+            base_group(&mut world, 20, BASE_JAPANESE, 2, 10, AirMission::Rest);
+            world
+                .truth
+                .bases
+                .get_mut(&BASE_JAPANESE)
+                .expect("base")
+                .anti_aircraft = 20;
+            strike_pulse(&mut world, Pulse::Morning);
+            let kinds: Vec<EventKind> = world.events().iter().map(|e| e.kind.clone()).collect();
+            (kinds, world.state_hash())
+        };
+        assert_eq!(run(false), run(true));
+    }
+
+    #[test]
+    fn the_hash_sees_a_base_strike_target_and_a_base_gun_and_a_gunless_base_hashes_as_before() {
+        let world = raid_world(1);
+        let base_hash = world.state_hash();
+        let mut other = raid_world(1);
+        group_mut(&mut other, AirGroupId::new(1)).mission = AirMission::BaseStrike(BaseId::new(9));
+        assert_ne!(other.state_hash(), base_hash);
+        let mut guns = raid_world(1);
+        guns.truth
+            .bases
+            .get_mut(&BASE_JAPANESE)
+            .expect("base")
+            .anti_aircraft = 1;
+        assert_ne!(guns.state_hash(), base_hash);
+        // The mission code is part of the hash too.
+        let mut rest = raid_world(1);
+        group_mut(&mut rest, AirGroupId::new(1)).mission = AirMission::Rest;
+        assert_ne!(rest.state_hash(), base_hash);
+    }
+
+    #[test]
+    fn a_base_strike_order_needs_figures_a_weapon_and_an_enemy_base() {
+        let accepted = |setup: &dyn Fn(&mut World), mission: AirMission| {
+            let mut world = base_world(1);
+            base_group(&mut world, 1, BASE_ALLIED, 2, 18, AirMission::Rest);
+            setup(&mut world);
+            world.submit_orders(
+                Side::Allied,
+                vec![mission_order(AirGroupId::new(1), mission)],
+            );
+            world.resolve_day().expect("day resolves");
+            (
+                rejections(&world),
+                world.truth.air_groups[&AirGroupId::new(1)].mission,
+            )
+        };
+        let at = |base: u32| AirMission::BaseStrike(BaseId::new(base));
+        assert_eq!(accepted(&|_| {}, at(2)), (vec![], at(2)));
+        assert_eq!(
+            accepted(&|_| {}, at(1)),
+            (vec![RejectReason::NotAnEnemyBase], AirMission::Rest)
+        );
+        assert_eq!(
+            accepted(&|_| {}, at(9)),
+            (vec![RejectReason::NotAnEnemyBase], AirMission::Rest)
+        );
+        assert_eq!(
+            accepted(
+                &|w| group_mut(w, AirGroupId::new(1)).aircraft_type = AircraftTypeId::new(4),
+                at(2)
+            ),
+            (
+                vec![RejectReason::AircraftAttackWithNothing],
+                AirMission::Rest
+            )
+        );
+        assert_eq!(
+            accepted(&|w| w.ref_data.air_combat = None, at(2)),
+            (vec![RejectReason::NoAirCombatFigures], AirMission::Rest)
+        );
     }
 }

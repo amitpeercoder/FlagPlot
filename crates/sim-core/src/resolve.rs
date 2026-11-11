@@ -446,6 +446,26 @@ impl World {
                         }
                         Ok(())
                     }
+                    AirGroupOrder::SetAirMission(AirMission::BaseStrike(base)) => {
+                        // Decision 1 of 0034: the same checks as the naval
+                        // strike, and the base must be an enemy's.
+                        if self.ref_data.air_combat.is_none() {
+                            return Err(RejectReason::NoAirCombatFigures);
+                        }
+                        let weapon = self
+                            .ref_data
+                            .aircraft_types
+                            .get(&group.aircraft_type)
+                            .expect("air group has a known aircraft type")
+                            .attack_weapon;
+                        if weapon == AttackWeapon::None {
+                            return Err(RejectReason::AircraftAttackWithNothing);
+                        }
+                        match self.truth.bases.get(base) {
+                            Some(base) if base.side != group.side => Ok(()),
+                            _ => Err(RejectReason::NotAnEnemyBase),
+                        }
+                    }
                     AirGroupOrder::SetAirMission(AirMission::CombatAirPatrol) => {
                         // Decision 1 of 0027.
                         if self.ref_data.air_combat.is_none() {
@@ -741,6 +761,7 @@ mod tests {
                 side: Side::Allied,
                 hex: Hex::new(0, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
 
@@ -2462,6 +2483,7 @@ mod tests {
                 side: Side::Japanese,
                 hex: hx(1, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         World::new(7, ref_data, good.map.clone(), truth).expect("valid setup")

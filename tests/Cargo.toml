@@ -69,5 +69,9 @@ path = "scenario_05d_carrier_duel.rs"
 name = "scenario_05_eastern_solomons"
 path = "scenario_05_eastern_solomons.rs"
 
+[[test]]
+name = "scenario_06a_base_raid"
+path = "scenario_06a_base_raid.rs"
+
 [lints]
 workspace = true

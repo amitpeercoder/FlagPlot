@@ -222,6 +222,9 @@ pub struct Base {
     pub hex: Hex,
     /// Supply stock, in tons.
     pub supply_t: Fixed,
+    /// Anti-aircraft shots the base fires at a raid on it (decision 5 of
+    /// `docs/decisions/0034-raids-on-a-base.md`). The default is 0.
+    pub anti_aircraft: u32,
 }
 
 /// What a task force is doing about its route.

@@ -90,6 +90,9 @@ struct BaseSpec {
     r: i32,
     /// Supply stock at the start, in tons. Defaults to 0.
     supply_t: Option<Quantity>,
+    /// Anti-aircraft shots at a raid on the base (decision 0034). Defaults
+    /// to 0.
+    anti_aircraft: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -205,8 +208,11 @@ enum ActionSpec {
     },
     Load {},
     Unload {},
+    /// `target_base` is required for `base_strike` and given for no other
+    /// mission (decision 0034).
     SetAirMission {
         mission: AirMissionSpec,
+        target_base: Option<u32>,
     },
     SetSearchArc {
         from_deg: i32,
@@ -296,17 +302,7 @@ enum AirMissionSpec {
     Search,
     NavalStrike,
     CombatAirPatrol,
-}
-
-impl From<AirMissionSpec> for AirMission {
-    fn from(spec: AirMissionSpec) -> AirMission {
-        match spec {
-            AirMissionSpec::Rest => AirMission::Rest,
-            AirMissionSpec::Search => AirMission::Search,
-            AirMissionSpec::NavalStrike => AirMission::NavalStrike,
-            AirMissionSpec::CombatAirPatrol => AirMission::CombatAirPatrol,
-        }
-    }
+    BaseStrike,
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -440,6 +436,7 @@ impl Scenario {
                         .map_err(|e| fail(format!("{id}: supply_t {e}")))?,
                     None => Fixed::ZERO,
                 },
+                anti_aircraft: spec.anti_aircraft.unwrap_or(0),
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -750,8 +747,47 @@ impl Scenario {
                 }
                 (None, Some(raw)) => {
                     let order = match &spec.action {
-                        ActionSpec::SetAirMission { mission } => {
-                            AirGroupOrder::SetAirMission((*mission).into())
+                        ActionSpec::SetAirMission {
+                            mission,
+                            target_base,
+                        } => {
+                            let mission = match (mission, target_base) {
+                                (AirMissionSpec::BaseStrike, Some(raw)) => {
+                                    let base = BaseId::new(*raw);
+                                    let held_by = truth
+                                        .bases
+                                        .get(&base)
+                                        .ok_or_else(|| {
+                                            fail(format!(
+                                                "the base_strike order on day {day} names unknown base {raw}"
+                                            ))
+                                        })?
+                                        .side;
+                                    if held_by == Side::from(spec.side) {
+                                        return Err(fail(format!(
+                                            "the base_strike order on day {day} names {base}, a base of the group's own side"
+                                        )));
+                                    }
+                                    AirMission::BaseStrike(base)
+                                }
+                                (AirMissionSpec::BaseStrike, None) => {
+                                    return Err(fail(format!(
+                                        "the base_strike order on day {day} needs a target_base"
+                                    )))
+                                }
+                                (_, Some(_)) => {
+                                    return Err(fail(format!(
+                                        "target_base on day {day} is only for the base_strike mission"
+                                    )))
+                                }
+                                (AirMissionSpec::Rest, None) => AirMission::Rest,
+                                (AirMissionSpec::Search, None) => AirMission::Search,
+                                (AirMissionSpec::NavalStrike, None) => AirMission::NavalStrike,
+                                (AirMissionSpec::CombatAirPatrol, None) => {
+                                    AirMission::CombatAirPatrol
+                                }
+                            };
+                            AirGroupOrder::SetAirMission(mission)
                         }
                         ActionSpec::SetSearchArc {
                             from_deg,
@@ -1158,6 +1194,62 @@ r = 0
             "kind = \"set_patrol_share\"\nshare = \"1.5\"",
         ))
         .expect("a share out of range is rejected by the world, not the loader");
+    }
+
+    #[test]
+    fn the_base_strike_mission_needs_its_target_base_and_no_other_mission_has_one() {
+        let strike = |target: &str| {
+            format!("kind = \"set_air_mission\"\nmission = \"base_strike\"\n{target}")
+        };
+        // A base of the other side loads, and the order is addressed to a
+        // group.
+        parse_with(&order("air_group = 1", &strike("target_base = 2"))).expect("loads");
+        let message = error_of(&order("air_group = 1", &strike("")));
+        assert!(message.contains("needs a target_base"), "{message}");
+        let message = error_of(&order("air_group = 1", &strike("target_base = 9")));
+        assert!(message.contains("unknown base 9"), "{message}");
+        let message = error_of(&order("air_group = 1", &strike("target_base = 1")));
+        assert!(message.contains("own side"), "{message}");
+        let message = error_of(&order(
+            "air_group = 1",
+            "kind = \"set_air_mission\"\nmission = \"naval_strike\"\ntarget_base = 2",
+        ));
+        assert!(message.contains("only for the base_strike"), "{message}");
+        // A target is a base number, not a float.
+        assert!(parse_with(&order("air_group = 1", &strike("target_base = 2.5"))).is_err());
+        // The order is for an air group.
+        assert!(
+            error_of(&order("task_force = 1", &strike("target_base = 2"))).contains("air_group")
+        );
+    }
+
+    #[test]
+    fn a_base_strike_order_sets_the_mission_with_its_target() {
+        let mut scenario = with_air_combat(&format!(
+            "{}[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_air_mission\"\nmission = \"base_strike\"\ntarget_base = 2\n",
+            air_group(1, 3)
+        ))
+        .expect("loads");
+        scenario.next_day().expect("day runs");
+        assert_eq!(
+            scenario.world.umpire().air_groups[&AirGroupId::new(1)].mission,
+            AirMission::BaseStrike(BaseId::new(2))
+        );
+    }
+
+    #[test]
+    fn a_base_takes_an_optional_whole_number_of_anti_aircraft_shots() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let guns = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let shots =
+            |scenario: Scenario| scenario.world.umpire().bases[&BaseId::new(2)].anti_aircraft;
+        assert_eq!(shots(guns("").expect("loads")), 0);
+        assert_eq!(shots(guns("anti_aircraft = 12\n").expect("loads")), 12);
+        assert!(guns("anti_aircraft = 1.5\n").is_err());
+        assert!(guns("anti_aircraft = -1\n").is_err());
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.

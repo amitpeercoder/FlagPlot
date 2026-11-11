@@ -118,6 +118,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::PatrolShareOutOfRange(share) => {
             base("patrol_share_out_of_range").num("share", *share)
         }
+        RejectReason::NotAnEnemyBase => base("not_an_enemy_base"),
     }
 }
 
@@ -279,6 +280,78 @@ fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .hex("hex", *hex)
                 .int("aircraft", *aircraft)
                 .num("distance_nm", *distance_nm),
+        ),
+        EventKind::BaseStrikeLaunched {
+            air_group,
+            base,
+            hex,
+            aircraft,
+            distance_nm,
+        } => (
+            "base_strike_launched",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .hex("hex", *hex)
+                .int("aircraft", *aircraft)
+                .num("distance_nm", *distance_nm),
+        ),
+        EventKind::BaseAntiAircraftFire {
+            base,
+            air_group,
+            shots,
+            chance,
+            expected,
+            hits,
+        } => (
+            "base_anti_aircraft_fire",
+            d.id("base", *base)
+                .id("air_group", *air_group)
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits),
+        ),
+        EventKind::BaseAttacked {
+            air_group,
+            base,
+            shots,
+            chance,
+            expected,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
+        } => (
+            "base_attacked",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits)
+                .int("hits_on_aircraft", *hits_on_aircraft)
+                .int("hits_on_supply", *hits_on_supply),
+        ),
+        EventKind::AircraftDestroyedOnGround {
+            air_group,
+            base,
+            aircraft,
+            remaining,
+        } => (
+            "aircraft_destroyed_on_ground",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .int("aircraft", *aircraft)
+                .int("remaining", *remaining),
+        ),
+        EventKind::BaseSupplyDestroyed {
+            base,
+            destroyed_t,
+            supply_t,
+        } => (
+            "base_supply_destroyed",
+            d.id("base", *base)
+                .num("destroyed_t", *destroyed_t)
+                .num("supply_t", *supply_t),
         ),
         EventKind::StrikeFoundNothing { air_group, hex } => (
             "strike_found_nothing",

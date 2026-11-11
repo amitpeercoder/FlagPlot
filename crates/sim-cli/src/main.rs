@@ -223,8 +223,12 @@ fn run(args: &[String]) -> Result<(), String> {
         } else {
             String::new()
         };
+        let mission = match group.mission {
+            AirMission::BaseStrike(base) => format!("BaseStrike on {base}"),
+            other => format!("{other:?}"),
+        };
         println!(
-            "{} \"{}\" ({}) {}: {} ready, mission {:?}{}, {}",
+            "{} \"{}\" ({}) {}: {} ready, mission {}{}, {}",
             group.id,
             group.name,
             group.side.name(),
@@ -233,7 +237,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 AirGroupLocation::Ship(ship) => format!("aboard {ship}"),
             },
             group.ready,
-            group.mission,
+            mission,
             share,
             arc
         );
@@ -274,13 +278,19 @@ fn run(args: &[String]) -> Result<(), String> {
         );
     }
     for base in truth.bases.values() {
+        let guns = if base.anti_aircraft > 0 {
+            format!(", {} anti-aircraft shots", base.anti_aircraft)
+        } else {
+            String::new()
+        };
         println!(
-            "{} \"{}\" ({}) at {}: {} t of supply in stock",
+            "{} \"{}\" ({}) at {}: {} t of supply in stock{}",
             base.id,
             base.name,
             base.side.name(),
             base.hex,
-            base.supply_t
+            base.supply_t,
+            guns
         );
     }
     for side in [Side::Allied, Side::Japanese] {

@@ -510,6 +510,7 @@ mod tests {
                 side: Side::Allied,
                 hex: hx(0, 0),
                 supply_t: Fixed::ZERO,
+                anti_aircraft: 0,
             },
         );
         World::new(7, ref_data, map, truth).expect("valid setup")

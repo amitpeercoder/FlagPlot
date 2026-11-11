@@ -1,0 +1,35 @@
+# PLACEHOLDER MAP. A strip of open sea with two airfields 200 nm apart, used
+# by the stages of scenario 6. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 12]
+r = [-3, 3]
+
+# Stands in for the attacker's airfield.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for the defender's airfield, 200 nm east.
+[[hex]]
+q = 5
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for an airfield beyond the bombers' radius, 280 nm east. Used by
+# a variant.
+[[hex]]
+q = 7
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

@@ -530,6 +530,16 @@ pub struct AirCombatFigures {
     /// Which system a bomb's system hit lands on: each system's share. A
     /// system absent from the table has share 0. The shares add to 1.
     pub bomb_system_hit: BTreeMap<ShipSystem, Fixed>,
+    /// The weight of supply one hit on a base's supply destroys, in tons
+    /// (decision 9 of `docs/decisions/0034-raids-on-a-base.md`).
+    pub base_supply_destroyed_per_hit_t: Fixed,
+    /// The chance a bomb hit on a base lands on aircraft on the ground
+    /// (decision 7 of 0034).
+    pub base_hit_aircraft: Fixed,
+    /// The chance a bomb hit on a base lands on its supply (decision 7 of
+    /// 0034). With `base_hit_aircraft` it adds to 1 at most; the rest of the
+    /// hits land on nothing.
+    pub base_hit_supply: Fixed,
 }
 
 impl AirCombatFigures {
@@ -562,6 +572,28 @@ impl AirCombatFigures {
         if total != Fixed::ONE {
             return Some(format!(
                 "air combat bomb system hit shares add to {total}, not 1"
+            ));
+        }
+        for (label, value) in [
+            ("aircraft", self.base_hit_aircraft),
+            ("supply", self.base_hit_supply),
+        ] {
+            if !in_unit(value) {
+                return Some(format!(
+                    "air combat base hit chance on {label} {value} is not between 0 and 1"
+                ));
+            }
+        }
+        let landed = self.base_hit_aircraft + self.base_hit_supply;
+        if landed > Fixed::ONE {
+            return Some(format!(
+                "air combat base hit chances on aircraft and supply add to {landed}, more than 1"
+            ));
+        }
+        if self.base_supply_destroyed_per_hit_t.is_negative() {
+            return Some(format!(
+                "air combat base supply destroyed per hit {} is negative",
+                self.base_supply_destroyed_per_hit_t
             ));
         }
         None
@@ -638,6 +670,9 @@ impl AirCombatFigures {
             ]
             .into_iter()
             .collect(),
+            base_supply_destroyed_per_hit_t: Fixed::from_int(50),
+            base_hit_aircraft: tenth(3),
+            base_hit_supply: tenth(3),
         }
     }
 }

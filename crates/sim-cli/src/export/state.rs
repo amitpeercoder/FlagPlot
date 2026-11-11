@@ -126,6 +126,13 @@ pub struct BaseOut {
     q: i32,
     r: i32,
     supply: Num,
+    /// Anti-aircraft shots (decision 0034). Left out when 0.
+    #[serde(skip_serializing_if = "is_zero")]
+    anti_aircraft: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 pub fn snapshot(truth: &TruthState, ref_data: &RefData) -> Snapshot {
@@ -157,6 +164,7 @@ fn base(base: &Base) -> BaseOut {
         q: base.hex.q,
         r: base.hex.r,
         supply: Num(base.supply_t),
+        anti_aircraft: base.anti_aircraft,
     }
 }
 
