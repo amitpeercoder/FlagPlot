@@ -240,3 +240,36 @@ fn bad_invocations_fail_and_write_nothing() {
         assert!(!out.exists(), "{args:?}: wrote a file");
     }
 }
+
+#[test]
+fn a_batch_says_what_it_was_run_on_and_carries_the_callers_label() {
+    // Decision 0057: the hash layout's version, the hash of the scenario
+    // file and of every data file it names, and the label as given.
+    let plain = parse(&batch("inputs-plain", FIGHT, &["--runs", "2"]));
+    let inputs = &plain["inputs"];
+    assert_eq!(inputs["state_version"], "flagplot-state-v2");
+    let scenario = fs::read(PathBuf::from(ROOT).join(FIGHT)).expect("the scenario reads");
+    let mut hasher = sim_core::hash::StateHasher::new();
+    hasher.bytes(&scenario);
+    assert_eq!(
+        inputs["scenario_hash"],
+        format!("{:016x}", hasher.finish()).as_str()
+    );
+    let data = inputs["data"].as_array().expect("data files");
+    assert!(!data.is_empty());
+    for file in data {
+        assert!(file["file"].as_str().is_some_and(|f| !f.is_empty()));
+        assert_eq!(file["hash"].as_str().expect("a hash").len(), 16);
+    }
+    assert!(plain.get("label").is_none());
+
+    let labelled = parse(&batch(
+        "inputs-labelled",
+        FIGHT,
+        &["--runs", "2", "--label", "abc123"],
+    ));
+    assert_eq!(labelled["label"], "abc123");
+    // The label changes nothing else.
+    assert_eq!(labelled["inputs"], plain["inputs"]);
+    assert_eq!(labelled["per_run"], plain["per_run"]);
+}
