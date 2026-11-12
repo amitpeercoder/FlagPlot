@@ -139,7 +139,7 @@ use sim_core::events::{AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
-use sim_core::rng::{RngKey, RngStream, Subsystem};
+use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState};
 use sim_core::time::Pulse;
 use sim_data::Scenario;
@@ -269,6 +269,7 @@ fn stream_of(seed: u64, day: u32, pulse: Pulse, entity: EntityRef, other: Entity
         subsystem: Subsystem::AirCombat,
         entity,
         other: Some(other),
+        draw: Draw::Legacy,
     }
     .stream()
 }

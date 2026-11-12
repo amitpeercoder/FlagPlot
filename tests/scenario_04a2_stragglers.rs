@@ -49,7 +49,7 @@
 //! | 3, left behind      | 6       | Stays at (6,0), set to avoid             |
 //!
 //! Task force 2 is made first and task force 3 second. Task force 2's route
-//! comes from a set-route order issued by the staff and taken in at once. Its
+//! comes from a set-route order issued by the local commander and taken in at once. Its
 //! speed is that of its slowest ship: cruiser 2 at 16 x 0.5 = 8 kn. All three
 //! forces move in that same movement step.
 //!
@@ -416,7 +416,7 @@ impl Run {
     fn staff_orders(&self) -> Vec<&Order> {
         self.world()
             .orders()
-            .filter(|order| order.origin.issuer == Issuer::Staff)
+            .filter(|order| order.origin.issuer == Issuer::LocalCommander)
             .collect()
     }
 
@@ -710,7 +710,7 @@ fn the_staff_order_sends_task_force_2_home() {
     assert_eq!(order.id, OrderId::new(4));
     assert_eq!(order.side, Side::Allied);
     assert_eq!(order.day_issued, 1);
-    assert_eq!(order.origin.issuer, Issuer::Staff);
+    assert_eq!(order.origin.issuer, Issuer::LocalCommander);
     assert_eq!(order.origin.intent, None);
     assert_eq!(
         order.kind,

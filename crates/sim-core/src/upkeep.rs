@@ -91,7 +91,7 @@ use crate::damage::roll_shots;
 use crate::events::{Breakdown, Cause, EventKind, Factor, FatigueChange, SortieKind, SupplyUse};
 use crate::fixed::Fixed;
 use crate::ids::{AirGroupId, BaseId, EntityRef};
-use crate::rng::{RngStream, Subsystem};
+use crate::rng::{Draw, RngStream, Subsystem};
 use crate::state::{AirGroupLocation, ShipLocation};
 use crate::time::Pulse;
 use crate::world::World;
@@ -335,6 +335,7 @@ impl World {
                     day,
                     Some(pulse),
                     Subsystem::Upkeep,
+                    Draw::Legacy,
                     EntityRef::AirGroup(sortie.air_group),
                 )
             });

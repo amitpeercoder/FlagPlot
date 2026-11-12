@@ -644,7 +644,7 @@ impl Day {
                         target,
                         reason,
                     } => orders.refused.push(RefusedOrder {
-                        order: order.raw(),
+                        order: ctx.order_number(*order),
                         target: ctx.entity(*target),
                         reason: reason.to_string(),
                         event: id,

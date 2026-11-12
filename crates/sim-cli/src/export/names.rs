@@ -81,6 +81,7 @@ pub fn issuer(issuer: Issuer) -> &'static str {
     match issuer {
         Issuer::Player => "player",
         Issuer::Staff => "staff",
+        Issuer::LocalCommander => "local_commander",
     }
 }
 

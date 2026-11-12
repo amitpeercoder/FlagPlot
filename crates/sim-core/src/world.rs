@@ -13,7 +13,7 @@ use crate::map::Map;
 use crate::objectives::{self, GameResult, Objectives};
 use crate::orders::{Order, OrderRequest};
 use crate::refdata::RefData;
-use crate::rng::{RngKey, RngStream, Subsystem};
+use crate::rng::{Draw, RngKey, RngStream, Subsystem};
 use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
@@ -381,11 +381,14 @@ impl World {
 
     /// Opens the random number stream for one entity in one subsystem at one
     /// moment. This is the only source of randomness the rules may use.
+    /// `draw` names the rule that draws; a new rule adds its own value to
+    /// [`Draw`] (decision 0055).
     pub fn rng(
         &self,
         day: u32,
         pulse: Option<Pulse>,
         subsystem: Subsystem,
+        draw: Draw,
         entity: EntityRef,
     ) -> RngStream {
         RngKey {
@@ -395,6 +398,7 @@ impl World {
             subsystem,
             entity,
             other: None,
+            draw,
         }
         .stream()
     }
@@ -409,6 +413,7 @@ impl World {
         day: u32,
         pulse: Option<Pulse>,
         subsystem: Subsystem,
+        draw: Draw,
         entity: EntityRef,
         other: EntityRef,
     ) -> RngStream {
@@ -419,6 +424,7 @@ impl World {
             subsystem,
             entity,
             other: Some(other),
+            draw,
         }
         .stream()
     }

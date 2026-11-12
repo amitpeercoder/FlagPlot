@@ -464,16 +464,19 @@ fn run(args: &[String]) -> Result<(), String> {
 /// One event as `run --events` prints it. An order the simulation issued
 /// itself is marked, so the log shows who gave it (decision 0016, 14).
 fn event_line(world: &sim_core::World, event: &sim_core::events::Event) -> String {
-    let by_staff = match &event.kind {
-        EventKind::OrderAccepted { order, .. } | EventKind::OrderRejected { order, .. } => world
-            .order(*order)
-            .is_some_and(|o| o.origin.issuer == sim_core::orders::Issuer::Staff),
-        _ => false,
+    let issuer = match &event.kind {
+        EventKind::OrderAccepted { order, .. } | EventKind::OrderRejected { order, .. } => {
+            world.order(*order).map(|o| o.origin.issuer)
+        }
+        _ => None,
     };
-    if by_staff {
-        format!("{event}  [issued by the staff]")
-    } else {
-        format!("{event}")
+    match issuer {
+        Some(sim_core::orders::Issuer::Staff) => format!("{event}  [issued by the staff]"),
+        // A rule acting inside the day (decision 0055).
+        Some(sim_core::orders::Issuer::LocalCommander) => {
+            format!("{event}  [issued by the local commander]")
+        }
+        Some(sim_core::orders::Issuer::Player) | None => format!("{event}"),
     }
 }
 

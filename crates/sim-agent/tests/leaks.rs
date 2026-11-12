@@ -523,6 +523,22 @@ fn rejected_order(doc: &Doc, side: Side, enemy: Side, _world: &World) -> Option<
         l.strip_prefix("days = ")
             .and_then(|v| v.trim().parse::<u32>().ok())
     })?;
+    rejected_order_on(doc, side, enemy, days)
+}
+
+/// The same on day 1, so the enemy's order is numbered before every order
+/// the side gives after it. The side's own orders must keep the numbers it
+/// is shown (decision 0055).
+fn rejected_order_on_day_one(
+    doc: &Doc,
+    side: Side,
+    enemy: Side,
+    _world: &World,
+) -> Option<(String, String)> {
+    rejected_order_on(doc, side, enemy, 1)
+}
+
+fn rejected_order_on(doc: &Doc, side: Side, enemy: Side, days: u32) -> Option<(String, String)> {
     let target = doc
         .tables
         .iter()
@@ -703,7 +719,11 @@ fn run(text: &str, name: &str, seed: u64, side: Side) -> Run {
         .world
         .orders()
         .filter(|o| o.side == side)
-        .map(|o| (o.id.raw(), o.day_issued))
+        .enumerate()
+        // By the side's own count, which is what it is shown (decision
+        // 0055). The log's numbers run through both sides' orders, so they
+        // move with what the enemy orders.
+        .map(|(i, o)| (u32::try_from(i + 1).expect("few orders"), o.day_issued))
         .collect();
     Run {
         raw,
@@ -798,7 +818,7 @@ fn found_by(make: Make, seeds: std::ops::RangeInclusive<u64>) -> Found {
 
 #[test]
 fn what_a_side_cannot_know_changes_nothing_it_is_given() {
-    let differences: [(&str, Make); 5] = [
+    let differences: [(&str, Make); 6] = [
         ("enemy ships carry a ton less fuel", less_fuel),
         ("enemy bases hold a ton more supply", more_supply),
         (
@@ -806,6 +826,10 @@ fn what_a_side_cannot_know_changes_nothing_it_is_given() {
             higher_rest_threshold,
         ),
         ("the enemy gives an order that is refused", rejected_order),
+        (
+            "the enemy gives one more order on day 1",
+            rejected_order_on_day_one,
+        ),
         (
             "an enemy force far away steams one way, not another",
             far_unit_moves,

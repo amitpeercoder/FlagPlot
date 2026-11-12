@@ -20,7 +20,7 @@ use crate::ids::{EntityRef, EventId, TaskForceId};
 use crate::map::Map;
 use crate::orders::AirMission;
 use crate::refdata::{SearchFigures, ShipKind};
-use crate::rng::{RngStream, Subsystem};
+use crate::rng::{Draw, RngStream, Subsystem};
 use crate::state::Side;
 use crate::time::{self, Pulse};
 use crate::upkeep::Sortie;
@@ -269,6 +269,7 @@ impl World {
                     day,
                     Some(pulse),
                     Subsystem::Search,
+                    Draw::Legacy,
                     EntityRef::AirGroup(group.id),
                     EntityRef::TaskForce(target.id),
                 );
@@ -947,6 +948,7 @@ mod tests {
                     1,
                     Some(Pulse::Morning),
                     Subsystem::Search,
+                    Draw::Legacy,
                     EntityRef::AirGroup(group),
                     EntityRef::TaskForce(TaskForceId::new(1)),
                 );

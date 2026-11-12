@@ -128,7 +128,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::AirMission;
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
-use crate::rng::{RngStream, Subsystem};
+use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
@@ -1545,6 +1545,7 @@ impl World {
                 day,
                 Some(pulse),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(first_escort),
                 target_entity,
             );
@@ -1571,6 +1572,7 @@ impl World {
                 day,
                 Some(pulse),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(first_patrol),
                 EntityRef::AirGroup(first.air_group),
             );
@@ -1657,6 +1659,7 @@ impl World {
                     day,
                     Some(pulse),
                     Subsystem::AirCombat,
+                    Draw::Legacy,
                     firer,
                     EntityRef::AirGroup(first.air_group),
                 );
@@ -1753,6 +1756,7 @@ impl World {
             day,
             Some(pulse),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(strike.air_group),
             EntityRef::TaskForce(task_force),
         );
@@ -1850,6 +1854,7 @@ impl World {
             day,
             Some(pulse),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(strike.air_group),
             EntityRef::Base(base),
         );
@@ -2722,6 +2727,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
@@ -2856,6 +2862,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(BOMBERS),
             EntityRef::TaskForce(FORCE_B),
         );
@@ -3504,6 +3511,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
@@ -3548,6 +3556,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
@@ -4124,6 +4133,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(PATROL_A),
             EntityRef::TaskForce(FORCE_B),
         );
@@ -4421,6 +4431,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::Ship(ShipId::new(2)),
                 EntityRef::AirGroup(BOMBERS),
             );
@@ -4777,7 +4788,14 @@ mod tests {
             assert_eq!(fights.len(), 3);
             assert_eq!((fights[0].4, fights[1].4, fights[2].4), (6, 6, 6));
             let key = |a: EntityRef, b: EntityRef| {
-                world.rng_pair(1, Some(Pulse::Morning), Subsystem::AirCombat, a, b)
+                world.rng_pair(
+                    1,
+                    Some(Pulse::Morning),
+                    Subsystem::AirCombat,
+                    Draw::Legacy,
+                    a,
+                    b,
+                )
             };
             // Escorts: the first escort group and the task force attacked.
             let mut stream = key(EntityRef::AirGroup(PATROL_A), EntityRef::TaskForce(FORCE_B));
@@ -4835,6 +4853,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(PATROL_B),
             EntityRef::AirGroup(BOMBERS),
         );
@@ -6050,6 +6069,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(AirGroupId::new(1)),
             EntityRef::Base(BASE_JAPANESE),
         );
@@ -6515,6 +6535,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 crate::rng::Subsystem::Upkeep,
+                crate::rng::Draw::Legacy,
                 EntityRef::AirGroup(AirGroupId::new(5)),
             );
             let (patrol_worn, patrol_off) = replay(&mut stream, 5, base, share);
