@@ -38,6 +38,8 @@
 //! lowest group first, forces move in clock order, and so on. That order is
 //! part of the rules (decision 3 of 0043).
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -52,8 +54,13 @@ fn scenario_path(name: &str) -> PathBuf {
     Path::new(ROOT).join("data/scenarios").join(name)
 }
 
+/// The determinism scenario runs on the live figures: that a run repeats, that
+/// its order of tables and its breakdowns change nothing, and that the
+/// invariants hold are claims about the figures in use, and step 2 tunes them.
+/// Only the test of which kinds of event the log holds, which depends on what
+/// the figures make happen, runs on the frozen figures of `data/reference/step1`.
 fn load(name: &str, seed: Option<u64>) -> Scenario {
-    let scenario = Scenario::load(&scenario_path(name)).expect("the scenario loads");
+    let scenario = common::load_live(&scenario_path(name)).expect("the scenario loads");
     match seed {
         Some(seed) => scenario.with_seed(seed).expect("a seed can be set"),
         None => scenario,
@@ -403,7 +410,9 @@ fn event_kinds() -> BTreeSet<String> {
 fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     let all = event_kinds();
     assert!(all.len() >= 50, "read {} kinds", all.len());
-    let outcome = run(load(FULL, None));
+    // On the frozen figures: which kinds of event the log holds depends on
+    // what the figures make happen.
+    let outcome = run(common::load(&scenario_path(FULL)).expect("the scenario loads"));
     let seen: BTreeSet<String> = outcome
         .events
         .iter()

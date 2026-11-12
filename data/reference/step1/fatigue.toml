@@ -1,0 +1,22 @@
+# FROZEN: a copy of data/reference/fatigue.toml
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0036-fatigue-and-rest.md.
+
+placeholder = true
+
+# Fatigue an air group gains in a daylight pulse in which it flew: this much
+# for the sortie, plus this much for each 100 nm of it.
+air_fatigue_per_sortie = 3
+air_fatigue_per_100_nm = 2
+
+# Fatigue an air group loses in a daylight pulse in which it did not fly.
+air_rest_per_pulse = 5
+
+# Fatigue a task force gains at the start of a pulse in which it is alert,
+# and loses at the start of one in which it is not (decision 0037).
+force_fatigue_per_pulse_alert = 5
+force_rest_per_pulse = 3

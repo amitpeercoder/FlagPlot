@@ -54,6 +54,16 @@
 //!   `ships_crippled`, `aircraft_destroyed`, `cargo_landed` and `base_open`
 //!   (decision 0054, "As built").
 //!
+//! A scenario names its reference files by path. A caller may read them from
+//! another directory instead with [`LoadOptions`] and `Scenario::load_with`:
+//! each reference file the scenario names is then looked up by its file name
+//! under `LoadOptions::reference_root`, and one that is missing there is an
+//! error that names it. The map is read where the scenario names it. The
+//! hand-calculation tests use `data/reference/step1`, the figures frozen at
+//! the end of step 1 (`LoadOptions::frozen_step1`); the run baselines and
+//! everything else read the live files. The files a scenario records as its
+//! inputs (`Scenario::data_files`) are the ones actually read.
+//!
 //! Quantities are written as whole numbers or as decimal strings such as
 //! `"0.25"`. TOML floats are rejected, so no value passes through floating
 //! point on its way into the simulation.
@@ -71,4 +81,4 @@ pub use reference::{
     load_fatigue_figures, load_port_sizes, load_search_figures, load_ship_classes,
     load_surface_combat_figures,
 };
-pub use scenario::Scenario;
+pub use scenario::{LoadOptions, Scenario, FROZEN_REFERENCE_DIR};

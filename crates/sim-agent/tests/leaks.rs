@@ -749,9 +749,10 @@ struct Found {
 fn compare(name: &str, seeds: std::ops::RangeInclusive<u64>, make: Make, found: &mut Found) {
     let text = scenario_text(name);
     let doc = parse_doc(&text);
-    let world0 = sim_data::Scenario::from_text(&text, &scenario_path(name))
-        .expect("loads")
-        .world;
+    let world0 =
+        sim_data::Scenario::from_text_with(&text, &scenario_path(name), &support::frozen())
+            .expect("loads")
+            .world;
     for side in SIDES {
         let enemy = other(side);
         let Some((first, second)) = make(&doc, side, enemy, &world0) else {

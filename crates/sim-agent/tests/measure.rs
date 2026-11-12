@@ -13,7 +13,7 @@ mod support;
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use serde_json::Value;
@@ -26,7 +26,7 @@ use sim_core::orders::{OrderKind, OrderRequest, Origin, TaskForceOrder};
 use sim_core::state::{Side, TaskForceStatus};
 use sim_core::time::{ClockTime, Pulse};
 use sim_core::view::SideView;
-use sim_data::Scenario;
+use sim_data::{LoadOptions, Scenario};
 use support::check::{check_measure, sample_questions};
 use support::{load, load_text, scenario_text, schemas, ROOT};
 
@@ -723,28 +723,28 @@ fn eastern_solomons_the_japanese_launches_are_at_the_distance_measure_gives_from
 const RABAUL: (i32, i32) = (-5, -13);
 const HENDERSON: (i32, i32) = (2, -4);
 
-fn variant_path(tag: &str, types: &dyn Fn(String) -> String) -> PathBuf {
+/// The frozen reference folder with `types` applied to a copy of the aircraft
+/// types the Rabaul scenario names, under the build directory.
+fn variant_options(tag: &str, types: &dyn Fn(String) -> String) -> LoadOptions {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let data = Path::new(ROOT).join("data").canonicalize().expect("data");
+    let frozen = Path::new(ROOT).join(sim_data::FROZEN_REFERENCE_DIR);
     let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
         "measure_{tag}_{}_{}",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
     fs::create_dir_all(&root).expect("make the folder");
-    let types_file = "reference/aircraft_types_rabaul_guadalcanal.csv";
-    let mut text = scenario_text("06_rabaul_guadalcanal.toml");
-    text = text.replace("= \"../", &format!("= \"{}/", data.display()));
-    let original = fs::read_to_string(data.join(types_file)).expect("read the types");
-    let file = root.join("aircraft_types.csv");
-    fs::write(&file, types(original)).expect("write the types");
-    text = text.replace(
-        &format!("{}/{types_file}", data.display()),
-        &file.display().to_string(),
-    );
-    let path = root.join("scenario.toml");
-    fs::write(&path, text).expect("write the scenario");
-    path
+    for entry in fs::read_dir(&frozen).expect("the frozen folder reads") {
+        let entry = entry.expect("an entry");
+        if entry.file_name().to_string_lossy().ends_with(".md") {
+            continue;
+        }
+        fs::copy(entry.path(), root.join(entry.file_name())).expect("copy a frozen file");
+    }
+    let types_file = root.join("aircraft_types_rabaul_guadalcanal.csv");
+    let original = fs::read_to_string(&types_file).expect("read the types");
+    fs::write(&types_file, types(original)).expect("write the types");
+    LoadOptions::with_reference_root(root)
 }
 
 fn replace_once(text: String, old: &str, new: &str) -> String {
@@ -753,7 +753,7 @@ fn replace_once(text: String, old: &str, new: &str) -> String {
 }
 
 fn rabaul_variant(a6m2: i64, g4m1: i64, seed: u64) -> Scenario {
-    let path = variant_path(&format!("a{a6m2}_g{g4m1}"), &|text| {
+    let options = variant_options(&format!("a{a6m2}_g{g4m1}"), &|text| {
         let text = replace_once(
             text,
             ",fighter,556,20,556,none,",
@@ -765,10 +765,14 @@ fn rabaul_variant(a6m2: i64, g4m1: i64, seed: u64) -> Scenario {
             &format!(",bomber,{g4m1},20,{g4m1},bomb,"),
         )
     });
-    Scenario::load(&path)
-        .expect("the variant loads")
-        .with_seed(seed)
-        .expect("a seed")
+    Scenario::from_text_with(
+        &scenario_text("06_rabaul_guadalcanal.toml"),
+        &support::scenario_path("06_rabaul_guadalcanal.toml"),
+        &options,
+    )
+    .expect("the variant loads")
+    .with_seed(seed)
+    .expect("a seed")
 }
 
 /// What group `group` of the Japanese side measures to Henderson Field, and

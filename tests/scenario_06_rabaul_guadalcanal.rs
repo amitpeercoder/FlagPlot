@@ -297,10 +297,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{
@@ -358,7 +359,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6 loads")
+    common::load(&scenario_path()).expect("scenario 6 loads")
 }
 
 fn n(value: i64) -> Fixed {
@@ -2451,7 +2452,7 @@ fn analyse(base: &Scenario, seed: u64, cfg: &Cfg) -> Worked {
 /// Analyses seeds 1 to `seeds` of the scenario file at `path`, on as many
 /// threads as the machine has (each seed is its own run, so the result does
 /// not depend on it).
-fn analyse_batch(path: &Path, seeds: u64, cfg: Cfg) -> Vec<Worked> {
+fn analyse_batch(source: &Source, seeds: u64, cfg: Cfg) -> Vec<Worked> {
     let all: Vec<u64> = (1..=seeds).collect();
     let threads = std::thread::available_parallelism()
         .map_or(1, usize::from)
@@ -2462,7 +2463,8 @@ fn analyse_batch(path: &Path, seeds: u64, cfg: Cfg) -> Vec<Worked> {
             .chunks(size)
             .map(|part| {
                 scope.spawn(move || {
-                    let base = Scenario::load(path).expect("the scenario loads");
+                    let base = common::from_text_with(&source.text, &source.path, &source.options)
+                        .expect("the scenario loads");
                     part.iter()
                         .map(|seed| analyse(&base, *seed, &cfg))
                         .collect::<Vec<_>>()
@@ -2479,22 +2481,37 @@ fn analyse_batch(path: &Path, seeds: u64, cfg: Cfg) -> Vec<Worked> {
 /// Every pulse of every run of the scenario, worked and asserted, once.
 fn batch() -> &'static Vec<Worked> {
     static BATCH: OnceLock<Vec<Worked>> = OnceLock::new();
-    BATCH.get_or_init(|| analyse_batch(&scenario_path(), SEEDS, scenario_cfg()))
+    BATCH.get_or_init(|| analyse_batch(&Source::plain(), SEEDS, scenario_cfg()))
 }
 
 // ---------------------------------------------------------------------
-// Variants: the scenario with one thing changed, written under the build
-// directory. Nothing in the repository's data folder is touched.
+// Variants: the scenario with one thing changed, in its text or in a copy of
+// the frozen figures under the build directory. Nothing in the repository's
+// data folder is touched.
 // ---------------------------------------------------------------------
+
+/// A scenario's text, where it would sit and how its reference files are
+/// read: what a worker thread needs to build its own copy.
+struct Source {
+    text: String,
+    path: PathBuf,
+    options: sim_data::LoadOptions,
+}
+
+impl Source {
+    /// The scenario as it is, on the frozen figures.
+    fn plain() -> Source {
+        Source {
+            text: fs::read_to_string(scenario_path()).expect("read the scenario"),
+            path: scenario_path(),
+            options: common::frozen(),
+        }
+    }
+}
 
 /// Replaces `original` by `changed`, which must appear exactly once.
 fn once(text: String, original: &str, changed: &str) -> String {
-    assert_eq!(
-        text.matches(original).count(),
-        1,
-        "the text {original:?} appears exactly once"
-    );
-    text.replace(original, changed)
+    common::replace_once(&text, original, changed)
 }
 
 /// The text without the blocks that begin with `header`, each up to the blank
@@ -2519,43 +2536,24 @@ fn without_blocks(text: &str, header: &str) -> String {
     out
 }
 
-const TYPES_FILE: &str = "reference/aircraft_types_rabaul_guadalcanal.csv";
+const TYPES_FILE: &str = "aircraft_types_rabaul_guadalcanal.csv";
 
-/// Writes the scenario to a folder of its own under the build directory, with
-/// its paths made absolute, `edit` applied to its text and, if given, `types`
-/// applied to a copy of the aircraft types the scenario then names. Returns
-/// the path of the scenario file.
+/// The scenario with `edit` applied to its text and, if given, `types`
+/// applied to a copy of the aircraft types the scenario names (in a copy of
+/// the frozen reference folder).
 fn variant(
     tag: &str,
     edit: &dyn Fn(String) -> String,
     types: Option<&dyn Fn(String) -> String>,
-) -> PathBuf {
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let data = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../data")
-        .canonicalize()
-        .expect("the data folder");
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "rabaul_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    fs::create_dir_all(&root).expect("make the variant folder");
-    let mut text = fs::read_to_string(scenario_path()).expect("read the scenario");
-    text = text.replace("= \"../", &format!("= \"{}/", data.display()));
+) -> Source {
+    let mut source = Source::plain();
+    source.text = edit(source.text);
     if let Some(types) = types {
-        let original = fs::read_to_string(data.join(TYPES_FILE)).expect("read the types");
-        let file = root.join("aircraft_types.csv");
-        fs::write(&file, types(original)).expect("write the types");
-        text = once(
-            text,
-            &format!("{}/{TYPES_FILE}", data.display()),
-            &file.display().to_string(),
-        );
+        source.options = common::altered_reference(tag, |dir| {
+            common::edit_file(dir, TYPES_FILE, types);
+        });
     }
-    let path = root.join("scenario.toml");
-    fs::write(&path, edit(text)).expect("write the variant");
-    path
+    source
 }
 
 /// The scenario's own text, unchanged.
@@ -2563,7 +2561,7 @@ fn same(text: String) -> String {
     text
 }
 
-fn radius_of_the_a6m2(nm: i64) -> PathBuf {
+fn radius_of_the_a6m2(nm: i64) -> Source {
     variant(
         &format!("a6m2_{nm}"),
         &same,
@@ -2577,7 +2575,7 @@ fn radius_of_the_a6m2(nm: i64) -> PathBuf {
     )
 }
 
-fn radius_of_the_g4m1(nm: i64) -> PathBuf {
+fn radius_of_the_g4m1(nm: i64) -> Source {
     variant(
         &format!("g4m1_{nm}"),
         &same,
@@ -2591,25 +2589,15 @@ fn radius_of_the_g4m1(nm: i64) -> PathBuf {
     )
 }
 
-fn without_the_fatigue_file() -> PathBuf {
+fn without_the_fatigue_file() -> Source {
     variant(
         "no_fatigue",
-        &|text| {
-            let data = Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../data")
-                .canonicalize()
-                .expect("the data folder");
-            once(
-                text,
-                &format!("fatigue = \"{}/reference/fatigue.toml\"\n", data.display()),
-                "",
-            )
-        },
+        &|text| once(text, "fatigue = \"../reference/fatigue.toml\"\n", ""),
         None,
     )
 }
 
-fn without_arrivals() -> PathBuf {
+fn without_arrivals() -> Source {
     variant(
         "no_arrivals",
         &|text| without_blocks(&text, "[[arrival]]"),
@@ -2617,7 +2605,7 @@ fn without_arrivals() -> PathBuf {
     )
 }
 
-fn without_replacements() -> PathBuf {
+fn without_replacements() -> Source {
     variant(
         "no_replacements",
         &|text| without_blocks(&text, "[[replacement]]"),

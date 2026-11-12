@@ -86,8 +86,10 @@
 //! - The aircraft aboard a ship never exceed its class's capacity, 36 here.
 //! - A replay of any seed reproduces the daily hash.
 
+mod common;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{Cause, Event, EventKind};
@@ -138,7 +140,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 5a loads")
+    common::load(&scenario_path()).expect("scenario 5a loads")
 }
 
 fn pulse_of(event: &Event) -> Pulse {
@@ -540,42 +542,21 @@ fn every_search_of_every_seed_is_flown_from_the_ship_and_its_forces_hex() {
     }
 }
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied scenario
-/// file, and loads it. Nothing in the repository's data folder is touched.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text. Nothing in the repository's data folder
+/// is touched.
 fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
     try_variant(tag, edits).expect("the variant loads")
 }
 
 /// As `variant`, returning the loader's error instead of panicking.
-fn try_variant(tag: &str, edits: &[(&str, &str)]) -> Result<Scenario, sim_data::DataError> {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("carrier_search_{tag}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_search.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let mut text = fs::read_to_string(data.join("scenarios/05a_carrier_search.toml"))
-        .expect("read the scenario");
+fn try_variant(_tag: &str, edits: &[(&str, &str)]) -> Result<Scenario, sim_data::DataError> {
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
     for (original, changed) in edits {
-        assert_eq!(
-            text.matches(original).count(),
-            1,
-            "the text {original:?} appears exactly once"
-        );
-        text = text.replace(original, changed);
+        text = common::replace_once(&text, original, changed);
     }
-    fs::write(root.join("scenarios/05a_carrier_search.toml"), text).expect("write the variant");
-    Scenario::load(&root.join("scenarios/05a_carrier_search.toml"))
+    common::from_text(&text, &path)
 }
 
 /// The chances of the attempts of a scenario run with its own seed.

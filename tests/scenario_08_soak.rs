@@ -73,6 +73,8 @@
 //!
 //! The scenario file's comments say what each part of it is for.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -99,11 +101,31 @@ fn scenario_path(name: &str) -> PathBuf {
     Path::new(ROOT).join("data/scenarios").join(name)
 }
 
+/// Which figures a soak runs on. The tests that assert only that the run
+/// completes, repeats, stays in range and conserves what it should (claims 1,
+/// 4 and 5 and the repeat) run on the live figures, so that the figures step 2
+/// tunes are held to them. The tests that assert what the soak's scripted
+/// orders make happen at the figures of step 1 (every subsystem in use, each
+/// kind of running out, the stranded forces, and the like) run on the frozen
+/// figures of `data/reference/step1`.
+#[derive(Clone, Copy)]
+enum Figures {
+    Frozen,
+    Live,
+}
+
 fn load(name: &str, seed: u64) -> Scenario {
-    Scenario::load(&scenario_path(name))
-        .expect("the scenario loads")
-        .with_seed(seed)
-        .expect("a seed can be set")
+    load_on(name, seed, Figures::Frozen)
+}
+
+fn load_on(name: &str, seed: u64, figures: Figures) -> Scenario {
+    match figures {
+        Figures::Frozen => common::load(&scenario_path(name)),
+        Figures::Live => common::load_live(&scenario_path(name)),
+    }
+    .expect("the scenario loads")
+    .with_seed(seed)
+    .expect("a seed can be set")
 }
 
 fn hundred() -> Fixed {
@@ -314,7 +336,11 @@ fn out_of_range(truth: &TruthState, before: Option<&TruthState>) -> Vec<String> 
 
 /// Runs a scenario for its days and checks the ranges at the close of each.
 fn run(name: &str, seed: u64) -> Run {
-    let mut scenario = load(name, seed);
+    run_on(name, seed, Figures::Frozen)
+}
+
+fn run_on(name: &str, seed: u64, figures: Figures) -> Run {
+    let mut scenario = load_on(name, seed, figures);
     let start = picture(scenario.world.umpire());
     let mut hashes = Vec::new();
     let mut days = Vec::new();
@@ -594,7 +620,7 @@ fn run_seeds(first: u64, last: u64) -> Vec<Run> {
                 scope.spawn(move || {
                     mine.into_iter()
                         .map(|seed| {
-                            let one = run(SOAK, seed);
+                            let one = run_on(SOAK, seed, Figures::Live);
                             check_every_run(&one);
                             one
                         })
@@ -617,7 +643,7 @@ fn run_seeds(first: u64, last: u64) -> Vec<Run> {
 
 #[test]
 fn the_scenarios_own_seed_runs_180_days_with_everything_holding() {
-    let one = run(SOAK, 1942);
+    let one = run_on(SOAK, 1942, Figures::Live);
     check_every_run(&one);
     let distinct: BTreeSet<u64> = one.hashes.iter().copied().collect();
     assert_eq!(distinct.len(), DAYS, "every day changes the state");
@@ -648,15 +674,15 @@ fn a_hundred_seeds_run_180_days_with_everything_holding() {
 
 #[test]
 fn seed_1942_run_twice_gives_the_same_180_daily_hashes_and_events() {
-    let a = run(SOAK, 1942);
-    let b = run(SOAK, 1942);
+    let a = run_on(SOAK, 1942, Figures::Live);
+    let b = run_on(SOAK, 1942, Figures::Live);
     assert_eq!(a.hashes.len(), DAYS);
     assert_eq!(a.hashes, b.hashes, "the daily hashes differ");
     assert_eq!(a.events.len(), b.events.len(), "the logs differ in length");
     for (x, y) in a.events.iter().zip(&b.events) {
         assert_eq!(x, y, "events differ");
     }
-    let other = run(SOAK, 1);
+    let other = run_on(SOAK, 1, Figures::Live);
     assert_ne!(a.hashes, other.hashes, "the seed matters");
 }
 
@@ -1011,7 +1037,7 @@ fn two_forces_left_in_one_hex_with_no_home_port_fight_in_every_pulse() {
     }
     flush(&mut table, &mut kept);
     assert_ne!(kept, text, "some orders were left out");
-    let mut scenario = Scenario::from_text(&kept, &scenario_path(SOAK)).expect("the variant loads");
+    let mut scenario = common::from_text(&kept, &scenario_path(SOAK)).expect("the variant loads");
     scenario.run_to_end().expect("the variant runs");
     let variant = Run {
         seed: 1942,

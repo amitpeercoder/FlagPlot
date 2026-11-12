@@ -163,10 +163,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind, SortieKind};
@@ -200,7 +201,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6b loads")
+    common::load(&scenario_path()).expect("scenario 6b loads")
 }
 
 fn tenths(value: i64) -> Fixed {
@@ -1418,54 +1419,18 @@ fn work_the_raid(
 // directory. Nothing in the repository's data folder is touched.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied scenario
-/// and upkeep files, and loads it.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text and in a copy of the upkeep figures.
 fn variant(tag: &str, scenario_edits: &[(&str, &str)], upkeep_edits: &[(&str, &str)]) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    // Tests run in parallel: each variant has a folder of its own.
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "wear_and_repair_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
+    for (original, changed) in scenario_edits {
+        text = common::replace_once(&text, original, changed);
     }
-    for file in [
-        "map/placeholder_two_airfields.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        "reference/air_combat.toml",
-        "reference/air_upkeep.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let edit = |path: &Path, edits: &[(&str, &str)]| {
-        let mut text = fs::read_to_string(path).expect("read a file to edit");
-        for (original, changed) in edits {
-            assert_eq!(
-                text.matches(original).count(),
-                1,
-                "the text {original:?} appears exactly once"
-            );
-            text = text.replace(original, changed);
-        }
-        fs::write(path, text).expect("write the variant");
-    };
-    edit(&root.join("reference/air_upkeep.toml"), upkeep_edits);
-    let scenario_file = root.join("scenarios/06b_wear_and_repair.toml");
-    fs::copy(
-        data.join("scenarios/06b_wear_and_repair.toml"),
-        &scenario_file,
-    )
-    .expect("copy the scenario");
-    edit(&scenario_file, scenario_edits);
-    Scenario::load(&scenario_file).expect("the variant loads")
+    let options = common::altered_reference(tag, |dir| {
+        common::edit_file_by(dir, "air_upkeep.toml", upkeep_edits);
+    });
+    common::from_text_with(&text, &path, &options).expect("the variant loads")
 }
 
 const UPKEEP_KEY: &str = "air_upkeep = \"../reference/air_upkeep.toml\"\n";
@@ -1890,7 +1855,7 @@ fn at_the_end_of_a_run_the_aircraft_add_up_and_group_4_never_flies() {
 fn a_scenario_with_no_upkeep_file_has_no_wear_no_repair_and_is_scenario_6a_for_three_days() {
     let variant = without_upkeep();
     assert!(variant.world.ref_data().air_upkeep.is_none());
-    let six_a = Scenario::load(
+    let six_a = common::load(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/06a_base_raid.toml"),
     )
     .expect("scenario 6a loads");
@@ -2310,7 +2275,7 @@ fn mean_figures_of_the_scenario_over_1000_seeds() {
         );
     }
     // Scenario 6a's three days, for comparison.
-    let six_a = Scenario::load(
+    let six_a = common::load(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/06a_base_raid.toml"),
     )
     .expect("scenario 6a loads");

@@ -118,9 +118,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{Cause, Event, EventKind, ForceFatigueChange};
@@ -189,11 +191,9 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6c2 loads")
+    common::load(&scenario_path()).expect("scenario 6c2 loads")
 }
 
-const SCENARIO: &str = "scenarios/06c2_tired_lookouts.toml";
-const FATIGUE: &str = "reference/fatigue.toml";
 /// The fatigue key of the scenario file, and the readiness line that puts
 /// force B at battle readiness from the start.
 const FATIGUE_KEY: &str = "fatigue = \"../reference/fatigue.toml\"\n";
@@ -208,52 +208,26 @@ fn readiness_order(day: u32, side: &str, force: u32, readiness: &str) -> String 
     )
 }
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied
-/// scenario file or fatigue file, appends to the scenario, and loads it.
-/// Nothing in the repository's data folder is touched.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text and in a copy of the fatigue figures,
+/// and `append` added to the scenario's text. Nothing in the repository's
+/// data folder is touched.
 fn variant(
     tag: &str,
     scenario_edits: &[(&str, &str)],
     append: &str,
     fatigue_edits: &[(&str, &str)],
 ) -> Scenario {
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("tired_lookouts_{tag}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
+    for (original, changed) in scenario_edits {
+        text = common::replace_once(&text, original, changed);
     }
-    for file in [
-        SCENARIO,
-        "map/placeholder_night_action.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        FATIGUE,
-    ] {
-        let mut text = fs::read_to_string(data_dir().join(file)).expect("read a data file");
-        let edits = if file == SCENARIO {
-            scenario_edits
-        } else if file == FATIGUE {
-            fatigue_edits
-        } else {
-            &[]
-        };
-        for (original, changed) in edits {
-            assert_eq!(
-                text.matches(original).count(),
-                1,
-                "{file}: the text {original:?} appears exactly once"
-            );
-            text = text.replace(original, changed);
-        }
-        if file == SCENARIO {
-            text.push_str(append);
-        }
-        fs::write(root.join(file), text).expect("write a variant file");
-    }
-    Scenario::load(&root.join(SCENARIO)).expect("the variant loads")
+    text.push_str(append);
+    let options = common::altered_reference(tag, |dir| {
+        common::edit_file_by(dir, "fatigue.toml", fatigue_edits);
+    });
+    common::from_text_with(&text, &path, &options).expect("the variant loads")
 }
 
 /// What a variant does, as the hand calculation's table gives it.

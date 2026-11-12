@@ -80,6 +80,8 @@
 //! Day 3: no new orders. The task force has arrived, so nothing moves and no
 //! fuel is burned.
 
+mod common;
+
 use std::path::PathBuf;
 
 use sim_core::events::{Cause, EventKind};
@@ -97,7 +99,7 @@ const DESTROYER: ShipId = ShipId::new(2);
 
 fn load() -> Scenario {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/01_transit.toml");
-    Scenario::load(&path).expect("scenario 1 loads")
+    common::load(&path).expect("scenario 1 loads")
 }
 
 fn tons(value: i64) -> Fixed {

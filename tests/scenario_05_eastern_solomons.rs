@@ -289,6 +289,8 @@
 //! The test prints how often each carrier is sunk and how many aircraft each
 //! side loses over seeds 1 to 1000, and asserts nothing about those counts.
 
+mod common;
+
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -543,7 +545,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 5 (Eastern Solomons) loads")
+    common::load(&scenario_path()).expect("scenario 5 (Eastern Solomons) loads")
 }
 
 fn millionths(value: i64) -> Fixed {

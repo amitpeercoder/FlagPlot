@@ -1,0 +1,24 @@
+# FROZEN: a copy of data/reference/port_sizes.csv
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation. Sourced
+# handling rates replace them in step 2.
+#
+# berths: ships that can work cargo alongside at once.
+# berth_rate_t_per_h: tons per hour moved by one ship on a berth.
+# lighter_rate_t_per_h: tons per hour moved by one ship without a berth.
+# See docs/decisions/0011-cargo-handling.md.
+port_size,berths,berth_rate_t_per_h,lighter_rate_t_per_h
+0,0,0,20
+1,1,50,20
+2,1,75,20
+3,2,100,20
+4,3,125,20
+5,4,150,20
+6,5,200,20
+7,6,250,20
+8,8,300,20
+9,10,350,20
+10,12,400,20

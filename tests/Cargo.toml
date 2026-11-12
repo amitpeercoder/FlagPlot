@@ -129,5 +129,9 @@ path = "scenario_10b_objectives.rs"
 name = "scenario_11_claims"
 path = "scenario_11_claims.rs"
 
+[[test]]
+name = "frozen_figures_mechanism"
+path = "frozen_figures_mechanism.rs"
+
 [lints]
 workspace = true

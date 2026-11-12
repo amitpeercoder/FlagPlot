@@ -33,7 +33,7 @@ enum Subject {
     Why(u32),
 }
 
-pub fn command(args: &[String]) -> Result<(), String> {
+pub fn command(args: &[String], options: &sim_data::LoadOptions) -> Result<(), String> {
     let usage = EVENTS_USAGE;
     let mut source: Option<&str> = None;
     let mut unit: Option<&str> = None;
@@ -84,7 +84,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
         }
     };
 
-    let executed = run_source(source, seed)?;
+    let executed = run_source(source, seed, options)?;
     let world = &executed.scenario.world;
     let asked = match &subject {
         Subject::Unit { unit, side } => format!(
@@ -103,17 +103,22 @@ pub fn command(args: &[String]) -> Result<(), String> {
 }
 
 /// Runs the scenario file, or replays the saved game, to its end.
-fn run_source(source: &str, seed: Option<u64>) -> Result<Executed, String> {
+fn run_source(
+    source: &str,
+    seed: Option<u64>,
+    options: &sim_data::LoadOptions,
+) -> Result<Executed, String> {
     let text = fs::read_to_string(source).map_err(|e| format!("{source}: {e}"))?;
     if !text.trim_start().starts_with('{') {
-        return execute(source, seed, |_| {});
+        return execute(source, seed, options, |_| {});
     }
     // A saved game, read as `replay` reads it.
     if seed.is_some() {
         return Err("--seed does not go with a saved game: it holds its own seed".to_string());
     }
     let saved = save::read(source)?;
-    let scenario = Scenario::load(Path::new(&saved.scenario_file)).map_err(|e| e.to_string())?;
+    let scenario =
+        Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
     saved.check_files(&scenario)?;
     let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
     scenario.replace_script(saved.script.clone());
