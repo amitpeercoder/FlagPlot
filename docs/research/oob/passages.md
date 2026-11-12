@@ -120,7 +120,7 @@ The 2nd Destroyer Squadron's diary has a noon position for every day at sea. Tha
 | 13 to 14 Oct | 74 nm | 3.1 kn | 26, 18 and 21 kn on the run in; 26 and then 29 kn retiring | To Guadalcanal and back in the 24 hours: a round trip, so the figure means nothing as a speed |
 | 14 to 16 Oct | 87 and 157 nm | 3.6 and 6.5 kn | Read once | Refuelling; a second bombardment on the 15th |
 | 16 to 26 Oct | 38 to 243 nm a day | 1.6 to 10.1 kn | 14 to 16 kn, read once | Cruising north of the Solomons, refuelling, waiting |
-| 27 to 28 Oct | 381 nm | 15.9 kn | 18 kn, read once | Returning to Truk |
+| 27 to 28 Oct | 381 nm | 15.9 kn | 18 kn on course 320 from 1200; 14 kn while refuelling from 2140 to 0855; 18 kn zigzagging from 0900. Read a second time by me | Returning north; refuelling overnight. The three timed speeds give about 386 nm (arithmetic), against 381 between the positions |
 | 28 to 29 Oct | 399 nm | 16.6 kn | 20 kn, read once | Returning to Truk |
 
 **What the daily track shows.**
