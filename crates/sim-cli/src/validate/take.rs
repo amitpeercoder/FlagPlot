@@ -136,6 +136,7 @@ pub enum Take {
     Claims(Side, Claim),
     ClaimsPerHundred(Side, Claim, Real),
     Minutes,
+    FightsByDay,
 }
 
 const SYSTEMS: [&str; 5] = [
@@ -341,6 +342,28 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
             Take::ClaimsPerHundred(side(measure)?, kind, real)
         }
         "minutes_of_action" => Take::Minutes,
+        "fights_by_day" => {
+            let given = measure.ships.is_some()
+                || measure.system.is_some()
+                || measure.weapons.is_some()
+                || measure.weapon.is_some()
+                || measure.side.is_some()
+                || measure.air_groups.is_some()
+                || measure.causes.is_some()
+                || measure.day.is_some()
+                || measure.escorts.is_some()
+                || measure.target_task_forces.is_some()
+                || measure.target_base.is_some()
+                || measure.aircraft.is_some()
+                || measure.claim.is_some();
+            if given {
+                return Err(format!(
+                    "measure {}: take fights_by_day takes no keys",
+                    measure.id
+                ));
+            }
+            Take::FightsByDay
+        }
         other => {
             return Err(format!(
                 "measure {}: take \"{other}\" is not known",
@@ -614,6 +637,7 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
             let rounds: u64 = run.fights.iter().map(|f| f.rounds).sum();
             n(rounds * minutes)?
         }
+        Take::FightsByDay => n(run.fights.iter().filter(|f| f.pulse != "night").count() as u64)?,
     }))
 }
 

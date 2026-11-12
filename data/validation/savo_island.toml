@@ -192,6 +192,16 @@ take = "minutes_of_action"
 rows = [14, 15, 16]
 reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). It is the measure for when a force breaks off, the last mechanism in the order of tuning. Judged since the batch file gives the rounds each fight ran, whatever ended it (decision 0062). A round in which a force slips away and no shot is fired is counted. Fights by day are counted too: the record has none, so a run that has one runs longer than the night did, and that is a true miss. A round is five minutes on the frozen figures, so the measure moves in fives."
 
+[[measure]]
+id = "surface_fights_by_day"
+counts = "Surface fights in the run that are not in a night pulse"
+record_low = 0
+record_high = 0
+judged = true
+take = "fights_by_day"
+rows = [14, 15]
+reason = "The whole action lay in the half hour from the enemy's appearing round Savo until he ceased fire and passed out to sea, between 01:45 and 02:15 (14, 15). No ship of either side was caught after dawn. At the baseline, fights by day with Japanese ships that had fallen behind cost the Allied groups about 550 shells a run; this measure is how often that happens."
+
 # --------------------------------------------------------------- claims
 
 [[measure]]
