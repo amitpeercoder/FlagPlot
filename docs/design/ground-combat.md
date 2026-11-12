@@ -1,6 +1,6 @@
 # Plan: land units and basic ground combat
 
-Status: a plan by the architect, written on Nov 12, 2026, for the designer's approval. Nothing here is built, and nothing is built until the plan is approved. On approval each stage gets its decision record, with a rule card, before its code is delegated. Every figure named is a placeholder. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
+Status: a plan by the architect, written on Nov 12, 2026, and approved by the designer the same day; the four questions it first left open are answered below. Nothing here is built. Each stage gets its decision record, with a rule card, before its code is delegated. Every figure named is a placeholder. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
 
 ## Why now
 
@@ -116,7 +116,7 @@ Each of these is real and was considered. None is needed for a naval or air deci
 
 | Left out | What it costs | When it might come |
 | --- | --- | --- |
-| Movement overland between hexes | The Kokoda Track cannot be played; men move only by sea | When a scenario in New Guinea needs it. Open question 1 |
+| Movement overland between hexes | The Kokoda Track cannot be played; men move only by sea | When a scenario in New Guinea needs it (answer 1 below) |
 | Fire from the shore on ships landing men | An opposed landing costs no ships | With the first scenario of an assault on a defended beach |
 | Artillery ashore closing an airfield | Guns on the island cannot stop Henderson Field flying | With damage to a base's airfield (decision 0052, item 12) |
 | Building and repairing airfields | A base's airfield is given by the scenario | With base damage and base orders |
@@ -168,7 +168,7 @@ Step 2 is under way and its spec says ground combat is not in it. Three things k
 
 - **Files.** Step 2 has three rules still to land in `sim-core` (strike target priority, the rest of ditching, experience), each raising the hash version. Stages 1 to 3 touch the same files. Two developers never edit the same files at once, so the code of stage 1 starts when those three have merged.
 - **Stage 0 can start now.** It is research and touches no file step 2 is working in.
-- **Figures.** The ground figures are placeholders like all the others. Whether they are tuned against the record is open question 2.
+- **Figures.** The ground figures are placeholders like all the others. They get a few coarse measures and no more (answer 2 below).
 
 ## Risks
 
@@ -177,9 +177,11 @@ Step 2 is under way and its spec says ground combat is not in it. Three things k
 - **Scope.** Every row of the left-out table will look reasonable to add. The test stays: does a decision at sea or in the air turn on it.
 - **A fight that is decided in a day.** If the figures let an attack take a base at once, there is no campaign. The scenario of stage 4 is where that shows, and it is a matter of figures, not of rules.
 
-## Open questions for the designer
+## Answers from the product managers
 
-1. **Movement overland is left out of the first build.** Men move only by sea, which serves Guadalcanal and Tulagi and not the Kokoda Track. The slice map covers eastern New Guinea. Is that acceptable for the slice as far as the kill gate, with overland movement as a later rule? The architect's view is yes.
-2. **Are the ground figures tuned against the record in step 2,** with measures of their own in `data/validation/`, or left as placeholders that give a plausible campaign until after the kill gate? The spec of step 2 is the designer's and the second session's. The architect's view: two or three coarse measures only, such as whether each attack the record names failed and how fast an unfed force wasted, because this is not a ground-war game and its sources are thin.
-3. **Men lost with a sinking ship: all of them, as proposed.** It overstates the loss of a transport and makes sinking one worth more than it was. Accept it as a known error until there is a roster of survivors, or have a share saved from the first build? The architect's view is to accept it, as was done for pilots.
-4. **Is the plan approved to start with stage 0,** the research, now?
+Agreed by the designer on Nov 12, 2026, on the architect's suggestion.
+
+1. **Men move only by sea in the first build.** Movement overland between hexes is a later rule of its own. The slice as far as the kill gate is the fight for Guadalcanal and Tulagi; the land fight in New Guinea waits.
+2. **The ground figures get a few coarse measures and no more.** Two or three, such as whether each attack on the airfield that the record names failed, and how fast an unfed force wasted. They are enough to make the campaign plausible. The measures belong to `docs/step2-spec.md` and `data/validation/`, which the second session owns: it adds them when stage 4 gives them something to measure, from the facts of stage 0.
+3. **Men aboard a ship that sinks are all lost,** as a known error, until there is a way to hold survivors who have no unit to go back to. It is put right together with pilots aboard a sinking carrier (decision 0059, item 10).
+4. **The plan is approved, and stage 0 starts now.** The code of stage 1 waits for step 2's three rules to land, as above.
