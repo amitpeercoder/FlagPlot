@@ -108,6 +108,18 @@ rows = [291, 1172, 289, 270, 293, 974]
 reason = "Low end: 24 in the first wave (291), 5 of Ryujo's strike (1172), 2 fighters ditched (289) and 4 lost with Ryujo (270). High end: 59, the official history's figure as Japanese Wikipedia gives it (974), a low-confidence disputed row read here by exception, as an upper bound only, less 5. The 5 are the dive bombers of the second wave that did not return after dark (293): they are taken out of both ends because the scenario ends at 18:00, before that wave came back, and the rules have no loss on a recovery in the dark (decision 0059 leaves it out). A total for the day must hold them, so they come off the high end too. Judged since stages 1 and 2 of decision 0059: the rules now ditch an aircraft out of fuel or with no deck to land on."
 
 [[measure]]
+id = "ryujo_aircraft_lost_with_the_ship"
+counts = "Aircraft of Ryujo's two units that go down aboard her"
+record_low = 4
+record_high = 4
+judged = false
+take = "air_losses"
+air_groups = [18, 19]
+causes = ["lost_with_ship"]
+rows = [270]
+reason = "Four aircraft went down with the ship (270); the rest were in the air, over Guadalcanal or on patrol, and came down beside her escorts. Not judged: it is nothing in every run in which she is not sunk, so the spread says how often she sinks and not how many were aboard. It is reported because the baseline had 23 aboard her in nearly every run in which she sank, and the measure of all Japanese losses agreed all the same."
+
+[[measure]]
 id = "us_aircraft_lost_to_enemy_action"
 counts = "US aircraft shot down by fighters or by anti-aircraft fire"
 record_low = 13
@@ -138,39 +150,39 @@ id = "japanese_aircraft_attacking_enterprise_force"
 counts = "Japanese aircraft that attack a ship of Task Force 16 or Task Force 11, with the fighters that escort them, summed over the run"
 record_low = 37
 record_high = 37
-judged = false
+judged = true
 take = "aircraft_attacking"
 side = "japanese"
 target_task_forces = [1, 2]
 escorts = true
 rows = [290, 1159, 1164, 409]
-reason = "The first wave, 27 dive bombers and 10 fighters (290; 22 from Shokaku, 1159, and 15 from Zuikaku, 1164). The second wave of 36 found nothing (409). Not judged until strike target priority and reach beyond the radius are built: they decide what flies."
+reason = "The first wave, 27 dive bombers and 10 fighters (290; 22 from Shokaku, 1159, and 15 from Zuikaku, 1164). The second wave of 36 found nothing (409). Judged since strike target priority (decision 0063) and reach beyond the radius (decision 0059) are built: they decide what flies."
 
 [[measure]]
 id = "us_aircraft_attacking_ryujo"
 counts = "US aircraft that attack a ship of the Ryujo detachment, with the fighters that escort them, summed over the run"
 record_low = 36
 record_high = 36
-judged = false
+judged = true
 take = "aircraft_attacking"
 side = "allied"
 target_task_forces = [4]
 escorts = true
 rows = [333, 334, 335]
-reason = "Saratoga's strike: 29 dive bombers and 7 torpedo planes reached the target (333); the row counts no fighters with them. Not judged, for the same reason."
+reason = "Saratoga's strike: 29 dive bombers and 7 torpedo planes reached the target (333); the row counts no fighters with them. Judged, for the same reason."
 
 [[measure]]
 id = "us_strike_on_the_japanese_fleet_carriers"
 counts = "1 if ten US aircraft or more attack ships of the carrier striking force in one pulse, escorts not counted, else 0"
 record_low = 0
 record_high = 0
-judged = false
+judged = true
 take = "attack_of_at_least"
 side = "allied"
 target_task_forces = [3]
 aircraft = 10
 rows = [368, 369, 378]
-reason = "Only search aircraft attacked, 4 dive bombers and 2 torpedo planes (368, 369); Enterprise's second group of 25 made no attack (378). Not judged, for the same reason. The floor of ten is the architect's, to tell a strike from a search plane's bomb."
+reason = "Only search aircraft attacked, 4 dive bombers and 2 torpedo planes (368, 369); Enterprise's second group of 25 made no attack (378). Judged, for the same reason. The floor of ten is the architect's, to tell a strike from a search plane's bomb."
 
 # --------------------------------------------------------------- claims
 #

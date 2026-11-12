@@ -6,16 +6,21 @@ The name comes from the compartment on a flagship where the admiral and staff tr
 
 ## Status
 
-Step 1 of five: a headless, deterministic simulation core. Three of its eight test scenarios are built, and scenario 4 is in progress. There is no game to play yet.
+The game is built in five steps. Step 1, a headless, deterministic simulation core, is complete: all nine of its scenarios pass. Step 2, which checks the simulation against the historical record and tunes its figures, is under way. There is no game to play yet.
 
-The ships in the repo are placeholders, invented so the engine has something to run. They are not historical. The map of the South Pacific slice, `data/map/south_pacific.csv`, is real geography, generated from public-domain Natural Earth coastlines by `crates/map-tool`; the small maps the early test scenarios use are placeholders.
+- **What runs today.** Ships steam, burn fuel and carry cargo. Aircraft search, strike ships and bases, fight in the air, wear out and are repaired. Forces fight at night on the surface. Each side knows the enemy only through sighting reports and claims, which can be wrong. A scripted or an AI player can play a scenario through `sim-cli`.
+- **What is real.** The ships and aircraft of Savo Island, the Eastern Solomons and the four weeks over Guadalcanal are historical, with ratings derived by a written rule from sourced facts in `data/oob`. The map of the South Pacific, `data/map/south_pacific.csv`, is real geography, generated from public-domain Natural Earth coastlines by `crates/map-tool`.
+- **What is a placeholder.** Every combat, wear, fatigue, supply and claim figure, and every point value, until step 2 sets it from the record. The small test scenarios use invented ships and maps, each named "Placeholder".
+- **What step 1 left out.** Ground combat, land units, shore bombardment, ship repair and base damage, among others. Decision 0052 has the list.
 
 ## Documents
 
 - [Design pillars](docs/pillars.md): what the game is and why.
-- [Step 1 spec](docs/step1-spec.md): the simulation core.
-- [Decisions](docs/decisions/): design choices the spec left open.
-- [CLAUDE.md](CLAUDE.md): the rules the code follows.
+- [The rules](docs/rules/): every rule as the code has it, in the order a day resolves. [Glossary](docs/glossary.md): one meaning for each word.
+- [Decisions](docs/decisions/): each design choice and its reason.
+- [Step 1 spec](docs/step1-spec.md) and [step 2 spec](docs/step2-spec.md).
+- [Commands](docs/commands.md): what each command does.
+- [CLAUDE.md](CLAUDE.md): the rules the code follows, and where everything else is.
 
 ## Running it
 
@@ -27,5 +32,7 @@ cargo run -p sim-cli -- run data/scenarios/01_transit.toml --events
 ```
 
 The second command runs scenario 1 and prints the state hash of each day, the full event log with what caused each event, and where every ship ended up.
+
+To run a historical battle, give it `data/scenarios/04_savo_island.toml` or `data/scenarios/05_eastern_solomons.toml`.
 
 `viewer/` holds a read-only replay viewer for debugging: `sim-cli export` writes a run as one file and `viewer/index.html` draws it on the map. See [viewer/README.md](viewer/README.md).

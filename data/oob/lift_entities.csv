@@ -1,0 +1,58 @@
+# What troop_lift_facts.csv is about: a named ship, a ship type, a standing transport group, or one run (a voyage or a night's run carrying men). Identity only.
+# These are kept apart from ships.csv and ship_classes.csv, which hold the warships the simulation rates; a transport here has no class row. oob-check does not yet know this file.
+id,key,name,kind,nation
+1000,jp-convoy-1942-08-25-tanaka,"Tanaka convoy (Ichiki second echelon, Yokosuka 5th SNLF), 19-25 Aug",run,jp
+1001,jp-convoy-1942-10-14-tassafaronga,"Japanese six-transport convoy to Tassafaronga, 14-15 Oct (Maruyama 2d Division)",run,jp
+1002,jp-convoy-1942-11-14-38th-division,"Japanese 38th Division convoy of eleven transports, 14-15 Nov",run,jp
+1003,jp-destroyer-type,Japanese destroyers (as troop carriers),ship-type,jp
+1004,jp-evacuation-1943-01,"Japanese evacuation of Guadalcanal, Jan-Feb 1943 (whole operation)",run,jp
+1005,jp-evacuation-1943-02-01,"Japanese evacuation run, night of 1-2 Feb 1943",run,jp
+1006,jp-evacuation-1943-02-04,"Japanese evacuation run, night of 4 Feb 1943",run,jp
+1007,jp-evacuation-1943-02-07,"Japanese evacuation run, 7 Feb 1943",run,jp
+1008,jp-kinryu-maru,Kinryu Maru,ship,jp
+1009,jp-oite,Destroyer Oite,ship,jp
+1010,jp-run-1942-08-18-ichiki-first-echelon,"Ichiki Detachment first echelon run, six destroyers, Truk to Taivu",run,jp
+1011,jp-run-1942-08-29-tassafaronga-destroyers,"Four-destroyer run to Tassafaronga, 29 Aug",run,jp
+1012,jp-run-1942-08-30-kawaguchi-night-runs,"Night runs by destroyers and barges, 30 Aug to 7 Sep",run,jp
+1013,jp-run-1942-08-31-tasimboko-destroyers,"Seven-destroyer run landing Kawaguchi troops, 31 Aug",run,jp
+1014,jp-run-1942-11-02-koli-point,"Japanese cruiser, transport and destroyers at Koli Point, 2 Nov",run,jp
+1015,jp-run-1942-11-16-tokyo-express-series,"Tokyo Express runs, 16 Nov 1942 to 9 Feb 1943",run,jp
+1016,jp-run-1942-11-30-tassafaronga,"Japanese destroyer run to Tassafaronga, 30 Nov",run,jp
+1017,jp-run-1942-11-38th-division-destroyers,"38th Division initial elements by destroyers from Shortlands, Nov",run,jp
+1018,jp-seiyo-maru,Seiyo Maru,ship,jp
+1019,jp-yudachi,Destroyer Yudachi,ship,jp
+1020,us-alhena-ak-26,USS Alhena (AK-26),ship,us
+1021,us-american-legion-ap-35,USS American Legion (AP-35),ship,us
+1022,us-amphibious-force-sopac,Amphibious Force South Pacific cargo loading,transport-group,us
+1023,us-betelgeuse-ak-28,USS Betelgeuse (AK-28),ship,us
+1024,us-convoy-1942-08-21-alhena-fomalhaut-apds,"Alhena, Fomalhaut, McFarland and six APDs, run of 21-22 Aug",run,us
+1025,us-convoy-1942-09-18-7th-marines,"Task Force 65 convoy, 7th Marines, to Guadalcanal, Sep",run,us
+1026,us-convoy-1942-10-09-164th-infantry,"Zeilin and McCawley, 164th Infantry run, Noumea to Guadalcanal, 9-13 Oct",run,us
+1027,us-convoy-1942-11-08-182nd-infantry,"Turner third group (182d Infantry), Noumea to Guadalcanal, 8-12 Nov",run,us
+1028,us-destroyer-transport-type,US destroyer-transports (APD),ship-type,us
+1029,us-fomalhaut-ak-22,USS Fomalhaut (AK-22),ship,us
+1030,us-fuller-ap-14,USS Fuller (AP-14),ship,us
+1031,us-heywood-ap-12,USS Heywood (AP-12),ship,us
+1032,us-little-apd-4,USS Little (APD-4),ship,us
+1033,us-manley-apd-1,Manley (APD-1),ship,us
+1034,us-mccawley-ap-10,USS McCawley (AP-10),ship,us
+1035,us-mckean-apd-5,McKean (APD-5),ship,us
+1036,us-neville-ap-16,USS Neville (AP-16),ship,us
+1037,us-president-adams-ap-38,President Adams (AP-38),ship,us
+1038,us-president-hayes-ap-39,President Hayes (AP-39),ship,us
+1039,us-president-jackson-ap-37,President Jackson (AP-37),ship,us
+1040,us-run-1942-07-01-2nd-marines-convoy,"Convoy carrying 2d Marines, San Diego to South Pacific",run,us
+1041,us-run-1942-07-22-3rd-defense-battalion,Zeilin and Betelgeuse carrying 3d Defense Battalion from Pearl Harbor,run,us
+1042,us-run-1942-08-07-haleta-landing-boats,"Eight landing boats, Company B 1/2 at Haleta, 7 Aug",run,us
+1043,us-run-1942-08-15-transdiv-12-apds,"Transport Division 12 four-APD run to Kukum, 15 Aug",run,us
+1044,us-run-1942-09-07-tasimboko-raiders,"APDs carrying 1st Raider Battalion to Tasimboko, 7-8 Sep",run,us
+1045,us-run-1942-11-04-aola-force,"Aola Force transports, 4 Nov",run,us
+1046,us-support-group-transports,"Support Group transports (Alchiba, Fomalhaut and others)",transport-group,us
+1047,us-task-force-62,Task Force 62 transports (Amphibious Force),transport-group,us
+1048,us-transport-division-eight,Transport Division Eight,transport-group,us
+1049,us-transport-division-ten,Transport Division Ten,transport-group,us
+1050,us-transport-division-twelve,"Transport Division Twelve (APDs: Little, McKean, Gregory, Colhoun)",transport-group,us
+1051,us-transport-division-two,Transport Division Two,transport-group,us
+1052,us-transport-division-type,"US transport division (generic, one combat team per transport)",transport-group,us
+1053,us-transport-group-xray,Transport Group XRAY (Guadalcanal),transport-group,us
+1054,us-transport-group-yoke,Transport Group YOKE (Tulagi),transport-group,us
