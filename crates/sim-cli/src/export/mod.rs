@@ -9,9 +9,12 @@
 mod data;
 mod events;
 mod map;
+#[cfg(test)]
+mod measure_fixture;
 mod names;
 mod num;
 mod orders;
+mod sides;
 mod state;
 
 use std::fs;
@@ -21,6 +24,7 @@ use serde::Serialize;
 
 use self::map::{LabelOut, MapOut};
 use self::orders::OrderOut;
+use self::sides::SidesOut;
 use self::state::{BaseOut, FinalOut, Snapshot};
 
 #[derive(Serialize)]
@@ -35,6 +39,8 @@ struct Replay {
     initial: Snapshot,
     orders: Vec<OrderOut>,
     events: Vec<events::EventOut>,
+    /// What each side may see of `events`, as the engine gives it (decision 0047).
+    side_views: SidesOut,
     days: Vec<DayOut>,
     #[serde(rename = "final")]
     final_state: FinalOut,
@@ -113,7 +119,7 @@ fn build(executed: &crate::Executed, scenario_path: &str, labels: Vec<LabelOut>)
     let world = &scenario.world;
     Replay {
         format: "flagplot-replay",
-        version: 1,
+        version: 2,
         scenario: ScenarioOut {
             name: scenario.name.clone(),
             placeholder: scenario.placeholder,
@@ -128,6 +134,7 @@ fn build(executed: &crate::Executed, scenario_path: &str, labels: Vec<LabelOut>)
         initial: state::snapshot(&executed.initial, world.ref_data()),
         orders: world.orders().map(orders::order).collect(),
         events: world.events().iter().map(events::event).collect(),
+        side_views: sides::sides(world),
         days: executed
             .summaries
             .iter()

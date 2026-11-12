@@ -65,7 +65,7 @@ fieldset.belief label { cursor: pointer; white-space: nowrap; }
 /* Layout */
 /* The map and the event panel never shrink below a usable size: in a short or
    narrow window the page scrolls instead, and the step controls stay in view. */
-main { flex: 1 0 auto; min-height: 420px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; }
+main { flex: 1 0 0; min-height: 420px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: minmax(0, 1fr); }
 @media (max-width: 960px) { main { grid-template-columns: minmax(0, 1fr) 320px; } }
 @media (max-width: 700px) { main { grid-template-columns: 1fr; grid-template-rows: minmax(340px, 55vh) minmax(320px, 45vh); min-height: 660px; } }
 #mapwrap { position: relative; min-width: 0; min-height: 0; background: var(--sea-deep); overflow: hidden; }
@@ -79,7 +79,15 @@ main { flex: 1 0 auto; min-height: 420px; display: grid; grid-template-columns: 
 .maptool { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
 #mapbtns { top: 8px; left: 8px; display: flex; gap: 4px; padding: 4px; }
 #mapbtns button { min-width: 30px; padding: 2px 8px; }
-#north { top: 8px; left: 150px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
+#mapbtns button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--panel)); }
+#map.measuring { cursor: crosshair; }
+#measurebox { left: 8px; top: 48px; max-width: min(330px, calc(100% - 180px)); font-size: 12.5px; }
+#measurebox div { overflow-wrap: anywhere; }
+#measurebox .big { font-weight: 650; }
+.measure-air { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 7 5; vector-effect: non-scaling-stroke; pointer-events: none; }
+.measure-sea { fill: none; stroke: var(--hl); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.measure-end { fill: color-mix(in srgb, var(--hl) 25%, transparent); stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; pointer-events: none; }
+#north { top: 8px; left: 200px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
 #scalebar { right: 10px; bottom: 10px; }
 #scalebar .bar { height: 6px; border: 2px solid var(--ink); border-top: 0; margin-top: 2px; }
 #readout { left: 8px; bottom: 8px; max-width: min(430px, calc(100% - 180px)); font-size: 12.5px; pointer-events: none; }
@@ -189,6 +197,12 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
   <div class="row">
     <span>Step: <b id="steplabel">none loaded</b></span>
     <span>State hash: <code id="hash">-</code></span>
+    <fieldset class="belief" id="povset">
+      <legend>View</legend>
+      <label><input type="radio" autocomplete="off" name="pov" value="umpire" checked> Umpire</label>
+      <label><input type="radio" autocomplete="off" name="pov" value="allied" disabled> Allied</label>
+      <label><input type="radio" autocomplete="off" name="pov" value="japanese" disabled> Japanese</label>
+    </fieldset>
     <fieldset class="belief" id="belief">
       <legend>Show</legend>
       <label><input type="radio" autocomplete="off" name="belief" value="truth" checked> Truth only</label>
@@ -201,10 +215,11 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
 <main>
   <section id="mapwrap" aria-label="Map">
     <svg id="map" role="img" aria-label="Hex map of the replay">
-      <g id="world"><g id="gHexes"></g><g id="gClosed"></g><g id="gDyn"></g><g id="gHover"></g></g>
+      <g id="world"><g id="gHexes"></g><g id="gClosed"></g><g id="gDyn"></g><g id="gMeasure"></g><g id="gHover"></g></g>
       <g id="gScreen"></g>
     </svg>
-    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button></div>
+    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button><button id="measurebtn" aria-pressed="false" title="Measure: click two hexes (Escape leaves)">Measure</button></div>
+    <div id="measurebox" class="maptool" hidden></div>
     <div id="north" class="maptool" title="North is up"><svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1 L12 16 L7 12.5 L2 16 Z" fill="currentColor"/></svg><b>N</b></div>
     <div id="scalebar" class="maptool" hidden><div id="scalelabel"></div><div class="bar" id="scalebarbar"></div></div>
     <div id="readout" class="maptool"><div class="dim">Move the pointer over the map.</div></div>
@@ -330,6 +345,50 @@ function placeLabels(hexes, labels) {
   return out;
 }
 
+const SIDES = ['allied', 'japanese'];
+
+// ---- A side's view ----
+/**
+ * What a side's page is built from: the replay with everything the side may not know left out.
+ * Its events are the ones the engine gave the side (replay.side_views, decision 0047), numbered by the
+ * side (n, never the log's number, which is kept as log_id for the checks only). Its units are its own,
+ * exactly. The enemy is only what the side's events and contacts say, and the enemy's bases are public:
+ * id, name, hex and side (decision 0048). The state hash is the umpire's, so there are no days.
+ * Nothing here decides who sees what; the one rule is the engine's. Returns null for a version 1 file.
+ */
+function sideReplay(replay, side) {
+  const sv = replay.side_views && replay.side_views[side];
+  if (!sv) return null;
+  const own = x => x && x.side === side;
+  const initial = replay.initial || {}, final = replay.final || null;
+  const ownShips = new Set((initial.ships || []).filter(own).map(s => s.id));
+  const out = Object.assign({}, replay, {
+    side_views: undefined, view_side: side,
+    orders: (replay.orders || []).filter(own),
+    bases: (replay.bases || []).map(b => own(b) ? b : { id: b.id, name: b.name, side: b.side, q: b.q, r: b.r }),
+    initial: {
+      task_forces: (initial.task_forces || []).filter(own),
+      ships: (initial.ships || []).filter(own),
+      air_groups: (initial.air_groups || []).filter(own),
+      bases: (initial.bases || []).filter(own),
+    },
+    events: sv.events.map(e => ({
+      id: e.n, log_id: e.log_id, day: e.day, pulse: e.pulse, kind: e.kind, text: e.text, causes: e.causes || [],
+      entities: e.entities || [], breakdown: e.breakdown, data: e.data || {}, cut: !!e.cut, hidden_causes: !!e.hidden_causes,
+    })),
+    days: [],
+    final: final ? {
+      task_forces: (final.task_forces || []).filter(own),
+      ships: (final.ships || []).filter(s => ownShips.has(s.id)),
+      air_groups: (final.air_groups || []).filter(own),
+      bases: (final.bases || []).filter(own),
+      contacts: { [side]: (final.contacts && final.contacts[side]) || [] },
+      claims: { [side]: (final.claims && final.claims[side]) || [] },
+    } : null,
+  });
+  return out;
+}
+
 // ---- Time steps ----
 const PHASES = ['orders', 'night', 'morning', 'afternoon', 'end'];
 const PHASE_HOURS = { night: '18:00 to 06:00', morning: '06:00 to 12:00', afternoon: '12:00 to 18:00' };
@@ -384,7 +443,16 @@ function buildSteps(events) {
 function validateReplay(r) {
   if (r === null || typeof r !== 'object' || Array.isArray(r)) return 'This is JSON but not a replay: expected an object at the top level.';
   if (r.format !== 'flagplot-replay') return 'Not a Flag Plot replay: format is ' + JSON.stringify(r.format) + ', expected "flagplot-replay".';
-  if (r.version !== 1) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads version 1 only.';
+  if (r.version !== 1 && r.version !== 2) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1 and 2.';
+  if (r.version === 2) {
+    // Version 2 adds side_views: for each side, the events the engine let it see (decision 0047).
+    if (!r.side_views || typeof r.side_views !== 'object') return 'Replay version 2 has no "side_views" object.';
+    for (const side of SIDES) {
+      const sv = r.side_views[side];
+      if (!sv || !Array.isArray(sv.events)) return 'Replay "side_views" has no event list for ' + side + '.';
+      for (const ev of sv.events) if (!ev || !Number.isInteger(ev.n) || !Number.isInteger(ev.log_id) || !Number.isInteger(ev.day) || typeof ev.kind !== 'string') return 'A ' + side + ' side event is missing its integer n, log_id or day, or its kind.';
+    }
+  }
   if (!r.scenario || typeof r.scenario !== 'object') return 'Replay has no "scenario" object.';
   if (!r.map || typeof r.map !== 'object' || !Array.isArray(r.map.hexes)) return 'Replay has no "map.hexes" list.';
   if (!Array.isArray(r.directions) || r.directions.length !== 6 || !r.directions.every(d => Array.isArray(d) && d.length === 2 && Number.isInteger(d[0]) && Number.isInteger(d[1]))) return 'Replay "directions" must be six [dq, dr] pairs.';
@@ -727,8 +795,95 @@ function summarize(model) {
   return { steps: model.steps.length, events: model.events.length, forces: end.forces.size, contacts, labels: model.placements.length };
 }
 
+// ---- Measuring (decisions 0040 and 0017) ----
+// These repeat the engine's own functions with whole numbers. viewer/check.js
+// runs them on viewer/measure_fixture.json, which the engine writes.
+const HEX_NM = 40;
+const SEA_KINDS = new Set(['deep_sea', 'shallow_sea', 'coast']);
+
+/** The largest whole s with s * s <= n, for a whole n below 2^53. */
+function isqrt(n) {
+  let s = Math.floor(Math.sqrt(n));
+  while (s * s > n) s--;
+  while ((s + 1) * (s + 1) <= n) s++;
+  return s;
+}
+
+/** Hex::air_distance_nm: the straight line between two hex centres in whole nautical miles. With x = 40 * 40 * (dq^2 + dr^2 + dq*dr) it is isqrt(4x) divided by 2, rounded up. */
+function airDistanceNm(q1, r1, q2, r2) {
+  const dq = q1 - q2, dr = r1 - r2;
+  const x = HEX_NM * HEX_NM * (dq * dq + dr * dr + dq * dr);
+  return Math.ceil(isqrt(4 * x) / 2);
+}
+
+/** What the sea path needs of the map: which hexes ships can enter and which sides are closed. */
+function makeSeaMap(hexes, directions) {
+  const cells = new Map();
+  for (const h of hexes) {
+    const closed = [false, false, false, false, false, false];
+    for (const d of h.closed || []) if (Number.isInteger(d) && d >= 0 && d <= 5) closed[d] = true;
+    cells.set(hexKey(h.q, h.r), { navigable: SEA_KINDS.has(h.kind), closed });
+  }
+  return { cells, directions };
+}
+
+/** Map::can_step: both hexes on the map and navigable, and the side between them open in both (a side is closed if either hex marks it). */
+function canStep(sea, q, r, d) {
+  const dir = sea.directions[d];
+  if (!dir) return false;
+  const here = sea.cells.get(hexKey(q, r)), there = sea.cells.get(hexKey(q + dir[0], r + dir[1]));
+  return !!(here && there && here.navigable && there.navigable && !here.closed[d] && !there.closed[(d + 3) % 6]);
+}
+
+/** Map::sea_distances_to: fewest steps from every hex that can reach the target (breadth first from the target, directions in order). Empty if ships cannot enter the target. */
+function seaDistancesTo(sea, tq, tr) {
+  const dist = new Map();
+  const t = sea.cells.get(hexKey(tq, tr));
+  if (!t || !t.navigable) return dist;
+  dist.set(hexKey(tq, tr), 0);
+  const queue = [[tq, tr]];
+  for (let head = 0; head < queue.length; head++) {
+    const q = queue[head][0], r = queue[head][1];
+    const next = dist.get(hexKey(q, r)) + 1;
+    for (let d = 0; d < 6; d++) {
+      const nq = q + sea.directions[d][0], nr = r + sea.directions[d][1], k = hexKey(nq, nr);
+      if (!dist.has(k) && canStep(sea, q, r, d)) { dist.set(k, next); queue.push([nq, nr]); }
+    }
+  }
+  return dist;
+}
+
+/** Map::sea_path: every hex entered from (fq, fr) to the target, in order; [] for the same hex; null when ships cannot get there. */
+function seaPath(sea, fq, fr, tq, tr) {
+  const dist = seaDistancesTo(sea, tq, tr);
+  if (!dist.has(hexKey(fq, fr))) return null;
+  const out = [];
+  let q = fq, r = fr;
+  for (;;) {
+    const here = dist.get(hexKey(q, r));
+    if (here === 0) break;
+    let step = null;
+    for (let d = 0; d < 6 && !step; d++) {
+      const nq = q + sea.directions[d][0], nr = r + sea.directions[d][1];
+      if (dist.get(hexKey(nq, nr)) === here - 1 && canStep(sea, q, r, d)) step = [nq, nr];
+    }
+    if (!step) break;
+    out.push(step);
+    q = step[0]; r = step[1];
+  }
+  return out;
+}
+
+/** Both measures between two hexes a and b, each [q, r]: the air distance, and the sea route (null when there is none) with its miles. */
+function measureHexes(sea, a, b) {
+  const path = seaPath(sea, a[0], a[1], b[0], b[1]);
+  return { air: airDistanceNm(a[0], a[1], b[0], b[1]), sea: path ? { path, steps: path.length, nm: path.length * HEX_NM } : null };
+}
+
 const FlagPlotCore = {
   HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
+  SIDES, sideReplay,
+  HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, measureHexes,
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
 };
@@ -777,8 +932,12 @@ const S = {
   playing: false, timer: null, speed: 1,
   filter: '', onlySel: false, allSteps: false,
   hoverKey: null,
+  // Measure mode: the two hexes picked so far, each [q, r] or null. sea is the map as the sea path reads it.
+  measure: { on: false, a: null, b: null }, sea: null,
+  // The view: 'umpire' (the truth) or a side, whose page is built only from what the engine let it see (sideReplay).
+  pov: 'umpire', models: null,
 };
-const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
+const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gMeasure = $('gMeasure'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
 
 // =====================================================================
 // Loading: file picker, drop, ?replay= fetch
@@ -802,12 +961,17 @@ function loadText(text, sourceName) {
   showMessage('');
   stopPlaying();
   S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null;
+  S.models = { umpire: model, allied: null, japanese: null }; S.pov = 'umpire'; S.belief = beliefChoice();
+  initPov();
+  S.sea = C.makeSeaMap(obj.map.hexes, obj.directions);
+  S.measure.a = null; S.measure.b = null;
   S.filter = ''; $('filter').value = '';
   buildWorld();
   fit();
   initHeader();
   render();
   renderReadout();
+  renderMeasure();
 }
 
 function loadFile(file) {
@@ -1062,7 +1226,7 @@ function renderScreen() {
     const g = sv('g', { class: 'base', transform: 'translate(' + bm.x + ' ' + bm.y + ')' });
     if (hl.bases.has(b.id)) g.append(sv('rect', { class: 'ring-hl', x: -10, y: -10, width: 20, height: 20 }));
     g.append(sv('path', { class: 'basemark side-' + side, d: 'M0 -7L7 0L0 7L-7 0Z' }));
-    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + ', supply ' + b.supply + ')' }));
+    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')' }));
     gBase.append(g);
     if (bm.label) gBase.append(sv('text', { class: 'lbl base', x: bm.x + 10, y: bm.y + 4, text: bm.label }));
   }
@@ -1164,6 +1328,7 @@ function initPanZoom() {
     const target = drag.target;
     drag = null;
     mapEl.classList.remove('dragging');
+    if (wasClick && S.measure.on) { pickMeasureHex(e); return; }
     if (wasClick && target && target.getAttribute('data-kind') === 'force') selectEntity({ type: 'force', id: Number(target.getAttribute('data-id')) });
   };
   mapEl.addEventListener('pointerup', end);
@@ -1213,12 +1378,116 @@ function renderReadout() {
   if (feat.length) line(feat.join(', '));
   if ((hx.closed || []).length) line('Closed sides: ' + hx.closed.join(', '));
   for (const p of m.placementsByHex.get(S.hoverKey) || []) line('Place: ' + p.label.place + (p.label.feature ? ' (' + p.label.feature + ')' : ''));
-  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + ', supply ' + b.supply + ')');
+  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
   for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
   if (S.belief !== 'truth' && st.contacts[S.belief]) {
     for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c));
   }
   if (st.fights.some(f => f.q === q && f.r === r)) line('A fight is recorded here in this step.');
+}
+
+// =====================================================================
+// The view: the umpire's truth, or one side's page built from what the engine let that side see
+// =====================================================================
+function beliefChoice() {
+  const c = document.querySelector('input[name=belief]:checked'); // the browser may restore form state on reload
+  return c ? c.value : 'truth';
+}
+
+function initPov() {
+  const has = !!(S.replay && S.replay.side_views);
+  document.querySelectorAll('input[name=pov]').forEach(r => { r.checked = r.value === S.pov; r.disabled = r.value !== 'umpire' && !has; });
+  $('povset').title = has ? '' : 'This file has no side views (replay version 1). Export it again to see a side\'s view.';
+  applyPovChrome();
+}
+
+function applyPovChrome() {
+  const side = S.pov !== 'umpire';
+  $('belief').hidden = side;
+  $('readonly').textContent = side ? S.pov.charAt(0).toUpperCase() + S.pov.slice(1) + ' side: only what it was allowed to know, read-only' : "Umpire's view, read-only";
+  renderLegend();
+}
+
+/** Changes the view, keeping the step nearest the one on screen (the steps of a side are the ones in which it has events). */
+function setPov(pov) {
+  if (!S.models || pov === S.pov) return;
+  let model = S.models[pov];
+  if (!model) {
+    try { model = C.buildModel(C.sideReplay(S.replay, pov)); }
+    catch (err) { showMessage('Could not build the ' + pov + ' view: ' + err.message); initPov(); return; }
+    S.models[pov] = model;
+  }
+  const key = s => s.day * 10 + (s.phase === 'start' ? -1 : C.PHASES.indexOf(s.phase));
+  const here = key(S.model.steps[S.step]);
+  let idx = 0;
+  model.steps.forEach((s, i) => { if (key(s) <= here) idx = i; });
+  stopPlaying();
+  S.pov = pov; S.model = model; S.step = idx; S.selEvent = null; S.selEntity = null; S.hoverKey = null;
+  S.belief = pov === 'umpire' ? beliefChoice() : pov; // a side shows the contacts it holds, and no others
+  buildWorld();
+  initHeader();
+  initPov();
+  render();
+  renderReadout();
+  renderMeasure();
+}
+
+// =====================================================================
+// Measuring: two hexes, the air distance and the sea route (decisions 0040, 0017)
+// =====================================================================
+function setMeasureMode(on) {
+  S.measure.on = on;
+  if (!on) { S.measure.a = null; S.measure.b = null; }
+  const btn = $('measurebtn');
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  mapEl.classList.toggle('measuring', on);
+  renderMeasure();
+}
+
+function pickMeasureHex(e) {
+  if (!S.model) return;
+  const r = mapEl.getBoundingClientRect();
+  const h = C.pointToHex((e.clientX - r.left - S.view.tx) / S.view.k, (e.clientY - r.top - S.view.ty) / S.view.k);
+  if (!S.model.hexByKey.has(C.hexKey(h.q, h.r))) return; // off the map: not a hex to measure
+  const m = S.measure;
+  if (!m.a || m.b) { m.a = [h.q, h.r]; m.b = null; } // the first pick, or a third click starting again
+  else m.b = [h.q, h.r];
+  renderMeasure();
+}
+
+function renderMeasure() {
+  const m = S.measure, box = $('measurebox');
+  clear(gMeasure); clear(box);
+  box.hidden = !m.on || !S.model;
+  if (box.hidden) return;
+  const line = (t, cls) => box.append(el('div', { class: cls, text: t }));
+  const hexLine = (label, h) => {
+    const hx = S.model.hexByKey.get(C.hexKey(h[0], h[1]));
+    line(label + ' (' + h[0] + ', ' + h[1] + ')' + (hx ? ', ' + String(hx.kind).replace('_', ' ') : ''));
+  };
+  const ring = h => gMeasure.append(sv('polygon', { class: 'measure-end', points: C.hexCorners(h[0], h[1]).map(c => c.join(',')).join(' ') }));
+  line('Measure', 'big');
+  if (!m.a) { line('Click a first hex. Escape leaves.', 'dim'); return; }
+  ring(m.a);
+  hexLine('From', m.a);
+  if (!m.b) { line('Click a second hex.', 'dim'); return; }
+  ring(m.b);
+  hexLine('To', m.b);
+  const res = C.measureHexes(S.sea, m.a, m.b);
+  const ca = C.hexCenter(m.a[0], m.a[1]), cb = C.hexCenter(m.b[0], m.b[1]);
+  gMeasure.append(sv('line', { class: 'measure-air', x1: ca[0], y1: ca[1], x2: cb[0], y2: cb[1] }));
+  if (res.sea) {
+    const pts = [m.a].concat(res.sea.path).map(h => C.hexCenter(h[0], h[1]).join(','));
+    if (pts.length > 1) gMeasure.append(sv('polyline', { class: 'measure-sea', points: pts.join(' ') }));
+  }
+  line('Air distance: ' + res.air + ' nm', 'big');
+  line(res.sea ? 'Sea route: ' + res.sea.nm + ' nm, ' + res.sea.steps + ' hex' + (res.sea.steps === 1 ? '' : 'es') : 'Sea route: no sea route', 'big');
+  line('Click again to start over.', 'dim');
+}
+
+function initMeasure() {
+  $('measurebtn').addEventListener('click', e => { setMeasureMode(!S.measure.on); e.currentTarget.blur(); });
 }
 
 // =====================================================================
@@ -1270,7 +1539,7 @@ function initControls() {
   document.addEventListener('keydown', e => {
     const t = e.target, tag = t && t.tagName;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.key === 'Escape') { clearSelection(); return; }
+    if (e.key === 'Escape') { if (S.measure.on) setMeasureMode(false); else clearSelection(); return; }
     if (tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && (t.type === 'text' || t.type === 'search'))) return; // typing in the filter box
     if (tag === 'INPUT' && t.type === 'checkbox' && (e.key === ' ' || e.code === 'Space')) return; // Space toggles the checkbox
     if (!S.model) return;
@@ -1278,6 +1547,7 @@ function initControls() {
     else if (e.key === 'ArrowRight') { e.preventDefault(); stopPlaying(); goto(S.step + 1); }
     else if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); togglePlay(); }
   });
+  document.querySelectorAll('input[name=pov]').forEach(r => r.addEventListener('change', () => { if (r.checked) { r.blur(); setPov(r.value); } }));
   document.querySelectorAll('input[name=belief]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.belief = r.value; r.blur(); render(); renderReadout(); } }));
 }
 
@@ -1307,7 +1577,11 @@ function renderEvents() {
       shown++;
       const parts = C.splitText(ev.text);
       const li = el('li', { class: 'ev' + (S.selEvent === ev.id ? ' sel' : ''), 'data-id': ev.id, onclick: () => clickEvent(ev.id) },
-        el('span', { class: 'eid', text: '#' + ev.id }), el('span', { text: parts.body }), parts.causes ? el('span', { class: 'ecause', text: '← ' + parts.causes }) : null);
+        el('span', { class: 'eid', text: '#' + ev.id }),
+        ev.cut ? el('span', { class: 'tag', text: 'cut', title: 'The engine shows this side only part of this event' }) : null,
+        el('span', { text: parts.body }),
+        parts.causes ? el('span', { class: 'ecause', text: '← ' + parts.causes }) : null,
+        ev.hidden_causes ? el('span', { class: 'ecause', text: '(and causes this side cannot see)' }) : null);
       ul.append(li);
     }
   }
@@ -1391,20 +1665,22 @@ function eventSection(id) {
   if (!ev) return sec;
   sec.append(el('h2', null, 'Event #' + ev.id + ' ', el('span', { class: 'tag', text: ev.kind }), el('span', { class: 'dim', text: ' ' + m.steps[m.stepOfEvent.get(ev.id) || 0].label })));
   sec.append(el('div', { text: C.splitText(ev.text).body }));
+  if (ev.cut) sec.append(el('div', { class: 'note', text: 'This side is shown only part of this event: what it may not know has been left out.' }));
   if (ev.breakdown && Array.isArray(ev.breakdown.factors)) {
     sec.append(el('h3', { text: 'Breakdown' }));
     const rows = ev.breakdown.factors.map(f => el('tr', null, el('td', { text: String(f.name) }), el('td', { class: 'num', text: String(f.value) })));
-    rows.push(el('tr', { class: 'result' }, el('td', { text: 'result' }), el('td', { class: 'num', text: String(ev.breakdown.result) })));
+    if (ev.breakdown.result !== undefined) rows.push(el('tr', { class: 'result' }, el('td', { text: 'result' }), el('td', { class: 'num', text: String(ev.breakdown.result) })));
     sec.append(el('table', null, el('tbody', null, rows)));
   }
   sec.append(el('h3', { text: 'Why' }));
   const tree = C.whyTree(m, ev.id, { maxDepth: 8, maxNodes: 60 });
-  if (!tree.nodes.length) sec.append(el('div', { class: 'dim', text: 'No recorded causes.' }));
+  if (!tree.nodes.length) sec.append(el('div', { class: 'dim', text: ev.hidden_causes ? 'No causes this side can see.' : 'No recorded causes.' }));
   else {
     const why = el('div', { class: 'why' }, el('ul', null, tree.nodes.map(whyNode)));
     if (tree.omitted) why.append(el('div', { class: 'dim', text: '... ' + tree.omitted + ' more cause(s) left out (limit ' + 60 + ' shown).' }));
     sec.append(why);
   }
+  if (ev.hidden_causes) sec.append(el('div', { class: 'note', text: 'There are more causes than these, and this side cannot see them.' }));
   sec.append(el('h3', { text: 'Led to' }));
   const led = m.ledTo.get('event:' + ev.id) || [];
   if (!led.length) sec.append(el('div', { class: 'dim', text: 'No later event cites this one.' }));
@@ -1484,14 +1760,23 @@ function entitySection(sel) {
 // Legend and theme (colours come from CSS custom properties; the page follows prefers-color-scheme)
 // =====================================================================
 function initLegend() {
+  if (window.innerWidth < 1000 || window.innerHeight < 700) $('legend').open = false; // small windows: start collapsed
+  renderLegend();
+}
+
+// A side's legend names only that side's forces: the enemy is not on its page except as contacts.
+function renderLegend() {
+  const side = S.pov !== 'umpire' ? S.pov : null;
   const items = [
-    ['allied', 'Allied force'], ['japanese', 'Japanese force'], ['ghost', 'Contact (belief), fainter when less sure'],
+    ...(!side || side === 'allied' ? [['allied', side ? 'Own force' : 'Allied force']] : []),
+    ...(!side || side === 'japanese' ? [['japanese', side ? 'Own force' : 'Japanese force']] : []),
+    ['ghost', side ? 'Contact this side holds, fainter when less sure' : 'Contact (belief), fainter when less sure'],
     ['deep', 'Deep sea'], ['shallow', 'Shallow sea'], ['coast', 'Coast (more land, darker)'], ['land', 'Land'],
-    ['closed', 'Closed side'], ['fight', 'Fight in this step'], ['arc', 'Search arc flown in this step'],
+    ['closed', 'Closed side'], ['fight', side ? 'Fight this side knows of, in this step' : 'Fight in this step'], ['arc', 'Search arc flown in this step'],
     ['trail', 'Trail of hexes entered'], ['move', 'Movement in this step'],
   ];
   const ul = $('legendlist');
-  if (window.innerWidth < 1000 || window.innerHeight < 700) $('legend').open = false; // small windows: start collapsed
+  clear(ul);
   items.forEach(([cls, text]) => ul.append(el('li', null, el('span', { class: 'sw ' + cls }), text)));
 }
 
@@ -1512,9 +1797,9 @@ function render() {
 function init() {
   initLegend();
   initControls();
-  const checked = document.querySelector('input[name=belief]:checked'); // the browser may restore form state on reload
-  if (checked) S.belief = checked.value;
+  S.belief = beliefChoice();
   initPanZoom();
+  initMeasure();
   $('filter').addEventListener('input', e => { S.filter = e.target.value.trim(); renderEvents(); });
   $('onlysel').addEventListener('change', e => { S.onlySel = e.target.checked; renderEvents(); });
   $('allsteps').addEventListener('change', e => { S.allSteps = e.target.checked; renderEvents(); });
