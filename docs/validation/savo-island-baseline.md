@@ -2,19 +2,19 @@
 
 Battle: savo-island
 Scenario: data/scenarios/04_savo_island.toml
-Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash f3d9c23102fc8f25
-Inputs: state hash layout flagplot-state-v4, scenario file hash a828cd46c317534b
+Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash f771a08ac56ee603
+Inputs: state hash layout flagplot-state-v5, scenario file hash a828cd46c317534b
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes_savo_island.csv 922ea7c389107084
 - data/scenarios/../reference/port_sizes.csv da12e2b751976274
 - data/scenarios/../reference/aircraft_types.csv 92830cbacc0a4328
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 485cfd1b8ba0d4f2
-Measures: data/validation/savo_island.toml (hash 5c90a7e35004af56), 14 measures, 13 judged
+Measures: data/validation/savo_island.toml (hash a0810935227db0af), 16 measures, 15 judged
 
-Judged measures: 6 agree, 4 agree at the edge, 3 miss, of 13.
+Judged measures: 6 agree, 4 agree at the edge, 5 miss, of 15.
 
-**The battle does not pass:** 3 of 13 judged measures miss.
+**The battle does not pass:** 5 of 15 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,6 +29,8 @@ Judged measures: 6 agree, 4 agree at the edge, 3 miss, of 13.
 | torpedo_hits_on_allied_ships | 4 to 9 | 0 to 6 | 3 | 297 of 1000 | 0 | agrees |
 | japanese_gun_hits_per_thousand_shells | 81 to 117 | 24 to 51 | 39 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | allied_gun_hits_per_thousand_shells | 21 to 36 | 16 to 53 | 40 | 300 of 994 | 6 | agrees |
+| japanese_gun_shells_fired_in_hundreds | 18 | 8 to 34 | 23 | 19 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| allied_gun_shells_fired_in_hundreds | 4 | 4 to 50 | 29 | 21 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
 | minutes_of_action | 20 to 30 | 15 to 50 | 30 | 495 of 1000 | 0 | agrees |
 | japanese_ships_claimed_sunk_per_hundred_sunk | 350 | 100 to 300 | 100 | 1 of 957 | 43 | reported |
 | allied_ships_claimed_sunk | 0 | 0 to 6 | 2 | 240 of 1000 | 0 | agrees, at the edge |
@@ -57,6 +59,20 @@ Judged measures: 6 agree, 4 agree at the edge, 3 miss, of 13.
 - Record: 81 to 117 (rows 7, 19, 37, 50, 58, 69, 83, 60, 71, 82, 9)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 13, 5th 24, 25th 32, median 39, 75th 44, 95th 51, greatest 62
+
+### japanese_gun_shells_fired_in_hundreds
+
+- Counts: Gun shots the Japanese force fires in the run, all calibres, in hundreds, rounded down
+- Record: 18 (rows 7)
+- Verdict: **MISS**: fewer than 1 run in 20 holds the record
+- Spread over 1000 runs kept (0 left out): least 5, 5th 8, 25th 15, median 23, 75th 25, 95th 34, greatest 46
+
+### allied_gun_shells_fired_in_hundreds
+
+- Counts: Gun shots the two Allied groups fire in the run, all calibres, in hundreds, rounded down
+- Record: 4 (rows 10)
+- Verdict: **MISS**: fewer than 1 run in 20 holds the record
+- Spread over 1000 runs kept (0 left out): least 0, 5th 4, 25th 18, median 29, 75th 37, 95th 50, greatest 65
 
 ## At the edge
 

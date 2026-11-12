@@ -4,12 +4,14 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 
 | Battle | Report | Judged | Agree | Agree at the edge | Miss |
 | --- | --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 13 | 6 | 4 | 3 |
+| Savo Island | `savo-island-baseline.md` | 15 | 6 | 4 | 5 |
 | Eastern Solomons | `eastern-solomons-baseline.md` | 11 | 7 | 1 | 3 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
 | Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
 
 An agreement at the edge is one whose record has no part in the middle half of the runs (the 25th to the 75th percentile). It still agrees by the rule; whether it counts against a battle at the close of step 2 is the designer's to decide after the first tuning rounds. The reports were remade once, the same day and on the same batches, when that mark was added to `validate`.
+
+The Savo Island report was remade again that day with two more judged measures, the shells each side fires, and both miss: the Japanese fire 8 to 34 hundreds against a record of 18, and the Allies 4 to 50 against 4. That remake ran on the engine after decision 0063 (state layout version 5); the other two reports are still the first ones and will be remade when the Eastern Solomons gets its new orders.
 
 The six ship passages are in `passages-baseline.md`. None is judged. Every one but the first is quicker in the rules than in the record, by 5 to 22 percent of the recorded time: a ship in the rules holds its stated speed along the route, and the record's ships did not. That is speed made good, which is not in step 2.
 
