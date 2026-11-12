@@ -129,20 +129,20 @@ fn a_keyword_the_validator_ignores_is_an_error() {
 #[test]
 fn the_real_schemas_load_and_refuse_a_wrong_document() {
     let schemas = Schemas::load(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("schemas"));
-    let bad = json!({"format": "flagplot-agent", "version": 1, "kind": "list_forces"});
+    let bad = json!({"format": "flagplot-agent", "version": 2, "kind": "list_forces"});
     let found = schemas.check("list_forces.schema.json", &bad);
     assert!(
         found.iter().any(|e| e.contains("missing task_forces")),
         "{found:?}"
     );
-    let not_known = json!({"format": "flagplot-agent", "version": 1,
+    let not_known = json!({"format": "flagplot-agent", "version": 2,
         "kind": "not_known", "query": "explain"});
     assert!(schemas.check("explain.schema.json", &not_known).is_empty());
     assert!(schemas.check("entity.schema.json", &not_known).is_empty());
     assert!(schemas
         .check("not_known.schema.json", &not_known)
         .is_empty());
-    let wrong = json!({"format": "flagplot-agent", "version": 2,
+    let wrong = json!({"format": "flagplot-agent", "version": 3,
         "kind": "not_known", "query": "explain"});
     assert!(!schemas.check("not_known.schema.json", &wrong).is_empty());
 }

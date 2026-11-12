@@ -98,7 +98,10 @@ fn own_fire_lists_the_fighters_and_the_guns() {
         .all(|f| f.firer.handle == "air_group:3"));
     assert_eq!(b.action.guns.len(), 1);
     assert_eq!(b.action.guns[0].by.handle, "base:2");
-    assert_eq!(b.action.guns[0].raid.handle, "air_group:1");
+    // The raid's air group is the enemy's and is not named (decision 0065).
+    assert!(!serde_json::to_string(&b.action.guns)
+        .unwrap()
+        .contains("air_group"));
     assert_eq!(
         b.action.guns[0].shots.0,
         sim_core::fixed::Fixed::from_int(20)
@@ -110,7 +113,7 @@ fn own_fire_lists_the_fighters_and_the_guns() {
     );
     assert!(
         text.contains(
-            "Anti-aircraft fire: base:2 \"Placeholder airfield B\" at the raid of enemy air_group:1, 20 shots [event "
+            "Anti-aircraft fire: base:2 \"Placeholder airfield B\" at a raid, 20 shots [event "
         ),
         "{text}"
     );
@@ -178,11 +181,11 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
     scenario.run_to_end().unwrap();
     let text = briefing(&scenario.world.side_view(Side::Allied), &title).to_text();
     assert!(
-        text.contains("- Air attack: air_group:2 \"VB-6\" on ship:33, 16 aircraft, bombs [event "),
+        text.contains("- Air attack: air_group:2 \"VB-6\", 16 aircraft, bombs [event "),
         "{text}"
     );
     assert!(
-        text.contains("- Attack on ship:1 \"USS Enterprise\" by enemy air_group:12: 12 aircraft"),
+        text.contains("- Attack on ship:1 \"USS Enterprise\" from the air: 27 aircraft, 2 attacks"),
         "{text}"
     );
     assert!(!text.contains("16 shots"));
@@ -195,7 +198,7 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
         }
     });
     assert!(
-        day3.contains("by enemy air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
+        day3.contains("\": 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
         "{day3}"
     );
 }
