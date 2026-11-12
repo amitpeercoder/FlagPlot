@@ -95,7 +95,13 @@ Tuned on one battle and checked on the same battle proves little. So:
 
 Step 1's scenario tests assert exact numbers from a hand calculation. Those numbers come from the figures step 2 is about to change. Each tuning round would break every one.
 
-Proposed: the hand-calculation tests run on a frozen copy of the figures as they stand at the end of step 1 (`data/reference/step1/`). They go on proving that the rules compute what they should. The live figures are judged by the bands above. A rule change still means a new hand calculation, written by the architect before the code.
+Proposed:
+
+1. **The hand-calculation tests run on a frozen copy of the figures** as they stand at the end of step 1 (`data/reference/step1/`).
+2. **One mechanism in the loader points a scenario at them:** a reference root the caller may override. A scenario file names its reference files by path, so without this each test would need its own copy of the scenario. One test already copies a figures file and rewrites the path in the scenario's text; that is replaced by the loader's mechanism, not repeated.
+3. **What such a test then proves is stated:** that the rules compute what the hand calculation says, on known figures. It proves nothing about the figures in use. That is `validate`'s job. Both run in CI.
+4. **The run baselines follow the live figures.** The files under `crates/sim-cli/tests/run_baseline` record what each scenario does on the figures in use, so they are remade in the same change as each tuning round, and the change shows the difference.
+5. **A rule change still means a new hand calculation,** written by the architect before the code.
 
 ## Rule work that comes before tuning
 
@@ -104,7 +110,7 @@ A figure cannot be tuned to cover for a rule that is missing. These are decided 
 | Item | State | Must it land before tuning? |
 | --- | --- | --- |
 | The state hash at version 2, and batches that record their inputs | Done (decision 0057) | Done |
-| Ships charged straight-line miles | Decided (decision 0058, confirmed by the designer), being built. The hash goes to version 3 with it | Yes, before passages are compared |
+| Ships charged straight-line miles | Decided (decision 0058, confirmed by the designer), being built. The hash goes to version 3 with it | Yes, before passages are compared, and before Savo Island is tuned at all: its start is worked back from the hour the Japanese column enters Savo's hex, and that changes with the rule |
 | Strike target priority as an order | On the opening list; not yet decided | Yes for the Eastern Solomons: what a strike goes for decides which ships are hit |
 | Reach beyond the radius, and a range policy order | On the opening list; not yet decided | Yes for the Eastern Solomons and the air campaign: it decides which strikes fly at all |
 | Ship repair | On the opening list; not yet decided | No. It matters to a campaign, not to one battle's losses |
@@ -123,6 +129,6 @@ A figure cannot be tuned to cover for a rule that is missing. These are decided 
 
 1. **Widths.** Is "the record inside the middle 90 percent, and not rarer than 1 run in 20" the right test? Narrower bands demand more of the model than one night can support.
 2. **A second night action.** Cape Esperance (11 to 12 October 1942) would let the surface figures be checked on a battle they were not fitted to. It is inside the slice but later than anything built so far, some facts for it are already in `data/oob`, and its ships would need deriving. Add it to step 2, or accept fitted surface figures?
-3. **Frozen figures for the hand-calculation tests.** Agreed, or should exact numbers follow the live figures and be recalculated each round?
-4. **Scoring.** Enterprise at the Eastern Solomons was flying again within the hour and then away for 53 days. Decision 0054's test for "crippled" does not count her. The opening list proposes points for a ship that must leave for repair. Should that be settled before the result on the scale is used as a measure, or should the scale be left out of the measures until it is?
+3. **Frozen figures for the hand-calculation tests.** Agreed as set out under "Tests while figures move", or should exact numbers follow the live figures and be recalculated each round?
+4. **Scoring.** Enterprise at the Eastern Solomons was flying again within the hour and then away for 53 days. Decision 0054's test for "crippled" does not count her. The word also has two meanings today: the glossary's "crippled" is flotation damage of 50 or more, while the objective `ships_crippled` counts a ship not sunk, in port or at sea, with propulsion or flight deck out. The opening list proposes points for a ship that must leave for repair. Should that be settled before the result on the scale is used as a measure, or should the scale be left out of the measures until it is?
 5. **Order of the rule work.** The table under "Rule work that comes before tuning" puts strike target priority and reach beyond the radius ahead of tuning the air figures. Agreed, or tune first on the rules as they are and see how far the figures get?
