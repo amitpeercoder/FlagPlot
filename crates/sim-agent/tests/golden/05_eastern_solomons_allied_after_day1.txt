@@ -76,8 +76,8 @@ AIR GROUPS
 - air_group:3 "VS-5" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 200 miles, search range 200 miles, mission search
 - air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 14 ready, radius 190 miles, search range 190 miles, mission naval strike
 - air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 48 ready, radius 105 miles, search range 105 miles, mission combat air patrol
-- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike
-- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike
+- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 200 miles)
+- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 200 miles)
 - air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, radius 190 miles, search range 190 miles, mission naval strike
 - air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 13 ready, radius 105 miles, search range 105 miles, mission combat air patrol
 - air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 43 ready, radius 200 miles, search range 200 miles, mission naval strike
