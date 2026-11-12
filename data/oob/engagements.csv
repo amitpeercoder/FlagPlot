@@ -5,3 +5,7 @@ id,key,name,date_from,date_to,zone
 1000,eastern-solomons,Battle of the Eastern Solomons,1942-08-23,1942-08-25,-11.5
 1001,savo-island,Battle of Savo Island,1942-08-08,1942-08-09,-11
 1002,rabaul-guadalcanal-air,"Air attrition: Rabaul against Guadalcanal, 21 August to 17 September 1942",1942-08-21,1942-09-17,-11
+1003,coral-sea,Battle of the Coral Sea,1942-05-04,1942-05-08,
+1004,midway,Battle of Midway,1942-06-04,1942-06-06,10
+1005,santa-cruz,Battle of the Santa Cruz Islands,1942-10-26,1942-10-26,
+1006,lae-salamaua-raid,Lae and Salamaua raid,1942-03-10,1942-03-10,
