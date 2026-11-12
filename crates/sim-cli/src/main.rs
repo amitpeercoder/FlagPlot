@@ -578,7 +578,10 @@ fn print_result(world: &sim_core::World) {
             .iter()
             .map(|o| {
                 let target = o.base.map_or(String::new(), |b| format!(" at {b}"));
-                format!("{}{target} {} = {}", o.kind, o.count, o.points)
+                // A base's count is days out of the days counted (decision
+                // 0067).
+                let of_days = o.days.map(|d| format!(" of {d} days")).unwrap_or_default();
+                format!("{}{target} {}{of_days} = {}", o.kind, o.count, o.points)
             })
             .collect();
         println!(

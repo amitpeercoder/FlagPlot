@@ -738,7 +738,13 @@ fn is_no_deck_event(event: &Event) -> bool {
 /// air and the no-deck events taken out and the events that are left
 /// numbered 1, 2, 3...
 fn lines_without_claims(world: &World) -> Vec<String> {
-    let kept = |e: &&Event| !is_air_claim(e) && !is_no_deck_event(e);
+    // A base's count at the end of the day (decision 0067) came after those
+    // logs were written, and changes no state.
+    let kept = |e: &&Event| {
+        !is_air_claim(e)
+            && !is_no_deck_event(e)
+            && !matches!(e.kind, EventKind::BaseAtDayEnd { .. })
+    };
     let mut map = BTreeMap::new();
     for event in world.events().iter().filter(kept) {
         let next = u32::try_from(map.len() + 1).expect("few events");

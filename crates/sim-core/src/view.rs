@@ -23,7 +23,7 @@ use crate::hex::Hex;
 use crate::ids::{AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
-use crate::objectives::{self, KnownProgress, Objective, OwnBase, SideObjectives};
+use crate::objectives::{self, KnownProgress, Objective, SideObjectives};
 use crate::orders::{AirMission, Order, SpeedSetting};
 use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
 use crate::side_events::{self, Owners, SideEvent};
@@ -267,18 +267,7 @@ impl<'a> SideView<'a> {
         let Some(own) = self.own_objectives() else {
             return Vec::new();
         };
-        let bases: Vec<OwnBase> = self
-            .bases()
-            .map(|base| OwnBase {
-                id: base.id,
-                supply_t: base.supply_t,
-                aircraft_ready: self
-                    .air_groups()
-                    .filter(|g| g.location == crate::state::AirGroupLocation::Base(base.id))
-                    .map(|g| g.ready)
-                    .sum(),
-            })
-            .collect();
+        let bases: Vec<BaseId> = self.bases().map(|base| base.id).collect();
         objectives::known_progress(own, &bases, &self.events())
     }
 

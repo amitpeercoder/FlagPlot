@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2180473fccbc5bb4  58 events
-day   2  hash 4166b1ed1151c62c  54 events
-day   3  hash d1352166ad354057  48 events
-day   4  hash 7e6dcaaff00b144c  276 events
-day   5  hash 7933981a03659153  145 events
-day   6  hash 38c0dafcf1cbd5fa  164 events
-day   7  hash fa2639f2dcc633bc  232 events
-day   8  hash 8c9db26be83c0b5c  124 events
-day   9  hash 0f953f5721623f2f  127 events
-day  10  hash 75a20c3f7a5a1ee8  80 events
-day  11  hash d0b145d5a361b86f  88 events
-day  12  hash df2c8cb160553d07  93 events
-day  13  hash a7b2f7052bf71845  61 events
-day  14  hash fc308895aeffd680  63 events
+day   1  hash 02858036c1cd1193  61 events
+day   2  hash 0b9b922e091b154e  57 events
+day   3  hash 48f7e4288673d1ea  51 events
+day   4  hash 22c72bc3909fa1ac  279 events
+day   5  hash 90388429e307d33c  148 events
+day   6  hash f490cbb16c9848d3  167 events
+day   7  hash 4578cd993925235c  235 events
+day   8  hash bdb36832c4ffc5e5  127 events
+day   9  hash 7ba770d0eeb2e9b9  130 events
+day  10  hash b39242591499f3fd  83 events
+day  11  hash 8322e24413b58509  91 events
+day  12  hash 0376dfab534b6da9  96 events
+day  13  hash def650e337ea7f2c  64 events
+day  14  hash 9d18741d86c51ded  66 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -164,5 +164,5 @@ Japanese claim at (7,-5): 0 hits on a carrier, 0 sunk, 1 aircraft shot down, day
 Japanese claim at (7,-5): 0 hits on a carrier, 0 sunk, day 12 afternoon
 
 Result (the placeholder scale of decision 0054):
-Allied: 30.85 points (ships_sunk 1 = 10; ships_crippled 0 = 0; aircraft_destroyed 121 = 6.05; cargo_landed at base:1 960 = 4.8; base_open at base:1 1 = 10), margin 19.4, decisive victory
-Japanese: 11.45 points (ships_sunk 3 = 9; ships_crippled 0 = 0; aircraft_destroyed 49 = 2.45; base_open at base:1 0 = 0), margin -19.4, decisive defeat
+Allied: 30.85 points (ships_sunk 1 = 10; ships_crippled 0 = 0; aircraft_destroyed 121 = 6.05; cargo_landed at base:1 960 = 4.8; base_open at base:1 14 of 14 days = 10), margin 19.4, decisive victory
+Japanese: 11.45 points (ships_sunk 3 = 9; ships_crippled 0 = 0; aircraft_destroyed 49 = 2.45; base_open at base:1 0 of 14 days = 0), margin -19.4, decisive defeat

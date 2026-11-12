@@ -2,34 +2,34 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1f2b2a2b53099570  49 events
-day   2  hash 36620ab0b5880565  35 events
-day   3  hash beee590e1bd713ea  31 events
-day   4  hash 57f923ef60ac7361  21 events
-day   5  hash 6cc9b8927b3b6b09  15 events
-day   6  hash 5495327996bf7718  35 events
-day   7  hash c59bc9331658afce  20 events
-day   8  hash fdc521e0eff423fa  11 events
-day   9  hash 17aea4930a5806bd  31 events
-day  10  hash 8f87d5f48f72ba70  23 events
-day  11  hash dc0f298ca9ae9e11  20 events
-day  12  hash e1053efa5fa6aa7c  35 events
-day  13  hash 7e272fdfc05bf20e  25 events
-day  14  hash 313015910e34c546  23 events
-day  15  hash 8f460c877464e5fb  44 events
-day  16  hash b60ff3598f0ae575  21 events
-day  17  hash 3fca820c60843e24  15 events
-day  18  hash aeb29031d1ac0736  33 events
-day  19  hash 617fc590928d9c64  19 events
-day  20  hash 74c3f44bfee2403c  13 events
-day  21  hash a0c6791029f643c6  39 events
-day  22  hash 7f8ab01445ca53cc  26 events
-day  23  hash e6227756f9af77a0  23 events
-day  24  hash 88ee30ac97073ee9  50 events
-day  25  hash 22f98686b98db7a3  29 events
-day  26  hash 7155e9fcbde146d2  27 events
-day  27  hash 4e9f86fb1c7492a4  45 events
-day  28  hash 578040d62e58b5d4  28 events
+day   1  hash 5d20b83d68e829b2  51 events
+day   2  hash 1ec8cf7c72276079  37 events
+day   3  hash 18735286e968b6f4  33 events
+day   4  hash ec8689750dd3044d  23 events
+day   5  hash 6ffe685fb4d404df  17 events
+day   6  hash d7f79457fae72894  37 events
+day   7  hash cfe4e346d8ab7264  22 events
+day   8  hash 5ad2956f2e3ab79a  13 events
+day   9  hash 7a823f9cfa93e5cc  33 events
+day  10  hash af3b51622b343064  25 events
+day  11  hash 3a6688c41a31bedf  22 events
+day  12  hash 0649fd8f5fbaaaf4  37 events
+day  13  hash e7e0cbc2e0794f40  27 events
+day  14  hash 6ba5422c64ec9992  25 events
+day  15  hash 245f538b15ac1555  46 events
+day  16  hash bc1db20cc0af4311  23 events
+day  17  hash 643185f02b223862  17 events
+day  18  hash 9a25a8b6ceac2d1b  35 events
+day  19  hash 81b297494f347bbb  21 events
+day  20  hash 5a083011ac7bc5d8  15 events
+day  21  hash 50640e017deaeee4  41 events
+day  22  hash 6808104b38fb7afc  28 events
+day  23  hash 1e69d069ad377c06  25 events
+day  24  hash 861534b1de6e4899  52 events
+day  25  hash 37e39d6db36e7da1  31 events
+day  26  hash fc7c09330f10f142  29 events
+day  27  hash 3043068c7cccee93  47 events
+day  28  hash 1fa687c88261272a  30 events
 
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 39 ready, 41 pilots, mission BaseStrike on base:1, fatigue 52.64, rests above 45, stood down, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 18 ready, 18 pilots, mission CombatAirPatrol, patrol share 0, fatigue 52.64, rests above 45, stood down, no arc
@@ -70,6 +70,6 @@ Japanese claim at (2,-4): 4 aircraft shot down, 3 aircraft destroyed on the grou
 Japanese claim at (2,-4): 8 aircraft shot down, 1 aircraft destroyed on the ground, day 27 morning
 
 Result (the placeholder scale of decision 0054):
-Allied: 13.05 points (aircraft_destroyed 61 = 3.05; base_open at base:1 1 = 10), margin 10.45, major victory
-Japanese: 2.6 points (aircraft_destroyed 52 = 2.6; base_open at base:1 0 = 0), margin -10.45, major defeat
+Allied: 13.05 points (aircraft_destroyed 61 = 3.05; base_open at base:1 28 of 28 days = 10), margin 10.45, major victory
+Japanese: 2.6 points (aircraft_destroyed 52 = 2.6; base_open at base:1 0 of 28 days = 0), margin -10.45, major defeat
 History: Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)

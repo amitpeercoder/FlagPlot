@@ -494,7 +494,9 @@ fn objectives_change_no_hash_and_no_event() {
     // built (the scenario orders)": Ryujo in (7,-9), her raid, the carriers'
     // target lists) were given, and 747baccba462dd21 until the carriers'
     // target list gained the transport (the third trial of settlement 4).
-    assert!(baseline.contains("hash 9887acc2b651abb9"));
+    // That was 9887acc2b651abb9 until decision 0067 recorded each base's
+    // count at the end of the day: the hash counts the events of the log.
+    assert!(baseline.contains("hash 798ce5b9ab626198"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

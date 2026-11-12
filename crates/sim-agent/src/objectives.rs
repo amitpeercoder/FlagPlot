@@ -51,7 +51,8 @@ pub struct ObjectiveLine {
     /// For the two ship objectives: the points for each kind of ship.
     pub ship_points: Vec<ShipKindPoints>,
     /// Points for one aircraft (`aircraft_destroyed`), one ton
-    /// (`cargo_landed`) or the base being as wanted (`base_open`).
+    /// (`cargo_landed`) or the base being as wanted on every day
+    /// (`base_open`, which earns the share of the days it was).
     pub points: Option<Dec>,
     /// What the side knows of its progress, from its own units and the events
     /// it may see.
@@ -74,7 +75,12 @@ pub struct ShipKindPoints {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct KnownLine {
     pub basis: &'static str,
+    /// Ships, aircraft, tons (unloaded less loaded back), or for a base of
+    /// the side's own the days it ended as wanted.
     pub count: Dec,
+    /// For `base_open` at a base of the side's own: the days counted, which
+    /// `count` is out of.
+    pub days: Option<u32>,
     pub points: Option<Dec>,
 }
 
@@ -109,8 +115,11 @@ pub struct ScoreLine {
     pub kind: &'static str,
     pub base: Option<Handle>,
     pub closed: Option<bool>,
-    /// Ships, aircraft, tons, or 1 or 0 for a base.
+    /// Ships, aircraft, tons (unloaded less loaded back), or for a base the
+    /// days it ended as wanted.
     pub count: Dec,
+    /// For `base_open`: the days counted, which `count` is out of.
+    pub days: Option<u32>,
     /// For the two ship objectives: the ships counted, by kind.
     pub ships: Vec<ShipsOfKind>,
     pub points: Dec,
@@ -144,6 +153,7 @@ fn line(ctx: &Ctx<'_>, objective: &Objective, known: &KnownProgress) -> Objectiv
         known: KnownLine {
             basis: known.basis.name(),
             count: Dec(known.count),
+            days: known.days,
             points: known.points.map(Dec),
         },
     };
@@ -196,6 +206,7 @@ fn side_result(ctx: &Ctx<'_>, result: &SideResult) -> SideResultPart {
                 base: o.base.map(|b| ctx.base(b)),
                 closed: (o.kind == "base_open").then_some(o.closed),
                 count: Dec(o.count),
+                days: o.days,
                 ships: o
                     .by_kind
                     .iter()

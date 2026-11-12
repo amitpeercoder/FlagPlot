@@ -994,6 +994,20 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .num("progress_nm", *progress_nm)
                 .hex("position", *position),
         ),
+        EventKind::BaseAtDayEnd {
+            base,
+            supply_t,
+            aircraft_ready,
+        } => (
+            "base_at_day_end",
+            d.id("base", *base)
+                .num("supply_t", *supply_t)
+                .int("aircraft_ready", *aircraft_ready)
+                .flag(
+                    "open",
+                    sim_core::events::base_is_open(*supply_t, *aircraft_ready),
+                ),
+        ),
         EventKind::AlarmRoll {
             task_force,
             by_a,
