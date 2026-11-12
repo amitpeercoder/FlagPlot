@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "5ddecbf483917c29"
+      "hash": "e1d69eca34ebd5b7"
     }
   ],
   "orders": [
@@ -391,7 +391,8 @@
         "kinds": [
           "carrier",
           "battleship",
-          "cruiser"
+          "cruiser",
+          "transport"
         ]
       },
       "origin": {
@@ -434,7 +435,8 @@
         "kinds": [
           "carrier",
           "battleship",
-          "cruiser"
+          "cruiser",
+          "transport"
         ]
       },
       "origin": {
@@ -487,7 +489,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "cd7b88c0ca851421"
+    "hash": "f6e1a405a8039d60"
   },
   "seats": {
     "allied": "player",

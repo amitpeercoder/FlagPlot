@@ -65,11 +65,11 @@
     },
     {
       "day": 4,
-      "hash": "37a64f95dffe2ac4"
+      "hash": "09fe2c4598fbc73b"
     },
     {
       "day": 5,
-      "hash": "b4667f5d96848841"
+      "hash": "f886d491cfd844cc"
     }
   ],
   "orders": [
@@ -690,7 +690,8 @@
         "kinds": [
           "carrier",
           "battleship",
-          "cruiser"
+          "cruiser",
+          "transport"
         ]
       },
       "origin": {
@@ -733,7 +734,8 @@
         "kinds": [
           "carrier",
           "battleship",
-          "cruiser"
+          "cruiser",
+          "transport"
         ]
       },
       "origin": {
@@ -918,7 +920,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "183a298b6b9e4ecc"
+    "hash": "7cce2880758889ab"
   },
   "seats": {
     "allied": "player",
