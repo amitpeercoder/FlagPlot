@@ -56,3 +56,7 @@ Two things in it are not the day's. Ryujo survives in most runs because the scou
 ## Rule card
 
 No rule. These are scenario inputs.
+
+## Amended by decision 0058 (Nov 12, 2026)
+
+The Japanese starts were worked back from noon fixes with 40 miles a hex. With straight-line miles (decision 0058), settled by the architect: the carrier striking force keeps its start, (9,-19) at 17 knots, which is 302 miles from (8,-11) and brings it there at 11:46; the Ryujo detachment starts in (7,-19) at 20 knots, 360 miles from (7,-10), and arrives at noon as before. From (10,-19) it would have arrived at 09:51, at odds with the 09:35 sighting. The full slice takes the same starts.

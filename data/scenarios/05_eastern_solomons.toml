@@ -66,12 +66,14 @@ q = 9
 r = -19
 mission = "carrier"
 
-# The Ryujo detachment.
+# The Ryujo detachment. It starts in (7,-19), on the same column of hexes as
+# its noon hex (7,-10), so its course is along an axis, 360 nm at 20 knots, and
+# it arrives at noon (decision 0058, decision 0031 amended).
 [[task_force]]
 id = 4
 name = "Ryujo detachment"
 side = "japanese"
-q = 10
+q = 7
 r = -19
 mission = "carrier"
 

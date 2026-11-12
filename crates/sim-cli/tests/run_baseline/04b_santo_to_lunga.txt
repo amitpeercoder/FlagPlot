@@ -2,12 +2,12 @@ Scenario 4b: Espiritu Santo to Lunga Point on the real map
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f8b64cf507e7d757  11 events
-day   2  hash b0ca3e12eb3571e6  7 events
+day   1  hash ef504fceabf57f5a  11 events
+day   2  hash c40674a49dbda4f4  7 events
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (2,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1840 t of fuel, 0 t of supply
-ship:2 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 420 t of fuel, 0 t of supply
+ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1842.75 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 421.375 t of fuel, 0 t of supply
 Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts

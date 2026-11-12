@@ -336,6 +336,7 @@ impl World {
         force.rules_order = parent_force.rules_order;
         force.toward_hex = parent_force.toward_hex;
         force.progress_nm = parent_force.progress_nm;
+        force.leg_nm = parent_force.leg_nm;
         for ship in ships {
             let removed = parent_force.ships.remove(ship);
             assert!(removed, "{ship} is in the parent task force");
@@ -751,7 +752,7 @@ mod tests {
 
     use super::*;
     use crate::belief::{BattleClaim, Report};
-    use crate::hex::{Hex, HEX_NM};
+    use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId};
     use crate::map::{HexData, HexKind, Map};
     use crate::movement::speed_multiplier;
@@ -2354,7 +2355,6 @@ mod tests {
             hx(5, 0),
             hx(7, 0),
         ];
-        let one_hex = nm(HEX_NM);
         for progress in [1, 10, 19, 20, 21, 39] {
             for waypoint in waypoints {
                 let mut world = world_with_fuel(2000);
@@ -2366,16 +2366,25 @@ mod tests {
                 let steamed = miles_until_stopped(&mut world);
                 assert_eq!(rejection(&world), None, "p={progress} W={waypoint}");
 
-                // cost ahead = (40 - p) + 40 x d(toward, W)
-                // cost back  = p + 40 x d(from, W)
-                let ahead = nm(40 - progress) + one_hex * i64::from(toward.distance(waypoint));
-                let back = nm(progress) + one_hex * i64::from(from.distance(waypoint));
+                // cost ahead = (40 - p) + charged miles from toward to W
+                // cost back  = p + charged miles from from to W
+                // (decision 0058: a step is charged the miles it brings the
+                // force closer where the way is clear).
+                let charged = |hex: Hex| {
+                    nm(i64::from(
+                        world
+                            .map
+                            .sea_charged_nm(hex, waypoint)
+                            .expect("the waypoint is reachable"),
+                    ))
+                };
+                let ahead = nm(40 - progress) + charged(toward);
+                let back = nm(progress) + charged(from);
                 assert_eq!(steamed, ahead.min(back), "p={progress} W={waypoint}");
 
                 // Position-independent bound: no shorter than the trip from
                 // the nearer of the two centres.
-                let bound =
-                    one_hex * i64::from(from.distance(waypoint).min(toward.distance(waypoint)));
+                let bound = charged(from).min(charged(toward));
                 assert!(steamed >= bound, "p={progress} W={waypoint}");
                 assert_eq!(leg(&world), (waypoint, None, Fixed::ZERO));
             }
@@ -2409,6 +2418,36 @@ mod tests {
         world.submit_orders(Side::Allied, vec![route_to(2, 0)]);
         world.intake_orders(2);
         assert_eq!(leg(&world), original);
+        assert_sound(&world);
+    }
+
+    #[test]
+    fn a_turn_back_keeps_the_charge_of_the_step_and_the_miles_to_go_are_the_charge_less_progress() {
+        // A step charged 34 miles, 10 along (decision 0058, 7). Turned
+        // back, the force has 34 - 10 = 24 miles to go to the hex it left,
+        // on the same charge.
+        let mut world = world_with_fuel(2000);
+        set_leg(&mut world, hx(0, 0), Some(hx(1, 0)), nm(10));
+        let task_force = world.truth.task_forces.get_mut(&TF).expect("task force");
+        task_force.leg_nm = nm(34);
+        assert_eq!(task_force.position(), hx(0, 0));
+        task_force.turn_back();
+        assert_eq!(
+            (
+                task_force.from_hex,
+                task_force.toward_hex,
+                task_force.progress_nm,
+                task_force.leg_nm
+            ),
+            (hx(1, 0), Some(hx(0, 0)), nm(24), nm(34))
+        );
+        // 24 is past the midpoint (17): it is in the hex ahead, (0,0).
+        assert_eq!(task_force.position(), hx(0, 0));
+        task_force.turn_back();
+        assert_eq!(
+            (task_force.progress_nm, task_force.leg_nm),
+            (nm(10), nm(34))
+        );
         assert_sound(&world);
     }
 
@@ -3479,10 +3518,19 @@ mod tests {
             TaskForceStatus::Arrived
         );
         assert_eq!(world.truth.task_forces[&TF].position(), hx(6, 0));
-        // 40 nm a hex at 0.25 t/nm.
+        // The way round is a detour, so a hex a step at first and the
+        // straight miles once clear of the wall (decision 0058), at 0.25
+        // t/nm.
+        let charged = i64::from(
+            world
+                .map
+                .sea_charged_nm(hx(0, 0), hx(6, 0))
+                .expect("reachable"),
+        );
+        assert!(charged > 6 * 40 && charged <= 40 * i64::from(steps));
         assert_eq!(
             world.truth.ships[&SHIP].fuel_t,
-            Fixed::from_int(2000 - 10 * i64::from(steps))
+            Fixed::from_ratio(2000 * 4 - charged, 4)
         );
         assert_sound(&world);
     }

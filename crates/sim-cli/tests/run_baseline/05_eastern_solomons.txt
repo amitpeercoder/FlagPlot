@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c09495f6039a2a2a  170 events
+day   1  hash e88694a2344625c0  155 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -46,20 +46,20 @@ ship:15 "USS Macdonough": afloat in task_force:2; damage flotation 0, fire 0; al
 ship:16 "USS Worden": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
 ship:17 "USS Dale": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
 ship:18 "USS Phelps": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
-ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
-ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
-ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2582.4 t of fuel, 0 t of supply
-ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
-ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
-ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
-ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
-ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1173.685431 t of fuel, 0 t of supply
-ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
-ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3972.350516 t of fuel, 0 t of supply
+ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3972.350516 t of fuel, 0 t of supply
+ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2588.4525 t of fuel, 0 t of supply
+ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6138.834 t of fuel, 0 t of supply
+ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6138.834 t of fuel, 0 t of supply
+ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2219.081195 t of fuel, 0 t of supply
+ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2219.081195 t of fuel, 0 t of supply
+ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1178.540626 t of fuel, 0 t of supply
+ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1035.30788 t of fuel, 0 t of supply
+ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
 ship:33 "Ryujo": SUNK; damage flotation 100, fire 53.490564; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
 ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply

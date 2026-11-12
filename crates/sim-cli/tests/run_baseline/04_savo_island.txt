@@ -2,21 +2,21 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d1cc32ff35c02084  290 events
+day   1  hash 7e3ae6475283476f  290 events
 
-task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-7); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
+task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Northern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:4 "Eighth Fleet striking force, sent home" (Japanese): Underway at (1,-11), 12.25 nm from (1,-11) toward (1,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:4 "Eighth Fleet striking force, sent home" (Japanese): Underway at (0,-12), 28.92 nm from (1,-12) toward (0,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:5 "Eighth Fleet striking force, left behind" (Japanese): Idle at (2,-5), 20 nm from (2,-6) toward (2,-5); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
-ship:1 "Chokai": afloat in task_force:4; damage flotation 34.625544, fire 0; propulsion degraded; 840 gun rounds, torpedoes gone; 2242.229647 t of fuel, 0 t of supply
-ship:2 "Aoba": afloat in task_force:4; damage flotation 83.18751, fire 16.637502; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 576 gun rounds, torpedoes gone; 1808.678719 t of fuel, 0 t of supply
-ship:3 "Kako": SUNK; damage flotation 100, fire 51.977493; propulsion out, fire control out, main battery degraded, torpedo mounts degraded; 324 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
-ship:4 "Kinugasa": afloat in task_force:4; damage flotation 54.094206, fire 7.055766; fire control out, main battery out; 612 gun rounds, torpedoes gone; 1808.678719 t of fuel, 0 t of supply
-ship:5 "Furutaka": SUNK; damage flotation 100, fire 24.32946; propulsion out, fire control degraded, main battery out, torpedo mounts out; 648 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
-ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39636 gun rounds, torpedoes gone; 692.232836 t of fuel, 0 t of supply
-ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59454 gun rounds, torpedoes gone; 581.664872 t of fuel, 0 t of supply
-ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39666 gun rounds, torpedoes gone; 308.930624 t of fuel, 0 t of supply
+ship:1 "Chokai": afloat in task_force:4; damage flotation 34.625544, fire 0; propulsion degraded; 840 gun rounds, torpedoes gone; 2220.084461 t of fuel, 0 t of supply
+ship:2 "Aoba": afloat in task_force:4; damage flotation 83.18751, fire 16.637502; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 576 gun rounds, torpedoes gone; 1790.81546 t of fuel, 0 t of supply
+ship:3 "Kako": SUNK; damage flotation 100, fire 51.977493; propulsion out, fire control out, main battery degraded, torpedo mounts degraded; 324 gun rounds, torpedoes gone; 1717.006139 t of fuel, 0 t of supply
+ship:4 "Kinugasa": afloat in task_force:4; damage flotation 54.094206, fire 7.055766; fire control out, main battery out; 612 gun rounds, torpedoes gone; 1790.81546 t of fuel, 0 t of supply
+ship:5 "Furutaka": SUNK; damage flotation 100, fire 24.32946; propulsion out, fire control degraded, main battery out, torpedo mounts out; 648 gun rounds, torpedoes gone; 1717.006139 t of fuel, 0 t of supply
+ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39636 gun rounds, torpedoes gone; 664.898075 t of fuel, 0 t of supply
+ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59454 gun rounds, torpedoes gone; 540.510569 t of fuel, 0 t of supply
+ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39666 gun rounds, torpedoes gone; 300.894107 t of fuel, 0 t of supply
 ship:9 "HMAS Canberra": SUNK; damage flotation 100, fire 5.378205; propulsion degraded, main battery degraded; 1040 gun rounds, torpedoes ready; 3400 t of fuel, 0 t of supply
 ship:10 "USS Chicago": afloat in task_force:2; damage flotation 35.969146, fire 9.293276; propulsion degraded, fire control out; 1233 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
 ship:11 "USS Patterson": SUNK; damage flotation 100, fire 42.038688; propulsion degraded, fire control out, main battery out; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply

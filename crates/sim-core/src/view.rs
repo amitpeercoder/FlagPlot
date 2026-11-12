@@ -287,16 +287,31 @@ impl<'a> SideView<'a> {
 
     /// The fewest steps by sea from every hex that can reach `target` to it
     /// (decision 0048, warnings). The map is common knowledge, so this is
-    /// not enemy truth; each step is 40 miles. Empty if ships cannot enter
-    /// `target`.
+    /// not enemy truth; it counts steps, not miles (a step is charged by
+    /// [`SideView::sea_charged_nm_in`], decision 0058). Empty if ships cannot
+    /// enter `target`.
     pub fn sea_distances_to(&self, target: Hex) -> BTreeMap<Hex, u32> {
         self.map.sea_distances_to(target)
+    }
+
+    /// The miles a force is charged for steaming from `from` to `to` by the
+    /// map's shortest sea path (decision 0058): [`Map::sea_charged_nm`]. The
+    /// straight-line air distance where the way is clear, more where land
+    /// forces a detour. `None` when ships cannot get from one to the other.
+    pub fn sea_charged_nm(&self, from: Hex, to: Hex) -> Option<u32> {
+        self.map.sea_charged_nm(from, to)
+    }
+
+    /// [`SideView::sea_charged_nm`] with the field of
+    /// [`SideView::sea_distances_to`] of `to` already worked out.
+    pub fn sea_charged_nm_in(&self, field: &BTreeMap<Hex, u32>, from: Hex, to: Hex) -> Option<u32> {
+        self.map.sea_charged_nm_in(field, from, to)
     }
 
     /// The hexes a force steams through from `from` to `to`, in order and
     /// ending at `to` (decision 0017), or `None` when ships cannot get from
     /// one to the other. The map is common knowledge, so this is not enemy
-    /// truth; each step is 40 miles.
+    /// truth; what the steps are charged is [`SideView::sea_charged_nm`].
     pub fn sea_path(&self, from: Hex, to: Hex) -> Option<Vec<Hex>> {
         self.map.sea_path(from, to)
     }

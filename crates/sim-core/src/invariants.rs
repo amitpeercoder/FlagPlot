@@ -33,8 +33,11 @@ pub enum InvariantViolation {
     ShipInSeveralTaskForces(ShipId),
     TaskForceHasShipOfOtherSide(TaskForceId, ShipId),
     TaskForceOffMap(TaskForceId, Hex),
-    /// Progress toward the next hex is negative or a full hex or more.
+    /// Progress toward the next hex is negative or the step's charge or more.
     TaskForceProgressOutOfRange(TaskForceId),
+    /// The step's charge (`leg_nm`) is under 1 or over a hex, or is not a
+    /// hex for a force at a centre (decision 0058).
+    TaskForceLegChargeOutOfRange(TaskForceId),
     BaseOffMap(BaseId, Hex),
     NegativeSupplyAboard(ShipId),
     /// A ship carries more supply and fuel cargo together than its class's
@@ -137,7 +140,13 @@ impl fmt::Display for InvariantViolation {
                 write!(f, "{task_force} is at {hex}, which is off the map")
             }
             InvariantViolation::TaskForceProgressOutOfRange(task_force) => {
-                write!(f, "{task_force} has progress outside one hex")
+                write!(f, "{task_force} has progress outside its step's charge")
+            }
+            InvariantViolation::TaskForceLegChargeOutOfRange(task_force) => {
+                write!(
+                    f,
+                    "{task_force} has a step charge outside 1 to 40 miles, or not 40 at a centre"
+                )
             }
             InvariantViolation::BaseOffMap(base, hex) => {
                 write!(f, "{base} is at {hex}, which is off the map")
@@ -395,8 +404,16 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 Some(_) => {}
             }
         }
-        if task_force.progress_nm.is_negative() || task_force.progress_nm >= one_hex {
+        if task_force.progress_nm.is_negative() || task_force.progress_nm >= task_force.leg_nm {
             violations.push(InvariantViolation::TaskForceProgressOutOfRange(
+                task_force.id,
+            ));
+        }
+        if task_force.leg_nm < Fixed::ONE
+            || task_force.leg_nm > one_hex
+            || (task_force.toward_hex.is_none() && task_force.leg_nm != one_hex)
+        {
+            violations.push(InvariantViolation::TaskForceLegChargeOutOfRange(
                 task_force.id,
             ));
         }
@@ -953,6 +970,41 @@ mod tests {
                 "closed here {here}, closed there {there}"
             );
         }
+    }
+
+    #[test]
+    fn a_steps_charge_is_one_to_forty_miles_forty_at_a_centre_and_progress_is_within_it() {
+        // On a leg charged 34 miles, 10 along: fine.
+        let (mut truth, map) = setup_on_a_leg(false, false);
+        truth.task_forces.get_mut(&TF).expect("task force").leg_nm = Fixed::from_int(34);
+        assert_eq!(violations_of(&truth, &map), Vec::new());
+        // Progress at the charge or beyond is out of range.
+        for progress in [34, 35] {
+            truth
+                .task_forces
+                .get_mut(&TF)
+                .expect("task force")
+                .progress_nm = Fixed::from_int(progress);
+            assert_eq!(
+                violations_of(&truth, &map),
+                vec![InvariantViolation::TaskForceProgressOutOfRange(TF)]
+            );
+        }
+        // A charge under 1 or over 40 is out of range.
+        for leg in [Fixed::ZERO, Fixed::from_int(41)] {
+            let (mut truth, map) = setup_on_a_leg(false, false);
+            truth.task_forces.get_mut(&TF).expect("task force").leg_nm = leg;
+            assert!(violations_of(&truth, &map)
+                .contains(&InvariantViolation::TaskForceLegChargeOutOfRange(TF)));
+        }
+        // At a centre it is 40.
+        let (mut truth, map) = setup_with_ship();
+        assert_eq!(violations_of(&truth, &map), Vec::new());
+        truth.task_forces.get_mut(&TF).expect("task force").leg_nm = Fixed::from_int(30);
+        assert_eq!(
+            violations_of(&truth, &map),
+            vec![InvariantViolation::TaskForceLegChargeOutOfRange(TF)]
+        );
     }
 
     #[test]

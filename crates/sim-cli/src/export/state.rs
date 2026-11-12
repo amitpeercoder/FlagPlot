@@ -43,10 +43,12 @@ pub struct TaskForceOut {
     /// The hex whose centre is nearest.
     position: Pos,
     /// The stored leg (decision 0005): the hex last left, the hex steamed
-    /// toward (null at a centre) and the miles covered between them.
+    /// toward (null at a centre), the miles covered between them and what the
+    /// step is charged in all (decision 0058, 7).
     from_hex: Pos,
     toward_hex: Option<Pos>,
     progress_nm: Num,
+    leg_nm: Num,
     status: &'static str,
     ships: Vec<u32>,
     home_port: Option<u32>,
@@ -221,6 +223,7 @@ fn task_force(force: &TaskForce) -> TaskForceOut {
         from_hex: force.from_hex.into(),
         toward_hex: force.toward_hex.map(Pos::from),
         progress_nm: Num(force.progress_nm),
+        leg_nm: Num(force.leg_nm),
         status: names::status(force.status),
         ships: force.ships.iter().map(|ship| ship.raw()).collect(),
         home_port: force.home_port.map(|port| port.raw()),

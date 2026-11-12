@@ -795,7 +795,7 @@ function summarize(model) {
   return { steps: model.steps.length, events: model.events.length, forces: end.forces.size, contacts, labels: model.placements.length };
 }
 
-// ---- Measuring (decisions 0040 and 0017) ----
+// ---- Measuring (decisions 0040, 0017 and 0058) ----
 // These repeat the engine's own functions with whole numbers. viewer/check.js
 // runs them on viewer/measure_fixture.json, which the engine writes.
 const HEX_NM = 40;
@@ -874,16 +874,38 @@ function seaPath(sea, fq, fr, tq, tr) {
   return out;
 }
 
-/** Both measures between two hexes a and b, each [q, r]: the air distance, and the sea route (null when there is none) with its miles. */
+/** Hex::distance: the number of hex steps between two hexes. */
+function hexDistance(q1, r1, q2, r2) {
+  const dq = q1 - q2, dr = r1 - r2;
+  return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
+}
+
+/** Map::step_charge_nm (decision 0058): what the step from (fq, fr) to its neighbour (nq, nr) is charged for a force steaming for (tq, tr). dist is seaDistancesTo the target. Where the way is clear (the sea path has as many steps as the hex distance) it is the miles the step brings the force closer in a straight line, at least 1; otherwise a hex. */
+function stepChargeNm(dist, fq, fr, nq, nr, tq, tr) {
+  if (dist.get(hexKey(fq, fr)) === hexDistance(fq, fr, tq, tr)) {
+    return Math.max(1, airDistanceNm(fq, fr, tq, tr) - airDistanceNm(nq, nr, tq, tr));
+  }
+  return HEX_NM;
+}
+
+/** Both measures between two hexes a and b, each [q, r]: the air distance, and the sea route (null when there is none) with the charge of each of its steps and their sum in miles (decision 0058). */
 function measureHexes(sea, a, b) {
   const path = seaPath(sea, a[0], a[1], b[0], b[1]);
-  return { air: airDistanceNm(a[0], a[1], b[0], b[1]), sea: path ? { path, steps: path.length, nm: path.length * HEX_NM } : null };
+  let sea_ = null;
+  if (path) {
+    const dist = seaDistancesTo(sea, b[0], b[1]);
+    const charges = [];
+    let q = a[0], r = a[1];
+    for (const h of path) { charges.push(stepChargeNm(dist, q, r, h[0], h[1], b[0], b[1])); q = h[0]; r = h[1]; }
+    sea_ = { path, steps: path.length, charges, nm: charges.reduce((x, y) => x + y, 0) };
+  }
+  return { air: airDistanceNm(a[0], a[1], b[0], b[1]), sea: sea_ };
 }
 
 const FlagPlotCore = {
   HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
   SIDES, sideReplay,
-  HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, measureHexes,
+  HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, hexDistance, stepChargeNm, measureHexes,
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
 };
@@ -1482,7 +1504,7 @@ function renderMeasure() {
     if (pts.length > 1) gMeasure.append(sv('polyline', { class: 'measure-sea', points: pts.join(' ') }));
   }
   line('Air distance: ' + res.air + ' nm', 'big');
-  line(res.sea ? 'Sea route: ' + res.sea.nm + ' nm, ' + res.sea.steps + ' hex' + (res.sea.steps === 1 ? '' : 'es') : 'Sea route: no sea route', 'big');
+  line(res.sea ? 'Sea route: ' + res.sea.nm + ' nm charged, ' + res.sea.steps + ' hex' + (res.sea.steps === 1 ? '' : 'es') : 'Sea route: no sea route', 'big');
   line('Click again to start over.', 'dim');
 }
 

@@ -535,7 +535,12 @@ id = 39
 name = "Placeholder destroyer 1"
 class = 2
 side = "allied"
-fuel_t = 500
+# A placeholder ship. The figure is chosen so that it runs dry at a hex centre
+# under decision 0058: before day 39 it has steamed 3 x 629 nm out and 3 x 578
+# nm back, 3621 nm, and 3621 + 360 = 3981 nm at 0.125 t a nm is 497.625 t, so
+# the fuel ends exactly at the centre of (7,-3), nine steps out, not in the
+# middle of a step.
+fuel_t = "497.625"
 task_force = 5
 
 [[ship]]

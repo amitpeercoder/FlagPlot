@@ -316,7 +316,7 @@ function checkMeasuring() {
   let fx;
   try { fx = JSON.parse(fs.readFileSync(path.join(__dirname, 'measure_fixture.json'), 'utf8')); }
   catch (e) { fail('cannot read viewer/measure_fixture.json: ' + e.message); return; }
-  assert(fx.format === 'flagplot-measure-fixture' && fx.version === 1, 'unknown fixture format');
+  assert(fx.format === 'flagplot-measure-fixture' && fx.version === 2, 'unknown fixture format');
   assert(fx.hex_nm === Core.HEX_NM, 'the page says a hex is ' + Core.HEX_NM + ' nm, the engine says ' + fx.hex_nm);
   const before = failures;
   for (const c of fx.air) {
@@ -335,6 +335,7 @@ function checkMeasuring() {
       routes++;
       assert(got.sea !== null && JSON.stringify(got.sea.path) === JSON.stringify(c.path), label + ': page path differs from the engine path');
       assert(got.sea !== null && got.sea.steps === c.steps && got.sea.nm === c.nm, label + ': page ' + (got.sea && got.sea.nm) + ' nm, engine ' + c.nm);
+      assert(got.sea !== null && JSON.stringify(got.sea.charges) === JSON.stringify(c.charges), label + ': page step charges ' + (got.sea && JSON.stringify(got.sea.charges)) + ', engine ' + JSON.stringify(c.charges));
     }
     assert(got.air === Core.airDistanceNm(c.from[0], c.from[1], c.to[0], c.to[1]), label + ': air distance inconsistent');
   }
