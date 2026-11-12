@@ -1,6 +1,6 @@
 # Flag Plot — Step 2 Spec: Validation Harness
 
-Status: draft by the architect, Nov 12, 2026. Not approved. The questions at the end are the designer's to answer before any of it is built.
+Status: draft by the architect, Nov 12, 2026. The designer answered its five open questions the same day; they are under "Decided by the designer". The spec as a whole is not yet approved.
 
 `docs/pillars.md` gives step 2 one line: thousands of automated runs compared with historical outcomes, and the model tuned there, not by feel. This says what that means for the slice as it stands at the end of step 1.
 
@@ -13,17 +13,20 @@ In step 2:
 - Tuning the figures in `data/reference` and the three constants in `data/derivation/rules.toml`, all of which are placeholders today.
 - Changes to rules where no figure can produce the record. Decision 0024 already names three for Savo Island.
 
+- A second night action, Cape Esperance, built to check the surface figures on.
+
 Not in step 2: new subsystems (ground combat, submarines, weather), the staff planner, any change to what a player sees, and battles outside the slice.
 
 ## What is compared with what
 
-Three battles, the ones step 1 built with real ships and aircraft. The record is in `data/oob/engagement_outcomes.csv`; `docs/research/oob/step2-record.md` reads it out and says how firm each part is.
+Three battles to tune on, the ones step 1 built with real ships and aircraft, and one to check on. The record is in `data/oob/engagement_outcomes.csv`; `docs/research/oob/step2-record.md` reads it out and says how firm each part is.
 
 | Battle | Scenario | What it tests |
 | --- | --- | --- |
 | Savo Island, 8 to 9 August 1942 | `04_savo_island` | Night surface combat, surprise, break-off |
 | Eastern Solomons, 24 to 25 August 1942 | `05_eastern_solomons` | Search, the strike decision, air combat, damage to ships |
 | Rabaul against Guadalcanal, 21 August to 17 September 1942 | `06_rabaul_guadalcanal` | Range, fatigue, pilots, wear, repair, base supply |
+| Cape Esperance, 11 to 12 October 1942 | To be built | The surface figures, on a night they were not tuned on |
 
 Two smaller checks ride with them: ship passages against recorded times, and claims against losses (decision 0056).
 
@@ -46,7 +49,7 @@ A measure is one number taken from a run, with the recorded value beside it. Eac
 | Savo Island | Ships sunk by side and by type; ships crippled by side; which Allied group was hit; rounds until the Japanese break off |
 | Eastern Solomons | Ships sunk and crippled by side; bomb hits on each carrier; aircraft lost by side; whether each side found and struck the other |
 | Rabaul against Guadalcanal | Raid days; aircraft lost by side and by cause; aircraft ready at Henderson Field over time; supply used; days the field could not fly |
-| All three | The result on the objectives scale (decision 0054), beside history's result on that scale |
+| All | The result on the objectives scale (decision 0054), beside history's result on that scale. Reported and not judged, until the scale counts a ship that is out of the campaign |
 | Passages | Days at sea for the recorded runs the slice holds |
 | Claims | Claimed over actual, for aircraft and for ships, by side |
 
@@ -67,7 +70,7 @@ One night happened once. A model that gives the recorded outcome every time is a
 3. **Shape checks are stated per battle, as yes or no.** For example: at Savo Island the Allied side loses more ships than the Japanese in at least 8 runs of 10.
 4. **A battle passes when every judged measure agrees.** A miss is reported with the measure, the record, and the runs' spread.
 
-These widths are a proposal. They are question 1 below.
+The designer accepted these widths as a start. They are looked at again after the first reports.
 
 ## The harness
 
@@ -89,7 +92,7 @@ The harness is an umpire's tool, like the viewer. It reads truth. Nothing that p
 Tuned on one battle and checked on the same battle proves little. So:
 
 - **Air figures are tuned on the Eastern Solomons and checked on Rabaul against Guadalcanal,** which they were not tuned on.
-- **Surface figures have only Savo Island.** They can be fitted, not checked. A second night action is needed for that; see question 2.
+- **Surface figures are tuned on Savo Island and checked on Cape Esperance,** where the other side had the radar and the surprise. A model that gets Savo Island right only because the Japanese always win at night fails there. Cape Esperance is built after Savo Island is tuned and is never tuned on. It needs its ships derived and a scenario, about the work of one of step 1's.
 
 ## Tests while figures move
 
@@ -97,7 +100,7 @@ Step 1's scenario tests assert exact numbers from a hand calculation. Those numb
 
 Proposed:
 
-1. **The hand-calculation tests run on a frozen copy of the figures** as they stand at the end of step 1 (`data/reference/step1/`).
+1. **The hand-calculation tests run on a frozen copy of the figures** as they stand at the end of step 1 (`data/reference/step1/`), for the length of step 2. Whether to work the calculations again on the tuned figures, all of them or a few chosen to test the arithmetic at tuned sizes, is decided when step 2 closes.
 2. **One mechanism in the loader points a scenario at them:** a reference root the caller may override. A scenario file names its reference files by path, so without this each test would need its own copy of the scenario. One test already copies a figures file and rewrites the path in the scenario's text; that is replaced by the loader's mechanism, not repeated.
 3. **What such a test then proves is stated:** that the rules compute what the hand calculation says, on known figures. It proves nothing about the figures in use. That is `validate`'s job. Both run in CI.
 4. **The run baselines follow the live figures.** The files under `crates/sim-cli/tests/run_baseline` record what each scenario does on the figures in use, so they are remade in the same change as each tuning round, and the change shows the difference.
@@ -105,7 +108,7 @@ Proposed:
 
 ## Rule work that comes before tuning
 
-A figure cannot be tuned to cover for a rule that is missing. These are decided or listed already; the spec only says where each stands against the tuning.
+A figure cannot be tuned to cover for a rule that is missing. So the rules that decide which strikes fly and what they hit are built before the air figures are tuned. The harness, the measures files and a first report on today's figures are built meanwhile; that report is the baseline.
 
 | Item | State | Must it land before tuning? |
 | --- | --- | --- |
@@ -114,7 +117,8 @@ A figure cannot be tuned to cover for a rule that is missing. These are decided 
 | Strike target priority as an order | On the opening list; not yet decided | Yes for the Eastern Solomons: what a strike goes for decides which ships are hit |
 | Reach beyond the radius, and a range policy order | On the opening list; not yet decided | Yes for the Eastern Solomons and the air campaign: it decides which strikes fly at all |
 | Ship repair | On the opening list; not yet decided | No. It matters to a campaign, not to one battle's losses |
-| "Out of the campaign" on the objectives scale | On the opening list; not yet decided | Before the result on the scale is judged. See question 4 |
+| "Out of the campaign" on the objectives scale | On the opening list; not yet decided | No. Until it lands the result on the scale is reported and not judged |
+| Two names for "crippled" | Not started | No, but soon: the glossary means flotation damage of 50 or more, and the objective `ships_crippled` means propulsion or flight deck out |
 
 `docs/step2-opening-list.md` stays the working list of these. Each becomes a decision record with a hand calculation, as in step 1.
 
@@ -125,10 +129,12 @@ A figure cannot be tuned to cover for a rule that is missing. These are decided 
 - The frozen-figure tests, the invariants, the determinism scenario and the soak still pass.
 - The legibility test is run again on the tuned Eastern Solomons.
 
-## Questions for the designer
+## Decided by the designer
 
-1. **Widths.** Is "the record inside the middle 90 percent, and not rarer than 1 run in 20" the right test? Narrower bands demand more of the model than one night can support.
-2. **A second night action.** Cape Esperance (11 to 12 October 1942) would let the surface figures be checked on a battle they were not fitted to. It is inside the slice but later than anything built so far, some facts for it are already in `data/oob`, and its ships would need deriving. Add it to step 2, or accept fitted surface figures?
-3. **Frozen figures for the hand-calculation tests.** Agreed as set out under "Tests while figures move", or should exact numbers follow the live figures and be recalculated each round?
-4. **Scoring.** Enterprise at the Eastern Solomons was flying again within the hour and then away for 53 days. Decision 0054's test for "crippled" does not count her. The word also has two meanings today: the glossary's "crippled" is flotation damage of 50 or more, while the objective `ships_crippled` counts a ship not sunk, in port or at sea, with propulsion or flight deck out. The opening list proposes points for a ship that must leave for repair. Should that be settled before the result on the scale is used as a measure, or should the scale be left out of the measures until it is?
-5. **Order of the rule work.** The table under "Rule work that comes before tuning" puts strike target priority and reach beyond the radius ahead of tuning the air figures. Agreed, or tune first on the rules as they are and see how far the figures get?
+On Nov 12, 2026, on the architect's recommendation in each case.
+
+1. **Widths.** A measure agrees if the record lies inside the middle 90 percent of the runs and holds at least 1 run in 20. A start, looked at again after the first reports.
+2. **A second night action.** Cape Esperance is added as a check on the surface figures, built after Savo Island is tuned and never tuned on.
+3. **Frozen figures.** The hand-calculation tests run on the step 1 figures, frozen, for the length of step 2. Working them again on the tuned figures is decided when step 2 closes.
+4. **Scoring.** The result on the objectives scale is reported and not judged until the scale counts a ship that is out of the campaign. Tuning is judged on direct measures: ships sunk, hits, aircraft lost.
+5. **Order of the rule work.** Strike target priority as an order, and reach beyond the radius, are built before the air figures are tuned.
