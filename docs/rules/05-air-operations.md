@@ -308,7 +308,7 @@ If the raid has escorts (with more than 0 aircraft) and meets a patrol (a share 
 
 Each shot is one draw from a stream keyed on (the first escort group, the target: the task force attacked, or the base). A hit is an aircraft lost. The losses are not taken in this raid's turn: the hits of all the raids' escorts are added up per patrol and taken, lowest patrol group first, when the rolls are recorded, each group down to 0. Hits beyond the patrol's aircraft are wasted. The patrol's pool is its aircraft at the start of the step. Records `AirFight` (firer: first escort group, target: first patrol group, firing escorts, at patrol, shots, chance, expected, hits). [0027, 0029, 0033]
 
-A side sees: `AirFight` for its own escorts as the firer, cut to the shots. The defender sees its own `AircraftLost` and `PilotsLost` only. It does not see the escorts' shots or hits.
+A side sees: `AirFight` for its own escorts as the firer, cut to the shots and without the group fired at (decision 0065). The defender sees its own `AircraftLost` and `PilotsLost` only. It does not see the escorts' shots or hits.
 
 ### The patrol against the escorts and the bombers
 
@@ -319,7 +319,7 @@ If the raid meets a patrol, the patrol fires from one stream keyed on (the first
 
 So escorts draw the patrol off the bombers one for one, and a raid with no escorts takes its whole share. Records `AirFight` for each roll (firer: first patrol group, target: first escort or first strike group, firing patrol, at escorts or bombers). The breakdown of a patrol roll lists, first, the whole patrol, the raid's aircraft, the aircraft of all the raids, and the raid's share, then the shots and chance. [0027, 0029, 0033]
 
-A side sees: `AirFight` for its own patrol, cut to the shots. The attacker sees only its own `AircraftLost`.
+A side sees: `AirFight` for its own patrol, cut to the shots and without the group fired at (decision 0065). The attacker sees only its own `AircraftLost`.
 
 ### Anti-aircraft fire
 
@@ -330,7 +330,7 @@ The guns of the target fire at the bombers that are left (the strike groups' air
 
 The chance is `air_combat.toml: anti_aircraft_hit_chance` times the protection factors of the first strike group's type. Hits come off the strike groups, lowest first, no more than they have. There is no ammunition limit. [0027, 0029, 0034, 0033]
 
-A side sees: `AntiAircraftFire` or `BaseAntiAircraftFire` for its own ships or base, cut to the shots. The attacker sees its own `AircraftLost`.
+A side sees: `AntiAircraftFire` or `BaseAntiAircraftFire` for its own ships or base, cut to the shots and without the raid's group (decision 0065). The attacker sees its own `AircraftLost`.
 
 ### Each shot is rolled
 
@@ -378,7 +378,7 @@ The attack's draws, in order, are one per shot, then per hit its track (a bomb o
 
 `AirAttack` is recorded (group, task force, ship, weapon, shots, chance, expected, hits), caused by the strike's launch and by every `AircraftLost` event of that group in the raid.
 
-A side sees: the attacker sees `AirAttack` for its own group, cut to the aircraft and the weapon. The ship attacked sees an `AirAttack` against it, cut to the group, the task force, the ship and the shots (one shot for each aircraft that attacked). It sees the damage to its own ships (`ShipDamaged`, `SystemHit`, `ShipSunk`), whole.
+A side sees: the attacker sees `AirAttack` for its own group, cut to the aircraft and the weapon, without the ship or its force (decision 0065). The ship attacked sees an `AirAttack` against it, cut to the task force, the ship and the shots (one shot for each aircraft that attacked), without the attacking group. It sees the damage to its own ships (`ShipDamaged`, `SystemHit`, `ShipSunk`), whole.
 
 ### The attack on a base
 
@@ -396,7 +396,7 @@ Then one draw for each hit decides where it lands, in the order: below `air_comb
 
 **Hits on nothing** change nothing. A side holds no belief about a base's contents, so no report follows. Nothing in the rules damages a base's port or airfield. [0034, 0052]
 
-A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The side that holds the base sees it whole, with the hits and where they landed, and its own `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround` and `BaseSupplyDestroyed`.
+A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The side that holds the base sees it with the hits and where they landed and without the raiding group (decision 0065), and its own `AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround` and `BaseSupplyDestroyed`.
 
 ### The report and the claim
 

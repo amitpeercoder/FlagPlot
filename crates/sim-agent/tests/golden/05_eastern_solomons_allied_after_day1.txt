@@ -32,24 +32,23 @@ CONTACTS
 ACTION YESTERDAY
 - Fights at sea: none
 - Salvoes fired at sea: none
-- Patrol fire: air_group:1 "VF-6" at the escorts of air_group:11, 6 shots [event 21]
-- Patrol fire: air_group:1 "VF-6" at the bombers of air_group:12, 22 shots [event 22]
-- Patrol fire: air_group:1 "VF-6" at the escorts of air_group:14, 5 shots [event 25]
-- Patrol fire: air_group:1 "VF-6" at the bombers of air_group:15, 21 shots [event 26]
-- Anti-aircraft fire: task_force:1 "Task Force 16" at the raid of enemy air_group:12, 123 shots [event 23]
-- Anti-aircraft fire: task_force:1 "Task Force 16" at the raid of enemy air_group:15, 123 shots [event 27]
+- Patrol fire: air_group:1 "VF-6" at the enemy's escorts, 6 shots [event 21]
+- Patrol fire: air_group:1 "VF-6" at the enemy's bombers, 22 shots [event 22]
+- Patrol fire: air_group:1 "VF-6" at the enemy's escorts, 5 shots [event 25]
+- Patrol fire: air_group:1 "VF-6" at the enemy's bombers, 21 shots [event 26]
+- Anti-aircraft fire: task_force:1 "Task Force 16" at a raid, 123 shots [event 23]
+- Anti-aircraft fire: task_force:1 "Task Force 16" at a raid, 123 shots [event 27]
 - Naval strike launched: air_group:2 "VB-6" at contact:1, place (7,-10), 17 aircraft, 200 miles [event 16]
 - Naval strike launched: air_group:6 "VB-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 17]
 - Naval strike launched: air_group:7 "VS-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 18]
-- Air attack: air_group:2 "VB-6" on ship:33, 16 aircraft, bombs [event 29]
+- Air attack: air_group:2 "VB-6", 16 aircraft, bombs [event 29]
   - Report: refreshed contact contact:1, 5 ships estimated, taken for carrier, at (7,-10) [event 34]
-- Air attack: air_group:6 "VB-3" on ship:33, 14 aircraft, bombs [event 30]
+- Air attack: air_group:6 "VB-3", 14 aircraft, bombs [event 30]
   - Report: refreshed contact contact:1, 4 ships estimated, taken for cruiser, at (7,-10) [event 35]
-- Air attack: air_group:7 "VS-3" on ship:33, 15 aircraft, bombs [event 31]
+- Air attack: air_group:7 "VS-3", 15 aircraft, bombs [event 31]
   - Report: refreshed contact contact:1, 3 ships estimated, taken for carrier, at (7,-10) [event 36]
 - Raids on bases: none
-- Attack on ship:1 "USS Enterprise" by enemy air_group:12: 12 aircraft
-- Attack on ship:1 "USS Enterprise" by enemy air_group:15: 15 aircraft
+- Attack on ship:1 "USS Enterprise" from the air: 27 aircraft, 2 attacks
 
 LOSSES YESTERDAY
 - Ships sunk: none

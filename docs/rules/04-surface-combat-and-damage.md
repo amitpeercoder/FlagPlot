@@ -34,7 +34,7 @@ A fight is dark if the pulse is the night pulse and light otherwise. The hex is 
 
 A fight holds the two forces (lower ID first), the hex, whether it is dark, and the ships each force had afloat when it began (`began_with`, in ship ID order). It records `EngagementBegun`, which cites the steaming event that brought a force into the hex, if one did, and each force's rules of engagement order, or failing that its route order. The fight's state is gone when the fight ends. [0014, 0022]
 
-A side sees: `EngagementBegun` whole, once the side knows of the fight. [0047]
+A side sees: `EngagementBegun` once the side knows of the fight, with its own force and without the enemy's. [0047, 0065]
 
 ## Alertness and readiness
 
@@ -68,7 +68,7 @@ Each round, each force that has not yet sighted the enemy is taken in turn, lowe
 
 A force that has sighted does not roll again. Both forces can sight in the same round. `SightingRoll` records each roll, with its chance, the fatigue factor and the result, and cites the beginning of the fight.
 
-A side sees: its own sighting roll, whole, only if it sighted. A roll that did not sight is hidden from both sides. [0047]
+A side sees: its own sighting roll, only if it sighted, without the force sighted. A roll that did not sight is hidden from both sides. [0047, 0065]
 
 ### Radar of unknown fit
 
@@ -88,7 +88,7 @@ The effective stance of a force is avoid if it broke off or slipped away earlier
 
 If both forces have sighted, neither slips, whatever their stances. [0014]
 
-A side sees: `ForceSlippedAway` whole, for the force that slipped. The other side does not see it. [0047]
+A side sees: `ForceSlippedAway` for the force that slipped, without the force it slipped away from. The other side does not see it. [0047, 0065]
 
 ### Who fires
 
@@ -98,13 +98,13 @@ Ships are matched in ship ID order. The ship in place i of a force's afloat list
 
 Known limit: there is no range. There is one night chance and one day chance, and no opening or closing of the range. Target choice by value, fire or distance is not built. [0014]
 
-A side sees: its own ship's salvo, cut: the round, the firer, the target, the weapon and the shots, without the chance, the expected hits or the hits scored. The side whose ship is the target sees that it was fired on: the round, the firer, the target and the weapon. The firer's side keeps the breakdown factors that are its own (guns, tubes, rate, minutes, the main battery, torpedo mount and fire control factors). [0047]
+A side sees: its own ship's salvo, cut: the round, the firer, the weapon and the shots, without the target, the chance, the expected hits or the hits scored. The side whose ship is the target sees that it was fired on: the round, the target and the weapon, without the firing ship (decision 0065). The firer's side keeps the breakdown factors that are its own (guns, tubes, rate, minutes, the main battery, torpedo mount and fire control factors). [0047]
 
 ### Surprise
 
 A force is surprised in a round if it has not sighted the enemy after the sighting step, the enemy has, and at least one ship of the enemy has shots above zero to fire this round, from its guns or its torpedoes. A force that is surprised does not fire: only forces that have sighted fire. Fire at a surprised force is more accurate (see the hit chance). `ForceSurprised` records it, citing the enemy's sighting roll or else the beginning of the fight. [0014]
 
-A side sees: `ForceSurprised` whole, for the force that was surprised. The enemy does not see it. [0047]
+A side sees: `ForceSurprised` for the force that was surprised, without the force that surprised it. The enemy does not see it. [0047, 0065]
 
 ### Shots
 
@@ -236,13 +236,13 @@ If neither force sights the enemy in `max_rounds` rounds, they pass unseen. [001
 
 A force that breaks off, or slips away, avoids action for the rest of the pulse. It takes the avoid stance in every fight it has: it slips away if it sights an enemy that has not sighted it, and otherwise fights back and breaks off at the end of the first round in which it is fired on. At the start of the next pulse it takes up its ordered stance again. This is not stored. The `ForceBrokeOff` and `ForceSlippedAway` events are the record. Breaking off does not move a force: it keeps to its route, and a force with no route stays. [0022]
 
-A side sees: `ForceBrokeOff` and `ForceSlippedAway` whole, for its own force. The enemy does not see them. A force that breaks off in a round in which it has neither sighted nor been fired on is not shown the break-off, because showing it would say an enemy was there. [0047]
+A side sees: `ForceBrokeOff` whole and `ForceSlippedAway` without the enemy's force, for its own force. The enemy does not see them. A force that breaks off in a round in which it has neither sighted nor been fired on is not shown the break-off, because showing it would say an enemy was there. [0047]
 
 ## The end of the fight
 
 When the fight ends, `EngagementEnded` records the round, the hex and the reason, and cites the ending causes. Then, lower force first, each force reports and claims. After them, if any salvo was fired, the alarm sounds. [0014, 0021]
 
-A side sees: `EngagementEnded` whole, once it knows of the fight. [0047]
+A side sees: `EngagementEnded` once it knows of the fight, with its own force and without the enemy's. [0047, 0065]
 
 ### The report and the claim
 
