@@ -1,6 +1,6 @@
 # Flag Plot — Step 2 Spec: Validation Harness
 
-Status: draft by the architect, Nov 12, 2026. The designer answered its five open questions the same day; they are under "Decided by the designer". The spec as a whole is not yet approved.
+Status: approved by the designer on Nov 12, 2026. Written by the architect; the designer's answers to its five open questions are under "Decided by the designer". It is the source of truth for step 2.
 
 `docs/pillars.md` gives step 2 one line: thousands of automated runs compared with historical outcomes, and the model tuned there, not by feel. This says what that means for the slice as it stands at the end of step 1.
 
