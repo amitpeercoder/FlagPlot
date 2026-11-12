@@ -14,17 +14,27 @@ ships = []
 # first day is 1942-10-11, so the three months are 1942-07-11 to 1942-10-11,
 # and a new ship is one commissioned after 1941-10-11.
 #
-# The ship-crew rows carry no valid_from or valid_to, so each answer below
-# gives the period its row's text gives.
+# The rows now carry their periods (valid_from, valid_to), so an answer gives
+# none and the tool reads them.
 #
-# Not answered, on purpose:
+# THE ARCHITECT'S SETTLEMENTS, Nov 12, 2026. The statement is
+# training_facts.csv row 74 (the Navy's combat narrative): Task Force SUGAR
+# "held target practice 8 Oct and brief antiaircraft practice that night",
+# dated 20 September to 8 October 1942. An antiaircraft practice at night is
+# an exercise at night. A statement about a force answers for a ship only if a
+# row names her as part of it at that time:
+# - Farenholt (sf:1081), Buchanan (sf:1082), Laffey (sf:1083): each named as
+#   one of the three destroyers of the force as first organised, with it on 7
+#   and 8 October. Yes. 2 - 1 (new ship) + 1 = 2.
+# - Duncan (sf:1084) and McCalla (sf:1085): rows say each was not with the
+#   force for the practices of 8 October. Not answered. 2 - 1 = 1.
 # - Helena. sf:1050 says she joined Task Force SUGAR from Espiritu Santo and
 #   does not say she exercised. Both her commissioning dates are before the
-#   line.
-# - Farenholt, Duncan, Laffey, Buchanan, McCalla. tf:74 (ONI) is about the
-#   force, and no preferred row names these ships in it at the exercises of
-#   7 and 8 October; the rows that would (the Wikipedia rows, sf:1045, 1047,
-#   1049) are not preferred. They are new ships by question 3.
+#   line. Not answered.
+# - The Japanese cruisers and the war diaries (sf:1086 to 1122): no value
+#   changes (see savo_island.toml). The five Japanese ships keep 3, by the
+#   designer's decision of Nov 12, 2026 ("Keep it").
+# Unchanged: San Francisco, Boise, Salt Lake City 3; Helena 2.
 [experience]
 engagement = "cape-esperance"
 output = "../reference/ship_experience_cape_esperance.ships.csv"
@@ -41,8 +51,6 @@ ship = "ca-25-salt-lake-city"
 question = "night_practice_recent"
 row = "ship_facts.csv:1033"
 answer = "yes"
-from = "1942-10-07"
-to = "1942-10-07"
 reason = "Her deck log of 7 October 1942: general quarters for night firing practice with San Francisco and Boise."
 
 [[experience.answer]]
@@ -50,8 +58,6 @@ ship = "ca-38-san-francisco"
 question = "night_practice_recent"
 row = "ship_facts.csv:1036"
 answer = "yes"
-from = "1942-10-07"
-to = "1942-10-07"
 reason = "Salt Lake City's deck log of 7 October 1942 names San Francisco in company and firing on a target in the night firing practice."
 
 [[experience.answer]]
@@ -59,6 +65,29 @@ ship = "cl-47-boise"
 question = "night_practice_recent"
 row = "ship_facts.csv:1037"
 answer = "yes"
-from = "1942-10-07"
-to = "1942-10-07"
 reason = "Salt Lake City's deck log of 7 October 1942 names Boise in company in the night firing practice."
+
+# The three destroyers of the force as first organised.
+[[experience.answer]]
+ship = "dd-491-farenholt"
+question = "night_practice_recent"
+row = "training_facts.csv:74"
+named_by = ["ship_facts.csv:1081"]
+answer = "yes"
+reason = "The Navy's narrative has the force hold target practice on 8 October and brief antiaircraft practice that night, an exercise at night; she was one of its three destroyers as first organised, with it on 7 and 8 October (sf:1081)."
+
+[[experience.answer]]
+ship = "dd-484-buchanan"
+question = "night_practice_recent"
+row = "training_facts.csv:74"
+named_by = ["ship_facts.csv:1082"]
+answer = "yes"
+reason = "The Navy's narrative has the force hold target practice on 8 October and brief antiaircraft practice that night, an exercise at night; she was one of its three destroyers as first organised, with it on 7 and 8 October (sf:1082)."
+
+[[experience.answer]]
+ship = "dd-459-laffey"
+question = "night_practice_recent"
+row = "training_facts.csv:74"
+named_by = ["ship_facts.csv:1083"]
+answer = "yes"
+reason = "The Navy's narrative has the force hold target practice on 8 October and brief antiaircraft practice that night, an exercise at night; she was one of its three destroyers as first organised, with it on 7 and 8 October (sf:1083)."

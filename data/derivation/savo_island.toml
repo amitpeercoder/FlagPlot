@@ -49,20 +49,72 @@ main_gun_ammunition_not_limiting = ["tenryu", "yubari", "yunagi"]
 # above, plus HMAS Australia, who is in ships.csv and takes no part in the
 # class derivation.
 #
-# The ship-crew rows carry no valid_from or valid_to, so each answer below
-# gives the period its row's text or note gives. When the research session
-# dates the rows, the answers can go.
+# The rows now carry the periods (valid_from, valid_to), so an answer gives
+# none and the tool reads them; only the two Atlantic rows (sf:1016 and 1017)
+# have none, and their answers give them.
 #
+# THE ARCHITECT'S SETTLEMENTS, Nov 12, 2026. The statement is sf:1019 to
+# 1021 (Crutchley, in Gill): Australia and Canberra did some night training
+# "with Chicago and Destroyer Squadron 4", at Brisbane, May to July 1942. A
+# statement about a force or a squadron answers for a ship only if a row
+# names her as part of it at that time (pull request 137). "At that time"
+# means a row puts her with that force during the period the statement is
+# dated to; a list of the squadron on one day does not by itself show that,
+# as its own note says. So each destroyer below is answered by the statement
+# and named_by the row that names her in the squadron together with a row
+# that puts her with the force at Brisbane inside May to July.
+# - Helm: named in the squadron (sf:1064) and joined Task Force 44 at
+#   Brisbane on 19 May 1942 (sf:1072). Yes.
+# - Bagley: named (sf:1068) and arrived at Brisbane on 30 May 1942 (sf:1074).
+#   Yes.
+# - Ralph Talbot: named (sf:1066) and left Brisbane with the force on 14 July
+#   1942 (sf:1070), having left Hawaii on 14 June (sf:1078): with the force at
+#   Brisbane inside the period, if briefly. Yes.
+# - Patterson: named (sf:1065). Her two rows on where she was are disputed
+#   between Gill (left Brisbane with the force on 14 July, sf:1069) and the
+#   ship dictionary (left Brisbane on 22 June, sf:1075); both put her at
+#   Brisbane inside the period. Yes, by the rule for rows that are all
+#   disputed and agree, and the answer names all of them.
 # Not answered, on purpose:
+# - Jarvis. Named (sf:1067). Her two rows are disputed and disagree on the
+#   answer: Gill has her leaving Brisbane with the force (sf:1071), the
+#   dictionary has her at Sydney from 18 June (sf:1076). Not answered.
+# - Blue. Named (sf:1063) on 7 July, and the dictionary has her on convoys
+#   from Pearl Harbor until June and then at Wellington (sf:1077); no row puts
+#   her at Brisbane. Not answered.
+# - Wilson. No row names her in the squadron.
 # - Astoria. sf:1018 says she "had recently held some night target
 #   practices", with no date: question 1 is not answered. Question 2 is not
 #   answered either, because a row says she held some.
-# - Bagley, Patterson, Helm, Wilson, Blue, Ralph Talbot, Jarvis. sf:1019 to
-#   1021 say Chicago, Canberra and Australia trained at night with
-#   Destroyer Squadron 4, but no row names the squadron's ships, and a
-#   statement about a squadron answers for a ship only if a row names her.
 # - tf:71 ("practically none of the ships assigned to TF 62 had engaged in
 #   any night battle exercise") names no ship it answers for.
+# Unchanged: the eight Japanese ships 3; Vincennes and Quincy 1; Astoria 2;
+# Chicago, Canberra and Australia 3.
+#
+# THE JAPANESE SHIPS, and what the Japanese cruiser divisions' war diaries
+# (sf:1086 to 1122) do and do not say. No value changes.
+# - No row says a Japanese cruiser fired or exercised at night inside the
+#   three months. The drills and firings the 6th Cruiser Division's diary
+#   records in July and October 1942 (sf:1102 to 1105, 1109 to 1111) say "the
+#   diary does not say" whether by night.
+# - Tenryu: the 18th Cruiser Division's order for the passage to Truk
+#   schedules a searchlight drill and a night formation-keeping test in June
+#   1942 (sf:1117), inside her three months. It is an order, "not a record
+#   that they were done", and the record of what was done (sf:1118) does not
+#   say night. An order is not a statement that she exercised. Not answered.
+# - The rows that say the diaries record no night exercise (sf:1098 to 1101,
+#   1112 to 1116) are the researcher's finding of an absence, of low
+#   confidence and unconfirmed, in diaries with months missing. An absence is
+#   a gap and answers no question.
+# - THE DESIGNER'S DECISION, Nov 12, 2026: shown that the only rows about
+#   these ships themselves fail to confirm the navy-level statement, and that
+#   the 18th Division's own lessons after Savo Island ask for "still more
+#   earnest, intensive training" in opening fire promptly and in rate of fire
+#   (sf:1121), the designer decided the Japanese ships keep the point for
+#   their navy's night training (training_facts rows 32 and 87). His words:
+#   "Keep it". The weak leg of decision 5 is weaker for it: the point rests on
+#   a statement about a navy that the diaries of these ships' own divisions do
+#   not confirm.
 [experience]
 engagement = "savo-island"
 output = "../reference/ship_experience_savo_island.ships.csv"
@@ -78,7 +130,7 @@ ships = [
 # (sf:949: sailed from New York 4 March 1942; sf:950: Atlantic Fleet until 14
 # March 1942), so the period ends in March 1942 and began, at the latest, in
 # December 1940. It reaches into the twelve months. No row says either held
-# one after.
+# one after. These two rows state no period, so the answers give it.
 [[experience.answer]]
 ship = "ca-44-vincennes"
 question = "no_night_practice"
@@ -98,32 +150,61 @@ to = "1942-03"
 reason = "Bates: in at least fifteen Atlantic months neither Vincennes nor Quincy held a night target practice or night battle exercise; she left the Atlantic in March 1942 (sf:950)."
 
 # Chicago, Canberra, Australia: some night training together at Brisbane,
-# May to July 1942, by the note of the rows (Task Force 44 was at Brisbane
-# then). sf:1022 (no ship had fired at night within eight months) is about
-# firing and does not contradict night training, so it is no conflict.
+# May to July 1942, by the rows' own dates. sf:1022 (no ship had fired at
+# night within eight months) is about firing and does not contradict night
+# training, so it is no conflict.
 [[experience.answer]]
 ship = "ca-29-chicago"
 question = "night_practice_recent"
 row = "ship_facts.csv:1021"
 answer = "yes"
-from = "1942-05"
-to = "1942-07"
-reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
+reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4, at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
 
 [[experience.answer]]
 ship = "hmas-canberra"
 question = "night_practice_recent"
 row = "ship_facts.csv:1019"
 answer = "yes"
-from = "1942-05"
-to = "1942-07"
-reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
+reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4, at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
 
 [[experience.answer]]
 ship = "hmas-australia"
 question = "night_practice_recent"
 row = "ship_facts.csv:1020"
 answer = "yes"
-from = "1942-05"
-to = "1942-07"
-reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942."
+reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4, at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
+
+# The four destroyers of Destroyer Squadron 4 that a row puts with the force
+# at Brisbane inside the period. The statement is sf:1019 (the same words as
+# 1020 and 1021).
+[[experience.answer]]
+ship = "dd-388-helm"
+question = "night_practice_recent"
+row = "ship_facts.csv:1019"
+named_by = ["ship_facts.csv:1064", "ship_facts.csv:1072"]
+answer = "yes"
+reason = "Named in Destroyer Squadron 4 (sf:1064) and joined Task Force 44 at Brisbane on 19 May 1942 (sf:1072), inside Crutchley's period of May to July 1942."
+
+[[experience.answer]]
+ship = "dd-386-bagley"
+question = "night_practice_recent"
+row = "ship_facts.csv:1019"
+named_by = ["ship_facts.csv:1068", "ship_facts.csv:1074"]
+answer = "yes"
+reason = "Named in Destroyer Squadron 4 (sf:1068) and arrived at Brisbane on 30 May 1942 (sf:1074), inside Crutchley's period of May to July 1942."
+
+[[experience.answer]]
+ship = "dd-390-ralph-talbot"
+question = "night_practice_recent"
+row = "ship_facts.csv:1019"
+named_by = ["ship_facts.csv:1066", "ship_facts.csv:1070", "ship_facts.csv:1078"]
+answer = "yes"
+reason = "Named in Destroyer Squadron 4 (sf:1066); left Hawaii on 14 June 1942 (sf:1078) and left Brisbane with the force on 14 July (sf:1070): with the force at Brisbane inside Crutchley's period, if briefly."
+
+[[experience.answer]]
+ship = "dd-392-patterson"
+question = "night_practice_recent"
+row = "ship_facts.csv:1019"
+named_by = ["ship_facts.csv:1065", "ship_facts.csv:1069", "ship_facts.csv:1075"]
+answer = "yes"
+reason = "Named in Destroyer Squadron 4 (sf:1065). Her two rows on where she was are disputed, Gill having her leave Brisbane with the force on 14 July (sf:1069) and the ship dictionary on 22 June (sf:1075); both put her at Brisbane inside Crutchley's period of May to July 1942, so the answer stands by the rule for disputed rows that agree, and names both."
