@@ -1,6 +1,6 @@
 # 0064: Experience
 
-Status: proposed, needs review. This is the plan for the designer's approval. Nothing is built, and no unit has a value yet. The hand calculation is written once the plan is approved, before any code is delegated.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its four questions. Nothing is built yet, and no unit has a value. The hand calculation is written before any code is delegated, and this record gains an "As built" section with each stage.
 
 ## The gap
 
@@ -19,7 +19,7 @@ From `docs/research/oob/experience.md` and the rows it names.
 
 So the ships can carry a value now, with one weak leg named below. The air groups are thinner, and the plan takes them second.
 
-## Decisions proposed
+## Decisions
 
 ### The number
 
@@ -40,7 +40,7 @@ So the ships can carry a value now, with one weak leg named below. The air group
 
    On that reading the Japanese cruisers are 3 at both battles; Vincennes and Quincy are 1; Chicago, Canberra and Australia are 2; Scott's three practised cruisers are 3, Helena 2 and his new destroyers 1. These are an illustration of the rule, not settled values.
 
-5. **The last question is the weak leg.** It is the only thing in the facts that lifts the Japanese above an ordinary Allied cruiser, and it is a statement about a navy, not about a ship. The research warns that several statements about the Japanese were written after the battle by the side that lost it. This one rests on Japanese officials and records, and was read at the source. The architect will commission a second source on Japanese night training before the values are fixed. If the designer will not admit a statement about a navy, the rows cannot tell the two sides apart at Savo Island, and by the spec's fourth condition experience waits.
+5. **The last question is the weak leg.** It is the only thing in the facts that lifts the Japanese above an ordinary Allied cruiser, and it is a statement about a navy, not about a ship. The research warns that several statements about the Japanese were written after the battle by the side that lost it. This one rests on Japanese officials and records, and was read at the source. The architect will commission a second source on Japanese night training before the values are fixed. The designer admitted a statement about a navy on Nov 12, 2026, with the second source to be commissioned first. Without it the rows could not tell the two sides apart at Savo Island, and by the spec's fourth condition experience would wait.
 
 ### What reads it (stage 1)
 
@@ -106,9 +106,11 @@ Cape Esperance is built after Savo Island is tuned and is never tuned on. On the
 | Reads | A ship's experience and whether the fight is dark; the three strength figures. In stage 2, an air group's experience, the replacements arriving and their service's value, and three more strength figures |
 | Writes | Nothing in stage 1: a ship's experience is set when the scenario loads and does not change. In stage 2, an air group's experience when replacements join it, with an event that names them |
 
-## Questions for the designer
+## Answered by the designer
 
-1. **May a statement about a navy's training feed a ship's value?** Decision 5. Recommended: yes, with a second source commissioned first. Without it experience waits and the surface figures stay marked as fitted and not checked.
-2. **Night only?** Decision 8. Recommended.
-3. **Air groups: derive the values and show them before any rule reads them?** Decision 9. Recommended.
-4. **Leave out experience that rises with time and action, for step 2?** Recommended.
+On Nov 12, 2026, as recommended in each case.
+
+1. **May a statement about a navy's training feed a ship's value?** Yes (decision 5), with a second source commissioned before the values are fixed.
+2. **Night only?** Yes (decision 8).
+3. **Air groups: derive the values and show them before any rule reads them?** Yes (decision 9).
+4. **Leave out experience that rises with time and action, for step 2?** Yes.

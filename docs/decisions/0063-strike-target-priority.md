@@ -1,6 +1,6 @@
 # 0063: Strike target priority as an order
 
-Status: proposed, needs review. This is the plan for the designer's approval. Nothing is built. The hand calculation is written once the plan is approved, before any code is delegated.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its three questions. Nothing is built yet. The hand calculation is written before any code is delegated, and this record gains an "As built" section when the rule lands.
 
 ## The gap
 
@@ -10,7 +10,7 @@ Status: proposed, needs review. This is the plan for the designer's approval. No
 
 The spec puts this rule before the air figures are tuned (`docs/step2-spec.md`, "Decided by the designer", 5): what a strike goes for decides which ships are hit.
 
-## Decisions proposed
+## Decisions
 
 ### The target list
 
@@ -77,8 +77,10 @@ Groups 1 and 2 fly to different hexes, so they are two raids, and the escorts go
 | Reads | The group's target list; its side's contacts (estimated kind, hex, age); the group's reach; over the target, the enemy forces at the hex and their ships afloat; for a base strike, whether the group has flown at its base that day |
 | Writes | The group's target list and the order that set it; the strike launched (working data of the pulse) |
 
-## Questions for the designer
+## Answered by the designer
 
-1. **Attack what it finds, or come home?** Decision 4 proposes that a strike sent at the wrong kind attacks what is there. Recommended.
-2. **Is the list enough to hold a strike?** Decision 2 has no separate hold order. Recommended: a second order would be a second way to say the same thing.
-3. **The afternoon base strike in this record, or its own?** Decision 7 is a change to another rule. It is here because it is what lets Ryujo's raid fly. Recommended: here.
+On Nov 12, 2026, as recommended in each case.
+
+1. **Attack what it finds, or come home?** A strike sent at the wrong kind attacks what is there (decision 4).
+2. **Is the list enough to hold a strike?** Yes. There is no separate hold order (decision 2): a second order would be a second way to say the same thing.
+3. **The afternoon base strike in this record, or its own?** Here (decision 7), because it is what lets Ryujo's raid fly.

@@ -70,7 +70,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0060 | A claim's breakdown is the umpire's: a side sees its claim whole and no breakdown of it, because the breakdown says how much of the claim is real | Confirmed |
 | 0061 | A search that sighted is shown to its side cut: the group and the force, without the distance or the chance, which are worked from the force's true position. Open: whether an event should name an enemy force by its number | Confirmed; the open question needs review |
 | 0062 | What `batch` records for each run: counts from the event log and end state for every step 2 measure, header tables, batch file version 2; no rule, no state | Settled |
-| 0063 | Strike target priority as an order: a list of kinds a strike group goes for, in order; a kind off the list is never launched at, which holds a strike; a base strike may fly in the afternoon. A plan, not built | Needs review |
-| 0064 | Experience: a value from 0 to 4 for a ship and an air group, derived from fact rows by yes or no questions and fixed before tuning; ships first, read at night by the hit and sighting chances; air groups second. A plan, not built | Needs review |
+| 0063 | Strike target priority as an order: a list of kinds a strike group goes for, in order; a kind off the list is never launched at, which holds a strike; a base strike may fly in the afternoon. Approved as a plan; not built yet | Confirmed |
+| 0064 | Experience: a value from 0 to 4 for a ship and an air group, derived from fact rows by yes or no questions and fixed before tuning; ships first, read at night by the hit and sighting chances; air groups second. Approved as a plan; not built yet | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.
