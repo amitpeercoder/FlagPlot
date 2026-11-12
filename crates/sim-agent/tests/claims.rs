@@ -51,6 +51,13 @@ fn the_briefing_lists_claims_yesterday_and_explain_shows_the_firing_each_rests_o
             valid(&schemas, "explain.schema.json", &answer, "explain");
             let nodes = answer["nodes"].as_array().expect("nodes");
             assert_eq!(nodes[0]["event_kind"], "claim_received");
+            // The claim's breakdown splits it into real and false, which is
+            // the enemy's truth: a side is not shown it (decision 0060).
+            assert!(nodes[0]["breakdown"].is_null(), "{}", nodes[0]);
+            assert!(
+                !answer.to_string().contains("real_") && !answer.to_string().contains("false_"),
+                "{answer}"
+            );
             let causes: Vec<&Value> = nodes[0]["causes"]
                 .as_array()
                 .expect("causes")

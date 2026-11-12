@@ -384,6 +384,8 @@ The causes of an event are cut the same way. A cause that is an order is kept if
 
 A side sees the whole breakdown, with its result, of an event it sees whole. A cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `torpedo_mount_factor` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A salvo against the side and an air attack against it keep no factor. [0047]
 
+A claim is the exception. A side sees its own `ClaimReceived` whole and no breakdown of it, because the breakdown says how much of the claim is real. The log keeps it for the umpire. [0060]
+
 Recording breakdowns never changes what happens or the hash. [0004]
 
 ### Own events, enemy knowledge
