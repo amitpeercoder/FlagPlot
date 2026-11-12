@@ -116,9 +116,24 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 | Ships charged straight-line miles | Decided (decision 0058, confirmed by the designer), being built. The hash goes to version 3 with it | Yes, before passages are compared, and before Savo Island is tuned at all: its start is worked back from the hour the Japanese column enters Savo's hex, and that changes with the rule |
 | Strike target priority as an order | On the opening list; not yet decided | Yes for the Eastern Solomons: what a strike goes for decides which ships are hit |
 | Reach beyond the radius, and a range policy order | On the opening list; not yet decided | Yes for the Eastern Solomons and the air campaign: it decides which strikes fly at all |
+| Aircraft lost for want of fuel or a deck (ditching) | Added to the opening list at the designer's word, Nov 12, 2026; not yet decided. Proposed as the price of reach beyond the radius | Yes for the Eastern Solomons: 7 of the 17 US carrier aircraft lost there ditched. Until it lands, losses to all causes are reported and not judged |
+| Experience: one number for an air group and one for a ship's crew | Added to the opening list at the designer's word, Nov 12, 2026; not yet decided. Morale is left out | Yes, before Savo Island is tuned, on the condition under "Experience" below |
 | Ship repair | On the opening list; not yet decided | No. It matters to a campaign, not to one battle's losses |
 | "Out of the campaign" on the objectives scale | On the opening list; not yet decided | No. Until it lands the result on the scale is reported and not judged |
 | Two names for "crippled" | Not started | No, but soon: the glossary means flotation damage of 50 or more, and the objective `ships_crippled` means propulsion or flight deck out |
+
+### Experience
+
+At Savo Island both sides fire by the same rules, and decision 0024 names that as a cause of the wrong result. If training is not a rule, tuning bends the gun and torpedo figures to do its work, and Cape Esperance, where the other side had the better of it, then fails for a reason no figure can mend. So experience is built before the surface figures are tuned.
+
+A number for each side that tuning may move would explain any miss. So:
+
+1. **A unit's experience is derived from fact rows by a written rule,** as a ship's figures are (decision 0020): flying hours, time in commission, night exercises. It is never worked back from a battle's result.
+2. **The values are fixed before tuning starts** and are not changed to improve a report.
+3. **Only the strength of the effect is tuned:** one figure for each rule that reads experience, the same for both sides.
+4. **If research finds too little to rest the values on, experience waits,** and the surface figures stay marked as fitted and not checked.
+
+Values set from training records before tuning either bring Cape Esperance out right or they do not. That is the test.
 
 `docs/step2-opening-list.md` stays the working list of these. Each becomes a decision record with a hand calculation, as in step 1.
 
@@ -127,7 +142,8 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 - All three battles pass, or each miss is written down with its cause and accepted by the designer.
 - No figure in `data/reference` is a placeholder without a note saying what it rests on.
 - The frozen-figure tests, the invariants, the determinism scenario and the soak still pass.
-- The legibility test is run again on the tuned Eastern Solomons.
+- The legibility test is run again on the tuned Eastern Solomons: a cheap model, given one side's briefing and the events, explains an outcome and predicts the next day.
+- A cheap model given only the rulebook (`docs/rules/`), the glossary, the data files and two scenario files reproduces a set of hand calculations exactly. The build session ran this once on the step 1 rules; it is run again after the rule changes of step 2.
 
 ## Decided by the designer
 
@@ -138,3 +154,5 @@ On Nov 12, 2026, on the architect's recommendation in each case.
 3. **Frozen figures.** The hand-calculation tests run on the step 1 figures, frozen, for the length of step 2. Working them again on the tuned figures is decided when step 2 closes.
 4. **Scoring.** The result on the objectives scale is reported and not judged until the scale counts a ship that is out of the campaign. Tuning is judged on direct measures: ships sunk, hits, aircraft lost.
 5. **Order of the rule work.** Strike target priority as an order, and reach beyond the radius, are built before the air figures are tuned.
+6. **Ditching.** Aircraft lost for want of fuel or a deck join the rule work, proposed as the price of reach beyond the radius.
+7. **Experience.** It is in step 2 and is built before Savo Island is tuned, on the condition that its values come from facts and are fixed before tuning; only the strength of its effect is tuned.
