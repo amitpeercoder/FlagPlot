@@ -116,6 +116,7 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 | Ships charged straight-line miles | Decided (decision 0058, confirmed by the designer), being built. The hash goes to version 3 with it | Yes, before passages are compared, and before Savo Island is tuned at all: its start is worked back from the hour the Japanese column enters Savo's hex, and that changes with the rule |
 | Strike target priority as an order | On the opening list; not yet decided | Yes for the Eastern Solomons: what a strike goes for decides which ships are hit |
 | Reach beyond the radius, and a range policy order | On the opening list; not yet decided | Yes for the Eastern Solomons and the air campaign: it decides which strikes fly at all |
+| Aircraft lost for want of fuel or a deck (ditching) | Added to the opening list at the designer's word, Nov 12, 2026; not yet decided. Proposed as the price of reach beyond the radius | Yes for the Eastern Solomons: 7 of the 17 US carrier aircraft lost there ditched. Until it lands, losses to all causes are reported and not judged |
 | Ship repair | On the opening list; not yet decided | No. It matters to a campaign, not to one battle's losses |
 | "Out of the campaign" on the objectives scale | On the opening list; not yet decided | No. Until it lands the result on the scale is reported and not judged |
 | Two names for "crippled" | Not started | No, but soon: the glossary means flotation damage of 50 or more, and the objective `ships_crippled` means propulsion or flight deck out |
