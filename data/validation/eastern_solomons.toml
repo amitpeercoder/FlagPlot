@@ -1,0 +1,136 @@
+# Measures for the Eastern Solomons, 24 August 1942 (step 2 spec, "Measures").
+#
+# Each measure is one number taken from a run of the scenario, with what the
+# record gives for it. `rows` are ids in `facts`; nothing here is typed in
+# without its rows. Where sources disagree the record is a range, from
+# `record_low` to `record_high`, and `reason` says which rows give each end.
+# A measure with `judged = false` is reported and does not count toward
+# agreement; `reason` says why.
+#
+# Scope is the scenario's (decision 0031): one day, 18:00 on 23 August to
+# 18:00 on 24 August, Enterprise's and Saratoga's forces, Nagumo's two
+# carriers with the vanguard, the Ryujo detachment and Henderson Field. The
+# 25th, the convoy, Chitose and the land-based aircraft are outside it, so
+# the totals most histories quote for the battle are not the record here.
+#
+# The ranges were settled by the architect of the spec session on
+# 2026-11-12. No row's standing was changed: a range spans a dispute, it
+# does not end it.
+
+battle = "eastern-solomons"
+scenario = "data/scenarios/05_eastern_solomons.toml"
+facts = "data/oob/engagement_outcomes.csv"
+
+# ---------------------------------------------------------------- ships
+
+[[measure]]
+id = "japanese_carriers_sunk"
+counts = "Japanese carriers sunk at the end of the run"
+record_low = 1
+record_high = 1
+judged = true
+rows = [666, 667, 1175, 273, 274]
+reason = "Ryujo, by Japanese records and testimony (666, 667, 1175). Shokaku and Zuikaku were not sunk; no row gives hits on either, and that gap is not filled here."
+
+[[measure]]
+id = "us_carriers_sunk"
+counts = "US carriers sunk at the end of the run"
+record_low = 0
+record_high = 0
+judged = true
+rows = [664, 208]
+reason = "Enterprise was the only US ship damaged (664) and steamed away for repair (208)."
+
+[[measure]]
+id = "bomb_hits_on_enterprise"
+counts = "Bomb hits on USS Enterprise"
+record_low = 3
+record_high = 3
+judged = true
+rows = [181, 182, 183, 184]
+reason = "Four sources agree, the ship's own report among them."
+
+[[measure]]
+id = "bomb_hits_on_saratoga"
+counts = "Bomb hits on USS Saratoga"
+record_low = 0
+record_high = 0
+judged = true
+rows = [230]
+reason = "Not attacked."
+
+[[measure]]
+id = "enterprise_flight_deck_out_at_end"
+counts = "1 if USS Enterprise's flight deck is out at the end of the run, else 0"
+record_low = 0
+record_high = 0
+judged = true
+rows = [657, 201]
+reason = "Her deck took aircraft again 65 minutes after the first hit (657, a subtraction of two stated times). Steering failed for 38 minutes (201); propulsion was not damaged."
+
+# ------------------------------------------------------------- aircraft
+
+[[measure]]
+id = "japanese_carrier_aircraft_lost_to_enemy_action"
+counts = "Aircraft of the Shokaku, Zuikaku and Ryujo units shot down by fighters or by anti-aircraft fire"
+record_low = 29
+record_high = 32
+judged = true
+rows = [291, 287, 288, 1165, 1166, 296, 1172, 271]
+reason = "First wave on Enterprise's force: 24, where the tabular record's total (291) equals Shokaku's 13 (287, 288) plus Zuikaku's own record of 8 dive bombers and 3 fighters (1165, 1166); 25 if Zuikaku lost all 9 dive bombers (296, disputed). Ryujo's strike on Henderson Field: 5 by her own record (1172), 7 by the tabular record (271). Low end 24 + 5, high end 25 + 7."
+
+[[measure]]
+id = "japanese_carrier_aircraft_lost_all_causes"
+counts = "Aircraft of the Shokaku, Zuikaku and Ryujo units lost to any cause, those aboard a carrier that sinks included"
+record_low = 40
+record_high = 59
+judged = false
+rows = [291, 1172, 289, 270, 293, 974]
+reason = "Low end: 24 in the first wave (291), 5 of Ryujo's strike (1172), 2 fighters ditched (289), 4 lost with Ryujo (270) and 5 dive bombers of the second wave that did not return after dark (293). High end: 59, the official history's figure as Japanese Wikipedia gives it (974), a low-confidence disputed row read here by exception, as an upper bound only. Not judged: the rules have no ditching for want of a deck and no loss on a night recovery, and the scenario ends at 18:00, before the second wave came back."
+
+[[measure]]
+id = "us_aircraft_lost_to_enemy_action"
+counts = "US aircraft shot down by fighters or by anti-aircraft fire, or written off for damage taken in combat"
+record_low = 13
+record_high = 14
+judged = true
+rows = [305, 311, 700]
+reason = "Of 17 carrier aircraft lost, 7 in combat and 3 expended for severe damage (305). Marine fighters over Guadalcanal: 3 (305, 311) or 4 (700)."
+
+[[measure]]
+id = "us_aircraft_lost_all_causes"
+counts = "US aircraft lost to any cause"
+record_low = 20
+record_high = 21
+judged = false
+rows = [305, 306, 307, 700]
+reason = "Twenty by three sources (305, 306, 307); 21 if the Marines lost 4 (700). Not judged: 7 of them ditched out of fuel, which the rules do not have."
+
+# -------------------------------------------------------------- strikes
+
+[[measure]]
+id = "japanese_aircraft_attacking_enterprise_force"
+counts = "Japanese aircraft in the raids that attack Task Force 16 or Task Force 11"
+record_low = 37
+record_high = 37
+judged = false
+rows = [290, 1159, 1164, 409]
+reason = "The first wave, 27 dive bombers and 10 fighters (290; 22 from Shokaku, 1159, and 15 from Zuikaku, 1164). The second wave of 36 found nothing (409). Not judged until strike target priority and reach beyond the radius are built: they decide what flies."
+
+[[measure]]
+id = "us_aircraft_attacking_ryujo"
+counts = "US aircraft in the raids that attack the Ryujo detachment"
+record_low = 36
+record_high = 36
+judged = false
+rows = [333, 334, 335]
+reason = "Saratoga's strike: 29 dive bombers and 7 torpedo planes reached the target (333). Not judged, for the same reason."
+
+[[measure]]
+id = "us_strike_on_the_japanese_fleet_carriers"
+counts = "1 if a US raid of ten aircraft or more attacks Shokaku's force, else 0"
+record_low = 0
+record_high = 0
+judged = false
+rows = [368, 369, 378]
+reason = "Only search aircraft attacked, 4 dive bombers and 2 torpedo planes (368, 369); Enterprise's second group of 25 made no attack (378). Not judged, for the same reason. The floor of ten is the architect's, to tell a strike from a search plane's bomb."
