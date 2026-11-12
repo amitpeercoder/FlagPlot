@@ -8,6 +8,7 @@ publish.workspace = true
 [dependencies]
 sim-core.workspace = true
 sim-data.workspace = true
+sim-agent = { path = "../sim-agent" }
 serde.workspace = true
 serde_json.workspace = true
 csv.workspace = true

@@ -1,11 +1,12 @@
 //! Flag Plot command-line runner.
 //!
-//! Commands: `run`, `export`, `batch`, `replay` and `hash`. The spec also
-//! lists `serve` and `query`. They arrive with the steps that need them.
+//! Commands: `run`, `export`, `batch`, `replay`, `hash` and `serve`. The spec
+//! also lists `query`, which arrives with the step that needs it.
 
 mod batch;
 mod export;
 mod save;
+mod serve;
 
 use std::env;
 use std::path::Path;
@@ -24,6 +25,8 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
        sim-cli hash <scenario.toml> [--seed N]
        sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]
+       sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
+                     [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
 
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up.
@@ -41,6 +44,18 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
             and writes one JSON summary file: ships sunk per side (a
             histogram and totals), per ship, and the final hash and sunk
             ships of every run. Prints a short summary.
+  serve     Holds one game open for play on standard input and output, one JSON
+            request a line and one JSON answer a line, and opens no port. A
+            request is {id, seat, tool, arguments}, for example
+            {\"id\": 1, \"seat\": \"allied\", \"tool\": \"get_briefing\"}; the
+            answer is {id, result} or {id, error}. The tools are get_briefing,
+            list_forces, list_contacts, list_bases, get_entity, measure,
+            explain, issue_orders and end_day. A seat held by the script cannot
+            be called; the day resolves when every player seat has ended it. At
+            least one seat must be a player's (the other defaults to script).
+            At the end of input it writes --save (a saved game with the seats
+            and the orders handed in by both sides, which replay runs with no
+            player) and --transcript (one JSON line for each call).
   --events  (run) Also prints the full event log, with what caused each event.
   --seed N  Runs with seed N instead of the scenario's own seed.
   --save F  (run) Also writes a saved game: the scenario's file and its hash
@@ -98,6 +113,7 @@ fn main() -> ExitCode {
         Some("export") => export::command(&args[1..], USAGE),
         Some("batch") => batch::command(&args[1..], USAGE),
         Some("replay") => replay(&args[1..]),
+        Some("serve") => serve::command(&args[1..], USAGE),
         Some("hash") => hash(&args[1..]),
         _ => run(&args),
     };
@@ -170,12 +186,16 @@ fn run(args: &[String]) -> Result<(), String> {
     }
 
     if let (Some(file), Some(remembered)) = (save_path, remembered) {
+        let remembered = remembered?;
+        let hashes: Vec<(u32, u64)> = summaries.iter().map(|s| (s.day, s.state_hash)).collect();
         save::write(
             file,
             scenario_path,
             scenario.world.seed(),
-            &remembered?,
-            &summaries,
+            &remembered,
+            remembered.script(),
+            &save::script_seats(),
+            &hashes,
         )?;
     }
 
@@ -462,6 +482,19 @@ fn replay(args: &[String]) -> Result<(), String> {
     scenario.replace_script(saved.script.clone());
     println!("{}", scenario.name);
     println!("seed {}", saved.seed);
+    // A game that had a player says so; the orders it handed in are replayed
+    // and nobody is asked for any.
+    if saved
+        .seats
+        .values()
+        .any(|k| *k == sim_agent::SeatKind::Player)
+    {
+        println!(
+            "seats allied {}, japanese {} (replayed with no player)",
+            saved.seats[&Side::Allied].name(),
+            saved.seats[&Side::Japanese].name()
+        );
+    }
     for (day, hash) in &saved.hashes {
         let summary = scenario
             .next_day()

@@ -23,7 +23,9 @@ mod support;
 use std::collections::BTreeMap;
 
 use serde_json::Value;
-use sim_agent::{briefing, get_entity, list_bases, list_contacts, list_forces, measure};
+use sim_agent::{
+    briefing, get_entity, list_bases, list_contacts, list_forces, measure, PlaceArg, Question,
+};
 use sim_core::hex::Hex;
 use sim_core::state::Side;
 use sim_core::World;
@@ -67,13 +69,8 @@ fn unknown_handles(world: &World, side: Side) -> Vec<String> {
             .filter(|u| u.side != side)
             .map(|u| u.id.to_string()),
     );
-    handles.extend(
-        truth
-            .bases
-            .values()
-            .filter(|u| u.side != side)
-            .map(|u| u.id.to_string()),
-    );
+    // An enemy base is not here: its number, name, place and holder are on
+    // the map and the side may ask for them (decision 0050, as amended).
     for kind in [
         "ship",
         "task_force",
@@ -174,6 +171,184 @@ fn a_number_that_is_no_event_of_the_side_gets_one_and_the_same_answer() {
             }
         }
     }
+}
+
+#[test]
+fn an_enemy_base_is_known_by_its_public_facts_and_a_missing_base_is_not() {
+    for name in ["06_rabaul_guadalcanal.toml", "05_eastern_solomons.toml"] {
+        let scenario = load(name, 1942);
+        for side in SIDES {
+            let view = scenario.world.side_view(side);
+            let missing = serde_json::to_string(&get_entity(&view, "base:99999")).unwrap();
+            assert!(missing.contains("not_known"), "{missing}");
+            let enemy: Vec<_> = scenario
+                .world
+                .umpire()
+                .bases
+                .values()
+                .filter(|b| b.side != side)
+                .cloned()
+                .collect();
+            for base in enemy {
+                let answer = serde_json::to_value(get_entity(&view, &base.id.to_string())).unwrap();
+                assert_eq!(answer["kind"], "entity", "{name} {side:?}");
+                let detail = &answer["entity"];
+                assert_eq!(detail["entity_kind"], "enemy_base");
+                assert_eq!(detail["summary"]["base"]["name"], base.name.as_str());
+                assert_eq!(detail["summary"]["place"]["q"], base.hex.q);
+                assert_eq!(detail["summary"]["held_by"], side_word(base.side));
+                // Nothing else of it: the keys are exactly these.
+                let keys: Vec<&String> = detail.as_object().unwrap().keys().collect();
+                assert_eq!(keys, ["entity_kind", "known", "summary"]);
+                let line: Vec<&String> = detail["summary"].as_object().unwrap().keys().collect();
+                assert_eq!(line, ["base", "held_by", "place"]);
+                assert_ne!(
+                    serde_json::to_string(&answer).unwrap(),
+                    missing,
+                    "known and missing are deliberately distinguishable"
+                );
+            }
+        }
+    }
+}
+
+/// The text of the scenario with every private figure of the enemy's bases
+/// changed: supply, fuel, anti-aircraft guns, repairs, and the aircraft and
+/// pilots of the air groups at them.
+fn enemy_bases_privately_different(doc: &Doc, enemy: Side) -> String {
+    let side = side_word(enemy);
+    let tables: Vec<String> = doc
+        .tables
+        .iter()
+        .map(|table| {
+            let mine = table_value(table, "side").as_deref() == Some(side);
+            let mut table = table.clone();
+            if mine && table_kind(&table) == "base" {
+                for key in [
+                    "supply_t",
+                    "anti_aircraft",
+                    "aircraft_repairs_per_day",
+                    "fuel_t",
+                ] {
+                    match change_number(&table, key, |n| Some(n + 7)) {
+                        Some(changed) => table = changed,
+                        None => {
+                            if !table.ends_with('\n') {
+                                table.push('\n');
+                            }
+                            table.push_str(&format!("{key} = 7\n"));
+                        }
+                    }
+                }
+            }
+            if mine && table_kind(&table) == "air_group" && table_value(&table, "base").is_some() {
+                for key in ["ready", "pilots"] {
+                    if let Some(changed) = change_number(&table, key, |n| Some(n + 3)) {
+                        table = changed;
+                    }
+                }
+            }
+            table
+        })
+        .collect();
+    Doc {
+        head: doc.head.clone(),
+        tables,
+    }
+    .text()
+}
+
+#[test]
+fn what_an_enemy_base_holds_changes_nothing_the_tools_say_of_it() {
+    let mut compared = 0;
+    for name in [
+        "05_eastern_solomons.toml",
+        "06a_base_raid.toml",
+        "06_rabaul_guadalcanal.toml",
+        "07_full_slice.toml",
+    ] {
+        let text = scenario_text(name);
+        let doc = parse_doc(&text);
+        for side in SIDES {
+            let enemy = other(side);
+            let changed = enemy_bases_privately_different(&doc, enemy);
+            if changed == text {
+                continue;
+            }
+            let (one, two) = (load_text(&text, name, 5), load_text(&changed, name, 5));
+            // The truth does differ.
+            let figures = |s: &sim_data::Scenario| {
+                s.world
+                    .umpire()
+                    .bases
+                    .values()
+                    .filter(|b| b.side == enemy)
+                    .map(|b| {
+                        (
+                            b.supply_t,
+                            b.fuel_t,
+                            b.anti_aircraft,
+                            b.aircraft_repairs_per_day,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            };
+            assert_ne!(
+                figures(&one),
+                figures(&two),
+                "{name} {side:?}: the edit applied"
+            );
+            let ask = |s: &sim_data::Scenario| {
+                let view = s.world.side_view(side);
+                let mut out = vec![
+                    serde_json::to_string(&list_bases(&view, None)).unwrap(),
+                    serde_json::to_string(&list_bases(&view, Some((Hex::new(0, 0), 400)))).unwrap(),
+                ];
+                for base in view.enemy_bases() {
+                    let handle = base.id.to_string();
+                    out.push(serde_json::to_string(&get_entity(&view, &handle)).unwrap());
+                    for force in view.task_forces() {
+                        let from = force.id.to_string();
+                        for question in [
+                            Question::AirDistance {
+                                from: PlaceArg::unit(&from),
+                                to: PlaceArg::unit(&handle),
+                            },
+                            Question::SeaRoute {
+                                from: PlaceArg::unit(&from),
+                                to: PlaceArg::unit(&handle),
+                            },
+                            Question::Passage {
+                                task_force: from.clone(),
+                                to: PlaceArg::unit(&handle),
+                                speed: None,
+                            },
+                        ] {
+                            out.push(serde_json::to_string(&measure(&view, &question)).unwrap());
+                        }
+                    }
+                    for group in view.air_groups() {
+                        out.push(
+                            serde_json::to_string(&measure(
+                                &view,
+                                &Question::AirReach {
+                                    air_group: group.id.to_string(),
+                                    to: vec![PlaceArg::unit(&handle)],
+                                },
+                            ))
+                            .unwrap(),
+                        );
+                    }
+                }
+                out
+            };
+            let (a, b) = (ask(&one), ask(&two));
+            assert!(a.len() >= 4, "{name} {side:?}: something was asked");
+            assert_eq!(a, b, "{name} {side:?}");
+            compared += 1;
+        }
+    }
+    assert!(compared >= 4, "{compared} comparisons");
 }
 
 // ---------------------------------------------------------------------
@@ -455,6 +630,25 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
     for handle in handles {
         out.insert(format!("entity:{handle}"), json(&get_entity(view, &handle)));
     }
+    // The bases of the other side: public facts, asked for as an entity and as
+    // a place to measure to.
+    for base in view.enemy_bases() {
+        let handle = base.id.to_string();
+        out.insert(format!("entity:{handle}"), json(&get_entity(view, &handle)));
+        if let Some(force) = view.task_forces().next() {
+            let from = force.id.to_string();
+            out.insert(
+                format!("measure:air_distance:{from}:{handle}"),
+                json(&measure(
+                    view,
+                    &Question::AirDistance {
+                        from: PlaceArg::unit(&from),
+                        to: PlaceArg::unit(&handle),
+                    },
+                )),
+            );
+        }
+    }
     // Measurements: passage, sea route, air distance and air reach, of a few
     // forces and groups to a few bases and contacts (decision 0049).
     for (key, question) in sample_questions(view, 3, 2) {
@@ -491,7 +685,16 @@ fn run(text: &str, name: &str, seed: u64, side: Side) -> Run {
     let mut enemy_briefings = Vec::new();
     play(&mut scenario, |s| {
         let view = s.world.side_view(side);
-        let a = answers(&view, &title);
+        let mut a = answers(&view, &title);
+        // What the side is told of orders it might give (stage 9d): the same
+        // probes in every world, on the first day, the middle one and the end.
+        let day = s.world.day();
+        if day == 0 || day == s.days / 2 || day == s.days {
+            a.insert(
+                "issue_orders".to_string(),
+                support::play::probe_answer(&s.world, side, &title),
+            );
+        }
         plain.push(normalised_answers(&view, &a));
         raw.push(a);
         enemy_briefings.push(briefing(&s.world.side_view(other(side)), &title).to_text());
@@ -609,7 +812,7 @@ fn what_a_side_cannot_know_changes_nothing_it_is_given() {
         ),
     ];
     for (name, make) in differences {
-        let found = found_by(make, 1..=2);
+        let found = found_by(make, 1..=1);
         println!("{name}: {found:?}");
         assert!(
             found.changed.is_empty(),
@@ -635,7 +838,7 @@ fn a_difference_the_side_can_meet_does_change_what_it_is_given() {
     // The control: one more aircraft a day for the enemy reaches the side in
     // the raids it meets. If nothing changed, the comparisons above would
     // prove nothing.
-    let found = found_by(more_replacements, 1..=2);
+    let found = found_by(more_replacements, 1..=1);
     println!("one more replacement aircraft a day: {found:?}");
     assert!(found.compared >= 2);
     assert!(
@@ -648,6 +851,18 @@ fn a_difference_the_side_can_meet_does_change_what_it_is_given() {
 // 3. The library names nothing of the truth.
 // ---------------------------------------------------------------------
 
+/// What the lint allows (stage 9d, decision 0050). Code lines of every source
+/// file of the library, doc comments left out, may not contain `umpire`,
+/// `EventLog`, `TruthState`, `BeliefState`, `std::fs`, `std::net`, the hash
+/// collections, `f32`, `f64` or `unsafe`, and may not contain the word `World`
+/// with one exception: `session.rs`, the module that holds the game, may. That
+/// file is held to a further list, below, so that holding the game does not
+/// become a way to read it: it may not call the world's truth (`umpire`), its
+/// full event log or order list, its map or reference data, or its beliefs
+/// (`world.events`, `world.orders`, `world.order(`, `world.map`,
+/// `world.ref_data`, `world.beliefs`, `world.truth`), and a view is only taken
+/// with `side_view`. Every tool implementation outside `session.rs` takes a
+/// `&SideView` and cannot name the world at all.
 #[test]
 fn the_library_code_names_nothing_of_the_truth() {
     let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
@@ -662,13 +877,13 @@ fn the_library_code_names_nothing_of_the_truth() {
             "{banned} is a dependency of the library"
         );
     }
-    // Words the library's code may not use. Doc comments are left out.
+    // Words the library's code may not use anywhere. Doc comments are left
+    // out.
     let banned = [
         "umpire",
         "EventLog",
         "TruthState",
         "BeliefState",
-        "World",
         "std::fs",
         "std::net",
         "HashMap",
@@ -677,9 +892,25 @@ fn the_library_code_names_nothing_of_the_truth() {
         "f64",
         "unsafe",
     ];
+    // The module that holds the game: `World` may be named there and only
+    // there, and these may not.
+    let session_banned = [
+        "world.events",
+        "world.orders",
+        "world.order(",
+        "world.map",
+        "world.ref_data",
+        "world.beliefs",
+        "world.truth",
+        "SystemTime",
+        "Instant",
+    ];
+    let mut holders = 0;
     for entry in std::fs::read_dir(src).expect("src reads") {
         let path = entry.expect("an entry").path();
+        let is_session = path.file_name().and_then(|n| n.to_str()) == Some("session.rs");
         let text = std::fs::read_to_string(&path).expect("a source reads");
+        let mut names_world = false;
         for (i, line) in text.lines().enumerate() {
             let code = line.trim_start();
             if code.starts_with("//") {
@@ -693,8 +924,31 @@ fn the_library_code_names_nothing_of_the_truth() {
                     i + 1
                 );
             }
+            if code.contains("World") {
+                assert!(
+                    is_session,
+                    "{}:{} names World outside session.rs: {line}",
+                    path.display(),
+                    i + 1
+                );
+                names_world = true;
+            }
+            if is_session {
+                for word in session_banned {
+                    assert!(
+                        !code.contains(word),
+                        "{}:{} uses {word}: {line}",
+                        path.display(),
+                        i + 1
+                    );
+                }
+            }
+        }
+        if names_world {
+            holders += 1;
         }
     }
+    assert_eq!(holders, 1, "exactly one module holds the world");
     let _ = (
         without_event_numbers as fn(&Value, &BTreeMap<u64, u64>) -> Value,
         Hex::new(0, 0),

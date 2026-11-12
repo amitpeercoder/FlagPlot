@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/briefing_text",
+  "title": "briefing_text: the briefing as text, made from the briefing's data",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "briefing_text"
+    },
+    "text": {
+      "type": "string"
+    }
+  }
+}

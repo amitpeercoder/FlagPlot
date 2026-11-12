@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 pub mod check;
+pub mod play;
 pub mod validator;
 
 use std::path::{Path, PathBuf};

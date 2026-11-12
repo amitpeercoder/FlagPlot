@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/end_day",
+  "title": "end_day: whether the day was resolved, the day now and whether the game is over",
+  "description": "resolved is false while another player seat has not ended its day, and after the last day. day is the number of days resolved.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "resolved",
+    "day",
+    "game_over"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "end_day"
+    },
+    "resolved": {
+      "type": "boolean"
+    },
+    "day": {
+      "type": "integer"
+    },
+    "game_over": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/error",
+  "title": "error: a call refused as a whole; the game is unchanged",
+  "description": "allowed lists the tools or the seats when that is what was wrong.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "message"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "error"
+    },
+    "message": {
+      "type": "string"
+    },
+    "allowed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

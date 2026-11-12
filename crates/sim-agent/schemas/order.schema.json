@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/order",
+  "title": "order: one order for one unit, as saved games and issue_orders write it",
+  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach and set_readiness; an air group's are set_air_mission, set_search_arc, set_patrol_share and set_rest_threshold. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply.",
+  "type": "object",
+  "required": [
+    "unit",
+    "order"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "unit": {
+      "type": "string"
+    },
+    "order": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/task_force_order"
+        },
+        {
+          "$ref": "#/$defs/air_group_order"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "task_force_order": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "waypoints"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_route"
+            },
+            "waypoints": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "speed"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_speed"
+            },
+            "speed": {
+              "enum": [
+                "cruise",
+                "full"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "knots"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_speed"
+            },
+            "knots": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "mission"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_mission"
+            },
+            "mission": {
+              "enum": [
+                "transport",
+                "surface_combat",
+                "carrier",
+                "bombardment",
+                "escort"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "load"
+            },
+            "cargo": {
+              "enum": [
+                "supply",
+                "fuel"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "unload"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "stance",
+            "break_off",
+            "stragglers",
+            "keep_share"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_rules_of_engagement"
+            },
+            "stance": {
+              "enum": [
+                "engage",
+                "avoid"
+              ]
+            },
+            "break_off": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            },
+            "stragglers": {
+              "enum": [
+                "keep",
+                "detach",
+                "leave",
+                "retire"
+              ]
+            },
+            "keep_share": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "base"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_home_port"
+            },
+            "base": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "ships"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "detach"
+            },
+            "ships": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "readiness"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_readiness"
+            },
+            "readiness": {
+              "enum": [
+                "normal",
+                "battle"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "air_group_order": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "mission"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_air_mission"
+            },
+            "mission": {
+              "enum": [
+                "rest",
+                "search",
+                "naval_strike",
+                "combat_air_patrol"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "mission",
+            "target_base"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_air_mission"
+            },
+            "mission": {
+              "const": "base_strike"
+            },
+            "target_base": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "from_deg",
+            "to_deg",
+            "range_nm"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_search_arc"
+            },
+            "from_deg": {
+              "type": "integer"
+            },
+            "to_deg": {
+              "type": "integer"
+            },
+            "range_nm": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "share"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_patrol_share"
+            },
+            "share": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "fatigue"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_rest_threshold"
+            },
+            "fatigue": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

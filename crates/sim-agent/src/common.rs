@@ -8,7 +8,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, ShipId, TaskForceId};
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{AirGroup, AirGroupLocation, Base, Ship, ShipLocation, TaskForce};
-use sim_core::view::SideView;
+use sim_core::view::{PublicBase, SideView};
 
 /// A [`Fixed`] written as a decimal string, exactly: `"12"`, `"0.25"`. No
 /// float is involved (decision 0048, 12).
@@ -78,6 +78,8 @@ pub(crate) struct Ctx<'a> {
     pub forces: BTreeMap<TaskForceId, &'a TaskForce>,
     pub groups: BTreeMap<AirGroupId, &'a AirGroup>,
     pub bases: BTreeMap<BaseId, &'a Base>,
+    /// The public facts of the bases the side does not own.
+    pub enemy_bases: BTreeMap<BaseId, PublicBase>,
     place_names: BTreeMap<Hex, String>,
     /// The side's own number for each event it sees, by the log's number.
     numbers: BTreeMap<u32, u32>,
@@ -89,6 +91,7 @@ impl<'a> Ctx<'a> {
         let forces: BTreeMap<_, _> = view.task_forces().map(|f| (f.id, f)).collect();
         let groups: BTreeMap<_, _> = view.air_groups().map(|g| (g.id, g)).collect();
         let bases: BTreeMap<_, _> = view.bases().map(|b| (b.id, b)).collect();
+        let enemy_bases: BTreeMap<_, _> = view.enemy_bases().map(|b| (b.id, b)).collect();
         let mut place_names: BTreeMap<Hex, String> = BTreeMap::new();
         for base in bases.values() {
             let entry = place_names.entry(base.hex).or_default();
@@ -103,6 +106,7 @@ impl<'a> Ctx<'a> {
             forces,
             groups,
             bases,
+            enemy_bases,
             place_names,
             numbers: BTreeMap::new(),
         }
@@ -163,7 +167,11 @@ impl<'a> Ctx<'a> {
     pub fn base(&self, id: BaseId) -> Handle {
         Handle {
             handle: id.to_string(),
-            name: self.bases.get(&id).map(|b| b.name.clone()),
+            name: self
+                .bases
+                .get(&id)
+                .map(|b| b.name.clone())
+                .or_else(|| self.enemy_bases.get(&id).map(|b| b.name.clone())),
         }
     }
 

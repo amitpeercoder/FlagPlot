@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/transcript_entry",
+  "title": "transcript_entry: one call a seat made and the whole answer it was given",
+  "description": "seq counts the calls 1, 2, 3 in order. after_day is how many days had been resolved when the call was made. answer is the tool's answer document or an error document; its kind says which. There is no time of day.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "seq",
+    "after_day",
+    "seat",
+    "tool",
+    "arguments",
+    "answer"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "transcript_entry"
+    },
+    "seq": {
+      "type": "integer"
+    },
+    "after_day": {
+      "type": "integer"
+    },
+    "seat": {
+      "enum": [
+        "allied",
+        "japanese"
+      ]
+    },
+    "tool": {
+      "type": "string"
+    },
+    "arguments": {
+      "type": [
+        "object",
+        "array",
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "answer": {
+      "type": "object",
+      "required": [
+        "format",
+        "version",
+        "kind"
+      ],
+      "properties": {
+        "format": {
+          "const": "flagplot-agent"
+        },
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

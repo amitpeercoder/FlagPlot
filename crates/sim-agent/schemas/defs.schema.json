@@ -9,7 +9,10 @@
       "format": "decimal"
     },
     "dec_or_null": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "decimal"
     },
     "count": {
@@ -17,145 +20,369 @@
       "type": "integer"
     },
     "count_or_null": {
-      "type": ["integer", "null"]
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "string_or_null": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "handle": {
       "description": "A unit named by kind and number as the log names it, with its name when the side knows one (its own units only).",
       "type": "object",
-      "required": ["handle", "name"],
+      "required": [
+        "handle",
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
-        "handle": { "type": "string" },
-        "name": { "$ref": "#/$defs/string_or_null" }
+        "handle": {
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/$defs/string_or_null"
+        }
       }
     },
     "handle_or_null": {
-      "oneOf": [{ "$ref": "#/$defs/handle" }, { "type": "null" }]
+      "oneOf": [
+        {
+          "$ref": "#/$defs/handle"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "handles": {
       "type": "array",
-      "items": { "$ref": "#/$defs/handle" }
+      "items": {
+        "$ref": "#/$defs/handle"
+      }
     },
     "place": {
       "description": "A hex, its latitude and longitude where the map has them, and the name of the side's own base there.",
       "type": "object",
-      "required": ["q", "r", "lat", "lon", "name"],
+      "required": [
+        "q",
+        "r",
+        "lat",
+        "lon",
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
-        "q": { "type": "integer" },
-        "r": { "type": "integer" },
-        "lat": { "$ref": "#/$defs/dec_or_null" },
-        "lon": { "$ref": "#/$defs/dec_or_null" },
-        "name": { "$ref": "#/$defs/string_or_null" }
+        "q": {
+          "type": "integer"
+        },
+        "r": {
+          "type": "integer"
+        },
+        "lat": {
+          "$ref": "#/$defs/dec_or_null"
+        },
+        "lon": {
+          "$ref": "#/$defs/dec_or_null"
+        },
+        "name": {
+          "$ref": "#/$defs/string_or_null"
+        }
       }
     },
     "place_or_null": {
-      "oneOf": [{ "$ref": "#/$defs/place" }, { "type": "null" }]
+      "oneOf": [
+        {
+          "$ref": "#/$defs/place"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "event_numbers": {
       "description": "The side's own numbers of events (1, 2, 3 in the order its view gives them), as explain takes them. The log's numbers never appear.",
       "type": "array",
-      "items": { "type": "integer" }
+      "items": {
+        "type": "integer"
+      }
     },
     "fuel_line": {
       "type": "object",
-      "required": ["ship", "fuel_t", "range_nm"],
+      "required": [
+        "ship",
+        "fuel_t",
+        "range_nm"
+      ],
       "additionalProperties": false,
       "properties": {
-        "ship": { "$ref": "#/$defs/handle" },
-        "fuel_t": { "$ref": "#/$defs/dec" },
-        "range_nm": { "$ref": "#/$defs/count_or_null" }
+        "ship": {
+          "$ref": "#/$defs/handle"
+        },
+        "fuel_t": {
+          "$ref": "#/$defs/dec"
+        },
+        "range_nm": {
+          "$ref": "#/$defs/count_or_null"
+        }
       }
     },
     "force_line": {
       "type": "object",
       "required": [
-        "task_force", "place", "status", "mission", "speed", "destination",
-        "readiness", "alert", "fatigue", "ships_afloat", "least_fuelled"
+        "task_force",
+        "place",
+        "status",
+        "mission",
+        "speed",
+        "destination",
+        "readiness",
+        "alert",
+        "fatigue",
+        "ships_afloat",
+        "least_fuelled"
       ],
       "additionalProperties": false,
       "properties": {
-        "task_force": { "$ref": "#/$defs/handle" },
-        "place": { "$ref": "#/$defs/place" },
-        "status": { "enum": ["idle", "underway", "arrived", "out_of_fuel"] },
-        "mission": {
-          "enum": ["transport", "surface_combat", "carrier", "bombardment", "escort"]
+        "task_force": {
+          "$ref": "#/$defs/handle"
         },
-        "speed": { "type": "string" },
-        "destination": { "$ref": "#/$defs/place_or_null" },
-        "readiness": { "enum": ["normal", "battle"] },
-        "alert": { "type": "boolean" },
-        "fatigue": { "$ref": "#/$defs/dec" },
-        "ships_afloat": { "type": "integer" },
+        "place": {
+          "$ref": "#/$defs/place"
+        },
+        "status": {
+          "enum": [
+            "idle",
+            "underway",
+            "arrived",
+            "out_of_fuel"
+          ]
+        },
+        "mission": {
+          "enum": [
+            "transport",
+            "surface_combat",
+            "carrier",
+            "bombardment",
+            "escort"
+          ]
+        },
+        "speed": {
+          "type": "string"
+        },
+        "destination": {
+          "$ref": "#/$defs/place_or_null"
+        },
+        "readiness": {
+          "enum": [
+            "normal",
+            "battle"
+          ]
+        },
+        "alert": {
+          "type": "boolean"
+        },
+        "fatigue": {
+          "$ref": "#/$defs/dec"
+        },
+        "ships_afloat": {
+          "type": "integer"
+        },
         "least_fuelled": {
-          "oneOf": [{ "$ref": "#/$defs/fuel_line" }, { "type": "null" }]
+          "oneOf": [
+            {
+              "$ref": "#/$defs/fuel_line"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
     "air_group_line": {
       "type": "object",
       "required": [
-        "air_group", "aircraft_type", "location", "place", "ready", "damaged",
-        "pilots", "fatigue", "stood_down", "rest_above", "mission", "target"
+        "air_group",
+        "aircraft_type",
+        "location",
+        "place",
+        "ready",
+        "damaged",
+        "pilots",
+        "fatigue",
+        "stood_down",
+        "rest_above",
+        "mission",
+        "target"
       ],
       "additionalProperties": false,
       "properties": {
-        "air_group": { "$ref": "#/$defs/handle" },
-        "aircraft_type": { "type": "string" },
-        "location": { "$ref": "#/$defs/handle" },
-        "place": { "$ref": "#/$defs/place_or_null" },
-        "ready": { "type": "integer" },
-        "damaged": { "type": "integer" },
-        "pilots": { "$ref": "#/$defs/count_or_null" },
-        "fatigue": { "$ref": "#/$defs/dec" },
-        "stood_down": { "type": "boolean" },
-        "rest_above": { "$ref": "#/$defs/dec_or_null" },
-        "mission": {
-          "enum": ["rest", "search", "naval_strike", "combat_air_patrol", "base_strike"]
+        "air_group": {
+          "$ref": "#/$defs/handle"
         },
-        "target": { "$ref": "#/$defs/handle_or_null" }
+        "aircraft_type": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/handle"
+        },
+        "place": {
+          "$ref": "#/$defs/place_or_null"
+        },
+        "ready": {
+          "type": "integer"
+        },
+        "damaged": {
+          "type": "integer"
+        },
+        "pilots": {
+          "$ref": "#/$defs/count_or_null"
+        },
+        "fatigue": {
+          "$ref": "#/$defs/dec"
+        },
+        "stood_down": {
+          "type": "boolean"
+        },
+        "rest_above": {
+          "$ref": "#/$defs/dec_or_null"
+        },
+        "mission": {
+          "enum": [
+            "rest",
+            "search",
+            "naval_strike",
+            "combat_air_patrol",
+            "base_strike"
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/handle_or_null"
+        }
       }
     },
     "base_line": {
       "type": "object",
-      "required": ["base", "place", "supply_t", "fuel_t", "port_size", "airfield_size"],
+      "required": [
+        "base",
+        "place",
+        "supply_t",
+        "fuel_t",
+        "port_size",
+        "airfield_size"
+      ],
       "additionalProperties": false,
       "properties": {
-        "base": { "$ref": "#/$defs/handle" },
-        "place": { "$ref": "#/$defs/place" },
-        "supply_t": { "$ref": "#/$defs/dec" },
-        "fuel_t": { "$ref": "#/$defs/dec" },
-        "port_size": { "type": "integer" },
-        "airfield_size": { "type": "integer" }
+        "base": {
+          "$ref": "#/$defs/handle"
+        },
+        "place": {
+          "$ref": "#/$defs/place"
+        },
+        "supply_t": {
+          "$ref": "#/$defs/dec"
+        },
+        "fuel_t": {
+          "$ref": "#/$defs/dec"
+        },
+        "port_size": {
+          "type": "integer"
+        },
+        "airfield_size": {
+          "type": "integer"
+        }
       }
     },
     "contact_line": {
       "type": "object",
-      "required": ["contact", "place", "ship_count", "taken_for", "age_pulses"],
+      "required": [
+        "contact",
+        "place",
+        "ship_count",
+        "taken_for",
+        "age_pulses"
+      ],
       "additionalProperties": false,
       "properties": {
-        "contact": { "$ref": "#/$defs/handle" },
-        "place": { "$ref": "#/$defs/place" },
-        "ship_count": { "type": "integer" },
-        "taken_for": {
-          "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"]
+        "contact": {
+          "$ref": "#/$defs/handle"
         },
-        "age_pulses": { "type": "integer" }
+        "place": {
+          "$ref": "#/$defs/place"
+        },
+        "ship_count": {
+          "type": "integer"
+        },
+        "taken_for": {
+          "enum": [
+            "carrier",
+            "battleship",
+            "cruiser",
+            "destroyer",
+            "transport",
+            "auxiliary"
+          ]
+        },
+        "age_pulses": {
+          "type": "integer"
+        }
       }
     },
     "not_known": {
       "description": "The one answer for anything the side does not know of. It carries nothing of the question.",
       "type": "object",
-      "required": ["format", "version", "kind", "query"],
+      "required": [
+        "format",
+        "version",
+        "kind",
+        "query"
+      ],
       "additionalProperties": false,
       "properties": {
-        "format": { "const": "flagplot-agent" },
-        "version": { "const": 1 },
-        "kind": { "const": "not_known" },
-        "query": { "enum": ["get_entity", "explain", "measure"] }
+        "format": {
+          "const": "flagplot-agent"
+        },
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "not_known"
+        },
+        "query": {
+          "enum": [
+            "get_entity",
+            "explain",
+            "measure"
+          ]
+        }
+      }
+    },
+    "enemy_base_line": {
+      "description": "A base the side does not own, as every side knows it: number, name, place and the side that holds it. Nothing else is known of it.",
+      "type": "object",
+      "required": [
+        "base",
+        "place",
+        "held_by"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "$ref": "#/$defs/handle"
+        },
+        "place": {
+          "$ref": "#/$defs/place"
+        },
+        "held_by": {
+          "enum": [
+            "allied",
+            "japanese"
+          ]
+        }
       }
     }
   }
