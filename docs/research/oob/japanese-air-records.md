@@ -105,3 +105,29 @@ First wave: **22 of 37 lost**, against 24 in the data until now. Ryujo launched 
 
 - The 49 rows from the unsourced chronology, and the Wikipedia rows for Japanese daily losses, are now overtaken on every day these forms cover. They were left as they were; dropping or demoting them is yours to decide.
 - For the three claim chances of decision 0055: US fighters and guns about 3 to 1 on aircraft; Japanese aircrew at least that on aircraft in the air; Japanese claims of aircraft on the ground about 60 to 80 claimed against a handful found.
+
+## Second pass, 2026-11-12: the vanguard's signal log
+
+The rest of the 11th Squadron's action report (JACAR C08030051500, pages 1 to 3 and 12 to 69) was read: the signal log of the vanguard for 23 to 25 August. Rows: `engagement_events.csv` ids 424 to 489, 20 position rows, 8 outcome rows, 8 gaps. Two pages were read a second time by me and agreed: the amendment that cancels the dawn floatplane group, and the sighting report.
+
+**The dawn floatplane groups did not fly.** The amendment to the search order, received at 2050 on 23 August, has a third item the 7th Cruiser Division's copy did not show: "the first search group is not used; the third search group is used" (第一索敵隊ヲ使用セズ第三索敵隊ヲ使用ス). The first group was the eleven cruiser floatplanes to 300 nm. The third was the seven carrier aircraft, which fits Shokaku's own form: seven attack planes at dawn. The fourth group, the older floatplanes, was cancelled at 0018 on the 24th.
+
+**The search as flown, 24 August** (Tokyo time):
+
+| Time | Aircraft | Result |
+| --- | --- | --- |
+| Dawn | Shokaku 7 and Zuikaku 12 attack planes | Nothing |
+| 0900 | Chikuma, 2 floatplanes | Her No. 2 sighted the enemy at 1207 and was lost |
+| 0940 | Kumano, 2 floatplanes, all she had | Nothing reported |
+| 1318 | Hiei and Chikuma, one shadowing aircraft each | Chikuma's No. 1 reported the enemy at 1450 |
+| 1515 | Kirishima and Nagara, one older floatplane each, for night contact | Both lost |
+
+The order for the 0900 search, received at 0346, was for six aircraft on a base line of 150 degrees. Four are shown launching. Tone, Suzuya and Kirishima show none in the log. No "Chikuma No. 5" appears in it.
+
+**The sighting, word for word.** From the carrier force's search aircraft, originated 1207, received 1208: "large enemy force sighted" (敵大部隊見ユ). At 1210: "we are being pursued by enemy fighters". Nothing more. Chikuma relayed the enemy's approximate position as a grid code at about 1315; the carrier force's battle summary says the enemy's strength and position were unknown and the strike was sent toward the aircraft's own estimated position, "about 260 nm, direction 153 degrees, from the carriers" at the time of the sighting. **That is the first Japanese figure for the range at which the first wave was launched** (it left at 1255 to 1300, some fifty minutes later), and it is well beyond the 150 to 210 miles of the US launches. It is from one reading and is graded medium.
+
+**Floatplanes lost in the battle,** from the report's closing table: Chikuma's No. 2, Kirishima's and Nagara's older floatplanes missing; a Kirishima observation plane capsized on recovery; Hiei's observation plane burned after combat damage. That is five, against the three the official history is quoted as giving.
+
+**The grid code is still unbroken.** Twenty-seven coded positions are now recorded. No key fits them all. The log names the table (地点標示法) but does not contain it. The one pair close in time is the vanguard: 6°S 163°E at 0400 on the 25th and grid ke-ri-tsu 22 at 0500. The carriers' positions remain grid codes only: ke-mu-ke 55 at 0500, ke-ya-ke 44 at the 1300 launch.
+
+**Not resolved:** many signals have no time of origin, so some rows carry the time of receipt; the bombing of Kirishima is timed three ways in the same report.
