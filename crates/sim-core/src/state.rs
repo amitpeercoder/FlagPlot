@@ -383,8 +383,14 @@ pub struct TaskForce {
     /// `from_hex` that ships can enter.
     pub toward_hex: Option<Hex>,
     /// Nautical miles covered from the centre of `from_hex` toward the centre
-    /// of `toward_hex`. At least 0 and less than one hex.
+    /// of `toward_hex`. At least 0 and less than `leg_nm`.
     pub progress_nm: Fixed,
+    /// What the step in progress is charged, in miles (decision 0058, 7):
+    /// set when a step begins, from the map's charge of the step
+    /// ([`Map::step_charge_nm`]). 1 to 40, and 40 for a force at a centre.
+    /// `progress_nm` runs from 0 to this, and the force is in the hex ahead
+    /// from half of it.
+    pub leg_nm: Fixed,
     pub status: TaskForceStatus,
     /// The standing order that set the route, if any.
     pub route_order: Option<OrderId>,
@@ -424,13 +430,11 @@ pub struct TaskForce {
 
 impl TaskForce {
     /// Where the task force is: the hex whose centre is nearest. That is
-    /// the hex ahead once it is half a hex (20 nm) or more along its leg,
-    /// and the hex it left before that (decision 0005, decision 1).
+    /// the hex ahead once it is half its leg's charge along it, and the hex
+    /// it left before that (decision 0005, decision 1; decision 0058, 6).
     pub fn position(&self) -> Hex {
         match self.toward_hex {
-            Some(toward) if self.progress_nm >= Fixed::from_int(HEX_NM) / Fixed::from_int(2) => {
-                toward
-            }
+            Some(toward) if self.progress_nm >= self.leg_nm / Fixed::from_int(2) => toward,
             _ => self.from_hex,
         }
     }
@@ -442,9 +446,10 @@ impl TaskForce {
     /// At a centre this is `(false, from_hex)`. Between centres the force
     /// goes on to the hex ahead or turns back to the hex it left, whichever
     /// is the shorter trip to `first_waypoint` by sea. Going on costs the
-    /// rest of the leg plus 40 nm for each step from the hex ahead. Turning
-    /// back costs the miles already covered plus 40 nm for each step from
-    /// the hex it left. A tie goes ahead. If only one side can reach the
+    /// rest of the leg plus the charged miles of the sea path from the hex
+    /// ahead ([`Map::sea_charged_nm_in`]). Turning back costs the miles
+    /// already covered plus the charged miles of the sea path from the hex
+    /// it left (decision 0058). A tie goes ahead. If only one side can reach the
     /// waypoint, that side is taken. If neither can, the result is `None`
     /// and the order must be rejected. With no waypoint there is nothing to
     /// compare, so it goes ahead.
@@ -465,13 +470,12 @@ impl TaskForce {
         // open too. Both distances below are therefore reached by open steps
         // only, and the cost of turning back is always a real trip.
         let distances = map.sea_distances_to(waypoint);
-        let one_hex = Fixed::from_int(HEX_NM);
-        let cost_ahead = distances
-            .get(&toward)
-            .map(|steps| (one_hex - self.progress_nm) + one_hex * i64::from(*steps));
-        let cost_back = distances
-            .get(&self.from_hex)
-            .map(|steps| self.progress_nm + one_hex * i64::from(*steps));
+        let cost_ahead = map
+            .sea_charged_nm_in(&distances, toward, waypoint)
+            .map(|miles| (self.leg_nm - self.progress_nm) + Fixed::from_int(i64::from(miles)));
+        let cost_back = map
+            .sea_charged_nm_in(&distances, self.from_hex, waypoint)
+            .map(|miles| self.progress_nm + Fixed::from_int(i64::from(miles)));
         match (cost_ahead, cost_back) {
             (None, None) => None,
             (Some(_), None) => Some((false, toward)),
@@ -536,7 +540,7 @@ impl TaskForce {
         if let Some(toward) = self.toward_hex {
             self.toward_hex = Some(self.from_hex);
             self.from_hex = toward;
-            self.progress_nm = Fixed::from_int(HEX_NM) - self.progress_nm;
+            self.progress_nm = self.leg_nm - self.progress_nm;
         }
     }
 
@@ -553,6 +557,7 @@ impl TaskForce {
             from_hex: hex,
             toward_hex: None,
             progress_nm: Fixed::ZERO,
+            leg_nm: Fixed::from_int(HEX_NM),
             status: TaskForceStatus::Idle,
             route_order: None,
             speed_order: None,

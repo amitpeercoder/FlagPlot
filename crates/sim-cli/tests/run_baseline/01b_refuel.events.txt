@@ -2,50 +2,51 @@ Scenario 1b: Refuelling, Noumea to Espiritu Santo and back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 29bad2e4046cfb23  11 events
-day   2  hash b9d562ac4d25e800  4 events
-day   3  hash ad31b0e07288b48f  12 events
-day   4  hash 2e2c8534441513c5  4 events
-day   5  hash 9c4e15c2fba1e4ba  1 events
+day   1  hash 469aba9e96dfec1a  11 events
+day   2  hash 763d2d1742c0d909  4 events
+day   3  hash 8fa709465b0fbb39  12 events
+day   4  hash bb34b601a3cef5e9  4 events
+day   5  hash 396d9fe8176fff30  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
 #3 D1 night     task_force:1 steamed 192 nm at 16 kn from (0,0) to (5,0)  <- order:1, order:2
 #4 D1 night     ship:1 burned 48 t, 1952 t remaining  <- #3
 #5 D1 night     ship:2 burned 24 t, 476 t remaining  <- #3
-#6 D1 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:1, order:2
+#6 D1 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (8,0)  <- order:1, order:2
 #7 D1 morning   ship:1 burned 24 t, 1928 t remaining  <- #6
 #8 D1 morning   ship:2 burned 12 t, 464 t remaining  <- #6
-#9 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (8,2)  <- order:1, order:2
+#9 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (8,0) to (8,3)  <- order:1, order:2
 #10 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #9
 #11 D1 afternoon ship:2 burned 12 t, 452 t remaining  <- #9
-#12 D2 night     task_force:1 steamed 56 nm at 16 kn from (8,2) to (8,3)  <- order:1, order:2
-#13 D2 night     ship:1 burned 14 t, 1890 t remaining  <- #12
-#14 D2 night     ship:2 burned 7 t, 445 t remaining  <- #12
-#15 D2 night     task_force:1 arrived at (8,3) at D2 21:30  <- #12
-#16 D3 -         ship:1 took 110 t of fuel at base:2, 2000 t aboard, base:2 has 40 t left  <- #15
-#17 D3 -         ship:2 took 40 t of fuel at base:2, 485 t aboard, base:2 is out of fuel  <- #15
+#12 D2 night     task_force:1 steamed 10 nm at 16 kn from (8,3) to (8,3)  <- order:1, order:2
+#13 D2 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #12
+#14 D2 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #12
+#15 D2 night     task_force:1 arrived at (8,3) at D2 18:38  <- #12
+#16 D3 -         ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 51.5 t left  <- #15
+#17 D3 -         ship:2 took 49.25 t of fuel at base:2, 500 t aboard, base:2 has 2.25 t left  <- #15
 #18 D3 -         order:3 accepted for task_force:1  <- order:3
-#19 D3 night     task_force:1 steamed 192 nm at 16 kn from (8,3) to (6,0)  <- order:3, order:2
+#19 D3 night     task_force:1 steamed 192 nm at 16 kn from (8,3) to (5,0)  <- order:3, order:2
 #20 D3 night     ship:1 burned 48 t, 1952 t remaining  <- #19
-#21 D3 night     ship:2 burned 24 t, 461 t remaining  <- #19
-#22 D3 morning   task_force:1 steamed 96 nm at 16 kn from (6,0) to (4,0)  <- order:3, order:2
+#21 D3 night     ship:2 burned 24 t, 476 t remaining  <- #19
+#22 D3 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (3,0)  <- order:3, order:2
 #23 D3 morning   ship:1 burned 24 t, 1928 t remaining  <- #22
-#24 D3 morning   ship:2 burned 12 t, 449 t remaining  <- #22
-#25 D3 afternoon task_force:1 steamed 96 nm at 16 kn from (4,0) to (1,0)  <- order:3, order:2
+#24 D3 morning   ship:2 burned 12 t, 464 t remaining  <- #22
+#25 D3 afternoon task_force:1 steamed 96 nm at 16 kn from (3,0) to (0,0)  <- order:3, order:2
 #26 D3 afternoon ship:1 burned 24 t, 1904 t remaining  <- #25
-#27 D3 afternoon ship:2 burned 12 t, 437 t remaining  <- #25
-#28 D4 night     task_force:1 steamed 56 nm at 16 kn from (1,0) to (0,0)  <- order:3, order:2
-#29 D4 night     ship:1 burned 14 t, 1890 t remaining  <- #28
-#30 D4 night     ship:2 burned 7 t, 430 t remaining  <- #28
-#31 D4 night     task_force:1 arrived at (0,0) at D4 21:30  <- #28
-#32 D5 -         ship:1 took 100 t of fuel at base:1, 1990 t aboard, base:1 is out of fuel  <- #31
+#27 D3 afternoon ship:2 burned 12 t, 452 t remaining  <- #25
+#28 D4 night     task_force:1 steamed 10 nm at 16 kn from (0,0) to (0,0)  <- order:3, order:2
+#29 D4 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #28
+#30 D4 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #28
+#31 D4 night     task_force:1 arrived at (0,0) at D4 18:38  <- #28
+#32 D5 -         ship:1 took 98.5 t of fuel at base:1, 2000 t aboard, base:1 has 1.5 t left  <- #31
+#33 D5 -         ship:2 took 1.5 t of fuel at base:1, 452.25 t aboard, base:1 is out of fuel  <- #31
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1990 t of fuel, 0 t of supply
-ship:2 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 430 t of fuel, 0 t of supply
+ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 452.25 t of fuel, 0 t of supply
 base:1 "Noumea" (Allied) at (0,0): 0 t of supply in stock, 0 t of fuel in stock
-base:2 "Espiritu Santo" (Allied) at (8,3): 0 t of supply in stock, 0 t of fuel in stock
+base:2 "Espiritu Santo" (Allied) at (8,3): 0 t of supply in stock, 2.25 t of fuel in stock
 Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts

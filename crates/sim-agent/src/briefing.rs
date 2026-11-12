@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::Serialize;
 use sim_core::events::{EventKind, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
-use sim_core::hex::HEX_NM;
+use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId};
 use sim_core::orders::{AirMission, Cargo};
 use sim_core::side_events::{SideEvent, SideEventKind};
@@ -1349,13 +1349,14 @@ fn loss<'m>(
 
 fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
     // 1. A ship that cannot reach the nearest base of its side at cruising
-    // speed, by the map's shortest sea path (40 miles to a hex).
+    // speed, by the map's shortest sea path, charged as a force is charged
+    // for steaming it (decision 0058).
     let mut ship_cannot_reach_base = Vec::new();
     if !ctx.bases.is_empty() {
-        let fields: BTreeMap<BaseId, BTreeMap<_, u32>> = ctx
+        let fields: BTreeMap<BaseId, (Hex, BTreeMap<Hex, u32>)> = ctx
             .bases
             .values()
-            .map(|b| (b.id, ctx.view.sea_distances_to(b.hex)))
+            .map(|b| (b.id, (b.hex, ctx.view.sea_distances_to(b.hex))))
             .collect();
         for ship in ctx.ships.values() {
             if ship.location == ShipLocation::Sunk {
@@ -1367,17 +1368,20 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
             };
             let nearest = fields
                 .iter()
-                .filter_map(|(base, field)| field.get(&hex).map(|steps| (*steps, *base)))
+                .filter_map(|(base, (base_hex, field))| {
+                    ctx.view
+                        .sea_charged_nm_in(field, hex, *base_hex)
+                        .map(|miles| (miles, *base))
+                })
                 .min();
-            let hex_nm = u32::try_from(HEX_NM).expect("a hex is a few miles");
             match nearest {
-                Some((steps, base)) if steps * hex_nm <= range => {
+                Some((miles, base)) if miles <= range => {
                     let _ = base;
                 }
-                Some((steps, base)) => ship_cannot_reach_base.push(ShipRangeWarning {
+                Some((miles, base)) => ship_cannot_reach_base.push(ShipRangeWarning {
                     ship: ctx.ship(ship.id),
                     nearest_base: Some(ctx.base(base)),
-                    distance_nm: Some(steps * hex_nm),
+                    distance_nm: Some(miles),
                     range_nm: range,
                 }),
                 None => ship_cannot_reach_base.push(ShipRangeWarning {
