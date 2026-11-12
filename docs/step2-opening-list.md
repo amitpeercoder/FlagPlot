@@ -21,6 +21,8 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Ships charged straight-line miles: built (decision 0058). A step is charged the miles it brings the force closer to its waypoint where the way is clear, 40 where land forces a detour.
 - The hash version: raised to 2 (decision 0057) and to 3 for the new field (decision 0058).
 - The reach rule: built in all its stages (decision 0059). Stage 1: reach by order and ditching for fuel; 1b: the patrol pilot's chance; 2: aircraft whose deck is lost land at another deck or a field, or in the sea; 3: Flight 300 is produced by the rule in the full slice and the soak (its scripted arrival is gone there and stays in scenario 6, which has no carriers), tested in scenario 12d. (Reach beyond the radius, ditching, the range policy order and the part of "a friendly field beyond the target" that lands aircraft at a field are the rows above.)
+- `batch` records what the measures count for each run (decision 0062), and `sim-cli validate` judges a batch against a battle's measures by the spec's rule of agreement. Ship passages are not in `validate` yet.
+- The baseline reports, on the figures of Nov 12, 2026, are in `docs/validation/`, with the architect's reading in `baseline-reading.md`: Savo Island misses 3 of 13 judged measures, the Eastern Solomons 3 of 11, Rabaul against Guadalcanal 6 of 10.
 
 ## What the architect settles from the research
 
@@ -36,7 +38,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Eastern Solomons over 1,000 runs, on placeholder points: 54 in 100 stalemates, 36 Allied victories, 9 Allied defeats. The day is usually judged a limited American victory.
 - Claims in the model overstate less than the record: about 2.5 to 3 aircraft were claimed for each lost, and 14 ships for 4 at Savo Island.
 - The Japanese search at Eastern Solomons is a placeholder arc; the real search orders are now in the facts.
-- On the Eastern Solomons' own seed Ryujo loses 17 aircraft aboard and 6 in the sea, where the record has about 4 lost with the ship and 5 from her strike. If most seeds look so, the Japanese all-cause loss measure will miss high because of when her strike is in the air in the scenario, not because of a figure: check it over seeds in the baseline report, and do not ask tuning to close it. (Raised by the spec session, Nov 12, 2026.)
+- On the Eastern Solomons' own seed Ryujo loses 17 aircraft aboard and 6 in the sea, where the record has about 4 lost with the ship and 5 from her strike. If most seeds look so, the Japanese all-cause loss measure will miss high because of when her strike is in the air in the scenario, not because of a figure: check it over seeds in the baseline report, and do not ask tuning to close it. (Raised by the spec session, Nov 12, 2026.) Checked over the 1,000 baseline runs: in 256 of the 265 runs in which she sinks, 23 of her aircraft go down aboard her, and none is ever shot down. It is the scenario's orders (her fighters held on deck, her attack unit waiting for a ship), so it waits for the strike target priority rule.
 
 ## Not step 2, kept here so they are not lost
 
