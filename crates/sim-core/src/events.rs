@@ -1906,12 +1906,31 @@ pub fn claim_text(
             if claimed_sunk == 1 { "ship" } else { "ships" }
         );
     }
+    let (place, words) = air_claim_words(
+        claimed_sunk,
+        claimed_hits,
+        claimed_kind.map(ShipKind::name),
+        claimed_shot_down,
+        claimed_on_ground,
+    );
+    format!("{} claim {place} {hex}: {words}", side.name())
+}
+
+/// What a claim from the air says, in words, and whether it is a claim
+/// "over" a place (aircraft shot down only) or "at" it: `("at", "5 hits on a
+/// carrier, 0 sunk")`.
+pub fn air_claim_words(
+    claimed_sunk: u32,
+    claimed_hits: u32,
+    claimed_kind: Option<&str>,
+    claimed_shot_down: u32,
+    claimed_on_ground: u32,
+) -> (&'static str, String) {
     let mut parts: Vec<String> = Vec::new();
     if let Some(kind) = claimed_kind {
         parts.push(format!(
-            "{claimed_hits} {} on a {}",
+            "{claimed_hits} {} on a {kind}",
             if claimed_hits == 1 { "hit" } else { "hits" },
-            kind.name()
         ));
         parts.push(format!("{claimed_sunk} sunk"));
     }
@@ -1931,7 +1950,7 @@ pub fn claim_text(
     } else {
         "at"
     };
-    format!("{} claim {place} {hex}: {}", side.name(), parts.join(", "))
+    (place, parts.join(", "))
 }
 
 #[cfg(test)]

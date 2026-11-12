@@ -189,7 +189,18 @@ fn known_progress_over_a_whole_run_is_exact_for_own_bases_and_blind_for_the_enem
                         KnownBasis::Exact => assert_eq!(k.count, true_line.count),
                         // Not observable: nothing, whatever the truth.
                         KnownBasis::NotObservable => assert_eq!(k.count.raw(), 0),
-                        KnownBasis::Claims => assert!(k.count <= true_line.count),
+                        // Claims (decision 0055) can be above the truth, and
+                        // are the sum of the side's own claims, in aircraft
+                        // for this scenario's objective.
+                        KnownBasis::Claims => {
+                            let claimed: u32 = world
+                                .side_view(side)
+                                .claims()
+                                .iter()
+                                .map(|c| c.claimed_shot_down + c.claimed_on_ground)
+                                .sum();
+                            assert_eq!(k.count.raw(), i64::from(claimed) * 1_000_000);
+                        }
                     }
                 }
             }

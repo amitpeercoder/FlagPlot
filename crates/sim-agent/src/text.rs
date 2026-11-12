@@ -390,13 +390,24 @@ impl Briefing {
                 evs(&x.events)
             )
         });
-        o.each("Claims of the enemy", &l.claims, |x| {
-            format!(
-                "Claim: {} enemy sunk at {}{}",
-                ships(x.claimed_sunk),
-                at(&x.place),
-                ev(x.event)
-            )
+        o.each("Claims yesterday", &l.claims, |x| {
+            if x.from_air {
+                let (place, words) = sim_core::events::air_claim_words(
+                    x.claimed_sunk,
+                    x.claimed_hits,
+                    x.taken_for,
+                    x.claimed_shot_down,
+                    x.claimed_on_ground,
+                );
+                format!("Claim {place} {}: {words}{}", at(&x.place), ev(x.event))
+            } else {
+                format!(
+                    "Claim: {} enemy sunk at {}{}",
+                    ships(x.claimed_sunk),
+                    at(&x.place),
+                    ev(x.event)
+                )
+            }
         });
 
         o.heading("TASK FORCES");
@@ -688,9 +699,19 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
                 .map(|p| format!(", worth {} points", p.0))
                 .unwrap_or_default()
         ),
+        // What the side is told by its own claims, which can be wrong.
+        "claims" if line.kind == "aircraft_destroyed" => format!(
+            "What you know of your progress: {} enemy aircraft claimed shot down or destroyed on the ground, worth {} points (claims can be wrong)",
+            known.count.0,
+            known.points.map(|p| p.0.to_string()).unwrap_or_default()
+        ),
         "claims" => format!(
-            "What you know of your progress: {} enemy ships reported sunk, of kinds you were not told",
-            known.count.0
+            "What you know of your progress: {} enemy ships claimed sunk{} (claims can be wrong)",
+            known.count.0,
+            known
+                .points
+                .map(|p| format!(", worth {} points for the kinds you attacked", p.0))
+                .unwrap_or_else(|| ", of kinds you were not told".to_string())
         ),
         _ => "What you know of your progress: nothing you can see shows it; it is counted at the end of the game".to_string(),
     });

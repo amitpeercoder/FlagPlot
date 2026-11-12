@@ -515,8 +515,12 @@ pub fn result(
 pub enum KnownBasis {
     /// From the side's own units and events: as exact as the truth.
     Exact,
-    /// From the claims the side received (`ClaimReceived`): the number of
-    /// enemy ships it believes sunk, of no known kind, so with no points.
+    /// From the claims the side received (`ClaimReceived`, decision 0055):
+    /// the number of enemy ships it believes sunk, and of enemy aircraft it
+    /// believes shot down or destroyed on the ground. The claims can be
+    /// wrong, so the count can be above the truth. A claim of ships from the
+    /// air has the kind the attackers took the contact for, and gives points
+    /// for it; a surface fight's claim has no kind and gives none.
     Claims,
     /// No unit of the side's and no event it may see shows this: the count
     /// is 0 and says nothing. The umpire counts it at the end.
@@ -543,8 +547,38 @@ pub struct KnownProgress {
     /// Ships, aircraft, tons, or 1 or 0 for a base. 0 when not observable.
     pub count: Fixed,
     /// Points of the known count, where the kind of what was counted is
-    /// known: `None` for claims and for what is not observable.
+    /// known: for ships claimed sunk, those of the claims that name a kind
+    /// (`None` if none does); for aircraft claimed, the count times the
+    /// points for one; `None` for what is not observable.
     pub points: Option<Fixed>,
+}
+
+/// What a side's claims add up to (decision 0055).
+#[derive(Default)]
+struct Claimed {
+    /// Enemy ships believed sunk, by any claim.
+    sunk: u32,
+    /// Of those, by the kind of ship the attackers took the contact for, for
+    /// the claims that name one.
+    sunk_by_kind: BTreeMap<ShipKind, u32>,
+    /// A claim says the side attacked ships: it names a kind.
+    attacked_ships: bool,
+    /// Enemy aircraft believed shot down or destroyed on the ground.
+    aircraft: u32,
+    /// The side has a claim from the air.
+    from_air: bool,
+}
+
+impl Claimed {
+    fn note(&mut self, sunk: u32, kind: Option<ShipKind>, aircraft: u32, from_air: bool) {
+        self.sunk += sunk;
+        if let Some(kind) = kind {
+            self.attacked_ships = true;
+            *self.sunk_by_kind.entry(kind).or_insert(0) += sunk;
+        }
+        self.aircraft += aircraft;
+        self.from_air |= from_air;
+    }
 }
 
 /// A side's own base and what it holds, as the side sees it. The view hands
@@ -568,7 +602,7 @@ pub fn known_progress(
     // Tons unloaded at each base by the side's own ships: a side sees its
     // own unloading whole.
     let mut cargo: BTreeMap<BaseId, Fixed> = BTreeMap::new();
-    let mut claimed: u32 = 0;
+    let mut claimed = Claimed::default();
     for event in events {
         if let SideEventKind::Whole(kind) = &event.kind {
             match kind {
@@ -577,7 +611,19 @@ pub fn known_progress(
                 } => {
                     *cargo.entry(*base).or_insert(Fixed::ZERO) += *unloaded_t;
                 }
-                EventKind::ClaimReceived { claimed_sunk, .. } => claimed += *claimed_sunk,
+                EventKind::ClaimReceived {
+                    claimed_sunk,
+                    claimed_kind,
+                    claimed_shot_down,
+                    claimed_on_ground,
+                    from_air,
+                    ..
+                } => claimed.note(
+                    *claimed_sunk,
+                    *claimed_kind,
+                    *claimed_shot_down + *claimed_on_ground,
+                    *from_air,
+                ),
                 _ => {}
             }
         }
@@ -595,13 +641,33 @@ pub fn known_progress(
                 points: None,
             };
             match objective {
-                Objective::ShipsSunk(_) => {
-                    if claimed > 0 {
+                Objective::ShipsSunk(points) => {
+                    // A side that has been told of ships, even of none sunk
+                    // by an attack it knows it made, has a claim count.
+                    if claimed.sunk > 0 || claimed.attacked_ships {
                         known.basis = KnownBasis::Claims;
-                        known.count = Fixed::from_int(i64::from(claimed));
+                        known.count = Fixed::from_int(i64::from(claimed.sunk));
+                        if !claimed.sunk_by_kind.is_empty() {
+                            known.points = Some(
+                                claimed
+                                    .sunk_by_kind
+                                    .iter()
+                                    .map(|(kind, n)| points.of(*kind) * i64::from(*n))
+                                    .fold(Fixed::ZERO, |sum, value| sum + value),
+                            );
+                        }
                     }
                 }
-                Objective::ShipsCrippled(_) | Objective::AircraftDestroyed { .. } => {}
+                Objective::ShipsCrippled(_) => {}
+                Objective::AircraftDestroyed { points } => {
+                    // Any claim from the air tells the side something of
+                    // aircraft, if only that it claims none.
+                    if claimed.from_air {
+                        known.basis = KnownBasis::Claims;
+                        known.count = Fixed::from_int(i64::from(claimed.aircraft));
+                        known.points = Some(known.count * *points);
+                    }
+                }
                 Objective::CargoLanded { base, points_per_t } => {
                     known.basis = KnownBasis::Exact;
                     known.count = cargo.get(base).copied().unwrap_or(Fixed::ZERO);
@@ -1014,6 +1080,105 @@ mod tests {
         assert_eq!(known[1].basis, KnownBasis::NotObservable);
         assert_eq!(known[2].basis, KnownBasis::NotObservable);
         assert_eq!(known[2].count, Fixed::ZERO);
+    }
+
+    fn air_claim(
+        id: u32,
+        sunk: u32,
+        kind: Option<ShipKind>,
+        shot_down: u32,
+        on_ground: u32,
+    ) -> SideEvent {
+        SideEvent {
+            id: crate::ids::EventId::new(id),
+            day: 1,
+            pulse: None,
+            kind: SideEventKind::Whole(EventKind::ClaimReceived {
+                side: Side::Allied,
+                hex: Hex::new(0, 0),
+                claimed_sunk: sunk,
+                claimed_hits: if kind.is_some() { 3 } else { 0 },
+                claimed_kind: kind,
+                claimed_shot_down: shot_down,
+                claimed_on_ground: on_ground,
+                from_air: true,
+            }),
+            causes: Vec::new(),
+            hidden_causes: false,
+            breakdown: None,
+        }
+    }
+
+    #[test]
+    fn claims_from_the_air_count_ships_with_points_for_their_kind_and_aircraft_shot_down_or_destroyed(
+    ) {
+        let ships = ShipPoints(BTreeMap::from([
+            (ShipKind::Carrier, n(10)),
+            (ShipKind::Cruiser, n(4)),
+        ]));
+        let objectives = SideObjectives {
+            mission: "Placeholder mission.".to_string(),
+            objectives: vec![
+                Objective::ShipsSunk(ships),
+                Objective::ShipsCrippled(ShipPoints::default()),
+                Objective::AircraftDestroyed {
+                    points: "0.05".parse().expect("a decimal"),
+                },
+            ],
+        };
+        // A raid on a carrier claims one sunk, one on a cruiser claims none,
+        // and a raid on a base claims aircraft on the ground.
+        let events = [
+            air_claim(1, 1, Some(ShipKind::Carrier), 4, 0),
+            air_claim(2, 0, Some(ShipKind::Cruiser), 0, 0),
+            air_claim(3, 0, None, 2, 20),
+        ];
+        let known = known_progress(&objectives, &[], &events);
+        assert_eq!(
+            (known[0].basis, known[0].count, known[0].points),
+            (KnownBasis::Claims, n(1), Some(n(10)))
+        );
+        assert_eq!(known[1].basis, KnownBasis::NotObservable);
+        // 4 + 0 + 2 shot down and 20 on the ground.
+        assert_eq!(
+            (known[2].basis, known[2].count, known[2].points),
+            (
+                KnownBasis::Claims,
+                n(26),
+                Some("1.3".parse().expect("a decimal"))
+            )
+        );
+    }
+
+    #[test]
+    fn a_claim_that_names_a_kind_makes_a_count_even_of_no_ship_sunk_and_one_that_does_not_makes_none(
+    ) {
+        let objectives = SideObjectives {
+            mission: "Placeholder mission.".to_string(),
+            objectives: vec![
+                Objective::ShipsSunk(ShipPoints::default()),
+                Objective::AircraftDestroyed { points: Fixed::ONE },
+            ],
+        };
+        // Aircraft only: nothing is known of ships; no ship was attacked.
+        let known = known_progress(&objectives, &[], &[air_claim(1, 0, None, 3, 0)]);
+        assert_eq!(known[0].basis, KnownBasis::NotObservable);
+        assert_eq!((known[1].basis, known[1].count), (KnownBasis::Claims, n(3)));
+        // A raid on ships that claims none sunk: a count of 0, from claims.
+        let known = known_progress(
+            &objectives,
+            &[],
+            &[air_claim(1, 0, Some(ShipKind::Carrier), 0, 0)],
+        );
+        assert_eq!(
+            (known[0].basis, known[0].count, known[0].points),
+            (KnownBasis::Claims, Fixed::ZERO, Some(Fixed::ZERO))
+        );
+        // A claim from the air of no aircraft is still a claim of none.
+        assert_eq!(
+            (known[1].basis, known[1].count),
+            (KnownBasis::Claims, Fixed::ZERO)
+        );
     }
 
     // -----------------------------------------------------------------

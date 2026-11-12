@@ -935,6 +935,54 @@ mod tests {
     }
 
     #[test]
+    fn the_false_claim_chances_are_required_in_range_and_not_floats() {
+        // Decision 12 of 0055: three chances, between 0 and 1, as strings.
+        let bad = |from: &str, to: &str| {
+            let text = air_combat_text().replace(from, to);
+            assert_ne!(text, air_combat_text(), "{from} is in the file");
+            parse_air_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        for (key, value, label) in [
+            (
+                "fighter_false_claim_chance",
+                "0.1",
+                "fighter false claim chance",
+            ),
+            (
+                "anti_aircraft_false_claim_chance",
+                "0.05",
+                "anti-aircraft false claim chance",
+            ),
+            ("bomb_false_claim_chance", "0.1", "bomb false claim chance"),
+        ] {
+            let line = format!("{key} = \"{value}\"");
+            assert!(
+                bad(&format!("{line}\n"), "").contains(key),
+                "{key} is required"
+            );
+            assert!(
+                bad(&line, &format!("{key} = \"1.5\"")).contains(label),
+                "{key} above 1"
+            );
+            assert!(
+                bad(&line, &format!("{key} = \"-0.1\"")).contains(label),
+                "{key} below 0"
+            );
+            assert!(
+                bad(&line, &format!("{key} = {value}")).contains(key),
+                "{key} as a float"
+            );
+            // The ends of the range are allowed.
+            for edge in ["0", "1"] {
+                let text = air_combat_text().replace(&line, &format!("{key} = \"{edge}\""));
+                parse_air_combat_figures(&text, here()).expect("an edge of the range loads");
+            }
+        }
+    }
+
+    #[test]
     fn a_float_in_air_combat_figures_is_rejected() {
         let text = air_combat_text().replace("\"0.2\"\ntorpedo", "0.2\ntorpedo");
         assert_ne!(text, air_combat_text());

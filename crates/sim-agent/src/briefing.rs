@@ -316,10 +316,26 @@ pub struct AircraftLoss {
     pub events: Vec<u32>,
 }
 
+/// What the side's own people believe they did in a fight or a raid
+/// (decisions 0014 and 0055). It can be wrong.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct Claim {
     pub place: Place,
+    /// Enemy ships believed sunk.
     pub claimed_sunk: u32,
+    /// Hits believed scored on ships, from the air.
+    pub claimed_hits: u32,
+    /// The kind of ship the attackers took the contact for, in a claim of
+    /// ships from the air.
+    pub taken_for: Option<&'static str>,
+    /// Enemy aircraft believed shot down.
+    pub claimed_shot_down: u32,
+    /// Enemy aircraft believed destroyed on the ground.
+    pub claimed_on_ground: u32,
+    /// True for a claim of a raid, false for one of a fight at sea.
+    pub from_air: bool,
+    /// The event that told the side. `explain` on it shows the side's own
+    /// firing it rests on.
     pub event: u32,
 }
 
@@ -858,15 +874,23 @@ impl Day {
                     } => {
                         loss(ctx, &mut aircraft, *air_group, id).pilots_lost += lost;
                     }
-                    // The claims from the air are told from stage 11c on.
                     EventKind::ClaimReceived {
                         hex,
                         claimed_sunk,
-                        from_air: false,
+                        claimed_hits,
+                        claimed_kind,
+                        claimed_shot_down,
+                        claimed_on_ground,
+                        from_air,
                         ..
                     } => claims.push(Claim {
                         place: ctx.place(*hex),
                         claimed_sunk: *claimed_sunk,
+                        claimed_hits: *claimed_hits,
+                        taken_for: claimed_kind.map(sim_core::refdata::ShipKind::name),
+                        claimed_shot_down: *claimed_shot_down,
+                        claimed_on_ground: *claimed_on_ground,
+                        from_air: *from_air,
                         event: id,
                     }),
                     EventKind::BaseSupplySpent { base, paid_t, .. } => {

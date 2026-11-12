@@ -314,33 +314,56 @@ fn the_objectives_are_those_the_decision_gives_both_sides() {
 // ---------------------------------------------------------------------
 
 #[test]
-fn what_each_side_knows_at_the_end_is_what_its_claims_say_of_ships_and_nothing_else() {
-    // Decision 0055 gives each side claims from the air. At this stage a
-    // side's known progress reads only the ships it claims sunk; the rest of
-    // its objectives are not observable. If a later change lets a side see
-    // more, this changes with it.
+fn what_each_side_knows_at_the_end_is_what_its_claims_say() {
+    // Decision 0055 (decision 14): a side's known progress reads its claims.
+    // Ships sunk and aircraft destroyed are the sums of the claims, labelled
+    // `claims`, and can be above the truth; ships crippled are told by no
+    // claim and stay not observable. Which ships a claim counts, and the kind
+    // each is worth points for, is the claim's (the kind its strike was sent
+    // at). If a later change lets a side see more, this changes with it.
     let world = run(SEED);
+    let objectives = world.objectives().expect("objectives");
     for side in Side::ALL {
         let view = world.side_view(side);
         let known = view.known_progress();
         assert_eq!(known.len(), 3);
-        let sunk: u32 = view.claims().iter().map(|c| c.claimed_sunk).sum();
-        assert!(!view.claims().is_empty());
-        assert!(view.claims().iter().all(|c| c.from_air));
+        let claims = view.claims();
+        assert!(!claims.is_empty());
+        assert!(claims.iter().all(|c| c.from_air));
+
+        // Ships sunk.
+        let sunk: u32 = claims.iter().map(|c| c.claimed_sunk).sum();
+        let attacked = claims.iter().any(|c| c.claimed_kind.is_some());
         assert_eq!(known[0].count, Fixed::from_int(i64::from(sunk)), "{side:?}");
-        assert_eq!(
-            known[0].basis,
-            if sunk > 0 {
-                KnownBasis::Claims
-            } else {
-                KnownBasis::NotObservable
-            }
-        );
-        for k in &known[1..] {
-            assert_eq!(k.basis, KnownBasis::NotObservable, "{side:?} {k:?}");
-            assert_eq!(k.count, Fixed::ZERO);
-            assert_eq!(k.points, None);
+        if sunk > 0 || attacked {
+            assert_eq!(known[0].basis, KnownBasis::Claims);
+            let Objective::ShipsSunk(points) = &objectives.side(side).objectives[0] else {
+                panic!("the first objective is ships sunk");
+            };
+            let worth = claims
+                .iter()
+                .filter_map(|c| {
+                    c.claimed_kind
+                        .map(|k| points.of(k) * i64::from(c.claimed_sunk))
+                })
+                .fold(Fixed::ZERO, |sum, value| sum + value);
+            assert_eq!(known[0].points, Some(worth), "{side:?}");
+        } else {
+            assert_eq!(known[0].basis, KnownBasis::NotObservable);
         }
+
+        // Ships crippled: nothing says it.
+        assert_eq!(known[1].basis, KnownBasis::NotObservable, "{side:?}");
+        assert_eq!((known[1].count, known[1].points), (Fixed::ZERO, None));
+
+        // Aircraft destroyed: shot down and destroyed on the ground.
+        let aircraft: u32 = claims
+            .iter()
+            .map(|c| c.claimed_shot_down + c.claimed_on_ground)
+            .sum();
+        assert_eq!(known[2].basis, KnownBasis::Claims, "{side:?}");
+        assert_eq!(known[2].count, Fixed::from_int(i64::from(aircraft)));
+        assert_eq!(known[2].points, Some(known[2].count * fx("0.05")));
     }
 }
 

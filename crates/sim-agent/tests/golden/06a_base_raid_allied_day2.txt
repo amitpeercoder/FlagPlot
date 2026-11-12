@@ -34,7 +34,7 @@ LOSSES YESTERDAY
 - Ships sunk: none
 - Ships damaged: none
 - Aircraft lost: air_group:3 "Placeholder defending fighters": 3 shot down [event 8]
-- Claims of the enemy: none
+- Claim over (5,0) Placeholder airfield B: 4 aircraft shot down [event 11]
 
 TASK FORCES
 - Task forces: none

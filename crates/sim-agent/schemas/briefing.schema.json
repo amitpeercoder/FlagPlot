@@ -67,7 +67,7 @@
           "$ref": "defs.schema.json#/$defs/dec_or_null"
         },
         "known": {
-          "description": "What the side knows of its progress, from its own units and the events it may see. basis is exact, claims (enemy ships reported sunk, of no known kind, so points is null) or not_observable (count is 0 and says nothing).",
+          "description": "What the side knows of its progress, from its own units and the events it may see. basis is exact, claims (the enemy ships and aircraft the side's own claims say it sank, shot down or destroyed on the ground: they can be wrong, so count can be above the truth; points are for the kind of ship each claim names, or null where none does) or not_observable (count is 0 and says nothing).",
           "type": "object",
           "required": ["basis", "count", "points"],
           "additionalProperties": false,
@@ -465,15 +465,30 @@
           }
         },
         "claims": {
+          "description": "Claims yesterday: what the side's own people believe they did in a fight at sea or a raid. They can be wrong. A claim from the air (from_air true) says hits on ships and the kind they were taken for, ships sunk, aircraft shot down and aircraft destroyed on the ground; a claim of a fight at sea says ships sunk only, with the rest 0 and null.",
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["place", "claimed_sunk", "event"],
+            "required": [
+              "place", "claimed_sunk", "claimed_hits", "taken_for", "claimed_shot_down",
+              "claimed_on_ground", "from_air", "event"
+            ],
             "additionalProperties": false,
             "properties": {
               "place": { "$ref": "defs.schema.json#/$defs/place" },
               "claimed_sunk": { "type": "integer" },
-              "event": { "type": "integer" }
+              "claimed_hits": { "type": "integer" },
+              "taken_for": {
+                "type": ["string", "null"],
+                "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary", null]
+              },
+              "claimed_shot_down": { "type": "integer" },
+              "claimed_on_ground": { "type": "integer" },
+              "from_air": { "type": "boolean" },
+              "event": {
+                "description": "The event that told the side; explain on it shows the side's own firing it rests on.",
+                "type": "integer"
+              }
             }
           }
         }

@@ -9,11 +9,11 @@ HEADING
 OBJECTIVES
 - Mission: Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action.
 - Objective: enemy ships sunk, points for each: carrier 10, battleship 8, cruiser 4, destroyer 1, transport 2, auxiliary 1
-  - What you know of your progress: 1 enemy ships reported sunk, of kinds you were not told
+  - What you know of your progress: 1 enemy ships claimed sunk, worth 10 points for the kinds you attacked (claims can be wrong)
 - Objective: enemy ships left afloat with propulsion or flight deck out, points for each: carrier 5, battleship 4, cruiser 2, destroyer 0.5, transport 1, auxiliary 0.5
   - What you know of your progress: nothing you can see shows it; it is counted at the end of the game
 - Objective: enemy aircraft destroyed, points for each: 0.05
-  - What you know of your progress: nothing you can see shows it; it is counted at the end of the game
+  - What you know of your progress: 41 enemy aircraft claimed shot down or destroyed on the ground, worth 2.05 points (claims can be wrong)
 
 ORDERS
 - Accepted yesterday: 11
@@ -56,7 +56,10 @@ LOSSES YESTERDAY
 - Aircraft lost: air_group:1 "VF-6": 3 shot down [events 24, 28]
 - Aircraft lost: air_group:2 "VB-6": 1 shot down [event 19]
 - Aircraft lost: air_group:6 "VB-3": 1 shot down [event 20]
-- Claims of the enemy: none
+- Claim at (7,-10): 6 hits on a carrier, 0 sunk [event 42]
+- Claim at (7,-10): 5 hits on a carrier, 1 sunk [event 43]
+- Claim over (7,-5): 20 aircraft shot down [event 44]
+- Claim over (7,-5): 21 aircraft shot down [event 45]
 
 TASK FORCES
 - task_force:1 "Task Force 16" at (7,-5): idle, carrier, speed cruise, readiness normal, not alert, 10 ships afloat
