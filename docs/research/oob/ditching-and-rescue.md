@@ -38,7 +38,7 @@ Status: research report for the architect, read on 2026-11-12. Nothing here is s
 | Eastern Solomons, 24 August | 6 fighters of Ryujo's patrol | No deck | Beside her two destroyers | All rescued within minutes (her own form; one reading, low confidence) |
 | Santa Cruz, 25 October | 6, Enterprise | Fuel and darkness: "water landings and deck crashes" after a search flown past dusk | Beside own force | All six crews saved |
 | Santa Cruz, 26 October | 5 torpedo bombers, Hornet | Fuel, with no deck | Beside own force | Not stated |
-| Santa Cruz, 26 October | 14, Enterprise | Fuel, with the deck blocked | Beside own force | 9 crews missing by her report |
+| Santa Cruz, 26 October | 14, Enterprise (9 fighters, 5 torpedo bombers) | Fuel, with the deck blocked | Beside own force | Not split. Her report has 9 crews missing that day from all causes, shooting down included; the Navy narrative says the men who landed in the sea were recovered |
 | Santa Cruz, 26 October | Japanese, 6 | No deck | Beside Zuikaku | Not stated |
 
 ## 2. Crews recovered against crews lost, by where the aircraft came down
@@ -47,7 +47,7 @@ Carrier aircraft, both navies, from the rows where the source states the fate. T
 
 | Where | Crews recovered | Crews lost | How and how soon |
 | --- | --- | --- | --- |
-| Beside its own force | 19 | 0 stated (5 more if Enterprise's missing fighters at Santa Cruz belong here) | Destroyer or cruiser, within minutes |
+| Beside its own force | 19 | 0 stated. Up to 5 fighter pilots at Santa Cruz may belong here: her report does not say how its missing crews were lost | Destroyer or cruiser, within minutes |
 | Within sight of its own base | 1 | 0 | A boat |
 | Open sea, away from any force | 6 to 9 | 4 to 7 | Flying boat, after two to four days |
 | Near the enemy | 1 | 1 | Flying boat, after 30 hours |
