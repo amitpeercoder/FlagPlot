@@ -65,7 +65,7 @@ fieldset.belief label { cursor: pointer; white-space: nowrap; }
 /* Layout */
 /* The map and the event panel never shrink below a usable size: in a short or
    narrow window the page scrolls instead, and the step controls stay in view. */
-main { flex: 1 0 auto; min-height: 420px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; }
+main { flex: 1 0 0; min-height: 420px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: minmax(0, 1fr); }
 @media (max-width: 960px) { main { grid-template-columns: minmax(0, 1fr) 320px; } }
 @media (max-width: 700px) { main { grid-template-columns: 1fr; grid-template-rows: minmax(340px, 55vh) minmax(320px, 45vh); min-height: 660px; } }
 #mapwrap { position: relative; min-width: 0; min-height: 0; background: var(--sea-deep); overflow: hidden; }
