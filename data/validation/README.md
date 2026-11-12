@@ -29,7 +29,7 @@ A claims measure is what a side believed it did for each hundred it really did, 
 
 ## Passages
 
-`passages.toml` is laid out differently, because a passage is checked with one calculation and not with runs. Each `[[passage]]` gives `facts` (the file its rows are in), `from_place` (a place in `data/oob/places.csv`), the end as `to_place` or as `to_bearing_deg` and `to_distance_nm` from the start, `speed_kn`, and the record in minutes as `record_low` and `record_high`. `to_short_by_nm` ends the run that many miles before the place. `speed_changes` is a list of `[minute, speed]`: the speed held from that minute on. `id`, `counts`, `judged`, `rows` and `reason` are as for a measure.
+`passages.toml` is laid out differently, because a passage is checked with one calculation and not with runs. Each `[[passage]]` gives `facts` (the file its rows are in), `from_place` (a place in `data/oob/places.csv`), the end as `to_place` or as `to_bearing_deg` and `to_distance_nm` from the start, `speed_kn`, and the record in minutes as `record_low` and `record_high`. `to_short_by_nm` ends the run that many miles before the place. An end may be given as `from_lat` and `from_lon`, or `to_lat` and `to_lon`, decimal strings with south and west negative, in place of a named place. `speed_changes` is a list of `[minute, speed]`: the speed held from that minute on. `id`, `counts`, `judged`, `rows` and `reason` are as for a measure.
 
 No passage is judged today. Research found no long run at one held speed, and a ship's speed made good in the record is a half to three quarters of its stated speed; the rules hold a force to its ordered speed on a straight course. The passages are reported to show the size of that.
 
@@ -54,6 +54,6 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 13 measures, 12 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
 | `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
-| `passages.toml` | Ship passages | 4 passages, none judged |
+| `passages.toml` | Ship passages | 5 passages, none judged |
 
 Still to write: for Cape Esperance, who sighted whom first, when the scenario is scoped.

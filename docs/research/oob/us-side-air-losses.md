@@ -62,3 +62,55 @@ The Command Summary carries the commanders' own daily figures for thirteen days 
 - The Army squadron's losses from its own report.
 
 The best remaining target is the 1st Marine Division's Final Report, Phase IV, which a browser may be able to download where a script could not.
+
+## Second pass, 2026-11-12: the 1st Marine Division's final report
+
+The division's own report for the period, "Final Report on Guadalcanal Operation, Phase IV" (20 August to 18 September 1942), was found mirrored on the Internet Archive and read in full from the page images; the volume for the next period was used for its tables. Rows: `engagement_outcomes.csv` ids 1738 to 1908, with 14 new gaps. Two pages of its aviation annex were read a second time by me and agreed.
+
+### Disputes
+
+The report disagrees with the data on many days, and with itself:
+- **26 August:** 12 enemy aircraft claimed in the aviation annex, 17 in a regiment's record.
+- **30 August:** 18 Zeros claimed in the annex, with 8 more added in the narrative. Four P-400s lost and three pilots missing, where the Army's account has two lost and two walking back.
+- **12 September:** 14 claimed in the annex (11 by fighters and 3 by anti-aircraft guns), 17 in the journal and 31 in a regiment's record. Our losses 4 or 2.
+- **10 and 11 September:** the 24 Navy fighters arrive on both days in the same annex. The raid of the 11th is "approximately 50" aircraft, against 26 bombers elsewhere.
+- **Shelling on the night of 25 August:** seven ships and no casualties in the journal; four ships, two killed and six wounded in a regiment's record.
+- **The 7th Marines:** 3,665 men landed, dated 19 September, against 4,180 and 4,262 on the 18th in the histories.
+
+### What it gives that nothing else did
+
+**A primary statement on crews saved.** The aviation annex ends: "During the First Marine Division's stay on Guadalcanal aviation based there destroyed 416 Japanese planes, sank 21 Japanese vessels with the loss of 78 planes in combat; the crews of about 50 percent being saved." The period is the division's whole stay, to December, not the scenario's four weeks, and "about 50 percent" is the report's own round figure. It sits between the two counts in `aircrew-fates.md` (59 per cent of all Marine fighter losses; about one in three for men who came down away from the field).
+
+**Claims by day from one source,** beside the losses on the Japanese units' own forms:
+
+| Date | Claimed in the aviation annex | Of which by anti-aircraft guns | Japanese forms: lost and forced down | Our losses, by the annex |
+| --- | --- | --- | --- | --- |
+| 21 Aug | 1 | | 0 | None |
+| 24 Aug | 21 | | The attackers were Ryujo's; see the Eastern Solomons rows | 3 F4F |
+| 26 Aug | 12 | | 7 | 1 F4F |
+| 29 Aug | 7 | 1 | 3 | None |
+| 30 Aug | 18 | | 4 | 4 P-400, 3 pilots missing |
+| 2 Sep | 7 | 1 | 2 | None in the air; 1 dive bomber burned on the ground |
+| 5 Sep | 3 | | 0 | 1 |
+| 9 Sep | 9 | | 1 | 2 |
+| 10 Sep | 5 | 1 | 3 | 1 |
+| 11 Sep | 7 | | 2 | 1 |
+| 12 Sep | 14 | 3 | 6 | 4 |
+| 13 Sep | 8 | | 6 | 5 |
+| 14 Sep | 16 | | 2 | Not stated |
+
+From 26 August to 14 September the annex claims 106 and the forms show 36 lost or forced down: **2.9 to 1.** This is the cleanest form of the comparison so far, one primary source on each side, and it agrees with the three to one found before. The sum is mine.
+
+**Anti-aircraft claims,** which were almost unrecorded: one each on 29 August, 2 September and 10 September, and three on 12 September. Six in the period.
+
+**The field.** No day is called closed. On 8 September it was in "bad condition following two days rain". The fighter strip was commissioned on 9 September.
+
+**Shellings by date:** 24 and 25 August, 3 and 5 September, Tulagi on 9 and 10 September, and the nights of 12 to 13 September (about five hours) and 13 to 14 September. No aircraft losses from shelling are given.
+
+**Supply and arrivals:** 120 tons of rations by three destroyer-transports on 21 August; a calendar of the supply ships' arrivals without tonnages; aircraft arrivals by date; on 10 September 11 fighters, 22 dive bombers and 3 P-400s flyable.
+
+**Ground actions, for the record:** the Tenaru, 34 killed and 75 wounded, with 700 to 1,000 enemy dead claimed; the ridge on 12 to 14 September, 31 killed, 103 wounded and 9 missing, with over 600 enemy dead counted.
+
+### What it does not give
+
+There is no list of raids in the intelligence annex; raid sizes come from the daily journal and two regiments' records. There are no cargo tonnages by ship (the appendices that held them are missing from the volume), no list of our aircraft lost by cause or on the ground by raid, and no count of the days the field was unusable.
