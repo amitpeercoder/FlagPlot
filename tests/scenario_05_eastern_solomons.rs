@@ -710,7 +710,21 @@ fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
     Run {
         seed,
-        events: run.world.events().iter().cloned().collect(),
+        // The claims from the air (decision 0056) are not part of what this
+        // scenario works out: they come after each raid is resolved and are
+        // asserted in scenario_11_claims.rs.
+        events: run
+            .world
+            .events()
+            .iter()
+            .filter(|e| {
+                !matches!(
+                    e.kind,
+                    sim_core::events::EventKind::ClaimReceived { from_air: true, .. }
+                )
+            })
+            .cloned()
+            .collect(),
         hashes: run.world.day_hashes().to_vec(),
         ships: truth
             .ships
@@ -3844,7 +3858,19 @@ fn a_replay_reproduces_every_daily_hash() {
         let mut again = base.with_seed(run.seed).expect("a seed can be set");
         again.run_to_end().expect("the run resolves");
         assert_eq!(run.hashes, again.world.day_hashes(), "seed {}", run.seed);
-        let events: Vec<Event> = again.world.events().iter().cloned().collect();
+        // The claims from the air are not in the batch's events (see `digest`).
+        let events: Vec<Event> = again
+            .world
+            .events()
+            .iter()
+            .filter(|e| {
+                !matches!(
+                    e.kind,
+                    sim_core::events::EventKind::ClaimReceived { from_air: true, .. }
+                )
+            })
+            .cloned()
+            .collect();
         assert_eq!(run.events, events, "seed {}", run.seed);
     }
     assert_eq!(batch()[76].seed, 77);

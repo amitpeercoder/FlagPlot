@@ -2,7 +2,7 @@ Scenario 5c: Escort, patrol and guns
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1eda26b70c1000be  25 events
+day   1  hash 4de5860cf3a6bef3  27 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -29,6 +29,8 @@ day   1  hash 1eda26b70c1000be  25 events
 #23 D1 afternoon ship:3 propulsion hit, working -> degraded  <- #21
 #24 D1 afternoon ship:3 main battery hit, no change, still working  <- #21
 #25 D1 afternoon Allied report: 3 ships, cruiser, at (9,0): refreshed contact:1  <- #21
+#26 D1 afternoon Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down  <- #14, #21
+#27 D1 afternoon Japanese claim over (9,0): 6 aircraft shot down  <- #15, #16, #17
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -42,6 +44,6 @@ ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 50, fir
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (9,0): 3 ships, cruiser, age 0 pulses
-Allied: no battle claims
+Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down, day 1 afternoon
 Japanese: no contacts
-Japanese: no battle claims
+Japanese claim over (9,0): 6 aircraft shot down, day 1 afternoon

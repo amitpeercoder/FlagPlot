@@ -2,9 +2,9 @@ Scenario 6a: A raid on an airfield
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d7b565c0db2531ce  19 events
-day   2  hash 273379f38c314f52  13 events
-day   3  hash f3a52f67142b0df6  12 events
+day   1  hash d493159cf89cbbfb  21 events
+day   2  hash dc070ce7d077e159  15 events
+day   3  hash 20db00018af0aa30  14 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -24,32 +24,38 @@ day   3  hash f3a52f67142b0df6  12 events
 #16 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
 #17 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #16
 #18 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #17
-#19 D1 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#20 D2 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#21 D2 morning   air_group:1 launched 16 aircraft at base:2 at (5,0), 200 nm  <- order:4
-#22 D2 morning   air_group:2 sent 6 escorts with air_group:1  <- order:5, order:6, #21
-#23 D2 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #21, #22
-#24 D2 morning   air_group:3 patrol at the escorts of air_group:2: 6 shots x 0.3 = 1.8 expected, 1 hit  <- #21, #22
-#25 D2 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #21
-#26 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits  <- #21
-#27 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #23
-#28 D2 morning   air_group:2 lost 1 aircraft, 10 left  <- #24
-#29 D2 morning   air_group:1 lost 1 aircraft, 15 left  <- #25
-#30 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #21, #29
-#31 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #30
-#32 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#33 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#34 D3 morning   air_group:1 launched 15 aircraft at base:2 at (5,0), 200 nm  <- order:4
-#35 D3 morning   air_group:2 sent 5 escorts with air_group:1  <- order:5, order:6, #34
-#36 D3 morning   air_group:2 escorts at the patrol of air_group:3: 5 shots x 0.3 = 1.5 expected, 0 hits  <- #34, #35
-#37 D3 morning   air_group:3 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #34, #35
-#38 D3 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #34
-#39 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits  <- #34
-#40 D3 morning   air_group:2 lost 1 aircraft, 9 left  <- #37
-#41 D3 morning   air_group:1 lost 1 aircraft, 14 left  <- #38
-#42 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #39
-#43 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #34, #41, #42
-#44 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#19 D1 morning   Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #10, #17
+#20 D1 morning   Allied claim over (5,0): 5 aircraft shot down  <- #11, #12, #13
+#21 D1 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#22 D2 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#23 D2 morning   air_group:1 launched 16 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#24 D2 morning   air_group:2 sent 6 escorts with air_group:1  <- order:5, order:6, #23
+#25 D2 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #23, #24
+#26 D2 morning   air_group:3 patrol at the escorts of air_group:2: 6 shots x 0.3 = 1.8 expected, 1 hit  <- #23, #24
+#27 D2 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #23
+#28 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits  <- #23
+#29 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #25
+#30 D2 morning   air_group:2 lost 1 aircraft, 10 left  <- #26
+#31 D2 morning   air_group:1 lost 1 aircraft, 15 left  <- #27
+#32 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #23, #31
+#33 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #32
+#34 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #25, #32
+#35 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #26, #27, #28
+#36 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#37 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#38 D3 morning   air_group:1 launched 15 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#39 D3 morning   air_group:2 sent 5 escorts with air_group:1  <- order:5, order:6, #38
+#40 D3 morning   air_group:2 escorts at the patrol of air_group:3: 5 shots x 0.3 = 1.5 expected, 0 hits  <- #38, #39
+#41 D3 morning   air_group:3 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #38, #39
+#42 D3 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #38
+#43 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits  <- #38
+#44 D3 morning   air_group:2 lost 1 aircraft, 9 left  <- #41
+#45 D3 morning   air_group:1 lost 1 aircraft, 14 left  <- #42
+#46 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #43
+#47 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #38, #45, #46
+#48 D3 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #40, #47
+#49 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #41, #42, #43
+#50 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 11 ready, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 9 ready, mission CombatAirPatrol, patrol share 0.5, no arc
@@ -59,6 +65,10 @@ air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, ar
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock
 base:2 "Placeholder airfield B" (Allied) at (5,0): 950 t of supply in stock, 20 anti-aircraft shots
 Allied: no contacts
-Allied: no battle claims
+Allied claim over (5,0): 5 aircraft shot down, day 1 morning
+Allied claim over (5,0): 3 aircraft shot down, day 2 morning
+Allied claim over (5,0): 6 aircraft shot down, day 3 morning
 Japanese: no contacts
-Japanese: no battle claims
+Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
+Japanese claim over (5,0): 0 aircraft shot down, day 3 morning

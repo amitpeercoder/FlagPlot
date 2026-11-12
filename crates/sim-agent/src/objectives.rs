@@ -50,10 +50,12 @@ pub struct ShipKindPoints {
 }
 
 /// Progress as the side knows it. `basis` is `exact` (its own units and
-/// events: as good as the truth), `claims` (the enemy ships it has been told
-/// are sunk, of no known kind, so `points` is `None`) or `not_observable` (no
-/// unit of its own and no event it may see shows this: `count` is 0 and says
-/// nothing; the umpire counts it at the end of the game).
+/// events: as good as the truth), `claims` (the enemy ships and aircraft its
+/// own claims say it sank or shot down or destroyed on the ground, which can
+/// be wrong; `points` are for the kind of ship each claim names, or `None`
+/// where none does) or `not_observable` (no unit of its own and no event it
+/// may see shows this: `count` is 0 and says nothing; the umpire counts it at
+/// the end of the game).
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct KnownLine {
     pub basis: &'static str,

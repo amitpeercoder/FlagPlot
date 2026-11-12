@@ -184,6 +184,26 @@ changes a rule, a result or a hash.
   descriptions of `order.schema.json`, which the MCP server's input schema
   repeats.
 
+## Claims (decision 0056, as built)
+
+- `losses.claims` lists the claims the side received yesterday, written in the
+  text as "Claims yesterday": what its own people believe they did in a fight
+  at sea or a raid. They can be wrong. Fields added to each (the version stays
+  1): `claimed_hits` (hits believed scored on ships), `taken_for` (the kind of
+  ship the attackers took the contact for when the strike was launched, or
+  `null`), `claimed_shot_down` and `claimed_on_ground` (enemy aircraft), and
+  `from_air` (true for a raid, false for a fight at sea, whose claim says ships
+  sunk only, with the rest 0 and `null`). A claim from the air reads "Claim over
+  (7,-5): 12 aircraft shot down" or "Claim at (9,0): 5 hits on a carrier, 0
+  sunk".
+- A claim is never below what really happened and is never corrected later; a
+  side fires and so claims more the more shots it fires, because each shot that
+  missed may be claimed.
+- `explain` on the claim's `event` number shows the firing events of the side's
+  own that it rests on. A claim of the enemy's is never given.
+- The `known` progress of `ships_sunk` and `aircraft_destroyed` objectives is
+  read from the claims (`basis` `claims`); see the next section.
+
 ## Objectives and the result (decision 0054, as built)
 
 A scenario may give each side a mission and objectives; neither changes a rule
@@ -197,8 +217,10 @@ or a hash.
   `base` where there is one, `closed` for `base_open`, the points (`ship_points`
   for each kind of ship, or `points` for one aircraft, one ton or the base), and
   `known`: what the side knows of its progress. `known.basis` is `exact` (the
-  side's own units and events), `claims` (enemy ships it is told are sunk, of no
-  known kind, so `points` is `null`) or `not_observable` (no unit of its own and
+  side's own units and events), `claims` (the enemy ships and aircraft its own
+  claims say it sank, shot down or destroyed on the ground, decision 0056: they
+  can be wrong, so `count` can be above the truth; `points` are for the kind of
+  ship each claim names, `null` where none does) or `not_observable` (no unit of its own and
   no event it may see shows it; `count` is 0 and says nothing). The text says
   `none` for a scenario without objectives. A side is never given the enemy's
   mission or objectives.

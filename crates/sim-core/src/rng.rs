@@ -59,17 +59,22 @@ impl Subsystem {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Draw {
     Legacy,
+    /// The false claims of a raid (decision 0056): one stream for each side's
+    /// claim, keyed on its first firing unit and the raid's first strike
+    /// group.
+    Claim,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 1] = [Draw::Legacy];
+    pub const ALL: [Draw; 2] = [Draw::Legacy, Draw::Claim];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
     /// and is not folded into the key.
     pub const fn code(self) -> u64 {
         match self {
             Draw::Legacy => 0,
+            Draw::Claim => 1,
         }
     }
 }

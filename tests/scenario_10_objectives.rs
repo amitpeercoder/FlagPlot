@@ -314,21 +314,56 @@ fn the_objectives_are_those_the_decision_gives_both_sides() {
 // ---------------------------------------------------------------------
 
 #[test]
-fn what_each_side_knows_at_the_end_is_nothing_of_the_enemys_losses() {
-    // No event a side may see (decision 0047) shows a hit on an enemy ship or
-    // aircraft, and no battle claim is made in this scenario, so each side
-    // knows of none of its three objectives. This records what is so today:
-    // if a later change lets a side see more, this changes with it.
+fn what_each_side_knows_at_the_end_is_what_its_claims_say() {
+    // Decision 0056 (decision 14): a side's known progress reads its claims.
+    // Ships sunk and aircraft destroyed are the sums of the claims, labelled
+    // `claims`, and can be above the truth; ships crippled are told by no
+    // claim and stay not observable. Which ships a claim counts, and the kind
+    // each is worth points for, is the claim's (the kind its strike was sent
+    // at). If a later change lets a side see more, this changes with it.
     let world = run(SEED);
+    let objectives = world.objectives().expect("objectives");
     for side in Side::ALL {
-        let known = world.side_view(side).known_progress();
+        let view = world.side_view(side);
+        let known = view.known_progress();
         assert_eq!(known.len(), 3);
-        for k in &known {
-            assert_eq!(k.basis, KnownBasis::NotObservable, "{side:?} {k:?}");
-            assert_eq!(k.count, Fixed::ZERO);
-            assert_eq!(k.points, None);
+        let claims = view.claims();
+        assert!(!claims.is_empty());
+        assert!(claims.iter().all(|c| c.from_air));
+
+        // Ships sunk.
+        let sunk: u32 = claims.iter().map(|c| c.claimed_sunk).sum();
+        let attacked = claims.iter().any(|c| c.claimed_kind.is_some());
+        assert_eq!(known[0].count, Fixed::from_int(i64::from(sunk)), "{side:?}");
+        if sunk > 0 || attacked {
+            assert_eq!(known[0].basis, KnownBasis::Claims);
+            let Objective::ShipsSunk(points) = &objectives.side(side).objectives[0] else {
+                panic!("the first objective is ships sunk");
+            };
+            let worth = claims
+                .iter()
+                .filter_map(|c| {
+                    c.claimed_kind
+                        .map(|k| points.of(k) * i64::from(c.claimed_sunk))
+                })
+                .fold(Fixed::ZERO, |sum, value| sum + value);
+            assert_eq!(known[0].points, Some(worth), "{side:?}");
+        } else {
+            assert_eq!(known[0].basis, KnownBasis::NotObservable);
         }
-        assert!(world.side_view(side).claims().is_empty());
+
+        // Ships crippled: nothing says it.
+        assert_eq!(known[1].basis, KnownBasis::NotObservable, "{side:?}");
+        assert_eq!((known[1].count, known[1].points), (Fixed::ZERO, None));
+
+        // Aircraft destroyed: shot down and destroyed on the ground.
+        let aircraft: u32 = claims
+            .iter()
+            .map(|c| c.claimed_shot_down + c.claimed_on_ground)
+            .sum();
+        assert_eq!(known[2].basis, KnownBasis::Claims, "{side:?}");
+        assert_eq!(known[2].count, Fixed::from_int(i64::from(aircraft)));
+        assert_eq!(known[2].points, Some(known[2].count * fx("0.05")));
     }
 }
 
@@ -386,21 +421,98 @@ fn objectives_change_no_hash_and_no_event() {
     )
     .expect("the baseline reads");
     assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
-    assert!(baseline.contains("hash a5f3f2bbd3931d4b"));
+    // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
+    // 0056 put the claims from the air into belief, and so into the hash.
+    assert!(baseline.contains("hash 2f37141bddfdb856"));
 }
 
-/// The known count of each objective is never above the true count, for both
-/// sides, seeds 1 to 200.
+/// The scenario run with the three false claim chances of decision 0056 set
+/// to 0, from air combat figures copied under the build directory.
+fn run_with_no_false_claims(seed: u64) -> World {
+    let figures =
+        std::fs::read_to_string(PathBuf::from(ROOT).join("data/reference/air_combat.toml"))
+            .expect("the air combat figures read");
+    let figures: Vec<String> = figures
+        .lines()
+        .map(|line| {
+            match [
+                "fighter_false_claim_chance",
+                "anti_aircraft_false_claim_chance",
+                "bomb_false_claim_chance",
+            ]
+            .iter()
+            .find(|key| line.starts_with(&format!("{key} = ")))
+            {
+                Some(key) => format!("{key} = \"0\""),
+                None => line.to_string(),
+            }
+        })
+        .collect();
+    let folder = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join(format!("objectives_no_false_claims_{}", std::process::id()));
+    std::fs::create_dir_all(&folder).expect("make the folder");
+    let path = folder.join("air_combat.toml");
+    std::fs::write(&path, figures.join("\n")).expect("write the figures");
+    let original = "air_combat = \"../reference/air_combat.toml\"";
+    let text = scenario_text();
+    assert_eq!(text.matches(original).count(), 1);
+    let text = text.replace(
+        original,
+        &format!("air_combat = {:?}", path.to_str().expect("a path")),
+    );
+    let mut scenario = load_text(&text, seed);
+    scenario.run_to_end().expect("the run resolves");
+    scenario.world
+}
+
+/// The ships the side's claims count only because they were left burning
+/// (decision 5 of 0056, the rule of decision 0014, 16): the `burning` factor
+/// of each of its claims from the air that has one.
+fn burning_credits(world: &World, side: Side) -> Fixed {
+    world
+        .events()
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::ClaimReceived {
+                side: claimant,
+                from_air: true,
+                ..
+            } if *claimant == side => event
+                .breakdown
+                .as_ref()
+                .and_then(|b| b.factors.iter().find(|f| f.name == "burning"))
+                .map(|f| f.value),
+            _ => None,
+        })
+        .fold(Fixed::ZERO, |sum, value| sum + value)
+}
+
+/// With the three false claim chances at 0 the known count of each
+/// objective is never above the true count, for both sides, seeds 1 to 200,
+/// except in the one way the rule of a claim of ships sunk allows: a ship
+/// left burning is claimed sunk. So for ships sunk the known count is the
+/// true count plus those burning credits, exactly. This replaces the
+/// property without the condition, which held until claims could be false
+/// (decision 0056): a side that claims a hit that was a miss knows more than
+/// the truth has.
 #[test]
-fn over_seeds_1_to_200_the_known_count_is_never_above_the_true_count() {
+fn over_seeds_1_to_200_with_no_false_claims_the_known_count_is_never_above_the_true_count() {
     for seed in 1..=200 {
-        let world = run(seed);
+        let world = run_with_no_false_claims(seed);
         let result = result_of(&world);
         for side in Side::ALL {
             let known = world.side_view(side).known_progress();
             let truth = &result.side(side).objectives;
             assert_eq!(known.len(), truth.len());
             for (k, t) in known.iter().zip(truth) {
+                if k.kind == "ships_sunk" {
+                    assert_eq!(
+                        k.count,
+                        t.count + burning_credits(&world, side),
+                        "seed {seed} {side:?}: ships sunk"
+                    );
+                    continue;
+                }
                 assert!(
                     k.count <= t.count,
                     "seed {seed} {side:?} {}: knows {} of {}",

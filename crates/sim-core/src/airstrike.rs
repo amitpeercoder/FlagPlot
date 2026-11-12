@@ -116,7 +116,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::belief::{ApplyOutcome, Report, SightingReport};
+use crate::belief::{ApplyOutcome, BattleClaim, Report, SightingReport};
 use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
@@ -161,6 +161,9 @@ pub(crate) struct StrikeInFlight {
     aircraft: u32,
     /// The `StrikeLaunched` event.
     launched: EventId,
+    /// The kind the contact was taken for when the strike was launched
+    /// (decision 6 of 0056). None for a strike at a base.
+    taken_for: Option<ShipKind>,
 }
 
 /// One strike's attack, worked out and not yet applied.
@@ -347,6 +350,97 @@ struct RaidResult {
     rolls: Vec<FireRoll>,
     /// By strike group; a group with no bombers left has none.
     outcomes: Vec<(AirGroupId, Outcome)>,
+    /// What the raid found, if anything.
+    target: Option<RaidTarget>,
+}
+
+/// The whole shots of a roll: the part of a shot is not one that can miss.
+fn whole_shots(shots: Fixed) -> u32 {
+    u32::try_from(shots.trunc()).expect("shots are not negative")
+}
+
+/// Which false claim chance a missed shot is claimed at (decision 12 of
+/// 0056).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum MissKind {
+    Fighter,
+    Gun,
+}
+
+/// What one side's firing in one raid adds up to, for its claim (decision 2
+/// of 0056): the firing events of its own, the aircraft it really shot down
+/// and the whole shots that missed.
+#[derive(Default)]
+struct SideTally {
+    /// The unit of the first firing event, which keys the claim's draws.
+    first: Option<EntityRef>,
+    /// The firing events the claim rests on, in the order they were recorded.
+    causes: Vec<EventId>,
+    /// Aircraft really lost to this side's fighters and guns in the raid.
+    real_shot_down: u32,
+    /// Whole shots that missed, by firing event, in event order.
+    air_misses: Vec<(u32, MissKind)>,
+    /// Bombs and torpedoes that really hit the ships attacked.
+    hits: u32,
+    /// Whole bombs and torpedoes that missed the ships attacked.
+    hit_misses: u32,
+    /// The ships the raid really sank.
+    sunk: Vec<ShipId>,
+    /// Whole bombs dropped on a base.
+    bombs: u32,
+    /// Aircraft the bombs really destroyed on the ground, ready or damaged.
+    real_on_ground: u32,
+}
+
+impl SideTally {
+    fn fired(&mut self, unit: EntityRef, event: EventId) {
+        self.first.get_or_insert(unit);
+        self.causes.push(event);
+    }
+}
+
+/// The claims one raid makes (decision 0056): what each side fired, as
+/// recorded, kept until the raid has been resolved.
+struct RaidTally {
+    hex: Hex,
+    /// What the raid attacked.
+    target: RaidTarget,
+    /// The kind the contact was taken for at the launch, for a raid on ships.
+    taken_for: Option<ShipKind>,
+    /// The raid's first strike group, the second part of each claim's key.
+    first_group: AirGroupId,
+    attacker_side: Side,
+    attacker: SideTally,
+    defender_side: Side,
+    defender: SideTally,
+}
+
+impl RaidTally {
+    /// Adds a roll of fighters or guns, recorded as `event`, which really
+    /// shot down `real` aircraft.
+    fn note_roll(&mut self, roll: &FireRoll, event: EventId, real: u32) {
+        let (by_attacker, kind, unit) = match &roll.fire {
+            Fire::Fighters { firer, firing, .. } => (
+                *firing == AirFirer::Escorts,
+                MissKind::Fighter,
+                EntityRef::AirGroup(*firer),
+            ),
+            Fire::Guns { task_force, .. } => {
+                (false, MissKind::Gun, EntityRef::TaskForce(*task_force))
+            }
+            Fire::BaseGuns { base, .. } => (false, MissKind::Gun, EntityRef::Base(*base)),
+        };
+        let whole = whole_shots(roll.shots);
+        let side = if by_attacker {
+            &mut self.attacker
+        } else {
+            &mut self.defender
+        };
+        side.fired(unit, event);
+        side.real_shot_down += real;
+        side.air_misses
+            .push((whole.saturating_sub(roll.hits), kind));
+    }
 }
 
 /// The shots times chance of a roll: shots, expected hits, hits (decision 10
@@ -543,7 +637,7 @@ impl World {
                         ))
                 })
                 .min_by_key(|(kind, distance_nm, id, _, _)| (*kind, *distance_nm, *id));
-            let Some((_, distance_nm, contact, hex, report_event)) = chosen else {
+            let Some((taken_for, distance_nm, contact, hex, report_event)) = chosen else {
                 continue;
             };
 
@@ -574,6 +668,7 @@ impl World {
                 hex,
                 aircraft,
                 launched,
+                taken_for: Some(taken_for),
             });
         }
     }
@@ -631,6 +726,7 @@ impl World {
             hex,
             aircraft,
             launched,
+            taken_for: None,
         });
     }
 
@@ -694,8 +790,22 @@ impl World {
         // Record the fights, then the losses, of each raid in turn.
         let mut outcomes: Vec<(AirGroupId, Outcome)> = Vec::new();
         let mut losses_of: Vec<(AirGroupId, EventId)> = Vec::new();
+        // What each raid that found a target adds up to for the claims, and
+        // the raid each strike group belongs to (decision 0056).
+        let mut tallies: Vec<RaidTally> = Vec::new();
+        let mut tally_of: BTreeMap<AirGroupId, usize> = BTreeMap::new();
         for (raid, result) in raids.iter().zip(results) {
             let first = &raid.strikes[0];
+            let mut tally = result.target.map(|target| RaidTally {
+                hex: first.hex,
+                target,
+                taken_for: first.taken_for,
+                first_group: first.air_group,
+                attacker_side: first.side,
+                attacker: SideTally::default(),
+                defender_side: self.defender_of(target),
+                defender: SideTally::default(),
+            });
             let mut escort_events = Vec::new();
             for (index, (group, aircraft, orders)) in result.escorts_sent.into_iter().enumerate() {
                 let causes: Vec<Cause> = orders
@@ -802,15 +912,26 @@ impl World {
                     ) => SortieKind::Escort,
                     _ => SortieKind::Strike,
                 };
+                let mut real = 0;
                 for (group, lost) in lost_list {
-                    if let Some(event) =
+                    if let Some((event, taken)) =
                         self.lose_aircraft(day, pulse, *group, *lost, lost_from, cause)
                     {
                         losses_of.push((*group, event));
                         self.note_loss(*group, lost_from, *lost);
+                        real += taken;
                     }
                 }
+                if let Some(tally) = tally.as_mut() {
+                    tally.note_roll(roll, cause, real);
+                }
             }
+            if tally.is_some() {
+                for strike in &raid.strikes {
+                    tally_of.insert(strike.air_group, tallies.len());
+                }
+            }
+            tallies.extend(tally);
             outcomes.extend(result.outcomes);
         }
         outcomes.sort_by_key(|(group, _)| *group);
@@ -864,6 +985,11 @@ impl World {
                         attack.breakdown.clone(),
                     );
                     attack_events.push(event);
+                    if let Some(index) = tally_of.get(&attack.air_group) {
+                        let side = &mut tallies[*index].attacker;
+                        side.fired(EntityRef::AirGroup(attack.air_group), event);
+                        side.bombs += whole_shots(attack.shots);
+                    }
                 }
                 Outcome::Attack(attack) => {
                     // The aircraft that attack are those the fights left.
@@ -893,6 +1019,12 @@ impl World {
                         attack.breakdown.clone(),
                     );
                     attack_events.push(event);
+                    if let Some(index) = tally_of.get(&attack.air_group) {
+                        let side = &mut tallies[*index].attacker;
+                        side.fired(EntityRef::AirGroup(attack.air_group), event);
+                        side.hits += attack.hits;
+                        side.hit_misses += whole_shots(attack.shots).saturating_sub(attack.hits);
+                    }
                 }
             }
         }
@@ -912,7 +1044,10 @@ impl World {
             let attack = match outcome {
                 Outcome::Attack(attack) => attack,
                 Outcome::BaseAttack(attack) => {
-                    self.apply_base_hits(day, pulse, &attack, event, &mut ground);
+                    let destroyed = self.apply_base_hits(day, pulse, &attack, event, &mut ground);
+                    if let Some(index) = tally_of.get(&attack.air_group) {
+                        tallies[*index].attacker.real_on_ground += destroyed;
+                    }
                     continue;
                 }
                 Outcome::Nothing {
@@ -938,7 +1073,7 @@ impl World {
                 }
             };
             let attack_event = event;
-            self.apply_hit_set(
+            let applied = self.apply_hit_set(
                 site,
                 &HitSet {
                     cause: attack_event,
@@ -949,6 +1084,14 @@ impl World {
                     system_hits: attack.system_hits.clone(),
                 },
             );
+            if let Some(index) = tally_of.get(&attack.air_group) {
+                let sunk = &mut tallies[*index].attacker.sunk;
+                for (ship, _) in applied.sunk {
+                    if !sunk.contains(&ship) {
+                        sunk.push(ship);
+                    }
+                }
+            }
 
             let mut report = attack.report.clone();
             report.received_event = self.events.next_id();
@@ -978,6 +1121,234 @@ impl World {
                 received, report.received_event,
                 "the report cites the event that records it"
             );
+        }
+
+        // Each side that fired in a raid claims what it believes it did, once
+        // the raid is resolved (decision 0056).
+        self.record_raid_claims(day, pulse, tallies);
+    }
+
+    /// The claims of the raids of one pulse (decision 0056): for each raid
+    /// that found a target, in order, the raiding side's claim and then the
+    /// defending side's, each only if it fired. A claim is what really
+    /// happened and the false claims drawn for the whole shots that missed,
+    /// from a stream of its own keyed for intelligence on the day, the pulse,
+    /// the side's first firing unit and the raid's first strike group. No draw
+    /// of the fight itself is touched.
+    fn record_raid_claims(&mut self, day: u32, pulse: Pulse, tallies: Vec<RaidTally>) {
+        if tallies.is_empty() {
+            return;
+        }
+        let air = self
+            .ref_data
+            .air_combat
+            .clone()
+            .expect("a strike needs the air combat figures");
+        let search = self
+            .ref_data
+            .search
+            .clone()
+            .expect("World::new requires search figures with air groups");
+        for tally in tallies {
+            for (side, part, attacking) in [
+                (tally.attacker_side, tally.attacker, true),
+                (tally.defender_side, tally.defender, false),
+            ] {
+                let Some(first) = part.first else {
+                    continue;
+                };
+                let mut stream = self.rng_pair(
+                    day,
+                    Some(pulse),
+                    Subsystem::Intelligence,
+                    Draw::Claim,
+                    first,
+                    EntityRef::AirGroup(tally.first_group),
+                );
+                let (mut fighter_misses, mut gun_misses) = (0, 0);
+                let mut false_down = 0;
+                for (misses, kind) in &part.air_misses {
+                    let chance = match kind {
+                        MissKind::Fighter => {
+                            fighter_misses += misses;
+                            air.fighter_false_claim_chance
+                        }
+                        MissKind::Gun => {
+                            gun_misses += misses;
+                            air.anti_aircraft_false_claim_chance
+                        }
+                    };
+                    false_down +=
+                        roll_shots(&mut stream, Fixed::from_int(i64::from(*misses)), chance);
+                }
+                let claimed_shot_down = part.real_shot_down + false_down;
+                // What the raiding side believes it did to what it attacked:
+                // hits on ships and ships sunk (decisions 4 and 5), or
+                // aircraft destroyed on the ground (decision 7). The draws
+                // come after those for aircraft shot down, on the same stream.
+                let count = |n: u32| Fixed::from_int(i64::from(n));
+                let (mut claimed_hits, mut claimed_sunk, mut claimed_on_ground) = (0, 0, 0);
+                let (mut false_hits, mut burning, mut false_ground) = (0, 0, 0);
+                let mut claimed_kind = None;
+                if attacking {
+                    match tally.target {
+                        RaidTarget::Ships(_, force, _) => {
+                            false_hits = roll_shots(
+                                &mut stream,
+                                count(part.hit_misses),
+                                air.bomb_false_claim_chance,
+                            );
+                            claimed_hits = part.hits + false_hits;
+                            claimed_kind = tally.taken_for;
+                            // A ship left burning, as a surface fight's claim
+                            // counts it (decision 5).
+                            let level = self
+                                .ref_data
+                                .surface_combat
+                                .as_ref()
+                                .expect("World::new requires surface combat figures")
+                                .claimed_sunk_fire;
+                            burning = self.truth.task_forces[&force]
+                                .ships
+                                .iter()
+                                .filter(|ship| self.truth.ships[*ship].fire_damage >= level)
+                                .count()
+                                .try_into()
+                                .expect("few ships");
+                            claimed_sunk =
+                                u32::try_from(part.sunk.len()).expect("few ships") + burning;
+                        }
+                        RaidTarget::Base(_) => {
+                            false_ground = roll_shots(
+                                &mut stream,
+                                count(part.bombs.saturating_sub(part.real_on_ground)),
+                                air.bomb_false_claim_chance,
+                            );
+                            claimed_on_ground = part.real_on_ground + false_ground;
+                        }
+                    }
+                }
+                let claim = BattleClaim {
+                    hex: tally.hex,
+                    day,
+                    pulse,
+                    claimed_sunk,
+                    claimed_hits,
+                    claimed_kind,
+                    claimed_shot_down,
+                    claimed_on_ground,
+                    from_air: true,
+                    received_event: self.events.next_id(),
+                };
+                let outcome = self
+                    .beliefs
+                    .get_mut(&side)
+                    .expect("both sides have a belief state")
+                    .apply_report(&Report::BattleClaim(claim.clone()), &search);
+                assert_eq!(outcome, ApplyOutcome::Claim, "a claim is stored as a claim");
+                let breakdown = self.config.record_breakdowns.then(|| {
+                    let mut factors = vec![
+                        Factor {
+                            name: "real_shot_down",
+                            value: count(part.real_shot_down),
+                        },
+                        Factor {
+                            name: "fighter_misses",
+                            value: count(fighter_misses),
+                        },
+                        Factor {
+                            name: "fighter_false_claim_chance",
+                            value: air.fighter_false_claim_chance,
+                        },
+                        Factor {
+                            name: "gun_misses",
+                            value: count(gun_misses),
+                        },
+                        Factor {
+                            name: "anti_aircraft_false_claim_chance",
+                            value: air.anti_aircraft_false_claim_chance,
+                        },
+                        Factor {
+                            name: "false_shot_down",
+                            value: count(false_down),
+                        },
+                    ];
+                    if attacking {
+                        match tally.target {
+                            RaidTarget::Ships(..) => factors.extend([
+                                Factor {
+                                    name: "real_hits",
+                                    value: count(part.hits),
+                                },
+                                Factor {
+                                    name: "missed_bombs",
+                                    value: count(part.hit_misses),
+                                },
+                                Factor {
+                                    name: "bomb_false_claim_chance",
+                                    value: air.bomb_false_claim_chance,
+                                },
+                                Factor {
+                                    name: "false_hits",
+                                    value: count(false_hits),
+                                },
+                                Factor {
+                                    name: "real_sunk",
+                                    value: count(
+                                        u32::try_from(part.sunk.len()).expect("few ships"),
+                                    ),
+                                },
+                                Factor {
+                                    name: "burning",
+                                    value: count(burning),
+                                },
+                            ]),
+                            RaidTarget::Base(_) => factors.extend([
+                                Factor {
+                                    name: "bombs",
+                                    value: count(part.bombs),
+                                },
+                                Factor {
+                                    name: "real_on_ground",
+                                    value: count(part.real_on_ground),
+                                },
+                                Factor {
+                                    name: "bomb_false_claim_chance",
+                                    value: air.bomb_false_claim_chance,
+                                },
+                                Factor {
+                                    name: "false_on_ground",
+                                    value: count(false_ground),
+                                },
+                            ]),
+                        }
+                    }
+                    Breakdown {
+                        factors,
+                        result: count(claimed_shot_down + claimed_hits + claimed_on_ground),
+                    }
+                });
+                let received = self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::ClaimReceived {
+                        side,
+                        hex: tally.hex,
+                        claimed_sunk,
+                        claimed_hits,
+                        claimed_kind,
+                        claimed_shot_down,
+                        claimed_on_ground,
+                        from_air: true,
+                    },
+                    part.causes.iter().copied().map(Cause::Event).collect(),
+                    breakdown,
+                );
+                assert_eq!(
+                    received, claim.received_event,
+                    "the claim cites the event that records it"
+                );
+            }
         }
     }
 
@@ -1073,7 +1444,7 @@ impl World {
         attack: &BaseAttack,
         attack_event: EventId,
         ground: &mut Ground,
-    ) {
+    ) -> u32 {
         let per_hit = self
             .ref_data
             .air_combat
@@ -1099,6 +1470,7 @@ impl World {
         });
         // The lowest group first, its damaged aircraft before its ready ones
         // (decision 11 of 0035): one event for each kind of aircraft hit.
+        let mut destroyed_in_all = 0;
         for (group, stock, destroyed) in take_ground(attack.hits_on_aircraft, pool) {
             let air_group = self
                 .truth
@@ -1109,6 +1481,7 @@ impl World {
                 Stock::Ready => {
                     let destroyed = destroyed.min(air_group.ready);
                     air_group.ready -= destroyed;
+                    destroyed_in_all += destroyed;
                     EventKind::AircraftDestroyedOnGround {
                         air_group: group,
                         base: attack.base,
@@ -1119,6 +1492,7 @@ impl World {
                 Stock::Damaged => {
                     let destroyed = destroyed.min(air_group.damaged);
                     air_group.damaged -= destroyed;
+                    destroyed_in_all += destroyed;
                     EventKind::DamagedAircraftDestroyedOnGround {
                         air_group: group,
                         base: attack.base,
@@ -1176,6 +1550,7 @@ impl World {
                 breakdown,
             );
         }
+        destroyed_in_all
     }
 
     /// Splits every fighter group on combat air patrol that has aircraft
@@ -1226,7 +1601,7 @@ impl World {
         aircraft: u32,
         lost_from: SortieKind,
         cause: EventId,
-    ) -> Option<EventId> {
+    ) -> Option<(EventId, u32)> {
         let air_group = self
             .truth
             .air_groups
@@ -1271,7 +1646,7 @@ impl World {
                 None,
             );
         }
-        Some(event)
+        Some((event, lost))
     }
 
     /// The enemy task force a strike of `side` finds at `hex`: the one with
@@ -1417,6 +1792,7 @@ impl World {
             // A raid that finds nothing meets nobody (decision 13 of 0027).
             // Only a strike at a contact can find nothing.
             return RaidResult {
+                target: None,
                 escorts_sent,
                 rolls: Vec::new(),
                 outcomes: raid
@@ -1697,6 +2073,7 @@ impl World {
             })
             .collect();
         RaidResult {
+            target: Some(target),
             escorts_sent,
             rolls,
             outcomes,
@@ -3931,6 +4308,7 @@ mod tests {
             hex,
             aircraft: 1,
             launched: EventId::new(group),
+            taken_for: None,
         };
         let ship_1 = AirGroupLocation::Ship(ShipId::new(1));
         let base_1 = AirGroupLocation::Base(crate::ids::BaseId::new(1));
@@ -4918,6 +5296,7 @@ mod tests {
                 hex: *hex,
                 aircraft: *bombers,
                 launched: EventId::new(*group),
+                taken_for: None,
             })
             .collect();
         let mut raids = group_raids(&strikes);
@@ -7620,9 +7999,10 @@ mod tests {
             // A patrol over its own hex: the pilot is saved.
             (SortieKind::Patrol, 2, 3, 5),
         ] {
-            let event = world
+            let (event, taken) = world
                 .lose_aircraft(1, Pulse::Morning, AirGroupId::new(10), lost, kind, cause)
                 .expect("aircraft were lost");
+            assert_eq!(taken, lost);
             let group = &world.truth.air_groups[&AirGroupId::new(10)];
             assert_eq!(
                 (group.ready, group.pilots),

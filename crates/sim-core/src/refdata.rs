@@ -540,6 +540,16 @@ pub struct AirCombatFigures {
     /// 0034). With `base_hit_aircraft` it adds to 1 at most; the rest of the
     /// hits land on nothing.
     pub base_hit_supply: Fixed,
+    /// The chance each whole shot of fighters that missed is claimed as an
+    /// aircraft shot down (decision 3 of
+    /// `docs/decisions/0056-claims-from-the-air.md`).
+    pub fighter_false_claim_chance: Fixed,
+    /// The same for the guns of ships and bases.
+    pub anti_aircraft_false_claim_chance: Fixed,
+    /// The chance each whole bomb or torpedo that missed is claimed as a hit
+    /// on a ship, or as an aircraft destroyed on the ground (decisions 4 and
+    /// 7 of 0056).
+    pub bomb_false_claim_chance: Fixed,
 }
 
 impl AirCombatFigures {
@@ -553,6 +563,15 @@ impl AirCombatFigures {
             ("anti-aircraft hit chance", self.anti_aircraft_hit_chance),
             ("pilot armour factor", self.pilot_armour_factor),
             ("self-sealing tanks factor", self.self_sealing_tanks_factor),
+            (
+                "fighter false claim chance",
+                self.fighter_false_claim_chance,
+            ),
+            (
+                "anti-aircraft false claim chance",
+                self.anti_aircraft_false_claim_chance,
+            ),
+            ("bomb false claim chance", self.bomb_false_claim_chance),
         ];
         for (label, value) in chances {
             if !in_unit(value) {
@@ -820,6 +839,9 @@ impl AirCombatFigures {
             base_supply_destroyed_per_hit_t: Fixed::from_int(50),
             base_hit_aircraft: tenth(3),
             base_hit_supply: tenth(3),
+            fighter_false_claim_chance: tenth(1),
+            anti_aircraft_false_claim_chance: Fixed::from_ratio(5, 100),
+            bomb_false_claim_chance: tenth(1),
         }
     }
 }

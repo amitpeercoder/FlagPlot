@@ -283,7 +283,21 @@ fn run_of(base: &Scenario, seed: u64) -> Run {
 
 fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
-    let events: Vec<Event> = run.world.events().iter().cloned().collect();
+    // The claims from the air (decision 0056) are not part of what this
+    // scenario works out: they come after each raid is resolved and are
+    // asserted in scenario_11_claims.rs.
+    let events: Vec<Event> = run
+        .world
+        .events()
+        .iter()
+        .filter(|e| {
+            !matches!(
+                e.kind,
+                sim_core::events::EventKind::ClaimReceived { from_air: true, .. }
+            )
+        })
+        .cloned()
+        .collect();
     let mut orders: BTreeMap<u32, Vec<OrderId>> = BTreeMap::new();
     for event in &events {
         if let EventKind::OrderAccepted {

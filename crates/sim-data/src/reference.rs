@@ -512,6 +512,9 @@ struct AirCombatFile {
     bomb_system_hit: SystemTable,
     base_supply_destroyed_per_hit_t: Quantity,
     base_hit: BaseHitTable,
+    fighter_false_claim_chance: Quantity,
+    anti_aircraft_false_claim_chance: Quantity,
+    bomb_false_claim_chance: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -560,6 +563,15 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         )?,
         base_hit_aircraft: number("base_hit.aircraft", &file.base_hit.aircraft)?,
         base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
+        fighter_false_claim_chance: number(
+            "fighter_false_claim_chance",
+            &file.fighter_false_claim_chance,
+        )?,
+        anti_aircraft_false_claim_chance: number(
+            "anti_aircraft_false_claim_chance",
+            &file.anti_aircraft_false_claim_chance,
+        )?,
+        bomb_false_claim_chance: number("bomb_false_claim_chance", &file.bomb_false_claim_chance)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -890,6 +902,12 @@ mod tests {
         assert_eq!(figures.base_supply_destroyed_per_hit_t, Fixed::from_int(50));
         assert_eq!(figures.base_hit_aircraft, Fixed::from_ratio(3, 10));
         assert_eq!(figures.base_hit_supply, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.fighter_false_claim_chance, Fixed::from_ratio(1, 10));
+        assert_eq!(
+            figures.anti_aircraft_false_claim_chance,
+            Fixed::from_ratio(5, 100)
+        );
+        assert_eq!(figures.bomb_false_claim_chance, Fixed::from_ratio(1, 10));
     }
 
     #[test]
@@ -914,6 +932,54 @@ mod tests {
         assert!(bad("supply = \"0.3\"", "supply = \"-0.1\"").contains("base hit chance"));
         // Together they may not pass 1.
         assert!(bad("aircraft = \"0.3\"", "aircraft = \"0.8\"").contains("add to"));
+    }
+
+    #[test]
+    fn the_false_claim_chances_are_required_in_range_and_not_floats() {
+        // Decision 12 of 0056: three chances, between 0 and 1, as strings.
+        let bad = |from: &str, to: &str| {
+            let text = air_combat_text().replace(from, to);
+            assert_ne!(text, air_combat_text(), "{from} is in the file");
+            parse_air_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        for (key, value, label) in [
+            (
+                "fighter_false_claim_chance",
+                "0.1",
+                "fighter false claim chance",
+            ),
+            (
+                "anti_aircraft_false_claim_chance",
+                "0.05",
+                "anti-aircraft false claim chance",
+            ),
+            ("bomb_false_claim_chance", "0.1", "bomb false claim chance"),
+        ] {
+            let line = format!("{key} = \"{value}\"");
+            assert!(
+                bad(&format!("{line}\n"), "").contains(key),
+                "{key} is required"
+            );
+            assert!(
+                bad(&line, &format!("{key} = \"1.5\"")).contains(label),
+                "{key} above 1"
+            );
+            assert!(
+                bad(&line, &format!("{key} = \"-0.1\"")).contains(label),
+                "{key} below 0"
+            );
+            assert!(
+                bad(&line, &format!("{key} = {value}")).contains(key),
+                "{key} as a float"
+            );
+            // The ends of the range are allowed.
+            for edge in ["0", "1"] {
+                let text = air_combat_text().replace(&line, &format!("{key} = \"{edge}\""));
+                parse_air_combat_figures(&text, here()).expect("an edge of the range loads");
+            }
+        }
     }
 
     #[test]
