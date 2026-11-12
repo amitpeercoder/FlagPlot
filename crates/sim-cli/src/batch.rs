@@ -1,16 +1,20 @@
-//! `sim-cli batch`: many runs of one scenario, summarised as losses per side.
+//! `sim-cli batch`: many runs of one scenario, summarised as losses per side
+//! and, for each run, everything the step 2 measures count (decision 0062).
 //!
 //! Runs `execute` once per seed, in seed order, one after another, and writes
 //! one JSON file. Every quantity in it is a whole number, a string or a bool.
 //! The structs are serialised in declaration order, so the same inputs give
 //! the same bytes. The file is written only after every run has succeeded.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 
 use serde::Serialize;
+use sim_core::ids::{AirGroupId, ShipId, TaskForceId};
 use sim_core::objectives::{Level, Outcome};
 use sim_core::state::{ShipLocation, Side};
+
+use crate::batch_record::{self, RunCounts};
 
 const DEFAULT_RUNS: u64 = 1000;
 const DEFAULT_FIRST_SEED: u64 = 1;
@@ -40,6 +44,11 @@ struct Batch {
     /// decisive Allied defeat, every level listed.
     #[serde(skip_serializing_if = "Option::is_none")]
     results: Option<Vec<ResultRow>>,
+    /// The tables the per-run counts name ids from (decision 0062): the
+    /// scenario's task forces, air groups and bases as they start.
+    task_forces: Vec<batch_record::TaskForceOut>,
+    air_groups: Vec<batch_record::AirGroupOut>,
+    bases: Vec<batch_record::BaseOut>,
 }
 
 #[derive(Serialize)]
@@ -79,6 +88,8 @@ struct ShipOut {
     side: String,
     class: String,
     kind: &'static str,
+    /// The task force the ship starts in; none for a ship in port.
+    task_force: Option<u32>,
 }
 
 #[derive(Serialize)]
@@ -119,6 +130,9 @@ struct PerRun {
     allied_margin: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     allied_outcome: Option<String>,
+    /// What the run counted (decision 0062).
+    #[serde(flatten)]
+    counts: RunCounts,
 }
 
 fn parse_count(flag: &str, value: Option<&str>, usage: &str) -> Result<u64, String> {
@@ -212,22 +226,33 @@ fn build(
     let mut per_run: Vec<PerRun> = Vec::new();
     let mut outcome_runs = [0u64; 7];
     let mut has_objectives = false;
+    let mut header: Option<batch_record::Header> = None;
 
     for index in 0..runs {
         let seed = first_seed + index;
         // A batch reads losses, not reasons, so it runs with breakdown
         // recording off (the spec's "can be switched off in batch runs").
         // Recording never changes what happens or a hash.
-        let executed = crate::execute(scenario_path, Some(seed), options, |scenario| {
-            scenario.world.set_config(sim_core::world::SimConfig {
-                record_breakdowns: false,
-            });
-        })?;
+        let mut ready_by_day: Vec<BTreeMap<AirGroupId, u32>> = Vec::new();
+        let executed = crate::execute_observing(
+            scenario_path,
+            Some(seed),
+            options,
+            |scenario| {
+                scenario.world.set_config(sim_core::world::SimConfig {
+                    record_breakdowns: false,
+                });
+            },
+            |scenario| ready_by_day.push(batch_record::ready_now(scenario.world.umpire())),
+        )?;
         let world = &executed.scenario.world;
         let truth = world.umpire();
 
         if index == 0 {
             let ref_data = world.ref_data();
+            header = Some(batch_record::header(&executed.initial, world));
+            let force_of: BTreeMap<ShipId, TaskForceId> =
+                batch_record::initial_force_of(&executed.initial);
             for ship in executed.initial.ships.values() {
                 let class = &ref_data.ship_classes[&ship.class];
                 ships.push(ShipOut {
@@ -236,6 +261,7 @@ fn build(
                     side: ship.side.name().to_lowercase(),
                     class: class.name.clone(),
                     kind: class.kind.name(),
+                    task_force: force_of.get(&ship.id).map(|force| force.raw()),
                 });
             }
             sunk_runs = vec![0; ships.len()];
@@ -299,6 +325,7 @@ fn build(
             sunk: sunk_ids.into_iter().collect(),
             allied_margin: result.as_ref().map(|r| r.allied.margin.to_string()),
             allied_outcome: result.as_ref().map(|r| r.allied.outcome.name()),
+            counts: batch_record::count(world, &executed.initial, &ready_by_day),
         });
     }
 
@@ -325,9 +352,10 @@ fn build(
         })
         .collect();
 
+    let header = header.ok_or_else(|| "no runs were made".to_string())?;
     Ok(Batch {
         format: "flag-plot-batch",
-        version: 1,
+        version: 2,
         scenario: scenario_out.ok_or_else(|| "no runs were made".to_string())?,
         inputs,
         label,
@@ -350,6 +378,9 @@ fn build(
                 })
                 .collect()
         }),
+        task_forces: header.task_forces,
+        air_groups: header.air_groups,
+        bases: header.bases,
     })
 }
 

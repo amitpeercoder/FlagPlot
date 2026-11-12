@@ -4,6 +4,7 @@
 //! (the spec's "query events" is `events`).
 
 mod batch;
+mod batch_record;
 mod events;
 mod export;
 mod mcp;
@@ -144,13 +145,31 @@ fn execute(
     options: &LoadOptions,
     before_run: impl FnOnce(&mut Scenario),
 ) -> Result<Executed, String> {
+    execute_observing(path, seed, options, before_run, |_| {})
+}
+
+/// [`execute`], calling `after_day` with the scenario after each day is
+/// resolved. The days are the same days in the same order, so the run, its
+/// events and its hashes are those of `execute`. `batch` reads the state at
+/// the end of each day this way.
+fn execute_observing(
+    path: &str,
+    seed: Option<u64>,
+    options: &LoadOptions,
+    before_run: impl FnOnce(&mut Scenario),
+    mut after_day: impl FnMut(&Scenario),
+) -> Result<Executed, String> {
     let mut scenario = Scenario::load_with(Path::new(path), options).map_err(|e| e.to_string())?;
     if let Some(seed) = seed {
         scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
     }
     before_run(&mut scenario);
     let initial = scenario.world.umpire().clone();
-    let summaries = scenario.run_to_end().map_err(|e| e.to_string())?;
+    let mut summaries = Vec::new();
+    while let Some(summary) = scenario.next_day().map_err(|e| e.to_string())? {
+        summaries.push(summary);
+        after_day(&scenario);
+    }
     Ok(Executed {
         scenario,
         summaries,
