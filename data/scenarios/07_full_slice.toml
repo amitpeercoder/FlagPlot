@@ -1392,7 +1392,7 @@ stance = "engage"
 break_off = "0.5"
 stragglers = "retire"
 
-# The dry destroyer steams 80 nm on day 2 with 5 t of fuel and stops.
+# The dry destroyer is ordered 80 nm on day 2. With 5 t of fuel it steams 40 nm and stops.
 [[order]]
 day = 2
 side = "allied"

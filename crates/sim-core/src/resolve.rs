@@ -374,45 +374,7 @@ impl World {
                 }
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
-                        // A waypoint off the map is rejected first, even for
-                        // the first one, before any turn-back choice.
-                        let first = waypoints.first().copied();
-                        if let Some(first) = first {
-                            if !self.map.contains(first) {
-                                return Err(RejectReason::WaypointOffMap(first));
-                            }
-                        }
-                        // The new route starts from the centre the force
-                        // reaches first: the same choice apply_order makes.
-                        // If neither side can reach the first waypoint by sea
-                        // the order is rejected.
-                        let Some((_, mut current)) = task_force.reroute_centre(&self.map, first)
-                        else {
-                            return Err(RejectReason::WaypointUnreachable(
-                                first.unwrap_or(task_force.from_hex),
-                            ));
-                        };
-                        // A force between centres always has somewhere to go:
-                        // the leg it must finish. So "stop at the hex ahead"
-                        // and "go back to the hex I left" are real routes.
-                        let mut goes_somewhere =
-                            task_force.toward_hex.is_some() && !waypoints.is_empty();
-                        // Each leg must be reachable by sea from the one
-                        // before (decision 0017, decision 13).
-                        for waypoint in waypoints {
-                            if !self.map.contains(*waypoint) {
-                                return Err(RejectReason::WaypointOffMap(*waypoint));
-                            }
-                            match self.map.sea_distance(current, *waypoint) {
-                                None => return Err(RejectReason::WaypointUnreachable(*waypoint)),
-                                Some(steps) => goes_somewhere |= steps > 0,
-                            }
-                            current = *waypoint;
-                        }
-                        if !goes_somewhere {
-                            return Err(RejectReason::EmptyRoute);
-                        }
-                        Ok(())
+                        task_force.check_route(&self.map, waypoints)
                     }
                     TaskForceOrder::Load | TaskForceOrder::LoadFuel => {
                         if task_force.status == TaskForceStatus::Underway {

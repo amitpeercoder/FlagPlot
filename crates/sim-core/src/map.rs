@@ -207,6 +207,22 @@ impl Map {
             .map(|(_, neighbor)| neighbor)
     }
 
+    /// The path [`Map::next_step_in`] gives from `from` to `target`: every hex
+    /// entered, in order, ending with `target` (nothing when `from` is
+    /// `target`). `None` when ships cannot get from one to the other. It is
+    /// the path a force takes along a leg of its route (decision 0017).
+    pub fn sea_path(&self, from: Hex, target: Hex) -> Option<Vec<Hex>> {
+        let distances = self.sea_distances_to(target);
+        distances.get(&from)?;
+        let mut hexes = Vec::new();
+        let mut here = from;
+        while let Some(next) = self.next_step_in(&distances, here) {
+            hexes.push(next);
+            here = next;
+        }
+        Some(hexes)
+    }
+
     pub fn len(&self) -> usize {
         self.hexes.len()
     }

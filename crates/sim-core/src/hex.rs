@@ -5,6 +5,8 @@
 
 use core::fmt;
 
+use crate::fixed::Fixed;
+
 /// Distance between the centres of two neighbouring hexes, in nautical miles.
 pub const HEX_NM: i64 = 40;
 
@@ -44,6 +46,14 @@ impl Hex {
         // The nearest integer to sqrt(x) is (isqrt(4x) + 1) / 2.
         let nearest = (4 * x).isqrt().div_ceil(2);
         u32::try_from(nearest).expect("an air distance on a map fits in u32")
+    }
+
+    /// Whether `other` is within `radius_nm` of this hex by air distance: the
+    /// one comparison every rule that tests a strike's or an escort's radius
+    /// makes (decision 0030), and `measure` makes (decision 0049). A distance
+    /// equal to the radius is within it.
+    pub fn air_distance_within(self, other: Hex, radius_nm: Fixed) -> bool {
+        Fixed::from_int(i64::from(self.air_distance_nm(other))) <= radius_nm
     }
 
     /// The six neighbours, in [`Hex::DIRECTIONS`] order.

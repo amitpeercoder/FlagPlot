@@ -42,10 +42,10 @@ use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{EventId, ShipId, TaskForceId};
 use crate::map::Map;
-use crate::orders::SpeedSetting;
-use crate::refdata::SurfaceCombatFigures;
+use crate::orders::{RejectReason, SpeedSetting};
+use crate::refdata::{RefData, SurfaceCombatFigures};
 use crate::rng::RngStream;
-use crate::state::{ShipSystem, TaskForceStatus};
+use crate::state::{Route, Ship, ShipSystem, TaskForce, TaskForceStatus};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
@@ -86,6 +86,14 @@ impl Steamer {
             * speed_multiplier(speed_kn, self.cruise_speed_kn)
     }
 
+    /// Fuel burned steaming `distance_nm` at `speed_kn`, capped at what is
+    /// aboard (the fuel limit and the burn round separately, so fuel never
+    /// goes negative), and the fuel left.
+    fn burn(&self, distance_nm: Fixed, speed_kn: Fixed) -> (Fixed, Fixed) {
+        let burned_t = self.fuel_for(distance_nm, speed_kn).min(self.fuel_t);
+        (burned_t, self.fuel_t - burned_t)
+    }
+
     /// How far the fuel aboard lasts at `speed_kn`. `None` when the burn rate
     /// rounds to nothing, which means fuel does not limit the ship.
     fn range_nm(&self, speed_kn: Fixed) -> Option<Fixed> {
@@ -95,6 +103,11 @@ impl Steamer {
         }
         Some((self.fuel_t / multiplier).mul_div(self.endurance_nm, self.fuel_capacity_t))
     }
+}
+
+/// The hours it takes to steam `distance_nm` at `speed_kn`.
+fn hours_for(distance_nm: Fixed, speed_kn: Fixed) -> Fixed {
+    distance_nm / speed_kn
 }
 
 fn one_hex() -> Fixed {
@@ -245,6 +258,37 @@ impl Mover {
         self.left_nm -= travelled_nm;
     }
 
+    /// Steams out what is left of the budget.
+    fn steam_out(&mut self, map: &Map) {
+        let left_nm = self.left_nm;
+        self.steam(map, left_nm);
+    }
+
+    /// The force has passed its last waypoint.
+    fn arrived(&self) -> bool {
+        self.next_index >= self.waypoints.len()
+    }
+
+    /// The fuel stopped the force short of its last waypoint (decision 5 of
+    /// 0006).
+    fn ran_dry(&self) -> bool {
+        !self.arrived() && self.fuel_is_the_limit
+    }
+
+    /// The ships whose fuel set the budget: the ones whose fuel lasts exactly
+    /// as far as the shortest range, when fuel is the limit at all.
+    fn limiting_ships(&self) -> Vec<ShipId> {
+        match self.fuel_limit_nm {
+            Some(limit) if self.fuel_is_the_limit => self
+                .steamers
+                .iter()
+                .filter(|s| s.range_nm(self.speed_kn) == Some(limit))
+                .map(|s| s.ship)
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
     /// The distance from now to the force's next change of position, if it
     /// has one: the rest of the way to 20 nm along its leg, or, past that,
     /// the rest of the leg plus 20 nm along the next one. `None` if the route
@@ -269,6 +313,100 @@ impl Mover {
         map.next_step_in(field, at)?;
         Some(walked_nm + half_hex())
     }
+}
+
+/// A mover for the force, if it is under way with a ship afloat and a speed
+/// above zero: the slowest ship sets the speed (the lowest ship ID on a tie).
+/// Its budget is that speed times the hours of the pulse it has not yet used,
+/// limited by the fuel aboard. It starts with `hours_used` already steamed.
+///
+/// The one place the movement rules read a force's ships. The step and the
+/// passage forecast ([`forecast_passage`]) both build their movers here.
+fn build_mover<'s>(
+    task_force: &TaskForce,
+    ship_of: impl Fn(ShipId) -> &'s Ship,
+    ref_data: &RefData,
+    pulse: Pulse,
+    hours_used: Fixed,
+) -> Option<Mover> {
+    if task_force.status != TaskForceStatus::Underway {
+        return None;
+    }
+
+    let figures: Option<&SurfaceCombatFigures> = ref_data.surface_combat.as_ref();
+    let steamers: Vec<Steamer> = task_force
+        .ships
+        .iter()
+        .map(|ship_id| {
+            let ship = ship_of(*ship_id);
+            let class = &ref_data.ship_classes[&ship.class];
+            // World::new rejects a damaged ship without figures, so
+            // with none every ship's propulsion works.
+            let propulsion_factor = match figures {
+                Some(figures) => {
+                    figures.system_factor(ShipSystem::Propulsion, ship.systems.propulsion)
+                }
+                None => Fixed::ONE,
+            };
+            let speed_kn = match task_force.speed {
+                SpeedSetting::Cruise => class.cruise_speed_kn * propulsion_factor,
+                SpeedSetting::Full => class.max_speed_kn * propulsion_factor,
+                // Decision 7 of 0021: the ordered speed, or the best
+                // speed of the ship (top speed times its propulsion
+                // factor) if that is lower.
+                SpeedSetting::Knots(knots) => knots.min(class.max_speed_kn * propulsion_factor),
+            };
+            Steamer {
+                ship: *ship_id,
+                fuel_t: ship.fuel_t,
+                speed_kn,
+                propulsion_factor,
+                cruise_speed_kn: class.cruise_speed_kn,
+                fuel_capacity_t: class.fuel_capacity_t,
+                endurance_nm: class.endurance_nm,
+            }
+        })
+        .collect();
+    // The slowest ship sets the speed; the lowest ship ID on a tie.
+    // A task force with no ships goes nowhere.
+    let slowest = steamers.iter().min_by_key(|s| s.speed_kn)?;
+    let speed_kn = slowest.speed_kn;
+    let propulsion_factor = slowest.propulsion_factor;
+    if speed_kn.is_zero() {
+        // Dead in the water: no movement, no event, no fuel burned. The
+        // force stays under way.
+        return None;
+    }
+
+    let hours_left = (Fixed::from_int(pulse.hours()) - hours_used).max(Fixed::ZERO);
+    let time_limit_nm = speed_kn * hours_left;
+    let fuel_limit_nm = steamers.iter().filter_map(|s| s.range_nm(speed_kn)).min();
+    let budget_nm = match fuel_limit_nm {
+        Some(limit) => time_limit_nm.min(limit),
+        None => time_limit_nm,
+    };
+    Some(Mover {
+        active: true,
+        waypoints: task_force.route.waypoints.clone(),
+        from_hex: task_force.from_hex,
+        toward_hex: task_force.toward_hex,
+        progress_nm: task_force.progress_nm,
+        next_index: task_force.route.next_index,
+        field: None,
+        steamers,
+        speed_kn,
+        propulsion_factor,
+        time_limit_nm,
+        fuel_limit_nm,
+        fuel_is_the_limit: budget_nm < time_limit_nm,
+        left_nm: budget_nm,
+        segment_from: task_force.position(),
+        segment_nm: Fixed::ZERO,
+        segment_hexes: Vec::new(),
+        hours_done: hours_used,
+        last_steamed: None,
+        arrival_recorded: false,
+    })
 }
 
 /// Everything that lasts for one movement step and is not truth state.
@@ -400,90 +538,17 @@ impl World {
     }
 
     /// A mover for the force, if it is under way with a ship afloat and a
-    /// speed above zero: the slowest ship sets the speed (the lowest ship ID
-    /// on a tie). Its budget is that speed times the hours of the pulse it
-    /// has not yet used, limited by the fuel aboard. It starts with
-    /// `hours_used` already steamed.
+    /// speed above zero ([`build_mover`]). It starts with `hours_used`
+    /// already steamed.
     fn new_mover(&self, id: TaskForceId, pulse: Pulse, hours_used: Fixed) -> Option<Mover> {
         let task_force = self.truth.task_forces.get(&id)?;
-        if task_force.status != TaskForceStatus::Underway {
-            return None;
-        }
-
-        let figures: Option<&SurfaceCombatFigures> = self.ref_data.surface_combat.as_ref();
-        let steamers: Vec<Steamer> = task_force
-            .ships
-            .iter()
-            .map(|ship_id| {
-                let ship = &self.truth.ships[ship_id];
-                let class = &self.ref_data.ship_classes[&ship.class];
-                // World::new rejects a damaged ship without figures, so
-                // with none every ship's propulsion works.
-                let propulsion_factor = match figures {
-                    Some(figures) => {
-                        figures.system_factor(ShipSystem::Propulsion, ship.systems.propulsion)
-                    }
-                    None => Fixed::ONE,
-                };
-                let speed_kn = match task_force.speed {
-                    SpeedSetting::Cruise => class.cruise_speed_kn * propulsion_factor,
-                    SpeedSetting::Full => class.max_speed_kn * propulsion_factor,
-                    // Decision 7 of 0021: the ordered speed, or the best
-                    // speed of the ship (top speed times its propulsion
-                    // factor) if that is lower.
-                    SpeedSetting::Knots(knots) => knots.min(class.max_speed_kn * propulsion_factor),
-                };
-                Steamer {
-                    ship: *ship_id,
-                    fuel_t: ship.fuel_t,
-                    speed_kn,
-                    propulsion_factor,
-                    cruise_speed_kn: class.cruise_speed_kn,
-                    fuel_capacity_t: class.fuel_capacity_t,
-                    endurance_nm: class.endurance_nm,
-                }
-            })
-            .collect();
-        // The slowest ship sets the speed; the lowest ship ID on a tie.
-        // A task force with no ships goes nowhere.
-        let slowest = steamers.iter().min_by_key(|s| s.speed_kn)?;
-        let speed_kn = slowest.speed_kn;
-        let propulsion_factor = slowest.propulsion_factor;
-        if speed_kn.is_zero() {
-            // Dead in the water: no movement, no event, no fuel burned. The
-            // force stays under way.
-            return None;
-        }
-
-        let hours_left = (Fixed::from_int(pulse.hours()) - hours_used).max(Fixed::ZERO);
-        let time_limit_nm = speed_kn * hours_left;
-        let fuel_limit_nm = steamers.iter().filter_map(|s| s.range_nm(speed_kn)).min();
-        let budget_nm = match fuel_limit_nm {
-            Some(limit) => time_limit_nm.min(limit),
-            None => time_limit_nm,
-        };
-        Some(Mover {
-            active: true,
-            waypoints: task_force.route.waypoints.clone(),
-            from_hex: task_force.from_hex,
-            toward_hex: task_force.toward_hex,
-            progress_nm: task_force.progress_nm,
-            next_index: task_force.route.next_index,
-            field: None,
-            steamers,
-            speed_kn,
-            propulsion_factor,
-            time_limit_nm,
-            fuel_limit_nm,
-            fuel_is_the_limit: budget_nm < time_limit_nm,
-            left_nm: budget_nm,
-            segment_from: task_force.position(),
-            segment_nm: Fixed::ZERO,
-            segment_hexes: Vec::new(),
-            hours_done: hours_used,
-            last_steamed: None,
-            arrival_recorded: false,
-        })
+        build_mover(
+            task_force,
+            |ship_id| &self.truth.ships[&ship_id],
+            &self.ref_data,
+            pulse,
+            hours_used,
+        )
     }
 
     /// The force at `id` has just changed position to `hex`, `elapsed_hours`
@@ -712,10 +777,7 @@ impl World {
         );
 
         for steamer in &mover.steamers {
-            // The fuel limit and the burn round separately, so cap the
-            // burn at what is aboard. Fuel never goes negative.
-            let burned_t = steamer.fuel_for(travelled_nm, speed_kn).min(steamer.fuel_t);
-            let remaining_t = steamer.fuel_t - burned_t;
+            let (burned_t, remaining_t) = steamer.burn(travelled_nm, speed_kn);
             self.truth
                 .ships
                 .get_mut(&steamer.ship)
@@ -765,7 +827,7 @@ impl World {
             );
         }
 
-        mover.hours_done += travelled_nm / speed_kn;
+        mover.hours_done += hours_for(travelled_nm, speed_kn);
         mover.segment_nm = Fixed::ZERO;
         mover.segment_from = to;
         mover.last_steamed = Some(event);
@@ -773,7 +835,7 @@ impl World {
         // A force that reached its last waypoint in this segment arrives with
         // it: the event comes right after the segment's fuel events and cites
         // the segment, and truth says so now, before any fight.
-        if !mover.arrival_recorded && mover.next_index >= mover.waypoints.len() {
+        if !mover.arrival_recorded && mover.arrived() {
             mover.arrival_recorded = true;
             let elapsed_hours = pulse_start(day, pulse) + mover.hours_done;
             let arrived = self.events.record(
@@ -805,11 +867,10 @@ impl World {
     fn finish_steaming(&mut self, step: &mut Step, id: TaskForceId) {
         let (day, pulse) = (step.day, step.pulse);
         let mover = step.movers.get_mut(&id).expect("the mover exists");
-        let left_nm = mover.left_nm;
-        mover.steam(&self.map, left_nm);
+        mover.steam_out(&self.map);
 
-        let arrived = mover.next_index >= mover.waypoints.len();
-        let ran_dry = !arrived && mover.fuel_is_the_limit;
+        let arrived = mover.arrived();
+        let ran_dry = mover.ran_dry();
         let status = if arrived {
             TaskForceStatus::Arrived
         } else if ran_dry {
@@ -881,6 +942,252 @@ impl World {
             );
         }
     }
+}
+
+/// One ship's part in a forecast passage.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ShipPassage {
+    pub ship: ShipId,
+    /// Fuel aboard when the passage starts, in tons.
+    pub fuel_t: Fixed,
+    /// Fuel the passage burns, in tons: the sum of what each pulse burns, as
+    /// the `FuelBurned` events of the run sum.
+    pub burned_t: Fixed,
+    /// Fuel aboard when the passage ends.
+    pub left_t: Fixed,
+    /// The ship's fuel is what stops the force short (decision 5 of 0006).
+    pub runs_dry: bool,
+}
+
+/// How a forecast passage ends.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PassageEnd {
+    /// The order would be refused at intake, so the force would not leave.
+    Refused,
+    /// No ship can make way (every slowest-ship speed is zero): the force
+    /// would stay where it is.
+    CannotMove,
+    /// The force reaches its last waypoint.
+    Arrives {
+        day: u32,
+        pulse: Pulse,
+        elapsed_hours: Fixed,
+    },
+    /// A ship runs dry and the force stops short, as `TaskForceOutOfFuel`.
+    RunsDry {
+        day: u32,
+        pulse: Pulse,
+        elapsed_hours: Fixed,
+        at: Hex,
+    },
+}
+
+/// What the movement rules would do with a task force given a route to one
+/// hex, left alone (decision 0049): no fight, no change of speed, no ship
+/// lost, and the fuel aboard as it is. Computed by the movement rules
+/// themselves, pulse by pulse, on a copy.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PassageForecast {
+    /// Why the order would be refused, if it would (`validate_order`).
+    pub refusal: Option<RejectReason>,
+    /// Where the force is now.
+    pub position: Hex,
+    /// The centre the new route starts from: the force's own hex at a centre,
+    /// else the one `TaskForce::reroute_centre` picks.
+    pub starts_at: Hex,
+    pub turns_back: bool,
+    /// The speed the force makes: the slowest ship's, in knots. Zero if it
+    /// cannot move or the order is refused.
+    pub speed_kn: Fixed,
+    /// The ship that sets the speed.
+    pub slowest: Option<ShipId>,
+    /// The hexes the force enters while it steams, in order, as the
+    /// `hexes_entered` of its steaming events list them.
+    pub hexes: Vec<Hex>,
+    /// The whole route: `hexes`, and for a force that stops short for want of
+    /// fuel, the hexes it would still have to enter to reach the destination.
+    pub route_hexes: Vec<Hex>,
+    /// The length of the whole route from where the force is, in miles, which
+    /// for a force that arrives is what it steams.
+    pub route_nm: Fixed,
+    /// Miles steamed in the forecast.
+    pub steamed_nm: Fixed,
+    /// Hours from the start of the first pulse to the end, arrival or stop.
+    pub hours: Fixed,
+    pub end: PassageEnd,
+    pub ships: Vec<ShipPassage>,
+}
+
+/// The longest a forecast runs, in days, so that it always ends.
+const FORECAST_DAYS: u32 = 400;
+
+/// Forecasts the passage of `task_force` to `destination` (decision 0049) if
+/// it were given that route, at `speed` if given and otherwise at the speed it
+/// has, leaving at the start of day `first_day`.
+///
+/// Every figure comes from the movement step's own code: the intake checks
+/// ([`TaskForce::check_route`], [`TaskForce::reroute_centre`] and
+/// [`TaskForce::turn_back`]), the mover built by `build_mover`, its steaming
+/// along the shortest path and the fuel burn of each segment. The pulses
+/// resolve in order from the night pulse of `first_day`, each with the fuel
+/// the last left.
+///
+/// `ships` holds the force's ships. Nothing is written anywhere.
+pub(crate) fn forecast_passage(
+    map: &Map,
+    ref_data: &RefData,
+    task_force: &TaskForce,
+    ships: &BTreeMap<ShipId, Ship>,
+    destination: Hex,
+    speed: Option<SpeedSetting>,
+    first_day: u32,
+) -> PassageForecast {
+    let fuel_at_start: Vec<(ShipId, Fixed)> = task_force
+        .ships
+        .iter()
+        .map(|id| (*id, ships[id].fuel_t))
+        .collect();
+    let mut result = PassageForecast {
+        refusal: None,
+        position: task_force.position(),
+        starts_at: task_force.from_hex,
+        turns_back: false,
+        speed_kn: Fixed::ZERO,
+        slowest: None,
+        hexes: Vec::new(),
+        route_hexes: Vec::new(),
+        route_nm: Fixed::ZERO,
+        steamed_nm: Fixed::ZERO,
+        hours: Fixed::ZERO,
+        end: PassageEnd::Refused,
+        ships: fuel_at_start
+            .iter()
+            .map(|(ship, fuel_t)| ShipPassage {
+                ship: *ship,
+                fuel_t: *fuel_t,
+                burned_t: Fixed::ZERO,
+                left_t: *fuel_t,
+                runs_dry: false,
+            })
+            .collect(),
+    };
+
+    // Intake, as `validate_order` and `apply_order` make it.
+    let waypoints = [destination];
+    let refusal = if task_force.ships.is_empty() {
+        Some(RejectReason::NoShipAfloat)
+    } else {
+        task_force.check_route(map, &waypoints).err()
+    };
+    if refusal.is_some() {
+        result.refusal = refusal;
+        return result;
+    }
+    let mut force = task_force.clone();
+    let (turns_back, starts_at) = force
+        .reroute_centre(map, Some(destination))
+        .expect("the route was checked: the first waypoint is reachable");
+    if turns_back {
+        force.turn_back();
+    }
+    result.turns_back = turns_back;
+    result.starts_at = starts_at;
+    force.route = Route {
+        waypoints: waypoints.to_vec(),
+        next_index: 0,
+    };
+    force.status = TaskForceStatus::Underway;
+    if let Some(speed) = speed {
+        force.speed = speed;
+    }
+
+    // The pulses, each steamed out with the fuel the one before left.
+    let mut aboard: BTreeMap<ShipId, Ship> = force
+        .ships
+        .iter()
+        .map(|id| (*id, ships[id].clone()))
+        .collect();
+    let start_hours = pulse_start(first_day, Pulse::Night);
+    let mut last_mover: Option<Mover> = None;
+    'days: for day in first_day..first_day.saturating_add(FORECAST_DAYS) {
+        for pulse in Pulse::ALL {
+            let Some(mut mover) =
+                build_mover(&force, |id| &aboard[&id], ref_data, pulse, Fixed::ZERO)
+            else {
+                result.end = PassageEnd::CannotMove;
+                break 'days;
+            };
+            if result.slowest.is_none() {
+                result.speed_kn = mover.speed_kn;
+                result.slowest = mover
+                    .steamers
+                    .iter()
+                    .min_by_key(|s| s.speed_kn)
+                    .map(|s| s.ship);
+            }
+            mover.steam_out(map);
+            let travelled_nm = mover.segment_nm;
+            let speed_kn = mover.speed_kn;
+            result.hexes.append(&mut mover.segment_hexes);
+            result.steamed_nm += travelled_nm;
+            for steamer in &mover.steamers {
+                let (burned_t, remaining_t) = steamer.burn(travelled_nm, speed_kn);
+                let ship = aboard.get_mut(&steamer.ship).expect("the ship is aboard");
+                ship.fuel_t = remaining_t;
+                let line = result
+                    .ships
+                    .iter_mut()
+                    .find(|line| line.ship == steamer.ship)
+                    .expect("every ship has a line");
+                line.burned_t += burned_t;
+                line.left_t = remaining_t;
+            }
+            let elapsed_hours = pulse_start(day, pulse) + hours_for(travelled_nm, speed_kn);
+            result.hours = elapsed_hours - start_hours;
+            force.from_hex = mover.from_hex;
+            force.toward_hex = mover.toward_hex;
+            force.progress_nm = mover.progress_nm;
+            force.route.next_index = mover.next_index;
+            if mover.arrived() {
+                result.end = PassageEnd::Arrives {
+                    day,
+                    pulse,
+                    elapsed_hours,
+                };
+                last_mover = Some(mover);
+                break 'days;
+            }
+            if mover.ran_dry() {
+                let limiting = mover.limiting_ships();
+                for line in &mut result.ships {
+                    line.runs_dry = limiting.contains(&line.ship);
+                }
+                result.end = PassageEnd::RunsDry {
+                    day,
+                    pulse,
+                    elapsed_hours,
+                    at: mover.position(),
+                };
+                last_mover = Some(mover);
+                break 'days;
+            }
+            last_mover = Some(mover);
+        }
+    }
+
+    // The length of the whole route: what is steamed, and for a force that
+    // stopped short, what the same steaming would still cover.
+    result.route_nm = result.steamed_nm;
+    result.route_hexes = result.hexes.clone();
+    if matches!(result.end, PassageEnd::RunsDry { .. }) {
+        if let Some(mut mover) = last_mover {
+            let before = mover.segment_nm;
+            mover.steam(map, Fixed::from_int(1_000_000));
+            result.route_nm += mover.segment_nm - before;
+            result.route_hexes.append(&mut mover.segment_hexes);
+        }
+    }
+    result
 }
 
 #[cfg(test)]

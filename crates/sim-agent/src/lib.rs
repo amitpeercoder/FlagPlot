@@ -17,6 +17,9 @@
 //!   optionally within an area.
 //! * [`get_entity`]: everything the side knows of one unit or contact.
 //! * [`explain`]: an event as the side may see it and its visible causes.
+//! * [`measure`]: air distance, sea route, the passage of a task force and the
+//!   air reach of an air group, with the functions the rules use (decision
+//!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
 //! `"version": 1` and a `"kind"`, and has a schema under `schemas/`. A
@@ -28,6 +31,7 @@ mod briefing;
 mod common;
 mod explain;
 mod lines;
+mod measure;
 mod queries;
 mod text;
 mod words;
@@ -45,6 +49,10 @@ pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
 pub use lines::{AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine};
+pub use measure::{
+    measure, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer, Moment, Passage,
+    PassageSpeed, PlaceArg, Question, ReachLine, Resolved, SeaRoute, ShipFuel, SpeedArg,
+};
 pub use queries::{
     get_entity, list_bases, list_contacts, list_forces, AirGroupDetail, Area, BaseDetail,
     ContactDetail, Detail, Entity, EntityAnswer, ForceDetail, ListBases, ListContacts, ListForces,

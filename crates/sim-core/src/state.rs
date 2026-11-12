@@ -20,7 +20,8 @@ use crate::ids::{
 };
 use crate::map::Map;
 use crate::orders::{
-    AirMission, CargoAction, Mission, Readiness, SpeedSetting, Stance, StragglerInstruction,
+    AirMission, CargoAction, Mission, Readiness, RejectReason, SpeedSetting, Stance,
+    StragglerInstruction,
 };
 
 /// One of the two sides.
@@ -430,6 +431,49 @@ impl TaskForce {
             (None, Some(_)) => Some((true, self.from_hex)),
             (Some(ahead), Some(back)) if back < ahead => Some((true, self.from_hex)),
             (Some(_), Some(_)) => Some((false, toward)),
+        }
+    }
+
+    /// Whether a route order with these waypoints would be accepted at
+    /// intake, as far as the route goes (the order's other checks are the
+    /// world's). The one check: `validate_order` and the passage forecast
+    /// (decision 0049) both make it.
+    ///
+    /// A waypoint off the map is rejected first, even for the first one,
+    /// before any turn-back choice. The new route starts from the centre the
+    /// force reaches first ([`TaskForce::reroute_centre`], the choice
+    /// `apply_order` makes); if neither side can reach the first waypoint by
+    /// sea the order is rejected. A force between centres always has
+    /// somewhere to go: the leg it must finish, so "stop at the hex ahead"
+    /// and "go back to the hex I left" are real routes. Each leg must be
+    /// reachable by sea from the one before (decision 0017, decision 13).
+    pub fn check_route(&self, map: &Map, waypoints: &[Hex]) -> Result<(), RejectReason> {
+        let first = waypoints.first().copied();
+        if let Some(first) = first {
+            if !map.contains(first) {
+                return Err(RejectReason::WaypointOffMap(first));
+            }
+        }
+        let Some((_, mut current)) = self.reroute_centre(map, first) else {
+            return Err(RejectReason::WaypointUnreachable(
+                first.unwrap_or(self.from_hex),
+            ));
+        };
+        let mut goes_somewhere = self.toward_hex.is_some() && !waypoints.is_empty();
+        for waypoint in waypoints {
+            if !map.contains(*waypoint) {
+                return Err(RejectReason::WaypointOffMap(*waypoint));
+            }
+            match map.sea_distance(current, *waypoint) {
+                None => return Err(RejectReason::WaypointUnreachable(*waypoint)),
+                Some(steps) => goes_somewhere |= steps > 0,
+            }
+            current = *waypoint;
+        }
+        if goes_somewhere {
+            Ok(())
+        } else {
+            Err(RejectReason::EmptyRoute)
         }
     }
 

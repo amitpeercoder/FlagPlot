@@ -18,9 +18,10 @@ use std::collections::BTreeMap;
 use crate::belief::{BattleClaim, BeliefState, Contact};
 use crate::events::EventLog;
 use crate::hex::Hex;
-use crate::ids::{AircraftTypeId, EventId, OrderId, ShipClassId};
+use crate::ids::{AircraftTypeId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
 use crate::map::{HexData, Map};
-use crate::orders::Order;
+use crate::movement::{self, PassageForecast};
+use crate::orders::{Order, SpeedSetting};
 use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{AirGroup, Arrival, Base, Replacement, Ship, Side, TaskForce, TruthState};
@@ -195,6 +196,46 @@ impl<'a> SideView<'a> {
     /// `target`.
     pub fn sea_distances_to(&self, target: Hex) -> BTreeMap<Hex, u32> {
         self.map.sea_distances_to(target)
+    }
+
+    /// The hexes a force steams through from `from` to `to`, in order and
+    /// ending at `to` (decision 0017), or `None` when ships cannot get from
+    /// one to the other. The map is common knowledge, so this is not enemy
+    /// truth; each step is 40 miles.
+    pub fn sea_path(&self, from: Hex, to: Hex) -> Option<Vec<Hex>> {
+        self.map.sea_path(from, to)
+    }
+
+    /// What the movement rules would do with one of the side's own task
+    /// forces if it were given a route to `destination` now (decision 0049),
+    /// at `speed` if given and otherwise at the speed it has, leaving at the
+    /// start of the day after [`SideView::day`]. `None` if `task_force` is
+    /// not one of the side's own. It reads only the side's own force and
+    /// ships, the map and the reference data, and writes nothing.
+    pub fn forecast_passage(
+        &self,
+        task_force: TaskForceId,
+        destination: Hex,
+        speed: Option<SpeedSetting>,
+    ) -> Option<PassageForecast> {
+        let force = self.truth.task_forces.get(&task_force)?;
+        if force.side != self.side {
+            return None;
+        }
+        let ships: BTreeMap<ShipId, Ship> = force
+            .ships
+            .iter()
+            .filter_map(|id| self.truth.ships.get(id).map(|ship| (*id, ship.clone())))
+            .collect();
+        Some(movement::forecast_passage(
+            self.map,
+            self.ref_data,
+            force,
+            &ships,
+            destination,
+            speed,
+            self.truth.day + 1,
+        ))
     }
 
     /// Reference data is common knowledge.

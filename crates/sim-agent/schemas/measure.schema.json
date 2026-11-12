@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/measure",
+  "title": "measure: air distance, sea route, passage of a task force, air reach of an air group",
+  "oneOf": [
+    { "$ref": "#/$defs/air_distance" },
+    { "$ref": "#/$defs/sea_route" },
+    { "$ref": "#/$defs/passage" },
+    { "$ref": "#/$defs/air_reach" },
+    { "$ref": "defs.schema.json#/$defs/not_known" }
+  ],
+  "$defs": {
+    "resolved": {
+      "description": "A place as asked: the hex, and the own unit or held contact it was named by, if any.",
+      "type": "object",
+      "required": ["unit", "place"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+        "place": { "$ref": "defs.schema.json#/$defs/place" }
+      }
+    },
+    "places": {
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/place" }
+    },
+    "moment": {
+      "description": "A game day and pulse, the hours elapsed since the scenario began, and the clock as the events show it.",
+      "type": "object",
+      "required": ["day", "pulse", "elapsed_hours", "clock"],
+      "additionalProperties": false,
+      "properties": {
+        "day": { "type": "integer" },
+        "pulse": { "enum": ["night", "morning", "afternoon"] },
+        "elapsed_hours": { "$ref": "defs.schema.json#/$defs/dec" },
+        "clock": { "type": "string" }
+      }
+    },
+    "moment_or_null": {
+      "oneOf": [{ "$ref": "#/$defs/moment" }, { "type": "null" }]
+    },
+    "air_distance": {
+      "type": "object",
+      "required": ["format", "version", "kind", "question", "from", "to", "distance_nm"],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 1 },
+        "kind": { "const": "measure" },
+        "question": { "const": "air_distance" },
+        "from": { "$ref": "#/$defs/resolved" },
+        "to": { "$ref": "#/$defs/resolved" },
+        "distance_nm": { "type": "integer" }
+      }
+    },
+    "sea_route": {
+      "type": "object",
+      "required": [
+        "format", "version", "kind", "question", "from", "to", "route_found",
+        "hexes", "steps", "distance_nm"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 1 },
+        "kind": { "const": "measure" },
+        "question": { "const": "sea_route" },
+        "from": { "$ref": "#/$defs/resolved" },
+        "to": { "$ref": "#/$defs/resolved" },
+        "route_found": { "type": "boolean" },
+        "hexes": { "$ref": "#/$defs/places" },
+        "steps": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "distance_nm": { "$ref": "defs.schema.json#/$defs/count_or_null" }
+      }
+    },
+    "ship_fuel": {
+      "type": "object",
+      "required": [
+        "ship", "class", "fuel_t", "burned_t", "left_t", "runs_dry", "runs_dry_after_nm"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+        "class": { "type": "string" },
+        "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "burned_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "left_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "runs_dry": { "type": "boolean" },
+        "runs_dry_after_nm": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+      }
+    },
+    "passage": {
+      "type": "object",
+      "required": [
+        "format", "version", "kind", "question", "task_force", "from", "to", "order",
+        "refusal", "between_hexes", "turns_back", "route_starts_at", "speed", "route",
+        "route_steps", "entered_steps", "route_nm", "leaves", "outcome", "ends", "ends_at",
+        "steaming_hours", "steamed_nm", "short_by_nm", "ships", "assumptions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 1 },
+        "kind": { "const": "measure" },
+        "question": { "const": "passage" },
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "from": { "$ref": "defs.schema.json#/$defs/place" },
+        "to": { "$ref": "#/$defs/resolved" },
+        "order": { "enum": ["accepted", "refused"] },
+        "refusal": {
+          "oneOf": [
+            { "enum": ["no_route", "already_there", "no_ship_afloat"] },
+            { "type": "null" }
+          ]
+        },
+        "between_hexes": { "type": "boolean" },
+        "turns_back": { "type": "boolean" },
+        "route_starts_at": { "$ref": "defs.schema.json#/$defs/place" },
+        "speed": {
+          "type": "object",
+          "required": ["setting", "knots", "slowest_ship"],
+          "additionalProperties": false,
+          "properties": {
+            "setting": { "type": "string" },
+            "knots": { "$ref": "defs.schema.json#/$defs/dec" },
+            "slowest_ship": { "$ref": "defs.schema.json#/$defs/handle_or_null" }
+          }
+        },
+        "route": { "$ref": "#/$defs/places" },
+        "route_steps": { "type": "integer" },
+        "entered_steps": { "type": "integer" },
+        "route_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+        "leaves": { "$ref": "#/$defs/moment" },
+        "outcome": { "enum": ["arrives", "runs_out_of_fuel", "cannot_move", "does_not_sail"] },
+        "ends": { "$ref": "#/$defs/moment_or_null" },
+        "ends_at": { "$ref": "defs.schema.json#/$defs/place_or_null" },
+        "steaming_hours": { "$ref": "defs.schema.json#/$defs/dec" },
+        "steamed_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+        "short_by_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+        "ships": { "type": "array", "items": { "$ref": "#/$defs/ship_fuel" } },
+        "assumptions": {
+          "description": "What the forecast takes as given, in fixed words.",
+          "type": "object",
+          "required": ["departs", "speed", "meets", "losses", "fuel"],
+          "additionalProperties": false,
+          "properties": {
+            "departs": { "type": "string" },
+            "speed": { "type": "string" },
+            "meets": { "type": "string" },
+            "losses": { "type": "string" },
+            "fuel": { "type": "string" }
+          }
+        }
+      }
+    },
+    "air_reach": {
+      "type": "object",
+      "required": [
+        "format", "version", "kind", "question", "air_group", "at", "aircraft_type",
+        "role", "radius_nm", "radius_is", "escort_radius_nm", "places"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 1 },
+        "kind": { "const": "measure" },
+        "question": { "const": "air_reach" },
+        "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+        "at": { "$ref": "defs.schema.json#/$defs/place" },
+        "aircraft_type": { "type": "string" },
+        "role": { "enum": ["patrol", "bomber", "fighter"] },
+        "radius_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+        "radius_is": { "enum": ["strike", "escort", "none"] },
+        "escort_radius_nm": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+        "places": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["to", "distance_nm", "within"],
+            "additionalProperties": false,
+            "properties": {
+              "to": { "$ref": "#/$defs/resolved" },
+              "distance_nm": { "type": "integer" },
+              "within": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@
 
 use sim_core::events::{DamageTrack, Weapon};
 use sim_core::orders::{AirMission, Mission, SpeedSetting, Stance};
+use sim_core::refdata::AircraftRole;
 use sim_core::state::{ShipSystem, Side, SystemState, TaskForceStatus};
 
 pub(crate) fn side(side: Side) -> &'static str {
@@ -98,5 +99,13 @@ pub(crate) fn end_reason(reason: sim_core::events::EngagementEndReason) -> &'sta
         R::BrokeOff => "broke_off",
         R::PassedUnseen => "passed_unseen",
         R::MaxRounds => "max_rounds",
+    }
+}
+
+pub(crate) fn role(role: AircraftRole) -> &'static str {
+    match role {
+        AircraftRole::Patrol => "patrol",
+        AircraftRole::Bomber => "bomber",
+        AircraftRole::Fighter => "fighter",
     }
 }
