@@ -159,6 +159,66 @@ fn a_scenario_without_fighting_loses_nothing() {
 }
 
 #[test]
+fn a_scenario_with_objectives_adds_a_margin_and_a_result_to_each_run_and_a_tally() {
+    let scenario = "data/scenarios/05_eastern_solomons.toml";
+    let summary = parse(&batch(
+        "objectives",
+        scenario,
+        &["--runs", "4", "--first-seed", "1940"],
+    ));
+    let runs = summary["per_run"].as_array().expect("per_run");
+    assert_eq!(runs.len(), 4);
+    let tally = summary["results"].as_array().expect("a tally of results");
+    let names: Vec<&str> = tally
+        .iter()
+        .map(|row| row["outcome"].as_str().expect("an outcome"))
+        .collect();
+    assert_eq!(
+        names,
+        [
+            "decisive victory",
+            "major victory",
+            "minor victory",
+            "stalemate",
+            "minor defeat",
+            "major defeat",
+            "decisive defeat"
+        ]
+    );
+    let total: u64 = tally
+        .iter()
+        .map(|row| row["runs"].as_u64().expect("runs"))
+        .sum();
+    assert_eq!(total, 4);
+    // Each run's own result is counted in the tally, and agrees with what
+    // `run --seed` prints for the seed.
+    for run in runs {
+        let outcome = run["allied_outcome"].as_str().expect("an outcome");
+        let row = tally
+            .iter()
+            .find(|row| row["outcome"] == outcome)
+            .expect("a row");
+        assert!(row["runs"].as_u64().unwrap() >= 1);
+        let seed = run["seed"].as_u64().expect("seed").to_string();
+        let printed = binary(&["run", scenario, "--seed", &seed]);
+        let text = String::from_utf8_lossy(&printed.stdout).into_owned();
+        let margin = run["allied_margin"].as_str().expect("a margin");
+        assert!(
+            text.contains(&format!("margin {margin}, {outcome}")),
+            "seed {seed}: {margin} {outcome} not in\n{text}"
+        );
+    }
+}
+
+#[test]
+fn a_scenario_without_objectives_has_no_result_in_its_batch() {
+    let summary = parse(&batch("no_objectives", QUIET, &["--runs", "2"]));
+    assert!(summary.get("results").is_none());
+    assert!(summary["per_run"][0].get("allied_margin").is_none());
+    assert!(summary["per_run"][0].get("allied_outcome").is_none());
+}
+
+#[test]
 fn bad_invocations_fail_and_write_nothing() {
     let out = temp_file("never");
     let _ = fs::remove_file(&out);

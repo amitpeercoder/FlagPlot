@@ -246,7 +246,7 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         assert!(schema_text.contains(phrase), "input schema lacks: {phrase}");
     }
     for phrase in [
-        "no score and there are no victory conditions",
+        "A scenario without objectives has no result",
         "Day 2 of 5",
         "BEFORE the contact appears",
         "pilots of null",

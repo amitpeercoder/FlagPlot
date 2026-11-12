@@ -48,6 +48,12 @@
 //!   ship may give its `gun_rounds`. An order is addressed to exactly one of a
 //!   `task_force` or an `air_group`.
 //!
+//!   A scenario may also have an `[objectives]` table: the three levels, an
+//!   optional `history` note, and for each side a `mission` and a list of
+//!   `[[objectives.<side>.objective]]` of the kinds `ships_sunk`,
+//!   `ships_crippled`, `aircraft_destroyed`, `cargo_landed` and `base_open`
+//!   (decision 0054, "As built").
+//!
 //! Quantities are written as whole numbers or as decimal strings such as
 //! `"0.25"`. TOML floats are rejected, so no value passes through floating
 //! point on its way into the simulation.

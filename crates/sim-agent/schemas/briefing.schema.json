@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/briefing",
-  "title": "briefing: the situation of one side at the start of a day, in ten parts",
+  "title": "briefing: the situation of one side at the start of a day, in ten parts and the objectives",
   "type": "object",
   "required": [
-    "format", "version", "kind", "heading", "orders", "contacts", "action", "losses",
+    "format", "version", "kind", "heading", "objectives", "orders", "contacts", "action", "losses",
     "task_forces", "air_groups", "bases", "arrivals", "warnings"
   ],
   "additionalProperties": false,
@@ -13,6 +13,7 @@
     "version": { "const": 1 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
+    "objectives": { "$ref": "#/$defs/objectives" },
     "orders": { "$ref": "#/$defs/orders" },
     "contacts": { "$ref": "#/$defs/contacts" },
     "action": { "$ref": "#/$defs/action" },
@@ -24,6 +25,110 @@
     "warnings": { "$ref": "#/$defs/warnings" }
   },
   "$defs": {
+    "objectives": {
+      "description": "The side's own mission and objectives (decision 0054), its progress as far as it can know it, and the umpire's result once the game is over. mission is null and objectives empty when the scenario has none; result is null until the game is over (and always null without objectives).",
+      "type": "object",
+      "required": ["mission", "objectives", "result"],
+      "additionalProperties": false,
+      "properties": {
+        "mission": { "$ref": "defs.schema.json#/$defs/string_or_null" },
+        "objectives": { "type": "array", "items": { "$ref": "#/$defs/objective" } },
+        "result": {
+          "oneOf": [
+            { "$ref": "#/$defs/result" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "required": ["kind", "base", "closed", "ship_points", "points", "known"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "aircraft_destroyed", "cargo_landed", "base_open"] },
+        "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+        "closed": { "type": ["boolean", "null"] },
+        "ship_points": {
+          "description": "For ships_sunk and ships_crippled: the points for each kind of ship. Empty for the others.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "points"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] },
+              "points": { "$ref": "defs.schema.json#/$defs/dec" }
+            }
+          }
+        },
+        "points": {
+          "description": "Points for one aircraft, one ton or the base being as wanted; null for the ship objectives.",
+          "$ref": "defs.schema.json#/$defs/dec_or_null"
+        },
+        "known": {
+          "description": "What the side knows of its progress, from its own units and the events it may see. basis is exact, claims (enemy ships reported sunk, of no known kind, so points is null) or not_observable (count is 0 and says nothing).",
+          "type": "object",
+          "required": ["basis", "count", "points"],
+          "additionalProperties": false,
+          "properties": {
+            "basis": { "enum": ["exact", "claims", "not_observable"] },
+            "count": { "$ref": "defs.schema.json#/$defs/dec" },
+            "points": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+          }
+        }
+      }
+    },
+    "result": {
+      "description": "The umpire's result for both sides, from the truth, told at the end of the game.",
+      "type": "object",
+      "required": ["allied", "japanese", "history"],
+      "additionalProperties": false,
+      "properties": {
+        "allied": { "$ref": "#/$defs/side_result" },
+        "japanese": { "$ref": "#/$defs/side_result" },
+        "history": { "$ref": "defs.schema.json#/$defs/string_or_null" }
+      }
+    },
+    "side_result": {
+      "type": "object",
+      "required": ["objectives", "total", "margin", "result", "level", "outcome"],
+      "additionalProperties": false,
+      "properties": {
+        "objectives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "base", "closed", "count", "ships", "points"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "enum": ["ships_sunk", "ships_crippled", "aircraft_destroyed", "cargo_landed", "base_open"] },
+              "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "closed": { "type": ["boolean", "null"] },
+              "count": { "$ref": "defs.schema.json#/$defs/dec" },
+              "ships": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["kind", "ships"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] },
+                    "ships": { "type": "integer" }
+                  }
+                }
+              },
+              "points": { "$ref": "defs.schema.json#/$defs/dec" }
+            }
+          }
+        },
+        "total": { "$ref": "defs.schema.json#/$defs/dec" },
+        "margin": { "description": "This side's points less the other side's.", "$ref": "defs.schema.json#/$defs/dec" },
+        "result": { "enum": ["victory", "defeat", "stalemate"] },
+        "level": { "enum": ["minor", "major", "decisive", null] },
+        "outcome": { "type": "string" }
+      }
+    },
     "heading": {
       "type": "object",
       "required": ["side", "day", "last_day", "yesterday", "scenario", "rules_in_play"],

@@ -10,7 +10,8 @@
     "kind",
     "resolved",
     "day",
-    "game_over"
+    "game_over",
+    "result"
   ],
   "additionalProperties": false,
   "properties": {
@@ -31,6 +32,17 @@
     },
     "game_over": {
       "type": "boolean"
+    },
+    "result": {
+      "description": "When game_over is true and the scenario has objectives, the umpire's result for both sides (decision 0054); otherwise null.",
+      "oneOf": [
+        {
+          "$ref": "briefing.schema.json#/$defs/result"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   }
 }

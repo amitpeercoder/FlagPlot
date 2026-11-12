@@ -21,6 +21,7 @@ use crate::answer::{FORMAT, VERSION};
 use crate::briefing::briefing_for_game;
 use crate::explain::explain;
 use crate::measure::{measure, Question};
+use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
 use crate::record::{seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
@@ -178,7 +179,12 @@ impl Session {
                     Some(_) => return Err(CallError::new("\"text\" must be true or false")),
                 };
                 let view = self.world.side_view(side);
-                let briefing = briefing_for_game(&view, &self.scenario, Some(self.days));
+                let mut briefing = briefing_for_game(&view, &self.scenario, Some(self.days));
+                // The final briefing carries the umpire's result (decision 8
+                // of 0054): the game is over, so it is no longer a secret.
+                if let Some(result) = self.final_result() {
+                    briefing = briefing.with_result(&view, &result);
+                }
                 if text {
                     Ok(json!({
                         "format": FORMAT,
@@ -357,6 +363,13 @@ impl Session {
                 resolved = true;
             }
         }
+        // The answer that reports the game over carries the umpire's result
+        // for both sides, when the scenario has objectives (decision 8 of
+        // 0054). Otherwise it is null.
+        let result = match self.final_result() {
+            Some(result) => to_value(&result_part(&self.world.side_view(side), &result))?,
+            None => Value::Null,
+        };
         Ok(json!({
             "format": FORMAT,
             "version": VERSION,
@@ -364,7 +377,18 @@ impl Session {
             "resolved": resolved,
             "day": self.world.day(),
             "game_over": self.is_over(),
+            "result": result,
         }))
+    }
+
+    /// The umpire's result, once the game is over and only then, if the
+    /// scenario has objectives.
+    fn final_result(&self) -> Option<sim_core::objectives::GameResult> {
+        if self.is_over() {
+            self.world.result()
+        } else {
+            None
+        }
     }
 
     /// Hands in every seat's orders for the coming day through the engine's

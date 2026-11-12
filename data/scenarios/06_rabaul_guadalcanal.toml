@@ -368,3 +368,36 @@ side = "allied"
 air_group = 17
 kind = "set_air_mission"
 mission = "naval_strike"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)"
+
+[objectives.allied]
+mission = "Keep Henderson Field flying and wear down the air groups at Rabaul."
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 1
+points = 10
+
+[objectives.japanese]
+mission = "Put Henderson Field out of use and destroy its aircraft."
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.japanese.objective]]
+kind = "base_open"
+base = 1
+closed = true
+points = 10
