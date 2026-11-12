@@ -719,3 +719,14 @@ raid,raid-1942-09-02-tainan-ku,Which aircraft turned back is stated on the sheet
 raid,raid-1942-08-21-tainan-ku,撃滅計 box reads 8 but 撃墜 4 plus 不確実 3 is 7; margin note on the formation sheet partly illegible,1942-08-21,JACAR C08051603900 pp.24-25,Left as written.
 raid,raid-1942-09-10-tainan-ku,Whether the 3-plane 2nd Air Group shotai is counted in the 12 or in a margin 15 is not stated; no 2nd Air Group losses or claims written on the sheet,1942-09-10,JACAR C08051604000 pp.54-55,"2nd Air Group (二空) aircraft appear as a shotai on 4, 5, 9 and 10 Sep sheets; their own records were not checked."
 air_unit,2nd Air Group fighters (二航空隊戦闘機隊),Own sheets for the aircraft flying with Tainan on 4-10 Sep not in these files,1942-09-02 to 1942-09-10,JACAR C08051604000,Pilot names and claims of 二空 pilots appear on the Tainan sheets (e.g. Wajima on 9 Sep) but no loss is recorded for them.
+engagement,eastern-solomons,Range at launch of Shokaku/Zuikaku first and second waves (about 1445-1600 Tokyo/Rabaul clock) and Ryujo strike on Henderson Field,1942-08-24,"ONI ES ch.3-4, wikipedia-en, ja-wikipedia (ja page text), combinedfleet (Wayback returned an empty page)",No distance found. Only the US radar tracks (88 mi at 1632) and the sighting of Japanese planes at 1725 are recorded.
+engagement,eastern-solomons,Losses of the Japanese second wave on night return,1942-08-24,"wikipedia-en (existing row), ja-wikipedia",Not found beyond existing rows.
+engagement,eastern-solomons,"Launch range of Saratoga's 23 August strike (31 SBD, 6 TBF) and Saratoga's position",1942-08-23,"ONI ES ch.3 (position only for TF FOX, 10S 163E)",Convoy was sighted 250 mi north of Guadalcanal; distance from carrier not stated.
+engagement,eastern-solomons,"Saratoga's own action report (launch ranges, fuel states, return position)",1942-08-24,not located on HyperWar,Not read.
+engagement,midway,"Hiryu strikes (range at launch, losses) and Japanese Nagumo report",1942-06-04,not fetched,Not read.
+engagement,midway,Spruance's intent for 4 June launch range; Yorktown launch range; TF-16 action report,1942-06-04,history.navy.mil TF-16 report page did not load by curl,Not read.
+engagement,santa-cruz,"Japanese strike ranges at launch (Shokaku, Zuikaku, Junyo) and losses to fuel",1942-10-26,wikipedia-en only: Junyo launched at 280 nm from the US carriers at 0905-0914 (footnote not read),Low-grade only.
+engagement,lae-salamaua-raid,Strike launch range over the Owen Stanleys and fuel use,1942-03-10,not searched,Not read.
+engagement,coral-sea,"Marshalls/Gilberts and Rabaul-Lae raids, ranges at launch",1942-02/03,not searched,Not read.
+doctrine,usf-74 usf-77,US Fleet carrier aircraft doctrine and standard strike radius by type,1941-1942,not fetched,Not read; no doctrine statement of a standard radius found in the ONI or action reports.
+doctrine,japanese,Japanese standard radius by type,1942,not fetched,Not read.
