@@ -255,10 +255,10 @@ pub fn command(
     let path = out.unwrap_or_else(|| {
         PathBuf::from(format!("docs/validation/{}-{label}.md", measures.battle))
     });
-    let (agree, miss, judged) = report::tally(&rows);
+    let (agree, edge, miss, judged) = report::tally(&rows);
     let wrote = write_report(&path, &text)?;
     println!(
-        "{} {}: judged {judged}, agree {agree}, miss {miss}",
+        "{} {}: judged {judged}, agree {agree}, at the edge {edge}, miss {miss}",
         if wrote { "wrote" } else { "unchanged" },
         path.display()
     );
