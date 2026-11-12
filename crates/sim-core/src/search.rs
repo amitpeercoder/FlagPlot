@@ -370,8 +370,7 @@ mod tests {
     use crate::orders::{AirGroupOrder, Mission, OrderKind, OrderRequest, Origin};
     use crate::refdata::{AircraftRole, AircraftType, PortSize, RefData, ShipClass};
     use crate::state::{
-        AirGroup, AirGroupLocation, Base, SearchArc, Ship, ShipLocation, ShipSystems, TaskForce,
-        TruthState,
+        AirGroup, AirGroupLocation, Base, SearchArc, Ship, ShipLocation, TaskForce, TruthState,
     };
     use crate::world::SimConfig;
 
@@ -618,43 +617,31 @@ mod tests {
         let mut truth = TruthState::default();
         truth.bases.insert(
             BaseId::new(1),
-            Base {
-                id: BaseId::new(1),
-                name: "Test base".to_string(),
-                side: Side::Allied,
-                hex: BASE_HEX,
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            Base::new(
+                BaseId::new(1),
+                "Test base".to_string(),
+                Side::Allied,
+                BASE_HEX,
+            ),
         );
         truth.air_groups.insert(
             GROUP,
             AirGroup {
-                id: GROUP,
-                name: "Test group".to_string(),
-                side: Side::Allied,
-                location: AirGroupLocation::Base(BaseId::new(1)),
-                aircraft_type: AircraftTypeId::new(1),
                 ready: 4,
-                damaged: 0,
                 mission: AirMission::Search,
                 search: Some(SearchArc {
                     from_deg: 60,
                     to_deg: 120,
                     range_nm: Fixed::from_int(600),
                 }),
-                mission_order: None,
-                arc_order: None,
-                patrol_share: Fixed::ONE,
-                share_order: None,
-                fatigue: Fixed::ZERO,
-                rest_above: None,
-                rest_order: None,
-                stood_down: false,
-                pilots: None,
                 strength: 4,
+                ..AirGroup::new(
+                    GROUP,
+                    "Test group".to_string(),
+                    Side::Allied,
+                    AirGroupLocation::Base(BaseId::new(1)),
+                    AircraftTypeId::new(1),
+                )
             },
         );
         let mut next_ship = 1;
@@ -674,19 +661,14 @@ mod tests {
                 truth.ships.insert(
                     ship,
                     Ship {
-                        id: ship,
-                        name: format!("Test ship {next_ship}"),
-                        class: ShipClassId::new(class),
-                        side: force.side,
                         fuel_t: Fixed::from_int(2000),
-                        supply_t: Fixed::ZERO,
-                        cargo_fuel_t: Fixed::ZERO,
-                        location: ShipLocation::TaskForce(id),
-                        flotation_damage: Fixed::ZERO,
-                        fire_damage: Fixed::ZERO,
-                        gun_rounds: Fixed::ZERO,
-                        torpedoes_ready: false,
-                        systems: ShipSystems::ALL_WORKING,
+                        ..Ship::new(
+                            ship,
+                            format!("Test ship {next_ship}"),
+                            ShipClassId::new(class),
+                            force.side,
+                            ShipLocation::TaskForce(id),
+                        )
                     },
                 );
             }

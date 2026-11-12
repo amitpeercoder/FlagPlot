@@ -1323,22 +1323,20 @@ mod tests {
                 truth.ships.insert(
                     ship_id,
                     Ship {
-                        id: ship_id,
-                        name: format!("Test ship {next_ship}"),
-                        class: ShipClassId::new(1),
-                        side: spec.side,
                         fuel_t: Fixed::from_int(2000),
-                        supply_t: Fixed::ZERO,
-                        cargo_fuel_t: Fixed::ZERO,
-                        location: ShipLocation::TaskForce(id),
-                        flotation_damage: Fixed::ZERO,
-                        fire_damage: Fixed::ZERO,
                         gun_rounds: Fixed::from_int(800),
                         torpedoes_ready: true,
                         systems: ShipSystems {
                             propulsion: spec.propulsion,
                             ..ShipSystems::ALL_WORKING
                         },
+                        ..Ship::new(
+                            ship_id,
+                            format!("Test ship {next_ship}"),
+                            ShipClassId::new(1),
+                            spec.side,
+                            ShipLocation::TaskForce(id),
+                        )
                     },
                 );
             }

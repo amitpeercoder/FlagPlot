@@ -15,7 +15,7 @@ use sim_core::ids::{BaseId, ShipClassId, ShipId, TaskForceId};
 use sim_core::map::{HexData, Map};
 use sim_core::orders::Mission;
 use sim_core::refdata::{PortSize, RefData, ShipClass, ShipKind};
-use sim_core::state::{Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState};
+use sim_core::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 use sim_core::World;
 use support::{load, play};
 
@@ -44,19 +44,15 @@ fn class() -> ShipClass {
 
 fn ship(id: u32, force: u32, fuel: i64) -> Ship {
     Ship {
-        id: ShipId::new(id),
-        name: format!("Ship {id}"),
-        class: ShipClassId::new(1),
-        side: Side::Allied,
         fuel_t: Fixed::from_int(fuel),
-        supply_t: Fixed::ZERO,
-        cargo_fuel_t: Fixed::ZERO,
-        location: ShipLocation::TaskForce(TaskForceId::new(force)),
-        flotation_damage: Fixed::ZERO,
-        fire_damage: Fixed::ZERO,
         gun_rounds: Fixed::from_int(800),
-        torpedoes_ready: false,
-        systems: ShipSystems::ALL_WORKING,
+        ..Ship::new(
+            ShipId::new(id),
+            format!("Ship {id}"),
+            ShipClassId::new(1),
+            Side::Allied,
+            ShipLocation::TaskForce(TaskForceId::new(force)),
+        )
     }
 }
 
@@ -88,14 +84,13 @@ fn world() -> World {
     truth.bases.insert(
         BaseId::new(1),
         Base {
-            id: BaseId::new(1),
-            name: "Home".to_string(),
-            side: Side::Allied,
-            hex: Hex::new(0, 0),
             supply_t: Fixed::from_int(100),
-            anti_aircraft: 0,
-            aircraft_repairs_per_day: 0,
-            fuel_t: Fixed::ZERO,
+            ..Base::new(
+                BaseId::new(1),
+                "Home".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            )
         },
     );
     for (force, hex, ships) in [
