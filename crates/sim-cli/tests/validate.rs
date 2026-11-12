@@ -78,8 +78,18 @@
 //! - L (judged, ships_sunk [1,2], record 2): the 5th to 95th is 0 to 2 and 2
 //!   of 20 hold it, 2 x 20 = 40 >= 20, so it agrees; the 25th to 75th is 0 to
 //!   1 and 2 is outside it. AGREES, AT THE EDGE.
-//! - So the fixture's head reads: judged 8 (A, B, C, D, F, G, I, L), agree 4
-//!   (A, D, F, G), at the edge 1 (L), miss 3 (B, C, I).
+//! - M (judged, shots_in_hundreds japanese gun, record 1): the fixture's
+//!   Japanese gun shots are "0" in run 1, "938" in run 2, "12.5" in run 3,
+//!   "7.5" in run 4 and "100" in runs 5 to 20. In hundreds, rounded down: 0,
+//!   9, 0, 0, and sixteen 1. No run is left out: 20 kept. Sorted: three 0,
+//!   sixteen 1, one 9. The 5th percentile (rank 1) is 0, the 25th (rank 5) is
+//!   1, the median (rank 10) is 1, the 75th (rank 15) is 1, the 95th (rank 19)
+//!   is 1. Record 1 is inside both; 16 of 20 hold it. Plain AGREES.
+//!   Unit cases for the calculation alone (`validate/take.rs`): "99.999999"
+//!   gives 0; "100" gives 1; "199.5" gives 1; "2791" gives 27; "1867" gives
+//!   18; "471" gives 4.
+//! - So the fixture's head reads: judged 9 (A, B, C, D, F, G, I, L, M), agree
+//!   5 (A, D, F, G, M), at the edge 1 (L), miss 3 (B, C, I).
 //! - The battle: 20 runs is fewer than 1,000, so no verdict on the battle;
 //!   the report says so.
 //!
@@ -413,6 +423,18 @@ take = "ships_sunk"
 ships = [1, 2]
 rows = [1]
 reason = "r"
+
+[[measure]]
+id = "m"
+counts = "M"
+record_low = 1
+record_high = 1
+judged = true
+take = "shots_in_hundreds"
+side = "japanese"
+weapon = "gun"
+rows = [1]
+reason = "r"
 "#;
 
 struct Setup {
@@ -514,6 +536,7 @@ fn the_hand_calculation_of_every_measure() {
     );
     expect(&report, "j", "0 to 0", "0", "1 of 20", "0", "reported");
     expect(&report, "k", "0 to 0", "0", "1 of 20", "0", "reported");
+    expect(&report, "m", "0 to 1", "1", "16 of 20", "0", "agrees");
     expect(
         &report,
         "l",
@@ -523,8 +546,8 @@ fn the_hand_calculation_of_every_measure() {
         "0",
         "agrees, at the edge",
     );
-    // Eight judged: a, d, f, g agree; l agrees at the edge; b, c, i miss.
-    assert!(report.contains("Judged measures: 4 agree, 1 agree at the edge, 3 miss, of 8."));
+    // Nine judged: a, d, f, g, m agree; l agrees at the edge; b, c, i miss.
+    assert!(report.contains("Judged measures: 5 agree, 1 agree at the edge, 3 miss, of 9."));
     assert!(report.contains("## At the edge\n\n### l\n"));
     assert!(report.contains("- Verdict: agrees, at the edge"));
     assert!(report.contains("least 0, 5th 0, 25th 0, median 0, 75th 1, 95th 2, greatest 2"));
@@ -681,6 +704,24 @@ fn what_validate_refuses() {
         "ship 77",
     );
     refuse(
+        "unknown-weapon",
+        &good,
+        &MEASURES.replace(
+            "take = \"shots_in_hundreds\"\nside = \"japanese\"\nweapon = \"gun\"",
+            "take = \"shots_in_hundreds\"\nside = \"japanese\"\nweapon = \"cannon\"",
+        ),
+        "weapon \"cannon\"",
+    );
+    refuse(
+        "unknown-side",
+        &good,
+        &MEASURES.replace(
+            "take = \"shots_in_hundreds\"\nside = \"japanese\"",
+            "take = \"shots_in_hundreds\"\nside = \"martian\"",
+        ),
+        "side \"martian\"",
+    );
+    refuse(
         "no-key",
         &good,
         &MEASURES.replace("day = 2\n", ""),
@@ -808,6 +849,14 @@ fn real_batches_of_the_three_battles_are_judged() {
         assert!(result.status.success(), "{battle}: {}", stderr(&result));
         let report = fs::read_to_string(&out).expect("report");
         let file = fs::read_to_string(Path::new(ROOT).join(measures)).expect("measures");
+        if battle == "savo-island" {
+            for id in [
+                "japanese_gun_shells_fired_in_hundreds",
+                "allied_gun_shells_fired_in_hundreds",
+            ] {
+                assert!(report.contains(&format!("| {id} |")), "{id} missing");
+            }
+        }
         for line in file.lines().filter(|l| l.starts_with("id = ")) {
             let id = line.trim_start_matches("id = ").trim_matches('"');
             assert!(
