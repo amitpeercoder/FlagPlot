@@ -43,7 +43,9 @@
 # after it. `to_short_by_nm` ends the run that many miles before the place.
 # An end may be a latitude and longitude, as decimal strings, south and
 # west negative, in place of a named place. A named place is one with a
-# position in data/oob/place_positions.csv.
+# position in data/oob/place_positions.csv, and `from_row` or `to_row`
+# gives the id of the row there that the passage takes its position from:
+# a place can have several.
 #
 # Settled by the architect of the spec session on 2026-11-12. No row's
 # standing was changed.
@@ -53,21 +55,24 @@ id = "japanese_column_up_the_slot_after_savo_island"
 facts = "data/oob/engagement_positions.csv"
 counts = "Minutes to steam from Savo Island to the point 135 miles from it on bearing 315, at 30 knots"
 from_place = "savo-island"
-to_bearing_deg = 315
-to_distance_nm = 135
+from_row = 10
+to_lat = "-7.5371"
+to_lon = "158.2126"
 speed_kn = 30
 record_low = 270
 record_high = 280
 judged = false
 rows = [236, 238, 245, 248]
-reason = "The order to break off was given at 02:20 (236); the column was at 30 knots from about 02:29 (238) and in its order again at 03:40 on course 300 at 30 knots (245); by 07:00 it was about 135 miles north-west of Savo Island (248). High end: 02:20 to 07:00, 280 minutes. Low end: 135 miles at 30 knots, 270 minutes, the time it would take with no minutes lost in turning away. Not judged: the run is three or four hexes long, the source says 'about', and a place is taken to be at the centre of its hex, up to 23 miles from where it is, which at 30 knots is 46 minutes at each end."
+reason = "The order to break off was given at 02:20 (236); the column was at 30 knots from about 02:29 (238) and in its order again at 03:40 on course 300 at 30 knots (245); by 07:00 it was about 135 miles north-west of Savo Island (248). High end: 02:20 to 07:00, 280 minutes. Low end: 135 miles at 30 knots, 270 minutes, the time it would take with no minutes lost in turning away. Not judged: the run is three or four hexes long, the source says 'about', and a place is taken to be at the centre of its hex, up to 23 miles from where it is, which at 30 knots is 46 minutes at each end. The end is given as a position: the point 135 miles from Savo Peak (row 10 of the positions file) on bearing 315 along a great circle, worked out by the architect; no source states it."
 
 [[passage]]
 id = "japanese_6th_cruiser_division_shortlands_to_savo_island"
 facts = "data/oob/passages.csv"
 counts = "Minutes to steam from the Shortland Islands to the point 10 miles short of Savo Island, at 24 knots for four hours and 30 knots after"
 from_place = "shortland-harbor"
+from_row = 24
 to_place = "savo-island"
+to_row = 10
 to_short_by_nm = 10
 speed_kn = 24
 speed_changes = [[240, 30]]
@@ -82,20 +87,24 @@ id = "mcfarland_espiritu_santo_to_lunga_point"
 facts = "data/oob/passages.csv"
 counts = "Minutes to steam from Espiritu Santo to Lunga Point at 17 knots"
 from_place = "espiritu-santo"
+from_row = 12
 to_place = "lunga-point"
+to_row = 6
 speed_kn = 17
 record_low = 2775
 record_high = 2775
 judged = false
 rows = [70]
-reason = "Sailed at 15:05 on 14 October, ordered to make better than 17 knots, and anchored at 13:20 on the 16th: 46 hours 15 minutes (70). The straight line is about 557 miles, which at 17 knots is 33 hours; she made 12 knots good. She took the route north of Espiritu Santo and slowed on the 15th to make her landfall. Not judged: the rules have no reason for a ship to make less than its ordered speed."
+reason = "Sailed at 15:05 on 14 October, ordered to make better than 17 knots, and anchored at 13:20 on the 16th: 46 hours 15 minutes (70). The straight line is about 557 miles, which at 17 knots is 33 hours; she made 12 knots good. Espiritu Santo is taken at Segond Channel, the fleet anchorage (row 12 of the positions file); the Luganville wharf (row 13) is two miles off and in the next hex. She took the route north of Espiritu Santo and slowed on the 15th to make her landfall. Not judged: the rules have no reason for a ship to make less than its ordered speed."
 
 [[passage]]
 id = "minesweepers_towing_espiritu_santo_to_tulagi"
 facts = "data/oob/passages.csv"
 counts = "Minutes to steam from Espiritu Santo to Tulagi at 18 knots"
 from_place = "espiritu-santo"
+from_row = 12
 to_place = "tulagi"
+to_row = 4
 speed_kn = 18
 record_low = 2303
 record_high = 2303
@@ -124,7 +133,9 @@ id = "japanese_4th_destroyer_squadron_tassafaronga_to_the_shortlands"
 facts = "data/oob/passages.csv"
 counts = "Minutes to steam from Tassafaronga to Shortland Harbour at 28 knots"
 from_place = "tassafaronga"
+from_row = 51
 to_place = "shortland-harbor"
+to_row = 24
 speed_kn = 28
 record_low = 650
 record_high = 650
