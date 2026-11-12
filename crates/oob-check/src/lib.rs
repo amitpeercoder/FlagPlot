@@ -11,6 +11,7 @@
 //! | `values` | Attributes are in the vocabulary and values have their declared form |
 //! | `sourcing` | Sourced rows have a source, locator, date read, grades and, where needed, a note |
 //! | `standing` | Chosen rows do not contradict each other, and `preferred` is earned |
+//! | `passages` | Recorded passages: required columns, located ends, forms of times, coordinates and speeds |
 //!
 //! Sort order is NOT checked. The design asks for fact and fit files to be
 //! sorted by entity, attribute or slot, date and source. Row order changes
@@ -19,6 +20,7 @@
 //! The checker reads files and nothing else. It does not feed the
 //! simulation, which loads only `data/reference`.
 
+mod passages;
 mod refs;
 mod schema;
 mod sourcing;
@@ -141,6 +143,7 @@ pub fn check_files(files: &BTreeMap<String, String>) -> Report {
         values::check(&data, &mut problems);
         sourcing::check(&data, &mut problems);
         standing::check(&data, &mut problems);
+        passages::check(&data, &mut problems);
     }
     problems.sort();
     problems.dedup();

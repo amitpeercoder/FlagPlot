@@ -14,6 +14,10 @@ fn src(source: &str, confidence: &str, standing: &str) -> String {
     format!("{source},p.1,2026-11-10,{confidence},stated,{standing},a note")
 }
 
+const PASSAGE_HEADER: &str = "id,subject,ships,from_place,from_lat,from_lon,depart_time,\
+to_place,to_lat,to_lon,arrive_time,zone,speed_kn,speed_note,distance_nm_stated,steady,flags,\
+as_stated,source,locator,accessed,confidence,basis,standing,note\n";
+
 fn base() -> BTreeMap<String, String> {
     let ok = src("a", "medium", "preferred");
     let files = [
@@ -108,6 +112,10 @@ fn base() -> BTreeMap<String, String> {
                  source,locator,accessed,confidence,basis,standing,note\n\
                  1,savo,sunk by gunfire,{ok}\n"
             ),
+        ),
+        (
+            "passages.csv",
+            format!("{PASSAGE_HEADER}1,run,shp|a formation,rabaul,,,1942-08-09T06:00,,-9.1,159.5,1942-08-10,,12.5,,300,no,,as stated,{ok}\n"),
         ),
     ];
     files
@@ -994,4 +1002,191 @@ fn rule6_low_engagement_row_cannot_be_preferred() {
         "engagement_outcomes.csv",
         &format!("2,savo,3,{}", src("b", "low", "unconfirmed")),
     ));
+}
+
+/// A passage row: the fields before the source columns, then a good source.
+fn passage(fields: &str) -> String {
+    format!("{fields},{}", src("a", "medium", "preferred"))
+}
+
+/// A good passage (id 2, 18 fields before the source columns) with the
+/// fields at the given 0-based positions replaced.
+fn passage_with(changes: &[(usize, &str)]) -> String {
+    let mut fields: Vec<String> = "2,run,shp,rabaul,,,,rabaul,,,,,,,,no,,as stated"
+        .split(',')
+        .map(str::to_string)
+        .collect();
+    for (index, value) in changes {
+        fields[*index] = (*value).to_string();
+    }
+    passage(&fields.join(","))
+}
+
+#[test]
+fn rule5_passages_good_rows() {
+    assert_clean(&adding(
+        "passages.csv",
+        &[
+            passage_with(&[]),
+            // Ends by coordinates, an open flag list, a ship that is a key
+            // and one that is a plain name, dates alone.
+            passage_with(&[
+                (0, "3"),
+                (2, "shp|Task Force 17"),
+                (3, ""),
+                (4, "-9.5"),
+                (5, "160"),
+                (6, "1942-08-09"),
+                (7, ""),
+                (8, "-10"),
+                (9, "161.25"),
+                (10, "1942-08-10T23:30"),
+                (12, "0.5"),
+                (14, "250"),
+                (15, "unknown"),
+                (16, "date-only|refuelled-at-Efate"),
+            ]),
+            // An end the source does not locate, and says so.
+            passage_with(&[(0, "4"), (7, ""), (16, "to-not-located")]),
+            passage_with(&[(0, "5"), (3, ""), (16, "from-not-located")]),
+        ],
+    ));
+}
+
+#[test]
+fn rule5_passages_columns_in_order() {
+    let mut files = base();
+    files.insert(
+        "passages.csv".to_string(),
+        PASSAGE_HEADER.replace("subject,ships", "ships,subject"),
+    );
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["passages.csv||columns must be, in order"],
+    );
+    let mut files = base();
+    files.remove("passages.csv");
+    // The file is optional (see `OPTIONAL_FILES` in `schema.rs`).
+    assert_clean(&problems_in(&files));
+    files.insert(
+        "passages.csv".to_string(),
+        "id,subject\n1,run\n".to_string(),
+    );
+    let found = problems_in(&files);
+    assert!(
+        found.contains(&"passages.csv||no `ships` column".to_string()),
+        "{found:#?}"
+    );
+}
+
+#[test]
+fn rule5_passages_blank_columns() {
+    let found = adding_one(
+        "passages.csv",
+        &passage_with(&[(1, ""), (2, ""), (15, ""), (17, "")]),
+    );
+    assert_problems(
+        &found,
+        4,
+        &[
+            "passages.csv|id 2|subject is blank",
+            "passages.csv|id 2|ships is blank",
+            "passages.csv|id 2|steady is blank",
+            "passages.csv|id 2|as_stated is blank",
+        ],
+    );
+}
+
+#[test]
+fn rule5_passages_ids_and_source() {
+    let found = adding_one("passages.csv", &passage_with(&[(0, "1")]));
+    assert_problems(&found, 1, &["passages.csv|id 1|duplicate id"]);
+    let found = adding_one("passages.csv", &passage_with(&[(0, "x")]));
+    assert_problems(&found, 1, &["passages.csv|id x|is not a whole number"]);
+    let row = passage_with(&[]).replace(",a,p.1", ",nobody,p.1");
+    let found = adding_one("passages.csv", &row);
+    assert_problems(&found, 1, &["passages.csv|id 2|unknown source `nobody`"]);
+}
+
+#[test]
+fn rule5_passages_steady_and_lists() {
+    let found = adding_one("passages.csv", &passage_with(&[(15, "maybe")]));
+    assert_problems(&found, 1, &["passages.csv|id 2|steady `maybe`"]);
+    let found = adding_one("passages.csv", &passage_with(&[(2, "shp||tug")]));
+    assert_problems(&found, 1, &["passages.csv|id 2|ships has an empty member"]);
+    let found = adding_one("passages.csv", &passage_with(&[(16, "zigzag||waited")]));
+    assert_problems(&found, 1, &["passages.csv|id 2|flags has an empty member"]);
+}
+
+#[test]
+fn rule5_passages_places_and_located_ends() {
+    let found = adding_one("passages.csv", &passage_with(&[(3, "nowhere")]));
+    assert_problems(
+        &found,
+        1,
+        &["passages.csv|id 2|unknown from_place `nowhere`"],
+    );
+    let found = adding_one("passages.csv", &passage_with(&[(7, "nowhere")]));
+    assert_problems(&found, 1, &["passages.csv|id 2|unknown to_place `nowhere`"]);
+    // Unlocated without the flag, at either end.
+    let found = adding_one("passages.csv", &passage_with(&[(3, "")]));
+    assert_problems(
+        &found,
+        1,
+        &["passages.csv|id 2|the from end is not located"],
+    );
+    let found = adding_one("passages.csv", &passage_with(&[(7, "")]));
+    assert_problems(&found, 1, &["passages.csv|id 2|the to end is not located"]);
+    // The flag for the other end does not help.
+    let found = adding_one(
+        "passages.csv",
+        &passage_with(&[(7, ""), (16, "from-not-located")]),
+    );
+    assert_problems(&found, 1, &["passages.csv|id 2|the to end is not located"]);
+}
+
+#[test]
+fn rule5_passages_coordinates() {
+    let found = adding_one("passages.csv", &passage_with(&[(4, "-9.5")]));
+    assert_problems(
+        &found,
+        1,
+        &["passages.csv|id 2|from_lat and from_lon come in pairs"],
+    );
+    let found = adding_one("passages.csv", &passage_with(&[(9, "159.5")]));
+    assert_problems(
+        &found,
+        1,
+        &["passages.csv|id 2|to_lat and to_lon come in pairs"],
+    );
+    let found = adding_one(
+        "passages.csv",
+        &passage_with(&[(4, "9-50S"), (5, "159E"), (8, "\"1,5\""), (9, "2")]),
+    );
+    assert_problems(
+        &found,
+        3,
+        &[
+            "passages.csv|id 2|from_lat `9-50S` is not a decimal",
+            "passages.csv|id 2|from_lon `159E` is not a decimal",
+            "passages.csv|id 2|to_lat `1,5` is not a decimal",
+        ],
+    );
+}
+
+#[test]
+fn rule5_passages_times_and_numbers() {
+    for bad in ["06:00", "1942-08-09 06:00", "1942-08-09T25:00"] {
+        let found = adding_one("passages.csv", &passage_with(&[(6, bad)]));
+        assert_problems(&found, 1, &["passages.csv|id 2|depart_time"]);
+        let found = adding_one("passages.csv", &passage_with(&[(10, bad)]));
+        assert_problems(&found, 1, &["passages.csv|id 2|arrive_time"]);
+    }
+    for bad in ["0", "0.0", "-5", "fast", "12 kn", "1e2"] {
+        let found = adding_one("passages.csv", &passage_with(&[(12, bad)]));
+        assert_problems(&found, 1, &["passages.csv|id 2|speed_kn"]);
+        let found = adding_one("passages.csv", &passage_with(&[(14, bad)]));
+        assert_problems(&found, 1, &["passages.csv|id 2|distance_nm_stated"]);
+    }
 }

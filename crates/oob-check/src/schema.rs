@@ -53,6 +53,11 @@ const FACT_COLUMNS: [&str; 6] = [
     "valid_to",
 ];
 
+/// Known files that may be absent. If present they are held to their
+/// columns and rules. `oob-derive` runs this checker over small data sets of
+/// its own that have no passages, so the file is not yet required.
+const OPTIONAL_FILES: [&str; 1] = ["passages.csv"];
+
 /// The identity file for an entity type, if the type is known.
 pub fn entity_file(entity_type: &str) -> Option<&'static str> {
     ENTITY_FILES
@@ -139,6 +144,11 @@ fn required() -> Vec<(&'static str, Vec<&'static str>, bool)> {
             vec!["id", "engagement", "value"],
             true,
         ),
+        (
+            "passages.csv",
+            crate::passages::COLUMNS[..crate::passages::OWN_COLUMNS].to_vec(),
+            true,
+        ),
     ];
     for (file, _) in FACT_FILES {
         files.push((file, FACT_COLUMNS.to_vec(), true));
@@ -153,7 +163,9 @@ pub fn check(data: &Data, out: &mut Vec<Problem>) {
     let known = required();
     for (file, columns, sourced) in &known {
         let Some(table) = data.tables.get(*file) else {
-            out.push(Problem::file(file, "file is missing"));
+            if !OPTIONAL_FILES.contains(file) {
+                out.push(Problem::file(file, "file is missing"));
+            }
             continue;
         };
         let source_columns: &[&str] = if *sourced { &SOURCE_COLUMNS } else { &[] };
