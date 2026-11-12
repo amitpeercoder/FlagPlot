@@ -72,6 +72,54 @@ function checkGeometry(replay, label) {
   return { edges, oneSided };
 }
 
+// ---- A side's view (decision 0047): what the engine let each side see, and a page built from nothing else ----
+function checkSideViews(replay) {
+  const notes = [];
+  const byLogId = new Map(replay.events.map(e => [e.id, e]));
+  for (const side of Core.SIDES) {
+    const label = side + ' view';
+    const sv = replay.side_views[side];
+    let last = 0;
+    sv.events.forEach((e, i) => {
+      assert(e.n === i + 1, label + ': event ' + (i + 1) + ' is numbered ' + e.n + ', not 1, 2, 3 in order');
+      const real = byLogId.get(e.log_id);
+      if (!real) { fail(label + ': event ' + e.n + ' points at log event ' + e.log_id + ', which is not in the log'); return; }
+      assert(e.log_id > last, label + ': event ' + e.n + ' is out of log order');
+      last = e.log_id;
+      assert(real.day === e.day && (real.pulse || null) === (e.pulse || null) && real.kind === e.kind, label + ': event ' + e.n + ' does not match log event ' + e.log_id + ' in day, pulse or kind');
+      assert(new RegExp('^#' + e.n + ' D' + e.day + ' ').test(e.text), label + ': event ' + e.n + ' text does not start with its own number: ' + e.text.slice(0, 20));
+      for (const c of e.causes || []) {
+        if (c.event !== undefined) assert(Number.isInteger(c.event) && c.event >= 1 && c.event < e.n, label + ': event ' + e.n + ' cites event ' + c.event + ', which is not an earlier event of this side');
+        else assert(Number.isInteger(c.order), label + ': event ' + e.n + ' has a cause that is neither an order nor an event');
+      }
+      if (e.cut) for (const k of ['chance', 'expected', 'hits', 'hits_on_aircraft']) assert(!(e.data && k in e.data), label + ': cut event ' + e.n + ' carries ' + k);
+    });
+    assert(sv.events.length <= replay.events.length, label + ': more events than the log');
+
+    // The page for a side is built from its events alone, so its own end state must come out of them.
+    const sr = Core.sideReplay(replay, side);
+    const model = Core.buildModel(sr);
+    Core.compareWithFinal(model).forEach(p => fail(label + ': rebuild vs final: ' + p));
+    let enemy = 0;
+    for (const st of model.states) {
+      for (const f of st.forces.values()) if (f.side !== side) enemy++;
+      for (const other of Object.keys(st.contacts)) if (other !== side && st.contacts[other].size) enemy++;
+    }
+    assert(enemy === 0, label + ': ' + enemy + ' enemy force(s) or enemy-held contacts in the side\'s page');
+    for (const b of model.bases.values()) if (b.side !== side) assert(Object.keys(b).every(k => ['id', 'name', 'side', 'q', 'r'].includes(k)), label + ': enemy base ' + b.id + ' carries more than id, name, side and hex');
+    assert(model.initShips.size === (replay.initial.ships || []).filter(s => s.side === side).length, label + ': ships are not exactly its own');
+    assert(model.days.size === 0, label + ': carries state hashes, which are the umpire\'s');
+    assert(model.replay.orders.every(o => o.side === side), label + ': carries the other side\'s orders');
+    const day0 = sv.events.map((e, i) => e.day === 0 ? i : -1).filter(i => i >= 0);
+    assert(JSON.stringify(model.steps[0].events) === JSON.stringify(day0), label + ': the Start step does not hold exactly the day-0 events');
+    const seen = new Set();
+    model.steps.forEach(s => s.events.forEach(ei => seen.add(ei)));
+    assert(seen.size === sv.events.length, label + ': not every side event is in a step');
+    notes.push(side + ' ' + sv.events.length + '/' + replay.events.length + ' events, ' + model.steps.length + ' steps');
+  }
+  return notes.join(', ');
+}
+
 // ---- One replay ----
 function checkReplay(file) {
   console.log(path.basename(file));
@@ -163,10 +211,12 @@ function checkReplay(file) {
     assert(model.placements.length === replay.labels.length, 'not every label was placed');
   } else assert(model.placements.length === 0, 'labels placed on a map without lat/lon');
 
+  const sideNote = replay.side_views ? checkSideViews(replay) : 'no side views (version ' + replay.version + ')';
+
   const s = Core.summarize(model);
   const unclosed = new Set(replay.events.map(e => e.kind));
   console.log('  steps ' + s.steps + ', events ' + s.events + ', forces ' + s.forces + ', contacts at end ' + s.contacts + ', labels placed ' + s.labels + '/' + replay.labels.length +
-    ', hexes ' + replay.map.hexes.length + ', edges checked ' + g.edges + ', one-sided closed marks ' + g.oneSided + ', event kinds ' + unclosed.size +
+    ', hexes ' + replay.map.hexes.length + ', edges checked ' + g.edges + ', one-sided closed marks ' + g.oneSided + ', event kinds ' + unclosed.size + ', ' + sideNote +
     (failures === before ? '  OK' : '  FAILED'));
 }
 
@@ -246,7 +296,12 @@ function synthetic() {
     else console.log('  ok: rejects ' + name + ': ' + msg);
   };
   reject('wrong format', Object.assign(base(), { format: 'something-else' }), 'format');
-  reject('version 2', Object.assign(base(), { version: 2 }), '2');
+  reject('version 3', Object.assign(base(), { version: 3 }), '3');
+  reject('version 2 without side views', Object.assign(base(), { version: 2 }), 'side_views');
+  reject('version 2 with a side event without its number', Object.assign(base(), { version: 2, side_views: { allied: { events: [{ log_id: 1, day: 1, kind: 'x' }] }, japanese: { events: [] } } }), 'allied');
+  const ok2 = Object.assign(base(), { version: 2, side_views: { allied: { events: [] }, japanese: { events: [] } } });
+  if (Core.validateReplay(ok2)) fail('a version 2 file with empty side views was rejected: ' + Core.validateReplay(ok2));
+  else { const m = Core.buildModel(Core.sideReplay(ok2, 'allied')); assert(m.steps.length === 1, 'empty side view should have only the Start step'); console.log('  ok: version 2 with empty side views, and a side page built from it'); }
   reject('missing version', Object.assign(base(), { version: undefined }), 'version');
   reject('array', [1, 2], 'object');
   reject('null', null, 'object');

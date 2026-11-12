@@ -90,7 +90,7 @@ fn every_scenario_exports_what_the_world_logged() {
         assert!(bytes.ends_with(b"\n"), "{scenario}: no trailing newline");
         let replay = parse(&bytes);
         assert_eq!(replay["format"], "flagplot-replay");
-        assert_eq!(replay["version"], 1);
+        assert_eq!(replay["version"], 2);
         assert_eq!(replay["scenario"]["path"], scenario.as_str());
 
         let mut loaded = Scenario::load(&Path::new(ROOT).join(&scenario)).expect("loads");
@@ -173,6 +173,7 @@ fn the_top_level_keys_come_in_the_documented_order() {
         "initial",
         "orders",
         "events",
+        "side_views",
         "days",
         "final",
     ] {
@@ -373,4 +374,84 @@ fn starting_contacts_are_events_before_day_one_in_no_days_range() {
     assert_eq!(day0.len(), 3, "{text}");
     let first_day_one = text.find(" D1 ").expect("day 1 events");
     assert!(text.find(" D0 ").expect("day 0 events") < first_day_one);
+}
+
+/// What each side may see is what the engine's `SideView::events()` gives: the
+/// export writes it down and decides nothing (decision 0047). Each of a side's
+/// events names its place in the full log, is numbered 1, 2, 3 in the side's
+/// own order, and carries the engine's own wording of what the engine gave.
+#[test]
+fn each_sides_exported_events_are_what_its_side_view_gives() {
+    use sim_core::side_events::SideEventKind;
+    use sim_core::state::Side;
+
+    for scenario in [
+        "data/scenarios/04_savo_island.toml",
+        "data/scenarios/05_eastern_solomons.toml",
+        "data/scenarios/07_full_slice.toml",
+    ] {
+        let replay = parse(&export(&format!("sides-{}", stem(scenario)), scenario, &[]));
+        let mut loaded = Scenario::load(&Path::new(ROOT).join(scenario)).expect("loads");
+        loaded.run_to_end().expect("runs");
+        let world = &loaded.world;
+        let full = replay["events"].as_array().expect("events is a list");
+        let mut seen_any = false;
+
+        for (name, side) in [("allied", Side::Allied), ("japanese", Side::Japanese)] {
+            let view = world.side_view(side).events();
+            let exported = replay["side_views"][name]["events"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{scenario}: no events for {name}"));
+            assert_eq!(exported.len(), view.len(), "{scenario} {name}: count");
+            // A side does not see everything: that is the point.
+            assert!(
+                view.len() < full.len(),
+                "{scenario} {name}: it sees the whole log"
+            );
+            seen_any |= !view.is_empty();
+            for (i, (out, event)) in exported.iter().zip(&view).enumerate() {
+                let label = format!("{scenario} {name} #{}", i + 1);
+                assert_eq!(out["n"], i + 1, "{label}: the side's own number");
+                assert_eq!(out["log_id"], event.id.raw(), "{label}: place in the log");
+                assert_eq!(out["day"], event.day, "{label}: day");
+                assert_eq!(
+                    out["pulse"].as_str(),
+                    event.pulse.map(|p| p.name()),
+                    "{label}: pulse"
+                );
+                let cut = !matches!(event.kind, SideEventKind::Whole(_));
+                assert_eq!(out["cut"], cut, "{label}: cut");
+                // The engine's own wording, after the side's number.
+                let text = out["text"].as_str().expect("text");
+                assert!(
+                    text.starts_with(&format!("#{} D{} ", i + 1, event.day)),
+                    "{label}: {text}"
+                );
+                assert!(text.contains(&event.kind.to_string()), "{label}: {text}");
+                assert_eq!(
+                    out["entities"].as_array().expect("entities").len(),
+                    event.kind.entities().len(),
+                    "{label}: entities"
+                );
+                // Causes are the engine's, and an event cause is a number the
+                // side has, earlier than this one.
+                let causes = out["causes"].as_array().expect("causes");
+                assert_eq!(causes.len(), event.causes.len(), "{label}: causes");
+                assert_eq!(out["hidden_causes"], event.hidden_causes, "{label}");
+                for cause in causes {
+                    if let Some(earlier) = cause["event"].as_u64() {
+                        assert!(earlier < out["n"].as_u64().unwrap(), "{label}: {cause}");
+                    }
+                }
+                if cut {
+                    // A cut event carries nothing of the hits it did not see.
+                    let data = out["data"].as_object().expect("data");
+                    for forbidden in ["chance", "expected", "hits", "hits_on_aircraft"] {
+                        assert!(!data.contains_key(forbidden), "{label}: {forbidden}");
+                    }
+                }
+            }
+        }
+        assert!(seen_any, "{scenario}: no side saw anything");
+    }
 }

@@ -197,6 +197,12 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
   <div class="row">
     <span>Step: <b id="steplabel">none loaded</b></span>
     <span>State hash: <code id="hash">-</code></span>
+    <fieldset class="belief" id="povset">
+      <legend>View</legend>
+      <label><input type="radio" autocomplete="off" name="pov" value="umpire" checked> Umpire</label>
+      <label><input type="radio" autocomplete="off" name="pov" value="allied" disabled> Allied</label>
+      <label><input type="radio" autocomplete="off" name="pov" value="japanese" disabled> Japanese</label>
+    </fieldset>
     <fieldset class="belief" id="belief">
       <legend>Show</legend>
       <label><input type="radio" autocomplete="off" name="belief" value="truth" checked> Truth only</label>
@@ -339,6 +345,50 @@ function placeLabels(hexes, labels) {
   return out;
 }
 
+const SIDES = ['allied', 'japanese'];
+
+// ---- A side's view ----
+/**
+ * What a side's page is built from: the replay with everything the side may not know left out.
+ * Its events are the ones the engine gave the side (replay.side_views, decision 0047), numbered by the
+ * side (n, never the log's number, which is kept as log_id for the checks only). Its units are its own,
+ * exactly. The enemy is only what the side's events and contacts say, and the enemy's bases are public:
+ * id, name, hex and side (decision 0048). The state hash is the umpire's, so there are no days.
+ * Nothing here decides who sees what; the one rule is the engine's. Returns null for a version 1 file.
+ */
+function sideReplay(replay, side) {
+  const sv = replay.side_views && replay.side_views[side];
+  if (!sv) return null;
+  const own = x => x && x.side === side;
+  const initial = replay.initial || {}, final = replay.final || null;
+  const ownShips = new Set((initial.ships || []).filter(own).map(s => s.id));
+  const out = Object.assign({}, replay, {
+    side_views: undefined, view_side: side,
+    orders: (replay.orders || []).filter(own),
+    bases: (replay.bases || []).map(b => own(b) ? b : { id: b.id, name: b.name, side: b.side, q: b.q, r: b.r }),
+    initial: {
+      task_forces: (initial.task_forces || []).filter(own),
+      ships: (initial.ships || []).filter(own),
+      air_groups: (initial.air_groups || []).filter(own),
+      bases: (initial.bases || []).filter(own),
+    },
+    events: sv.events.map(e => ({
+      id: e.n, log_id: e.log_id, day: e.day, pulse: e.pulse, kind: e.kind, text: e.text, causes: e.causes || [],
+      entities: e.entities || [], breakdown: e.breakdown, data: e.data || {}, cut: !!e.cut, hidden_causes: !!e.hidden_causes,
+    })),
+    days: [],
+    final: final ? {
+      task_forces: (final.task_forces || []).filter(own),
+      ships: (final.ships || []).filter(s => ownShips.has(s.id)),
+      air_groups: (final.air_groups || []).filter(own),
+      bases: (final.bases || []).filter(own),
+      contacts: { [side]: (final.contacts && final.contacts[side]) || [] },
+      claims: { [side]: (final.claims && final.claims[side]) || [] },
+    } : null,
+  });
+  return out;
+}
+
 // ---- Time steps ----
 const PHASES = ['orders', 'night', 'morning', 'afternoon', 'end'];
 const PHASE_HOURS = { night: '18:00 to 06:00', morning: '06:00 to 12:00', afternoon: '12:00 to 18:00' };
@@ -393,7 +443,16 @@ function buildSteps(events) {
 function validateReplay(r) {
   if (r === null || typeof r !== 'object' || Array.isArray(r)) return 'This is JSON but not a replay: expected an object at the top level.';
   if (r.format !== 'flagplot-replay') return 'Not a Flag Plot replay: format is ' + JSON.stringify(r.format) + ', expected "flagplot-replay".';
-  if (r.version !== 1) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads version 1 only.';
+  if (r.version !== 1 && r.version !== 2) return 'Unsupported replay version: this file is version ' + JSON.stringify(r.version) + '; this viewer reads versions 1 and 2.';
+  if (r.version === 2) {
+    // Version 2 adds side_views: for each side, the events the engine let it see (decision 0047).
+    if (!r.side_views || typeof r.side_views !== 'object') return 'Replay version 2 has no "side_views" object.';
+    for (const side of SIDES) {
+      const sv = r.side_views[side];
+      if (!sv || !Array.isArray(sv.events)) return 'Replay "side_views" has no event list for ' + side + '.';
+      for (const ev of sv.events) if (!ev || !Number.isInteger(ev.n) || !Number.isInteger(ev.log_id) || !Number.isInteger(ev.day) || typeof ev.kind !== 'string') return 'A ' + side + ' side event is missing its integer n, log_id or day, or its kind.';
+    }
+  }
   if (!r.scenario || typeof r.scenario !== 'object') return 'Replay has no "scenario" object.';
   if (!r.map || typeof r.map !== 'object' || !Array.isArray(r.map.hexes)) return 'Replay has no "map.hexes" list.';
   if (!Array.isArray(r.directions) || r.directions.length !== 6 || !r.directions.every(d => Array.isArray(d) && d.length === 2 && Number.isInteger(d[0]) && Number.isInteger(d[1]))) return 'Replay "directions" must be six [dq, dr] pairs.';
@@ -823,6 +882,7 @@ function measureHexes(sea, a, b) {
 
 const FlagPlotCore = {
   HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
+  SIDES, sideReplay,
   HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, measureHexes,
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
@@ -874,6 +934,8 @@ const S = {
   hoverKey: null,
   // Measure mode: the two hexes picked so far, each [q, r] or null. sea is the map as the sea path reads it.
   measure: { on: false, a: null, b: null }, sea: null,
+  // The view: 'umpire' (the truth) or a side, whose page is built only from what the engine let it see (sideReplay).
+  pov: 'umpire', models: null,
 };
 const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gMeasure = $('gMeasure'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
 
@@ -899,6 +961,8 @@ function loadText(text, sourceName) {
   showMessage('');
   stopPlaying();
   S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null;
+  S.models = { umpire: model, allied: null, japanese: null }; S.pov = 'umpire'; S.belief = beliefChoice();
+  initPov();
   S.sea = C.makeSeaMap(obj.map.hexes, obj.directions);
   S.measure.a = null; S.measure.b = null;
   S.filter = ''; $('filter').value = '';
@@ -1162,7 +1226,7 @@ function renderScreen() {
     const g = sv('g', { class: 'base', transform: 'translate(' + bm.x + ' ' + bm.y + ')' });
     if (hl.bases.has(b.id)) g.append(sv('rect', { class: 'ring-hl', x: -10, y: -10, width: 20, height: 20 }));
     g.append(sv('path', { class: 'basemark side-' + side, d: 'M0 -7L7 0L0 7L-7 0Z' }));
-    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + ', supply ' + b.supply + ')' }));
+    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')' }));
     gBase.append(g);
     if (bm.label) gBase.append(sv('text', { class: 'lbl base', x: bm.x + 10, y: bm.y + 4, text: bm.label }));
   }
@@ -1314,12 +1378,58 @@ function renderReadout() {
   if (feat.length) line(feat.join(', '));
   if ((hx.closed || []).length) line('Closed sides: ' + hx.closed.join(', '));
   for (const p of m.placementsByHex.get(S.hoverKey) || []) line('Place: ' + p.label.place + (p.label.feature ? ' (' + p.label.feature + ')' : ''));
-  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + ', supply ' + b.supply + ')');
+  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
   for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
   if (S.belief !== 'truth' && st.contacts[S.belief]) {
     for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c));
   }
   if (st.fights.some(f => f.q === q && f.r === r)) line('A fight is recorded here in this step.');
+}
+
+// =====================================================================
+// The view: the umpire's truth, or one side's page built from what the engine let that side see
+// =====================================================================
+function beliefChoice() {
+  const c = document.querySelector('input[name=belief]:checked'); // the browser may restore form state on reload
+  return c ? c.value : 'truth';
+}
+
+function initPov() {
+  const has = !!(S.replay && S.replay.side_views);
+  document.querySelectorAll('input[name=pov]').forEach(r => { r.checked = r.value === S.pov; r.disabled = r.value !== 'umpire' && !has; });
+  $('povset').title = has ? '' : 'This file has no side views (replay version 1). Export it again to see a side\'s view.';
+  applyPovChrome();
+}
+
+function applyPovChrome() {
+  const side = S.pov !== 'umpire';
+  $('belief').hidden = side;
+  $('readonly').textContent = side ? S.pov.charAt(0).toUpperCase() + S.pov.slice(1) + ' side: only what it was allowed to know, read-only' : "Umpire's view, read-only";
+  renderLegend();
+}
+
+/** Changes the view, keeping the step nearest the one on screen (the steps of a side are the ones in which it has events). */
+function setPov(pov) {
+  if (!S.models || pov === S.pov) return;
+  let model = S.models[pov];
+  if (!model) {
+    try { model = C.buildModel(C.sideReplay(S.replay, pov)); }
+    catch (err) { showMessage('Could not build the ' + pov + ' view: ' + err.message); initPov(); return; }
+    S.models[pov] = model;
+  }
+  const key = s => s.day * 10 + (s.phase === 'start' ? -1 : C.PHASES.indexOf(s.phase));
+  const here = key(S.model.steps[S.step]);
+  let idx = 0;
+  model.steps.forEach((s, i) => { if (key(s) <= here) idx = i; });
+  stopPlaying();
+  S.pov = pov; S.model = model; S.step = idx; S.selEvent = null; S.selEntity = null; S.hoverKey = null;
+  S.belief = pov === 'umpire' ? beliefChoice() : pov; // a side shows the contacts it holds, and no others
+  buildWorld();
+  initHeader();
+  initPov();
+  render();
+  renderReadout();
+  renderMeasure();
 }
 
 // =====================================================================
@@ -1437,6 +1547,7 @@ function initControls() {
     else if (e.key === 'ArrowRight') { e.preventDefault(); stopPlaying(); goto(S.step + 1); }
     else if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); togglePlay(); }
   });
+  document.querySelectorAll('input[name=pov]').forEach(r => r.addEventListener('change', () => { if (r.checked) { r.blur(); setPov(r.value); } }));
   document.querySelectorAll('input[name=belief]').forEach(r => r.addEventListener('change', () => { if (r.checked) { S.belief = r.value; r.blur(); render(); renderReadout(); } }));
 }
 
@@ -1466,7 +1577,11 @@ function renderEvents() {
       shown++;
       const parts = C.splitText(ev.text);
       const li = el('li', { class: 'ev' + (S.selEvent === ev.id ? ' sel' : ''), 'data-id': ev.id, onclick: () => clickEvent(ev.id) },
-        el('span', { class: 'eid', text: '#' + ev.id }), el('span', { text: parts.body }), parts.causes ? el('span', { class: 'ecause', text: '← ' + parts.causes }) : null);
+        el('span', { class: 'eid', text: '#' + ev.id }),
+        ev.cut ? el('span', { class: 'tag', text: 'cut', title: 'The engine shows this side only part of this event' }) : null,
+        el('span', { text: parts.body }),
+        parts.causes ? el('span', { class: 'ecause', text: '← ' + parts.causes }) : null,
+        ev.hidden_causes ? el('span', { class: 'ecause', text: '(and causes this side cannot see)' }) : null);
       ul.append(li);
     }
   }
@@ -1550,20 +1665,22 @@ function eventSection(id) {
   if (!ev) return sec;
   sec.append(el('h2', null, 'Event #' + ev.id + ' ', el('span', { class: 'tag', text: ev.kind }), el('span', { class: 'dim', text: ' ' + m.steps[m.stepOfEvent.get(ev.id) || 0].label })));
   sec.append(el('div', { text: C.splitText(ev.text).body }));
+  if (ev.cut) sec.append(el('div', { class: 'note', text: 'This side is shown only part of this event: what it may not know has been left out.' }));
   if (ev.breakdown && Array.isArray(ev.breakdown.factors)) {
     sec.append(el('h3', { text: 'Breakdown' }));
     const rows = ev.breakdown.factors.map(f => el('tr', null, el('td', { text: String(f.name) }), el('td', { class: 'num', text: String(f.value) })));
-    rows.push(el('tr', { class: 'result' }, el('td', { text: 'result' }), el('td', { class: 'num', text: String(ev.breakdown.result) })));
+    if (ev.breakdown.result !== undefined) rows.push(el('tr', { class: 'result' }, el('td', { text: 'result' }), el('td', { class: 'num', text: String(ev.breakdown.result) })));
     sec.append(el('table', null, el('tbody', null, rows)));
   }
   sec.append(el('h3', { text: 'Why' }));
   const tree = C.whyTree(m, ev.id, { maxDepth: 8, maxNodes: 60 });
-  if (!tree.nodes.length) sec.append(el('div', { class: 'dim', text: 'No recorded causes.' }));
+  if (!tree.nodes.length) sec.append(el('div', { class: 'dim', text: ev.hidden_causes ? 'No causes this side can see.' : 'No recorded causes.' }));
   else {
     const why = el('div', { class: 'why' }, el('ul', null, tree.nodes.map(whyNode)));
     if (tree.omitted) why.append(el('div', { class: 'dim', text: '... ' + tree.omitted + ' more cause(s) left out (limit ' + 60 + ' shown).' }));
     sec.append(why);
   }
+  if (ev.hidden_causes) sec.append(el('div', { class: 'note', text: 'There are more causes than these, and this side cannot see them.' }));
   sec.append(el('h3', { text: 'Led to' }));
   const led = m.ledTo.get('event:' + ev.id) || [];
   if (!led.length) sec.append(el('div', { class: 'dim', text: 'No later event cites this one.' }));
@@ -1643,14 +1760,23 @@ function entitySection(sel) {
 // Legend and theme (colours come from CSS custom properties; the page follows prefers-color-scheme)
 // =====================================================================
 function initLegend() {
+  if (window.innerWidth < 1000 || window.innerHeight < 700) $('legend').open = false; // small windows: start collapsed
+  renderLegend();
+}
+
+// A side's legend names only that side's forces: the enemy is not on its page except as contacts.
+function renderLegend() {
+  const side = S.pov !== 'umpire' ? S.pov : null;
   const items = [
-    ['allied', 'Allied force'], ['japanese', 'Japanese force'], ['ghost', 'Contact (belief), fainter when less sure'],
+    ...(!side || side === 'allied' ? [['allied', side ? 'Own force' : 'Allied force']] : []),
+    ...(!side || side === 'japanese' ? [['japanese', side ? 'Own force' : 'Japanese force']] : []),
+    ['ghost', side ? 'Contact this side holds, fainter when less sure' : 'Contact (belief), fainter when less sure'],
     ['deep', 'Deep sea'], ['shallow', 'Shallow sea'], ['coast', 'Coast (more land, darker)'], ['land', 'Land'],
-    ['closed', 'Closed side'], ['fight', 'Fight in this step'], ['arc', 'Search arc flown in this step'],
+    ['closed', 'Closed side'], ['fight', side ? 'Fight this side knows of, in this step' : 'Fight in this step'], ['arc', 'Search arc flown in this step'],
     ['trail', 'Trail of hexes entered'], ['move', 'Movement in this step'],
   ];
   const ul = $('legendlist');
-  if (window.innerWidth < 1000 || window.innerHeight < 700) $('legend').open = false; // small windows: start collapsed
+  clear(ul);
   items.forEach(([cls, text]) => ul.append(el('li', null, el('span', { class: 'sw ' + cls }), text)));
 }
 
@@ -1671,8 +1797,7 @@ function render() {
 function init() {
   initLegend();
   initControls();
-  const checked = document.querySelector('input[name=belief]:checked'); // the browser may restore form state on reload
-  if (checked) S.belief = checked.value;
+  S.belief = beliefChoice();
   initPanZoom();
   initMeasure();
   $('filter').addEventListener('input', e => { S.filter = e.target.value.trim(); renderEvents(); });
