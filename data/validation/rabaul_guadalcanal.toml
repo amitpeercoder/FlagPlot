@@ -1,0 +1,93 @@
+# Measures for Rabaul against Guadalcanal in the air, 21 August to
+# 17 September 1942 (step 2 spec, "Measures"). The format and its rules are
+# in README.md beside this file.
+#
+# Scope is the scenario's (decision 0042): Rabaul's G4M bombers (the Misawa,
+# Kisarazu and 4th Air Groups, one group in the scenario), the fighters of
+# the Tainan Air Group and, from 31 August, the 6th; at Henderson Field the
+# Marine and Navy F4Fs and SBDs. Outside it: Shokaku's fighters sent ashore
+# to Buka, the 2nd Air Group, the floatplanes, the Army's P-400s, and the
+# carrier battle of 24 August. So the Japanese total of 29 aircraft lost
+# that the unit records add up to is not the record here: 7 of them belong
+# to units the scenario leaves out.
+#
+# The Japanese figures are the units' own action records, one form for each
+# mission. The US figures are the Navy's statistics by month, and September
+# there runs to the 30th, thirteen days past the scenario's end, so a US
+# figure is a range whose high end is a ceiling.
+#
+# The ranges were settled by the architect of the spec session on
+# 2026-11-12. No row's standing was changed.
+
+battle = "rabaul-guadalcanal-air"
+scenario = "data/scenarios/06_rabaul_guadalcanal.toml"
+facts = "data/oob/engagement_outcomes.csv"
+
+# ---------------------------------------------------- Japanese aircraft
+
+[[measure]]
+id = "japanese_bombers_lost_to_enemy_action"
+counts = "Rabaul's bombers shot down by fighters or by anti-aircraft fire"
+record_low = 12
+record_high = 12
+judged = true
+rows = [1048, 1060, 1020, 1024, 1095, 1101, 1034, 1109]
+reason = "Missing or self-destroyed on the units' forms: 2 on 26 August (1048), 1 on 29 August (1060), 1 on 9 September (1020), 2 on the 10th (1024), 1 on the 11th (1095), 4 on the 12th (1101, 1034) and 1 on the 13th (1109)."
+
+[[measure]]
+id = "japanese_fighters_lost_to_enemy_action"
+counts = "Fighters of the Tainan and 6th Air Groups shot down by fighters or by anti-aircraft fire"
+record_low = 6
+record_high = 10
+judged = true
+rows = [1202, 1216, 1140, 1231]
+reason = "Low end: 3 on 26 August (1202), 2 on 2 September (1216) and 1 of the 6th on 11 September (1140), all on escort. High end adds the 4 lost on 13 September escorting reconnaissance aircraft (1231), a mission the scenario does not fly but a loss of a unit it holds. Shokaku's fighters from Buka lost 5 and the 2nd Air Group 2; neither unit is in the scenario."
+
+[[measure]]
+id = "japanese_bombers_forced_down"
+counts = "Rabaul's bombers written off after a sortie"
+record_low = 5
+record_high = 6
+judged = false
+rows = [988, 1049, 1061, 1090, 1110, 1102]
+reason = "Forced landings with the aircraft wrecked: one each on 26 August for two units (988, 1049), 29 August (1061), 10 September (1090) and 13 September (1110); a sixth on 12 September rests on a low-confidence row (1102), read as the high end by exception. Not judged: the forms count a forced landing, not an aircraft that came home and never flew again, so the record is a floor for what the rules call written off."
+
+# ---------------------------------------------------------- US aircraft
+
+[[measure]]
+id = "us_fighters_lost_to_enemy_aircraft"
+counts = "Henderson Field's F4Fs shot down by fighters or by bombers' guns"
+record_low = 7
+record_high = 23
+judged = true
+rows = [1263, 1269, 1285]
+reason = "The Navy's statistics by month: Marine fighters 7 in August (1263) and 12 in September (1269), Navy fighters ashore 4 in September (1285). Low end is August alone; high end counts all of September, which runs thirteen days past the scenario. The high end is a ceiling."
+
+[[measure]]
+id = "us_aircraft_destroyed_on_the_ground"
+counts = "Henderson Field's F4Fs and SBDs destroyed on the ground by bombing"
+record_low = 2
+record_high = 3
+judged = true
+rows = [1266, 1272, 1283, 1299, 1330]
+reason = "The Navy's statistics give 2 Marine fighters in August (1266) and none of any type in September (1272, 1283, 1299). A dispatch gives one dive bomber destroyed by bombing on 2 September (1330), which the statistics do not show. Low end without it, high end with it. The P-400s burned on the ground are outside the scenario."
+
+# ---------------------------------------------------------------- raids
+
+[[measure]]
+id = "raid_days_that_reach_guadalcanal"
+counts = "Days on which a bomber raid from Rabaul attacks Henderson Field"
+record_low = 11
+record_high = 11
+judged = false
+rows = [954, 1108, 1037]
+reason = "Ten to 12 September: 14 missions launched and 4 aborted (954). The forms add the raid of 13 September (1108, 1037) and show the bombers of the 16th turning back. Not judged: weather turned back about half the bomber sorties of the period and the rules have no weather. The scenario flies about as many raids today, for another reason: fatigue."
+
+[[measure]]
+id = "bomber_sorties_that_reach_guadalcanal"
+counts = "Bombers in the raids that attack Henderson Field, summed over the run"
+record_low = 211
+record_high = 213
+judged = false
+rows = [1115, 1044, 982, 1047, 987, 1059, 1005, 1118, 1065, 1008, 1075, 1011, 1080, 1015, 1085, 1019, 1089, 1023, 1094, 1028, 1100, 1033, 1108, 1037]
+reason = "By day, from the forms: 23 on 25 August (1115, 1044, 982), 16 on the 26th (1047, 987), 18 on the 29th (1059, 1005), 18 or 20 on the 30th (1065, 1008; 1118 is two more of the 4th Air Group, which the research note does not count in the raid), 18 on 2 September (1075, 1011), 18 on the 5th (1080, 1015), 18 on the 9th (1085, 1019), 22 on the 10th (1089, 1023), 24 on the 11th (1094, 1028), 20 on the 12th (1100, 1033) and 16 on the 13th (1108, 1037). Not judged, for the reason raid days are not."

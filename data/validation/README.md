@@ -42,5 +42,6 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | First pass, 12 measures, 7 judged |
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | First pass, 11 measures, all judged |
+| `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | First pass, 7 measures, 4 judged |
 
-Still to write: Rabaul against Guadalcanal, and the claims and passages checks.
+Still to write: the claims and passages checks, flyable aircraft at Henderson Field on dated days, aircrew lost, and Cape Esperance when its facts are in.
