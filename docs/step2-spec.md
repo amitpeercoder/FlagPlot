@@ -106,6 +106,8 @@ Proposed:
 3. **What such a test then proves is stated:** that the rules compute what the hand calculation says, on known figures. It proves nothing about the figures in use. That is `validate`'s job. Both run in CI.
 4. **The run baselines follow the live figures.** The files under `crates/sim-cli/tests/run_baseline` record what each scenario does on the figures in use, so they are remade in the same change as each tuning round, and the change shows the difference.
 5. **A rule change still means a new hand calculation,** written by the architect before the code.
+6. **A rule added during step 2 adds its figures to the frozen copy too, at the value that leaves step 1's results as they were,** where there is such a value, and otherwise at its first value. The frozen copy stands for what step 1 did, so a rule step 1 did not have is switched off there wherever it can be. The pilot of a patrol shot down over its own base is always recovered in the frozen copy, as in step 1, and draws for it in the live figures. The strength of experience is frozen at the value that makes experience do nothing. So no hand calculation of step 1 moves when a rule is added.
+7. **The new rule is then proved in a scenario of its own,** with its own hand calculation, on values that make it act. Switched off in the frozen copy, it is tested nowhere else by hand, so this is not optional: a rule with no scenario of its own on working values has no hand calculation at all.
 
 ## Rule work that comes before tuning
 
