@@ -56,3 +56,13 @@ id,key,name,kind,nation
 1052,us-transport-division-type,"US transport division (generic, one combat team per transport)",transport-group,us
 1053,us-transport-group-xray,Transport Group XRAY (Guadalcanal),transport-group,us
 1054,us-transport-group-yoke,Transport Group YOKE (Tulagi),transport-group,us
+1055,us-bellatrix-ak-20,USS Bellatrix (AK-20),ship,us
+1056,us-barnett-ap-11,USS Barnett (AP-11),ship,us
+1057,us-george-f-elliott-ap-13,USS George F. Elliott (AP-13),ship,us
+1058,us-libra-ak-53,USS Libra (AK-53),ship,us
+1059,us-hunter-liggett-ap-27,USS Hunter Liggett (AP-27),ship,us
+1060,us-alchiba-ak-23,USS Alchiba (AK-23),ship,us
+1061,us-crescent-city-ap-40,USS Crescent City (AP-40),ship,us
+1062,us-colhoun-apd-2,USS Colhoun (APD-2),ship,us
+1063,us-gregory-apd-3,USS Gregory (APD-3),ship,us
+1064,us-landing-force-1942-08-02,Landing force as embarked on 2 August 1942 (station list total),run,us
