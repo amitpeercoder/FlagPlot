@@ -243,9 +243,11 @@ fn the_final_briefing_and_the_end_day_answer_carry_the_result_and_nothing_before
     assert_eq!(ended["game_over"], true);
     let result = &ended["result"];
     assert_eq!(result["allied"]["total"], "13");
-    assert_eq!(result["japanese"]["total"], "5.4");
-    assert_eq!(result["allied"]["margin"], "7.6");
-    assert_eq!(result["japanese"]["margin"], "-7.6");
+    // 5 + 11 x 0.05 = 5.55 (11 Allied-destroyed aircraft counted for the
+    // Japanese: see scenario_10_objectives), margin 13 - 5.55 = 7.45.
+    assert_eq!(result["japanese"]["total"], "5.55");
+    assert_eq!(result["allied"]["margin"], "7.45");
+    assert_eq!(result["japanese"]["margin"], "-7.45");
     assert_eq!(result["allied"]["outcome"], "minor victory");
     assert_eq!(result["japanese"]["outcome"], "minor defeat");
     assert_eq!(result["allied"]["result"], "victory");
@@ -267,11 +269,11 @@ fn the_final_briefing_and_the_end_day_answer_carry_the_result_and_nothing_before
         "{text}"
     );
     assert!(
-        text.contains("Allied: 13 points, margin 7.6, minor victory"),
+        text.contains("Allied: 13 points, margin 7.45, minor victory"),
         "{text}"
     );
     assert!(
-        text.contains("Japanese: 5.4 points, margin -7.6, minor defeat"),
+        text.contains("Japanese: 5.55 points, margin -7.45, minor defeat"),
         "{text}"
     );
     assert!(

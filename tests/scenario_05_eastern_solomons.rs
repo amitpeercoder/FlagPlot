@@ -22,17 +22,27 @@
 //!
 //! Quantities are cut to six decimal places at each step.
 //!
+//! Brought to the scenario's new orders on Nov 12, 2026 (the `ryujo-raid`
+//! change, after decisions 0059 and 0063), by the rules it already works by:
+//! Ryujo's detachment reaches (7,-9) at noon and not (7,-10) (200 nm from
+//! Henderson Field, as the record has her launch, engagement_events 331 and
+//! engagement_positions 310); her attack unit, group 19, raids Henderson
+//! Field on extended reach; her fighters keep 0.35 and send the rest; and
+//! the dive bomber groups of the fleet carriers, 12 and 15, hold a target
+//! list. Each section below says what changed. The figures are the frozen
+//! figures of step 1.
+//!
 //! ## The forces
 //!
 //! | Task force | Ships, by ID | Air groups, by ID |
 //! | ---------- | ------------ | ----------------- |
 //! | 1, Task Force 16, Allied | 1 Enterprise, 2 North Carolina, 3 Portland, 4 Atlanta, 5 to 10 destroyers | 1 VF-6, 27 F4F-4, patrol; 2 VB-6, 17 SBD-3, strike; 3 VS-5, 16 SBD-3, search; 4 VT-3, 14 TBF-1, strike |
 //! | 2, Task Force 11, Allied | 11 Saratoga, 12 New Orleans, 13 Minneapolis, 14 to 18 destroyers | 5 VF-5, 27 F4F-4, patrol; 6 VB-3, 15 SBD-3, strike; 7 VS-3, 15 SBD-3, strike; 8 VT-8, 13 TBF-1, strike |
-//! | 3, carrier striking force, Japanese | 19 Shokaku, 20 Zuikaku, 21 Chikuma, 22 Hiei, 23 Kirishima, 24 Kumano, 25 Suzuya, 26 Nagara, 27 to 32 destroyers | 11 fighters, 26 A6M2, patrol share 0.8; 12 bombers, 27 D3A1, strike; 13 attack, 18 B5N2, strike (Shokaku). 14 fighters, 25, share 0.8; 15 bombers, 27; 16 attack, 18 (Zuikaku). 17 floatplanes, 5 E13A1, search (Chikuma) |
-//! | 4, Ryujo detachment, Japanese | 33 Ryujo, 34 Tone, 35 Amatsukaze, 36 Tokitsukaze | 18 fighters, 23 A6M2, patrol share 0.3; 19 attack, 6 B5N2, strike (Ryujo). 20 floatplanes, 5 E13A1, search (Tone) |
+//! | 3, carrier striking force, Japanese | 19 Shokaku, 20 Zuikaku, 21 Chikuma, 22 Hiei, 23 Kirishima, 24 Kumano, 25 Suzuya, 26 Nagara, 27 to 32 destroyers | 11 fighters, 26 A6M2, patrol share 0.8; 12 bombers, 27 D3A1, strike, target list carrier, battleship, cruiser, transport; 13 attack, 18 B5N2, strike (Shokaku). 14 fighters, 25, share 0.8; 15 bombers, 27, the same list; 16 attack, 18 (Zuikaku). 17 floatplanes, 5 E13A1, search (Chikuma) |
+//! | 4, Ryujo detachment, Japanese | 33 Ryujo, 34 Tone, 35 Amatsukaze, 36 Tokitsukaze | 18 fighters, 23 A6M2, patrol share 0.35; 19 attack, 6 B5N2, base strike on base 1, extended reach (Ryujo). 20 floatplanes, 5 E13A1, search (Tone) |
 //!
 //! At Henderson Field, base 1, in (2,-4): 9 VMF-223, 13 F4F-4, patrol; 10
-//! VMSB-232, 11 SBD-3, strike.
+//! VMSB-232, 11 SBD-3, strike. The base has no guns and no supply here.
 //!
 //! | Aircraft | Radius | Attacks with | Pilot armour | Self-sealing tanks |
 //! | -------- | ------ | ------------ | ------------ | ------------------ |
@@ -60,16 +70,19 @@
 //! nm, then (8,-17) after 22 + 20 = 42, (8,-16) 82, (8,-15) 122, (8,-14) 162,
 //! (8,-13) 202, (8,-12) 242 and (8,-11) after 282 nm.
 //!
-//! The Ryujo detachment starts in (7,-19) and steams for (7,-10), 9 hexes down
+//! The Ryujo detachment starts in (7,-18) and steams for (7,-9), 9 hexes down
 //! the q = 7 column, an axis: 9 x 40 = 360 nm, at 20 knots, every step 40. It
-//! enters (7,-18) after 20 nm and each hex after it 40 nm later, (7,-10)
-//! after 340 nm. A force's position is the nearest hex centre.
+//! enters (7,-17) after 20 nm and each hex after it 40 nm later, (7,-9) after
+//! 340 nm. A force's position is the nearest hex centre. (It started in
+//! (7,-19) for (7,-10) before: (7,-10) is 223 nm from Henderson Field by hex
+//! centres, which is the grid's error, and the record has her launch from 200
+//! to 202 nm of it.)
 //!
 //! | At | Striking force | Steamed | Ryujo detachment | Steamed |
 //! | -- | -------------- | ------- | ---------------- | ------- |
-//! | 06:00 | (8,-13), 22 nm past the centre of (8,-14) on a step of 40 | 204 nm | (7,-13), at its centre | 240 nm |
-//! | 12:00 | (8,-11), arrived at hour 17.764705 (11:46) | 302 nm | (7,-10), arrived at 12:00, hour 18 | 360 nm |
-//! | 18:00 | (8,-11) | 302 nm | (7,-10) | 360 nm |
+//! | 06:00 | (8,-13), 22 nm past the centre of (8,-14) on a step of 40 | 204 nm | (7,-12), at its centre | 240 nm |
+//! | 12:00 | (8,-11), arrived at hour 17.764705 (11:46) | 302 nm | (7,-9), arrived at 12:00, hour 18 | 360 nm |
+//! | 18:00 | (8,-11) | 302 nm | (7,-9) | 360 nm |
 //!
 //! The striking force arrives 302 / 17 = 17.764705 hours after the start:
 //! 12 hours for the night's 204 nm and 98 / 17 = 5.764705 into the morning, 14
@@ -82,8 +95,8 @@
 //!
 //! | At | American carriers to striking force | American carriers to Ryujo | Henderson Field to Ryujo |
 //! | -- | ----------------------------------- | -------------------------- | ------------------------ |
-//! | 06:00 | (1,-8): 40 x root 57 = 302 (by hexes 320) | (0,-8): 320 (320) | (5,-9): 40 x root 61 = 312 (360) |
-//! | 12:00 | (1,-6): 40 x root 31 = 223 (240) | (0,-5): 200 (200) | (5,-6): 40 x root 31 = 223 (240) |
+//! | 06:00 | (1,-8): 40 x root 57 = 302 (by hexes 320) | (0,-7): 280 (280) | (5,-8): 40 x root 49 = 280 (320) |
+//! | 12:00 | (1,-6): 40 x root 31 = 223 (240) | (0,-4): 160 (160) | (5,-5): 40 x root 25 = 200 (200) |
 //!
 //! (Before decision 0040 every air distance here was the hex count times
 //! 40. The figures below that changed with it are marked.)
@@ -101,9 +114,13 @@
 //!
 //! ## The morning
 //!
-//! Every search is flown. No force is within reach of any search, so there
-//! is no attempt, no contact, no strike and no loss in the morning of any
-//! run.
+//! Every search is flown. No force is within reach of any search (the nearest
+//! enemy is 280 nm away, and the searches are 200 and 253 nm), so there is no
+//! attempt, no contact, no strike and no loss in the morning of any run. Nor
+//! does group 19's base strike launch: Henderson Field is 280 nm from Ryujo
+//! at 06:00, and the group's extended reach is 175 x 1.25 = 218.75, cut to 218
+//! (decision 2 of 0059). (A launch needs the base in reach when the pulse
+//! begins, decision 7 of 0063.)
 //!
 //! ## The afternoon: search
 //!
@@ -111,101 +128,128 @@
 //!
 //! | Searcher | From | Arc | Target | Bearing | Distance | Chance |
 //! | -------- | ---- | --- | ------ | ------- | -------- | ------ |
-//! | Group 3, 16 SBD-3 | (7,-5) | 290 to 090, 160 degrees, to 200 nm | Ryujo detachment | 330 | 200 | 0.572957 |
+//! | Group 3, 16 SBD-3 | (7,-5) | 290 to 090, 160 degrees, to 200 nm | Ryujo detachment | 330 | 160 | 57.295779 x 16 x 20 / (160 x 160) = 18334.64928 / 25600 = 0.716197 |
 //! | Group 3 | (7,-5) | | Striking force | | 223 | beyond 200 nm: no attempt |
 //! | Group 17, 5 E13A1 | (8,-11) | 110 to 200, 90 degrees, to 253 nm | Each American force | about 159 | 223 | 57.295779 x 5 x 20 / (90 x 223) = 0.285479 |
-//! | Group 20, 5 E13A1 | (7,-10) | 110 to 200 | Each American force | 150 | 200 | 0.318309 |
+//! | Group 20, 5 E13A1 | (7,-9) | 110 to 200 | Each American force | 150 | 160 | 57.295779 x 5 x 20 / (90 x 160) = 5729.5779 / 14400 = 0.397887 |
+//!
+//! (Ryujo at (7,-10) was 200 nm from the carriers: group 3's chance was
+//! 0.572957 and group 20's 0.318309.)
 //!
 //! Each floatplane group rolls once for each of the two American forces, so
 //! the Japanese make four attempts. The chance that none sights is
-//! 0.714521 x 0.714521 x 0.681691 x 0.681691 = 0.237248, so the Japanese
-//! side holds a contact in the afternoon with chance 0.762752. (At 240 nm,
-//! before decision 0040, group 17's chance was 0.265258 and the side's
-//! 0.749133.)
+//! 0.714521 x 0.714521 x 0.602113 x 0.602113 = 0.185090, so the Japanese
+//! side holds a contact in the afternoon with chance 0.814910. (At 240 nm,
+//! before decision 0040, group 17's chance was 0.265258.)
 //!
 //! | Count of runs, over seeds 1 to 1000 | p        | Mean   | Std dev | Allowed    |
 //! | ----------------------------------- | -------- | ------ | ------- | ---------- |
-//! | The Allied side sights the Ryujo detachment | 0.572957 | 572.96 | 15.64 | 511 to 635 |
-//! | The Japanese side sights an American force  | 0.762752 | 762.75 | 13.45 | 709 to 816 |
+//! | The Allied side sights the Ryujo detachment | 0.716197 | 716.20 | 14.26 | 660 to 773 |
+//! | The Japanese side sights an American force  | 0.814910 | 814.91 | 12.28 | 766 to 864 |
 //!
 //! ## The afternoon: who launches
 //!
 //! A group launches at a contact its side holds within its radius of where
-//! the group is. A report names the true hex or one next to it.
+//! the group is. A report names the true hex or one next to it. A group with
+//! a target list (decision 0063) launches only at a contact whose reported
+//! kind is on it, the one that comes first on the list, then the nearest.
 //!
-//! - **Groups 2, 6 and 7, the SBD-3s:** launch if the contact's hex is within
-//!   200 nm of (7,-5), which the true hex (7,-10) is, exactly. Of the hexes
-//!   next to it, (7,-9) at 160 nm and (8,-10) and (6,-9) at 183 nm are in
-//!   reach and they find nothing there; (6,-10) and (8,-11) at 223 nm and
-//!   (7,-11) at 240 nm launch nothing.
-//! - **Groups 4 and 8, the TBF-1s:** radius 190 nm. The true hex, at 200 nm,
-//!   is out of reach. They launch only at a contact reported in (7,-9),
-//!   (8,-10) or (6,-9), and find nothing there. (Before decision 0040 only
-//!   (7,-9) was in reach: the other two were 200 nm by hexes.)
-//! - **Group 10 at Henderson Field:** the Ryujo detachment's true hex is 223
-//!   nm from (2,-4). It launches only at a contact reported in (7,-9), 200
-//!   nm away, or (6,-9), 183 nm, and finds nothing there.
-//! - **Groups 12 and 15, the D3A1s:** launch if the contact's hex is within
-//!   252 nm of (8,-11), which the true hex (7,-5) is, at 223 nm. Of the
-//!   hexes next to it only (7,-4), at 262 nm, is out of reach. (Before
-//!   decision 0040 (6,-4), now 250 nm, was out of reach too, at 280 nm by
-//!   hexes.)
+//! Distances from the American carriers' (7,-5) and from Henderson Field
+//! (2,-4) to the true hex (7,-9) and the six hexes next to it, 40 x root (dq x
+//! dq + dr x dr + dq x dr) to the nearest mile:
+//!
+//! | Hex | From (7,-5) | From (2,-4) |
+//! | --- | ----------- | ----------- |
+//! | (7,-9), the true hex | 160 | 200 |
+//! | (8,-9) | 144 | 223 |
+//! | (8,-10) | 183 | 240 |
+//! | (7,-10) | 200 | 223 |
+//! | (6,-9) | 183 | 183 |
+//! | (6,-8) | 144 | 160 |
+//! | (7,-8) | 120 | 183 |
+//!
+//! - **Groups 2, 6 and 7, the SBD-3s (radius 200):** launch if the contact's
+//!   hex is within 200 nm of (7,-5), which every one of the seven is. Only
+//!   the true hex has Ryujo; at any other they find nothing.
+//! - **Groups 4 and 8, the TBF-1s (radius 190):** launch if it is within 190
+//!   nm, which is every hex but (7,-10), at 200. (They stayed on the deck
+//!   when the true hex was 200 nm away, and now fly at 160.)
+//! - **Group 10 at Henderson Field (radius 200):** launches if the hex is
+//!   within 200 nm of (2,-4): (7,-9), at 200 exactly, (6,-9), (6,-8) and
+//!   (7,-8). It does not at (8,-9), (8,-10) or (7,-10). (The true hex was 223
+//!   nm away, and group 10 launched only at a neighbour.)
+//! - **Groups 12 and 15, the D3A1s (radius 252, target list carrier,
+//!   battleship, cruiser, transport):** launch if the Japanese side holds a contact
+//!   reported as one of those kinds within 252 nm of (8,-11), which the true
+//!   hex (7,-5) is, at 223 nm. Of the hexes next to it only (7,-4), at 262
+//!   nm, is out of reach. A contact reported as a destroyer or an
+//!   auxiliary is held for: the groups stay on deck. A report of a carrier
+//!   is read through the confusion table of the search figures, so some are.
+//!   The launch cites the mission order, the target order and the report.
 //! - **Groups 13 and 16, the striking force's B5N2s:** radius 175 nm, and
 //!   every hex a report of the American forces can name is 183 nm or more
 //!   from (8,-11). They never launch.
-//! - **Group 19, Ryujo's B5N2s:** the true hex is 200 nm from (7,-10). They
-//!   launch only at a contact reported in (7,-6), 160 nm away, and find
-//!   nothing there: (6,-5) and (8,-6) are 183 nm away. Ryujo's 17 escorts
-//!   go with them: the A6M2's radius covers it. (The first version of this
-//!   list said no B5N2 ever launches. It missed the hex between the two
-//!   forces.)
+//! - **Group 19, Ryujo's B5N2s, a base strike on base 1:** needs no contact.
+//!   It launches in the first daylight pulse in which base 1 is within its
+//!   reach (decision 7 of 0063): 280 nm from Ryujo at 06:00, beyond its
+//!   extended reach of 218, and 200 nm at noon, within it. So it launches in
+//!   the afternoon, all 6 aircraft, once, in every run, and cites its orders
+//!   (the mission and the reach). Ryujo's 15 escorts go with it.
 //!
 //! A strike attacks only if it flew to the hex its target is really in.
 //!
 //! ## An American raid on the Ryujo detachment
 //!
-//! Enterprise's raid is group 2: 17 SBD-3. Saratoga's raid is groups 6 and
-//! 7: 30 SBD-3. Neither has an escort: the target is 200 nm away and the
-//! F4F-4's radius is 105 (decision 0030).
+//! Every American group that launches at the true hex (7,-9) attacks Ryujo
+//! there, and all six launch at it (see above), so a run has all three raids
+//! or none. The raids are grouped by where they leave from (decision 0027):
+//! Enterprise's, groups 2 (17 SBD-3) and 4 (14 TBF-1), 31 aircraft;
+//! Saratoga's, groups 6 and 7 (15 SBD-3 each) and 8 (13 TBF-1), 43 aircraft;
+//! and Henderson Field's, group 10 (11 SBD-3), 11 aircraft. None has an
+//! escort: the target is 160 nm from the carriers and 200 nm from Henderson
+//! Field and the F4F-4's radius is 105 (decision 0030). Before the change
+//! only the SBD-3s of the carriers flew, 17 and 30 aircraft, at 200 nm.
 //!
-//! Ryujo's fighters, 23 with a share of 0.3, keep 6 overhead (6.9 rounded
-//! down). The other 17 are escorts, and fly only if group 19 launches.
+//! Ryujo's fighters, 23 with a share of 0.35, keep 8 overhead (23 x 0.35 =
+//! 8.05, rounded down). The other 15 are escorts, and fly only because group
+//! 19 launches (below). The patrol over a hex is divided among the raids that
+//! attack there in a pulse (decision 0033): a raid's share is the patrol times
+//! its aircraft, bombers and escorts together, over the aircraft of all the
+//! raids, rounded down, and the fighters left over go one each to the raids in
+//! order of size, the largest first. The patrol and the raids are counted as
+//! they stood at the start of the pulse. The three raids, of 31, 43 and 11
+//! aircraft, 85 in all, divide the 8:
 //!
-//! The patrol over a hex is divided among the raids that attack there in a
-//! pulse (decision 0033): a raid's share is the patrol times its aircraft,
-//! bombers and escorts together, over the aircraft of all the raids,
-//! rounded down, and the fighters left over go one each to the raids in
-//! order of size, the largest first. The patrol and the raids are counted
-//! as they stood at the start of the pulse. A raid alone meets all 6. When
-//! both raids attack whole, of 17 and 30 aircraft:
-//!
-//! | Raid | Share of the 6 |
+//! | Raid | Share of the 8 |
 //! | ---- | -------------- |
-//! | Enterprise's, 17 | 6 x 17 / 47 = 2.17: 2 |
-//! | Saratoga's, 30 | 6 x 30 / 47 = 3.83: 3, and the one left over: 4 |
+//! | Enterprise's, 31 | 8 x 31 / 85 = 2.92: 2 |
+//! | Saratoga's, 43 | 8 x 43 / 85 = 4.05: 4, and the one left over: 5 |
+//! | Henderson Field's, 11 | 8 x 11 / 85 = 1.04: 1 |
 //!
-//! A shot at an SBD-3 has both protection factors against it: a fighter's
-//! 0.3 x 0.75 x 0.75 = 0.16875, a gun's 0.05 x 0.75 x 0.75 = 0.028125. The
-//! detachment's ships have 13 + 11 + 1 + 1 = 26 anti-aircraft shots.
+//! A shot at an SBD-3 or a TBF-1 has both protection factors against it: a
+//! fighter's 0.3 x 0.75 x 0.75 = 0.16875, a gun's 0.05 x 0.75 x 0.75 =
+//! 0.028125. The detachment's ships have 13 + 11 + 1 + 1 = 26 anti-aircraft
+//! shots.
 //!
 //! | Step | Shots | Chance | Expected | Std dev |
 //! | ---- | ----- | ------ | -------- | ------- |
 //! | Patrol at Enterprise's bombers | 2 | 0.16875 | 0.3375 | 0.529668 |
-//! | Patrol at Saratoga's bombers | 4 | 0.16875 | 0.675 | 0.749065 |
-//! | Patrol at the bombers of a raid alone | 6 | 0.16875 | 1.0125 | 0.917410 |
+//! | Patrol at Saratoga's bombers | 5 | 0.16875 | 0.84375 | 0.837477 |
+//! | Patrol at Henderson Field's bombers | 1 | 0.16875 | 0.16875 | 0.374531 |
 //! | Guns at the bombers, each raid | 26 | 0.028125 | 0.73125 | 0.843021 |
 //!
 //! Each shot is rolled on its own (decision 0033), so a roll scores from no
-//! hit to its shots. When both attack whole, of Enterprise's 17 bombers 17
-//! less both losses attack, 15.93125 on average, and of Saratoga's 30,
-//! 28.59375 on average. Over the runs the hits of each roll are within four
-//! standard deviations of its expected figure summed over the raids.
-//! (Before decision 0033 each raid met all 6 of the patrol, which shot down
-//! 1 or 2 of each, and the guns 0 or 1.)
-//! A group whose bombers are all shot down attacks nothing, and records
-//! neither an attack nor a strike that found nothing.
-//! Saratoga's losses come off group 6 first. Every bomber attacks Ryujo,
-//! ship 33, at 0.2 a bomb. A hit does 100 x 75.6 / 424 = 17.830188 points.
+//! hit to its shots. The bombers that attack are the raid's less both losses.
+//! Over the runs the hits of each roll are within four standard deviations of
+//! its expected figure summed over the raids. A group whose bombers are all
+//! shot down attacks nothing, and records neither an attack nor a strike that
+//! found nothing. A raid's losses come off its lowest group first (2 before
+//! 4; 6, then 7, then 8). Every bomber attacks Ryujo, ship 33: a dive
+//! bomber's bombs at 0.2 a bomb, a hit doing 100 x 75.6 / 424 = 17.830188
+//! points; a torpedo plane's torpedo at 0.15, a hit doing 100 x 73.2 / 424 =
+//! 17.264150 points, always on the flotation track. (Before the change the
+//! raids were Enterprise's 17 and Saratoga's 30, sharing 6 as 2 and 4, a
+//! raid alone meeting all 6.)
 //!
 //! ## A Japanese raid on the American carriers
 //!
@@ -256,15 +300,71 @@
 //! attacks Enterprise, ship 1, at 0.2 a bomb. A hit does 100 x 41.666666 /
 //! 792 = 5.260942 points. Saratoga's force is never attacked.
 //!
+//! ## Ryujo's raid on Henderson Field
+//!
+//! Group 19, 6 B5N2, has a base strike order on base 1 and extended reach
+//! (the record has her launch 15 fighters and 6 attack planes at it from 200
+//! to 202 nm: engagement_outcomes 1171, engagement_events 331). It launches
+//! in the afternoon (above): 6 aircraft at 200 nm, which is 25 beyond its
+//! radius of 175 and within its reach of 218. Group 18 flies 23 x 0.35 =
+//! 8.05, so 8 on patrol and 15 escorts with the raid (decision 2 of 0027); the
+//! escorts fly 200 nm, within the A6M2's radius of 261, and roll nothing for
+//! fuel. The raid is one raid, of 6 + 15 = 21 aircraft, on Henderson Field.
+//!
+//! Over Henderson Field the defending patrol is VMF-223, group 9: 13 F4F-4 on
+//! a share of 1, all 13 on patrol. A raid alone meets all of it: 13 x 21 / 21 =
+//! 13. The base has no guns here, so no gun roll. The escorts fire first, one
+//! shot each at the patrol, then the patrol at the escorts, one shot each, up
+//! to its share, and what is left of the share at the bombers (none: 13 of
+//! 15 escorts are fired at, none at the bombers). The streams are keyed on the
+//! base for the raid's rolls, and on (the group, the base) for the bombs.
+//!
+//! | Step | Shots | Chance | Expected | Std dev |
+//! | ---- | ----- | ------ | -------- | ------- |
+//! | Escorts at the patrol | 15 | 0.16875 (an F4F-4) | 2.53125 | 1.450552 |
+//! | Patrol at the escorts | 13 | 0.3 (an A6M2) | 3.9 | 1.652271 |
+//! | Patrol at the bombers | 0 | | | |
+//! | Bombs on the base | 6 | 0.2 | 1.2 | 0.979796 |
+//!
+//! Each hit of the patrol destroys an escort (group 18, no more than its 15);
+//! each hit of the escorts a fighter of group 9 (no more than 13). All 6 B5N2
+//! attack. The bombs fall at the bomb hit chance whatever the weapon the type
+//! carries (decisions 6 and 7 of 0034), and each hit lands on aircraft, on
+//! supply or on nothing, by one more draw. The aircraft on the ground are
+//! those at the base that are not flying in the pulse: VMF-223's 13 are all on
+//! patrol; VMSB-232's 11 are in the air if the group launched at Ryujo, and on
+//! the ground if it did not (in 427 of 1000 runs). Each hit on aircraft
+//! destroys one aircraft on the ground, the lowest group first, no more than
+//! were there; Henderson Field has no supply, so a hit on supply destroys
+//! nothing.
+//!
+//! Fuel (decisions 3 to 5 of 0059): a sortie whose one-way distance d was
+//! beyond its type's radius R rolls each aircraft that came back, on its own,
+//! at the ditch figure 2 times (d - R) / R. Here d = 200, R = 175: 25 / 175 =
+//! 0.142857, times 2, 0.285714 each, and 6 x 0.285714 = 1.714284 expected
+//! aircraft out of fuel (std dev 1.106566). The roll is one stream for the
+//! group, after the air combat step and before the aircraft whose deck is
+//! lost come home. A ditched aircraft is gone for good, and the pilots are
+//! not counted in this scenario. No other sortie of the scenario is beyond
+//! its radius: group 10 flies 200 nm on a radius of 200.
+//!
+//! Over the runs the hits of each roll are within four standard deviations of
+//! its expected figure summed over the runs.
+//!
 //! ## When a deck is lost
 //!
 //! A ship that sinks, or whose flight deck goes out, in the afternoon's air
 //! combat step sends the aircraft her groups have in the air to another deck,
 //! a base or the sea (decisions 7 to 10 of 0059). The aircraft in the air are
 //! those each group flew in the pulse and did not lose: its search, its
-//! strike, its patrol and the escorts that went. Those aboard a ship that
-//! sinks, ready and damaged, go down with her, so `AirGroupLost` names
-//! the aircraft aboard and not the aircraft in the air. The test works it
+//! strike, its patrol and the escorts that went, less those that ran out of
+//! fuel on the way home. Those aboard a ship that sinks, ready and damaged, go
+//! down with her, so `AirGroupLost` names the aircraft aboard and not the
+//! aircraft in the air. Ryujo's groups fly everything they can in the pulse:
+//! group 18's 23 are 8 on patrol and 15 escorts, group 19's 6 are the raid, so
+//! when she sinks in the air combat step nothing of either is aboard and
+//! `AirGroupLost` names 0 for each (before the change it named 17 and 6, 23
+//! lost with her). The test works it
 //! for every run: where each group's aircraft go is the first of these that
 //! has room, in order of group number: another carrier of the group's side in
 //! the same hex, afloat, her flight deck not out, lowest ship number first and
@@ -276,22 +376,29 @@
 //! ditching is asserted whole: the groups, the place, the aircraft, whether
 //! the group was formed, the causes (the event that closed the deck, then the
 //! events that say the group flew), and the chance, 1 on the frozen figures,
-//! so no pilot is lost. On the scenario's own seed, Ryujo sinks with 6 of
-//! group 18's aircraft in the air, which come down in the sea beside her
-//! detachment, and Enterprise's deck goes out with groups 1, 2 and 3 in the
-//! air: 21 of group 1 land on Saratoga and join group 5 (she has room), the
-//! other 3 come down in the sea, and groups 2 and 3, 16 each, land at
-//! Henderson Field, within their radius of 200 nm, and join group 10.
+//! so no pilot is lost. On the scenario's own seed, Ryujo sinks with all of
+//! group 18's and group 19's aircraft in the air, lost with her none: group
+//! 18's 21 (23 less the 2 that VMF-223 shot down over Henderson Field) and
+//! group 19's 3 (6 less the 3 that ran out of fuel) come down in the sea
+//! beside her detachment's other ships. Enterprise's deck goes out with
+//! groups 1, 2, 3 and 4 in the air: 21 of group 1 land on Saratoga and join
+//! group 5 (she has room), the other 3 come down in the sea, groups 2 and 3,
+//! 16 each, land at Henderson Field, within their radius of 200 nm, and join
+//! group 10, and group 4's 14 (TBF-1, radius 190) land there too, 183 nm from
+//! the carriers, and form group 21 (decision 8 of 0059).
 //!
 //! ## What cannot happen
 //!
 //! - No ship fires a gun or a torpedo at another ship: no two opposing
 //!   forces are ever in one hex.
 //! - No F4F-4 ever escorts a raid, and no B5N2 of the striking force ever
-//!   launches. No B5N2 ever attacks.
-//! - No aircraft at Henderson Field is ever lost, and no ship of task force
-//!   2 or task force 3 is ever damaged. Aircraft only land there when a deck
-//!   is lost (group 10 receives them).
+//!   launches. No B5N2 attacks a ship: Ryujo's attack unit launches only its
+//!   base strike.
+//! - No aircraft at Henderson Field is ever lost with a ship, and no ship of
+//!   task force 2 or task force 3 is ever damaged. (Its fighters are shot
+//!   down by Ryujo's escorts, and its dive bombers on the ground or over
+//!   Ryujo; aircraft land there when a deck is lost, and group 10 receives
+//!   them.)
 //! - No aircraft lands elsewhere or comes down for want of a deck unless its
 //!   group's ship sank or lost her flight deck in that pulse; none for a
 //!   group at Henderson Field; none in a pulse with no air combat step (the
@@ -300,15 +407,16 @@
 //!
 //! # Properties
 //!
-//! - Every strike is launched at a contact its own side holds, reported in
-//!   that pulse or the one before, within the launching type's radius.
+//! - Every naval strike is launched at a contact its own side holds, reported
+//!   in that pulse or the one before, within the launching type's radius, and
+//!   of a kind on the group's target list.
 //! - Every escort sent is within its fighter type's radius of the raid's
 //!   target.
 //! - Every group's aircraft at the end are its aircraft at the start less
-//!   the aircraft its loss events record (a sunk ship's, and those that came
-//!   down in the sea for want of a deck), less what landed elsewhere from it,
-//!   plus what landed elsewhere to it, and none goes below zero. A group
-//!   aboard a ship that sinks has none.
+//!   the aircraft its loss events record (shot down, lost with a sunk ship,
+//!   destroyed on the ground, ditched for fuel, and ditched for want of a
+//!   deck), less what landed elsewhere from it, plus what landed elsewhere to
+//!   it, and none goes below zero. A group aboard a ship that sinks has none.
 //! - No ship has negative fuel, and no damage track is above 100.
 //! - Every damage event is caused by an attack, every attack by a launch,
 //!   and every launch by a report to the launching side.
@@ -331,12 +439,16 @@ use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::bearing;
-use sim_core::events::{AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind, Weapon};
+use sim_core::events::{
+    AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind, SortieKind, Weapon,
+};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use sim_core::ids::{
+    AirGroupId, BaseId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId,
+};
 use sim_core::map::Map;
-use sim_core::orders::AirMission;
+use sim_core::orders::{AirMission, Reach};
 use sim_core::refdata::{
     AirCombatFigures, AircraftType, AttackWeapon, SearchFigures, ShipKind, SurfaceCombatFigures,
 };
@@ -364,7 +476,7 @@ struct Spec {
     /// The aircraft type's ID.
     ty: u32,
     mission: AirMission,
-    /// The patrol share in tenths.
+    /// The patrol share in hundredths.
     share: i64,
     place: Place,
 }
@@ -399,30 +511,32 @@ const E13A1: u32 = 2006;
 
 const PATROL: AirMission = AirMission::CombatAirPatrol;
 const STRIKE: AirMission = AirMission::NavalStrike;
+/// Ryujo's attack unit: a base strike on Henderson Field, base 1.
+const RAID: AirMission = AirMission::BaseStrike(BaseId::new(1));
 const SEARCH: AirMission = AirMission::Search;
 
 /// The first table: the air groups, by ID.
 const GROUPS: [Spec; 20] = [
-    group(1, Side::Allied, 27, F4F4, PATROL, 10, Place::Ship(1)),
-    group(2, Side::Allied, 17, SBD3, STRIKE, 10, Place::Ship(1)),
-    group(3, Side::Allied, 16, SBD3, SEARCH, 10, Place::Ship(1)),
-    group(4, Side::Allied, 14, TBF1, STRIKE, 10, Place::Ship(1)),
-    group(5, Side::Allied, 27, F4F4, PATROL, 10, Place::Ship(11)),
-    group(6, Side::Allied, 15, SBD3, STRIKE, 10, Place::Ship(11)),
-    group(7, Side::Allied, 15, SBD3, STRIKE, 10, Place::Ship(11)),
-    group(8, Side::Allied, 13, TBF1, STRIKE, 10, Place::Ship(11)),
-    group(9, Side::Allied, 13, F4F4, PATROL, 10, Place::Base(1)),
-    group(10, Side::Allied, 11, SBD3, STRIKE, 10, Place::Base(1)),
-    group(11, Side::Japanese, 26, A6M2, PATROL, 8, Place::Ship(19)),
-    group(12, Side::Japanese, 27, D3A1, STRIKE, 10, Place::Ship(19)),
-    group(13, Side::Japanese, 18, B5N2, STRIKE, 10, Place::Ship(19)),
-    group(14, Side::Japanese, 25, A6M2, PATROL, 8, Place::Ship(20)),
-    group(15, Side::Japanese, 27, D3A1, STRIKE, 10, Place::Ship(20)),
-    group(16, Side::Japanese, 18, B5N2, STRIKE, 10, Place::Ship(20)),
-    group(17, Side::Japanese, 5, E13A1, SEARCH, 10, Place::Ship(21)),
-    group(18, Side::Japanese, 23, A6M2, PATROL, 3, Place::Ship(33)),
-    group(19, Side::Japanese, 6, B5N2, STRIKE, 10, Place::Ship(33)),
-    group(20, Side::Japanese, 5, E13A1, SEARCH, 10, Place::Ship(34)),
+    group(1, Side::Allied, 27, F4F4, PATROL, 100, Place::Ship(1)),
+    group(2, Side::Allied, 17, SBD3, STRIKE, 100, Place::Ship(1)),
+    group(3, Side::Allied, 16, SBD3, SEARCH, 100, Place::Ship(1)),
+    group(4, Side::Allied, 14, TBF1, STRIKE, 100, Place::Ship(1)),
+    group(5, Side::Allied, 27, F4F4, PATROL, 100, Place::Ship(11)),
+    group(6, Side::Allied, 15, SBD3, STRIKE, 100, Place::Ship(11)),
+    group(7, Side::Allied, 15, SBD3, STRIKE, 100, Place::Ship(11)),
+    group(8, Side::Allied, 13, TBF1, STRIKE, 100, Place::Ship(11)),
+    group(9, Side::Allied, 13, F4F4, PATROL, 100, Place::Base(1)),
+    group(10, Side::Allied, 11, SBD3, STRIKE, 100, Place::Base(1)),
+    group(11, Side::Japanese, 26, A6M2, PATROL, 80, Place::Ship(19)),
+    group(12, Side::Japanese, 27, D3A1, STRIKE, 100, Place::Ship(19)),
+    group(13, Side::Japanese, 18, B5N2, STRIKE, 100, Place::Ship(19)),
+    group(14, Side::Japanese, 25, A6M2, PATROL, 80, Place::Ship(20)),
+    group(15, Side::Japanese, 27, D3A1, STRIKE, 100, Place::Ship(20)),
+    group(16, Side::Japanese, 18, B5N2, STRIKE, 100, Place::Ship(20)),
+    group(17, Side::Japanese, 5, E13A1, SEARCH, 100, Place::Ship(21)),
+    group(18, Side::Japanese, 23, A6M2, PATROL, 35, Place::Ship(33)),
+    group(19, Side::Japanese, 6, B5N2, RAID, 100, Place::Ship(33)),
+    group(20, Side::Japanese, 5, E13A1, SEARCH, 100, Place::Ship(34)),
 ];
 
 /// The orders each group's standing orders came from, in the order they were
@@ -439,15 +553,18 @@ const ORDERS: [(u32, &[u32]); 20] = [
     (9, &[10]),
     (10, &[11]),
     (11, &[16, 17]),
-    (12, &[18]),
-    (13, &[19]),
-    (14, &[20, 21]),
-    (15, &[22]),
-    (16, &[23]),
-    (17, &[24, 25]),
-    (18, &[26, 27]),
-    (19, &[28]),
-    (20, &[29, 30]),
+    // The mission, then the target list (carrier, battleship, cruiser,
+    // transport).
+    (12, &[18, 19]),
+    (13, &[20]),
+    (14, &[21, 22]),
+    (15, &[23, 24]),
+    (16, &[25]),
+    (17, &[26, 27]),
+    (18, &[28, 29]),
+    // The base strike on base 1, then extended reach.
+    (19, &[30, 31]),
+    (20, &[32, 33]),
 ];
 
 /// The second table: the aircraft. ID, name part, radius in nm, weapon,
@@ -524,7 +641,7 @@ fn force_hex(force: u32) -> Hex {
     match force {
         1 | 2 => Hex::new(7, -5),
         3 => Hex::new(8, -11),
-        4 => Hex::new(7, -10),
+        4 => Hex::new(7, -9),
         _ => panic!("no such force"),
     }
 }
@@ -540,6 +657,21 @@ fn place_hex(place: Place) -> Hex {
 
 fn spec_of(group: u32) -> &'static Spec {
     &GROUPS[usize::try_from(group).expect("small") - 1]
+}
+
+/// The target list of a strike group that has one (decision 0063): Shokaku's
+/// and Zuikaku's dive bomber groups hold their strike for the heavy ships.
+/// Every other group has the default list.
+fn target_list(group: u32) -> Option<&'static [ShipKind]> {
+    match group {
+        12 | 15 => Some(&[
+            ShipKind::Carrier,
+            ShipKind::Battleship,
+            ShipKind::Cruiser,
+            ShipKind::Transport,
+        ]),
+        _ => None,
+    }
 }
 
 fn orders_of(group: u32) -> Vec<Cause> {
@@ -911,12 +1043,16 @@ impl<'a> Cursor<'a> {
 #[derive(Clone, Debug)]
 struct Launch {
     group: u32,
-    contact: u32,
+    /// The contact a naval strike was launched at; none for a base strike.
+    contact: Option<u32>,
     hex: Hex,
     aircraft: u32,
     distance_nm: i64,
     event: EventId,
-    report: EventId,
+    /// The report a naval strike cites; none for a base strike.
+    report: Option<EventId>,
+    /// The base a base strike was launched at.
+    base: Option<u32>,
 }
 
 /// One raid, as the rule works it.
@@ -932,6 +1068,8 @@ struct RaidWork {
     found: bool,
     target_force: Option<u32>,
     target_ship: Option<u32>,
+    /// The base a raid on a base is aimed at.
+    target_base: Option<u32>,
     /// The raid's share of the patrol over its hex (decision 0033, 7): what
     /// it meets.
     patrol: u32,
@@ -947,6 +1085,27 @@ struct RaidWork {
     guns: Option<(u32, u32)>,
     bombers: u32,
     bombers_attacking: u32,
+}
+
+/// One strike group's bombs on a base, as the rule works them.
+#[derive(Clone, Debug)]
+struct BaseAttackWork {
+    group: u32,
+    shots: u32,
+    hits: u32,
+    on_aircraft: u32,
+    on_supply: u32,
+    /// The aircraft destroyed on the ground by those hits, by group.
+    destroyed: Vec<(u32, u32)>,
+}
+
+/// One sortie that went beyond its type's radius and rolled for fuel.
+#[derive(Clone, Debug)]
+struct FuelRoll {
+    group: u32,
+    came_back: u32,
+    chance: Fixed,
+    ditched: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -966,9 +1125,14 @@ struct Worked {
     attempts: Vec<(u32, u32, bool)>,
     /// The hex each side's last report of the afternoon's search named.
     last_report: [Option<Hex>; 2],
+    /// The contacts each side held when its groups decided (contact, hex,
+    /// kind the report named).
+    held: [Vec<(u32, Hex, ShipKind)>; 2],
     launches: Vec<Launch>,
     raids: Vec<RaidWork>,
     attacks: Vec<AttackWork>,
+    base_attacks: Vec<BaseAttackWork>,
+    fuel_rolls: Vec<FuelRoll>,
     /// Aircraft lost in the air, by group.
     lost: BTreeMap<u32, u32>,
     /// Ships sunk.
@@ -1102,6 +1266,14 @@ enum Outcome {
         tracks: [u32; 2],
         report: (Hex, u32, ShipKind),
     },
+    /// Bombs on a base: the bombs that hit, and where they landed.
+    BaseAttack {
+        left: u32,
+        base: u32,
+        hits: u32,
+        on_aircraft: u32,
+        on_supply: u32,
+    },
     /// No bomber left: it records nothing.
     Spent,
 }
@@ -1153,9 +1325,12 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         seed,
         attempts: Vec::new(),
         last_report: [None, None],
+        held: [Vec::new(), Vec::new()],
         launches: Vec::new(),
         raids: Vec::new(),
         attacks: Vec::new(),
+        base_attacks: Vec::new(),
+        fuel_rolls: Vec::new(),
         lost: BTreeMap::new(),
         sunk: Vec::new(),
     };
@@ -1179,7 +1354,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             (290, 90),
             200,
             16,
-            &[(4, 200, 572_957)],
+            &[(4, 160, 716_197)],
         ),
         (
             17,
@@ -1193,11 +1368,11 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         (
             20,
             34,
-            Hex::new(7, -10),
+            Hex::new(7, -9),
             (110, 200),
             253,
             5,
-            &[(1, 200, 318_309), (2, 200, 318_309)],
+            &[(1, 160, 397_887), (2, 160, 397_887)],
         ),
     ];
     let force_counts = [0u32, 10, 8, 14, 4];
@@ -1299,27 +1474,93 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         }
     }
 
-    // ---- The decisions: each strike group on its own side's belief. ----
+    // ---- The decisions: each strike group on its own side's belief, and each
+    // base strike group on the reach of its own order. ----
+    for (slot, belief) in beliefs.iter().enumerate() {
+        work.held[slot] = belief
+            .contacts
+            .iter()
+            .map(|(id, held)| (*id, held.hex, held.kind))
+            .collect();
+    }
     for spec in &GROUPS {
         let ty = &cx.types[&spec.ty];
-        if spec.mission != STRIKE || ty.attack_weapon == AttackWeapon::None || spec.ready == 0 {
+        if ty.attack_weapon == AttackWeapon::None || spec.ready == 0 {
             continue;
         }
         let origin = place_hex(spec.place);
+        if let AirMission::BaseStrike(base) = spec.mission {
+            // A base strike launches in the first daylight pulse of the day
+            // in which its base is within its reach (decision 7 of 0063). The
+            // group is on extended reach: the radius times 1.25, cut to a
+            // whole mile (decision 2 of 0059). Henderson Field is 312 nm from
+            // Ryujo at 06:00, so the morning launches nothing (asserted in
+            // its own test), and 200 nm from her at noon.
+            let reach = cx.air.reach_nm(ty.strike_range_nm, Reach::Extended);
+            assert_eq!(reach, Fixed::from_int(218), "175 x 1.25 = 218.75");
+            let distance = air(origin, HENDERSON);
+            assert_eq!(distance, 200);
+            assert!(Fixed::from_int(distance) <= reach);
+            let event = cur.next("a base strike launched");
+            assert_eq!(
+                event.kind,
+                EventKind::BaseStrikeLaunched {
+                    air_group: AirGroupId::new(spec.id),
+                    base,
+                    hex: HENDERSON,
+                    aircraft: spec.ready,
+                    distance_nm: Fixed::from_int(distance),
+                },
+                "seed {seed}"
+            );
+            assert_eq!(
+                event.kind.to_string(),
+                format!(
+                    "air_group:{} launched {} aircraft at base:{} at {HENDERSON}, {distance} nm",
+                    spec.id,
+                    spec.ready,
+                    base.raw()
+                )
+            );
+            // Its causes are its orders: the mission, then the reach.
+            assert_eq!(event.causes, orders_of(spec.id), "seed {seed}");
+            work.launches.push(Launch {
+                group: spec.id,
+                contact: None,
+                hex: HENDERSON,
+                aircraft: spec.ready,
+                distance_nm: distance,
+                event: event.id,
+                report: None,
+                base: Some(base.raw()),
+            });
+            continue;
+        }
+        if spec.mission != STRIKE {
+            continue;
+        }
+        // The target list of groups 12 and 15 (carrier, battleship, cruiser,
+        // transport):
+        // a contact of a kind not on it is never launched at. The default is
+        // every kind in the order of importance.
+        let list = target_list(spec.id);
+        let rank = |kind: ShipKind| -> Option<usize> {
+            match list {
+                Some(list) => list.iter().position(|k| *k == kind),
+                None => ShipKind::ALL.iter().position(|k| *k == kind),
+            }
+        };
         let chosen = beliefs[side_index(spec.side)]
             .contacts
             .iter()
             .filter_map(|(id, held)| {
                 let distance = air(origin, held.hex);
-                (Fixed::from_int(distance) <= ty.strike_range_nm).then_some((
-                    held.kind,
-                    distance,
-                    *id,
-                    held.hex,
-                    held.report,
-                ))
+                (Fixed::from_int(distance) <= ty.strike_range_nm)
+                    .then(|| rank(held.kind))
+                    .flatten()
+                    .map(|rank| (rank, distance, *id, held.hex, held.report))
             })
-            .min_by_key(|(kind, distance, id, _, _)| (*kind, *distance, *id));
+            .min_by_key(|(rank, distance, id, _, _)| (*rank, *distance, *id));
         let Some((_, distance, contact, hex, report)) = chosen else {
             continue;
         };
@@ -1342,17 +1583,24 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 spec.id, spec.ready
             )
         );
-        let mut causes = vec![orders_of(spec.id)[0]];
+        // Its causes: the mission order, the target order if the list is not
+        // the default, and the report (decision 0063).
+        let mut causes = if list.is_some() {
+            orders_of(spec.id)
+        } else {
+            vec![orders_of(spec.id)[0]]
+        };
         causes.push(Cause::Event(report));
         assert_eq!(event.causes, causes, "seed {seed}");
         work.launches.push(Launch {
             group: spec.id,
-            contact,
+            contact: Some(contact),
             hex,
             aircraft: spec.ready,
             distance_nm: distance,
             event: event.id,
-            report,
+            report: Some(report),
+            base: None,
         });
     }
 
@@ -1361,21 +1609,23 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         place: Place,
         hex: Hex,
         side: Side,
+        /// The base a raid on a base is aimed at.
+        base: Option<u32>,
         strikes: Vec<usize>,
         escorts: Vec<usize>,
     }
     let mut raids: Vec<Raid> = Vec::new();
     for (index, launch) in work.launches.iter().enumerate() {
         let spec = spec_of(launch.group);
-        match raids
-            .iter_mut()
-            .find(|raid| raid.place == spec.place && raid.hex == launch.hex)
-        {
+        match raids.iter_mut().find(|raid| {
+            raid.place == spec.place && raid.hex == launch.hex && raid.base == launch.base
+        }) {
             Some(raid) => raid.strikes.push(index),
             None => raids.push(Raid {
                 place: spec.place,
                 hex: launch.hex,
                 side: spec.side,
+                base: launch.base,
                 strikes: vec![index],
                 escorts: Vec::new(),
             }),
@@ -1395,7 +1645,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         .iter()
         .filter(|s| s.mission == PATROL && s.ready > 0)
         .map(|s| {
-            let patrol = (int(s.ready) * tenths(s.share)).trunc();
+            let patrol = (int(s.ready) * hundredths(s.share)).trunc();
             let patrol = u32::try_from(patrol).expect("small");
             Fighter {
                 group: s.id,
@@ -1452,6 +1702,15 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             })
             .min()
     };
+    // The side a raid attacks and what it is aimed at: a raid on a base
+    // attacks the base's side (Henderson Field is Allied), and a raid on ships
+    // the force `find_target` gives.
+    let aim_of = |raid: &Raid| -> Option<(Side, Option<(u32, u32)>)> {
+        if raid.base.is_some() {
+            return Some((Side::Allied, None));
+        }
+        find_target(raid).map(|(_, force, ship)| (side_of_force(force), Some((force, ship))))
+    };
     // Each raid's share of the patrol over its hex, from the counts at the
     // start of the step, before any raid is worked (decision 0033, 7): the
     // patrol times the raid's aircraft over the aircraft of all the raids
@@ -1472,8 +1731,8 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         };
         let mut hexes: Vec<(Side, Hex)> = Vec::new();
         for raid in &raids {
-            if let Some((_, force, _)) = find_target(raid) {
-                let key = (side_of_force(force), raid.hex);
+            if let Some((defending, _)) = aim_of(raid) {
+                let key = (defending, raid.hex);
                 if !hexes.contains(&key) {
                     hexes.push(key);
                 }
@@ -1482,8 +1741,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         for (defending, hex) in hexes {
             let members: Vec<usize> = (0..raids.len())
                 .filter(|&i| {
-                    find_target(&raids[i])
-                        .is_some_and(|(_, force, _)| side_of_force(force) == defending)
+                    aim_of(&raids[i]).is_some_and(|(side, _)| side == defending)
                         && raids[i].hex == hex
                 })
                 .collect();
@@ -1551,6 +1809,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             found: false,
             target_force: None,
             target_ship: None,
+            target_base: raid.base,
             patrol: 0,
             patrol_over_hex: 0,
             all_raids_aircraft: 0,
@@ -1588,8 +1847,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             assert_eq!(event.causes, causes, "seed {seed}");
             escort_events.push(event.id);
         }
-        let target = find_target(raid);
-        let Some((_, force, ship)) = target else {
+        let Some((defending, ships)) = aim_of(raid) else {
             for &(group, _) in &raid_work.strikes {
                 outcomes.insert(group, Outcome::Nothing);
             }
@@ -1597,9 +1855,16 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             continue;
         };
         raid_work.found = true;
-        raid_work.target_force = Some(force);
-        raid_work.target_ship = Some(ship);
-        let defending = side_of_force(force);
+        raid_work.target_force = ships.map(|(force, _)| force);
+        raid_work.target_ship = ships.map(|(_, ship)| ship);
+        // What the streams of the raid are keyed on: the task force attacked,
+        // or the base.
+        let target_ref = match (raid.base, ships) {
+            (Some(base), _) => EntityRef::Base(BaseId::new(base)),
+            (None, Some((force, _))) => EntityRef::TaskForce(TaskForceId::new(force)),
+            (None, None) => unreachable!("a raid is aimed at something"),
+        };
+        let (force, ship) = ships.unwrap_or((0, 0));
 
         // The pools the hits are taken from, each in group order.
         let mut bombers: Vec<(u32, u32)> = raid_work.strikes.clone();
@@ -1692,7 +1957,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 pulse,
                 Subsystem::AirCombat,
                 EntityRef::AirGroup(AirGroupId::new(first_escort)),
-                EntityRef::TaskForce(TaskForceId::new(force)),
+                target_ref,
             );
             let (chance, factors) = shot_chance(cx, cx.air.fighter_hit_chance, first_patrol);
             let hits = hits_from(&mut stream, escort_count, chance);
@@ -1766,13 +2031,22 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 ));
             }
         }
-        // The guns of every ship afloat in the force, at the bombers left.
-        let gun_shots: u32 = ships_of_force(force)
-            .filter(|ship| afloat.contains(ship))
-            .map(|ship| cx.ships[&ship].aa)
-            .sum();
+        // The guns of every ship afloat in the force, at the bombers left. The
+        // base's guns are none in this scenario (asserted with the forces).
+        let gun_shots: u32 = if ships.is_some() {
+            ships_of_force(force)
+                .filter(|ship| afloat.contains(ship))
+                .map(|ship| cx.ships[&ship].aa)
+                .sum()
+        } else {
+            0
+        };
         let bombers_left: u32 = bombers.iter().map(|(_, n)| n).sum();
-        let lowest = ships_of_force(force).find(|ship| afloat.contains(ship));
+        let lowest = if ships.is_some() {
+            ships_of_force(force).find(|ship| afloat.contains(ship))
+        } else {
+            None
+        };
         if let (true, true, Some(lowest)) = (gun_shots > 0, bombers_left > 0, lowest) {
             let mut stream = stream_of(
                 seed,
@@ -1842,10 +2116,53 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             }
         }
         // What each strike group has left to attack with.
+        raid_work.bombers_attacking = bombers.iter().map(|(_, n)| n).sum();
+        if let Some(base) = raid.base {
+            // A raid on a base: one draw for each bomb at the bomb hit chance
+            // whatever the type's weapon, then one for each hit, below the
+            // chance of landing on aircraft, then below that and the chance of
+            // landing on supply, else on nothing (decisions 6 and 7 of 0034).
+            for &(group, left) in &bombers {
+                if left == 0 {
+                    outcomes.insert(group, Outcome::Spent);
+                    continue;
+                }
+                let mut stream = stream_of(
+                    seed,
+                    pulse,
+                    Subsystem::AirCombat,
+                    EntityRef::AirGroup(AirGroupId::new(group)),
+                    target_ref,
+                );
+                let hits = hits_from(&mut stream, left, cx.air.bomb_hit_chance);
+                let on_aircraft_below = raw_u64(cx.air.base_hit_aircraft);
+                let on_supply_below = on_aircraft_below + raw_u64(cx.air.base_hit_supply);
+                let (mut on_aircraft, mut on_supply) = (0, 0);
+                for _ in 0..hits {
+                    let draw = stream.below(scale());
+                    if draw < on_aircraft_below {
+                        on_aircraft += 1;
+                    } else if draw < on_supply_below {
+                        on_supply += 1;
+                    }
+                }
+                outcomes.insert(
+                    group,
+                    Outcome::BaseAttack {
+                        left,
+                        base,
+                        hits,
+                        on_aircraft,
+                        on_supply,
+                    },
+                );
+            }
+            work.raids.push(raid_work);
+            continue;
+        }
         let ship_count =
             u32::try_from(ships_of_force(force).filter(|s| afloat.contains(s)).count())
                 .expect("few ships");
-        raid_work.bombers_attacking = bombers.iter().map(|(_, n)| n).sum();
         for (&(group, left), launch_index) in bombers.iter().zip(&raid.strikes) {
             if left == 0 {
                 outcomes.insert(group, Outcome::Spent);
@@ -1863,7 +2180,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 pulse,
                 Subsystem::AirCombat,
                 EntityRef::AirGroup(AirGroupId::new(group)),
-                EntityRef::TaskForce(TaskForceId::new(force)),
+                target_ref,
             );
             let hits = hits_from(&mut stream, left, weapon_chance);
             let mut tracks = [0u32; 2];
@@ -1936,8 +2253,15 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 ..
             } => {
                 let ty = &cx.types[&spec_of(launch.group).ty];
-                assert_eq!(ty.attack_weapon, AttackWeapon::Bomb, "seed {seed}");
-                let chance = cx.air.bomb_hit_chance;
+                // A dive bomber's bombs and a torpedo plane's torpedoes, each
+                // at its own hit chance.
+                let (weapon, verb, chance) = match ty.attack_weapon {
+                    AttackWeapon::Bomb => (Weapon::Bomb, "bombs", cx.air.bomb_hit_chance),
+                    AttackWeapon::Torpedo => {
+                        (Weapon::Torpedo, "torpedoes", cx.air.torpedo_hit_chance)
+                    }
+                    AttackWeapon::None => unreachable!(),
+                };
                 let expected = int(*left) * chance;
                 let event = cur.next("an attack");
                 assert_eq!(
@@ -1946,7 +2270,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                         air_group: AirGroupId::new(launch.group),
                         task_force: TaskForceId::new(*force),
                         ship: ShipId::new(*ship),
-                        weapon: Weapon::Bomb,
+                        weapon,
                         shots: int(*left),
                         chance,
                         expected,
@@ -1957,7 +2281,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 assert_eq!(
                     event.kind.to_string(),
                     format!(
-                        "air_group:{} bombs at ship:{ship}: {}",
+                        "air_group:{} {verb} at ship:{ship}: {}",
                         launch.group,
                         shots_text(*left, chance, expected, *hits)
                     )
@@ -1978,6 +2302,64 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                         .map(|f| (f.name, f.value))
                         .collect::<Vec<_>>(),
                     vec![("aircraft", int(*left)), ("hit_chance", chance)]
+                );
+                finding.insert(launch.group, event.id);
+            }
+            Outcome::BaseAttack {
+                left,
+                base,
+                hits,
+                on_aircraft,
+                on_supply,
+            } => {
+                let chance = cx.air.bomb_hit_chance;
+                let expected = int(*left) * chance;
+                let event = cur.next("an attack on a base");
+                assert_eq!(
+                    event.kind,
+                    EventKind::BaseAttacked {
+                        air_group: AirGroupId::new(launch.group),
+                        base: BaseId::new(*base),
+                        shots: int(*left),
+                        chance,
+                        expected,
+                        hits: *hits,
+                        hits_on_aircraft: *on_aircraft,
+                        hits_on_supply: *on_supply,
+                    },
+                    "seed {seed}"
+                );
+                assert_eq!(
+                    event.kind.to_string(),
+                    format!(
+                        "air_group:{} bombs at base:{base}: {}: {on_aircraft} on aircraft, \
+                         {on_supply} on supply, {} on nothing",
+                        launch.group,
+                        shots_text(*left, chance, expected, *hits),
+                        hits - on_aircraft - on_supply
+                    )
+                );
+                let mut causes = vec![Cause::Event(launch.event)];
+                causes.extend(event_ids(
+                    loss_ids
+                        .get(&launch.group)
+                        .map_or(&[][..], |v| v.as_slice()),
+                ));
+                assert_eq!(event.causes, causes, "seed {seed}");
+                let breakdown = event.breakdown.as_ref().expect("a breakdown");
+                assert_eq!(breakdown.result, expected);
+                assert_eq!(
+                    breakdown
+                        .factors
+                        .iter()
+                        .map(|f| (f.name, f.value))
+                        .collect::<Vec<_>>(),
+                    vec![
+                        ("aircraft", int(*left)),
+                        ("hit_chance", chance),
+                        ("hit_on_aircraft_chance", cx.air.base_hit_aircraft),
+                        ("hit_on_supply_chance", cx.air.base_hit_supply),
+                    ]
                 );
                 finding.insert(launch.group, event.id);
             }
@@ -2011,19 +2393,96 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         let own = side_index(side);
         match &outcomes[&launch.group] {
             Outcome::Spent => {}
+            Outcome::BaseAttack {
+                left,
+                base,
+                hits,
+                on_aircraft,
+                on_supply,
+            } => {
+                // The hits on aircraft destroy aircraft on the ground, the
+                // lowest group first, no more than were there at the start
+                // of the step: for each group at the base, the ready aircraft
+                // that are not flying in the pulse (decision 8 of 0034). A
+                // group's patrol and its launched strike are flying; the
+                // others rest. Supply is destroyed up to what the base has,
+                // and Henderson Field has none here (decision 9 of 0034).
+                let attack_id = finding[&launch.group];
+                let mut ground: Vec<(u32, u32)> = Vec::new();
+                for spec in GROUPS.iter().filter(|s| s.place == Place::Base(*base)) {
+                    let flying = match spec.mission {
+                        AirMission::CombatAirPatrol => {
+                            fighters.iter().find(|f| f.group == spec.id).map_or(0, |f| {
+                                f.patrol
+                                    + if raids.iter().any(|raid| {
+                                        raid.escorts.iter().any(|&i| fighters[i].group == spec.id)
+                                    }) {
+                                        f.escorts
+                                    } else {
+                                        0
+                                    }
+                            })
+                        }
+                        AirMission::NavalStrike => work
+                            .launches
+                            .iter()
+                            .find(|l| l.group == spec.id)
+                            .map_or(0, |l| l.aircraft),
+                        _ => 0,
+                    };
+                    let resting = spec.ready.saturating_sub(flying);
+                    if resting > 0 {
+                        ground.push((spec.id, resting));
+                    }
+                }
+                let mut destroyed_by_group: Vec<(u32, u32)> = Vec::new();
+                let mut hits_left = *on_aircraft;
+                for (group, on_the_ground) in ground {
+                    let destroyed = hits_left.min(on_the_ground);
+                    if destroyed == 0 {
+                        continue;
+                    }
+                    hits_left -= destroyed;
+                    let remaining = now[&group] - destroyed;
+                    now.insert(group, remaining);
+                    let event = cur.next("aircraft destroyed on the ground");
+                    assert_eq!(
+                        event.kind,
+                        EventKind::AircraftDestroyedOnGround {
+                            air_group: AirGroupId::new(group),
+                            base: BaseId::new(*base),
+                            aircraft: destroyed,
+                            remaining,
+                        },
+                        "seed {seed}"
+                    );
+                    assert_eq!(event.causes, vec![Cause::Event(attack_id)], "seed {seed}");
+                    destroyed_by_group.push((group, destroyed));
+                }
+                assert!(on_supply + on_aircraft <= *hits, "seed {seed}");
+                work.base_attacks.push(BaseAttackWork {
+                    group: launch.group,
+                    shots: *left,
+                    hits: *hits,
+                    on_aircraft: *on_aircraft,
+                    on_supply: *on_supply,
+                    destroyed: destroyed_by_group,
+                });
+            }
             Outcome::Nothing => {
+                let contact = launch.contact.expect("a naval strike has a contact");
                 let names = beliefs[own]
                     .contacts
-                    .get(&launch.contact)
+                    .get(&contact)
                     .is_some_and(|held| held.hex == launch.hex);
                 if names {
-                    beliefs[own].contacts.remove(&launch.contact);
+                    beliefs[own].contacts.remove(&contact);
                     let event = cur.next("a contact dropped");
                     assert_eq!(
                         event.kind,
                         EventKind::ContactNotThere {
                             side,
-                            contact: ContactId::new(launch.contact),
+                            contact: ContactId::new(contact),
                             hex: launch.hex,
                         },
                         "seed {seed}"
@@ -2197,6 +2656,116 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 });
             }
         }
+    }
+
+    // ---- Fuel (decisions 3 to 5 of 0059): each strike or escort sortie whose
+    // one-way distance d was beyond its type's radius R rolls each aircraft
+    // that came back, on its own, at the ditch figure times (d - R) over R. A
+    // sortie within the radius rolls nothing: every escort here flies within
+    // its radius, and so does every strike but group 19's, which flies 200 nm
+    // on a radius of 175. The roll is from a stream of the group alone, after
+    // the air combat step and before the aircraft whose deck is lost come
+    // home. No pilots are counted in this scenario. ----
+    for raid in &raids {
+        for &index in &raid.escorts {
+            let distance = air(fighters[index].hex, raid.hex);
+            assert!(
+                Fixed::from_int(distance) <= fighters[index].radius,
+                "seed {seed}: no escort of this scenario flies beyond its radius"
+            );
+        }
+    }
+    for launch in &work.launches {
+        let spec = spec_of(launch.group);
+        let radius = cx.types[&spec.ty].strike_range_nm;
+        let distance = Fixed::from_int(launch.distance_nm);
+        if distance <= radius {
+            continue;
+        }
+        assert_eq!(launch.group, 19, "seed {seed}: only group 19 flies beyond");
+        let came_back = launch.aircraft - work.lost.get(&launch.group).copied().unwrap_or(0);
+        if came_back == 0 {
+            continue;
+        }
+        // 200 nm on a radius of 175: 25 beyond, a share of 25 / 175 =
+        // 0.142857, and the ditch figure 2 times it, 0.285714.
+        let share = Fixed::from_int(25).mul_div(Fixed::ONE, Fixed::from_int(175));
+        assert_eq!(share, millionths(142_857));
+        assert_eq!(cx.air.ditch_chance_per_radius_beyond, Fixed::from_int(2));
+        let chance = cx.air.ditch_chance_per_radius_beyond * share;
+        assert_eq!(chance, millionths(285_714));
+        let mut stream = RngKey {
+            seed,
+            day: 1,
+            pulse: Some(pulse),
+            subsystem: Subsystem::Upkeep,
+            entity: EntityRef::AirGroup(AirGroupId::new(launch.group)),
+            other: None,
+            draw: Draw::Ditch,
+        }
+        .stream();
+        let ditched = hits_from(&mut stream, came_back, chance);
+        let expected = int(came_back) * chance;
+        let ready = now[&launch.group] - ditched;
+        let event = cur.next("aircraft ditched for fuel");
+        assert_eq!(
+            event.kind,
+            EventKind::AircraftDitched {
+                air_group: AirGroupId::new(launch.group),
+                sortie: SortieKind::BaseStrike,
+                distance_nm: distance,
+                radius_nm: radius,
+                aircraft: came_back,
+                chance,
+                expected,
+                ditched,
+                crews_recovered: None,
+                pilots_lost: 0,
+                ready,
+            },
+            "seed {seed}"
+        );
+        assert_eq!(
+            event.causes,
+            vec![Cause::Event(launch.event)],
+            "seed {seed}"
+        );
+        let breakdown = event.breakdown.as_ref().expect("a breakdown");
+        assert_eq!(breakdown.result, expected);
+        assert_eq!(
+            breakdown
+                .factors
+                .iter()
+                .map(|f| (f.name, f.value))
+                .collect::<Vec<_>>(),
+            vec![
+                ("aircraft", int(came_back)),
+                ("distance_nm", distance),
+                ("radius_nm", radius),
+                ("share_beyond_radius", share),
+                (
+                    "ditch_chance_per_radius_beyond",
+                    cx.air.ditch_chance_per_radius_beyond
+                ),
+                ("chance", chance),
+                (
+                    "crew_recovered_short_of_home",
+                    cx.air.crew_recovered_short_of_home
+                ),
+            ]
+        );
+        // A ditched aircraft is gone from the group and is no longer in the
+        // air when the deck is lost.
+        now.insert(launch.group, ready);
+        if let Some(aircraft) = in_air.get_mut(&launch.group) {
+            *aircraft -= ditched;
+        }
+        work.fuel_rolls.push(FuelRoll {
+            group: launch.group,
+            came_back,
+            chance,
+            ditched,
+        });
     }
 
     // ---- The aircraft whose deck is lost come home (decisions 7 to 10 of
@@ -2424,12 +2993,12 @@ fn the_forces_and_air_groups_are_as_the_first_two_tables_say() {
         );
     }
     // Both American forces start in (7,-5), the Japanese in (9,-19) and
-    // (7,-19); Henderson Field is base 1, in (2,-4).
+    // (7,-18); Henderson Field is base 1, in (2,-4).
     for (id, hex) in [
         (1, Hex::new(7, -5)),
         (2, Hex::new(7, -5)),
         (3, Hex::new(9, -19)),
-        (4, Hex::new(7, -19)),
+        (4, Hex::new(7, -18)),
     ] {
         assert_eq!(truth.task_forces[&TaskForceId::new(id)].position(), hex);
     }
@@ -2438,6 +3007,8 @@ fn the_forces_and_air_groups_are_as_the_first_two_tables_say() {
         Hex::new(2, -4)
     );
     assert_eq!(truth.bases.len(), 1);
+    // Henderson Field has no guns here, so a raid on it meets no gun fire.
+    assert_eq!(truth.bases[&BaseId::new(1)].anti_aircraft, 0);
     // Twenty air groups: counts, types, places.
     assert_eq!(truth.air_groups.len(), 20);
     for spec in &GROUPS {
@@ -2483,8 +3054,34 @@ fn the_forces_and_air_groups_are_as_the_first_two_tables_say() {
         let air = &truth.air_groups[&AirGroupId::new(spec.id)];
         assert_eq!(air.mission, spec.mission, "group {}", spec.id);
         if spec.mission == PATROL {
-            assert_eq!(air.patrol_share, tenths(spec.share), "group {}", spec.id);
+            assert_eq!(
+                air.patrol_share,
+                hundredths(spec.share),
+                "group {}",
+                spec.id
+            );
         }
+        // The target list (decision 0063): groups 12 and 15 hold their strike
+        // for carrier, battleship, cruiser and transport; every other group has the
+        // default, all six kinds in the order of importance. And the reach
+        // (decision 0059): Ryujo's attack unit is on extended reach, the
+        // others on normal.
+        assert_eq!(
+            air.target_priority,
+            target_list(spec.id).map_or_else(|| ShipKind::ALL.to_vec(), <[ShipKind]>::to_vec),
+            "group {}",
+            spec.id
+        );
+        assert_eq!(
+            air.reach,
+            if spec.id == 19 {
+                Reach::Extended
+            } else {
+                Reach::Normal
+            },
+            "group {}",
+            spec.id
+        );
         let arc = air.search.map(|a| (a.from_deg, a.to_deg, a.range_nm));
         match spec.id {
             3 => assert_eq!(arc, Some((290, 90, Fixed::from_int(200)))),
@@ -2492,7 +3089,7 @@ fn the_forces_and_air_groups_are_as_the_first_two_tables_say() {
             _ => assert_eq!(arc, None, "group {}", spec.id),
         }
     }
-    // Patrol shares: the Japanese carriers keep 0.8, Ryujo 0.3, the American
+    // Patrol shares: the Japanese carriers keep 0.8, Ryujo 0.35, the American
     // fighters everything.
     for id in [1, 5, 9] {
         assert_eq!(
@@ -2594,9 +3191,9 @@ fn the_aircraft_table_is_read_from_the_reference_data() {
         millionths(5_260_942)
     );
     // How many keep station and how many escort: 26 x 0.8 = 20.8, 25 x 0.8,
-    // 23 x 0.3 = 6.9, all rounded down.
-    for (ready, share, keep) in [(26, 8, 20), (25, 8, 20), (23, 3, 6)] {
-        assert_eq!((int(ready) * tenths(share)).trunc(), keep);
+    // 23 x 0.35 = 8.05, all rounded down.
+    for (ready, share, keep) in [(26, 80, 20), (25, 80, 20), (23, 35, 8)] {
+        assert_eq!((int(ready) * hundredths(share)).trunc(), keep);
     }
 }
 
@@ -2629,9 +3226,9 @@ fn steamed(events: &[&Event], force: u32) -> Option<(Hex, Hex, Fixed, Fixed)> {
 #[test]
 fn positions_distances_and_arrivals_are_as_the_tables_say() {
     let start3 = Hex::new(9, -19);
-    let start4 = Hex::new(7, -19);
+    let start4 = Hex::new(7, -18);
     let dest3 = Hex::new(8, -11);
-    let dest4 = Hex::new(7, -10);
+    let dest4 = Hex::new(7, -9);
     // Eight hexes, charged the straight line, 302 nm (22 and seven 40s);
     // nine hexes down an axis, 360 nm (decision 0058).
     assert_eq!(start3.distance(dest3), 8);
@@ -2646,30 +3243,31 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
     assert_eq!(air(start4, dest4), 360);
     assert_eq!(nm(start4.distance(dest4)), 360);
     let american = Hex::new(7, -5);
-    // 06:00: (8,-13) and (7,-13).
-    let (a3, a4) = (Hex::new(8, -13), Hex::new(7, -13));
-    // Air distance (hex count times 40 in brackets): 302 (320), 320 (320),
-    // 312 (360).
+    // 06:00: (8,-13) and (7,-12).
+    let (a3, a4) = (Hex::new(8, -13), Hex::new(7, -12));
+    // Air distance (hex count times 40 in brackets): 302 (320), 280 (280),
+    // 280 (320): Henderson Field is dq 5, dr -8, 25 + 64 - 40 = 49, 40 x 7.
     assert_eq!(air(american, a3), 302);
     assert_eq!(nm(american.distance(a3)), 320);
     assert_eq!(american.distance(a3), 8);
-    assert_eq!(air(american, a4), 320);
-    assert_eq!(nm(american.distance(a4)), 320);
-    assert_eq!(american.distance(a4), 8);
-    assert_eq!(air(HENDERSON, a4), 312);
-    assert_eq!(nm(HENDERSON.distance(a4)), 360);
-    assert_eq!(HENDERSON.distance(a4), 9);
-    // 12:00: (8,-11) and (7,-10).
-    // Air distance: 223 (240), 200 (200), 223 (240).
+    assert_eq!(air(american, a4), 280);
+    assert_eq!(nm(american.distance(a4)), 280);
+    assert_eq!(american.distance(a4), 7);
+    assert_eq!(air(HENDERSON, a4), 280);
+    assert_eq!(nm(HENDERSON.distance(a4)), 320);
+    assert_eq!(HENDERSON.distance(a4), 8);
+    // 12:00: (8,-11) and (7,-9).
+    // Air distance: 223 (240), 160 (160), 200 (200): Henderson Field is dq 5,
+    // dr -5, 25 + 25 - 25 = 25, 40 x 5.
     assert_eq!(air(american, dest3), 223);
     assert_eq!(nm(american.distance(dest3)), 240);
     assert_eq!(american.distance(dest3), 6);
-    assert_eq!(air(american, dest4), 200);
-    assert_eq!(nm(american.distance(dest4)), 200);
-    assert_eq!(american.distance(dest4), 5);
-    assert_eq!(air(HENDERSON, dest4), 223);
-    assert_eq!(nm(HENDERSON.distance(dest4)), 240);
-    assert_eq!(HENDERSON.distance(dest4), 6);
+    assert_eq!(air(american, dest4), 160);
+    assert_eq!(nm(american.distance(dest4)), 160);
+    assert_eq!(american.distance(dest4), 4);
+    assert_eq!(air(HENDERSON, dest4), 200);
+    assert_eq!(nm(HENDERSON.distance(dest4)), 200);
+    assert_eq!(HENDERSON.distance(dest4), 5);
 
     for run in batch() {
         let night = night(run);
@@ -2687,8 +3285,8 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
         assert_eq!(204 + 98, 302, "seed {seed}");
         assert_eq!(22 + 4 * 40, 182, "the centre of (8,-14)");
         assert_eq!(204 - 182, 22, "22 nm past it");
-        // The Ryujo detachment: 240 nm to (7,-13), at its centre; 120 nm to
-        // (7,-10), 360 nm; at 20 knots; nothing in the afternoon.
+        // The Ryujo detachment: 240 nm to (7,-12), at its centre; 120 nm to
+        // (7,-9), 360 nm; at 20 knots; nothing in the afternoon.
         let n4 = steamed(&night, 4).expect("steamed");
         let m4 = steamed(&morning, 4).expect("steamed");
         assert_eq!(n4, (start4, a4, Fixed::from_int(240), Fixed::from_int(20)));
@@ -2734,8 +3332,8 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
         );
         assert_eq!(time::pulse_start(1, Pulse::Afternoon), Fixed::from_int(18));
         // The searches fly from where the forces are: (7,-5) all day; the
-        // floatplanes from (8,-13) and (7,-13) at 06:00 and from (8,-11) and
-        // (7,-10) at 12:00.
+        // floatplanes from (8,-13) and (7,-12) at 06:00 and from (8,-11) and
+        // (7,-9) at 12:00.
         for (events, expected) in [
             (&morning, [(3, american), (17, a3), (20, a4)]),
             (&afternoon, [(3, american), (17, dest3), (20, dest4)]),
@@ -2885,20 +3483,31 @@ fn the_fuel_figures_are_exact() {
 fn the_morning_flies_every_search_and_finds_nothing_and_does_nothing() {
     let cx = ctx();
     // No force is within reach of any search: the searches are 200 nm and
-    // 253 nm and every enemy is 302 nm or more away.
+    // 253 nm and every enemy is 280 nm or more away.
     let american = Hex::new(7, -5);
-    let (a3, a4) = (Hex::new(8, -13), Hex::new(7, -13));
+    let (a3, a4) = (Hex::new(8, -13), Hex::new(7, -12));
     for (from, range, enemies) in [
         (american, 200, [a3, a4]),
         (a3, 253, [american, american]),
         (a4, 253, [american, american]),
     ] {
         for enemy in enemies {
-            assert!(air(from, enemy) >= 302);
+            assert!(air(from, enemy) >= 280);
             assert!(air(from, enemy) > range);
         }
     }
     assert_eq!(cx.types[&SBD3].search_range_nm, Fixed::from_int(200));
+    // Nor is Henderson Field within the reach of Ryujo's attack unit at
+    // 06:00: 280 nm, against its extended reach of 218 (175 x 1.25 = 218.75,
+    // cut to a whole mile), so its base strike does not launch in the
+    // morning (decision 7 of 0063).
+    assert_eq!(air(HENDERSON, a4), 280);
+    assert_eq!(
+        cx.air
+            .reach_nm(cx.types[&B5N2].strike_range_nm, Reach::Extended),
+        Fixed::from_int(218)
+    );
+    assert!(air(HENDERSON, a4) > 218);
     for run in batch() {
         let seed = run.seed;
         let events = morning(run);
@@ -2938,7 +3547,9 @@ fn the_morning_flies_every_search_and_finds_nothing_and_does_nothing() {
                     EventKind::SearchAttempt { .. }
                         | EventKind::ReportReceived { .. }
                         | EventKind::StrikeLaunched { .. }
+                        | EventKind::BaseStrikeLaunched { .. }
                         | EventKind::AirAttack { .. }
+                        | EventKind::BaseAttacked { .. }
                         | EventKind::AircraftLost { .. }
                         | EventKind::ContactAged { .. }
                 ),
@@ -2959,9 +3570,9 @@ fn the_morning_flies_every_search_and_finds_nothing_and_does_nothing() {
 #[test]
 fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands() {
     let american = Hex::new(7, -5);
-    let (striking, ryujo) = (Hex::new(8, -11), Hex::new(7, -10));
+    let (striking, ryujo) = (Hex::new(8, -11), Hex::new(7, -9));
     // Group 3, from (7,-5), arc 290 to 090, 160 degrees, to 200 nm: the
-    // Ryujo detachment at bearing 330 and 200 nm, and the striking force at
+    // Ryujo detachment at bearing 330 and 160 nm, and the striking force at
     // 223 nm, beyond 200: no attempt.
     assert_eq!(bearing::arc_degrees(290, 90), 160);
     assert!(bearing::in_arc(american, ryujo, 290, 90));
@@ -2971,7 +3582,7 @@ fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands
     assert!(bearing::in_arc(american, ryujo, 330, 340));
     assert!(!bearing::in_arc(american, ryujo, 340, 350));
     assert!(!bearing::in_arc(american, ryujo, 310, 320));
-    assert_eq!(air(american, ryujo), 200);
+    assert_eq!(air(american, ryujo), 160);
     assert_eq!(air(american, striking), 223);
     assert!(air(american, striking) > 200);
     // Group 17, from (8,-11), arc 110 to 200, 90 degrees, to 253 nm: about
@@ -2982,25 +3593,28 @@ fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands
     assert!(!bearing::in_arc(striking, american, 140, 150));
     assert!(bearing::in_arc(striking, american, 110, 200));
     assert_eq!(air(striking, american), 223);
-    // Group 20, from (7,-10): bearing 150 exactly, 200 nm.
+    // Group 20, from (7,-9): bearing 150 exactly, 160 nm.
     assert!(bearing::in_arc(ryujo, american, 150, 160));
     assert!(bearing::in_arc(ryujo, american, 140, 150));
     assert!(!bearing::in_arc(ryujo, american, 160, 170));
     assert!(!bearing::in_arc(ryujo, american, 130, 140));
     assert!(bearing::in_arc(ryujo, american, 110, 200));
-    assert_eq!(air(ryujo, american), 200);
-    // The chances, by the formula and as the table gives them.
-    assert_eq!(search_chance(16, 160, 200), millionths(572_957));
+    assert_eq!(air(ryujo, american), 160);
+    // The chances, by the formula and as the table gives them: 57.295779 x 16
+    // x 20 / (160 x 160) = 18334.64928 / 25600 = 0.716197 for group 3, and
+    // 57.295779 x 5 x 20 / (90 x 160) = 5729.5779 / 14400 = 0.397887 for
+    // group 20 (0.285479 for group 17, unchanged).
+    assert_eq!(search_chance(16, 160, 160), millionths(716_197));
     assert_eq!(search_chance(5, 90, 223), millionths(285_479));
-    assert_eq!(search_chance(5, 90, 200), millionths(318_309));
+    assert_eq!(search_chance(5, 90, 160), millionths(397_887));
     // The chance that none of the four attempts sights, and its complement.
-    // 0.714521 x 0.714521 x 0.681691 x 0.681691 = 0.237248 and 0.762752.
+    // 0.714521 x 0.714521 x 0.602113 x 0.602113 = 0.185091 and 0.814909.
     let none = (Fixed::ONE - millionths(285_479))
         * (Fixed::ONE - millionths(285_479))
-        * (Fixed::ONE - millionths(318_309))
-        * (Fixed::ONE - millionths(318_309));
-    assert_eq!(none, millionths(237_248));
-    assert_eq!(Fixed::ONE - none, millionths(762_752));
+        * (Fixed::ONE - millionths(397_887))
+        * (Fixed::ONE - millionths(397_887));
+    assert_eq!(none, millionths(185_090));
+    assert_eq!(Fixed::ONE - none, millionths(814_910));
 
     let mut allied = 0;
     let mut japanese = 0;
@@ -3020,13 +3634,13 @@ fn the_afternoon_search_attempts_are_the_table_and_the_counts_are_in_their_bands
     eprintln!("afternoon sightings over 1000 seeds: Allied {allied}, Japanese {japanese}");
     // The two counts, in the bands the table allows (and four standard
     // deviations of the exact chance).
-    assert!((511..=635).contains(&allied), "Allied sightings {allied}");
+    assert!((660..=773).contains(&allied), "Allied sightings {allied}");
     assert!(
-        (709..=816).contains(&japanese),
+        (766..=864).contains(&japanese),
         "Japanese sightings {japanese}"
     );
-    assert!(within_four_sigma(allied, 1000, 572_957));
-    assert!(within_four_sigma(japanese, 1000, 762_752));
+    assert!(within_four_sigma(allied, 1000, 716_197));
+    assert!(within_four_sigma(japanese, 1000, 814_910));
 }
 
 // ---------------------------------------------------------------------
@@ -3053,16 +3667,19 @@ fn found_nothing(run: &Run, group: u32) -> bool {
 fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_not_otherwise() {
     let cx = ctx();
     let american = Hex::new(7, -5);
-    let (striking, ryujo) = (Hex::new(8, -11), Hex::new(7, -10));
+    let (striking, ryujo) = (Hex::new(8, -11), Hex::new(7, -9));
     // What the radii and the hexes say, before any run: a hex is reached if
     // its distance in nm is within the radius.
     let reaches = |from: Hex, to: Hex, ty: u32| {
         Fixed::from_int(air(from, to)) <= cx.types[&ty].strike_range_nm
     };
+    // The true hex is 160 nm from the American carriers: within the SBD-3's
+    // 200 and the TBF-1's 190. It is 200 nm from Henderson Field: within the
+    // SBD-3's 200 exactly.
     assert!(reaches(american, ryujo, SBD3));
-    assert!(!reaches(american, ryujo, TBF1));
-    assert!(!reaches(HENDERSON, ryujo, SBD3));
-    assert_eq!(air(HENDERSON, ryujo), 223);
+    assert!(reaches(american, ryujo, TBF1));
+    assert!(reaches(HENDERSON, ryujo, SBD3));
+    assert_eq!(air(HENDERSON, ryujo), 200);
     assert!(reaches(striking, american, D3A1));
     assert!(!reaches(striking, american, B5N2));
     // A report of the American forces names (7,-5) or a navigable
@@ -3078,17 +3695,19 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
     for hex in &named {
         assert!(air(striking, *hex) >= 183, "{hex}");
     }
-    // The hexes next to the true hex (7,-10) and their distances from the
-    // SBD-3s' (7,-5) and from Henderson Field, and two hexes next to the
-    // true American hex from the D3A1s' (8,-11).
+    // The hexes next to the true hex (7,-9) and their distances from the
+    // American carriers' (7,-5) and from Henderson Field, by the formula 40 x
+    // root (dq x dq + dr x dr + dq x dr), to the nearest mile. A report
+    // names the true hex or one of these.
     let at = |q: i32, r: i32| Hex::new(q, r);
     for (hex, from_american, from_henderson) in [
         (at(7, -9), 160, 200),
+        (at(8, -9), 144, 223),
         (at(8, -10), 183, 240),
+        (at(7, -10), 200, 223),
         (at(6, -9), 183, 183),
-        (at(6, -10), 223, 212),
-        (at(8, -11), 223, 262),
-        (at(7, -11), 240, 250),
+        (at(6, -8), 144, 160),
+        (at(7, -8), 120, 183),
     ] {
         assert_eq!(air(american, hex), from_american, "{hex}");
         assert_eq!(air(HENDERSON, hex), from_henderson, "{hex}");
@@ -3096,109 +3715,131 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
     for (hex, nm_from_striking) in [(at(7, -4), 262), (at(6, -4), 250)] {
         assert_eq!(air(striking, hex), nm_from_striking, "{hex}");
     }
-    // The B5N2s' radius is 175: Ryujo's group 19 reaches (7,-6) at 160 and
-    // not (6,-5) or (8,-6) at 183.
-    assert_eq!(air(ryujo, at(7, -6)), 160);
-    assert_eq!(air(ryujo, at(6, -5)), 183);
-    assert_eq!(air(ryujo, at(8, -6)), 183);
 
+    // The Japanese side's contacts are reports of the American carriers, true
+    // kind carrier, and a carrier is never reported as a destroyer or an
+    // auxiliary (the confusion row gives carrier 0.7, battleship, cruiser and
+    // transport 0.1 each). So with the list carrier, battleship, cruiser,
+    // transport no report of this scenario is held for, and groups 12 and 15
+    // launch in every run in which the Japanese hold a contact within 252 nm
+    // (809 of 1,000 sight an American force; the 551 whose report names the
+    // true hex attack Enterprise). The hold itself (a kind not on the list is never
+    // launched at) is shown in scenarios 13a and 13b. The model above still
+    // asserts the rule in every run.
+    let row = &cx.search.kind_confusion[&ShipKind::Carrier];
+    assert!(!row.contains_key(&ShipKind::Destroyer) && !row.contains_key(&ShipKind::Auxiliary));
     let mut counts: BTreeMap<&str, i64> = BTreeMap::new();
     let mut bump = |name: &'static str| *counts.entry(name).or_default() += 1;
     for (run, work) in batch().iter().zip(worked()) {
         let seed = run.seed;
         let allied_hex = work.last_report[0];
-        let japanese_hex = work.last_report[1];
-        // Groups 2, 6 and 7: launch if the contact's hex is within 200 nm of
-        // (7,-5).
-        for group in [2, 6, 7] {
-            let within = allied_hex.is_some_and(|hex| air(american, hex) <= 200);
-            assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
-            if let Some(launch) = launched(work, group) {
-                assert_eq!(Some(launch.hex), allied_hex);
-                assert_eq!(launch.aircraft, spec_of(group).ready);
+        // Groups 2, 6 and 7, the SBD-3s, and groups 4 and 8, the TBF-1s,
+        // launch if the contact's hex is within their radius of (7,-5): 200
+        // and 190. Group 10, at Henderson Field, if it is within 200 of
+        // (2,-4). The side holds one contact in the afternoon, the report of
+        // its only search.
+        for (groups, radius) in [(&[2, 6, 7][..], 200), (&[4, 8][..], 190)] {
+            for &group in groups {
+                let within = allied_hex.is_some_and(|hex| air(american, hex) <= radius);
+                assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
+                if let Some(launch) = launched(work, group) {
+                    assert_eq!(Some(launch.hex), allied_hex);
+                    assert_eq!(launch.aircraft, spec_of(group).ready);
+                    assert_eq!(launch.distance_nm, air(american, launch.hex));
+                }
             }
         }
-        // The true hex is exactly 200 nm; a hex 223 or 240 nm away launches
-        // nothing.
-        if allied_hex == Some(ryujo) {
-            assert_eq!(launched(work, 2).expect("launches").distance_nm, 200);
-            bump("allied report names the true hex");
-        }
-        if allied_hex.is_some_and(|hex| air(american, hex) > 200) {
-            assert!(launched(work, 2).is_none() && launched(work, 6).is_none());
-            assert!(launched(work, 7).is_none());
-            bump("allied report beyond 200 nm, nothing launches");
-        }
-        // Groups 4 and 8: radius 190. The true hex, at 200, is out of reach.
-        // They launch only at a contact reported in (7,-9) at 160 nm or
-        // (8,-10) or (6,-9) at 183, and find nothing there.
-        for group in [4, 8] {
-            let within = allied_hex.is_some_and(|hex| air(american, hex) <= 190);
-            assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
-            if let Some(launch) = launched(work, group) {
-                assert!(
-                    [(7, -9, 160), (8, -10, 183), (6, -9, 183)].contains(&(
-                        launch.hex.q,
-                        launch.hex.r,
-                        launch.distance_nm
-                    )),
-                    "seed {seed}: {}",
-                    launch.hex
-                );
-                assert!(air(american, ryujo) > launch.distance_nm);
-                assert_ne!(launch.hex, ryujo);
-                assert!(found_nothing(run, group), "seed {seed}");
-                assert!(!attacked(run, group), "seed {seed}");
-                bump(if group == 4 {
-                    "group 4 launches and finds nothing"
-                } else {
-                    "group 8 launches and finds nothing"
-                });
-            }
-        }
-        // Group 10 at Henderson Field: the true hex is 223 nm away. It
-        // launches only at a contact reported in (7,-9) at 200 nm or (6,-9)
-        // at 183, and finds nothing there.
         let within = allied_hex.is_some_and(|hex| air(HENDERSON, hex) <= 200);
         assert_eq!(launched(work, 10).is_some(), within, "seed {seed}");
-        if let Some(launch) = launched(work, 10) {
-            assert!(
-                [(7, -9, 200), (6, -9, 183)].contains(&(
-                    launch.hex.q,
-                    launch.hex.r,
-                    launch.distance_nm
-                )),
-                "seed {seed}: {}",
-                launch.hex
-            );
-            assert_ne!(launch.hex, ryujo);
-            assert!(found_nothing(run, 10), "seed {seed}");
-            assert!(!attacked(run, 10), "seed {seed}");
-            bump("group 10 launches and finds nothing");
-        }
+        // The true hex: all six groups launch, at 160 nm (200 for group 10),
+        // and each finds the force there.
         if allied_hex == Some(ryujo) {
-            assert!(launched(work, 10).is_none(), "seed {seed}");
+            for group in [2, 4, 6, 7, 8] {
+                assert_eq!(launched(work, group).expect("launches").distance_nm, 160);
+            }
+            assert_eq!(launched(work, 10).expect("launches").distance_nm, 200);
+            bump("allied report names the true hex: six groups launch");
         }
-        // Groups 12 and 15: launch if the contact's hex is within 252 nm of
-        // (8,-11), which the true hex (7,-5) is.
-        for group in [12, 15] {
-            let within = japanese_hex.is_some_and(|hex| air(striking, hex) <= 252);
-            assert_eq!(launched(work, group).is_some(), within, "seed {seed}");
+        // A report at (7,-10), 200 nm from the carriers: the SBD-3s of the
+        // carriers launch (200) and the torpedo groups (190) and group 10
+        // (223 from Henderson Field) do not.
+        if allied_hex == Some(at(7, -10)) {
+            assert!(launched(work, 2).is_some() && launched(work, 6).is_some());
+            assert!(launched(work, 4).is_none() && launched(work, 8).is_none());
+            assert!(launched(work, 10).is_none(), "seed {seed}");
+            bump("allied report at (7,-10): the torpedo groups and group 10 stay");
+        }
+        // A report beyond Henderson Field's reach: group 10 stays on the
+        // ground.
+        if allied_hex.is_some_and(|hex| air(HENDERSON, hex) > 200) {
+            assert!(launched(work, 10).is_none(), "seed {seed}");
+            bump("allied report beyond group 10's 200 nm: it stays");
+        }
+        for group in [4, 8, 10] {
             if let Some(launch) = launched(work, group) {
-                assert_eq!(Some(launch.hex), japanese_hex);
-                assert_eq!(launch.aircraft, 27);
+                if launch.hex != ryujo {
+                    assert!(found_nothing(run, group), "seed {seed}");
+                    assert!(!attacked(run, group), "seed {seed}");
+                    bump(match group {
+                        4 => "group 4 launches and finds nothing",
+                        8 => "group 8 launches and finds nothing",
+                        _ => "group 10 launches and finds nothing",
+                    });
+                } else {
+                    bump(match group {
+                        4 => "group 4 launches at the true hex",
+                        8 => "group 8 launches at the true hex",
+                        _ => "group 10 launches at the true hex",
+                    });
+                }
             }
         }
-        if japanese_hex == Some(american) {
-            assert_eq!(launched(work, 12).expect("launches").distance_nm, 223);
+        // Groups 12 and 15: a contact the Japanese side holds, of a kind on
+        // their list (carrier, battleship, cruiser, transport), within 252 nm of
+        // (8,-11), which the true hex (7,-5) is, at 223. A contact reported as
+        // a destroyer or an auxiliary is not launched at.
+        for group in [12, 15] {
+            let list = target_list(group).expect("a list");
+            let wanted = work.held[1].iter().any(|(_, hex, kind)| {
+                list.contains(kind)
+                    && Fixed::from_int(air(striking, *hex)) <= cx.types[&D3A1].strike_range_nm
+            });
+            assert_eq!(launched(work, group).is_some(), wanted, "seed {seed}");
+            if let Some(launch) = launched(work, group) {
+                assert_eq!(launch.aircraft, 27);
+                assert!(work.held[1]
+                    .iter()
+                    .any(|(id, hex, kind)| Some(*id) == launch.contact
+                        && *hex == launch.hex
+                        && list.contains(kind)));
+            }
+        }
+        if work.held[1].iter().any(|(_, hex, _)| *hex == american) {
             bump("japanese report names the true hex");
         }
         // Groups 13 and 16, the B5N2s of the striking force, never launch.
         assert!(launched(work, 13).is_none(), "seed {seed}");
         assert!(launched(work, 16).is_none(), "seed {seed}");
+        // Group 19, Ryujo's attack unit, launches its base strike in every
+        // run: Henderson Field is 200 nm from her at noon and 280 at 06:00,
+        // within its extended reach of 218 in the afternoon and not in the
+        // morning. All 6 aircraft fly, at base 1, at 200 nm, and every launch
+        // of it is the base strike.
+        let raid = launched(work, 19).expect("the raid launches in every run");
+        assert_eq!(
+            (raid.base, raid.hex, raid.distance_nm, raid.aircraft),
+            (Some(1), HENDERSON, 200, 6),
+            "seed {seed}"
+        );
+        assert!(raid.contact.is_none() && raid.report.is_none());
+        assert_eq!(
+            work.launches.iter().filter(|l| l.group == 19).count(),
+            1,
+            "once a day"
+        );
         // A strike attacks only if it flew to the hex its target is really
         // in.
-        for launch in &work.launches {
+        for launch in work.launches.iter().filter(|l| l.base.is_none()) {
             let side = spec_of(launch.group).side;
             let enemy_hex = if side == Side::Allied {
                 ryujo
@@ -3221,8 +3862,12 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
     }
     eprintln!("launch cases over 1000 seeds: {counts:?}");
     for name in [
-        "allied report names the true hex",
-        "allied report beyond 200 nm, nothing launches",
+        "allied report names the true hex: six groups launch",
+        "allied report at (7,-10): the torpedo groups and group 10 stay",
+        "allied report beyond group 10's 200 nm: it stays",
+        "group 4 launches at the true hex",
+        "group 8 launches at the true hex",
+        "group 10 launches at the true hex",
         "group 4 launches and finds nothing",
         "group 8 launches and finds nothing",
         "group 10 launches and finds nothing",
@@ -3240,15 +3885,11 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
 fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
     let cx = ctx();
     let mut raids = 0;
-    let mut both = 0;
+    let mut runs_with_raids = 0;
     // Shots and hits over all raids, for the bands: (shots, hits) of the
     // patrol at the bombers and of the guns.
     let mut patrol_total = (0i64, 0i64);
     let mut gun_total = (0i64, 0i64);
-    // The runs in which the two raids attacked whole, and those in which a
-    // raid met the patrol alone.
-    let mut both_whole = 0;
-    let mut alone = 0;
     for (run, work) in batch().iter().zip(worked()) {
         let seed = run.seed;
         let found: Vec<&RaidWork> = work
@@ -3256,63 +3897,63 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
             .iter()
             .filter(|r| r.found && r.side == Side::Allied)
             .collect();
-        // Enterprise's raid is group 2, Saratoga's groups 6 and 7.
+        // Enterprise's raid is groups 2 and 4, Saratoga's groups 6, 7 and 8,
+        // and Henderson Field's group 10: three raids, because they leave
+        // from three places. A raid is found only at the true hex, where all
+        // six groups launch, so a run has all three raids or none.
         let mut shapes: Vec<Vec<u32>> = found
             .iter()
             .map(|r| r.strikes.iter().map(|s| s.0).collect())
             .collect();
         shapes.sort();
         assert!(
-            shapes.is_empty() || shapes == vec![vec![2], vec![6, 7]],
+            shapes.is_empty() || shapes == vec![vec![2, 4], vec![6, 7, 8], vec![10]],
             "seed {seed}: {shapes:?}"
         );
-        both += i64::from(found.len() == 2);
-        let found_count = found.len();
+        runs_with_raids += i64::from(!found.is_empty());
         for raid in found {
             raids += 1;
             let bombers: u32 = raid.strikes.iter().map(|s| s.1).sum();
-            assert!(bombers == 17 || bombers == 30);
+            assert!(matches!(bombers, 31 | 43 | 11));
             assert_eq!(raid.bombers, bombers);
             assert_eq!(raid.target_force, Some(4));
             assert_eq!(raid.target_ship, Some(33));
-            // Enterprise's raid leaves Enterprise, Saratoga's Saratoga.
+            // Enterprise's raid (31) leaves Enterprise, Saratoga's (43)
+            // Saratoga, group 10's (11) Henderson Field.
             assert_eq!(
                 raid.place,
-                if bombers == 17 {
-                    Place::Ship(1)
-                } else {
-                    Place::Ship(11)
+                match bombers {
+                    31 => Place::Ship(1),
+                    43 => Place::Ship(11),
+                    _ => Place::Base(1),
                 }
             );
-            assert_eq!(raid.hex, Hex::new(7, -10));
-            // No escort: the target is 200 nm away and the F4F-4's radius is
-            // 105 (decision 0030).
+            assert_eq!(raid.hex, Hex::new(7, -9));
+            // No escort: the target is 160 nm from the carriers and 200 nm
+            // from Henderson Field, and the F4F-4's radius is 105 (decision
+            // 0030).
             assert!(raid.escorts.is_empty(), "seed {seed}");
             assert_eq!(raid.escort_count, 0);
             assert!(raid.escorts_at_patrol.is_none() && raid.patrol_at_escorts.is_none());
-            // Ryujo's fighters: 23 with a share of 0.3 keep 6 overhead, as
-            // they stood at the start of the pulse. Two raids divide them,
-            // 2 to Enterprise's of 17 aircraft and 4 to Saratoga's of 30; a
-            // raid alone meets all 6 (decision 0033).
-            assert_eq!(raid.patrol_over_hex, 6, "seed {seed}");
-            let expected_share = if found_count == 1 {
-                6
-            } else if bombers == 17 {
-                2
-            } else {
-                4
+            // Ryujo's fighters: 23 with a share of 0.35 keep 8 overhead (23 x
+            // 0.35 = 8.05, rounded down), as they stood at the start of the
+            // pulse. The three raids, of 31, 43 and 11 aircraft, divide them
+            // (decision 0033): 8 x 31 / 85 = 2.9, 8 x 43 / 85 = 4.05 and
+            // 8 x 11 / 85 = 1.03, so 2, 4 and 1, and the one left over goes to
+            // the largest raid: 2, 5 and 1.
+            assert_eq!(raid.patrol_over_hex, 8, "seed {seed}");
+            let expected_share = match bombers {
+                31 => 2,
+                43 => 5,
+                _ => 1,
             };
             assert_eq!(raid.patrol, expected_share, "seed {seed}");
-            if found_count == 2 {
-                assert_eq!(raid.all_raids_aircraft, 47, "seed {seed}");
-            } else {
-                assert_eq!(raid.all_raids_aircraft, bombers, "seed {seed}");
-            }
+            assert_eq!(raid.all_raids_aircraft, 85, "seed {seed}");
             let (shots, patrol_hits) = raid.patrol_at_bombers.expect("a patrol roll");
             assert_eq!(shots, expected_share);
-            // The shots at 0.16875 expect 0.3375, 0.675 or 1.0125 (a raid
-            // alone); each is rolled on its own, so from no hit to the
-            // shots, and the loss is no more than the bombers there are.
+            // The shots at 0.16875 expect 0.3375, 0.84375 or 0.16875; each is
+            // rolled on its own, so from no hit to the shots, and the loss is
+            // no more than the bombers there are.
             let first_group = raid.strikes[0].0;
             let (chance, _) = shot_chance(cx, cx.air.fighter_hit_chance, first_group);
             assert_eq!(chance, millionths(168_750));
@@ -3320,16 +3961,11 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
                 int(shots) * chance,
                 match shots {
                     2 => millionths(337_500),
-                    4 => millionths(675_000),
-                    6 => millionths(1_012_500),
+                    5 => millionths(843_750),
+                    1 => millionths(168_750),
                     other => panic!("seed {seed}: {other} shots"),
                 }
             );
-            if found_count == 2 {
-                both_whole += 1;
-            } else {
-                alone += 1;
-            }
             assert!(patrol_hits <= shots, "seed {seed}");
             patrol_total.0 += i64::from(shots);
             patrol_total.1 += i64::from(patrol_hits);
@@ -3344,42 +3980,48 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
             gun_total.0 += i64::from(gun_shots);
             gun_total.1 += i64::from(gun_hits);
             let lost_to_guns = gun_hits.min(bombers - lost_to_patrol);
-            // Of 17 (or 30) bombers, those less both losses attack.
+            // Of the raid's bombers, those less both losses attack.
             let attacking = bombers - lost_to_patrol - lost_to_guns;
             assert_eq!(raid.bombers_attacking, attacking, "seed {seed}");
+            // The losses come off the lowest group first: each group attacks
+            // with what is left of it.
+            let attacks: Vec<&AttackWork> = work
+                .attacks
+                .iter()
+                .filter(|a| raid.strikes.iter().any(|s| s.0 == a.group))
+                .collect();
+            let lost = bombers - attacking;
+            let mut pool = lost;
+            for &(group, aircraft) in &raid.strikes {
+                let took = pool.min(aircraft);
+                pool -= took;
+                let shots_of = attacks
+                    .iter()
+                    .find(|a| a.group == group)
+                    .map_or(0, |a| a.shots);
+                assert_eq!(shots_of, aircraft - took, "seed {seed}, group {group}");
+            }
         }
-        // Every bomber that attacks attacks Ryujo, ship 33.
-        let attacks: Vec<&AttackWork> = work
+        // Every bomber that attacks attacks Ryujo, ship 33: the dive bombers
+        // with bombs, the torpedo groups (4 and 8) with torpedoes.
+        for attack in work
             .attacks
             .iter()
             .filter(|a| spec_of(a.group).side == Side::Allied)
-            .collect();
-        for attack in &attacks {
+        {
             assert_eq!(attack.ship, 33, "seed {seed}");
             assert_eq!(attack.flotation_hits + attack.fire_hits, attack.hits);
             assert!(attack.hits <= attack.shots);
-        }
-        // Saratoga's losses come off group 6 first: group 7 attacks with all
-        // 15 unless the raid lost more than group 6 had, and group 6 with
-        // what is left of it.
-        if let Some(saratoga) = work
-            .raids
-            .iter()
-            .find(|r| r.found && r.strikes.first().is_some_and(|s| s.0 == 6))
-        {
-            let lost = 30 - saratoga.bombers_attacking;
-            let shots_of = |group: u32| {
-                attacks
-                    .iter()
-                    .find(|a| a.group == group)
-                    .map_or(0, |a| a.shots)
-            };
-            assert_eq!(shots_of(6), 15 - lost.min(15), "seed {seed}");
-            assert_eq!(shots_of(7), 15 - lost.saturating_sub(15), "seed {seed}");
+            if matches!(attack.group, 4 | 8) {
+                assert_eq!(
+                    attack.fire_hits, 0,
+                    "a torpedo hit is always below the line"
+                );
+            }
         }
     }
     eprintln!(
-        "American raids on Ryujo {raids}, runs with both raids {both}, \
+        "American raids on Ryujo {raids}, runs with the three raids {runs_with_raids}, \
          patrol hits {} of {} shots, gun hits {} of {}",
         patrol_total.1, patrol_total.0, gun_total.1, gun_total.0
     );
@@ -3387,10 +4029,136 @@ fn an_american_raid_on_the_ryujo_detachment_is_as_the_table_says() {
     // deviations of the sum of the expected figures.
     assert!(within_four_sigma(patrol_total.1, patrol_total.0, 168_750));
     assert!(within_four_sigma(gun_total.1, gun_total.0, 28_125));
-    assert!(raids > 500, "{raids} raids");
-    assert!(both > 200, "{both} runs with both raids");
-    assert_eq!(both_whole, 2 * both);
-    eprintln!("American raids that met the patrol alone {alone}");
+    assert_eq!(raids, 3 * runs_with_raids);
+    assert!(runs_with_raids > 400, "{runs_with_raids} runs with raids");
+}
+
+#[test]
+fn ryujos_raid_on_henderson_field_is_as_the_table_says() {
+    let cx = ctx();
+    // The sums of each roll over the runs, (shots, hits), for the bands.
+    let mut escorts_at_patrol = (0i64, 0i64);
+    let mut patrol_at_escorts = (0i64, 0i64);
+    let mut bombs = (0i64, 0i64);
+    let mut fuel = (0i64, 0i64);
+    let mut on_the_ground_runs = 0;
+    let mut destroyed_runs = 0;
+    for (run, work) in batch().iter().zip(worked()) {
+        let seed = run.seed;
+        let raid = work
+            .raids
+            .iter()
+            .find(|r| r.target_base.is_some())
+            .expect("the raid on the base is flown in every run");
+        // Group 19, 6 B5N2, launches from Ryujo at base 1: one raid, with
+        // Ryujo's 15 escorts (23 x 0.35 = 8.05, so 8 on patrol and 15 sent).
+        assert_eq!(raid.place, Place::Ship(33));
+        assert_eq!(raid.side, Side::Japanese);
+        assert_eq!(raid.hex, HENDERSON);
+        assert_eq!(raid.strikes, vec![(19, 6)]);
+        assert_eq!(raid.escorts, vec![(18, 15)], "seed {seed}");
+        assert_eq!(raid.escort_count, 15);
+        assert_eq!((raid.target_force, raid.target_ship), (None, None));
+        assert_eq!(raid.target_base, Some(1));
+        // The escorts fly 200 nm, within the A6M2's radius of 261: no fuel
+        // roll for them. The strike flies 200 nm on a radius of 175.
+        assert!(air(place_hex(Place::Ship(33)), HENDERSON) <= 261);
+        // Over Henderson Field the patrol is VMF-223's 13 (shares of 1.0), one
+        // raid alone meets all 13: 13 x 21 / 21. The 6 bombers and 15 escorts
+        // make 21 aircraft.
+        assert_eq!(raid.patrol_over_hex, 13, "seed {seed}");
+        assert_eq!(raid.patrol, 13, "seed {seed}");
+        assert_eq!(raid.all_raids_aircraft, 21, "seed {seed}");
+        // Escorts at the patrol: 15 shots at 0.16875 (an F4F-4 has both
+        // protections), expecting 2.53125. Patrol at the escorts: 13 shots at
+        // 0.3, expecting 3.9. The whole share goes at the escorts, 13 of 15,
+        // so none is left for the bombers.
+        let (shots, hits) = raid.escorts_at_patrol.expect("the escorts fire");
+        assert_eq!(shots, 15);
+        let (chance, _) = shot_chance(cx, cx.air.fighter_hit_chance, 9);
+        assert_eq!(chance, millionths(168_750));
+        assert_eq!(int(shots) * chance, millionths(2_531_250));
+        assert!(hits <= shots);
+        escorts_at_patrol.0 += i64::from(shots);
+        escorts_at_patrol.1 += i64::from(hits);
+        let (shots_pe, hits_pe) = raid.patrol_at_escorts.expect("the patrol fires");
+        assert_eq!(shots_pe, 13);
+        let (chance, _) = shot_chance(cx, cx.air.fighter_hit_chance, 18);
+        assert_eq!(chance, tenths(3));
+        assert_eq!(int(shots_pe) * chance, millionths(3_900_000));
+        assert!(hits_pe <= shots_pe);
+        patrol_at_escorts.0 += i64::from(shots_pe);
+        patrol_at_escorts.1 += i64::from(hits_pe);
+        assert!(raid.patrol_at_bombers.is_none(), "seed {seed}");
+        // The base has no guns here.
+        assert!(raid.guns.is_none(), "seed {seed}");
+        // Losses: VMF-223 loses what the escorts hit (of its 13), Ryujo's
+        // fighters what the patrol hits (of the 15 escorts). The bombers are
+        // not fired at, and all 6 attack.
+        assert_eq!(work.lost.get(&9).copied().unwrap_or(0), hits.min(13));
+        assert_eq!(work.lost.get(&18).copied().unwrap_or(0), hits_pe.min(15));
+        assert_eq!(work.lost.get(&19).copied().unwrap_or(0), 0);
+        assert_eq!(raid.bombers_attacking, 6);
+        // The bombs: 6 shots at 0.2, expecting 1.2, each hit landing on
+        // aircraft, on supply (none there to destroy) or on nothing.
+        let [attack] = work.base_attacks.as_slice() else {
+            panic!("seed {seed}: one attack on the base");
+        };
+        assert_eq!((attack.group, attack.shots), (19, 6));
+        assert_eq!(
+            int(attack.shots) * cx.air.bomb_hit_chance,
+            millionths(1_200_000)
+        );
+        assert!(attack.hits <= attack.shots);
+        assert!(attack.on_aircraft + attack.on_supply <= attack.hits);
+        bombs.0 += i64::from(attack.shots);
+        bombs.1 += i64::from(attack.hits);
+        // The aircraft on the ground are VMSB-232's 11 when it did not launch
+        // at Ryujo (VMF-223's are all on patrol), and none when it did. Each
+        // hit on aircraft destroys one of them.
+        let resting = if launched(work, 10).is_some() { 0 } else { 11 };
+        on_the_ground_runs += i64::from(resting > 0);
+        let destroyed = attack.on_aircraft.min(resting);
+        let expected_destroyed: Vec<(u32, u32)> = if destroyed > 0 {
+            vec![(10, destroyed)]
+        } else {
+            Vec::new()
+        };
+        assert_eq!(attack.destroyed, expected_destroyed, "seed {seed}");
+        destroyed_runs += i64::from(destroyed > 0);
+        // The fuel: 200 nm is 25 beyond the radius of 175, 25 / 175 =
+        // 0.142857 of it, and the ditch figure is 2 times that, 0.285714. All
+        // 6 came back to roll: 6 x 0.285714 = 1.714284 expected.
+        let [roll] = work.fuel_rolls.as_slice() else {
+            panic!("seed {seed}: one fuel roll");
+        };
+        assert_eq!((roll.group, roll.came_back), (19, 6));
+        assert_eq!(roll.chance, millionths(285_714));
+        assert_eq!(int(roll.came_back) * roll.chance, millionths(1_714_284));
+        assert!(roll.ditched <= roll.came_back);
+        fuel.0 += i64::from(roll.came_back);
+        fuel.1 += i64::from(roll.ditched);
+    }
+    eprintln!(
+        "Ryujo's raid: escorts at patrol {escorts_at_patrol:?}, patrol at escorts \
+         {patrol_at_escorts:?}, bombs {bombs:?}, fuel {fuel:?}, group 10 on the ground in \
+         {on_the_ground_runs} runs and hit in {destroyed_runs}"
+    );
+    // Over the runs the hits of each roll are within four standard
+    // deviations of the sum of the expected figures.
+    assert!(within_four_sigma(
+        escorts_at_patrol.1,
+        escorts_at_patrol.0,
+        168_750
+    ));
+    assert!(within_four_sigma(
+        patrol_at_escorts.1,
+        patrol_at_escorts.0,
+        300_000
+    ));
+    assert!(within_four_sigma(bombs.1, bombs.0, 200_000));
+    assert!(within_four_sigma(fuel.1, fuel.0, 285_714));
+    assert!(on_the_ground_runs > 100 && destroyed_runs > 20);
 }
 
 #[test]
@@ -3406,7 +4174,7 @@ fn a_japanese_raid_on_the_american_carriers_is_as_the_table_says() {
         let found: Vec<&RaidWork> = work
             .raids
             .iter()
-            .filter(|r| r.found && r.side == Side::Japanese)
+            .filter(|r| r.found && r.side == Side::Japanese && r.target_base.is_none())
             .collect();
         // Two raids, because they leave from two ships: Shokaku's is group
         // 12, Zuikaku's group 15. Neither is ever combined with another.
@@ -3584,6 +4352,8 @@ fn the_shot_numbers_and_chances_of_the_tables_are_in_the_events() {
                 } => {
                     let name = match (firer.raw(), firing, at) {
                         (18, AirFirer::Patrol, AirTarget::Bombers) => "ryujo patrol at bombers",
+                        (18, AirFirer::Escorts, AirTarget::Patrol) => "ryujo escorts at patrol",
+                        (9, AirFirer::Patrol, AirTarget::Escorts) => "henderson patrol at escorts",
                         (11, AirFirer::Escorts, AirTarget::Patrol) => "shokaku escorts at patrol",
                         (14, AirFirer::Escorts, AirTarget::Patrol) => "zuikaku escorts at patrol",
                         (1, AirFirer::Patrol, AirTarget::Escorts) => "patrol at escorts",
@@ -3612,14 +4382,27 @@ fn the_shot_numbers_and_chances_of_the_tables_are_in_the_events() {
             };
             match name {
                 "ryujo patrol at bombers" => {
-                    // Enterprise's raid meets 2 of the 6 and Saratoga's 4,
-                    // and a raid alone meets all 6.
+                    // Enterprise's raid meets 2 of the 8, Saratoga's 5 and
+                    // Henderson Field's 1 (when all three attack whole).
                     assert!(
-                        shots == int(2) || shots == int(4) || shots == int(6),
+                        shots == int(2) || shots == int(5) || shots == int(1),
                         "{shots}"
                     );
                     assert_eq!(chance, millionths(168_750));
                     assert_eq!(expected, shots * millionths(168_750));
+                }
+                "ryujo escorts at patrol" => {
+                    // Over Henderson Field: 15 escorts at VMF-223's 13.
+                    assert_eq!(
+                        (shots, chance, expected),
+                        (int(15), millionths(168_750), millionths(2_531_250))
+                    );
+                }
+                "henderson patrol at escorts" => {
+                    assert_eq!(
+                        (shots, chance, expected),
+                        (int(13), tenths(3), millionths(3_900_000))
+                    );
                 }
                 "guns of task force 4" => {
                     assert_eq!(
@@ -3669,6 +4452,8 @@ fn the_shot_numbers_and_chances_of_the_tables_are_in_the_events() {
     }
     for name in [
         "ryujo patrol at bombers",
+        "ryujo escorts at patrol",
+        "henderson patrol at escorts",
         "guns of task force 4",
         "shokaku escorts at patrol",
         "zuikaku escorts at patrol",
@@ -3713,13 +4498,13 @@ fn what_cannot_happen_never_does() {
             } = event.kind
             {
                 // Only the Japanese forces move, and none enters (7,-5) or
-                // any hex south of row -10.
+                // any hex south of row -9.
                 assert!(task_force.raw() >= 3, "seed {seed}");
                 for hex in std::iter::once(&from)
                     .chain(std::iter::once(&to))
                     .chain(hexes_entered)
                 {
-                    assert!(hex.r <= -10, "seed {seed}: {hex}");
+                    assert!(hex.r <= -9, "seed {seed}: {hex}");
                     assert_ne!(*hex, Hex::new(7, -5));
                 }
             }
@@ -3729,8 +4514,9 @@ fn what_cannot_happen_never_does() {
         assert_ne!(run.positions[&2], run.positions[&3]);
         assert_ne!(run.positions[&2], run.positions[&4]);
         // No F4F-4 ever escorts a raid, and no B5N2 of the striking force
-        // ever launches. Group 19, Ryujo's B5N2s, launches only at (7,-6),
-        // 160 nm away, and always finds nothing; no B5N2 ever attacks.
+        // ever launches. Group 19, Ryujo's B5N2s, launches only the base
+        // strike on Henderson Field, 200 nm away, and never a naval strike;
+        // no B5N2 ever attacks a ship.
         for event in &run.events {
             match event.kind {
                 EventKind::EscortsSent { air_group, .. } => {
@@ -3749,12 +4535,13 @@ fn what_cannot_happen_never_does() {
                 _ => {}
             }
         }
-        // Group 19 launches only at (7,-6), 160 nm, and finds nothing; Ryujo's
-        // 17 escorts are sent exactly when it launches.
+        // Group 19 launches only at base 1, 200 nm, in every run, and attacks
+        // no ship; Ryujo's 15 escorts are sent exactly when it launches.
         if let Some(l) = launched(work, 19) {
-            assert_eq!(l.hex, Hex::new(7, -6), "seed {seed}");
-            assert_eq!(l.distance_nm, 160);
-            assert!(found_nothing(run, 19) && !attacked(run, 19), "seed {seed}");
+            assert_eq!(l.hex, HENDERSON, "seed {seed}");
+            assert_eq!(l.distance_nm, 200);
+            assert_eq!(l.base, Some(1));
+            assert!(!found_nothing(run, 19) && !attacked(run, 19), "seed {seed}");
             let sent: Vec<u32> = run
                 .events
                 .iter()
@@ -3770,7 +4557,7 @@ fn what_cannot_happen_never_does() {
                     _ => None,
                 })
                 .collect();
-            assert_eq!(sent, [17], "seed {seed}");
+            assert_eq!(sent, [15], "seed {seed}");
         }
         for e in &run.events {
             if let EventKind::AirAttack { air_group, .. } = e.kind {
@@ -3786,12 +4573,13 @@ fn what_cannot_happen_never_does() {
                 "seed {seed}"
             );
         }
-        // No aircraft at Henderson Field is ever lost, and no ship of task
-        // force 2 or task force 3 is ever damaged.
+        // No aircraft at Henderson Field is lost with a ship, and no ship of
+        // task force 2 or task force 3 is ever damaged. (VMF-223 now loses
+        // aircraft to Ryujo's escorts over the field, and VMSB-232 to Ryujo's
+        // patrol and guns and, when it did not launch, on the ground.)
         for event in &run.events {
             match event.kind {
-                EventKind::AircraftLost { air_group, .. }
-                | EventKind::AirGroupLost { air_group, .. } => {
+                EventKind::AirGroupLost { air_group, .. } => {
                     assert!(!matches!(air_group.raw(), 9 | 10), "seed {seed}");
                 }
                 EventKind::ShipDamaged { ship, .. }
@@ -3811,10 +4599,37 @@ fn what_cannot_happen_never_does() {
                 _ => {}
             }
         }
-        // Group 10 also has what landed at Henderson Field when Enterprise's
-        // deck went out.
-        assert_eq!(run.ready[&9], 13 + landed_to(run, 9));
-        assert_eq!(run.ready[&10], 11 + landed_to(run, 10));
+        // Henderson Field's groups have what they started with, less what
+        // was shot down, and what was destroyed on the ground, plus what
+        // landed there when Enterprise's deck went out.
+        let lost_of = |group: u32| -> u32 {
+            run.events
+                .iter()
+                .map(|e| match e.kind {
+                    EventKind::AircraftLost {
+                        air_group,
+                        aircraft,
+                        ..
+                    }
+                    | EventKind::AircraftDestroyedOnGround {
+                        air_group,
+                        aircraft,
+                        ..
+                    } if air_group.raw() == group => aircraft,
+                    _ => 0,
+                })
+                .sum()
+        };
+        assert_eq!(
+            run.ready[&9],
+            13 - lost_of(9) + landed_to(run, 9),
+            "seed {seed}"
+        );
+        assert_eq!(
+            run.ready[&10],
+            11 - lost_of(10) + landed_to(run, 10),
+            "seed {seed}"
+        );
         for ship in 11..=32u32 {
             let last = &run.ships[&ship];
             assert_eq!(last.flotation, Fixed::ZERO);
@@ -3868,12 +4683,12 @@ fn every_strike_is_launched_at_a_contact_its_own_side_holds_within_its_types_rad
     let mut launches = 0;
     for (run, work) in batch().iter().zip(worked()) {
         let by_id: BTreeMap<EventId, &Event> = run.events.iter().map(|e| (e.id, e)).collect();
-        for launch in &work.launches {
+        for launch in work.launches.iter().filter(|l| l.base.is_none()) {
             launches += 1;
             let spec = spec_of(launch.group);
             // It cites a report of its own side, from this pulse's search
             // (there was nothing the pulse before).
-            let report = by_id[&launch.report];
+            let report = by_id[&launch.report.expect("a naval strike cites a report")];
             let EventKind::ReportReceived { side, hex, .. } = report.kind else {
                 panic!("a launch cites a report");
             };
@@ -3966,6 +4781,29 @@ fn every_groups_aircraft_at_the_end_are_those_at_the_start_less_its_recorded_los
                         aircraft,
                         ..
                     } if air_group.raw() == spec.id => aircraft,
+                    // What ran out of fuel on the way home from a sortie
+                    // beyond its radius (decision 3 of 0059).
+                    EventKind::AircraftDitched {
+                        air_group,
+                        ditched,
+                        ready,
+                        ..
+                    } if air_group.raw() == spec.id => {
+                        left = left.checked_sub(ditched).expect("none goes below zero");
+                        assert_eq!(left, ready, "seed {}", run.seed);
+                        continue;
+                    }
+                    // What was destroyed on the ground at Henderson Field.
+                    EventKind::AircraftDestroyedOnGround {
+                        air_group,
+                        aircraft,
+                        remaining,
+                        ..
+                    } if air_group.raw() == spec.id => {
+                        left = left.checked_sub(aircraft).expect("none goes below zero");
+                        assert_eq!(left, remaining, "seed {}", run.seed);
+                        continue;
+                    }
                     // What came down in the sea for want of a deck.
                     EventKind::AircraftDitchedNoDeck {
                         air_group,
@@ -4087,7 +4925,9 @@ fn every_damage_event_is_caused_by_an_attack_every_attack_by_a_launch_and_every_
                     }
                 }
                 EventKind::StrikeLaunched { air_group, .. } => {
-                    let Cause::Event(report) = event.causes[1] else {
+                    // The mission order, the target order of groups 12 and
+                    // 15, and the report, last.
+                    let Some(&Cause::Event(report)) = event.causes.last() else {
                         panic!("a launch cites a report");
                     };
                     assert!(matches!(

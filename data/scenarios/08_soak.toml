@@ -129,7 +129,14 @@ q = 9
 r = -19
 mission = "carrier"
 
-# The Ryujo detachment.
+# The Ryujo detachment. It starts in (10,-19), 356 nm charged from its noon
+# hex (7,-9), which it reaches at 11:48 on day 4 at 20 knots and holds at noon.
+# Ryujo's noon hex is (7,-9) and not (7,-10). The record has her launch from
+# 200 to 202 miles from Guadalcanal (engagement_events 331, the 8th Cruiser
+# Division's war diary: "20 degrees 202 nm from the Guadalcanal base";
+# engagement_positions 310: 200 nautical miles north of Lunga Point). (7,-9)
+# is 200 miles from Henderson Field at (2,-4) by hex centres; (7,-10) is 223,
+# which is the grid's error and not the record.
 
 [[task_force]]
 id = 4
@@ -1141,7 +1148,7 @@ day = 4
 side = "japanese"
 task_force = 4
 kind = "set_route"
-waypoints = [[7, -10]]
+waypoints = [[7, -9]]
 
 [[order]]
 day = 4
@@ -1151,7 +1158,8 @@ kind = "set_speed"
 knots = "20"
 
 # Air orders. Fighters patrol; the American fighters keep everything
-# overhead, the Japanese carriers keep four fifths and Ryujo three tenths.
+# overhead, the Japanese carriers keep four fifths and Ryujo 0.35 (so that 15
+# of her 23 fighters escort her raid and 8 stay over her).
 
 [[order]]
 day = 4
@@ -1207,7 +1215,7 @@ day = 4
 side = "japanese"
 air_group = 118
 kind = "set_patrol_share"
-share = "0.3"
+share = "0.35"
 
 # Enterprise's scouting squadron searches the northern half; the cruisers'
 # floatplanes search to the south-east.
@@ -1297,12 +1305,32 @@ air_group = 108
 kind = "set_air_mission"
 mission = "naval_strike"
 
+# The fleet carriers' dive bomber groups (112 and 115) hold their strike for the
+# enemy's fleet: target list carrier, battleship, cruiser, transport. The
+# record names the enemy carriers as the object of their first wave
+# (engagement_events 371, Shokaku's action report: heading to attack enemy
+# carriers), and the enemy surface force if no carrier is found (425). The
+# architect reads the surface force as any force of ships but a destroyer or
+# an auxiliary met alone: a contact reported as a destroyer or an auxiliary is
+# a picket or a tender, not the fleet they were kept for, and the strike is
+# held for it. This is a reading of two rows, not a row. It was fixed on Nov
+# 12, 2026 after two trials: the default list sent both groups 250 miles at
+# one destroyer in the full slice on its own seed, and a list without
+# transports held them all day for a ten-ship force reported as transports.
+# Their torpedo units and Ryujo's groups get no target order.
 [[order]]
 day = 4
 side = "japanese"
 air_group = 112
 kind = "set_air_mission"
 mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 112
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
 
 [[order]]
 day = 4
@@ -1321,16 +1349,37 @@ mission = "naval_strike"
 [[order]]
 day = 4
 side = "japanese"
+air_group = 115
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 4
+side = "japanese"
 air_group = 116
 kind = "set_air_mission"
 mission = "naval_strike"
 
+# Ryujo's attack unit raids Henderson Field (decision 0063, "What it costs"):
+# the record has her launch 15 fighters and 6 attack planes at it
+# (engagement_outcomes 1171, her action report) from 200 to 202 miles
+# (engagement_events 331, engagement_positions 310). That is beyond the B5N2's
+# derived radius of 175 and within extended reach (218), so the raid is a base
+# strike at base 1 on extended reach.
 [[order]]
 day = 4
 side = "japanese"
 air_group = 119
 kind = "set_air_mission"
-mission = "naval_strike"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 119
+kind = "set_reach"
+reach = "extended"
 
 # The convoy: load on day 1, steam for Lunga Point from day 2 and unload there.
 [[order]]

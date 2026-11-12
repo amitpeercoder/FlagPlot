@@ -60,3 +60,7 @@ No rule. These are scenario inputs.
 ## Amended by decision 0058 (Nov 12, 2026)
 
 The Japanese starts were worked back from noon fixes with 40 miles a hex. With straight-line miles (decision 0058), settled by the architect: the carrier striking force keeps its start, (9,-19) at 17 knots, which is 302 miles from (8,-11) and brings it there at 11:46; the Ryujo detachment starts in (7,-19) at 20 knots, 360 miles from (7,-10), and arrives at noon as before. From (10,-19) it would have arrived at 09:51, at odds with the 09:35 sighting. The full slice takes the same starts.
+
+## Note, Nov 12, 2026
+
+Ryujo's noon hex, her raid and her fighters' share were changed after decision 0063 (the lines above are left as they were written). She is in (7,-9) at noon and not (7,-10): the record has her launch from 200 to 202 miles of Guadalcanal (engagement_events 331, engagement_positions 310), and (7,-10) is 223 miles from Henderson Field by hex centres, which is the grid's error. Her attack unit raids Henderson Field (the line "A strike on an airfield" under what is left out is no longer true of it), as a base strike on extended reach (engagement_outcomes 1171), and her fighters keep 0.35 and send 15 of 23 with it, where item 10 above says three tenths. The reasons and the rows are in decision 0063, "As built (the scenario orders)".

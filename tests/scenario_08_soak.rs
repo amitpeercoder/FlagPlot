@@ -475,8 +475,11 @@ fn assert_conserved(run: &Run) {
         let (mut arrived, mut received, mut shot, mut ground, mut written_off, mut with_ship) =
             (0u32, 0u32, 0u32, 0u32, 0u32, 0u32);
         let (mut pilots_arrived, mut pilots_received, mut pilots_lost) = (0u32, 0u32, 0u32);
-        // What came down in the sea for want of a deck, and what landed
-        // elsewhere from the group and to it, with the pilots that went along.
+        // What ran out of fuel on the way home from a sortie beyond the
+        // radius (decision 3 of 0059), what came down in the sea for want of a
+        // deck, and what landed elsewhere from the group and to it, with the
+        // pilots that went along.
+        let mut fuel = 0u32;
         let (mut no_deck, mut landed_out, mut landed_in) = (0u32, 0u32, 0u32);
         let (mut pilots_out, mut pilots_in) = (0u32, 0u32);
         for event in &run.events {
@@ -527,6 +530,9 @@ fn assert_conserved(run: &Run) {
                 EventKind::PilotsLost {
                     air_group, lost, ..
                 } if air_group.raw() == *g => pilots_lost += lost,
+                EventKind::AircraftDitched {
+                    air_group, ditched, ..
+                } if air_group.raw() == *g => fuel += ditched,
                 EventKind::AircraftDitchedNoDeck {
                     air_group,
                     aircraft,
@@ -553,11 +559,11 @@ fn assert_conserved(run: &Run) {
         }
         assert_eq!(
             start.aircraft() + arrived + received + landed_in,
-            now.aircraft() + shot + ground + written_off + with_ship + no_deck + landed_out,
+            now.aircraft() + shot + ground + written_off + with_ship + fuel + no_deck + landed_out,
             "seed {seed}, air group {g}: aircraft started {} + arrived {arrived} + received \
              {received} + landed to it {landed_in} = has {} + shot {shot} + on the ground \
-             {ground} + written off {written_off} + lost with a ship {with_ship} + no deck \
-             {no_deck} + landed from it {landed_out}",
+             {ground} + written off {written_off} + lost with a ship {with_ship} + out of fuel \
+             {fuel} + no deck {no_deck} + landed from it {landed_out}",
             start.aircraft(),
             now.aircraft()
         );

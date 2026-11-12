@@ -48,4 +48,9 @@ Regenerated after decision 0059 stage 3, which took Flight 300's scripted arriva
 
 Regenerated after decision 0065, which stops a side's events naming an enemy ship, task force or air group, and makes the agent interface version 2. Every answer of every game differs in its `version`. Beyond that, the briefings after a day of fighting and the `explain` answers that named an enemy unit differ: "at the raid of enemy air_group:12" is "at a raid", an air attack names no ship, a search "sighted a force", and attacks from the air on one ship are one line. The players' `account.md` files describe the answers as they were. No save differs.
 
+<<<<<<< HEAD
+Regenerated again after the scenario orders of decision 0063 ("As built (the scenario orders)", Nov 12, 2026): the scenarios' orders changed, so the games now meet Ryujo one hex nearer (in (7,-9), 160 miles from the American carriers) with her raid on Henderson Field flying, and the fleet carriers' dive bombers hold their strike for heavy ships. The requests (`game.jsonl`) and accounts (`account.md`) are as played: an account describes the game as it ran before, with Ryujo in (7,-10) 200 miles off.
+
+=======
 Regenerated after the briefing's air group line gained `would_strike` (decision 0063, decision 6): the contact a naval strike group would strike if the decision were made now. One briefing in the Sonnet game of the Eastern Solomons and two in the full slice game gained the words; the Haiku game's transcript and all three saves are as they were. The requests and accounts are as played.
+>>>>>>> origin/main

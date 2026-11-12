@@ -13,7 +13,7 @@ OBJECTIVES
 - Objective: enemy ships left afloat with propulsion or flight deck out, points for each: carrier 5, battleship 4, cruiser 2, destroyer 0.5, transport 1, auxiliary 0.5
   - What you know of your progress: nothing you can see shows it; it is counted at the end of the game
 - Objective: enemy aircraft destroyed, points for each: 0.05
-  - What you know of your progress: 51 enemy aircraft claimed shot down or destroyed on the ground, worth 2.55 points (claims can be wrong)
+  - What you know of your progress: 54 enemy aircraft claimed shot down or destroyed on the ground, worth 2.7 points (claims can be wrong)
 - Levels: the result is read from the margin, your points less the enemy's. A margin of 3 or more is a minor victory, 8 or more a major one, 16 or more a decisive one; the same margins against you are defeats; less than 3 either way is a stalemate
 
 ORDERS
@@ -21,48 +21,66 @@ ORDERS
 - Refused yesterday: none
 
 CONTACTS
-- New contact: contact:1, 4 ships estimated, taken for carrier, at (7,-10) [event 15]
-- Refreshed contact: contact:1, 5 ships estimated (was 4), taken for carrier, at (7,-10) [event 34]
-- Refreshed contact: contact:1, 4 ships estimated (was 5), taken for cruiser (was carrier), at (7,-10) [event 35]
-- Refreshed contact: contact:1, 3 ships estimated (was 4), taken for carrier (was cruiser), at (7,-10) [event 36]
+- New contact: contact:1, 4 ships estimated, taken for carrier, at (7,-9) [event 15]
+- Refreshed contact: contact:1, 5 ships estimated (was 4), taken for carrier, at (7,-9) [event 44]
+- Refreshed contact: contact:1, 4 ships estimated (was 5), taken for carrier, at (7,-9) [event 45]
+- Refreshed contact: contact:1, 4 ships estimated, taken for cruiser (was carrier), at (7,-9) [event 46]
+- Refreshed contact: contact:1, 3 ships estimated (was 4), taken for carrier (was cruiser), at (7,-9) [event 47]
+- Refreshed contact: contact:1, 4 ships estimated (was 3), taken for carrier, at (7,-9) [event 48]
+- Refreshed contact: contact:1, 5 ships estimated (was 4), taken for carrier, at (7,-9) [event 49]
 - Dropped contacts: none
 - Contacts found not there: none
-- Held contact: contact:1 at (7,-10), 3 ships estimated, taken for carrier, age 0 pulses
+- Held contact: contact:1 at (7,-9), 5 ships estimated, taken for carrier, age 0 pulses
 
 ACTION YESTERDAY
 - Fights at sea: none
 - Salvoes fired at sea: none
-- Patrol fire: air_group:1 "VF-6" at the enemy's escorts, 6 shots [event 21]
-- Patrol fire: air_group:1 "VF-6" at the enemy's bombers, 22 shots [event 22]
-- Patrol fire: air_group:1 "VF-6" at the enemy's escorts, 5 shots [event 25]
-- Patrol fire: air_group:1 "VF-6" at the enemy's bombers, 21 shots [event 26]
-- Anti-aircraft fire: task_force:1 "Task Force 16" at a raid, 123 shots [event 23]
+- Patrol fire: air_group:1 "VF-6" at the enemy's escorts, 6 shots [event 25]
+- Patrol fire: air_group:1 "VF-6" at the enemy's bombers, 22 shots [event 26]
+- Patrol fire: air_group:1 "VF-6" at the enemy's escorts, 5 shots [event 29]
+- Patrol fire: air_group:1 "VF-6" at the enemy's bombers, 21 shots [event 30]
+- Patrol fire: air_group:9 "VMF-223" at the enemy's escorts, 13 shots [event 33]
 - Anti-aircraft fire: task_force:1 "Task Force 16" at a raid, 123 shots [event 27]
-- Naval strike launched: air_group:2 "VB-6" at contact:1, place (7,-10), 17 aircraft, 200 miles [event 16]
-- Naval strike launched: air_group:6 "VB-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 17]
-- Naval strike launched: air_group:7 "VS-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 18]
-- Air attack: air_group:2 "VB-6", 16 aircraft, bombs [event 29]
-  - Report: refreshed contact contact:1, 5 ships estimated, taken for carrier, at (7,-10) [event 34]
-- Air attack: air_group:6 "VB-3", 14 aircraft, bombs [event 30]
-  - Report: refreshed contact contact:1, 4 ships estimated, taken for cruiser, at (7,-10) [event 35]
-- Air attack: air_group:7 "VS-3", 15 aircraft, bombs [event 31]
-  - Report: refreshed contact contact:1, 3 ships estimated, taken for carrier, at (7,-10) [event 36]
-- Raids on bases: none
+- Anti-aircraft fire: task_force:1 "Task Force 16" at a raid, 123 shots [event 31]
+- Naval strike launched: air_group:2 "VB-6" at contact:1, place (7,-9), 17 aircraft, 160 miles [event 16]
+- Naval strike launched: air_group:4 "VT-3" at contact:1, place (7,-9), 14 aircraft, 160 miles [event 17]
+- Naval strike launched: air_group:6 "VB-3" at contact:1, place (7,-9), 15 aircraft, 160 miles [event 18]
+- Naval strike launched: air_group:7 "VS-3" at contact:1, place (7,-9), 15 aircraft, 160 miles [event 19]
+- Naval strike launched: air_group:8 "VT-8" at contact:1, place (7,-9), 13 aircraft, 160 miles [event 20]
+- Naval strike launched: air_group:10 "VMSB-232" at contact:1, place (7,-9), 11 aircraft, 200 miles [event 21]
+- Air attack: air_group:2 "VB-6", 16 aircraft, bombs [event 35]
+  - Report: refreshed contact contact:1, 5 ships estimated, taken for carrier, at (7,-9) [event 44]
+- Air attack: air_group:4 "VT-3", 14 aircraft, torpedoes [event 36]
+  - Report: refreshed contact contact:1, 4 ships estimated, taken for carrier, at (7,-9) [event 45]
+- Air attack: air_group:6 "VB-3", 14 aircraft, bombs [event 37]
+  - Report: refreshed contact contact:1, 4 ships estimated, taken for cruiser, at (7,-9) [event 46]
+- Air attack: air_group:7 "VS-3", 15 aircraft, bombs [event 38]
+  - Report: refreshed contact contact:1, 3 ships estimated, taken for carrier, at (7,-9) [event 47]
+- Air attack: air_group:8 "VT-8", 13 aircraft, torpedoes [event 39]
+  - Report: refreshed contact contact:1, 4 ships estimated, taken for carrier, at (7,-9) [event 48]
+- Air attack: air_group:10 "VMSB-232", 10 aircraft, bombs [event 40]
+  - Report: refreshed contact contact:1, 5 ships estimated, taken for carrier, at (7,-9) [event 49]
+- Raid on base:1 "Henderson Field": 6 aircraft attacked, 0 hits, 0 on aircraft, 0 on supply, 0 on nothing [event 43]
 - Attack on ship:1 "USS Enterprise" from the air: 27 aircraft, 2 attacks
 
 LOSSES YESTERDAY
 - Ships sunk: none
-- Ship damaged: ship:1 "USS Enterprise": 6 hits, flotation damage 21.043768, fire damage 10.521884, flight deck working to degraded, flight deck degraded to out [events 37, 38, 39, 40, 41]
-- Aircraft lost: air_group:1 "VF-6": 3 shot down, 3 came down in the sea for want of a deck [events 24, 28, 47]
-- Aircraft lost: air_group:2 "VB-6": 1 shot down [event 19]
-- Aircraft lost: air_group:6 "VB-3": 1 shot down [event 20]
-- Landed elsewhere: air_group:1 "VF-6" landed 21 aircraft at ship:11 "USS Saratoga", joining air_group:5 "VF-5" [event 46]
-- Landed elsewhere: air_group:2 "VB-6" landed 16 aircraft at base:1 "Henderson Field", joining air_group:10 "VMSB-232" [event 48]
-- Landed elsewhere: air_group:3 "VS-5" landed 16 aircraft at base:1 "Henderson Field", joining air_group:10 "VMSB-232" [event 49]
-- Claim at (7,-10): 6 hits on a carrier, 0 sunk [event 42]
-- Claim at (7,-10): 6 hits on a carrier, 1 sunk [event 43]
-- Claim over (7,-5): 30 aircraft shot down [event 44]
-- Claim over (7,-5): 21 aircraft shot down [event 45]
+- Ship damaged: ship:1 "USS Enterprise": 6 hits, flotation damage 21.043768, fire damage 10.521884, flight deck working to degraded, flight deck degraded to out [events 50, 51, 52, 53, 54]
+- Aircraft lost: air_group:1 "VF-6": 3 shot down, 3 came down in the sea for want of a deck [events 28, 32, 62]
+- Aircraft lost: air_group:2 "VB-6": 1 shot down [event 22]
+- Aircraft lost: air_group:6 "VB-3": 1 shot down [event 23]
+- Aircraft lost: air_group:9 "VMF-223": 2 shot down [event 34]
+- Aircraft lost: air_group:10 "VMSB-232": 1 shot down [event 24]
+- Landed elsewhere: air_group:1 "VF-6" landed 21 aircraft at ship:11 "USS Saratoga", joining air_group:5 "VF-5" [event 61]
+- Landed elsewhere: air_group:2 "VB-6" landed 16 aircraft at base:1 "Henderson Field", joining air_group:10 "VMSB-232" [event 63]
+- Landed elsewhere: air_group:3 "VS-5" landed 16 aircraft at base:1 "Henderson Field", joining air_group:10 "VMSB-232" [event 64]
+- Landed elsewhere: air_group:4 "VT-3" landed 14 aircraft at base:1 "Henderson Field", forming air_group:21 "VT-3 landed at base:1" [event 65]
+- Claim at (7,-9): 9 hits on a carrier, 1 sunk [event 55]
+- Claim at (7,-9): 10 hits on a carrier, 0 sunk [event 56]
+- Claim at (7,-9): 5 hits on a carrier, 0 sunk [event 57]
+- Claim over (7,-5): 30 aircraft shot down [event 58]
+- Claim over (7,-5): 21 aircraft shot down [event 59]
+- Claim over (2,-4) Henderson Field: 3 aircraft shot down [event 60]
 
 TASK FORCES
 - task_force:1 "Task Force 16" at (7,-5): idle, carrier, speed cruise, readiness normal, not alert, 10 ships afloat
@@ -74,13 +92,14 @@ AIR GROUPS
 - air_group:1 "VF-6" (Grumman F4F-4 Wildcat) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 105 miles, search range 105 miles, mission combat air patrol
 - air_group:2 "VB-6" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 200 miles, search range 200 miles, mission naval strike
 - air_group:3 "VS-5" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 200 miles, search range 200 miles, mission search
-- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 14 ready, radius 190 miles, search range 190 miles, mission naval strike
+- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 190 miles, search range 190 miles, mission naval strike
 - air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 48 ready, radius 105 miles, search range 105 miles, mission combat air patrol
-- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 200 miles)
-- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 200 miles)
-- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, radius 190 miles, search range 190 miles, mission naval strike
-- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 13 ready, radius 105 miles, search range 105 miles, mission combat air patrol
-- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 43 ready, radius 200 miles, search range 200 miles, mission naval strike
+- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 160 miles)
+- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 160 miles)
+- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, radius 190 miles, search range 190 miles, mission naval strike, would strike contact:1 now (carrier, 160 miles)
+- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 11 ready, radius 105 miles, search range 105 miles, mission combat air patrol
+- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 42 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (carrier, 200 miles)
+- air_group:21 "VT-3 landed at base:1" (Grumman TBF-1 Avenger) at base:1 "Henderson Field" (2,-4): 14 ready, radius 190 miles, search range 190 miles, mission rest
 
 BASES
 - base:1 "Henderson Field" at (2,-4): fuel 0 t
@@ -96,6 +115,4 @@ WARNINGS
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
 - Task forces that cannot move or are slowed: none
-- Out of reach: air_group:4 "VT-3" is on naval strike with a radius of 190 miles and holds contacts, but none is within it; the nearest is contact:1, 200 miles away
-- Out of reach: air_group:8 "VT-8" is on naval strike with a radius of 190 miles and holds contacts, but none is within it; the nearest is contact:1, 200 miles away
-- Out of reach: air_group:10 "VMSB-232" is on naval strike with a radius of 200 miles and holds contacts, but none is within it; the nearest is contact:1, 223 miles away
+- Strike groups with nothing in reach: none

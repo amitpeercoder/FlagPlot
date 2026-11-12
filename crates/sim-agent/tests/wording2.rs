@@ -228,9 +228,24 @@ fn check_out_of_reach(view: &sim_core::view::SideView<'_>, label: &str) -> usize
 
 #[test]
 fn a_strike_group_with_contacts_but_none_in_reach_is_warned_with_the_figures() {
-    // Eastern Solomons after its day: the contact is 200 miles from the
-    // carriers, the torpedo bombers' radius is 190 and the dive bombers' 200.
-    let mut scenario = load("05_eastern_solomons.toml", 1942);
+    // Eastern Solomons after its day, with the Ryujo detachment put where it
+    // was before the scenario's orders of Nov 12, 2026 (it starts in (7,-19)
+    // and steams for (7,-10), which is as far from the carriers as the
+    // contact then was): the contact is 200 miles from the carriers, the
+    // torpedo bombers' radius is 190 and the dive bombers' 200. With Ryujo in
+    // (7,-9), 160 miles from them, every strike group reaches the contact and
+    // none is warned, so the case is made by a small edit of the scenario's
+    // text, as other tests here do.
+    let text = support::scenario_text("05_eastern_solomons.toml");
+    let moved = text
+        .replacen(
+            "name = \"Ryujo detachment\"\nside = \"japanese\"\nq = 7\nr = -18",
+            "name = \"Ryujo detachment\"\nside = \"japanese\"\nq = 7\nr = -19",
+            1,
+        )
+        .replacen("waypoints = [[7, -9]]", "waypoints = [[7, -10]]", 1);
+    assert_ne!(text, moved, "the edit applied");
+    let mut scenario = support::load_text(&moved, "05_eastern_solomons.toml", 1942);
     scenario.run_to_end().expect("the scenario runs");
     let view = scenario.world.side_view(Side::Allied);
     let made = answer_value(&briefing(&view, "Eastern Solomons"));
