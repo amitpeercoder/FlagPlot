@@ -44,6 +44,7 @@ A formed group's losses and ready counts are recorded under its own id; `batch` 
 - **Shots can be fractional.** A `Salvo`'s `shots` is a `Fixed` (a damaged battery, the ammunition cap), so the sum is written exactly. `AirAttack.shots` and `BaseAttacked.shots` are whole numbers, one for each aircraft attacking.
 - **A claim's side is the claimant.**
 - **Hits are counted as rolled.** A salvo is rolled on the ships afloat at the start of the round, and an air attack on the state at the start of the step, so hits are rolled at a ship that another salvo of the same round sinks. Over 200 seeds of Savo Island, `ShipDamaged` events on an already-sunk ship carried 4,322 of 43,112 hits (10 percent); in the other scenarios tried (4a, 5, 5d, 7) 0.5 to 8 percent. No salvo or attack is aimed at a ship sunk in an earlier round or pulse. The count is the one the rules record; whether a measure should discount it is for the measures.
+- **An escort entry names the raid's first strike group.** `EscortsSent.with_air_group` is the first group of the raid the fighters went with, not every group in it. To add a raid's escorts to its attackers, match an escort entry to the attacks of the same day and pulse by that group. If that first group has no bombers left when the raid attacks, it records no attack and the escorts match nothing; that is rare and is left as it is.
 
 ## Left out, and why
 
