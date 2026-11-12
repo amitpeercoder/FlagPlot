@@ -19,13 +19,13 @@ Not in step 2: new subsystems (ground combat, submarines, weather), the staff pl
 
 ## What is compared with what
 
-Three battles to tune on, the ones step 1 built with real ships and aircraft, and one to check on. The record is in `data/oob/engagement_outcomes.csv`; `docs/research/oob/step2-record.md` reads it out and says how firm each part is.
+Three battles to tune on, the ones step 1 built with real ships and aircraft, and one to check on. Rabaul against Guadalcanal is both: the figures of air combat are checked on it and the figures that take weeks to show are tuned on it ("Tuning"). The record is in `data/oob/engagement_outcomes.csv`; `docs/research/oob/step2-record.md` reads it out and says how firm each part is.
 
 | Battle | Scenario | What it tests |
 | --- | --- | --- |
 | Savo Island, 8 to 9 August 1942 | `04_savo_island` | Night surface combat, surprise, break-off |
 | Eastern Solomons, 24 to 25 August 1942 | `05_eastern_solomons` | Search, the strike decision, air combat, damage to ships |
-| Rabaul against Guadalcanal, 21 August to 17 September 1942 | `06_rabaul_guadalcanal` | Range, fatigue, pilots, wear, repair, base supply |
+| Rabaul against Guadalcanal, 21 August to 17 September 1942 | `06_rabaul_guadalcanal` | Tuned on it: fatigue, pilots and replacements, wear, repair, base supply. Checked on it: the air combat figures tuned on the Eastern Solomons |
 | Cape Esperance, 11 to 12 October 1942 | To be built | The surface figures, on a night they were not tuned on |
 
 Two smaller checks ride with them: ship passages against recorded times, and claims against losses (decision 0056).
@@ -105,7 +105,9 @@ The harness is an umpire's tool, like the viewer. It reads truth. Nothing that p
 
 Tuned on one battle and checked on the same battle proves little. So:
 
-- **Air figures are tuned on the Eastern Solomons and checked on Rabaul against Guadalcanal,** which they were not tuned on.
+- **The figures of air combat are tuned on the Eastern Solomons and checked on Rabaul against Guadalcanal,** which they were not tuned on: search, the fight between aircraft, anti-aircraft fire, the attack on a ship or a field, and claims. A tuning round does not move one of these to mend a miss at Rabaul. A miss there goes back to the Eastern Solomons, or to the rule.
+- **The figures that take weeks to show are tuned on Rabaul against Guadalcanal,** because nothing else in the slice can show them: fatigue, wear and repair, pilots and replacements, base supply. The Eastern Solomons is one day. **These figures have no battle to be checked on, and step 2 says so of each:** tuned on one battle and not checked. A second long scenario would check them; none is planned in step 2.
+- **Each tuning round's record names which kind it moved.** That is how a reader of a Rabaul report knows what it shows.
 - **Surface figures are tuned on Savo Island and checked on Cape Esperance,** where the other side had the radar and the surprise. A model that gets Savo Island right only because the Japanese always win at night fails there. Cape Esperance is built after Savo Island is tuned and is never tuned on. It needs its ships derived and a scenario, about the work of one of step 1's.
 
 ## Tests while figures move
@@ -140,6 +142,7 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 | A surprised force that is not at battle readiness is kept from firing | To be planned as decision 0066, at the designer's word on Nov 12, 2026 ("Yes, plan it"). Nothing is built until he approves the plan | Yes, before Savo Island is tuned. At the baseline the Allied groups fire about 2,900 shells a run where the record has 471, because surprise stops a force firing for one round and then both sides fire alike. Experience at its cap does not close the gap. The rule must serve Cape Esperance, where the other side was surprised, on the same figures |
 | Ship repair | On the opening list; not yet decided | No. It matters to a campaign, not to one battle's losses |
 | "Out of the campaign" on the objectives scale | On the opening list; not yet decided | No. Until it lands the result on the scale is reported and not judged |
+| Two objectives that can be gamed, found by the rulebook review on Nov 12, 2026. `cargo_landed` counts every ton unloaded, so cargo unloaded, loaded back at the same base and unloaded again scores each time. `base_open` reads only the last moment of the game, so a base shut for four weeks scores as open with one ton and one ready aircraft at the end | Not yet decided. Each is a rule change and needs a plan for the designer | No. No measure rests on either, and the result on the scale is reported and not judged. They are mended with the scale, before anything plays the game for points (step 3). Until then the tally of outcomes for `06_rabaul_guadalcanal` and `07_full_slice` is read with this in mind |
 | Two names for "crippled" | Not started | No, but soon: the glossary means flotation damage of 50 or more, and the objective `ships_crippled` means propulsion or flight deck out |
 
 ### Experience
