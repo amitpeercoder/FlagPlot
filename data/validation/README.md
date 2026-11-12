@@ -9,7 +9,7 @@ A file opens with three keys:
 | Key | Holds |
 | --- | --- |
 | `battle` | The engagement's name in `data/oob` |
-| `scenario` | The scenario file the measures are taken from |
+| `scenario` | The scenario file the measures are taken from. Left out while the scenario is not built |
 | `facts` | The fact file the `rows` are ids in |
 
 Then one `[[measure]]` table for each measure:
@@ -52,7 +52,8 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 15 measures, 9 judged |
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 13 measures, 12 judged |
-| `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 9 measures, 5 judged |
+| `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
+| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes |
 | `passages.toml` | Ship passages | 4 passages, none judged |
 
-Still to write: flyable aircraft at Henderson Field on dated days, aircrew lost, and Cape Esperance when its facts are in.
+Still to write: for Cape Esperance, who sighted whom first and hits for each thousand shells, when the scenario is scoped and if the rounds fired are found.
