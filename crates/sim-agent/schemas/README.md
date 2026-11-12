@@ -17,6 +17,14 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `explain` | `explain.schema.json` | `explain` |
 | `measure` | `measure.schema.json` | `measure`: one of four answers, told apart by `question` (`air_distance`, `sea_route`, `passage`, `air_reach`) |
 | `not_known` | `not_known.schema.json` | `get_entity`, `explain` and `measure`, for anything the side does not know of |
+| `briefing_text` | `briefing_text.schema.json` | `get_briefing` with `{"text": true}` |
+| `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |
+| `end_day` | `end_day.schema.json` | `end_day` |
+| `error` | `error.schema.json` | any call refused as a whole |
+| `transcript_entry` | `transcript_entry.schema.json` | one line of a game's transcript |
+
+`order.schema.json` is not an answer: it describes one order, as saved games
+and `issue_orders` write it.
 
 `defs.schema.json` holds what the files share: the decimal string, the unit
 handle, the place and the one-line summaries of a task force, an air group, a
@@ -83,3 +91,61 @@ nothing).
 
 Numbers follow the rule above: whole miles and counts are integers; tons,
 hours, speeds and the miles of a passage are decimal strings.
+
+## Playing a side (decision 0050)
+
+A `Session` holds a game; `Session::call(seat, tool, arguments)` is the one
+entry point and `sim-cli serve` wraps it in JSON lines. The tools are
+`get_briefing` (`{"text": true}` for the text), `list_forces`, `list_bases`,
+`list_contacts` (each `{"area": {"q", "r", "radius_nm"}}` optional),
+`get_entity` (`{"handle": ".."}`), `measure` (the question object itself),
+`explain` (`{"event": N}`), `issue_orders` and `end_day`. A call refused as a
+whole (a tool that is not one, arguments that are not arguments, an order after
+the day is closed or the game is over) gives an `error` document and changes
+nothing.
+
+### Orders
+
+`issue_orders` takes `{"orders": [order, ...], "clear": true?}`. An order is
+`{"unit": "task_force:3", "order": {"kind": "set_route", "waypoints": [[2, -4]]}}`;
+`order.schema.json` lists every kind. `clear` empties the seat's queue first.
+For each order in the order given the answer says `queued` or `refused` with a
+reason. The engine's own check, the one made when the day begins, is made
+against the state now. A reason is the engine's own words, except that an order
+for a unit the side does not own, a unit that does not exist and a unit not
+written as `task_force:N` or `air_group:N` all get the one reason `not known`.
+A malformed order is refused with a reason beginning `malformed order`; the
+others in the call stand. The answer holds no part of the order it answers.
+
+The verdict is a forecast: an order queued can be refused when the day begins
+(for instance a load after a route order, which finds the force under way) and
+the next briefing's `orders.refused` says so.
+
+### Time
+
+`end_day` says the seat has finished. When every seat held by a player has, the
+day is resolved. The answer: `resolved`, `day` (days resolved) and `game_over`.
+After `end_day` and before the resolution the seat can read and cannot order;
+after the last day `end_day` changes nothing.
+
+### The record
+
+The session keeps the orders as handed in to the engine (a saved game made of
+them replays with no player) and a transcript of every call a player's seat
+made, numbered, with `after_day` (days resolved when it was made), the tool,
+the arguments and the whole answer. It holds no time of day.
+
+### Bases of the other side
+
+Where every base is and which side holds it is the map, not intelligence
+(decision 0034, 2), so a side is told those facts and nothing else of an enemy
+base. `list_bases` has a second list, `enemy_bases`, with a line for each base
+the side does not own (`base` handle with its name, `place`, `held_by`); the
+area filter applies to it. `get_entity("base:N")` for such a base gives an
+`entity` whose `entity_kind` is `enemy_base`: a `summary` with those three
+fields and `known`, the fixed words "number, name, place and holder only".
+`measure` takes such a base as a place and names it. A base number that does
+not exist is still `not_known`, so the two cases are deliberately told apart.
+No supply, fuel, guns, repairs or aircraft of an enemy base appear anywhere;
+`SideView::enemy_bases` returns a `PublicBase`, a struct with no field for them.
+A base strike is therefore judged by facts the side can list.

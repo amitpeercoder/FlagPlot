@@ -7,22 +7,23 @@
 //! Every quantity is a whole number, a decimal string or a plain string, so
 //! the same run gives the same bytes. The hash of a file is the FNV-1a hash
 //! the simulation uses for its state, over the file's bytes.
+//!
+//! Decision 11 of 0050 adds `"seats"`: who held each side, `"player"` or
+//! `"script"`. The orders are those handed in to the engine, for both sides,
+//! whoever gave them, so a game played by a player replays with none. The
+//! key is an addition: a file without it (every game saved before) is read as
+//! both seats held by the script, and the version is unchanged.
 
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde_json::{json, Map, Value};
-use sim_core::fixed::Fixed;
+use serde_json::{json, Value};
+use sim_agent::{order_from_json, order_to_json, unit_text, SeatKind};
 use sim_core::hash::StateHasher;
-use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, ShipId, TaskForceId};
-use sim_core::orders::{
-    AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Readiness,
-    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
-};
+use sim_core::ids::IntentId;
+use sim_core::orders::{Issuer, OrderRequest, Origin};
 use sim_core::state::Side;
-use sim_core::DaySummary;
 use sim_data::Scenario;
 
 pub const FORMAT: &str = "flagplot-saved-game";
@@ -60,18 +61,37 @@ pub fn remember(scenario: &Scenario) -> Result<Remembered, String> {
     })
 }
 
+/// The seats of a game with no player: both held by the script.
+pub fn script_seats() -> BTreeMap<Side, SeatKind> {
+    Side::ALL
+        .into_iter()
+        .map(|s| (s, SeatKind::Script))
+        .collect()
+}
+
+impl Remembered {
+    /// The scenario's own script, as it will be submitted.
+    pub fn script(&self) -> &Script {
+        &self.script
+    }
+}
+
+/// Writes a saved game. `orders` are the orders as handed in to the engine,
+/// by day, for both sides; `hashes` are `(day, hash)` for each day resolved.
 pub fn write(
     file: &str,
     scenario_path: &str,
     seed: u64,
     remembered: &Remembered,
-    summaries: &[DaySummary],
+    orders: &Script,
+    seats: &BTreeMap<Side, SeatKind>,
+    hashes: &[(u32, u64)],
 ) -> Result<(), String> {
     let scenario_hash = file_hash(Path::new(scenario_path))?;
-    let mut orders = Vec::new();
-    for (day, list) in &remembered.script {
+    let mut order_list = Vec::new();
+    for (day, list) in orders {
         for (side, request) in list {
-            orders.push(json!({
+            order_list.push(json!({
                 "day": day,
                 "side": match side {
                     Side::Allied => "allied",
@@ -99,130 +119,19 @@ pub fn write(
             .map(|(path, hash)| json!({ "file": path, "hash": hash }))
             .collect::<Vec<_>>(),
         "seed": seed,
-        "orders": orders,
-        "hashes": summaries
+        "seats": {
+            "allied": seats.get(&Side::Allied).copied().unwrap_or(SeatKind::Script).name(),
+            "japanese": seats.get(&Side::Japanese).copied().unwrap_or(SeatKind::Script).name(),
+        },
+        "orders": order_list,
+        "hashes": hashes
             .iter()
-            .map(|s| json!({ "day": s.day, "hash": format!("{:016x}", s.state_hash) }))
+            .map(|(day, hash)| json!({ "day": day, "hash": format!("{hash:016x}") }))
             .collect::<Vec<_>>(),
     });
     let mut text = serde_json::to_string_pretty(&value).map_err(|e| e.to_string())?;
     text.push('\n');
     fs::write(file, text).map_err(|e| format!("{file}: {e}"))
-}
-
-fn unit_text(kind: &OrderKind) -> String {
-    match kind {
-        OrderKind::TaskForce { target, .. } => format!("task_force:{}", target.raw()),
-        OrderKind::AirGroup { target, .. } => format!("air_group:{}", target.raw()),
-    }
-}
-
-fn fixed_text(value: Fixed) -> Value {
-    Value::String(value.to_string())
-}
-
-fn order_to_json(kind: &OrderKind) -> Value {
-    match kind {
-        OrderKind::TaskForce { order, .. } => match order {
-            TaskForceOrder::SetRoute(waypoints) => json!({
-                "kind": "set_route",
-                "waypoints": waypoints.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>(),
-            }),
-            TaskForceOrder::SetSpeed(speed) => match speed {
-                SpeedSetting::Cruise => json!({ "kind": "set_speed", "speed": "cruise" }),
-                SpeedSetting::Full => json!({ "kind": "set_speed", "speed": "full" }),
-                SpeedSetting::Knots(knots) => {
-                    json!({ "kind": "set_speed", "knots": fixed_text(*knots) })
-                }
-            },
-            TaskForceOrder::SetMission(mission) => {
-                json!({ "kind": "set_mission", "mission": mission_name(*mission) })
-            }
-            TaskForceOrder::Load => json!({ "kind": "load" }),
-            // A load of supply is written as it always was: only fuel names
-            // its cargo, so a save of an old game is unchanged (decision 0046).
-            TaskForceOrder::LoadFuel => json!({ "kind": "load", "cargo": "fuel" }),
-            TaskForceOrder::Unload => json!({ "kind": "unload" }),
-            TaskForceOrder::SetRulesOfEngagement {
-                stance,
-                break_off,
-                stragglers,
-                keep_share,
-            } => json!({
-                "kind": "set_rules_of_engagement",
-                "stance": match stance { Stance::Engage => "engage", Stance::Avoid => "avoid" },
-                "break_off": fixed_text(*break_off),
-                "stragglers": stragglers.name(),
-                "keep_share": fixed_text(*keep_share),
-            }),
-            TaskForceOrder::SetHomePort(base) => {
-                json!({ "kind": "set_home_port", "base": base.raw() })
-            }
-            TaskForceOrder::DetachShips(ships) => json!({
-                "kind": "detach",
-                "ships": ships.iter().map(|s| s.raw()).collect::<Vec<_>>(),
-            }),
-            TaskForceOrder::SetReadiness(readiness) => {
-                json!({ "kind": "set_readiness", "readiness": readiness.name() })
-            }
-        },
-        OrderKind::AirGroup { order, .. } => match order {
-            AirGroupOrder::SetAirMission(mission) => {
-                let mut map = Map::new();
-                map.insert("kind".into(), json!("set_air_mission"));
-                match mission {
-                    AirMission::Rest => map.insert("mission".into(), json!("rest")),
-                    AirMission::Search => map.insert("mission".into(), json!("search")),
-                    AirMission::NavalStrike => map.insert("mission".into(), json!("naval_strike")),
-                    AirMission::CombatAirPatrol => {
-                        map.insert("mission".into(), json!("combat_air_patrol"))
-                    }
-                    AirMission::BaseStrike(base) => {
-                        map.insert("mission".into(), json!("base_strike"));
-                        map.insert("target_base".into(), json!(base.raw()))
-                    }
-                };
-                Value::Object(map)
-            }
-            AirGroupOrder::SetSearchArc {
-                from_deg,
-                to_deg,
-                range_nm,
-            } => json!({
-                "kind": "set_search_arc",
-                "from_deg": from_deg,
-                "to_deg": to_deg,
-                "range_nm": fixed_text(*range_nm),
-            }),
-            AirGroupOrder::SetPatrolShare { share } => {
-                json!({ "kind": "set_patrol_share", "share": fixed_text(*share) })
-            }
-            AirGroupOrder::SetRestThreshold { fatigue } => {
-                json!({ "kind": "set_rest_threshold", "fatigue": fixed_text(*fatigue) })
-            }
-        },
-    }
-}
-
-fn mission_name(mission: Mission) -> &'static str {
-    match mission {
-        Mission::Transport => "transport",
-        Mission::SurfaceCombat => "surface_combat",
-        Mission::Carrier => "carrier",
-        Mission::Bombardment => "bombardment",
-        Mission::Escort => "escort",
-    }
-}
-
-fn mission_from(name: &str) -> Result<Mission, String> {
-    Ok(match name {
-        "transport" => Mission::Transport,
-        "surface_combat" => Mission::SurfaceCombat,
-        "carrier" => Mission::Carrier,
-        "bombardment" => Mission::Bombardment,
-        "escort" => Mission::Escort,
-        other => return Err(format!("unknown mission \"{other}\"")),
-    })
 }
 
 fn text<'a>(value: &'a Value, key: &str) -> Result<&'a str, String> {
@@ -232,149 +141,12 @@ fn text<'a>(value: &'a Value, key: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("\"{key}\" is missing or not text"))
 }
 
-fn whole(value: &Value, key: &str) -> Result<i64, String> {
+fn small(value: &Value, key: &str) -> Result<u32, String> {
     value
         .get(key)
         .and_then(Value::as_i64)
         .ok_or_else(|| format!("\"{key}\" is missing or not a whole number"))
-}
-
-fn small(value: &Value, key: &str) -> Result<u32, String> {
-    u32::try_from(whole(value, key)?).map_err(|_| format!("\"{key}\" is out of range"))
-}
-
-fn fixed(value: &Value, key: &str) -> Result<Fixed, String> {
-    text(value, key)?
-        .parse::<Fixed>()
-        .map_err(|e| format!("\"{key}\": {e}"))
-}
-
-fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
-    let (kind_of_unit, raw) = unit
-        .split_once(':')
-        .ok_or_else(|| format!("unit \"{unit}\" is not kind:number"))?;
-    let raw: u32 = raw
-        .parse()
-        .map_err(|_| format!("unit \"{unit}\" has no number"))?;
-    let kind = text(value, "kind")?;
-    match kind_of_unit {
-        "task_force" => {
-            let order = match kind {
-                "set_route" => {
-                    let list = value
-                        .get("waypoints")
-                        .and_then(Value::as_array)
-                        .ok_or("\"waypoints\" is missing")?;
-                    let mut hexes = Vec::new();
-                    for pair in list {
-                        let pair = pair.as_array().ok_or("a waypoint is not a pair")?;
-                        let get = |i: usize| {
-                            pair.get(i)
-                                .and_then(Value::as_i64)
-                                .and_then(|n| i32::try_from(n).ok())
-                                .ok_or("a waypoint is not a pair of whole numbers")
-                        };
-                        hexes.push(Hex::new(get(0)?, get(1)?));
-                    }
-                    TaskForceOrder::SetRoute(hexes)
-                }
-                "set_speed" => TaskForceOrder::SetSpeed(if value.get("knots").is_some() {
-                    SpeedSetting::Knots(fixed(value, "knots")?)
-                } else {
-                    match text(value, "speed")? {
-                        "cruise" => SpeedSetting::Cruise,
-                        "full" => SpeedSetting::Full,
-                        other => return Err(format!("unknown speed \"{other}\"")),
-                    }
-                }),
-                "set_mission" => TaskForceOrder::SetMission(mission_from(text(value, "mission")?)?),
-                "load" => match value.get("cargo") {
-                    None => TaskForceOrder::Load,
-                    Some(_) => match text(value, "cargo")? {
-                        "supply" => TaskForceOrder::Load,
-                        "fuel" => TaskForceOrder::LoadFuel,
-                        other => return Err(format!("unknown cargo \"{other}\"")),
-                    },
-                },
-                "unload" => TaskForceOrder::Unload,
-                "set_rules_of_engagement" => TaskForceOrder::SetRulesOfEngagement {
-                    stance: match text(value, "stance")? {
-                        "engage" => Stance::Engage,
-                        "avoid" => Stance::Avoid,
-                        other => return Err(format!("unknown stance \"{other}\"")),
-                    },
-                    break_off: fixed(value, "break_off")?,
-                    stragglers: match text(value, "stragglers")? {
-                        "keep" => StragglerInstruction::Keep,
-                        "detach" => StragglerInstruction::Detach,
-                        "leave" => StragglerInstruction::Leave,
-                        "retire" => StragglerInstruction::Retire,
-                        other => return Err(format!("unknown straggler instruction \"{other}\"")),
-                    },
-                    keep_share: fixed(value, "keep_share")?,
-                },
-                "set_home_port" => TaskForceOrder::SetHomePort(BaseId::new(small(value, "base")?)),
-                "detach" => {
-                    let list = value
-                        .get("ships")
-                        .and_then(Value::as_array)
-                        .ok_or("\"ships\" is missing")?;
-                    let mut ships = Vec::new();
-                    for ship in list {
-                        let raw = ship
-                            .as_u64()
-                            .and_then(|n| u32::try_from(n).ok())
-                            .ok_or("a ship is not a whole number")?;
-                        ships.push(ShipId::new(raw));
-                    }
-                    TaskForceOrder::DetachShips(ships)
-                }
-                "set_readiness" => TaskForceOrder::SetReadiness(match text(value, "readiness")? {
-                    "normal" => Readiness::Normal,
-                    "battle" => Readiness::Battle,
-                    other => return Err(format!("unknown readiness \"{other}\"")),
-                }),
-                other => return Err(format!("unknown task force order \"{other}\"")),
-            };
-            Ok(OrderKind::TaskForce {
-                target: TaskForceId::new(raw),
-                order,
-            })
-        }
-        "air_group" => {
-            let order = match kind {
-                "set_air_mission" => AirGroupOrder::SetAirMission(match text(value, "mission")? {
-                    "rest" => AirMission::Rest,
-                    "search" => AirMission::Search,
-                    "naval_strike" => AirMission::NavalStrike,
-                    "combat_air_patrol" => AirMission::CombatAirPatrol,
-                    "base_strike" => {
-                        AirMission::BaseStrike(BaseId::new(small(value, "target_base")?))
-                    }
-                    other => return Err(format!("unknown air mission \"{other}\"")),
-                }),
-                "set_search_arc" => AirGroupOrder::SetSearchArc {
-                    from_deg: i32::try_from(whole(value, "from_deg")?)
-                        .map_err(|_| "from_deg is out of range".to_string())?,
-                    to_deg: i32::try_from(whole(value, "to_deg")?)
-                        .map_err(|_| "to_deg is out of range".to_string())?,
-                    range_nm: fixed(value, "range_nm")?,
-                },
-                "set_patrol_share" => AirGroupOrder::SetPatrolShare {
-                    share: fixed(value, "share")?,
-                },
-                "set_rest_threshold" => AirGroupOrder::SetRestThreshold {
-                    fatigue: fixed(value, "fatigue")?,
-                },
-                other => return Err(format!("unknown air group order \"{other}\"")),
-            };
-            Ok(OrderKind::AirGroup {
-                target: AirGroupId::new(raw),
-                order,
-            })
-        }
-        other => Err(format!("unknown unit kind \"{other}\"")),
-    }
+        .and_then(|n| u32::try_from(n).map_err(|_| format!("\"{key}\" is out of range")))
 }
 
 /// A saved game, read back.
@@ -383,6 +155,7 @@ pub struct Saved {
     scenario_hash: String,
     data_files: Vec<(String, String)>,
     pub seed: u64,
+    pub seats: BTreeMap<Side, SeatKind>,
     pub script: Script,
     pub hashes: Vec<(u32, String)>,
 }
@@ -419,6 +192,20 @@ pub fn read(file: &str) -> Result<Saved, String> {
         .get("seed")
         .and_then(Value::as_u64)
         .ok_or_else(|| bad("no seed".into()))?;
+    let mut seats = script_seats();
+    if let Some(held) = value.get("seats") {
+        for side in Side::ALL {
+            let name = if side == Side::Allied {
+                "allied"
+            } else {
+                "japanese"
+            };
+            let kind = text(held, name).map_err(&bad)?;
+            let kind = SeatKind::parse(kind)
+                .ok_or_else(|| bad(format!("unknown seat holder \"{kind}\"")))?;
+            seats.insert(side, kind);
+        }
+    }
     let mut script: Script = BTreeMap::new();
     for entry in value
         .get("orders")
@@ -477,6 +264,7 @@ pub fn read(file: &str) -> Result<Saved, String> {
         scenario_hash,
         data_files,
         seed,
+        seats,
         script,
         hashes,
     })
@@ -513,55 +301,5 @@ impl Saved {
             }
         }
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn load_of(value: &Value) -> Result<TaskForceOrder, String> {
-        match order_from_json("task_force:1", value)? {
-            OrderKind::TaskForce { order, .. } => Ok(order),
-            other => Err(format!("not a task force order: {other:?}")),
-        }
-    }
-
-    fn written(order: TaskForceOrder) -> Value {
-        order_to_json(&OrderKind::TaskForce {
-            target: TaskForceId::new(1),
-            order,
-        })
-    }
-
-    #[test]
-    fn a_load_written_before_fuel_was_a_cargo_still_reads_as_supply() {
-        // The encoding of a load order in every saved game made before
-        // decision 0046: a kind and nothing else.
-        let old: Value = serde_json::from_str(r#"{"kind":"load"}"#).expect("JSON");
-        assert_eq!(load_of(&old), Ok(TaskForceOrder::Load));
-        let named: Value =
-            serde_json::from_str(r#"{"kind":"load","cargo":"supply"}"#).expect("JSON");
-        assert_eq!(load_of(&named), Ok(TaskForceOrder::Load));
-    }
-
-    #[test]
-    fn a_load_of_supply_is_still_written_as_it_was_and_fuel_names_its_cargo() {
-        assert_eq!(written(TaskForceOrder::Load), json!({ "kind": "load" }));
-        assert_eq!(
-            written(TaskForceOrder::LoadFuel),
-            json!({ "kind": "load", "cargo": "fuel" })
-        );
-        assert_eq!(
-            load_of(&written(TaskForceOrder::LoadFuel)),
-            Ok(TaskForceOrder::LoadFuel)
-        );
-        assert_eq!(written(TaskForceOrder::Unload), json!({ "kind": "unload" }));
-    }
-
-    #[test]
-    fn an_unknown_cargo_is_refused() {
-        let bad: Value = serde_json::from_str(r#"{"kind":"load","cargo":"oil"}"#).expect("JSON");
-        assert!(load_of(&bad).is_err());
     }
 }

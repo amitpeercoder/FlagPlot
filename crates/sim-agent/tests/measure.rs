@@ -1239,13 +1239,8 @@ fn what_the_side_does_not_know_is_one_and_the_same_answer() {
                         .filter(|u| theirs(u.side))
                         .map(|u| (side, u.id.to_string())),
                 );
-                enemy.extend(
-                    truth
-                        .bases
-                        .values()
-                        .filter(|u| theirs(u.side))
-                        .map(|u| (side, u.id.to_string())),
-                );
+                // An enemy base is a place the side knows (decision 0050, as
+                // amended): see `an_enemy_base_is_a_place_by_its_public_facts`.
             }
             enemy
         };
@@ -1491,4 +1486,56 @@ fn the_passage_of_the_convoy_and_the_reach_of_the_g4m1s_as_text() {
     )
     .to_text();
     println!("---- air reach of the G4M1 group in scenario 6\n{text}");
+}
+
+#[test]
+fn an_enemy_base_is_a_place_by_its_public_facts() {
+    let scenario = load("06_rabaul_guadalcanal.toml", 1);
+    let truth = scenario.world.umpire();
+    let enemy = truth
+        .bases
+        .values()
+        .find(|b| b.side == Side::Japanese)
+        .expect("a Japanese base")
+        .clone();
+    let view = scenario.world.side_view(Side::Allied);
+    let own = view.bases().next().expect("own base").id.to_string();
+    let schemas = schemas();
+    let handle = enemy.id.to_string();
+    let (_, data) = check_measure(
+        &view,
+        &Question::AirDistance {
+            from: PlaceArg::unit(&own),
+            to: PlaceArg::unit(&handle),
+        },
+        &schemas,
+        "air distance to an enemy base",
+    );
+    assert_eq!(data["kind"], "measure");
+    assert_eq!(data["to"]["unit"]["handle"], handle.as_str());
+    assert_eq!(data["to"]["unit"]["name"], enemy.name.as_str());
+    assert_eq!(data["to"]["place"]["q"], enemy.hex.q);
+    // A base number that does not exist is still not known.
+    let (_, data) = check_measure(
+        &view,
+        &Question::AirDistance {
+            from: PlaceArg::unit(&own),
+            to: PlaceArg::unit("base:99999"),
+        },
+        &schemas,
+        "air distance to no base",
+    );
+    assert_eq!(data["kind"], "not_known");
+    // The reach of an own air group to the enemy base names it.
+    let group = view.air_groups().next().expect("a group").id.to_string();
+    let (_, data) = check_measure(
+        &view,
+        &Question::AirReach {
+            air_group: group,
+            to: vec![PlaceArg::unit(&handle)],
+        },
+        &schemas,
+        "air reach to an enemy base",
+    );
+    assert_eq!(data["kind"], "measure");
 }

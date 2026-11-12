@@ -352,6 +352,22 @@ impl World {
         id
     }
 
+    /// Whether the engine would accept this order from `side` if it were
+    /// taken in now: the same check intake makes (`validate_order`), against
+    /// the state as it stands. Changes nothing, numbers nothing and records
+    /// nothing. An order queued is checked again when the day begins, and the
+    /// state may have changed by then (decision 4 of 0050).
+    pub fn check_order(&self, side: Side, request: &OrderRequest) -> Result<(), RejectReason> {
+        let order = Order {
+            id: OrderId::new(0),
+            side,
+            day_issued: self.truth.day + 1,
+            kind: request.kind.clone(),
+            origin: request.origin,
+        };
+        self.validate_order(&order)
+    }
+
     /// Orders are checked against the truth, as the spec says. Note that a
     /// rejection can therefore tell a side something its own view would not.
     fn validate_order(&self, order: &Order) -> Result<(), RejectReason> {

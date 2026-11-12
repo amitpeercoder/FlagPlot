@@ -116,6 +116,9 @@ pub fn allowed_handles(view: &SideView<'_>) -> BTreeSet<String> {
     allowed.extend(view.task_forces().map(|s| s.id.to_string()));
     allowed.extend(view.air_groups().map(|s| s.id.to_string()));
     allowed.extend(view.bases().map(|s| s.id.to_string()));
+    // The bases of the other side are on the map (decision 0034, 2): their
+    // numbers, names, places and holders are public, and nothing else of them.
+    allowed.extend(view.enemy_bases().map(|b| b.id.to_string()));
     allowed.extend(view.contacts().map(|c| c.id.to_string()));
     for event in view.events() {
         allowed.extend(event.kind.entities().iter().map(ToString::to_string));

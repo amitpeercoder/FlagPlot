@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/issue_orders",
+  "title": "issue_orders: for each order given, queued or refused with the reason",
+  "description": "A forecast of the engine's verdict made against the state now; an order queued can still be refused when the day begins, and the next briefing says so. An order for a unit the side does not own is refused with the reason \"not known\", as is one for a unit that does not exist.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "for_day",
+    "cleared",
+    "results",
+    "queued"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "issue_orders"
+    },
+    "for_day": {
+      "type": "integer"
+    },
+    "cleared": {
+      "type": "boolean"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "status"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "status": {
+                "const": "queued"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "status": {
+                "const": "refused"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "queued": {
+      "type": "integer"
+    }
+  }
+}

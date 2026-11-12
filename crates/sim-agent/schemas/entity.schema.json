@@ -3,145 +3,371 @@
   "$id": "flagplot-agent/entity",
   "title": "entity: everything the side knows of one own unit or one contact (get_entity); or not_known",
   "oneOf": [
-    { "$ref": "#/$defs/entity" },
-    { "$ref": "defs.schema.json#/$defs/not_known" }
+    {
+      "$ref": "#/$defs/entity"
+    },
+    {
+      "$ref": "defs.schema.json#/$defs/not_known"
+    }
   ],
   "$defs": {
     "entity": {
       "type": "object",
-      "required": ["format", "version", "kind", "entity"],
+      "required": [
+        "format",
+        "version",
+        "kind",
+        "entity"
+      ],
       "additionalProperties": false,
       "properties": {
-        "format": { "const": "flagplot-agent" },
-        "version": { "const": 1 },
-        "kind": { "const": "entity" },
+        "format": {
+          "const": "flagplot-agent"
+        },
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "entity"
+        },
         "entity": {
           "oneOf": [
-            { "$ref": "#/$defs/ship" },
-            { "$ref": "#/$defs/task_force" },
-            { "$ref": "#/$defs/air_group" },
-            { "$ref": "#/$defs/base" },
-            { "$ref": "#/$defs/contact" }
+            {
+              "$ref": "#/$defs/ship"
+            },
+            {
+              "$ref": "#/$defs/task_force"
+            },
+            {
+              "$ref": "#/$defs/air_group"
+            },
+            {
+              "$ref": "#/$defs/base"
+            },
+            {
+              "$ref": "#/$defs/contact"
+            },
+            {
+              "$ref": "#/$defs/enemy_base"
+            }
           ]
         }
       }
     },
-    "system_state": { "enum": ["working", "degraded", "out"] },
+    "system_state": {
+      "enum": [
+        "working",
+        "degraded",
+        "out"
+      ]
+    },
     "systems": {
       "type": "object",
-      "required": ["propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"],
+      "required": [
+        "propulsion",
+        "fire_control",
+        "main_battery",
+        "torpedo_mounts",
+        "flight_deck"
+      ],
       "additionalProperties": false,
       "properties": {
-        "propulsion": { "$ref": "#/$defs/system_state" },
-        "fire_control": { "$ref": "#/$defs/system_state" },
-        "main_battery": { "$ref": "#/$defs/system_state" },
-        "torpedo_mounts": { "$ref": "#/$defs/system_state" },
-        "flight_deck": { "$ref": "#/$defs/system_state" }
+        "propulsion": {
+          "$ref": "#/$defs/system_state"
+        },
+        "fire_control": {
+          "$ref": "#/$defs/system_state"
+        },
+        "main_battery": {
+          "$ref": "#/$defs/system_state"
+        },
+        "torpedo_mounts": {
+          "$ref": "#/$defs/system_state"
+        },
+        "flight_deck": {
+          "$ref": "#/$defs/system_state"
+        }
       }
     },
     "ship": {
       "type": "object",
       "required": [
-        "entity_kind", "ship", "class", "ship_kind", "sunk", "task_force", "port", "place",
-        "fuel_t", "supply_t", "cargo_fuel_t", "flotation_damage", "fire_damage", "gun_rounds",
-        "torpedoes_ready", "systems", "range_nm", "air_groups"
+        "entity_kind",
+        "ship",
+        "class",
+        "ship_kind",
+        "sunk",
+        "task_force",
+        "port",
+        "place",
+        "fuel_t",
+        "supply_t",
+        "cargo_fuel_t",
+        "flotation_damage",
+        "fire_damage",
+        "gun_rounds",
+        "torpedoes_ready",
+        "systems",
+        "range_nm",
+        "air_groups"
       ],
       "additionalProperties": false,
       "properties": {
-        "entity_kind": { "const": "ship" },
-        "ship": { "$ref": "defs.schema.json#/$defs/handle" },
-        "class": { "type": "string" },
-        "ship_kind": {
-          "type": ["string", "null"],
-          "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary", null]
+        "entity_kind": {
+          "const": "ship"
         },
-        "sunk": { "type": "boolean" },
-        "task_force": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
-        "port": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
-        "place": { "$ref": "defs.schema.json#/$defs/place_or_null" },
-        "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
-        "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
-        "cargo_fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
-        "flotation_damage": { "$ref": "defs.schema.json#/$defs/dec" },
-        "fire_damage": { "$ref": "defs.schema.json#/$defs/dec" },
-        "gun_rounds": { "$ref": "defs.schema.json#/$defs/dec" },
-        "torpedoes_ready": { "type": "boolean" },
-        "systems": { "$ref": "#/$defs/systems" },
-        "range_nm": { "$ref": "defs.schema.json#/$defs/count_or_null" },
-        "air_groups": { "$ref": "defs.schema.json#/$defs/handles" }
+        "ship": {
+          "$ref": "defs.schema.json#/$defs/handle"
+        },
+        "class": {
+          "type": "string"
+        },
+        "ship_kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "carrier",
+            "battleship",
+            "cruiser",
+            "destroyer",
+            "transport",
+            "auxiliary",
+            null
+          ]
+        },
+        "sunk": {
+          "type": "boolean"
+        },
+        "task_force": {
+          "$ref": "defs.schema.json#/$defs/handle_or_null"
+        },
+        "port": {
+          "$ref": "defs.schema.json#/$defs/handle_or_null"
+        },
+        "place": {
+          "$ref": "defs.schema.json#/$defs/place_or_null"
+        },
+        "fuel_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "supply_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "cargo_fuel_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "flotation_damage": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "fire_damage": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "gun_rounds": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "torpedoes_ready": {
+          "type": "boolean"
+        },
+        "systems": {
+          "$ref": "#/$defs/systems"
+        },
+        "range_nm": {
+          "$ref": "defs.schema.json#/$defs/count_or_null"
+        },
+        "air_groups": {
+          "$ref": "defs.schema.json#/$defs/handles"
+        }
       }
     },
     "ship_line": {
       "type": "object",
-      "required": ["ship", "class", "sunk", "fuel_t", "flotation_damage", "fire_damage"],
+      "required": [
+        "ship",
+        "class",
+        "sunk",
+        "fuel_t",
+        "flotation_damage",
+        "fire_damage"
+      ],
       "additionalProperties": false,
       "properties": {
-        "ship": { "$ref": "defs.schema.json#/$defs/handle" },
-        "class": { "type": "string" },
-        "sunk": { "type": "boolean" },
-        "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
-        "flotation_damage": { "$ref": "defs.schema.json#/$defs/dec" },
-        "fire_damage": { "$ref": "defs.schema.json#/$defs/dec" }
+        "ship": {
+          "$ref": "defs.schema.json#/$defs/handle"
+        },
+        "class": {
+          "type": "string"
+        },
+        "sunk": {
+          "type": "boolean"
+        },
+        "fuel_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "flotation_damage": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "fire_damage": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        }
       }
     },
     "task_force": {
       "type": "object",
       "required": [
-        "entity_kind", "summary", "route", "next_waypoint", "stance", "break_off", "home_port", "ships"
+        "entity_kind",
+        "summary",
+        "route",
+        "next_waypoint",
+        "stance",
+        "break_off",
+        "home_port",
+        "ships"
       ],
       "additionalProperties": false,
       "properties": {
-        "entity_kind": { "const": "task_force" },
-        "summary": { "$ref": "defs.schema.json#/$defs/force_line" },
-        "route": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/place" } },
-        "next_waypoint": { "type": "integer" },
-        "stance": { "enum": ["engage", "avoid"] },
-        "break_off": { "$ref": "defs.schema.json#/$defs/dec" },
-        "home_port": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
-        "ships": { "type": "array", "items": { "$ref": "#/$defs/ship_line" } }
+        "entity_kind": {
+          "const": "task_force"
+        },
+        "summary": {
+          "$ref": "defs.schema.json#/$defs/force_line"
+        },
+        "route": {
+          "type": "array",
+          "items": {
+            "$ref": "defs.schema.json#/$defs/place"
+          }
+        },
+        "next_waypoint": {
+          "type": "integer"
+        },
+        "stance": {
+          "enum": [
+            "engage",
+            "avoid"
+          ]
+        },
+        "break_off": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "home_port": {
+          "$ref": "defs.schema.json#/$defs/handle_or_null"
+        },
+        "ships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ship_line"
+          }
+        }
       }
     },
     "air_group": {
       "type": "object",
       "required": [
-        "entity_kind", "summary", "patrol_share", "strength", "search_from_deg",
-        "search_to_deg", "search_range_nm"
+        "entity_kind",
+        "summary",
+        "patrol_share",
+        "strength",
+        "search_from_deg",
+        "search_to_deg",
+        "search_range_nm"
       ],
       "additionalProperties": false,
       "properties": {
-        "entity_kind": { "const": "air_group" },
-        "summary": { "$ref": "defs.schema.json#/$defs/air_group_line" },
-        "patrol_share": { "$ref": "defs.schema.json#/$defs/dec" },
-        "strength": { "type": "integer" },
-        "search_from_deg": { "$ref": "defs.schema.json#/$defs/count_or_null" },
-        "search_to_deg": { "$ref": "defs.schema.json#/$defs/count_or_null" },
-        "search_range_nm": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+        "entity_kind": {
+          "const": "air_group"
+        },
+        "summary": {
+          "$ref": "defs.schema.json#/$defs/air_group_line"
+        },
+        "patrol_share": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "strength": {
+          "type": "integer"
+        },
+        "search_from_deg": {
+          "$ref": "defs.schema.json#/$defs/count_or_null"
+        },
+        "search_to_deg": {
+          "$ref": "defs.schema.json#/$defs/count_or_null"
+        },
+        "search_range_nm": {
+          "$ref": "defs.schema.json#/$defs/dec_or_null"
+        }
       }
     },
     "base": {
       "type": "object",
       "required": [
-        "entity_kind", "summary", "anti_aircraft", "aircraft_repairs_per_day", "air_groups",
+        "entity_kind",
+        "summary",
+        "anti_aircraft",
+        "aircraft_repairs_per_day",
+        "air_groups",
         "ships_in_port"
       ],
       "additionalProperties": false,
       "properties": {
-        "entity_kind": { "const": "base" },
-        "summary": { "$ref": "defs.schema.json#/$defs/base_line" },
-        "anti_aircraft": { "type": "integer" },
-        "aircraft_repairs_per_day": { "type": "integer" },
-        "air_groups": { "$ref": "defs.schema.json#/$defs/handles" },
-        "ships_in_port": { "$ref": "defs.schema.json#/$defs/handles" }
+        "entity_kind": {
+          "const": "base"
+        },
+        "summary": {
+          "$ref": "defs.schema.json#/$defs/base_line"
+        },
+        "anti_aircraft": {
+          "type": "integer"
+        },
+        "aircraft_repairs_per_day": {
+          "type": "integer"
+        },
+        "air_groups": {
+          "$ref": "defs.schema.json#/$defs/handles"
+        },
+        "ships_in_port": {
+          "$ref": "defs.schema.json#/$defs/handles"
+        }
       }
     },
     "contact": {
       "type": "object",
-      "required": ["entity_kind", "summary", "last_report_event"],
+      "required": [
+        "entity_kind",
+        "summary",
+        "last_report_event"
+      ],
       "additionalProperties": false,
       "properties": {
-        "entity_kind": { "const": "contact" },
-        "summary": { "$ref": "defs.schema.json#/$defs/contact_line" },
-        "last_report_event": { "$ref": "defs.schema.json#/$defs/count_or_null" }
+        "entity_kind": {
+          "const": "contact"
+        },
+        "summary": {
+          "$ref": "defs.schema.json#/$defs/contact_line"
+        },
+        "last_report_event": {
+          "$ref": "defs.schema.json#/$defs/count_or_null"
+        }
+      }
+    },
+    "enemy_base": {
+      "type": "object",
+      "required": [
+        "entity_kind",
+        "summary",
+        "known"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity_kind": {
+          "const": "enemy_base"
+        },
+        "summary": {
+          "$ref": "defs.schema.json#/$defs/enemy_base_line"
+        },
+        "known": {
+          "const": "number, name, place and holder only"
+        }
       }
     }
   }

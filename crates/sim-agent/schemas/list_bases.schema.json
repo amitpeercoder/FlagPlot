@@ -3,29 +3,67 @@
   "$id": "flagplot-agent/list_bases",
   "title": "list_bases: a line for each base",
   "type": "object",
-  "required": ["format", "version", "kind", "area", "bases"],
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "area",
+    "bases",
+    "enemy_bases"
+  ],
   "additionalProperties": false,
   "properties": {
-    "format": { "const": "flagplot-agent" },
-    "version": { "const": 1 },
-    "kind": { "const": "list_bases" },
-    "area": { "$ref": "#/$defs/area_or_null" },
-    "bases": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/base_line" } }
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "list_bases"
+    },
+    "area": {
+      "$ref": "#/$defs/area_or_null"
+    },
+    "bases": {
+      "type": "array",
+      "items": {
+        "$ref": "defs.schema.json#/$defs/base_line"
+      }
+    },
+    "enemy_bases": {
+      "type": "array",
+      "items": {
+        "$ref": "defs.schema.json#/$defs/enemy_base_line"
+      }
+    }
   },
   "$defs": {
     "area_or_null": {
       "oneOf": [
         {
           "type": "object",
-          "required": ["q", "r", "radius_nm"],
+          "required": [
+            "q",
+            "r",
+            "radius_nm"
+          ],
           "additionalProperties": false,
           "properties": {
-            "q": { "type": "integer" },
-            "r": { "type": "integer" },
-            "radius_nm": { "type": "integer" }
+            "q": {
+              "type": "integer"
+            },
+            "r": {
+              "type": "integer"
+            },
+            "radius_nm": {
+              "type": "integer"
+            }
           }
         },
-        { "type": "null" }
+        {
+          "type": "null"
+        }
       ]
     }
   }

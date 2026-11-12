@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 use crate::belief::{BattleClaim, BeliefState, Contact};
 use crate::events::EventLog;
 use crate::hex::Hex;
-use crate::ids::{AircraftTypeId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
+use crate::ids::{AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
 use crate::orders::{Order, SpeedSetting};
@@ -33,6 +33,19 @@ pub struct RulesInPlay {
     pub wear: bool,
     pub fatigue: bool,
     pub supply: bool,
+}
+
+/// What every side knows of a base that is not its own: where it is and which
+/// side holds it, and its number and name. That is the map, not intelligence
+/// (decision 0034, 2). The type has no field for supply, fuel, guns, repairs or
+/// aircraft, so nothing more can be carried in it.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PublicBase {
+    pub id: BaseId,
+    pub name: String,
+    pub hex: Hex,
+    /// The side that holds it.
+    pub side: Side,
 }
 
 /// One side's view of the game.
@@ -116,6 +129,22 @@ impl<'a> SideView<'a> {
             .bases
             .values()
             .filter(move |base| base.side == side)
+    }
+
+    /// The public facts of every base the side does not own, in number order
+    /// (see [`PublicBase`]). Nothing else of an enemy base is visible.
+    pub fn enemy_bases(&self) -> impl Iterator<Item = PublicBase> + '_ {
+        let side = self.side;
+        self.truth
+            .bases
+            .values()
+            .filter(move |base| base.side != side)
+            .map(|base| PublicBase {
+                id: base.id,
+                name: base.name.clone(),
+                hex: base.hex,
+                side: base.side,
+            })
     }
 
     /// The side's own air groups, known exactly.

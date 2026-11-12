@@ -57,5 +57,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0047 | What a side may know of what happened: which events each side sees and what is cut from them | Confirmed |
 | 0048 | The briefing and the queries: a daily situation report for a side, list and detail queries, and explain, built only on a side's view, as JSON with schemas | Confirmed |
 | 0049 | Measuring: air distance, sea route, a force's passage with time and fuel, and an air group's reach, each by the engine's own function | Confirmed |
+| 0050 | Playing a side: seats, `issue_orders` and `end_day`, saved orders as handed in, the transcript, and `sim-cli serve` | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

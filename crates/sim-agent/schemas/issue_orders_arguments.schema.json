@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/issue_orders_arguments",
+  "title": "issue_orders arguments: the orders for the coming day, and whether to clear the queue first",
+  "type": "object",
+  "required": [
+    "orders"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "orders": {
+      "type": "array",
+      "items": {
+        "$ref": "order.schema.json"
+      }
+    },
+    "clear": {
+      "type": "boolean"
+    }
+  }
+}

@@ -32,7 +32,10 @@ mod common;
 mod explain;
 mod lines;
 mod measure;
+mod orders;
 mod queries;
+mod record;
+mod session;
 mod text;
 mod words;
 
@@ -53,8 +56,11 @@ pub use measure::{
     measure, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer, Moment, Passage,
     PassageSpeed, PlaceArg, Question, ReachLine, Resolved, SeaRoute, ShipFuel, SpeedArg,
 };
+pub use orders::{is_orderable_unit, order_from_json, order_to_json, unit_text};
 pub use queries::{
     get_entity, list_bases, list_contacts, list_forces, AirGroupDetail, Area, BaseDetail,
-    ContactDetail, Detail, Entity, EntityAnswer, ForceDetail, ListBases, ListContacts, ListForces,
-    ShipDetail, ShipLine, SystemStates,
+    ContactDetail, Detail, EnemyBaseDetail, EnemyBaseLine, Entity, EntityAnswer, ForceDetail,
+    ListBases, ListContacts, ListForces, ShipDetail, ShipLine, SystemStates,
 };
+pub use record::{parse_seat, seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
+pub use session::{Session, NOT_KNOWN};

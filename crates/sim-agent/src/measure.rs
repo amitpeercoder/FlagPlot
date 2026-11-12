@@ -347,8 +347,15 @@ fn resolve(ctx: &Ctx<'_>, arg: &PlaceArg) -> Option<(Hex, Resolved)> {
                     (ctx.group_hex(group)?, Some(ctx.group(group.id)))
                 }
                 "base" => {
-                    let base = *ctx.bases.get(&sim_core::ids::BaseId::new(id))?;
-                    (base.hex, Some(ctx.base(base.id)))
+                    let id = sim_core::ids::BaseId::new(id);
+                    match ctx.bases.get(&id) {
+                        Some(base) => (base.hex, Some(ctx.base(base.id))),
+                        // A base of the other side: where it is is the map's.
+                        None => {
+                            let base = ctx.enemy_bases.get(&id)?;
+                            (base.hex, Some(ctx.base(base.id)))
+                        }
+                    }
                 }
                 "contact" => {
                     let contact = ctx.view.contacts().find(|c| c.id == ContactId::new(id))?;

@@ -50,6 +50,26 @@ pub struct ListBases {
     pub kind: &'static str,
     pub area: Option<Area>,
     pub bases: Vec<BaseLine>,
+    /// The bases the side does not own: public facts only (decision 0050).
+    pub enemy_bases: Vec<EnemyBaseLine>,
+}
+
+/// A base the side does not own, as every side knows it: number, name, place
+/// and the side that holds it. Nothing else is known.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct EnemyBaseLine {
+    pub base: Handle,
+    pub place: Place,
+    /// `allied` or `japanese`.
+    pub held_by: &'static str,
+}
+
+fn enemy_base_line(ctx: &Ctx<'_>, base: &sim_core::view::PublicBase) -> EnemyBaseLine {
+    EnemyBaseLine {
+        base: ctx.base(base.id),
+        place: ctx.place(base.hex),
+        held_by: crate::record::seat_name(base.side),
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -92,6 +112,12 @@ pub fn list_bases(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListBases {
             .values()
             .filter(|b| within(area, b.hex))
             .map(|b| base_line(&ctx, b))
+            .collect(),
+        enemy_bases: ctx
+            .enemy_bases
+            .values()
+            .filter(|b| within(area, b.hex))
+            .map(|b| enemy_base_line(&ctx, b))
             .collect(),
     }
 }
@@ -148,6 +174,7 @@ pub enum Detail {
     TaskForce(ForceDetail),
     AirGroup(AirGroupDetail),
     Base(BaseDetail),
+    EnemyBase(EnemyBaseDetail),
     Contact(ContactDetail),
 }
 
@@ -228,6 +255,16 @@ pub struct BaseDetail {
     pub aircraft_repairs_per_day: u32,
     pub air_groups: Vec<Handle>,
     pub ships_in_port: Vec<Handle>,
+}
+
+/// What is known of a base the side does not own: the public facts, and a
+/// statement that nothing more is known.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct EnemyBaseDetail {
+    pub entity_kind: &'static str,
+    pub summary: EnemyBaseLine,
+    /// Always `"number, name, place and holder only"`.
+    pub known: &'static str,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -353,7 +390,15 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             }))
         }
         "base" => {
-            let base = *ctx.bases.get(&sim_core::ids::BaseId::new(id))?;
+            let base_id = sim_core::ids::BaseId::new(id);
+            if let Some(public) = ctx.enemy_bases.get(&base_id) {
+                return Some(Detail::EnemyBase(EnemyBaseDetail {
+                    entity_kind: "enemy_base",
+                    summary: enemy_base_line(&ctx, public),
+                    known: "number, name, place and holder only",
+                }));
+            }
+            let base = *ctx.bases.get(&base_id)?;
             Some(Detail::Base(BaseDetail {
                 entity_kind: "base",
                 summary: base_line(&ctx, base),

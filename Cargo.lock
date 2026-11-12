@@ -240,6 +240,7 @@ dependencies = [
  "csv",
  "serde",
  "serde_json",
+ "sim-agent",
  "sim-core",
  "sim-data",
 ]
