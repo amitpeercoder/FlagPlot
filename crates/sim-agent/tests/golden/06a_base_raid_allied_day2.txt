@@ -40,9 +40,9 @@ TASK FORCES
 - Task forces: none
 
 AIR GROUPS
-- air_group:3 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 9 ready, mission combat air patrol
-- air_group:4 "Placeholder resting bombers" (Placeholder dive bomber) at base:2 "Placeholder airfield B" (5,0): 10 ready, mission rest
-- air_group:5 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, mission search
+- air_group:3 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 9 ready, radius 250 miles, search range 0 miles, mission combat air patrol
+- air_group:4 "Placeholder resting bombers" (Placeholder dive bomber) at base:2 "Placeholder airfield B" (5,0): 10 ready, radius 250 miles, search range 0 miles, mission rest
+- air_group:5 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, radius 0 miles, search range 300 miles, mission search
 
 BASES
 - base:2 "Placeholder airfield B" at (5,0): fuel 0 t
@@ -58,3 +58,4 @@ WARNINGS
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
 - Task forces that cannot move or are slowed: none
+- Strike groups with nothing in reach: none

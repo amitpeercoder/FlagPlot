@@ -279,11 +279,11 @@ fn the_objectives_are_those_the_decision_gives_both_sides() {
     );
     assert_eq!(
         objectives.allied.mission,
-        "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action."
+        "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action. The Japanese carriers are expected to come down from the north."
     );
     assert_eq!(
         objectives.japanese.mission,
-        "Destroy the American carriers east of Guadalcanal, and keep your own in action."
+        "Destroy the American carriers east of Guadalcanal, and keep your own in action. The American carriers are believed to be south or east of Guadalcanal."
     );
     let table = |sunk: bool| {
         let (carrier, battleship, cruiser, destroyer, transport, auxiliary) = if sunk {

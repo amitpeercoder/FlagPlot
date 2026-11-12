@@ -28,11 +28,27 @@
     "objectives": {
       "description": "The side's own mission and objectives (decision 0054), its progress as far as it can know it, and the umpire's result once the game is over. mission is null and objectives empty when the scenario has none; result is null until the game is over (and always null without objectives).",
       "type": "object",
-      "required": ["mission", "objectives", "result"],
+      "required": ["mission", "objectives", "levels", "result"],
       "additionalProperties": false,
       "properties": {
         "mission": { "$ref": "defs.schema.json#/$defs/string_or_null" },
         "objectives": { "type": "array", "items": { "$ref": "#/$defs/objective" } },
+        "levels": {
+          "description": "From day 1: the margins (a side's points less the enemy's) that make a minor, a major and a decisive victory; the same margins against a side are defeats of the same level, and a margin of less than minor either way is a stalemate. null when the scenario has no objectives.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["minor", "major", "decisive"],
+              "additionalProperties": false,
+              "properties": {
+                "minor": { "$ref": "defs.schema.json#/$defs/dec" },
+                "major": { "$ref": "defs.schema.json#/$defs/dec" },
+                "decisive": { "$ref": "defs.schema.json#/$defs/dec" }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
         "result": {
           "oneOf": [
             { "$ref": "#/$defs/result" },
@@ -87,7 +103,10 @@
       "properties": {
         "allied": { "$ref": "#/$defs/side_result" },
         "japanese": { "$ref": "#/$defs/side_result" },
-        "history": { "$ref": "defs.schema.json#/$defs/string_or_null" }
+        "history": {
+          "description": "What happened in the real battle, not in this game: the scenario's note of how the day went in history, in words and not a computed score. It is not this game's result. null where the scenario gives none.",
+          "$ref": "defs.schema.json#/$defs/string_or_null"
+        }
       }
     },
     "side_result": {
@@ -125,8 +144,8 @@
         "total": { "$ref": "defs.schema.json#/$defs/dec" },
         "margin": { "description": "This side's points less the other side's.", "$ref": "defs.schema.json#/$defs/dec" },
         "result": { "enum": ["victory", "defeat", "stalemate"] },
-        "level": { "enum": ["minor", "major", "decisive", null] },
-        "outcome": { "type": "string" }
+        "level": { "description": "minor, major or decisive; null for a stalemate, which has no level (outcome says it in words).", "enum": ["minor", "major", "decisive", null] },
+        "outcome": { "description": "The outcome in words: \"minor victory\", \"major defeat\", \"stalemate\" and so on.", "type": "string" }
       }
     },
     "heading": {
@@ -171,7 +190,7 @@
             "properties": {
               "order": { "type": "integer" },
               "target": { "$ref": "defs.schema.json#/$defs/handle" },
-              "reason": { "type": "string" },
+              "reason": { "description": "The engine's own words, with a short hint in brackets of what the order needs where the reason has one.", "type": "string" },
               "event": { "type": "integer" }
             }
           }
@@ -498,7 +517,7 @@
       "type": "object",
       "required": [
         "base", "place", "supply_t", "fuel_t", "spent_yesterday_t", "destroyed_yesterday_t",
-        "days_of_supply"
+        "days_of_supply", "stocks_yesterday"
       ],
       "additionalProperties": false,
       "properties": {
@@ -508,7 +527,61 @@
         "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "spent_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "destroyed_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
-        "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+        "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+        "stocks_yesterday": {
+          "description": "Where the base's supply and fuel went and came from yesterday, by cause, from the side's own events. null when nothing moved in or out of either stock; otherwise supply and fuel are each null when that stock did not move. start_t is end_t less the net of the causes (landed less the others).",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["supply", "fuel"],
+              "additionalProperties": false,
+              "properties": {
+                "supply": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "start_t", "end_t", "landed_t", "loaded_onto_ships_t",
+                        "sorties_and_upkeep_t", "repairs_t", "destroyed_by_raids_t"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "start_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                        "end_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                        "landed_t": { "description": "Put ashore by ships.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "loaded_onto_ships_t": { "description": "Taken aboard ships as cargo.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "sorties_and_upkeep_t": { "description": "Paid for sorties flown and aircraft kept at the base.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "repairs_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                        "destroyed_by_raids_t": { "$ref": "defs.schema.json#/$defs/dec" }
+                      }
+                    },
+                    { "type": "null" }
+                  ]
+                },
+                "fuel": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "start_t", "end_t", "landed_t", "loaded_onto_ships_t", "refuelling_ships_t"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "start_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                        "end_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                        "landed_t": { "description": "Put ashore by ships.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "loaded_onto_ships_t": { "description": "Taken aboard ships as cargo.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "refuelling_ships_t": { "description": "Taken by ships to fill their own tanks.", "$ref": "defs.schema.json#/$defs/dec" }
+                      }
+                    },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        }
       }
     },
     "arrivals": {
@@ -550,7 +623,8 @@
       "type": "object",
       "required": [
         "ship_cannot_reach_base", "base_supply_low", "base_without_fuel_with_force",
-        "air_group_short_of_pilots", "air_group_tired", "task_force_propulsion"
+        "air_group_short_of_pilots", "air_group_tired", "task_force_propulsion",
+        "strike_group_out_of_reach"
       ],
       "additionalProperties": false,
       "properties": {
@@ -634,6 +708,22 @@
               "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
               "effect": { "enum": ["cannot_move", "slowed"] },
               "ships": { "$ref": "defs.schema.json#/$defs/propulsion_lines" }
+            }
+          }
+        },
+        "strike_group_out_of_reach": {
+          "description": "An own air group on naval_strike that holds contacts but has none within its aircraft type's strike radius, or on base_strike at a base beyond it, at the time of the briefing: it would launch nothing. nearest is the nearest contact held (naval_strike) or the target base (base_strike); distance_nm is its air distance, the figure measure air_reach gives.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "mission", "radius_nm", "nearest", "distance_nm"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "mission": { "enum": ["naval_strike", "base_strike"] },
+              "radius_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+              "nearest": { "$ref": "defs.schema.json#/$defs/handle" },
+              "distance_nm": { "type": "integer" }
             }
           }
         }

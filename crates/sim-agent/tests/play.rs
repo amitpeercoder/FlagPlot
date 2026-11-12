@@ -440,10 +440,14 @@ fn a_route_through_land_or_to_nowhere_gets_the_engines_own_reason() {
             .check_order(Side::Allied, &request)
             .expect_err("the engine refuses it")
             .to_string();
-        assert_eq!(
-            answer["results"][0],
-            json!({"index": 0, "status": "refused", "reason": engine}),
-            "{waypoints}"
+        // The engine's own words come first; a hint of what the order needs
+        // may follow in brackets (wording pass of Nov 12).
+        let shown = answer["results"][0]["reason"].as_str().expect("a reason");
+        assert_eq!(answer["results"][0]["status"], "refused", "{waypoints}");
+        assert!(shown.starts_with(&engine), "{waypoints}: {shown}");
+        assert!(
+            shown == engine || shown[engine.len()..].starts_with(" ("),
+            "{shown}"
         );
         assert_ne!(engine, NOT_KNOWN);
     }
@@ -860,8 +864,29 @@ fn an_order_acceptable_now_can_be_refused_when_the_day_begins() {
     let briefing = call(&mut session, Side::Allied, "get_briefing", json!({}));
     let refused = &briefing["orders"]["refused"];
     assert_eq!(refused.as_array().unwrap().len(), 1, "{refused}");
-    assert_eq!(refused[0]["reason"], "the task force is under way");
+    let reason = refused[0]["reason"].as_str().expect("a reason");
+    assert!(
+        reason.starts_with("the task force is under way"),
+        "{reason}"
+    );
+    assert!(
+        reason.contains("load needs the task force stopped at a base of your own side"),
+        "{reason}"
+    );
     assert_eq!(briefing["orders"]["accepted"], 1);
+    // `explain` shows the same refusal in the same words.
+    let event = refused[0]["event"].as_u64().expect("an event number");
+    let explained = call(
+        &mut session,
+        Side::Allied,
+        "explain",
+        json!({ "event": event }),
+    );
+    let text = explained["nodes"][0]["text"].as_str().expect("text");
+    assert!(
+        text.contains(": the task force is under way (load needs the task force stopped at a base of your own side"),
+        "{text}"
+    );
 }
 
 // ---- What the engine's verdict can tell a side ----

@@ -21,7 +21,22 @@ use crate::common::{Ctx, Dec, Handle};
 pub struct ObjectivesPart {
     pub mission: Option<String>,
     pub objectives: Vec<ObjectiveLine>,
+    /// The margins (a side's points less the enemy's) that make a minor, a
+    /// major and a decisive victory or defeat, from day 1. `None` when the
+    /// scenario has no objectives.
+    pub levels: Option<LevelsPart>,
     pub result: Option<ResultPart>,
+}
+
+/// The scenario's levels (decision 4 of 0054): a margin of at least `minor`
+/// is a minor victory, at least `major` a major one, at least `decisive` a
+/// decisive one; the same margins against a side are defeats; a margin
+/// between minus `minor` and `minor` is a stalemate.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LevelsPart {
+    pub minor: Dec,
+    pub major: Dec,
+    pub decisive: Dec,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -68,8 +83,9 @@ pub struct KnownLine {
 pub struct ResultPart {
     pub allied: SideResultPart,
     pub japanese: SideResultPart,
-    /// The scenario's note of how the day went in history: words, not a
-    /// computed score.
+    /// What happened in the real battle, not in this game: the scenario's
+    /// note of how the day went in history, in words and not a computed
+    /// score. It is not this game's result.
     pub history: Option<String>,
 }
 
@@ -81,7 +97,8 @@ pub struct SideResultPart {
     pub margin: Dec,
     /// `victory`, `defeat` or `stalemate`.
     pub result: &'static str,
-    /// `minor`, `major` or `decisive`; `None` for a stalemate.
+    /// `minor`, `major` or `decisive`; `None` for a stalemate, which has no
+    /// level (`outcome` says it in words).
     pub level: Option<&'static str>,
     /// `minor victory`, `stalemate` and so on.
     pub outcome: String,
@@ -155,6 +172,11 @@ pub(crate) fn objectives_part(ctx: &Ctx<'_>, view: &SideView<'_>) -> ObjectivesP
             .zip(&known)
             .map(|(objective, known)| line(ctx, objective, known))
             .collect(),
+        levels: view.levels().map(|l| LevelsPart {
+            minor: Dec(l.minor),
+            major: Dec(l.major),
+            decisive: Dec(l.decisive),
+        }),
         result: None,
     }
 }

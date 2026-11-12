@@ -1495,7 +1495,7 @@ major = 8
 decisive = 16
 
 [objectives.allied]
-mission = "Land the convoy at Henderson Field, keep the field flying, and win the carrier fight."
+mission = "Land the convoy at Henderson Field, keep the field flying, and win the carrier fight. The Japanese carriers are expected to come down from the north."
 
 [[objectives.allied.objective]]
 kind = "ships_sunk"
@@ -1520,7 +1520,7 @@ base = 1
 points = 10
 
 [objectives.japanese]
-mission = "Close Henderson Field, sink what supplies it, and win the carrier fight."
+mission = "Close Henderson Field, sink what supplies it, and win the carrier fight. The American carriers are believed to be south or east of Guadalcanal."
 
 [[objectives.japanese.objective]]
 kind = "ships_sunk"

@@ -282,6 +282,7 @@
           "$ref": "defs.schema.json#/$defs/air_group_line"
         },
         "patrol_share": {
+          "description": "The share of the group kept over its own hex: 1 keeps every fighter at home and sends no escort; 0.5 keeps half and lets half escort raids.",
           "$ref": "defs.schema.json#/$defs/dec"
         },
         "strength": {

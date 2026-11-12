@@ -342,7 +342,7 @@ impl Session {
         match self.world.check_order(side, &request) {
             Ok(()) => Ok(request),
             Err(RejectReason::NotYourUnit) => Err(NOT_KNOWN.to_string()),
-            Err(reason) => Err(reason.to_string()),
+            Err(reason) => Err(crate::words::refusal(&reason)),
         }
     }
 

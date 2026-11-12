@@ -439,7 +439,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "257e45c178bda774"
+    "hash": "cf22af68dfe1572d"
   },
   "seats": {
     "allied": "player",

@@ -81,3 +81,19 @@ Settled by the architect while building, inside the approved plan.
 
 **Spec scenario 9 is met:** a model played the Allied side of scenario 5 through the MCP server's tools from start to finish with no human help, and the saved game replays to the same hashes.
 
+## The wording pass after the second round
+
+Words and fields only; no rule, result or state hash changes, and every event and daily hash of `crates/sim-cli/tests/run_baseline` is as it was.
+
+- **Levels.** The briefing's OBJECTIVES part gives the scenario's three levels from day 1 (`objectives.levels`, and a "Levels:" line in the text). A stalemate keeps `level: null`; its `outcome` already said "stalemate" and the text says it for both sides. `SideView::levels()` is the one read-only accessor added to `sim-core`.
+- **History.** The note at the end is labelled "what happened in the real battle, not in this game", in the text and in the schema.
+- **Out of reach.** A seventh warning, `strike_group_out_of_reach`: a group on naval strike that holds contacts and has none within its type's radius, or on base strike at a base beyond it, with the radius, the nearest contact or the base and its air distance (the engine's own test, as `measure` air_reach makes it). No event is added.
+- **The last day.** The briefing text says "This is the last day: the game ends when you end it."; the server instructions say a scenario can be one day long, so all orders come before the first `end_day`.
+- **Hints.** A refusal shown to a player (`issue_orders`, the briefing's refused orders, `explain`) keeps the engine's words and, for a few reasons, adds a bracketed hint of what the order needs; the engine's text in events and saved games is unchanged. The `issue_orders` description says exactly when load and unload take effect: load is refused under way or away from an own base, and unload is never refused but works only while the force is stopped at an own base.
+- **Cargo.** A force line shows `cargo_supply_t` and `cargo_fuel_t` aboard when above zero or when the force's mission is transport.
+- **Stocks yesterday.** A base that took in or gave out supply or fuel shows start, end and the totals by cause (landed, loaded onto ships, sorties and upkeep, repairs, destroyed by raids, refuelling ships), from the side's own events.
+- **Where the enemy is expected.** One sentence added to each side's mission in scenarios 5 and 7. This changes the hash of the scenario file, which a saved game records, so the three recorded games' `save.json` differ from the played ones in that one line; their orders, results and daily hashes are the same.
+- **`measure` air_reach** takes one place as a list of one. The "not known" a player met was a list that held a hex off the map, which makes the whole answer "not known" (decision 0049, 2); that is unchanged and now said in the description.
+- **Patrol share, contacts, pulses, radius.** `set_patrol_share` is described as the share kept over the group's own hex; the instructions and the contact tools say that the kind and count of a contact are what the sighting reported and can be wrong; the instructions give the pulses (night from 18:00 the evening before, morning, afternoon, the last in which a group flies) and the `measure` description says a passage leaves at the start of the night pulse; an air group line shows its type's radius and search range.
+- **The recorded games.** Their requests and accounts are as played; their transcripts were regenerated to show today's answers.
+
