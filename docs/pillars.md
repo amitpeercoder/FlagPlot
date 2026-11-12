@@ -16,7 +16,7 @@ Every feature is tested against these five. A feature that serves none of them i
 
 1. **Command at any altitude.** Zoom level is command level. The player can run the whole theatre by intent, or drop down and personally plan one carrier strike. Anything can be grabbed, and released back to staff when done.
 2. **Staff you can read.** Every staff-generated order shows its reasoning and is visible before it executes. The player corrects by changing intent or by overriding. An override holds until the player releases it.
-3. **Time runs until something matters.** The simulation resolves in days, but the player does not click "end turn" 1,600 times. A quiet week passes in seconds. A major carrier battle takes an evening. The player sets what is worth an interruption.
+3. **Time runs until something matters.** The simulation resolves in days, and a day, once begun, runs to its end, but the player does not click "end turn" 1,600 times. A quiet week passes in seconds. A major carrier battle takes an evening. The player sets what is worth an interruption.
 4. **The map is the interface.** Supply flow, air ranges, threat and readiness are answered on the map, not in modal tables. Every number can be opened to show what produced it.
 5. **Uncertainty and consequence.** Sighting reports are wrong, intelligence is partial, and results come back as signals and after-action accounts. Engagement comes from real decisions on incomplete information.
 
@@ -39,7 +39,7 @@ Rules of control:
 - **Hold:** a held item is never touched by staff, and is visibly marked as held.
 - **Release:** releasing returns it to staff under the current intent.
 - **Explain:** any staff order answers "why" with the intent it serves and the constraint that shaped it.
-- **Interrupt:** the player defines what stops the clock, such as a sighting of carriers, a base falling below supply, or a plan the staff cannot meet.
+- **Interrupt:** the player defines what stops the clock between days, such as a sighting of carriers, a base falling below supply, or a plan the staff cannot meet.
 
 ## Cuts
 

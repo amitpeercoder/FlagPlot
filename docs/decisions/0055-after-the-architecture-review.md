@@ -1,6 +1,6 @@
 # 0055: After the architecture review
 
-Status: decisions 1 to 4 are confirmed, made by the designer on Nov 12, 2026. Decisions 5 to 9 are settled by the architect. The pillar wording at the end is proposed and needs review; `docs/pillars.md` is not changed.
+Status: decisions 1 to 4 are confirmed, made by the designer on Nov 12, 2026. Decisions 5 to 9 are settled by the architect. The pillar wording at the end was accepted by the designer on Nov 12, 2026 and is made in `docs/pillars.md`.
 
 ## The review
 
@@ -64,9 +64,9 @@ Found by the review and not acted on here. None blocks step 1.
 - **For the long-term target.** Ships, bases and air groups cannot be made during a game. Ports and airfields are on the map, which is not state, so they cannot be built or bombed down. Each resource is its own set of fields. A ship class has a number local to its scenario and no refit over time. The event log grows without limit and the state points into it.
 - **Housekeeping.** Constructors for test fixtures, so a new state field does not touch every struct literal (48 for `TaskForce` alone). Left until the stage in flight has merged.
 
-## Proposed wording for the pillars
+## Wording of the pillars
 
-Decision 1 fits the pillars as written, but two lines can be read as stopping the clock inside a day. Proposed, for the designer to accept or change:
+Decision 1 fits the pillars as written, but two lines can be read as stopping the clock inside a day. The designer accepted these two changes:
 
 - Pillar 3: after "The simulation resolves in days" add "and a day, once begun, runs to its end".
 - Interrupt: "the player defines what stops the clock between days, such as...".

@@ -62,6 +62,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0052 | What step 1 leaves out: ground combat, land units, shore bombardment and base orders deferred; pilots as a count and weapons as figures recorded as choices | Confirmed |
 | 0053 | The viewer measures (air distance and sea route, checked against the engine) and shows a side's view, built from the events the engine gave it | Settled |
 | 0054 | Objectives and results: a mission and counted objectives for each side, points, a margin and a level from decisive victory to decisive defeat; no rule reads them | Confirmed |
-| 0055 | After the architecture review: the day is the smallest command cycle, saved games need not survive rule changes, own units are known exactly; a player's own count of orders, the local commander as issuer, a rule tag on random keys, every state field named beside the hash | Confirmed (1 to 4); settled (5 to 9); pillar wording needs review |
+| 0055 | After the architecture review: the day is the smallest command cycle, saved games need not survive rule changes, own units are known exactly; a player's own count of orders, the local commander as issuer, a rule tag on random keys, every state field named beside the hash | Confirmed (1 to 4 and the pillar wording); settled (5 to 9) |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.
