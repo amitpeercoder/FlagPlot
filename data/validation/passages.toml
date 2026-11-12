@@ -7,31 +7,36 @@
 # places, the miles the rules charge for it, and the minutes that is at the
 # stated speed.
 #
-# A passage is usable here only if the record gives a start, an end, the
-# time between them and a speed held throughout. The record read so far
-# holds one, and it is short. The others in the facts will not do:
+# Research looked for long runs at a steady speed and found none
+# (docs/research/oob/passages.md, 76 rows in data/oob/passages.csv): no
+# recorded passage has a start, an end, both times and one held speed over
+# 250 miles. A stated speed is nearly always an order, a burst or a
+# ceiling, and where the same source gives positions and times the speed
+# made good is a half to three quarters of it. Ships zigzagged, waited,
+# slowed for landfall and towed.
 #
+# So nothing here is judged. The passages are reported, to show two things:
+# what the rules charge for a run the record times, and how much sooner a
+# force arrives in the game, where it holds its ordered speed on a straight
+# course, than it did.
+#
+# Runs that will not do at all:
 # - The Japanese column's approach to Savo Island from midnight on
-#   8 August is what the scenario's start was worked back from (decision
-#   0024, 6, and again under decision 0058), so it cannot check the rule it
-#   was fitted with.
-# - Its run from Rabaul on the 7th and its day east of Bougainville on the
-#   8th were not at one speed: it waited for its search planes and changed
-#   course "from time to time" (engagement_positions.csv rows 186 to 191).
-# - The return to Rabaul was at 30 knots, then 20, with the force divided
-#   (rows 250 to 260).
+#   8 August is what the scenario's start was worked back from (decisions
+#   0024 and 0058), so it cannot check the rule it was fitted with.
+# - The transports' noon positions of 1 to 5 August (passages.csv rows 32
+#   and 34) are east of the map.
 #
-# Longer passages at a steady speed are asked for from research: destroyer
-# runs from the Shortlands to Guadalcanal, convoys from Noumea and Espiritu
-# Santo, and the ships that left for repair.
+# Each passage names the file its rows are in. A passage with
+# `speed_changes` holds `speed_kn` until the minute given and the new speed
+# after it. `to_short_by_nm` ends the run that many miles before the place.
 #
 # Settled by the architect of the spec session on 2026-11-12. No row's
 # standing was changed.
 
-facts = "data/oob/engagement_positions.csv"
-
 [[passage]]
 id = "japanese_column_up_the_slot_after_savo_island"
+facts = "data/oob/engagement_positions.csv"
 counts = "Minutes to steam from Savo Island to the point 135 miles from it on bearing 315, at 30 knots"
 from_place = "savo-island"
 to_bearing_deg = 315
@@ -42,3 +47,45 @@ record_high = 280
 judged = false
 rows = [236, 238, 245, 248]
 reason = "The order to break off was given at 02:20 (236); the column was at 30 knots from about 02:29 (238) and in its order again at 03:40 on course 300 at 30 knots (245); by 07:00 it was about 135 miles north-west of Savo Island (248). High end: 02:20 to 07:00, 280 minutes. Low end: 135 miles at 30 knots, 270 minutes, the time it would take with no minutes lost in turning away. Not judged: the run is three or four hexes long, the source says 'about', and a place is taken to be at the centre of its hex, up to 23 miles from where it is, which at 30 knots is 46 minutes at each end."
+
+[[passage]]
+id = "japanese_6th_cruiser_division_shortlands_to_savo_island"
+facts = "data/oob/passages.csv"
+counts = "Minutes to steam from the Shortland Islands to the point 10 miles short of Savo Island, at 24 knots for four hours and 30 knots after"
+from_place = "shortland-islands"
+to_place = "savo-island"
+to_short_by_nm = 10
+speed_kn = 24
+speed_changes = [[240, 30]]
+record_low = 573
+record_high = 573
+judged = false
+rows = [11]
+reason = "The force's own report for 11 October: sailed at 12:00 at 24 knots, 30 knots from 16:00, and at 21:33 came out of a squall with Savo Island about 10 miles off (11). Four hours at 24 knots and 5 hours 33 minutes at 30 are 262 miles, and the two places are about 265 apart, so here the stated speeds and the times agree. It is the best check in the record. Not judged: the run is six or seven hexes, and a place at the centre of its hex can be 23 miles off at each end, which at 30 knots is 46 minutes."
+
+[[passage]]
+id = "mcfarland_espiritu_santo_to_lunga_point"
+facts = "data/oob/passages.csv"
+counts = "Minutes to steam from Espiritu Santo to Lunga Point at 17 knots"
+from_place = "espiritu-santo"
+to_place = "lunga-point"
+speed_kn = 17
+record_low = 2775
+record_high = 2775
+judged = false
+rows = [70]
+reason = "Sailed at 15:05 on 14 October, ordered to make better than 17 knots, and anchored at 13:20 on the 16th: 46 hours 15 minutes (70). The straight line is about 557 miles, which at 17 knots is 33 hours; she made 12 knots good. She took the route north of Espiritu Santo and slowed on the 15th to make her landfall. Not judged: the rules have no reason for a ship to make less than its ordered speed."
+
+[[passage]]
+id = "minesweepers_towing_espiritu_santo_to_tulagi"
+facts = "data/oob/passages.csv"
+counts = "Minutes to steam from Espiritu Santo to Tulagi at 18 knots"
+from_place = "espiritu-santo"
+to_place = "tulagi"
+speed_kn = 18
+record_low = 2303
+record_high = 2303
+judged = false
+rows = [71]
+reason = "Two fast minesweepers towing torpedo boats, on course 319 at about 18 knots, from 14:52 on 23 October to 05:15 on the 25th: 38 hours 23 minutes (71). The straight line is about 564 miles, which at 18 knots is 31 hours; they made 14.7 knots good. Not judged: the start hour is when the tow was taken up, not when they sailed, and the rules have no towing."
+
