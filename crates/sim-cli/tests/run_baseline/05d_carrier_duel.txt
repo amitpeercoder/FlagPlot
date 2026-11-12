@@ -3,13 +3,13 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 53e3260b80c55774  34 events
-day   2  hash 4ae4b69cec1af6ea  43 events
+day   2  hash ac612751bf1dc197  45 events
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder carrier force B" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-air_group:1 "Placeholder scouting squadron A" (Allied) aboard ship:1: 8 ready, mission Search, arc 040-130 to 300 nm
+air_group:1 "Placeholder scouting squadron A" (Allied) aboard ship:1: 0 ready, mission Search, arc 040-130 to 300 nm
 air_group:2 "Placeholder bombing squadron A" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
-air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 5 ready, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:4 "Placeholder scouting squadron B" (Japanese) aboard ship:4: 8 ready, mission Search, arc 220-310 to 300 nm
 air_group:5 "Placeholder bombing squadron B" (Japanese) aboard ship:4: 12 ready, mission NavalStrike, no arc
 air_group:6 "Placeholder fighting squadron B" (Japanese) aboard ship:4: 7 ready, mission CombatAirPatrol, patrol share 0.5, no arc

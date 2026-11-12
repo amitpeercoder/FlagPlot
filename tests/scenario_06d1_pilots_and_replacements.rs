@@ -2122,8 +2122,9 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("08_")
                 // Scenario 12a gives its bombing squadron pilots (decision 0059).
                 && !stem.starts_with("12a_")
-                // And 12b, which counts pilots for its fighters.
-                && !stem.starts_with("12b_"))
+                // And 12b and 12c, which count pilots for their groups.
+                && !stem.starts_with("12b_")
+                && !stem.starts_with("12c_"))
             .then(|| stem.to_string())
         })
         .collect();
