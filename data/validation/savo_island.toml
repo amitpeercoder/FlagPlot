@@ -23,6 +23,8 @@ counts = "Allied cruisers sunk at the end of the run, of the five"
 record_low = 4
 record_high = 4
 judged = true
+take = "ships_sunk"
+ships = [9, 10, 13, 14, 15]
 rows = [761, 762, 763, 764, 765, 768, 769]
 reason = "Canberra, Vincennes, Quincy and Astoria (761, 762, 763, 764). Canberra was scuttled at about 08:00 (765) and Astoria capsized later that day; both are within the scenario's day. Chicago was damaged and steamed on (768, 769)."
 
@@ -32,6 +34,8 @@ counts = "Cruisers of the southern group sunk at the end of the run, of the two"
 record_low = 1
 record_high = 1
 judged = true
+take = "ships_sunk"
+ships = [9, 10]
 rows = [761, 765, 768]
 reason = "Canberra (761, 765). Chicago was not (768)."
 
@@ -41,6 +45,8 @@ counts = "Cruisers of the northern group sunk at the end of the run, of the thre
 record_low = 3
 record_high = 3
 judged = true
+take = "ships_sunk"
+ships = [13, 14, 15]
 rows = [762, 763, 764]
 reason = "Vincennes, Quincy and Astoria (762, 763, 764). The column went on from the southern group to the northern; a model in which it breaks off between them fails here."
 
@@ -50,6 +56,8 @@ counts = "Allied destroyers sunk at the end of the run, of the four"
 record_low = 0
 record_high = 0
 judged = true
+take = "ships_sunk"
+ships = [11, 12, 16, 17]
 rows = [770, 773, 774, 775]
 reason = "Patterson was damaged and stayed in service (770). Bagley, Helm and Wilson were not hit (773, 774, 775)."
 
@@ -59,6 +67,8 @@ counts = "Japanese ships sunk at the end of the run, of the eight"
 record_low = 0
 record_high = 0
 judged = true
+take = "ships_sunk"
+ships = [1, 2, 3, 4, 5, 6, 7, 8]
 rows = [779, 780, 781, 782, 783, 785, 787, 778]
 reason = "None in the action. Chokai, Aoba, Kinugasa, Yubari and Tenryu had slight damage (779, 780, 781, 782, 783); Furutaka and Yunagi none (785, 787). Kako was sunk by a submarine the next day, outside the scenario (778)."
 
@@ -68,6 +78,9 @@ counts = "Japanese ships afloat at the end of the run with propulsion out"
 record_low = 0
 record_high = 0
 judged = true
+take = "ships_with_system_out"
+ships = [1, 2, 3, 4, 5, 6, 7, 8]
+system = "propulsion"
 rows = [779, 780, 781, 782, 783]
 reason = "All the damaged ships steamed home (779, 780, 781); Yubari and Tenryu had splinters or scratches only (782, 783)."
 
@@ -79,6 +92,9 @@ counts = "Gun hits on the nine Allied ships, all calibres"
 record_low = 153
 record_high = 219
 judged = true
+take = "hits_on"
+ships = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+weapons = ["gun"]
 rows = [19, 20, 37, 50, 58, 59, 60, 69, 70, 71, 82, 83, 49, 93, 96]
 reason = "Low end: Canberra 24 (19, 20), Chicago 1 (37), Patterson 1 (50), Vincennes 57 (58, 59), Quincy 36 (69, 70), Astoria 34 by the count of larger calibres only (83). High end: Vincennes 74 (60), Quincy 54 (71) and Astoria 65 by the count of all calibres (82). Bagley, Helm and Wilson took none (49, 93, 96)."
 
@@ -88,6 +104,9 @@ counts = "Gun hits on the eight Japanese ships, all calibres"
 record_low = 10
 record_high = 17
 judged = true
+take = "hits_on"
+ships = [1, 2, 3, 4, 5, 6, 7, 8]
+weapons = ["gun"]
 rows = [11, 114, 115, 125, 140, 141, 151, 156, 132, 147, 157]
 reason = "Low end: 10 by the Japanese reports the 1950 analysis quotes, Chokai 4, Kinugasa 2, Yubari 3, Tenryu 1 (11, 114, 140, 151, 156), a low-confidence row read here by exception because it is the only count from the side that was hit. High end: Chokai 10 by the tabular record (115) and 1 on Aoba (125), with Kinugasa 2 (141), Yubari 3 and Tenryu 1. Kako, Furutaka and Yunagi took none (132, 147, 157). Either end is a small fraction of what the Allied ships took, and that is the fact the measure is for."
 
@@ -97,6 +116,9 @@ counts = "Torpedo hits on the nine Allied ships"
 record_low = 4
 record_high = 9
 judged = true
+take = "hits_on"
+ships = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+weapons = ["torpedo"]
 rows = [25, 23, 24, 163, 38, 39, 61, 62, 63, 72, 73, 85]
 reason = "Canberra 0, 1 or 2: the 1950 analysis rejects any hit (25), the 1943 narrative says one or two (23, 24) and the Australian navy's history two (163). Chicago 1 (38, 39). Vincennes 1, 2 or 3 (61, 62, 63). Quincy 2 or 3 (72, 73). Astoria 0 (85). Low end 0 + 1 + 1 + 2, high end 2 + 1 + 3 + 3."
 
@@ -114,6 +136,9 @@ counts = "Gun hits scored by the Japanese force for each 1,000 gun shots it fire
 record_low = 81
 record_high = 117
 judged = true
+take = "hits_per_thousand_shots"
+side = "japanese"
+weapon = "gun"
 rows = [7, 19, 37, 50, 58, 69, 83, 60, 71, 82, 9]
 reason = "Shells fired: 1,867 (7). Hits: 153 to 219 on the nine Allied ships, as in gun_hits_on_allied_ships (low end 19, 37, 50, 58, 69, 83; high end 60, 71, 82). 153 in 1,867 is 81 a thousand and 219 is 117. The 1950 analysis's own estimate is about 12 in 100 (9). The shells counted include the few fired at Ralph Talbot, who is outside the scenario."
 
@@ -123,8 +148,23 @@ counts = "Gun hits scored by the two Allied groups for each 1,000 gun shots they
 record_low = 21
 record_high = 36
 judged = true
+take = "hits_per_thousand_shots"
+side = "allied"
+weapon = "gun"
 rows = [10, 11, 115, 125, 141, 156, 151]
 reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as in gun_hits_on_japanese_ships (low end 11; high end 115, 125, 141, 156, 151). 10 in 471 is 21 a thousand and 17 is 36. The shells counted include Ralph Talbot's 12, outside the scenario."
+
+# ------------------------------------------------------- how long it ran
+
+[[measure]]
+id = "minutes_of_action"
+counts = "Minutes of surface fighting in the run: the rounds fought in each fight, summed, times the minutes a round stands for"
+record_low = 20
+record_high = 30
+judged = false
+take = "minutes_of_action"
+rows = [14, 15, 16]
+reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). Not judged yet: the batch file gives the round in which a force broke off, which is not the length of a fight that ends another way. It is judged when the batch file gives the rounds each fight ran. It is the measure for when a force breaks off, the last mechanism in the order of tuning."
 
 # --------------------------------------------------------------- claims
 
@@ -134,6 +174,10 @@ counts = "Ships the Japanese side claims sunk, for each 100 Allied ships really 
 record_low = 350
 record_high = 350
 judged = false
+take = "claims_per_hundred"
+side = "japanese"
+claim = "sunk"
+ships = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 rows = [745, 761, 762, 763, 764]
 reason = "The cruiser force claimed 14 ships sunk (745) and sank 4 (761, 762, 763, 764). Not judged: the claim was of more ships than were there to fire at. The rules claim a ship that sank and a ship left burning (decision 0014, 16), so with nine Allied ships in the scenario and four sunk they cannot pass 225."
 
@@ -143,5 +187,8 @@ counts = "Japanese ships the Allied side claims sunk"
 record_low = 0
 record_high = 0
 judged = true
+take = "claims"
+side = "allied"
+claim = "sunk"
 rows = [749, 751]
 reason = "The Allies knew they had done some damage and claimed no ship sunk (749, 751)."
