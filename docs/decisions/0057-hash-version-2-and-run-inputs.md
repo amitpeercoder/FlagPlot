@@ -14,7 +14,7 @@ Two things stood between step 1 and step 2, which compares thousands of runs wit
 1. **The state hash is at version 2.** It opens with `flagplot-state-v2` (`hash::STATE_VERSION`). Every field of every unit is written, always, in one order. The twelve tag bytes are gone. An air group's place is a tag (1 at a base, 2 aboard a ship) and a number, as a ship's is.
 2. **The golden files are remade in the same change:** the 53 run baselines and the saved games of the three recorded games. Only hashes changed in them. No outcome, event or hand calculation moved.
 3. **The version is raised again whenever what is hashed, or its order, changes.** A new field is added in its place and the golden files are remade. No tag bytes.
-4. **A batch summary and a replay carry `inputs`:** the version of the hash's layout, the hash of the scenario file, and each data file the scenario names with its hash. It is what a saved game already records (decision 0043), in the same hash.
+4. **A batch summary and a replay carry `inputs`:** the version of the hash's layout, the hash of the scenario file, and each data file the scenario names with its hash. The two file hashes are what a saved game already records (decision 0043), made the same way. The version of the hash's layout is new here: a saved game does not record it.
 5. **`batch --label TEXT` records the caller's own name for the engine that ran,** such as a revision. The engine does not know its own revision, and a file that held one would differ from build to build for the same run.
 6. **Both file formats keep their version number.** `inputs` and `label` are additions; a reader that does not know them is not misled.
 
