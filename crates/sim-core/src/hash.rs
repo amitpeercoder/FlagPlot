@@ -10,41 +10,13 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::belief::{BattleClaim, Contact};
-use crate::fixed::Fixed;
 use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Replacement, Route, RulesOfEngagement,
-    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, SystemState, TaskForce, TruthState,
+    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, TruthState,
 };
 use crate::world::World;
-
-/// Marks a flight deck that is degraded or out in the hash of a ship.
-const FLIGHT_DECK_TAG: u8 = 0xF1;
-/// Tag of an air group's patrol share (decision 0027). See `hash_world`.
-const PATROL_SHARE_TAG: u8 = 0xF2;
-/// Tag of a base's anti-aircraft shots (decision 0034). See `hash_world`.
-const BASE_GUNS_TAG: u8 = 0xF3;
-/// Tag of a base's repairs a day (decision 0035). See `hash_world`.
-const BASE_REPAIRS_TAG: u8 = 0xF4;
-/// Marks a base's fuel stock, hashed only when above nothing (decision 0045).
-const BASE_FUEL_TAG: u8 = 0xFA;
-/// Marks a ship's fuel cargo, hashed only when above nothing (decision 0046).
-const SHIP_FUEL_CARGO_TAG: u8 = 0xFB;
-/// Tag of an air group's damaged aircraft (decision 0035). See `hash_world`.
-const DAMAGED_TAG: u8 = 0xF5;
-/// Tag of an air group's fatigue, rest threshold and stand-down (decision
-/// 0036). See `hash_world`.
-const FATIGUE_TAG: u8 = 0xF6;
-/// Tag of an air group's pilots and strength, and of the replacement streams
-/// (decision 0038). See `hash_world`.
-const PILOTS_TAG: u8 = 0xF7;
-/// Tag of a task force's fatigue (decision 0037).
-const FORCE_FATIGUE_TAG: u8 = 0xF8;
-/// Tag of the scenario's arrivals (decision 0041).
-const ARRIVALS_TAG: u8 = 0xF9;
-/// Tag of the air figures of a claim (decision 0056). See `hash_world`.
-const CLAIM_EXTRA_TAG: u8 = 0xFC;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -130,6 +102,13 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
         SpeedSetting::Knots(_) => 3,
     }
 }
+
+/// The first bytes hashed: the version of the hash's layout. It is raised
+/// whenever what is hashed, or its order, changes, and the golden files are
+/// remade in the same change (decision 9 of 0055). Version 1 kept old hashes
+/// alive by writing a new field only where it was in use, behind a tag byte;
+/// version 2 writes every field of every unit, always, in one order.
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v2";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -338,7 +317,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         "strikes were launched and have not landed"
     );
     let mut h = StateHasher::new();
-    h.bytes(b"flagplot-state-v1");
+    h.bytes(STATE_VERSION);
     h.u64(world.seed);
 
     let truth = &world.truth;
@@ -356,28 +335,9 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(ship.gun_rounds.raw());
         h.u8(u8::from(ship.torpedoes_ready));
         for system in ShipSystem::ALL {
-            // The flight deck (code 5, decision 0026) is hashed below, so
-            // that a ship whose flight deck works hashes as it did before
-            // the system existed.
-            if system != ShipSystem::FlightDeck {
-                h.u8(ship.systems.get(system).code());
-            }
+            h.u8(ship.systems.get(system).code());
         }
-        // A flight deck that is not working: a tag byte, then its state.
-        // The tag 0xF1 cannot be taken for what follows, which is the
-        // location tag 1, 2 or 3, so every state has one reading. A working
-        // flight deck writes nothing.
-        if ship.systems.flight_deck != SystemState::Working {
-            h.u8(FLIGHT_DECK_TAG);
-            h.u8(ship.systems.flight_deck.code());
-        }
-        // Fuel carried as cargo: nothing when there is none, so a ship that
-        // carries none hashes as it did before decision 0046. The tag cannot
-        // be taken for the location tag that follows.
-        if ship.cargo_fuel_t != Fixed::ZERO {
-            h.u8(SHIP_FUEL_CARGO_TAG);
-            h.i64(ship.cargo_fuel_t.raw());
-        }
+        h.i64(ship.cargo_fuel_t.raw());
         match ship.location {
             ShipLocation::TaskForce(id) => {
                 h.u8(1);
@@ -450,6 +410,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(task_force.rules_of_engagement.keep_share.raw());
         h.optional_u32(task_force.rules_order.map(|id| id.raw()));
         h.optional_u32(task_force.home_port.map(|id| id.raw()));
+        h.i64(task_force.fatigue.raw());
     }
 
     h.count(truth.bases.len());
@@ -459,96 +420,47 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i32(base.hex.q);
         h.i32(base.hex.r);
         h.i64(base.supply_t.raw());
-        // A base with no guns writes nothing, so it hashes as it did before
-        // bases had guns (decision 0034).
-        if base.anti_aircraft != 0 {
-            h.u8(BASE_GUNS_TAG);
-            h.u32(base.anti_aircraft);
-        }
-        // Likewise a base that repairs no aircraft (decision 0035).
-        if base.aircraft_repairs_per_day != 0 {
-            h.u8(BASE_REPAIRS_TAG);
-            h.u32(base.aircraft_repairs_per_day);
-        }
-        // And a base with no fuel stock (decision 0045).
-        if base.fuel_t != Fixed::ZERO {
-            h.u8(BASE_FUEL_TAG);
-            h.i64(base.fuel_t.raw());
-        }
+        h.u32(base.anti_aircraft);
+        h.u32(base.aircraft_repairs_per_day);
+        h.i64(base.fuel_t.raw());
     }
 
     h.count(truth.air_groups.len());
     for group in truth.air_groups.values() {
         h.u32(group.id.raw());
         h.u8(group.side.code());
-        // A group at a base hashes exactly as it did when it could only be
-        // at a base: the base's id, four bytes. A group aboard a ship writes
-        // the marker u32::MAX, then the ship's id. No base has that id.
         match group.location {
-            AirGroupLocation::Base(base) => h.u32(base.raw()),
+            AirGroupLocation::Base(base) => {
+                h.u8(1);
+                h.u32(base.raw());
+            }
             AirGroupLocation::Ship(ship) => {
-                h.u32(u32::MAX);
+                h.u8(2);
                 h.u32(ship.raw());
             }
         }
         h.u32(group.aircraft_type.raw());
         h.u32(group.ready);
-        // A group with no damaged aircraft writes nothing, so it hashes as
-        // it did before damaged aircraft (decision 0035). The tag 0xF5
-        // follows the ready count and the mission code that follows it is 1
-        // to 5, so every state has one reading.
-        if group.damaged != 0 {
-            h.u8(DAMAGED_TAG);
-            h.u32(group.damaged);
-        }
-        // A group that is not tired, has no rest threshold and is not stood
-        // down writes nothing, so it hashes as it did before fatigue
-        // (decision 0036). The tag 0xF6 follows the damaged count (or the
-        // ready count) and the mission code that follows it is 1 to 5, so
-        // every state has one reading.
-        if group.fatigue != Fixed::ZERO
-            || group.rest_above.is_some()
-            || group.rest_order.is_some()
-            || group.stood_down
-        {
-            h.u8(FATIGUE_TAG);
-            h.i64(group.fatigue.raw());
-            match group.rest_above {
-                Some(level) => {
-                    h.u8(1);
-                    h.i64(level.raw());
-                }
-                None => h.u8(0),
+        h.u32(group.damaged);
+        h.i64(group.fatigue.raw());
+        match group.rest_above {
+            Some(level) => {
+                h.u8(1);
+                h.i64(level.raw());
             }
-            h.optional_u32(group.rest_order.map(|id| id.raw()));
-            h.u8(u8::from(group.stood_down));
+            None => h.u8(0),
         }
-        // A scenario with no replacements and a group whose pilots are not
-        // tracked write nothing, so they hash as they did before pilots
-        // (decision 0038). Strength is read by replacements alone, so it is
-        // hashed only where there are some. The tag 0xF7 is followed by
-        // the mission code, 1 to 5.
-        if group.pilots.is_some() || !truth.replacements.is_empty() || !truth.arrivals.is_empty() {
-            h.u8(PILOTS_TAG);
-            h.optional_u32(group.pilots);
-            h.u32(group.strength);
-        }
+        h.optional_u32(group.rest_order.map(|id| id.raw()));
+        h.u8(u8::from(group.stood_down));
+        h.optional_u32(group.pilots);
+        h.u32(group.strength);
         h.u8(group.mission.code());
         // The base strike mission (code 5) is followed by its target base.
         if let AirMission::BaseStrike(base) = group.mission {
             h.u32(base.raw());
         }
-        // A patrol share that is not the default 1, or that an order set:
-        // a tag byte, the share, then the order. The tag 0xF2 follows the
-        // mission code (1 to 4) and so can only be taken for the search
-        // tag, which is 0 or 1: every state has one reading. A group on the
-        // default share with no order writes nothing, so it hashes as it did
-        // before the share existed.
-        if group.patrol_share != Fixed::ONE || group.share_order.is_some() {
-            h.u8(PATROL_SHARE_TAG);
-            h.i64(group.patrol_share.raw());
-            h.optional_u32(group.share_order.map(|id| id.raw()));
-        }
+        h.i64(group.patrol_share.raw());
+        h.optional_u32(group.share_order.map(|id| id.raw()));
         match group.search {
             Some(arc) => {
                 h.u8(1);
@@ -562,29 +474,21 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.optional_u32(group.arc_order.map(|id| id.raw()));
     }
 
-    // The replacement streams: nothing at all without any (decision 0038).
-    if !truth.replacements.is_empty() {
-        h.u8(PILOTS_TAG);
-        h.count(truth.replacements.len());
-        for stream in &truth.replacements {
-            h.u8(stream.side.code());
-            h.u32(stream.base.raw());
-            h.u32(stream.aircraft_type.raw());
-            h.u32(stream.aircraft_per_day);
-            h.u32(stream.pilots_per_day);
-        }
+    h.count(truth.replacements.len());
+    for stream in &truth.replacements {
+        h.u8(stream.side.code());
+        h.u32(stream.base.raw());
+        h.u32(stream.aircraft_type.raw());
+        h.u32(stream.aircraft_per_day);
+        h.u32(stream.pilots_per_day);
     }
 
-    // The arrivals: nothing at all without any (decision 0041).
-    if !truth.arrivals.is_empty() {
-        h.u8(ARRIVALS_TAG);
-        h.count(truth.arrivals.len());
-        for arrival in &truth.arrivals {
-            h.u32(arrival.day);
-            h.u32(arrival.air_group.raw());
-            h.u32(arrival.aircraft);
-            h.u32(arrival.pilots);
-        }
+    h.count(truth.arrivals.len());
+    for arrival in &truth.arrivals {
+        h.u32(arrival.day);
+        h.u32(arrival.air_group.raw());
+        h.u32(arrival.aircraft);
+        h.u32(arrival.pilots);
     }
 
     h.count(world.beliefs.len());
@@ -615,25 +519,11 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u64(claim.pulse.code());
             h.u32(claim.claimed_sunk);
             h.u32(claim.received_event.raw());
-        }
-        // The air claims of decision 0056 follow the claims, each tagged with
-        // its place in the list. A claim of the old form (ships sunk only)
-        // writes nothing here and hashes as it did before.
-        for (index, claim) in belief.claims().iter().enumerate() {
-            if claim.from_air
-                || claim.claimed_hits != 0
-                || claim.claimed_kind.is_some()
-                || claim.claimed_shot_down != 0
-                || claim.claimed_on_ground != 0
-            {
-                h.u8(CLAIM_EXTRA_TAG);
-                h.count(index);
-                h.u32(claim.claimed_hits);
-                h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
-                h.u32(claim.claimed_shot_down);
-                h.u32(claim.claimed_on_ground);
-                h.u8(u8::from(claim.from_air));
-            }
+            h.u32(claim.claimed_hits);
+            h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
+            h.u32(claim.claimed_shot_down);
+            h.u32(claim.claimed_on_ground);
+            h.u8(u8::from(claim.from_air));
         }
     }
 
@@ -641,18 +531,6 @@ pub(crate) fn hash_world(world: &World) -> u64 {
     h.u32(world.order_ids.next_raw());
     h.u32(world.task_force_ids.next_raw());
     h.count(world.events.len());
-
-    // Task force fatigue (decision 0037) comes last, so that nothing after
-    // it can be mistaken for it: for each tired force, in ID order, the tag
-    // 0xF7, its ID and its fatigue. A world with no tired force writes
-    // nothing and hashes as it did before.
-    for task_force in truth.task_forces.values() {
-        if task_force.fatigue != Fixed::ZERO {
-            h.u8(FORCE_FATIGUE_TAG);
-            h.u32(task_force.id.raw());
-            h.i64(task_force.fatigue.raw());
-        }
-    }
 
     h.finish()
 }

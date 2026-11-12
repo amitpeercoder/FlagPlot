@@ -23,6 +23,12 @@ struct Batch {
     format: &'static str,
     version: u32,
     scenario: ScenarioOut,
+    /// What the runs were made on (decision 0057).
+    inputs: crate::save::Inputs,
+    /// The caller's own name for the engine that ran, such as a revision,
+    /// from `--label`. The engine does not know its own revision.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    label: Option<String>,
     runs: u64,
     first_seed: u64,
     ships: Vec<ShipOut>,
@@ -129,6 +135,7 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
     let mut out: Option<&str> = None;
     let mut runs = DEFAULT_RUNS;
     let mut first_seed = DEFAULT_FIRST_SEED;
+    let mut label: Option<String> = None;
 
     let mut words = args.iter().map(String::as_str);
     while let Some(word) = words.next() {
@@ -147,6 +154,14 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
                 }
             }
             "--first-seed" => first_seed = parse_count("--first-seed", words.next(), usage)?,
+            "--label" => {
+                label = Some(
+                    words
+                        .next()
+                        .ok_or_else(|| format!("--label needs some text\n\n{usage}"))?
+                        .to_string(),
+                );
+            }
             flag if flag.starts_with('-') => {
                 return Err(format!("unknown option \"{flag}\"\n\n{usage}"))
             }
@@ -161,7 +176,7 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
         .checked_add(runs - 1)
         .ok_or_else(|| "--first-seed plus --runs is too large".to_string())?;
 
-    let batch = build(scenario_path, runs, first_seed)?;
+    let batch = build(scenario_path, runs, first_seed, label)?;
 
     print_summary(&batch);
     let mut text = serde_json::to_string(&batch).map_err(|e| e.to_string())?;
@@ -169,7 +184,17 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
     fs::write(out, text).map_err(|e| format!("{out}: {e}"))
 }
 
-fn build(scenario_path: &str, runs: u64, first_seed: u64) -> Result<Batch, String> {
+fn build(
+    scenario_path: &str,
+    runs: u64,
+    first_seed: u64,
+    label: Option<String>,
+) -> Result<Batch, String> {
+    let inputs = {
+        let scenario = sim_data::Scenario::load(std::path::Path::new(scenario_path))
+            .map_err(|e| e.to_string())?;
+        crate::save::inputs(scenario_path, &scenario)?
+    };
     let mut ships: Vec<ShipOut> = Vec::new();
     let mut scenario_out: Option<ScenarioOut> = None;
     // Per ship, in id order: runs sunk, runs crippled.
@@ -299,6 +324,8 @@ fn build(scenario_path: &str, runs: u64, first_seed: u64) -> Result<Batch, Strin
         format: "flag-plot-batch",
         version: 1,
         scenario: scenario_out.ok_or_else(|| "no runs were made".to_string())?,
+        inputs,
+        label,
         runs,
         first_seed,
         ships,

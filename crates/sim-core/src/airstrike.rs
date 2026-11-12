@@ -7798,7 +7798,7 @@ mod tests {
         assert!(!group_mut(&mut world, AirGroupId::new(5)).stood_down);
         assert_eq!(fatigue_of(&mut world, 5), Fixed::from_int(80));
         assert_eq!(able(&world, 5), 10);
-        // A group with no fatigue state hashes as it did before fatigue.
+        // Fatigue is state and is hashed.
         let plain = raid_world(1);
         let mut same = raid_world(1);
         assert_eq!(plain.state_hash(), same.state_hash());
@@ -8389,23 +8389,25 @@ mod tests {
     }
 
     #[test]
-    fn untracked_groups_and_scenarios_without_replacements_hash_and_fly_as_before() {
+    fn pilots_strength_and_replacement_streams_are_hashed_and_untracked_groups_fly_as_before() {
         let mut plain = base_world(1);
         crewed(&mut plain, 10, 5, 8, None, 12);
         let hash = plain.state_hash();
-        // Strength is read by replacements alone: with none, it is not
-        // hashed.
+        // Strength is state and is hashed, whether or not a replacement
+        // reads it (version 2 of the hash, decision 9 of 0055).
         let mut other = base_world(1);
         crewed(&mut other, 10, 5, 8, None, 99);
+        assert_ne!(other.state_hash(), hash);
+        group_mut(&mut other, AirGroupId::new(10)).strength = 12;
         assert_eq!(other.state_hash(), hash);
-        // Pilots, strength, and a stream are.
+        // So are pilots and a stream.
         group_mut(&mut other, AirGroupId::new(10)).pilots = Some(8);
         assert_ne!(other.state_hash(), hash);
         let with_pilots = other.state_hash();
         group_mut(&mut other, AirGroupId::new(10)).pilots = Some(7);
         assert_ne!(other.state_hash(), with_pilots);
         group_mut(&mut other, AirGroupId::new(10)).pilots = Some(8);
-        group_mut(&mut other, AirGroupId::new(10)).strength = 12;
+        group_mut(&mut other, AirGroupId::new(10)).strength = 13;
         assert_ne!(other.state_hash(), with_pilots);
         let mut with_stream = base_world(1);
         crewed(&mut with_stream, 10, 5, 8, None, 12);
@@ -8684,7 +8686,7 @@ mod tests {
     }
 
     #[test]
-    fn no_arrivals_leaves_the_hash_as_it_was_and_arrivals_change_it() {
+    fn arrivals_are_hashed_and_taking_them_away_restores_the_hash() {
         let mut plain = base_world(1);
         crewed(&mut plain, 10, 5, 8, None, 12);
         let hash = plain.state_hash();
@@ -8697,10 +8699,10 @@ mod tests {
         assert_ne!(other.state_hash(), with_one);
         other.truth.arrivals.clear();
         assert_eq!(other.state_hash(), hash);
-        // Strength is hashed only where something reads it: still not with
-        // no arrivals and no replacements.
+        // Strength is hashed with or without arrivals (version 2 of the
+        // hash, decision 9 of 0055).
         group_mut(&mut other, AirGroupId::new(10)).strength = 99;
-        assert_eq!(other.state_hash(), hash);
+        assert_ne!(other.state_hash(), hash);
         // A side sees its own arrivals and not the enemy's.
         crewed(&mut other, 11, 5, 2, None, 2);
         other.truth.arrivals.push(arrival(2, 10, 1, 0));
