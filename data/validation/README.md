@@ -26,23 +26,23 @@ Then one `[[measure]]` table for each measure:
 
 ## What a measure takes
 
-`counts` says in words what is counted. `take` and its keys say the same thing so that `sim-cli validate` can do it, in the names the batch file uses. Ships, air groups, task forces and bases are given by their ids in the scenario. An air group formed in a run by a landing elsewhere counts with the group it came from. A ship's task force is the one it starts in.
+`counts` says in words what is counted. `take` and its keys say the same thing so that `sim-cli validate` can do it, in the names the batch file uses. Ships, air groups, task forces and bases are given by their ids in the scenario. An air group formed in a run by a landing elsewhere counts with the group it came from, and with that group's source if it too was formed in the run. A ship's task force is the one it starts in.
 
 | `take` | Keys | The number |
 | --- | --- | --- |
 | `ships_sunk` | `ships` | How many of the ships are sunk at the end |
-| `ships_with_system_out` | `ships`, `system` | How many of the ships are afloat at the end with that system out |
-| `hits_on` | `ships`, `weapons` | Hits of those weapons on those ships |
+| `ships_with_system_out` | `ships`, `system` | How many of the ships are afloat at the end with that system out: `propulsion`, `fire_control`, `main_battery`, `torpedo_mounts` or `flight_deck` |
+| `hits_on` | `ships`, `weapons` | Hits of those weapons on those ships, as rolled. A salvo is rolled at the ships afloat when its round starts, so a hit on a ship that another salvo sinks in the same round is counted. The record counts hits on a ship already sinking too |
 | `hits_per_thousand_shots` | `side`, `weapon` | The side's hits with that weapon over the run, times 1,000, divided by its shots, rounded down. The shots are the exact figure the rules fired, fractions and all. A run in which the side fires no shot is left out |
 | `air_losses` | `air_groups`, `causes` | Aircraft of those groups lost to those causes. The causes are the batch file's: `shot_down`, `destroyed_on_ground`, `damaged_destroyed_on_ground`, `lost_with_ship`, `worn_out`, `ditched_fuel`, `ditched_no_deck`. No aircraft is counted under two |
 | `pilots_lost` | `air_groups` | Pilots of those groups lost |
 | `ready` | `air_groups`, `day` | Aircraft of those groups ready at the end of that day, the first day being 1 |
-| `aircraft_attacking` | `side` or `air_groups`; `target_task_forces` or `target_base`; `escorts` | Aircraft in every attack by that side or those groups on a ship of those task forces or on that base, summed over the run. With `escorts = true` the aircraft escorting an attacking group in the same day and pulse are added |
+| `aircraft_attacking` | `side` or `air_groups`; `target_task_forces` or `target_base`; `escorts` | Aircraft in every attack by that side or those groups on a ship of those task forces or on that base, summed over the run. With `escorts = true` the aircraft escorting an attacking group in the same day and pulse are added. The batch file names a raid's first strike group as the one escorted, so the escorts are matched to that group's attacks |
 | `attack_days` | as `aircraft_attacking`, without `escorts` | The number of days with at least one such attack |
 | `attack_of_at_least` | `side`, `target_task_forces`, `aircraft` | 1 if in some one day and pulse the aircraft attacking ships of those task forces come to that many or more, escorts not counted; else 0 |
 | `claims` | `side`, `claim` | What the side claims of that kind (`sunk`, `hits`, `shot_down`, `on_ground`) |
 | `claims_per_hundred` | `side`, `claim`, and what was really done: `ships` for `sunk`; `ships` and `weapons` for `hits`; `air_groups` and `causes` for `shot_down` and `on_ground` | The claims, times 100, divided by what was really done, rounded down. A run in which nothing was really done is left out |
-| `minutes_of_action` | none | The rounds fought in each surface fight, summed, times `round_minutes` |
+| `minutes_of_action` | none | The rounds each surface fight ran (the batch file's `fights`), summed, times `round_minutes` from the surface combat figures the batch was run on |
 
 **Lost to enemy action is aircraft shot down, and nothing else.** The rules have no write-off for damage taken in combat: an aircraft worn out after a sortie is worn out whoever it met. Where the record counts aircraft expended for combat damage or forced down by it, they stay in the record, and the aircraft shot down in a run stand for them. A ditching, for want of fuel or of a deck, is never enemy action; it is counted where a measure takes every cause.
 
@@ -76,7 +76,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | File | Battle | State |
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 15 measures, 11 judged |
-| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 14 measures, 12 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 14 measures, 13 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
 | `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
 | `passages.toml` | Ship passages | 6 passages, none judged |

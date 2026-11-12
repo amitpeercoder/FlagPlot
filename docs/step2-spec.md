@@ -47,7 +47,7 @@ A measure is one number taken from a run, with the recorded value beside it. Eac
 
 | Battle | Measures |
 | --- | --- |
-| Savo Island | Ships sunk by side and by type; ships crippled by side; which Allied group was hit; minutes of fighting, for when a force breaks off (reported and not judged until the batch file gives the rounds each fight ran) |
+| Savo Island | Ships sunk by side and by type; ships crippled by side; which Allied group was hit; minutes of fighting, for when a force breaks off |
 | Eastern Solomons | Ships sunk and crippled by side; bomb hits on each carrier; aircraft lost by side; whether each side found and struck the other |
 | Rabaul against Guadalcanal | Raid days; aircraft lost by side and by cause; aircraft ready at Henderson Field over time; supply used; days the field could not fly |
 | All | The result on the objectives scale (decision 0054), beside history's result on that scale. Reported and not judged, until the scale counts a ship that is out of the campaign |
@@ -75,7 +75,7 @@ The designer accepted these widths as a start. They are looked at again after th
 
 ## The harness
 
-- **`sim-cli batch` records more for each run:** aircraft lost by side and cause, hits by ship, sorties flown, supply used, and the round a force broke off. Today it records ships sunk and the result only.
+- **`sim-cli batch` records more for each run** (decision 0062): aircraft lost by group and cause, hits by ship, shots and hits by side, attacks and escorts, aircraft ready by day, claims, supply used, the round a force broke off and the rounds each fight ran.
 - **A new command, `sim-cli validate`,** reads a batch file and a measures file and writes a report: each measure, the record, the spread, and agree or not. It refuses a batch whose `inputs` do not match the data files on disk (decision 0057).
 - **Every batch is labelled** with the revision that made it. `batch` writes one without a label; `validate` refuses it.
 - **Reports are kept** under `docs/validation/`, one per battle per tuning round, so the history of the tuning can be read.
