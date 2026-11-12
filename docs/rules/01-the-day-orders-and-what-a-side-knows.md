@@ -65,7 +65,7 @@ For each pulse in order (night, morning, afternoon):
 4. The pulse's phases, in the order below.
 5. **Contact ageing.** Each side's contacts age, and old ones are dropped, after the pulse's last phase, night included. Chapter 3, Ageing and dropping. [0012]
 
-Steps 1 to 3 run before the pulse's first phase. Each of the steps 1 to 3 does nothing when the scenario names no figures for its rule (surface combat figures, fatigue figures, air supply figures). Contact ageing does nothing when there are no search figures. [0021, 0037, 0039]
+Steps 1 to 3 run before the pulse's first phase. Each of them does nothing unless its figures are loaded: step 1 needs `surface_combat.toml`, step 2 needs `fatigue.toml`, step 3 needs `air_supply.toml`. Contact ageing needs `search.toml`. See Where figures come from and when a rule is loaded. [0021, 0037, 0039]
 
 ### The night pulse
 
@@ -150,9 +150,11 @@ The orders that exist are the ones in the tables below. The spec lists more (for
 
 [0008, 0011, 0014, 0016, 0017, 0021, 0046]
 
+To change: differences.md row 17, a load order to a force that is out of fuel is to be refused, and row 34, a route order to a force with no fuel is to be refused.
+
 The stance is engage or avoid. The straggler instruction is keep, detach, leave or retire. Chapter 4, Breaking off, and chapter 2, Stragglers, give what they do. The readiness is read by chapter 3, Readiness, alertness and fatigue of a force. [0014, 0016, 0021]
 
-Detaching ships creates a new force with the next free task force number. It starts at the parent's exact position and leg, idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. [0016, 0037]
+Detaching ships creates a new force with the next free task force number. It starts at the parent's exact position and leg, idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. To change: differences.md row 24, the acceptance is to be recorded first. [0016, 0037]
 
 ### Air group orders
 
@@ -290,7 +292,7 @@ Anything that plays the game is handed a side's view and never the truth. The tr
 | Its own ships, task forces, bases and air groups | Exactly. There is no fog over a side's own units. Supply and fuel stocks of its own bases and ships are shown. |
 | Its own replacement streams and arrivals | Exactly. |
 | The enemy's forces | Only as contacts: a hex, a count, a kind and an age, each made and refreshed by reports, each possibly wrong. |
-| What it believes came of its fights and raids | Its claims. Real damage is truth and is not shown. |
+| What it believes came of its fights and raids | Its claims. The damage it does to the enemy is truth and is not shown to it. The damage done to its own ships and aircraft is shown to it whole. |
 | The enemy's bases | Number, name, hex and the holding side, and nothing else. This is the map, not intelligence. |
 | The map | In full. |
 | Reference data (ship classes, aircraft types, figures) | In full. |
@@ -354,7 +356,7 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Event | The firer sees | The target sees |
 | --- | --- | --- |
 | Salvo | Its own salvo: the round, firer, target, weapon and shots. Not the chance, the expected hits or the hits scored. | That it was fired on: the round, the firing ship, the target and the weapon. Not the shots. The hits it took reach it as ship damaged. |
-| Air attack on a ship | Its own attack: group, force, ship, weapon and shots. | That its ship was attacked: the group, force, ship and the number of aircraft it can count. Not the chance or the hits. |
+| Air attack on a ship | Its own attack: group, force, ship, weapon and shots. | That its ship was attacked: the group, the task force, the ship and the shots (one shot for each aircraft that attacked). Not the chance or the hits. |
 | Air fight | Its own fighters firing: firer, target, what fired and at what, and shots. | Nothing. |
 | Anti-aircraft fire (a force's) | Its own force's fire: force, raid group and shots. | Nothing. |
 | Base anti-aircraft fire | Its own base's fire: base, raid group and shots. | Nothing. |
@@ -402,6 +404,21 @@ All simulation state is fixed-point. A `Fixed` is a signed 64-bit integer counti
 - A data file gives a quantity as a whole number or a decimal string with at most six decimals. A float is refused.
 
 [0002]
+
+### Where figures come from and when a rule is loaded
+
+A figure comes from one of three places. A **data file** in `data/reference/` holds the figures of a rule, named in this book as `file: key`. The **scenario file** holds the starting state, named in this book as the entry and its field (for example a base entry's `anti_aircraft`). The **code** holds a few figures that have no file, and the text says so where it uses one.
+
+A rule's figures are **loaded** when the scenario file names the file that holds them. A rule whose file the scenario does not name does nothing, and the state it would have written stays as the scenario started it. This is the one meaning of "loaded" in the book. A scenario file always names `ship_classes`, `port_sizes`, `aircraft_types`, `search` and `surface_combat`, so the rules that read those are always loaded. It may also name these, and each is loaded only if it does:
+
+| Scenario key | File | Rules that run only if it is loaded |
+| --- | --- | --- |
+| `air_combat` | `air_combat.toml` | Strike and base strike missions, combat air patrol, escorts, raids, anti-aircraft fire, and the false claims of a raid. Without it these orders are refused. |
+| `air_upkeep` | `air_upkeep.toml` | Wear and repair of aircraft. |
+| `fatigue` | `fatigue.toml` | Fatigue of task forces and of air groups, stand-down and return, and the fatigue factor of a sighting. |
+| `air_supply` | `air_supply.toml` | Supply for sorties and the daily supply, bases out of supply, and the supply a repair costs. |
+
+A scenario with air groups must also name search figures, and a scenario with surface combat figures must also name them. [0021, 0026, 0035, 0036, 0037, 0039]
 
 ### How a chance is rolled
 
@@ -451,7 +468,7 @@ The rules for each draw are in chapters 3, 4 and 5. The output of the generator 
 
 ## Invariants
 
-At the end of every day, after the third pulse and the end-of-day phases, the engine checks the state. They are also checked when a game is built. A violation is always a bug in the rules, never a legal state. If any is broken, `resolve_day` returns an error naming the day and every violation, and no hash is recorded for the day. The day counter has already advanced and the events are kept. [0004]
+At the end of every day, after the third pulse and the end-of-day phases, the engine checks the state. They are also checked when a game is built. A violation is always a bug in the rules, never a legal state. If any is broken, `resolve_day` returns an error naming the day and every violation, and no hash is recorded for the day. The day counter has already advanced and the events are kept. To change: differences.md row 25, the invariants are to be checked before the counter advances. [0004]
 
 The checks:
 

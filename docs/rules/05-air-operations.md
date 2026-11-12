@@ -4,7 +4,7 @@ This chapter is the rules for air groups: what they are, what they are ordered t
 
 A day has three pulses: night, morning and afternoon. The night pulse comes first. Air groups do nothing but rest, repair and receive aircraft at night: nothing flies in the dark (decision 0001, 0012). The air rules in the order they run are listed in "The order of the air rules in a day", and chapter 1, The order in which a day resolves, holds the sequence of the whole day.
 
-Several rules apply only when a scenario loads the figures for them. Where that matters it is stated with the rule.
+Several rules apply only when their figures are loaded, which is defined once in chapter 1, Where figures come from and when a rule is loaded: `air_combat.toml` for strikes, patrol, escorts and raids, `air_upkeep.toml` for wear and repair, `fatigue.toml` for fatigue and rest, and `air_supply.toml` for supply. Where that matters it is stated with the rule.
 
 ## The air group
 
@@ -15,6 +15,7 @@ An air group is one unit of aircraft of one aircraft type. It holds:
 - `ready`: aircraft fit to fly.
 - `damaged`: aircraft that came back worn and cannot fly until repaired. Every count of what a group can fly counts `ready` only.
 - `pilots`: a count, or none. A group whose scenario gives it no pilots does not track them. One pilot stands for the crew of one aircraft.
+- Its starting figures (`ready`, `damaged`, `fatigue`, `pilots`, `strength`) are fields of its entry in the scenario file.
 - `strength`: the ceiling for replacements, in aircraft (ready and damaged together) and in pilots. It is what the group started with, unless the scenario gives another figure. Arrivals raise it. Nothing else reads it.
 - `mission`, and the order that set it.
 - `search`: a search arc (from, to, range), and the order that set it.
@@ -88,10 +89,10 @@ Search, strike launch and the split of fighters into patrol and escorts all use 
 1. A group at a base that is out of supply at the start of the pulse flies none. A group aboard a ship is never limited this way.
 2. Start from the smaller of the group's ready aircraft and its pilots. A group whose pilots are not tracked starts from its ready aircraft.
 3. If the group is aboard a ship, multiply by the ship's flight deck factor: 1 if the deck is working, `surface_combat.toml: degraded_factor` if degraded, 0 if out. A group at a base is not multiplied. Without the surface combat figures this step does nothing.
-4. If the fatigue figures are loaded: a group that is stood down flies none. Otherwise multiply by (100 minus the group's fatigue) over 100.
+4. Fatigue. If `fatigue.toml` is loaded, a group that is stood down flies none, and any other group is multiplied by (100 minus its fatigue) over 100, so loaded fatigue figures do cut the aircraft. If `fatigue.toml` is not loaded, nothing is multiplied, no group is ever stood down, and fatigue cuts nothing.
 5. Cut the result to a whole number once, toward zero. The multiplications of steps 3 and 4 are fixed-point, so no rounding happens before this cut.
 
-The cut is applied once, to the product. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039]
+The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039]
 
 A side sees: the number it flew in its own events (`SearchFlown`, `StrikeLaunched`, `EscortsSent`). It is not told the limits that produced it.
 
@@ -142,7 +143,7 @@ The night pulse runs these air steps first, in this order: repair, arrivals, rep
 
 At the start of the night pulse, repair runs if `air_upkeep.toml` is loaded. Without that file nothing is repaired.
 
-1. Places are listed in order: every base whose `aircraft_repairs_per_day` is above 0, by base number; then, if `air_upkeep.toml: carrier_repairs_per_day` is above 0, every ship afloat that carries at least one group, by ship number. Each place has an allowance: the base's own figure, or the carrier figure for each ship.
+1. Places are listed in order: every base whose `aircraft_repairs_per_day` (a figure of the base's entry in the scenario file, 0 if not given) is above 0, by base number; then, if `air_upkeep.toml: carrier_repairs_per_day` is above 0, every ship afloat that carries at least one group, by ship number. Each place has an allowance: the base's own figure, or the carrier figure for each ship.
 2. For each place in order, the groups located there with damaged aircraft are taken lowest group number first. A group's repair is the smaller of the allowance left and its damaged aircraft.
 3. At a base, with `air_supply.toml` loaded and `repair_supply_t` above 0, a repair is also limited by stock: the whole number of repairs the stock covers, which is the stock divided by `repair_supply_t`, cut to a whole number. The repair is the smaller of the two. If that is 0 the base stops repairing for the day, and no later group at the base is repaired. A ship pays no supply.
 4. Each repaired aircraft moves from `damaged` to `ready`. `AircraftRepaired` is recorded for each group repaired, caused by the group's latest `AircraftWorn` event that left an aircraft damaged. An aircraft damaged from the start has no cause.
@@ -156,7 +157,7 @@ A side sees: `AircraftRepaired` and `BaseSupplySpent` for its own groups and bas
 
 ### Aircraft that arrive on a day
 
-A scenario may list arrivals: a day, an air group, a number of aircraft and a number of pilots. After repair and before replacements, on every day including day 1, each arrival due that day, in the order listed, is delivered:
+A scenario may list arrivals (`[[arrival]]` entries in the scenario file): a day, an air group, a number of aircraft and a number of pilots. After repair and before replacements, on every day including day 1, each arrival due that day, in the order listed, is delivered:
 
 1. If the group does not exist, or is aboard a ship that has sunk, nothing happens and nothing is recorded.
 2. The group's `ready` and `strength` each rise by the arrival's aircraft.
@@ -169,7 +170,7 @@ A side sees: `AircraftArrived` for its own groups, whole.
 
 ### Replacements
 
-A scenario may give a side replacements at a base: for one aircraft type, a number of aircraft a day and a number of pilots a day. From day 2 on, after arrivals, each stream is worked in the order given:
+A scenario may give a side replacements at a base (`[[replacement]]` entries in the scenario file): for one aircraft type, a number of aircraft a day and a number of pilots a day. From day 2 on, after arrivals, each stream is worked in the order given:
 
 1. If the base is not still held by the stream's side, nothing happens.
 2. The groups located at that base, of that side, that fly that type are taken lowest group number first.
@@ -220,7 +221,7 @@ A naval strike group considers each contact its side holds. A contact qualifies 
 - Its age in pulses is at most `air_combat.toml: strike_contact_max_age_pulses`. A contact is not aged in the pulse it was reported in, so with the figure at 0 a contact reported this pulse or the one before qualifies, and no older one.
 - Its estimated hex is within the type's strike radius of the group's hex, by air distance.
 
-From the contacts that qualify the group takes the one with the most important estimated kind (carrier, battleship, cruiser, destroyer, transport, auxiliary, in that order), then the nearest by air distance, then the lowest contact number. With none it does nothing.
+From the contacts that qualify the group takes the one with the most important estimated kind (chapter 3, What a report holds), then the nearest by air distance, then the lowest contact number. With none it does nothing.
 
 It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040]
 
@@ -240,7 +241,7 @@ Nothing in these rules keeps aircraft that flew in the morning from flying in th
 
 ### The split
 
-At the start of the air combat step each fighter group on combat air patrol that has ready aircraft is split. Let F be the aircraft it is able to fly. The patrol is F times the group's patrol share, cut to a whole number. The escorts are F minus the patrol. The patrol stays over the group's own hex. The escorts go with a raid if one is available. A fighter group that is not on combat air patrol is not split and flies nothing. [0027, 0036]
+At the start of the air combat step each fighter group on combat air patrol that has ready aircraft is split. Let F be the aircraft it is able to fly. The patrol is F times the group's patrol share, cut to a whole number. The escorts are F minus the patrol. The patrol stays over the group's own hex. The escorts go with a raid launched from the group's own place, if there is one and it is within the radius (see Which raid the escorts join, and the radius). A fighter group that is not on combat air patrol is not split and flies nothing. [0027, 0036]
 
 The patrol defends the hex the group is in, against every enemy raid that attacks that side's forces or base there, in a daylight pulse. [0027]
 
@@ -252,7 +253,7 @@ The strikes launched in one pulse from one place at one hex are one raid. A plac
 
 ### Which raid the escorts join, and the radius
 
-All the escorts at a place go with one raid from that place: the raid with the most bombers launched, and of those the one whose first group has the lowest number. They look for no nearer raid. The raid is tested for the radius: the escorts go only if the raid's hex is within the fighter type's strike radius of the fighter group's hex, by air distance. A group with no position is not measured and sends its escorts. If the raid is beyond the radius, the whole group that can fly is its patrol for the pulse: its patrol rises by its escorts and its escorts fall to 0. If no raid launches from the place, its escorts fly nothing and are on the ground. The test is made on the hex the raid is sent to, which is where its side believes the enemy is, so a group whose escorts go with a raid to an empty hex has still sent them. [0027, 0030]
+All the escorts at a place go with one raid from that place: the raid with the most bombers launched, and of those the one whose first group has the lowest number. They look for no nearer raid. The raid is tested for the radius: the escorts go only if the raid's hex is within the fighter type's strike radius of the fighter group's hex, by air distance. If the raid is beyond the radius, the whole group that can fly is its patrol for the pulse: its patrol rises by its escorts and its escorts fall to 0. If no raid launches from the place, its escorts fly nothing and are on the ground. A group that is split has ready aircraft, so it is at a base or aboard a ship that is afloat, and always has a position: a group aboard a sunk ship has no aircraft and is not split. The test is made on the hex the raid is sent to, which is where its side believes the enemy is, so a group whose escorts go with a raid to an empty hex has still sent them. [0027, 0030]
 
 `EscortsSent` is recorded for each fighter group whose escorts go (group, the raid's first strike group, aircraft), caused by the group's mission order, its share order, and the raid's `StrikeLaunched` or `BaseStrikeLaunched` event. It is recorded only when escorts go. [0027, 0030]
 
@@ -316,7 +317,7 @@ A side sees: `AirFight` for its own patrol, cut to the shots. The attacker sees 
 The guns of the target fire at the bombers that are left (the strike groups' aircraft after the patrol's hits). Skipped if there are no bombers left or the guns have no shots.
 
 - Raid on ships: the shots are the sum of the `anti_aircraft` of the class of every ship afloat in the task force attacked. Damage does not reduce them. The stream is keyed on (the lowest-numbered ship afloat in that force, the raid's first strike group). One roll covers every ship. Records `AntiAircraftFire`.
-- Raid on a base: the shots are the base's `anti_aircraft`. The stream is keyed on (the base, the raid's first strike group). Records `BaseAntiAircraftFire`. Ships in the hex do not fire at a raid on the base, and the base does not fire at a raid on ships.
+- Raid on a base: the shots are the base's `anti_aircraft`, a figure of the base's entry in the scenario file (0 if not given). The stream is keyed on (the base, the raid's first strike group). Records `BaseAntiAircraftFire`. Ships in the hex do not fire at a raid on the base, and the base does not fire at a raid on ships.
 
 The chance is `air_combat.toml: anti_aircraft_hit_chance` times the protection factors of the first strike group's type. Hits come off the strike groups, lowest first, no more than they have. There is no ammunition limit. [0027, 0029, 0034, 0033]
 
@@ -332,7 +333,7 @@ A shot at aircraft has a chance made in this order, each step cut: the base chan
 
 ### Aircraft lost
 
-Hits are taken from the pool: patrol, escorts or bombers, lowest group number first, each group down to 0 before the next. An aircraft lost is taken off the group's `ready` aircraft, never more than it has. `AircraftLost` (group, aircraft, remaining) is recorded, caused by the firing event.
+Hits are taken from the pool: patrol, escorts or bombers, lowest group number first, each group down to 0 before the next. An aircraft lost is removed from the group's `ready` aircraft, never more than it has. `AircraftLost` (group, aircraft, remaining) is recorded, caused by the firing event.
 
 Pilots, where counted:
 
@@ -340,7 +341,7 @@ Pilots, where counted:
 - An aircraft lost as the patrol over its own hex loses no pilot. The group has one aircraft fewer and keeps the pilot. This holds for a carrier's patrol at sea too: rescue at sea is not modelled.
 - An aircraft written off after a sortie, or destroyed on the ground, loses no pilot.
 
-An aircraft that has been shot down is not worn afterwards: it is taken off the sortie that the wear step rolls. A group whose aircraft were all shot down still flew, for fatigue and supply. [0027, 0035, 0038]
+An aircraft that has been shot down is not worn afterwards: it is removed from the sortie that the wear step rolls. A group whose aircraft were all shot down still flew, for fatigue and supply. [0027, 0035, 0038]
 
 A side sees: `AircraftLost` and `PilotsLost` for its own groups, whole. It never sees the enemy's losses. What it learns of the enemy's is the claim.
 
@@ -356,7 +357,7 @@ Each strike group with bombers left attacks, in group order, each with what it h
 
 - The damage points are 100 times the aircraft type's `attack_damage` over the target class's `toughness`, in one multiplication and one division, cut. A gun or torpedo hit in a surface fight uses the class's damage figure in the same formula.
 - A bomb draws its track as a gun does, against `surface_combat.toml: gun_hit_flotation`. A torpedo lands on flotation and draws no track.
-- The system draw is made for every hit, even at a chance of 0. Its bands use `air_combat.toml: bomb_system_hit` for a bomb, which names the flight deck, and `surface_combat.toml: torpedo_system_hit` for a torpedo. The chance of a system hit per point is the same figure for every weapon.
+- The system draw is made for every hit, even at a chance of 0. Its bands are in the order given in chapter 4, Where a hit lands, and use `air_combat.toml: bomb_system_hit` for a bomb, which names the flight deck, and `surface_combat.toml: torpedo_system_hit` for a torpedo. The chance of a system hit per point is the same figure for every weapon.
 - The hits carry no round number.
 
 The attack's draws, in order, are one per shot, then per hit its track (a bomb only) and its system, then the sighting report (chapter 3, Reports from a strike). [0026, 0033]
@@ -367,7 +368,7 @@ The attack's draws, in order, are one per shot, then per hit its track (a bomb o
 
 `AirAttack` is recorded (group, task force, ship, weapon, shots, chance, expected, hits), caused by the strike's launch and by every `AircraftLost` event of that group in the raid.
 
-A side sees: the attacker sees `AirAttack` for its own group, cut to the aircraft and the weapon. The ship attacked sees an `AirAttack` against it, cut to the group, the task force, the ship and the shots. It sees the damage to its own ships (`ShipDamaged`, `SystemHit`, `ShipSunk`), whole.
+A side sees: the attacker sees `AirAttack` for its own group, cut to the aircraft and the weapon. The ship attacked sees an `AirAttack` against it, cut to the group, the task force, the ship and the shots (one shot for each aircraft that attacked). It sees the damage to its own ships (`ShipDamaged`, `SystemHit`, `ShipSunk`), whole.
 
 ### The attack on a base
 
@@ -389,7 +390,7 @@ A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The
 
 ### The report and the claim
 
-**The sighting report.** After a strike group attacks ships, in step 5 and right after its damage lands, the attacking side receives a sighting report of the force attacked. Chapter 3, Reports from a strike, gives what it holds and how its errors are drawn. The event is `ReportReceived`, caused by the `AirAttack`. A strike at a base sends no report. [0026, 0012]
+**The sighting report.** After a strike group attacks ships, in step 5 and right after its damage lands, the attacking side receives a sighting report of the force attacked. Chapter 3, Reports from a strike, gives what it holds and how its errors are drawn. The event is `ReportReceived`, caused by the `AirAttack`. A strike at a base sends no report. What the report does to the contact the strike was sent at, and whether the group can strike it again, is in chapter 3, Reports from a strike. To change: differences.md row 7. [0026, 0012]
 
 **The claim.** Step 6 makes the claims of the pulse's raids, the raiding side's first and then the defending side's, for each raid in order of its first strike group. A raid that found nothing makes none. Chapter 3, The claim after a raid from the air, gives who claims, what a claim counts and how its false counts are drawn. The claim is recorded as `ClaimReceived`, caused by the claimant's own firing events. [0056]
 
@@ -475,7 +476,7 @@ Contacts age at the end of every pulse (chapter 3). The end-of-day phases do not
 - **No rebase.** A group cannot move between bases or between a ship and a base. [0025, 0041, 0052]
 - **No landing elsewhere.** Aircraft are lost with their ship. [0025]
 - **Pilots are a count.** No experience, no skills, no pilot wounded. Pilots over the sea are not rescued. [0038, 0052]
-- **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run.
+- **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run. To change: differences.md row 27, a scenario whose arrival would overfill a ship is to be refused when it loads.
 - **Aircraft in reserve, morale, a base's aviation support, ground support, weather** are not built. [0052]
 - **Anti-aircraft ammunition** is not limited. [0027]
 - **Repair order** is lowest group first and cannot be changed. [0052]

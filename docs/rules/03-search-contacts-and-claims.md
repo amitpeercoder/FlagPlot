@@ -74,7 +74,7 @@ A side sees: nothing about a target it did not sight. A search that found nothin
 
 For one group and one target in range and arc:
 
-1. `numerator` = 57.295779 times the aircraft flown, times the type's sweep width in nautical miles (`aircraft_types.csv: sweep_width_nm`). The first product is exact. The second is a fixed-point product, cut to six decimals.
+1. `numerator` = (57.295779 times the aircraft flown) times the type's sweep width in nautical miles (`aircraft_types.csv: sweep_width_nm`). The first product, a fixed-point number times a whole number, is exact. The second, that result times the sweep width, is a fixed-point product, cut to six decimals. So a sweep width with decimals is multiplied in once, after the aircraft.
 2. `denominator` = the air distance in miles times the arc width in degrees. It is exact.
 3. `chance` = `numerator` divided by `denominator`, cut to six decimals, and no more than 1.
 
@@ -100,6 +100,8 @@ Not built: a group sending only part of itself on search while the rest does som
 
 ### What a report holds
 
+The kinds of ship, from most to least important, are carrier, battleship, cruiser, destroyer, transport, auxiliary. This is the importance of a kind. Every rule that takes "the most important" kind of a set, or walks the kinds in order, uses it (the kind a report is made of, the kind a strike picks, the ship a raid attacks, the escorts a straggler takes from the least important up).
+
 A sighting report holds an estimated hex, an estimated ship count and an estimated kind. It carries the event that records its arrival. It holds no identity of the force seen, so a side cannot tell two sightings are of one force. It holds no confidence (decision 0032 withdrew it). Air search, a surface fight and a strike that attacked all build their reports by the same code, so a report means the same whoever made it. [0012, 0014, 0026, 0032]
 
 ### How each part is drawn
@@ -108,7 +110,7 @@ Each part can be wrong, and each is drawn independently, in this fixed order fro
 
 1. **Position.** One draw against `search.toml: position_error_chance`. If it strikes, a second draw chooses one of the six neighbours evenly, by an index into the neighbour order (+1,0), (+1,-1), (0,-1), (-1,0), (-1,+1), (0,+1). If that neighbour is on the map and is deep sea, shallow sea or coast, the report names it. Otherwise (land, or off the map) it names the true hex. A closed hex side between the two hexes is not read. If the first draw does not strike, the second is not drawn.
 2. **Count.** One draw `v` below 1,000,000. If `v` is below `count_under_chance` (as millionths) the report says one ship fewer, but never fewer than 1. If it is below the under and over chances together (`count_over_chance`) it says one more. Otherwise it says the true count.
-3. **Kind.** One draw `v` below 1,000,000. The true kind's row in `search.toml: [kind_confusion.<kind>]` is walked in order of importance: carrier, battleship, cruiser, destroyer, transport, auxiliary. A kind absent from the row counts 0. The report names the first kind whose running total of chances exceeds `v`. Each row adds to 1, so one is always named.
+3. **Kind.** One draw `v` below 1,000,000. The true kind's row in `search.toml: [kind_confusion.<kind>]` is walked in order of importance (see What a report holds). A kind absent from the row counts 0. The report names the first kind whose running total of chances exceeds `v`. Each row adds to 1, so one is always named.
 
 The "true" values: the hex is where the force was seen, the count is the number of ships in it, and the kind is the most important kind among them, by the order carrier first. [0012]
 
@@ -126,7 +128,11 @@ A side sees: its own report whole. It learns of the fight from the first round i
 
 ### Reports from a strike
 
-A strike that finds ships sends a report of the force it attacked. It is worked out when the attack is, from the strike's own stream (keyed in the air combat subsystem, on the day, the pulse, the striking group and the task force attacked), after the hit draws. The true hex is the hex the strike was sent to. The true count is the number of ships in the force attacked at the start of the air combat step: the report is drawn before the step's damage lands, so a ship sunk by the attack is still counted. The true kind is the most important kind in that force. After all the strikes' findings are recorded, each attack's damage lands and then its report goes in, in group number order. The `ReportReceived` event cites the `AirAttack` event. A strike on a base makes no sighting report. [0026, 0028]
+A strike that finds ships sends a report of the force it attacked. It is worked out when the attack is, from the strike's own stream (keyed in the air combat subsystem, on the day, the pulse, the striking group and the task force attacked), after the hit draws. The true hex is the hex the strike was sent to. The true count is the number of ships in the force attacked at the start of the air combat step: the report is drawn before the step's damage lands, so a ship sunk by the attack is still counted. The true kind is the most important kind in that force. After all the strikes' findings are recorded, each attack's damage lands and then its report goes in, in group number order. The `ReportReceived` event cites the `AirAttack` event. A strike on a base makes no sighting report. To change: differences.md row 7, the report is to read the force after the damage, in step 2. [0026, 0028]
+
+**What the report does to the contact.** The report goes through the same rule as any sighting report (A sighting report makes or refreshes a contact). Its hex is the hex the strike was sent to, or a neighbour of it if the position error struck, which is the hex of the contact the strike was sent at or one next to it. So it normally refreshes that contact: the contact keeps its number, takes the report's hex, count and kind, and has its age set to 0 and marked, so the ageing at the end of the pulse skips it. If the nearest fresh contact within `merge_distance_hexes` of the reported hex is another, that one is refreshed instead. If none is, a new contact is made. A strike that found nothing works differently (A strike that finds nothing).
+
+The consequence is that the contact is at age 0 when the next pulse's strike decision is made. A group that struck it in the morning, and that can still fly aircraft (chapter 5, What a group can fly in a pulse), can be launched at it again in the afternoon pulse, if the contact's hex is within the type's strike radius. A strike made in the afternoon leaves the contact at age 1 after the night's ageing, so the group can strike it again the next morning only if `air_combat.toml: strike_contact_max_age_pulses` is at least 1. [0012, 0026, 0032]
 
 A side sees: its own report whole. The enemy sees nothing of it. [0047]
 
@@ -225,7 +231,7 @@ The rule reads the flag, not the readiness:
 
 So the rule gives the same results whatever set the flag. A force alerted by a fight or an alarm stays alerted at the start of the next pulse only if its side then holds a fresh contact within the distance. The report a fight sends makes or refreshes a contact at the fight's hex (or at a neighbour of it, if the position error struck), at age 0, which the ageing at the end of the pulse skips once. So a force that sighted or was fired on in a fight stays alerted for as long as that contact is fresh and the force is within the distance of it, and stands down at the first pulse start where no contact qualifies. A force alerted only by an alarm has sent no report, and stands down at the next pulse's start unless a contact of its side qualifies. [0021, 0032]
 
-A force at battle readiness is handled like any other: the flag is set and cleared, and the two events are recorded, though the force is alert either way. [0021]
+A force at battle readiness is handled like any other: the flag is set and cleared, and the two events are recorded, though the force is alert either way. To change: differences.md row 2, a contact is to neither alert nor stand down a force at battle readiness, and the events are not to be recorded for it. [0021]
 
 A side sees: both events whole, its own force's. [0047]
 
@@ -289,12 +295,12 @@ The claim holds a count of each of these, and each count is the real number plus
 
 | Count | Real part | A false one is drawn for each | Chance |
 | --- | --- | --- | --- |
-| Aircraft shot down | Aircraft its fighters and guns really took off in the raid, after the pool limits | Whole shot of fighters that missed | `air_combat.toml: fighter_false_claim_chance` |
+| Aircraft shot down | Aircraft its fighters and guns really shot down in the raid, counted as aircraft removed from the groups, after the pool limits | Whole shot of fighters that missed | `air_combat.toml: fighter_false_claim_chance` |
 | | | Whole shot of ships' or a base's guns that missed | `air_combat.toml: anti_aircraft_false_claim_chance` |
 | Hits on ships (raiding side only, raid on ships) | Bombs and torpedoes that really hit | Whole bomb or torpedo that missed | `air_combat.toml: bomb_false_claim_chance` |
 | Aircraft destroyed on the ground (raiding side only, raid on a base) | Aircraft the bombs really destroyed, ready and damaged together | Whole bomb that did not destroy one | `air_combat.toml: bomb_false_claim_chance` |
 
-A missed shot is counted in whole shots: the shots of a firing event, cut to a whole number, less its hits, never below zero. Each missed whole shot is one draw. A torpedo counts as a bomb. There is no claim for supply destroyed. [0056]
+A miss is counted in whole units, and each miss is one draw. For a firing event of fighters or guns, and for an attack on ships, the misses are the shots of the event, cut to a whole number, less its hits, never below zero. For a raid on a base they are the bombs dropped (the whole shots of the attack events) less the aircraft the bombs really destroyed, so a bomb that hit supply or nothing, or a hit on aircraft that found none left to destroy, counts as a miss. A torpedo counts as a bomb. There is no claim for supply destroyed. [0056]
 
 Ships sunk, in a raid on ships, for the raiding side: the ships the raid's own attacks really sank (each ship once), plus the ships of the force attacked that are still afloat at the end of the step with fire damage of at least `claimed_sunk_fire`. The end of the step includes the fire from every raid of the pulse, so a burning ship is claimed by each raid on its force that pulse, and a ship sunk by another raid is not afloat and is not counted twice. [0056, 0014]
 

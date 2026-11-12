@@ -35,7 +35,7 @@ Each objective is a count of something the engine already records, taken for the
 - **Aircraft destroyed** counts, through the side of the air group that lost them: aircraft shot down (`AircraftLost`), aircraft lost with a sunk ship, ready and damaged (`AirGroupLost`), ready and damaged aircraft destroyed on the ground (`AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`), and aircraft written off by wear (`AircraftWorn`, the written off part only). It does not count the worn aircraft that are repaired later, pilots lost, or any event that adds aircraft. [0054]
 - **Cargo landed** counts `CargoUnloaded` events of ships of the side, supply and fuel tons together, at the named base. [0054]
 - **Base open** reads the final truth: the base's supply above zero, and at least one ready aircraft in the air groups located at that base. Aircraft aboard ships do not count. Either side may hold the objective for any base. [0054]
-- **Ryujo counts as a carrier.** Points go by the six kinds of ship the engine has: carrier, battleship, cruiser, destroyer, transport, auxiliary. [0054]
+- **Ryujo counts as a carrier.** Points go by the six kinds of ship the engine has (chapter 3, What a report holds). [0054]
 
 Known limit: with ground combat deferred, no base changes hands, so no objective can be to take or hold ground. A kind of ship finer than the six waits for step 2. [0052, 0054]
 

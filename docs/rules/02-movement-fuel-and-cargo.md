@@ -36,7 +36,7 @@ A side sees: not an event.
 
 ### Bases on hexes
 
-A base is on one hex. A hex may hold several bases, of one side or of both. A base has a side, a supply stock and a fuel stock, both in tons (see Cargo and Refuelling). A base must be on the map. It need not be on a navigable hex, but a force can use a base only if it can be at the base's hex, so a base on land serves nobody. Where a rule looks for a base of a side at a hex, it takes the lowest-numbered base that matches. [0011, 0045]
+A base is on one hex. A hex may hold several bases, of one side or of both. A base has a side, a supply stock and a fuel stock, both in tons (see Cargo and Refuelling). The scenario's base entry gives the stocks (`supply_t`, `fuel_t`), the base's anti-aircraft shots (`anti_aircraft`, chapter 5) and the damaged aircraft it repairs each day (`aircraft_repairs_per_day`, chapter 5), each 0 if not given. A base must be on the map. It need not be on a navigable hex, but a force can use a base only if it can be at the base's hex, so a base on land serves nobody. Where a rule looks for a base of a side at a hex, it takes the lowest-numbered base that matches. [0011, 0045]
 
 A ship that is not in a task force may be in a port, which is a base. Such a ship does not move, refuel or work cargo: every rule here acts on task forces. Its position is the base's hex, and an air group aboard it uses that position. [0025]
 
@@ -89,7 +89,7 @@ A side sees: its own `ShipsDetached` event whole. The enemy sees nothing.
 
 A route order replaces the force's route with a list of waypoints. Chapter 1, Every reason an order is refused, gives when it is refused: a waypoint off the map, a waypoint that cannot be reached by sea from where the route starts (the turn-back rule below picks where that is), or a route that goes nowhere.
 
-An accepted route order sets the route to the waypoints with the next index 0, sets the status to underway, sets the route order, and clears the arrival hour and the arrival event. It never clears the cargo order, the readiness or the rules of engagement. A route order given to an out-of-fuel or arrived force sets it underway. [0005, 0017, 0044]
+An accepted route order sets the route to the waypoints with the next index 0, sets the status to underway, sets the route order, and clears the arrival hour and the arrival event. It never clears the cargo order, the readiness or the rules of engagement. A route order given to an out-of-fuel or arrived force sets it underway. To change: differences.md row 34, a route order to a force with no fuel is to be refused. [0005, 0017, 0044]
 
 A speed order sets the speed setting to cruise, full or a number of knots, which must be above zero. It does not change the status. [0021 item 7]
 
@@ -167,7 +167,7 @@ A side sees: its own steaming events, in log order before the fight's events.
 A force's steaming is recorded in segments: from the start of the pulse or the last fight to the next fight or the end of the pulse. A force that fights nobody has one segment. For a segment with distance above 0 the engine records:
 
 1. `TaskForceSteamed`, with the force, where it was, where it is, the miles, the speed and the hexes entered. It cites the force's route order and speed order, and records a breakdown of the speed, the propulsion factor, the pulse hours, the time limit and the fuel limit.
-2. `FuelBurned` for each ship, citing the steamed event, and the fuel it took off the ship (see Fuel burn).
+2. `FuelBurned` for each ship, citing the steamed event, and the fuel removed from the ship (see Fuel burn).
 
 The hours of a segment are its distance divided by its speed, cut. They are added to the force's hours used in the pulse. [0005, 0006, 0022]
 
@@ -211,7 +211,7 @@ Weather, formation speed loss, zigzagging, and any difference between day and ni
 
 ### Fuel burn
 
-A ship's fuel is in tons. A class has `fuel_capacity_t`, `endurance_nm` (the distance a full load lasts at cruise speed) and `cruise_speed_kn`. For a distance steamed at a speed:
+A ship's fuel is in tons, given at the start by its entry in the scenario file (`fuel_t`). A class has `fuel_capacity_t`, `endurance_nm` (the distance a full load lasts at cruise speed) and `cruise_speed_kn`. For a distance steamed at a speed:
 
 - the burn per mile at cruise is `fuel_capacity_t` over `endurance_nm`;
 - the multiplier is 1 if the speed is at or below the ship's cruise speed, and otherwise (speed over cruise speed) squared, the ratio cut to six decimals before it is squared;
@@ -229,7 +229,7 @@ A side sees: not an event. The breakdown of the steaming event holds the limit.
 
 ### Refuelling in port
 
-At the start of each day, before the day's orders are taken in, every task force that is stopped at a base of its own side refuels. Stopped means: the status is not underway and the force is exactly at a hex centre, with no hex ahead. The base must be at that centre. This is stricter than cargo handling, which takes the base at the force's position, the nearest centre (see Cargo orders). A force that arrived, never left, or ran out of fuel at that centre is stopped. A force out of fuel between two hexes takes nothing.
+At the start of each day, before the day's orders are taken in, every task force that is stopped at a base of its own side refuels. Stopped means: the status is not underway and the force is exactly at a hex centre, with no hex ahead. The base must be at that centre. Today this is stricter than cargo handling, which takes the base at the force's position, the nearest centre (see Cargo orders). To change: differences.md row 32, both are to ask that the force is at the centre of the base's hex. A force that arrived, never left, or ran out of fuel at that centre is stopped. A force out of fuel between two hexes takes nothing.
 
 Forces are served in order of their number and ships within a force in order of theirs. For each ship the engine takes the lowest-numbered base of the force's side in the force's hex that has fuel above 0. The ship takes what it lacks up to its class's `fuel_capacity_t` or what the base has, whichever is less. If no base there has fuel, the rest of the force gets nothing. A ship that lacks nothing takes nothing and records nothing. Each refuelling records `ShipRefuelled`, with the tons taken, the ship's fuel, the base's fuel left and whether the force was restored. It cites the force's arrival event. Nobody orders it, it takes no time and no berth, and loading cargo does not stop it. A scenario whose bases have no fuel has no refuelling.
 
@@ -257,7 +257,7 @@ There are three standing cargo orders. They are one kind of order, so a new one 
 | Load fuel | The same, from the base's fuel stock |
 | Unload | Moves everything aboard into the base's two stocks, supply first and then fuel |
 
-A load order is rejected at intake if the force is underway, or if no base of the side is at the force's position. An unload order is always accepted. Both take effect in a loading phase in which the force is idle or arrived, and its position is a hex that holds a base of its own side. A force that is underway, or that is out of fuel, works no cargo, even if it counts as being in a base hex. A load order is accepted for an out-of-fuel force, which then never works it. "At a base" means the base's hex as the force's position, the nearest centre, so a force idle part-way along a leg can work cargo, but cannot refuel. Cargo moves automatically only through an order: an arrival with no unload order does nothing. A force made by a split has no cargo order. [0011 items 6, 7, 10 and 13, 0046 items 2 and 3]
+A load order is rejected at intake if the force is underway, or if no base of the side is at the force's position. An unload order is always accepted. Both take effect in a loading phase in which the force is idle or arrived, and its position is a hex that holds a base of its own side. A force that is underway, or that is out of fuel, works no cargo, even if it counts as being in a base hex. A load order is accepted for an out-of-fuel force, which then never works it. To change: differences.md row 17, such an order is to be refused. "At a base" means the base's hex as the force's position, the nearest centre, so a force idle part-way along a leg can work cargo, but cannot refuel. Cargo moves automatically only through an order: an arrival with no unload order does nothing. A force made by a split has no cargo order. [0011 items 6, 7, 10 and 13, 0046 items 2 and 3]
 
 A side sees: its own `OrderAccepted` or `OrderRejected`.
 
@@ -295,7 +295,7 @@ The ships of the force are sorted by propulsion into sound (working), able to st
 
 - **Keep:** nothing happens.
 - **Leave:** every straggler, degraded and out, goes into one new force that stays where it is. The parent carries on.
-- **Detach:** the ships dead in the water are left behind as above. The degraded ones go into a new force with escorts and head for the home port. The number of escorts is the sum over the degraded ships of the `straggler_escorts` figure of `surface_combat.toml` for each one's kind. Escorts are taken from sound ships that have main guns, the least important kind first and the lowest number on a tie. From least to most important the kinds are auxiliary, transport, destroyer, cruiser, battleship and carrier. If there are not enough, all of those are taken. If the parent would keep fewer than its share to keep of the sound ships it had, or none, the force retires instead. A ship with degraded propulsion is not an escort and does not count toward the share to keep.
+- **Detach:** the ships dead in the water are left behind as above. The degraded ones go into a new force with escorts and head for the home port. The number of escorts is the sum over the degraded ships of the `straggler_escorts` figure of `surface_combat.toml` for each one's kind. Escorts are taken from sound ships that have main guns, the least important kind first and the lowest number on a tie. The importance of a kind is in chapter 3, What a report holds. If there are not enough, all of those are taken. If the parent would keep fewer than its share to keep of the sound ships it had, or none, the force retires instead. A ship with degraded propulsion is not an escort and does not count toward the share to keep.
 - **Retire:** the ships dead in the water are left, and the rest of the force, degraded ships included, heads for the home port together. The parent records `ForceRetired`, gets no route and idle status, and then takes the home-port order below. A force with no ship left to send home stays as it is.
 
 A force made by the pass takes the side, mission, speed setting, home port and the rest from its parent as a split does, and is then set to the avoid stance with the straggler instruction keep and no share to keep, keeping the parent's break-off level. A force that retires is set the same way. Its name says whether it was sent home, left behind or detached.

@@ -14,7 +14,7 @@ The rules of Flag Plot as they stand in the code today, each stated once, in the
 
 - **Bracketed numbers** close a rule or a paragraph: `[0014, 0033]` names the decision records it rests on. `[0052 item 15]` names an item in a record. Find the title of a record in `docs/decisions/README.md`.
 - **"A side sees:"** closes a rule that changes what is true or what a side is told. It says which events or reports a side is given of it, whole, cut down or not at all (chapter 1, What a side sees of an event). A rule with no such line has no event a side sees.
-- **Data keys** such as `search.toml: fresh_contact_max_age_pulses` name a figure in `data/reference/`. A key with no file is written into the code, and the text says where.
+- **Where a figure comes from.** A figure is in a data file, in the scenario file, or in the code. A data file figure is named `file: key`, such as `search.toml: fresh_contact_max_age_pulses`. A scenario file figure is named by its entry and field, such as a base entry's `anti_aircraft` or an air group entry's `pilots`. A figure with no file is in the code, and the text says where. A rule whose data file the scenario does not name is not loaded and does nothing (chapter 1, Where figures come from and when a rule is loaded).
 - **Cross-references** give a chapter and a section by its title, as "chapter 3, Sighting reports".
 - **"Limit:" and "Not built:"** name what a rule leaves out. **"Known limit"** is the same.
 - **Words** have one meaning each, given in `docs/glossary.md`.
