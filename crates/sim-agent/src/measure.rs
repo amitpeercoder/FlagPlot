@@ -289,9 +289,16 @@ pub struct Passage {
 pub struct ReachLine {
     pub to: Resolved,
     pub distance_nm: u32,
-    /// The distance is within the radius, by the comparison the strike
-    /// decision makes (a distance equal to the radius is within it).
+    /// The distance is within the reach in force, by the comparison the
+    /// strike decision makes (a distance equal to the reach is within it).
+    /// On normal reach the reach is the radius.
     pub within: bool,
+    /// The distance is within the type's radius, whatever the reach in force.
+    pub within_radius: bool,
+    /// The chance an aircraft that came back from a strike or escort sortie
+    /// to this distance runs out of fuel (decision 3 of 0059): 0 within the
+    /// radius. `None` where the scenario has no air combat figures.
+    pub ditch_chance: Option<Dec>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -309,6 +316,13 @@ pub struct AirReach {
     pub radius_nm: Dec,
     /// `strike`, `escort` (a fighter's) or `none`.
     pub radius_is: &'static str,
+    /// The group's reach in force: `normal` (the radius applies) or
+    /// `extended` (the longer reach applies; decision 0059).
+    pub reach: &'static str,
+    /// The reach in force in miles: the radius on normal reach, and the
+    /// radius and a share more, cut to a whole mile, on extended. A distance
+    /// is `within` if it is no more than this.
+    pub reach_nm: Dec,
     /// For a fighter, the same figure: the radius within which its escorts go
     /// with a raid (decision 0030).
     pub escort_radius_nm: Option<Dec>,
@@ -568,6 +582,8 @@ fn air_reach(ctx: &Ctx<'_>, handle: &str, to: &[PlaceArg]) -> Option<MeasureAnsw
         .map(|arg| resolve(ctx, arg))
         .collect::<Option<_>>()?;
     let radius = aircraft.strike_range_nm;
+    // The reach in force, by the one function the strike decision uses.
+    let reach_nm = ctx.view.reach_nm(group);
     let radius_is = if aircraft.role == AircraftRole::Fighter {
         "escort"
     } else if aircraft.attack_weapon != AttackWeapon::None {
@@ -586,6 +602,8 @@ fn air_reach(ctx: &Ctx<'_>, handle: &str, to: &[PlaceArg]) -> Option<MeasureAnsw
         role: words::role(aircraft.role),
         radius_nm: Dec(radius),
         radius_is,
+        reach: group.reach.name(),
+        reach_nm: Dec(reach_nm),
         escort_radius_nm: (aircraft.role == AircraftRole::Fighter).then_some(Dec(radius)),
         places: places
             .into_iter()
@@ -593,7 +611,18 @@ fn air_reach(ctx: &Ctx<'_>, handle: &str, to: &[PlaceArg]) -> Option<MeasureAnsw
                 to,
                 distance_nm: origin.air_distance_nm(hex),
                 // A type with no radius reaches nothing, not even its own hex.
-                within: radius_is != "none" && origin.air_distance_within(hex, radius),
+                within: radius_is != "none" && origin.air_distance_within(hex, reach_nm),
+                within_radius: radius_is != "none" && origin.air_distance_within(hex, radius),
+                ditch_chance: if radius_is == "none" {
+                    None
+                } else {
+                    ctx.view
+                        .ditch_chance(
+                            Fixed::from_int(i64::from(origin.air_distance_nm(hex))),
+                            radius,
+                        )
+                        .map(Dec)
+                },
             })
             .collect(),
     }))
@@ -772,6 +801,12 @@ impl AirReach {
             )),
             _ => text.push_str(&format!("- Radius: {} miles\n", self.radius_nm)),
         }
+        if self.radius_is != "none" {
+            text.push_str(&format!(
+                "- Reach in force: {}, {} miles\n",
+                self.reach, self.reach_nm
+            ));
+        }
         if self.places.is_empty() {
             text.push_str("- Places asked: none\n");
         }
@@ -780,12 +815,19 @@ impl AirReach {
                 "- {}: {} miles, {}\n",
                 unit_at(&line.to),
                 line.distance_nm,
-                if line.within {
-                    "within the radius"
-                } else {
-                    "beyond the radius"
+                match (line.within, line.within_radius) {
+                    (_, true) => "within the radius",
+                    (true, false) => "beyond the radius, within the reach in force",
+                    (false, false) => "beyond the reach in force",
                 }
             ));
+            if let Some(chance) = line.ditch_chance {
+                if !line.within_radius && line.within {
+                    text.push_str(&format!(
+                        "  An aircraft that came back would run out of fuel with chance {chance}\n"
+                    ));
+                }
+            }
         }
         text
     }

@@ -1,0 +1,38 @@
+Scenario 12a: Long reach
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 64dc00cfcbc2d1b9  18 events
+
+#1 D1 -         order:1 accepted for air_group:1  <- order:1
+#2 D1 -         order:2 accepted for air_group:1  <- order:2
+#3 D1 -         order:3 accepted for air_group:2  <- order:3
+#4 D1 -         order:4 accepted for air_group:2  <- order:4
+#5 D1 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#6 D1 morning   air_group:1 searched for task_force:2 at 280 nm, chance 0.363782: not sighted  <- #5
+#7 D1 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#8 D1 afternoon air_group:1 searched for task_force:2 at 280 nm, chance 0.363782: sighted  <- #7
+#9 D1 afternoon Allied report: 3 ships, carrier, at (11,0): new contact:1  <- #8
+#10 D1 afternoon air_group:2 launched 18 aircraft at contact:1 at (11,0), 280 nm  <- order:3, order:4, #9
+#11 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 5 hits  <- #10
+#12 D1 afternoon ship:3 took 5 hits on flotation, 50 points, now 50  <- #11
+#13 D1 afternoon ship:3 propulsion hit, working -> degraded  <- #11
+#14 D1 afternoon ship:3 main battery hit, no change, still working  <- #11
+#15 D1 afternoon Allied report: 3 ships, cruiser, at (11,0): refreshed contact:1  <- #11
+#16 D1 afternoon Allied claim at (11,0): 6 hits on a carrier, 0 sunk  <- #11
+#17 D1 afternoon air_group:2 strike sortie of 280 nm, 30 beyond its radius of 250: 18 aircraft x 0.24 = 4.32 expected out of fuel, 2 ditched, 1 crew recovered, 1 pilot lost, 16 ready left  <- #10
+#18 D1 afternoon air_group:2 lost 1 pilot, 17 left  <- #17
+
+task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (11,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder scouting squadron" (Allied) aboard ship:1: 8 ready, mission Search, arc 040-130 to 300 nm
+air_group:2 "Placeholder bombing squadron" (Allied) aboard ship:1: 16 ready, 17 pilots, mission NavalStrike, extended reach, no arc
+ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 50, fire 0; propulsion degraded; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+Allied contact:1 at (11,0): 3 ships, cruiser, age 0 pulses
+Allied claim at (11,0): 6 hits on a carrier, 0 sunk, day 1 afternoon
+Japanese: no contacts
+Japanese: no battle claims

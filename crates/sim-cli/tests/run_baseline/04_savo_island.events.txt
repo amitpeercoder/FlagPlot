@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7e3ae6475283476f  290 events
+day   1  hash 195aeb12557d1484  290 events
 
 #1 D0 -         Allied report: 8 ships, cruiser, at (-1,-9), held at the start: new contact:1
 #2 D0 -         Allied contact:1 aged to 1 pulses  <- #1

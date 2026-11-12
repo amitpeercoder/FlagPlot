@@ -93,7 +93,7 @@ Both use the same list.
 | 1 | Air search | Air groups on the search mission fly their arcs and sighting reports follow. | Chapter 3, Air search |
 | 2 | Strike decisions | Groups on a strike mission decide, on their side's belief, and launch. | Chapter 5, The strike decision |
 | 3 | Air combat | Escorts, patrols, guns and attacks, then the damage. Reports and claims follow. | Chapter 5, The raid, step by step; chapter 3, Claims |
-| 4 | Aircraft wear | Aircraft that flew roll for wear, air groups gain fatigue, and bases pay for sorties. | Chapter 5, The end of a daylight pulse for aircraft |
+| 4 | Aircraft wear | Aircraft that flew beyond their radius may run out of fuel, the rest roll for wear, air groups gain fatigue, and bases pay for sorties. | Chapter 5, The end of a daylight pulse for aircraft |
 | 5 | Movement | The straggler pass, then forces move in order of clock time, and fight where they meet. | Chapter 2, Movement and Stragglers; chapter 4 |
 | 6 | Surface engagements | Empty slot. The fights happen inside movement. | Chapter 4, Meeting |
 | 7 | Loading | Cargo is loaded and unloaded at bases. | Chapter 2, Cargo |
@@ -164,8 +164,9 @@ Detaching ships creates a new force with the next free task force number. It sta
 | Set search arc (from bearing, to bearing, range in miles) | The arc and the order that set it. | Search arc |
 | Set patrol share (0 to 1) | The share of its flyable aircraft a group on patrol keeps over its own hex. | Patrol share |
 | Set rest threshold (0 to 100) | The fatigue above which the staff stands the group down at the start of the day. | Rest threshold |
+| Set reach (normal or extended) | How far its strikes and escorts may go: the type's strike radius, or a share more (chapter 5, Radius and reach). Normal is the default. | Reach |
 
-[0012, 0026, 0027, 0034, 0036]
+[0012, 0026, 0027, 0034, 0036, 0059]
 
 ### When an order is checked, and against what
 
@@ -226,10 +227,11 @@ Then, by kind:
 | Rest, Search | None | Always accepted. |
 | Set patrol share | Patrol share out of range | Below 0 or above 1. |
 | Set rest threshold | Fatigue out of range | Below 0 or above 100. |
+| Set reach | No air combat figures | The order is extended and the scenario has none. Normal reach is always accepted, so a group can go back to it. |
 | Set search arc | Invalid bearing | A bearing is not a multiple of 10 from 0 to 350. The from bearing is tried first. |
 | Set search arc | Invalid search range | The range is zero or below, or above the aircraft type's search range (`aircraft_types` file: `search_range_nm`). |
 
-[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044]
+[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059]
 
 A refused order changes nothing but the log and the order counter. It is kept in the order record. [0008]
 
@@ -241,9 +243,9 @@ A side sees: it sees its own acceptances and refusals whole, with the reason. Th
 
 An accepted order replaces the standing order of its slot and nothing else. A new route does not cancel a speed order. A new mission does not cancel a search arc. Cargo orders share one slot: Load, Load fuel and Unload replace each other. The four figures of the rules of engagement are replaced together. [0008, 0027, 0036, 0046]
 
-A standing order stays until another of its slot replaces it. Nothing clears a cargo, speed, mission, readiness, rules, home port, patrol share, rest threshold or arc order when it has been carried out. Two rules do drop the route order of a force: a force that ran dry and takes fuel in port, and a force retiring because of its stragglers. Chapter 2, Refuelling in port and Stragglers, says when. [0008, 0016, 0045]
+A standing order stays until another of its slot replaces it. Nothing clears a cargo, speed, mission, readiness, rules, home port, patrol share, rest threshold, reach or arc order when it has been carried out. Two rules do drop the route order of a force: a force that ran dry and takes fuel in port, and a force retiring because of its stragglers. Chapter 2, Refuelling in port and Stragglers, says when. [0008, 0016, 0045]
 
-A task force remembers which order set its route, speed, rules of engagement and readiness. An air group remembers which order set its mission, arc, patrol share and rest threshold. Events cite them as causes. [0008]
+A task force remembers which order set its route, speed, rules of engagement and readiness. An air group remembers which order set its mission, arc, patrol share, rest threshold and reach. Events cite them as causes. [0008, 0059]
 
 A route order that finds a force between two hexes may turn it round. The event `TaskForceTurnedBack` follows the order's acceptance and cites the order. [0005, 0017]
 
@@ -340,7 +342,7 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Cargo loaded, cargo unloaded | Own ship |
 | Ship damaged, system hit, ship sunk | Own ship |
 | Search flown | Own air group |
-| Aircraft worn, aircraft repaired, aircraft arrived, replacements received | Own air group |
+| Aircraft worn, aircraft ditched, aircraft repaired, aircraft arrived, replacements received | Own air group |
 | Damaged aircraft destroyed on the ground, aircraft destroyed on the ground | Own air group |
 | Air group lost, air group fatigue, air group stood down, air group returned | Own air group |
 | Strike launched, base strike launched, strike found nothing, escorts sent | Own air group |
@@ -413,7 +415,7 @@ A rule's figures are **loaded** when the scenario file names the file that holds
 
 | Scenario key | File | Rules that run only if it is loaded |
 | --- | --- | --- |
-| `air_combat` | `air_combat.toml` | Strike and base strike missions, combat air patrol, escorts, raids, anti-aircraft fire, and the false claims of a raid. Without it these orders are refused. |
+| `air_combat` | `air_combat.toml` | Strike and base strike missions, combat air patrol, escorts, raids, anti-aircraft fire, the false claims of a raid, and reach beyond the radius with running out of fuel. Without it the mission orders and the extended reach order are refused. A file that names the scenario must hold every key: one without a key is refused when the scenario loads. |
 | `air_upkeep` | `air_upkeep.toml` | Wear and repair of aircraft. |
 | `fatigue` | `fatigue.toml` | Fatigue of task forces and of air groups, stand-down and return, and the fatigue factor of a sighting. |
 | `air_supply` | `air_supply.toml` | Supply for sorties and the daily supply, bases out of supply, and the supply a repair costs. |
@@ -442,7 +444,7 @@ A key is made of:
 
 Each part has its own tag so equal values in different parts cannot cancel. A key opens a stream, and the n-th draw of the stream is mixed from the key and n. A rule that needs several numbers for one key takes them from that one stream in a fixed order. No rule shares one stream between entities and no stream is carried from one pulse to the next. [0003, 0013, 0055]
 
-The values of `Draw` are `Legacy` (0) and `Claim` (1, the false claims of a raid, one stream for each side's claim keyed on its first firing unit and the raid's first strike group). [0055, 0056]
+The values of `Draw` are `Legacy` (0), `Claim` (1, the false claims of a raid, one stream for each side's claim keyed on its first firing unit and the raid's first strike group) and `Ditch` (2, the aircraft that run out of fuel and the recovery of their crews, one stream for each air group and pulse, in the upkeep subsystem, keyed on the air group alone). [0055, 0056, 0059]
 
 The eleven legacy draws, told apart by the shape of their keys:
 
@@ -488,7 +490,7 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v3`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. [0004, 0057, 0058 item 7]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v4`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. [0004, 0057, 0058 item 7, 0059]
 
 The hash covers: the seed; the day; every ship, task force, base, air group, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases or air groups, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 

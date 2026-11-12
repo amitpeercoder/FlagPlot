@@ -515,6 +515,12 @@ struct AirCombatFile {
     fighter_false_claim_chance: Quantity,
     anti_aircraft_false_claim_chance: Quantity,
     bomb_false_claim_chance: Quantity,
+    /// Reach beyond the radius and running out of fuel (decision 0059).
+    /// Required like every other key of the file: a file without them is
+    /// refused, naming the key.
+    extended_reach_share: Quantity,
+    ditch_chance_per_radius_beyond: Quantity,
+    crew_recovered_short_of_home: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -572,6 +578,15 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             &file.anti_aircraft_false_claim_chance,
         )?,
         bomb_false_claim_chance: number("bomb_false_claim_chance", &file.bomb_false_claim_chance)?,
+        extended_reach_share: number("extended_reach_share", &file.extended_reach_share)?,
+        ditch_chance_per_radius_beyond: number(
+            "ditch_chance_per_radius_beyond",
+            &file.ditch_chance_per_radius_beyond,
+        )?,
+        crew_recovered_short_of_home: number(
+            "crew_recovered_short_of_home",
+            &file.crew_recovered_short_of_home,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -976,6 +991,55 @@ mod tests {
             );
             // The ends of the range are allowed.
             for edge in ["0", "1"] {
+                let text = air_combat_text().replace(&line, &format!("{key} = \"{edge}\""));
+                parse_air_combat_figures(&text, here()).expect("an edge of the range loads");
+            }
+        }
+    }
+
+    #[test]
+    fn the_reach_and_ditching_figures_are_required_in_range_and_not_floats() {
+        // Decisions 2, 3 and 6 of 0059. A file without a key is refused,
+        // naming it, as with every other key of the file.
+        let bad = |from: &str, to: &str| {
+            let text = air_combat_text().replace(from, to);
+            assert_ne!(text, air_combat_text(), "{from} is in the file");
+            parse_air_combat_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        let figures = parse_air_combat_figures(&air_combat_text(), here()).expect("parses");
+        assert_eq!(figures.extended_reach_share, Fixed::from_ratio(25, 100));
+        assert_eq!(figures.ditch_chance_per_radius_beyond, Fixed::from_int(2));
+        assert_eq!(
+            figures.crew_recovered_short_of_home,
+            Fixed::from_ratio(7, 10)
+        );
+        // (key, value as written, the largest allowed, a value just above it,
+        // the same as a TOML float).
+        for (key, value, top, over, float) in [
+            ("extended_reach_share", "0.25", "1", "1.5", "0.25"),
+            ("ditch_chance_per_radius_beyond", "2", "100", "101", "2.5"),
+            ("crew_recovered_short_of_home", "0.7", "1", "1.5", "0.7"),
+        ] {
+            let line = format!("{key} = \"{value}\"");
+            assert!(
+                bad(&format!("{line}\n"), "").contains(key),
+                "{key} is required"
+            );
+            assert!(
+                bad(&line, &format!("{key} = \"{over}\"")).contains("not between"),
+                "{key} above its range"
+            );
+            assert!(
+                bad(&line, &format!("{key} = \"-0.1\"")).contains("not between"),
+                "{key} below 0"
+            );
+            assert!(
+                bad(&line, &format!("{key} = {float}")).contains(key),
+                "{key} as a float"
+            );
+            for edge in ["0", top] {
                 let text = air_combat_text().replace(&line, &format!("{key} = \"{edge}\""));
                 parse_air_combat_figures(&text, here()).expect("an edge of the range loads");
             }

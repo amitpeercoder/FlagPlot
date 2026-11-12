@@ -478,6 +478,7 @@
               "destroyed_on_ground": { "type": "integer" },
               "written_off": { "type": "integer" },
               "lost_with_ship": { "type": "integer" },
+              "ditched": { "description": "Left out when 0. Aircraft that ran out of fuel on the way home from a strike or escort sortie beyond their radius, and are lost.", "type": "integer" },
               "pilots_lost": { "type": "integer" },
               "events": { "$ref": "defs.schema.json#/$defs/event_numbers" }
             }
@@ -722,6 +723,10 @@
               "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
               "mission": { "enum": ["naval_strike", "base_strike"] },
               "radius_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+              "reach_nm": {
+                "description": "Given only for a group on extended reach: the reach in force in miles. The warning is made against it, not against radius_nm: a contact within it does not warn.",
+                "$ref": "defs.schema.json#/$defs/dec"
+              },
               "nearest": { "$ref": "defs.schema.json#/$defs/handle" },
               "distance_nm": { "type": "integer" }
             }

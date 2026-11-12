@@ -391,6 +391,9 @@ impl Briefing {
             if x.lost_with_ship > 0 {
                 causes.push(format!("{} lost with their ship", x.lost_with_ship));
             }
+            if x.ditched > 0 {
+                causes.push(format!("{} ran out of fuel on the way home", x.ditched));
+            }
             if x.pilots_lost > 0 {
                 causes.push(plural(x.pilots_lost, "pilot lost", "pilots lost"));
             }
@@ -503,6 +506,9 @@ impl Briefing {
                 ", radius {} miles, search range {} miles",
                 g.strike_radius_nm.0, g.search_range_nm.0
             ));
+            if let Some(reach) = g.reach_nm {
+                s.push_str(&format!(", extended reach {} miles", reach.0));
+            }
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));
@@ -705,19 +711,22 @@ impl Briefing {
             "Strike groups with nothing in reach",
             &w.strike_group_out_of_reach,
             |x| {
+                // On extended reach the test is against the reach in force.
+                let (word, miles) = match x.reach_nm {
+                    Some(reach) => ("extended reach", reach.0),
+                    None => ("radius", x.radius_nm.0),
+                };
                 if x.mission == "naval_strike" {
                     format!(
-                        "Out of reach: {} is on naval strike with a radius of {} miles and holds contacts, but none is within it; the nearest is {}, {} miles away",
+                        "Out of reach: {} is on naval strike with a {word} of {miles} miles and holds contacts, but none is within it; the nearest is {}, {} miles away",
                         x.air_group.text(),
-                        x.radius_nm.0,
                         x.nearest.text(),
                         x.distance_nm
                     )
                 } else {
                     format!(
-                        "Out of reach: {} is on base strike with a radius of {} miles, but its target {} is {} miles away",
+                        "Out of reach: {} is on base strike with a {word} of {miles} miles, but its target {} is {} miles away",
                         x.air_group.text(),
-                        x.radius_nm.0,
                         x.nearest.text(),
                         x.distance_nm
                     )

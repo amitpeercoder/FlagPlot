@@ -4,7 +4,7 @@ This chapter is the rules for air groups: what they are, what they are ordered t
 
 A day has three pulses: night, morning and afternoon. The night pulse comes first. Air groups do nothing but rest, repair and receive aircraft at night: nothing flies in the dark (decision 0001, 0012). The air rules in the order they run are listed in "The order of the air rules in a day", and chapter 1, The order in which a day resolves, holds the sequence of the whole day.
 
-Several rules apply only when their figures are loaded, which is defined once in chapter 1, Where figures come from and when a rule is loaded: `air_combat.toml` for strikes, patrol, escorts and raids, `air_upkeep.toml` for wear and repair, `fatigue.toml` for fatigue and rest, and `air_supply.toml` for supply. Where that matters it is stated with the rule.
+Several rules apply only when their figures are loaded, which is defined once in chapter 1, Where figures come from and when a rule is loaded: `air_combat.toml` for strikes, patrol, escorts, raids, reach and running out of fuel, `air_upkeep.toml` for wear and repair, `fatigue.toml` for fatigue and rest, and `air_supply.toml` for supply. Where that matters it is stated with the rule.
 
 ## The air group
 
@@ -22,10 +22,11 @@ An air group is one unit of aircraft of one aircraft type. It holds:
 - `patrol_share`: from 0 to 1, default 1, and the order that set it.
 - `fatigue`: from 0 to 100, default 0.
 - `rest_above`: the rest threshold, or none, and the order that set it.
+- `reach`: normal or extended, default normal, and the order that set it (see "Radius and reach").
 - `stood_down`: whether the staff stood the group down today.
 - Its place: exactly one base or exactly one ship.
 
-[0025, 0035, 0036, 0038, 0041]
+[0025, 0035, 0036, 0038, 0041, 0059]
 
 A side sees: its own groups whole. The enemy sees nothing of a group except through a sighting report, a claim, or the fight events listed with each rule below.
 
@@ -73,12 +74,13 @@ The orders that act on an air group, and every reason one is refused, are in cha
 - A search arc order sets the arc that the search step flies (chapter 3, Air search).
 - A patrol share order sets `patrol_share`, which only The split reads. It does nothing for a group that is not on combat air patrol.
 - A rest threshold order sets `rest_above`, which only Stand-down and return reads. It does nothing when the fatigue figures are not loaded.
+- A reach order sets `reach` to normal or extended, which the strike decision, the base strike and the escorts read (see "Radius and reach"), and which a sortie beyond the radius pays for (see "Running out of fuel"). It does nothing for a group that does not strike or escort.
 
-The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050]
+The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059]
 
 A side sees: `OrderAccepted` or `OrderRejected` for its own orders, whole.
 
-Not built: orders to rebase, to set target priority, to set a range limit other than a search arc's range, and to change the repair order (0052).
+Not built: orders to rebase, to set target priority and to change the repair order (0052).
 
 ## What a group can fly in a pulse
 
@@ -108,7 +110,7 @@ A side sees: `BaseSupplySpent` for its own bases. The enemy sees nothing.
 
 Search, strike decisions and air combat happen in the two daylight pulses only. Strike decision tests `is_dark` for the group's hex, which is true exactly in the night pulse. A group flies no strike by night. [0001, 0012, 0026]
 
-## Air distance and radius
+## Air distance, radius and reach
 
 ### Air distance
 
@@ -118,11 +120,18 @@ A ship steams hex by hex but is charged the same straight-line miles where the w
 
 A side sees: the distance in its own events that carry one.
 
-### Radius
+### Radius and reach
 
-A type has a search range (`aircraft_types*.csv: search_range_nm`), a strike radius (`strike_range_nm`) and a sweep width (`sweep_width_nm`). The strike radius is how far out an aircraft goes and comes back, and the same figure is the radius for a strike and for an escort. The derivation sets it from the sourced combat radius where exactly one can be read, and otherwise from a third of the sourced range with a normal load, cut to a whole mile (0029). The search range is the largest range a search arc may name. [0026, 0029, 0030, 0040]
+A type has a search range (`aircraft_types*.csv: search_range_nm`), a strike radius (`strike_range_nm`) and a sweep width (`sweep_width_nm`). The strike radius is how far out an aircraft goes and comes back, and the same figure is the radius for a strike and for an escort. The derivation sets it from the sourced combat radius where exactly one can be read, and otherwise from a third of the sourced range with a normal load, cut to a whole mile (0029). The search range is the largest range a search arc may name. [0026, 0029, 0030, 0040, 0059]
 
-Known limit: the radius is a hard cutoff. A group strikes only if the target is within the radius, and escorts go only if the raid's hex is within their radius. There is no partial effort, no reduced load and no drop-tank order. Decision 0030 lists drop tanks as deferred. The radius of a type with a sourced combat radius and one without are not the same kind of figure (0030).
+A group has a **reach**, set by order (see "Air group orders"): normal, which is the default, or extended. Reach is how far its strikes and its escorts may go, and it is read through one function, `RefData::reach_nm`, by every rule and tool that asks:
+
+- On normal reach the reach is the type's strike radius.
+- On extended reach it is the strike radius times (1 plus `air_combat.toml: extended_reach_share`), cut to a whole mile. With a radius of 250 and a share of 0.25 that is 312.5, cut to 312.
+
+A naval strike group on extended reach strikes a contact within its reach, a base strike group a base within its reach, and a fighter group on extended reach sends its escorts with a raid within its own reach. A distance is within the reach if it is no more than it. The briefing and `measure` give the same reach, because they ask the same function. The price of reach beyond the radius is paid on the way home (see "Running out of fuel").
+
+Known limit: reach is a hard cutoff. A group strikes only if the target is within its reach, and escorts go only if the raid's hex is within theirs. There is no partial effort, no reduced load and no drop-tank order. Decision 0030 lists drop tanks as deferred. The radius of a type with a sourced combat radius and one without are not the same kind of figure (0030). [0059]
 
 ### What a type carries
 
@@ -219,17 +228,17 @@ A side sees: nothing of a decision that launched nothing.
 A naval strike group considers each contact its side holds. A contact qualifies if both hold:
 
 - Its age in pulses is at most `air_combat.toml: strike_contact_max_age_pulses`. A contact is not aged in the pulse it was reported in, so with the figure at 0 a contact reported this pulse or the one before qualifies, and no older one.
-- Its estimated hex is within the type's strike radius of the group's hex, by air distance.
+- Its estimated hex is within the group's reach (the type's strike radius on normal reach) of the group's hex, by air distance.
 
 From the contacts that qualify the group takes the one with the most important estimated kind (chapter 3, What a report holds), then the nearest by air distance, then the lowest contact number. With none it does nothing.
 
-It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040]
+It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040, 0059]
 
 A side sees: `StrikeLaunched` for its own group, whole. The enemy sees nothing at launch.
 
 ### Base strike
 
-A base strike group launches in the morning pulse only, once a day, with no contact and no belief read. It launches if the base exists, is held by the other side, and is within the type's strike radius by air distance. It launches every aircraft it is able to fly and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order. In the afternoon pulse a base strike group does nothing. [0034]
+A base strike group launches in the morning pulse only, once a day, with no contact and no belief read. It launches if the base exists, is held by the other side, and is within the group's reach by air distance. It launches every aircraft it is able to fly and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order and, on extended reach, its reach order. In the afternoon pulse a base strike group does nothing. [0034, 0059]
 
 A side sees: `BaseStrikeLaunched` for its own group, whole.
 
@@ -241,7 +250,7 @@ Nothing in these rules keeps aircraft that flew in the morning from flying in th
 
 ### The split
 
-At the start of the air combat step each fighter group on combat air patrol that has ready aircraft is split. Let F be the aircraft it is able to fly. The patrol is F times the group's patrol share, cut to a whole number. The escorts are F minus the patrol. The patrol stays over the group's own hex. The escorts go with a raid launched from the group's own place, if there is one and it is within the radius (see Which raid the escorts join, and the radius). A fighter group that is not on combat air patrol is not split and flies nothing. [0027, 0036]
+At the start of the air combat step each fighter group on combat air patrol that has ready aircraft is split. Let F be the aircraft it is able to fly. The patrol is F times the group's patrol share, cut to a whole number. The escorts are F minus the patrol. The patrol stays over the group's own hex. The escorts go with a raid launched from the group's own place, if there is one and it is within the group's reach (see Which raid the escorts join, and the reach). A fighter group that is not on combat air patrol is not split and flies nothing. [0027, 0036]
 
 The patrol defends the hex the group is in, against every enemy raid that attacks that side's forces or base there, in a daylight pulse. [0027]
 
@@ -251,11 +260,11 @@ A side sees: nothing of the split itself.
 
 The strikes launched in one pulse from one place at one hex are one raid. A place is a ship or a base. The raid's bombers are the aircraft of those strike groups. Strikes at ships and strikes at a base from one place at one hex are two raids; two strikes at a base from one place are one raid only if they name the same base. Raids are ordered by their first strike group, the lowest group number first. A raid with a strike group whose aircraft the fights leave at zero is still a raid. [0027, 0034]
 
-### Which raid the escorts join, and the radius
+### Which raid the escorts join, and the reach
 
-All the escorts at a place go with one raid from that place: the raid with the most bombers launched, and of those the one whose first group has the lowest number. They look for no nearer raid. The raid is tested for the radius: the escorts go only if the raid's hex is within the fighter type's strike radius of the fighter group's hex, by air distance. If the raid is beyond the radius, the whole group that can fly is its patrol for the pulse: its patrol rises by its escorts and its escorts fall to 0. If no raid launches from the place, its escorts fly nothing and are on the ground. A group that is split has ready aircraft, so it is at a base or aboard a ship that is afloat, and always has a position: a group aboard a sunk ship has no aircraft and is not split. The test is made on the hex the raid is sent to, which is where its side believes the enemy is, so a group whose escorts go with a raid to an empty hex has still sent them. [0027, 0030]
+All the escorts at a place go with one raid from that place: the raid with the most bombers launched, and of those the one whose first group has the lowest number. They look for no nearer raid. The raid is tested for the reach: the escorts go only if the raid's hex is within the fighter group's reach (its type's strike radius on normal reach) of the fighter group's hex, by air distance. If the raid is beyond the reach, the whole group that can fly is its patrol for the pulse: its patrol rises by its escorts and its escorts fall to 0. If no raid launches from the place, its escorts fly nothing and are on the ground. A group that is split has ready aircraft, so it is at a base or aboard a ship that is afloat, and always has a position: a group aboard a sunk ship has no aircraft and is not split. The test is made on the hex the raid is sent to, which is where its side believes the enemy is, so a group whose escorts go with a raid to an empty hex has still sent them. [0027, 0030]
 
-`EscortsSent` is recorded for each fighter group whose escorts go (group, the raid's first strike group, aircraft), caused by the group's mission order, its share order, and the raid's `StrikeLaunched` or `BaseStrikeLaunched` event. It is recorded only when escorts go. [0027, 0030]
+`EscortsSent` is recorded for each fighter group whose escorts go (group, the raid's first strike group, aircraft), caused by the group's mission order, its share order, its reach order if it is on extended reach, and the raid's `StrikeLaunched` or `BaseStrikeLaunched` event. It is recorded only when escorts go. [0027, 0030, 0059]
 
 A side sees: `EscortsSent` for its own group, whole. The enemy sees nothing of it.
 
@@ -340,6 +349,7 @@ Pilots, where counted:
 - An aircraft lost as a bomber or an escort takes its pilot with it, never below 0. `PilotsLost` is recorded right after, caused by `AircraftLost`.
 - An aircraft lost as the patrol over its own hex loses no pilot. The group has one aircraft fewer and keeps the pilot. This holds for a carrier's patrol at sea too: rescue at sea is not modelled.
 - An aircraft written off after a sortie, or destroyed on the ground, loses no pilot.
+- An aircraft that ran out of fuel on the way home (see "Running out of fuel") draws for its crew, and a crew not recovered is a pilot lost.
 
 An aircraft that has been shot down is not worn afterwards: it is removed from the sortie that the wear step rolls. A group whose aircraft were all shot down still flew, for fatigue and supply. [0027, 0035, 0038]
 
@@ -402,11 +412,11 @@ Both forces' strikes are launched in the decision step before either lands, each
 
 ## The end of a daylight pulse for aircraft
 
-The wear step runs in each daylight pulse after air combat, then fatigue, then the supply for sorties. They are worked on the sorties noted in the pulse.
+The wear phase runs in each daylight pulse after air combat. It works the sorties noted in the pulse, in this order: running out of fuel, wear, fatigue, then the supply for sorties.
 
 ### What counts as a sortie
 
-When any of the wear, fatigue or air supply figures are loaded, the search step and the air combat step note the sorties of the pulse. Each notes the group, the kind, the aircraft that flew (`sent`), the aircraft that came back (`sent` less those shot down), the distance, and the events that say it flew.
+When any of the wear, fatigue, air supply or air combat figures are loaded, the search step and the air combat step note the sorties of the pulse. Each notes the group, the kind, the aircraft that flew (`sent`), the aircraft that came back (`sent` less those shot down), the distance, and the events that say it flew.
 
 | Kind | Aircraft | Distance |
 | --- | --- | --- |
@@ -417,9 +427,28 @@ When any of the wear, fatigue or air supply figures are loaded, the search step 
 
 A fighter group with a patrol and escorts has two sorties. A patrol flies in every daylight pulse, whether a raid comes or not. Escorts fly only when sent. Nothing flies where it is dark. [0035, 0036, 0039]
 
+### Running out of fuel
+
+The first part of the wear phase, before any wear is rolled. It runs if `air_combat.toml` is loaded, whether or not the wear figures are. It works the strike, base strike and escort sorties of the pulse in the order the wear step uses: order of air group, a group's sorties in the order noted. A sortie is rolled only if at least one aircraft came back from it and its group has a position (a group aboard a ship that sank in the pulse has none: it rolls nothing, as in wear, and its aircraft are lost with the ship). A search and a patrol never roll.
+
+For each such sortie, with d its one-way distance (half the distance the sortie is noted at, in whole miles) and R the strike radius of the group's type:
+
+1. If d is not above R, nothing is rolled and nothing is recorded. A group that flew within its radius never ditches.
+2. The share beyond the radius is (d less R) over R, cut to millionths. The chance is `air_combat.toml: ditch_chance_per_radius_beyond` times the share, cut, and then 1 at most. The figure may be more than 1. With R 250 and d 280 the share is 0.12, and with the figure 2 the chance is 0.24. Each type is measured against its own radius, so fighters, with the shorter radius, are further beyond theirs on the same strike. No rule singles them out.
+3. Each aircraft that came back (those sent less those shot down) is rolled on its own at the chance, in the form of chapter 4, Each shot is rolled. An aircraft that fails is **ditched**: it leaves `ready` for good. It also leaves the sortie, so that the wear step below never rolls it. The sortie still counts as flown, on the aircraft sent, for fatigue and for supply.
+4. Where the group's pilots are counted, each ditched aircraft then draws for its crew at `air_combat.toml: crew_recovered_short_of_home`. Each crew not recovered is one pilot lost, never below 0, and `PilotsLost` is recorded right after the sortie's event, caused by it, when any is lost. A group whose pilots are not counted draws no crew.
+
+All the draws of a group in a pulse come from one stream of the upkeep subsystem with its own value of `Draw` (`Ditch`, code 2), keyed on the air group, and no other. The stream is taken across the group's sorties in order. For each sortie the ditching draws come first, one for each aircraft that came back, and then the crew draws, one for each aircraft ditched. This stream is not the one wear uses, so a ditching changes no wear draw but the number of aircraft wear rolls.
+
+`AircraftDitched` is recorded for each sortie that rolled, whether or not an aircraft ditched (group, kind of sortie, one-way distance, radius, aircraft rolled, chance, expected, ditched, crews recovered, pilots lost, ready after), caused by the events that say the group flew. Its breakdown lists the aircraft rolled, the distance, the radius, the share beyond the radius, the figure per radius, the chance and the crew figure. For the enemy's `aircraft_destroyed` objective a ditched aircraft counts as destroyed, though no one claims it: no claim counts it (chapter 6, The five kinds). [0059]
+
+A side sees: `AircraftDitched` for its own groups, whole, and `PilotsLost`. The enemy sees nothing of it. [0047, 0059]
+
+Not built: a landing at another deck or a field instead of the sea when the deck is lost, and a different chance for the crew by where the aircraft comes down (decision 0059, stage 2).
+
 ### Wear
 
-If `air_upkeep.toml` is loaded, each sortie is rolled in order of air group (a group's patrol before its escorts). The aircraft that rolled are those that came back. A sortie with no aircraft back rolls nothing. A group aboard a sunk ship has no position and rolls nothing.
+If `air_upkeep.toml` is loaded, each sortie is rolled in order of air group (a group's patrol before its escorts). The aircraft that rolled are those that came back and did not ditch. A sortie with no aircraft back rolls nothing. A group aboard a sunk ship has no position and rolls nothing.
 
 1. The wear chance is `air_upkeep.toml: wear_base_chance` plus `wear_chance_per_100_nm` times the distance over 100, 1 at most. The distance term is one multiplication and division, cut.
 2. Each returning aircraft is rolled on its own at the wear chance. The worn leave `ready`.
@@ -462,20 +491,20 @@ Chapter 1, The night pulse and The morning and afternoon pulses, hold the sequen
 
 1. At the start of every pulse: the grounded bases are fixed (A base out of supply).
 2. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, stand-down and return.
-3. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs wear, then fatigue, then supply for sorties, and then movement (chapter 2).
+3. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
 
-Contacts age at the end of every pulse (chapter 3). The end-of-day phases do nothing for aircraft. [0035, 0036, 0039, 0041]
+Contacts age at the end of every pulse (chapter 3). The end-of-day phases do nothing for aircraft. [0035, 0036, 0039, 0041, 0059]
 
 ## Known limits
 
-- **A hard radius.** A strike group launches only if its target is within the type's strike radius. There is no longer reach at reduced load. [0030]
+- **A hard reach.** A strike group launches only if its target is within its reach, the type's strike radius or, on extended reach, a share more. There is no partial effort or reduced load. A group on extended reach pays for a sortie beyond its radius only in aircraft that run out of fuel on the way home. There is no daylight limit on a launch and no landing at a field beyond the target. [0030, 0059]
 - **One hex.** A strike flies to the hex its contact names and attacks only there. It does not search neighbouring hexes. [0026, 0028]
 - **One ship.** All aircraft of a group attack one ship. A strike is not spread, and it attacks nothing but that ship. [0026]
 - **No night strikes.** [0026, 0034]
 - **Bases.** A base strike launches once a day, in the morning. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052]
 - **No rebase.** A group cannot move between bases or between a ship and a base. [0025, 0041, 0052]
 - **No landing elsewhere.** Aircraft are lost with their ship. [0025]
-- **Pilots are a count.** No experience, no skills, no pilot wounded. Pilots over the sea are not rescued. [0038, 0052]
+- **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down. [0038, 0052, 0059]
 - **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run. To change: differences.md row 27, a scenario whose arrival would overfill a ship is to be refused when it loads.
 - **Aircraft in reserve, morale, a base's aviation support, ground support, weather** are not built. [0052]
 - **Anti-aircraft ammunition** is not limited. [0027]

@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 use sim_core::fixed::Fixed;
-use sim_core::orders::{AirMission, Mission};
+use sim_core::orders::{AirMission, Mission, Reach};
 use sim_core::state::{AirGroup, Base, SystemState, TaskForce};
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
@@ -88,6 +88,11 @@ pub struct AirGroupLine {
     /// The aircraft type's search range in miles: the furthest a search arc
     /// can reach. Zero for a type that cannot search.
     pub search_range_nm: Dec,
+    /// The group's reach in force in miles, given only when it is on
+    /// extended reach (decision 0059); on normal reach the reach is
+    /// `strike_radius_nm` and the field is left out.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reach_nm: Option<Dec>,
 }
 
 /// A base in one line.
@@ -192,6 +197,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
     AirGroupLine {
         strike_radius_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.strike_range_nm)),
         search_range_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.search_range_nm)),
+        reach_nm: (group.reach == Reach::Extended).then(|| Dec(ctx.view.reach_nm(group))),
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),

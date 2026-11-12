@@ -22,6 +22,32 @@
 //! - escorts: the aircraft a fighter group sent with a raid, less those shot
 //!   down, twice the distance from the group to the raid's hex.
 //!
+//! # Running out of fuel (0059)
+//!
+//! [`World::roll_ditching`] is the first part of the wear phase, before any
+//! wear is rolled, and it needs only the air combat figures. For each
+//! strike or escort sortie of the pulse, in the order the sorties are noted
+//! (group number, a group's sorties in the order noted), whose one-way
+//! distance d (half the sortie's distance) is beyond the type's strike radius
+//! R: each aircraft that came back is rolled on its own at the chance
+//! `ditch_chance_per_radius_beyond` times (d - R) over R, 1 at most. The
+//! share (d - R) over R is cut to millionths first, then multiplied, then cut
+//! at 1: for d 280 and R 250, 30 over 250 is 0.12 and the chance is 0.24. An
+//! aircraft that fails is ditched: it leaves `ready` for good, leaves the
+//! sortie (so the wear roll and the paragraph below never see it), and still
+//! counts as flown on the aircraft `sent`. Where the group's pilots are
+//! counted, each ditched aircraft then draws for its crew at
+//! `crew_recovered_short_of_home`, and a crew not recovered is one pilot
+//! lost, never below 0, as `PilotsLost` records it. The draws are one stream
+//! of the upkeep subsystem with [`Draw::Ditch`], keyed on the air group, taken
+//! across the group's sorties of the pulse in order: for each sortie the
+//! ditching draws (one for each aircraft that came back), then the crew draws
+//! (one for each aircraft ditched). A sortie within the radius, a search and
+//! a patrol roll nothing, and a group aboard a ship that sank in the pulse
+//! has no position and rolls nothing, as in the wear roll. `AircraftDitched`
+//! is recorded for each sortie that rolled, whether or not an aircraft
+//! ditched.
+//!
 //! # The wear step
 //!
 //! [`World::wear_aircraft`] runs in a daylight pulse after the air combat
@@ -91,6 +117,7 @@ use crate::damage::roll_shots;
 use crate::events::{Breakdown, Cause, EventKind, Factor, FatigueChange, SortieKind, SupplyUse};
 use crate::fixed::Fixed;
 use crate::ids::{AirGroupId, BaseId, EntityRef};
+use crate::refdata::AirCombatFigures;
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::state::{AirGroupLocation, ShipLocation};
 use crate::time::Pulse;
@@ -137,6 +164,8 @@ impl World {
         let mut sorties = std::mem::take(&mut self.sorties);
         // Stable: a fighter group's patrol stays before its escorts.
         sorties.sort_by_key(|sortie| sortie.air_group);
+        // Before any wear is rolled: an aircraft that ditched is not worn.
+        self.roll_ditching(day, pulse, &mut sorties);
         self.roll_wear(day, pulse, &sorties);
         self.tire_and_rest_air_groups(day, pulse, &sorties);
         self.pay_for_sorties(day, pulse, &sorties);
@@ -302,11 +331,158 @@ impl World {
     }
 
     /// Whether the air and search steps note what each group flew: when the
-    /// wear, fatigue or supply figures are loaded.
+    /// wear, fatigue or supply figures are loaded, or the air combat figures
+    /// (the reach rule rolls ditching on the sorties, decision 0059).
     pub(crate) fn notes_sorties(&self) -> bool {
         self.ref_data.air_upkeep.is_some()
             || self.ref_data.fatigue.is_some()
             || self.ref_data.air_supply.is_some()
+            || self.ref_data.air_combat.is_some()
+    }
+
+    /// Aircraft that run out of fuel on the way home from a strike or an
+    /// escort sortie beyond their radius, and the fate of their crews
+    /// (decisions 3 to 6 of 0059). See the module comment: the order of the
+    /// draws and what each is keyed on.
+    fn roll_ditching(&mut self, day: u32, pulse: Pulse, sorties: &mut [Sortie]) {
+        let Some(figures) = self.ref_data.air_combat.clone() else {
+            return;
+        };
+        let mut streams: BTreeMap<AirGroupId, RngStream> = BTreeMap::new();
+        for sortie in sorties.iter_mut() {
+            if !matches!(
+                sortie.kind,
+                SortieKind::Strike | SortieKind::BaseStrike | SortieKind::Escort
+            ) || sortie.aircraft == 0
+            {
+                continue;
+            }
+            let Some(group) = self.truth.air_groups.get(&sortie.air_group) else {
+                continue;
+            };
+            // A group aboard a ship that sank in the pulse has no position
+            // and rolls nothing (as in the wear roll).
+            if self.truth.air_group_hex(group).is_none() {
+                continue;
+            }
+            let radius_nm = self
+                .ref_data
+                .aircraft_types
+                .get(&group.aircraft_type)
+                .map_or(Fixed::ZERO, |aircraft| aircraft.strike_range_nm);
+            // The sortie's distance is out and back, a whole number of miles.
+            let one_way_nm = sortie.distance_nm.mul_div(Fixed::ONE, Fixed::from_int(2));
+            if one_way_nm <= radius_nm {
+                continue;
+            }
+            let share_beyond = AirCombatFigures::share_beyond_radius(one_way_nm, radius_nm);
+            let chance = figures.ditch_chance(one_way_nm, radius_nm);
+            let came_back = sortie.aircraft;
+            let flew = Fixed::from_int(i64::from(came_back));
+            let expected = flew * chance;
+            let pilots = group.pilots;
+            let stream = streams.entry(sortie.air_group).or_insert_with(|| {
+                self.rng(
+                    day,
+                    Some(pulse),
+                    Subsystem::Upkeep,
+                    Draw::Ditch,
+                    EntityRef::AirGroup(sortie.air_group),
+                )
+            });
+            let ditched = roll_shots(stream, flew, chance);
+            let (crews_recovered, pilots_lost) = match pilots {
+                Some(pilots) => {
+                    let recovered = roll_shots(
+                        stream,
+                        Fixed::from_int(i64::from(ditched)),
+                        figures.crew_recovered_short_of_home,
+                    );
+                    (Some(recovered), (ditched - recovered).min(pilots))
+                }
+                None => (None, 0),
+            };
+
+            let group = self
+                .truth
+                .air_groups
+                .get_mut(&sortie.air_group)
+                .expect("the air group exists");
+            group.ready -= ditched;
+            if let Some(pilots) = group.pilots {
+                group.pilots = Some(pilots - pilots_lost);
+            }
+            let (ready, pilots_left) = (group.ready, group.pilots.unwrap_or(0));
+            // A ditched aircraft is not rolled for wear. `sent` stays: the
+            // sortie still counts as flown for fatigue and supply.
+            sortie.aircraft -= ditched;
+
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "aircraft",
+                        value: flew,
+                    },
+                    Factor {
+                        name: "distance_nm",
+                        value: one_way_nm,
+                    },
+                    Factor {
+                        name: "radius_nm",
+                        value: radius_nm,
+                    },
+                    Factor {
+                        name: "share_beyond_radius",
+                        value: share_beyond,
+                    },
+                    Factor {
+                        name: "ditch_chance_per_radius_beyond",
+                        value: figures.ditch_chance_per_radius_beyond,
+                    },
+                    Factor {
+                        name: "chance",
+                        value: chance,
+                    },
+                    Factor {
+                        name: "crew_recovered_short_of_home",
+                        value: figures.crew_recovered_short_of_home,
+                    },
+                ],
+                result: expected,
+            });
+            let event = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::AircraftDitched {
+                    air_group: sortie.air_group,
+                    sortie: sortie.kind,
+                    distance_nm: one_way_nm,
+                    radius_nm,
+                    aircraft: came_back,
+                    chance,
+                    expected,
+                    ditched,
+                    crews_recovered,
+                    pilots_lost,
+                    ready,
+                },
+                sortie.causes.clone(),
+                breakdown,
+            );
+            if pilots_lost > 0 {
+                self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::PilotsLost {
+                        air_group: sortie.air_group,
+                        lost: pilots_lost,
+                        left: pilots_left,
+                    },
+                    vec![Cause::Event(event)],
+                    None,
+                );
+            }
+        }
     }
 
     fn roll_wear(&mut self, day: u32, pulse: Pulse, sorties: &[Sortie]) {

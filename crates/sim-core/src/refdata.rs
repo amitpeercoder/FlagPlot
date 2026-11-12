@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 
 use crate::fixed::Fixed;
 use crate::ids::{AircraftTypeId, ShipClassId};
+use crate::orders::Reach;
 use crate::state::{ShipSystem, SystemState};
 
 /// Broad type of a ship class.
@@ -550,12 +551,76 @@ pub struct AirCombatFigures {
     /// on a ship, or as an aircraft destroyed on the ground (decisions 4 and
     /// 7 of 0056).
     pub bomb_false_claim_chance: Fixed,
+    /// The share of its strike radius an air group on extended reach may go
+    /// beyond it (decision 2 of
+    /// `docs/decisions/0059-aircraft-that-cannot-land-where-they-took-off.md`).
+    pub extended_reach_share: Fixed,
+    /// The chance an aircraft that came back from a sortie beyond its radius
+    /// runs out of fuel, for each whole radius beyond (decision 3 of 0059).
+    /// It may be more than 1: the chance itself is cut at 1.
+    pub ditch_chance_per_radius_beyond: Fixed,
+    /// The chance the crew of an aircraft out of fuel on the way home is
+    /// recovered (decision 6 of 0059).
+    pub crew_recovered_short_of_home: Fixed,
 }
 
 impl AirCombatFigures {
+    /// The air group's reach in miles for a type of strike radius
+    /// `radius_nm` (decision 2 of 0059): the radius on normal reach, and on
+    /// extended reach the radius times (1 + `extended_reach_share`), cut to
+    /// a whole mile. Every test of how far a strike or an escort may go is
+    /// made against this ([`RefData::reach_nm`]).
+    pub fn reach_nm(&self, radius_nm: Fixed, reach: Reach) -> Fixed {
+        match reach {
+            Reach::Normal => radius_nm,
+            Reach::Extended => {
+                Fixed::from_int((radius_nm * (Fixed::ONE + self.extended_reach_share)).trunc())
+            }
+        }
+    }
+
+    /// The share of its radius a sortie of one-way distance `distance_nm`
+    /// went beyond it: (distance less radius) over radius, cut to millionths.
+    /// 0 for a sortie within the radius or for a type with no radius.
+    pub fn share_beyond_radius(distance_nm: Fixed, radius_nm: Fixed) -> Fixed {
+        if radius_nm <= Fixed::ZERO || distance_nm <= radius_nm {
+            return Fixed::ZERO;
+        }
+        (distance_nm - radius_nm).mul_div(Fixed::ONE, radius_nm)
+    }
+
+    /// The chance an aircraft that came back runs out of fuel (decision 3 of
+    /// 0059): `ditch_chance_per_radius_beyond` times the share beyond the
+    /// radius, the share cut first, then the product, and 1 at most.
+    pub fn ditch_chance(&self, distance_nm: Fixed, radius_nm: Fixed) -> Fixed {
+        (self.ditch_chance_per_radius_beyond * Self::share_beyond_radius(distance_nm, radius_nm))
+            .min(Fixed::ONE)
+    }
+
     /// Describes what is wrong with the figures, if anything.
     pub fn problem(&self) -> Option<String> {
         let in_unit = |value: Fixed| value >= Fixed::ZERO && value <= Fixed::ONE;
+        // Decisions 2, 3 and 6 of 0059. A reach beyond double the radius, or
+        // a chance per radius beyond of more than 100, is a mistake.
+        for (label, value) in [
+            ("extended reach share", self.extended_reach_share),
+            (
+                "crew recovered short of home",
+                self.crew_recovered_short_of_home,
+            ),
+        ] {
+            if !in_unit(value) {
+                return Some(format!("air combat {label} {value} is not between 0 and 1"));
+            }
+        }
+        if self.ditch_chance_per_radius_beyond < Fixed::ZERO
+            || self.ditch_chance_per_radius_beyond > Fixed::from_int(100)
+        {
+            return Some(format!(
+                "air combat ditch chance per radius beyond {} is not between 0 and 100",
+                self.ditch_chance_per_radius_beyond
+            ));
+        }
         let chances = [
             ("bomb hit chance", self.bomb_hit_chance),
             ("torpedo hit chance", self.torpedo_hit_chance),
@@ -678,6 +743,28 @@ pub struct RefData {
     /// names no file: nothing is spent, no base is out of supply and nothing
     /// is recorded.
     pub air_supply: Option<AirSupplyFigures>,
+}
+
+impl RefData {
+    /// How far a strike or an escort of an air group of type `aircraft_type`
+    /// may go with the reach `reach` in force, in miles: the type's strike
+    /// radius on normal reach, and the extended reach of
+    /// [`AirCombatFigures::reach_nm`] on extended. This is the one function
+    /// every test of a strike's or an escort's distance is made against
+    /// (decision 2 of 0059): the strike decision, the base strike, the
+    /// escorts, `measure` and the briefing's warning. Without the air combat
+    /// figures no group can be on extended reach, and the answer is the
+    /// radius. A type that does not exist has none: 0.
+    pub fn reach_nm(&self, aircraft_type: AircraftTypeId, reach: Reach) -> Fixed {
+        let radius = self
+            .aircraft_types
+            .get(&aircraft_type)
+            .map_or(Fixed::ZERO, |aircraft| aircraft.strike_range_nm);
+        match &self.air_combat {
+            Some(figures) => figures.reach_nm(radius, reach),
+            None => radius,
+        }
+    }
 }
 
 /// The figures of the base supply rule. See
@@ -842,6 +929,9 @@ impl AirCombatFigures {
             fighter_false_claim_chance: tenth(1),
             anti_aircraft_false_claim_chance: Fixed::from_ratio(5, 100),
             bomb_false_claim_chance: tenth(1),
+            extended_reach_share: Fixed::from_ratio(25, 100),
+            ditch_chance_per_radius_beyond: Fixed::from_int(2),
+            crew_recovered_short_of_home: tenth(7),
         }
     }
 }

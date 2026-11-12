@@ -72,6 +72,7 @@ fn text(kind: &OrderKind) -> String {
             } => format!("search {from_deg:03}-{to_deg:03} out to {range_nm} nm"),
             AirGroupOrder::SetPatrolShare { share } => format!("patrol share {share}"),
             AirGroupOrder::SetRestThreshold { fatigue } => format!("rest above {fatigue}"),
+            AirGroupOrder::SetReach { reach } => format!("reach {}", reach.name()),
         },
     }
 }

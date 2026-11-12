@@ -11,7 +11,7 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Mission, OrderKind, Readiness, SpeedSetting, Stance,
+    AirGroupOrder, AirMission, Mission, OrderKind, Reach, Readiness, SpeedSetting, Stance,
     StragglerInstruction, TaskForceOrder,
 };
 
@@ -105,6 +105,9 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             }
             AirGroupOrder::SetRestThreshold { fatigue } => {
                 json!({ "kind": "set_rest_threshold", "fatigue": fixed_text(*fatigue) })
+            }
+            AirGroupOrder::SetReach { reach } => {
+                json!({ "kind": "set_reach", "reach": reach.name() })
             }
         },
     }
@@ -281,6 +284,13 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                 },
                 "set_rest_threshold" => AirGroupOrder::SetRestThreshold {
                     fatigue: fixed(value, "fatigue")?,
+                },
+                "set_reach" => AirGroupOrder::SetReach {
+                    reach: match text(value, "reach")? {
+                        "normal" => Reach::Normal,
+                        "extended" => Reach::Extended,
+                        other => return Err(format!("unknown reach \"{other}\"")),
+                    },
                 },
                 other => return Err(format!("unknown air group order \"{other}\"")),
             };

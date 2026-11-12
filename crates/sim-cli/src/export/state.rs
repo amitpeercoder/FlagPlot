@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 use sim_core::hex::Hex;
-use sim_core::orders::AirMission;
+use sim_core::orders::{AirMission, Reach};
 use sim_core::refdata::RefData;
 use sim_core::state::{
     AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, TaskForce, TruthState,
@@ -136,6 +136,10 @@ pub struct AirGroupOut {
     /// The ceiling for replacements; given only with pilots.
     #[serde(skip_serializing_if = "Option::is_none")]
     strength: Option<u32>,
+    /// "extended" for a group on extended reach (decision 0059). Left out on
+    /// normal reach, so a replay of a game with no reach order is as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reach: Option<&'static str>,
     arc: Option<ArcOut>,
 }
 
@@ -296,6 +300,7 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         stood_down: group.stood_down,
         pilots: group.pilots,
         strength: group.pilots.map(|_| group.strength),
+        reach: (group.reach == Reach::Extended).then_some(group.reach.name()),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,
