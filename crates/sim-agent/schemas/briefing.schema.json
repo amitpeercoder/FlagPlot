@@ -26,11 +26,15 @@
   "$defs": {
     "heading": {
       "type": "object",
-      "required": ["side", "day", "yesterday", "scenario", "rules_in_play"],
+      "required": ["side", "day", "last_day", "yesterday", "scenario", "rules_in_play"],
       "additionalProperties": false,
       "properties": {
         "side": { "enum": ["allied", "japanese"] },
         "day": { "type": "integer" },
+        "last_day": {
+          "description": "The last day of the game: it ends when this day has been resolved. Null if the briefing was made without it.",
+          "$ref": "defs.schema.json#/$defs/count_or_null"
+        },
         "yesterday": { "$ref": "defs.schema.json#/$defs/count_or_null" },
         "scenario": { "type": "string" },
         "rules_in_play": {
@@ -426,7 +430,7 @@
       "type": "object",
       "required": [
         "ship_cannot_reach_base", "base_supply_low", "base_without_fuel_with_force",
-        "air_group_short_of_pilots", "air_group_tired"
+        "air_group_short_of_pilots", "air_group_tired", "task_force_propulsion"
       ],
       "additionalProperties": false,
       "properties": {
@@ -496,6 +500,20 @@
               "fatigue": { "$ref": "defs.schema.json#/$defs/dec" },
               "rest_above": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
               "stood_down": { "type": "boolean" }
+            }
+          }
+        },
+        "task_force_propulsion": {
+          "description": "Task forces with a ship afloat whose propulsion is degraded or out. A force steams at the speed of its slowest ship, so a ship with propulsion out stops the whole force (effect cannot_move) and one degraded slows it (effect slowed).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "effect", "ships"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "effect": { "enum": ["cannot_move", "slowed"] },
+              "ships": { "$ref": "defs.schema.json#/$defs/propulsion_lines" }
             }
           }
         }

@@ -24,7 +24,9 @@ use sim_core::view::SideView;
 
 use crate::answer::{FORMAT, VERSION};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
-use crate::lines::{air_group_line, force_line, is_afloat, AirGroupLine, ContactLine, ForceLine};
+use crate::lines::{
+    air_group_line, force_line, is_afloat, AirGroupLine, ContactLine, ForceLine, PropulsionLine,
+};
 use crate::words;
 
 /// The briefing: ten parts, in this order, present every day.
@@ -61,6 +63,9 @@ pub struct Heading {
     pub side: &'static str,
     /// The day that is about to be played.
     pub day: u32,
+    /// The last day of the game: it ends when this day has been resolved.
+    /// `None` if the caller of `briefing` did not say.
+    pub last_day: Option<u32>,
     /// The day the report covers: `None` on day 1.
     pub yesterday: Option<u32>,
     pub scenario: String,
@@ -357,6 +362,18 @@ pub struct Warnings {
     pub base_without_fuel_with_force: Vec<FuelWarning>,
     pub air_group_short_of_pilots: Vec<PilotWarning>,
     pub air_group_tired: Vec<TiredWarning>,
+    /// A sixth, from the review of scenario 9 play: task forces that cannot
+    /// move or are slowed by a ship of theirs with damaged propulsion.
+    pub task_force_propulsion: Vec<PropulsionWarning>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct PropulsionWarning {
+    pub task_force: Handle,
+    /// `cannot_move` if a ship has propulsion out (the force has no speed),
+    /// `slowed` if the worst is degraded.
+    pub effect: &'static str,
+    pub ships: Vec<PropulsionLine>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -406,6 +423,15 @@ pub struct TiredWarning {
 /// The briefing of a side at the start of a day. `scenario` is the name the
 /// caller gives the game for the heading.
 pub fn briefing(view: &SideView<'_>, scenario: &str) -> Briefing {
+    briefing_for_game(view, scenario, None)
+}
+
+/// The briefing of a game that runs through day `last_day`. How long the
+/// game runs is a fact of the scenario file, the same for both sides and
+/// known to the one who started the game, not a fact of the world; a view
+/// does not hold it, so whoever holds the game hands it in (the session does).
+/// `None` if the caller does not know it, and the heading then leaves it out.
+pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u32>) -> Briefing {
     let all = view.events();
     let mut ctx = Ctx::new(*view);
     ctx.set_events(&all);
@@ -489,6 +515,7 @@ pub fn briefing(view: &SideView<'_>, scenario: &str) -> Briefing {
         heading: Heading {
             side: words::side(view.side()),
             day: today,
+            last_day,
             yesterday,
             scenario: scenario.to_string(),
             rules_in_play: rules,
@@ -1204,11 +1231,26 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
         }
     }
 
+    // 6. A task force with a ship whose propulsion is not working.
+    let task_force_propulsion: Vec<PropulsionWarning> = ctx
+        .forces
+        .values()
+        .filter(|f| is_afloat(ctx, f))
+        .map(|f| force_line(ctx, f))
+        .filter(|line| line.movement != "normal")
+        .map(|line| PropulsionWarning {
+            task_force: line.task_force,
+            effect: line.movement,
+            ships: line.propulsion_damaged,
+        })
+        .collect();
+
     Warnings {
         ship_cannot_reach_base,
         base_supply_low,
         base_without_fuel_with_force,
         air_group_short_of_pilots,
         air_group_tired,
+        task_force_propulsion,
     }
 }

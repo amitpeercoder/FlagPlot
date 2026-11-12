@@ -222,6 +222,39 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         assert!(orders["description"].as_str().unwrap().contains(kind));
         assert!(orders["inputSchema"].to_string().contains(kind));
     }
+    // What the missions do, the arc convention and the length of the game are
+    // said where a player reads them (the review of scenario 9 play).
+    let description = orders["description"].as_str().unwrap();
+    for phrase in [
+        "set missions BEFORE the contact appears",
+        "naval_strike: the staff launches the group, in the same pulse",
+        "base_strike {target_base: N}: in the morning pulse",
+        "combat_air_patrol (fighters)",
+        "A group flies only the mission it is on",
+        "with no arc set it flies nothing",
+        "0 is north",
+        "clockwise from from_deg to to_deg",
+        "multiples of 10 from 0 to 350",
+        "at most the aircraft type's search range",
+        "queued_in_call",
+        "the other orders in the call stand",
+    ] {
+        assert!(description.contains(phrase), "description lacks: {phrase}");
+    }
+    let schema_text = orders["inputSchema"].to_string();
+    for phrase in ["0 is north", "multiple of 10 from 0 to 350", "search range"] {
+        assert!(schema_text.contains(phrase), "input schema lacks: {phrase}");
+    }
+    for phrase in [
+        "no score and there are no victory conditions",
+        "Day 2 of 5",
+        "BEFORE the contact appears",
+        "pilots of null",
+        "due day N",
+        "not known",
+    ] {
+        assert!(instructions.contains(phrase), "instructions lack: {phrase}");
+    }
 
     // Every tool, with valid arguments.
     let (briefing, bad) = c.call("get_briefing", json!({}));
