@@ -26,6 +26,13 @@
 #   0024 and 0058), so it cannot check the rule it was fitted with.
 # - The transports' noon positions of 1 to 5 August (passages.csv rows 32
 #   and 34) are east of the map.
+# - The 2nd Destroyer Squadron's noon positions on its two sorties from
+#   Truk in September and October (rows 84, 85, 108, 110, 118, 119) are the
+#   best legs found, 359 to 424 miles each from the force's own diary. All
+#   six lie north of the map, which ends at 1 S. They still tell something:
+#   that force, zigzagging, made good 15 to 18 knots at stated speeds of 16
+#   to 20, eight or nine tenths, where the convoys and the carrier forces
+#   made a half to three quarters.
 #
 # Each passage names the file its rows are in. A passage with
 # `speed_changes` holds `speed_kn` until the minute given and the new speed

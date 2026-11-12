@@ -39,7 +39,7 @@ From `docs/step2-opening-list.md`, which the build session keeps, and the decisi
 - The losses of the four weeks over Guadalcanal do not have the shape of the record (decision 0042).
 - Claims overstate less than the record does: about 2.5 to 3 aircraft were claimed for each lost, and 14 ships for 4 at Savo Island.
 - The Japanese search at the Eastern Solomons is a placeholder arc. The real search orders are now in the facts.
-- A force in the game holds its ordered speed on a straight course. In the record a ship's speed made good is a half to three quarters of the speed a source states for it: ships zigzagged, waited, slowed for landfall and towed (`docs/research/oob/passages.md`). No rule covers this. The designer has put it aside for now (see "Decided by the designer", 8). So passages are reported and not judged (`data/validation/passages.toml`).
+- A force in the game holds its ordered speed on a straight course. In the record a ship's speed made good is below the speed a source states for it: a half to three quarters for convoys and carrier forces, eight or nine tenths for a destroyer squadron on passage. Ships zigzagged, waited, slowed for landfall and towed (`docs/research/oob/passages.md`). No rule covers this. The designer has put it aside for now (see "Decided by the designer", 8). So passages are reported and not judged (`data/validation/passages.toml`).
 
 ## Measures
 
