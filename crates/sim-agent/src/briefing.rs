@@ -426,6 +426,31 @@ pub struct Warnings {
     /// strike radius, or on base_strike at a base beyond it, at the time of
     /// the briefing. It would launch nothing.
     pub strike_group_out_of_reach: Vec<OutOfReachWarning>,
+    /// An eighth, from decision 0063: an air group on naval_strike that holds
+    /// contacts within its reach, none of a kind on its target list, so that
+    /// it holds its strike. Left out when there is none, so the briefing of a
+    /// game with no target order is as it was.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub strike_group_holding: Vec<HoldingWarning>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HoldingWarning {
+    pub air_group: Handle,
+    /// The group's target list, in order.
+    pub target_priority: Vec<&'static str>,
+    /// The aircraft type's strike radius in miles.
+    pub radius_nm: Dec,
+    /// The reach in force in miles, given only for a group on extended
+    /// reach.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reach_nm: Option<Dec>,
+    /// The nearest contact held within reach.
+    pub nearest: Handle,
+    /// The kind the contact is taken for.
+    pub nearest_taken_for: &'static str,
+    /// Its air distance from the group in whole miles.
+    pub distance_nm: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -1525,6 +1550,7 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
     // 7. A strike group that could launch nothing for want of a target in
     // reach, by the radius test the strike decision and `measure` make.
     let mut strike_group_out_of_reach = Vec::new();
+    let mut strike_group_holding = Vec::new();
     for group in ctx.groups.values() {
         let (Some(origin), Some(aircraft)) = (
             ctx.group_hex(group),
@@ -1549,6 +1575,36 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
                         )
                     })
                     .min();
+                // 8. Contacts in reach, none of a kind on the group's list.
+                let in_reach = ctx
+                    .view
+                    .contacts()
+                    .filter(|c| origin.air_distance_within(c.estimated_hex, reach))
+                    .collect::<Vec<_>>();
+                if !in_reach.is_empty()
+                    && in_reach
+                        .iter()
+                        .all(|c| !group.target_priority.contains(&c.estimated_kind))
+                {
+                    if let Some(c) = in_reach
+                        .iter()
+                        .min_by_key(|c| (origin.air_distance_nm(c.estimated_hex), c.id))
+                    {
+                        strike_group_holding.push(HoldingWarning {
+                            air_group: ctx.group(group.id),
+                            target_priority: group
+                                .target_priority
+                                .iter()
+                                .map(|kind| kind.name())
+                                .collect(),
+                            radius_nm: Dec(radius),
+                            reach_nm,
+                            nearest: ctx.entity(EntityRef::Contact(c.id)),
+                            nearest_taken_for: c.estimated_kind.name(),
+                            distance_nm: origin.air_distance_nm(c.estimated_hex),
+                        });
+                    }
+                }
                 if let Some((distance, id, hex)) = nearest {
                     if !origin.air_distance_within(hex, reach) {
                         strike_group_out_of_reach.push(OutOfReachWarning {
@@ -1588,5 +1644,6 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
         air_group_tired,
         task_force_propulsion,
         strike_group_out_of_reach,
+        strike_group_holding,
     }
 }

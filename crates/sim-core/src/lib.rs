@@ -41,6 +41,7 @@ mod stragglers;
 mod surface;
 mod upkeep;
 
+pub use airstrike::StrikeChoice;
 pub use invariants::InvariantViolation;
 pub use movement::{PassageEnd, PassageForecast, ShipPassage};
 pub use start::StartingContact;

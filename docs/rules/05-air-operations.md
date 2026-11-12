@@ -58,8 +58,8 @@ A group has one mission at a time. It flies only that mission. A group takes up 
 | --- | --- |
 | Rest | Stays on the ground. Flies nothing. |
 | Search | Flies its search arc in each daylight pulse, in the search step (chapter 3, Air search). |
-| Naval strike | Decides in each daylight pulse whether to strike a contact its side holds. |
-| Base strike (names an enemy base) | Strikes that base in the morning pulse. |
+| Naval strike | Decides in each daylight pulse whether to strike a contact its side holds, of a kind on its target list. |
+| Base strike (names an enemy base) | Strikes that base in the first daylight pulse of the day in which it is in reach, once a day. |
 | Combat air patrol | Keeps a share of its aircraft over its own hex, and escorts raids with the rest. |
 
 The group's mission order, if the mission was set by an order, is a cause of every event that group's flying produces. A group on a strike mission does not search. A group on search does not strike or patrol. A group on patrol does not strike. [0026, 0027, 0034]
@@ -75,12 +75,13 @@ The orders that act on an air group, and every reason one is refused, are in cha
 - A patrol share order sets `patrol_share`, which only The split reads. It does nothing for a group that is not on combat air patrol.
 - A rest threshold order sets `rest_above`, which only Stand-down and return reads. It does nothing when the fatigue figures are not loaded.
 - A reach order sets `reach` to normal or extended, which the strike decision, the base strike and the escorts read (see "Radius and reach"), and which a sortie beyond the radius pays for (see "Running out of fuel"). It does nothing for a group that does not strike or escort.
+- A target priority order sets `target_priority`, a list of kinds of ship, and `target_order`. The strike decision reads it to choose a contact, and the raid reads it to choose what to attack (see "Naval strike: the contact" and "The attack on a ship"). It does nothing for a group that does not strike, and it is accepted for any group.
 
-The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059]
+The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063]
 
 A side sees: `OrderAccepted` or `OrderRejected` for its own orders, whole.
 
-Not built: orders to rebase, to set target priority and to change the repair order (0052).
+Not built: orders to rebase and to change the repair order (0052).
 
 ## What a group can fly in a pulse
 
@@ -229,16 +230,19 @@ A naval strike group considers each contact its side holds. A contact qualifies 
 
 - Its age in pulses is at most `air_combat.toml: strike_contact_max_age_pulses`. A contact is not aged in the pulse it was reported in, so with the figure at 0 a contact reported this pulse or the one before qualifies, and no older one.
 - Its estimated hex is within the group's reach (the type's strike radius on normal reach) of the group's hex, by air distance.
+- Its estimated kind is on the group's target list. The list is a standing order (see "Air group orders"), and its default is all six kinds in the order of importance (chapter 3, What a report holds). A kind that is not on the list is never launched at, so a short list holds the strike back: a group whose list is "carrier" stays on deck until a carrier is reported in reach.
 
-From the contacts that qualify the group takes the one with the most important estimated kind (chapter 3, What a report holds), then the nearest by air distance, then the lowest contact number. With none it does nothing.
+From the contacts that qualify the group takes the one whose estimated kind comes first on its list, then the nearest by air distance, then the lowest contact number. With none it does nothing, and nothing is recorded. A report that names the wrong kind sends the strike wrong.
 
-It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040, 0059]
+This choice is one function, which takes the side's belief and the group's own state and orders and nothing else. The strike decision calls it, and the side's view offers it (`SideView::strike_choice`), so the briefing and a planner can ask what a group would strike now.
+
+It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040, 0059, 0063]
 
 A side sees: `StrikeLaunched` for its own group, whole. The enemy sees nothing at launch.
 
 ### Base strike
 
-A base strike group launches in the morning pulse only, once a day, with no contact and no belief read. It launches if the base exists, is held by the other side, and is within the group's reach by air distance. It launches every aircraft it is able to fly and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order and, on extended reach, its reach order. In the afternoon pulse a base strike group does nothing. [0034, 0059]
+A base strike group launches in a daylight pulse, morning or afternoon, once a game day: it launches in the first daylight pulse of the day in which the base is within its reach, and not again that day. It needs no contact and reads no belief. It launches if it has not launched at its base that game day, and the base exists, is held by the other side, and is within the group's reach by air distance from where the group is when the pulse begins. A group that can launch in the morning does, so a group whose base is in reach every morning flies as it did. A group whose base comes into reach during the day, as a carrier's does as she closes it, launches in the afternoon. The group keeps the game day of its last base strike (`last_base_strike_day`, in the state hash), and a launch sets it. It launches every aircraft it is able to fly and records `BaseStrikeLaunched` (group, base, hex, aircraft, one-way distance), caused by the group's mission order and, on extended reach, its reach order. [0034, 0059, 0063]
 
 A side sees: `BaseStrikeLaunched` for its own group, whole.
 
@@ -296,9 +300,9 @@ Both sides' strikes land in this one step. A group aboard a ship that sinks in s
 
 ### A strike that finds nothing
 
-A raid's target is found on the truth at the start of the step. For a raid at ships, the target is the enemy task force with the most important ship that is really at the raid's hex, and on a tie the lowest task force number. Position is read before the pulse's movement, because movement follows air combat in the daylight pulse. If no enemy task force is at the hex, the raid finds nothing. It does not search neighbouring hexes. A base strike always finds its base, because the launch checked it exists and is held by the other side.
+A raid's target is found on the truth at the start of the step. For a raid at ships, the target is the enemy task force at the raid's hex that holds the best ranked ship afloat by the target list of the raid's first strike group (see "The attack on a ship"), and on a tie the lowest task force number. With the default list that is the force with the most important ship, as it was before target lists. Position is read before the pulse's movement, because movement follows air combat in the daylight pulse. If no enemy task force is at the hex, the raid finds nothing. It does not search neighbouring hexes. A base strike always finds its base, because the launch checked it exists and is held by the other side.
 
-A raid that finds nothing meets nobody: no escorts fire, no patrol fires, no guns fire, and it takes no share of a patrol. Every strike group in it records `StrikeFoundNothing` (group, hex), caused by the strike's launch. Then, in group order and with no random number, the side's belief is told nothing is there. If the side still holds the contact the strike was sent at and that contact still names that hex, the contact is dropped and `ContactNotThere` is recorded, caused by that group's `StrikeFoundNothing`. If the contact has gone or a later report has moved it, nothing is dropped and nothing is recorded. A dropped contact's number is not used again. A strike group that has no bomber left does not find nothing: it records nothing, and the contact stays. [0026, 0027, 0028]
+A raid that finds nothing meets nobody: no escorts fire, no patrol fires, no guns fire, and it takes no share of a patrol. Every strike group in it records `StrikeFoundNothing` (group, hex), caused by the strike's launch. Then, in group order and with no random number, the side's belief is told nothing is there. If the side still holds the contact the strike was sent at and that contact still names that hex, the contact is dropped and `ContactNotThere` is recorded, caused by that group's `StrikeFoundNothing`. If the contact has gone or a later report has moved it, nothing is dropped and nothing is recorded. A dropped contact's number is not used again. A strike group that has no bomber left does not find nothing: it records nothing, and the contact stays. [0026, 0027, 0028, 0063]
 
 A side sees: `StrikeFoundNothing` for its own group, `ContactNotThere` for its own contact. The enemy sees nothing: it never learns a strike came.
 
@@ -359,7 +363,7 @@ A side sees: `AircraftLost` and `PilotsLost` for its own groups, whole. It never
 
 Each strike group with bombers left attacks, in group order, each with what it has left. The attack is worked out from one stream keyed on (the air group, the task force attacked), in the air combat subsystem.
 
-**The target ship.** All the aircraft of the group attack one ship: the most important ship afloat in the task force, and on a tie the lowest ship number. The ship is the one chosen when the raid's target was found, so it is the same for every strike group in the raid.
+**The target ship.** All the aircraft of the group attack one ship: the ship afloat in the task force that ranks first by the group's own target list, and on a tie the lowest ship number. A group ranks ships by its target list first, in the list's order, and then by the kinds not on its list, in the order of importance. So a group sent at a "carrier" that turns out to be a cruiser attacks the cruiser: a strike that has flown attacks what it finds. The force is the one the raid found, the same for every strike group in the raid, but each group picks its own ship in it, so two groups of one raid may attack different ships. With the default list every group attacks the most important ship afloat in the force, as before target lists. Ranks are worked on the ships afloat at the start of the step.
 
 **The weapon and its chance.** A type's `attack_weapon` sets the chance: `air_combat.toml: bomb_hit_chance` for a bomb, `torpedo_hit_chance` for a torpedo. Each aircraft is one shot, and each shot is rolled.
 
@@ -515,9 +519,10 @@ Contacts age at the end of every pulse (chapter 3). The end-of-day phases do not
 
 - **A hard reach.** A strike group launches only if its target is within its reach, the type's strike radius or, on extended reach, a share more. There is no partial effort or reduced load. A group on extended reach pays for a sortie beyond its radius only in aircraft that run out of fuel on the way home. There is no daylight limit on a launch and no landing at a field beyond the target. [0030, 0059]
 - **One hex.** A strike flies to the hex its contact names and attacks only there. It does not search neighbouring hexes. [0026, 0028]
-- **One ship.** All aircraft of a group attack one ship. A strike is not spread, and it attacks nothing but that ship. [0026]
+- **One ship.** All aircraft of a group attack one ship. A strike is not spread, and it attacks nothing but that ship, which is the one its own target list ranks first in the force the raid found. [0026, 0063]
+- **Target lists are standing.** An order given after a contact is seen does not send a strike at it that day: search, decision and strike all happen inside the day. A list cannot hold back a share of a group, split a strike among several ships, name a contact, or hold by the size of a force. [0063]
 - **No night strikes.** [0026, 0034]
-- **Bases.** A base strike launches once a day, in the morning. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052]
+- **Bases.** A base strike launches once a day, in the first daylight pulse in which the base is in reach. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052, 0063]
 - **No rebase.** A group cannot move between bases or between a ship and a base. [0025, 0041, 0052]
 - **Landing elsewhere is by deck loss only.** Aircraft in the air when their own deck is lost land at another carrier or a base, or come down in the sea; no group is ever ordered to move, and a landing plans no field beyond the target. Aircraft aboard a ship that sinks are lost with her, with their pilots, though most of those men were really saved: a saved pilot with no aircraft has nowhere to go, and there is no roster of pilots. [0025, 0059]
 - **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down away from home is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down, and the pilot of a patrol aircraft shot down over its own hex may be, at a chance for a base and one for ships. [0038, 0052, 0059]

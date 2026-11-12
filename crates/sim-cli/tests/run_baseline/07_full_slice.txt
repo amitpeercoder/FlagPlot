@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 83df8e6bb63edcb0  58 events
-day   2  hash e18208d184f235d5  54 events
-day   3  hash 3f20342bdd09c989  48 events
-day   4  hash 8b86345e9f18e4c3  230 events
-day   5  hash 4c537ccd5fd078e0  137 events
-day   6  hash 5874897992e2184f  117 events
-day   7  hash c27fd345032162ba  251 events
-day   8  hash f850368db6bd5509  123 events
-day   9  hash f09cc78494b08253  127 events
-day  10  hash 95a10e18d2350834  77 events
-day  11  hash 97c591d77bf47bd5  86 events
-day  12  hash 490d7909742b34bd  95 events
-day  13  hash 43c271622027d602  64 events
-day  14  hash 9cac3a35a3ac9f62  58 events
+day   1  hash 8a183c6c61f77e11  58 events
+day   2  hash 938aa870cb1e1d1d  54 events
+day   3  hash fc0c4722d5c46f66  48 events
+day   4  hash 19879fcd601a9b10  230 events
+day   5  hash cbe1a445a8889ea7  137 events
+day   6  hash 754159ffbaee3d2f  117 events
+day   7  hash 96945b205aaafd96  251 events
+day   8  hash d815fead731710e5  123 events
+day   9  hash d98eaf31f112d5c8  127 events
+day  10  hash 65b9b532548e9185  77 events
+day  11  hash c781e41791e2bc0c  86 events
+day  12  hash 83bf14162e1a4707  95 events
+day  13  hash ef82587cb99ebd28  64 events
+day  14  hash 8655617c58145540  58 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

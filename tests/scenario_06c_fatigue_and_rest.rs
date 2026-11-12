@@ -70,6 +70,15 @@
 //! rounded down, on patrol and the rest do not fly. Group 3's patrol is
 //! fly(R3, f3). Group 1 does not fly. Then fatigue, as in the morning.
 //!
+//! (Added with decision 0063, and accepted by the architect on Nov 12,
+//! 2026: the decision lets a base strike launch in the first
+//! daylight pulse of the day in which it can, once a day. The paragraph above
+//! holds for every day on which the bombers launch in the morning, which is
+//! every day of the tables below. In a run in which they can fly no aircraft
+//! in the morning, for their fatigue, and one in the afternoon, once the
+//! morning's rest has lowered it, they launch the raid in the afternoon, and
+//! it is worked as the morning's is. No number of the tables moves.)
+//!
 //! Group 4 never flies and its fatigue is 0 throughout: it has nothing to
 //! lose.
 //!
@@ -669,8 +678,17 @@ fn work_the_run(run: &Run, config: &Config) -> Worked {
         work_the_night(run, config, day, &mut state, &mut record);
         record.start_fatigue = state.fatigue;
         record.stood = state.stood;
-        work_the_morning(run, config, day, &mut state, &mut worked, &mut record);
-        work_the_afternoon(run, config, day, &mut state, &mut record);
+        for pulse in [Pulse::Morning, Pulse::Afternoon] {
+            work_the_pulse(
+                run,
+                config,
+                day,
+                pulse,
+                &mut state,
+                &mut worked,
+                &mut record,
+            );
+        }
         worked.days.push(record);
     }
 
@@ -763,16 +781,22 @@ fn work_the_night(run: &Run, config: &Config, day: u32, state: &mut State, recor
     }
 }
 
-fn work_the_morning(
+/// One daylight pulse by the rule. The bombers launch in the first pulse of
+/// the day in which they can fly an aircraft, once a day (decision 7 of 0063):
+/// the morning if they can fly in it, else the afternoon if they can then (a
+/// group that could fly none in the morning, for its fatigue, may fly one when
+/// the morning's rest has lowered it). The two pulses are worked alike.
+fn work_the_pulse(
     run: &Run,
     config: &Config,
     day: u32,
+    pulse: Pulse,
     state: &mut State,
     worked: &mut Worked,
     record: &mut Day,
 ) {
     let seed = run.seed;
-    let pulse = Pulse::Morning;
+    let morning = pulse == Pulse::Morning;
     let step = run.pulse(day, pulse);
     // The log of the morning is in the order of the module comment, and the
     // fatigue of each group comes last.
@@ -809,9 +833,17 @@ fn work_the_morning(
         "seed {seed}, day {day}"
     );
 
-    record.ready_morning = state.ready;
+    if morning {
+        record.ready_morning = state.ready;
+    } else {
+        record.scouts_afternoon = state.ready[of(SCOUTS)];
+    }
     let able = GROUPS.map(|g| state.able(config, g));
-    record.able_morning = able;
+    if morning {
+        record.able_morning = able;
+    } else {
+        record.able_afternoon = able;
+    }
     // What each group flies, by the rule: group 5 searches with all it can
     // fly; group 1 launches all it can fly, if that is at least one; group 2
     // keeps half of what it can fly, rounded down, and the rest escort the
@@ -821,7 +853,8 @@ fn work_the_morning(
     let big_f = able[of(ESCORTS)];
     let kept = big_f * 5 / 10;
     let p3 = able[of(DEFENDERS)];
-    let raid = b >= 1;
+    // A raid launches if the bombers can fly and have not launched today.
+    let raid = b >= 1 && record.bombers == 0;
     let e = if raid { big_f - kept } else { 0 };
     for g in GROUPS {
         assert!(
@@ -836,11 +869,19 @@ fn work_the_morning(
             );
         }
     }
-    record.bombers = b;
-    record.escorts = e;
-    record.patrol = p3;
-    record.kept = kept;
-    record.search_morning = s5;
+    if morning {
+        record.bombers = b;
+        record.escorts = e;
+        record.patrol = p3;
+        record.kept = kept;
+        record.search_morning = s5;
+    } else {
+        record.search_afternoon = s5;
+        if raid {
+            record.bombers = b;
+            record.escorts = e;
+        }
+    }
 
     // Group 5 searches.
     let search_event = if s5 > 0 {
@@ -878,6 +919,7 @@ fn work_the_morning(
             run,
             config,
             day,
+            pulse,
             state,
             worked,
             record,
@@ -945,77 +987,11 @@ fn work_the_morning(
         });
     }
     work_the_fatigue(run, config, day, pulse, &fatigue_events, &flew, state);
-    record.after_morning = state.fatigue;
-}
-
-fn work_the_afternoon(run: &Run, config: &Config, day: u32, state: &mut State, record: &mut Day) {
-    let seed = run.seed;
-    let pulse = Pulse::Afternoon;
-    let step = run.pulse(day, pulse);
-    let mut searches = Vec::new();
-    let mut fatigue_events = Vec::new();
-    for event in &step {
-        match event.kind {
-            EventKind::SearchFlown { .. } => {
-                assert!(
-                    fatigue_events.is_empty(),
-                    "seed {seed}: the search comes first"
-                );
-                searches.push(*event);
-            }
-            EventKind::AirGroupFatigue { .. } => fatigue_events.push(*event),
-            ref other => {
-                panic!("seed {seed}, day {day}: no raid flies in the afternoon: {other:?}")
-            }
-        }
-    }
-    let able = GROUPS.map(|g| state.able(config, g));
-    record.able_afternoon = able;
-    record.scouts_afternoon = state.ready[of(SCOUTS)];
-    let s5 = able[of(SCOUTS)];
-    let kept = able[of(ESCORTS)] * 5 / 10;
-    let p3 = able[of(DEFENDERS)];
-    record.search_afternoon = s5;
-    let mut flew: BTreeMap<u32, Vec<Flew>> = BTreeMap::new();
-    // Group 2 keeps half on patrol; the rest of it does not fly.
-    if kept > 0 {
-        flew.entry(ESCORTS).or_default().push(Flew {
-            sortie: SortieKind::Patrol,
-            distance_nm: 0,
-            causes: run.patrol_orders(ESCORTS),
-        });
-    }
-    if p3 > 0 {
-        flew.entry(DEFENDERS).or_default().push(Flew {
-            sortie: SortieKind::Patrol,
-            distance_nm: 0,
-            causes: run.patrol_orders(DEFENDERS),
-        });
-    }
-    if s5 > 0 {
-        assert_eq!(searches.len(), 1, "seed {seed}, day {day}");
-        assert_eq!(
-            searches[0].kind,
-            EventKind::SearchFlown {
-                air_group: group(SCOUTS),
-                from: AirGroupLocation::Base(AIRFIELD_B),
-                hex: Hex::new(config.raid_hexes as i32, 0),
-                from_deg: 40,
-                to_deg: 130,
-                range_nm: Fixed::from_int(SEARCH_NM),
-                aircraft: s5,
-            }
-        );
-        flew.entry(SCOUTS).or_default().push(Flew {
-            sortie: SortieKind::Search,
-            distance_nm: 2 * SEARCH_NM,
-            causes: vec![Cause::Event(searches[0].id)],
-        });
+    if morning {
+        record.after_morning = state.fatigue;
     } else {
-        assert!(searches.is_empty(), "seed {seed}, day {day}");
+        record.after_afternoon = state.fatigue;
     }
-    work_the_fatigue(run, config, day, pulse, &fatigue_events, &flew, state);
-    record.after_afternoon = state.fatigue;
 }
 
 /// The fatigue of one daylight pulse, after the air combat: each group, in
@@ -1175,7 +1151,7 @@ struct RaidInputs {
     scouts_flying: u32,
 }
 
-/// The morning's raid worked as in scenario 6a on `inputs`. The aircraft on
+/// A pulse's raid worked as in scenario 6a on `inputs`. The aircraft on
 /// the ground at airfield B are every ready aircraft there that is not
 /// flying (decision 11 of 0036): the fighters of group 3 that are not on
 /// patrol, all of group 4, and the scouts that are not searching. The raid is
@@ -1186,6 +1162,7 @@ fn work_the_raid(
     run: &Run,
     config: &Config,
     day: u32,
+    pulse: Pulse,
     state: &mut State,
     worked: &mut Worked,
     record: &mut Day,
@@ -1200,7 +1177,6 @@ fn work_the_raid(
     supply_events: &[&Event],
 ) -> (EventId, Option<EventId>) {
     let seed = run.seed;
-    let pulse = Pulse::Morning;
     let RaidInputs {
         bombers: b,
         escorts: e,
@@ -1971,11 +1947,19 @@ fn the_day_runs_stand_downs_at_night_then_search_raid_and_fatigue_in_the_morning
                     );
                 }
             }
-            // The afternoon has no raid.
-            assert!(!run
-                .pulse(day, Pulse::Afternoon)
-                .iter()
-                .any(|e| matches!(e.kind, EventKind::BaseStrikeLaunched { .. })));
+            // The raid launches once a day (decision 7 of 0063): the
+            // afternoon has one only on a day whose morning had none.
+            let raids_in = |pulse| {
+                run.pulse(day, pulse)
+                    .iter()
+                    .filter(|e| matches!(e.kind, EventKind::BaseStrikeLaunched { .. }))
+                    .count()
+            };
+            assert!(
+                raids_in(Pulse::Morning) + raids_in(Pulse::Afternoon) <= 1,
+                "seed {}, day {day}: one raid a day at most",
+                run.seed
+            );
         }
         // On day 1 nobody is stood down.
         assert!(run.pulse(1, Pulse::Night).is_empty(), "seed {}", run.seed);

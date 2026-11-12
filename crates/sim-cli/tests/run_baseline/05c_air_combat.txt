@@ -2,7 +2,7 @@ Scenario 5c: Escort, patrol and guns
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 50b3c9ac8de31e62  27 events
+day   1  hash 3c183460bacc45c3  27 events
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

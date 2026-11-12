@@ -125,6 +125,10 @@ fn reject_reason(reason: &RejectReason) -> Data {
         }
         RejectReason::NoShipAfloat => base("no_ship_afloat"),
         RejectReason::AirGroupLost => base("air_group_lost"),
+        RejectReason::TargetListEmpty => base("target_list_empty"),
+        RejectReason::TargetKindRepeated(kind) => {
+            base("target_kind_repeated").text("kind", kind.name())
+        }
     }
 }
 

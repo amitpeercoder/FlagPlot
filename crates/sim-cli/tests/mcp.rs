@@ -228,7 +228,9 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
     for phrase in [
         "set missions BEFORE the contact appears",
         "naval_strike: the staff launches the group, in the same pulse",
-        "base_strike {target_base: N}: in the morning pulse",
+        "base_strike {target_base: N}: in the first daylight pulse of a day",
+        "TARGET PRIORITY. A naval_strike group has a target list",
+        "set_target_priority {kinds:",
         "combat_air_patrol (fighters)",
         "A group flies only the mission it is on",
         "with no arc set it flies nothing",

@@ -3,7 +3,7 @@
 use serde::Serialize;
 use sim_core::hex::Hex;
 use sim_core::orders::{AirMission, Reach};
-use sim_core::refdata::RefData;
+use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, TaskForce, TruthState,
 };
@@ -140,6 +140,11 @@ pub struct AirGroupOut {
     /// normal reach, so a replay of a game with no reach order is as it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     reach: Option<&'static str>,
+    /// The kinds the group goes for, in order, for a group whose list is not
+    /// the default (decision 0063). Left out otherwise, so a replay of a game
+    /// with no target order is as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    target_priority: Option<Vec<&'static str>>,
     arc: Option<ArcOut>,
 }
 
@@ -301,6 +306,13 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
         pilots: group.pilots,
         strength: group.pilots.map(|_| group.strength),
         reach: (group.reach == Reach::Extended).then_some(group.reach.name()),
+        target_priority: (group.target_priority != ShipKind::ALL).then(|| {
+            group
+                .target_priority
+                .iter()
+                .map(|kind| kind.name())
+                .collect()
+        }),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,
