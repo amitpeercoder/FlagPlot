@@ -771,3 +771,42 @@ side = "japanese"
 air_group = 19
 kind = "set_air_mission"
 mission = "naval_strike"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Ryujo was sunk and Enterprise was damaged and withdrew for repair; Japanese aircraft losses were several times the American. Usually judged a limited American victory. (The architect's reading; not yet scored from the order-of-battle facts.)"
+
+[objectives.allied]
+mission = "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[objectives.japanese]
+mission = "Destroy the American carriers east of Guadalcanal, and keep your own in action."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+

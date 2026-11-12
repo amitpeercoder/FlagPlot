@@ -69,3 +69,8 @@ Allied contact:1 at (7,-10): 3 ships, carrier, age 0 pulses
 Allied: no battle claims
 Japanese contact:1 at (7,-5): 10 ships, transport, age 0 pulses
 Japanese: no battle claims
+
+Result (the placeholder scale of decision 0054):
+Allied: 13 points (ships_sunk 1 = 10; ships_crippled 0 = 0; aircraft_destroyed 60 = 3), margin 7.75, minor victory
+Japanese: 5.25 points (ships_sunk 0 = 0; ships_crippled 1 = 5; aircraft_destroyed 5 = 0.25), margin -7.75, minor defeat
+History: Ryujo was sunk and Enterprise was damaged and withdrew for repair; Japanese aircraft losses were several times the American. Usually judged a limited American victory. (The architect's reading; not yet scored from the order-of-battle facts.)

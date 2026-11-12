@@ -34,7 +34,8 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
-            each day, then where every task force and ship ended up.
+            each day, then where every task force and ship ended up, and for a
+            scenario with objectives (decision 0054) the result.
   replay    Runs a saved game: loads the scenario the file names, refuses it if
             the scenario file or any data file it names has changed, submits
             the saved orders day by day in place of the scenario's own, prints
@@ -48,7 +49,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
   batch     Runs a scenario N times with seeds S, S+1, ... one after another
             and writes one JSON summary file: ships sunk per side (a
             histogram and totals), per ship, and the final hash and sunk
-            ships of every run. Prints a short summary.
+            ships of every run. For a scenario with objectives it adds each
+            run's Allied margin and result and a tally of the results. Prints
+            a short summary.
   serve     Holds one game open for play on standard input and output, one JSON
             request a line and one JSON answer a line, and opens no port. A
             request is {id, seat, tool, arguments}, for example
@@ -455,7 +458,42 @@ fn run(args: &[String]) -> Result<(), String> {
             println!("{}: no battle claims", side.name());
         }
     }
+    print_result(world);
     Ok(())
+}
+
+/// The umpire's result (decision 0054), for a scenario that has objectives:
+/// each side's points by objective, its margin and level, and the note of
+/// how the day went in history. Nothing for a scenario without them, so its
+/// output is what it was.
+fn print_result(world: &sim_core::World) {
+    let Some(result) = world.result() else {
+        return;
+    };
+    println!();
+    println!("Result (the placeholder scale of decision 0054):");
+    for side in [Side::Allied, Side::Japanese] {
+        let r = result.side(side);
+        let parts: Vec<String> = r
+            .objectives
+            .iter()
+            .map(|o| {
+                let target = o.base.map_or(String::new(), |b| format!(" at {b}"));
+                format!("{}{target} {} = {}", o.kind, o.count, o.points)
+            })
+            .collect();
+        println!(
+            "{}: {} points ({}), margin {}, {}",
+            side.name(),
+            r.total,
+            parts.join("; "),
+            r.margin,
+            r.outcome
+        );
+    }
+    if let Some(history) = &result.history {
+        println!("History: {history}");
+    }
 }
 
 /// `sim-cli hash <scenario> [--seed N]`: the daily hashes and nothing else.

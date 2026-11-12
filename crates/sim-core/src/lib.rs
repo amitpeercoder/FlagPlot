@@ -17,6 +17,7 @@ pub mod hash;
 pub mod hex;
 pub mod ids;
 pub mod map;
+pub mod objectives;
 pub mod orders;
 pub mod refdata;
 pub mod rng;

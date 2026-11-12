@@ -89,8 +89,9 @@ fn the_full_slice_every_day_for_both_sides() {
     assert!(explained > 100);
 }
 
-const PARTS: [&str; 10] = [
+const PARTS: [&str; 11] = [
     "heading",
+    "objectives",
     "orders",
     "contacts",
     "action",
@@ -102,8 +103,9 @@ const PARTS: [&str; 10] = [
     "warnings",
 ];
 
-const HEADINGS: [&str; 10] = [
+const HEADINGS: [&str; 11] = [
     "HEADING",
+    "OBJECTIVES",
     "ORDERS",
     "CONTACTS",
     "ACTION YESTERDAY",

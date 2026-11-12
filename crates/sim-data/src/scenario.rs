@@ -8,11 +8,12 @@ use sim_core::hex::Hex;
 use sim_core::ids::{
     AirGroupId, AircraftTypeId, BaseId, IntentId, ShipClassId, ShipId, TaskForceId,
 };
+use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
     AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Readiness,
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
-use sim_core::refdata::RefData;
+use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Replacement, Ship, ShipLocation, ShipSystem,
     ShipSystems, Side, SystemState, TaskForce, TruthState,
@@ -97,6 +98,56 @@ struct ScenarioFile {
     order: Vec<OrderSpec>,
     #[serde(default)]
     contact: Vec<ContactSpec>,
+    /// Missions and objectives (decision 0054). Optional.
+    objectives: Option<ObjectivesSpec>,
+}
+
+/// The `[objectives]` table (decision 0054, "As built"): the three levels,
+/// an optional note of how the day went in history, and a table for each
+/// side.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ObjectivesSpec {
+    minor: Quantity,
+    major: Quantity,
+    decisive: Quantity,
+    history: Option<String>,
+    allied: SideObjectivesSpec,
+    japanese: SideObjectivesSpec,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SideObjectivesSpec {
+    mission: String,
+    #[serde(default)]
+    objective: Vec<ObjectiveSpec>,
+}
+
+/// One `[[objectives.<side>.objective]]`, by its `kind`.
+#[derive(Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+enum ObjectiveSpec {
+    /// `points` is a table from a ship kind (`carrier`, `battleship`,
+    /// `cruiser`, `destroyer`, `transport`, `auxiliary`) to points.
+    ShipsSunk {
+        points: BTreeMap<String, Quantity>,
+    },
+    ShipsCrippled {
+        points: BTreeMap<String, Quantity>,
+    },
+    AircraftDestroyed {
+        points: Quantity,
+    },
+    CargoLanded {
+        base: u32,
+        points_per_t: Quantity,
+    },
+    BaseOpen {
+        base: u32,
+        points: Quantity,
+        closed: Option<bool>,
+    },
 }
 
 /// A contact a side holds when the game begins (decision 8 of
@@ -469,6 +520,87 @@ impl From<SpeedSpec> for SpeedSetting {
             SpeedSpec::Full => SpeedSetting::Full,
         }
     }
+}
+
+fn points_of(quantity: &Quantity, what: &str) -> Result<Fixed, String> {
+    let points = quantity.to_fixed().map_err(|e| format!("{what} {e}"))?;
+    if points.is_negative() {
+        return Err(format!("{what} is negative"));
+    }
+    Ok(points)
+}
+
+fn ship_points(table: &BTreeMap<String, Quantity>, what: &str) -> Result<ShipPoints, String> {
+    let mut points = BTreeMap::new();
+    for (name, quantity) in table {
+        let kind: ShipKind =
+            parse_kind(name).ok_or_else(|| format!("{what} has unknown ship kind \"{name}\""))?;
+        points.insert(kind, points_of(quantity, &format!("{what} {name}"))?);
+    }
+    Ok(ShipPoints(points))
+}
+
+/// Builds the objectives from their table. Named bases are checked against
+/// the game by `World::set_objectives`.
+fn build_objectives(spec: &ObjectivesSpec) -> Result<Objectives, String> {
+    let level = |quantity: &Quantity, name: &str| {
+        quantity
+            .to_fixed()
+            .map_err(|e| format!("objectives level {name} {e}"))
+    };
+    let (minor, major, decisive) = (
+        level(&spec.minor, "minor")?,
+        level(&spec.major, "major")?,
+        level(&spec.decisive, "decisive")?,
+    );
+    let levels = Levels::new(minor, major, decisive).ok_or_else(|| {
+        format!(
+            "objectives levels must be above zero and rising, but minor is {minor}, major {major} and decisive {decisive}"
+        )
+    })?;
+    let side = |name: &str, spec: &SideObjectivesSpec| -> Result<SideObjectives, String> {
+        if spec.mission.trim().is_empty() {
+            return Err(format!("the {name} mission is empty"));
+        }
+        let mut objectives = Vec::new();
+        for (index, objective) in spec.objective.iter().enumerate() {
+            let what = format!("{name} objective {}", index + 1);
+            objectives.push(match objective {
+                ObjectiveSpec::ShipsSunk { points } => {
+                    Objective::ShipsSunk(ship_points(points, &what)?)
+                }
+                ObjectiveSpec::ShipsCrippled { points } => {
+                    Objective::ShipsCrippled(ship_points(points, &what)?)
+                }
+                ObjectiveSpec::AircraftDestroyed { points } => Objective::AircraftDestroyed {
+                    points: points_of(points, &format!("{what} points"))?,
+                },
+                ObjectiveSpec::CargoLanded { base, points_per_t } => Objective::CargoLanded {
+                    base: BaseId::new(*base),
+                    points_per_t: points_of(points_per_t, &format!("{what} points_per_t"))?,
+                },
+                ObjectiveSpec::BaseOpen {
+                    base,
+                    points,
+                    closed,
+                } => Objective::BaseOpen {
+                    base: BaseId::new(*base),
+                    closed: closed.unwrap_or(false),
+                    points: points_of(points, &format!("{what} points"))?,
+                },
+            });
+        }
+        Ok(SideObjectives {
+            mission: spec.mission.clone(),
+            objectives,
+        })
+    };
+    Ok(Objectives {
+        allied: side("allied", &spec.allied)?,
+        japanese: side("japanese", &spec.japanese)?,
+        levels,
+        history: spec.history.clone(),
+    })
 }
 
 /// A scenario ready to run: a game at its starting state plus the orders each
@@ -1165,6 +1297,12 @@ impl Scenario {
 
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
+        if let Some(spec) = &file.objectives {
+            let objectives = build_objectives(spec).map_err(&fail)?;
+            world
+                .set_objectives(objectives)
+                .map_err(|e| fail(e.to_string()))?;
+        }
 
         let mut contacts = Vec::new();
         for (index, spec) in file.contact.iter().enumerate() {
@@ -1236,6 +1374,9 @@ impl Scenario {
             self.world.umpire().clone(),
         )?;
         world.hold_starting_contacts(self.contacts.clone())?;
+        if let Some(objectives) = self.world.objectives() {
+            world.set_objectives(objectives.clone())?;
+        }
         Ok(Scenario {
             name: self.name.clone(),
             placeholder: self.placeholder,
@@ -2767,5 +2908,210 @@ r = 0
             again.world.state_hash()
         });
         assert_eq!(other.world.side_view(Side::Allied).contacts().count(), 1);
+    }
+
+    // -----------------------------------------------------------------
+    // Objectives (decision 0054, "As built").
+    // -----------------------------------------------------------------
+
+    /// An `[objectives]` section with the given levels line and the given
+    /// body for the allied objectives. The Japanese side has a mission and
+    /// no objective.
+    fn objectives(levels: &str, allied: &str) -> String {
+        format!(
+            "\n[objectives]\n{levels}\nhistory = \"A note.\"\n\n[objectives.allied]\nmission = \"Hold base one.\"\n{allied}\n[objectives.japanese]\nmission = \"Take base one.\"\n"
+        )
+    }
+
+    const LEVELS: &str = "minor = 3\nmajor = 8\ndecisive = 16";
+
+    const ALL_KINDS: &str = r#"
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, destroyer = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, destroyer = "0.5" }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.allied.objective]]
+kind = "cargo_landed"
+base = 1
+points_per_t = "0.1"
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 2
+closed = true
+points = 4
+"#;
+
+    #[test]
+    fn a_scenario_may_give_each_side_a_mission_and_objectives_of_the_five_kinds() {
+        let scenario = parse_with(&objectives(LEVELS, ALL_KINDS)).expect("loads");
+        let found = scenario.world.objectives().expect("has objectives");
+        assert_eq!(found.allied.mission, "Hold base one.");
+        assert_eq!(found.japanese.mission, "Take base one.");
+        assert_eq!(found.japanese.objectives.len(), 0);
+        assert_eq!(found.history.as_deref(), Some("A note."));
+        assert_eq!(
+            (
+                found.levels.minor,
+                found.levels.major,
+                found.levels.decisive
+            ),
+            (Fixed::from_int(3), Fixed::from_int(8), Fixed::from_int(16))
+        );
+        let kinds: Vec<&str> = found
+            .allied
+            .objectives
+            .iter()
+            .map(Objective::name)
+            .collect();
+        assert_eq!(
+            kinds,
+            [
+                "ships_sunk",
+                "ships_crippled",
+                "aircraft_destroyed",
+                "cargo_landed",
+                "base_open"
+            ]
+        );
+        match &found.allied.objectives[1] {
+            Objective::ShipsCrippled(points) => {
+                assert_eq!(points.of(ShipKind::Carrier), Fixed::from_int(5));
+                assert_eq!(points.of(ShipKind::Destroyer), Fixed::from_ratio(1, 2));
+                // A kind not listed is worth nothing.
+                assert_eq!(points.of(ShipKind::Cruiser), Fixed::ZERO);
+            }
+            other => panic!("{other:?}"),
+        }
+        assert_eq!(
+            found.allied.objectives[4],
+            Objective::BaseOpen {
+                base: BaseId::new(2),
+                closed: true,
+                points: Fixed::from_int(4)
+            }
+        );
+        // Whole numbers and decimal strings both read; `closed` defaults to
+        // false and `history` is optional.
+        let plain = parse_with(
+            "\n[objectives]\nminor = \"0.5\"\nmajor = 1\ndecisive = 2\n\n[objectives.allied]\nmission = \"A.\"\n\n[[objectives.allied.objective]]\nkind = \"base_open\"\nbase = 1\npoints = 1\n\n[objectives.japanese]\nmission = \"B.\"\n",
+        )
+        .expect("loads");
+        let found = plain.world.objectives().expect("has objectives");
+        assert_eq!(found.history, None);
+        assert_eq!(
+            found.allied.objectives[0],
+            Objective::BaseOpen {
+                base: BaseId::new(1),
+                closed: false,
+                points: Fixed::ONE
+            }
+        );
+    }
+
+    #[test]
+    fn a_scenario_without_objectives_has_none() {
+        let scenario = parse_with("").expect("loads");
+        assert!(scenario.world.objectives().is_none());
+        assert!(scenario.world.result().is_none());
+        // A copy for another seed keeps them.
+        let with = parse_with(&objectives(LEVELS, ALL_KINDS)).expect("loads");
+        let other = with.with_seed(9).expect("copies");
+        assert_eq!(other.world.objectives(), with.world.objectives());
+    }
+
+    #[test]
+    fn objectives_are_checked_with_clear_errors() {
+        let bad_levels = [
+            "minor = 0\nmajor = 8\ndecisive = 16",
+            "minor = 3\nmajor = 3\ndecisive = 16",
+            "minor = 3\nmajor = 8\ndecisive = 8",
+            "minor = 9\nmajor = 8\ndecisive = 16",
+            "minor = -3\nmajor = 8\ndecisive = 16",
+        ];
+        for levels in bad_levels {
+            let message = error_of(&objectives(levels, ""));
+            assert!(
+                message.contains("levels must be above zero and rising"),
+                "{levels}: {message}"
+            );
+        }
+        // A float level or points are rejected, as everywhere.
+        let message = error_of(&objectives("minor = 0.5\nmajor = 8\ndecisive = 16", ""));
+        assert!(message.contains("minor"), "{message}");
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"aircraft_destroyed\"\npoints = 0.05\n",
+        ));
+        assert!(!message.is_empty());
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"ships_sunk\"\npoints = { carrier = 0.5 }\n",
+        ));
+        assert!(!message.is_empty());
+        // Negative points.
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"aircraft_destroyed\"\npoints = -1\n",
+        ));
+        assert!(
+            message.contains("allied objective 1 points is negative"),
+            "{message}"
+        );
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"ships_sunk\"\npoints = { carrier = -10 }\n",
+        ));
+        assert!(message.contains("carrier is negative"), "{message}");
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"cargo_landed\"\nbase = 1\npoints_per_t = \"-0.1\"\n",
+        ));
+        assert!(message.contains("points_per_t is negative"), "{message}");
+        // A named base that does not exist.
+        for kind in [
+            "cargo_landed\"\npoints_per_t = 1\nbase = 77\n#",
+            "base_open\"\npoints = 1\nbase = 77\n#",
+        ] {
+            let message = error_of(&objectives(
+                LEVELS,
+                &format!("[[objectives.allied.objective]]\nkind = \"{kind}\n"),
+            ));
+            assert!(message.contains("unknown base:77"), "{message}");
+        }
+        // An unknown kind of objective, of ship, or field.
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"islands_taken\"\npoints = 1\n",
+        ));
+        assert!(message.contains("islands_taken"), "{message}");
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"ships_sunk\"\npoints = { dreadnought = 1 }\n",
+        ));
+        assert!(
+            message.contains("unknown ship kind \"dreadnought\""),
+            "{message}"
+        );
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"aircraft_destroyed\"\npoints = 1\nbase = 1\n",
+        ));
+        assert!(message.contains("base"), "{message}");
+        // An empty mission, a side missing.
+        let message = error_of(&objectives(LEVELS, "").replace("Take base one.", "  "));
+        assert!(message.contains("japanese mission is empty"), "{message}");
+        let message = error_of(
+            "\n[objectives]\nminor = 3\nmajor = 8\ndecisive = 16\n\n[objectives.allied]\nmission = \"A.\"\n",
+        );
+        assert!(message.contains("japanese"), "{message}");
     }
 }

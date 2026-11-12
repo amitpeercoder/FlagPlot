@@ -21,6 +21,7 @@ use crate::hex::Hex;
 use crate::ids::{AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
+use crate::objectives::{self, KnownProgress, Objective, OwnBase, SideObjectives};
 use crate::orders::{Order, SpeedSetting};
 use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
 use crate::side_events::{self, Owners, SideEvent};
@@ -62,6 +63,7 @@ pub struct SideView<'a> {
     ref_data: &'a RefData,
     log: &'a EventLog,
     orders: &'a BTreeMap<OrderId, Order>,
+    objectives: Option<&'a crate::objectives::Objectives>,
 }
 
 impl std::fmt::Debug for SideView<'_> {
@@ -73,6 +75,9 @@ impl std::fmt::Debug for SideView<'_> {
 }
 
 impl<'a> SideView<'a> {
+    // The world hands over each part of its fixed and changing state by
+    // reference; one more argument (the objectives) is clearer than a bundle.
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         side: Side,
         truth: &'a TruthState,
@@ -81,6 +86,7 @@ impl<'a> SideView<'a> {
         ref_data: &'a RefData,
         log: &'a EventLog,
         orders: &'a BTreeMap<OrderId, Order>,
+        objectives: Option<&'a crate::objectives::Objectives>,
     ) -> SideView<'a> {
         SideView {
             side,
@@ -90,6 +96,7 @@ impl<'a> SideView<'a> {
             ref_data,
             log,
             orders,
+            objectives,
         }
     }
 
@@ -212,6 +219,47 @@ impl<'a> SideView<'a> {
     /// ones the side may see, and `hidden_causes` says if there are more.
     pub fn event(&self, id: EventId) -> Option<SideEvent> {
         self.events().into_iter().find(|event| event.id == id)
+    }
+
+    fn own_objectives(&self) -> Option<&'a SideObjectives> {
+        self.objectives.map(|o| o.side(self.side))
+    }
+
+    /// The side's own mission (decision 6 of 0054), or `None` if the
+    /// scenario has no objectives. Never the enemy's.
+    pub fn mission(&self) -> Option<&'a str> {
+        self.own_objectives().map(|o| o.mission.as_str())
+    }
+
+    /// The side's own objectives, in the order the scenario gives them
+    /// (decision 6 of 0054). Never the enemy's.
+    pub fn objectives(&self) -> &'a [Objective] {
+        self.own_objectives()
+            .map_or(&[], |o| o.objectives.as_slice())
+    }
+
+    /// The side's progress on each of its objectives, as far as it can know
+    /// it (decision 7 of 0054): counted from its own units and from the
+    /// events it may see, and from nothing else. In the order of
+    /// [`SideView::objectives`]. What no unit or event of the side shows is
+    /// marked not observable and counts 0. The umpire's result is not here.
+    pub fn known_progress(&self) -> Vec<KnownProgress> {
+        let Some(own) = self.own_objectives() else {
+            return Vec::new();
+        };
+        let bases: Vec<OwnBase> = self
+            .bases()
+            .map(|base| OwnBase {
+                id: base.id,
+                supply_t: base.supply_t,
+                aircraft_ready: self
+                    .air_groups()
+                    .filter(|g| g.location == crate::state::AirGroupLocation::Base(base.id))
+                    .map(|g| g.ready)
+                    .sum(),
+            })
+            .collect();
+        objectives::known_progress(own, &bases, &self.events())
     }
 
     /// The map is common knowledge.

@@ -1,0 +1,455 @@
+//! Objectives and results (decision 0054), on scenario 5, Eastern Solomons.
+//!
+//! # Hand calculation
+//!
+//! Written by the architect before the test code. The tests below assert
+//! these numbers. If the code disagrees, the code or the rule is wrong: do
+//! not change a number here to make a test pass.
+//!
+//! The scenario is `data/scenarios/05_eastern_solomons.toml`, seed 1942, as
+//! it runs today. Nothing of the battle changes: the objectives only read
+//! what happened. What happened, from the event log of that run:
+//!
+//! | Fact | Count |
+//! | ---- | ----- |
+//! | Japanese ships sunk | 1: ship 33, Ryujo, a carrier |
+//! | Japanese ships afloat with propulsion or flight deck out | 0 |
+//! | Allied ships sunk | 0 |
+//! | Allied ships afloat with propulsion or flight deck out | 1: ship 1, Enterprise, a carrier, flight deck out |
+//! | Japanese aircraft lost | group 11: 3; group 12: 10 and 5; group 14: 1; group 15: 8 and 4; lost with Ryujo, group 18: 23 and group 19: 6. 3 + 15 + 1 + 12 + 29 = 60 |
+//! | Allied aircraft lost | group 2: 1; group 6: 1; group 1: 2 and 1. 5 |
+//!
+//! Both sides hold the same three objectives on the placeholder scale:
+//! ships sunk (carrier 10, battleship 8, cruiser 4, destroyer 1, transport
+//! 2, auxiliary 1), ships crippled (half of each), and aircraft destroyed
+//! at 0.05 each. Levels: minor 3, major 8, decisive 16.
+//!
+//! | Objective | Allied count | Allied points | Japanese count | Japanese points |
+//! | --------- | ------------ | ------------- | -------------- | --------------- |
+//! | Ships sunk | 1 carrier | 10 | 0 | 0 |
+//! | Ships crippled | 0 | 0 | 1 carrier | 5 |
+//! | Aircraft destroyed | 60 | 60 x 0.05 = 3 | 5 | 5 x 0.05 = 0.25 |
+//! | Total | | 13 | | 5.25 |
+//!
+//! Margin for the Allied side: 13 - 5.25 = 7.75. It is at least 3 and less
+//! than 8: a minor Allied victory, and so a minor Japanese defeat, margin
+//! -7.75.
+//!
+//! What each side knows of its progress at the end is not fixed here: it
+//! depends on which events decision 0047 lets a side see, and the developer
+//! reports it. Two things are fixed. A side's count of its own losses is not
+//! part of its progress (they are the enemy's points). And a side's known
+//! count for an objective is never above the true count.
+//!
+//! # Properties
+//!
+//! - The result is the same run twice, and the same from a saved game
+//!   replayed.
+//! - The two sides' margins sum to zero, and their levels mirror.
+//! - The state hash of every day is what it was before objectives existed
+//!   (the golden files under `crates/sim-cli/tests/run_baseline` do not
+//!   change).
+//! - Sinking one more enemy ship, or losing one fewer of one's own, never
+//!   lowers a side's margin (checked on the scoring function with made-up
+//!   counts).
+//! - Over seeds 1 to 200 the known count of each objective is never above
+//!   the true count, for both sides.
+
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use sim_core::events::EventKind;
+use sim_core::fixed::Fixed;
+use sim_core::ids::{AirGroupId, ShipId};
+use sim_core::objectives::{
+    score, GameResult, KnownBasis, Level, Objective, Outcome, ShipPoints, SideResult, Tally,
+};
+use sim_core::refdata::ShipKind;
+use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState};
+use sim_core::World;
+use sim_data::Scenario;
+
+const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+const NAME: &str = "05_eastern_solomons.toml";
+const SEED: u64 = 1942;
+
+fn scenario_path() -> PathBuf {
+    PathBuf::from(ROOT).join("data/scenarios").join(NAME)
+}
+
+fn scenario_text() -> String {
+    std::fs::read_to_string(scenario_path()).expect("the scenario reads")
+}
+
+fn load_text(text: &str, seed: u64) -> Scenario {
+    Scenario::from_text(text, &scenario_path())
+        .expect("the scenario loads")
+        .with_seed(seed)
+        .expect("a seed can be set")
+}
+
+fn run(seed: u64) -> World {
+    let mut scenario = load_text(&scenario_text(), seed);
+    scenario.run_to_end().expect("the run resolves");
+    scenario.world
+}
+
+fn fx(text: &str) -> Fixed {
+    text.parse().expect("a decimal")
+}
+
+fn n(value: i64) -> Fixed {
+    Fixed::from_int(value)
+}
+
+fn result_of(world: &World) -> GameResult {
+    world.result().expect("scenario 5 has objectives")
+}
+
+// ---------------------------------------------------------------------
+// The facts the hand calculation starts from, read independently of the
+// scoring function: from the event log and the final truth.
+// ---------------------------------------------------------------------
+
+#[test]
+fn what_happened_is_what_the_hand_calculation_says() {
+    let world = run(SEED);
+    let truth = world.umpire();
+
+    // Ships sunk: ship 33, Ryujo, and no other.
+    let sunk: Vec<u32> = truth
+        .ships
+        .values()
+        .filter(|s| s.location == ShipLocation::Sunk)
+        .map(|s| s.id.raw())
+        .collect();
+    assert_eq!(sunk, vec![33]);
+    let kind_of =
+        |ship: u32| world.ref_data().ship_classes[&truth.ships[&ShipId::new(ship)].class].kind;
+    assert_eq!(kind_of(33), ShipKind::Carrier);
+
+    // Ships afloat with propulsion or the flight deck out: Enterprise, flight
+    // deck out, and nobody else. Ryujo has both out but is sunk.
+    let crippled: Vec<(u32, bool, bool)> = truth
+        .ships
+        .values()
+        .filter(|s| s.location != ShipLocation::Sunk)
+        .filter(|s| {
+            s.systems.get(ShipSystem::Propulsion) == SystemState::Out
+                || s.systems.get(ShipSystem::FlightDeck) == SystemState::Out
+        })
+        .map(|s| {
+            (
+                s.id.raw(),
+                s.systems.get(ShipSystem::Propulsion) == SystemState::Out,
+                s.systems.get(ShipSystem::FlightDeck) == SystemState::Out,
+            )
+        })
+        .collect();
+    assert_eq!(crippled, vec![(1, false, true)]);
+    assert_eq!(kind_of(1), ShipKind::Carrier);
+    let ryujo = &truth.ships[&ShipId::new(33)];
+    assert_eq!(
+        (
+            ryujo.systems.get(ShipSystem::Propulsion),
+            ryujo.systems.get(ShipSystem::FlightDeck)
+        ),
+        (SystemState::Out, SystemState::Out)
+    );
+
+    // Aircraft lost for good, by group and event.
+    let mut shot_down: Vec<(u32, u32)> = Vec::new();
+    let mut with_ship: Vec<(u32, u32)> = Vec::new();
+    let mut other_losses = 0;
+    for event in world.events().iter() {
+        match &event.kind {
+            EventKind::AircraftLost {
+                air_group,
+                aircraft,
+                ..
+            } => shot_down.push((air_group.raw(), *aircraft)),
+            EventKind::AirGroupLost {
+                air_group,
+                aircraft,
+                ..
+            } => with_ship.push((air_group.raw(), *aircraft)),
+            EventKind::AircraftDestroyedOnGround { .. }
+            | EventKind::DamagedAircraftDestroyedOnGround { .. } => other_losses += 1,
+            EventKind::AircraftWorn { written_off, .. } => other_losses += written_off,
+            _ => {}
+        }
+    }
+    assert_eq!(
+        other_losses, 0,
+        "no loss on the ground or by wear in this scenario"
+    );
+    let side_of = |group: u32| truth.air_groups[&AirGroupId::new(group)].side;
+    let by_side = |list: &[(u32, u32)], side: Side| -> Vec<(u32, u32)> {
+        let mut found: Vec<(u32, u32)> = list
+            .iter()
+            .copied()
+            .filter(|(group, _)| side_of(*group) == side)
+            .collect();
+        found.sort();
+        found
+    };
+    // Japanese: group 11: 3; 12: 10 and 5; 14: 1; 15: 8 and 4; lost with
+    // Ryujo, group 18: 23 and group 19: 6. 3 + 15 + 1 + 12 + 29 = 60.
+    let japanese = by_side(&shot_down, Side::Japanese);
+    assert_eq!(
+        japanese,
+        vec![(11, 3), (12, 5), (12, 10), (14, 1), (15, 4), (15, 8)]
+    );
+    let lost_with_ryujo = by_side(&with_ship, Side::Japanese);
+    assert_eq!(lost_with_ryujo, vec![(18, 23), (19, 6)]);
+    let total = |lists: [&Vec<(u32, u32)>; 2]| -> u32 {
+        lists.iter().flat_map(|l| l.iter()).map(|(_, a)| a).sum()
+    };
+    assert_eq!(total([&japanese, &lost_with_ryujo]), 60);
+    // Allied: group 2: 1; group 6: 1; group 1: 2 and 1. 5.
+    let allied = by_side(&shot_down, Side::Allied);
+    assert_eq!(allied, vec![(1, 1), (1, 2), (2, 1), (6, 1)]);
+    assert_eq!(by_side(&with_ship, Side::Allied), vec![]);
+    assert_eq!(total([&allied, &vec![]]), 5);
+}
+
+// ---------------------------------------------------------------------
+// The hand calculation.
+// ---------------------------------------------------------------------
+
+#[test]
+fn the_result_is_what_the_hand_calculation_says() {
+    let result = result_of(&run(SEED));
+
+    let line = |side: &SideResult, i: usize| {
+        let o = &side.objectives[i];
+        (o.kind, o.count, o.points)
+    };
+
+    // Allied points: ships sunk 1 carrier = 10; ships crippled 0; aircraft
+    // 60 x 0.05 = 3; total 13.
+    let allied = &result.allied;
+    assert_eq!(allied.objectives.len(), 3);
+    assert_eq!(line(allied, 0), ("ships_sunk", n(1), n(10)));
+    assert_eq!(
+        allied.objectives[0].by_kind,
+        BTreeMap::from([(ShipKind::Carrier, 1)])
+    );
+    assert_eq!(line(allied, 1), ("ships_crippled", n(0), n(0)));
+    assert_eq!(line(allied, 2), ("aircraft_destroyed", n(60), n(3)));
+    assert_eq!(allied.total, n(13));
+
+    // Japanese points: ships sunk 0; ships crippled 1 carrier = 5; aircraft
+    // 5 x 0.05 = 0.25; total 5.25.
+    let japanese = &result.japanese;
+    assert_eq!(line(japanese, 0), ("ships_sunk", n(0), n(0)));
+    assert_eq!(line(japanese, 1), ("ships_crippled", n(1), n(5)));
+    assert_eq!(
+        japanese.objectives[1].by_kind,
+        BTreeMap::from([(ShipKind::Carrier, 1)])
+    );
+    assert_eq!(line(japanese, 2), ("aircraft_destroyed", n(5), fx("0.25")));
+    assert_eq!(japanese.total, fx("5.25"));
+
+    // Margin 13 - 5.25 = 7.75: at least 3 and under 8, a minor Allied
+    // victory and a minor Japanese defeat with margin -7.75.
+    assert_eq!(allied.margin, fx("7.75"));
+    assert_eq!(japanese.margin, fx("-7.75"));
+    assert_eq!(allied.outcome, Outcome::Victory(Level::Minor));
+    assert_eq!(japanese.outcome, Outcome::Defeat(Level::Minor));
+    assert_eq!(allied.outcome.name(), "minor victory");
+    assert_eq!(japanese.outcome.name(), "minor defeat");
+    assert!(result
+        .history
+        .as_deref()
+        .is_some_and(|h| h.starts_with("Ryujo was sunk and Enterprise was damaged")));
+}
+
+#[test]
+fn the_objectives_are_those_the_decision_gives_both_sides() {
+    let world = run(SEED);
+    let objectives = world.objectives().expect("objectives");
+    assert_eq!(
+        (
+            objectives.levels.minor,
+            objectives.levels.major,
+            objectives.levels.decisive
+        ),
+        (n(3), n(8), n(16))
+    );
+    assert_eq!(
+        objectives.allied.mission,
+        "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action."
+    );
+    assert_eq!(
+        objectives.japanese.mission,
+        "Destroy the American carriers east of Guadalcanal, and keep your own in action."
+    );
+    let table = |sunk: bool| {
+        let (carrier, battleship, cruiser, destroyer, transport, auxiliary) = if sunk {
+            (n(10), n(8), n(4), n(1), n(2), n(1))
+        } else {
+            (n(5), n(4), n(2), fx("0.5"), n(1), fx("0.5"))
+        };
+        ShipPoints(BTreeMap::from([
+            (ShipKind::Carrier, carrier),
+            (ShipKind::Battleship, battleship),
+            (ShipKind::Cruiser, cruiser),
+            (ShipKind::Destroyer, destroyer),
+            (ShipKind::Transport, transport),
+            (ShipKind::Auxiliary, auxiliary),
+        ]))
+    };
+    for side in Side::ALL {
+        let own = &objectives.side(side).objectives;
+        assert_eq!(own.len(), 3);
+        assert_eq!(own[0], Objective::ShipsSunk(table(true)));
+        assert_eq!(own[1], Objective::ShipsCrippled(table(false)));
+        assert_eq!(own[2], Objective::AircraftDestroyed { points: fx("0.05") });
+    }
+}
+
+// ---------------------------------------------------------------------
+// What each side knows of its progress at the end of the day.
+// ---------------------------------------------------------------------
+
+#[test]
+fn what_each_side_knows_at_the_end_is_nothing_of_the_enemys_losses() {
+    // No event a side may see (decision 0047) shows a hit on an enemy ship or
+    // aircraft, and no battle claim is made in this scenario, so each side
+    // knows of none of its three objectives. This records what is so today:
+    // if a later change lets a side see more, this changes with it.
+    let world = run(SEED);
+    for side in Side::ALL {
+        let known = world.side_view(side).known_progress();
+        assert_eq!(known.len(), 3);
+        for k in &known {
+            assert_eq!(k.basis, KnownBasis::NotObservable, "{side:?} {k:?}");
+            assert_eq!(k.count, Fixed::ZERO);
+            assert_eq!(k.points, None);
+        }
+        assert!(world.side_view(side).claims().is_empty());
+    }
+}
+
+// ---------------------------------------------------------------------
+// Properties.
+// ---------------------------------------------------------------------
+
+#[test]
+fn the_result_is_the_same_run_twice_and_from_a_saved_game_replayed() {
+    let first = run(SEED);
+    let second = run(SEED);
+    assert_eq!(result_of(&first), result_of(&second));
+    assert_eq!(first.day_hashes(), second.day_hashes());
+
+    // A saved game replays the orders as handed in, in place of the
+    // scenario's own script.
+    let saved = load_text(&scenario_text(), SEED).scripted_orders().clone();
+    let mut replay = load_text(&scenario_text(), SEED);
+    replay.replace_script(saved);
+    replay.run_to_end().expect("the replay resolves");
+    assert_eq!(replay.world.day_hashes(), first.day_hashes());
+    assert_eq!(result_of(&replay.world), result_of(&first));
+}
+
+#[test]
+fn the_margins_sum_to_zero_and_the_levels_mirror_over_seeds() {
+    for seed in 1..=50 {
+        let result = result_of(&run(seed));
+        assert_eq!(result.allied.margin + result.japanese.margin, Fixed::ZERO);
+        assert_eq!(result.allied.outcome.mirror(), result.japanese.outcome);
+        assert_eq!(
+            result.allied.margin,
+            result.allied.total - result.japanese.total
+        );
+    }
+}
+
+#[test]
+fn objectives_change_no_hash_and_no_event() {
+    // The same scenario with its [objectives] section cut off.
+    let text = scenario_text();
+    let cut = text
+        .find("# Missions and objectives")
+        .expect("the objectives section");
+    let mut without = load_text(&text[..cut], SEED);
+    assert!(without.world.objectives().is_none());
+    without.run_to_end().expect("runs");
+    let with = run(SEED);
+    assert_eq!(with.day_hashes(), without.world.day_hashes());
+    assert_eq!(with.state_hash(), without.world.state_hash());
+    assert_eq!(with.events().len(), without.world.events().len());
+    // And the hash is the one in the baseline file.
+    let baseline = std::fs::read_to_string(
+        PathBuf::from(ROOT).join("crates/sim-cli/tests/run_baseline/05_eastern_solomons.txt"),
+    )
+    .expect("the baseline reads");
+    assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
+    assert!(baseline.contains("hash a5f3f2bbd3931d4b"));
+}
+
+/// The known count of each objective is never above the true count, for both
+/// sides, seeds 1 to 200.
+#[test]
+fn over_seeds_1_to_200_the_known_count_is_never_above_the_true_count() {
+    for seed in 1..=200 {
+        let world = run(seed);
+        let result = result_of(&world);
+        for side in Side::ALL {
+            let known = world.side_view(side).known_progress();
+            let truth = &result.side(side).objectives;
+            assert_eq!(known.len(), truth.len());
+            for (k, t) in known.iter().zip(truth) {
+                assert!(
+                    k.count <= t.count,
+                    "seed {seed} {side:?} {}: knows {} of {}",
+                    k.kind,
+                    k.count,
+                    t.count
+                );
+                if let Some(points) = k.points {
+                    assert!(points <= t.points, "seed {seed} {side:?} {}", k.kind);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn sinking_one_more_enemy_ship_or_losing_one_fewer_never_lowers_a_margin() {
+    // The scoring function on made-up counts, with the scenario's own
+    // objectives: the Allied tally holds what the Allied side did to the
+    // Japanese, and the Japanese tally what the Japanese side did to it.
+    let world = run(SEED);
+    let objectives = world.objectives().expect("objectives");
+    let tally = |carriers: u32, cruisers: u32, crippled: u32, aircraft: u32| Tally {
+        sunk: BTreeMap::from([(ShipKind::Carrier, carriers), (ShipKind::Cruiser, cruisers)]),
+        crippled: BTreeMap::from([(ShipKind::Carrier, crippled)]),
+        aircraft,
+        ..Tally::default()
+    };
+    let margin = |allied: Tally, japanese: Tally| {
+        let tallies = BTreeMap::from([(Side::Allied, allied), (Side::Japanese, japanese)]);
+        score(objectives, &tallies).allied.margin
+    };
+    for a in 0..4 {
+        for b in 0..4 {
+            for (ac, jc) in [(0, 0), (5, 60), (60, 5)] {
+                let before = margin(tally(a, 0, 0, ac), tally(b, 0, 0, jc));
+                // One more enemy ship sunk.
+                assert!(margin(tally(a + 1, 0, 0, ac), tally(b, 0, 0, jc)) >= before);
+                assert!(margin(tally(a, 1, 0, ac), tally(b, 0, 0, jc)) >= before);
+                // One own ship fewer sunk, or one own aircraft fewer lost.
+                if b > 0 {
+                    assert!(margin(tally(a, 0, 0, ac), tally(b - 1, 0, 0, jc)) >= before);
+                }
+                if jc > 0 {
+                    assert!(margin(tally(a, 0, 0, ac), tally(b, 0, 0, jc - 1)) >= before);
+                }
+                // One more enemy ship crippled.
+                assert!(margin(tally(a, 0, 1, ac), tally(b, 0, 0, jc)) >= before);
+            }
+        }
+    }
+}
