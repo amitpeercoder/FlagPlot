@@ -242,6 +242,7 @@
               "const": "set_air_mission"
             },
             "mission": {
+              "description": "What the group does each daylight pulse, and only that: rest (stays on the ground); search (flies the arc set by set_search_arc, and flies nothing if none is set); naval_strike (the staff launches it, in the same pulse, at an enemy contact the side holds that was reported in that pulse or the one before and lies within the aircraft type's strike radius); combat_air_patrol (fighters: a share stays over their own hex as patrol, the rest escort a raid within their radius). Set missions before the contact appears: search, the strike decision and the strike all happen inside one day, and a group flies only the mission it is on. For a strike on a base use base_strike with target_base.",
               "enum": [
                 "rest",
                 "search",
@@ -264,9 +265,11 @@
               "const": "set_air_mission"
             },
             "mission": {
+              "description": "base_strike: in the morning pulse, with no contact needed, the group launches at the named enemy base if the base is held by the other side and within the aircraft type's strike radius, and its bombs can hit aircraft on the ground and supply there.",
               "const": "base_strike"
             },
             "target_base": {
+              "description": "The number of an enemy base, as list_bases gives it under enemy_bases.",
               "type": "integer"
             }
           }
@@ -285,12 +288,15 @@
               "const": "set_search_arc"
             },
             "from_deg": {
+              "description": "Bearing in degrees where the arc starts: 0 is north (up the map, toward smaller r), 90 east, 180 south, 270 west. A multiple of 10 from 0 to 350. The arc runs clockwise from from_deg to to_deg.",
               "type": "integer"
             },
             "to_deg": {
+              "description": "Bearing in degrees where the arc ends, going clockwise from from_deg; a multiple of 10 from 0 to 350. from_deg 270 and to_deg 90 is the northern half; equal bearings mean the whole circle. Arcs wider than 180 degrees are allowed.",
               "type": "integer"
             },
             "range_nm": {
+              "description": "How far out the group searches, in miles: above 0 and at most the aircraft type's search range (a longer range is refused, and the refusal names the maximum). A longer range costs more wear. Search does nothing until an arc is set; the arc stays until another is set.",
               "$ref": "defs.schema.json#/$defs/dec"
             }
           }

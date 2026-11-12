@@ -143,7 +143,9 @@
         "alert",
         "fatigue",
         "ships_afloat",
-        "least_fuelled"
+        "least_fuelled",
+        "movement",
+        "propulsion_damaged"
       ],
       "additionalProperties": false,
       "properties": {
@@ -200,6 +202,40 @@
               "type": "null"
             }
           ]
+        },
+        "movement": {
+          "description": "A force steams at the speed of its slowest ship. cannot_move: a ship afloat has propulsion out, so the force has no speed whatever its status and route say. slowed: a ship has propulsion degraded. normal: neither.",
+          "enum": [
+            "normal",
+            "slowed",
+            "cannot_move"
+          ]
+        },
+        "propulsion_damaged": {
+          "$ref": "#/$defs/propulsion_lines"
+        }
+      }
+    },
+    "propulsion_lines": {
+      "description": "The ships afloat whose propulsion is not working, each with its state.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ship",
+          "propulsion"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ship": {
+            "$ref": "#/$defs/handle"
+          },
+          "propulsion": {
+            "enum": [
+              "degraded",
+              "out"
+            ]
+          }
         }
       }
     },
@@ -240,6 +276,7 @@
           "type": "integer"
         },
         "pilots": {
+          "description": "Pilots of the group. null means the scenario does not count this group's pilots (decision 0038): no pilot limit applies and every ready aircraft can fly. A number means the group can fly no more aircraft than it has pilots.",
           "$ref": "#/$defs/count_or_null"
         },
         "fatigue": {
@@ -290,9 +327,11 @@
           "$ref": "#/$defs/dec"
         },
         "port_size": {
+          "description": "The map's port size of the hex, 0 where the map gives none. In the rules as built it sets only how fast cargo is worked: a port of size 0 has no berths and ships load and unload by lighter at that size's rate. Any ship may stop at a base of any size, and refuelling does not depend on it.",
           "type": "integer"
         },
         "airfield_size": {
+          "description": "The map's airfield size of the hex, 0 where the map gives none. No rule reads it: a base of size 0 launches and receives air groups, repairs and is raided like any other, and no limit on the aircraft at a base follows from it.",
           "type": "integer"
         }
       }

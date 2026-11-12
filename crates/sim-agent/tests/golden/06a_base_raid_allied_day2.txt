@@ -2,7 +2,7 @@ FLAG PLOT BRIEFING
 
 HEADING
 - Side: allied
-- Day: 2
+- Day: 2 of 3
 - Scenario: Scenario 6a: A raid on an airfield
 - Covers: day 1 and the state at the start of day 2
 
@@ -22,9 +22,9 @@ ACTION YESTERDAY
 - Salvoes fired at sea: none
 - Patrol fire: air_group:3 "Placeholder defending fighters" at the escorts of air_group:2, 6 shots [event 5]
 - Patrol fire: air_group:3 "Placeholder defending fighters" at the bombers of air_group:1, 6 shots [event 6]
-- Anti-aircraft fire: base:2 "Placeholder airfield B" at the raid of air_group:1, 20 shots [event 7]
+- Anti-aircraft fire: base:2 "Placeholder airfield B" at the raid of enemy air_group:1, 20 shots [event 7]
 - Strikes and attacks flown: none
-- Raid on base:2 "Placeholder airfield B" by air_group:1: 16 aircraft attacked, 1 hit, 0 on aircraft, 1 on supply, 0 on nothing [event 9]
+- Raid on base:2 "Placeholder airfield B" by enemy air_group:1: 16 aircraft attacked, 1 hit, 0 on aircraft, 1 on supply, 0 on nothing [event 9]
 - Attacks on ships: none
 
 LOSSES YESTERDAY
@@ -45,7 +45,7 @@ BASES
 - base:2 "Placeholder airfield B" at (5,0): fuel 0 t
 
 ARRIVALS
-- Arrivals due today and on the next two days: none
+- Arrivals due on the coming day and the next two days: none
 - Replacements: none
 
 WARNINGS
@@ -54,3 +54,4 @@ WARNINGS
 - Bases without fuel and a force stopped there: none
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
+- Task forces that cannot move or are slowed: none

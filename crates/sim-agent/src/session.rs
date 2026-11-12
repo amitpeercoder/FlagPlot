@@ -18,7 +18,7 @@ use sim_core::state::Side;
 use sim_core::World;
 
 use crate::answer::{FORMAT, VERSION};
-use crate::briefing::briefing;
+use crate::briefing::briefing_for_game;
 use crate::explain::explain;
 use crate::measure::{measure, Question};
 use crate::orders::{is_orderable_unit, order_from_json};
@@ -178,7 +178,7 @@ impl Session {
                     Some(_) => return Err(CallError::new("\"text\" must be true or false")),
                 };
                 let view = self.world.side_view(side);
-                let briefing = briefing(&view, &self.scenario);
+                let briefing = briefing_for_game(&view, &self.scenario, Some(self.days));
                 if text {
                     Ok(json!({
                         "format": FORMAT,
@@ -288,6 +288,15 @@ impl Session {
                 }
             }
         }
+        let refused = results.iter().filter(|r| r["status"] == "refused").count();
+        let accepted = results.len() - refused;
+        let queued = self.seats[&side].queued.len();
+        let summary = format!(
+            "In this call {accepted} of {} orders queued and {refused} refused. A refused order is not queued and the others in the call stand. {queued} {} now queued for day {}.",
+            results.len(),
+            if queued == 1 { "order is" } else { "orders are" },
+            self.world.day() + 1
+        );
         Ok(json!({
             "format": FORMAT,
             "version": VERSION,
@@ -295,7 +304,10 @@ impl Session {
             "for_day": self.world.day() + 1,
             "cleared": clear,
             "results": results,
-            "queued": self.seats[&side].queued.len(),
+            "queued_in_call": accepted,
+            "refused_in_call": refused,
+            "queued": queued,
+            "summary": summary,
         }))
     }
 
