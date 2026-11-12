@@ -275,6 +275,9 @@ struct ShipSpec {
     /// Gun rounds aboard at the start. Defaults to the guns times the
     /// rounds each carries.
     gun_rounds: Option<Quantity>,
+    /// The crew's experience, a whole number from 0 to 4 (decision 0064).
+    /// Defaults to 2. Set here and written by no rule.
+    experience: Option<i64>,
     /// The state of each named system at the start. Each defaults to
     /// working, and anything else needs a class that has the system.
     propulsion: Option<SystemStateSpec>,
@@ -966,6 +969,18 @@ impl Scenario {
                     i64::from(ship_class.main_guns) * i64::from(ship_class.gun_rounds_per_gun),
                 ),
             };
+            let experience = match spec.experience {
+                None => Ship::DEFAULT_EXPERIENCE,
+                Some(value) => u8::try_from(value)
+                    .ok()
+                    .filter(|value| *value <= Ship::MAX_EXPERIENCE)
+                    .ok_or_else(|| {
+                        fail(format!(
+                            "{id}: experience {value} is not a whole number from 0 to {}",
+                            Ship::MAX_EXPERIENCE
+                        ))
+                    })?,
+            };
             let mut systems = ShipSystems::ALL_WORKING;
             for (system, wanted) in [
                 (ShipSystem::Propulsion, spec.propulsion),
@@ -1038,6 +1053,7 @@ impl Scenario {
                 gun_rounds,
                 torpedoes_ready: ship_class.torpedo_tubes > 0,
                 systems,
+                experience,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -2615,6 +2631,29 @@ r = 0
         let ship = &scenario.world.umpire().ships[&ShipId::new(1)];
         assert_eq!(ship.gun_rounds, Fixed::ZERO);
         assert!(!ship.torpedoes_ready);
+    }
+
+    #[test]
+    fn a_ship_has_experience_2_unless_the_scenario_gives_0_to_4() {
+        let experience = |text: &str| {
+            parse_with(&with_force(&ship(text)))
+                .map(|s| s.world.umpire().ships[&ShipId::new(1)].experience)
+        };
+        assert_eq!(experience("").expect("loads"), 2);
+        for value in 0..=4u8 {
+            assert_eq!(
+                experience(&format!("experience = {value}")).expect("loads"),
+                value
+            );
+        }
+        // Outside 0 to 4, below 0, a float or a string: refused, naming the
+        // ship and the figure.
+        for bad in ["5", "-1", "100", "2.0", "\"3\"", "\"high\""] {
+            let result = experience(&format!("experience = {bad}"));
+            assert!(result.is_err(), "experience = {bad}");
+        }
+        let message = experience("experience = 5").expect_err("refused").message;
+        assert!(message.contains("experience 5"), "{message}");
     }
 
     #[test]

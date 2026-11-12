@@ -2,8 +2,8 @@ Scenario 4a2: Stragglers, a damaged force sheds two ships
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c04170715cb508aa  25 events
-day   2  hash b310f5bef97a88ba  5 events
+day   1  hash e54e79edb2c44157  25 events
+day   2  hash 24ecc016d0b8ca65  5 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

@@ -42,7 +42,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Readiness, Stance};
-use crate::refdata::{ShipClass, ShipKind, SurfaceCombatFigures};
+use crate::refdata::{experience_factor, ShipClass, ShipKind, SurfaceCombatFigures};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
 use crate::state::{Ship, ShipLocation, ShipSystem, Side};
@@ -168,6 +168,10 @@ struct Shot {
     shot_factors: [Fixed; 4],
     /// The firer's fire control factor. One for torpedoes.
     fire_control_factor: Fixed,
+    /// The firer's experience factor for this weapon and `Some` only in a
+    /// dark fight with the weapon's strength above zero (decision 0064).
+    /// Multiplied in last.
+    experience_factor: Option<Fixed>,
     damage_per_hit: Fixed,
 }
 
@@ -651,7 +655,21 @@ impl World {
             } else {
                 Fixed::ONE
             };
-            let chance = ((base + radar_bonus) * alert_factor).min(Fixed::ONE) * fatigue_factor;
+            // Experience reads in a dark fight only, and only when its
+            // strength is above zero (decision 0064). The force's value is
+            // the mean of the ships it has afloat now, in the fixed
+            // arithmetic.
+            let experience_factor =
+                (fight.dark && figures.experience_sighting_strength > Fixed::ZERO).then(|| {
+                    experience_factor(
+                        figures.experience_sighting_strength,
+                        self.mean_experience(id),
+                    )
+                });
+            let chance =
+                ((base + radar_bonus) * alert_factor * experience_factor.unwrap_or(Fixed::ONE))
+                    .min(Fixed::ONE)
+                    * fatigue_factor;
             let sighted = fight.forces[index].sighting_stream.chance(chance);
 
             let breakdown = self.config.record_breakdowns.then(|| {
@@ -669,6 +687,12 @@ impl World {
                         value: alert_factor,
                     },
                 ];
+                if let Some(value) = experience_factor {
+                    factors.push(Factor {
+                        name: "experience_factor",
+                        value,
+                    });
+                }
                 if fatigue_in_play {
                     factors.push(Factor {
                         name: "fatigue_factor",
@@ -700,6 +724,23 @@ impl World {
                 round.forces[index].rolled = Some(event);
             }
         }
+    }
+
+    /// The mean experience of the ships a force has afloat: the sum of their
+    /// whole-number values over their count, in `Fixed` (decision 0064, 6).
+    /// A force with no ship afloat has the standard value, though no fight
+    /// holds one.
+    fn mean_experience(&self, force: TaskForceId) -> Fixed {
+        let ships = &self.truth.task_forces[&force].ships;
+        if ships.is_empty() {
+            return Fixed::from_int(i64::from(Ship::DEFAULT_EXPERIENCE));
+        }
+        let sum: i64 = ships
+            .iter()
+            .map(|ship| i64::from(self.truth.ships[ship].experience))
+            .sum();
+        let count = i64::try_from(ships.len()).expect("a force's ships fit in i64");
+        Fixed::from_int(sum) / Fixed::from_int(count)
     }
 
     /// True if any ship afloat in the force has a radar class.
@@ -842,6 +883,12 @@ impl World {
         let fire_control =
             figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
         let per_hit = |damage: Fixed| damage_per_hit(damage, target_class.toughness);
+        // The firer's own experience, in a dark fight, when the weapon's
+        // strength is above zero (decision 0064).
+        let experience_for = |strength: Fixed| {
+            (fight.dark && strength > Fixed::ZERO)
+                .then(|| experience_factor(strength, Fixed::from_int(i64::from(ship.experience))))
+        };
         let gun = (shots > Fixed::ZERO).then(|| Shot {
             firer,
             target,
@@ -860,6 +907,7 @@ impl World {
                 figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery),
             ],
             fire_control_factor: fire_control,
+            experience_factor: experience_for(figures.experience_gun_strength),
             damage_per_hit: per_hit(class.gun_damage),
         });
         let torpedo = (torpedo_shot_count > Fixed::ZERO).then(|| Shot {
@@ -880,6 +928,7 @@ impl World {
                 figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts),
             ],
             fire_control_factor: Fixed::ONE,
+            experience_factor: experience_for(figures.experience_torpedo_strength),
             damage_per_hit: per_hit(class.torpedo_damage),
         });
 
@@ -940,7 +989,11 @@ impl World {
         } else {
             Fixed::ONE
         };
-        let chance = shot.base_chance * surprised_factor * lit_factor * shot.fire_control_factor;
+        let chance = shot.base_chance
+            * surprised_factor
+            * lit_factor
+            * shot.fire_control_factor
+            * shot.experience_factor.unwrap_or(Fixed::ONE);
         let expected = shot.shots * chance;
         let hits = roll_shots(stream, shot.shots, chance);
 
@@ -995,6 +1048,9 @@ impl World {
             factors.push(factor("lit_factor", lit_factor));
             if shot.weapon == Weapon::Gun {
                 factors.push(factor("fire_control_factor", shot.fire_control_factor));
+            }
+            if let Some(value) = shot.experience_factor {
+                factors.push(factor("experience_factor", value));
             }
             Breakdown {
                 factors,
@@ -5237,5 +5293,331 @@ mod tests {
             at_fatigue(w, 2, 30);
         });
         assert_eq!(first_round_chances(&world), [fx("0.7"), fx("0.42")]);
+    }
+
+    // ---- experience (decision 0064) ----
+
+    /// Sets the three strengths of experience.
+    fn strengths(world: &mut World, gun: &str, torpedo: &str, sighting: &str) {
+        let figures = figures_mut(world);
+        figures.experience_gun_strength = fx(gun);
+        figures.experience_torpedo_strength = fx(torpedo);
+        figures.experience_sighting_strength = fx(sighting);
+    }
+
+    /// Both forces sight in round 1 for sure, so each ship fires in round 1
+    /// at a target that is neither surprised nor lit.
+    fn both_sight(world: &mut World) {
+        figures_mut(world).sighting_chance_night = Fixed::ONE;
+    }
+
+    fn night_duel() -> Scene {
+        let hex = Hex::new(5, 0);
+        night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ])
+    }
+
+    fn event_with_id(world: &World, id: EventId) -> &Event {
+        world
+            .events()
+            .iter()
+            .find(|e| e.id == id)
+            .expect("the event exists")
+    }
+
+    fn factor_names(event: &Event) -> Vec<&'static str> {
+        event
+            .breakdown
+            .as_ref()
+            .expect("a breakdown")
+            .factors
+            .iter()
+            .map(|f| f.name)
+            .collect()
+    }
+
+    #[test]
+    fn the_factor_is_one_plus_strength_times_experience_less_two() {
+        // 1 + strength x (experience - 2), for each value and strength.
+        let table = [
+            ("0", ["1", "1", "1", "1", "1"]),
+            ("0.25", ["0.5", "0.75", "1", "1.25", "1.5"]),
+            ("0.5", ["0", "0.5", "1", "1.5", "2"]),
+        ];
+        for (strength, factors) in table {
+            for (experience, factor) in factors.iter().enumerate() {
+                let experience = i64::try_from(experience).expect("small");
+                assert_eq!(
+                    experience_factor(fx(strength), Fixed::from_int(experience)),
+                    fx(factor),
+                    "strength {strength}, experience {experience}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn in_a_dark_fight_a_ships_gun_and_torpedo_chances_read_her_own_experience() {
+        // Night, round 1, nobody surprised or lit: gun 0.03 x factor,
+        // torpedo 0.04 x factor, with different strengths for the two:
+        // guns 0.25, torpedoes 0.5.
+        //   experience 0: 0.03 x 0.5 = 0.015    0.04 x 0 = 0
+        //   experience 1: 0.03 x 0.75 = 0.0225  0.04 x 0.5 = 0.02
+        //   experience 2: 0.03                  0.04
+        //   experience 3: 0.03 x 1.25 = 0.0375  0.04 x 1.5 = 0.06
+        //   experience 4: 0.03 x 1.5 = 0.045    0.04 x 2 = 0.08
+        let table = [
+            (0, "0.015", "0"),
+            (1, "0.0225", "0.02"),
+            (2, "0.03", "0.04"),
+            (3, "0.0375", "0.06"),
+            (4, "0.045", "0.08"),
+        ];
+        for (experience, gun, torpedo) in table {
+            let world = run(&night_duel(), |w| {
+                both_sight(w);
+                strengths(w, "0.25", "0.5", "0");
+                // Ship 2 stays at 2, so only the firer's own value counts.
+                ship_mut(w, 1).experience = experience;
+            });
+            let first_gun = first_round_salvo(&world, 1, Weapon::Gun);
+            assert_eq!(first_gun.chance, fx(gun), "gun, experience {experience}");
+            assert_eq!(first_gun.expected, Fixed::from_int(120) * fx(gun));
+            let first_torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+            assert_eq!(
+                first_torpedo.chance,
+                fx(torpedo),
+                "torpedo, experience {experience}"
+            );
+            // Ship 2 fires as before.
+            assert_eq!(first_round_salvo(&world, 2, Weapon::Gun).chance, fx("0.03"));
+            assert_eq!(
+                first_round_salvo(&world, 2, Weapon::Torpedo).chance,
+                fx("0.04")
+            );
+        }
+    }
+
+    #[test]
+    fn a_crew_of_experience_0_at_the_top_strength_hits_nothing() {
+        // 1 + 0.5 x (0 - 2) = 0: the chance is 0, the expected hits 0, and
+        // no shot hits whatever the draws.
+        for seed in 1..=20 {
+            let scene = Scene::new(seed, Pulse::Night, night_duel().forces);
+            let world = run(&scene, |w| {
+                both_sight(w);
+                strengths(w, "0.5", "0.5", "0");
+                ship_mut(w, 1).experience = 0;
+            });
+            for weapon in [Weapon::Gun, Weapon::Torpedo] {
+                let salvo = first_round_salvo(&world, 1, weapon);
+                assert_eq!(salvo.chance, Fixed::ZERO);
+                assert_eq!(salvo.expected, Fixed::ZERO);
+                assert_eq!(salvo.hits, 0);
+            }
+            assert!(gun_salvos_of(&world, 1).iter().all(|s| s.hits == 0));
+        }
+    }
+
+    #[test]
+    fn the_experience_factor_multiplies_last_and_is_in_the_breakdown_only_when_it_acts() {
+        // Degraded fire control halves the gun chance before the factor:
+        // 0.03 x 0.5 x 1.5 (experience 3 at strength 0.5) = 0.0225.
+        let world = run(&night_duel(), |w| {
+            both_sight(w);
+            strengths(w, "0.5", "0.5", "0");
+            ship_mut(w, 1).experience = 3;
+            ship_mut(w, 1).systems.fire_control = SystemState::Degraded;
+        });
+        let gun = first_round_salvo(&world, 1, Weapon::Gun);
+        assert_eq!(gun.chance, fx("0.0225"));
+        let event = event_with_id(&world, gun.id);
+        let names = factor_names(event);
+        assert_eq!(
+            &names[names.len() - 2..],
+            ["fire_control_factor", "experience_factor"]
+        );
+        let value = event
+            .breakdown
+            .as_ref()
+            .expect("a breakdown")
+            .factors
+            .iter()
+            .find(|f| f.name == "experience_factor")
+            .expect("named")
+            .value;
+        assert_eq!(value, fx("1.5"));
+        let torpedo = first_round_salvo(&world, 1, Weapon::Torpedo);
+        let event = event_with_id(&world, torpedo.id);
+        assert_eq!(factor_names(event).last(), Some(&"experience_factor"));
+
+        // At a strength of 0 the factor is not in the breakdown, and the
+        // chance is the plain one to the last digit.
+        let world = run(&night_duel(), |w| {
+            both_sight(w);
+            ship_mut(w, 1).experience = 4;
+        });
+        let gun = first_round_salvo(&world, 1, Weapon::Gun);
+        assert_eq!(gun.chance, fx("0.03"));
+        let event = event_with_id(&world, gun.id);
+        assert!(!factor_names(event).contains(&"experience_factor"));
+        for roll in world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::SightingRoll { .. }))
+        {
+            assert!(!factor_names(roll).contains(&"experience_factor"));
+        }
+    }
+
+    #[test]
+    fn by_day_nothing_reads_experience() {
+        // Day figures: sighting 1, gun 0.05, torpedo 0.02. Every strength
+        // at the top and a crew of 4 and a crew of 0 change none of them,
+        // and no breakdown names the factor.
+        let world = run(&duel(), |w| {
+            strengths(w, "0.5", "0.5", "0.5");
+            ship_mut(w, 1).experience = 4;
+            ship_mut(w, 2).experience = 0;
+        });
+        assert_eq!(first_round_chances(&world), [Fixed::ONE, Fixed::ONE]);
+        for firer in [1, 2] {
+            assert_eq!(
+                first_round_salvo(&world, firer, Weapon::Gun).chance,
+                fx("0.05")
+            );
+            assert_eq!(
+                first_round_salvo(&world, firer, Weapon::Torpedo).chance,
+                fx("0.02")
+            );
+        }
+        for event in world.events().iter() {
+            if event.breakdown.is_some() {
+                assert!(!factor_names(event).contains(&"experience_factor"));
+            }
+        }
+    }
+
+    #[test]
+    fn a_forces_sighting_reads_the_mean_of_its_ships_inside_the_cap_and_before_fatigue() {
+        // Ships of 3, 3 and 2: the mean is 8 / 3 = 2.666666 in the fixed
+        // arithmetic, the factor at 0.4 is 1 + 0.4 x 0.666666 = 1.266666
+        // (0.2666664 cut), and the chance is 0.5 x 1.266666 = 0.633333.
+        let hex = Hex::new(5, 0);
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1, 1, 1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, |w| {
+            strengths(w, "0", "0", "0.4");
+            ship_mut(w, 1).experience = 3;
+            ship_mut(w, 2).experience = 3;
+            ship_mut(w, 3).experience = 2;
+            ship_mut(w, 4).experience = 2;
+        });
+        let [mixed, plain] = first_round_chances(&world);
+        assert_eq!(mixed.raw(), 633_333);
+        assert_eq!(plain, fx("0.5"));
+        let roll = world
+            .events()
+            .iter()
+            .find(|e| {
+                matches!(
+                    e.kind,
+                    EventKind::SightingRoll { round: 1, task_force, .. }
+                        if task_force == TaskForceId::new(1)
+                )
+            })
+            .expect("force 1 rolled");
+        assert_eq!(
+            factor_names(roll),
+            vec!["base", "radar_bonus", "alert_factor", "experience_factor"]
+        );
+        let value = roll.breakdown.as_ref().expect("a breakdown").factors[3].value;
+        assert_eq!(value.raw(), 1_266_666);
+
+        // The cap holds the experience factor inside it: base 0.9 at a
+        // factor of 2 is 1, not 1.8, and fatigue (30) is applied after: 0.7.
+        let world = run(&scene, |w| {
+            strengths(w, "0", "0", "0.5");
+            figures_mut(w).sighting_chance_night = fx("0.9");
+            ship_mut(w, 1).experience = 4;
+            ship_mut(w, 2).experience = 4;
+            ship_mut(w, 3).experience = 4;
+            tire(w);
+            at_fatigue(w, 1, 30);
+        });
+        assert_eq!(first_round_chances(&world)[0], fx("0.7"));
+    }
+
+    #[test]
+    fn the_mean_is_over_the_ships_afloat_at_the_moment_of_the_roll() {
+        // Experience 4, 0 and 2: mean 2. With the second ship gone from the
+        // force the mean is (4 + 2) / 2 = 3.
+        let hex = Hex::new(5, 0);
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1, 1, 1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let mut world = scene.world();
+        ship_mut(&mut world, 1).experience = 4;
+        ship_mut(&mut world, 2).experience = 0;
+        ship_mut(&mut world, 3).experience = 2;
+        let force = TaskForceId::new(1);
+        assert_eq!(world.mean_experience(force), Fixed::from_int(2));
+        world
+            .truth
+            .task_forces
+            .get_mut(&force)
+            .expect("force")
+            .ships
+            .remove(&ShipId::new(2));
+        ship_mut(&mut world, 2).location = ShipLocation::Sunk;
+        assert_eq!(world.mean_experience(force), Fixed::from_int(3));
+        // Ships of 3, 3 and 2: 8 / 3, cut at the sixth place.
+        ship_mut(&mut world, 1).experience = 3;
+        ship_mut(&mut world, 3).experience = 3;
+        world
+            .truth
+            .task_forces
+            .get_mut(&force)
+            .expect("force")
+            .ships
+            .insert(ShipId::new(2));
+        ship_mut(&mut world, 2).experience = 2;
+        ship_mut(&mut world, 2).location = ShipLocation::TaskForce(force);
+        assert_eq!(world.mean_experience(force).raw(), 2_666_666);
+    }
+
+    #[test]
+    fn two_worlds_that_differ_only_in_a_ships_experience_hash_differently() {
+        let scene = night_duel();
+        let a = scene.world();
+        let mut b = scene.world();
+        assert_eq!(a.state_hash(), b.state_hash());
+        ship_mut(&mut b, 1).experience = 3;
+        assert_ne!(a.state_hash(), b.state_hash());
+        let mut c = scene.world();
+        ship_mut(&mut c, 1).experience = 4;
+        assert_ne!(b.state_hash(), c.state_hash());
+    }
+
+    #[test]
+    fn recording_breakdowns_does_not_change_what_experience_does() {
+        let build = |record: bool| {
+            let scene = night_duel();
+            let mut world = scene.world();
+            world.config = SimConfig {
+                record_breakdowns: record,
+            };
+            strengths(&mut world, "0.4", "0.4", "0.4");
+            ship_mut(&mut world, 1).experience = 3;
+            ship_mut(&mut world, 2).experience = 1;
+            scene.run_step(&mut world);
+            world
+        };
+        assert_eq!(build(true).state_hash(), build(false).state_hash());
     }
 }

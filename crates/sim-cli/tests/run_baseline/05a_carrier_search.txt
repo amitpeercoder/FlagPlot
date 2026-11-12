@@ -2,8 +2,8 @@ Scenario 5a: Carrier search
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 38535e67c45b2614  16 events
-day   2  hash 82a9d7311c1755df  11 events
+day   1  hash 44dcafeaa71b2625  16 events
+day   2  hash c1bded5d82f00c04  11 events
 
 task_force:1 "Placeholder carrier force" (Allied): Arrived at (10,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder cruiser force" (Japanese): Idle at (14,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -1,0 +1,128 @@
+# Scenario 14a: scenario 4a with the crews' experience unequal (decision 0064).
+#
+# Scenario 4a exactly, except that force A's three ships have experience 3 and
+# force B's three have experience 1. The surface combat figures that read
+# experience are 0 in the frozen figures, so the test sets them to a working
+# value through an altered copy (tests/common). The hand calculation is written
+# out in tests/scenario_14a_experience.rs. The test runs this file with seeds
+# 1 to 1000.
+#
+# PLACEHOLDER DATA. The ships, combat figures and map are invented.
+
+name = "Scenario 14a: Night action, experienced crews against green ones"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_night_action.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# The attacking force starts at (0,0) and steams east through (5,0). It is
+# at battle readiness, so it is alert.
+[[task_force]]
+id = 1
+name = "Placeholder attacking force"
+side = "japanese"
+q = 0
+r = 0
+mission = "surface_combat"
+readiness = "battle"
+
+# The defending force lies stopped at (5,0), 200 nm east. It is at normal
+# readiness and its side holds no contact, so it is not alert.
+[[task_force]]
+id = 2
+name = "Placeholder defending force"
+side = "allied"
+q = 5
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+experience = 3
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+experience = 3
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser A3"
+class = 1
+side = "japanese"
+experience = 3
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+experience = 1
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+experience = 1
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cruiser B3"
+class = 1
+side = "allied"
+experience = 1
+fuel_t = 2000
+task_force = 2
+
+# Day 1, Japanese: steam east to (10,0) at cruise speed, and fight.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[10, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# Day 1, Allied: hold position, and fight.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"

@@ -46,6 +46,15 @@ alarm_chance = "0.5"
 crippled_flotation = 50
 claimed_sunk_fire = 30
 
+# Experience (decision 0064). In a dark fight a chance is multiplied by
+# 1 + strength x (experience - 2): a ship's own value for her gun and torpedo
+# chances, the mean of the force's ships for its chance to sight. Each strength
+# is from 0 to 0.5; 0 switches the rule off. PLACEHOLDER: the middle of the
+# allowed range, for tuning to set. Nothing reads experience by day.
+experience_gun_strength = "0.25"
+experience_torpedo_strength = "0.25"
+experience_sighting_strength = "0.25"
+
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]
 propulsion = "0.2"
