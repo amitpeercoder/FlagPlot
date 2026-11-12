@@ -41,12 +41,12 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0031 | The Eastern Solomons scenario: one day, four forces and Henderson Field; positions, air groups and orders | Confirmed |
 | 0032 | What the complexity review cut and merged: noticing, contact confidence, two duplicate figures, and clock rounding | Confirmed |
 | 0033 | Hits revised: a system hit depends on the damage, each shot is rolled, and a patrol divides among the raids on its hex | Confirmed |
-| 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed; 3 and 6 need review |
-| 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2, 9 and 12 need review |
-| 0036 | Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies | Confirmed; 4, 5 and 9 need review |
+| 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed |
+| 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2 needs review, after the air figures are tuned |
+| 0036 | Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies | Confirmed |
 | 0037 | Fatigue at battle readiness: an alert force tires each pulse, and fatigue cuts its chance to sight | Confirmed |
-| 0038 | Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate | Confirmed; 4, 8 and 10 need review |
-| 0039 | Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing | Confirmed; 4, 6 and 8 need review |
+| 0038 | Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate | Confirmed |
+| 0039 | Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing | Confirmed |
 | 0040 | Air distance is a straight line between hex centres, in whole miles, for every rule that asks how far an aircraft flies. Ships are deferred | Confirmed |
 | 0041 | Aircraft that arrive on a day: a scenario may deliver aircraft and pilots to an air group on a named day, raising its strength | Confirmed |
 | 0042 | The Rabaul against Guadalcanal scenario: who is there, what the aircraft can do, and what is a placeholder | Confirmed |

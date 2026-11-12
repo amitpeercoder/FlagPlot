@@ -1,6 +1,6 @@
 # 0036: Fatigue and rest
 
-Status: confirmed. The designer chose on Nov 11, 2026 that fatigue cuts the number of ready aircraft that fly and does nothing else, and that the player sets one threshold for a group and the staff rests it. Decisions 4, 5 and 9 are choices that answer did not state and are marked for review.
+Status: confirmed. The designer chose on Nov 11, 2026 that fatigue cuts the number of ready aircraft that fly and does nothing else, and that the player sets one threshold for a group and the staff rests it. Decisions 4, 5 and 9 are choices that answer did not state; the designer confirmed them on Nov 12, 2026.
 
 ## The gap
 
@@ -16,15 +16,15 @@ Stage 6b made flying cost aircraft. It still costs the people nothing: a group f
 
 ### Rising and falling
 
-4. **After the air combat of a daylight pulse, a group that flew gains fatigue** *(needs review)*: a figure for the sortie plus a figure for each 100 miles of it, the distance counted as for wear (decision 0035, 4). A fighter group that kept a patrol and sent escorts gains for the longer of the two, once.
-5. **A group that did not fly in a daylight pulse loses a rest figure** *(needs review)*, and not below 0. Nothing changes at night. So a group that flies one long sortie in the morning gets part of it back in the afternoon, and a group that flies both pulses gets nothing back.
+4. **After the air combat of a daylight pulse, a group that flew gains fatigue** *(confirmed by the designer, Nov 12, 2026)*: a figure for the sortie plus a figure for each 100 miles of it, the distance counted as for wear (decision 0035, 4). A fighter group that kept a patrol and sent escorts gains for the longer of the two, once.
+5. **A group that did not fly in a daylight pulse loses a rest figure** *(confirmed by the designer, Nov 12, 2026)*, and not below 0. Nothing changes at night. So a group that flies one long sortie in the morning gets part of it back in the afternoon, and a group that flies both pulses gets nothing back.
 6. **Fatigue gained in the morning cuts what flies in the afternoon.**
 
 ### Rest
 
 7. **A group can be given a rest threshold.** The order names the group and a fatigue.
 8. **At the start of each day the staff stands down every group whose fatigue is above its threshold,** and returns to flying every stood-down group whose fatigue is not. A group with no threshold is never stood down.
-9. **A stood-down group flies nothing that day** *(needs review)*: no search, strike, escort or patrol. It keeps its mission and takes it up again when it returns. It loses the rest figure in each daylight pulse, as any group that did not fly.
+9. **A stood-down group flies nothing that day** *(confirmed by the designer, Nov 12, 2026)*: no search, strike, escort or patrol. It keeps its mission and takes it up again when it returns. It loses the rest figure in each daylight pulse, as any group that did not fly.
 10. **One threshold, no second figure for coming back.** A group that rests goes back to flying on the first morning its fatigue is at or under the threshold. With the rest a day gives, that is a rhythm of days flown and days rested, and the threshold sets how hard the group is flown.
 
 ### On the ground

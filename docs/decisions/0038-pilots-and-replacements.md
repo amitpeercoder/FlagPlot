@@ -1,6 +1,6 @@
 # 0038: Pilots and replacements
 
-Status: confirmed. The designer chose on Nov 11, 2026 that scenario 6 counts pilots only, that replacements fill seats at the same quality, and that replacements arrive at a set rate. Decisions 4, 8 and 10 are choices that answer did not state and are marked for review.
+Status: confirmed. The designer chose on Nov 11, 2026 that scenario 6 counts pilots only, that replacements fill seats at the same quality, and that replacements arrive at a set rate. Decisions 4, 8 and 10 are choices that answer did not state; the designer confirmed them on Nov 12, 2026, decision 4 as decision 0059 left it.
 
 ## The gap
 
@@ -15,16 +15,16 @@ Base supply, which a replacement will draw on, is the next stage.
 1. **An air group may have a number of pilots.** One pilot stands for the crew of one aircraft, whatever its size. A scenario that gives a group no pilots does not track them for that group, and the group flies as before.
 2. **A group flies no more aircraft than it has pilots.** The aircraft it can fly are the smaller of its ready aircraft and its pilots, and fatigue and the flight deck then cut that number as they cut ready aircraft now.
 3. **A pilot is lost with an aircraft shot down away from its group's own hex.** That is every bomber, scout or escort brought down by fighters or guns over the enemy.
-4. **A pilot is saved when his aircraft is lost at home** *(needs review)*: a patrol aircraft shot down over its own hex, an aircraft written off after a sortie (decision 0035), and an aircraft destroyed on the ground. The group keeps the pilot and has one aircraft fewer.
+4. **A pilot is saved when his aircraft is lost at home** *(confirmed by the designer, Nov 12, 2026, for an aircraft written off after a sortie and one destroyed on the ground; a patrol pilot shot down over his own hex is recovered by chance since decision 0059, 6a)*: a patrol aircraft shot down over its own hex, an aircraft written off after a sortie (decision 0035), and an aircraft destroyed on the ground. The group keeps the pilot and has one aircraft fewer.
 5. **A group lost with its ship loses its pilots.**
 
 ### Replacements
 
 6. **A scenario may give a side replacements at a base:** for one aircraft type, a number of aircraft and a number of pilots a day.
 7. **They arrive at the start of each day, after repair.** Aircraft go to the groups at that base that fly the type, the lowest-numbered first, until each has as many aircraft, ready and damaged together, as it started the scenario with. Pilots go the same way, until each group has as many pilots as it started with. An aircraft arrives ready.
-8. **What a day's replacements cannot place is lost** *(needs review)*. Nothing is held over to the next day. A pool that fills up while a group is at strength is a second stock to keep and explain, and in four weeks of raids no group stays at strength.
+8. **What a day's replacements cannot place is lost** *(confirmed by the designer, Nov 12, 2026)*. Nothing is held over to the next day. A pool that fills up while a group is at strength is a second stock to keep and explain, and in four weeks of raids no group stays at strength.
 9. **Replacement pilots are as good as the ones they replace.** Experience is not modelled.
-10. **A group's strength is what it started with** *(needs review)*, unless the scenario gives another figure. It is the ceiling for replacements and nothing else.
+10. **A group's strength is what it started with** *(confirmed by the designer, Nov 12, 2026)*, unless the scenario gives another figure. It is the ceiling for replacements and nothing else.
 
 ## Why
 

@@ -1,6 +1,6 @@
 # 0035: Wear, repair and operational losses
 
-Status: confirmed by the architect, within the plan for scenario 6 the designer approved on Nov 11, 2026. Decisions 2, 9 and 12 are choices the plan did not state and are marked for review.
+Status: confirmed by the architect, within the plan for scenario 6 the designer approved on Nov 11, 2026. Decisions 2, 9 and 12 are choices the plan did not state. The designer confirmed 9 and 12 on Nov 12, 2026. Decision 2 stays marked for review until the air figures are tuned: in the baseline fighters are lost far too fast over Guadalcanal, and a hit that always shoots an aircraft down may be part of it.
 
 ## The gap
 
@@ -26,13 +26,13 @@ Stage 6b adds aircraft that come back unfit to fly, their repair, and aircraft l
 
 ### Repair
 
-9. **A base repairs a number of damaged aircraft each day,** given for the base, at the start of the day *(needs review)*. It repairs the lowest-numbered group's first. A repaired aircraft is ready. A carrier repairs a number given once for all carriers, for the groups aboard it.
+9. **A base repairs a number of damaged aircraft each day,** given for the base, at the start of the day *(confirmed by the designer, Nov 12, 2026)*. It repairs the lowest-numbered group's first. A repaired aircraft is ready. A carrier repairs a number given once for all carriers, for the groups aboard it.
 10. **Repair costs nothing yet.** The supply it uses comes with base supply consumption in stage 6d.
 
 ### On the ground
 
 11. **Damaged aircraft are on the ground,** whatever their group is doing, and a bomb hit on aircraft can destroy them (decision 0034, 8). A group's damaged aircraft are destroyed before its ready ones.
-12. **Aircraft worn in a pulse are not on the ground in that pulse** *(needs review)*: the hits of a raid are worked out on the state at the start of the air combat step, and wear comes after it.
+12. **Aircraft worn in a pulse are not on the ground in that pulse** *(confirmed by the designer, Nov 12, 2026)*: the hits of a raid are worked out on the state at the start of the air combat step, and wear comes after it.
 
 ## Why
 
