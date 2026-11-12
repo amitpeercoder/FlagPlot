@@ -132,31 +132,38 @@ fn a_force_that_can_move_has_no_propulsion_warning() {
 /// Item 7: an arrival due on day N is still listed in the briefing for day N,
 /// and says when it arrives; the group has its aircraft in the briefing for
 /// day N + 1.
+///
+/// The arrival is VMF-224, air group 13, due day 10 (19 aircraft, 19 pilots).
+/// It was Flight 300, air group 12, due day 4, until decision 11 of 0059 took
+/// that arrival out of the full slice: the rule produces those aircraft now,
+/// and on this seed no Allied deck is lost, so none arrive.
 #[test]
 fn an_arrival_due_on_a_day_is_listed_that_day_and_has_arrived_the_day_after() {
     let mut s = allied("07_full_slice.toml", 1942);
-    end_days(&mut s, 1);
+    // The briefing lists arrivals due on the coming day and the next two:
+    // day 8 is the first that lists day 10.
+    end_days(&mut s, 7);
     let text = text_of(&mut s);
     assert!(
-        text.contains("- Due day 4: air_group:12 \"Flight 300\", 11 aircraft, 11 pilots, arriving in the night pulse that begins that day, before its morning"),
+        text.contains("- Due day 10: air_group:13 \"VMF-224\", 19 aircraft, 19 pilots, arriving in the night pulse that begins that day, before its morning"),
         "{text}"
     );
     let ready = |text: &str| {
         text.lines()
-            .find(|l| l.starts_with("- air_group:12 "))
+            .find(|l| l.starts_with("- air_group:13 "))
             .expect("the group")
-            .contains(": 11 ready")
+            .contains(": 19 ready")
     };
     end_days(&mut s, 2);
-    let day4 = text_of(&mut s);
-    assert!(day4.contains("\n- Day: 4 of"), "{day4}");
-    assert!(day4.contains("- Due day 4: air_group:12"), "{day4}");
-    assert!(!ready(&day4), "not yet arrived in the briefing for day 4");
+    let day10 = text_of(&mut s);
+    assert!(day10.contains("\n- Day: 10 of"), "{day10}");
+    assert!(day10.contains("- Due day 10: air_group:13"), "{day10}");
+    assert!(!ready(&day10), "not yet arrived in the briefing for day 10");
     end_days(&mut s, 1);
-    let day5 = text_of(&mut s);
-    assert!(day5.contains("\n- Day: 5 of"), "{day5}");
-    assert!(ready(&day5), "arrived during day 4: {day5}");
-    assert!(!day5.contains("Due day 4"), "{day5}");
+    let day11 = text_of(&mut s);
+    assert!(day11.contains("\n- Day: 11 of"), "{day11}");
+    assert!(ready(&day11), "arrived during day 10: {day11}");
+    assert!(!day11.contains("Due day 10"), "{day11}");
 }
 
 /// Item 8: a group whose pilots are not counted says so in words.

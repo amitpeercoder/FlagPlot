@@ -430,9 +430,11 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // `AircraftLandedElsewhere` is the other: the full slice on its seed has
     // no deck lost beside another deck with room or within reach of a base (its
     // one deck lost, Ryujo's, has nothing near), so its aircraft in the air
-    // come down in the sea. Scenario 12c records it; stage 3 of 0059 is
-    // expected to bring it into the slice. `AircraftDitchedNoDeck` is in the
-    // log and needs no entry.
+    // come down in the sea. Stage 3 of 0059 took Flight 300's scripted
+    // arrival out of the slice, and on its own seed no Allied deck is lost
+    // (Enterprise's deck goes out in about a quarter of other seeds), so
+    // `AircraftLandedElsewhere` stays out of this log. Scenarios 12c and 12d
+    // record it. `AircraftDitchedNoDeck` is in the log and needs no entry.
     const NOT_IN_THE_FULL_SLICE: [&str; 2] = ["AircraftDitched", "AircraftLandedElsewhere"];
     let missing: Vec<&String> = all
         .difference(&seen)

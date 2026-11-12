@@ -142,6 +142,10 @@ name = "scenario_12c_no_deck"
 path = "scenario_12c_no_deck.rs"
 
 [[test]]
+name = "scenario_12d_flight_300"
+path = "scenario_12d_flight_300.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 
