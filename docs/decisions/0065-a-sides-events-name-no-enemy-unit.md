@@ -1,6 +1,6 @@
 # 0065: A side's events name no enemy ship, task force or air group
 
-Status: decision 1 is confirmed for task forces. The designer answered the question of decision 0061 on Nov 12, 2026: a side's events stop naming an enemy task force by its number. Carrying the same rule to enemy ships and air groups (decision 2) and leaving a fight without labels (decision 6) are the architect's and need review. It replaces item 8 of decision 0047 and amends its table of kinds.
+Status: confirmed. The designer answered the question of decision 0061 on Nov 12, 2026: a side's events stop naming an enemy task force by its number. The same day the designer confirmed carrying the rule to enemy ships and air groups (decision 2) and leaving a fight without labels (decision 6), which the architect had proposed. It replaces item 8 of decision 0047 and amends its table of kinds.
 
 ## The gap
 
