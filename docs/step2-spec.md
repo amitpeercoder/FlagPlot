@@ -135,6 +135,8 @@ A number for each side that tuning may move would explain any miss. So:
 
 Values set from training records before tuning either bring Cape Esperance out right or they do not. That is the test.
 
+It is a blunter test than was hoped. At Savo Island the record gives shells fired and hits for both sides, so how well each side shot can be measured directly: 81 to 117 hits for each thousand shells for the Japanese, 21 to 36 for the Allies. At Cape Esperance the shells fired are not on record, and research has looked twice. What is on record there is hits received by each side and ships sunk. Those depend on how long each side fired as well as how well. So the direct measure of experience exists only for the battle the figures are fitted on, and the check on the other battle is by its outcome. That makes conditions 1 and 2 carry more weight: if a unit's value could be moved, nothing would catch it.
+
 `docs/step2-opening-list.md` stays the working list of these. Each becomes a decision record with a hand calculation, as in step 1.
 
 ## Done means
@@ -155,5 +157,5 @@ On Nov 12, 2026, on the architect's recommendation in each case.
 4. **Scoring.** The result on the objectives scale is reported and not judged until the scale counts a ship that is out of the campaign. Tuning is judged on direct measures: ships sunk, hits, aircraft lost.
 5. **Order of the rule work.** Strike target priority as an order, and reach beyond the radius, are built before the air figures are tuned.
 6. **Ditching.** Aircraft lost for want of fuel or a deck join the rule work. It became one rule with reach beyond the radius, a friendly field and aircraft aloft when their deck is lost: decision 0059.
-7. **Experience.** It is in step 2 and is built before Savo Island is tuned, on the condition that its values come from facts and are fixed before tuning; only the strength of its effect is tuned.
+7. **Experience.** It is in step 2 and is built before Savo Island is tuned, on the condition that its values come from facts and are fixed before tuning; only the strength of its effect is tuned. The designer kept it in step 2 after research found that Cape Esperance can check it only by outcome, not by hits for each shell fired.
 8. **Speed made good.** Noted and not in step 2. None of the three battles turns on how fast a ship in transit travels. It is taken up when convoys and supply are compared with the record; the simplest answer may be a cruising speed for routine movement below a ship's stated speed, not a new mechanism.
