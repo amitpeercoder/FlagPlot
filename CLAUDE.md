@@ -69,6 +69,7 @@ Each of these fails with no error and no failing test if it is missed. The page 
 
 - The hand calculation is written by the architect before any code is delegated, in the test file's doc comment. Nobody else changes an expected number, and never to make a test pass: a mismatch goes back to the architect.
 - When figures are tuned (step 2): one set of figures serves every battle and none is set for one scenario, a figure moves only toward something a source supports, a unit's experience value is never changed to improve a report (only the strength of its effect is tuned), and the hand-calculation tests run on the frozen step 1 figures. `docs/step2-spec.md` has the rules of tuning.
+- No test and no build step reads a Markdown file: CI skips its checks when only Markdown changed, so such a test would not run when its input does. If one must, exempt its input in `.github/scripts/needs-checks.sh` first.
 - A subagent's summary is a lead, not a fact. Check any claim a design choice will rest on against the source.
 
 **Git**
@@ -96,7 +97,7 @@ cargo run -p oob-derive -- data/derivation/savo_island.toml --check
 cargo run -p oob-derive -- data/derivation/rabaul_guadalcanal.toml --check
 ```
 
-The first three must pass before a commit; CI runs them, then runs scenario 1, exports every scenario and runs the viewer's check. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build. `docs/commands.md` says what each command does and the options it takes.
+The first three must pass before a commit; CI runs them, then runs scenario 1, exports every scenario and runs the viewer's check, unless only Markdown files changed, when it skips them all. So success on a documents-only pull request means nothing was checked. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build. `docs/commands.md` says what each command does and the options it takes.
 
 ## Who decides what
 
@@ -113,7 +114,7 @@ Kept short on purpose. The history of how each stage was built is in the decisio
 
 - **Step 1 is complete** against the spec as amended by decision 0052, which lists what it leaves out (ground combat, land units, shore bombardment, ship repair, base damage, crew and pilot quality, among others). All nine scenarios pass; scenario 9's recorded games are under `crates/sim-cli/tests/recorded_games/`.
 - **The rules as they stand are in `docs/rules/`.** `docs/rules/differences.md` lists where a decision record and the code differ, with a ruling on each; nine small code fixes it calls for are not made yet.
-- **Step 2 is under way** to `docs/step2-spec.md`. Another session owns the spec and the measures files (`data/validation/`); the build is planned from `docs/step2-opening-list.md`. Before any figure is tuned: decision 0058 (ships charged straight-line miles) and the scenarios re-derived for it, the step 1 figures frozen for the hand-calculation tests, and three rules (strike target priority as an order, reach beyond the radius with ditching, experience), each with its own decision record.
+- **Step 2 is under way** to `docs/step2-spec.md`. Another session owns the spec and the measures files (`data/validation/`); the build is planned from `docs/step2-opening-list.md`. Ships are charged straight-line miles (decision 0058) and the scenarios are re-derived for it. Before any figure is tuned: the step 1 figures frozen for the hand-calculation tests, and three rules (strike target priority as an order, reach beyond the radius with ditching, experience), each with its own decision record.
 - **Every combat, wear, fatigue, supply and claim figure, and every point value, is a placeholder** until step 2 sets it from the record. The loss spreads of Savo Island and of the four weeks over Guadalcanal are known not to match history yet (decisions 0024, 0042).
 - **The order-of-battle facts** (`data/oob`) cover Savo Island, the Eastern Solomons, the air campaign of August and September 1942 and strike launch ranges; research on Cape Esperance, ditching and crew recovery, and training is arriving in its own pull requests. Rows are unsettled until a derivation reads them (a measure takes a range across a dispute and settles nothing); `data/oob/README.md` says how firm they are and what is missing.
 

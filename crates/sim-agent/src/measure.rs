@@ -431,7 +431,8 @@ fn answer(ctx: &Ctx<'_>, question: &Question) -> Option<MeasureAnswer> {
                 route_found: path.is_some(),
                 hexes: path.iter().flatten().map(|hex| ctx.place(*hex)).collect(),
                 steps,
-                distance_nm: steps.map(|n| n * 40),
+                // What the force is charged for the way (decision 0058).
+                distance_nm: ctx.view.sea_charged_nm(a, b),
             }))
         }
         Question::Passage {

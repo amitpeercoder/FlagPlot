@@ -306,8 +306,9 @@ fn run_path(flags: &Flags) -> Result<(), String> {
         println!("  {i:>3}  ({},{})  {}", h.q, h.r, kind_name(&map, *h));
     }
     println!(
-        "path length: {steps} hexes = {} nm",
-        i64::from(steps) * HEX_NM
+        "path length: {steps} hexes = {} nm charged to a ship (decision 0058)",
+        map.sea_charged_nm_in(&distances, from, to)
+            .expect("the path was found")
     );
     println!(
         "hex count with no land in the way: {straight} hexes = {} nm ({} hexes of detour)",

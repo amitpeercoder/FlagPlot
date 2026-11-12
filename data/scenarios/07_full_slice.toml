@@ -122,13 +122,13 @@ q = 9
 r = -19
 mission = "carrier"
 
-# The Ryujo detachment.
+# The Ryujo detachment, in (7,-19) as in scenario 5 (decision 0058).
 
 [[task_force]]
 id = 4
 name = "Ryujo detachment"
 side = "japanese"
-q = 10
+q = 7
 r = -19
 mission = "carrier"
 

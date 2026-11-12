@@ -48,16 +48,32 @@
 //!
 //! Both American forces lie stopped in (7,-5) all day.
 //!
+//! Ships are charged the straight-line miles of their course where the way
+//! is clear (decision 0058); decision 0031, amended by it, gives the starts.
+//!
 //! The carrier striking force starts in (9,-19) and steams for (8,-11), 8
-//! hexes and 320 nm, at 17 knots. The Ryujo detachment starts in (10,-19)
-//! and steams for (7,-10), 9 hexes and 360 nm, at 20 knots. A force's
-//! position is the nearest hex centre.
+//! hexes, at 17 knots. The way is clear, so it is charged the air distance:
+//! dq -1, dr 8, 1 + 64 - 8 = 57, 40 x root 57 = 301.99, 302 nm. The first
+//! step, to (8,-18), is charged 302 - 280 = 22 (from (8,-18) the target is 7
+//! hexes down an axis: 280), and each of the seven after it 40: 22 + 7 x 40 =
+//! 302. It enters each hex after half the step's charge: (8,-18) after 11
+//! nm, then (8,-17) after 22 + 20 = 42, (8,-16) 82, (8,-15) 122, (8,-14) 162,
+//! (8,-13) 202, (8,-12) 242 and (8,-11) after 282 nm.
+//!
+//! The Ryujo detachment starts in (7,-19) and steams for (7,-10), 9 hexes down
+//! the q = 7 column, an axis: 9 x 40 = 360 nm, at 20 knots, every step 40. It
+//! enters (7,-18) after 20 nm and each hex after it 40 nm later, (7,-10)
+//! after 340 nm. A force's position is the nearest hex centre.
 //!
 //! | At | Striking force | Steamed | Ryujo detachment | Steamed |
 //! | -- | -------------- | ------- | ---------------- | ------- |
-//! | 06:00 | (8,-14), 4 nm past its centre | 204 nm | (7,-13), at its centre | 240 nm |
-//! | 12:00 | (8,-11), 14 nm short of its centre | 306 nm | (7,-10), arrived at 12:00, hour 18 | 360 nm |
-//! | 18:00 | (8,-11), arrived at hour 18.823529 | 320 nm | (7,-10) | 360 nm |
+//! | 06:00 | (8,-13), 22 nm past the centre of (8,-14) on a step of 40 | 204 nm | (7,-13), at its centre | 240 nm |
+//! | 12:00 | (8,-11), arrived at hour 17.764705 (11:46) | 302 nm | (7,-10), arrived at 12:00, hour 18 | 360 nm |
+//! | 18:00 | (8,-11) | 302 nm | (7,-10) | 360 nm |
+//!
+//! The striking force arrives 302 / 17 = 17.764705 hours after the start:
+//! 12 hours for the night's 204 nm and 98 / 17 = 5.764705 into the morning, 14
+//! minutes before the noon the fix is for. It steams 98 nm in the morning.
 //!
 //! Air distances, in nm: the straight line between hex centres, 40 times
 //! the square root of (dq x dq + dr x dr + dq x dr), to the nearest mile
@@ -66,7 +82,7 @@
 //!
 //! | At | American carriers to striking force | American carriers to Ryujo | Henderson Field to Ryujo |
 //! | -- | ----------------------------------- | -------------------------- | ------------------------ |
-//! | 06:00 | (1,-9): 40 x root 73 = 342 (by hexes 360) | (0,-8): 320 (320) | (5,-9): 40 x root 61 = 312 (360) |
+//! | 06:00 | (1,-8): 40 x root 57 = 302 (by hexes 320) | (0,-8): 320 (320) | (5,-9): 40 x root 61 = 312 (360) |
 //! | 12:00 | (1,-6): 40 x root 31 = 223 (240) | (0,-5): 200 (200) | (5,-6): 40 x root 31 = 223 (240) |
 //!
 //! (Before decision 0040 every air distance here was the hex count times
@@ -75,8 +91,9 @@
 //! ## Fuel
 //!
 //! Shokaku cruises at 18 knots, so at 17 she burns at her cruise rate, 4100
-//! t over 9700 nm: 86.226804 t in the night, 43.113402 t in the morning and
-//! 5.917525 t for the last 14 nm, 135.257731 t in all. Ryujo cruises at 14
+//! t over 9700 nm: 86.226804 t in the night (204 nm) and 41.42268 t in the
+//! morning (98 nm), nothing in the afternoon, 127.649484 t in all, and she has
+//! 3972.350516 t left. Ryujo cruises at 14
 //! knots, so at 20 her burn is multiplied by (20 / 14) squared: 1.428571
 //! squared is 2.040815. She burns 240 x 2490 / 10000 = 59.76, times that,
 //! 121.959104 t in the night, and 60.979552 t in the morning, and has
@@ -2196,12 +2213,12 @@ fn the_forces_and_air_groups_are_as_the_first_two_tables_say() {
         );
     }
     // Both American forces start in (7,-5), the Japanese in (9,-19) and
-    // (10,-19); Henderson Field is base 1, in (2,-4).
+    // (7,-19); Henderson Field is base 1, in (2,-4).
     for (id, hex) in [
         (1, Hex::new(7, -5)),
         (2, Hex::new(7, -5)),
         (3, Hex::new(9, -19)),
-        (4, Hex::new(10, -19)),
+        (4, Hex::new(7, -19)),
     ] {
         assert_eq!(truth.task_forces[&TaskForceId::new(id)].position(), hex);
     }
@@ -2401,22 +2418,30 @@ fn steamed(events: &[&Event], force: u32) -> Option<(Hex, Hex, Fixed, Fixed)> {
 #[test]
 fn positions_distances_and_arrivals_are_as_the_tables_say() {
     let start3 = Hex::new(9, -19);
-    let start4 = Hex::new(10, -19);
+    let start4 = Hex::new(7, -19);
     let dest3 = Hex::new(8, -11);
     let dest4 = Hex::new(7, -10);
-    // Eight hexes and 320 nm, nine hexes and 360 nm.
+    // Eight hexes, charged the straight line, 302 nm (22 and seven 40s);
+    // nine hexes down an axis, 360 nm (decision 0058).
     assert_eq!(start3.distance(dest3), 8);
-    assert_eq!(nm(start3.distance(dest3)), 320);
+    assert_eq!(air(start3, dest3), 302);
+    assert_eq!(
+        air(start3, dest3) - air(Hex::new(8, -18), dest3),
+        22,
+        "the first step"
+    );
+    assert_eq!(air(Hex::new(8, -18), dest3), 7 * 40);
     assert_eq!(start4.distance(dest4), 9);
+    assert_eq!(air(start4, dest4), 360);
     assert_eq!(nm(start4.distance(dest4)), 360);
     let american = Hex::new(7, -5);
-    // 06:00: (8,-14) and (7,-13).
-    let (a3, a4) = (Hex::new(8, -14), Hex::new(7, -13));
-    // Air distance (hex count times 40 in brackets): 342 (360), 320 (320),
+    // 06:00: (8,-13) and (7,-13).
+    let (a3, a4) = (Hex::new(8, -13), Hex::new(7, -13));
+    // Air distance (hex count times 40 in brackets): 302 (320), 320 (320),
     // 312 (360).
-    assert_eq!(air(american, a3), 342);
-    assert_eq!(nm(american.distance(a3)), 360);
-    assert_eq!(american.distance(a3), 9);
+    assert_eq!(air(american, a3), 302);
+    assert_eq!(nm(american.distance(a3)), 320);
+    assert_eq!(american.distance(a3), 8);
     assert_eq!(air(american, a4), 320);
     assert_eq!(nm(american.distance(a4)), 320);
     assert_eq!(american.distance(a4), 8);
@@ -2440,19 +2465,17 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
         let morning = morning(run);
         let afternoon = afternoon(run);
         let seed = run.seed;
-        // The striking force: 204 nm in the night to (8,-14), 4 nm past its
-        // centre, then 102 nm to (8,-11): 306 nm in all, 14 nm short of the
-        // centre, then the last 14 nm: 320 nm, at 17 knots.
+        // The striking force: 204 nm in the night to (8,-13), 22 nm past the
+        // centre of (8,-14) (at 182 nm) on a step of 40, then 98 nm to
+        // (8,-11): 302 nm in all, at 17 knots, and nothing in the afternoon.
         let n3 = steamed(&night, 3).expect("steamed");
         let m3 = steamed(&morning, 3).expect("steamed");
-        let f3 = steamed(&afternoon, 3).expect("steamed");
         assert_eq!(n3, (start3, a3, Fixed::from_int(204), Fixed::from_int(17)));
-        assert_eq!(m3, (a3, dest3, Fixed::from_int(102), Fixed::from_int(17)));
-        assert_eq!(f3, (dest3, dest3, Fixed::from_int(14), Fixed::from_int(17)));
-        assert_eq!(nm(start3.distance(a3)) + 4, 204, "4 nm past its centre");
-        assert_eq!(204 + 102, 306, "seed {seed}");
-        assert_eq!(nm(start3.distance(dest3)) - 306, 14, "14 nm short");
-        assert_eq!(204 + 102 + 14, 320);
+        assert_eq!(m3, (a3, dest3, Fixed::from_int(98), Fixed::from_int(17)));
+        assert!(steamed(&afternoon, 3).is_none(), "seed {seed}");
+        assert_eq!(204 + 98, 302, "seed {seed}");
+        assert_eq!(22 + 4 * 40, 182, "the centre of (8,-14)");
+        assert_eq!(204 - 182, 22, "22 nm past it");
         // The Ryujo detachment: 240 nm to (7,-13), at its centre; 120 nm to
         // (7,-10), 360 nm; at 20 knots; nothing in the afternoon.
         let n4 = steamed(&night, 4).expect("steamed");
@@ -2462,8 +2485,8 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
         assert_eq!(nm(start4.distance(a4)), 240, "at its centre");
         assert_eq!(240 + 120, 360);
         assert!(steamed(&afternoon, 4).is_none(), "seed {seed}");
-        // Arrivals: the Ryujo detachment at 12:00, hour 18; the striking
-        // force at hour 18.823529.
+        // Arrivals: the striking force at hour 17.764705 (12 + 98 / 17), the
+        // Ryujo detachment at 12:00, hour 18, both in the morning pulse.
         let arrivals: Vec<(TaskForceId, Hex, Fixed, Pulse)> = run
             .events
             .iter()
@@ -2480,27 +2503,27 @@ fn positions_distances_and_arrivals_are_as_the_tables_say() {
             arrivals,
             vec![
                 (
+                    TaskForceId::new(3),
+                    dest3,
+                    millionths(17_764_705),
+                    Pulse::Morning
+                ),
+                (
                     TaskForceId::new(4),
                     dest4,
                     Fixed::from_int(18),
                     Pulse::Morning
                 ),
-                (
-                    TaskForceId::new(3),
-                    dest3,
-                    millionths(18_823_529),
-                    Pulse::Afternoon
-                ),
             ],
             "seed {seed}"
         );
         assert_eq!(
-            Fixed::from_int(18) + Fixed::from_int(14) / Fixed::from_int(17),
-            millionths(18_823_529)
+            Fixed::from_int(12) + Fixed::from_int(98) / Fixed::from_int(17),
+            millionths(17_764_705)
         );
         assert_eq!(time::pulse_start(1, Pulse::Afternoon), Fixed::from_int(18));
         // The searches fly from where the forces are: (7,-5) all day; the
-        // floatplanes from (8,-14) and (7,-13) at 06:00 and from (8,-11) and
+        // floatplanes from (8,-13) and (7,-13) at 06:00 and from (8,-11) and
         // (7,-10) at 12:00.
         for (events, expected) in [
             (&morning, [(3, american), (17, a3), (20, a4)]),
@@ -2542,11 +2565,10 @@ fn the_fuel_figures_are_exact() {
     assert_eq!(shokaku.endurance, Fixed::from_int(9700));
     let burn = |distance: i64| shokaku.fuel * distance / shokaku.endurance;
     assert_eq!(burn(204), millionths(86_226_804));
-    assert_eq!(burn(102), millionths(43_113_402));
-    assert_eq!(burn(14), millionths(5_917_525));
+    assert_eq!(burn(98), millionths(41_422_680));
     assert_eq!(
-        millionths(86_226_804) + millionths(43_113_402) + millionths(5_917_525),
-        millionths(135_257_731)
+        millionths(86_226_804) + millionths(41_422_680),
+        millionths(127_649_484)
     );
     // Ryujo cruises at 14 knots, so at 20 her burn is multiplied by (20 /
     // 14) squared: 1.428571 squared is 2.040815. She burns 240 x 2490 /
@@ -2606,7 +2628,7 @@ fn the_fuel_figures_are_exact() {
                 assert!(!burns.contains_key(id), "seed {seed}");
             }
         }
-        // Shokaku: night, morning, afternoon; Ryujo: night, morning.
+        // Shokaku: night, morning; Ryujo: night, morning.
         assert_eq!(
             burns[&19],
             vec![
@@ -2617,18 +2639,13 @@ fn the_fuel_figures_are_exact() {
                 ),
                 (
                     Pulse::Morning,
-                    millionths(43_113_402),
-                    millionths(4_100_000_000 - 86_226_804 - 43_113_402)
-                ),
-                (
-                    Pulse::Afternoon,
-                    millionths(5_917_525),
-                    millionths(4_100_000_000 - 135_257_731)
+                    millionths(41_422_680),
+                    millionths(4_100_000_000 - 127_649_484)
                 ),
             ],
             "seed {seed}"
         );
-        assert_eq!(run.ships[&19].fuel, millionths(3_964_742_269));
+        assert_eq!(run.ships[&19].fuel, millionths(3_972_350_516));
         assert_eq!(
             burns[&33],
             vec![
@@ -2657,16 +2674,16 @@ fn the_fuel_figures_are_exact() {
 fn the_morning_flies_every_search_and_finds_nothing_and_does_nothing() {
     let cx = ctx();
     // No force is within reach of any search: the searches are 200 nm and
-    // 253 nm and every enemy is 320 nm or more away.
+    // 253 nm and every enemy is 302 nm or more away.
     let american = Hex::new(7, -5);
-    let (a3, a4) = (Hex::new(8, -14), Hex::new(7, -13));
+    let (a3, a4) = (Hex::new(8, -13), Hex::new(7, -13));
     for (from, range, enemies) in [
         (american, 200, [a3, a4]),
         (a3, 253, [american, american]),
         (a4, 253, [american, american]),
     ] {
         for enemy in enemies {
-            assert!(air(from, enemy) >= 320);
+            assert!(air(from, enemy) >= 302);
             assert!(air(from, enemy) > range);
         }
     }

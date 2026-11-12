@@ -5,7 +5,9 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | Word | Means | Does not mean |
 | --- | --- | --- |
 | **Air distance** | How far an aircraft flies between two hexes: the straight line between their centres, in whole miles (decision 0040). Every range, radius and sortie distance, and every tool that measures one, uses it | The number of hexes between them times 40, which is longer off the grid's axes |
-| **Sea distance** | How far a ship steams: the hexes on its path times 40 miles (decision 0017) | The air distance |
+| **Sea distance** | How far a ship is charged for steaming between two hexes by the map's shortest sea path: the sum of the charges of its steps. Where the way is clear it is the air distance; where land forces a detour the steps are charged 40 miles until the way is clear (decision 0058) | The hex count of the path times 40 miles |
+| **Step charge** | What the step from one hex centre to the next is charged, in miles, 1 to 40: the miles it brings the force closer to its waypoint in a straight line where the way is clear, 40 where it is not (decision 0058) | |
+| **Clear way** | From a hex, a sea path to the waypoint with as many steps as the hex distance: no land forces a detour (decision 0058) | |
 | **Readiness** | What a force is ordered to be: normal or battle (decision 0021) | Whether it is alert at this moment |
 | **Alert** | The state of a force that will see and shoot at full effect. A force at battle readiness is always alert | An order |
 | **Alerted** | How a force at normal readiness came to be alert: by a fresh contact nearby, by being fired on, or by an alarm | |
@@ -52,7 +54,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Closed side** | A side of a hex a ship cannot cross. A mark on either hex closes it | |
 | **Route** | The list of waypoints a force steams to, with the index of the next one | The path between them, which is never stored |
 | **Waypoint** | A hex a route names. A force reaches it when it reaches the hex's centre | |
-| **Leg** | The 40 miles between the centres of two neighbouring hexes. Once begun it is always finished | |
+| **Leg** | The step between the centres of two neighbouring hexes, charged `leg_nm` miles (1 to 40), set when it begins. Once begun it is always finished at that charge | |
 | **Segment** | A force's steaming from the start of a pulse or its last fight to its next fight or the end of the pulse. It is recorded as one steamed event | A leg |
 | **Budget** | The miles a force may steam in a pulse: the lower of its time limit and its fuel limit | |
 | **Fuel limit** | How far the fuel of a force's least-fuelled ship lasts at the force's speed | The ship's fuel capacity |

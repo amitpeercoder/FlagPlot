@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "eb6b317f73956e86"
+      "hash": "e7074212eaef01b1"
     }
   ],
   "orders": [
@@ -439,7 +439,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "cf22af68dfe1572d"
+    "hash": "b775cd9c57b69b43"
   },
   "seats": {
     "allied": "player",
