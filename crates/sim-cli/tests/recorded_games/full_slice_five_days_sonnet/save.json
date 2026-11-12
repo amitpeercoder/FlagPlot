@@ -1,0 +1,881 @@
+{
+  "data_files": [
+    {
+      "file": "data/scenarios/../map/south_pacific.csv",
+      "hash": "ba6cb3aea5cc45f5"
+    },
+    {
+      "file": "data/scenarios/../reference/ship_classes_eastern_solomons.csv",
+      "hash": "41f5cac8b29d0036"
+    },
+    {
+      "file": "data/scenarios/../reference/ship_classes.csv",
+      "hash": "9d8ba7a2e5948b4b"
+    },
+    {
+      "file": "data/scenarios/../reference/port_sizes.csv",
+      "hash": "da12e2b751976274"
+    },
+    {
+      "file": "data/scenarios/../reference/aircraft_types_eastern_solomons.csv",
+      "hash": "487d803eb95dba01"
+    },
+    {
+      "file": "data/scenarios/../reference/aircraft_types_rabaul_guadalcanal.csv",
+      "hash": "c2d44e8ffaa8fa3d"
+    },
+    {
+      "file": "data/scenarios/../reference/search.toml",
+      "hash": "9d9cd2961a30d99a"
+    },
+    {
+      "file": "data/scenarios/../reference/surface_combat.toml",
+      "hash": "485cfd1b8ba0d4f2"
+    },
+    {
+      "file": "data/scenarios/../reference/air_combat.toml",
+      "hash": "d3e1770d7d7d1f6b"
+    },
+    {
+      "file": "data/scenarios/../reference/air_upkeep.toml",
+      "hash": "b2db73fbc8e30d0e"
+    },
+    {
+      "file": "data/scenarios/../reference/fatigue.toml",
+      "hash": "32b26b3bef8a1089"
+    },
+    {
+      "file": "data/scenarios/../reference/air_supply.toml",
+      "hash": "4269ae7b442c3edc"
+    }
+  ],
+  "format": "flagplot-saved-game",
+  "hashes": [
+    {
+      "day": 1,
+      "hash": "4b109ddbbb0ae5d5"
+    },
+    {
+      "day": 2,
+      "hash": "76d55b4caf399185"
+    },
+    {
+      "day": 3,
+      "hash": "2f26ed09bd4e6404"
+    },
+    {
+      "day": 4,
+      "hash": "90e4ecaf02babf88"
+    },
+    {
+      "day": 5,
+      "hash": "67dfca877c4422b1"
+    }
+  ],
+  "orders": [
+    {
+      "day": 1,
+      "order": {
+        "kind": "load"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:103"
+    },
+    {
+      "day": 1,
+      "order": {
+        "from_deg": 270,
+        "kind": "set_search_arc",
+        "range_nm": "200",
+        "to_deg": 90
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:107"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:107"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:101"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:105"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:10"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:102"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:104"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:106"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:108"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:11"
+    },
+    {
+      "day": 1,
+      "order": {
+        "from_deg": 0,
+        "kind": "set_search_arc",
+        "range_nm": "200",
+        "to_deg": 0
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:103"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "base_strike",
+        "target_base": 1
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:1"
+    },
+    {
+      "day": 1,
+      "order": {
+        "fatigue": "45",
+        "kind": "set_rest_threshold"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:1"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:2"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_patrol_share",
+        "share": "0"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:2"
+    },
+    {
+      "day": 1,
+      "order": {
+        "fatigue": "45",
+        "kind": "set_rest_threshold"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:2"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:3"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_patrol_share",
+        "share": "0"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:3"
+    },
+    {
+      "day": 1,
+      "order": {
+        "fatigue": "45",
+        "kind": "set_rest_threshold"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:3"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            2,
+            -4
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_speed",
+        "speed": "full"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "unload"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:103"
+    },
+    {
+      "day": 2,
+      "order": {
+        "from_deg": 270,
+        "kind": "set_search_arc",
+        "range_nm": "200",
+        "to_deg": 60
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:107"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "unload"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:107"
+    },
+    {
+      "day": 4,
+      "order": {
+        "from_deg": 270,
+        "kind": "set_search_arc",
+        "range_nm": "200",
+        "to_deg": 60
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:103"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:103"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            8,
+            -11
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:3"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_speed",
+        "knots": "17"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:3"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            -10
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:4"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_speed",
+        "knots": "20"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:4"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:111"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_patrol_share",
+        "share": "0.8"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:111"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:114"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_patrol_share",
+        "share": "0.8"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:114"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "combat_air_patrol"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:118"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_patrol_share",
+        "share": "0.3"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:118"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:117"
+    },
+    {
+      "day": 4,
+      "order": {
+        "from_deg": 110,
+        "kind": "set_search_arc",
+        "range_nm": "253",
+        "to_deg": 200
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:117"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:120"
+    },
+    {
+      "day": 4,
+      "order": {
+        "from_deg": 110,
+        "kind": "set_search_arc",
+        "range_nm": "253",
+        "to_deg": 200
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:120"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:112"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:113"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:115"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:116"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:119"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_readiness",
+        "readiness": "battle"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:6"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            -7
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:2"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_readiness",
+        "readiness": "battle"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:2"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_readiness",
+        "readiness": "battle"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:1"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            6
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_speed",
+        "speed": "full"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 5,
+      "order": {
+        "cargo": "fuel",
+        "kind": "load"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            -8,
+            0
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:6"
+    },
+    {
+      "day": 5,
+      "order": {
+        "kind": "set_speed",
+        "speed": "full"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "task_force:5"
+    }
+  ],
+  "scenario": {
+    "file": "data/scenarios/07_full_slice.toml",
+    "hash": "a164134a4af83599"
+  },
+  "seats": {
+    "allied": "player",
+    "japanese": "script"
+  },
+  "seed": 1942,
+  "version": 1
+}

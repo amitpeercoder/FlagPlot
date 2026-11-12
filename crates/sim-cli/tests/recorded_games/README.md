@@ -25,3 +25,8 @@ transcript and save equal these files byte for byte, and that `replay` of
 is enough. A change to the engine that alters a result makes the test fail,
 rightly; the game is then played again or the record marked as of an older
 engine. The model's play is not judged here, only that it repeats.
+
+## The games here
+
+Played on Nov 12, 2026 (decision 0051, "The games"): `eastern_solomons_sonnet`, `eastern_solomons_haiku` and `full_slice_five_days_sonnet`. Each has the player's `account.md`. The requests of an earlier round, played before objectives and claims existed, are in `docs/research/scenario-9-first-round/` and are not replayed.
+
