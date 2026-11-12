@@ -153,7 +153,13 @@
 //!
 //! - Over seeds 1 to 1000 and both pulses, a group is never launched at a
 //!   contact whose estimated kind, when it was launched, is not on its
-//!   list. Group 3 is never launched.
+//!   list. Group 3 is never launched in the morning, and in the afternoon
+//!   only at a contact reported as a battleship. (Corrected by the
+//!   architect on Nov 12, 2026. First written as "Group 3 is never
+//!   launched", which forgot that a strike's report of the cruiser force it
+//!   attacked can name a battleship, by the confusion table of
+//!   `search.toml`. The developer measured 111 such launches in 1,000 runs
+//!   and reported the mismatch. No number of the morning changed.)
 //! - A group attacks a ship whose kind is off its list only when no ship
 //!   afloat in the force attacked is of a kind on its list.
 //! - Every group of a raid attacks the same force.

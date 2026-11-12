@@ -70,7 +70,8 @@
 //! rounded down, on patrol and the rest do not fly. Group 3's patrol is
 //! fly(R3, f3). Group 1 does not fly. Then fatigue, as in the morning.
 //!
-//! (Added with decision 0063, which lets a base strike launch in the first
+//! (Added with decision 0063, and accepted by the architect on Nov 12,
+//! 2026: the decision lets a base strike launch in the first
 //! daylight pulse of the day in which it can, once a day. The paragraph above
 //! holds for every day on which the bombers launch in the morning, which is
 //! every day of the tables below. In a run in which they can fly no aircraft
