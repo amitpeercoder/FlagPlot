@@ -158,13 +158,13 @@ reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as
 
 [[measure]]
 id = "minutes_of_action"
-counts = "Minutes of surface fighting in the run: the rounds fought in each fight, summed, times the minutes a round stands for"
+counts = "Minutes of surface fighting in the run: the rounds each fight ran, summed, times the minutes a round stands for"
 record_low = 20
 record_high = 30
-judged = false
+judged = true
 take = "minutes_of_action"
 rows = [14, 15, 16]
-reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). Not judged yet: the batch file gives the round in which a force broke off, which is not the length of a fight that ends another way. It is judged when the batch file gives the rounds each fight ran. It is the measure for when a force breaks off, the last mechanism in the order of tuning."
+reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). It is the measure for when a force breaks off, the last mechanism in the order of tuning. Judged since the batch file gives the rounds each fight ran, whatever ended it (decision 0062). A round in which a force slips away and no shot is fired is counted. A round is five minutes on the frozen figures, so the measure moves in fives."
 
 # --------------------------------------------------------------- claims
 
