@@ -1,0 +1,100 @@
+# Land units: formations, echelons and task groupings the sources name, and each side's whole force at a place. Identity only; see land_unit_facts.csv.
+# kind: formation, echelon, task-group, garrison, construction, patrol, or forces-at-place (everything a side had ashore there). parent is given only where a unit's own name or a fact row states it.
+# Format and rules: docs/research/oob/database-design.md and docs/research/oob/land-forces.md. oob-check does not yet know this file.
+id,key,name,nation,service,kind,parent
+1000,jp-11th-construction-unit,11th Naval Construction Unit,jp,ijn,construction,
+1001,jp-124th-infantry,124th Infantry Regiment,jp,ija,formation,
+1002,jp-13th-construction-unit,13th Naval Construction Unit,jp,ijn,construction,
+1003,jp-17th-army,Seventeenth Army,jp,ija,formation,
+1004,jp-1st-battalion-124th-infantry,"1st (Ishitari) Battalion, 124th Infantry",jp,ija,formation,jp-124th-infantry
+1005,jp-228th-infantry,228th Infantry Regiment,jp,ija,formation,
+1006,jp-230th-infantry,230th Infantry Regiment,jp,ija,formation,
+1007,jp-2d-battalion-4th-infantry,"2d Battalion, 4th Infantry",jp,ija,formation,jp-4th-infantry
+1008,jp-2d-division,2d Division,jp,ija,formation,
+1009,jp-2d-division-left-column,"Left column of the inland attack (Nasu, with 29th Infantry)",jp,ija,task-group,jp-2d-division
+1010,jp-2d-division-right-column,Right column of the inland attack (Maruyama),jp,ija,task-group,jp-2d-division
+1011,jp-38th-division,38th Division,jp,ija,formation,
+1012,jp-3d-kure-snlf,3d Kure Special Naval Landing Force,jp,ijn,formation,
+1013,jp-3d-kure-snlf-gavutu-group,3d Kure SNLF group on Gavutu,jp,ijn,task-group,jp-3d-kure-snlf
+1014,jp-3d-kure-snlf-tulagi-group,3d Kure SNLF group on Tulagi,jp,ijn,task-group,jp-3d-kure-snlf
+1015,jp-4th-infantry,4th Infantry Regiment,jp,ija,formation,
+1016,jp-aoba-detachment,Aoba Detachment,jp,ija,formation,jp-17th-army
+1017,jp-construction-unit-tulagi,"Japanese construction unit, Tulagi and Gavutu",jp,ijn,construction,
+1018,jp-construction-units-guadalcanal,Japanese construction (labor) units on Guadalcanal,jp,ijn,construction,
+1019,jp-forces-guadalcanal,Japanese forces on Guadalcanal,jp,mixed,forces-at-place,
+1020,jp-forces-guadalcanal-tulagi,"Japanese forces, Guadalcanal and Tulagi together",jp,mixed,forces-at-place,
+1021,jp-forces-tulagi,"Japanese forces on Tulagi, Gavutu and Tanambogo",jp,mixed,forces-at-place,
+1022,jp-ichiki-detachment,Ichiki Detachment,jp,ija,formation,
+1023,jp-ichiki-detachment-first-echelon,"Ichiki Detachment, first echelon (advance unit)",jp,ija,echelon,jp-ichiki-detachment
+1024,jp-ichiki-detachment-second-echelon,"Ichiki Detachment, second echelon (rear echelon)",jp,ija,echelon,jp-ichiki-detachment
+1025,jp-kawaguchi-detachment,Kawaguchi Detachment (35th Infantry Brigade),jp,ija,formation,
+1026,jp-naval-air-personnel-tulagi,"Japanese naval air personnel, Tulagi and Gavutu",jp,ijn,garrison,
+1027,jp-naval-garrison-guadalcanal,"Japanese naval garrison (guard unit and naval landing troops), Guadalcanal",jp,ijn,garrison,
+1028,jp-naval-garrison-tulagi,"Japanese naval garrison (guard unit), Tulagi and Gavutu",jp,ijn,garrison,
+1029,jp-oka-group,Oka group (124th Infantry headquarters and 2d Battalion),jp,ija,task-group,jp-124th-infantry
+1030,jp-pioneer-battalion-guadalcanal,Pioneer Battalion (Guadalcanal),jp,ija,formation,
+1031,jp-sasebo-5th-snlf,Sasebo 5th Special Naval Landing Force,jp,ijn,formation,
+1032,jp-sumiyoshi-force,Sumiyoshi's coastal force,jp,ija,task-group,
+1033,jp-yokosuka-5th-snlf,Yokosuka 5th Special Naval Landing Force,jp,ijn,formation,
+1034,us-11th-marines,11th Marines,us,usmc,formation,
+1035,us-147th-infantry,147th Infantry,us,us-army,formation,
+1036,us-164th-infantry,164th Infantry,us,us-army,formation,us-americal-division
+1037,us-182d-infantry,182d Infantry,us,us-army,formation,
+1038,us-1st-amphibian-tractor-battalion,1st Amphibian Tractor Battalion,us,usmc,formation,
+1039,us-1st-aviation-engineer-battalion,1st Aviation Engineer Battalion,us,usmc,formation,
+1040,us-1st-battalion-147th-infantry,"1st Battalion, 147th Infantry",us,us-army,formation,us-147th-infantry
+1041,us-1st-battalion-1st-marines,"1st Battalion, 1st Marines",us,usmc,formation,us-1st-marines
+1042,us-1st-battalion-2d-marines,"1st Battalion, 2d Marines",us,usmc,formation,us-2d-marines
+1043,us-1st-battalion-5th-marines,"1st Battalion, 5th Marines",us,usmc,formation,us-5th-marines
+1044,us-1st-battalion-7th-marines,"1st Battalion, 7th Marines",us,usmc,formation,us-7th-marines
+1045,us-1st-engineer-battalion,1st Engineer Battalion,us,usmc,formation,
+1046,us-1st-marine-division,1st Marine Division,us,usmc,formation,
+1047,us-1st-marines,1st Marines,us,usmc,formation,
+1048,us-1st-parachute-battalion,1st Parachute Battalion,us,usmc,formation,
+1049,us-1st-pioneer-battalion,1st Pioneer Battalion,us,usmc,formation,
+1050,us-1st-raider-battalion,1st Raider Battalion,us,usmc,formation,
+1051,us-1st-special-weapons-battalion,1st Special Weapons Battalion,us,usmc,formation,
+1052,us-1st-tank-battalion,1st Tank Battalion,us,usmc,formation,
+1053,us-2d-battalion-1st-marines,"2d Battalion, 1st Marines",us,usmc,formation,us-1st-marines
+1054,us-2d-battalion-2d-marines,"2d Battalion, 2d Marines",us,usmc,formation,us-2d-marines
+1055,us-2d-battalion-5th-marines,"2d Battalion, 5th Marines",us,usmc,formation,us-5th-marines
+1056,us-2d-battalion-7th-marines,"2d Battalion, 7th Marines",us,usmc,formation,us-7th-marines
+1057,us-2d-marines,2d Marines,us,usmc,formation,
+1058,us-2d-raider-battalion,2d Raider Battalion,us,usmc,formation,
+1059,us-3d-battalion-10th-marines,"3d Battalion, 10th Marines",us,usmc,formation,
+1060,us-3d-battalion-164th-infantry,"3d Battalion, 164th Infantry",us,us-army,formation,us-164th-infantry
+1061,us-3d-battalion-1st-marines,"3d Battalion, 1st Marines",us,usmc,formation,us-1st-marines
+1062,us-3d-battalion-2d-marines,"3d Battalion, 2d Marines",us,usmc,formation,us-2d-marines
+1063,us-3d-battalion-5th-marines,"3d Battalion, 5th Marines",us,usmc,formation,us-5th-marines
+1064,us-3d-battalion-7th-marines,"3d Battalion, 7th Marines",us,usmc,formation,us-7th-marines
+1065,us-3d-defense-battalion,3d Defense Battalion,us,usmc,formation,
+1066,us-3d-defense-battalion-guadalcanal-detachment,"3d Defense Battalion, Guadalcanal detachment",us,usmc,task-group,us-3d-defense-battalion
+1067,us-4th-defense-battalion,4th Defense Battalion,us,usmc,formation,
+1068,us-5th-defense-battalion,5th Defense Battalion (detachment with 7th Marines),us,usmc,formation,
+1069,us-5th-marines,5th Marines,us,usmc,formation,
+1070,us-6th-naval-construction-battalion,6th Naval Construction Battalion,us,usn,construction,
+1071,us-7th-marines,7th Marines,us,usmc,formation,
+1072,us-8th-marines,8th Marines,us,usmc,formation,
+1073,us-9th-defense-battalion,9th Defense Battalion,us,usmc,formation,
+1074,us-americal-division,Americal Division,us,us-army,formation,
+1075,us-aola-bay-landing-force,Aola Bay landing force (Col. W. B. Tuttle),us,mixed,task-group,
+1076,us-clemens-native-scouts,Clemens' native scouts (Solomon Islands scouts),us,mixed,formation,
+1077,us-combat-group-a,"Combat Group A (5th Marines, reinforced, less 2d Battalion)",us,usmc,task-group,us-1st-marine-division
+1078,us-combat-group-b,"Combat Group B (1st Marines, reinforced)",us,usmc,task-group,us-1st-marine-division
+1079,us-company-b-1st-battalion-2d-marines,"Company B (reinforced), 1st Battalion, 2d Marines",us,usmc,formation,us-1st-battalion-2d-marines
+1080,us-cub-1,CUB One (Naval Construction and Base unit),us,usn,construction,
+1081,us-division-reserve,"Division Reserve (2d Marines, reinforced, less Combat Team A)",us,usmc,task-group,us-1st-marine-division
+1082,us-florida-group,"Florida Group (Combat Team A, 1st Battalion, 2d Marines, reinforced; Group Yoke)",us,usmc,task-group,us-1st-marine-division
+1083,us-forces-guadalcanal,US forces on Guadalcanal,us,mixed,forces-at-place,
+1084,us-forces-guadalcanal-tulagi,"US forces, Guadalcanal and Tulagi together",us,mixed,forces-at-place,
+1085,us-forces-tulagi,"US forces on Tulagi, Gavutu, Tanambogo and Florida",us,mixed,forces-at-place,
+1086,us-gavutu-group,Gavutu Group (1st Parachute Battalion),us,usmc,task-group,us-1st-marine-division
+1087,us-goettge-patrol,Goettge patrol,us,usmc,patrol,
+1088,us-guadalcanal-group,Guadalcanal Group (Combat Groups A and B),us,usmc,task-group,
+1089,us-marine-casual-detachment-13-oct,Marine casual detachment landed 13 October with the 164th Infantry,us,usmc,task-group,
+1090,us-matanikau-operation-7-9-oct,"Matanikau operation, 7-9 October (5th and 7th Marines and 3d Battalion, 2d Marines)",us,usmc,task-group,
+1091,us-provisional-raider-parachute-battalion,Provisional raid battalion (1st Raider and 1st Parachute Battalions),us,usmc,task-group,
+1092,us-rear-echelon-1st-marine-division,"Rear echelon, 1st Marine Division (left at Wellington)",us,usmc,task-group,
+1093,us-support-group,Division Support Group,us,usmc,task-group,us-1st-marine-division
+1094,us-tulagi-group,"Tulagi Group (1st Raider Battalion, Combat Team 2 and 3d Defense Battalion)",us,usmc,task-group,us-1st-marine-division
+1095,us-whaling-group,Whaling Group,us,usmc,task-group,
