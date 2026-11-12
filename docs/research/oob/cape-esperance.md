@@ -127,3 +127,51 @@ US night surface claims ran four to seven times the losses; the Japanese claimed
 - **Readiness decided the first minute.** One side at action stations, the other expecting to shell an airfield.
 - **A formation change at the wrong moment** put three US destroyers between the lines; two were hit by their own side.
 - **Nobody was crippled by the rule's test, and four ships were away four to five months.** The same point as Enterprise at Eastern Solomons.
+
+## Second pass, 2026-11-12: rounds fired and hits
+
+The architect asked for rounds fired by each US ship by calibre and hits on each Japanese ship, so that hits for each thousand shells could be worked out for this night as it has been for Savo Island. Rows: `engagement_outcomes.csv` ids 1686 to 1726, with 19 new gaps. One page of the Japanese report was read a second time by me and agreed.
+
+**The answer first: the measure cannot be computed.** No US ship's action report was found online, and the Japanese division's report gives no count of hits on any ship and no count of rounds fired.
+
+### Disputes
+
+- **Kinugasa was not hit, by the Japanese record.** The division's report says she attacked "without receiving gunfire" for about an hour and a half (read twice), and her own signal is read as "no damage". The English compilation's "four hits" and the "minor damage" of the post-war survey and both Wikipedias contradict it. The new rows are entered as disputed.
+- **How long Kinugasa fought:** about an hour and a half by the report's summary and her signal; 2150 to 2215, 25 minutes, by the report's narrative.
+- **Salt Lake City's star shell:** 125 by her war diary, 150 by a 1947 summary. Her total of 175 5-inch rounds fits only the 125.
+- **When Helena opened fire:** 2347 by her own war diary, 2346 by the bulletin and the narrative.
+- **Furutaka's main-battery rounds:** now three figures from Japanese Wikipedia (20, 36, "40 or fewer"), each citing a different book. The division's report says only that she fired one salvo from her high-angle guns.
+- **Length of the US firing:** 33 to 34 minutes, or about 40 by a captain's newspaper account.
+
+### What was found
+
+| Ship | Rounds fired | Firing | Source |
+| --- | --- | --- | --- |
+| Salt Lake City | 296 8-inch in 30 salvos; 50 5-inch common; 125 or 150 star shell | 2347 to 0016 | Her war diary and a 1947 summary of the action, both on her association's site. The two agree on 296 and 50 |
+| Boise | "More than 1,000 rounds of five- and six-inch shells", not split; 120 5-inch at one target | 27 minutes | A news magazine of November 1942 (low); the fleet bulletin for the 120 |
+| Helena | Not found | 2347 to 0012 | Her war diary, read from page images. It refers to an enclosed battle report that is not posted |
+| San Francisco | Not found; her log has one partial 8-inch salvo and several 5-inch at Laffey by mistake | About 2347 to 0020 | The fleet bulletin, quoting her log |
+| Farenholt | Not found. Her torpedo mount jammed at 2350 | Opened 2349 | The fleet bulletin |
+| Duncan | 2 torpedoes | | Her Navy history |
+| Laffey | Not found | | |
+| Buchanan | 5 torpedoes (low) | | A magazine article citing a book not read |
+| McCalla | 390 5-inch | | A website, from her war diary |
+| Aoba | 7 main-battery rounds (Japanese Wikipedia, citing the official history) | The division broke off after "fifteen minutes of engagement" | The report's flash signal for the fifteen minutes |
+| Kinugasa | 80 main, 11 anti-aircraft, 16 torpedoes (Japanese Wikipedia only) | See the dispute above | |
+
+**Hits received, from the Japanese report:** a first shell on Aoba's bridge, her gun director destroyed and a turret unusable; Furutaka hit in her torpedo tubes at 2150, a great fire following; Fubuki hit about 2200 and burning, with a great explosion seen by some afterwards; Kinugasa none; Hatsuyuki holed forward above the waterline. **No count for any ship, and no calibre.** The "up to forty" hits on Aoba and "ninety or more" on Furutaka rest on secondary sources.
+
+**Claims.** Salt Lake City claimed "at least 150" 8-inch hits from her 296 rounds, which is more than half. It is recorded as a claim; nothing in the Japanese record supports a figure of that order.
+
+**Hits on US destroyers by their own side.** Farenholt's report, as the bulletin quotes it, says her own cruisers fired at her and she was hit at 2350; no count of the friendly share. The 1943 narrative has two hull hits that looked like 6-inch. For Duncan the bulletin says only that it was "quite possible that own forces fired on" her.
+
+### The one figure that can be offered
+
+Salt Lake City fired 296 main-battery rounds. If every hit claimed for the whole US force on Aoba and Furutaka ("up to forty" and "ninety or more") were real, and the four cruisers fired about a thousand main-battery rounds each for the two light cruisers and about three hundred each for the two heavy ones, the rate would be near fifty hits in a thousand. **Every term of that sum is either a secondary figure or a guess of mine at the missing rounds, so it is not a row and should not be used as one.** It shows only that the measure, if the reports are found, is likely to sit between the Allied and Japanese figures at Savo Island.
+
+### Where the missing figures are
+
+- Helena's "Report of Battle off Savo Island", an enclosure to her October war diary, and the other ships' action reports: in the National Archives' war diary collection, whose online images are behind a paywall.
+- Scott's own report was presumed lost when his flagship was sunk a month later; the Pacific Fleet's covering letter with the totals was not found.
+- A book on the battle (Cook) is the usual source of rounds by ship and was not seen.
+- Aoba's and Kinugasa's own action reports, the destroyer division's diary and the navy yard's survey of Aoba's damage were not found in the Japanese archive.
