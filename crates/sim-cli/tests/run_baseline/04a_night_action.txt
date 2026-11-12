@@ -2,20 +2,17 @@ Scenario 4a: Night action, an alert force meets one that is not
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ad4734a85de98c0d  109 events
+day   1  hash eaea958ec3a31755  74 events
 
-task_force:1 "Placeholder attacking force" (Japanese): Underway at (5,0), 20 nm from (4,0) toward (5,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 45, fire 15; fire control out, main battery degraded, torpedo mounts out; 380 gun rounds, torpedoes gone; 1955 t of fuel, 0 t of supply
-ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 60, fire 10; propulsion out, main battery degraded; 440 gun rounds, torpedoes gone; 1955 t of fuel, 0 t of supply
-ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 320 gun rounds, torpedoes gone; 1955 t of fuel, 0 t of supply
-ship:4 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 15; propulsion degraded, main battery degraded, torpedo mounts out; 560 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:5 "Placeholder cruiser B2": SUNK; damage flotation 100, fire 35; fire control out, main battery out, torpedo mounts degraded; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 85, fire 5; main battery out; 740 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-Allied contact:1 at (6,-1): 3 ships, destroyer, age 0 pulses
+ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 5, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
+ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 10, fire 5; all systems working; 560 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 90, fire 10; propulsion degraded; 740 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 55, fire 35; fire control out, main battery degraded, torpedo mounts degraded; 770 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 40, fire 5; main battery out; 770 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+Allied contact:1 at (5,0): 3 ships, cruiser, age 2 pulses
 Allied claims 0 enemy ships sunk at (5,0), day 1 night
-Allied claims 0 enemy ships sunk at (5,0), day 1 morning
-Japanese contact:1 at (5,0): 1 ships, cruiser, age 0 pulses
+Japanese contact:1 at (4,0): 2 ships, destroyer, age 2 pulses
 Japanese claims 1 enemy ship sunk at (5,0), day 1 night
-Japanese claims 2 enemy ships sunk at (5,0), day 1 morning
-Japanese claims 1 enemy ship sunk at (5,0), day 1 afternoon

@@ -1,6 +1,6 @@
 # 0064: Experience
 
-Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its four questions. Nothing is built yet, and no unit has a value. The hand calculation is written before any code is delegated, and this record gains an "As built" section with each stage.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its four questions. Stage 1 (ships) is built; see "As built (stage 1)". Stage 2 (air groups) is not. The hand calculation is written before any code is delegated, and this record gains an "As built" section with each stage.
 
 ## The gap
 
@@ -121,7 +121,7 @@ The part of stage 1 that does not touch the simulation: `oob-check` reads `data/
 
 ### The four questions, as fixed
 
-Fixed by the architect on Nov 12, 2026, before any batch with the rule on exists. A value starts at 2; each question a row answers moves it by 1, once, however many rows answer it; it is clamped to 0 to 4. Rows that are not preferred never move a value and are listed in the output as not read. The thresholds are in `data/derivation/rules.toml`, measured to the first day of the engagement (`engagements.csv`, `date_from`: 1942-08-08 for Savo Island, 1942-10-11 for Cape Esperance).
+Fixed by the architect on Nov 12, 2026, before any batch with the rule on exists. A value starts at 2; each question a row answers moves it by 1, once, however many rows answer it; it is clamped to 0 to 4. Rows that are not preferred never move a value and are printed, with the other rows no question read, as not read (not written to the generated file). The thresholds are in `data/derivation/rules.toml`, measured to the first day of the engagement (`engagements.csv`, `date_from`: 1942-08-08 for Savo Island, 1942-10-11 for Cape Esperance).
 
 1. **`night_practice_recent`, up 1.** A preferred row of medium or high confidence, naming the ship, says she fired or exercised at night, and the row or its note dates that inside the three months that end on that day. "Night training" is exercising at night. An undated "recently" answers nothing. A statement about a force or a squadron answers for a ship only if a row names her as part of it at that time.
 2. **`no_night_practice`, down 1.** Such a row says she held no night practice over a period that reaches into the twelve months that end on that day, and no preferred row says she held one in them. A statement about "practically none of the ships" of a force names no ship and answers nothing.
@@ -130,16 +130,16 @@ Fixed by the architect on Nov 12, 2026, before any batch with the rule on exists
 
 ### The settlements, and why
 
-- **The ship-crew rows carry no `valid_from` or `valid_to`,** so the list carries each answer for questions 1 and 2 (`[[experience.answer]]`: ship, question, row, answer, `from`, `to` as the row's text or note gives them, a reason). The tool checks the row exists, is of that ship, is a `night_practice_note` row, is preferred and of medium or high confidence, and that the period meets the question's window (a partial date counts if some day it could stand for is inside). When the research session dates the rows the answers can go.
+- **The list carries each answer for questions 1 and 2** (`[[experience.answer]]`: ship, question, row, answer, a reason, and optionally `named_by`, `from`, `to`). The tool checks the row exists, is of that ship, is a `night_practice_note` row, is preferred and of medium or high confidence, and that the period meets the question's window (a partial date counts if some day it could stand for is inside). The period is read from the row's `valid_from` and `valid_to` (see "Dates", below); the answer gives it only where the row has none.
 - **A row for and a row against on one ship and question stop the derivation** unless the list settles it by naming the row it reads, with a reason (`[[experience.settle]]`). A settlement with nothing to settle is a problem.
-- **A statement about a squadron or a force answers for no ship the rows do not name.** No row names the destroyers of Destroyer Squadron 4, so the night training of "Chicago and Destroyer Squadron 4" (rows 1019 to 1021) answers for none of them. Row 71 ("practically none of the ships") names none.
+- **A statement about a squadron or a force answers for a ship only if a row names her as part of it at that time** (the rule as fixed in pull request 137). Settled on Nov 12, 2026, once rows naming the destroyers existed: "at that time" means a row puts her with that force during the period the statement is dated to; a list of the squadron on one day does not by itself show that, as the rows' own note says. So the answer names the list and a row that puts her with the force (see "Force statements", below). Row 71 ("practically none of the ships") names none and answers nothing.
 - **Astoria** is 2: row 1018 says she held "recently" some night practices, undated, so question 1 is not answered, and question 2 is not answered because a row says she held some.
 - **Row 1022 does not contradict night training.** It says no ship had fired at night within eight months; it is about firing.
 - **Decision 5 requires a second source for Japan before any value is fixed.** It is `training_facts.csv` row 87: Vice Admiral Ozawa to the Strategic Bombing Survey, 1945, "we stressed training on that type of battle from before the war". It is Japanese testimony, independent of the 1950 analysis behind row 32. The architect settled what counts as a second source: a row of the navy's entity, from a different `source` than the first row, read at the page, whose standing is not `disputed`; it need not be `preferred` (row 87 is `unconfirmed`, being one witness). The tool checks exactly that (row 87 is of `ijn-surface-fleet`, the navy's whole surface fleet, so the rules file names that entity for it). With it the Japanese values are **fixed** at 3. Its limits: it is about the navy as a whole, names no ship or date, and the question put to him assumed the emphasis. The tool keeps the other mechanism: with `second_source` empty for a nation, its ships are marked `provisional` in the `fixed` column and the file's header says so; `--check` passes on such a file, and a later stage that writes values into scenarios must refuse one. Synthetic tests cover a nation with no second source.
 
 ### The values
 
-From the rows, with the questions above. Generated: `data/reference/ship_experience_savo_island.ships.csv` and `data/reference/ship_experience_cape_esperance.ships.csv`; the real-data tests carry the architect's hand calculation.
+As they stand after the changes of Nov 12, 2026 (below). From the rows, with the questions above. Generated: `data/reference/ship_experience_savo_island.ships.csv` and `data/reference/ship_experience_cape_esperance.ships.csv`; the real-data tests carry the architect's hand calculation.
 
 | Savo Island | Value | Why |
 | --- | --- | --- |
@@ -147,23 +147,72 @@ From the rows, with the questions above. Generated: `data/reference/ship_experie
 | Canberra, Australia, Chicago | 3 | Question 1: night training at Brisbane, May to July 1942 (rows 1019, 1020, 1021). Decision 0064's illustration gave 2, a first reading that said so |
 | Vincennes, Quincy | 1 | Question 2: no night practice in at least fifteen months in the Atlantic Fleet, which they left in March 1942 (rows 1016, 1017; 949, 950) |
 | Astoria | 2 | Nothing answered |
-| Bagley, Patterson, Helm, Wilson, Blue, Ralph Talbot, Jarvis | 2 | Nothing answered |
+| Helm | 3 | Question 1 by the force statement (rows 1019 to 1021), named in Destroyer Squadron 4 (row 1064) and joined Task Force 44 at Brisbane on 19 May 1942 (row 1072) |
+| Bagley | 3 | The same: named (row 1068), at Brisbane from 30 May (row 1074) |
+| Ralph Talbot | 3 | The same: named (row 1066), left Hawaii on 14 June (row 1078) and left Brisbane with the force on 14 July (row 1070): with the force at Brisbane inside the period, if briefly |
+| Patterson | 3 | The same: named (row 1065); her rows on where she was are disputed (Gill, row 1069, left Brisbane with the force on 14 July; the ship dictionary, row 1075, on 22 June) and both put her at Brisbane inside the period, so the answer stands and names both |
+| Wilson, Blue, Jarvis | 2 | Nothing answered. No row names Wilson in the squadron. Blue is named (row 1063) but no row puts her at Brisbane (row 1077: convoys, then Wellington). Jarvis is named (row 1067) and her two disputed rows disagree (Gill, row 1071, with the force; the dictionary, row 1076, at Sydney from 18 June) |
 
 | Cape Esperance | Value | Why |
 | --- | --- | --- |
 | Salt Lake City, San Francisco, Boise | 3 | Question 1: the night firing practice of 7 October 1942 (rows 1033, 1036, 1037) |
 | Helena | 2 | Nothing answered |
-| Farenholt, Duncan, Laffey, Buchanan, McCalla | 1 | Question 3: commissioned March to May 1942 |
+| Farenholt, Buchanan, Laffey | 2 | Question 1 by the Navy's narrative of the force (training_facts row 74: target practice on 8 October and brief antiaircraft practice that night, an exercise at night), each named as one of the three destroyers of the force as first organised, with it on 7 and 8 October (rows 1081, 1082, 1083); question 3 (commissioned March to May 1942). 2 - 1 + 1 |
+| Duncan, McCalla | 1 | Question 3 only: rows 1084 and 1085 say each was not with the force for the practices of 8 October, so question 1 is not answered |
 | Aoba, Furutaka, Kinugasa, Fubuki, Hatsuyuki | 3, fixed | Question 4 by row 32, second source row 87 |
 
 The values are those of the architect's hand calculation, which the real-data tests carry.
 
+### What changed on Nov 12, 2026, and why
+
+New fact rows arrived: the destroyers of the two forces (rows 1060 to 1085), the Japanese cruiser divisions' war diaries (rows 1086 to 1122) and dates on the training rows. A ship's value changes only when a fact row changes, by the four questions as they are worded, and none was reworded.
+
+- **Seven values changed, by new rows:** Helm, Bagley, Patterson and Ralph Talbot from 2 to 3 (Savo Island), and Farenholt, Buchanan and Laffey from 1 to 2 (Cape Esperance). Nothing else moved: the eight Japanese ships 3, Vincennes and Quincy 1, Astoria 2, Chicago, Canberra and Australia 3, Wilson, Blue and Jarvis 2, San Francisco, Boise and Salt Lake City 3, Helena 2, Duncan and McCalla 1, the five Japanese ships 3.
+- **Bagley and Helm are 3 although Bagley fired no gun at Savo Island and Helm fired four shells.** The rule gives it: both were with the force at Brisbane while it trained at night. Experience is not readiness; decision 0068 is the rule for readiness.
+- **The Japanese cruisers keep 3, and the war diaries change nothing.** No row says a Japanese cruiser fired or exercised at night inside either window. The drills and firings the 6th Cruiser Division's diary records in July and October 1942 (rows 1102 to 1105, 1109 to 1111) say "the diary does not say" whether by night. For Tenryu, the 18th Cruiser Division's order for the passage to Truk schedules a searchlight drill and a night formation-keeping test in June 1942 (row 1117), inside her three months, but it is an order, "not a record that they were done", and the record of what was done (row 1118) does not say night: an order is not a statement that she exercised, and she is not answered. The rows that say the diaries record no night exercise (rows 1098 to 1101, 1112 to 1116) are the researcher's finding of an absence, of low confidence and unconfirmed, in diaries with months missing; an absence is a gap and answers no question.
+- **The designer's decision, Nov 12, 2026:** shown that the only rows about these ships themselves fail to confirm the navy-level statement, and that the 18th Division's own lessons after Savo Island ask for "still more earnest, intensive training" in opening fire promptly and in rate of fire (row 1121), the designer decided the Japanese ships keep the point for their navy's night training (training_facts rows 32 and 87). His words: "Keep it". Recorded plainly: **the weak leg of decision 5 is weaker for it.** The point still rests on a statement about a navy, and the one body of evidence about these ships' own divisions does not confirm it and, in the 18th Division's lessons, qualifies it.
+
+### Force statements
+
+A force or squadron statement may answer question 1 for a ship. An `[[experience.answer]]` may carry `named_by`, the row or rows that name the ship as part of the force at that time, beside `row`, the statement. The tool checks:
+
+- the statement row is preferred, of medium or high confidence, and dated inside the three months;
+- each `named_by` row is of that ship, of medium or high confidence, and dated so that it puts her with the force inside the statement's period (its own period meets the statement's; a row with a start and no end goes on);
+- a `named_by` row is preferred, except that disputed rows are allowed if every disputed row of hers that bears on the period (that meets it) is named too and each is dated inside it. That is the same rule the tool already has for disputed commissioning rows, applied to where she was, and the answer names all of them;
+- the attributes allowed are a short list in the rules file (`[experience.force]`), checked by the tool: the statement is a `night_practice_note` row of `ship_facts.csv` or a `night_training_note` row of `training_facts.csv`; `named_by` rows are her `time_in_theatre_note` or `night_practice_note` rows;
+- `named_by` is for question 1 only.
+
+The tool reads dates, standings and attributes, not what a row says. That a row puts her with the force, and that disputed rows agree, is the architect's reading, written in the answer's reason; the tool cannot tell that Jarvis's disputed rows disagree, which is why her answer is not given. Each destroyer's answer names the list (the squadron on 7 July) and a row that puts her with the force, together.
+
+### Dates
+
+The research session has dated the ship-crew rows, so the periods come from the rows. An answer's `from` and `to` are optional: where the cited row has `valid_from` and `valid_to` the tool reads them; if the answer also gives dates they must agree, else a problem. Where the row has none, the answer must give them, with its reason, as before: question 1 needs both, question 2 needs `to` (an open start is allowed). Only the two Atlantic rows (ship_facts 1016 and 1017) have none now.
+
+### What a run prints instead of the rows not read
+
+The generated file no longer carries a `not_read` column. A research pull request that adds a row for a listed ship therefore no longer makes it stale. `--check` and a run print, after the list of files, one line for each listed ship that has rows no question read (night practice, commissioning and, for the force rules, time-in-theatre rows), with their standing. The generated file keeps the `rows` column: the rows read, "no" answers included, and the rows that name a ship in a force.
+
 ### What the questions leave unused
 
-Rows about night training that no question reads: the Japanese lookout, "better trained" and "assumed" rows (inferred, unconfirmed); damage control for both sides; "never maneuvered together" and its dispute; the planned weekly night quarters of 1941; the star-shell rows; rows 89 to 91 (Omori on November 1943: "lack of training in night operations", substitute ships that "never had an opportunity to train together"), which are about 1943 and limit nothing for August and October 1942; row 88 (a destroyer squadron that was at neither battle) and row 92 (night action as a basis of ship design, not of training); the destroyers' "diverse origins"; the rows that Task Force SUGAR "engaged only in target practice" and the Wikipedia rows on 8 October (not preferred, or about a force); the post-battle judgements. Question 3 does not read `last_refit_completed`, captains or time in theatre.
+Rows about night training that no question reads: the Japanese lookout, "better trained" and "assumed" rows (inferred, unconfirmed); damage control for both sides; "never maneuvered together" and its dispute; the planned weekly night quarters of 1941; the star-shell rows; rows 89 to 91 (Omori on November 1943: "lack of training in night operations", substitute ships that "never had an opportunity to train together"), which are about 1943 and limit nothing for August and October 1942; row 88 (a destroyer squadron that was at neither battle) and row 92 (night action as a basis of ship design, not of training); the destroyers' "diverse origins"; the rows that Task Force SUGAR "engaged only in target practice" and the Wikipedia rows on 8 October (not preferred, or about a force); the post-battle judgements. Question 3 does not read `last_refit_completed` or captains. The time-in-theatre rows are read only to name a ship in a force (question 1).
 
 ### Gaps found
 
-- No row names the ships of Destroyer Squadron 4, so its night training cannot be matched to a destroyer.
-- No ship-crew row is dated (`valid_from`, `valid_to`): the periods are carried in the lists, and the research session is asked to date the rows.
+- Wilson is named in no row of Destroyer Squadron 4. Blue is named but no row puts her at Brisbane. Jarvis's rows disagree. Their night training, if any, cannot be matched to them.
+- Two ship-crew rows are undated (`valid_from`, `valid_to`): ship_facts 1016 and 1017 (the Atlantic months), whose answers give the period.
 - Five rows of `training_facts.csv` would fail the "earned preferred" rule (lone medium rows marked `unconfirmed`: 3, 30, 31, 33, 79). `oob-check` does not apply that rule to the file in this stage.
+
+## As built (stage 1)
+
+Decisions 1, 6, 7, 8 and 12 in the simulation, for ships.
+
+- **State.** `Ship.experience`, a `u8` from 0 to 4, default 2 (`Ship::DEFAULT_EXPERIENCE`). A scenario's `[[ship]]` may give `experience = N`; the loader refuses a value outside 0 to 4, a float or a string. No rule writes it. It is hashed last in the ship, named in `hash::name_every_field`; `hash::STATE_VERSION` is `flagplot-state-v6`. Every hash in every golden file changes and nothing else does.
+- **Figures.** `experience_gun_strength`, `experience_torpedo_strength` and `experience_sighting_strength` in `surface_combat.toml`, each from 0 to 0.5 (the loader refuses outside). The frozen file has all three at "0", so no step 1 result moves; the live file has "0.25", a placeholder, the middle of the range.
+- **The rule.** The factor is `experience_factor(strength, experience) = 1 + strength x (experience - 2)`. A gun or torpedo salvo in a dark fight takes the firer's own value, multiplied in last after the fire control factor. A force's chance to sight in a dark fight is `min(1, (base + radar_bonus) x alert_factor x experience_factor) x fatigue_factor`, with the mean of the ships in the force's list at the moment of the roll (sum over count in `Fixed`: ships of 3, 3 and 2 have 2.666666, a factor of 1.266666 at 0.4 and a sighting of 0.633333). By day nothing reads it. No new random draw.
+- **Breakdown.** `experience_factor` is last among a salvo's chance factors and after `alert_factor` in a sighting, and is there only in a dark fight when the rule's strength is above 0. On the frozen figures no breakdown and no event changes.
+- **What a side sees.** In `side_events.rs`, `experience_factor` is added to the own factors of `Salvo` (the firer's side). A `SightingRoll` is shown whole to its own force's side and already carried it. `SalvoAgainst` has no breakdown. The query answers `detail` for a ship and for a force's ships give `experience` when it is not 2, for the side's own ships only; no method of `SideView` returns an enemy ship's experience.
+- **Values.** Scenario 4 gives `experience` to each ship whose value is not 2, from `data/reference/ship_experience_savo_island.ships.csv`; a test holds every ship to the file's value. No other scenario gives values.
+- **Tests.** Scenario 14a (`data/scenarios/14a_experience.toml`, `tests/scenario_14a_experience.rs`): scenario 4a with experience 3 and 1, at a working strength of 0.4, with the architect's hand calculation. Unit tests in `sim-core` for the factor, the mean, the breakdown, the hash and the figures' limits, and in `sim-data` for the loader.
+- **What Savo Island shows at the live strength of 0.25 (1,000 runs, before and after, on the same seeds).** The Japanese hit rate in the middle run rises from 39 to 48 hits for each thousand shells against a record of 81 to 117, and still misses. Allied cruisers sunk are still none in the middle run (record 4). Allied destroyers sunk, which agreed at the edge (middle run 2, record 0), now miss (middle run 3). The head line goes from 7 agree, 4 at the edge, 5 miss to 8 agree, 2 at the edge, 6 miss. On the scenario's own seed the run baseline moves from 291 to 276 events and from a minor Allied victory (2 Japanese ships sunk, 2 Allied) to a major Allied defeat (5 Allied ships sunk, none Japanese). This was expected: at the top strength of 0.5 a crew of 3 gains only half as much again, and a cap on one chance cannot close a gap of this size alone, which is why decision 0068 follows. Nothing is tuned here.
+- **Limits.** Night and ships only; no change with time or action; the replay export does not show experience.
+- **Rule card as built.** Reads: a ship's experience, whether the fight is dark, the three strengths. Writes: nothing.

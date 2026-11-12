@@ -4,7 +4,7 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 
 | Battle | Report | Judged | Agree | Agree at the edge | Miss |
 | --- | --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 16 | 7 | 4 | 5 |
+| Savo Island | `savo-island-baseline.md` | 16 | 8 | 1 | 7 |
 | Eastern Solomons | `eastern-solomons-baseline.md` | 14 | 10 | 0 | 4 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
 | Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
@@ -29,6 +29,28 @@ cargo run --release -p sim-cli -- validate BATCH.json data/validation/savo_islan
 - **The Allied guns hit at about the right rate and fire far too much.** Their hits for each thousand shells are 16 to 53 against a record of 21 to 36. But the record has 471 Allied shells fired and the runs average about 2,800, where the Japanese fire about 2,170 against a record of 1,867. So Allied gun hits on Japanese ships are 127 in the middle run against a record of 10 to 17. A rate that agrees hid a count that is six times too high; two measures of shells fired were added on Nov 12, 2026 so that it cannot hide again. In the record most of the Allied cruisers never got their guns into effective action, and nothing in the rules keeps a surprised force from firing its full broadside from the second round.
 - **An agreement that is weaker than it looks:** gun hits on Japanese ships agree because the record of 10 to 17 touches the bottom of a spread of 8 to 224. The median run has 127. The Allies score many more hits than they did; a likely reason is that the fights last while the Japanese fail to win them quickly, which the report does not itself show.
 - **The result:** an Allied victory of some kind in 441 runs and a defeat in 308. The night was a decisive Japanese victory; one run in 1,000 is.
+
+### The Savo Island report as remade with experience, Nov 12, 2026
+
+The report in the file now is on the engine with experience for ships (decision 0064, stage 1), the ships' values derived from the fact rows, and the three strengths at their placeholder of 0.25. The bullets above describe the report before it.
+
+- **The Japanese hit harder, and not hard enough:** 28 to 64 hits for each thousand shells, 48 in the middle run, against a record of 81 to 117. It was 39. At the cap of 0.5 the arithmetic gave about 61, so experience was never going to close this alone.
+- **The Allied cruisers still live:** none is sunk in the middle run, and the record's four is held by no run.
+- **Allied destroyers sunk is a new miss:** 3 in the middle run against a record of none, where it was 2 and agreed at the edge. The Japanese hit harder, and the Allied destroyers still fire far too much and are fired at in return.
+- **The shells barely move** (Allied 25 hundreds in the middle run against 4; Japanese 22 against 18). Experience is how well a crew fights at night, not whether its guns are manned: that is decision 0068, which is built next.
+- **The result has turned toward the record:** an Allied defeat of some kind in 440 runs and a victory in 347, where it was 308 and 441. The night was a decisive Japanese victory; ten runs in 1,000 are.
+
+The three strengths are placeholders. They are tuned after decision 0068 is in, and not before.
+
+### The Savo Island report as remade with the readiness rule, Nov 13, 2026
+
+The report in the file now is on the engine with decision 0068 as well: a force not at battle readiness fires its guns at a share, the placeholder 0.5. Both rules that the spec put before tuning at this battle are in.
+
+- **The Allied groups fire half what they did:** 13 hundreds of shells in the middle run, where it was 25, against a record of 4. By ship, the southern group fires about 440 and the northern about 870 in the middle run. It is still three times the record; the share would have to go well below the half that the record states, which the designer has allowed tuning to do.
+- **Gun hits on Japanese ships fall with them,** from 96 to 53 in the middle run against a record of 10 to 17. The measure agreed at the edge before and misses now: fewer than one run in twenty holds the record. Nothing got worse; the spread narrowed off a record it had only been brushing.
+- **Fights by day are rarer:** 518 runs of 1,000 have none, where 438 had.
+- **Neither rule has moved the two things at the heart of the night.** The Japanese guns hit 50 times for each thousand shells against 81 to 117, and no Allied cruiser is sunk in the middle run where four were. These are for tuning: the strength of experience, the share, and the chance to hit itself.
+- **The result has turned further toward the record:** an Allied defeat of some kind in 563 runs and a victory in 216. Ten runs in 1,000 are the decisive Japanese victory the night was.
 
 ## Eastern Solomons
 

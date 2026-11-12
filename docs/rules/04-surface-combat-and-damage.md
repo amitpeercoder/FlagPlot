@@ -58,17 +58,20 @@ Each round, each force that has not yet sighted the enemy is taken in turn, lowe
 - A force that was fired on in the previous round has sighted the enemy now, with no roll and no draw. It counts as newly sighted this round. [0014]
 - Any other force that has not sighted rolls. The chance is:
 
-  `chance = min(1, (base + radar_bonus) x alert_factor) x fatigue_factor`
+  `chance = min(1, (base + radar_bonus) x alert_factor x experience_factor) x fatigue_factor`
 
   - `base` is `surface_combat.toml: sighting_chance_night` if the fight is dark, else `sighting_chance_day`.
   - `radar_bonus` is `radar_sighting_bonus` if any ship afloat in the force has a class with `radar` true, else 0. Radar is a yes or no for a class. [0014, 0019]
   - `alert_factor` is 1 if the force is alert, else `not_alert_sighting_factor`.
+  - `experience_factor` is 1 if the fight is light or `surface_combat.toml: experience_sighting_strength` is 0. In a dark fight with the strength above 0 it is `1 + strength x (mean - 2)`, where the mean is the sum of the experience of the ships in the force's list at the moment of the roll, over their count, in the fixed arithmetic (three ships of 3, 3 and 2 have a mean of 2.666666). It is inside the cap, so it cannot lift a chance past 1. [0064]
   - `fatigue_factor` is (100 less the force's fatigue) over 100, when the scenario names fatigue figures, else 1. It is applied after the cap at 1. The fatigue is its value after the start-of-pulse change (chapter 3, Fatigue of a force). [0037]
 - The roll is one draw from a stream keyed on this force and the enemy force, one draw a round until it sights. If it sights, the force has sighted from now on. [0014]
 
 A force that has sighted does not roll again. Both forces can sight in the same round. `SightingRoll` records each roll, with its chance, the fatigue factor and the result, and cites the beginning of the fight.
 
-A side sees: its own sighting roll, only if it sighted, without the force sighted. A roll that did not sight is hidden from both sides. [0047, 0065]
+The breakdown of a roll names `experience_factor` after `alert_factor` (and before `fatigue_factor`) only in a dark fight with the strength above 0, as `fatigue_factor` is named only when fatigue is in play. [0064]
+
+A side sees: its own sighting roll, only if it sighted, without the force sighted. A roll that did not sight is hidden from both sides. The breakdown of the roll is shown whole, so the side sees its own force's experience factor and never the enemy's. [0047, 0064, 0065]
 
 ### Radar of unknown fit
 
@@ -98,7 +101,7 @@ Ships are matched in ship ID order. The ship in place i of a force's afloat list
 
 Known limit: there is no range. There is one night chance and one day chance, and no opening or closing of the range. Target choice by value, fire or distance is not built. [0014]
 
-A side sees: its own ship's salvo, cut: the round, the firer, the weapon and the shots, without the target, the chance, the expected hits or the hits scored. The side whose ship is the target sees that it was fired on: the round, the target and the weapon, without the firing ship (decision 0065). The firer's side keeps the breakdown factors that are its own (guns, tubes, rate, minutes, the main battery, torpedo mount and fire control factors). [0047]
+A side sees: its own ship's salvo, cut: the round, the firer, the weapon and the shots, without the target, the chance, the expected hits or the hits scored. The side whose ship is the target sees that it was fired on: the round, the target and the weapon, without the firing ship (decision 0065). The firer's side keeps the breakdown factors that are its own (guns, tubes, rate, minutes, the main battery, the share of its guns for being not ready, torpedo mount, fire control and experience factors). The side fired on is given no breakdown, so the enemy never sees that a force fired part of its guns. [0047, 0064, 0068]
 
 ### Surprise
 
@@ -112,12 +115,22 @@ Guns and torpedoes use one mechanism: shots, a chance to hit, damage per hit. Ai
 
 **Gun shots in a round**
 
-`full = gun_rounds_per_min x (main_guns x round_minutes)`, then `shots = min(full x main_battery_factor, ammunition aboard)`.
+`full = gun_rounds_per_min x (main_guns x round_minutes)`, then `shots = min(full x main_battery_factor x unready_gun_share, ammunition aboard)`. The share comes before the ammunition cap, as the main battery factor does.
 
 - `gun_rounds_per_min`, `main_guns` and `gun_rounds_per_gun` are keys of the ship class (`ship_classes*.csv`). `round_minutes` is `surface_combat.toml: round_minutes`.
 - The main battery factor is 1 if the main battery is working, `degraded_factor` if degraded, 0 if out. [0016]
+- `unready_gun_share` is `surface_combat.toml: unready_gun_share`, from 0.1 to 1 (the loader refuses a value outside it), if the firing ship's force was not ready when the fight began (see Ready, below), else 1. The same figure holds for every ship of the force and for every round of the fight. At 1 the rule does nothing. [0068]
 - Ammunition is the ship's `gun_rounds`. A scenario ship starts with `main_guns x gun_rounds_per_gun` unless the scenario gives another figure. Each salvo takes its shots from it. [0014]
 - For some ships the derivation writes 9,999 rounds a gun as a marker for ammunition that is not limiting, where no source gives an outfit. [0023]
+
+**Ready, and the share of the guns**
+
+A force is ready for action, or not, once, as a fight begins, and the answer is kept for the whole of that fight: no sighting, no fire received, no alert gained and no round changes it. [0068]
+
+- A force is ready if its readiness is battle (by order or from the start of the scenario), or if it was alert before the present pulse began. [0068, 0021]
+- A force at normal readiness that was alerted in the present pulse is not ready: by a contact at the start of this pulse (chapter 3, Alert from belief), by being sighted or fired on in an earlier fight of this pulse, or by the alarm of a fight earlier in this pulse. A force alerted in an earlier pulse and still alert is ready. A force at normal readiness that is not alert is not ready. When a force was alerted is read from the event that alerted it (`alerted_by`, an event of a day and a pulse); no field of the state holds it. An alerted force with no such event is taken to have been alerted before. [0068]
+- A force that is not ready fires every ship's guns at `unready_gun_share` of their shots in every round of that fight, as the formula above says. Torpedoes, the chance to hit, sighting, surprise, the alarm and breaking off are unchanged. The force's readiness does not rise during the fight: a force that becomes alert in a fight is not ready in a later fight of the same pulse either, and is ready in a fight of a later pulse only if it is still alert then (chapter 3, Alert from belief, says when it stands down). [0068]
+- The figure is a placeholder (0.5 in the live file, the half of the armament manned that Condition II means; 1 in the frozen step 1 file). It is one figure for both sides and every battle. [0068]
 
 **Torpedo shots**
 
@@ -127,14 +140,17 @@ A shot count can have a fractional part (for example 67.5 shots). A salvo with n
 
 ### The hit chance
 
-`chance = base x surprised_factor x lit_factor x fire_control_factor`, multiplied in that order.
+`chance = base x surprised_factor x lit_factor x fire_control_factor x experience_factor`, multiplied in that order.
 
 - `base` for a gun is `surface_combat.toml: gun_hit_chance_night` or `gun_hit_chance_day`. For a torpedo it is `torpedo_hit_chance_night` or `torpedo_hit_chance_day`. Night means the fight is dark. [0014]
 - `surprised_factor` is `surprised_target_factor` if the target's force is surprised this round, else 1. [0014]
 - `lit_factor` is `lit_target_factor` if the fight is dark and the target has any fire damage above zero, else 1. The target's fire damage is as it stood at the start of the round. [0014]
 - `fire_control_factor` is the firer's fire control factor for a gun, else 1 for a torpedo. It is 1 if fire control is working, `degraded_factor` if degraded, and `fire_control_out_factor` if out. [0016]
+- `experience_factor` is 1 if the fight is light, or if the strength for the weapon is 0 (`surface_combat.toml: experience_gun_strength` for a gun, `experience_torpedo_strength` for a torpedo). In a dark fight with the strength above 0 it is `1 + strength x (experience - 2)` with the firing ship's own experience (a whole number from 0 to 4, 2 unless the scenario's `[[ship]]` gives `experience`; the loader refuses a value outside 0 to 4; a field of the ship set when the scenario loads and written by no rule). It is multiplied in last, so that a factor of 1 changes nothing to the last digit. With a strength of 0.5 a crew of experience 0 has a factor of 0 and its shots hit nothing. Experience is not read by day. [0064]
 
 The chance is not capped when it is worked out. When it is rolled it is clamped between 0 and 1. The expected hits recorded are `shots x chance`. Radar does not enter the hit chance. It enters sighting only. [0014, 0016]
+
+Known limit: experience is read by ships in a dark fight only, and not at all by aircraft (stage 2 of decision 0064 is not built). It does not change with time or action: it is set when the scenario loads. A force's mean is of the ships in its list now, so a sunk ship stops counting at once. [0064]
 
 ### Each shot is rolled
 
@@ -142,7 +158,7 @@ Each whole shot is one draw at the chance. A part of a shot is one more draw at 
 
 Draws come from the firing ship's fire stream, keyed on the firing ship and the enemy force. It is opened when the ship first fires and kept for the whole fight. For each salvo the draws come in this order: the shots, then for each hit its track (guns only) and then its system. A ship's gun salvo is drawn before its torpedo salvo. [0014, 0033]
 
-`Salvo` records the round, the firer, the target, the weapon, the shots, the chance, the expected hits and the hits. It cites the beginning of the fight and carries a breakdown of the shot count factors (guns or tubes, rate, minutes, the system factor) and the hit chance factors (base, surprised, lit, and for guns fire control). [0014, 0033]
+`Salvo` records the round, the firer, the target, the weapon, the shots, the chance, the expected hits and the hits. It cites the beginning of the fight and carries a breakdown of the shot count factors (guns or tubes, rate, minutes, the system factor) and the hit chance factors (base, surprised, lit, for guns fire control, and last the experience factor, named only in a dark fight when the weapon's strength is above 0, so on the frozen figures no breakdown changes). A gun salvo's breakdown names `unready_gun_share` straight after `main_battery_factor`, and only when the firing force was not ready and the figure is below 1; a ready force's salvo and any torpedo salvo never name it. [0014, 0033, 0064, 0068]
 
 ### Where a hit lands
 

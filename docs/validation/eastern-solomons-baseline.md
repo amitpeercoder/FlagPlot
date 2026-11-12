@@ -2,14 +2,14 @@
 
 Battle: eastern-solomons
 Scenario: data/scenarios/05_eastern_solomons.toml
-Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash 15aba245410cffd6
-Inputs: state hash layout flagplot-state-v5, scenario file hash f6e1a405a8039d60
+Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash a2db2010abed3448
+Inputs: state hash layout flagplot-state-v6, scenario file hash f6e1a405a8039d60
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes_eastern_solomons.csv 41f5cac8b29d0036
 - data/scenarios/../reference/port_sizes.csv da12e2b751976274
 - data/scenarios/../reference/aircraft_types_eastern_solomons.csv 487d803eb95dba01
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
-- data/scenarios/../reference/surface_combat.toml 485cfd1b8ba0d4f2
+- data/scenarios/../reference/surface_combat.toml 014bdbf0888f4925
 - data/scenarios/../reference/air_combat.toml 7019eca7f6998d5c
 Measures: data/validation/eastern_solomons.toml (hash 016ae4090a817434), 16 measures, 14 judged
 

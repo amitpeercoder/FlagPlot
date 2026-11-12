@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 
 use sim_core::hash::STATE_VERSION;
 
-use input::{Batch, MeasuresFile};
+use input::{Batch, BatchHeader, MeasuresFile};
 use report::{Head, Row};
 
 /// A label becomes part of a file name, so it is letters, digits, dot, dash
@@ -140,14 +140,21 @@ pub fn command(
     // 1. The batch file itself.
     let batch_bytes = fs::read(batch_path).map_err(|e| format!("{batch_path}: {e}"))?;
     let batch_hash = crate::save::hash_hex(&batch_bytes);
-    let batch: Batch = serde_json::from_slice(&batch_bytes)
-        .map_err(|e| format!("{batch_path}: not a batch file of version 2 (decision 0062): {e}"))?;
-    if batch.format != "flag-plot-batch" || batch.version != 2 {
+    let header: BatchHeader = serde_json::from_slice(&batch_bytes)
+        .map_err(|e| format!("{batch_path}: not a batch file (decision 0062): {e}"))?;
+    if header.format != "flag-plot-batch" || header.version != 3 {
+        let made_again = if header.version < 3 {
+            "; make it again with the engine's `batch` (version 3 adds the shots of each ship)"
+        } else {
+            ""
+        };
         return Err(format!(
-            "{batch_path}: the batch is {} version {}; validate reads flag-plot-batch version 2",
-            batch.format, batch.version
+            "{batch_path}: the batch is {} version {}; validate reads flag-plot-batch version 3 only{made_again}",
+            header.format, header.version
         ));
     }
+    let batch: Batch = serde_json::from_slice(&batch_bytes)
+        .map_err(|e| format!("{batch_path}: not a batch file of version 3 (decision 0062): {e}"))?;
     // 2. The label is the tuning round.
     let label = match batch.label.as_deref() {
         None => {

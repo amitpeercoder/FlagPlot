@@ -1,4 +1,4 @@
-//! What `validate` reads: a batch file of version 2 (decision 0062) and a
+//! What `validate` reads: a batch file of version 3 (decision 0062) and a
 //! measures file (`data/validation/README.md`). Only the keys it needs are
 //! named; every key it names must be there, so a file from before is refused
 //! rather than read as empty.
@@ -7,10 +7,16 @@ use serde::Deserialize;
 
 // ----------------------------------------------------------- the batch file
 
+/// Just the header of a batch file, read first so that a file of another
+/// version is refused for its version and not for a key it lacks.
 #[derive(Deserialize)]
-pub struct Batch {
+pub struct BatchHeader {
     pub format: String,
     pub version: u32,
+}
+
+#[derive(Deserialize)]
+pub struct Batch {
     pub scenario: ScenarioIn,
     pub inputs: InputsIn,
     #[serde(default)]
@@ -76,6 +82,7 @@ pub struct PerRun {
     pub allied_margin: Option<String>,
     pub hits_on: Vec<HitsOn>,
     pub fire: Fire,
+    pub shots_by: Vec<ShotsBy>,
     pub systems_out: Vec<SystemOut>,
     pub air_losses: Vec<AirLoss>,
     pub ready: Vec<ReadyRow>,
@@ -92,6 +99,13 @@ pub struct HitsOn {
     pub gun: u64,
     pub torpedo: u64,
     pub bomb: u64,
+}
+
+#[derive(Deserialize)]
+pub struct ShotsBy {
+    pub ship: u32,
+    pub gun: String,
+    pub torpedo: String,
 }
 
 #[derive(Deserialize)]

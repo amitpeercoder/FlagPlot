@@ -215,7 +215,9 @@ pub fn derive_with(
             list_title: &list.name,
             rules_file: &list.rules,
         };
-        outputs.experience_csv = Some(experience::derive(exp, exp_rules, &data, &names)?);
+        let derived = experience::derive(exp, exp_rules, &data, &names)?;
+        outputs.experience_csv = Some(derived.text);
+        outputs.experience_unread = derived.unread;
     }
     Ok(outputs)
 }
@@ -227,7 +229,13 @@ pub enum Outcome {
     Problems(Vec<Problem>),
     /// No problems. With `written` false (a `--check`), these are the files
     /// that would be written; otherwise the files that were.
-    Clean { files: Vec<PathBuf>, written: bool },
+    Clean {
+        files: Vec<PathBuf>,
+        written: bool,
+        /// Rows of the experience ships that no question read, one line a
+        /// ship. They are not in the generated file.
+        unread: Vec<String>,
+    },
 }
 
 /// Reads the list, the rules it names and the facts directory, derives, and
@@ -272,11 +280,12 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         }
     };
     let (facts, unread) = oob_check::read_dir(facts_dir);
-    let outputs = match derive_with(&list_name, &list_text, rules, &facts, &unread) {
+    let mut outputs = match derive_with(&list_name, &list_text, rules, &facts, &unread) {
         Ok(outputs) => outputs,
         Err(problems) => return Ok(Outcome::Problems(problems)),
     };
     let list = list.expect("a list that derives has parsed");
+    let unread = std::mem::take(&mut outputs.experience_unread);
     let mut files = Vec::new();
     if !list.ships.is_empty() {
         let class_path = dir.join(&list.output);
@@ -303,6 +312,7 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         return Ok(Outcome::Clean {
             files: paths,
             written: false,
+            unread,
         });
     }
     let mut done: Vec<&Path> = Vec::new();
@@ -318,5 +328,6 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
     Ok(Outcome::Clean {
         files: paths,
         written: true,
+        unread,
     })
 }

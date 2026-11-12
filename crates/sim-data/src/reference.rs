@@ -374,6 +374,14 @@ struct SurfaceCombatFile {
     fire_control_out_factor: Quantity,
     crippled_flotation: Quantity,
     claimed_sunk_fire: Quantity,
+    /// The strength of experience in a dark fight, from 0 to 0.5 (decision
+    /// 0064). Required like every other key.
+    experience_gun_strength: Quantity,
+    experience_torpedo_strength: Quantity,
+    experience_sighting_strength: Quantity,
+    /// The share of its guns a force not ready fires, from 0.1 to 1 (decision
+    /// 0068). Required like every other key.
+    unready_gun_share: Quantity,
     gun_system_hit: SystemTable,
     torpedo_system_hit: SystemTable,
     straggler_escorts: EscortTable,
@@ -489,6 +497,16 @@ fn parse_surface_combat_figures(
         .collect(),
         crippled_flotation: number("crippled_flotation", &file.crippled_flotation)?,
         claimed_sunk_fire: number("claimed_sunk_fire", &file.claimed_sunk_fire)?,
+        experience_gun_strength: number("experience_gun_strength", &file.experience_gun_strength)?,
+        experience_torpedo_strength: number(
+            "experience_torpedo_strength",
+            &file.experience_torpedo_strength,
+        )?,
+        experience_sighting_strength: number(
+            "experience_sighting_strength",
+            &file.experience_sighting_strength,
+        )?,
+        unready_gun_share: number("unready_gun_share", &file.unready_gun_share)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1544,6 +1562,88 @@ mod tests {
         );
         assert_eq!(figures.crippled_flotation, Fixed::from_int(50));
         assert_eq!(figures.claimed_sunk_fire, Fixed::from_int(30));
+        // The strengths of experience (decision 0064): the placeholder
+        // 0.25 in the live file.
+        assert_eq!(figures.experience_gun_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.experience_torpedo_strength, Fixed::from_ratio(1, 4));
+        assert_eq!(
+            figures.experience_sighting_strength,
+            Fixed::from_ratio(1, 4)
+        );
+    }
+
+    #[test]
+    fn the_live_file_has_the_placeholder_share_and_the_frozen_one_switches_it_off() {
+        let live = parse_surface_combat_figures(&combat_text(), here()).expect("parses");
+        assert_eq!(live.unready_gun_share, Fixed::from_ratio(1, 2));
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/reference/step1/surface_combat.toml");
+        let frozen = load_surface_combat_figures(&path).expect("the frozen file loads");
+        assert_eq!(frozen.unready_gun_share, Fixed::ONE);
+    }
+
+    #[test]
+    fn an_unready_gun_share_outside_a_tenth_to_one_or_missing_is_refused() {
+        let from = "unready_gun_share = \"0.5\"";
+        for (to, ok) in [
+            ("\"0.1\"", true),
+            ("\"1\"", true),
+            ("1", true),
+            ("\"0.09\"", false),
+            ("\"1.01\"", false),
+            ("\"0\"", false),
+            ("2", false),
+            ("0.5", false),
+        ] {
+            let text = combat_text().replace(from, &format!("unready_gun_share = {to}"));
+            assert_ne!(text, combat_text(), "{from} is in the file");
+            let result = parse_surface_combat_figures(&text, here());
+            assert_eq!(result.is_ok(), ok, "unready_gun_share = {to}");
+        }
+        let text = combat_text().replace(&format!("{from}\n"), "");
+        let message = parse_surface_combat_figures(&text, here())
+            .expect_err("a missing key is refused")
+            .message;
+        assert!(message.contains("unready_gun_share"), "{message}");
+    }
+
+    #[test]
+    fn the_frozen_surface_combat_file_switches_experience_off() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/reference/step1/surface_combat.toml");
+        let figures = load_surface_combat_figures(&path).expect("the frozen file loads");
+        assert_eq!(figures.experience_gun_strength, Fixed::ZERO);
+        assert_eq!(figures.experience_torpedo_strength, Fixed::ZERO);
+        assert_eq!(figures.experience_sighting_strength, Fixed::ZERO);
+    }
+
+    #[test]
+    fn a_strength_of_experience_outside_0_to_half_or_missing_is_refused() {
+        for key in [
+            "experience_gun_strength",
+            "experience_torpedo_strength",
+            "experience_sighting_strength",
+        ] {
+            let from = format!("{key} = \"0.25\"");
+            for (to, ok) in [
+                ("\"0\"", true),
+                ("\"0.5\"", true),
+                ("\"0.51\"", false),
+                ("\"-0.01\"", false),
+                ("1", false),
+                ("0.25", false),
+            ] {
+                let text = combat_text().replace(&from, &format!("{key} = {to}"));
+                assert_ne!(text, combat_text(), "{from} is in the file");
+                let result = parse_surface_combat_figures(&text, here());
+                assert_eq!(result.is_ok(), ok, "{key} = {to}");
+            }
+            let text = combat_text().replace(&format!("{from}\n"), "");
+            let message = parse_surface_combat_figures(&text, here())
+                .expect_err("a missing key is refused")
+                .message;
+            assert!(message.contains(key), "{message}");
+        }
     }
 
     #[test]

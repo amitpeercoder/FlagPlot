@@ -598,6 +598,7 @@ mod tests {
                         gun_rounds: Fixed::from_int(800),
                         torpedoes_ready: false,
                         systems: ShipSystems::ALL_WORKING,
+                        experience: Ship::DEFAULT_EXPERIENCE,
                     },
                 );
             }

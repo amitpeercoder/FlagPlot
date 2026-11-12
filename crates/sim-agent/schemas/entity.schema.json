@@ -173,6 +173,12 @@
         "systems": {
           "$ref": "#/$defs/systems"
         },
+        "experience": {
+          "description": "The crew's experience, 0 to 4, present only when it is not the standard 2 (decision 0064).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
         "range_nm": {
           "$ref": "defs.schema.json#/$defs/count_or_null"
         },
@@ -210,6 +216,12 @@
         },
         "fire_damage": {
           "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "experience": {
+          "description": "The crew's experience, 0 to 4, present only when it is not the standard 2 (decision 0064).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
         }
       }
     },

@@ -99,8 +99,19 @@
 //!   Unit cases for the calculation alone (`validate/take.rs`): "99.999999"
 //!   gives 0; "100" gives 1; "199.5" gives 1; "2791" gives 27; "1867" gives
 //!   18; "471" gives 4.
-//! - So the fixture's head reads: judged 10 (A, B, C, D, F, G, I, L, M, N),
-//!   agree 6 (A, D, F, G, M, N), at the edge 1 (L), miss 3 (B, C, I).
+//! - Shots by ship (batch version 3). Ships 3 and 4 (Allied) fired gun shots
+//!   "150" and "60.5" in run 1 and "99" and "0.999" in run 2, and none in the
+//!   other eighteen runs. To stay consistent with them the Allied gun fire of
+//!   the fixture is `shots` "210.5" in run 1 and "99.999" in run 2 (hits 0),
+//!   and "0" in the others; no measure here reads the Allied side's fire.
+//! - P (judged, shots_in_hundreds, ships [3, 4], weapon gun, record 0): the
+//!   ships' shots are summed and floored once. Run 1: floor(210.5 / 100) = 2;
+//!   run 2: floor(99.999 / 100) = 0; the other eighteen 0. No run is left
+//!   out: 20 kept. Sorted: nineteen 0, one 2. The 5th, 25th, median, 75th and
+//!   95th (rank 19) are all 0. Record 0 is inside both; held by 19 of 20.
+//!   Plain AGREES.
+//! - So the fixture's head reads: judged 11 (A, B, C, D, F, G, I, L, M, N,
+//!   P), agree 7 (A, D, F, G, M, N, P), at the edge 1 (L), miss 3 (B, C, I).
 //! - The battle: 20 runs is fewer than 1,000, so no verdict on the battle;
 //!   the report says so.
 //!
@@ -185,7 +196,7 @@ fn empty_run(seed: u64) -> Value {
             "japanese": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0},
             "allied": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0}},
         "attacks": [], "escorts": [], "broke_off": [], "fights": [],
-        "supply": [], "formed_groups": []
+        "supply": [], "formed_groups": [], "shots_by": []
     })
 }
 
@@ -246,6 +257,18 @@ fn fixture(dir: &Path, runs: u64) -> Value {
             _ => ("100", 10),
         };
         run["fire"]["japanese"]["gun"] = json!({"shots": shots, "hits": hits});
+        let by = |ship: u32, gun: &str| json!({"ship": ship, "gun": gun, "torpedo": "0"});
+        match r {
+            1 => {
+                run["shots_by"] = json!([by(3, "150"), by(4, "60.5")]);
+                run["fire"]["allied"]["gun"] = json!({"shots": "210.5", "hits": 0});
+            }
+            2 => {
+                run["shots_by"] = json!([by(3, "99"), by(4, "0.999")]);
+                run["fire"]["allied"]["gun"] = json!({"shots": "99.999", "hits": 0});
+            }
+            _ => {}
+        }
         run["claims"]["japanese"]["shot_down"] = json!(match r {
             1 => 7,
             2 => 5,
@@ -463,6 +486,18 @@ judged = true
 take = "fights_by_day"
 rows = [1]
 reason = "r"
+
+[[measure]]
+id = "p"
+counts = "P"
+record_low = 0
+record_high = 0
+judged = true
+take = "shots_in_hundreds"
+ships = [3, 4]
+weapon = "gun"
+rows = [1]
+reason = "r"
 "#;
 
 struct Setup {
@@ -566,6 +601,7 @@ fn the_hand_calculation_of_every_measure() {
     expect(&report, "j", "0 to 0", "0", "1 of 20", "0", "reported");
     expect(&report, "k", "0 to 0", "0", "1 of 20", "0", "reported");
     expect(&report, "m", "0 to 1", "1", "16 of 20", "0", "agrees");
+    expect(&report, "p", "0 to 0", "0", "19 of 20", "0", "agrees");
     expect(
         &report,
         "l",
@@ -575,8 +611,9 @@ fn the_hand_calculation_of_every_measure() {
         "0",
         "agrees, at the edge",
     );
-    // Ten judged: a, d, f, g, m, n agree; l agrees at the edge; b, c, i miss.
-    assert!(report.contains("Judged measures: 6 agree, 1 agree at the edge, 3 miss, of 10."));
+    // Eleven judged: a, d, f, g, m, n, p agree; l agrees at the edge; b, c, i
+    // miss.
+    assert!(report.contains("Judged measures: 7 agree, 1 agree at the edge, 3 miss, of 11."));
     assert!(report.contains("## At the edge\n\n### l\n"));
     assert!(report.contains("- Verdict: agrees, at the edge"));
     assert!(report.contains("least 0, 5th 0, 25th 0, median 0, 75th 1, 95th 2, greatest 2"));
@@ -698,6 +735,18 @@ fn what_validate_refuses() {
     let mut b = good.clone();
     b["version"] = json!(1);
     refuse("version", &b, MEASURES, "version 1");
+    // A version 2 batch, the shape before the shots of each ship, is refused
+    // for its version and told to be made again.
+    let mut b = good.clone();
+    b["version"] = json!(2);
+    b["per_run"][0]
+        .as_object_mut()
+        .expect("run")
+        .remove("shots_by");
+    refuse("version-2", &b, MEASURES, "version 2; validate reads");
+    let mut b = good.clone();
+    b["version"] = json!(2);
+    refuse("version-2-again", &b, MEASURES, "make it again");
     let mut b = good.clone();
     b["inputs"]["state_version"] = json!("flagplot-state-v0");
     refuse("state", &b, MEASURES, "state hash layout");
@@ -810,7 +859,32 @@ fn what_validate_refuses() {
         .as_object_mut()
         .expect("run")
         .remove("fights");
-    refuse("old-shape", &b, MEASURES, "not a batch file of version 2");
+    refuse("old-shape", &b, MEASURES, "not a batch file of version 3");
+    // `ships` and `side` together are an error, and so is neither.
+    refuse(
+        "ships-and-side",
+        &good,
+        &MEASURES.replace(
+            "ships = [3, 4]\nweapon = \"gun\"",
+            "ships = [3, 4]\nside = \"japanese\"\nweapon = \"gun\"",
+        ),
+        "ships or side, not both",
+    );
+    refuse(
+        "neither-ships-nor-side",
+        &good,
+        &MEASURES.replace("ships = [3, 4]\nweapon = \"gun\"", "weapon = \"gun\""),
+        "needs the key side",
+    );
+    refuse(
+        "unknown-ship-in-shots",
+        &good,
+        &MEASURES.replace(
+            "ships = [3, 4]\nweapon = \"gun\"",
+            "ships = [3, 77]\nweapon = \"gun\"",
+        ),
+        "ship 77",
+    );
 }
 
 #[test]

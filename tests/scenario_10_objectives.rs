@@ -495,8 +495,10 @@ fn objectives_change_no_hash_and_no_event() {
     // target lists) were given, and 747baccba462dd21 until the carriers'
     // target list gained the transport (the third trial of settlement 4).
     // That was 9887acc2b651abb9 until decision 0067 recorded each base's
-    // count at the end of the day: the hash counts the events of the log.
-    assert!(baseline.contains("hash 798ce5b9ab626198"));
+    // count at the end of the day: the hash counts the events of the log. And
+    // it was 798ce5b9ab626198 until the hash went to version 6 (decision
+    // 0064, a ship's experience).
+    assert!(baseline.contains("hash 1710b81aa6539e01"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

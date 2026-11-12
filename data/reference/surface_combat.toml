@@ -46,6 +46,26 @@ alarm_chance = "0.5"
 crippled_flotation = 50
 claimed_sunk_fire = 30
 
+# Experience (decision 0064). In a dark fight a chance is multiplied by
+# 1 + strength x (experience - 2): a ship's own value for her gun and torpedo
+# chances, the mean of the force's ships for its chance to sight. Each strength
+# is from 0 to 0.5; 0 switches the rule off. PLACEHOLDER: the middle of the
+# allowed range, for tuning to set. Nothing reads experience by day.
+experience_gun_strength = "0.25"
+experience_torpedo_strength = "0.25"
+experience_sighting_strength = "0.25"
+
+# A force not ready when a fight begins (not at battle readiness by order, and
+# not alert since before the pulse began) fires its guns, in every round of
+# that fight, at this share of their full rate (decision 0068). From 0.1 to 1;
+# 1 switches the rule off. Torpedoes are not touched. PLACEHOLDER: 0.5 is
+# Condition II as engagement_events row 23 states it, half the armament
+# manned. Tuning may move it, toward the record and never for one battle; if
+# it goes below 0.5 it also carries what the rule does not model (captains
+# asleep, ships taken for friends, orders to cease fire), and the tuning
+# record says so (decisions 7 and 8).
+unready_gun_share = "0.5"
+
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]
 propulsion = "0.2"

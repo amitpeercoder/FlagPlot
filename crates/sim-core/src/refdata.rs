@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 use crate::fixed::Fixed;
 use crate::ids::{AircraftTypeId, ShipClassId};
 use crate::orders::Reach;
-use crate::state::{ShipSystem, SystemState};
+use crate::state::{Ship, ShipSystem, SystemState};
 
 /// Broad type of a ship class.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -404,6 +404,33 @@ pub struct SurfaceCombatFigures {
     pub crippled_flotation: Fixed,
     /// Fire damage at which the enemy believes a ship is sinking.
     pub claimed_sunk_fire: Fixed,
+    /// How much a gun shot's chance to hit, in a dark fight, rises with the
+    /// firing ship's experience above 2 and falls with it below (decision
+    /// 0064). From 0 to 0.5. At 0 experience does nothing to it.
+    pub experience_gun_strength: Fixed,
+    /// The same for a torpedo's chance to hit.
+    pub experience_torpedo_strength: Fixed,
+    /// The same for a force's chance to sight the enemy, which reads the
+    /// mean experience of the ships it has afloat.
+    pub experience_sighting_strength: Fixed,
+    /// The share of its gun shots a force fires, for the whole of a fight,
+    /// when it was not ready as the fight began (decision 0068). From 0.1 to
+    /// 1; at 1 the rule does nothing.
+    pub unready_gun_share: Fixed,
+}
+
+/// The least `unready_gun_share` may be (decision 0068, 7).
+pub const MIN_UNREADY_GUN_SHARE: Fixed = Fixed::from_raw(Fixed::SCALE / 10);
+
+/// The most a strength of experience may be (decision 0064, 6).
+pub const MAX_EXPERIENCE_STRENGTH: Fixed = Fixed::from_raw(Fixed::SCALE / 2);
+
+/// The factor an experience gives a chance in a dark fight:
+/// `1 + strength x (experience - 2)` (decision 0064, 6). `experience` is a
+/// ship's value, or a force's mean in the fixed arithmetic. At a strength of
+/// 0 it is exactly 1.
+pub fn experience_factor(strength: Fixed, experience: Fixed) -> Fixed {
+    Fixed::ONE + strength * (experience - Fixed::from_int(i64::from(Ship::DEFAULT_EXPERIENCE)))
 }
 
 impl SurfaceCombatFigures {
@@ -491,6 +518,30 @@ impl SurfaceCombatFigures {
             }
         }
         let hundred = Fixed::from_int(100);
+        let strengths = [
+            ("experience gun strength", self.experience_gun_strength),
+            (
+                "experience torpedo strength",
+                self.experience_torpedo_strength,
+            ),
+            (
+                "experience sighting strength",
+                self.experience_sighting_strength,
+            ),
+        ];
+        for (label, value) in strengths {
+            if value < Fixed::ZERO || value > MAX_EXPERIENCE_STRENGTH {
+                return Some(format!(
+                    "surface combat {label} {value} is not between 0 and 0.5"
+                ));
+            }
+        }
+        if self.unready_gun_share < MIN_UNREADY_GUN_SHARE || self.unready_gun_share > Fixed::ONE {
+            return Some(format!(
+                "surface combat unready gun share {} is not between 0.1 and 1",
+                self.unready_gun_share
+            ));
+        }
         let levels = [
             ("crippled flotation", self.crippled_flotation),
             ("claimed sunk fire", self.claimed_sunk_fire),
@@ -959,7 +1010,9 @@ impl AirCombatFigures {
 
 #[cfg(test)]
 impl SurfaceCombatFigures {
-    /// The figures of `data/reference/surface_combat.toml`, written out.
+    /// The figures of `data/reference/step1/surface_combat.toml`, written
+    /// out: the strengths of experience are 0, so that the tests of the other
+    /// rules are not touched by it.
     pub(crate) fn from_surface_combat_toml() -> SurfaceCombatFigures {
         let hundredth = |n: i64| Fixed::from_ratio(n, 100);
         SurfaceCombatFigures {
@@ -1008,6 +1061,10 @@ impl SurfaceCombatFigures {
             .collect(),
             crippled_flotation: Fixed::from_int(50),
             claimed_sunk_fire: Fixed::from_int(30),
+            experience_gun_strength: Fixed::ZERO,
+            experience_torpedo_strength: Fixed::ZERO,
+            experience_sighting_strength: Fixed::ZERO,
+            unready_gun_share: Fixed::ONE,
         }
     }
 }
@@ -1109,6 +1166,54 @@ mod tests {
         let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
         change(&mut figures);
         figures.problem().expect("the change makes a problem")
+    }
+
+    #[test]
+    fn each_strength_of_experience_must_be_between_zero_and_a_half() {
+        let over = Fixed::from_ratio(51, 100);
+        let under = Fixed::from_ratio(-1, 100);
+        for (label, set) in [
+            (
+                "experience gun strength",
+                (|f: &mut SurfaceCombatFigures, v| f.experience_gun_strength = v)
+                    as fn(&mut SurfaceCombatFigures, Fixed),
+            ),
+            ("experience torpedo strength", |f, v| {
+                f.experience_torpedo_strength = v
+            }),
+            ("experience sighting strength", |f, v| {
+                f.experience_sighting_strength = v
+            }),
+        ] {
+            assert!(combat_problem_of(|f| set(f, over)).contains(label));
+            assert!(combat_problem_of(|f| set(f, under)).contains(label));
+            let mut edge = SurfaceCombatFigures::from_surface_combat_toml();
+            set(&mut edge, Fixed::from_ratio(1, 2));
+            assert_eq!(edge.problem(), None);
+            set(&mut edge, Fixed::ZERO);
+            assert_eq!(edge.problem(), None);
+        }
+    }
+
+    #[test]
+    fn the_unready_gun_share_must_be_between_a_tenth_and_one() {
+        for (value, ok) in [
+            (Fixed::from_ratio(1, 10), true),
+            (Fixed::from_ratio(1, 2), true),
+            (Fixed::ONE, true),
+            (Fixed::from_ratio(99, 1000), false),
+            (Fixed::ZERO, false),
+            (Fixed::from_ratio(101, 100), false),
+            (Fixed::from_ratio(-1, 2), false),
+        ] {
+            let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+            figures.unready_gun_share = value;
+            let problem = figures.problem();
+            assert_eq!(problem.is_none(), ok, "{value}");
+            if let Some(problem) = problem {
+                assert!(problem.contains("unready gun share"), "{problem}");
+            }
+        }
     }
 
     #[test]

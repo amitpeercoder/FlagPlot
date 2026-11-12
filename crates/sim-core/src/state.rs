@@ -87,9 +87,19 @@ pub struct Ship {
     pub torpedoes_ready: bool,
     /// The state of each named system (decision 0016).
     pub systems: ShipSystems,
+    /// The crew's experience, a whole number from 0 to
+    /// [`Ship::MAX_EXPERIENCE`] (decision 0064). Set when the scenario loads
+    /// and written by no rule. Three chances of a dark surface fight read it.
+    pub experience: u8,
 }
 
 impl Ship {
+    /// A crew trained to its service's standard, with nothing in the record
+    /// for or against it. A placeholder ship has this value.
+    pub const DEFAULT_EXPERIENCE: u8 = 2;
+    /// The highest experience a ship may have.
+    pub const MAX_EXPERIENCE: u8 = 4;
+
     /// A ship with nothing aboard and nothing damaged: no fuel, supply or
     /// cargo, no gun rounds, torpedoes spent, every system working. Callers
     /// set the figures they care about; production code that builds a ship
@@ -116,6 +126,7 @@ impl Ship {
             gun_rounds: Fixed::ZERO,
             torpedoes_ready: false,
             systems: ShipSystems::ALL_WORKING,
+            experience: Ship::DEFAULT_EXPERIENCE,
         }
     }
 }
