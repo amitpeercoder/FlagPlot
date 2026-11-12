@@ -1569,7 +1569,7 @@ fn check_never_writes_even_when_clean() {
     let dir = scratch("check");
     install(&dir, &["shp"], &[], &base());
     match go(&dir, true) {
-        Outcome::Clean { files, written } => {
+        Outcome::Clean { files, written, .. } => {
             assert!(!written);
             let names: Vec<_> = files
                 .iter()
@@ -1592,7 +1592,7 @@ fn a_clean_run_writes_the_three_files_and_a_second_run_gives_the_same_bytes() {
     for dir in [&first, &second] {
         install(dir, &["shp", "shp2"], &[], &base());
         match go(dir, false) {
-            Outcome::Clean { written, files } => {
+            Outcome::Clean { written, files, .. } => {
                 assert!(written);
                 assert_eq!(files.len(), 3);
             }
@@ -3461,7 +3461,7 @@ fn a_run_writes_the_aircraft_file_and_its_sources_beside_the_others() {
         std::fs::write(dir.join("oob").join(name), text).unwrap();
     }
     match go(&dir, true) {
-        Outcome::Clean { written, files } => {
+        Outcome::Clean { written, files, .. } => {
             assert!(!written);
             assert_eq!(files.len(), 5, "{files:?}");
         }
@@ -3469,7 +3469,7 @@ fn a_run_writes_the_aircraft_file_and_its_sources_beside_the_others() {
     }
     assert!(reference_files(&dir).is_empty());
     match go(&dir, false) {
-        Outcome::Clean { written, files } => {
+        Outcome::Clean { written, files, .. } => {
             assert!(written);
             assert_eq!(files.len(), 5);
         }
@@ -3571,7 +3571,7 @@ fn a_list_with_no_ships_writes_only_the_aircraft_files() {
         std::fs::write(dir.join("oob").join(name), text).unwrap();
     }
     match go(&dir, true) {
-        Outcome::Clean { written, files } => {
+        Outcome::Clean { written, files, .. } => {
             assert!(!written);
             assert_eq!(files.len(), 2, "{files:?}");
         }

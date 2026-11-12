@@ -45,11 +45,21 @@ fn main() -> ExitCode {
             );
             ExitCode::FAILURE
         }
-        Ok(Outcome::Clean { files, written }) => {
+        Ok(Outcome::Clean {
+            files,
+            written,
+            unread,
+        }) => {
             println!("{list}: no problems");
             println!("{}", if written { "wrote:" } else { "would write:" });
             for file in files {
                 println!("  {}", file.display());
+            }
+            if !unread.is_empty() {
+                println!("rows of the listed ships that no question read (not in the file):");
+                for line in unread {
+                    println!("  {line}");
+                }
             }
             ExitCode::SUCCESS
         }
