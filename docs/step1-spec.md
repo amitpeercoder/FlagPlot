@@ -23,6 +23,8 @@ Out of scope:
 - Submarines, mines, production and reinforcement schedules. These arrive in later steps.
 - Tuning against history. Step 1 makes the model run and be measurable. Step 2 makes it accurate.
 
+Deferred after this was written (decision 0052): ground combat, land units and their orders, shore bombardment, the ground support mission and base orders. They are still listed below as first intended, and arrive with the scenario that first needs them.
+
 ## Map
 
 The simulation uses a hex grid at 40 nautical miles per hex, in axial coordinates. The UI will never show the hexes.
