@@ -2,44 +2,44 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7d5a6cee569a99f4  48 events
-day   2  hash f15ef675b800d26b  34 events
-day   3  hash 5631fafb8764a2a1  31 events
-day   4  hash ffdb32a0c50395ca  21 events
-day   5  hash ae0783a2764f48e2  15 events
-day   6  hash 3722ab413409e222  34 events
-day   7  hash 2d51d7501e42f288  20 events
-day   8  hash e6ef43249c0faf46  11 events
-day   9  hash 0ad1a60e938b20e7  30 events
-day  10  hash 3310dd7ab2ef72d2  23 events
-day  11  hash 34ed64c94cb13dcb  20 events
-day  12  hash 99a664b7caa1859b  34 events
-day  13  hash 741d7f05bf737fc3  25 events
-day  14  hash ad52c67f3ec23765  23 events
-day  15  hash 04a2c59cfd3d65a2  42 events
-day  16  hash d4df149a32612cf2  21 events
-day  17  hash 9f26c31263964c9d  15 events
-day  18  hash d29cc1245f63177c  33 events
-day  19  hash 52a310a604e369d8  19 events
-day  20  hash f5821445b1697eee  13 events
-day  21  hash c9c18b4e160a84b1  38 events
-day  22  hash 6abf32a5f4215bab  26 events
-day  23  hash 9b0f5a77ddb3c2d7  23 events
-day  24  hash 21f11907204b023b  49 events
-day  25  hash 0c8548d36f67cd4b  29 events
-day  26  hash 71490d9a80a3dc5c  27 events
-day  27  hash 856ceee56b79d69d  44 events
-day  28  hash 0e6c1df189d72099  28 events
+day   1  hash fdb4dc38d66f74ec  49 events
+day   2  hash 001e4215feb3ad3a  35 events
+day   3  hash 0b099c9b932ef9dc  31 events
+day   4  hash 10a91702bf116c93  21 events
+day   5  hash ad6d54e780d0e7bb  15 events
+day   6  hash 349a9f0b2874fbbb  35 events
+day   7  hash 1abf02d4d9a1a019  20 events
+day   8  hash 91ce2aa1944e2f1d  11 events
+day   9  hash f1c268f1281a9901  31 events
+day  10  hash f54212f1e5752198  23 events
+day  11  hash 49f1eba17a207305  20 events
+day  12  hash 4d023148f158464d  35 events
+day  13  hash a4ea9f26853326ef  25 events
+day  14  hash 5e7c0801716c4007  23 events
+day  15  hash 574732c31ff86921  44 events
+day  16  hash f876e43331c595fb  21 events
+day  17  hash f9ed1b9ed3605eb6  15 events
+day  18  hash b4cfd53a31759f51  33 events
+day  19  hash df137cc47e61283b  19 events
+day  20  hash d777a9f18cb0dc77  13 events
+day  21  hash 8a12963bb28b60e6  39 events
+day  22  hash 76f43024ff910fe8  26 events
+day  23  hash c3afde30bedf07b4  23 events
+day  24  hash e8443424c9feac58  50 events
+day  25  hash 94bd54d53de7ca1e  29 events
+day  26  hash c3430d864dc7567b  27 events
+day  27  hash 919317c26d34a366  45 events
+day  28  hash 8ec2f5e6b6360f72  28 events
 
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 39 ready, 41 pilots, mission BaseStrike on base:1, fatigue 52.64, rests above 45, stood down, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 18 ready, 18 pilots, mission CombatAirPatrol, patrol share 0, fatigue 52.64, rests above 45, stood down, no arc
 air_group:3 "6th Air Group" (Japanese) at base:2: 9 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 11.44, rests above 45, no arc
-air_group:10 "VMF-223" (Allied) at base:1: 0 ready, 19 pilots, mission CombatAirPatrol, patrol share 1, rests above 40, no arc
+air_group:10 "VMF-223" (Allied) at base:1: 0 ready, 12 pilots, mission CombatAirPatrol, patrol share 1, rests above 40, no arc
 air_group:11 "VMSB-232" (Allied) at base:1: 9 ready, 12 pilots, mission NavalStrike, no arc
 air_group:12 "Flight 300" (Allied) at base:1: 11 ready, 11 pilots, mission NavalStrike, no arc
-air_group:13 "VMF-224" (Allied) at base:1: 1 ready, 19 pilots, mission CombatAirPatrol, patrol share 1, fatigue 3, rests above 40, no arc
+air_group:13 "VMF-224" (Allied) at base:1: 1 ready, 11 pilots, mission CombatAirPatrol, patrol share 1, fatigue 3, rests above 40, no arc
 air_group:14 "VMSB-231" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
-air_group:15 "VF-5" (Allied) at base:1: 13 ready, 1 damaged, 24 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
+air_group:15 "VF-5" (Allied) at base:1: 13 ready, 1 damaged, 22 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
 air_group:16 "Fighters from Hornet and Wasp" (Allied) at base:1: 16 ready, 18 pilots, mission CombatAirPatrol, patrol share 1, fatigue 30, rests above 40, no arc
 air_group:17 "VS-3" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
 base:1 "Henderson Field" (Allied) at (2,-4): 2747 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day

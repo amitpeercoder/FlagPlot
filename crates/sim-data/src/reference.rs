@@ -521,6 +521,9 @@ struct AirCombatFile {
     extended_reach_share: Quantity,
     ditch_chance_per_radius_beyond: Quantity,
     crew_recovered_short_of_home: Quantity,
+    /// Decision 6a of 0059.
+    crew_recovered_over_own_base: Quantity,
+    crew_recovered_beside_own_force: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -586,6 +589,14 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         crew_recovered_short_of_home: number(
             "crew_recovered_short_of_home",
             &file.crew_recovered_short_of_home,
+        )?,
+        crew_recovered_over_own_base: number(
+            "crew_recovered_over_own_base",
+            &file.crew_recovered_over_own_base,
+        )?,
+        crew_recovered_beside_own_force: number(
+            "crew_recovered_beside_own_force",
+            &file.crew_recovered_beside_own_force,
         )?,
     };
     if let Some(problem) = figures.problem() {
@@ -1021,6 +1032,14 @@ mod tests {
             ("extended_reach_share", "0.25", "1", "1.5", "0.25"),
             ("ditch_chance_per_radius_beyond", "2", "100", "101", "2.5"),
             ("crew_recovered_short_of_home", "0.7", "1", "1.5", "0.7"),
+            ("crew_recovered_over_own_base", "0.6", "1", "1.5", "0.6"),
+            (
+                "crew_recovered_beside_own_force",
+                "0.95",
+                "1",
+                "1.5",
+                "0.95",
+            ),
         ] {
             let line = format!("{key} = \"{value}\"");
             assert!(

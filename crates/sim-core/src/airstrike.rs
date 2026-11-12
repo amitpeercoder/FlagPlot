@@ -912,10 +912,16 @@ impl World {
                     ) => SortieKind::Escort,
                     _ => SortieKind::Strike,
                 };
+                // The firing group: with the patrol group it keys the draws for
+                // the pilots of a patrol's losses (decision 6a of 0059).
+                let firer = match &roll.fire {
+                    Fire::Fighters { firer, .. } => Some(*firer),
+                    _ => None,
+                };
                 let mut real = 0;
                 for (group, lost) in lost_list {
                     if let Some((event, taken)) =
-                        self.lose_aircraft(day, pulse, *group, *lost, lost_from, cause)
+                        self.lose_aircraft(day, pulse, *group, *lost, lost_from, cause, firer)
                     {
                         losses_of.push((*group, event));
                         self.note_loss(*group, lost_from, *lost);
@@ -1592,8 +1598,14 @@ impl World {
     /// Records nothing if it has none to lose. If the group's pilots are
     /// tracked, each aircraft lost takes its pilot with it (never below 0),
     /// recorded as `PilotsLost` right after, unless the aircraft were the
-    /// group's patrol over its own hex, whose pilots are saved (decisions 3
-    /// and 4 of 0038). `lost_from` says which.
+    /// group's patrol over its own hex. Each of those draws for its pilot
+    /// (decision 6a of 0059): recovered with `crew_recovered_over_own_base`
+    /// for a group at a base, `crew_recovered_beside_own_force` for one
+    /// aboard a ship, and a pilot not recovered is lost. The draws are one
+    /// stream with [`Draw::PatrolPilot`] in the air combat subsystem, keyed
+    /// on the patrol group and `firer`, the escort group whose roll took the
+    /// loss: one draw for each aircraft lost. `lost_from` says which.
+    #[allow(clippy::too_many_arguments)]
     fn lose_aircraft(
         &mut self,
         day: u32,
@@ -1602,16 +1614,44 @@ impl World {
         aircraft: u32,
         lost_from: SortieKind,
         cause: EventId,
+        firer: Option<AirGroupId>,
     ) -> Option<(EventId, u32)> {
+        let (ready, location, pilots_before) = {
+            let air_group = &self.truth.air_groups[&group];
+            (air_group.ready, air_group.location, air_group.pilots)
+        };
+        let lost = aircraft.min(ready);
+        if lost == 0 {
+            return None;
+        }
+        // A patrol's pilots draw: how many of the crews were recovered.
+        let mut recovered_of: Option<(u32, Fixed)> = None;
+        if let (SortieKind::Patrol, Some(_), Some(firer), Some(figures)) = (
+            lost_from,
+            pilots_before,
+            firer,
+            self.ref_data.air_combat.as_ref(),
+        ) {
+            let chance = match location {
+                AirGroupLocation::Base(_) => figures.crew_recovered_over_own_base,
+                AirGroupLocation::Ship(_) => figures.crew_recovered_beside_own_force,
+            };
+            let mut stream = self.rng_pair(
+                day,
+                Some(pulse),
+                Subsystem::AirCombat,
+                Draw::PatrolPilot,
+                EntityRef::AirGroup(group),
+                EntityRef::AirGroup(firer),
+            );
+            let recovered = roll_shots(&mut stream, Fixed::from_int(i64::from(lost)), chance);
+            recovered_of = Some((recovered, chance));
+        }
         let air_group = self
             .truth
             .air_groups
             .get_mut(&group)
             .expect("the air group exists");
-        let lost = aircraft.min(air_group.ready);
-        if lost == 0 {
-            return None;
-        }
         air_group.ready -= lost;
         let remaining = air_group.ready;
         let pilots_lost = match air_group.pilots {
@@ -1620,9 +1660,33 @@ impl World {
                 air_group.pilots = Some(pilots - taken);
                 taken
             }
-            _ => 0,
+            Some(pilots) => {
+                // Only a draw that was made loses a pilot.
+                let unrecovered = recovered_of.map_or(0, |(recovered, _)| lost - recovered);
+                let taken = unrecovered.min(pilots);
+                air_group.pilots = Some(pilots - taken);
+                taken
+            }
+            None => 0,
         };
         let pilots_left = air_group.pilots.unwrap_or(0);
+        // Where a draw was made, the breakdown says how many crews were
+        // recovered, whether or not a pilot was lost.
+        let breakdown = recovered_of.and_then(|(recovered, chance)| {
+            self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "aircraft_lost",
+                        value: Fixed::from_int(i64::from(lost)),
+                    },
+                    Factor {
+                        name: "crew_recovered_chance",
+                        value: chance,
+                    },
+                ],
+                result: Fixed::from_int(i64::from(recovered)),
+            })
+        });
         let event = self.events.record(
             day,
             Some(pulse),
@@ -1632,7 +1696,7 @@ impl World {
                 remaining,
             },
             vec![Cause::Event(cause)],
-            None,
+            breakdown,
         );
         if pilots_lost > 0 {
             self.events.record(
@@ -8012,7 +8076,15 @@ mod tests {
             (SortieKind::Patrol, 2, 3, 5),
         ] {
             let (event, taken) = world
-                .lose_aircraft(1, Pulse::Morning, AirGroupId::new(10), lost, kind, cause)
+                .lose_aircraft(
+                    1,
+                    Pulse::Morning,
+                    AirGroupId::new(10),
+                    lost,
+                    kind,
+                    cause,
+                    None,
+                )
                 .expect("aircraft were lost");
             assert_eq!(taken, lost);
             let group = &world.truth.air_groups[&AirGroupId::new(10)];
@@ -8062,6 +8134,7 @@ mod tests {
                 4,
                 SortieKind::Escort,
                 cause,
+                None,
             )
             .expect("lost");
         assert_eq!(pilots_of(&world, 11), None);
@@ -8076,6 +8149,7 @@ mod tests {
                 3,
                 SortieKind::Escort,
                 cause,
+                None,
             )
             .expect("lost");
         assert_eq!(pilots_of(&world, 12), Some(0));
@@ -8089,7 +8163,8 @@ mod tests {
                 AirGroupId::new(12),
                 2,
                 SortieKind::Escort,
-                cause
+                cause,
+                None
             )
             .is_none());
         assert_eq!(world.events.len(), before);
@@ -8102,6 +8177,9 @@ mod tests {
         // Japanese base 2, where 5 fighters are on patrol.
         let mut world = raid_world(1);
         sure_fighters(&mut world);
+        // At 1 every patrol pilot is recovered: step 1's rule (decision 6a of
+        // 0059; the frozen figure).
+        air_figures(&mut world).crew_recovered_over_own_base = Fixed::ONE;
         group_mut(&mut world, AirGroupId::new(1)).ready = 6;
         group_mut(&mut world, AirGroupId::new(1)).pilots = Some(6);
         cap_group(&mut world, 2, Side::Allied, 1, 4, Fixed::ZERO);
@@ -9793,5 +9871,136 @@ mod tests {
             world.check_order(Side::Allied, &order(BOMBERS, Reach::Normal)),
             Ok(())
         );
+    }
+
+    // ---- the pilot of a patrol shot down over its own hex (decision 6a of 0059) ----
+
+    /// The raid of the test above, with the two chances given. Returns the
+    /// world after the pulse.
+    fn patrol_raid(seed: u64, base_chance: Fixed, force_chance: Fixed, record: bool) -> World {
+        let mut world = raid_world(seed);
+        world.set_config(crate::SimConfig {
+            record_breakdowns: record,
+        });
+        sure_fighters(&mut world);
+        let figures = air_figures(&mut world);
+        figures.crew_recovered_over_own_base = base_chance;
+        figures.crew_recovered_beside_own_force = force_chance;
+        group_mut(&mut world, AirGroupId::new(1)).ready = 6;
+        cap_group(&mut world, 2, Side::Allied, 1, 4, Fixed::ZERO);
+        {
+            let escorts = group_mut(&mut world, AirGroupId::new(2));
+            escorts.location = AirGroupLocation::Base(BASE_ALLIED);
+            escorts.pilots = Some(4);
+        }
+        cap_group(&mut world, 3, Side::Japanese, 2, 5, Fixed::ONE);
+        {
+            let patrol = group_mut(&mut world, AirGroupId::new(3));
+            patrol.location = AirGroupLocation::Base(BASE_JAPANESE);
+            patrol.pilots = Some(5);
+        }
+        strike_pulse(&mut world, Pulse::Morning);
+        world
+    }
+
+    #[test]
+    fn a_patrol_over_its_base_draws_for_each_pilot_at_the_base_figure_and_not_the_ships() {
+        // The escorts bring down 4 of the 5 patrol aircraft.
+        let lost_all = patrol_raid(1, Fixed::ZERO, Fixed::ONE, false);
+        assert_eq!(pilots_of(&lost_all, 3), Some(1));
+        assert_eq!(lost_all.truth.air_groups[&AirGroupId::new(3)].ready, 1);
+        let saved_all = patrol_raid(1, Fixed::ONE, Fixed::ZERO, false);
+        assert_eq!(pilots_of(&saved_all, 3), Some(5));
+        // PilotsLost follows the AircraftLost it comes from, for the patrol.
+        let log: Vec<Event> = lost_all.events.iter().cloned().collect();
+        let at = log
+            .iter()
+            .position(|e| {
+                matches!(e.kind, EventKind::PilotsLost { air_group, .. } if air_group.raw() == 3)
+            })
+            .expect("the patrol lost pilots");
+        assert_eq!(log[at].causes, vec![Cause::Event(log[at - 1].id)]);
+        assert!(matches!(
+            log[at - 1].kind,
+            EventKind::AircraftLost { air_group, aircraft: 4, remaining: 1 } if air_group.raw() == 3
+        ));
+        // The text of the loss is as it was, and the pilot event reads as one.
+        assert_eq!(
+            log[at - 1].kind.to_string(),
+            "air_group:3 lost 4 aircraft, 1 left"
+        );
+        assert_eq!(
+            log[at].kind.to_string(),
+            "air_group:3 lost 4 pilots, 1 left"
+        );
+    }
+
+    #[test]
+    fn a_patrol_draw_is_the_stream_of_the_patrol_group_and_the_firing_group() {
+        let world = patrol_raid(3, fixed(6, 10), Fixed::ONE, true);
+        let mut stream = world.rng_pair(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::AirCombat,
+            Draw::PatrolPilot,
+            EntityRef::AirGroup(AirGroupId::new(3)),
+            EntityRef::AirGroup(AirGroupId::new(2)),
+        );
+        let recovered = roll_shots(&mut stream, Fixed::from_int(4), fixed(6, 10));
+        assert_eq!(pilots_of(&world, 3), Some(5 - (4 - recovered)));
+        // The loss event says how many crews were recovered, lost or not.
+        let lost = events_where(
+            &world,
+            |k| matches!(k, EventKind::AircraftLost { air_group, .. } if air_group.raw() == 3),
+        );
+        let breakdown = lost[0].breakdown.as_ref().expect("a breakdown");
+        assert_eq!(breakdown.result, Fixed::from_int(i64::from(recovered)));
+        assert_eq!(breakdown.factors.len(), 2);
+        // Recording changes nothing; losses of bombers and escorts carry none.
+        let plain = patrol_raid(3, fixed(6, 10), Fixed::ONE, false);
+        assert_eq!(plain.state_hash(), world.state_hash());
+        let escorts = events_where(
+            &world,
+            |k| matches!(k, EventKind::AircraftLost { air_group, .. } if air_group.raw() == 2),
+        );
+        assert!(escorts[0].breakdown.is_none());
+    }
+
+    #[test]
+    fn a_patrol_of_a_group_whose_pilots_are_not_counted_draws_nothing() {
+        let mut world = raid_world(1);
+        sure_fighters(&mut world);
+        cap_group(&mut world, 2, Side::Allied, 1, 4, Fixed::ZERO);
+        cap_group(&mut world, 3, Side::Japanese, 2, 5, Fixed::ONE);
+        group_mut(&mut world, AirGroupId::new(3)).location = AirGroupLocation::Base(BASE_JAPANESE);
+        group_mut(&mut world, AirGroupId::new(2)).location = AirGroupLocation::Base(BASE_ALLIED);
+        air_figures(&mut world).crew_recovered_over_own_base = Fixed::ZERO;
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(pilots_of(&world, 3), None);
+        assert!(pilot_losses(&world).is_empty());
+    }
+
+    #[test]
+    fn a_carriers_patrol_draws_at_the_figure_beside_its_own_force() {
+        // Fighters aboard the Japanese carrier (ship 2) at (5,0), shot down by
+        // escorts of the Allied carrier's raid.
+        let run = |base: Fixed, force: Fixed| {
+            let mut world = world_with_a_good_contact(1);
+            sure_fighters(&mut world);
+            let figures = air_figures(&mut world);
+            figures.crew_recovered_over_own_base = base;
+            figures.crew_recovered_beside_own_force = force;
+            cap_group(&mut world, 5, Side::Allied, 1, 6, Fixed::ZERO);
+            cap_group(&mut world, 10, Side::Japanese, 2, 6, Fixed::ONE);
+            group_mut(&mut world, AirGroupId::new(10)).pilots = Some(6);
+            strike_pulse(&mut world, Pulse::Morning);
+            world
+        };
+        let kept = run(Fixed::ZERO, Fixed::ONE);
+        assert_eq!(pilots_of(&kept, 10), Some(6));
+        let lost = run(Fixed::ONE, Fixed::ZERO);
+        let aircraft_lost = 6 - lost.truth.air_groups[&AirGroupId::new(10)].ready;
+        assert!(aircraft_lost > 0);
+        assert_eq!(pilots_of(&lost, 10), Some(6 - aircraft_lost));
     }
 }

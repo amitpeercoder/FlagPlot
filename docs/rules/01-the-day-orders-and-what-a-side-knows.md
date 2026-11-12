@@ -415,7 +415,7 @@ A rule's figures are **loaded** when the scenario file names the file that holds
 
 | Scenario key | File | Rules that run only if it is loaded |
 | --- | --- | --- |
-| `air_combat` | `air_combat.toml` | Strike and base strike missions, combat air patrol, escorts, raids, anti-aircraft fire, the false claims of a raid, and reach beyond the radius with running out of fuel. Without it the mission orders and the extended reach order are refused. A file that names the scenario must hold every key: one without a key is refused when the scenario loads. |
+| `air_combat` | `air_combat.toml` | Strike and base strike missions, combat air patrol, escorts, raids, anti-aircraft fire, the false claims of a raid, reach beyond the radius with running out of fuel, and the pilots of a patrol shot down over its own hex. Without it the mission orders and the extended reach order are refused. A file that names the scenario must hold every key: one without a key is refused when the scenario loads. |
 | `air_upkeep` | `air_upkeep.toml` | Wear and repair of aircraft. |
 | `fatigue` | `fatigue.toml` | Fatigue of task forces and of air groups, stand-down and return, and the fatigue factor of a sighting. |
 | `air_supply` | `air_supply.toml` | Supply for sorties and the daily supply, bases out of supply, and the supply a repair costs. |
@@ -444,7 +444,7 @@ A key is made of:
 
 Each part has its own tag so equal values in different parts cannot cancel. A key opens a stream, and the n-th draw of the stream is mixed from the key and n. A rule that needs several numbers for one key takes them from that one stream in a fixed order. No rule shares one stream between entities and no stream is carried from one pulse to the next. [0003, 0013, 0055]
 
-The values of `Draw` are `Legacy` (0), `Claim` (1, the false claims of a raid, one stream for each side's claim keyed on its first firing unit and the raid's first strike group) and `Ditch` (2, the aircraft that run out of fuel and the recovery of their crews, one stream for each air group and pulse, in the upkeep subsystem, keyed on the air group alone). [0055, 0056, 0059]
+The values of `Draw` are `Legacy` (0), `Claim` (1, the false claims of a raid, one stream for each side's claim keyed on its first firing unit and the raid's first strike group) and `Ditch` (2, the aircraft that run out of fuel and the recovery of their crews, one stream for each air group and pulse, in the upkeep subsystem, keyed on the air group alone) and `PatrolPilot` (3, the pilots of a patrol's aircraft shot down over its own hex, one stream for each firing roll's losses to a patrol group, in the air combat subsystem, keyed on the patrol group and the firing escort group). [0055, 0056, 0059]
 
 The eleven legacy draws, told apart by the shape of their keys:
 

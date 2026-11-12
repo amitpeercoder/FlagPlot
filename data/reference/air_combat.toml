@@ -44,6 +44,13 @@ ditch_chance_per_radius_beyond = "2"
 # The chance the crew of such an aircraft is recovered. A crew not recovered
 # is a pilot lost, where the group's pilots are counted.
 crew_recovered_short_of_home = "0.7"
+# The chance the pilot of a patrol aircraft shot down over its own hex is
+# recovered (decision 6a of 0059): over a base of its side, and over its own
+# ships at sea. A pilot not recovered is lost. PLACEHOLDERS: the record has 12
+# of 23 pilots recovered over their own base and 19 of 19 beside their own
+# force, samples that favour those who lived to be written of.
+crew_recovered_over_own_base = "0.6"
+crew_recovered_beside_own_force = "0.95"
 
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
