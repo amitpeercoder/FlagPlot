@@ -870,7 +870,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "a164134a4af83599"
+    "hash": "ae2c3e601d7d518e"
   },
   "seats": {
     "allied": "player",

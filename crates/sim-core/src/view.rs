@@ -240,6 +240,15 @@ impl<'a> SideView<'a> {
         self.own_objectives().map(|o| o.mission.as_str())
     }
 
+    /// The three margins of the scenario that make a minor, a major and a
+    /// decisive victory, or `None` if the scenario has no objectives. One set
+    /// serves both sides (the margin is one number seen from both), so it
+    /// says nothing of the enemy's mission or objectives; it is part of how
+    /// the side's own objectives are scored.
+    pub fn levels(&self) -> Option<crate::objectives::Levels> {
+        self.objectives.map(|o| o.levels)
+    }
+
     /// The side's own objectives, in the order the scenario gives them
     /// (decision 6 of 0054). Never the enemy's.
     pub fn objectives(&self) -> &'a [Objective] {

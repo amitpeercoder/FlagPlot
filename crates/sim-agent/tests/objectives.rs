@@ -109,7 +109,7 @@ fn a_scenario_without_objectives_says_none() {
     let json: Value = serde_json::to_value(&made).expect("serialises");
     assert_eq!(
         json["objectives"],
-        json!({"mission": null, "objectives": [], "result": null})
+        json!({"mission": null, "objectives": [], "levels": null, "result": null})
     );
     let text = made.to_text();
     assert!(
@@ -274,7 +274,12 @@ fn the_final_briefing_and_the_end_day_answer_carry_the_result_and_nothing_before
         text.contains("Japanese: 5.25 points, margin -7.75, minor defeat"),
         "{text}"
     );
-    assert!(text.contains("History: Ryujo was sunk"), "{text}");
+    assert!(
+        text.contains(
+            "History (what happened in the real battle, not in this game): Ryujo was sunk"
+        ),
+        "{text}"
+    );
 
     // A second end_day after the end gives the result again.
     let again = session

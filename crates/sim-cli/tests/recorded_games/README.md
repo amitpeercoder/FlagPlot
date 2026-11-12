@@ -30,3 +30,5 @@ engine. The model's play is not judged here, only that it repeats.
 
 Played on Nov 12, 2026 (decision 0051, "The games"): `eastern_solomons_sonnet`, `eastern_solomons_haiku` and `full_slice_five_days_sonnet`. Each has the player's `account.md`. The requests of an earlier round, played before objectives and claims existed, are in `docs/research/scenario-9-first-round/` and are not replayed.
 
+The transcripts were regenerated after the wording pass that followed these games (decision 0051, "The wording pass after the second round"), so they show the answers the tools give now and not word for word what the players read; the requests (`game.jsonl`) and the accounts (`account.md`) are as played. The games themselves did not change: the same orders were accepted and refused and the daily hashes are the same, and each `save.json` differs from the one played only in the hash of the scenario file, which changed when the missions of scenarios 5 and 7 gained a sentence on where the enemy carriers are expected.
+
