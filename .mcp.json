@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "flag-plot": {
+      "command": "/opt/homebrew/opt/rustup/bin/cargo",
+      "args": [
+        "run", "-q", "--release", "-p", "sim-cli", "--",
+        "mcp", "data/scenarios/07_full_slice.toml", "--seat", "allied"
+      ],
+      "env": {
+        "PATH": "/opt/homebrew/opt/rustup/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}
