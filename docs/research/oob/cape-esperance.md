@@ -165,9 +165,9 @@ The architect asked for rounds fired by each US ship by calibre and hits on each
 
 **Hits on US destroyers by their own side.** Farenholt's report, as the bulletin quotes it, says her own cruisers fired at her and she was hit at 2350; no count of the friendly share. The 1943 narrative has two hull hits that looked like 6-inch. For Duncan the bulletin says only that it was "quite possible that own forces fired on" her.
 
-### The one figure that can be offered
+### What can and cannot be said about the hit rate
 
-Salt Lake City fired 296 main-battery rounds. If every hit claimed for the whole US force on Aoba and Furutaka ("up to forty" and "ninety or more") were real, and the four cruisers fired about a thousand main-battery rounds each for the two light cruisers and about three hundred each for the two heavy ones, the rate would be near fifty hits in a thousand. **Every term of that sum is either a secondary figure or a guess of mine at the missing rounds, so it is not a row and should not be used as one.** It shows only that the measure, if the reports are found, is likely to sit between the Allied and Japanese figures at Savo Island.
+Only one ship has a count of main-battery rounds (Salt Lake City, 296), and no ship has a count of hits from the side that received them. The secondary figures for hits on Aoba ("up to forty") and Furutaka ("ninety or more") are for the whole US force and cannot be divided among the ships that fired. **So no hits-per-thousand figure is offered, and none should be built from these rows.** The measure needs the four cruisers' round counts, which are in the action reports listed below.
 
 ### Where the missing figures are
 
