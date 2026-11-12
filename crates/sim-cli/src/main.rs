@@ -1,9 +1,10 @@
 //! Flag Plot command-line runner.
 //!
-//! Commands: `run`, `export`, `batch`, `replay`, `hash` and `serve`. The spec
-//! also lists `query`, which arrives with the step that needs it.
+//! Commands: `run`, `export`, `batch`, `replay`, `hash`, `events` and `serve`
+//! (the spec's "query events" is `events`).
 
 mod batch;
+mod events;
 mod export;
 mod mcp;
 mod play;
@@ -25,6 +26,8 @@ const USAGE: &str = "\
 Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
        sim-cli replay <game.json>
        sim-cli hash <scenario.toml> [--seed N]
+       sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N]
+       sim-cli events <scenario.toml | game.json> --why EVENT [--seed N]
        sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
@@ -43,6 +46,14 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
             error on the first day that differs.
   hash      Runs a scenario and prints the state hash of each day, one a line
             as `day N <hash>`, and nothing else.
+  events    The umpire's questions to a finished run (a scenario run to its
+            end, or a saved game replayed). --unit HANDLE (ship:N,
+            task_force:N, air_group:N, base:N, contact:N or allied:contact:N)
+            prints every event that names the unit, as `run --events` prints
+            it; for a ship it also prints the events of the task force it was
+            in, marked `via task_force:N`. --day N keeps one day. --why EVENT
+            prints that event and its causes down to orders, as a tree, with
+            each event's breakdown.
   export    Runs a scenario the same way and writes the finished run as one
             JSON replay file: the map, the starting forces, every event with
             its causes, and the final state.
@@ -97,13 +108,13 @@ struct Executed {
 fn execute(
     path: &str,
     seed: Option<u64>,
-    before_run: impl FnOnce(&Scenario),
+    before_run: impl FnOnce(&mut Scenario),
 ) -> Result<Executed, String> {
     let mut scenario = Scenario::load(Path::new(path)).map_err(|e| e.to_string())?;
     if let Some(seed) = seed {
         scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
     }
-    before_run(&scenario);
+    before_run(&mut scenario);
     let initial = scenario.world.umpire().clone();
     let summaries = scenario.run_to_end().map_err(|e| e.to_string())?;
     Ok(Executed {
@@ -124,6 +135,7 @@ fn parse_seed(value: Option<&str>) -> Result<u64, String> {
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
+        Some("events") => events::command(&args[1..]),
         Some("export") => export::command(&args[1..], USAGE),
         Some("batch") => batch::command(&args[1..], USAGE),
         Some("replay") => replay(&args[1..]),
@@ -219,20 +231,7 @@ fn run(args: &[String]) -> Result<(), String> {
     if show_events {
         println!();
         for event in world.events().iter() {
-            // An order the simulation issued itself is marked, so the log
-            // shows who gave it (decision 0016, 14).
-            let by_staff = match &event.kind {
-                sim_core::events::EventKind::OrderAccepted { order, .. }
-                | sim_core::events::EventKind::OrderRejected { order, .. } => world
-                    .order(*order)
-                    .is_some_and(|o| o.origin.issuer == sim_core::orders::Issuer::Staff),
-                _ => false,
-            };
-            if by_staff {
-                println!("{event}  [issued by the staff]");
-            } else {
-                println!("{event}");
-            }
+            println!("{}", event_line(world, event));
         }
     }
 
@@ -460,6 +459,22 @@ fn run(args: &[String]) -> Result<(), String> {
     }
     print_result(world);
     Ok(())
+}
+
+/// One event as `run --events` prints it. An order the simulation issued
+/// itself is marked, so the log shows who gave it (decision 0016, 14).
+fn event_line(world: &sim_core::World, event: &sim_core::events::Event) -> String {
+    let by_staff = match &event.kind {
+        EventKind::OrderAccepted { order, .. } | EventKind::OrderRejected { order, .. } => world
+            .order(*order)
+            .is_some_and(|o| o.origin.issuer == sim_core::orders::Issuer::Staff),
+        _ => false,
+    };
+    if by_staff {
+        format!("{event}  [issued by the staff]")
+    } else {
+        format!("{event}")
+    }
 }
 
 /// The umpire's result (decision 0054), for a scenario that has objectives:

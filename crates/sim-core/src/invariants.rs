@@ -2,11 +2,11 @@
 //!
 //! A violation is always a bug in the rules, never a legal game state.
 //!
-//! The spec lists three more invariants. "Aircraft ready is never negative"
-//! holds by construction: `ready` is unsigned. "Every air group is at exactly
-//! one base" holds by construction too, since an air group has one `base`
-//! field; the checks here are that the base exists and is the group's own
-//! side's. (Carriers arrive later.) "No belief-state data was written from
+//! Three of the spec's invariants hold by construction. "Aircraft ready is
+//! never negative": `ready` is unsigned. "Every air group is at exactly one
+//! base or carrier": an air group has one location, a base or a ship; the
+//! checks here are that the base or ship exists and is the group's own
+//! side's. "No belief-state data was written from
 //! anything except a report" holds by construction: see
 //! [`crate::belief::BeliefState::apply_report`].
 
