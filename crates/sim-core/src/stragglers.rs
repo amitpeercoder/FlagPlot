@@ -486,35 +486,22 @@ mod tests {
             truth.ships.insert(
                 id,
                 Ship {
-                    id,
-                    name: format!("Test ship {}", id.raw()),
-                    class: ShipClassId::new(*class),
-                    side: Side::Allied,
                     fuel_t: Fixed::from_int(2000),
-                    supply_t: Fixed::ZERO,
-                    cargo_fuel_t: Fixed::ZERO,
-                    location: ShipLocation::TaskForce(TF),
-                    flotation_damage: Fixed::ZERO,
-                    fire_damage: Fixed::ZERO,
-                    gun_rounds: Fixed::ZERO,
-                    torpedoes_ready: false,
                     systems,
+                    ..Ship::new(
+                        id,
+                        format!("Test ship {}", id.raw()),
+                        ShipClassId::new(*class),
+                        Side::Allied,
+                        ShipLocation::TaskForce(TF),
+                    )
                 },
             );
         }
         truth.task_forces.insert(TF, force);
         truth.bases.insert(
             HOME,
-            Base {
-                id: HOME,
-                name: "Home".to_string(),
-                side: Side::Allied,
-                hex: hx(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            Base::new(HOME, "Home".to_string(), Side::Allied, hx(0, 0)),
         );
         World::new(7, ref_data, map, truth).expect("valid setup")
     }

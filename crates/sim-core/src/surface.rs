@@ -1601,21 +1601,18 @@ mod tests {
                     truth.ships.insert(
                         ship_id,
                         Ship {
-                            id: ship_id,
-                            name: format!("Test ship {}", ship_id.raw()),
-                            class: ShipClassId::new(*class),
-                            side: spec.side,
                             fuel_t: Fixed::from_int(2000),
-                            supply_t: Fixed::ZERO,
-                            cargo_fuel_t: Fixed::ZERO,
-                            location: ShipLocation::TaskForce(id),
-                            flotation_damage: Fixed::ZERO,
-                            fire_damage: Fixed::ZERO,
                             gun_rounds: Fixed::from_int(i64::from(
                                 class_data.main_guns * class_data.gun_rounds_per_gun,
                             )),
                             torpedoes_ready: class_data.torpedo_tubes > 0,
-                            systems: ShipSystems::ALL_WORKING,
+                            ..Ship::new(
+                                ship_id,
+                                format!("Test ship {}", ship_id.raw()),
+                                ShipClassId::new(*class),
+                                spec.side,
+                                ShipLocation::TaskForce(id),
+                            )
                         },
                     );
                 }
@@ -2510,7 +2507,7 @@ mod tests {
     #[test]
     fn air_groups_aboard_a_ship_that_sinks_are_lost_with_it() {
         use crate::ids::{AirGroupId, AircraftTypeId};
-        use crate::orders::AirMission;
+
         use crate::state::{AirGroup, AirGroupLocation};
 
         // The sinking of ship 4 in round 1 as in the test above. Two groups
@@ -2522,25 +2519,15 @@ mod tests {
             ForceSpec::new(2, Side::Allied, hex, &[1, 1, 1]),
         ]);
         let group = |id: u32, ship: u32, ready: u32| AirGroup {
-            id: AirGroupId::new(id),
-            name: format!("Group {id}"),
-            side: Side::Allied,
-            location: AirGroupLocation::Ship(ShipId::new(ship)),
-            aircraft_type: AircraftTypeId::new(1),
             ready,
-            damaged: 0,
-            mission: AirMission::Rest,
-            search: None,
-            mission_order: None,
-            arc_order: None,
-            patrol_share: Fixed::ONE,
-            share_order: None,
-            fatigue: Fixed::ZERO,
-            rest_above: None,
-            rest_order: None,
-            stood_down: false,
-            pilots: None,
             strength: ready,
+            ..AirGroup::new(
+                AirGroupId::new(id),
+                format!("Group {id}"),
+                Side::Allied,
+                AirGroupLocation::Ship(ShipId::new(ship)),
+                AircraftTypeId::new(1),
+            )
         };
         let world = run(&scene, |w| {
             flotation_only(w);

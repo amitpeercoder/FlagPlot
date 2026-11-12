@@ -9,6 +9,7 @@ Read these before changing anything:
 - `docs/decisions/`: choices the spec left open, one short file each.
 - `docs/glossary.md`: one meaning for each word the rules use.
 - `docs/complexity-review-after-scenario-5.md`: what was cut, merged and left alone after scenario 5, and why.
+- `docs/design/`: notes for discussion on things not yet planned (intelligence, materials and economy). Nothing in them is decided.
 
 If the spec is ambiguous or looks wrong, stop and ask. Do not guess. If you make a design choice the spec did not make, record it in `docs/decisions/` as the next numbered file.
 
