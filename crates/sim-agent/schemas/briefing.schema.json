@@ -478,9 +478,28 @@
               "destroyed_on_ground": { "type": "integer" },
               "written_off": { "type": "integer" },
               "lost_with_ship": { "type": "integer" },
+              "no_deck": { "description": "Left out when 0. Aircraft that were in the air when their own deck was lost, found no other carrier with room and no base within reach, and came down in the sea.", "type": "integer" },
               "ditched": { "description": "Left out when 0. Aircraft that ran out of fuel on the way home from a strike or escort sortie beyond their radius, and are lost.", "type": "integer" },
               "pilots_lost": { "type": "integer" },
               "events": { "$ref": "defs.schema.json#/$defs/event_numbers" }
+            }
+          }
+        },
+        "aircraft_landed_elsewhere": {
+          "description": "Left out when none. Aircraft that were in the air when their own deck was lost (the ship sank or her flight deck went out) and landed at another carrier or a base: from is the group they flew in, to the group that has them now (an existing one, or one formed by the landing), at the ship or base.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "at", "aircraft", "pilots", "formed", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "$ref": "defs.schema.json#/$defs/handle" },
+              "to": { "$ref": "defs.schema.json#/$defs/handle" },
+              "at": { "$ref": "defs.schema.json#/$defs/handle" },
+              "aircraft": { "type": "integer" },
+              "pilots": { "type": "integer" },
+              "formed": { "type": "boolean" },
+              "event": { "type": "integer" }
             }
           }
         },

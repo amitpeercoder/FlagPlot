@@ -49,11 +49,14 @@
 //! 5. **Conservation** (decision 3), computed from the events and the final
 //!    state alone, as the scenario 6 test does, for every run:
 //!    - for each air group, what it started with plus what arrived and what
-//!      replacements brought equals what it has (ready and damaged) plus
-//!      what was shot down, destroyed on the ground, written off and lost
-//!      with a ship; for each air group whose pilots are tracked, the pilots
-//!      it started with plus those that arrived and were replaced equal
-//!      those it has plus those lost;
+//!      replacements brought, plus what landed elsewhere to it, equals what
+//!      it has (ready and damaged) plus what was shot down, destroyed on the
+//!      ground, written off, lost with a ship, came down in the sea for want
+//!      of a deck (decisions 7 to 10 of 0059) and landed elsewhere from it,
+//!      a group formed by a landing starting at 0; for each air group whose
+//!      pilots are tracked, the pilots it started with plus those that
+//!      arrived, were replaced and came with a landing equal those it has
+//!      plus those lost and those that went with a landing;
 //!    - for each base, supply started + unloaded = left + spent on flying and
 //!      repair + destroyed by bombs + loaded out;
 //!    - for each ship, the supply aboard is what it started with plus what it
@@ -458,11 +461,24 @@ fn events_by_window(run: &Run) -> [usize; WINDOWS] {
 fn assert_conserved(run: &Run) {
     let seed = run.seed;
     let end = run.end();
-    for (g, start) in &run.start.groups {
-        let now = end.groups[g];
+    // Every group at the end, those formed by a landing elsewhere (decisions 7
+    // to 10 of 0059) included: a formed group starts at 0.
+    for (g, now) in &end.groups {
+        let now = *now;
+        let start = run.start.groups.get(g).copied().unwrap_or(GroupState {
+            ready: 0,
+            damaged: 0,
+            pilots: now.pilots.map(|_| 0),
+            strength: 0,
+        });
+        let start = &start;
         let (mut arrived, mut received, mut shot, mut ground, mut written_off, mut with_ship) =
             (0u32, 0u32, 0u32, 0u32, 0u32, 0u32);
         let (mut pilots_arrived, mut pilots_received, mut pilots_lost) = (0u32, 0u32, 0u32);
+        // What came down in the sea for want of a deck, and what landed
+        // elsewhere from the group and to it, with the pilots that went along.
+        let (mut no_deck, mut landed_out, mut landed_in) = (0u32, 0u32, 0u32);
+        let (mut pilots_out, mut pilots_in) = (0u32, 0u32);
         for event in &run.events {
             match event.kind {
                 EventKind::AircraftArrived {
@@ -511,22 +527,44 @@ fn assert_conserved(run: &Run) {
                 EventKind::PilotsLost {
                     air_group, lost, ..
                 } if air_group.raw() == *g => pilots_lost += lost,
+                EventKind::AircraftDitchedNoDeck {
+                    air_group,
+                    aircraft,
+                    ..
+                } if air_group.raw() == *g => no_deck += aircraft,
+                EventKind::AircraftLandedElsewhere {
+                    from,
+                    to,
+                    aircraft,
+                    pilots,
+                    ..
+                } => {
+                    if from.raw() == *g {
+                        landed_out += aircraft;
+                        pilots_out += pilots;
+                    }
+                    if to.raw() == *g {
+                        landed_in += aircraft;
+                        pilots_in += pilots;
+                    }
+                }
                 _ => {}
             }
         }
         assert_eq!(
-            start.aircraft() + arrived + received,
-            now.aircraft() + shot + ground + written_off + with_ship,
+            start.aircraft() + arrived + received + landed_in,
+            now.aircraft() + shot + ground + written_off + with_ship + no_deck + landed_out,
             "seed {seed}, air group {g}: aircraft started {} + arrived {arrived} + received \
-             {received} = has {} + shot {shot} + on the ground {ground} + written off \
-             {written_off} + lost with a ship {with_ship}",
+             {received} + landed to it {landed_in} = has {} + shot {shot} + on the ground \
+             {ground} + written off {written_off} + lost with a ship {with_ship} + no deck \
+             {no_deck} + landed from it {landed_out}",
             start.aircraft(),
             now.aircraft()
         );
         match (start.pilots, now.pilots) {
             (Some(p), Some(q)) => assert_eq!(
-                p + pilots_arrived + pilots_received,
-                q + pilots_lost,
+                p + pilots_arrived + pilots_received + pilots_in,
+                q + pilots_lost + pilots_out,
                 "seed {seed}, air group {g}: pilots"
             ),
             (None, None) => {}
@@ -750,16 +788,22 @@ fn each_kind_of_running_out_happens_and_leaves_the_run_going() {
 
     // An air group that had aircraft and has none.
     let destroyed_day = first_day(&one, |p| {
-        p.groups
-            .iter()
-            .any(|(g, now)| one.start.groups[g].aircraft() > 0 && now.aircraft() == 0)
+        p.groups.iter().any(|(g, now)| {
+            one.start
+                .groups
+                .get(g)
+                .is_some_and(|start| start.aircraft() > 0)
+                && now.aircraft() == 0
+        })
     })
     .expect("an air group is destroyed outright");
     // The same for a group ashore (pilots are tracked only ashore).
     let destroyed_ashore_day = first_day(&one, |p| {
         p.groups.iter().any(|(g, now)| {
-            one.start.groups[g].pilots.is_some()
-                && one.start.groups[g].aircraft() > 0
+            one.start
+                .groups
+                .get(g)
+                .is_some_and(|start| start.pilots.is_some() && start.aircraft() > 0)
                 && now.aircraft() == 0
         })
     })
@@ -774,7 +818,7 @@ fn each_kind_of_running_out_happens_and_leaves_the_run_going() {
                 one.days[i]
                     .groups
                     .iter()
-                    .any(|(g, now)| holds(now) && !holds(&one.days[i - 1].groups[g]))
+                    .any(|(g, now)| holds(now) && !one.days[i - 1].groups.get(g).is_some_and(holds))
             })
             .map(|i| i + 1)
     };

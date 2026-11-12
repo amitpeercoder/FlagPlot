@@ -16,8 +16,8 @@
 //! | Japanese ships afloat with propulsion or flight deck out | 0 |
 //! | Allied ships sunk | 0 |
 //! | Allied ships afloat with propulsion or flight deck out | 1: ship 1, Enterprise, a carrier, flight deck out |
-//! | Japanese aircraft lost | group 11: 3; group 12: 10 and 5; group 14: 1; group 15: 8 and 4; lost with Ryujo, group 18: 23 and group 19: 6. 3 + 15 + 1 + 12 + 29 = 60 |
-//! | Allied aircraft lost | group 2: 1; group 6: 1; group 1: 2 and 1. 5 |
+//! | Japanese aircraft lost | group 11: 3; group 12: 10 and 5; group 14: 1; group 15: 8 and 4; lost with Ryujo, group 18: 17 (aboard) and group 19: 6; group 18's 6 aircraft in the air when Ryujo sank, with no deck, came down in the sea (decisions 7 to 10 of 0059). 3 + 15 + 1 + 12 + 17 + 6 + 6 = 60 |
+//! | Allied aircraft lost | group 2: 1; group 6: 1; group 1: 2 and 1; and 3 of group 1 that came down in the sea when Enterprise's flight deck went out (21 landed on ship 11 and 16 and 16 at base 1: a landing is no loss). 5 + 3 = 8 |
 //!
 //! Both sides hold the same three objectives on the placeholder scale:
 //! ships sunk (carrier 10, battleship 8, cruiser 4, destroyer 1, transport
@@ -28,12 +28,12 @@
 //! | --------- | ------------ | ------------- | -------------- | --------------- |
 //! | Ships sunk | 1 carrier | 10 | 0 | 0 |
 //! | Ships crippled | 0 | 0 | 1 carrier | 5 |
-//! | Aircraft destroyed | 60 | 60 x 0.05 = 3 | 5 | 5 x 0.05 = 0.25 |
-//! | Total | | 13 | | 5.25 |
+//! | Aircraft destroyed | 60 | 60 x 0.05 = 3 | 8 | 8 x 0.05 = 0.4 |
+//! | Total | | 13 | | 5.4 |
 //!
-//! Margin for the Allied side: 13 - 5.25 = 7.75. It is at least 3 and less
+//! Margin for the Allied side: 13 - 5.4 = 7.6. It is at least 3 and less
 //! than 8: a minor Allied victory, and so a minor Japanese defeat, margin
-//! -7.75.
+//! -7.6.
 //!
 //! What each side knows of its progress at the end is not fixed here: it
 //! depends on which events decision 0047 lets a side see, and the developer
@@ -162,6 +162,7 @@ fn what_happened_is_what_the_hand_calculation_says() {
     // Aircraft lost for good, by group and event.
     let mut shot_down: Vec<(u32, u32)> = Vec::new();
     let mut with_ship: Vec<(u32, u32)> = Vec::new();
+    let mut no_deck: Vec<(u32, u32)> = Vec::new();
     let mut other_losses = 0;
     for event in world.events().iter() {
         match &event.kind {
@@ -175,6 +176,11 @@ fn what_happened_is_what_the_hand_calculation_says() {
                 aircraft,
                 ..
             } => with_ship.push((air_group.raw(), *aircraft)),
+            EventKind::AircraftDitchedNoDeck {
+                air_group,
+                aircraft,
+                ..
+            } => no_deck.push((air_group.raw(), *aircraft)),
             EventKind::AircraftDestroyedOnGround { .. }
             | EventKind::DamagedAircraftDestroyedOnGround { .. } => other_losses += 1,
             EventKind::AircraftWorn { written_off, .. } => other_losses += written_off,
@@ -196,23 +202,29 @@ fn what_happened_is_what_the_hand_calculation_says() {
         found
     };
     // Japanese: group 11: 3; 12: 10 and 5; 14: 1; 15: 8 and 4; lost with
-    // Ryujo, group 18: 23 and group 19: 6. 3 + 15 + 1 + 12 + 29 = 60.
+    // Ryujo, group 18: 17 and group 19: 6; group 18's 6 in the air came down
+    // in the sea for want of a deck. 3 + 15 + 1 + 12 + 23 + 6 = 60.
     let japanese = by_side(&shot_down, Side::Japanese);
     assert_eq!(
         japanese,
         vec![(11, 3), (12, 5), (12, 10), (14, 1), (15, 4), (15, 8)]
     );
     let lost_with_ryujo = by_side(&with_ship, Side::Japanese);
-    assert_eq!(lost_with_ryujo, vec![(18, 23), (19, 6)]);
-    let total = |lists: [&Vec<(u32, u32)>; 2]| -> u32 {
+    assert_eq!(lost_with_ryujo, vec![(18, 17), (19, 6)]);
+    let japanese_no_deck = by_side(&no_deck, Side::Japanese);
+    assert_eq!(japanese_no_deck, vec![(18, 6)]);
+    let total = |lists: [&Vec<(u32, u32)>; 3]| -> u32 {
         lists.iter().flat_map(|l| l.iter()).map(|(_, a)| a).sum()
     };
-    assert_eq!(total([&japanese, &lost_with_ryujo]), 60);
-    // Allied: group 2: 1; group 6: 1; group 1: 2 and 1. 5.
+    assert_eq!(total([&japanese, &lost_with_ryujo, &japanese_no_deck]), 60);
+    // Allied: group 2: 1; group 6: 1; group 1: 2 and 1, and 3 of group 1
+    // that came down in the sea when carrier 1's deck went out. 5 + 3 = 8.
     let allied = by_side(&shot_down, Side::Allied);
     assert_eq!(allied, vec![(1, 1), (1, 2), (2, 1), (6, 1)]);
     assert_eq!(by_side(&with_ship, Side::Allied), vec![]);
-    assert_eq!(total([&allied, &vec![]]), 5);
+    let allied_no_deck = by_side(&no_deck, Side::Allied);
+    assert_eq!(allied_no_deck, vec![(1, 3)]);
+    assert_eq!(total([&allied, &vec![], &allied_no_deck]), 8);
 }
 
 // ---------------------------------------------------------------------
@@ -242,7 +254,7 @@ fn the_result_is_what_the_hand_calculation_says() {
     assert_eq!(allied.total, n(13));
 
     // Japanese points: ships sunk 0; ships crippled 1 carrier = 5; aircraft
-    // 5 x 0.05 = 0.25; total 5.25.
+    // 8 x 0.05 = 0.4; total 5.4.
     let japanese = &result.japanese;
     assert_eq!(line(japanese, 0), ("ships_sunk", n(0), n(0)));
     assert_eq!(line(japanese, 1), ("ships_crippled", n(1), n(5)));
@@ -250,13 +262,13 @@ fn the_result_is_what_the_hand_calculation_says() {
         japanese.objectives[1].by_kind,
         BTreeMap::from([(ShipKind::Carrier, 1)])
     );
-    assert_eq!(line(japanese, 2), ("aircraft_destroyed", n(5), fx("0.25")));
-    assert_eq!(japanese.total, fx("5.25"));
+    assert_eq!(line(japanese, 2), ("aircraft_destroyed", n(8), fx("0.4")));
+    assert_eq!(japanese.total, fx("5.4"));
 
-    // Margin 13 - 5.25 = 7.75: at least 3 and under 8, a minor Allied
-    // victory and a minor Japanese defeat with margin -7.75.
-    assert_eq!(allied.margin, fx("7.75"));
-    assert_eq!(japanese.margin, fx("-7.75"));
+    // Margin 13 - 5.4 = 7.6: at least 3 and under 8, a minor Allied
+    // victory and a minor Japanese defeat with margin -7.6.
+    assert_eq!(allied.margin, fx("7.6"));
+    assert_eq!(japanese.margin, fx("-7.6"));
     assert_eq!(allied.outcome, Outcome::Victory(Level::Minor));
     assert_eq!(japanese.outcome, Outcome::Defeat(Level::Minor));
     assert_eq!(allied.outcome.name(), "minor victory");
@@ -436,8 +448,9 @@ fn objectives_change_no_hash_and_no_event() {
     // 0055), c09495f6039a2a2a until the hash went to version 3 (decision
     // 0058, `leg_nm`) and the Ryujo detachment moved its start, and
     // e88694a2344625c0 until the hash went to version 4 (decision 0059, an
-    // air group's reach).
-    assert!(baseline.contains("hash bbd586296ddd4b8f"));
+    // air group's reach), and bbd586296ddd4b8f until decisions 7 to 10 of
+    // 0059 sent the aircraft in the air when a deck is lost elsewhere.
+    assert!(baseline.contains("hash a0dde1048adeb5ec"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

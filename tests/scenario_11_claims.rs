@@ -722,18 +722,32 @@ fn renumbered(line: &str, map: &BTreeMap<u32, u32>) -> String {
     out
 }
 
+/// Events that did not exist when the old logs were made, which a log read
+/// against them takes out with the claims: the landing of aircraft elsewhere
+/// and their ditching for want of a deck (decisions 7 to 10 of 0059). They
+/// record a state change that was not made then (an aircraft in the air when
+/// its deck was lost stayed aboard).
+fn is_no_deck_event(event: &Event) -> bool {
+    matches!(
+        event.kind,
+        EventKind::AircraftLandedElsewhere { .. } | EventKind::AircraftDitchedNoDeck { .. }
+    )
+}
+
 /// A run's log as `sim-cli run --events` prints it, with the claims from the
-/// air taken out and the events that are left numbered 1, 2, 3...
+/// air and the no-deck events taken out and the events that are left
+/// numbered 1, 2, 3...
 fn lines_without_claims(world: &World) -> Vec<String> {
+    let kept = |e: &&Event| !is_air_claim(e) && !is_no_deck_event(e);
     let mut map = BTreeMap::new();
-    for event in world.events().iter().filter(|e| !is_air_claim(e)) {
+    for event in world.events().iter().filter(kept) {
         let next = u32::try_from(map.len() + 1).expect("few events");
         map.insert(event.id.raw(), next);
     }
     world
         .events()
         .iter()
-        .filter(|e| !is_air_claim(e))
+        .filter(kept)
         .map(|event| renumbered(&event.to_string(), &map))
         .collect()
 }

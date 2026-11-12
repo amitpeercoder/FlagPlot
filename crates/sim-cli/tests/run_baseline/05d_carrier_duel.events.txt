@@ -3,7 +3,7 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 53e3260b80c55774  34 events
-day   2  hash 4ae4b69cec1af6ea  43 events
+day   2  hash ac612751bf1dc197  45 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -81,13 +81,15 @@ day   2  hash 4ae4b69cec1af6ea  43 events
 #74 D2 afternoon Japanese report: 3 ships, cruiser, at (4,0): refreshed contact:1  <- #67
 #75 D2 afternoon Japanese claim at (4,0): 6 hits on a cruiser, 0 sunk  <- #62, #67
 #76 D2 afternoon Allied claim over (4,0): 2 aircraft shot down  <- #63, #64, #65
-#77 D2 afternoon Allied contact:1 aged to 3 pulses  <- #32
+#77 D2 afternoon air_group:1 had no deck: 8 aircraft came down in the sea at (4,0), beside ships of its own side (chance 0.95), 0 ready left  <- #73, #56
+#78 D2 afternoon air_group:3 had no deck: 5 aircraft came down in the sea at (4,0), beside ships of its own side (chance 0.95), 5 ready left  <- #73, order:4, order:5
+#79 D2 afternoon Allied contact:1 aged to 3 pulses  <- #32
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder carrier force B" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-air_group:1 "Placeholder scouting squadron A" (Allied) aboard ship:1: 8 ready, mission Search, arc 040-130 to 300 nm
+air_group:1 "Placeholder scouting squadron A" (Allied) aboard ship:1: 0 ready, mission Search, arc 040-130 to 300 nm
 air_group:2 "Placeholder bombing squadron A" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
-air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 5 ready, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:4 "Placeholder scouting squadron B" (Japanese) aboard ship:4: 8 ready, mission Search, arc 220-310 to 300 nm
 air_group:5 "Placeholder bombing squadron B" (Japanese) aboard ship:4: 12 ready, mission NavalStrike, no arc
 air_group:6 "Placeholder fighting squadron B" (Japanese) aboard ship:4: 7 ready, mission CombatAirPatrol, patrol share 0.5, no arc

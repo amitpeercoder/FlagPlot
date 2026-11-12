@@ -5,17 +5,17 @@ seed 1942
 day   1  hash 3acc977b52dac353  59 events
 day   2  hash 4d56617417024dc6  54 events
 day   3  hash 43dc1643e30d4fb0  48 events
-day   4  hash b820969c55861e75  230 events
-day   5  hash 5a6462b18581225f  141 events
-day   6  hash ea9f5c2f452b9cd1  121 events
-day   7  hash 83586b5d4e26590e  252 events
-day   8  hash 9cba5e0fbe193cf3  123 events
-day   9  hash 85fa5c59b8775185  127 events
-day  10  hash 8ee48f83185651d9  77 events
-day  11  hash 894e0b64700c4308  86 events
-day  12  hash 8f80e8811e237fb9  95 events
-day  13  hash 1d61c29bd82ada4a  64 events
-day  14  hash e8531e8a4c64d653  58 events
+day   4  hash 9295bc5a7b32061a  231 events
+day   5  hash 50b389d1c1e123aa  141 events
+day   6  hash 0a295c62021c0ce5  121 events
+day   7  hash 553b374280d93f97  252 events
+day   8  hash 68c3468b584fbf40  123 events
+day   9  hash 3fdddbc9d92ad441  127 events
+day  10  hash 331897e4ae3fa8a9  77 events
+day  11  hash ea57222eed8e7a4a  86 events
+day  12  hash 659c21c703a0410a  95 events
+day  13  hash 5ef18ffa2bcb4b91  64 events
+day  14  hash d6f5f7b0b95acf32  58 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

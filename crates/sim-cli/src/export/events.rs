@@ -366,6 +366,49 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .int("ready", *ready)
                 .int("damaged", *damaged),
         ),
+        EventKind::AircraftLandedElsewhere {
+            from,
+            to,
+            at,
+            aircraft,
+            pilots,
+            formed,
+        } => (
+            "aircraft_landed_elsewhere",
+            match at {
+                AirGroupLocation::Base(base) => d.id("from", *from).id("to", *to).id("base", *base),
+                AirGroupLocation::Ship(ship) => d.id("from", *from).id("to", *to).id("ship", *ship),
+            }
+            .int("aircraft", *aircraft)
+            .int("pilots", *pilots)
+            .flag("formed", *formed),
+        ),
+        EventKind::AircraftDitchedNoDeck {
+            air_group,
+            hex,
+            aircraft,
+            beside_own_force,
+            chance,
+            crews_recovered,
+            pilots_lost,
+            ready,
+        } => {
+            let data = d
+                .id("air_group", *air_group)
+                .hex("hex", *hex)
+                .int("aircraft", *aircraft)
+                .flag("beside_own_force", *beside_own_force)
+                .num("chance", *chance);
+            // Left out where the group's pilots are not counted.
+            let data = match crews_recovered {
+                Some(recovered) => data.int("crews_recovered", *recovered),
+                None => data,
+            };
+            (
+                "aircraft_ditched_no_deck",
+                data.int("pilots_lost", *pilots_lost).int("ready", *ready),
+            )
+        }
         EventKind::AircraftRepaired {
             air_group,
             at,

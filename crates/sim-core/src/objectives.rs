@@ -34,7 +34,9 @@
 //!   `AircraftDestroyedOnGround` (ready), `DamagedAircraftDestroyedOnGround`
 //!   (damaged), `AircraftWorn::written_off` and `AircraftDitched::ditched`
 //!   (out of fuel on the way home, decision 5 of 0059: counted for the enemy
-//!   though no one claims it). Not counted: `AircraftWorn`
+//!   though no one claims it) and `AircraftDitchedNoDeck` (no deck, decision
+//!   9 of 0059). Aircraft that land elsewhere are not lost and are not
+//!   counted. Not counted: `AircraftWorn`
 //!   `worn` (damaged and repaired later, not lost), `PilotsLost` (pilots, not
 //!   aircraft; the aircraft's own event counts the aircraft), `AircraftRepaired`
 //!   and every event that adds aircraft.
@@ -313,6 +315,11 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
             | EventKind::AircraftDitched {
                 air_group,
                 ditched: aircraft,
+                ..
+            }
+            | EventKind::AircraftDitchedNoDeck {
+                air_group,
+                aircraft,
                 ..
             } => {
                 if let Some(group) = truth.air_groups.get(air_group) {

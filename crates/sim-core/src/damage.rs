@@ -18,7 +18,7 @@ use crate::fixed::Fixed;
 use crate::ids::{AirGroupId, EventId, ShipId, TaskForceId};
 use crate::refdata::ShipClass;
 use crate::rng::RngStream;
-use crate::state::{AirGroupLocation, Ship, ShipLocation, ShipSystem};
+use crate::state::{AirGroupLocation, Ship, ShipLocation, ShipSystem, SystemState};
 use crate::time::Pulse;
 use crate::world::World;
 
@@ -124,6 +124,16 @@ pub(crate) fn system_for_draw(
     None
 }
 
+/// The aircraft of `group` that flew in this pulse and were not shot down:
+/// the sum of its noted sorties (decision 7 of 0059).
+fn in_air_of(sorties: &[crate::upkeep::Sortie], group: AirGroupId) -> u32 {
+    sorties
+        .iter()
+        .filter(|sortie| sortie.air_group == group)
+        .map(|sortie| sortie.aircraft)
+        .sum()
+}
+
 impl World {
     fn damage_class_of(&self, ship: ShipId) -> &ShipClass {
         &self.ref_data.ship_classes[&self.truth.ships[&ship].class]
@@ -175,7 +185,7 @@ impl World {
                 before
             };
             ship.systems.set(system, after);
-            self.record_at(
+            let hit = self.record_at(
                 site,
                 EventKind::SystemHit {
                     round: site.round,
@@ -186,6 +196,17 @@ impl World {
                 },
                 vec![Cause::Event(hits.cause)],
             );
+            // A flight deck that goes out closes the deck to the aircraft of
+            // the ship that are in the air (decision 7 of 0059).
+            if system == ShipSystem::FlightDeck && after == SystemState::Out && before != after {
+                if let Some(hex) = self.ship_hex(target) {
+                    self.deck_losses.push(crate::landing::DeckLoss {
+                        ship: target,
+                        hex,
+                        cause: hit,
+                    });
+                }
+            }
         }
         applied
     }
@@ -200,6 +221,7 @@ impl World {
         ship: ShipId,
         cause: EventId,
     ) -> EventId {
+        let sank_at = self.truth.task_forces[&task_force].position();
         self.truth
             .ships
             .get_mut(&ship)
@@ -220,8 +242,15 @@ impl World {
             },
             vec![Cause::Event(cause)],
         );
-        // The group stays aboard in the state, with no aircraft and no
-        // position.
+        self.deck_losses.push(crate::landing::DeckLoss {
+            ship,
+            hex: sank_at,
+            cause: sunk,
+        });
+        // The group stays aboard in the state, with no position. It keeps
+        // only the aircraft that are in the air in this pulse (decisions 7
+        // and 10 of 0059): those are dealt with when they come home. All the
+        // rest, ready and damaged, go down with the ship.
         let aboard: Vec<AirGroupId> = self
             .truth
             .air_groups
@@ -236,15 +265,18 @@ impl World {
                 .get_mut(&air_group)
                 .expect("air group exists");
             // Damaged aircraft go down with the ship too (decision 0035).
-            let aircraft = group.ready + group.damaged;
-            group.ready = 0;
+            let in_air = in_air_of(&self.sorties, air_group).min(group.ready);
+            let aircraft = group.ready - in_air + group.damaged;
+            group.ready = in_air;
             group.damaged = 0;
-            // The pilots of a group lost with its ship go with it (decision
-            // 5 of 0038).
-            let pilots = group.pilots.unwrap_or(0);
+            // The pilots of the aircraft lost with the ship go with them
+            // (decision 5 of 0038); one stays with each aircraft in the air.
+            let pilots_before = group.pilots.unwrap_or(0);
+            let pilots = pilots_before - pilots_before.min(in_air);
             if group.pilots.is_some() {
-                group.pilots = Some(0);
+                group.pilots = Some(pilots_before - pilots);
             }
+            let pilots_left = group.pilots.unwrap_or(0);
             let lost = self.record_at(
                 site,
                 EventKind::AirGroupLost {
@@ -260,7 +292,7 @@ impl World {
                     EventKind::PilotsLost {
                         air_group,
                         lost: pilots,
-                        left: 0,
+                        left: pilots_left,
                     },
                     vec![Cause::Event(lost)],
                 );

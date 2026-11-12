@@ -524,6 +524,8 @@ struct AirCombatFile {
     /// Decision 6a of 0059.
     crew_recovered_over_own_base: Quantity,
     crew_recovered_beside_own_force: Quantity,
+    /// Decision 9 of 0059.
+    crew_recovered_open_sea: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -598,6 +600,7 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             "crew_recovered_beside_own_force",
             &file.crew_recovered_beside_own_force,
         )?,
+        crew_recovered_open_sea: number("crew_recovered_open_sea", &file.crew_recovered_open_sea)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1040,6 +1043,7 @@ mod tests {
                 "1.5",
                 "0.95",
             ),
+            ("crew_recovered_open_sea", "0.5", "1", "1.5", "0.5"),
         ] {
             let line = format!("{key} = \"{value}\"");
             assert!(

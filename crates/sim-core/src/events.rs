@@ -837,6 +837,38 @@ pub enum EventKind {
         pilots_lost: u32,
         ready: u32,
     },
+    /// Aircraft of `from` that were in the air when their own deck was lost
+    /// (the ship sank, or her flight deck went out) landed at another
+    /// carrier or at a base (decisions 7 and 8 of
+    /// `docs/decisions/0059-aircraft-that-cannot-land-where-they-took-off.md`).
+    /// They joined the group `to` located at `at`, or formed it if `formed`.
+    /// `pilots` came with them, where pilots are counted.
+    AircraftLandedElsewhere {
+        from: AirGroupId,
+        to: AirGroupId,
+        at: AirGroupLocation,
+        aircraft: u32,
+        pilots: u32,
+        formed: bool,
+    },
+    /// Aircraft of an air group that were in the air when their own deck was
+    /// lost found no other carrier with room and no base within reach, and
+    /// came down in the sea at `hex` (decision 9 of 0059). The crew of each
+    /// is recovered with the chance `chance`, which is the figure for coming
+    /// down beside ships of their own side if `beside_own_force`, and else
+    /// the figure for the open sea. `crews_recovered` is none where the
+    /// group's pilots are not counted. `ready` is what the group has ready
+    /// afterwards.
+    AircraftDitchedNoDeck {
+        air_group: AirGroupId,
+        hex: Hex,
+        aircraft: u32,
+        beside_own_force: bool,
+        chance: Fixed,
+        crews_recovered: Option<u32>,
+        pilots_lost: u32,
+        ready: u32,
+    },
 }
 
 impl EventKind {
@@ -925,7 +957,16 @@ impl EventKind {
             EventKind::DamagedAircraftDestroyedOnGround {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
-            EventKind::AircraftWorn { air_group, .. }
+            EventKind::AircraftLandedElsewhere { from, to, at, .. } => vec![
+                EntityRef::AirGroup(*from),
+                EntityRef::AirGroup(*to),
+                match at {
+                    AirGroupLocation::Base(base) => EntityRef::Base(*base),
+                    AirGroupLocation::Ship(ship) => EntityRef::Ship(*ship),
+                },
+            ],
+            EventKind::AircraftDitchedNoDeck { air_group, .. }
+            | EventKind::AircraftWorn { air_group, .. }
             | EventKind::AircraftDitched { air_group, .. }
             | EventKind::AirGroupFatigue { air_group, .. }
             | EventKind::AirGroupStoodDown { air_group, .. }
@@ -1316,6 +1357,53 @@ impl fmt::Display for EventKind {
                 "{air_group} {} sortie of {distance_nm} nm: {aircraft} aircraft x {chance} = {expected} expected worn, {worn} worn, {written_off} written off, {ready} ready and {damaged} damaged left",
                 sortie.name()
             ),
+            EventKind::AircraftLandedElsewhere {
+                from,
+                to,
+                at,
+                aircraft,
+                pilots,
+                formed,
+            } => {
+                write!(
+                    f,
+                    "{from} had no deck: {aircraft} aircraft landed at {at}, {} {to}",
+                    if *formed { "forming" } else { "joining" }
+                )?;
+                if *pilots > 0 {
+                    write!(f, " with {pilots} pilots")?;
+                }
+                Ok(())
+            }
+            EventKind::AircraftDitchedNoDeck {
+                air_group,
+                hex,
+                aircraft,
+                beside_own_force,
+                chance,
+                crews_recovered,
+                pilots_lost,
+                ready,
+            } => {
+                write!(
+                    f,
+                    "{air_group} had no deck: {aircraft} aircraft came down in the sea at {hex}, {} (chance {chance})",
+                    if *beside_own_force {
+                        "beside ships of its own side"
+                    } else {
+                        "in the open sea"
+                    }
+                )?;
+                if let Some(recovered) = crews_recovered {
+                    write!(
+                        f,
+                        ", {recovered} {} recovered, {pilots_lost} {} lost",
+                        if *recovered == 1 { "crew" } else { "crews" },
+                        if *pilots_lost == 1 { "pilot" } else { "pilots" }
+                    )?;
+                }
+                write!(f, ", {ready} ready left")
+            }
             EventKind::AircraftDitched {
                 air_group,
                 sortie,

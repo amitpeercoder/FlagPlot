@@ -40,4 +40,6 @@ Regenerated again after decision 0059 stage 1b, where a patrol pilot shot down o
 
 Regenerated after decision 0060, which stops a side being shown the breakdown of its own claim. One `explain` answer in the Haiku game lost its breakdown (the claim of 30 aircraft, which had said 18 were real and 12 false). That player's `account.md` describes the answer as it was. No other answer and no save changed.
 
+Regenerated once more after decision 0059 stage 2, where aircraft in the air when their deck is lost land elsewhere or come down in the sea. The requests and accounts are as played. In the Eastern Solomons games the day's `end_day` answer and one briefing differ (aircraft that landed, groups formed, the aircraft lost); in the full slice game three briefings differ. Every `issue_orders`, list, `measure` and `explain` answer is as before, and the saves differ in hashes only.
+
 Regenerated after decision 0061, which cuts the distance and the chance from a side's view of its own search that sighted. One `explain` answer in the Haiku game changed (the search of event 19: no distance, no chance, and the breakdown keeps the aircraft, the sweep width and the arc). That player's `account.md` describes the answer as it was. No other answer and no save changed.

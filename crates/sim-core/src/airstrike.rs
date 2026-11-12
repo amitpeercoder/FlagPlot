@@ -741,6 +741,9 @@ impl World {
     /// order of the log.
     pub(crate) fn resolve_strikes(&mut self, day: u32, pulse: Pulse) {
         let strikes = std::mem::take(&mut self.strikes_in_flight);
+        // The decks lost in an earlier phase are not this pulse's (decision
+        // 7 of 0059).
+        self.deck_losses.clear();
         if strikes.is_empty() {
             // A patrol flies whether or not a raid came (decision 7 of 0035).
             if self.notes_sorties() {
@@ -3676,8 +3679,12 @@ mod tests {
                 "bombers and scouts aboard ship 1, bombers aboard ship 2"
             );
             assert!(lost.iter().all(|event| event.id > all[1].id));
-            assert_eq!(group_mut(&mut world, BOMBERS).ready, 0);
-            assert_eq!(group_mut(&mut world, ENEMY_BOMBERS).ready, 0);
+            // The bombers' aircraft are in the air: they are kept until the
+            // wear phase brings them home (decisions 7 and 10 of 0059), and
+            // only what was aboard (the scouts, at rest) went down.
+            assert_eq!(group_mut(&mut world, BOMBERS).ready, 18);
+            assert_eq!(group_mut(&mut world, ENEMY_BOMBERS).ready, 18);
+            assert_eq!(group_mut(&mut world, SCOUTS).ready, 0);
         }
     }
 
@@ -9705,14 +9712,16 @@ mod tests {
     }
 
     #[test]
-    fn a_group_aboard_a_ship_that_sank_in_the_pulse_rolls_nothing_for_fuel() {
+    fn a_group_aboard_a_ship_that_sank_in_the_pulse_still_rolls_its_aircraft_in_the_air_for_fuel() {
         let mut world = long_world(1, 7, Reach::Extended);
         air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::from_int(10);
         strike_pulse(&mut world, Pulse::Morning);
         // The ship sinks in the pulse: its group has no position.
         ship_mut(&mut world, 1).location = ShipLocation::Sunk;
         world.wear_aircraft(1, Pulse::Morning);
-        assert!(ditchings(&world).is_empty());
+        // The aircraft it has in the air roll all the same: an aircraft out
+        // of fuel never reaches any deck (decision 3 of 0059).
+        assert_eq!(ditchings(&world).len(), 1);
     }
 
     #[test]

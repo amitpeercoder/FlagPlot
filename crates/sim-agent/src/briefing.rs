@@ -278,8 +278,26 @@ pub struct LossesPart {
     pub ships_damaged: Vec<DamagedShip>,
     /// Aircraft and pilots lost, by group, with the cause.
     pub aircraft: Vec<AircraftLoss>,
+    /// Aircraft that were in the air when their own deck was lost and landed
+    /// at another carrier or a base (decision 0059). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub aircraft_landed_elsewhere: Vec<LandedLine>,
     /// What the side claims of the enemy: claims received yesterday.
     pub claims: Vec<Claim>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LandedLine {
+    pub from: Handle,
+    /// The group that received them: an existing one, or one formed by it.
+    pub to: Handle,
+    /// The ship or base they landed at.
+    pub at: Handle,
+    pub aircraft: u32,
+    pub pilots: u32,
+    /// Whether `to` was formed by this landing.
+    pub formed: bool,
+    pub event: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -322,6 +340,10 @@ pub struct AircraftLoss {
     /// reach order reads as it did.
     #[serde(skip_serializing_if = "is_zero")]
     pub ditched: u32,
+    /// Aircraft that came down in the sea for want of a deck (decision 9 of
+    /// 0059). Left out when 0.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub no_deck: u32,
     pub pilots_lost: u32,
     pub events: Vec<u32>,
 }
@@ -794,6 +816,7 @@ impl Day {
         let mut damaged: BTreeMap<ShipId, DamagedShip> = BTreeMap::new();
         let mut aircraft: BTreeMap<AirGroupId, AircraftLoss> = BTreeMap::new();
         let mut claims = Vec::new();
+        let mut landed: Vec<LandedLine> = Vec::new();
         let mut spent: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut destroyed: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut stocks: BTreeMap<BaseId, StockMoves> = BTreeMap::new();
@@ -1017,6 +1040,32 @@ impl Day {
                     } => {
                         loss(ctx, &mut aircraft, *air_group, id).lost_with_ship += n;
                     }
+                    EventKind::AircraftDitchedNoDeck {
+                        air_group,
+                        aircraft: n,
+                        ..
+                    } if *n > 0 => {
+                        loss(ctx, &mut aircraft, *air_group, id).no_deck += n;
+                    }
+                    EventKind::AircraftLandedElsewhere {
+                        from,
+                        to,
+                        at,
+                        aircraft: n,
+                        pilots,
+                        formed,
+                    } => landed.push(LandedLine {
+                        from: ctx.group(*from),
+                        to: ctx.group(*to),
+                        at: match at {
+                            sim_core::state::AirGroupLocation::Base(base) => ctx.base(*base),
+                            sim_core::state::AirGroupLocation::Ship(ship) => ctx.ship(*ship),
+                        },
+                        aircraft: *n,
+                        pilots: *pilots,
+                        formed: *formed,
+                        event: id,
+                    }),
                     EventKind::AircraftDitched {
                         air_group, ditched, ..
                     } if *ditched > 0 => {
@@ -1264,6 +1313,7 @@ impl Day {
                 ships_sunk: sunk,
                 ships_damaged: damaged,
                 aircraft: aircraft.into_values().collect(),
+                aircraft_landed_elsewhere: landed,
                 claims,
             },
             spent,
@@ -1362,6 +1412,7 @@ fn loss<'m>(
         written_off: 0,
         lost_with_ship: 0,
         ditched: 0,
+        no_deck: 0,
         pilots_lost: 0,
         events: Vec::new(),
     });
