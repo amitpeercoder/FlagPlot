@@ -101,7 +101,7 @@ Ships are matched in ship ID order. The ship in place i of a force's afloat list
 
 Known limit: there is no range. There is one night chance and one day chance, and no opening or closing of the range. Target choice by value, fire or distance is not built. [0014]
 
-A side sees: its own ship's salvo, cut: the round, the firer, the weapon and the shots, without the target, the chance, the expected hits or the hits scored. The side whose ship is the target sees that it was fired on: the round, the target and the weapon, without the firing ship (decision 0065). The firer's side keeps the breakdown factors that are its own (guns, tubes, rate, minutes, the main battery, torpedo mount, fire control and experience factors). The side fired on is given no breakdown. [0047, 0064]
+A side sees: its own ship's salvo, cut: the round, the firer, the weapon and the shots, without the target, the chance, the expected hits or the hits scored. The side whose ship is the target sees that it was fired on: the round, the target and the weapon, without the firing ship (decision 0065). The firer's side keeps the breakdown factors that are its own (guns, tubes, rate, minutes, the main battery, the share of its guns for being not ready, torpedo mount, fire control and experience factors). The side fired on is given no breakdown, so the enemy never sees that a force fired part of its guns. [0047, 0064, 0068]
 
 ### Surprise
 
@@ -115,12 +115,22 @@ Guns and torpedoes use one mechanism: shots, a chance to hit, damage per hit. Ai
 
 **Gun shots in a round**
 
-`full = gun_rounds_per_min x (main_guns x round_minutes)`, then `shots = min(full x main_battery_factor, ammunition aboard)`.
+`full = gun_rounds_per_min x (main_guns x round_minutes)`, then `shots = min(full x main_battery_factor x unready_gun_share, ammunition aboard)`. The share comes before the ammunition cap, as the main battery factor does.
 
 - `gun_rounds_per_min`, `main_guns` and `gun_rounds_per_gun` are keys of the ship class (`ship_classes*.csv`). `round_minutes` is `surface_combat.toml: round_minutes`.
 - The main battery factor is 1 if the main battery is working, `degraded_factor` if degraded, 0 if out. [0016]
+- `unready_gun_share` is `surface_combat.toml: unready_gun_share`, from 0.1 to 1 (the loader refuses a value outside it), if the firing ship's force was not ready when the fight began (see Ready, below), else 1. The same figure holds for every ship of the force and for every round of the fight. At 1 the rule does nothing. [0068]
 - Ammunition is the ship's `gun_rounds`. A scenario ship starts with `main_guns x gun_rounds_per_gun` unless the scenario gives another figure. Each salvo takes its shots from it. [0014]
 - For some ships the derivation writes 9,999 rounds a gun as a marker for ammunition that is not limiting, where no source gives an outfit. [0023]
+
+**Ready, and the share of the guns**
+
+A force is ready for action, or not, once, as a fight begins, and the answer is kept for the whole of that fight: no sighting, no fire received, no alert gained and no round changes it. [0068]
+
+- A force is ready if its readiness is battle (by order or from the start of the scenario), or if it was alert before the present pulse began. [0068, 0021]
+- A force at normal readiness that was alerted in the present pulse is not ready: by a contact at the start of this pulse (chapter 3, Alert from belief), by being sighted or fired on in an earlier fight of this pulse, or by the alarm of a fight earlier in this pulse. A force alerted in an earlier pulse and still alert is ready. A force at normal readiness that is not alert is not ready. When a force was alerted is read from the event that alerted it (`alerted_by`, an event of a day and a pulse); no field of the state holds it. An alerted force with no such event is taken to have been alerted before. [0068]
+- A force that is not ready fires every ship's guns at `unready_gun_share` of their shots in every round of that fight, as the formula above says. Torpedoes, the chance to hit, sighting, surprise, the alarm and breaking off are unchanged. The force's readiness does not rise during the fight: a force that becomes alert in a fight is ready in the next pulse's fights, and in no other fight of the same pulse. [0068]
+- The figure is a placeholder (0.5 in the live file, the half of the armament manned that Condition II means; 1 in the frozen step 1 file). It is one figure for both sides and every battle. [0068]
 
 **Torpedo shots**
 
@@ -148,7 +158,7 @@ Each whole shot is one draw at the chance. A part of a shot is one more draw at 
 
 Draws come from the firing ship's fire stream, keyed on the firing ship and the enemy force. It is opened when the ship first fires and kept for the whole fight. For each salvo the draws come in this order: the shots, then for each hit its track (guns only) and then its system. A ship's gun salvo is drawn before its torpedo salvo. [0014, 0033]
 
-`Salvo` records the round, the firer, the target, the weapon, the shots, the chance, the expected hits and the hits. It cites the beginning of the fight and carries a breakdown of the shot count factors (guns or tubes, rate, minutes, the system factor) and the hit chance factors (base, surprised, lit, for guns fire control, and last the experience factor, named only in a dark fight when the weapon's strength is above 0, so on the frozen figures no breakdown changes). [0014, 0033, 0064]
+`Salvo` records the round, the firer, the target, the weapon, the shots, the chance, the expected hits and the hits. It cites the beginning of the fight and carries a breakdown of the shot count factors (guns or tubes, rate, minutes, the system factor) and the hit chance factors (base, surprised, lit, for guns fire control, and last the experience factor, named only in a dark fight when the weapon's strength is above 0, so on the frozen figures no breakdown changes). A gun salvo's breakdown names `unready_gun_share` straight after `main_battery_factor`, and only when the firing force was not ready and the figure is below 1; a ready force's salvo and any torpedo salvo never name it. [0014, 0033, 0064, 0068]
 
 ### Where a hit lands
 

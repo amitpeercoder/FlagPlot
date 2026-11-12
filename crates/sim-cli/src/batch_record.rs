@@ -1,5 +1,5 @@
 //! What `batch` counts from one run's event log and end state (decision
-//! 0062). It only reads: the log, the truth after each day and at the end.
+//! 0062; `shots_by` was added at version 3). It only reads: the log, the truth after each day and at the end.
 //! Every quantity is a whole number or, for a `Fixed`, a decimal string. A
 //! list is empty when there is nothing, and every key is always written, so
 //! a reader can tell an old file (key missing) from a run with none.
@@ -129,6 +129,16 @@ pub struct HitsOn {
     gun: u64,
     torpedo: u64,
     bomb: u64,
+}
+
+/// The shots one ship fired in surface fights over a run, by weapon: exact
+/// decimal strings, as `fire` writes them. A ship that fired nothing has no
+/// entry.
+#[derive(Serialize)]
+pub struct ShotsBy {
+    ship: u32,
+    gun: String,
+    torpedo: String,
 }
 
 #[derive(Serialize, Default)]
@@ -267,6 +277,7 @@ pub struct FormedGroup {
 pub struct RunCounts {
     pub hits_on: Vec<HitsOn>,
     pub fire: Fire,
+    pub shots_by: Vec<ShotsBy>,
     pub systems_out: Vec<SystemOut>,
     pub air_losses: Vec<AirLoss>,
     pub ready: Vec<ReadyRow>,
@@ -300,6 +311,8 @@ pub fn count(
     let mut hits_on: BTreeMap<ShipId, [u64; 3]> = BTreeMap::new();
     // [side][gun, torpedo] -> (shots, hits)
     let mut fire = [[(Fixed::ZERO, 0u64); 2]; 2];
+    // The shots each ship fired in surface fights: [gun, torpedo].
+    let mut shots_by: BTreeMap<ShipId, [Fixed; 2]> = BTreeMap::new();
     let mut losses: BTreeMap<AirGroupId, AirLoss> = BTreeMap::new();
     let mut claims = [[0u64; 4]; 2];
     let mut attacks = Vec::new();
@@ -335,6 +348,7 @@ pub fn count(
                 if hits > 0 {
                     hits_on.entry(*target).or_default()[column] += hits;
                 }
+                shots_by.entry(*firer).or_insert([Fixed::ZERO; 2])[column] += *shots;
                 if let Some(side) = side_of_ship(firer) {
                     let cell = &mut fire[slot(side)][column];
                     cell.0 += *shots;
@@ -563,6 +577,14 @@ pub fn count(
             japanese: side_fire(0),
             allied: side_fire(1),
         },
+        shots_by: shots_by
+            .into_iter()
+            .map(|(ship, [gun, torpedo])| ShotsBy {
+                ship: ship.raw(),
+                gun: gun.to_string(),
+                torpedo: torpedo.to_string(),
+            })
+            .collect(),
         systems_out,
         air_losses: losses.into_values().collect(),
         ready,

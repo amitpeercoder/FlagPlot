@@ -57,6 +57,12 @@ experience_gun_strength = "0"
 experience_torpedo_strength = "0"
 experience_sighting_strength = "0"
 
+# The share of its guns a force fires when it was not ready as a fight began
+# (decision 0068). Step 1 had no such rule, so this is 1, the value at which
+# the rule does nothing and no step 1 result moves. The live file has the
+# placeholder figure.
+unready_gun_share = "1"
+
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]
 propulsion = "0.2"

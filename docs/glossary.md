@@ -9,7 +9,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Step charge** | What the step from one hex centre to the next is charged, in miles, 1 to 40: the miles it brings the force closer to its waypoint in a straight line where the way is clear, 40 where it is not (decision 0058) | |
 | **Clear way** | From a hex, a sea path to the waypoint with as many steps as the hex distance: no land forces a detour (decision 0058) | |
 | **Readiness** | What a force is ordered to be: normal or battle (decision 0021) | Whether it is alert at this moment |
-| **Alert** | The state of a force that will see and shoot at full effect. A force at battle readiness is always alert | An order |
+| **Alert** | The state of a force whose lookouts see at full effect. A force at battle readiness is always alert | An order |
+| **Ready** | A force's state as a fight begins, kept for the whole fight: at battle readiness, or alert since before the present pulse began. A force that is not ready fires its guns at a share, `unready_gun_share`, in every round (decision 0068) | Alert. A force alerted in this pulse sees at full effect and is not ready |
 | **Alerted** | How a force at normal readiness came to be alert: by a fresh contact nearby, by being fired on, or by an alarm | |
 | **Alarm** | The roll a force that is not alert makes when a fight with gunfire happens in its hex | |
 | **Stance** | A force's ordered way of meeting an enemy: engage or avoid (decision 0014) | |

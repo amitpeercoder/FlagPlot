@@ -62,6 +62,11 @@ struct ForceFight {
     /// The ships afloat when the fight began, in ID order.
     began_with: Vec<ShipId>,
     fired_this_fight: bool,
+    /// Ready for action when the fight began, decided once and kept for the
+    /// whole fight (decision 0068, 2): at battle readiness by order, or alert
+    /// since before the pulse began. A force that is not ready fires its guns
+    /// at `unready_gun_share`.
+    ready: bool,
     /// Ships of this force that sank in this fight.
     sunk_in_fight: BTreeSet<ShipId>,
     /// One `chance()` draw per round in which the force rolls.
@@ -96,6 +101,17 @@ impl Fight {
     /// The index of the other force.
     const fn enemy(index: usize) -> usize {
         1 - index
+    }
+
+    /// What multiplies the gun shots of the force at `index`: the figure
+    /// `unready_gun_share` if it was not ready when the fight began, else 1
+    /// (decision 0068).
+    fn gun_share(&self, index: usize) -> Fixed {
+        if self.forces[index].ready {
+            Fixed::ONE
+        } else {
+            self.figures.unready_gun_share
+        }
     }
 }
 
@@ -166,6 +182,12 @@ struct Shot {
     /// The factors behind `shots`: guns or tubes, rate, minutes and the
     /// firer's main battery or torpedo mount factor.
     shot_factors: [Fixed; 4],
+    /// The share of its guns a force not ready fires (decision 0068): `Some`
+    /// only for a gun salvo of a force that was not ready when the fight began,
+    /// with the share below 1. Multiplied into `shots` after the main battery
+    /// factor and before the ammunition cap; named in the breakdown after
+    /// `main_battery_factor`.
+    unready_share: Option<Fixed>,
     /// The firer's fire control factor. One for torpedoes.
     fire_control_factor: Fixed,
     /// The firer's experience factor for this weapon and `Some` only in a
@@ -176,19 +198,22 @@ struct Shot {
 }
 
 /// The gun shots a ship would fire in a round of `minutes`: guns x rate x
-/// minutes x the main battery factor, then capped by the ammunition aboard
-/// (decision 6 of `docs/decisions/0016-systems-and-stragglers.md`).
+/// minutes x the main battery factor x `share` (the share of its guns a force
+/// not ready fires, 1 for a force that is ready: decision 0068), then capped
+/// by the ammunition aboard (decision 6 of
+/// `docs/decisions/0016-systems-and-stragglers.md`).
 fn gun_shots(
     ship: &Ship,
     class: &ShipClass,
     minutes: u32,
     figures: &SurfaceCombatFigures,
+    share: Fixed,
 ) -> Fixed {
     // Guns x minutes is a whole number; the exact `Fixed * i64` multiplies it
     // into the rate before anything is divided.
     let full = class.gun_rounds_per_min * (i64::from(class.main_guns) * i64::from(minutes));
     let factor = figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery);
-    (full * factor).min(ship.gun_rounds)
+    (full * factor * share).min(ship.gun_rounds)
 }
 
 /// The torpedo shots a ship fires in its first firing round: tubes x the
@@ -233,6 +258,29 @@ impl World {
             self.sound_alarm(&fight, ended, alarm_streams);
         }
         *avoiding = fight.avoiding;
+    }
+
+    /// Whether a force is ready for action as a fight begins (decision 0068,
+    /// 2): at battle readiness by order, or alert since before the present
+    /// pulse began. A force alerted in the present pulse (by a contact at the
+    /// pulse's start, by being sighted or fired on in an earlier fight of the
+    /// pulse, or by the alarm) is not. When the force was alerted is read from
+    /// the event that alerted it, `alerted_by`; an alerted force with none
+    /// (a state a rule never makes) counts as alerted before.
+    fn force_is_ready(&self, id: TaskForceId, day: u32, pulse: Pulse) -> bool {
+        let force = &self.truth.task_forces[&id];
+        if force.readiness == Readiness::Battle {
+            return true;
+        }
+        if !force.alerted {
+            return false;
+        }
+        force
+            .alerted_by
+            .and_then(|event| self.events.get(event))
+            .is_none_or(|event| {
+                event.day < day || (event.day == day && event.pulse.is_none_or(|p| p < pulse))
+            })
     }
 
     /// The stance a force takes in a fight: avoid if it broke off or slipped
@@ -557,6 +605,7 @@ impl World {
                 fired_on_last_round: false,
                 began_with: force.ships.iter().copied().collect(),
                 fired_this_fight: false,
+                ready: world.force_is_ready(id, day, pulse),
                 sunk_in_fight: BTreeSet::new(),
                 sighting_stream: world.rng_pair(
                     day,
@@ -808,7 +857,7 @@ impl World {
                 && fight.forces[enemy].sighted
                 && afloat[enemy]
                     .iter()
-                    .any(|ship| self.has_any_salvo(fight, *ship));
+                    .any(|ship| self.has_any_salvo(fight, enemy, *ship));
             round.forces[index].surprised = surprised;
             if surprised {
                 let cause = fight.forces[enemy]
@@ -853,10 +902,17 @@ impl World {
     }
 
     /// True if the ship has a gun or a torpedo salvo to fire this round.
-    fn has_any_salvo(&self, fight: &Fight, ship: ShipId) -> bool {
+    fn has_any_salvo(&self, fight: &Fight, force: usize, ship: ShipId) -> bool {
         let state = &self.truth.ships[&ship];
         let class = self.class_of(ship);
-        gun_shots(state, class, fight.figures.round_minutes, &fight.figures) > Fixed::ZERO
+        let share = fight.gun_share(force);
+        gun_shots(
+            state,
+            class,
+            fight.figures.round_minutes,
+            &fight.figures,
+            share,
+        ) > Fixed::ZERO
             || torpedo_shots(state, class, &fight.figures) > Fixed::ZERO
     }
 
@@ -877,7 +933,8 @@ impl World {
         let class = self.class_of(firer);
         let target_class = self.class_of(target);
         let figures = &fight.figures;
-        let shots = gun_shots(ship, class, figures.round_minutes, figures);
+        let share = fight.gun_share(force);
+        let shots = gun_shots(ship, class, figures.round_minutes, figures, share);
         let torpedo_shot_count = torpedo_shots(ship, class, figures);
         let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
         let fire_control =
@@ -906,6 +963,10 @@ impl World {
                 Fixed::from_int(i64::from(figures.round_minutes)),
                 figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery),
             ],
+            // Named in the breakdown only for a force that is not ready and
+            // only when the share is below 1, so that on the frozen figures
+            // no breakdown changes.
+            unready_share: (share < Fixed::ONE).then_some(share),
             fire_control_factor: fire_control,
             experience_factor: experience_for(figures.experience_gun_strength),
             damage_per_hit: per_hit(class.gun_damage),
@@ -927,6 +988,7 @@ impl World {
                 Fixed::ONE,
                 figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts),
             ],
+            unready_share: None,
             fire_control_factor: Fixed::ONE,
             experience_factor: experience_for(figures.experience_torpedo_strength),
             damage_per_hit: per_hit(class.torpedo_damage),
@@ -1029,12 +1091,18 @@ impl World {
             let [count, rate, minutes, system_factor] = shot.shot_factors;
             let factor = |name, value| Factor { name, value };
             let mut factors = match shot.weapon {
-                Weapon::Gun => vec![
-                    factor("guns", count),
-                    factor("rate", rate),
-                    factor("minutes", minutes),
-                    factor("main_battery_factor", system_factor),
-                ],
+                Weapon::Gun => {
+                    let mut factors = vec![
+                        factor("guns", count),
+                        factor("rate", rate),
+                        factor("minutes", minutes),
+                        factor("main_battery_factor", system_factor),
+                    ];
+                    if let Some(share) = shot.unready_share {
+                        factors.push(factor("unready_gun_share", share));
+                    }
+                    factors
+                }
                 Weapon::Torpedo => vec![
                     factor("tubes", count),
                     factor("rate", rate),
@@ -1772,7 +1840,10 @@ mod tests {
             figures.system_factor(ShipSystem::MainBattery, ship.systems.main_battery),
             Fixed::ONE
         );
-        assert_eq!(gun_shots(ship, class, 5, &figures), Fixed::from_int(140));
+        assert_eq!(
+            gun_shots(ship, class, 5, &figures, Fixed::ONE),
+            Fixed::from_int(140)
+        );
     }
 
     #[test]
@@ -5615,6 +5686,302 @@ mod tests {
             strengths(&mut world, "0.4", "0.4", "0.4");
             ship_mut(&mut world, 1).experience = 3;
             ship_mut(&mut world, 2).experience = 1;
+            scene.run_step(&mut world);
+            world
+        };
+        assert_eq!(build(true).state_hash(), build(false).state_hash());
+    }
+
+    // ---- a force not ready fires part of its guns (decision 0068) ----
+
+    /// Both forces sight in round 1 for sure, and the share is 0.5.
+    fn unready_duel(world: &mut World) {
+        both_sight(world);
+        figures_mut(world).unready_gun_share = fx("0.5");
+    }
+
+    /// Force 1 at battle readiness, force 2 at normal readiness and never
+    /// alerted, at night.
+    fn unready_scene() -> Scene {
+        let hex = Hex::new(5, 0);
+        night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
+        ])
+    }
+
+    /// Records an event that alerted force 2 in the given day and pulse and
+    /// sets the force alerted by it.
+    fn alerted_at(world: &mut World, day: u32, pulse: Pulse) {
+        let event = world.events.record(
+            day,
+            Some(pulse),
+            EventKind::ForceAlertedByContact {
+                task_force: TaskForceId::new(2),
+                contact: ContactId::new(1),
+            },
+            Vec::new(),
+            None,
+        );
+        let force = force_mut(world, 2);
+        force.alerted = true;
+        force.alerted_by = Some(event);
+    }
+
+    #[test]
+    fn a_force_is_ready_at_battle_readiness_or_alert_since_before_the_pulse_and_not_otherwise() {
+        let mut world = unready_scene().world();
+        let id = TaskForceId::new(2);
+        // Normal readiness, never alerted: not ready.
+        assert!(!world.force_is_ready(id, 1, Pulse::Night));
+        // Alerted in the present pulse: not ready in it.
+        alerted_at(&mut world, 1, Pulse::Night);
+        assert!(!world.force_is_ready(id, 1, Pulse::Night));
+        // The same event is an earlier pulse when asked of a later one, and
+        // an earlier day when asked of the next day's first pulse.
+        assert!(world.force_is_ready(id, 1, Pulse::Morning));
+        assert!(world.force_is_ready(id, 1, Pulse::Afternoon));
+        assert!(world.force_is_ready(id, 2, Pulse::Night));
+        // An event of a later pulse of the same day is not before.
+        alerted_at(&mut world, 1, Pulse::Afternoon);
+        assert!(!world.force_is_ready(id, 1, Pulse::Morning));
+        assert!(!world.force_is_ready(id, 1, Pulse::Afternoon));
+        // An event of an earlier day.
+        alerted_at(&mut world, 0, Pulse::Afternoon);
+        assert!(world.force_is_ready(id, 1, Pulse::Night));
+        // Alerted by nothing the log knows about: alerted before.
+        force_mut(&mut world, 2).alerted_by = None;
+        assert!(world.force_is_ready(id, 1, Pulse::Night));
+        // Not alerted any more: not ready, whatever the flag's cause was.
+        force_mut(&mut world, 2).alerted = false;
+        assert!(!world.force_is_ready(id, 1, Pulse::Night));
+        // Battle readiness by order is ready, alerted or not.
+        force_mut(&mut world, 2).readiness = Readiness::Battle;
+        assert!(world.force_is_ready(id, 1, Pulse::Night));
+        // Force 1, at battle readiness from the start.
+        assert!(world.force_is_ready(TaskForceId::new(1), 1, Pulse::Night));
+    }
+
+    #[test]
+    fn a_force_alerted_by_a_contact_at_the_start_of_this_pulse_is_not_ready_in_it_but_is_in_the_next(
+    ) {
+        // Decision 0068, 2: alert_from_belief at the start of a pulse records
+        // its event in that pulse, so the force it alerts is not ready in it.
+        let mut world = lone_allied();
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        world.alert_from_belief(1, Pulse::Night);
+        assert!(force(&world, 1).alerted);
+        let id = TaskForceId::new(1);
+        assert!(!world.force_is_ready(id, 1, Pulse::Night));
+        // Still alerted by the same contact in the next pulse: ready.
+        assert!(world.force_is_ready(id, 1, Pulse::Morning));
+    }
+
+    #[test]
+    fn a_force_not_ready_fires_the_share_of_its_guns_in_every_round_of_the_fight() {
+        // Share 0.5: 8 x 3 x 5 = 120, x 0.5 = 60 shots, in all six rounds
+        // though the force sights, is fired on and becomes alert in round 1.
+        // Force 1 is ready and fires 120. Torpedoes are 8 and untouched.
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_duel(w);
+        });
+        assert!(
+            force(&world, 2).alerted,
+            "force 2 became alert in the fight"
+        );
+        let theirs = gun_salvos_of(&world, 2);
+        assert_eq!(theirs.len(), 6);
+        for salvo in &theirs {
+            assert_eq!(salvo.shots, Fixed::from_int(60), "round {}", salvo.round);
+            assert_eq!(salvo.expected, salvo.shots * salvo.chance);
+        }
+        let ours = gun_salvos_of(&world, 1);
+        assert_eq!(ours.len(), 6);
+        assert!(ours.iter().all(|s| s.shots == Fixed::from_int(120)));
+        for ship in [1, 2] {
+            let torpedoes = torpedo_salvos_of(&world, ship);
+            assert_eq!(torpedoes.len(), 1);
+            assert_eq!(torpedoes[0].shots, Fixed::from_int(8));
+        }
+        // The ammunition used is the shots fired: 800 less 6 x 60.
+        assert_eq!(ship(&world, 2).gun_rounds, Fixed::from_int(440));
+        assert_eq!(ship(&world, 1).gun_rounds, Fixed::from_int(80));
+    }
+
+    #[test]
+    fn the_share_multiplies_with_the_main_battery_factor_before_the_ammunition_cap() {
+        // A degraded battery halves the shots: 120 x 0.5 x 0.5 = 30. With it
+        // out there is no gun salvo at all. The cap comes after: 50 rounds
+        // left make min(60, 50) = 50 shots, and 70 make 60, where without the
+        // share 70 would make 70.
+        let shots_with = |change: fn(&mut World)| {
+            let world = run(&unready_scene(), |w| {
+                harmless(w);
+                unready_duel(w);
+                change(w);
+            });
+            gun_salvos_of(&world, 2)
+                .first()
+                .map(|s| (s.shots, ship(&world, 2).gun_rounds))
+        };
+        let degraded = shots_with(|w| ship_mut(w, 2).systems.main_battery = SystemState::Degraded);
+        assert_eq!(degraded.map(|d| d.0), Some(Fixed::from_int(30)));
+        assert_eq!(
+            shots_with(|w| ship_mut(w, 2).systems.main_battery = SystemState::Out),
+            None
+        );
+        let fifty = shots_with(|w| ship_mut(w, 2).gun_rounds = Fixed::from_int(50));
+        assert_eq!(fifty.map(|d| d.0), Some(Fixed::from_int(50)));
+        let seventy = shots_with(|w| ship_mut(w, 2).gun_rounds = Fixed::from_int(70));
+        assert_eq!(seventy.map(|d| d.0), Some(Fixed::from_int(60)));
+    }
+
+    #[test]
+    fn the_unready_gun_share_is_in_a_not_ready_forces_gun_breakdowns_after_the_battery_factor() {
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_duel(w);
+        });
+        let share_of = |event: &Event| {
+            event
+                .breakdown
+                .as_ref()
+                .expect("a breakdown")
+                .factors
+                .iter()
+                .find(|f| f.name == "unready_gun_share")
+                .map(|f| f.value)
+        };
+        for salvo in gun_salvos_of(&world, 2) {
+            let event = event_with_id(&world, salvo.id);
+            let names = factor_names(event);
+            assert_eq!(
+                &names[..6],
+                &[
+                    "guns",
+                    "rate",
+                    "minutes",
+                    "main_battery_factor",
+                    "unready_gun_share",
+                    "base_chance"
+                ]
+            );
+            assert_eq!(share_of(event), Some(fx("0.5")));
+        }
+        // None in a ready force's gun salvo, and none in a torpedo salvo.
+        for salvo in gun_salvos_of(&world, 1) {
+            assert_eq!(share_of(event_with_id(&world, salvo.id)), None);
+        }
+        for ship in [1, 2] {
+            for salvo in torpedo_salvos_of(&world, ship) {
+                assert_eq!(share_of(event_with_id(&world, salvo.id)), None);
+            }
+        }
+    }
+
+    #[test]
+    fn at_a_share_of_1_nothing_changes_and_no_breakdown_names_the_factor() {
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            both_sight(w);
+        });
+        for salvo in salvos(&world) {
+            let event = event_with_id(&world, salvo.id);
+            assert!(!factor_names(event).contains(&"unready_gun_share"));
+            if salvo.weapon == Weapon::Gun {
+                assert_eq!(salvo.shots, Fixed::from_int(120));
+            }
+        }
+    }
+
+    #[test]
+    fn readiness_is_decided_when_the_fight_begins_and_a_force_alerted_in_it_stays_not_ready() {
+        // Force 2 is at normal readiness, never alerted; force 1 sights only
+        // by roll. Force 2 is not ready at the start, becomes alert in round
+        // 1 by being fired on, and fires 60 shots in every round it fires.
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            only_force_1_sights_by_roll(w);
+            figures_mut(w).unready_gun_share = fx("0.5");
+        });
+        let theirs = gun_salvos_of(&world, 2);
+        assert!(theirs.len() >= 2, "force 2 fired in several rounds");
+        assert!(theirs.iter().all(|s| s.shots == Fixed::from_int(60)));
+        assert!(force(&world, 2).alerted);
+    }
+
+    #[test]
+    fn a_force_alerted_before_the_pulse_fires_its_full_salvo() {
+        // Alerted in an earlier pulse (here an earlier day): ready. In the
+        // same pulse: not ready.
+        for (day, shots) in [(0, 120), (1, 60)] {
+            let world = run(&unready_scene(), |w| {
+                harmless(w);
+                unready_duel(w);
+                alerted_at(w, day, Pulse::Night);
+            });
+            assert!(
+                gun_salvos_of(&world, 2)
+                    .iter()
+                    .all(|s| s.shots == Fixed::from_int(shots)),
+                "alerted on day {day}"
+            );
+        }
+        // At battle readiness by order: ready.
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_duel(w);
+            force_mut(w, 2).readiness = Readiness::Battle;
+        });
+        assert!(gun_salvos_of(&world, 2)
+            .iter()
+            .all(|s| s.shots == Fixed::from_int(120)));
+    }
+
+    #[test]
+    fn a_force_alarmed_in_the_pulse_and_one_alerted_by_an_earlier_fight_of_it_are_not_ready() {
+        // Four forces in one hex (see `crowded_hex`); force 3 is at normal
+        // readiness. With the alarm sure, force 3 is alerted by the alarm of
+        // the first fight (1,2) and fires 60 shots in (2,3) and (3,4). With
+        // the alarm never sounding it is alerted by being fired on in (2,3),
+        // and is not ready in (3,4) either. The three other forces are at
+        // battle readiness and fire 120.
+        for alarm in [Fixed::ONE, Fixed::ZERO] {
+            let world = run(&crowded_hex(1), move |w| {
+                alarm_chance_is(alarm)(w);
+                figures_mut(w).unready_gun_share = fx("0.5");
+            });
+            // The ready forces' first salvos are full (later ones may be cut
+            // by the ammunition after several fights).
+            for ship in [1, 2, 4] {
+                assert_eq!(gun_salvos_of(&world, ship)[0].shots, Fixed::from_int(120));
+            }
+            let theirs = gun_salvos_of(&world, 3);
+            assert!(!theirs.is_empty());
+            assert!(
+                theirs.iter().all(|s| s.shots == Fixed::from_int(60)),
+                "alarm chance {alarm}"
+            );
+            let by = force(&world, 3).alerted_by.expect("alerted");
+            let kind_of_cause = &event_with_id(&world, by).kind;
+            assert_eq!(
+                matches!(kind_of_cause, EventKind::AlarmRoll { .. }),
+                alarm == Fixed::ONE,
+                "{kind_of_cause:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn recording_breakdowns_does_not_change_what_the_share_does() {
+        let build = |record: bool| {
+            let scene = unready_scene();
+            let mut world = scene.world();
+            world.config = SimConfig {
+                record_breakdowns: record,
+            };
+            unready_duel(&mut world);
             scene.run_step(&mut world);
             world
         };

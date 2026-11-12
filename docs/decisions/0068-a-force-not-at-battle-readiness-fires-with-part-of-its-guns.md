@@ -1,6 +1,6 @@
 # 0068: A force not at battle readiness fires with part of its guns
 
-Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its six questions. Nothing is built yet. It is built after experience (decision 0064), which changes the same file. The hand calculation is written before any code is delegated, and this record gains an "As built" section when the rule lands.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its six questions. Built; see "As built". It was built after experience (decision 0064), which changes the same file. The hand calculation was written before any code was delegated.
 
 ## The gap
 
@@ -128,3 +128,18 @@ On Nov 12, 2026, as recommended in each case.
 4. **Torpedoes left as they are?** Yes (decision 5).
 5. **The daylight fights with stragglers:** looked at after this rule and experience are in.
 6. **Cape Esperance:** the rule does not wait. The architect commissions research on the state of the Japanese ships there before that scenario's readiness is set.
+
+## As built
+
+Decisions 1 to 9 in the simulation, with the architect's settlements of the brief.
+
+- **No new state.** Whether a force was alert before the pulse began is read from the event that alerted it: `TaskForce.alerted_by` names an event, and an event has a day and a pulse. So no field was added, `hash::STATE_VERSION` is unchanged (`flagplot-state-v6`), no hash and no golden file changes on account of the state, and `name_every_field` has nothing to add. An alerted force with no `alerted_by` (which no rule makes; only a test sets it) counts as alerted before.
+- **Ready.** `World::force_is_ready(force, day, pulse)`, called once for each force in `begin_fight` and kept in `ForceFight.ready` for the whole fight. Ready is: readiness `Battle` (by order or from the start), or alerted with an `alerted_by` event of an earlier day, or of an earlier pulse of the same day. A force alerted in the present pulse is not ready, by each route: a contact at the start of the pulse (`alert_from_belief` records its event in that pulse), being sighted or fired on in an earlier fight of the pulse (`ForceBecameAlert`), or the alarm (`AlarmRoll`). A force alerted by a contact in an earlier pulse and still alerted is ready. A normal force never alerted is not ready.
+- **Figure.** `unready_gun_share` in `surface_combat.toml`, from 0.1 to 1 (the loader refuses outside, and a float or a missing key). The frozen file holds "1"; the live file "0.5", a placeholder, with the comment that 0.5 is Condition II as engagement_events row 23 states it and that tuning may move it and then says what it carries (decisions 7 and 8).
+- **The rule.** `gun_shots(ship, class, minutes, figures, share)` is `min(full x main_battery_factor x share, ammunition)`: the share is a factor beside the battery factor, before the cap. The share is `Fight::gun_share(force)`: the figure if the force was not ready, else 1. `has_any_salvo` (the test for who is surprised) reads the same share. Torpedo shots, hit chances, sighting, surprise, the alarm and breaking off do not read it. No new draw and no new event.
+- **Breakdown.** A gun salvo names `unready_gun_share` straight after `main_battery_factor`, only when the firing force was not ready and the figure is below 1. On the frozen figures no breakdown and no event changes.
+- **What a side sees.** In `side_events.rs`, `unready_gun_share` is added to the own factors of `Salvo`, the firer's side (decision 9). `SalvoAgainst` has no breakdown, so the enemy never sees it; no method of `SideView` returns a force's readiness or share.
+- **Scenario.** `data/scenarios/15a_unready_fire.toml` is scenario 4a exactly; `tests/scenario_15a_unready_fire.rs` has the architect's hand calculation and the three parts (the shots at the working value 0.5, properties over 1,000 seeds and the cases of a force ordered to battle readiness, alert since an earlier pulse and alarmed in the pulse, and a pinned outcome on the live figures). No other scenario file changes.
+- **The batch file** goes to version 3 with `shots_by` (decision 0062, "Version 3"), so that the Savo Island shells measures can be taken by group.
+- **What Savo Island shows at the live share of 0.5 (1,000 runs, before and after, on the same seeds; nothing tuned).** Allied gun shells in the middle run fall from 2,515 to 1,378 (the mean of a run from 2,401 to 1,470; the record is 471). The southern group's gun shells in the middle run go from 875 to 438, the northern group's from 1,493 to 870, and the three Japanese light ships' stay at 1,230 (they are at battle readiness). The head line goes from 8 agree, 2 at the edge, 6 miss to 8 agree, 1 at the edge, 7 miss: the Allied shells measure still misses (median 25 to 13 hundred, record 4), the Japanese hits on Allied ships and Allied destroyers sunk are not mended, and gun hits on Japanese ships, at the edge before, now miss (median 96 to 53, record 10 to 17). What the rule leaves out is named above (the daylight fights with stragglers, the rate of fire, secondary guns).
+- **Rule card as built.** Reads: a force's readiness, its `alerted` flag, the day and pulse of the event named by `alerted_by`, the figure, a ship's guns, rate and battery state. Writes: nothing.

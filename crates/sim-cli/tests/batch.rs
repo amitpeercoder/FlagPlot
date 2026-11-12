@@ -60,7 +60,7 @@ fn ids_of(side: &str, summary: &Value) -> Vec<u64> {
 fn the_summary_adds_up_and_matches_single_runs() {
     let summary = parse(&batch("fight", FIGHT, &["--runs", "20"]));
     assert_eq!(summary["format"], "flag-plot-batch");
-    assert_eq!(summary["version"], 2);
+    assert_eq!(summary["version"], 3);
     assert_eq!(summary["runs"], 20);
     assert_eq!(summary["first_seed"], 1);
     assert_eq!(summary["scenario"]["file"], FIGHT);
@@ -421,6 +421,57 @@ fn check_run(file: &str, seed: u64, record: &Value, played: &Played) {
         }
     }
 
+    // Shots by ship (version 3): each ship's exact gun and torpedo shots,
+    // counted again here from the `Salvo` events. A ship that fired nothing
+    // has no entry, the entries are in ship order, and they add up by side to
+    // `fire`.
+    let mut by_ship: std::collections::BTreeMap<u32, [Fixed; 2]> = Default::default();
+    for event in &events {
+        if let EventKind::Salvo {
+            firer,
+            weapon,
+            shots,
+            ..
+        } = &event.kind
+        {
+            let column = usize::from(*weapon == Weapon::Torpedo);
+            by_ship.entry(firer.raw()).or_default()[column] += *shots;
+        }
+    }
+    let listed = record["shots_by"].as_array().expect("shots_by");
+    assert_eq!(listed.len(), by_ship.len(), "{what}: ships that fired");
+    let order: Vec<u64> = listed.iter().map(|row| num(&row["ship"])).collect();
+    assert!(order.windows(2).all(|w| w[0] < w[1]), "{what}: ship order");
+    for (ship, [gun, torpedo]) in &by_ship {
+        let row = find(&record["shots_by"], "ship", u64::from(*ship)).expect("a row");
+        assert_eq!(row["gun"], gun.to_string().as_str(), "{what}: ship {ship}");
+        assert_eq!(
+            row["torpedo"],
+            torpedo.to_string().as_str(),
+            "{what}: ship {ship}"
+        );
+    }
+    for (name, side) in [("japanese", Side::Japanese), ("allied", Side::Allied)] {
+        for weapon_name in ["gun", "torpedo"] {
+            let mut sum = Fixed::ZERO;
+            for row in listed {
+                let ship = sim_core::ids::ShipId::new(num(&row["ship"]) as u32);
+                if truth.ships[&ship].side == side {
+                    sum += row[weapon_name]
+                        .as_str()
+                        .expect("a decimal string")
+                        .parse::<Fixed>()
+                        .expect("a decimal");
+                }
+            }
+            assert_eq!(
+                record["fire"][name][weapon_name]["shots"],
+                sum.to_string().as_str(),
+                "{what}: {name} {weapon_name} by ship and by side"
+            );
+        }
+    }
+
     // Claims by claimant.
     for (name, side) in [("japanese", Side::Japanese), ("allied", Side::Allied)] {
         let mut sums = [0u64; 4];
@@ -706,6 +757,7 @@ fn a_scenario_with_nothing_to_count_still_writes_every_key_empty() {
     let run = &summary["per_run"][0];
     for key in [
         "hits_on",
+        "shots_by",
         "systems_out",
         "air_losses",
         "ready",
@@ -873,7 +925,7 @@ fn the_keys_a_version_1_reader_used_keep_their_values() {
             &["--runs", "3"],
         ));
         assert_eq!(before["version"], 1);
-        assert_eq!(after["version"], 2);
+        assert_eq!(after["version"], 3);
         for (key, value) in before.as_object().expect("an object") {
             if key == "version" {
                 continue;
