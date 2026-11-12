@@ -115,6 +115,7 @@ use sim_core::orders::{
     AirGroupOrder, AirMission, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
+use sim_core::refdata::ShipKind;
 use support::play::{order_json, play_day, session_of, ByDay};
 use support::schemas;
 
@@ -167,9 +168,10 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetPatrolShare { .. } => 6,
         AirGroupOrder::SetRestThreshold { .. } => 7,
         AirGroupOrder::SetReach { .. } => 8,
+        AirGroupOrder::SetTargetPriority { .. } => 9,
     }
 }
-const AG_KINDS: usize = 9;
+const AG_KINDS: usize = 10;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -222,6 +224,12 @@ fn examples() -> Vec<OrderKind> {
         }),
         ag(AirGroupOrder::SetReach {
             reach: Reach::Normal,
+        }),
+        ag(AirGroupOrder::SetTargetPriority {
+            kinds: vec![ShipKind::Transport, ShipKind::Cruiser],
+        }),
+        ag(AirGroupOrder::SetTargetPriority {
+            kinds: vec![ShipKind::Carrier],
         }),
     ];
     for mission in [

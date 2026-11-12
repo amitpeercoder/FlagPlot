@@ -746,6 +746,30 @@
               "distance_nm": { "type": "integer" }
             }
           }
+        },
+        "strike_group_holding": {
+          "description": "Left out when there is none. An own air group on naval_strike that holds contacts within its reach, none of a kind on its target list (set_target_priority): it holds its strike and launches nothing at them. nearest is the nearest contact within reach and nearest_taken_for the kind it is taken for; distance_nm is its air distance.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "target_priority", "radius_nm", "nearest", "nearest_taken_for", "distance_nm"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "target_priority": {
+                "type": "array",
+                "items": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] }
+              },
+              "radius_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+              "reach_nm": {
+                "description": "Given only for a group on extended reach: the reach in force in miles.",
+                "$ref": "defs.schema.json#/$defs/dec"
+              },
+              "nearest": { "$ref": "defs.schema.json#/$defs/handle" },
+              "nearest_taken_for": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] },
+              "distance_nm": { "type": "integer" }
+            }
+          }
         }
       }
     }

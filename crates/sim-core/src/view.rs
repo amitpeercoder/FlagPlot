@@ -15,6 +15,7 @@
 
 use std::collections::BTreeMap;
 
+use crate::airstrike::StrikeChoice;
 use crate::belief::{BattleClaim, BeliefState, Contact};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
@@ -23,7 +24,7 @@ use crate::ids::{AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, 
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
 use crate::objectives::{self, KnownProgress, Objective, OwnBase, SideObjectives};
-use crate::orders::{Order, SpeedSetting};
+use crate::orders::{AirMission, Order, SpeedSetting};
 use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{AirGroup, Arrival, Base, Replacement, Ship, Side, TaskForce, TruthState};
@@ -365,6 +366,27 @@ impl<'a> SideView<'a> {
     /// figures are rules, so common knowledge.
     pub fn reach_nm(&self, group: &AirGroup) -> Fixed {
         self.ref_data.reach_nm(group.aircraft_type, group.reach)
+    }
+
+    /// The contact `group` would launch a strike at now (decision 6 of 0063):
+    /// `contact_to_strike` (`airstrike.rs`) on this side's belief and the
+    /// group's own state, orders and reach, which is what the strike decision
+    /// calls. `None` for a group that is not this side's, is not on the naval
+    /// strike mission, has no position, or has no contact that qualifies. It
+    /// reads belief and the side's own unit and nothing of the enemy.
+    pub fn strike_choice(&self, group: &AirGroup) -> Option<StrikeChoice> {
+        if group.side != self.side || group.mission != AirMission::NavalStrike {
+            return None;
+        }
+        let figures = self.ref_data.air_combat.as_ref()?;
+        let origin = self.truth.air_group_hex(group)?;
+        crate::airstrike::contact_to_strike(
+            self.belief,
+            group,
+            origin,
+            self.reach_nm(group),
+            figures.strike_contact_max_age_pulses,
+        )
     }
 
     /// The air combat figures' extended reach share and ditching chance are

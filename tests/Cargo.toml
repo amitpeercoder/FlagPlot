@@ -146,6 +146,14 @@ name = "scenario_12d_flight_300"
 path = "scenario_12d_flight_300.rs"
 
 [[test]]
+name = "scenario_13a_target_priority"
+path = "scenario_13a_target_priority.rs"
+
+[[test]]
+name = "scenario_13b_afternoon_base_strike"
+path = "scenario_13b_afternoon_base_strike.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 

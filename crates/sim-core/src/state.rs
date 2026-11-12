@@ -23,6 +23,7 @@ use crate::orders::{
     AirMission, CargoAction, Mission, Reach, Readiness, RejectReason, SpeedSetting, Stance,
     StragglerInstruction,
 };
+use crate::refdata::ShipKind;
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -656,9 +657,36 @@ pub struct AirGroup {
     pub reach: Reach,
     /// The standing order that set the reach, if any.
     pub reach_order: Option<OrderId>,
+    /// The kinds of ship the group's strikes go for, in order (decision 0063).
+    /// A kind not on the list is never launched at. The default is every
+    /// kind, in the order of importance ([`ShipKind::ALL`]).
+    pub target_priority: Vec<ShipKind>,
+    /// The standing order that set the target list, if any.
+    pub target_order: Option<OrderId>,
+    /// The game day of the group's last base strike launch (decision 7 of
+    /// 0063): a base strike launches once in a game day. `None` until it
+    /// has launched one.
+    pub last_base_strike_day: Option<u32>,
 }
 
 impl AirGroup {
+    /// Where a kind of ship comes in the group's order of preference (decision
+    /// 4 of 0063): the kinds on its target list first, in list order, then the
+    /// kinds not on it, in the order of importance. Lower is better.
+    pub fn target_rank(&self, kind: ShipKind) -> (u8, u8) {
+        match self
+            .target_priority
+            .iter()
+            .position(|listed| *listed == kind)
+        {
+            Some(index) => (
+                0,
+                u8::try_from(index).expect("a list has six kinds at most"),
+            ),
+            None => (1, kind.code()),
+        }
+    }
+
     /// An air group at rest with no aircraft, no fatigue, no pilot tracking
     /// and no standing orders; the whole patrol share. Set `ready` and
     /// `strength` together.
@@ -691,6 +719,9 @@ impl AirGroup {
             strength: 0,
             reach: Reach::Normal,
             reach_order: None,
+            target_priority: ShipKind::ALL.to_vec(),
+            target_order: None,
+            last_base_strike_day: None,
         }
     }
 }

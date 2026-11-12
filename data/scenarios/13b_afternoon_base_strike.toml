@@ -1,0 +1,83 @@
+# Scenario 13b: a carrier closes an enemy airfield and strikes it in the
+# afternoon of the first day and in the morning of the second.
+#
+# Stage 1 of decision 0063, decision 7. A carrier force steams west toward a
+# Japanese airfield. In the morning of day 1 it is 280 nm out, beyond the
+# dive bombers' radius of 250 nm; in the afternoon it is 200 nm out, within it.
+# The dive bomber group, on base strike, launches in the afternoon of day 1,
+# once, and again in the morning of day 2, once. Nobody opposes the strikes:
+# the airfield has no anti-aircraft fire and no aircraft. The hand calculation
+# is in tests/scenario_13b_afternoon_base_strike.rs. The test runs this file
+# with seeds 1 to 1000 and with the carrier force started where it is already
+# in reach.
+#
+# PLACEHOLDER DATA. The bases, ships, aircraft, figures and map are invented.
+
+name = "Scenario 13b: An afternoon base strike"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_two_airfields.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# The Japanese airfield, with supply to lose and nothing to fire with.
+[[base]]
+id = 1
+name = "Placeholder airfield A"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+
+# The carrier force starts at (12,0) and is ordered to (3,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force"
+side = "allied"
+q = 12
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier A"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer A"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 18
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[3, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1

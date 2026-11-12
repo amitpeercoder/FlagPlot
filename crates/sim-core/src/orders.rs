@@ -10,6 +10,7 @@ use core::fmt;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, IntentId, OrderId, ShipId, TaskForceId};
+use crate::refdata::ShipKind;
 use crate::state::Side;
 
 /// Who issued an order.
@@ -351,6 +352,12 @@ pub enum AirGroupOrder {
     SetReach {
         reach: Reach,
     },
+    /// The kinds of ship a strike group goes for, in order (decision 0063).
+    /// A kind not on the list is never launched at. A standing order of its
+    /// own kind: it replaces the list and nothing else. Added at the end.
+    SetTargetPriority {
+        kinds: Vec<ShipKind>,
+    },
 }
 
 /// An order together with the unit it is for.
@@ -461,6 +468,12 @@ pub enum RejectReason {
     /// The air group was lost with the ship it was aboard, so there is
     /// nothing to give an order to. Added at the end of the enum.
     AirGroupLost,
+    /// A target list names no kind (decision 0063). Added at the end of the
+    /// enum.
+    TargetListEmpty,
+    /// A target list names a kind twice (decision 0063). Added at the end of
+    /// the enum.
+    TargetKindRepeated(ShipKind),
 }
 
 impl fmt::Display for RejectReason {
@@ -518,6 +531,10 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::NoShipAfloat => f.write_str("the task force has no ship afloat"),
             RejectReason::AirGroupLost => f.write_str("the air group was lost with its ship"),
+            RejectReason::TargetListEmpty => f.write_str("the target list names no kind of ship"),
+            RejectReason::TargetKindRepeated(kind) => {
+                write!(f, "the target list names {} twice", kind.name())
+            }
         }
     }
 }

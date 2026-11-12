@@ -374,6 +374,12 @@ enum ActionSpec {
     SetReach {
         reach: ReachSpec,
     },
+    /// `kinds` are ship kinds by name, in the order the group goes for them
+    /// (decision 0063). An empty list or a kind named twice is refused when
+    /// the order reaches intake, as an out-of-range value is.
+    SetTargetPriority {
+        kinds: Vec<String>,
+    },
     SetRulesOfEngagement {
         stance: StanceSpec,
         break_off: Quantity,
@@ -1131,6 +1137,9 @@ impl Scenario {
                     .unwrap_or_else(|| spec.ready.saturating_add(spec.damaged.unwrap_or(0))),
                 reach: Reach::Normal,
                 reach_order: None,
+                target_priority: ShipKind::ALL.to_vec(),
+                target_order: None,
+                last_base_strike_day: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1295,6 +1304,9 @@ impl Scenario {
                         ActionSpec::SetReach { .. } => {
                             return Err(wrong_target("set_reach", "air_group"))
                         }
+                        ActionSpec::SetTargetPriority { .. } => {
+                            return Err(wrong_target("set_target_priority", "air_group"))
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -1371,9 +1383,20 @@ impl Scenario {
                         ActionSpec::SetReach { reach } => AirGroupOrder::SetReach {
                             reach: (*reach).into(),
                         },
+                        ActionSpec::SetTargetPriority { kinds } => {
+                            let mut parsed = Vec::new();
+                            for name in kinds {
+                                parsed.push(crate::reference::parse_kind(name).ok_or_else(|| {
+                                    fail(format!(
+                                        "the set_target_priority order on day {day} names \"{name}\", which is not a kind of ship"
+                                    ))
+                                })?);
+                            }
+                            AirGroupOrder::SetTargetPriority { kinds: parsed }
+                        }
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold or set_reach"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach or set_target_priority"
                             )))
                         }
                     };
@@ -2350,6 +2373,29 @@ r = 0
         assert!(parse_with(&order(
             "air_group = 1",
             &format!("{}\nextra = 1", reach("extended"))
+        ))
+        .is_err());
+    }
+
+    #[test]
+    fn the_target_priority_order_loads_for_an_air_group_with_kind_names_and_nothing_else() {
+        let list = |kinds: &str| format!("kind = \"set_target_priority\"\nkinds = {kinds}");
+        parse_with(&order(
+            "air_group = 1",
+            &list("[\"transport\", \"cruiser\"]"),
+        ))
+        .expect("a list of kinds loads");
+        // An empty list or a repeated kind is the world's to refuse, at
+        // intake.
+        parse_with(&order("air_group = 1", &list("[]"))).expect("an empty list loads");
+        parse_with(&order("air_group = 1", &list("[\"cruiser\", \"cruiser\"]")))
+            .expect("a repeated kind loads");
+        assert!(error_of(&order("air_group = 1", &list("[\"frigate\"]"))).contains("frigate"));
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_target_priority\"")).is_err());
+        assert!(error_of(&order("task_force = 1", &list("[\"cruiser\"]"))).contains("air_group"));
+        assert!(parse_with(&order(
+            "air_group = 1",
+            &format!("{}\nextra = 1", list("[\"cruiser\"]"))
         ))
         .is_err());
     }
