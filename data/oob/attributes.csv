@@ -33,6 +33,12 @@ ship_class,ship,ref:ship_class,,one,The class a source assigns the ship to; the 
 out_of_action_from,ship,date,,many,Date a ship was put out of action by damage; the note says by what and how badly
 repair_place,ship,text,,many,"A place the ship was repaired after damage, one row per place in order; the dates are the time there and the note says temporary or permanent"
 returned_to_service,ship,date,,many,Date a damaged ship was operational again; the note says what the source counts as return
+last_refit_completed,ship,date,,many,Date the last yard period before a battle ended; the note says what was done
+time_in_theatre_note,ship,text,,many,When the ship arrived in the theatre and what she had done since
+crew_turnover_note,ship,text,,many,"A stated large change of crew or change of captain, with its date"
+prior_action_note,ship,text,,many,Actions the ship had fought before a battle
+night_practice_note,ship,text,,many,"Night battle practice or night gunnery exercise the ship did, and when"
+readiness_measure_note,ship,text,,many,A measure of training or readiness a source of the period used
 max_speed_kn,aircraft_type,decimal,knots,one,Maximum level speed at the altitude given by max_speed_altitude_m
 max_speed_altitude_m,aircraft_type,integer,metres,one,Altitude at which max_speed_kn is quoted
 cruise_speed_kn,aircraft_type,decimal,knots,one,Cruising speed
@@ -107,3 +113,10 @@ internal_fuel_l,aircraft_type,integer,litres,one,"Fuel in the fixed tanks, witho
 performance_note,aircraft_type,text,,many,"A source statement about range, radius, ceiling or another performance limit that gives no usable number, or compares two types; the note says who said it"
 aircraft_received,air_unit,integer,aircraft,many,"Aircraft that joined the unit or force on the date, or over the range of dates, given; the note names the type and where they came from"
 pilots_on_hand,air_unit,integer,pilots,many,Pilots on strength on the date; the note says which pilots are counted
+formed,air_unit,date,,many,Date the unit was formed or commissioned
+in_action_since,air_unit,date,,many,Date the unit first saw combat; the note says where
+prior_combat_note,air_unit,text,,many,"Campaigns the unit fought before a scenario date, as a source states them"
+pilot_experience_note,air_unit,text,,many,What a source says of the experience of the unit's pilots at a date
+veteran_share_percent,air_unit,integer,percent,many,Share of the unit's pilots a source counts as veterans at a date; the note shows the numbers
+pilot_flying_hours,air_unit,integer,hours,many,A stated average or typical flying hours figure for the unit's pilots at a date
+losses_before_scenario_note,air_unit,text,,many,"Pilots or aircraft the unit lost in earlier fighting, as a source states"
