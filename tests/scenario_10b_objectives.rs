@@ -62,7 +62,7 @@
 //! | Allied ships sunk | ships 42 and 43, cruisers; ship 44, a destroyer |
 //! | Allied ships crippled | ship 1 Enterprise, a carrier |
 //! | Japanese ships crippled | none (ship 40 has propulsion degraded only) |
-//! | Japanese aircraft lost | shot down 78, lost with Ryujo 29, written off 17: 124 |
+//! | Japanese aircraft lost | shot down 78, lost with Ryujo 23 (group 118: 17 aboard; group 119: 6), group 118's 6 aircraft in the air when she sank came down in the sea with no deck (decisions 7 to 10 of 0059), written off 17: 78 + 23 + 6 + 17 = 124 |
 //! | Allied aircraft lost | shot down 32, on the ground 4, written off 7: 43 |
 //! | Cargo landed at base 1 by Allied ships | ships 37 and 38, each 62 + 120 + 240 + 58 = 480 t: 960 t (the convoy arrives a little sooner under decision 0058, so the tons fall in other pulses) |
 //! | Henderson Field at the end | 4300.955 t of supply, aircraft ready: open |
@@ -210,6 +210,23 @@ fn losses(world: &World, side: Side) -> (u32, u32, u32, u32) {
     (shot, ship, ground, wear)
 }
 
+/// The aircraft of `side` that came down in the sea for want of a deck.
+fn no_deck_losses(world: &World, side: Side) -> u32 {
+    let truth = world.umpire();
+    world
+        .events()
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::AircraftDitchedNoDeck {
+                air_group,
+                aircraft,
+                ..
+            } if truth.air_groups[air_group].side == side => Some(*aircraft),
+            _ => None,
+        })
+        .sum()
+}
+
 // ---------------------------------------------------------------------
 // Scenario 4, Savo Island.
 // ---------------------------------------------------------------------
@@ -328,9 +345,12 @@ fn the_full_slice_is_a_major_allied_victory() {
         SystemState::Degraded
     );
 
-    // Aircraft: Japanese shot down 78, lost with Ryujo 29, written off 17.
-    // Allied shot down 32, on the ground 4, written off 7.
-    assert_eq!(losses(&world, Side::Japanese), (78, 29, 0, 17));
+    // Aircraft: Japanese shot down 78, lost with Ryujo 23 and 6 more that
+    // came down in the sea with no deck, written off 17. Allied shot down
+    // 32, on the ground 4, written off 7.
+    assert_eq!(losses(&world, Side::Japanese), (78, 23, 0, 17));
+    assert_eq!(no_deck_losses(&world, Side::Japanese), 6);
+    assert_eq!(no_deck_losses(&world, Side::Allied), 0);
     assert_eq!(losses(&world, Side::Allied), (32, 0, 4, 7));
 
     // Cargo landed at base 1 by Allied ships 37 and 38: 480 t each.

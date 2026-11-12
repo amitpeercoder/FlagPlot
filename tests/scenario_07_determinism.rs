@@ -426,7 +426,14 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // A kind the full slice cannot record: a ditching needs an air group on
     // extended reach and the full slice gives no reach order (decision
     // 0059, stage 1). Scenario 12a records it, and its own test reads it.
-    const NOT_IN_THE_FULL_SLICE: [&str; 1] = ["AircraftDitched"];
+    //
+    // `AircraftLandedElsewhere` is the other: the full slice on its seed has
+    // no deck lost beside another deck with room or within reach of a base (its
+    // one deck lost, Ryujo's, has nothing near), so its aircraft in the air
+    // come down in the sea. Scenario 12c records it; stage 3 of 0059 is
+    // expected to bring it into the slice. `AircraftDitchedNoDeck` is in the
+    // log and needs no entry.
+    const NOT_IN_THE_FULL_SLICE: [&str; 2] = ["AircraftDitched", "AircraftLandedElsewhere"];
     let missing: Vec<&String> = all
         .difference(&seen)
         .filter(|kind| !NOT_IN_THE_FULL_SLICE.contains(&kind.as_str()))

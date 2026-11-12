@@ -32,7 +32,7 @@ A side sees: its own groups whole. The enemy sees nothing of a group except thro
 
 ### Where a group is
 
-A group at a base is at the base's hex. A group aboard a ship is at the position of the ship's task force, and moves with it with no order. A group aboard a ship that is in a port is at the port's hex, and is still aboard the ship. A group aboard a ship that has sunk has no position. A group cannot change between a ship and a base, or between bases: there is no rebase order. A group with no aircraft is at its place all along and can be given orders. [0025, 0041, 0052]
+A group at a base is at the base's hex. A group aboard a ship is at the position of the ship's task force, and moves with it with no order. A group aboard a ship that is in a port is at the port's hex, and is still aboard the ship. A group aboard a ship that has sunk has no position. A group cannot change between a ship and a base, or between bases: there is no rebase order. Aircraft can come to be at another place only by landing there when their own deck is lost (see "Coming home to no deck"), and they then belong to a group of that place. A group with no aircraft is at its place all along and can be given orders. [0025, 0041, 0052, 0059]
 
 A side sees: its own group's place. The enemy sees only what a report says of a force.
 
@@ -44,7 +44,7 @@ A side sees: its own capacity and aircraft count. The enemy does not.
 
 ### A group lost with its ship
 
-When a ship sinks, every group aboard it loses all its ready and damaged aircraft and, if its pilots are tracked, all its pilots. The group stays in the state, aboard the sunk ship, with no aircraft and no position. It records `AirGroupLost` (caused by the `ShipSunk` event) and, if it had pilots, `PilotsLost` (caused by `AirGroupLost`). An order to such a group is rejected with `AirGroupLost`. A group aboard a ship that sinks in the pulse still attacks in that pulse, because every attack is worked out before any damage lands. Landing aboard another carrier or ashore is not modelled. [0025, 0026, 0035, 0038, 0041]
+When a ship sinks, every group aboard it loses the aircraft that were aboard her, ready and damaged, and, if its pilots are tracked, their pilots. The aircraft that were in the air in the pulse are not aboard: they are a group's aircraft that flew in the pulse and were not shot down, which are the aircraft of the sorties noted for it (see "What counts as a sortie"). A sinking in the air combat step finds those noted; a sinking in a surface fight in the movement phase finds none, since the pulse's flying is over, and so loses every aircraft. The group keeps the aircraft in the air as ready aircraft, and one pilot with each where pilots are tracked, until the wear phase of the same pulse brings them home (see "Coming home to no deck"). It stays in the state, aboard the sunk ship, with no position. It records `AirGroupLost` (caused by the `ShipSunk` event, giving only the aircraft that were aboard, 0 if there were none) and, if it lost pilots, `PilotsLost` (caused by `AirGroupLost`, giving the pilots left). An order to such a group is rejected with `AirGroupLost`. A group aboard a ship that sinks in the pulse still attacks in that pulse, because every attack is worked out before any damage lands. [0025, 0026, 0035, 0038, 0041, 0059]
 
 A side sees: `AirGroupLost` and `PilotsLost` for its own groups, whole. The enemy sees nothing of them, and learns the ship sank only through a claim or a report.
 
@@ -374,7 +374,7 @@ The attack's draws, in order, are one per shot, then per hit its track (a bomb o
 
 **Applying the damage.** In step 5 of the air combat step the hits go through the damage path of chapter 4 (Applying damage): one `ShipDamaged` per track that took hits, then one `SystemHit` per system hit, each caused by the `AirAttack` event. A ship whose flotation reaches 100 sinks, and its groups are lost (see "A group lost with its ship"). A strike group's hits land in group order, so a later group's hits can land on a ship an earlier group sank in the same step: its damage and system events are recorded and no second sinking happens. [0026, 0033]
 
-**The flight deck.** A deck that is out stops all launches from it (see "What a group can fly in a pulse"). There is no rule for aircraft whose deck is closed while they are away: they are lost only if the ship sinks. [0026, 0027]
+**The flight deck.** A deck that is out stops all launches from it (see "What a group can fly in a pulse"). Aircraft that are in the air when their deck is lost, by a sinking or by a hit that puts it out, come home to another deck, a base or the sea (see "Coming home to no deck"). [0026, 0027, 0059]
 
 `AirAttack` is recorded (group, task force, ship, weapon, shots, chance, expected, hits), caused by the strike's launch and by every `AircraftLost` event of that group in the raid.
 
@@ -412,7 +412,7 @@ Both forces' strikes are launched in the decision step before either lands, each
 
 ## The end of a daylight pulse for aircraft
 
-The wear phase runs in each daylight pulse after air combat. It works the sorties noted in the pulse, in this order: running out of fuel, wear, fatigue, then the supply for sorties.
+The wear phase runs in each daylight pulse after air combat. It works the sorties noted in the pulse, in this order: running out of fuel, coming home to no deck, wear, fatigue, then the supply for sorties.
 
 ### What counts as a sortie
 
@@ -445,6 +445,22 @@ All the draws of a group in a pulse come from one stream of the upkeep subsystem
 A side sees: `AircraftDitched` for its own groups, whole, and `PilotsLost`. The enemy sees nothing of it. [0047, 0059]
 
 Not built: a landing at another deck or a field instead of the sea when the deck is lost, and a different chance for the crew by where the aircraft comes down (decision 0059, stage 2).
+
+### Coming home to no deck
+
+The second part of the wear phase, after running out of fuel and before wear. It runs if `air_combat.toml` is loaded. A group's aircraft are in the air if they flew in the pulse (a search, strike, patrol or escort) and were not shot down or ditched for fuel: they are what its noted sorties still hold. Their own deck cannot take them if the group is aboard a ship that has sunk in the pulse, or whose flight deck is out at this moment. A degraded deck takes them. A group at a base is never affected: no rule damages a field.
+
+Groups are worked in group number order, each group's aircraft as one body that may be split by room, in this order:
+
+1. **Another carrier of the group's side in the same hex**: the hex of the group's ship, or where it sank (noted when she sank). She must be afloat with her flight deck not out, in any task force of her side; ships are taken in ship number order, lowest first. She takes as many as fit under her aircraft capacity, the ready and damaged aircraft of the groups aboard her counted at that moment, and the rest go on to the next such carrier.
+2. **A base of the group's side within the aircraft type's strike radius of that hex**, by air distance (the radius, not the reach). For a type with no strike radius, a scout, the search range stands for it. The nearest base, then the lowest number. A base takes any number.
+3. **The sea.** The aircraft left are ditched and `AircraftDitchedNoDeck` is recorded. Where the group's pilots are counted, each crew is recovered with `air_combat.toml: crew_recovered_beside_own_force` if any ship of the group's side is afloat in that hex at that moment (the group's own ship counts if she is afloat with her deck out), and otherwise with `crew_recovered_open_sea`. A crew not recovered is a pilot lost, never below 0, with `PilotsLost` caused by the ditching event. The draws are one stream of the upkeep subsystem with its own value of `Draw` (`NoDeck`, code 4), keyed on the source group, one draw for each aircraft ditched, taken after the group's landings. No other draw is made: the choice of a place is not random.
+
+Aircraft that land join the lowest-numbered group of their aircraft type and side located at that ship or base, whose ready aircraft and strength rise by them (and its pilots, if they are tracked); if there is none, a new group is formed there: the next group number above the highest in the game, the same aircraft type and side, a name made of the old one, "landed at" and the place (for example "Placeholder dive bombers landed at ship:6"), mission rest, reach normal, no search arc, the source group's fatigue, strength equal to what it received, and pilots counted if the source group's are, one with each aircraft. The source group keeps what it has aboard, its orders and its number; it loses the aircraft and, with each, a pilot. A sortie goes with its aircraft to the group that has them, so wear, fatigue and supply are worked for that group. `AircraftLandedElsewhere` is recorded for each landing (from group, to group, the ship or base, aircraft, pilots, whether the group was formed), and `AircraftDitchedNoDeck` for the ditching (group, hex, aircraft, whether beside own ships, the chance, crews recovered, pilots lost, ready after, with a breakdown of the aircraft, the chance and whether a ship was in the hex). Both are caused by the event that closed the deck (the `ShipSunk`, or the `SystemHit` that put the deck out) and by the events that say the group flew. No carrier ends a pulse over her aircraft capacity. A ditched aircraft counts for the enemy's `aircraft_destroyed` objective; an aircraft that lands elsewhere does not. [0059]
+
+A side sees: `AircraftLandedElsewhere` and `AircraftDitchedNoDeck` for its own groups, whole, and the `PilotsLost` that follows. The enemy sees nothing of them. [0047, 0059]
+
+Not built: a landing planned at a field beyond the target, a deck that takes aircraft by night or in the dark, aircraft pushed over the side to clear a deck, and rescue of a pilot beside ships of the other side. A ship's deck that goes out in a surface fight while aircraft are in the air is not met: the pulse's flying is over by then.
 
 ### Wear
 
@@ -491,7 +507,7 @@ Chapter 1, The night pulse and The morning and afternoon pulses, hold the sequen
 
 1. At the start of every pulse: the grounded bases are fixed (A base out of supply).
 2. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, stand-down and return.
-3. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
+3. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
 
 Contacts age at the end of every pulse (chapter 3). The end-of-day phases do nothing for aircraft. [0035, 0036, 0039, 0041, 0059]
 
@@ -503,8 +519,8 @@ Contacts age at the end of every pulse (chapter 3). The end-of-day phases do not
 - **No night strikes.** [0026, 0034]
 - **Bases.** A base strike launches once a day, in the morning. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052]
 - **No rebase.** A group cannot move between bases or between a ship and a base. [0025, 0041, 0052]
-- **No landing elsewhere.** Aircraft are lost with their ship. [0025]
-- **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down, and the pilot of a patrol aircraft shot down over its own hex may be, at a chance for a base and one for ships. [0038, 0052, 0059]
+- **Landing elsewhere is by deck loss only.** Aircraft in the air when their own deck is lost land at another carrier or a base, or come down in the sea; no group is ever ordered to move, and a landing plans no field beyond the target. Aircraft aboard a ship that sinks are lost with her, with their pilots, though most of those men were really saved: a saved pilot with no aircraft has nowhere to go, and there is no roster of pilots. [0025, 0059]
+- **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down away from home is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down, and the pilot of a patrol aircraft shot down over its own hex may be, at a chance for a base and one for ships. [0038, 0052, 0059]
 - **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run. To change: differences.md row 27, a scenario whose arrival would overfill a ship is to be refused when it loads.
 - **Aircraft in reserve, morale, a base's aviation support, ground support, weather** are not built. [0052]
 - **Anti-aircraft ammunition** is not limited. [0027]

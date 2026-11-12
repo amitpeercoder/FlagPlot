@@ -261,8 +261,12 @@ fn the_unit_and_event_forms_parse_and_errors_are_clear() {
 
 #[test]
 fn a_unit_with_no_events_says_so_and_succeeds() {
-    // A base nothing happened at in scenario 1.
-    let scenario = world("data/scenarios/05_eastern_solomons.toml");
+    // A base nothing happened at in scenario 1. It was a base of scenario 5
+    // until aircraft landed at its only base when Enterprise's deck went out
+    // (decisions 7 to 10 of 0059): scenario 5 has no unit left that no event
+    // names, so the test reads scenario 1.
+    const TRANSIT: &str = "data/scenarios/01_transit.toml";
+    let scenario = world(TRANSIT);
     let named: BTreeSet<EntityRef> = scenario
         .world
         .events()
@@ -276,7 +280,7 @@ fn a_unit_with_no_events_says_so_and_succeeds() {
         .keys()
         .find(|b| !named.contains(&EntityRef::Base(**b)))
         .expect("a base no event names");
-    let out = stdout_of(&["events", EASTERN, "--unit", &quiet.to_string()]);
+    let out = stdout_of(&["events", TRANSIT, "--unit", &quiet.to_string()]);
     assert!(
         out.contains("is in this run, but no event names it"),
         "{out}"

@@ -44,7 +44,9 @@
 //! ditching draws (one for each aircraft that came back), then the crew draws
 //! (one for each aircraft ditched). A sortie within the radius, a search and
 //! a patrol roll nothing, and a group aboard a ship that sank in the pulse
-//! has no position and rolls nothing, as in the wear roll. `AircraftDitched`
+//! has no position, but the aircraft it has in the air roll all the same
+//! (they are what its sorties hold, and nothing else of it is left).
+//! `AircraftDitched`
 //! is recorded for each sortie that rolled, whether or not an aircraft
 //! ditched.
 //!
@@ -166,6 +168,10 @@ impl World {
         sorties.sort_by_key(|sortie| sortie.air_group);
         // Before any wear is rolled: an aircraft that ditched is not worn.
         self.roll_ditching(day, pulse, &mut sorties);
+        // Then the aircraft whose own deck is lost come home to another
+        // deck, a base or the sea, and wear is rolled for those that landed
+        // (decisions 7 to 10 of 0059).
+        self.come_home(day, pulse, &mut sorties);
         self.roll_wear(day, pulse, &sorties);
         self.tire_and_rest_air_groups(day, pulse, &sorties);
         self.pay_for_sorties(day, pulse, &sorties);
@@ -360,11 +366,9 @@ impl World {
             let Some(group) = self.truth.air_groups.get(&sortie.air_group) else {
                 continue;
             };
-            // A group aboard a ship that sank in the pulse has no position
-            // and rolls nothing (as in the wear roll).
-            if self.truth.air_group_hex(group).is_none() {
-                continue;
-            }
+            // A group aboard a ship that sank in the pulse has no position,
+            // but the aircraft it has in the air are rolled all the same:
+            // an aircraft out of fuel never reaches any deck (decision 0059).
             let radius_nm = self
                 .ref_data
                 .aircraft_types

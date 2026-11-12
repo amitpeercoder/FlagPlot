@@ -138,6 +138,10 @@ name = "scenario_12b_patrol_pilots"
 path = "scenario_12b_patrol_pilots.rs"
 
 [[test]]
+name = "scenario_12c_no_deck"
+path = "scenario_12c_no_deck.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 

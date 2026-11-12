@@ -106,8 +106,12 @@
 //! Carrier B is sunk by ten hits on flotation, which two attacks can now
 //! do, though rarely: two attacks average under 6 hits, and a quarter of
 //! them start fires instead. While she is afloat every attack is on her and
-//! the guns fire 36 shots. If a morning attack sinks her, air group 4 is
-//! lost with her (decision 0025), so the afternoon strike meets no patrol
+//! the guns fire 36 shots. If a morning attack sinks her, the aircraft of air
+//! group 4 that were aboard her go down with her (decisions 0025 and 10 of
+//! 0059), and those it had in the air, its patrol, come down in the sea (a
+//! ship of its side, a cruiser, is afloat in the hex; there is no other
+//! carrier and no base here: decisions 7 to 10 of 0059). Group 4 ends with
+//! none, so the afternoon strike meets no patrol
 //! and group 3's escorts fire at nothing; the cruisers fire 16 shots; and
 //! the bombers attack the lower-numbered cruiser afloat, at 15 points a hit.
 //! (Before decision 0033 two attacks did 80 points at most and she could
@@ -245,6 +249,9 @@ struct Run {
     enemy_force_at: Hex,
     /// The patrol share of group 3 and the mission of group 4, as set.
     share_of_3: Fixed,
+    /// The orders that set group 4's mission and share: the causes of its
+    /// patrol (decisions 7 to 10 of 0059 cite them when it comes home).
+    patrol_orders_of_4: Vec<Cause>,
 }
 
 impl Run {
@@ -357,6 +364,12 @@ fn digest(run: &Scenario, seed: u64) -> Run {
         allied_force_at: truth.task_forces[&ALLIED_FORCE].position(),
         enemy_force_at: truth.task_forces[&ENEMY_FORCE].position(),
         share_of_3: truth.air_groups[&FIGHTERS_A].patrol_share,
+        patrol_orders_of_4: truth.air_groups[&FIGHTERS_B]
+            .mission_order
+            .into_iter()
+            .chain(truth.air_groups[&FIGHTERS_B].share_order)
+            .map(Cause::Order)
+            .collect(),
     }
 }
 
@@ -469,6 +482,22 @@ fn shots_text(shots: u32, chance: &str, expected: Fixed, hits: u32) -> String {
 /// the air combat step against it, and returns what was worked. The counts
 /// are carried from pulse to pulse from the loss events of the pulses
 /// before.
+/// The ships, groups and bases of the scenario as loaded, for the model of
+/// where aircraft go when their deck is lost.
+#[allow(clippy::type_complexity)]
+fn no_deck_facts() -> &'static (
+    Vec<common::no_deck::ModelShip>,
+    Vec<common::no_deck::ModelGroup>,
+    Vec<common::no_deck::ModelBase>,
+) {
+    static FACTS: OnceLock<(
+        Vec<common::no_deck::ModelShip>,
+        Vec<common::no_deck::ModelGroup>,
+        Vec<common::no_deck::ModelBase>,
+    )> = OnceLock::new();
+    FACTS.get_or_init(|| common::no_deck::initial(&load().world))
+}
+
 fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
     let seed = run.seed;
     let mut ready = [18u32, 12, 12];
@@ -947,6 +976,9 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
         );
         let mut after_sinking = now;
         let mut sank_b = false;
+        // The aircraft group 4 has in the air at the end of the step: its
+        // patrol less what it lost (decision 7 of 0059).
+        let in_air_4 = p - (ready[2] - now[2]);
         if sinks {
             assert_eq!(sunk.len(), 1, "seed {seed}");
             assert_eq!(
@@ -964,29 +996,141 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             );
             afloat.remove(&target);
             if target == CARRIER_B {
-                // Air group 4 is the only one aboard, and is lost with her.
+                // Air group 4 is the only one aboard. What was aboard goes
+                // down with her; its patrol, in the air, is kept and comes
+                // home below (decisions 7 to 10 of 0059).
+                let aboard = now[2] - in_air_4;
                 assert_eq!(groups_lost.len(), 1, "seed {seed}");
                 assert_eq!(
                     groups_lost[0].kind,
                     EventKind::AirGroupLost {
                         air_group: FIGHTERS_B,
                         ship: CARRIER_B,
-                        aircraft: now[2]
+                        aircraft: aboard
                     },
                     "seed {seed}"
                 );
                 assert_eq!(
                     groups_lost[0].kind.to_string(),
-                    format!("air_group:4 lost with ship:3: {} aircraft", now[2])
+                    format!("air_group:4 lost with ship:3: {aboard} aircraft")
                 );
                 assert_eq!(groups_lost[0].causes, vec![Cause::Event(sunk[0].id)]);
-                after_sinking[2] = 0;
+                after_sinking[2] = in_air_4;
                 sank_b = true;
             } else {
                 assert!(groups_lost.is_empty(), "seed {seed}");
             }
         } else {
             assert!(sunk.is_empty() && groups_lost.is_empty(), "seed {seed}");
+        }
+
+        // ---- The aircraft of group 4 in the air come home if carrier B's deck
+        // is lost: she sank, or her flight deck went out in this pulse. There
+        // is no other carrier and no base here, so they come down in the sea,
+        // beside the cruisers while one is afloat. ----
+        {
+            let mut deck_losses: Vec<common::no_deck::DeckLoss> = Vec::new();
+            let mut deck_after = deck_b;
+            let mut sunk_so_far = false;
+            let (mut ships, mut model_groups, bases) = no_deck_facts().clone();
+            let hex = ships
+                .iter()
+                .find(|s| s.id == CARRIER_B.raw())
+                .map(|s| s.hex)
+                .expect("carrier B");
+            for event in &step {
+                match event.kind {
+                    EventKind::ShipSunk { ship, .. } if ship == CARRIER_B => {
+                        sunk_so_far = true;
+                        deck_losses.push(common::no_deck::DeckLoss {
+                            ship: ship.raw(),
+                            hex,
+                            cause: event.id,
+                        });
+                    }
+                    EventKind::SystemHit {
+                        ship,
+                        system: ShipSystem::FlightDeck,
+                        after,
+                        ..
+                    } if ship == CARRIER_B && !sunk_so_far => {
+                        if after == SystemState::Out && deck_after != SystemState::Out {
+                            deck_losses.push(common::no_deck::DeckLoss {
+                                ship: ship.raw(),
+                                hex,
+                                cause: event.id,
+                            });
+                        }
+                        deck_after = after;
+                    }
+                    _ => {}
+                }
+            }
+            for ship in &mut ships {
+                ship.afloat = afloat.contains(&ShipId::new(ship.id));
+                ship.deck_out = ship.id == CARRIER_B.raw() && deck_after == SystemState::Out;
+            }
+            for group in &mut model_groups {
+                match group.id {
+                    2 => group.ready = after_sinking[0],
+                    3 => group.ready = after_sinking[1],
+                    4 => {
+                        group.ready = after_sinking[2];
+                        group.in_air = in_air_4;
+                    }
+                    _ => {}
+                }
+            }
+            let homing = kinds(|k| {
+                matches!(
+                    k,
+                    EventKind::AircraftLandedElsewhere { .. }
+                        | EventKind::AircraftDitchedNoDeck { .. }
+                )
+            });
+            let expected =
+                common::no_deck::homecoming(&ships, &mut model_groups, &bases, &deck_losses);
+            assert_eq!(homing.len(), expected.len(), "seed {seed}");
+            for (event, (home, closing)) in homing.iter().zip(&expected) {
+                let common::no_deck::Home::NoDeck {
+                    group,
+                    hex,
+                    aircraft,
+                    beside_own_force,
+                } = *home
+                else {
+                    panic!("seed {seed}: nothing lands elsewhere here: {home:?}");
+                };
+                assert_eq!(group, FIGHTERS_B.raw());
+                // Its patrol sortie's causes follow the closing event.
+                let mut causes: Vec<Cause> = closing.map(Cause::Event).into_iter().collect();
+                causes.extend(run.patrol_orders_of_4.iter().copied());
+                assert_eq!(
+                    event.kind,
+                    EventKind::AircraftDitchedNoDeck {
+                        air_group: FIGHTERS_B,
+                        hex,
+                        aircraft,
+                        beside_own_force,
+                        // The frozen figures: both crew figures are 1.
+                        chance: Fixed::ONE,
+                        crews_recovered: None,
+                        pilots_lost: 0,
+                        ready: model_groups
+                            .iter()
+                            .find(|g| g.id == group)
+                            .map(|g| g.ready)
+                            .expect("group 4")
+                    },
+                    "seed {seed}"
+                );
+                assert_eq!(event.causes, causes, "seed {seed}");
+            }
+            after_sinking[2] = model_groups
+                .iter()
+                .find(|g| g.id == 4)
+                .map(|g| g.ready)
+                .expect("group 4");
         }
 
         worked.push(Worked {
@@ -1811,10 +1955,32 @@ fn with_group_4_not_on_patrol_nothing_fights_and_only_the_guns_cost_bombers() {
 // ---------------------------------------------------------------------
 
 #[test]
+fn aircraft_come_home_elsewhere_only_when_carrier_bs_deck_sank_or_went_out_in_the_pulse() {
+    // Decisions 7 to 10 of 0059: only air group 4, aboard carrier B, is ever
+    // affected, only in a daylight pulse in which she sank or her flight deck
+    // went out, and its aircraft in the air then come down in the sea. Group
+    // 4 ends with none if she sank.
+    let ship_of = |group: AirGroupId| (group == FIGHTERS_B).then_some(CARRIER_B);
+    let mut homecomings = 0;
+    for run in batch() {
+        homecomings += common::no_deck::assert_only_for_lost_decks(&run.events, ship_of);
+        assert!(run
+            .events
+            .iter()
+            .all(|e| !matches!(e.kind, EventKind::AircraftLandedElsewhere { .. })));
+        if run.ship(3).sunk {
+            assert_eq!(run.ready[3], 0, "seed {}", run.seed);
+        }
+    }
+    assert!(homecomings > 0, "carrier B is sunk or hit out in some runs");
+}
+
+#[test]
 fn every_groups_aircraft_at_the_end_are_those_at_the_start_less_its_recorded_losses() {
     for run in batch() {
-        // The aircraft a group lost: its loss events, and all it had left
-        // if its carrier was sunk (air group 4 with carrier B).
+        // The aircraft a group lost: its loss events, those aboard its carrier
+        // when she sank (air group 4 with carrier B) and those of its own in
+        // the air that came down in the sea for want of a deck.
         let lost = |group: AirGroupId| -> u32 {
             run.events
                 .iter()
@@ -1825,6 +1991,14 @@ fn every_groups_aircraft_at_the_end_are_those_at_the_start_less_its_recorded_los
                         ..
                     }
                     | EventKind::AirGroupLost {
+                        air_group,
+                        aircraft,
+                        ..
+                    }
+                    // What came down in the sea for want of a deck (decisions
+                    // 7 to 10 of 0059). Nothing lands elsewhere here: there
+                    // is no other carrier and no base.
+                    | EventKind::AircraftDitchedNoDeck {
                         air_group,
                         aircraft,
                         ..

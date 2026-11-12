@@ -72,11 +72,21 @@ pub enum Draw {
     /// (decision 6a of 0059): one stream for each firing roll's losses to a
     /// patrol group, keyed on the patrol group and the firing escort group.
     PatrolPilot,
+    /// The crews of aircraft that came down in the sea for want of a deck
+    /// (decision 9 of 0059): one stream for each source air group and pulse,
+    /// in the upkeep subsystem, keyed on the air group.
+    NoDeck,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 4] = [Draw::Legacy, Draw::Claim, Draw::Ditch, Draw::PatrolPilot];
+    pub const ALL: [Draw; 5] = [
+        Draw::Legacy,
+        Draw::Claim,
+        Draw::Ditch,
+        Draw::PatrolPilot,
+        Draw::NoDeck,
+    ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
     /// and is not folded into the key.
@@ -86,6 +96,7 @@ impl Draw {
             Draw::Claim => 1,
             Draw::Ditch => 2,
             Draw::PatrolPilot => 3,
+            Draw::NoDeck => 4,
         }
     }
 }
