@@ -33,3 +33,7 @@ A check of the spec against the code, made as step 1 closes, found things the sp
 ## Rule card
 
 No rule is added or changed.
+
+## As built
+
+Item 9 is built as `sim-cli events`, an umpire's command that reads the truth like `run`. `events SCENARIO_OR_SAVE --unit HANDLE [--day N] [--seed N]` runs the scenario (or replays the saved game) to its end and prints every event that names the unit, in the text `run --events` prints, with a count last. A handle is `ship:N`, `task_force:N`, `air_group:N`, `base:N` or `contact:N`; contact numbers belong to a side, so `allied:contact:N` or `japanese:contact:N` picks one. For a ship it also prints the events of the task force it was in at the time, each marked `via task_force:N`. `events SCENARIO_OR_SAVE --why EVENT` prints the event and its causes down to orders as an indented tree, with each event's breakdown, and an event reached twice is printed once and then referred to by number.
