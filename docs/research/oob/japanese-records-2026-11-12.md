@@ -64,7 +64,7 @@ No Japanese record was read. What was found is secondary, mostly Wikipedia in Ja
 | 13 Sep | 9 fighters on reconnaissance; 27 bombers and 12 fighters | 4 fighters; 2 bombers | | 11 |
 | 14 Sep | 19 floatplanes and 2 float fighters | 3 or 8 | 5 in the air | about 10 |
 
-On these days US claims run two to three times the Japanese losses, which agrees with the first pass. Japanese claims now have three days (21 August: 8 claimed, none lost in air combat that day by the US rows; 12 September; 14 September). The 12 September claim of 20 aircraft on the ground is the first ground claim found.
+On these days US claims run two to three times the Japanese losses, which agrees with the first pass. Japanese claims now have three days (21 August: 8 fighters claimed, against US rows of two fighters crashed and one dive bomber lost that day, cause not split; 12 September; 14 September). The 12 September claim of 20 aircraft on the ground is the first ground claim found.
 
 These rows do not replace the 49 rows from the unsourced chronology; they sit beside them. Where a day now has a figure with a named book behind it, the chronology's row for that day could be dropped.
 
