@@ -10,6 +10,7 @@
 
 use crate::briefing::{Briefing, StrikeReport};
 use crate::common::{Handle, Place};
+use crate::objectives::{ObjectiveLine, ResultPart, ShipKindPoints};
 
 fn plain(word: &str) -> String {
     word.replace('_', " ")
@@ -119,6 +120,21 @@ impl Briefing {
                 h.day
             )),
             None => o.line("Covers: the state only, no day has been resolved".to_string()),
+        }
+
+        o.heading("OBJECTIVES");
+        let ob = &self.objectives;
+        match &ob.mission {
+            None => o.line("none: this scenario gives no mission and no objectives".to_string()),
+            Some(mission) => {
+                o.line(format!("Mission: {mission}"));
+                for line in &ob.objectives {
+                    objective_text(&mut o, line);
+                }
+            }
+        }
+        if let Some(result) = &ob.result {
+            result_text(&mut o, result);
         }
 
         o.heading("ORDERS");
@@ -624,6 +640,95 @@ impl Briefing {
         );
 
         o.0
+    }
+}
+
+/// Points for each kind of ship, as `carrier 10, battleship 8`.
+fn ship_points_text(points: &[ShipKindPoints]) -> String {
+    let list: Vec<String> = points
+        .iter()
+        .map(|p| format!("{} {}", p.kind, p.points.0))
+        .collect();
+    list.join(", ")
+}
+
+fn objective_text(o: &mut Out, line: &ObjectiveLine) {
+    let base = line.base.as_ref().map(Handle::text).unwrap_or_default();
+    let points = line.points.map(|p| p.0.to_string()).unwrap_or_default();
+    let what = match line.kind {
+        "ships_sunk" => format!(
+            "Objective: enemy ships sunk, points for each: {}",
+            ship_points_text(&line.ship_points)
+        ),
+        "ships_crippled" => format!(
+            "Objective: enemy ships left afloat with propulsion or flight deck out, points for each: {}",
+            ship_points_text(&line.ship_points)
+        ),
+        "aircraft_destroyed" => {
+            format!("Objective: enemy aircraft destroyed, points for each: {points}")
+        }
+        "cargo_landed" => format!(
+            "Objective: tons of supply and fuel you unload at {base}, points for each ton: {points}"
+        ),
+        _ if line.closed == Some(true) => format!(
+            "Objective: {base} shut at the end (no supply, or no aircraft ready), points: {points}"
+        ),
+        _ => format!(
+            "Objective: {base} open at the end (supply and an aircraft ready), points: {points}"
+        ),
+    };
+    o.line(what);
+    let known = &line.known;
+    o.sub(match known.basis {
+        "exact" => format!(
+            "What you know of your progress: {}{}",
+            known.count.0,
+            known
+                .points
+                .map(|p| format!(", worth {} points", p.0))
+                .unwrap_or_default()
+        ),
+        "claims" => format!(
+            "What you know of your progress: {} enemy ships reported sunk, of kinds you were not told",
+            known.count.0
+        ),
+        _ => "What you know of your progress: nothing you can see shows it; it is counted at the end of the game".to_string(),
+    });
+}
+
+fn result_text(o: &mut Out, result: &ResultPart) {
+    o.line("The game is over. The result, counted from the truth:".to_string());
+    for (name, side) in [("Allied", &result.allied), ("Japanese", &result.japanese)] {
+        o.line(format!(
+            "{name}: {} points, margin {}, {}",
+            side.total.0, side.margin.0, side.outcome
+        ));
+        for score in &side.objectives {
+            let base = score
+                .base
+                .as_ref()
+                .map(|b| format!(" at {}", b.text()))
+                .unwrap_or_default();
+            let ships: Vec<String> = score
+                .ships
+                .iter()
+                .map(|s| format!("{} {}", s.ships, s.kind))
+                .collect();
+            let by_kind = if ships.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", ships.join(", "))
+            };
+            o.sub(format!(
+                "{}{base}: count {}{by_kind}, points {}",
+                plain(score.kind),
+                score.count.0,
+                score.points.0
+            ));
+        }
+    }
+    if let Some(history) = &result.history {
+        o.line(format!("History: {history}"));
     }
 }
 

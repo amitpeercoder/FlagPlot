@@ -62,3 +62,80 @@ One aircraft destroyed is worth 0.05. Levels for a one-day battle: minor 3, majo
 | --- | --- |
 | Reads | Ships (sunk, systems, kind, side); the event log (aircraft lost, cargo unloaded); bases (supply, aircraft ready); the scenario's objectives |
 | Writes | Nothing. The result is computed when asked |
+
+## As built
+
+Added by the developer. Nothing above this heading was changed.
+
+### The scenario file
+
+An optional `[objectives]` table. A scenario without it plays as before and has no result.
+
+```toml
+[objectives]
+minor = 3                 # the three levels: above zero and rising; one set for the
+major = 8                 # scenario (the margin is one number seen from both sides)
+decisive = 16
+history = "..."           # optional note of how the day went (decision 9)
+
+[objectives.allied]       # both sides are required
+mission = "..."           # not empty
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"       # or "ships_crippled"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"           # for one aircraft
+
+[[objectives.allied.objective]]
+kind = "cargo_landed"
+base = 1
+points_per_t = "0.1"
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 2
+closed = true             # optional, false by default
+points = 4
+
+[objectives.japanese]
+mission = "..."
+# objectives as for the Allied side, in any number and order
+```
+
+Levels, points and `points_per_t` are whole numbers or decimal strings; a TOML float is rejected, as everywhere. In the ship tables a kind that is left out is worth nothing. The loader refuses: levels that are not above zero and rising; negative points; an unknown kind of objective, of ship, or an unknown field; an objective naming a base the scenario does not have (checked by `World::set_objectives`); an empty mission; a missing side. An objective list may be empty (the side then scores nothing). The same kind may be given more than once (for example `cargo_landed` at two bases). Objectives are listed in the file's order, and the briefing, the known progress and the result keep that order.
+
+### Where it lives
+
+`sim-core/src/objectives.rs` holds the types, `tallies` (what each side achieved, from the final truth and the log), `score` (points, margin and level from the tallies, pure, on plain counts) and `known_progress`. `World` holds the objectives beside the reference data: not state and not in the hash, which no rule reads. `World::result()` gives the umpire's result; `SideView::mission()`, `SideView::objectives()` and `SideView::known_progress()` give a side its own.
+
+### What each count reads
+
+- `ships_sunk`: enemy ships with location sunk, by ship kind.
+- `ships_crippled`: enemy ships not sunk (afloat or in port) with propulsion out or flight deck out, by kind. Degraded does not count.
+- `aircraft_destroyed`: the enemy's aircraft, from `AircraftLost` (shot down), `AirGroupLost` (lost with a sunk ship, ready and damaged), `AircraftDestroyedOnGround` (ready), `DamagedAircraftDestroyedOnGround` (damaged) and the `written_off` of `AircraftWorn`. Not counted: the `worn` aircraft of `AircraftWorn` (damaged, repaired later), `PilotsLost` (pilots; the aircraft are counted by their own events) and every event that adds aircraft. Each event is attributed through its air group's side, so the enemy of that side scores it.
+- `cargo_landed`: `CargoUnloaded` events of the side's own ships at the named base, supply and fuel tons together.
+- `base_open`: the named base's supply above zero and at least one ready aircraft of an air group based there, read from the final truth. Either side may hold the objective for any base; `closed = true` reverses it.
+
+### What a side knows (decision 7)
+
+Counted from the side's own units and `SideView::events()`, each objective with a basis:
+
+- `exact`: `cargo_landed` (its own ships' unloading is a whole event it sees) and `base_open` for a base of its own (its own base's supply and aircraft). As good as the truth.
+- `claims`: `ships_sunk` counts the enemy ships of the `ClaimReceived` events the side has. A claim names no kind of ship, so the known points are not given. No rule makes a claim today.
+- `not_observable`: `ships_crippled`, `aircraft_destroyed`, and `base_open` for an enemy base. No unit of the side's and no event it may see (decision 0047 cuts the hits out of its own firing) shows them. The count is 0 and says nothing; the briefing says so in words.
+
+A known count is never above the true count. A side's own losses are not part of its progress.
+
+### The agent interface and the runner
+
+The briefing has an `objectives` part after the heading: the mission, each objective with its points, each with its known progress, and `result`, which is null until the game is over. The text says `none` for a scenario without objectives. At the end of the game the session adds the result for both sides (points by objective, margin, level and the history note) to the final briefing and to the `end_day` answer that reports `game_over`; the `end_day` answer always has a `result` field, null without objectives or before the end. `sim-cli run` prints the result after the final state; `sim-cli batch` adds to each run the Allied margin and result and a tally of the seven results (seen from the Allied side) to the summary file, for a scenario with objectives.
+
+### Choices the decision did not state
+
+- One set of levels per scenario, not one per side: the margin is one number.
+- Both sides' mission is required once `[objectives]` is given; a list of objectives may be empty.
+- The result of a game that is asked for before it ends is the score so far; the session and the runner only hand it out at the end.
+- Scenario 5 carries the objectives of the placeholder scale and nothing else changes in it.

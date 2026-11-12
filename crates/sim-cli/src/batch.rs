@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 use std::fs;
 
 use serde::Serialize;
+use sim_core::objectives::{Level, Outcome};
 use sim_core::state::{ShipLocation, Side};
 
 const DEFAULT_RUNS: u64 = 1000;
@@ -28,6 +29,32 @@ struct Batch {
     sides: SidesOut,
     per_ship: Vec<PerShip>,
     per_run: Vec<PerRun>,
+    /// The runs of each result, seen from the Allied side, when the scenario
+    /// has objectives (decision 0054): from a decisive Allied victory to a
+    /// decisive Allied defeat, every level listed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    results: Option<Vec<ResultRow>>,
+}
+
+#[derive(Serialize)]
+struct ResultRow {
+    /// `decisive victory`, `major victory`, `minor victory`, `stalemate`,
+    /// `minor defeat`, `major defeat` or `decisive defeat`, of the Allied side.
+    outcome: String,
+    runs: u64,
+}
+
+/// The seven outcomes in the order the file lists them.
+fn outcomes() -> [Outcome; 7] {
+    [
+        Outcome::Victory(Level::Decisive),
+        Outcome::Victory(Level::Major),
+        Outcome::Victory(Level::Minor),
+        Outcome::Stalemate,
+        Outcome::Defeat(Level::Minor),
+        Outcome::Defeat(Level::Major),
+        Outcome::Defeat(Level::Decisive),
+    ]
 }
 
 #[derive(Serialize)]
@@ -79,6 +106,13 @@ struct PerRun {
     seed: u64,
     final_hash: String,
     sunk: Vec<u32>,
+    /// The Allied margin and result of the run, when the scenario has
+    /// objectives. The Japanese margin is its negative and the result its
+    /// mirror.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    allied_margin: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    allied_outcome: Option<String>,
 }
 
 fn parse_count(flag: &str, value: Option<&str>, usage: &str) -> Result<u64, String> {
@@ -146,6 +180,8 @@ fn build(scenario_path: &str, runs: u64, first_seed: u64) -> Result<Batch, Strin
     let mut histograms: Vec<Vec<u64>> = Vec::new();
     let mut side_ships: Vec<u64> = Vec::new();
     let mut per_run: Vec<PerRun> = Vec::new();
+    let mut outcome_runs = [0u64; 7];
+    let mut has_objectives = false;
 
     for index in 0..runs {
         let seed = first_seed + index;
@@ -213,10 +249,19 @@ fn build(scenario_path: &str, runs: u64, first_seed: u64) -> Result<Batch, Strin
             .last()
             .map(|summary| format!("{:016x}", summary.state_hash))
             .ok_or_else(|| format!("{scenario_path}: the scenario has no days"))?;
+        let result = world.result();
+        if let Some(result) = &result {
+            has_objectives = true;
+            if let Some(slot) = outcomes().iter().position(|o| *o == result.allied.outcome) {
+                outcome_runs[slot] += 1;
+            }
+        }
         per_run.push(PerRun {
             seed,
             final_hash,
             sunk: sunk_ids.into_iter().collect(),
+            allied_margin: result.as_ref().map(|r| r.allied.margin.to_string()),
+            allied_outcome: result.as_ref().map(|r| r.allied.outcome.name()),
         });
     }
 
@@ -256,10 +301,21 @@ fn build(scenario_path: &str, runs: u64, first_seed: u64) -> Result<Batch, Strin
         },
         per_ship,
         per_run,
+        results: has_objectives.then(|| {
+            outcomes()
+                .iter()
+                .zip(outcome_runs)
+                .map(|(outcome, runs)| ResultRow {
+                    outcome: outcome.name(),
+                    runs,
+                })
+                .collect()
+        }),
     })
 }
 
 fn print_summary(batch: &Batch) {
+    // The summary below is unchanged for a scenario without objectives.
     println!("{}", batch.scenario.name);
     if batch.scenario.placeholder {
         println!("PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.");
@@ -288,6 +344,13 @@ fn print_summary(batch: &Batch) {
                     ship.name, count.sunk_runs, batch.runs
                 );
             }
+        }
+    }
+    if let Some(results) = &batch.results {
+        println!();
+        println!("results, seen from the Allied side:");
+        for row in results {
+            println!("  {}: {} of {}", row.outcome, row.runs, batch.runs);
         }
     }
 }

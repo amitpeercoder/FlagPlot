@@ -740,6 +740,15 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
                 end(&mut session, Side::Japanese)
             }
         };
+        // The answer that reports the game over carries the result of the
+        // scenario's objectives (decision 0054); the rest is as it was.
+        let mut last = last;
+        let result = last
+            .as_object_mut()
+            .expect("an object")
+            .remove("result")
+            .expect("the answer has a result");
+        assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
             json!({"format": "flagplot-agent", "version": 1, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
@@ -1037,7 +1046,14 @@ fn every_answer_and_the_transcript_are_valid_against_their_schemas() {
         };
         let errors = schemas.check(&file, &entry.answer);
         assert!(errors.is_empty(), "{file}: {errors:?}");
-        assert!(!doc.to_string().contains("time"), "no time of day");
+        // The scenario's history note says "several times the American": a
+        // multiple, not a time of day.
+        assert!(
+            !doc.to_string()
+                .replace("several times", "")
+                .contains("time"),
+            "no time of day"
+        );
     }
     assert_eq!(entries[0].after_day, 0);
     assert_eq!(entries[1].tool, "get_briefing");

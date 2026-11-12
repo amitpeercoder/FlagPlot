@@ -6,6 +6,9 @@ HEADING
 - Scenario: Scenario 6a: A raid on an airfield
 - Covers: day 1 and the state at the start of day 2
 
+OBJECTIVES
+- none: this scenario gives no mission and no objectives
+
 ORDERS
 - Accepted yesterday: 3
 - Refused yesterday: none
