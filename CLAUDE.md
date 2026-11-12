@@ -68,7 +68,7 @@ Each of these fails with no error and no failing test if it is missed. The page 
 **Tests and numbers** (`docs/engineering/roles-and-tests.md`)
 
 - The hand calculation is written by the architect before any code is delegated, in the test file's doc comment. Nobody else changes an expected number, and never to make a test pass: a mismatch goes back to the architect.
-- When figures are tuned (step 2): a figure moves only toward something a source supports, a unit's experience value is never changed to improve a report (only the strength of its effect is tuned), and the hand-calculation tests run on the frozen step 1 figures. `docs/step2-spec.md` has the rules of tuning.
+- When figures are tuned (step 2): one set of figures serves every battle and none is set for one scenario, a figure moves only toward something a source supports, a unit's experience value is never changed to improve a report (only the strength of its effect is tuned), and the hand-calculation tests run on the frozen step 1 figures. `docs/step2-spec.md` has the rules of tuning.
 - A subagent's summary is a lead, not a fact. Check any claim a design choice will rest on against the source.
 
 **Git**
