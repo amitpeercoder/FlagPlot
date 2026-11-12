@@ -2,14 +2,14 @@
 
 Battle: rabaul-guadalcanal-air
 Scenario: data/scenarios/06_rabaul_guadalcanal.toml
-Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash dd700a7ba85cc7e8
-Inputs: state hash layout flagplot-state-v5, scenario file hash 3cb76a936397a686
+Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash 5cc38793a3749d77
+Inputs: state hash layout flagplot-state-v6, scenario file hash 3cb76a936397a686
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes.csv 9d8ba7a2e5948b4b
 - data/scenarios/../reference/port_sizes.csv da12e2b751976274
 - data/scenarios/../reference/aircraft_types_rabaul_guadalcanal.csv c2d44e8ffaa8fa3d
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
-- data/scenarios/../reference/surface_combat.toml 485cfd1b8ba0d4f2
+- data/scenarios/../reference/surface_combat.toml 14b86fdba9f64bfc
 - data/scenarios/../reference/air_combat.toml 7019eca7f6998d5c
 - data/scenarios/../reference/air_upkeep.toml b2db73fbc8e30d0e
 - data/scenarios/../reference/fatigue.toml 32b26b3bef8a1089
