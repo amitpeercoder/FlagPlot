@@ -66,15 +66,21 @@ q = 9
 r = -19
 mission = "carrier"
 
-# The Ryujo detachment. It starts in (7,-19), on the same column of hexes as
-# its noon hex (7,-10), so its course is along an axis, 360 nm at 20 knots, and
+# The Ryujo detachment. It starts in (7,-18), on the same column of hexes as
+# its noon hex (7,-9), so its course is along an axis, 360 nm at 20 knots, and
 # it arrives at noon (decision 0058, decision 0031 amended).
+# Ryujo's noon hex is (7,-9) and not (7,-10). The record has her launch from
+# 200 to 202 miles from Guadalcanal (engagement_events 331, the 8th Cruiser
+# Division's war diary: "20 degrees 202 nm from the Guadalcanal base";
+# engagement_positions 310: 200 nautical miles north of Lunga Point). (7,-9)
+# is 200 miles from Henderson Field at (2,-4) by hex centres; (7,-10) is 223,
+# which is the grid's error and not the record.
 [[task_force]]
 id = 4
 name = "Ryujo detachment"
 side = "japanese"
 q = 7
-r = -19
+r = -18
 mission = "carrier"
 
 [[ship]]
@@ -569,7 +575,7 @@ day = 1
 side = "japanese"
 task_force = 4
 kind = "set_route"
-waypoints = [[7, -10]]
+waypoints = [[7, -9]]
 
 [[order]]
 day = 1
@@ -579,7 +585,8 @@ kind = "set_speed"
 knots = "20"
 
 # Air orders. Fighters patrol; the American fighters keep everything
-# overhead, the Japanese carriers keep four fifths and Ryujo three tenths.
+# overhead, the Japanese carriers keep four fifths and Ryujo 0.35 (so that 15
+# of her 23 fighters escort her raid and 8 stay over her).
 
 [[order]]
 day = 1
@@ -642,7 +649,7 @@ day = 1
 side = "japanese"
 air_group = 18
 kind = "set_patrol_share"
-share = "0.3"
+share = "0.35"
 
 # Enterprise's scouting squadron searches the northern half; the cruisers'
 # floatplanes search to the south-east.
@@ -695,7 +702,8 @@ from_deg = 110
 to_deg = 200
 range_nm = 253
 
-# Every bomber group is ordered to strike ships.
+# Every bomber group is ordered to strike ships, except Ryujo's attack unit,
+# which raids Henderson Field (below).
 
 [[order]]
 day = 1
@@ -739,12 +747,32 @@ air_group = 10
 kind = "set_air_mission"
 mission = "naval_strike"
 
+# The fleet carriers' dive bomber groups (12 and 15) hold their strike for the
+# enemy's fleet: target list carrier, battleship, cruiser, transport. The
+# record names the enemy carriers as the object of their first wave
+# (engagement_events 371, Shokaku's action report: heading to attack enemy
+# carriers), and the enemy surface force if no carrier is found (425). The
+# architect reads the surface force as any force of ships but a destroyer or
+# an auxiliary met alone: a contact reported as a destroyer or an auxiliary is
+# a picket or a tender, not the fleet they were kept for, and the strike is
+# held for it. This is a reading of two rows, not a row. It was fixed on Nov
+# 12, 2026 after two trials: the default list sent both groups 250 miles at
+# one destroyer in the full slice on its own seed, and a list without
+# transports held them all day for a ten-ship force reported as transports.
+# Their torpedo units and Ryujo's groups get no target order.
 [[order]]
 day = 1
 side = "japanese"
 air_group = 12
 kind = "set_air_mission"
 mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 12
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
 
 [[order]]
 day = 1
@@ -763,16 +791,37 @@ mission = "naval_strike"
 [[order]]
 day = 1
 side = "japanese"
+air_group = 15
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 1
+side = "japanese"
 air_group = 16
 kind = "set_air_mission"
 mission = "naval_strike"
 
+# Ryujo's attack unit raids Henderson Field (decision 0063, "What it costs"):
+# the record has her launch 15 fighters and 6 attack planes at it
+# (engagement_outcomes 1171, her action report) from 200 to 202 miles
+# (engagement_events 331, engagement_positions 310). That is beyond the B5N2's
+# derived radius of 175 and within extended reach (218), so the raid is a base
+# strike at base 1 on extended reach.
 [[order]]
 day = 1
 side = "japanese"
 air_group = 19
 kind = "set_air_mission"
-mission = "naval_strike"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 19
+kind = "set_reach"
+reach = "extended"
 
 # Missions and objectives (decision 0054). The points and the levels are the
 # placeholder scale of that decision, to be set from the record in step 2.

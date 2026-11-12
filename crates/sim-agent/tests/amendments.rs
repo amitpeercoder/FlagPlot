@@ -210,17 +210,35 @@ fn every_refresh_of_the_day_is_listed_and_the_last_is_the_contact_held() {
     let title = scenario.name.clone();
     scenario.run_to_end().unwrap();
     let b = briefing(&scenario.world.side_view(Side::Allied), &title);
+    // On the scenario's own seed, with Ryujo in (7,-9) and six American groups
+    // striking her, the contact is refreshed six times in the afternoon: 4 ships
+    // first seen, then 5, 4, 4, 3, 4 and 5 (the third refresh changes the kind
+    // from carrier to cruiser and not the count). Each refresh says what the
+    // count was before, so the chain can be followed: the count was is always
+    // the count the contact had before, starting from the one that was new,
+    // and the last refresh is the contact held.
     let counts: Vec<u32> = b.contacts.refreshed.iter().map(|r| r.ship_count).collect();
-    assert_eq!(counts, vec![5, 4, 3]);
+    assert_eq!(counts, vec![5, 4, 4, 3, 4, 5]);
     let was: Vec<Option<u32>> = b
         .contacts
         .refreshed
         .iter()
         .map(|r| r.was_ship_count)
         .collect();
-    assert_eq!(was, vec![Some(4), Some(5), Some(4)]);
+    // The third refresh changes the kind and not the count, so it has no
+    // count it was.
+    assert_eq!(was, vec![Some(4), Some(5), None, Some(4), Some(3), Some(4)]);
     assert_eq!(b.contacts.new[0].ship_count, 4);
-    assert_eq!(b.contacts.held[0].ship_count, 3);
+    let mut before = b.contacts.new[0].ship_count;
+    for refresh in &b.contacts.refreshed {
+        match refresh.was_ship_count {
+            Some(was) => assert_eq!(was, before),
+            None => assert_eq!(refresh.ship_count, before),
+        }
+        before = refresh.ship_count;
+    }
+    assert_eq!(b.contacts.held[0].ship_count, before);
+    assert_eq!(b.contacts.held[0].ship_count, 5);
     let text = b.to_text();
     assert!(text.contains("5 ships estimated (was 4)"), "{text}");
     assert!(text.contains("3 ships estimated (was 4)"), "{text}");

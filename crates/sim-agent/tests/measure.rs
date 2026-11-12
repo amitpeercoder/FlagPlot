@@ -1183,34 +1183,43 @@ fn a_contact_off_by_a_hex_is_measured_at_the_estimate() {
     let off = Hex::new(real.q + 1, real.r);
     // The scenario's own contacts: use the view of a run, which holds the
     // contacts the search makes, and find one whose estimate differs from
-    // every enemy hex by at least a hex.
-    let mut scenario = load_text(&text, "05_eastern_solomons.toml", 1);
-    scenario.run_to_end().expect("runs");
-    let view = scenario.world.side_view(Side::Allied);
-    let truth = scenario.world.umpire();
+    // every enemy hex by at least a hex. A contact's last report is at the
+    // true hex or one beside it, so which seed has one beside depends on the
+    // scenario's orders; with Ryujo struck by six groups (the Eastern
+    // Solomons orders of Nov 12, 2026) the first seed whose held contact is
+    // a hex off is searched for, among the first 50 (seed 1 no longer is).
     let mut checked = 0;
-    for contact in view.contacts() {
-        let nearest = truth
-            .task_forces
-            .values()
-            .filter(|f| f.side == Side::Japanese)
-            .map(|f| f.position().distance(contact.estimated_hex))
-            .min()
-            .unwrap_or(0);
-        let (answer, data) = asked(
-            &view,
-            &Question::AirDistance {
-                from: PlaceArg::unit(&contact.id.to_string()),
-                to: PlaceArg::hex(real.q, real.r),
-            },
-        );
-        let MeasureAnswer::AirDistance(a) = answer else {
-            panic!("not an air distance")
-        };
-        // The distance is measured from the estimate, whatever the truth.
-        assert_eq!(a.distance_nm, contact.estimated_hex.air_distance_nm(real));
-        assert_eq!(data["from"]["place"]["q"], contact.estimated_hex.q);
-        checked += usize::from(nearest > 0);
+    for seed in 1..=50 {
+        let mut scenario = load_text(&text, "05_eastern_solomons.toml", seed);
+        scenario.run_to_end().expect("runs");
+        let view = scenario.world.side_view(Side::Allied);
+        let truth = scenario.world.umpire();
+        for contact in view.contacts() {
+            let nearest = truth
+                .task_forces
+                .values()
+                .filter(|f| f.side == Side::Japanese)
+                .map(|f| f.position().distance(contact.estimated_hex))
+                .min()
+                .unwrap_or(0);
+            let (answer, data) = asked(
+                &view,
+                &Question::AirDistance {
+                    from: PlaceArg::unit(&contact.id.to_string()),
+                    to: PlaceArg::hex(real.q, real.r),
+                },
+            );
+            let MeasureAnswer::AirDistance(a) = answer else {
+                panic!("not an air distance")
+            };
+            // The distance is measured from the estimate, whatever the truth.
+            assert_eq!(a.distance_nm, contact.estimated_hex.air_distance_nm(real));
+            assert_eq!(data["from"]["place"]["q"], contact.estimated_hex.q);
+            checked += usize::from(nearest > 0);
+        }
+        if checked > 0 {
+            break;
+        }
     }
     let _ = off;
     assert!(

@@ -982,10 +982,10 @@ fn a_route_into_a_hex_with_an_unseen_enemy_is_judged_by_the_map_alone() {
     // battery.
     let name = "05_eastern_solomons.toml";
     let text = support::scenario_text(name);
-    let target = Hex::new(7, -19);
+    let target = Hex::new(7, -18);
     let beside = (target.q + 1, target.r);
     let moved = text.replacen(
-        "name = \"Ryujo detachment\"\nside = \"japanese\"\nq = 7\nr = -19",
+        "name = \"Ryujo detachment\"\nside = \"japanese\"\nq = 7\nr = -18",
         &format!(
             "name = \"Ryujo detachment\"\nside = \"japanese\"\nq = {}\nr = {}",
             beside.0, beside.1

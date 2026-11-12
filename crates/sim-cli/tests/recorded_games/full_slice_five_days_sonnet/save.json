@@ -53,23 +53,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "7066458d2d80b898"
+      "hash": "763156cf7a6a3099"
     },
     {
       "day": 2,
-      "hash": "a41d63b9d6661cda"
+      "hash": "2cf2499cb57ec53f"
     },
     {
       "day": 3,
-      "hash": "68d72235237b175c"
+      "hash": "7670a63c43cb124d"
     },
     {
       "day": 4,
-      "hash": "c703030d1c99ceee"
+      "hash": "6badda0e1aebbaf4"
     },
     {
       "day": 5,
-      "hash": "8f92f0d1d5e09fd0"
+      "hash": "145d51e1397b06d1"
     }
   ],
   "orders": [
@@ -512,7 +512,7 @@
         "waypoints": [
           [
             7,
-            -10
+            -9
           ]
         ]
       },
@@ -605,7 +605,7 @@
       "day": 4,
       "order": {
         "kind": "set_patrol_share",
-        "share": "0.3"
+        "share": "0.35"
       },
       "origin": {
         "intent": null,
@@ -686,6 +686,24 @@
     {
       "day": 4,
       "order": {
+        "kind": "set_target_priority",
+        "kinds": [
+          "carrier",
+          "battleship",
+          "cruiser",
+          "transport"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:112"
+    },
+    {
+      "day": 4,
+      "order": {
         "kind": "set_air_mission",
         "mission": "naval_strike"
       },
@@ -712,6 +730,24 @@
     {
       "day": 4,
       "order": {
+        "kind": "set_target_priority",
+        "kinds": [
+          "carrier",
+          "battleship",
+          "cruiser",
+          "transport"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:115"
+    },
+    {
+      "day": 4,
+      "order": {
         "kind": "set_air_mission",
         "mission": "naval_strike"
       },
@@ -726,7 +762,21 @@
       "day": 4,
       "order": {
         "kind": "set_air_mission",
-        "mission": "naval_strike"
+        "mission": "base_strike",
+        "target_base": 1
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:119"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_reach",
+        "reach": "extended"
       },
       "origin": {
         "intent": null,
@@ -870,7 +920,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "96b2d25fafdf8af3"
+    "hash": "7cce2880758889ab"
   },
   "seats": {
     "allied": "player",

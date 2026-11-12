@@ -165,29 +165,39 @@ fn the_line_names_the_contact_the_briefings_own_figures_give() {
 
 #[test]
 fn after_the_eastern_solomons_the_dive_bombers_would_strike_the_carrier_contact() {
-    // The contact is a "carrier", 200 miles from the carriers. The dive
-    // bombers' radius is 200 and the torpedo bombers' 190, so the dive
-    // bomber groups with aircraft would strike it and the torpedo groups,
-    // which are warned out of reach, would not.
+    // The contact is a "carrier", 160 miles from the carriers since Ryujo's
+    // detachment reaches (7,-9) at noon (decision 0063, "As built (the
+    // scenario orders)"); it was 200. The dive bombers' radius is 200 and the
+    // torpedo bombers' 190, so every strike group aboard with aircraft would
+    // strike it, each within its own radius, and a group warned out of reach
+    // (none is, at this distance) would not.
     let mut scenario = load("05_eastern_solomons.toml", 1942);
     scenario.run_to_end().expect("the scenario runs");
     let view = scenario.world.side_view(Side::Allied);
     let made = briefing(&view, "Eastern Solomons");
     let value = serde_json::to_value(&made).expect("it serialises");
-    let mut would = 0;
+    // Aboard the carriers the contact is 160 miles off; from Henderson Field
+    // it is 200.
+    let (mut would, mut carrier_groups) = (0, 0);
     for group in value["air_groups"].as_array().expect("air groups") {
         let Some(w) = group.get("would_strike").filter(|v| !v.is_null()) else {
             continue;
         };
         would += 1;
         assert_eq!(group["mission"], "naval_strike");
-        assert_eq!(group["strike_radius_nm"], "200");
+        let radius = group["strike_radius_nm"].as_str().expect("a radius");
+        assert!(radius == "200" || radius == "190", "{radius}");
         assert_ne!(group["ready"], 0);
         assert_eq!(w["contact"]["handle"], "contact:1");
         assert_eq!(w["taken_for"], "carrier");
-        assert_eq!(w["distance_nm"], 200);
+        let distance = w["distance_nm"].as_u64().expect("a distance");
+        assert!(distance == 160 || distance == 200, "{distance}");
+        assert!(distance <= radius.parse::<u64>().expect("a whole radius"));
+        if distance == 160 {
+            carrier_groups += 1;
+        }
     }
-    assert!(would > 0);
+    assert!(would > 0 && carrier_groups > 0);
     for warned in value["warnings"]["strike_group_out_of_reach"]
         .as_array()
         .expect("list")
@@ -202,5 +212,5 @@ fn after_the_eastern_solomons_the_dive_bombers_would_strike_the_carrier_contact(
     }
     assert!(made
         .to_text()
-        .contains("would strike contact:1 now (carrier, 200 miles)"));
+        .contains("would strike contact:1 now (carrier, 160 miles)"));
 }
