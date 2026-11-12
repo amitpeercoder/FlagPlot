@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3acc977b52dac353  59 events
-day   2  hash 4d56617417024dc6  54 events
-day   3  hash 43dc1643e30d4fb0  48 events
-day   4  hash 9295bc5a7b32061a  231 events
-day   5  hash 50b389d1c1e123aa  141 events
-day   6  hash 0a295c62021c0ce5  121 events
-day   7  hash 553b374280d93f97  252 events
-day   8  hash 68c3468b584fbf40  123 events
-day   9  hash 3fdddbc9d92ad441  127 events
-day  10  hash 331897e4ae3fa8a9  77 events
-day  11  hash ea57222eed8e7a4a  86 events
-day  12  hash 659c21c703a0410a  95 events
-day  13  hash 5ef18ffa2bcb4b91  64 events
-day  14  hash d6f5f7b0b95acf32  58 events
+day   1  hash 83df8e6bb63edcb0  58 events
+day   2  hash e18208d184f235d5  54 events
+day   3  hash 3f20342bdd09c989  48 events
+day   4  hash 8b86345e9f18e4c3  230 events
+day   5  hash 4c537ccd5fd078e0  137 events
+day   6  hash 5874897992e2184f  117 events
+day   7  hash c27fd345032162ba  251 events
+day   8  hash f850368db6bd5509  123 events
+day   9  hash f09cc78494b08253  127 events
+day  10  hash 95a10e18d2350834  77 events
+day  11  hash 97c591d77bf47bd5  86 events
+day  12  hash 490d7909742b34bd  95 events
+day  13  hash 43c271622027d602  64 events
+day  14  hash 9cac3a35a3ac9f62  58 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -36,7 +36,6 @@ air_group:2 "Tainan Air Group" (Japanese) at base:2: 21 ready, 21 pilots, missio
 air_group:3 "6th Air Group" (Japanese) at base:2: 11 ready, 1 damaged, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 0.24, rests above 45, no arc
 air_group:10 "VMF-223" (Allied) at base:1: 2 ready, 13 pilots, mission CombatAirPatrol, patrol share 1, fatigue 36, rests above 40, stood down, no arc
 air_group:11 "VMSB-232" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
-air_group:12 "Flight 300" (Allied) at base:1: 11 ready, 11 pilots, mission NavalStrike, no arc
 air_group:13 "VMF-224" (Allied) at base:1: 10 ready, 2 damaged, 16 pilots, mission CombatAirPatrol, patrol share 1, fatigue 30, rests above 40, no arc
 air_group:14 "VMSB-231" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
 air_group:15 "VF-5" (Allied) at base:1: 0 ready, 0 pilots, mission CombatAirPatrol, patrol share 1, rests above 40, no arc
@@ -111,7 +110,7 @@ ship:48 "Placeholder cruiser D1": afloat in task_force:11; damage flotation 0, f
 ship:49 "Placeholder cruiser D2": afloat in task_force:11; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
 ship:50 "Placeholder cruiser E1": afloat in task_force:12; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
 ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
-base:1 "Henderson Field" (Allied) at (2,-4): 4301.455 t of supply in stock, 195.575 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 4343.22 t of supply in stock, 195.575 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 8910.52 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 600 t of fuel in stock
 Allied: no contacts

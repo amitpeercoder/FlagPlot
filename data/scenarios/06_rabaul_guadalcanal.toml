@@ -156,7 +156,9 @@ pilots = 0
 # Squadrons that arrive during the four weeks (decision 0041). Day 1 is 21
 # August. Each arrives with a pilot for each aircraft, which is an
 # assumption: the sources count aircraft.
-# 24 August: eleven dive bombers of Enterprise, Flight 300.
+# 24 August: eleven dive bombers of Enterprise, Flight 300. This arrival stays
+# scripted here: the scenario has no carriers, so the rule of decision 11 of
+# 0059 cannot deliver them. (The full slice and the soak leave it to the rule.)
 [[arrival]]
 day = 4
 air_group = 12

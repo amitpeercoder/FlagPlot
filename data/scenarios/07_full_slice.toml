@@ -675,14 +675,12 @@ aircraft_type = 2101
 ready = 12
 pilots = 12
 
-[[air_group]]
-id = 12
-name = "Flight 300"
-side = "allied"
-base = 1
-aircraft_type = 2101
-ready = 0
-pilots = 0
+# Air group id 12 is retired and is never reused. It was "Flight 300", the
+# eleven dive bombers of Enterprise that landed at Henderson Field on 24 August,
+# once scripted as a day-4 arrival. Decision 11 of 0059: aircraft in the air
+# when their carrier's deck is lost now land at another carrier or at a base
+# within radius, and the rule forms the group. Henderson has those aircraft
+# only when the battle produces them.
 
 [[air_group]]
 id = 13
@@ -732,7 +730,6 @@ pilots = 0
 # Squadrons that arrive during the four weeks (decision 0041). Day 1 is 21
 # August. Each arrives with a pilot for each aircraft, which is an
 # assumption: the sources count aircraft.
-# 24 August: eleven dive bombers of Enterprise, Flight 300.
 
 [[air_group]]
 id = 101
@@ -915,11 +912,8 @@ ready = 5
 # Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
 # detachment at 20.
 
-[[arrival]]
-day = 4
-air_group = 12
-aircraft = 11
-pilots = 11
+# 24 August: no scripted arrival. Flight 300 is produced by the rule (decision
+# 11 of 0059) when Enterprise's deck is lost.
 
 # 30 August: VMF-224.
 
@@ -1086,13 +1080,6 @@ fatigue = 40
 day = 1
 side = "allied"
 air_group = 11
-kind = "set_air_mission"
-mission = "naval_strike"
-
-[[order]]
-day = 1
-side = "allied"
-air_group = 12
 kind = "set_air_mission"
 mission = "naval_strike"
 

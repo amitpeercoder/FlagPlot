@@ -65,7 +65,7 @@
 //! | Japanese aircraft lost | shot down 78, lost with Ryujo 23 (group 118: 17 aboard; group 119: 6), group 118's 6 aircraft in the air when she sank came down in the sea with no deck (decisions 7 to 10 of 0059), written off 17: 78 + 23 + 6 + 17 = 124 |
 //! | Allied aircraft lost | shot down 32, on the ground 4, written off 7: 43 |
 //! | Cargo landed at base 1 by Allied ships | ships 37 and 38, each 62 + 120 + 240 + 58 = 480 t: 960 t (the convoy arrives a little sooner under decision 0058, so the tons fall in other pulses) |
-//! | Henderson Field at the end | 4300.955 t of supply, aircraft ready: open |
+//! | Henderson Field at the end | 4342.72 t of supply, aircraft ready: open (it was 4300.955 t while Flight 300 arrived by script: 41.765 t is what that group's 11 aircraft cost, 11 nights at 2.2 t on the 11 aircraft at the base for the day (24.2), 15.565 t on its strike of the afternoon of day 5 and 2 t on its 2 repairs, decision 11 of 0059) |
 //!
 //! | Objective | Allied | Japanese |
 //! | --------- | ------ | -------- |
@@ -371,7 +371,7 @@ fn the_full_slice_is_a_major_allied_victory() {
     assert_eq!(landed, BTreeMap::from([(37, n(480)), (38, n(480))]));
     assert_eq!(
         world.umpire().bases[&BaseId::new(1)].supply_t,
-        fx("4300.955")
+        fx("4342.72")
     );
 
     let result = result_of(&world);
