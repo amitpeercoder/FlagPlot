@@ -33,16 +33,16 @@
 #   that force, zigzagging, made good 15 to 18 knots at stated speeds of 16
 #   to 20, eight or nine tenths, where the convoys and the carrier forces
 #   made a half to three quarters.
-# - Two more legs from the same diary do lie on the map and are long
-#   enough. Row 112, noon 14 to noon 15 September, 361 miles: the pages
-#   give four speeds, 28 knots down to 12 while refuelling, and none for
-#   the first hours. Row 100, noon 27 to noon 28 October, 381 miles: the
-#   row holds no speed. A passage needs a speed to charge the run at, so
-#   neither is one. Each is a day's run made good, 15 and 16 knots.
+# - Row 112 of the same diary, noon 14 to noon 15 September, lies on the
+#   map and is 361 miles. The pages give four speeds, 28 knots down to 12
+#   while refuelling, and none for the first hours. A passage needs a
+#   speed for every hour of it, so this is not one.
 #
 # Each passage names the file its rows are in. A passage with
 # `speed_changes` holds `speed_kn` until the minute given and the new speed
 # after it. `to_short_by_nm` ends the run that many miles before the place.
+# An end may be a latitude and longitude, as decimal strings, south and
+# west negative, in place of a named place.
 #
 # Settled by the architect of the spec session on 2026-11-12. No row's
 # standing was changed.
@@ -101,4 +101,20 @@ record_high = 2303
 judged = false
 rows = [71]
 reason = "Two fast minesweepers towing torpedo boats, on course 319 at about 18 knots, from 14:52 on 23 October to 05:15 on the 25th: 38 hours 23 minutes (71). The straight line is about 564 miles, which at 18 knots is 31 hours; they made 14.7 knots good. Not judged: the start hour is when the tow was taken up, not when they sailed, and the rules have no towing."
+
+[[passage]]
+id = "japanese_2nd_destroyer_squadron_noon_27_to_noon_28_october"
+facts = "data/oob/passages.csv"
+counts = "Minutes to steam from 6-14.5 S 165-53 E to 1-23.5 S 161-47 E, at 18 knots, 14 knots from 21:40 while refuelling, and 18 knots again from 09:00"
+from_lat = "-6.2417"
+from_lon = "165.8833"
+to_lat = "-1.3917"
+to_lon = "161.7833"
+speed_kn = 18
+speed_changes = [[580, 14], [1260, 18]]
+record_low = 1440
+record_high = 1440
+judged = false
+rows = [100]
+reason = "The squadron's own diary: noon positions a day apart, and every hour between accounted for (100). At 12:00 on 27 October the force turned to 320 degrees at 18 knots; at 21:40 it began refuelling from an oiler at 14 knots; at 09:00 on the 28th it went back to 18 knots and began to zigzag. Those speeds over those hours come to about 387 miles, and the two positions are 381 apart, so the record agrees with itself to within two in a hundred. It is the longest run in the record that lies on the map with a speed for every hour, and the best check there is of the miles a ship is charged. Not judged: a position is taken to be at the centre of its hex, up to 23 miles off at each end, which at these speeds is over an hour and a half each, as much as the error the rule was made to remove."
 
