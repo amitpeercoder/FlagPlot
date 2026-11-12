@@ -38,7 +38,7 @@
 //! | ---------- | ------------ | ----------------- |
 //! | 1, Task Force 16, Allied | 1 Enterprise, 2 North Carolina, 3 Portland, 4 Atlanta, 5 to 10 destroyers | 1 VF-6, 27 F4F-4, patrol; 2 VB-6, 17 SBD-3, strike; 3 VS-5, 16 SBD-3, search; 4 VT-3, 14 TBF-1, strike |
 //! | 2, Task Force 11, Allied | 11 Saratoga, 12 New Orleans, 13 Minneapolis, 14 to 18 destroyers | 5 VF-5, 27 F4F-4, patrol; 6 VB-3, 15 SBD-3, strike; 7 VS-3, 15 SBD-3, strike; 8 VT-8, 13 TBF-1, strike |
-//! | 3, carrier striking force, Japanese | 19 Shokaku, 20 Zuikaku, 21 Chikuma, 22 Hiei, 23 Kirishima, 24 Kumano, 25 Suzuya, 26 Nagara, 27 to 32 destroyers | 11 fighters, 26 A6M2, patrol share 0.8; 12 bombers, 27 D3A1, strike, target list carrier, battleship, cruiser; 13 attack, 18 B5N2, strike (Shokaku). 14 fighters, 25, share 0.8; 15 bombers, 27, the same list; 16 attack, 18 (Zuikaku). 17 floatplanes, 5 E13A1, search (Chikuma) |
+//! | 3, carrier striking force, Japanese | 19 Shokaku, 20 Zuikaku, 21 Chikuma, 22 Hiei, 23 Kirishima, 24 Kumano, 25 Suzuya, 26 Nagara, 27 to 32 destroyers | 11 fighters, 26 A6M2, patrol share 0.8; 12 bombers, 27 D3A1, strike, target list carrier, battleship, cruiser, transport; 13 attack, 18 B5N2, strike (Shokaku). 14 fighters, 25, share 0.8; 15 bombers, 27, the same list; 16 attack, 18 (Zuikaku). 17 floatplanes, 5 E13A1, search (Chikuma) |
 //! | 4, Ryujo detachment, Japanese | 33 Ryujo, 34 Tone, 35 Amatsukaze, 36 Tokitsukaze | 18 fighters, 23 A6M2, patrol share 0.35; 19 attack, 6 B5N2, base strike on base 1, extended reach (Ryujo). 20 floatplanes, 5 E13A1, search (Tone) |
 //!
 //! At Henderson Field, base 1, in (2,-4): 9 VMF-223, 13 F4F-4, patrol; 10
@@ -179,11 +179,11 @@
 //!   (7,-8). It does not at (8,-9), (8,-10) or (7,-10). (The true hex was 223
 //!   nm away, and group 10 launched only at a neighbour.)
 //! - **Groups 12 and 15, the D3A1s (radius 252, target list carrier,
-//!   battleship, cruiser):** launch if the Japanese side holds a contact
+//!   battleship, cruiser, transport):** launch if the Japanese side holds a contact
 //!   reported as one of those kinds within 252 nm of (8,-11), which the true
 //!   hex (7,-5) is, at 223 nm. Of the hexes next to it only (7,-4), at 262
-//!   nm, is out of reach. A contact reported as a destroyer, a transport or
-//!   an auxiliary is held for: the groups stay on deck. A report of a carrier
+//!   nm, is out of reach. A contact reported as a destroyer or an
+//!   auxiliary is held for: the groups stay on deck. A report of a carrier
 //!   is read through the confusion table of the search figures, so some are.
 //!   The launch cites the mission order, the target order and the report.
 //! - **Groups 13 and 16, the striking force's B5N2s:** radius 175 nm, and
@@ -553,7 +553,8 @@ const ORDERS: [(u32, &[u32]); 20] = [
     (9, &[10]),
     (10, &[11]),
     (11, &[16, 17]),
-    // The mission, then the target list (carrier, battleship, cruiser).
+    // The mission, then the target list (carrier, battleship, cruiser,
+    // transport).
     (12, &[18, 19]),
     (13, &[20]),
     (14, &[21, 22]),
@@ -663,7 +664,12 @@ fn spec_of(group: u32) -> &'static Spec {
 /// Every other group has the default list.
 fn target_list(group: u32) -> Option<&'static [ShipKind]> {
     match group {
-        12 | 15 => Some(&[ShipKind::Carrier, ShipKind::Battleship, ShipKind::Cruiser]),
+        12 | 15 => Some(&[
+            ShipKind::Carrier,
+            ShipKind::Battleship,
+            ShipKind::Cruiser,
+            ShipKind::Transport,
+        ]),
         _ => None,
     }
 }
@@ -1533,7 +1539,8 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
         if spec.mission != STRIKE {
             continue;
         }
-        // The target list of groups 12 and 15 (carrier, battleship, cruiser):
+        // The target list of groups 12 and 15 (carrier, battleship, cruiser,
+        // transport):
         // a contact of a kind not on it is never launched at. The default is
         // every kind in the order of importance.
         let list = target_list(spec.id);
@@ -3055,7 +3062,7 @@ fn the_forces_and_air_groups_are_as_the_first_two_tables_say() {
             );
         }
         // The target list (decision 0063): groups 12 and 15 hold their strike
-        // for carrier, battleship and cruiser; every other group has the
+        // for carrier, battleship, cruiser and transport; every other group has the
         // default, all six kinds in the order of importance. And the reach
         // (decision 0059): Ryujo's attack unit is on extended reach, the
         // others on normal.
@@ -3709,6 +3716,18 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
         assert_eq!(air(striking, hex), nm_from_striking, "{hex}");
     }
 
+    // The Japanese side's contacts are reports of the American carriers, true
+    // kind carrier, and a carrier is never reported as a destroyer or an
+    // auxiliary (the confusion row gives carrier 0.7, battleship, cruiser and
+    // transport 0.1 each). So with the list carrier, battleship, cruiser,
+    // transport no report of this scenario is held for, and groups 12 and 15
+    // launch in every run in which the Japanese hold a contact within 252 nm
+    // (809 of 1,000 sight an American force; the 551 whose report names the
+    // true hex attack Enterprise). The hold itself (a kind not on the list is never
+    // launched at) is shown in scenarios 13a and 13b. The model above still
+    // asserts the rule in every run.
+    let row = &cx.search.kind_confusion[&ShipKind::Carrier];
+    assert!(!row.contains_key(&ShipKind::Destroyer) && !row.contains_key(&ShipKind::Auxiliary));
     let mut counts: BTreeMap<&str, i64> = BTreeMap::new();
     let mut bump = |name: &'static str| *counts.entry(name).or_default() += 1;
     for (run, work) in batch().iter().zip(worked()) {
@@ -3776,9 +3795,9 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
             }
         }
         // Groups 12 and 15: a contact the Japanese side holds, of a kind on
-        // their list (carrier, battleship, cruiser), within 252 nm of
+        // their list (carrier, battleship, cruiser, transport), within 252 nm of
         // (8,-11), which the true hex (7,-5) is, at 223. A contact reported as
-        // a destroyer, a transport or an auxiliary is not launched at.
+        // a destroyer or an auxiliary is not launched at.
         for group in [12, 15] {
             let list = target_list(group).expect("a list");
             let wanted = work.held[1].iter().any(|(_, hex, kind)| {
@@ -3793,13 +3812,6 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
                     .any(|(id, hex, kind)| Some(*id) == launch.contact
                         && *hex == launch.hex
                         && list.contains(kind)));
-            } else if !work.held[1].is_empty()
-                && work.held[1].iter().any(|(_, hex, _)| {
-                    Fixed::from_int(air(striking, *hex)) <= cx.types[&D3A1].strike_range_nm
-                })
-            {
-                // A contact in reach and none of a kind on the list: held.
-                bump("group 12 or 15 holds its strike for a lesser kind of contact");
             }
         }
         if work.held[1].iter().any(|(_, hex, _)| *hex == american) {
@@ -3859,7 +3871,6 @@ fn each_group_launches_when_its_own_side_holds_a_contact_within_its_radius_and_n
         "group 4 launches and finds nothing",
         "group 8 launches and finds nothing",
         "group 10 launches and finds nothing",
-        "group 12 or 15 holds its strike for a lesser kind of contact",
         "japanese report names the true hex",
     ] {
         assert!(counts.get(name).copied().unwrap_or(0) > 0, "{name}");

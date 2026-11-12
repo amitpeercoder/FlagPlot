@@ -1306,16 +1306,18 @@ kind = "set_air_mission"
 mission = "naval_strike"
 
 # The fleet carriers' dive bomber groups (112 and 115) hold their strike for the
-# enemy's heavy ships: target list carrier, battleship, cruiser. The record
-# names the enemy carriers as the object of their first wave
+# enemy's fleet: target list carrier, battleship, cruiser, transport. The
+# record names the enemy carriers as the object of their first wave
 # (engagement_events 371, Shokaku's action report: heading to attack enemy
 # carriers), and the enemy surface force if no carrier is found (425). The
-# architect reads that as carriers, then the heavy ships of a surface force: a
-# contact reported as a destroyer, a transport or an auxiliary is not the fleet
-# they were kept for, and the strike is held for it. This is a reading of two
-# rows, not a row; it was fixed after seeing the default list send both groups
-# at one destroyer in the full slice on its own seed. Their torpedo units and
-# Ryujo's groups get no target order.
+# architect reads the surface force as any force of ships but a destroyer or
+# an auxiliary met alone: a contact reported as a destroyer or an auxiliary is
+# a picket or a tender, not the fleet they were kept for, and the strike is
+# held for it. This is a reading of two rows, not a row. It was fixed on Nov
+# 12, 2026 after two trials: the default list sent both groups 250 miles at
+# one destroyer in the full slice on its own seed, and a list without
+# transports held them all day for a ten-ship force reported as transports.
+# Their torpedo units and Ryujo's groups get no target order.
 [[order]]
 day = 4
 side = "japanese"
@@ -1328,7 +1330,7 @@ day = 4
 side = "japanese"
 air_group = 112
 kind = "set_target_priority"
-kinds = ["carrier", "battleship", "cruiser"]
+kinds = ["carrier", "battleship", "cruiser", "transport"]
 
 [[order]]
 day = 4
@@ -1349,7 +1351,7 @@ day = 4
 side = "japanese"
 air_group = 115
 kind = "set_target_priority"
-kinds = ["carrier", "battleship", "cruiser"]
+kinds = ["carrier", "battleship", "cruiser", "transport"]
 
 [[order]]
 day = 4

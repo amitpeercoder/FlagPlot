@@ -492,8 +492,9 @@ fn objectives_change_no_hash_and_no_event() {
     // air group's target list and the day of its last base strike), and
     // b7fbc563ff170b89 until the scenario's orders of decision 0063 ("As
     // built (the scenario orders)": Ryujo in (7,-9), her raid, the carriers'
-    // target lists) were given.
-    assert!(baseline.contains("hash 747baccba462dd21"));
+    // target lists) were given, and 747baccba462dd21 until the carriers'
+    // target list gained the transport (the third trial of settlement 4).
+    assert!(baseline.contains("hash 9887acc2b651abb9"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

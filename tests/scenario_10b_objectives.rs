@@ -69,10 +69,10 @@
 //! | ---- | - |
 //! | Japanese ships sunk | ship 33 Ryujo, a carrier |
 //! | Allied ships sunk | ships 42 and 43, cruisers; ship 44, a destroyer |
-//! | Allied ships crippled | none: Enterprise is not attacked in this run, since groups 112 and 115 hold their strike for heavy ships and the one contact they were offered on day 4 was a transport |
+//! | Allied ships crippled | none: groups 112 and 115 attack Enterprise on day 4 (13 and 12 bombers left, 5 and 2 hits) and her flight deck stays at working or degraded |
 //! | Japanese ships crippled | none (ship 40 has propulsion degraded only) |
-//! | Japanese aircraft lost | shot down 84; lost with Ryujo 1 (group 118's 23 aircraft less the 22 that could fly, 23 x 0.97 = 22.31 for its fatigue of 3, were aboard; group 119's 0); ran out of fuel on the way home from the raid 1 (group 119: 6 x 0.285714 = 1.714284 expected); came down in the sea for want of a deck 23 (group 118: 18, group 119: 5); written off 18: 84 + 1 + 1 + 23 + 18 = 127 |
-//! | Allied aircraft lost | shot down 35, on the ground 4, written off 6: 45 |
+//! | Japanese aircraft lost | shot down 80; lost with Ryujo 1 (group 118's 23 aircraft less the 22 that could fly, 23 x 0.97 = 22.31 for its fatigue of 3, were aboard; group 119's 0); ran out of fuel on the way home from the raid 1 (group 119: 6 x 0.285714 = 1.714284 expected); came down in the sea for want of a deck 23 (group 118: 18, group 119: 5); written off 16: 80 + 1 + 1 + 23 + 16 = 121 |
+//! | Allied aircraft lost | shot down 38, on the ground 4, written off 7: 49 |
 //! | Cargo landed at base 1 by Allied ships | ships 37 and 38, each 62 + 120 + 240 + 58 = 480 t: 960 t (the convoy arrives a little sooner under decision 0058, so the tons fall in other pulses) |
 //! | Henderson Field at the end | 4339.2 t of supply, aircraft ready: open. From the events: 4000 t at the start + 960 t landed - 350 t destroyed (three raids on the supply) - 270.8 t spent (13 on 13 repairs, 86 on the aircraft at the base for the day and 171.8 on aircraft sent on sorties) = 4339.2 t. (It was 4342.72 t before the change, and 4300.955 t while Flight 300 arrived by script: 41.765 t is what that group's 11 aircraft cost, 11 nights at 2.2 t on the 11 aircraft at the base for the day (24.2), 15.565 t on its strike of the afternoon of day 5 and 2 t on its 2 repairs, decision 11 of 0059) |
 //!
@@ -80,13 +80,13 @@
 //! | --------- | ------ | -------- |
 //! | Ships sunk | 10 | 4 + 4 + 1 = 9 |
 //! | Ships crippled | 0 | 0 |
-//! | Aircraft destroyed | 127 x 0.05 = 6.35 | 45 x 0.05 = 2.25 |
+//! | Aircraft destroyed | 121 x 0.05 = 6.05 | 49 x 0.05 = 2.45 |
 //! | Cargo landed | 960 x 0.005 = 4.8 | |
 //! | Base open / closed | 10 | 0 |
-//! | Total | 10 + 0 + 6.35 + 4.8 + 10 = 31.15 | 9 + 0 + 2.25 + 0 = 11.25 |
+//! | Total | 10 + 0 + 6.05 + 4.8 + 10 = 30.85 | 9 + 0 + 2.45 + 0 = 11.45 |
 //!
-//! Allied margin 31.15 - 11.25 = 19.9, at least 16: a decisive Allied
-//! victory. (Before the change: 31 and 16.15, margin 14.85, major.) The full
+//! Allied margin 30.85 - 11.45 = 19.4, at least 16: a decisive Allied
+//! victory. (Before the change: 31 and 16.15, margin 14.85, major. With the target list carrier, battleship, cruiser the figures were 31.15 and 11.25, margin 19.9.) The full
 //! slice is not a reconstruction and has no history to set beside it.
 //!
 //! # Properties
@@ -360,7 +360,7 @@ fn the_full_slice_on_its_own_seed_ends_in_a_decisive_allied_victory() {
     assert_eq!(kind_of(&world, 42), ShipKind::Cruiser);
     assert_eq!(kind_of(&world, 43), ShipKind::Cruiser);
     assert_eq!(kind_of(&world, 44), ShipKind::Destroyer);
-    // Nothing is crippled: Enterprise is not attacked in this run, and
+    // Nothing is crippled: Enterprise is attacked but keeps her deck, and
     // nothing Japanese is (ship 40 has propulsion degraded only).
     assert!(ship_ids(&world, Side::Allied, propulsion_out).is_empty());
     assert_eq!(kind_of(&world, 1), ShipKind::Carrier);
@@ -372,15 +372,15 @@ fn the_full_slice_on_its_own_seed_ends_in_a_decisive_allied_victory() {
         SystemState::Degraded
     );
 
-    // Aircraft: Japanese shot down 84, lost with Ryujo 1, written off 18,
-    // 1 out of fuel and 23 in the sea for want of a deck (84 + 1 + 1 + 23 + 18
-    // = 127). Allied shot down 35, on the ground 4, written off 6 (45).
-    assert_eq!(losses(&world, Side::Japanese), (84, 1, 0, 18));
+    // Aircraft: Japanese shot down 80, lost with Ryujo 1, written off 16,
+    // 1 out of fuel and 23 in the sea for want of a deck (80 + 1 + 1 + 23 + 16
+    // = 121). Allied shot down 38, on the ground 4, written off 7 (49).
+    assert_eq!(losses(&world, Side::Japanese), (80, 1, 0, 16));
     assert_eq!(fuel_losses(&world, Side::Japanese), 1);
     assert_eq!(no_deck_losses(&world, Side::Japanese), 23);
     assert_eq!(no_deck_losses(&world, Side::Allied), 0);
     assert_eq!(fuel_losses(&world, Side::Allied), 0);
-    assert_eq!(losses(&world, Side::Allied), (35, 0, 4, 6));
+    assert_eq!(losses(&world, Side::Allied), (38, 0, 4, 7));
 
     // Cargo landed at base 1 by Allied ships 37 and 38: 480 t each.
     let mut landed: BTreeMap<u32, Fixed> = BTreeMap::new();
@@ -408,27 +408,27 @@ fn the_full_slice_on_its_own_seed_ends_in_a_decisive_allied_victory() {
     assert_eq!(line(&result.allied, 1), ("ships_crippled", n(0), n(0)));
     assert_eq!(
         line(&result.allied, 2),
-        ("aircraft_destroyed", n(127), fx("6.35"))
+        ("aircraft_destroyed", n(121), fx("6.05"))
     );
     assert_eq!(line(&result.allied, 3), ("cargo_landed", n(960), fx("4.8")));
     assert_eq!(line(&result.allied, 4), ("base_open", n(1), n(10)));
-    // 10 + 0 + 6.35 + 4.8 + 10 = 31.15.
-    assert_eq!(result.allied.total, fx("31.15"));
+    // 10 + 0 + 6.05 + 4.8 + 10 = 30.85.
+    assert_eq!(result.allied.total, fx("30.85"));
 
-    // Japanese: sunk 4 + 4 + 1 = 9, crippled 0, aircraft 45 x 0.05 = 2.25,
+    // Japanese: sunk 4 + 4 + 1 = 9, crippled 0, aircraft 49 x 0.05 = 2.45,
     // base shut 0.
     assert_eq!(line(&result.japanese, 0), ("ships_sunk", n(3), n(9)));
     assert_eq!(line(&result.japanese, 1), ("ships_crippled", n(0), n(0)));
     assert_eq!(
         line(&result.japanese, 2),
-        ("aircraft_destroyed", n(45), fx("2.25"))
+        ("aircraft_destroyed", n(49), fx("2.45"))
     );
     assert_eq!(line(&result.japanese, 3), ("base_open", n(0), n(0)));
-    assert_eq!(result.japanese.total, fx("11.25"));
+    assert_eq!(result.japanese.total, fx("11.45"));
 
-    // 31.15 - 11.25 = 19.9, at least 16: a decisive Allied victory.
-    assert_eq!(result.allied.margin, fx("19.9"));
-    assert_eq!(result.japanese.margin, fx("-19.9"));
+    // 30.85 - 11.45 = 19.4, at least 16: a decisive Allied victory.
+    assert_eq!(result.allied.margin, fx("19.4"));
+    assert_eq!(result.japanese.margin, fx("-19.4"));
     assert_eq!(result.allied.outcome, Outcome::Victory(Level::Decisive));
     assert_eq!(result.japanese.outcome, Outcome::Defeat(Level::Decisive));
     assert_eq!(result.history, None);
