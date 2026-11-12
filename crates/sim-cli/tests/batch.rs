@@ -854,12 +854,14 @@ fn the_day_by_day_loop_makes_the_same_run_as_running_to_the_end() {
 #[test]
 fn the_keys_a_version_1_reader_used_keep_their_values() {
     // Files made by `batch` before decision 0062, three seeds each.
-    // Everything they held is held, unchanged, except the version.
-    for file in [
-        "04a_night_action",
-        "05_eastern_solomons",
-        "06_rabaul_guadalcanal",
-    ] {
+    // Everything they held is held, unchanged, except the version. There was
+    // a captured file of scenario 5 too, made by the code of that day; it
+    // could not be made again (the code is gone) and the scenario's orders
+    // changed on Nov 12, 2026 (decision 0063, "As built (the scenario
+    // orders)"), so its runs and its inputs no longer match any run today.
+    // It is dropped, with its file. Scenarios 4a and 6 keep the test's
+    // purpose: what a version 1 reader used is still where it was.
+    for file in ["04a_night_action", "06_rabaul_guadalcanal"] {
         let before_path = PathBuf::from(ROOT)
             .join("crates/sim-cli/tests/batch_before")
             .join(format!("{file}.json"));

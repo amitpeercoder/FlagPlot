@@ -747,16 +747,30 @@ air_group = 10
 kind = "set_air_mission"
 mission = "naval_strike"
 
-# The fleet carriers' dive bomber groups (12 and 15) get no target order. The
-# record names the enemy carriers as the first wave's object
-# (engagement_events 371) and the enemy surface force if no carrier is found
-# (425), which is the default order of importance.
+# The fleet carriers' dive bomber groups (12 and 15) hold their strike for the
+# enemy's heavy ships: target list carrier, battleship, cruiser. The record
+# names the enemy carriers as the object of their first wave
+# (engagement_events 371, Shokaku's action report: heading to attack enemy
+# carriers), and the enemy surface force if no carrier is found (425). The
+# architect reads that as carriers, then the heavy ships of a surface force: a
+# contact reported as a destroyer, a transport or an auxiliary is not the fleet
+# they were kept for, and the strike is held for it. This is a reading of two
+# rows, not a row; it was fixed after seeing the default list send both groups
+# at one destroyer in the full slice on its own seed. Their torpedo units and
+# Ryujo's groups get no target order.
 [[order]]
 day = 1
 side = "japanese"
 air_group = 12
 kind = "set_air_mission"
 mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 12
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser"]
 
 [[order]]
 day = 1
@@ -771,6 +785,13 @@ side = "japanese"
 air_group = 15
 kind = "set_air_mission"
 mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 15
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser"]
 
 [[order]]
 day = 1
