@@ -134,3 +134,41 @@ record_high = 0
 judged = false
 rows = [368, 369, 378]
 reason = "Only search aircraft attacked, 4 dive bombers and 2 torpedo planes (368, 369); Enterprise's second group of 25 made no attack (378). Not judged, for the same reason. The floor of ten is the architect's, to tell a strike from a search plane's bomb."
+
+# --------------------------------------------------------------- claims
+#
+# What a side believed it did, for each hundred it really did, rounded down
+# (decision 0056). A run in which the side really did none is left out of
+# the measure. Each end of a range is a division of two recorded figures,
+# and the division is the architect's.
+
+[[measure]]
+id = "us_aircraft_claimed_per_hundred_shot_down"
+counts = "Aircraft the US side claims shot down, for each 100 Japanese carrier aircraft really shot down"
+record_low = 259
+record_high = 362
+judged = true
+rows = [257, 255, 310, 215, 244, 252, 254, 710, 711, 713, 309, 291, 296, 1172, 271]
+reason = "Claimed, low end 83: the two fighter squadrons 43 (257), Task Force 16's guns 24 by Enterprise's captain (255), the Marines over Guadalcanal 16 (310). High end 105: the fighters 43, the ships' own highest figures 41 (215, 244, 252, 254, 710, 711, 713), the Marines 21 (309). Really shot down: 29 to 32, as in japanese_carrier_aircraft_lost_to_enemy_action (291, 296, 1172, 271). 83 in 32 is 259 a hundred and 105 in 29 is 362."
+
+[[measure]]
+id = "japanese_aircraft_claimed_per_hundred_shot_down"
+counts = "Aircraft the Japanese side claims shot down, for each 100 US aircraft really lost to enemy action"
+record_low = 171
+record_high = 261
+judged = true
+rows = [1161, 1167, 1173, 1174, 305, 311, 700]
+reason = "Claimed, low end 24: Shokaku's first wave 5 (1161), Zuikaku's fighters 4 (1167), Ryujo's strike on Guadalcanal 15 (1173). High end 34 adds 10 by Ryujo's patrol (1174), a low-confidence row read by exception. Really lost: 13 or 14, as in us_aircraft_lost_to_enemy_action (305, 311, 700). 24 in 14 is 171 a hundred and 34 in 13 is 261."
+
+[[measure]]
+id = "us_hits_claimed_on_ryujo_per_hundred_scored"
+counts = "Bomb and torpedo hits the US side claims on Ryujo, for each 100 really scored"
+record_low = 50
+record_high = 140
+judged = false
+rows = [259, 261, 263, 258, 260, 668, 1177]
+reason = "Claimed: 4 to 6 bombs (259, 261) and one torpedo certain (263), so 5 to 7. Really scored: one torpedo by the ship's own division (1177), and 4 bombs by the tabular record (258) or 10 hits of both kinds by Japanese statements (260, 668), so 5 to 10. Not judged: the hits really scored are disputed twofold, and the range holds 100, so it cannot tell a claim from the truth."
+
+# The Japanese aircrews' claim on the US carriers is in ships (two carriers
+# hit, rows 727 and 728, against one), and the rules' claim is in bombs, so
+# there is no measure for it.

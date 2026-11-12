@@ -1,0 +1,44 @@
+# Passages: how long a force took to steam from one place to another at a
+# stated speed, set against what the rules charge for the same run (step 2
+# spec, "Measures"; decision 0058 for the miles a step is charged).
+#
+# A passage is not a battle. Nothing is random in it, so it is checked with
+# one calculation, not a thousand runs: the sea route between the two
+# places, the miles the rules charge for it, and the minutes that is at the
+# stated speed.
+#
+# A passage is usable here only if the record gives a start, an end, the
+# time between them and a speed held throughout. The record read so far
+# holds one, and it is short. The others in the facts will not do:
+#
+# - The Japanese column's approach to Savo Island from midnight on
+#   8 August is what the scenario's start was worked back from (decision
+#   0024, 6, and again under decision 0058), so it cannot check the rule it
+#   was fitted with.
+# - Its run from Rabaul on the 7th and its day east of Bougainville on the
+#   8th were not at one speed: it waited for its search planes and changed
+#   course "from time to time" (engagement_positions.csv rows 186 to 191).
+# - The return to Rabaul was at 30 knots, then 20, with the force divided
+#   (rows 250 to 260).
+#
+# Longer passages at a steady speed are asked for from research: destroyer
+# runs from the Shortlands to Guadalcanal, convoys from Noumea and Espiritu
+# Santo, and the ships that left for repair.
+#
+# Settled by the architect of the spec session on 2026-11-12. No row's
+# standing was changed.
+
+facts = "data/oob/engagement_positions.csv"
+
+[[passage]]
+id = "japanese_column_up_the_slot_after_savo_island"
+counts = "Minutes to steam from Savo Island to the point 135 miles from it on bearing 315, at 30 knots"
+from_place = "savo-island"
+to_bearing_deg = 315
+to_distance_nm = 135
+speed_kn = 30
+record_low = 270
+record_high = 280
+judged = false
+rows = [236, 238, 245, 248]
+reason = "The order to break off was given at 02:20 (236); the column was at 30 knots from about 02:29 (238) and in its order again at 03:40 on course 300 at 30 knots (245); by 07:00 it was about 135 miles north-west of Savo Island (248). High end: 02:20 to 07:00, 280 minutes. Low end: 135 miles at 30 knots, 270 minutes, the time it would take with no minutes lost in turning away. Not judged: the run is three or four hexes long, the source says 'about', and a place is taken to be at the centre of its hex, up to 23 miles from where it is, which at 30 knots is 46 minutes at each end."

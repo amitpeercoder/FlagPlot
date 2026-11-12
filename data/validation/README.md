@@ -23,6 +23,14 @@ Then one `[[measure]]` table for each measure:
 | `rows` | The ids of the fact rows the record rests on |
 | `reason` | Which rows give each end of the range, and for a measure not judged, why not |
 
+## Claims
+
+A claims measure is what a side believed it did for each hundred it really did, rounded down (decision 0056). It sits in its battle's file. A run in which the side really did none is left out of the measure. Each end of the range is a division of two recorded figures.
+
+## Passages
+
+`passages.toml` is laid out differently, because a passage is checked with one calculation and not with runs. Each `[[passage]]` gives `from_place` (a place in `data/oob/places.csv`), the end as `to_place` or as `to_bearing_deg` and `to_distance_nm` from the start, `speed_kn`, and the record in minutes as `record_low` and `record_high`. `id`, `counts`, `judged`, `rows` and `reason` are as for a measure.
+
 ## Rules
 
 - **No recorded value without its rows.** If no row gives a fact, there is no measure for it; the gap is said in a `reason` nearby or in `data/oob/gaps.csv`.
@@ -40,8 +48,9 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 
 | File | Battle | State |
 | --- | --- | --- |
-| `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | First pass, 12 measures, 7 judged |
-| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | First pass, 11 measures, all judged |
-| `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | First pass, 7 measures, 4 judged |
+| `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 15 measures, 9 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 13 measures, 12 judged |
+| `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 9 measures, 5 judged |
+| `passages.toml` | Ship passages | 1 passage, not judged. Waiting on research for longer ones |
 
-Still to write: the claims and passages checks, flyable aircraft at Henderson Field on dated days, aircrew lost, and Cape Esperance when its facts are in.
+Still to write: flyable aircraft at Henderson Field on dated days, aircrew lost, more passages, and Cape Esperance when its facts are in.

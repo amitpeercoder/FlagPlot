@@ -125,3 +125,23 @@ record_high = 36
 judged = true
 rows = [10, 11, 115, 125, 141, 156, 151]
 reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as in gun_hits_on_japanese_ships (low end 11; high end 115, 125, 141, 156, 151). 10 in 471 is 21 a thousand and 17 is 36. The shells counted include Ralph Talbot's 12, outside the scenario."
+
+# --------------------------------------------------------------- claims
+
+[[measure]]
+id = "japanese_ships_claimed_sunk_per_hundred_sunk"
+counts = "Ships the Japanese side claims sunk, for each 100 Allied ships really sunk"
+record_low = 350
+record_high = 350
+judged = false
+rows = [745, 761, 762, 763, 764]
+reason = "The cruiser force claimed 14 ships sunk (745) and sank 4 (761, 762, 763, 764). Not judged: the claim was of more ships than were there to fire at. The rules claim a ship that sank and a ship left burning (decision 0014, 16), so with nine Allied ships in the scenario and four sunk they cannot pass 225."
+
+[[measure]]
+id = "allied_ships_claimed_sunk"
+counts = "Japanese ships the Allied side claims sunk"
+record_low = 0
+record_high = 0
+judged = true
+rows = [749, 751]
+reason = "The Allies knew they had done some damage and claimed no ship sunk (749, 751)."
