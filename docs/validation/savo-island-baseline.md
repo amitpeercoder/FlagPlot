@@ -10,7 +10,7 @@ Inputs: state hash layout flagplot-state-v5, scenario file hash a828cd46c317534b
 - data/scenarios/../reference/aircraft_types.csv 92830cbacc0a4328
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 485cfd1b8ba0d4f2
-Measures: data/validation/savo_island.toml (hash 5eeb11755f6a96f6), 17 measures, 16 judged
+Measures: data/validation/savo_island.toml (hash b7bc786ed7fd90cd), 17 measures, 16 judged
 
 Judged measures: 7 agree, 4 agree at the edge, 5 miss, of 16.
 
