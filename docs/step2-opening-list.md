@@ -35,5 +35,6 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 
 ## Not step 2, kept here so they are not lost
 
+- Speed made good. A force in the game holds its ordered speed on a straight course. In the record, where a source gives positions and times as well as a speed, a convoy or a ship in transit made good a half to three quarters of its stated speed: it zigzagged, waited, slowed for landfall or towed. Warships on a combat run are the exception (the 6th Cruiser Division from the Shortlands to off Savo Island on 11 October 1942 took what its speeds give for the distance). Noted by the designer on Nov 12, 2026 and not for step 2 (`docs/step2-spec.md`, "Decided by the designer", item 8): taken up when convoys and supply are compared with the record. The simplest answer may be a cruising speed for routine movement below a ship's stated speed, not a new mechanism. The facts are in `data/oob/passages.csv` and `docs/research/oob/passages.md`.
 - Before step 3: the staff closing the range on a contact it cannot reach; choices rules make inside a day pulled into functions the planner can ask (decision 0055, "Left for later"); objectives that name a flow (`docs/design/economy.md`).
 - With step 2 or 3: coastwatchers and reconnaissance as standing sources (`docs/design/intelligence.md`, layer 2).
