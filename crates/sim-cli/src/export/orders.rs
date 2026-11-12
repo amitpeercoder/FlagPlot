@@ -73,6 +73,10 @@ fn text(kind: &OrderKind) -> String {
             AirGroupOrder::SetPatrolShare { share } => format!("patrol share {share}"),
             AirGroupOrder::SetRestThreshold { fatigue } => format!("rest above {fatigue}"),
             AirGroupOrder::SetReach { reach } => format!("reach {}", reach.name()),
+            AirGroupOrder::SetTargetPriority { kinds } => {
+                let kinds: Vec<&str> = kinds.iter().map(|kind| kind.name()).collect();
+                format!("target priority {}", kinds.join(", "))
+            }
         },
     }
 }

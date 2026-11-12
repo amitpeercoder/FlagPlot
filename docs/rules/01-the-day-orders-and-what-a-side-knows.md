@@ -131,7 +131,7 @@ A side sees: it sees the events of its own units, as the event table below says,
 
 An order is addressed to one unit: a task force or an air group. It carries an origin: who issued it, and the intent it serves if any. An order that is taken in gets a number, is kept whether accepted or refused, and has one event: accepted, or refused with a reason. [0008, 0055]
 
-The orders that exist are the ones in the tables below. The spec lists more (form, disband, add ships, rebase, target priority, range limit, base orders, land unit orders). They are not built. [0008, 0050, 0052]
+The orders that exist are the ones in the tables below. The spec lists more (form, disband, add ships, rebase, range limit, base orders, land unit orders). They are not built. [0008, 0050, 0052]
 
 ### Task force orders
 
@@ -165,8 +165,9 @@ Detaching ships creates a new force with the next free task force number. It sta
 | Set patrol share (0 to 1) | The share of its flyable aircraft a group on patrol keeps over its own hex. | Patrol share |
 | Set rest threshold (0 to 100) | The fatigue above which the staff stands the group down at the start of the day. | Rest threshold |
 | Set reach (normal or extended) | How far its strikes and escorts may go: the type's strike radius, or a share more (chapter 5, Radius and reach). Normal is the default. | Reach |
+| Set target priority (a list of kinds of ship: carrier, battleship, cruiser, destroyer, transport, auxiliary) | The kinds a group's strikes go for, in order, and the order that set the list. The default is all six kinds in the order of importance. A kind not on the list is never launched at (chapter 5, Naval strike: the contact), and the list ranks the ships a group attacks (chapter 5, The attack on a ship). | Target priority |
 
-[0012, 0026, 0027, 0034, 0036, 0059]
+[0012, 0026, 0027, 0034, 0036, 0059, 0063]
 
 ### When an order is checked, and against what
 
@@ -223,6 +224,8 @@ Then, by kind:
 | Base strike | No air combat figures; aircraft attack with nothing | As for a naval strike, tried in that order. |
 | Base strike | Not an enemy base | The base does not exist or is the group's own side's. Tried after the two above. |
 | Combat air patrol | No air combat figures | The scenario has none. |
+| Set target priority | Target list empty | The list names no kind. |
+| Set target priority | Target kind repeated | The list names a kind twice. The first kind named twice, in list order, is named. Tried after the empty list. |
 | Combat air patrol | Not a fighter | The group's aircraft type is not a fighter. |
 | Rest, Search | None | Always accepted. |
 | Set patrol share | Patrol share out of range | Below 0 or above 1. |
@@ -492,7 +495,7 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v4`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. [0004, 0057, 0058 item 7, 0059]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v5`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. [0004, 0057, 0058 item 7, 0059, 0063]
 
 The hash covers: the seed; the day; every ship, task force, base, air group, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases or air groups, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 

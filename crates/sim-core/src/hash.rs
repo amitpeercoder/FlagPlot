@@ -110,8 +110,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 2 writes every field of every unit, always, in one order;
 /// version 3 adds a task force's `leg_nm` after its `progress_nm` (decision 0058);
 /// version 4 adds an air group's `reach` and `reach_order` after its
-/// `arc_order` (decision 0059).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v4";
+/// `arc_order` (decision 0059);
+/// version 5 adds an air group's `target_priority`, `target_order` and
+/// `last_base_strike_day` after its `reach_order` (decision 0063).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v5";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -262,6 +264,9 @@ fn name_every_field(world: &World) {
             strength: _,
             reach: _,
             reach_order: _,
+            target_priority: _,
+            target_order: _,
+            last_base_strike_day: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -482,6 +487,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.optional_u32(group.arc_order.map(|id| id.raw()));
         h.u8(group.reach.code());
         h.optional_u32(group.reach_order.map(|id| id.raw()));
+        h.count(group.target_priority.len());
+        for kind in &group.target_priority {
+            h.u8(kind.code());
+        }
+        h.optional_u32(group.target_order.map(|id| id.raw()));
+        h.optional_u32(group.last_base_strike_day);
     }
 
     h.count(truth.replacements.len());

@@ -14,6 +14,7 @@ use sim_core::orders::{
     AirGroupOrder, AirMission, Mission, OrderKind, Reach, Readiness, SpeedSetting, Stance,
     StragglerInstruction, TaskForceOrder,
 };
+use sim_core::refdata::ShipKind;
 
 /// The unit an order is for, as `"task_force:N"` or `"air_group:N"`.
 pub fn unit_text(kind: &OrderKind) -> String {
@@ -109,6 +110,10 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             AirGroupOrder::SetReach { reach } => {
                 json!({ "kind": "set_reach", "reach": reach.name() })
             }
+            AirGroupOrder::SetTargetPriority { kinds } => json!({
+                "kind": "set_target_priority",
+                "kinds": kinds.iter().map(|kind| kind.name()).collect::<Vec<_>>(),
+            }),
         },
     }
 }
@@ -292,6 +297,23 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                         other => return Err(format!("unknown reach \"{other}\"")),
                     },
                 },
+                "set_target_priority" => {
+                    let list = value
+                        .get("kinds")
+                        .and_then(Value::as_array)
+                        .ok_or("\"kinds\" is missing")?;
+                    let mut kinds = Vec::new();
+                    for item in list {
+                        let name = item.as_str().ok_or("a kind is not text")?;
+                        kinds.push(
+                            ShipKind::ALL
+                                .into_iter()
+                                .find(|kind| kind.name() == name)
+                                .ok_or_else(|| format!("unknown kind of ship \"{name}\""))?,
+                        );
+                    }
+                    AirGroupOrder::SetTargetPriority { kinds }
+                }
                 other => return Err(format!("unknown air group order \"{other}\"")),
             };
             Ok(OrderKind::AirGroup {

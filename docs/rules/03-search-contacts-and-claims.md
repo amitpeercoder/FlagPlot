@@ -100,7 +100,7 @@ Not built: a group sending only part of itself on search while the rest does som
 
 ### What a report holds
 
-The kinds of ship, from most to least important, are carrier, battleship, cruiser, destroyer, transport, auxiliary. This is the importance of a kind. Every rule that takes "the most important" kind of a set, or walks the kinds in order, uses it (the kind a report is made of, the kind a strike picks, the ship a raid attacks, the escorts a straggler takes from the least important up).
+The kinds of ship, from most to least important, are carrier, battleship, cruiser, destroyer, transport, auxiliary. This is the importance of a kind. Every rule that takes "the most important" kind of a set, or walks the kinds in order, uses it (the kind a report is made of, the escorts a straggler takes from the least important up, and the default target list of an air group, which is every kind in this order). A strike group's target list, set by order, replaces it for the kind a strike picks and the ship a raid attacks, with the kinds not on the list following in this order (chapter 5, Naval strike: the contact, and The attack on a ship). [0063]
 
 A sighting report holds an estimated hex, an estimated ship count and an estimated kind. It carries the event that records its arrival. It holds no identity of the force seen, so a side cannot tell two sightings are of one force. It holds no confidence (decision 0032 withdrew it). Air search, a surface fight and a strike that attacked all build their reports by the same code, so a report means the same whoever made it. [0012, 0014, 0026, 0032]
 

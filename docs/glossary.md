@@ -26,6 +26,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Radius** | How far out an aircraft type goes and comes back. `search_range_nm` is the largest range a search arc may name, and the engine refuses an arc beyond it. `strike_range_nm` is what a group's reach is measured from. Both columns are named range and hold radii | Range |
 | **Reach** | How far an air group's strikes and escorts may go: normal, the type's strike radius, or extended, the radius and a share more. Set by order, normal until then (decision 0059) | Radius |
 | **Extended reach** | The reach of a group that has been ordered to it: the radius times (1 plus the extended reach share), cut to a whole mile. A sortie beyond the radius may cost aircraft that run out of fuel on the way home | Normal reach |
+| **Target list** | The kinds of ship a strike group goes for, in order, set by order. The default is all six kinds in the order of importance. A group is launched only at a contact taken for a kind on its list, and attacks over the target the ship its list ranks first, the kinds not on it following in the order of importance (decision 0063) | Target priority, priorities |
 | **In the air** | Describes the aircraft of a group that flew in the pulse and were not shot down, until the wear phase of the pulse brings them home (decision 0059) | Aboard |
 | **Landed elsewhere** | Describes aircraft that were in the air when their own deck was lost and landed at another carrier or a base, joining or forming a group there (decision 0059) | Rebased |
 | **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius, or that found no deck to land on, and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
@@ -115,7 +116,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Escort** | A fighter sent with a raid. Escorts fire at the patrol the raid meets (decisions 0027 and 0030) | A patrol |
 | **Patrol** | Fighters a group keeps over its own hex, which fire at raids that attack there | |
 | **Bomber** | An aircraft of a strike group, whether it carries bombs or a torpedo | |
-| **Base strike** | A mission to strike a named enemy base, launched in the morning pulse only (decision 0034) | A naval strike |
+| **Base strike** | A mission to strike a named enemy base, launched once a day, in the first daylight pulse in which the base is in reach (decisions 0034 and 0063) | A naval strike |
 | **Arrival** | Aircraft and pilots a scenario delivers to an air group on a named day (decision 0041) | A replacement |
 | **Replacement** | Aircraft and pilots a base receives each day from day 2, given to its groups below strength (decision 0038) | An arrival |
 | **Out of supply** | Describes a base whose supply stock is exactly zero at the start of a pulse. Its groups fly nothing in that pulse (decision 0039) | |

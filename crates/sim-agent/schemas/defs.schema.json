@@ -323,6 +323,11 @@
         "reach_nm": {
           "description": "Given only for a group on extended reach (set_reach): the reach in force in miles, more than strike_radius_nm. Left out on normal reach, where the reach is strike_radius_nm.",
           "$ref": "#/$defs/dec"
+        },
+        "target_priority": {
+          "description": "Given only for a group whose target list is not the default (set_target_priority): the kinds of ship its strikes go for, in order. A contact of a kind not on the list is never launched at. Left out where the list is every kind in the order carrier, battleship, cruiser, destroyer, transport, auxiliary.",
+          "type": "array",
+          "items": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] }
         }
       }
     },

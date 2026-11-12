@@ -116,7 +116,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::belief::{ApplyOutcome, BattleClaim, Report, SightingReport};
+use crate::belief::{ApplyOutcome, BattleClaim, BeliefState, Report, SightingReport};
 use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
@@ -216,11 +216,13 @@ struct BaseAttack {
     breakdown: Option<Breakdown>,
 }
 
-/// What a raid attacks: the most important enemy task force at its hex
-/// (decision 7 of 0026), or a base (decision 0034).
+/// What a raid attacks: the enemy task force at its hex that holds the best
+/// ranked ship by the target list of its first strike group (decision 4 of
+/// 0063), or a base (decision 0034). Each strike group then picks its own
+/// ship in the force.
 #[derive(Clone, Copy)]
 enum RaidTarget {
-    Ships(ShipKind, TaskForceId, ShipId),
+    Ships(TaskForceId),
     Base(BaseId),
 }
 
@@ -564,9 +566,10 @@ impl World {
     /// decides at [`World::decide_base_strike`]). Each group on the naval strike mission, in group order, that
     /// has aircraft, a position, light and a flight deck that lets it launch
     /// at least one aircraft, takes the contact its side holds that is no
-    /// older than the figures allow and within the type's strike range: the
-    /// most important reported kind first, then the nearest, then the lowest
-    /// contact number. It launches every aircraft it can.
+    /// older than the figures allow, within its reach and of a kind on its
+    /// target list: the kind first on the list, then the nearest, then the
+    /// lowest contact number ([`contact_to_strike`]). With no such contact it
+    /// launches nothing. It launches every aircraft it can.
     ///
     /// The decision reads the group's own side's belief and the group's own
     /// state. It never reads the enemy.
@@ -614,24 +617,23 @@ impl World {
                 continue;
             }
 
-            let chosen = self.beliefs[&group.side]
-                .contacts()
-                .filter(|contact| contact.age_pulses <= figures.strike_contact_max_age_pulses)
-                .filter_map(|contact| {
-                    let distance_nm =
-                        Fixed::from_int(i64::from(origin.air_distance_nm(contact.estimated_hex)));
-                    origin
-                        .air_distance_within(contact.estimated_hex, reach_nm)
-                        .then_some((
-                            contact.estimated_kind,
-                            distance_nm,
-                            contact.id,
-                            contact.estimated_hex,
-                            contact.last_report_event,
-                        ))
-                })
-                .min_by_key(|(kind, distance_nm, id, _, _)| (*kind, *distance_nm, *id));
-            let Some((taken_for, distance_nm, contact, hex, report_event)) = chosen else {
+            // The one function (decision 6 of 0063): the contact this group
+            // would strike now, from its side's belief and its own state.
+            let chosen = contact_to_strike(
+                &self.beliefs[&group.side],
+                &group,
+                origin,
+                reach_nm,
+                figures.strike_contact_max_age_pulses,
+            );
+            let Some(StrikeChoice {
+                kind: taken_for,
+                distance_nm,
+                contact,
+                hex,
+                report_event,
+            }) = chosen
+            else {
                 continue;
             };
 
@@ -640,6 +642,7 @@ impl World {
                 .map(Cause::Order)
                 .into_iter()
                 .chain(reach_cause(&group))
+                .chain(target_cause(&group))
                 .chain([Cause::Event(report_event)])
                 .collect();
             let launched = self.events.record(
@@ -669,9 +672,11 @@ impl World {
     }
 
     /// The decision of one group on the base strike mission (decision 3 of
-    /// 0034): it launches every aircraft it can fly in the morning pulse if
-    /// the base exists, is held by the other side and is within the type's
-    /// strike range. It reads no belief and needs no contact. The caller
+    /// 0034, and 7 of 0063): it launches every aircraft it can fly in a
+    /// daylight pulse, if it has not launched at its base that game day, the
+    /// base exists, is held by the other side and is within the reach in
+    /// force. So it flies in the first daylight pulse in which the base is in
+    /// reach, once a day. It reads no belief and needs no contact. The caller
     /// has checked the light, that the type carries a weapon and that the
     /// group can fly an aircraft.
     #[allow(clippy::too_many_arguments)]
@@ -685,7 +690,9 @@ impl World {
         reach_nm: Fixed,
         aircraft: u32,
     ) {
-        if pulse != Pulse::Morning {
+        // Once in a game day, in the first daylight pulse the base is in
+        // reach (decision 7 of 0063). The caller has checked the light.
+        if group.last_base_strike_day == Some(day) {
             return;
         }
         let Some(target) = self.truth.bases.get(&base) else {
@@ -705,6 +712,11 @@ impl World {
             .into_iter()
             .chain(reach_cause(group))
             .collect();
+        self.truth
+            .air_groups
+            .get_mut(&group.id)
+            .expect("the group is in the state")
+            .last_base_strike_day = Some(day);
         let launched = self.events.record(
             day,
             Some(pulse),
@@ -1201,7 +1213,7 @@ impl World {
                 let mut claimed_kind = None;
                 if attacking {
                     match tally.target {
-                        RaidTarget::Ships(_, force, _) => {
+                        RaidTarget::Ships(force) => {
                             false_hits = roll_shots(
                                 &mut stream,
                                 count(part.hit_misses),
@@ -1284,7 +1296,7 @@ impl World {
                     ];
                     if attacking {
                         match tally.target {
-                            RaidTarget::Ships(..) => factors.extend([
+                            RaidTarget::Ships(_) => factors.extend([
                                 Factor {
                                     name: "real_hits",
                                     value: count(part.hits),
@@ -1717,23 +1729,55 @@ impl World {
         Some((event, lost))
     }
 
-    /// The enemy task force a strike of `side` finds at `hex`: the one with
-    /// the most important ship, then the lowest number (decision 7 of 0026),
-    /// and that ship. Reads truth, which the umpire may.
-    fn find_target(&self, side: Side, hex: Hex) -> Option<(ShipKind, TaskForceId, ShipId)> {
+    /// The enemy task force a raid of `side` finds at `hex`: the one holding
+    /// the best ranked ship afloat by the target list of the raid's first
+    /// strike group `first_group` (decision 4 of 0063), then the lowest force
+    /// number on a tie. With the default list that is the force with the most
+    /// important ship, as decision 7 of 0026 had it. Reads truth, which the
+    /// umpire may.
+    fn find_target(&self, first_group: AirGroupId, side: Side, hex: Hex) -> Option<TaskForceId> {
+        let group = &self.truth.air_groups[&first_group];
         self.truth
             .task_forces
             .values()
             .filter(|force| force.side != side && force.position() == hex)
             .filter_map(|force| {
-                let ship = force
+                let (rank, ship) = force
                     .ships
                     .iter()
-                    .map(|ship| (self.kind_of(*ship), *ship))
+                    .map(|ship| (group.target_rank(self.kind_of(*ship)), *ship))
                     .min()?;
-                Some((ship.0, force.id, ship.1))
+                Some((rank, force.id, ship))
             })
             .min()
+            .map(|(_, force, _)| force)
+    }
+
+    /// The ship a strike group attacks in the force its raid found: the best
+    /// ranked ship afloat in it by the group's own target list, the lowest
+    /// ship number on a tie (decision 4 of 0063). Reads truth, which the
+    /// umpire may.
+    fn ship_to_attack(&self, group: AirGroupId, force: TaskForceId) -> ShipId {
+        let group = &self.truth.air_groups[&group];
+        self.truth.task_forces[&force]
+            .ships
+            .iter()
+            .map(|ship| (group.target_rank(self.kind_of(*ship)), *ship))
+            .min()
+            .map(|(_, ship)| ship)
+            .expect("the force the raid found has a ship afloat")
+    }
+
+    /// The most important kind among the ships afloat in `force`: the true
+    /// kind of the sighting report an attack on the force sends, whichever
+    /// ship was attacked (chapter 3, What a report holds).
+    fn most_important_kind_in(&self, force: TaskForceId) -> ShipKind {
+        self.truth.task_forces[&force]
+            .ships
+            .iter()
+            .map(|ship| self.kind_of(*ship))
+            .min()
+            .expect("the force the raid found has a ship afloat")
     }
 
     /// What the raid whose first strike is `first` attacks, on the truth at
@@ -1744,8 +1788,8 @@ impl World {
     fn raid_target(&self, first: &StrikeInFlight) -> Option<RaidTarget> {
         match first.aim {
             Aim::Contact(_) => self
-                .find_target(first.side, first.hex)
-                .map(|(kind, task_force, ship)| RaidTarget::Ships(kind, task_force, ship)),
+                .find_target(first.air_group, first.side, first.hex)
+                .map(RaidTarget::Ships),
             Aim::Base(base) => self
                 .truth
                 .bases
@@ -1758,7 +1802,7 @@ impl World {
     /// The side a raid's target belongs to.
     fn defender_of(&self, target: RaidTarget) -> Side {
         match target {
-            RaidTarget::Ships(_, task_force, _) => self.truth.task_forces[&task_force].side,
+            RaidTarget::Ships(task_force) => self.truth.task_forces[&task_force].side,
             RaidTarget::Base(base) => self.truth.bases[&base].side,
         }
     }
@@ -1887,7 +1931,7 @@ impl World {
         let defending_side = self.defender_of(target);
         // What the fighters' streams are keyed on besides their group.
         let target_entity = match target {
-            RaidTarget::Ships(_, task_force, _) => EntityRef::TaskForce(task_force),
+            RaidTarget::Ships(task_force) => EntityRef::TaskForce(task_force),
             RaidTarget::Base(base) => EntityRef::Base(base),
         };
         let air = self
@@ -2068,7 +2112,7 @@ impl World {
         // not fire at a raid on ships.
         let bombers_left: u32 = bombers.iter().map(|(_, aircraft)| aircraft).sum();
         let guns = match target {
-            RaidTarget::Ships(_, task_force, _) => {
+            RaidTarget::Ships(task_force) => {
                 let force = &self.truth.task_forces[&task_force];
                 let gun_shots: u32 = force
                     .ships
@@ -2130,7 +2174,12 @@ impl World {
             .filter(|((_, left), _)| *left > 0)
             .map(|((group, left), strike)| {
                 let outcome = match target {
-                    RaidTarget::Ships(kind, task_force, ship) => {
+                    RaidTarget::Ships(task_force) => {
+                        // Each group attacks the ship its own list ranks
+                        // first in the force the raid found (decision 4 of
+                        // 0063).
+                        let ship = self.ship_to_attack(strike.air_group, task_force);
+                        let kind = self.most_important_kind_in(task_force);
                         self.work_out_attack(day, pulse, strike, *left, (kind, task_force, ship))
                     }
                     RaidTarget::Base(base) => {
@@ -2434,6 +2483,66 @@ fn reach_cause(group: &AirGroup) -> Option<Cause> {
         (Reach::Extended, Some(order)) => Some(Cause::Order(order)),
         _ => None,
     }
+}
+
+/// The target order as a cause of a launch, when the group has one (decision
+/// 3 of 0063): a group with no target order cites nothing new, so no log of
+/// a game with no target order changes.
+fn target_cause(group: &AirGroup) -> Option<Cause> {
+    group.target_order.map(Cause::Order)
+}
+
+/// The contact a naval strike group would launch at: what
+/// [`contact_to_strike`] chose.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct StrikeChoice {
+    /// The kind the contact is taken for.
+    pub kind: ShipKind,
+    /// The contact's air distance from the group, in whole miles.
+    pub distance_nm: Fixed,
+    pub contact: ContactId,
+    /// The hex the contact names.
+    pub hex: Hex,
+    /// The event that recorded the report the contact rests on.
+    pub report_event: EventId,
+}
+
+/// Which contact `group`, at `origin`, would strike now (decision 6 of
+/// 0063). A contact qualifies if it is no older than `max_age_pulses`, lies
+/// within `reach_nm` of `origin` and is taken for a kind on the group's target
+/// list. Of those the contact whose kind comes first on the list is taken,
+/// then the nearest, then the lowest contact number. `None`: the group
+/// launches nothing.
+///
+/// It reads the side's belief and the group's own state and orders, and
+/// nothing else: never the enemy. The strike decision and the side's view
+/// both call it.
+pub(crate) fn contact_to_strike(
+    belief: &BeliefState,
+    group: &AirGroup,
+    origin: Hex,
+    reach_nm: Fixed,
+    max_age_pulses: u32,
+) -> Option<StrikeChoice> {
+    belief
+        .contacts()
+        .filter(|contact| contact.age_pulses <= max_age_pulses)
+        .filter(|contact| group.target_priority.contains(&contact.estimated_kind))
+        .filter(|contact| origin.air_distance_within(contact.estimated_hex, reach_nm))
+        .min_by_key(|contact| {
+            (
+                group.target_rank(contact.estimated_kind),
+                origin.air_distance_nm(contact.estimated_hex),
+                contact.id,
+            )
+        })
+        .map(|contact| StrikeChoice {
+            kind: contact.estimated_kind,
+            distance_nm: Fixed::from_int(i64::from(origin.air_distance_nm(contact.estimated_hex))),
+            contact: contact.id,
+            hex: contact.estimated_hex,
+            report_event: contact.last_report_event,
+        })
 }
 
 /// A sortie out to `to` and back from `from`: twice the distance (decision 4
@@ -6163,7 +6272,18 @@ mod tests {
         type Change = Box<dyn Fn(&mut World)>;
         let stops: Vec<(&str, Change, Pulse)> = vec![
             ("night", Box::new(|_| {}), Pulse::Night),
-            ("afternoon", Box::new(|_| {}), Pulse::Afternoon),
+            // The afternoon no longer stops it (decision 7 of 0063); having
+            // launched that day does, in either daylight pulse.
+            (
+                "it has launched today, in the morning",
+                Box::new(|w| group_mut(w, AirGroupId::new(1)).last_base_strike_day = Some(1)),
+                Pulse::Morning,
+            ),
+            (
+                "it has launched today, in the afternoon",
+                Box::new(|w| group_mut(w, AirGroupId::new(1)).last_base_strike_day = Some(1)),
+                Pulse::Afternoon,
+            ),
             (
                 "no aircraft",
                 Box::new(|w| group_mut(w, AirGroupId::new(1)).ready = 0),
@@ -6220,6 +6340,12 @@ mod tests {
         let mut world = raid_world(1);
         world.truth.bases.get_mut(&BASE_JAPANESE).expect("base").hex = Hex::new(6, 0);
         world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(base_launches(&world).len(), 1);
+        // The afternoon launches if it has not launched that day, and the
+        // day before's launch does not stop it (decision 7 of 0063).
+        let mut world = raid_world(1);
+        group_mut(&mut world, AirGroupId::new(1)).last_base_strike_day = Some(1);
+        world.decide_strikes(2, Pulse::Afternoon);
         assert_eq!(base_launches(&world).len(), 1);
     }
 
@@ -10011,5 +10137,446 @@ mod tests {
         let aircraft_lost = 6 - lost.truth.air_groups[&AirGroupId::new(10)].ready;
         assert!(aircraft_lost > 0);
         assert_eq!(pilots_of(&lost, 10), Some(6 - aircraft_lost));
+    }
+
+    // ---- strike target priority (decisions 1 to 7 of 0063) ----
+
+    fn set_priority(world: &mut World, group: AirGroupId, kinds: &[ShipKind]) {
+        group_mut(world, group).target_priority = kinds.to_vec();
+    }
+
+    /// A second Allied strike group aboard ship 1 on the naval strike
+    /// mission.
+    fn second_group(world: &mut World, id: u32, kinds: &[ShipKind]) {
+        let mut added = group(AirGroupId::new(id), Side::Allied, 1, 2, 6);
+        added.mission = AirMission::NavalStrike;
+        added.target_priority = kinds.to_vec();
+        world.truth.air_groups.insert(added.id, added);
+    }
+
+    #[test]
+    fn the_default_target_list_is_every_kind_in_the_order_of_importance() {
+        let group = group(AirGroupId::new(9), Side::Allied, 1, 2, 1);
+        assert_eq!(group.target_priority, ShipKind::ALL.to_vec());
+        assert_eq!(group.target_order, None);
+        assert_eq!(group.last_base_strike_day, None);
+        // On the default list the rank is the order of importance.
+        let mut ranks: Vec<_> = ShipKind::ALL
+            .iter()
+            .map(|k| group.target_rank(*k))
+            .collect();
+        let sorted = {
+            let mut copy = ranks.clone();
+            copy.sort_unstable();
+            copy
+        };
+        assert_eq!(ranks, sorted);
+        ranks.dedup();
+        assert_eq!(ranks.len(), 6);
+    }
+
+    #[test]
+    fn a_kind_on_the_list_ranks_before_every_kind_off_it_and_the_rest_follow_in_importance() {
+        let mut g = group(AirGroupId::new(9), Side::Allied, 1, 2, 1);
+        g.target_priority = vec![ShipKind::Transport, ShipKind::Cruiser];
+        let mut kinds = ShipKind::ALL.to_vec();
+        kinds.sort_by_key(|kind| g.target_rank(*kind));
+        assert_eq!(
+            kinds,
+            vec![
+                ShipKind::Transport,
+                ShipKind::Cruiser,
+                ShipKind::Carrier,
+                ShipKind::Battleship,
+                ShipKind::Destroyer,
+                ShipKind::Auxiliary,
+            ]
+        );
+    }
+
+    #[test]
+    fn a_group_goes_for_the_kind_first_on_its_list_and_never_for_a_kind_off_it() {
+        // Contacts 1, 2 and 3, 120, 160 and 240 nm out, more than two hexes
+        // apart so none merges with another.
+        let contacts = || {
+            vec![
+                held(Hex::new(3, 0), ShipKind::Cruiser, 0),
+                held(Hex::new(-4, 0), ShipKind::Transport, 0),
+                held(Hex::new(0, 6), ShipKind::Carrier, 0),
+            ]
+        };
+        let chosen = |kinds: Option<&[ShipKind]>| {
+            let mut world = world(1, contacts());
+            if let Some(kinds) = kinds {
+                set_priority(&mut world, BOMBERS, kinds);
+            }
+            world.decide_strikes(1, Pulse::Morning);
+            let all = launches(&world);
+            assert!(all.len() <= 1);
+            assert_eq!(world.strikes_in_flight.len(), all.len());
+            all.first().map(|event| launch_of(event).1)
+        };
+        // The default list: the carrier, though the farthest.
+        assert_eq!(chosen(None), Some(3));
+        // A transport first, though the cruiser is nearer.
+        assert_eq!(
+            chosen(Some(&[ShipKind::Transport, ShipKind::Cruiser])),
+            Some(2)
+        );
+        assert_eq!(
+            chosen(Some(&[ShipKind::Cruiser, ShipKind::Transport])),
+            Some(1)
+        );
+        // No contact is a destroyer: the next kind on the list.
+        assert_eq!(
+            chosen(Some(&[ShipKind::Destroyer, ShipKind::Cruiser])),
+            Some(1)
+        );
+        // No contact is a battleship: nothing is launched, nothing recorded.
+        assert_eq!(chosen(Some(&[ShipKind::Battleship])), None);
+        let mut world = world(1, contacts());
+        set_priority(&mut world, BOMBERS, &[ShipKind::Battleship]);
+        world.decide_strikes(1, Pulse::Morning);
+        assert!(world
+            .events()
+            .iter()
+            .all(|event| !matches!(event.kind, EventKind::StrikeLaunched { .. })));
+        // A listed kind that is too far is not taken either.
+        let mut world = self::world(1, vec![held(Hex::new(9, 0), ShipKind::Carrier, 0)]);
+        set_priority(&mut world, BOMBERS, &[ShipKind::Carrier]);
+        world.decide_strikes(1, Pulse::Morning);
+        assert!(launches(&world).is_empty());
+    }
+
+    #[test]
+    fn of_one_kind_on_the_list_the_nearest_then_the_lowest_contact_is_taken() {
+        let chosen = |contacts: Vec<StartingContact>| {
+            let mut world = world(1, contacts);
+            set_priority(&mut world, BOMBERS, &[ShipKind::Cruiser]);
+            world.decide_strikes(1, Pulse::Morning);
+            launch_of(&launches(&world)[0]).1
+        };
+        assert_eq!(
+            chosen(vec![
+                held(Hex::new(4, 0), ShipKind::Cruiser, 0),
+                held(Hex::new(-3, 0), ShipKind::Cruiser, 0),
+                held(Hex::new(0, 2), ShipKind::Destroyer, 0),
+            ]),
+            2
+        );
+        assert_eq!(
+            chosen(vec![
+                held(Hex::new(4, 0), ShipKind::Cruiser, 0),
+                held(Hex::new(-4, 0), ShipKind::Cruiser, 0),
+            ]),
+            1
+        );
+    }
+
+    #[test]
+    fn a_launch_cites_the_target_order_only_when_the_group_has_one() {
+        let contacts = || vec![held(Hex::new(5, 0), ShipKind::Cruiser, 0)];
+        // No target order: the causes are what they were.
+        let mut world = world(1, contacts());
+        group_mut(&mut world, BOMBERS).mission_order = Some(OrderId::new(1));
+        world.decide_strikes(1, Pulse::Morning);
+        assert_eq!(launches(&world)[0].causes.len(), 2);
+        assert!(!launches(&world)[0]
+            .causes
+            .contains(&Cause::Order(OrderId::new(2))));
+        // A target order, even for the default list, is a cause.
+        let mut world = self::world(1, contacts());
+        group_mut(&mut world, BOMBERS).mission_order = Some(OrderId::new(1));
+        group_mut(&mut world, BOMBERS).target_order = Some(OrderId::new(2));
+        world.decide_strikes(1, Pulse::Morning);
+        let causes = launches(&world)[0].causes.clone();
+        assert_eq!(causes.len(), 3);
+        assert_eq!(causes[0], Cause::Order(OrderId::new(1)));
+        assert_eq!(causes[1], Cause::Order(OrderId::new(2)));
+    }
+
+    #[test]
+    fn the_sides_view_names_the_contact_the_strike_decision_launches_at() {
+        let contacts = || {
+            vec![
+                held(Hex::new(3, 0), ShipKind::Cruiser, 0),
+                held(Hex::new(-4, 0), ShipKind::Transport, 0),
+                held(Hex::new(0, 6), ShipKind::Carrier, 0),
+            ]
+        };
+        for kinds in [
+            ShipKind::ALL.to_vec(),
+            vec![ShipKind::Transport, ShipKind::Cruiser],
+            vec![ShipKind::Battleship],
+            vec![ShipKind::Destroyer, ShipKind::Cruiser],
+        ] {
+            let mut world = world(1, contacts());
+            set_priority(&mut world, BOMBERS, &kinds);
+            let asked = world
+                .side_view(Side::Allied)
+                .strike_choice(&world.truth.air_groups[&BOMBERS])
+                .map(|choice| (choice.contact.raw(), choice.hex, choice.distance_nm));
+            world.decide_strikes(1, Pulse::Morning);
+            let launched = launches(&world)
+                .first()
+                .map(launch_of)
+                .map(|(_, contact, hex, _, distance)| (contact, hex, distance));
+            assert_eq!(asked, launched, "list {kinds:?}");
+        }
+        // It answers for a naval strike group of the asking side only.
+        let world = world(1, contacts());
+        let group = &world.truth.air_groups[&BOMBERS];
+        assert!(world.side_view(Side::Allied).strike_choice(group).is_some());
+        assert!(world
+            .side_view(Side::Japanese)
+            .strike_choice(group)
+            .is_none());
+        let mut resting = group.clone();
+        resting.mission = AirMission::Rest;
+        assert!(world
+            .side_view(Side::Allied)
+            .strike_choice(&resting)
+            .is_none());
+    }
+
+    #[test]
+    fn a_raid_attacks_the_force_with_the_best_ranked_ship_by_its_first_groups_list() {
+        // Force B (ship 2 a carrier, 3 and 4 cruisers) and a force C at the
+        // same hex holding a cargo ship (class 3 is added as a transport).
+        // The contact is a cruiser, so a group launches only if its list has
+        // the cruiser.
+        let setup = |first_list: &[ShipKind], no_cruisers_in_b: bool| {
+            let mut world = world_with_a_good_contact(1);
+            world
+                .ref_data
+                .ship_classes
+                .insert(ShipClassId::new(3), class(3, ShipKind::Transport, 300, 0));
+            add_force(&mut world, 3, Side::Japanese, Hex::new(5, 0), &[(7, 3)]);
+            if no_cruisers_in_b {
+                set_class(&mut world, 3, 2);
+                set_class(&mut world, 4, 2);
+            }
+            set_priority(&mut world, BOMBERS, first_list);
+            world
+        };
+        let force_attacked = |world: &mut World| {
+            strike_pulse(world, Pulse::Morning);
+            let all = attacks(world);
+            assert_eq!(all.len(), 1);
+            let (_, force, ship, ..) = attack_of(&all[0]);
+            (force, ship)
+        };
+        // The default list: the carrier, in force 2.
+        let mut world = setup(&ShipKind::ALL, false);
+        assert_eq!(force_attacked(&mut world), (2, 2));
+        // A cruiser first: force 2 holds cruisers and force 3 does not, and
+        // the lowest cruiser is ship 3.
+        let mut world = setup(&[ShipKind::Cruiser], false);
+        assert_eq!(force_attacked(&mut world), (2, 3));
+        // The transport first, then the cruiser: the contact is a cruiser so
+        // it launches, and the raid goes for the cargo ship in force 3.
+        let mut world = setup(&[ShipKind::Transport, ShipKind::Cruiser], false);
+        assert_eq!(force_attacked(&mut world), (3, 7));
+        // The cruiser first, then the transport: the cruiser wins.
+        let mut world = setup(&[ShipKind::Cruiser, ShipKind::Transport], false);
+        assert_eq!(force_attacked(&mut world), (2, 3));
+        // The contact is a cruiser and no cruiser is there: a strike attacks
+        // what it finds. Off the list the order of importance gives the
+        // carrier before the cargo ship.
+        let mut world = setup(&[ShipKind::Cruiser], true);
+        assert_eq!(force_attacked(&mut world), (2, 2));
+        // The same with the transport named: it is on the list, so it comes
+        // first and the raid goes for the cargo ship.
+        let mut world = setup(&[ShipKind::Cruiser, ShipKind::Transport], true);
+        assert_eq!(force_attacked(&mut world), (3, 7));
+    }
+
+    #[test]
+    fn two_groups_of_one_raid_each_attack_the_ship_their_own_list_ranks_first() {
+        let mut world = world_with_a_good_contact(1);
+        // Both lists have the cruiser, the contact's kind, or they would not
+        // launch.
+        second_group(&mut world, 4, &[ShipKind::Cruiser]);
+        second_group(&mut world, 5, &[ShipKind::Cruiser, ShipKind::Carrier]);
+        strike_pulse(&mut world, Pulse::Morning);
+        assert_eq!(launches(&world).len(), 3);
+        let mut by_group: Vec<(u32, u32, u32)> = attacks(&world)
+            .iter()
+            .map(|event| {
+                let (group, force, ship, ..) = attack_of(event);
+                (group, force, ship)
+            })
+            .collect();
+        by_group.sort_unstable();
+        // Group 1 (default): the carrier, ship 2. Group 4: the first cruiser,
+        // ship 3. Group 5: its list puts the cruiser first too, ship 3. One
+        // raid, one force.
+        assert_eq!(by_group, vec![(1, 2, 2), (4, 2, 3), (5, 2, 3)]);
+        // With a list that puts the carrier first the group attacks it.
+        let mut world = world_with_a_good_contact(1);
+        second_group(&mut world, 4, &[ShipKind::Cruiser]);
+        second_group(&mut world, 5, &[ShipKind::Carrier, ShipKind::Cruiser]);
+        strike_pulse(&mut world, Pulse::Morning);
+        let mut by_group: Vec<(u32, u32, u32)> = attacks(&world)
+            .iter()
+            .map(|event| {
+                let (group, force, ship, ..) = attack_of(event);
+                (group, force, ship)
+            })
+            .collect();
+        by_group.sort_unstable();
+        assert_eq!(by_group, vec![(1, 2, 2), (4, 2, 3), (5, 2, 2)]);
+    }
+
+    #[test]
+    fn the_target_order_is_accepted_stands_and_is_replaced_and_the_hash_sees_it() {
+        let order = |kinds: Vec<ShipKind>| OrderRequest {
+            kind: OrderKind::AirGroup {
+                target: BOMBERS,
+                order: AirGroupOrder::SetTargetPriority { kinds },
+            },
+            origin: Origin::PLAYER,
+        };
+        let mut world = world(1, vec![]);
+        world.submit_orders(
+            Side::Allied,
+            vec![order(vec![ShipKind::Transport, ShipKind::Cruiser])],
+        );
+        world.resolve_day().expect("day resolves");
+        assert!(rejections(&world).is_empty());
+        assert_eq!(
+            group_mut(&mut world, BOMBERS).target_priority,
+            vec![ShipKind::Transport, ShipKind::Cruiser]
+        );
+        let order_id = group_mut(&mut world, BOMBERS).target_order;
+        assert!(order_id.is_some());
+        // It stands, and the reach and mission orders leave it alone.
+        world.resolve_day().expect("day resolves");
+        assert_eq!(group_mut(&mut world, BOMBERS).target_priority.len(), 2);
+        world.submit_orders(Side::Allied, vec![order(vec![ShipKind::Carrier])]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(
+            group_mut(&mut world, BOMBERS).target_priority,
+            vec![ShipKind::Carrier]
+        );
+        assert_ne!(group_mut(&mut world, BOMBERS).target_order, order_id);
+        // The list, its order and the day of the last base strike are in the
+        // hash.
+        let mut a = self::world(1, vec![]);
+        let mut b = self::world(1, vec![]);
+        assert_eq!(a.state_hash(), b.state_hash());
+        set_priority(&mut b, BOMBERS, &[ShipKind::Cruiser]);
+        assert_ne!(a.state_hash(), b.state_hash());
+        set_priority(&mut a, BOMBERS, &[ShipKind::Cruiser]);
+        assert_eq!(a.state_hash(), b.state_hash());
+        // The same kinds in another order are another list.
+        set_priority(&mut a, BOMBERS, &[ShipKind::Cruiser, ShipKind::Destroyer]);
+        set_priority(&mut b, BOMBERS, &[ShipKind::Destroyer, ShipKind::Cruiser]);
+        assert_ne!(a.state_hash(), b.state_hash());
+        set_priority(&mut b, BOMBERS, &[ShipKind::Cruiser, ShipKind::Destroyer]);
+        assert_eq!(a.state_hash(), b.state_hash());
+        group_mut(&mut a, BOMBERS).target_order = Some(OrderId::new(3));
+        assert_ne!(a.state_hash(), b.state_hash());
+        group_mut(&mut b, BOMBERS).target_order = Some(OrderId::new(3));
+        assert_eq!(a.state_hash(), b.state_hash());
+        group_mut(&mut a, BOMBERS).last_base_strike_day = Some(2);
+        assert_ne!(a.state_hash(), b.state_hash());
+        group_mut(&mut b, BOMBERS).last_base_strike_day = Some(3);
+        assert_ne!(a.state_hash(), b.state_hash());
+        group_mut(&mut b, BOMBERS).last_base_strike_day = Some(2);
+        assert_eq!(a.state_hash(), b.state_hash());
+    }
+
+    #[test]
+    fn the_target_order_is_refused_for_an_empty_list_a_repeated_kind_an_enemy_group_and_a_lost_group(
+    ) {
+        let order = |target: AirGroupId, kinds: Vec<ShipKind>| OrderRequest {
+            kind: OrderKind::AirGroup {
+                target,
+                order: AirGroupOrder::SetTargetPriority { kinds },
+            },
+            origin: Origin::PLAYER,
+        };
+        let world = world(1, vec![]);
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, vec![])),
+            Err(RejectReason::TargetListEmpty)
+        );
+        assert_eq!(
+            world.check_order(
+                Side::Allied,
+                &order(
+                    BOMBERS,
+                    vec![ShipKind::Cruiser, ShipKind::Carrier, ShipKind::Cruiser]
+                )
+            ),
+            Err(RejectReason::TargetKindRepeated(ShipKind::Cruiser))
+        );
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, ShipKind::ALL.to_vec())),
+            Ok(())
+        );
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, vec![ShipKind::Auxiliary])),
+            Ok(())
+        );
+        assert_eq!(
+            world.check_order(Side::Japanese, &order(BOMBERS, vec![ShipKind::Cruiser])),
+            Err(RejectReason::NotYourUnit)
+        );
+        let mut lost = self::world(1, vec![]);
+        ship_mut(&mut lost, 1).location = ShipLocation::Sunk;
+        assert_eq!(
+            lost.check_order(Side::Allied, &order(BOMBERS, vec![ShipKind::Cruiser])),
+            Err(RejectReason::AirGroupLost)
+        );
+        // A refused order changes nothing: the group keeps its list.
+        let mut world = self::world(1, vec![]);
+        world.submit_orders(Side::Allied, vec![order(BOMBERS, vec![])]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(rejections(&world), vec![RejectReason::TargetListEmpty]);
+        assert_eq!(
+            group_mut(&mut world, BOMBERS).target_priority,
+            ShipKind::ALL.to_vec()
+        );
+        assert_eq!(group_mut(&mut world, BOMBERS).target_order, None);
+        assert_eq!(
+            RejectReason::TargetKindRepeated(ShipKind::Cruiser).to_string(),
+            "the target list names cruiser twice"
+        );
+    }
+
+    #[test]
+    fn a_base_strike_launches_in_the_afternoon_if_it_has_not_launched_that_day_and_once_a_day() {
+        // The base is in reach in the afternoon only: out of reach by a
+        // hex in the morning is modelled by moving the base between pulses.
+        let mut world = raid_world(1);
+        world.truth.bases.get_mut(&BASE_JAPANESE).expect("base").hex = Hex::new(7, 0);
+        world.decide_strikes(1, Pulse::Morning);
+        assert!(base_launches(&world).is_empty());
+        assert_eq!(
+            group_mut(&mut world, AirGroupId::new(1)).last_base_strike_day,
+            None
+        );
+        world.truth.bases.get_mut(&BASE_JAPANESE).expect("base").hex = Hex::new(5, 0);
+        world.decide_strikes(1, Pulse::Afternoon);
+        assert_eq!(base_launches(&world).len(), 1);
+        assert_eq!(
+            group_mut(&mut world, AirGroupId::new(1)).last_base_strike_day,
+            Some(1)
+        );
+        world.strikes_in_flight.clear();
+        // Not again that day, in either pulse.
+        world.decide_strikes(1, Pulse::Morning);
+        world.decide_strikes(1, Pulse::Afternoon);
+        assert_eq!(base_launches(&world).len(), 1);
+        // The next day it launches again, in the morning, and not at night.
+        world.decide_strikes(2, Pulse::Night);
+        assert_eq!(base_launches(&world).len(), 1);
+        world.decide_strikes(2, Pulse::Morning);
+        assert_eq!(base_launches(&world).len(), 2);
+        world.strikes_in_flight.clear();
+        world.decide_strikes(2, Pulse::Afternoon);
+        assert_eq!(base_launches(&world).len(), 2);
     }
 }

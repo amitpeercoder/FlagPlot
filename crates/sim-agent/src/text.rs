@@ -526,6 +526,9 @@ impl Briefing {
             if let Some(reach) = g.reach_nm {
                 s.push_str(&format!(", extended reach {} miles", reach.0));
             }
+            if let Some(list) = &g.target_priority {
+                s.push_str(&format!(", target priority {}", list.join(", ")));
+            }
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));
@@ -750,6 +753,27 @@ impl Briefing {
                 }
             },
         );
+
+        // Left out when none, so the briefing of a game with no target
+        // order reads as it did.
+        if !w.strike_group_holding.is_empty() {
+            o.each(
+                "Strike groups holding their strike",
+                &w.strike_group_holding,
+                |x| {
+                    format!(
+                        "Holding: {} is on naval strike with a target list of {} and holds contacts within {} {} miles, but none is of a kind on its list; the nearest is {}, taken for a {}, {} miles away; it launches nothing at them",
+                        x.air_group.text(),
+                        x.target_priority.join(", "),
+                        if x.reach_nm.is_some() { "its extended reach of" } else { "its radius of" },
+                        x.reach_nm.unwrap_or(x.radius_nm).0,
+                        x.nearest.text(),
+                        x.nearest_taken_for,
+                        x.distance_nm
+                    )
+                },
+            );
+        }
 
         o.0
     }

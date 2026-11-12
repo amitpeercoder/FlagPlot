@@ -1,0 +1,32 @@
+Scenario 13a: Target priority
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash a0fcb4db7c44d1b7  21 events
+
+task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder cruiser force A" (Japanese): Idle at (7,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder cruiser force B" (Japanese): Idle at (7,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Placeholder convoy" (Japanese): Idle at (7,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:5 "Placeholder cruiser force C" (Japanese): Idle at (9,-3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder dive bombers 1" (Allied) aboard ship:1: 6 ready, mission NavalStrike, no arc
+air_group:2 "Placeholder dive bombers 2" (Allied) aboard ship:1: 6 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder dive bombers 3" (Allied) aboard ship:1: 6 ready, mission NavalStrike, no arc
+air_group:4 "Placeholder dive bombers 4" (Allied) aboard ship:1: 6 ready, mission NavalStrike, no arc
+air_group:5 "Placeholder dive bombers 5" (Allied) aboard ship:1: 6 ready, mission NavalStrike, no arc
+air_group:6 "Placeholder dive bombers 6" (Allied) aboard ship:1: 6 ready, mission NavalStrike, no arc
+ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser A1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder destroyer A2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B1": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder destroyer B2": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:7 "Placeholder cargo ship": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:8 "Placeholder cruiser C1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:9 "Placeholder destroyer C2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+Allied contact:1 at (7,0): 2 ships, cruiser, age 3 pulses
+Allied contact:2 at (7,3): 3 ships, transport, age 3 pulses
+Allied contact:3 at (9,-3): 2 ships, carrier, age 3 pulses
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

@@ -555,6 +555,19 @@ impl World {
                             Ok(())
                         }
                     }
+                    AirGroupOrder::SetTargetPriority { kinds } => {
+                        // Decision 0063: a list names at least one kind, and
+                        // each kind once.
+                        if kinds.is_empty() {
+                            return Err(RejectReason::TargetListEmpty);
+                        }
+                        for (index, kind) in kinds.iter().enumerate() {
+                            if kinds[..index].contains(kind) {
+                                return Err(RejectReason::TargetKindRepeated(*kind));
+                            }
+                        }
+                        Ok(())
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -729,6 +742,10 @@ impl World {
                     AirGroupOrder::SetReach { reach } => {
                         group.reach = *reach;
                         group.reach_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetTargetPriority { kinds } => {
+                        group.target_priority = kinds.clone();
+                        group.target_order = Some(order.id);
                     }
                     AirGroupOrder::SetSearchArc {
                         from_deg,

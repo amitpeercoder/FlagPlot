@@ -4,6 +4,7 @@
 use serde::Serialize;
 use sim_core::fixed::Fixed;
 use sim_core::orders::{AirMission, Mission, Reach};
+use sim_core::refdata::ShipKind;
 use sim_core::state::{AirGroup, Base, SystemState, TaskForce};
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
@@ -93,6 +94,11 @@ pub struct AirGroupLine {
     /// `strike_radius_nm` and the field is left out.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reach_nm: Option<Dec>,
+    /// The kinds of ship the group's strikes go for, in order, given only
+    /// when the list is not the default (every kind in the order of
+    /// importance; decision 0063).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_priority: Option<Vec<&'static str>>,
 }
 
 /// A base in one line.
@@ -198,6 +204,13 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         strike_radius_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.strike_range_nm)),
         search_range_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.search_range_nm)),
         reach_nm: (group.reach == Reach::Extended).then(|| Dec(ctx.view.reach_nm(group))),
+        target_priority: (group.target_priority != ShipKind::ALL).then(|| {
+            group
+                .target_priority
+                .iter()
+                .map(|kind| kind.name())
+                .collect()
+        }),
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),

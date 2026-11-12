@@ -14,7 +14,7 @@ Stage 6a adds the raid itself. Damaged aircraft and repair, operational losses, 
 
 1. **An air group can be given the mission "base strike" with a base as its target.** The order names the base. A group on this mission does not strike ships.
 2. **Both sides know where every base is and which side holds it.** That is the map, not intelligence. Neither side knows anything else about an enemy base: not its aircraft, its supply or its guns.
-3. **A base strike launches in the morning pulse, once a day** *(needs review)*. It launches if it is not dark where the group is, the group can fly at least one aircraft, its type carries a weapon, and the base is within the type's strike radius. It needs no contact and reads no belief. A raid on a fixed target is planned the day before and flown once; a strike on ships answers a sighting and may fly in either daylight pulse.
+3. **A base strike launches in the morning pulse, once a day** *(settled by decision 0063: it launches in the first daylight pulse of the day in which its base is in reach, once a day)*. It launches if it is not dark where the group is, the group can fly at least one aircraft, its type carries a weapon, and the base is within the type's strike radius. It needs no contact and reads no belief. A raid on a fixed target is planned the day before and flown once; a strike on ships answers a sighting and may fly in either daylight pulse.
 
 ### The raid
 
