@@ -143,4 +143,47 @@ The 2nd Destroyer Squadron's diary has a noon position for every day at sea. Tha
 
 ### Not read
 
-About 480 pages of telegram logs in the reinforcement group's and the 4th Destroyer Squadron's volumes; the 2nd Destroyer Squadron's signal-log volumes; pages 17 to 72 of its October action report, which may hold the convoy of 14 to 15 October.
+About 480 pages of telegram logs in the reinforcement group's and the 4th Destroyer Squadron's volumes; the 2nd Destroyer Squadron's signal-log volumes; the 4th Destroyer Squadron's signal pages in the volumes read in the third pass below.
+
+## Third pass (12 November 2026): the runs from the Shortlands to Guadalcanal
+
+**What was read.** Three volumes of the 4th Destroyer Squadron's action reports for 25 September to 9 November 1942 (JACAR C08030113100, C08030113300, C08030113400), found through the archive's catalogue, and the rest of the 2nd Destroyer Squadron's October action report (C08030098300, pages 39 to 72). Rows 130 to 170. All new rows stand `unconfirmed`. Each row's note says whether I read the page myself after the researcher or not.
+
+### The runs, as the logs give them
+
+Times are Tokyo time as printed. Tassafaronga is not a key of `places.csv`, so the Guadalcanal end of each run is named in the row's note and flagged as not located.
+
+| Run | Left | Arrived | Speeds stated | Row |
+| --- | --- | --- | --- | --- |
+| High-speed convoy, Rabaul group, from north of Buka | 13 Oct 0945 | point A, 14 Oct 0400 | 14 kn | 130 |
+| High-speed convoy, the Shortlands group | the Shortlands, 13 Oct 1700 | point A, 14 Oct 0400 | none | 131 |
+| High-speed convoy, six transports, from point A | 14 Oct 0400 | Tassafaronga, 14 Oct 2200 | 14 kn, then 13 kn from 1245 | 132 |
+| Kito Maru and Sado Maru with the escort, withdrawing | off Guadalcanal, 15 Oct 1545 | the Shortlands, 16 Oct 0830 | 16 kn | 134 |
+| Reinforcement run, cruisers and destroyers | the Shortlands, 17 Oct 0215 | Tassafaronga, 17 Oct 2030 | 18 kn from 0350, 26 kn from 0540, 28 kn from 1245 | 135 |
+| The same force returning | Tassafaronga, 17 Oct 2240 | the Shortlands, 18 Oct 0930 | 28 kn | 137 |
+| Second Attack Unit (Akizuki, Yura) | the Shortlands, 24 Oct 1530 | position at 1800 | 18 kn, 19 kn from 1545 | 139 |
+
+**What they show.**
+- **Warships ran the Shortlands to Tassafaronga in about 18 hours out and under 11 hours back.** Outbound the force went north of the direct line and timed its arrival for dark; the return was one stated speed, 28 knots on course 320, by the central route. The return (row 137) is the nearest thing found to a single-speed run between two named places, but the log states the speed once, at the start, and its length is not stated.
+- **The transports made 13 to 14 knots on the way in and 16 knots coming out.** The convoy took 18 hours from point A to the anchorage, under air attack twice.
+- **Row 136 gives two timed positions six hours apart on the run in** (1200 and 1800 on 17 October, printed in the page heading), with a change from 26 to 28 knots at 1245 between them.
+
+### The 2nd Destroyer Squadron, 15 to 30 October
+
+Thirty rows (141 to 170) give the timed speeds of the force the squadron screened: 30 and 28 knots retiring from the bombardment of 15 October, 12 to 14 knots refuelling, 14 to 18 knots cruising and waiting north of the Solomons, 24 knots and more on 26 October. None has a start or end position, so they are speeds over timed stretches, to be read beside the noon-to-noon rows 88 to 102.
+
+The date cells of this action report give the same daily positions as the war diary read in the second pass, for every day from 16 to 29 October. They are not entered a second time. For 30 October the researcher read 10°49.7'N where the diary row has 10°45.7'N; that position was already marked as doubtful.
+
+### Doubts
+
+- **The base is written as code letters** on the 4th Destroyer Squadron's pages (R×E as I read it, R×B as one researcher read it). The page headings name the Shortlands for the same days, and the rows say so.
+- **Printed positions I could not read** are left out, not guessed: the noon positions of the convoy on 13, 14 and 15 October, a position written small beside point A, and the positions of 25 and 26 October in the Second Attack Unit's log.
+- **One reading was wrong and is not used:** a researcher read the air attack of 1605 on 14 October as about 3 aircraft; the page says about 30. Attack sizes are not recorded in these rows.
+- **Row 144's course** was read as 027 by the researcher and as 270 by me. The speed, 14 knots, is clear.
+- **The 2nd Destroyer Squadron rows were read once by a researcher,** except rows 144 and 158. Rows the researcher graded low, and items with no legible time, were left out.
+- **No track chart is attached to the convoy volume,** though its contents page lists one. The charts in the other two volumes (C08030113300 page 26, C08030113400 page 60) print times and courses but no speeds and no grid.
+
+### Not read
+
+The signal pages of the three volumes (about 100 pages), and volumes 1, 2 and 4 of the same file (barge transport, and the lessons of the convoy escort).
+
