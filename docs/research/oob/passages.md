@@ -151,7 +151,7 @@ About 480 pages of telegram logs in the reinforcement group's and the 4th Destro
 
 ### The runs, as the logs give them
 
-Times are Tokyo time as printed. Tassafaronga is not a key of `places.csv`, so the Guadalcanal end of each run is named in the row's note and flagged as not located.
+Times are Tokyo time as printed. Tassafaronga was added to `places.csv` for these rows, with the position GeoNames gives for the point (9.36806 S, 159.86412 E); the logs name the anchorage off it and print no position.
 
 | Run | Left | Arrived | Speeds stated | Row |
 | --- | --- | --- | --- | --- |
@@ -165,6 +165,7 @@ Times are Tokyo time as printed. Tassafaronga is not a key of `places.csv`, so t
 
 **What they show.**
 - **Warships ran the Shortlands to Tassafaronga in about 18 hours out and under 11 hours back.** Outbound the force went north of the direct line and timed its arrival for dark; the return was one stated speed, 28 knots on course 320, by the central route. The return (row 137) is the nearest thing found to a single-speed run between two named places, but the log states the speed once, at the start, and its length is not stated.
+- **The "central route" was the channel between Santa Isabel and the New Georgia islands.** The track chart in the volume (page 26) draws the return that way, passing south of Choiseul, and marks 0310 on the 18th off New Georgia. It labels the two legs 305 and 295, where the log gives 320 at the start. The outward track on the same chart runs north of Choiseul and down the east side of Santa Isabel.
 - **The transports made 13 to 14 knots on the way in and 16 knots coming out.** The convoy took 18 hours from point A to the anchorage, under air attack twice.
 - **Row 136 gives two timed positions six hours apart on the run in** (1200 and 1800 on 17 October, printed in the page heading), with a change from 26 to 28 knots at 1245 between them.
 
