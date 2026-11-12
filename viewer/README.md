@@ -31,7 +31,7 @@ Add `--seed N` for another seed, and `--labels data/map/south_pacific_anchors.cs
 
   then open `http://localhost:8765/viewer/?replay=replays/04a_night_action.json`. If the fetch fails the page says so and the file picker still works.
 
-**View.** The View selector shows the Umpire's truth (as before), or one side's page: its own units exactly, the enemy only as the contacts that side holds, and only the events the engine let that side see (`SideView::events()`, decision 0047), numbered by the side. The export writes them in `side_views` (replay version 2, decision 0051); a version 1 file opens in the Umpire view only.
+**View.** The View selector shows the Umpire's truth (as before), or one side's page: its own units exactly, the enemy only as the contacts that side holds, and only the events the engine let that side see (`SideView::events()`, decision 0047), numbered by the side. The export writes them in `side_views` (replay version 2, decision 0053); a version 1 file opens in the Umpire view only.
 
 Keys: Left and Right step, Space plays and pauses, Escape clears the selection.
 

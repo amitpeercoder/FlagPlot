@@ -1,4 +1,4 @@
-# 0051: The viewer measures, and shows a side's view
+# 0053: The viewer measures, and shows a side's view
 
 Status: settled, an engineering choice for the umpire's tool of decision 0018. No rule of the game changes.
 
