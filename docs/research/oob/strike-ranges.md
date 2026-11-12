@@ -22,7 +22,7 @@ Status: research report for the architect, read on 2026-11-12. Nothing here is s
 | Eastern Solomons, 23 August | Saratoga | 31 dive bombers, 6 torpedo bombers | Not stated | All landed at Henderson Field for the night, "following instructions" |
 | Santa Cruz, 26 October | Hornet, Enterprise | 29, 25 and 19 | "about 210 miles" | Seven torpedo bombers ditched across the three groups, and one missing |
 
-Japanese launch ranges: none found for Eastern Solomons. The Japanese forms read today give launch times and losses but not the distance. Zuikaku's second wave, which found nothing and came back after dark, lost one aircraft for fuel by her own form.
+Japanese launch ranges: one found since, in the vanguard's signal log: the first wave was sent toward the sighting aircraft's estimated position, 153 degrees and about 260 nm from the carriers at the time of the sighting, some fifty minutes before it left (see `japanese-air-records.md`, second pass; one reading, medium confidence). The Japanese forms read today give launch times and losses but not the distance. Zuikaku's second wave, which found nothing and came back after dark, lost one aircraft for fuel by her own form.
 
 ## What the record shows
 
