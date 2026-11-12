@@ -64,3 +64,4 @@ id,key,name,nation,kind
 1060,jp-53cm-torpedo,53 cm (21-inch) torpedo (type not stated by the source),jp,torpedo
 1061,uk-2pdr-pompom-type-unstated,"QF 2-pounder (40/39) pom-pom, mark not stated by the source",uk,aa_gun
 1062,us-90mm-m1-aa,US 90 mm/50 M1 anti-aircraft gun (M1A1 and M2 improvements not told apart),us,aa_gun
+1063,us-6in-47-mk16,US 6in/47 Mark 16,us,gun

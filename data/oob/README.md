@@ -8,6 +8,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - What was looked for and not found: `gaps.csv`
 - Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`. The disputed facts its ships need, for one-pass approval: `savo-island-settlement.md`
 - Eastern Solomons, the same: `docs/research/oob/eastern-solomons.md`. The disputed facts scenario 5 needs, for approval: `eastern-solomons-settlement.md`
+- Cape Esperance (11 to 12 October 1942), the same, with the disputes first: `docs/research/oob/cape-esperance.md`
 - Rabaul against Guadalcanal in the air, 21 August to 17 September 1942, for scenario 6: `docs/research/oob/rabaul-guadalcanal-air.md`
 - Proposals of 2026-11-11 for the architect (cruiser floatplanes, the two aerial torpedoes, Enterprise's 20 mm guns): `docs/research/oob/proposals-2026-11-11.md`
 - The record for step 2 (outcomes in scoring terms, claims against losses, ship repair, base sizes), read on 2026-11-12: `docs/research/oob/step2-record.md`. Base facts are in `place_facts.csv`, **not yet checked by `oob-check`**
