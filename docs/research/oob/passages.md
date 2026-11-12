@@ -186,5 +186,63 @@ The date cells of this action report give the same daily positions as the war di
 
 ### Not read
 
-The signal pages of the three volumes (about 100 pages), and volumes 1, 2 and 4 of the same file (barge transport, and the lessons of the convoy escort).
+The signal pages of the three volumes (about 100 pages), and volumes 1, 2 and 4 of the same file (barge transport, and the lessons of the convoy escort). The fourth pass, below, reads them.
 
+
+## Fourth pass (12 November 2026): the rest of the 4th Destroyer Squadron's report
+
+The third pass left the signal pages of three volumes and all of volumes 1, 2 and 4 unread. Five researchers read them; I checked the pages every row below rests on. Rows 171 to 186 are new, all `unconfirmed`. Most are plans and orders, flagged `planned`: they say where a force meant to go, not where it went.
+
+### Point A has a position
+
+The escort order of 8 October for the high-speed convoy (volume 4, C08030113200) has a route chart on PDF page 56. It prints two positions:
+
+- **Point A, 6°20'S 157°57'E,** where the group from Rabaul and the group from the Shortlands were to join at 0400 on the day of arrival. The order's text (page 17) gives the same figures in small writing.
+- **The next turn, 7°31'S 160°0'E,** reached from A on course 120 over 141 miles.
+
+Rows 130 to 132 (the run as made, from volume 3's log) end and start at "point A" with no position, because volume 3 does not print one. They are not changed: a row is one source's statement. Row 172 is the row that locates A. Whether the convoy was at A at 0400 on 14 October as planned is what the log says (row 132 starts there at 0400), not something the chart proves.
+
+South of the 160°E turn the chart draws the track down past Ramos Island to Guadalcanal (row 174). Volume 3 gives the same approach in words, as bearings and distances from Ramos Island and the summit of Savo Island (row 176), but the researcher and I read its figures differently and it should not be used without a third reading.
+
+### What the "central route" was
+
+The log of the 17 to 18 October run says the squadron went home "by the central route" (row 137), and the spec session asked what that was. Three things now bear on it:
+
+- **The convoy order's chart** (row 175) draws the planned return as a dashed line from Guadalcanal up the channel between Santa Isabel and New Georgia, along the south-west side of Choiseul, past the south-east end of Bougainville and up its east coast, with courses 304, 292, 310, 334 and 321.
+- **The escort's signal of 15 October** (row 177) says it will pass 6 miles west of Savo Island, go north and return by the central route.
+- **The 17 October run went out a different way,** which its order calls the northern detour by the north entrance: from a reef north of Santa Isabel, course 150 for 73 miles and 180 for 75 miles, then 235 to come in west of Savo (row 178). A signal of 23 October in volume 6 switches a sortie to a "southern route".
+
+So the squadron used three names, northern, central and southern, and the central one is the passage up the middle of the Solomons chain. No page read defines any of them in words; the match between the name and the dashed line on the chart is my inference, and the rows say so.
+
+### The barge relay: destroyers towing to Rendova
+
+Volumes 1 and 2 (C08030112900, C08030113000) are not destroyer runs to Guadalcanal. They are the report of a relay that moved supplies in landing barges down a chain of four boat bases (Rendova, Viru, Wickham Anchorage, the Russell Islands) and on to Guadalcanal. Destroyers towed the barges from the Shortlands to the first base. Volume 1's table on PDF page 23 lists each tow with its times (rows 180 to 186).
+
+| Row | Ships | Left | Arrived | What the page says of speed |
+| --- | --- | --- | --- | --- |
+| 180 | Amagiri | 26 Sep 1615 | back 2000 | real speed would not pass 10 kn in the swell |
+| 181 | Amagiri | 27 Sep 1315 | 28 Sep 0300, 2 miles off Rendova | none; one barge lost in a head sea |
+| 182 | Amagiri, Ayanami | 29 Sep 1500 | 30 Sep 0100 | average real speed 14 kn |
+| 183 | Uranami, Shikinami | 30 Sep 1300 | 1 Oct 0100 | none |
+| 184 | Amagiri, Ayanami | 1 Oct 1300 | 1 Oct 2300 | none |
+| 185 | Hatsuyuki | 7 Oct 1255 | 7 Oct 2045 | none |
+| 186 | Hatsuyuki, Amagiri | 7 Oct 2245 (from the base) | 8 Oct 0805 | none |
+
+These are tows, flagged `towing`: a destroyer's speed with barges astern, not its speed alone. The first base has no printed position, so the Rendova end is not located.
+
+Not entered, because each was read once at low resolution: the barges' own runs between the bases, the submarine tows to Kamimbo, a planned 12 knots outbound and 30 knots home for a tow by way of Simbo Island (volume 1, page 56, times unreadable), and the statement that a barge cannot make more than 3 knots in a wind of 6 to 7 metres a second (volume 2, page 38).
+
+### Also on these pages, not entered as rows
+
+- **Convoy speeds in the order** (volume 4, pages 18 and 46): 14 knots as the fast speed while escorting, 12 standard, 9 half, 6 slow. Row 132 has the convoy at 14 and then 13 knots as run.
+- **Entering the anchorage** (volume 4, pages 23, 24 and 52): standard speed 5,000 metres out, half at 2,500, slow at 1,200, stop at 600. Read by the researcher only.
+- **The 26 knots at immediate notice** ordered for the evening of 15 October (volume 3, pages 48 and 49) is a readiness order, not a speed made.
+
+### Doubts and gaps
+
+- **The anchorage code RXE** is taken as the Shortlands on the evidence each row gives; no page read spells it out.
+- **The convoy's noon positions** on volume 3's pages 18, 20 and 22 were tried again at 600 dpi and are still not legible past the degrees. The scan itself is the limit. The researcher's second reading does not support the first reader's 159° for 1800 on 15 October.
+- **The chart of the track as run** (volume 4, page 14) has time labels too small to read at any resolution.
+- **Volume 6 gives positions as a grid code** (for example ケミ837 for Yura at 1300 on 25 October, course 350, 12 knots) with no key on its pages. Those positions stay unlocated. Its sketch chart on page 79 is the planned route of the order of 20 October, by the north-east side of Choiseul and Santa Isabel, with course figures read once.
+- **One reading was wrong and is not used:** a researcher read the arrival in the 14-knot signal as 2100; the page and the table both say 0100.
+- **The Japanese official history** (Senshi Sosho) was tried again; its site still answers with a maintenance notice. The 3rd Destroyer Squadron's runs of August to October stay a gap.
