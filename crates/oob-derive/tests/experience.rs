@@ -674,8 +674,14 @@ fn a_second_source_may_be_a_row_of_the_entity_the_rules_name_and_need_not_be_pre
     // (unconfirmed, low). Not disputed, a different source: it is one.
     let mut files = base();
     files.get_mut("training_facts.csv").unwrap().push_str(
-        &(training(5, "ijn-surface-fleet", "night_training_note", "b", "low", "unconfirmed")
-            + "\n"),
+        &(training(
+            5,
+            "ijn-surface-fleet",
+            "night_training_note",
+            "b",
+            "low",
+            "unconfirmed",
+        ) + "\n"),
     );
     let rules = RULES.replace(
         "kinds = [\"heavy_cruiser\"]",
@@ -687,21 +693,42 @@ fn a_second_source_may_be_a_row_of_the_entity_the_rules_name_and_need_not_be_pre
         .unwrap();
     // 2 + 1 = 3, fixed; the header names both rows.
     assert_eq!(record(&text, "jp1")[1..3], ["3", "fixed"]);
-    assert!(text.contains("second source: training_facts.csv:5."), "{text}");
+    assert!(
+        text.contains("second source: training_facts.csv:5."),
+        "{text}"
+    );
     // The same row without the entity named is of the wrong entity.
-    let rules = RULES.replace("kinds = [\"heavy_cruiser\"]", "kinds = [\"heavy_cruiser\"]\nsecond_source = [5]");
+    let rules = RULES.replace(
+        "kinds = [\"heavy_cruiser\"]",
+        "kinds = [\"heavy_cruiser\"]\nsecond_source = [5]",
+    );
     let problems = derive_with(&["jp1"], "", &rules, &files).expect_err("problems");
-    assert_one(&problems, &["navy jp", "is not a `night_training_note` row of `ijn-cruiser-destroyer-crews`"]);
+    assert_one(
+        &problems,
+        &[
+            "navy jp",
+            "is not a `night_training_note` row of `ijn-cruiser-destroyer-crews`",
+        ],
+    );
 }
 
 #[test]
 fn a_disputed_row_is_no_second_source() {
     let mut files = base();
     files.get_mut("training_facts.csv").unwrap().push_str(
-        &(training(5, "ijn-cruiser-destroyer-crews", "night_training_note", "b", "low", "disputed")
-            + "\n"),
+        &(training(
+            5,
+            "ijn-cruiser-destroyer-crews",
+            "night_training_note",
+            "b",
+            "low",
+            "disputed",
+        ) + "\n"),
     );
-    let rules = RULES.replace("kinds = [\"heavy_cruiser\"]", "kinds = [\"heavy_cruiser\"]\nsecond_source = [5]");
+    let rules = RULES.replace(
+        "kinds = [\"heavy_cruiser\"]",
+        "kinds = [\"heavy_cruiser\"]\nsecond_source = [5]",
+    );
     let problems = derive_with(&["jp1"], "", &rules, &files).expect_err("problems");
     assert_one(&problems, &["navy jp", "not disputed"]);
 }

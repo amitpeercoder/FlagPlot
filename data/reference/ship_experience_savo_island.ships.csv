@@ -7,21 +7,21 @@
 # new_ship: down 1, her commissioned date is later than 1941-08-08.
 # navy_night_first: up 1, the rules file names training_facts rows saying her navy's fleet training put night action first, for her nation and kind of ship.
 # rows: file:id of the rows read to answer a question, "no" answers included. not_read: the ship's night practice and commissioning rows that were not read, with their standing.
-# PROVISIONAL: ships marked `provisional` rest on one statement about their navy and the rules file lists no second source for it (decision 0064, item 5). `--check` passes on this file. A stage that writes these values into scenarios must refuse a file that has a provisional ship.
+# navy_night_first for `jp`: rows training_facts.csv:32; second source: training_facts.csv:87.
 # answer: ca-44-vincennes no_night_practice yes by ship_facts.csv:1016, dated 1940-12..1942-03: Bates: in at least fifteen Atlantic months neither Vincennes nor Quincy held a night target practice or night battle exercise; she left the Atlantic in March 1942 (sf:949).
 # answer: ca-39-quincy no_night_practice yes by ship_facts.csv:1017, dated 1940-12..1942-03: Bates: in at least fifteen Atlantic months neither Vincennes nor Quincy held a night target practice or night battle exercise; she left the Atlantic in March 1942 (sf:950).
 # answer: ca-29-chicago night_practice_recent yes by ship_facts.csv:1021, dated 1942-05..1942-07: Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it.
 # answer: hmas-canberra night_practice_recent yes by ship_facts.csv:1019, dated 1942-05..1942-07: Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it.
 # answer: hmas-australia night_practice_recent yes by ship_facts.csv:1020, dated 1942-05..1942-07: Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942.
 ship,experience,fixed,night_practice_recent,no_night_practice,new_ship,navy_night_first,rows,not_read
-chokai,3,provisional,none,none,none,up,ship_facts.csv:135|ship_facts.csv:136|training_facts.csv:32,ship_facts.csv:1023(disputed)|ship_facts.csv:1032(unconfirmed)
-aoba,3,provisional,none,none,none,up,ship_facts.csv:8|ship_facts.csv:9|training_facts.csv:32,ship_facts.csv:1024(disputed)|ship_facts.csv:1030(disputed)
-kako,3,provisional,none,none,none,up,ship_facts.csv:439|training_facts.csv:32,ship_facts.csv:1025(disputed)|ship_facts.csv:1031(disputed)
-kinugasa,3,provisional,none,none,none,up,ship_facts.csv:455|ship_facts.csv:456|training_facts.csv:32,ship_facts.csv:1026(disputed)
-furutaka,3,provisional,none,none,none,up,ship_facts.csv:387|ship_facts.csv:388|training_facts.csv:32,ship_facts.csv:1027(disputed)
-tenryu,3,provisional,none,none,none,up,ship_facts.csv:551|training_facts.csv:32,ship_facts.csv:1028(disputed)
-yubari,3,provisional,none,none,none,up,ship_facts.csv:572|training_facts.csv:32,ship_facts.csv:1029(disputed)
-yunagi,3,provisional,none,none,none,up,ship_facts.csv:599|training_facts.csv:32,ship_facts.csv:602(alternative)
+chokai,3,fixed,none,none,none,up,ship_facts.csv:135|ship_facts.csv:136|training_facts.csv:32,ship_facts.csv:1023(disputed)|ship_facts.csv:1032(unconfirmed)
+aoba,3,fixed,none,none,none,up,ship_facts.csv:8|ship_facts.csv:9|training_facts.csv:32,ship_facts.csv:1024(disputed)|ship_facts.csv:1030(disputed)
+kako,3,fixed,none,none,none,up,ship_facts.csv:439|training_facts.csv:32,ship_facts.csv:1025(disputed)|ship_facts.csv:1031(disputed)
+kinugasa,3,fixed,none,none,none,up,ship_facts.csv:455|ship_facts.csv:456|training_facts.csv:32,ship_facts.csv:1026(disputed)
+furutaka,3,fixed,none,none,none,up,ship_facts.csv:387|ship_facts.csv:388|training_facts.csv:32,ship_facts.csv:1027(disputed)
+tenryu,3,fixed,none,none,none,up,ship_facts.csv:551|training_facts.csv:32,ship_facts.csv:1028(disputed)
+yubari,3,fixed,none,none,none,up,ship_facts.csv:572|training_facts.csv:32,ship_facts.csv:1029(disputed)
+yunagi,3,fixed,none,none,none,up,ship_facts.csv:599|training_facts.csv:32,ship_facts.csv:602(alternative)
 hmas-canberra,3,fixed,up,none,none,none,ship_facts.csv:608|ship_facts.csv:1019,ship_facts.csv:1022(preferred)|ship_facts.csv:420(alternative)
 hmas-australia,3,fixed,up,none,none,none,ship_facts.csv:416|ship_facts.csv:605|ship_facts.csv:1020,
 ca-29-chicago,3,fixed,up,none,none,none,ship_facts.csv:73|ship_facts.csv:74|ship_facts.csv:1021,

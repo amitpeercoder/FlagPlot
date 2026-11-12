@@ -7,7 +7,7 @@
 # new_ship: down 1, her commissioned date is later than 1941-10-11.
 # navy_night_first: up 1, the rules file names training_facts rows saying her navy's fleet training put night action first, for her nation and kind of ship.
 # rows: file:id of the rows read to answer a question, "no" answers included. not_read: the ship's night practice and commissioning rows that were not read, with their standing.
-# PROVISIONAL: ships marked `provisional` rest on one statement about their navy and the rules file lists no second source for it (decision 0064, item 5). `--check` passes on this file. A stage that writes these values into scenarios must refuse a file that has a provisional ship.
+# navy_night_first for `jp`: rows training_facts.csv:32; second source: training_facts.csv:87.
 # answer: ca-25-salt-lake-city night_practice_recent yes by ship_facts.csv:1033, dated 1942-10-07..1942-10-07: Her deck log of 7 October 1942: general quarters for night firing practice with San Francisco and Boise.
 # answer: ca-38-san-francisco night_practice_recent yes by ship_facts.csv:1036, dated 1942-10-07..1942-10-07: Salt Lake City's deck log of 7 October 1942 names San Francisco in company and firing on a target in the night firing practice.
 # answer: cl-47-boise night_practice_recent yes by ship_facts.csv:1037, dated 1942-10-07..1942-10-07: Salt Lake City's deck log of 7 October 1942 names Boise in company in the night firing practice.
@@ -21,8 +21,8 @@ dd-485-duncan,1,fixed,none,none,down,none,ship_facts.csv:821|ship_facts.csv:822|
 dd-459-laffey,1,fixed,none,none,down,none,ship_facts.csv:833|ship_facts.csv:834|ship_facts.csv:929,ship_facts.csv:1048(preferred)|ship_facts.csv:1049(disputed)|ship_facts.csv:1055(preferred)
 dd-484-buchanan,1,fixed,none,none,down,none,ship_facts.csv:340|ship_facts.csv:341,ship_facts.csv:1046(preferred)|ship_facts.csv:1047(disputed)|ship_facts.csv:1056(preferred)
 dd-488-mccalla,1,fixed,none,none,down,none,ship_facts.csv:845|ship_facts.csv:846|ship_facts.csv:930,ship_facts.csv:1052(preferred)|ship_facts.csv:1057(preferred)
-aoba,3,provisional,none,none,none,up,ship_facts.csv:8|ship_facts.csv:9|training_facts.csv:32,ship_facts.csv:1024(disputed)|ship_facts.csv:1030(disputed)
-furutaka,3,provisional,none,none,none,up,ship_facts.csv:387|ship_facts.csv:388|training_facts.csv:32,ship_facts.csv:1027(disputed)
-kinugasa,3,provisional,none,none,none,up,ship_facts.csv:455|ship_facts.csv:456|training_facts.csv:32,ship_facts.csv:1026(disputed)
-fubuki,3,provisional,none,none,none,up,ship_facts.csv:863|ship_facts.csv:864|training_facts.csv:32,
-hatsuyuki,3,provisional,none,none,none,up,ship_facts.csv:871|ship_facts.csv:872|training_facts.csv:32,
+aoba,3,fixed,none,none,none,up,ship_facts.csv:8|ship_facts.csv:9|training_facts.csv:32,ship_facts.csv:1024(disputed)|ship_facts.csv:1030(disputed)
+furutaka,3,fixed,none,none,none,up,ship_facts.csv:387|ship_facts.csv:388|training_facts.csv:32,ship_facts.csv:1027(disputed)
+kinugasa,3,fixed,none,none,none,up,ship_facts.csv:455|ship_facts.csv:456|training_facts.csv:32,ship_facts.csv:1026(disputed)
+fubuki,3,fixed,none,none,none,up,ship_facts.csv:863|ship_facts.csv:864|training_facts.csv:32,
+hatsuyuki,3,fixed,none,none,none,up,ship_facts.csv:871|ship_facts.csv:872|training_facts.csv:32,
