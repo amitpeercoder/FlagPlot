@@ -1,6 +1,6 @@
 # 0068: A force not at battle readiness fires with part of its guns
 
-Status: needs review. This is a plan for the designer, who asked for it on Nov 12, 2026. Nothing is built, and nothing is built until the plan is approved. The hand calculation is written before any code is delegated, and this record gains an "As built" section when the rule lands.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its six questions. Nothing is built yet. It is built after experience (decision 0064), which changes the same file. The hand calculation is written before any code is delegated, and this record gains an "As built" section when the rule lands.
 
 ## The gap
 
@@ -118,11 +118,13 @@ Scenario 4a with one force at normal readiness is the rule's own scenario, with 
 | Reads | A force's readiness and whether it was alert before the pulse began; the figure `unready_gun_share`; a ship's guns, rate of fire and main battery state, as now |
 | Writes | Nothing new. The shots of a salvo are fewer, and the salvo's breakdown names the factor. If decision 2 needs it, the pulse in which a force was alerted |
 
-## Questions for the designer
+## Answered by the designer
 
-1. **What makes a force ready?** Recommended: battle readiness by order, or alert since before the pulse began (decision 2). The other choice is the order alone: simpler, but then a force that fought all night fires with half its guns at dawn unless its commander remembers to order battle readiness, which is a chore and not a decision.
-2. **A share for the whole fight, or one that rises?** Recommended: for the whole fight (decision 3). The rows show no rise.
-3. **May tuning take the figure below the half that the row states?** Recommended: yes, down to 0.1, with the tuning record saying what the figure then carries (decisions 7 and 8). The other choice fixes it at 0.5 by the row and leaves the rest of the gap open, to be met by a later rule or not at all.
-4. **Torpedoes left as they are?** Recommended: yes (decision 5).
-5. **The daylight fights with stragglers:** look at them after this rule and experience are in, as said above, or plan for them now? Recommended: after.
-6. **Cape Esperance.** That the Japanese there were short of battle stations rests on one row of low confidence, contradicted by another from the same source. The architect will commission research on it before that scenario's readiness is set, as with the second source for experience. Is that enough, or should this rule wait for it? Recommended: do not wait; the rule rests on Savo Island's rows, which are firm, and Cape Esperance is its test, not its ground.
+On Nov 12, 2026, as recommended in each case.
+
+1. **What makes a force ready?** Battle readiness by order, or alert since before the pulse began (decision 2).
+2. **A share for the whole fight, or one that rises?** For the whole fight (decision 3).
+3. **May tuning take the figure below the half that the row states?** Yes, down to 0.1, with the tuning record saying what the figure then carries (decisions 7 and 8).
+4. **Torpedoes left as they are?** Yes (decision 5).
+5. **The daylight fights with stragglers:** looked at after this rule and experience are in.
+6. **Cape Esperance:** the rule does not wait. The architect commissions research on the state of the Japanese ships there before that scenario's readiness is set.
