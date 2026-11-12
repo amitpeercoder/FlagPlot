@@ -22,7 +22,7 @@ If a spec or a rule is ambiguous or looks wrong, stop and ask. Do not guess. A d
 | Touch `data/oob`, `data/reference` or `data/derivation`, or use `references/` | `docs/engineering/data-rules.md`, then `data/oob/README.md` |
 | Build a scenario or its test, brief a developer, or open a pull request | `docs/engineering/roles-and-tests.md` |
 | Run a command and want to know what it does | `docs/commands.md` |
-| Think about what is not planned yet | `docs/design/` (intelligence, materials and economy, storytelling and commands, planning an operation) |
+| Think about what is not planned yet | `docs/design/` (intelligence, materials and economy, storytelling and commands, planning an operation, the plan for ground combat) |
 
 ## Always
 
