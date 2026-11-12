@@ -101,7 +101,9 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Margin** | A side's points less the enemy's | |
 | **Level** | One of three sizes of margin, minor, major and decisive, that the scenario gives | A ship's level of damage |
 | **Outcome** | One of seven: a minor, major or decisive victory or defeat, or a stalemate | |
-| **Result** | The umpire's points, margin and outcome for each side, worked from the final truth. It is given when the game ends | What a side knows of its progress |
+| **Result** | The umpire's points, margin and outcome for each side, worked from the final truth and the event log. It is given when the game ends | What a side knows of its progress |
+| **Cargo landed** | For the objective: the tons a side's ships unloaded at a base less the tons they loaded back there, never below 0 (decision 0067) | Tons unloaded |
+| **Base open** | A base that ends a day with supply above zero and at least one ready aircraft at it. The objective counts the days (decision 0067) | A base's state at the end of the game |
 | **Air group** | One unit of aircraft of one type, at a base or aboard a ship | A raid |
 | **Ready aircraft** | Aircraft of a group that are fit to fly | |
 | **Damaged aircraft** | Aircraft that came back worn and cannot fly until repaired | Aircraft lost |

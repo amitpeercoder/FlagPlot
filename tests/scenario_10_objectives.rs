@@ -451,8 +451,10 @@ fn objectives_change_no_hash_and_no_event() {
     // air group's reach), and bbd586296ddd4b8f until decisions 7 to 10 of
     // 0059 sent the aircraft in the air when a deck is lost elsewhere, and
     // a0dde1048adeb5ec until the hash went to version 5 (decision 0063, an
-    // air group's target list and the day of its last base strike).
-    assert!(baseline.contains("hash b7fbc563ff170b89"));
+    // air group's target list and the day of its last base strike), and
+    // b7fbc563ff170b89 until decision 0067 recorded each base's count at
+    // the end of the day: the hash counts the events of the log.
+    assert!(baseline.contains("hash 9900fe5af427c168"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

@@ -809,7 +809,14 @@ fn each_side_sees_its_own_ships_fuel_cargo_and_nothing_of_the_enemys() {
 #[test]
 fn every_seed_gives_the_same_events() {
     let own = run_to_end(load()).events();
-    assert_eq!(own.len(), 43);
+    // 43 events of the rules, and each base's count at the end of each day
+    // (decision 0067).
+    assert_eq!(
+        own.iter()
+            .filter(|event| !matches!(event.kind, EventKind::BaseAtDayEnd { .. }))
+            .count(),
+        43
+    );
     for seed in [1, 2, 7, 99, 31_337] {
         let run = run_to_end(load().with_seed(seed).expect("a seed can be set"));
         assert_eq!(run.events(), own, "seed {seed}");

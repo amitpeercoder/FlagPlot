@@ -13,7 +13,7 @@
 
 use crate::events::{Cause, DetachReason, EventKind};
 use crate::fixed::Fixed;
-use crate::ids::{EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{BaseId, EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
     AirGroupOrder, AirMission, CargoAction, Order, OrderKind, OrderRequest, Reach, RejectReason,
@@ -66,6 +66,9 @@ enum EndOfDayPhase {
     Logistics,
     AirGroupUpkeep,
     IntelligenceUpdate,
+    /// What each base holds at the end of the day is recorded, last of all
+    /// (decision 0067).
+    BaseCount,
 }
 
 const NIGHT_SEQUENCE: [PulsePhase; 10] = [
@@ -91,11 +94,12 @@ const DAYLIGHT_SEQUENCE: [PulsePhase; 7] = [
     PulsePhase::Loading,
 ];
 
-const END_OF_DAY_SEQUENCE: [EndOfDayPhase; 4] = [
+const END_OF_DAY_SEQUENCE: [EndOfDayPhase; 5] = [
     EndOfDayPhase::GroundCombat,
     EndOfDayPhase::Logistics,
     EndOfDayPhase::AirGroupUpkeep,
     EndOfDayPhase::IntelligenceUpdate,
+    EndOfDayPhase::BaseCount,
 ];
 
 const fn pulse_sequence(pulse: Pulse) -> &'static [PulsePhase] {
@@ -177,8 +181,9 @@ impl World {
         }
     }
 
-    fn run_end_of_day_phase(&mut self, _day: u32, phase: EndOfDayPhase) {
+    fn run_end_of_day_phase(&mut self, day: u32, phase: EndOfDayPhase) {
         match phase {
+            EndOfDayPhase::BaseCount => self.record_bases_at_day_end(day),
             // Not implemented yet. Each arrives with the scenario that needs it.
             // IntelligenceUpdate stays empty on purpose: contacts age at the end
             // of every pulse and reports merge on arrival, which covers "age
@@ -188,6 +193,43 @@ impl World {
             | EndOfDayPhase::Logistics
             | EndOfDayPhase::AirGroupUpkeep
             | EndOfDayPhase::IntelligenceUpdate => {}
+        }
+    }
+
+    /// Records what every base holds at the end of the day: its supply and
+    /// the ready aircraft of the air groups at it (decision 0067). Bases are
+    /// taken in base order. It is recorded for every base, whatever the
+    /// objectives say: no rule reads the objectives. The event belongs to no
+    /// pulse and has no cause. Reads the bases and the air groups; writes no
+    /// state and draws no random number.
+    fn record_bases_at_day_end(&mut self, day: u32) {
+        let counts: Vec<(BaseId, Fixed, u32)> = self
+            .truth
+            .bases
+            .values()
+            .map(|base| {
+                let ready = self
+                    .truth
+                    .air_groups
+                    .values()
+                    .filter(|group| group.location == crate::state::AirGroupLocation::Base(base.id))
+                    .map(|group| group.ready)
+                    .sum();
+                (base.id, base.supply_t, ready)
+            })
+            .collect();
+        for (base, supply_t, aircraft_ready) in counts {
+            self.events.record(
+                day,
+                None,
+                EventKind::BaseAtDayEnd {
+                    base,
+                    supply_t,
+                    aircraft_ready,
+                },
+                Vec::new(),
+                None,
+            );
         }
     }
 
@@ -1249,9 +1291,15 @@ mod tests {
         assert_eq!(ran_dry, 1);
 
         // It stays stopped and burns nothing more.
+        // Only the bases' counts at the end of the day are recorded
+        // (decision 0067).
         let events_before = world.events().len();
         world.resolve_day().expect("day resolves");
-        assert_eq!(world.events().len(), events_before);
+        assert!(world
+            .events()
+            .iter()
+            .skip(events_before)
+            .all(|event| matches!(event.kind, EventKind::BaseAtDayEnd { .. })));
     }
 
     #[test]

@@ -381,12 +381,19 @@ fn the_transit_matches_the_hand_calculation() {
         "D2 18:38"
     );
 
-    // Day 3: no orders, nothing moves, nothing burns, nothing is logged.
+    // Day 3: no orders, nothing moves, nothing burns, and nothing is logged
+    // but the two bases' counts at the end of the day (decision 0067).
     let day3 = scenario
         .next_day()
         .expect("day 3 resolves")
         .expect("day 3 exists");
-    assert_eq!(day3.event_count, 0);
+    assert_eq!(day3.event_count, 2);
+    assert!(scenario
+        .world
+        .events()
+        .from_index(day3.first_event)
+        .iter()
+        .all(|event| matches!(event.kind, EventKind::BaseAtDayEnd { .. })));
     {
         let truth = scenario.world.umpire();
         let task_force = &truth.task_forces[&TASK_FORCE];

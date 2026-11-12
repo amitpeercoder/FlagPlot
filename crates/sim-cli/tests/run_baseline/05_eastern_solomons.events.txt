@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b7fbc563ff170b89  160 events
+day   1  hash 9900fe5af427c168  161 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:2  <- order:2
@@ -164,6 +164,7 @@ day   1  hash b7fbc563ff170b89  160 events
 #158 D1 afternoon air_group:2 had no deck: 16 aircraft landed at base:1, joining air_group:10  <- #144, #86
 #159 D1 afternoon air_group:3 had no deck: 16 aircraft landed at base:1, joining air_group:10  <- #144, #76
 #160 D1 afternoon air_group:18 had no deck: 6 aircraft came down in the sea at (7,-10), beside ships of its own side (chance 0.95), 0 ready left  <- #134, order:26, order:27
+#161 D1 -         base:1 at the end of the day: 0 t of supply, 56 aircraft ready: not open
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

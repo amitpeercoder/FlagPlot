@@ -2,11 +2,11 @@ Scenario 1b: Refuelling, Noumea to Espiritu Santo and back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 376cbca96cbfe24b  11 events
-day   2  hash b4c12d9f69494690  4 events
-day   3  hash e7158b655b59cf6d  12 events
-day   4  hash 5448f937ba8405bd  4 events
-day   5  hash cae3742f70fc2035  2 events
+day   1  hash 75624abb829e768d  13 events
+day   2  hash 8630a2ab2eccc6da  6 events
+day   3  hash fc3a32e1269bf8d7  14 events
+day   4  hash 0f287be315d18b13  6 events
+day   5  hash b17aca457897b895  4 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -19,28 +19,38 @@ day   5  hash cae3742f70fc2035  2 events
 #9 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (8,0) to (8,3)  <- order:1, order:2
 #10 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #9
 #11 D1 afternoon ship:2 burned 12 t, 452 t remaining  <- #9
-#12 D2 night     task_force:1 steamed 10 nm at 16 kn from (8,3) to (8,3)  <- order:1, order:2
-#13 D2 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #12
-#14 D2 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #12
-#15 D2 night     task_force:1 arrived at (8,3) at D2 18:38  <- #12
-#16 D3 -         ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 21.5 t left  <- #15
-#17 D3 -         ship:2 took 21.5 t of fuel at base:2, 472.25 t aboard, base:2 is out of fuel  <- #15
-#18 D3 -         order:3 accepted for task_force:1  <- order:3
-#19 D3 night     task_force:1 steamed 192 nm at 16 kn from (8,3) to (5,0)  <- order:3, order:2
-#20 D3 night     ship:1 burned 48 t, 1952 t remaining  <- #19
-#21 D3 night     ship:2 burned 24 t, 448.25 t remaining  <- #19
-#22 D3 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (3,0)  <- order:3, order:2
-#23 D3 morning   ship:1 burned 24 t, 1928 t remaining  <- #22
-#24 D3 morning   ship:2 burned 12 t, 436.25 t remaining  <- #22
-#25 D3 afternoon task_force:1 steamed 96 nm at 16 kn from (3,0) to (0,0)  <- order:3, order:2
-#26 D3 afternoon ship:1 burned 24 t, 1904 t remaining  <- #25
-#27 D3 afternoon ship:2 burned 12 t, 424.25 t remaining  <- #25
-#28 D4 night     task_force:1 steamed 10 nm at 16 kn from (0,0) to (0,0)  <- order:3, order:2
-#29 D4 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #28
-#30 D4 night     ship:2 burned 1.25 t, 423 t remaining  <- #28
-#31 D4 night     task_force:1 arrived at (0,0) at D4 18:38  <- #28
-#32 D5 -         ship:1 took 98.5 t of fuel at base:1, 2000 t aboard, base:1 has 1.5 t left  <- #31
-#33 D5 -         ship:2 took 1.5 t of fuel at base:1, 424.5 t aboard, base:1 is out of fuel  <- #31
+#12 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#13 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#14 D2 night     task_force:1 steamed 10 nm at 16 kn from (8,3) to (8,3)  <- order:1, order:2
+#15 D2 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #14
+#16 D2 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #14
+#17 D2 night     task_force:1 arrived at (8,3) at D2 18:38  <- #14
+#18 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#19 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#20 D3 -         ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 21.5 t left  <- #17
+#21 D3 -         ship:2 took 21.5 t of fuel at base:2, 472.25 t aboard, base:2 is out of fuel  <- #17
+#22 D3 -         order:3 accepted for task_force:1  <- order:3
+#23 D3 night     task_force:1 steamed 192 nm at 16 kn from (8,3) to (5,0)  <- order:3, order:2
+#24 D3 night     ship:1 burned 48 t, 1952 t remaining  <- #23
+#25 D3 night     ship:2 burned 24 t, 448.25 t remaining  <- #23
+#26 D3 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (3,0)  <- order:3, order:2
+#27 D3 morning   ship:1 burned 24 t, 1928 t remaining  <- #26
+#28 D3 morning   ship:2 burned 12 t, 436.25 t remaining  <- #26
+#29 D3 afternoon task_force:1 steamed 96 nm at 16 kn from (3,0) to (0,0)  <- order:3, order:2
+#30 D3 afternoon ship:1 burned 24 t, 1904 t remaining  <- #29
+#31 D3 afternoon ship:2 burned 12 t, 424.25 t remaining  <- #29
+#32 D3 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#33 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#34 D4 night     task_force:1 steamed 10 nm at 16 kn from (0,0) to (0,0)  <- order:3, order:2
+#35 D4 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #34
+#36 D4 night     ship:2 burned 1.25 t, 423 t remaining  <- #34
+#37 D4 night     task_force:1 arrived at (0,0) at D4 18:38  <- #34
+#38 D4 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#39 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#40 D5 -         ship:1 took 98.5 t of fuel at base:1, 2000 t aboard, base:1 has 1.5 t left  <- #37
+#41 D5 -         ship:2 took 1.5 t of fuel at base:1, 424.5 t aboard, base:1 is out of fuel  <- #37
+#42 D5 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#43 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply

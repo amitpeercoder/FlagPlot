@@ -869,6 +869,15 @@ pub enum EventKind {
         pilots_lost: u32,
         ready: u32,
     },
+    /// What a base held at the end of a day, after the afternoon pulse
+    /// (decision 0067): its supply and the ready aircraft of the air groups
+    /// at it. Recorded for every base on every day, whatever the objectives
+    /// say, and changes no state. `base_open` is counted from it.
+    BaseAtDayEnd {
+        base: BaseId,
+        supply_t: Fixed,
+        aircraft_ready: u32,
+    },
 }
 
 impl EventKind {
@@ -953,7 +962,8 @@ impl EventKind {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
             EventKind::BaseSupplyDestroyed { base, .. }
-            | EventKind::BaseSupplySpent { base, .. } => vec![EntityRef::Base(*base)],
+            | EventKind::BaseSupplySpent { base, .. }
+            | EventKind::BaseAtDayEnd { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::DamagedAircraftDestroyedOnGround {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
@@ -1853,8 +1863,28 @@ impl fmt::Display for EventKind {
                 "{task_force} heard the fight of {by_a} and {by_b}, chance {chance}: {}",
                 if *alarmed { "alarmed" } else { "not alarmed" }
             ),
+            EventKind::BaseAtDayEnd {
+                base,
+                supply_t,
+                aircraft_ready,
+            } => write!(
+                f,
+                "{base} at the end of the day: {supply_t} t of supply, {aircraft_ready} aircraft ready: {}",
+                if base_is_open(*supply_t, *aircraft_ready) {
+                    "open"
+                } else {
+                    "not open"
+                }
+            ),
         }
     }
+}
+
+/// Whether a base is open: supply above zero and at least one ready aircraft
+/// of an air group at it (decisions 0054 and 0067). The one place the test
+/// is written.
+pub fn base_is_open(supply_t: Fixed, aircraft_ready: u32) -> bool {
+    supply_t > Fixed::ZERO && aircraft_ready > 0
 }
 
 /// Ship IDs written as a list, such as `ship:2, ship:4`.

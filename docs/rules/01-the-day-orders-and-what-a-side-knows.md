@@ -106,7 +106,7 @@ The movement phase is one step. In it the straggler pass runs first. Then each f
 
 ### After the pulses
 
-The four end-of-day phases run in this order. All four are empty. [0052]
+The five end-of-day phases run in this order. The first four are empty. [0052, 0067]
 
 | Phase | State |
 | --- | --- |
@@ -114,6 +114,7 @@ The four end-of-day phases run in this order. All four are empty. [0052]
 | Logistics | Empty. Refuelling is done before intake, and base supply is spent inside the air phases. [0045, 0039] |
 | Air group upkeep | Empty. Repair, arrival, replacement, supply and rest run at the start of the night pulse. [0035, 0036, 0038] |
 | Intelligence update | Empty. Contacts age at the end of every pulse, and reports merge when they arrive. [0012] |
+| Base count | For every base, in base order, a `BaseAtDayEnd` event records its supply and the ready aircraft of the air groups at it. It is recorded whatever the objectives say, belongs to no pulse, has no cause and changes no state. `base_open` is counted from it (chapter 6). [0067] |
 
 Then the day closes:
 
@@ -347,7 +348,7 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | Air group lost, air group fatigue, air group stood down, air group returned | Own air group |
 | Strike launched, base strike launched, strike found nothing, escorts sent | Own air group |
 | Aircraft lost, pilots lost | Own air group |
-| Base supply destroyed, base supply spent | Own base |
+| Base supply destroyed, base supply spent, base at day end | Own base |
 | Report received, claim received, contact aged, contact dropped, contact not there | The side that holds the contact or made the report |
 
 **Cut of the enemy's name and nothing else** [0065]

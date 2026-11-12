@@ -1973,6 +1973,29 @@ fn with_no_supply_file_nothing_is_spent_and_the_first_three_days_are_scenario_6a
         let ours: Vec<&Event> = run.events.iter().filter(|e| e.day <= 3).collect();
         assert_eq!(ours.len(), reference.events.len(), "seed {seed}");
         for (a, b) in ours.iter().zip(&reference.events) {
+            // A base's count at the end of the day (decision 0067) says its
+            // supply, and this scenario's bases hold a stock where 6a's hold
+            // none: the same event at the same number, with another figure.
+            if let (
+                EventKind::BaseAtDayEnd {
+                    base: ours_base,
+                    aircraft_ready: ours_ready,
+                    ..
+                },
+                EventKind::BaseAtDayEnd {
+                    base,
+                    aircraft_ready,
+                    ..
+                },
+            ) = (&a.kind, &b.kind)
+            {
+                assert_eq!(
+                    (a.id, a.day, ours_base, ours_ready),
+                    (b.id, b.day, base, aircraft_ready),
+                    "seed {seed}"
+                );
+                continue;
+            }
             assert_eq!(
                 (
                     a.id,

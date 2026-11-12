@@ -188,7 +188,14 @@ fn run_day(scenario: &mut Scenario) -> (u32, Vec<Event>) {
         .expect("the day exists");
     let events = scenario.world.events().from_index(summary.first_event);
     assert_eq!(events.len(), summary.event_count);
-    (summary.day, events.to_vec())
+    // The events of the rules. Each day also ends with each base's count
+    // (decision 0067), which the hand calculation does not list.
+    let events = events
+        .iter()
+        .filter(|event| !matches!(event.kind, EventKind::BaseAtDayEnd { .. }))
+        .cloned()
+        .collect();
+    (summary.day, events)
 }
 
 fn ship_supply(world: &World, ship: ShipId) -> Fixed {
