@@ -1,6 +1,6 @@
 # Design note: the story of the day, and giving commands
 
-Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is built. It says how Flag Plot could tell the player what happened so that they care about it, how the player could give commands, what both rest on that exists, and what is open for the designer. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
+Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is built. The three questions it first left open were answered the same day; the answers are below. It says how Flag Plot could tell the player what happened so that they care about it, how the player could give commands, and what both rest on that exists. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
 
 ## The problem
 
@@ -72,7 +72,7 @@ Pillar 1 says zoom level is command level. It is also the level of the story. Th
 Attachment comes from identity, history, scarcity and consequence. None of it needs flavour text.
 
 - **A service record for every unit.** A ship, an air group or a base has a history derived from the event log: where it has been, what it fought, what it claimed, what it lost. It needs no new state. A ship with a history is one whose loss is felt.
-- **Named people.** Step 1 holds pilots as a count and has no commanders (decision 0052). A named task force commander and a named squadron leader are the cheapest source of attachment, and the natural voice for a dispatch or a staff explanation. This is the one addition to the simulation in this note, and it is open (below).
+- **Named people.** Step 1 holds pilots as a count and has no commanders (decision 0052). A named task force commander and a named squadron leader are the cheapest source of attachment, and the natural voice for a dispatch or a staff explanation. This is the one addition to the simulation in this note. People enter as entities with names that no rule reads yet (answer 1 below).
 - **Logistics as the cause, not as a table.** Nobody cares about tons of supply. They care that Henderson Field flew 12 sorties and not 30 because its fuel was down to two days. Supply belongs in the diary as the reason something failed or was possible, and in a plan as the constraint that shaped it (`docs/design/planning.md`).
 - **Scarcity.** What cannot be replaced matters: carriers, tankers, experienced air groups. The experience rule of step 2 serves this directly.
 - **Conditions.** Weather, light and the moon are out of step 1 (decision 0052). When they arrive they should appear the same way as supply: as causes in an account, and on the map.
@@ -83,7 +83,7 @@ The pillars leave open how the player expresses intent: map gestures, structured
 
 - **The structured intent is the real thing.** An objective with a measure and a date, the forces released to it, and the constraints: "Guadalcanal held at 30 days of supply by 1 October, no carrier risked within reach of Rabaul". It is what the staff plans from, what orders name as their intent, and what a saved game holds.
 - **Map gestures for where, when and who.** Drag a route, draw a patrol or search area, drop a force on an objective. While the player drags, reach rings, passage time and fuel are shown from the engine's own measuring (decision 0049), so what is possible is seen before anything is committed.
-- **Plain language as a way to fill the form.** The player types or says what they want; it is turned into the structured intent and shown back to be confirmed. It never acts on its own.
+- **Plain language as a way to fill the form, after the kill gate** (answer 3 below). The player types or says what they want; it is turned into the structured intent and shown back to be confirmed. It never acts on its own.
 - **Direct control** of a held force uses the same gestures, producing orders and not intent.
 
 ## Tables and detail
@@ -113,10 +113,12 @@ The player who wants every figure has it. The pillars cut modal spreadsheet scre
 1. **Now, at no cost to step 2:** write a diary by hand from a side's events for the Eastern Solomons and for a week of the full slice, to find out what ranking and what threads the events can already support, and what is missing from them.
 2. **With step 3:** threads and plan against actual, since both need the plan as an object.
 3. **With step 4:** signals, the diary and the map gestures in the prototype.
-4. **With step 5:** service records in full, named people if decided, the umpire's history.
+4. **With step 5:** service records in full, named people, plain language, the umpire's history.
 
-## Open questions for the designer
+## Answers from the product managers
 
-1. **Named people.** Do commanders and squadron leaders enter the simulation as entities with names and, later, qualities? Or do names stay labels on units with no rule reading them? Real names are facts and fall under the data rules.
-2. **A fourth question for the kill gate:** "do you read the diary, or skip it?"
-3. **Intent by plain language:** in the step 4 prototype, or left until the structured form has proved itself?
+Agreed by the designer on Nov 12, 2026, on the architect's suggestion. These are directions for the design, not built rules; each becomes a decision record when its part is planned.
+
+1. **People are entities with names, and no rule reads them yet.** A task force commander or a squadron leader has a stable id and a real name taken from sourced fact rows, under the data rules like any other fact. A person can move between units and has a service record of their own. The diary, the dispatches and the staff's explanations use them. No quality or rating is given to a person now; if one is added later it is derived from facts by a written rule, as a ship's figures are, and never invented.
+2. **The kill gate has a fourth question:** "do you read the diary, or skip it?" The step 4 prototype must therefore carry the diary. A diary the player skips means the ranking failed, and it is reworked before step 5. `docs/pillars.md` is changed to say so.
+3. **Plain language comes after the kill gate.** The step 4 prototype gives intent by the structured form and by map gestures only. Plain language needs a language model, which the pillars keep out of the game that runs offline, and it would hide whether the structured form is good on its own.

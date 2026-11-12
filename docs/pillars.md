@@ -78,13 +78,14 @@ Five steps, with a kill gate after step 4. No full database and no real UI befor
 4. **Command-loop prototype.** Minimal UI over steps 1 to 3: set intent, read staff plans, run time, get interrupted, react.
 5. **Full build.** Real UI, complete order of battle, more theatres, the Japanese side.
 
-**Kill gate, after step 4.** Three questions, answered by playing the prototype for a few weeks:
+**Kill gate, after step 4.** Four questions, answered by playing the prototype for a few weeks:
 
 - Is commanding by intent fun, or does it feel like watching a screensaver?
 - Do you trust the staff, or do you keep overriding it?
 - Does the interrupt-driven clock produce tension, or just a stream of pop-ups?
+- Do you read the diary of the day, or skip it? (`docs/design/storytelling.md`)
 
-A "no" on any of them means reworking the command model before step 5. The order-of-battle research for step 5 is the long grind, and it should not start on an unproven design.
+A "no" on any of the first three means reworking the command model before step 5, and a "no" on the fourth means reworking how the day is told. Planning an operation is judged at the gate in a small version (`docs/design/planning.md`). The order-of-battle research for step 5 is the long grind, and it should not start on an unproven design.
 
 ## Architecture decisions
 
