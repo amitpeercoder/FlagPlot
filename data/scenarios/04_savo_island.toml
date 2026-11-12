@@ -71,11 +71,15 @@ q = 2
 r = -5
 mission = "surface_combat"
 
+# Each ship's experience, where it is not 2, is the value in
+# data/reference/ship_experience_savo_island.ships.csv (decision 0064). Read
+# only in a dark fight, by the strengths in surface_combat.toml.
 [[ship]]
 id = 1
 name = "Chokai"
 class = 1003
 side = "japanese"
+experience = 3
 fuel_t = 2529
 task_force = 1
 
@@ -84,6 +88,7 @@ id = 2
 name = "Aoba"
 class = 1000
 side = "japanese"
+experience = 3
 fuel_t = 2040
 task_force = 1
 
@@ -92,6 +97,7 @@ id = 3
 name = "Kako"
 class = 1001
 side = "japanese"
+experience = 3
 fuel_t = 1858
 task_force = 1
 
@@ -100,6 +106,7 @@ id = 4
 name = "Kinugasa"
 class = 1000
 side = "japanese"
+experience = 3
 fuel_t = 2040
 task_force = 1
 
@@ -108,6 +115,7 @@ id = 5
 name = "Furutaka"
 class = 1001
 side = "japanese"
+experience = 3
 fuel_t = 1858
 task_force = 1
 
@@ -116,6 +124,7 @@ id = 6
 name = "Tenryu"
 class = 1004
 side = "japanese"
+experience = 3
 fuel_t = 905
 task_force = 1
 
@@ -124,6 +133,7 @@ id = 7
 name = "Yubari"
 class = 1005
 side = "japanese"
+experience = 3
 fuel_t = 902
 task_force = 1
 
@@ -132,6 +142,7 @@ id = 8
 name = "Yunagi"
 class = 1002
 side = "japanese"
+experience = 3
 fuel_t = 413
 task_force = 1
 
@@ -140,6 +151,7 @@ id = 9
 name = "HMAS Canberra"
 class = 1006
 side = "allied"
+experience = 3
 fuel_t = 3400
 task_force = 2
 
@@ -148,6 +160,7 @@ id = 10
 name = "USS Chicago"
 class = 1012
 side = "allied"
+experience = 3
 fuel_t = 2987
 task_force = 2
 
@@ -156,6 +169,7 @@ id = 11
 name = "USS Patterson"
 class = 1007
 side = "allied"
+experience = 3
 fuel_t = 506
 task_force = 2
 
@@ -164,6 +178,7 @@ id = 12
 name = "USS Bagley"
 class = 1007
 side = "allied"
+experience = 3
 fuel_t = 506
 task_force = 2
 
@@ -172,6 +187,7 @@ id = 13
 name = "USS Vincennes"
 class = 1010
 side = "allied"
+experience = 1
 fuel_t = 1900
 task_force = 3
 
@@ -180,6 +196,7 @@ id = 14
 name = "USS Quincy"
 class = 1011
 side = "allied"
+experience = 1
 fuel_t = 1900
 task_force = 3
 
@@ -196,6 +213,7 @@ id = 16
 name = "USS Helm"
 class = 1007
 side = "allied"
+experience = 3
 fuel_t = 506
 task_force = 3
 

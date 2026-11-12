@@ -205,6 +205,10 @@ pub struct ShipDetail {
     pub gun_rounds: Dec,
     pub torpedoes_ready: bool,
     pub systems: SystemStates,
+    /// The crew's experience, 0 to 4, shown only when it is not the standard
+    /// 2 (decision 0064, 12). Only the side's own ships are asked about.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub experience: Option<u8>,
     /// Whole miles at cruising speed on the fuel aboard.
     pub range_nm: Option<u32>,
     pub air_groups: Vec<Handle>,
@@ -219,6 +223,15 @@ pub struct ShipLine {
     pub fuel_t: Dec,
     pub flotation_damage: Dec,
     pub fire_damage: Dec,
+    /// As in [`ShipDetail`]: shown only when it is not 2.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub experience: Option<u8>,
+}
+
+/// A ship's experience as the side's own view shows it: nothing when it is
+/// the standard value (decision 0064, 12).
+fn shown_experience(ship: &sim_core::state::Ship) -> Option<u8> {
+    (ship.experience != sim_core::state::Ship::DEFAULT_EXPERIENCE).then_some(ship.experience)
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -337,6 +350,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                 gun_rounds: Dec(ship.gun_rounds),
                 torpedoes_ready: ship.torpedoes_ready,
                 systems: systems(&ship.systems),
+                experience: shown_experience(ship),
                 range_nm: cruise_range_nm(view, ship),
                 air_groups: ctx
                     .groups
@@ -373,6 +387,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                         fuel_t: Dec(s.fuel_t),
                         flotation_damage: Dec(s.flotation_damage),
                         fire_damage: Dec(s.fire_damage),
+                        experience: shown_experience(s),
                     })
                     .collect(),
             }))

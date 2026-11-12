@@ -748,6 +748,9 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             "main_battery_factor",
             "torpedo_mount_factor",
             "fire_control_factor",
+            // The firing ship's own experience (decision 0064, 12). The
+            // target's side is given no breakdown at all.
+            "experience_factor",
         ],
         SideEventKind::AirAttack { .. } | SideEventKind::BaseAttacked { .. } => &["aircraft"],
         SideEventKind::SearchAttempt { .. } => &["aircraft", "sweep_width_nm", "arc_deg"],
@@ -2360,6 +2363,52 @@ mod tests {
                 result: Some(fx(1)),
             })
         );
+    }
+
+    #[test]
+    fn the_firers_side_keeps_its_experience_factor_and_the_targets_side_sees_no_breakdown() {
+        // Decision 0064, 12: the factor is the firer's own, so its side keeps
+        // it with the rest of its own factors; the side fired on is given a
+        // `SalvoAgainst` with no breakdown at all.
+        let factor = |name, n| Factor { name, value: fx(n) };
+        let mut events = log(vec![EventKind::Salvo {
+            round: 1,
+            firer: ship(1),
+            target: ship(2),
+            weapon: Weapon::Gun,
+            shots: fx(120),
+            chance: Fixed::from_ratio(1, 20),
+            expected: fx(6),
+            hits: 5,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("guns", 8),
+                factor("base_chance", 1),
+                factor("fire_control_factor", 1),
+                factor("experience_factor", 2),
+            ],
+            result: fx(6),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        let names: Vec<&str> = shown[0]
+            .breakdown
+            .as_ref()
+            .expect("a breakdown")
+            .factors
+            .iter()
+            .map(|f| f.name)
+            .collect();
+        assert_eq!(
+            names,
+            vec!["guns", "fire_control_factor", "experience_factor"]
+        );
+        let against = project(Side::Japanese, &events, &owners(false));
+        assert!(matches!(
+            against[0].kind,
+            SideEventKind::SalvoAgainst { .. }
+        ));
+        assert_eq!(against[0].breakdown, None);
     }
 
     // ---- the round rule of decision 5 ----

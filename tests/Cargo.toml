@@ -154,6 +154,14 @@ name = "scenario_13b_afternoon_base_strike"
 path = "scenario_13b_afternoon_base_strike.rs"
 
 [[test]]
+name = "scenario_04_experience_values"
+path = "scenario_04_experience_values.rs"
+
+[[test]]
+name = "scenario_14a_experience"
+path = "scenario_14a_experience.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 
