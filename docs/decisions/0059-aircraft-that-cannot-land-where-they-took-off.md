@@ -1,6 +1,6 @@
 # 0059: Aircraft that cannot land where they took off
 
-Status: confirmed. The designer approved the plan on Nov 12, 2026. The figures are placeholders set by the architect, to be set from the record in step 2. It is built in three stages; this record is written before the first and gains an "As built" section with each.
+Status: confirmed. The designer approved the plan on Nov 12, 2026. The figures are placeholders set by the architect, to be set from the record in step 2. It is built in stages (1, 1b, 2 and 3); this record is written before the first and gains an "As built" section with each.
 
 ## The gap
 
@@ -33,7 +33,12 @@ The record of what became of such aircraft and their crews is in `docs/research/
    | No deck, beside ships of its own side (stage 2) | `crew_recovered_beside_own_force` |
    | No deck, with no ship of its own side in the hex (stage 2) | `crew_recovered_open_sea` |
 
-   A crew not recovered is a pilot lost. An aircraft shot down over the enemy loses its pilot as now, and one shot down on patrol over its own hex keeps it (decision 0038).
+   A crew not recovered is a pilot lost. An aircraft shot down over the enemy loses its pilot as now (decision 0038).
+
+### The pilot of a patrol shot down over its own hex (stage 1b)
+
+6a. **A fighter shot down on patrol over its own hex no longer always keeps its pilot.** Decision 0038 saved every such pilot. The record of the four weeks over Guadalcanal has 9 to 22 American pilots lost, and the rules gave none. Where pilots are counted, each aircraft a patrol loses over its own hex draws for its pilot: over a base of its side, recovered with chance `crew_recovered_over_own_base`; over ships of its side at sea, with `crew_recovered_beside_own_force`, the figure of decision 6. The designer agreed this addition on Nov 12, 2026.
+6b. **It is its own stage,** after stage 1, because it changes results that stage 1 does not: every scenario that counts pilots and loses patrol aircraft (the pilots scenario, the four weeks over Guadalcanal, the full slice, the soak) loses pilots it kept before, and its hand calculation of pilots is redone.
 
 ### No deck (stage 2)
 
@@ -48,7 +53,7 @@ The record of what became of such aircraft and their crews is in `docs/research/
 
 ## Placeholder figures
 
-`extended_reach_share = "0.25"`, `ditch_chance_per_radius_beyond = "2"`, `crew_recovered_short_of_home = "0.7"`, `crew_recovered_beside_own_force = "0.95"`, `crew_recovered_open_sea = "0.5"`. The record behind the last three is 19 crews of 19 recovered beside their own force and 6 to 9 of 13 to 16 in open sea; the first two have examples and no rates.
+`extended_reach_share = "0.25"`, `ditch_chance_per_radius_beyond = "2"`, `crew_recovered_short_of_home = "0.7"`, `crew_recovered_beside_own_force = "0.95"`, `crew_recovered_open_sea = "0.5"`, `crew_recovered_over_own_base = "0.6"`. The record behind the last three is 19 crews of 19 recovered beside their own force and 6 to 9 of 13 to 16 in open sea; the first two have examples and no rates. For a pilot over his own base: of 23 American pilots with a stated fate 12 were recovered, a sample that favours those who lived to be written of, and a broader figure not yet read at its source has two in three surviving.
 
 ## Why
 
@@ -70,10 +75,11 @@ The record of what became of such aircraft and their crews is in `docs/research/
 - A group's aircraft can come to be based somewhere else, and a group can be formed in the middle of a game. Both are new. A new group's number depends on how many groups exist, as a split-off task force's does (the leak decision 0047 records).
 - One more field of state for an air group, so the hash version rises and every golden file's hashes are remade.
 - When stage 2 lands, the Eastern Solomons and the full slice change, and their hand calculations with them.
+- Stage 1b changes the pilots lost in every scenario that counts pilots and loses patrol aircraft, and their hand calculations.
 
 ## Rule card
 
 | | |
 | --- | --- |
-| Reads | An air group's reach, its type's radius and the distance of its sortie; whether its ship is afloat and her flight deck's state; the carriers and bases of its side at and near its hex, and their room; the five figures |
+| Reads | An air group's reach, its type's radius and the distance of its sortie; whether its ship is afloat and her flight deck's state; the carriers and bases of its side at and near its hex, and their room; whether a patrol's hex holds a base or ships of its side; the six figures |
 | Writes | The group's ready aircraft and pilots; the aircraft and pilots of the group they join, or a new group; a ditching event |
