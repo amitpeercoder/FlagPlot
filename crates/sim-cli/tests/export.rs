@@ -166,6 +166,7 @@ fn the_top_level_keys_come_in_the_documented_order() {
         "format",
         "version",
         "scenario",
+        "inputs",
         "map",
         "directions",
         "labels",

@@ -29,7 +29,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
        sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N]
        sim-cli events <scenario.toml | game.json> --why EVENT [--seed N]
        sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
-       sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]
+       sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
                      [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli mcp <scenario.toml> --seat allied|japanese
