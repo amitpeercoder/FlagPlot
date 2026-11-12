@@ -3,6 +3,7 @@
 
 use serde::Serialize;
 use sim_core::fixed::Fixed;
+use sim_core::ids::EntityRef;
 use sim_core::orders::{AirMission, Mission, Reach};
 use sim_core::refdata::ShipKind;
 use sim_core::state::{AirGroup, Base, SystemState, TaskForce};
@@ -99,6 +100,22 @@ pub struct AirGroupLine {
     /// importance; decision 0063).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target_priority: Option<Vec<&'static str>>,
+    /// The contact the group would launch a strike at if the strike decision
+    /// were made now (decision 6 of 0063): `SideView::strike_choice`, the
+    /// function the decision itself calls. Left out for a group that is not
+    /// on naval strike, has no ready aircraft, or would launch at nothing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub would_strike: Option<WouldStrike>,
+}
+
+/// The contact a naval strike group would launch at now.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct WouldStrike {
+    pub contact: Handle,
+    /// The kind the contact is taken for.
+    pub taken_for: &'static str,
+    /// The contact's air distance from the group, in whole miles.
+    pub distance_nm: u32,
 }
 
 /// A base in one line.
@@ -211,6 +228,16 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
                 .map(|kind| kind.name())
                 .collect()
         }),
+        would_strike: ctx
+            .view
+            .strike_choice(group)
+            .filter(|_| group.ready > 0)
+            .map(|choice| WouldStrike {
+                contact: ctx.entity(EntityRef::Contact(choice.contact)),
+                taken_for: choice.kind.name(),
+                distance_nm: u32::try_from(choice.distance_nm.trunc())
+                    .expect("an air distance is a whole number of miles"),
+            }),
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),

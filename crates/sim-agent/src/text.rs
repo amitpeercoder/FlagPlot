@@ -527,6 +527,14 @@ impl Briefing {
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));
             }
+            if let Some(w) = &g.would_strike {
+                s.push_str(&format!(
+                    ", would strike {} now ({}, {} miles)",
+                    w.contact.text(),
+                    w.taken_for,
+                    w.distance_nm
+                ));
+            }
             if rules.fatigue {
                 if let Some(t) = g.rest_above {
                     s.push_str(&format!(", stands down above {}", t.0));

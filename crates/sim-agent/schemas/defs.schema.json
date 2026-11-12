@@ -328,6 +328,17 @@
           "description": "Given only for a group whose target list is not the default (set_target_priority): the kinds of ship its strikes go for, in order. A contact of a kind not on the list is never launched at. Left out where the list is every kind in the order carrier, battleship, cruiser, destroyer, transport, auxiliary.",
           "type": "array",
           "items": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] }
+        },
+        "would_strike": {
+          "description": "Given only for a group on naval_strike with ready aircraft that would launch now: the contact the staff would send it at if the strike decision were made at this moment, by the rule the decision uses (a contact reported in this pulse or the one before, within the group's reach, of a kind on its target list; the kind first on the list, then the nearest). The decision is made in each daylight pulse on the contacts held then, so a contact that is not sighted again may be too old by the morning. Left out when the group would launch at nothing.",
+          "type": "object",
+          "required": ["contact", "taken_for", "distance_nm"],
+          "additionalProperties": false,
+          "properties": {
+            "contact": { "$ref": "#/$defs/handle" },
+            "taken_for": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] },
+            "distance_nm": { "type": "integer" }
+          }
         }
       }
     },
