@@ -60,5 +60,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0050 | Playing a side: seats, `issue_orders` and `end_day`, saved orders as handed in, the transcript, and `sim-cli serve` | Confirmed |
 | 0051 | The MCP server and scenario 9: `sim-cli mcp`, `sim-cli play`, a game as a file of requests, and a model's two recorded games | Confirmed |
 | 0052 | What step 1 leaves out: ground combat, land units, shore bombardment and base orders deferred; pilots as a count and weapons as figures recorded as choices | Confirmed |
+| 0054 | Objectives and results: a mission and counted objectives for each side, points, a margin and a level from decisive victory to decisive defeat; no rule reads them | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.
