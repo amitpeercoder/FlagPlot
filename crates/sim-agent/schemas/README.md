@@ -121,6 +121,11 @@ The verdict is a forecast: an order queued can be refused when the day begins
 (for instance a load after a route order, which finds the force under way) and
 the next briefing's `orders.refused` says so.
 
+The answer also counts the call: `queued_in_call`, `refused_in_call` and a
+`summary` sentence say how many orders of this call were queued and how many
+refused, and that a refused order does not stop the others; `queued` is the
+whole queue for the coming day, all calls together.
+
 ### Time
 
 `end_day` says the seat has finished. When every seat held by a player has, the
@@ -149,3 +154,32 @@ not exist is still `not_known`, so the two cases are deliberately told apart.
 No supply, fuel, guns, repairs or aircraft of an enemy base appear anywhere;
 `SideView::enemy_bases` returns a `PublicBase`, a struct with no field for them.
 A base strike is therefore judged by facts the side can list.
+
+## Changes after the first models played (decision 0051, as built)
+
+Two models played scenarios 5 and 7 alone and found gaps in what is told. None
+changes a rule, a result or a hash.
+
+- The briefing's heading has `last_day`, the last day of the game, and the text
+  says `Day: 2 of 5` (`Day: 6 (the game is over: day 5 was the last)` after it).
+  A view does not hold the length of the game, so the session passes it to
+  `briefing_for_game`; `briefing` leaves it out (`null`).
+- A force line has `movement` (`normal`, `slowed` or `cannot_move`) and
+  `propulsion_damaged` (the ships afloat with propulsion `degraded` or `out`).
+  The briefing's warnings have a sixth part, `task_force_propulsion`, naming the
+  force, the effect and the ships. A ship with propulsion out has no speed and
+  the force steams at its slowest ship's speed, so one stops the whole force
+  whatever its status says.
+- `pilots: null` on an air group means the scenario does not count its pilots:
+  no limit applies. The text says "pilots not counted (no pilot limit)".
+- `port_size` and `airfield_size` of a base are the map's, 0 where it has none.
+  No rule reads the airfield size; the port size sets only how fast cargo is
+  worked.
+- The text calls an enemy unit in a raid, an attack or a gun's target "enemy".
+  The number is the log's and nothing else is known of it (decision 0047, 8);
+  `get_entity` says "not known" for it as for every enemy unit.
+- An arrival "due day N" joins its group in the night pulse that begins day N;
+  the text says so.
+- `set_search_arc` and `set_air_mission` carry their rules in the field
+  descriptions of `order.schema.json`, which the MCP server's input schema
+  repeats.

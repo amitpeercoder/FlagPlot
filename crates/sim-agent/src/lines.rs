@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 use sim_core::orders::AirMission;
-use sim_core::state::{AirGroup, Base, TaskForce};
+use sim_core::state::{AirGroup, Base, SystemState, TaskForce};
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::words;
@@ -37,6 +37,22 @@ pub struct ForceLine {
     pub ships_afloat: u32,
     /// The ship afloat with the least fuel (the lowest number if two tie).
     pub least_fuelled: Option<FuelLine>,
+    /// `normal`, `slowed` or `cannot_move`. A force steams at the speed of
+    /// its slowest ship, and a ship whose propulsion is out has no speed, so
+    /// one such ship stops the whole force whatever its route and status
+    /// say; a ship with propulsion degraded slows it.
+    pub movement: &'static str,
+    /// The ships afloat whose propulsion is not working, with the state each
+    /// is in.
+    pub propulsion_damaged: Vec<PropulsionLine>,
+}
+
+/// A ship afloat whose propulsion is not working.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct PropulsionLine {
+    pub ship: Handle,
+    /// `degraded` or `out`.
+    pub propulsion: &'static str,
 }
 
 /// An air group in one line.
@@ -104,6 +120,24 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         .get(force.route.next_index)
         .and_then(|_| force.route.waypoints.last())
         .map(|hex| ctx.place(*hex));
+    let propulsion_damaged: Vec<PropulsionLine> = afloat
+        .iter()
+        .filter(|s| s.systems.propulsion != SystemState::Working)
+        .map(|s| PropulsionLine {
+            ship: ctx.ship(s.id),
+            propulsion: words::system_state(s.systems.propulsion),
+        })
+        .collect();
+    let movement = if afloat
+        .iter()
+        .any(|s| s.systems.propulsion == SystemState::Out)
+    {
+        "cannot_move"
+    } else if propulsion_damaged.is_empty() {
+        "normal"
+    } else {
+        "slowed"
+    };
     ForceLine {
         task_force: ctx.force(force.id),
         place: ctx.place(force.position()),
@@ -116,6 +150,8 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         fatigue: Dec(force.fatigue),
         ships_afloat: u32::try_from(afloat.len()).expect("a force has few ships"),
         least_fuelled: least,
+        movement,
+        propulsion_damaged,
     }
 }
 

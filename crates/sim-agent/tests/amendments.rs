@@ -110,7 +110,7 @@ fn own_fire_lists_the_fighters_and_the_guns() {
     );
     assert!(
         text.contains(
-            "Anti-aircraft fire: base:2 \"Placeholder airfield B\" at the raid of air_group:1, 20 shots [event "
+            "Anti-aircraft fire: base:2 \"Placeholder airfield B\" at the raid of enemy air_group:1, 20 shots [event "
         ),
         "{text}"
     );
@@ -182,7 +182,7 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
         "{text}"
     );
     assert!(
-        text.contains("- Attack on ship:1 \"USS Enterprise\" by air_group:12: 12 aircraft"),
+        text.contains("- Attack on ship:1 \"USS Enterprise\" by enemy air_group:12: 12 aircraft"),
         "{text}"
     );
     assert!(!text.contains("16 shots"));
@@ -195,7 +195,7 @@ fn aircraft_are_counted_as_aircraft_and_guns_as_shots() {
         }
     });
     assert!(
-        day3.contains("by air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
+        day3.contains("by enemy air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing"),
         "{day3}"
     );
 }
