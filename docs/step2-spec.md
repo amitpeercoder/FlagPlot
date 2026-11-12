@@ -39,7 +39,7 @@ From `docs/step2-opening-list.md`, which the build session keeps, and the decisi
 - The losses of the four weeks over Guadalcanal do not have the shape of the record (decision 0042).
 - Claims overstate less than the record does: about 2.5 to 3 aircraft were claimed for each lost, and 14 ships for 4 at Savo Island.
 - The Japanese search at the Eastern Solomons is a placeholder arc. The real search orders are now in the facts.
-- A force in the game holds its ordered speed on a straight course. In the record a ship's speed made good is a half to three quarters of the speed a source states for it: ships zigzagged, waited, slowed for landfall and towed (`docs/research/oob/passages.md`). No rule covers this and none is yet proposed. So passages are reported and not judged (`data/validation/passages.toml`).
+- A force in the game holds its ordered speed on a straight course. In the record a ship's speed made good is a half to three quarters of the speed a source states for it: ships zigzagged, waited, slowed for landfall and towed (`docs/research/oob/passages.md`). No rule covers this. The designer has put it aside for now (see "Decided by the designer", 8). So passages are reported and not judged (`data/validation/passages.toml`).
 
 ## Measures
 
@@ -157,3 +157,4 @@ On Nov 12, 2026, on the architect's recommendation in each case.
 5. **Order of the rule work.** Strike target priority as an order, and reach beyond the radius, are built before the air figures are tuned.
 6. **Ditching.** Aircraft lost for want of fuel or a deck join the rule work, proposed as the price of reach beyond the radius.
 7. **Experience.** It is in step 2 and is built before Savo Island is tuned, on the condition that its values come from facts and are fixed before tuning; only the strength of its effect is tuned.
+8. **Speed made good.** Noted and not in step 2. None of the three battles turns on how fast a ship in transit travels. It is taken up when convoys and supply are compared with the record; the simplest answer may be a cruising speed for routine movement below a ship's stated speed, not a new mechanism.
