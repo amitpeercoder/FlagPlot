@@ -328,7 +328,14 @@ fn what_each_side_knows_at_the_end_is_nothing_of_the_enemys_losses() {
             assert_eq!(k.count, Fixed::ZERO);
             assert_eq!(k.points, None);
         }
-        assert!(world.side_view(side).claims().is_empty());
+        // Since decision 0055 each side has claims from the air, of aircraft
+        // shot down only: none of ships.
+        let view = world.side_view(side);
+        assert!(!view.claims().is_empty());
+        assert!(view
+            .claims()
+            .iter()
+            .all(|c| c.from_air && c.claimed_sunk == 0 && c.claimed_hits == 0));
     }
 }
 
@@ -386,7 +393,9 @@ fn objectives_change_no_hash_and_no_event() {
     )
     .expect("the baseline reads");
     assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
-    assert!(baseline.contains("hash a5f3f2bbd3931d4b"));
+    // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
+    // 0055 put the claims from the air into belief, and so into the hash.
+    assert!(baseline.contains("hash 5807ed482aa6da78"));
 }
 
 /// The known count of each objective is never above the true count, for both

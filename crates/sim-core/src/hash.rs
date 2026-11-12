@@ -11,6 +11,7 @@
 
 use crate::fixed::Fixed;
 use crate::orders::{AirMission, Mission, SpeedSetting};
+use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState};
 use crate::world::World;
 
@@ -38,6 +39,8 @@ const PILOTS_TAG: u8 = 0xF7;
 const FORCE_FATIGUE_TAG: u8 = 0xF8;
 /// Tag of the scenario's arrivals (decision 0041).
 const ARRIVALS_TAG: u8 = 0xF9;
+/// Tag of the air figures of a claim (decision 0055). See `hash_world`.
+const CLAIM_EXTRA_TAG: u8 = 0xFC;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01B3;
@@ -411,6 +414,25 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u64(claim.pulse.code());
             h.u32(claim.claimed_sunk);
             h.u32(claim.received_event.raw());
+        }
+        // The air claims of decision 0055 follow the claims, each tagged with
+        // its place in the list. A claim of the old form (ships sunk only)
+        // writes nothing here and hashes as it did before.
+        for (index, claim) in belief.claims().iter().enumerate() {
+            if claim.from_air
+                || claim.claimed_hits != 0
+                || claim.claimed_kind.is_some()
+                || claim.claimed_shot_down != 0
+                || claim.claimed_on_ground != 0
+            {
+                h.u8(CLAIM_EXTRA_TAG);
+                h.count(index);
+                h.u32(claim.claimed_hits);
+                h.u8(claim.claimed_kind.map_or(0, ShipKind::code));
+                h.u32(claim.claimed_shot_down);
+                h.u32(claim.claimed_on_ground);
+                h.u8(u8::from(claim.from_air));
+            }
         }
     }
 

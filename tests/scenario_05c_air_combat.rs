@@ -320,7 +320,21 @@ fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
     Run {
         seed,
-        events: run.world.events().iter().cloned().collect(),
+        // The claims from the air (decision 0055) are not part of what this
+        // scenario works out: they come after each raid is resolved and are
+        // asserted in scenario_11_claims.rs.
+        events: run
+            .world
+            .events()
+            .iter()
+            .filter(|e| {
+                !matches!(
+                    e.kind,
+                    sim_core::events::EventKind::ClaimReceived { from_air: true, .. }
+                )
+            })
+            .cloned()
+            .collect(),
         hashes: run.world.day_hashes().to_vec(),
         ships: truth
             .ships

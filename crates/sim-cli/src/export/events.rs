@@ -816,12 +816,32 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
             side,
             hex,
             claimed_sunk,
-        } => (
-            "claim_received",
-            d.text("side", names::side(*side))
+            claimed_hits,
+            claimed_kind,
+            claimed_shot_down,
+            claimed_on_ground,
+            from_air,
+        } => {
+            let d = d
+                .text("side", names::side(*side))
                 .hex("hex", *hex)
-                .int("claimed_sunk", *claimed_sunk),
-        ),
+                .int("claimed_sunk", *claimed_sunk);
+            // A claim from the air (decision 0055) adds its own figures; a
+            // surface fight's claim exports as it always did.
+            let d = if *from_air {
+                let d = d
+                    .int("claimed_hits", *claimed_hits)
+                    .int("claimed_shot_down", *claimed_shot_down)
+                    .int("claimed_on_ground", *claimed_on_ground);
+                match claimed_kind {
+                    Some(kind) => d.text("claimed_kind", kind.name()),
+                    None => d,
+                }
+            } else {
+                d
+            };
+            ("claim_received", d)
+        }
         EventKind::SystemHit {
             round,
             ship,

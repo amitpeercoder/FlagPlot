@@ -23,18 +23,18 @@ CONTACTS
 ACTION YESTERDAY
 - Fights at sea: none
 - Salvoes fired at sea: none
-- Patrol fire: air_group:3 "Placeholder defending fighters" at the escorts of air_group:2, 6 shots [event 13]
-- Patrol fire: air_group:3 "Placeholder defending fighters" at the bombers of air_group:1, 3 shots [event 14]
-- Anti-aircraft fire: base:2 "Placeholder airfield B" at the raid of enemy air_group:1, 20 shots [event 15]
+- Patrol fire: air_group:3 "Placeholder defending fighters" at the escorts of air_group:2, 6 shots [event 14]
+- Patrol fire: air_group:3 "Placeholder defending fighters" at the bombers of air_group:1, 3 shots [event 15]
+- Anti-aircraft fire: base:2 "Placeholder airfield B" at the raid of enemy air_group:1, 20 shots [event 16]
 - Strikes and attacks flown: none
-- Raid on base:2 "Placeholder airfield B" by enemy air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing [event 17]
+- Raid on base:2 "Placeholder airfield B" by enemy air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing [event 18]
 - Attacks on ships: none
 
 LOSSES YESTERDAY
 - Ships sunk: none
 - Ships damaged: none
-- Aircraft lost: air_group:3 "Placeholder defending fighters": 2 shot down [event 16]
-- Aircraft lost: air_group:4 "Placeholder resting bombers": 2 destroyed on the ground [event 18]
+- Aircraft lost: air_group:3 "Placeholder defending fighters": 2 shot down [event 17]
+- Aircraft lost: air_group:4 "Placeholder resting bombers": 2 destroyed on the ground [event 19]
 - Claims of the enemy: none
 
 TASK FORCES

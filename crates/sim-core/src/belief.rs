@@ -57,8 +57,13 @@ pub struct SightingReport {
     pub received_event: EventId,
 }
 
-/// What a side believes came of a fight: how many enemy ships it believes
-/// sank. Real damage goes into truth, and the two can differ.
+/// What a side believes came of a fight or a raid: how many enemy ships it
+/// believes sank and, since decision 0055, how many hits it believes it
+/// scored, what kind of ship it believes it attacked, how many aircraft it
+/// believes it shot down and how many it believes it destroyed on the ground.
+/// Real damage goes into truth, and the two can differ. Each count is zero
+/// when the claim is not about it. A claim holds no identity of an enemy
+/// unit.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BattleClaim {
     /// The hex of the fight.
@@ -67,8 +72,37 @@ pub struct BattleClaim {
     pub day: u32,
     pub pulse: Pulse,
     pub claimed_sunk: u32,
+    /// Hits believed scored on ships (decision 0055, 4).
+    pub claimed_hits: u32,
+    /// The kind of ship the attackers believed they attacked: the kind the
+    /// contact was taken for when the strike was launched (decision 0055,
+    /// 6). `None` for a surface fight and for a raid on a base.
+    pub claimed_kind: Option<ShipKind>,
+    /// Enemy aircraft believed shot down (decision 0055, 3).
+    pub claimed_shot_down: u32,
+    /// Enemy aircraft believed destroyed on the ground (decision 0055, 7).
+    pub claimed_on_ground: u32,
+    /// True for the claim of a raid, which tells a claim of nothing from a
+    /// surface fight's (decision 0055, 1).
+    pub from_air: bool,
     /// The event that records this claim's arrival.
     pub received_event: EventId,
+}
+
+impl BattleClaim {
+    /// The claim as the log and the listings word it, for `side`.
+    pub fn text(&self, side: Side) -> String {
+        crate::events::claim_text(
+            side,
+            self.hex,
+            self.claimed_sunk,
+            self.claimed_hits,
+            self.claimed_kind,
+            self.claimed_shot_down,
+            self.claimed_on_ground,
+            self.from_air,
+        )
+    }
 }
 
 /// Something one side believes is at sea.
@@ -614,6 +648,11 @@ mod tests {
             day: 1,
             pulse: Pulse::Night,
             claimed_sunk: 2,
+            claimed_hits: 0,
+            claimed_kind: None,
+            claimed_shot_down: 0,
+            claimed_on_ground: 0,
+            from_air: false,
             received_event: EventId::new(40),
         };
         let outcome = belief.apply_report(&Report::BattleClaim(claim.clone()), &figures());
@@ -631,6 +670,11 @@ mod tests {
             day: 2,
             pulse: Pulse::Morning,
             claimed_sunk: 0,
+            claimed_hits: 5,
+            claimed_kind: Some(ShipKind::Carrier),
+            claimed_shot_down: 12,
+            claimed_on_ground: 4,
+            from_air: true,
             received_event: EventId::new(90),
         };
         belief.apply_report(&Report::BattleClaim(later.clone()), &figures());
@@ -644,6 +688,11 @@ mod tests {
             day: _,
             pulse: _,
             claimed_sunk: _,
+            claimed_hits: _,
+            claimed_kind: _,
+            claimed_shot_down: _,
+            claimed_on_ground: _,
+            from_air: _,
             received_event: _,
         } = belief.claims()[0].clone();
     }

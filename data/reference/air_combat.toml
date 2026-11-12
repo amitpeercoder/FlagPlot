@@ -23,6 +23,15 @@ anti_aircraft_hit_chance = "0.05"
 pilot_armour_factor = "0.75"
 self_sealing_tanks_factor = "0.75"
 
+# Claims from the air (decision 0055). PLACEHOLDER chances, to be set from
+# the record in step 2. Each whole shot of fighters (or each whole shot of the
+# guns of ships and bases) that missed is claimed as an aircraft shot down with
+# the chance given; each whole bomb or torpedo that missed is claimed as a hit
+# on a ship, or as an aircraft destroyed on the ground, with the last.
+fighter_false_claim_chance = "0.1"
+anti_aircraft_false_claim_chance = "0.05"
+bomb_false_claim_chance = "0.1"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

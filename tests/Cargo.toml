@@ -125,5 +125,9 @@ path = "scenario_10_objectives.rs"
 name = "scenario_10b_objectives"
 path = "scenario_10b_objectives.rs"
 
+[[test]]
+name = "scenario_11_claims"
+path = "scenario_11_claims.rs"
+
 [lints]
 workspace = true

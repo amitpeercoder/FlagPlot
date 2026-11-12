@@ -512,6 +512,9 @@ struct AirCombatFile {
     bomb_system_hit: SystemTable,
     base_supply_destroyed_per_hit_t: Quantity,
     base_hit: BaseHitTable,
+    fighter_false_claim_chance: Quantity,
+    anti_aircraft_false_claim_chance: Quantity,
+    bomb_false_claim_chance: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -560,6 +563,15 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         )?,
         base_hit_aircraft: number("base_hit.aircraft", &file.base_hit.aircraft)?,
         base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
+        fighter_false_claim_chance: number(
+            "fighter_false_claim_chance",
+            &file.fighter_false_claim_chance,
+        )?,
+        anti_aircraft_false_claim_chance: number(
+            "anti_aircraft_false_claim_chance",
+            &file.anti_aircraft_false_claim_chance,
+        )?,
+        bomb_false_claim_chance: number("bomb_false_claim_chance", &file.bomb_false_claim_chance)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -890,6 +902,12 @@ mod tests {
         assert_eq!(figures.base_supply_destroyed_per_hit_t, Fixed::from_int(50));
         assert_eq!(figures.base_hit_aircraft, Fixed::from_ratio(3, 10));
         assert_eq!(figures.base_hit_supply, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.fighter_false_claim_chance, Fixed::from_ratio(1, 10));
+        assert_eq!(
+            figures.anti_aircraft_false_claim_chance,
+            Fixed::from_ratio(5, 100)
+        );
+        assert_eq!(figures.bomb_false_claim_chance, Fixed::from_ratio(1, 10));
     }
 
     #[test]

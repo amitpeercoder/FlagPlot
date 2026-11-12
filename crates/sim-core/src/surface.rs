@@ -1375,6 +1375,11 @@ impl World {
             day: fight.day,
             pulse: fight.pulse,
             claimed_sunk,
+            claimed_hits: 0,
+            claimed_kind: None,
+            claimed_shot_down: 0,
+            claimed_on_ground: 0,
+            from_air: false,
             received_event: self.events.next_id(),
         };
         let outcome = self
@@ -1389,6 +1394,11 @@ impl World {
                 side: force.side,
                 hex: fight.hex,
                 claimed_sunk,
+                claimed_hits: 0,
+                claimed_kind: None,
+                claimed_shot_down: 0,
+                claimed_on_ground: 0,
+                from_air: false,
             },
             vec![Cause::Event(ended)],
             None,

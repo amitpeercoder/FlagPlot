@@ -2019,6 +2019,11 @@ mod tests {
             day: 1,
             pulse: Pulse::Night,
             claimed_sunk: 2,
+            claimed_hits: 0,
+            claimed_kind: None,
+            claimed_shot_down: 0,
+            claimed_on_ground: 0,
+            from_air: false,
             received_event: EventId::new(7),
         };
         let with_claim = |claim: &BattleClaim| {
@@ -2051,6 +2056,31 @@ mod tests {
             },
             BattleClaim {
                 claimed_sunk: 3,
+                ..claim.clone()
+            },
+            BattleClaim {
+                claimed_hits: 1,
+                ..claim.clone()
+            },
+            BattleClaim {
+                claimed_kind: Some(ShipKind::Carrier),
+                ..claim.clone()
+            },
+            BattleClaim {
+                claimed_kind: Some(ShipKind::Cruiser),
+                claimed_hits: 1,
+                ..claim.clone()
+            },
+            BattleClaim {
+                claimed_shot_down: 1,
+                ..claim.clone()
+            },
+            BattleClaim {
+                claimed_on_ground: 1,
+                ..claim.clone()
+            },
+            BattleClaim {
+                from_air: true,
                 ..claim.clone()
             },
             BattleClaim {

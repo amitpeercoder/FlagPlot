@@ -441,15 +441,8 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         for claim in view.claims() {
             println!(
-                "{} claims {} enemy {} sunk at {}, day {} {}",
-                side.name(),
-                claim.claimed_sunk,
-                if claim.claimed_sunk == 1 {
-                    "ship"
-                } else {
-                    "ships"
-                },
-                claim.hex,
+                "{}, day {} {}",
+                claim.text(side),
                 claim.day,
                 claim.pulse.name()
             );

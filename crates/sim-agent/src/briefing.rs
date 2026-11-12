@@ -858,8 +858,12 @@ impl Day {
                     } => {
                         loss(ctx, &mut aircraft, *air_group, id).pilots_lost += lost;
                     }
+                    // The claims from the air are told from stage 11c on.
                     EventKind::ClaimReceived {
-                        hex, claimed_sunk, ..
+                        hex,
+                        claimed_sunk,
+                        from_air: false,
+                        ..
                     } => claims.push(Claim {
                         place: ctx.place(*hex),
                         claimed_sunk: *claimed_sunk,
@@ -1102,7 +1106,10 @@ fn reports_of(
                 event: number,
             },
             SideEventKind::Whole(EventKind::ClaimReceived {
-                hex, claimed_sunk, ..
+                hex,
+                claimed_sunk,
+                from_air: false,
+                ..
             }) => StrikeReport {
                 result: "claim",
                 contact: None,

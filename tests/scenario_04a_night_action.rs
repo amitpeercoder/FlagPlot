@@ -1030,6 +1030,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 side,
                 hex,
                 claimed_sunk,
+                ..
             } => {
                 let fight = closed_fight(&mut parsed, open, event);
                 fight.after_fight.push((true, *side));

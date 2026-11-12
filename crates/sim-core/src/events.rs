@@ -474,11 +474,20 @@ pub enum EventKind {
         hex: Hex,
         reason: EngagementEndReason,
     },
-    /// A battle claim reached a side's belief.
+    /// A claim reached a side's belief: of a surface fight (ships believed
+    /// sunk only) or, since decision 0055, of a raid (also hits believed
+    /// scored, the kind of ship believed attacked, aircraft believed shot
+    /// down and aircraft believed destroyed on the ground).
     ClaimReceived {
         side: Side,
         hex: Hex,
         claimed_sunk: u32,
+        claimed_hits: u32,
+        claimed_kind: Option<ShipKind>,
+        claimed_shot_down: u32,
+        claimed_on_ground: u32,
+        /// True for the claim of a raid.
+        from_air: bool,
     },
     /// A hit knocked, or tried to knock, one named system of a ship down one
     /// level (decision 0016). `before == after` when the ship lacks the
@@ -1621,12 +1630,21 @@ impl fmt::Display for EventKind {
                 side,
                 hex,
                 claimed_sunk,
-            } => write!(
-                f,
-                "{} claims {claimed_sunk} enemy {} sunk at {hex}",
-                side.name(),
-                if *claimed_sunk == 1 { "ship" } else { "ships" }
-            ),
+                claimed_hits,
+                claimed_kind,
+                claimed_shot_down,
+                claimed_on_ground,
+                from_air,
+            } => f.write_str(&claim_text(
+                *side,
+                *hex,
+                *claimed_sunk,
+                *claimed_hits,
+                *claimed_kind,
+                *claimed_shot_down,
+                *claimed_on_ground,
+                *from_air,
+            )),
             EventKind::ShipsDetached {
                 parent,
                 new_force,
@@ -1863,6 +1881,57 @@ impl EventLog {
         }
         found
     }
+}
+
+/// How a claim reads, in the event log and wherever a claim is listed
+/// (decision 0055). A surface fight's claim reads as it always has: "Allied
+/// claims 2 enemy ships sunk at (5,0)". A claim from the air reads "Allied
+/// claim over (7,-5): 12 aircraft shot down" or "Allied claim at (9,0): 5
+/// hits on a carrier, 0 sunk".
+#[allow(clippy::too_many_arguments)]
+pub fn claim_text(
+    side: Side,
+    hex: Hex,
+    claimed_sunk: u32,
+    claimed_hits: u32,
+    claimed_kind: Option<ShipKind>,
+    claimed_shot_down: u32,
+    claimed_on_ground: u32,
+    from_air: bool,
+) -> String {
+    if !from_air {
+        return format!(
+            "{} claims {claimed_sunk} enemy {} sunk at {hex}",
+            side.name(),
+            if claimed_sunk == 1 { "ship" } else { "ships" }
+        );
+    }
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(kind) = claimed_kind {
+        parts.push(format!(
+            "{claimed_hits} {} on a {}",
+            if claimed_hits == 1 { "hit" } else { "hits" },
+            kind.name()
+        ));
+        parts.push(format!("{claimed_sunk} sunk"));
+    }
+    // Aircraft shot down are always told, if only as none, when the claim
+    // says nothing else of what was hit.
+    if claimed_shot_down != 0 || (claimed_kind.is_none() && claimed_on_ground == 0) {
+        parts.push(format!("{claimed_shot_down} aircraft shot down"));
+    }
+    if claimed_on_ground != 0 {
+        parts.push(format!(
+            "{claimed_on_ground} aircraft destroyed on the ground"
+        ));
+    }
+    // Only aircraft shot down: a claim over the hex.
+    let place = if claimed_kind.is_none() && claimed_on_ground == 0 {
+        "over"
+    } else {
+        "at"
+    };
+    format!("{} claim {place} {hex}: {}", side.name(), parts.join(", "))
 }
 
 #[cfg(test)]

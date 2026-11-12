@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a5f3f2bbd3931d4b  162 events
+day   1  hash 5807ed482aa6da78  168 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -66,9 +66,13 @@ ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all sy
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
 Allied contact:1 at (7,-10): 3 ships, carrier, age 0 pulses
-Allied: no battle claims
+Allied claim over (7,-5): 20 aircraft shot down, day 1 afternoon
+Allied claim over (7,-5): 21 aircraft shot down, day 1 afternoon
 Japanese contact:1 at (7,-5): 10 ships, transport, age 0 pulses
-Japanese: no battle claims
+Japanese claim over (7,-10): 4 aircraft shot down, day 1 afternoon
+Japanese claim over (7,-10): 1 aircraft shot down, day 1 afternoon
+Japanese claim over (7,-5): 2 aircraft shot down, day 1 afternoon
+Japanese claim over (7,-5): 1 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
 Allied: 13 points (ships_sunk 1 = 10; ships_crippled 0 = 0; aircraft_destroyed 60 = 3), margin 7.75, minor victory

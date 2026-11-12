@@ -346,7 +346,21 @@ fn run_of(base: &Scenario, seed: u64) -> Run {
 
 fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
-    let events: Vec<Event> = run.world.events().iter().cloned().collect();
+    // The claims from the air (decision 0055) are not part of what this
+    // scenario works out: they come after each raid is resolved and are
+    // asserted in scenario_11_claims.rs.
+    let events: Vec<Event> = run
+        .world
+        .events()
+        .iter()
+        .filter(|e| {
+            !matches!(
+                e.kind,
+                sim_core::events::EventKind::ClaimReceived { from_air: true, .. }
+            )
+        })
+        .cloned()
+        .collect();
     let mut orders: BTreeMap<u32, Vec<OrderId>> = BTreeMap::new();
     for event in &events {
         if let EventKind::OrderAccepted {
@@ -1765,15 +1779,21 @@ fn with_no_replacements_nothing_is_received_and_the_first_three_days_are_scenari
         // scenario 6a's with the same seed: same kinds, breakdowns and
         // causes, with the events numbered as 6a numbers them.
         let reference = run_of(&reference_scenario, seed);
+        // The claims from the air are in neither list but are in both logs,
+        // where they leave the same gaps in the numbers, so a number in 6a's
+        // numbering is ours less the pilots lost before it.
         let mut mapped: BTreeMap<u32, u32> = BTreeMap::new();
-        let mut next = 0;
+        let mut skipped = 0;
         let mut ours: Vec<&Event> = Vec::new();
         for event in &run.events {
-            if event.day > 3 || matches!(event.kind, EventKind::PilotsLost { .. }) {
+            if event.day > 3 {
                 continue;
             }
-            next += 1;
-            mapped.insert(event.id.raw(), next);
+            if matches!(event.kind, EventKind::PilotsLost { .. }) {
+                skipped += 1;
+                continue;
+            }
+            mapped.insert(event.id.raw(), event.id.raw() - skipped);
             ours.push(event);
         }
         assert_eq!(ours.len(), reference.events.len(), "seed {seed}");
