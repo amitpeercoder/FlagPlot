@@ -16,30 +16,48 @@ jobs:
     name: Format, lint, test
     runs-on: ubuntu-latest
     steps:
+      # Two commits deep, so the commit's first parent is there to compare
+      # with.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # A change to documents alone cannot break the build: no test reads a
+      # Markdown file. The job still runs and reports, because main requires
+      # this check; it only skips the steps below.
+      - name: See whether anything but documents changed
+        id: changes
+        run: echo "needed=$(sh .github/scripts/needs-checks.sh)" >> "$GITHUB_OUTPUT"
 
       # rustup reads rust-toolchain.toml and installs the pinned toolchain
       # with rustfmt and clippy.
       - name: Install the pinned Rust toolchain
+        if: steps.changes.outputs.needed == 'true'
         run: rustup show active-toolchain || rustup toolchain install
 
       - uses: Swatinem/rust-cache@v2
+        if: steps.changes.outputs.needed == 'true'
 
       - name: Format
+        if: steps.changes.outputs.needed == 'true'
         run: cargo fmt --all -- --check
 
       - name: Lint
+        if: steps.changes.outputs.needed == 'true'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
       - name: Test
+        if: steps.changes.outputs.needed == 'true'
         run: cargo test --workspace --locked
 
       - name: Run scenario 1 from the command line
+        if: steps.changes.outputs.needed == 'true'
         run: cargo run --locked -p sim-cli -- run data/scenarios/01_transit.toml --events
 
       # The viewer rebuilds state from the exported events on its own, in
       # JavaScript. Export every scenario and check the two agree.
       - name: Export every scenario and check the viewer rebuilds it
+        if: steps.changes.outputs.needed == 'true'
         run: |
           mkdir -p viewer/replays
           for scenario in data/scenarios/*.toml; do
