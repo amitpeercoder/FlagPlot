@@ -34,6 +34,8 @@ struct RawList {
     aircraft_output: Option<String>,
     #[serde(default)]
     first_aircraft_type_id: Option<u32>,
+    #[serde(default)]
+    experience: Option<crate::experience::RawExperience>,
 }
 
 /// Either the string "all" or a list of ship names.
@@ -103,6 +105,8 @@ pub struct List {
     /// Path of the aircraft CSV, relative to the list file; with aircraft.
     pub aircraft_output: Option<String>,
     pub first_aircraft_type_id: u32,
+    /// Ships' experience values to derive (decision 0064).
+    pub experience: Option<crate::experience::Experience>,
 }
 
 fn list_problem(figure: &str, message: impl Into<String>) -> Problem {
@@ -138,10 +142,10 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
                 problems.push(list_problem(field, "the list has no ships"));
             }
         }
-        if raw.aircraft.is_empty() {
+        if raw.aircraft.is_empty() && raw.experience.is_none() {
             problems.push(list_problem(
                 "ships",
-                "the list has neither ships nor [[aircraft]] entries",
+                "the list has neither ships nor [[aircraft]] entries (nor an [experience] table)",
             ));
         }
     } else {
@@ -304,6 +308,14 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             ));
         }
     }
+    let experience = match raw.experience {
+        Some(raw) => {
+            let (experience, experience_problems) = crate::experience::parse_list(raw);
+            problems.extend(experience_problems);
+            experience
+        }
+        None => None,
+    };
     let Some(date) = date else {
         return (None, problems);
     };
@@ -325,6 +337,7 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         aircraft,
         aircraft_output: raw.aircraft_output,
         first_aircraft_type_id: raw.first_aircraft_type_id.unwrap_or(0),
+        experience,
     };
     (Some(list), problems)
 }
@@ -346,6 +359,8 @@ struct RawRules {
     search_sweep_width_nm: Option<toml::Value>,
     #[serde(default)]
     exception: Vec<RawException>,
+    #[serde(default)]
+    experience: Option<crate::experience::RawRulesExperience>,
 }
 
 #[derive(Deserialize)]
@@ -388,6 +403,8 @@ pub struct Rules {
     pub strike_radius_fraction_of_range: Option<Dec>,
     pub search_sweep_width_nm: Option<Dec>,
     pub exceptions: Vec<Exception>,
+    /// The questions' thresholds and the navies' rows (decision 0064).
+    pub experience: Option<crate::experience::ExperienceRules>,
 }
 
 fn constant(name: &str, value: &toml::Value, problems: &mut Vec<Problem>) -> Option<Dec> {
@@ -502,6 +519,14 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
             });
         }
     }
+    let experience = match raw.experience {
+        Some(raw) => {
+            let (experience, experience_problems) = crate::experience::parse_rules(raw);
+            problems.extend(experience_problems);
+            experience
+        }
+        None => None,
+    };
     let rules = match (gun, torpedo, toughness) {
         (Some(gun), Some(torpedo), Some(toughness)) => Some(Rules {
             gun_shell_kg_per_damage: gun,
@@ -512,6 +537,7 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
             strike_radius_fraction_of_range: fraction,
             search_sweep_width_nm: sweep,
             exceptions,
+            experience,
         }),
         _ => None,
     };

@@ -40,6 +40,18 @@ fn days_in_month(year: u32, month: u32) -> u32 {
 }
 
 impl Day {
+    /// This day with `months` taken off. A day that the earlier month does
+    /// not have becomes that month's last day.
+    pub fn minus_months(self, months: u32) -> Day {
+        let total = (self.year * 12 + (self.month - 1)).saturating_sub(months);
+        let (year, month) = (total / 12, total % 12 + 1);
+        Day {
+            year,
+            month,
+            day: self.day.min(days_in_month(year, month)),
+        }
+    }
+
     /// A full `YYYY-MM-DD`.
     pub fn parse_full(text: &str) -> Option<Day> {
         let span = Span::parse(text)?;
@@ -193,6 +205,17 @@ mod tests {
         assert_eq!(on("1942-08-08", "1942-08-08", "1942-08-09"), Tri::No);
         assert_eq!(on("1942-08", "1942-08", "1942-08-08"), Tri::CannotTell);
         assert_eq!(on("1942-08", "1942-08", "1942-09-01"), Tri::No);
+    }
+
+    #[test]
+    fn months_taken_off_a_day() {
+        let day = |t: &str| Day::parse_full(t).unwrap();
+        assert_eq!(day("1942-08-08").minus_months(3), day("1942-05-08"));
+        assert_eq!(day("1942-08-08").minus_months(12), day("1941-08-08"));
+        assert_eq!(day("1942-10-11").minus_months(12), day("1941-10-11"));
+        assert_eq!(day("1942-01-15").minus_months(2), day("1941-11-15"));
+        assert_eq!(day("1942-05-31").minus_months(3), day("1942-02-28"));
+        assert_eq!(day("1944-05-31").minus_months(3), day("1944-02-29"));
     }
 
     #[test]

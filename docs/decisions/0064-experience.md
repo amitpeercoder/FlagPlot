@@ -114,3 +114,56 @@ On Nov 12, 2026, as recommended in each case.
 2. **Night only?** Yes (decision 8).
 3. **Air groups: derive the values and show them before any rule reads them?** Yes (decision 9).
 4. **Leave out experience that rises with time and action, for step 2?** Yes.
+
+## As built (the derivation)
+
+The part of stage 1 that does not touch the simulation: `oob-check` reads `data/oob/training_facts.csv`, and `oob-derive` derives a ship's value from fact rows. Nothing reads the values yet; no scenario has one, and the hash is unchanged.
+
+### The four questions, as fixed
+
+Fixed by the architect on Nov 12, 2026, before any batch with the rule on exists. A value starts at 2; each question a row answers moves it by 1, once, however many rows answer it; it is clamped to 0 to 4. Rows that are not preferred never move a value and are listed in the output as not read. The thresholds are in `data/derivation/rules.toml`, measured to the first day of the engagement (`engagements.csv`, `date_from`: 1942-08-08 for Savo Island, 1942-10-11 for Cape Esperance).
+
+1. **`night_practice_recent`, up 1.** A preferred row of medium or high confidence, naming the ship, says she fired or exercised at night, and the row or its note dates that inside the three months that end on that day. "Night training" is exercising at night. An undated "recently" answers nothing. A statement about a force or a squadron answers for a ship only if a row names her as part of it at that time.
+2. **`no_night_practice`, down 1.** Such a row says she held no night practice over a period that reaches into the twelve months that end on that day, and no preferred row says she held one in them. A statement about "practically none of the ships" of a force names no ship and answers nothing.
+3. **`new_ship`, down 1.** Her `commissioned` date is later than that day less twelve months (strictly). Where every commissioning row is disputed, the question is answered if every row, whatever its standing, gives the same answer; otherwise it is a problem to settle.
+4. **`navy_night_first`, up 1.** The rules file names, for a nation, the `training_facts.csv` rows that say its fleet training put night action first, and the kinds of ship they cover. For Japan that is row 32 (cruisers and destroyers). A nation with no such row is not answered "no": nothing moves.
+
+### The settlements, and why
+
+- **The ship-crew rows carry no `valid_from` or `valid_to`,** so the list carries each answer for questions 1 and 2 (`[[experience.answer]]`: ship, question, row, answer, `from`, `to` as the row's text or note gives them, a reason). The tool checks the row exists, is of that ship, is a `night_practice_note` row, is preferred and of medium or high confidence, and that the period meets the question's window (a partial date counts if some day it could stand for is inside). When the research session dates the rows the answers can go.
+- **A row for and a row against on one ship and question stop the derivation** unless the list settles it by naming the row it reads, with a reason (`[[experience.settle]]`). A settlement with nothing to settle is a problem.
+- **A statement about a squadron or a force answers for no ship the rows do not name.** No row names the destroyers of Destroyer Squadron 4, so the night training of "Chicago and Destroyer Squadron 4" (rows 1019 to 1021) answers for none of them. Row 71 ("practically none of the ships") names none.
+- **Astoria** is 2: row 1018 says she held "recently" some night practices, undated, so question 1 is not answered, and question 2 is not answered because a row says she held some.
+- **Row 1022 does not contradict night training.** It says no ship had fired at night within eight months; it is about firing.
+- **Decision 5 requires a second source for Japan before any value is fixed.** It is `training_facts.csv` row 87: Vice Admiral Ozawa to the Strategic Bombing Survey, 1945, "we stressed training on that type of battle from before the war". It is Japanese testimony, independent of the 1950 analysis behind row 32. The architect settled what counts as a second source: a row of the navy's entity, from a different `source` than the first row, read at the page, whose standing is not `disputed`; it need not be `preferred` (row 87 is `unconfirmed`, being one witness). The tool checks exactly that (row 87 is of `ijn-surface-fleet`, the navy's whole surface fleet, so the rules file names that entity for it). With it the Japanese values are **fixed** at 3. Its limits: it is about the navy as a whole, names no ship or date, and the question put to him assumed the emphasis. The tool keeps the other mechanism: with `second_source` empty for a nation, its ships are marked `provisional` in the `fixed` column and the file's header says so; `--check` passes on such a file, and a later stage that writes values into scenarios must refuse one. Synthetic tests cover a nation with no second source.
+
+### The values
+
+From the rows, with the questions above. Generated: `data/reference/ship_experience_savo_island.ships.csv` and `data/reference/ship_experience_cape_esperance.ships.csv`; the real-data tests carry the architect's hand calculation.
+
+| Savo Island | Value | Why |
+| --- | --- | --- |
+| Chokai, Aoba, Kako, Kinugasa, Furutaka, Tenryu, Yubari, Yunagi | 3, fixed | Question 4 by row 32, second source row 87 |
+| Canberra, Australia, Chicago | 3 | Question 1: night training at Brisbane, May to July 1942 (rows 1019, 1020, 1021). Decision 0064's illustration gave 2, a first reading that said so |
+| Vincennes, Quincy | 1 | Question 2: no night practice in at least fifteen months in the Atlantic Fleet, which they left in March 1942 (rows 1016, 1017; 949, 950) |
+| Astoria | 2 | Nothing answered |
+| Bagley, Patterson, Helm, Wilson, Blue, Ralph Talbot, Jarvis | 2 | Nothing answered |
+
+| Cape Esperance | Value | Why |
+| --- | --- | --- |
+| Salt Lake City, San Francisco, Boise | 3 | Question 1: the night firing practice of 7 October 1942 (rows 1033, 1036, 1037) |
+| Helena | 2 | Nothing answered |
+| Farenholt, Duncan, Laffey, Buchanan, McCalla | 1 | Question 3: commissioned March to May 1942 |
+| Aoba, Furutaka, Kinugasa, Fubuki, Hatsuyuki | 3, fixed | Question 4 by row 32, second source row 87 |
+
+The values are those of the architect's hand calculation, which the real-data tests carry.
+
+### What the questions leave unused
+
+Rows about night training that no question reads: the Japanese lookout, "better trained" and "assumed" rows (inferred, unconfirmed); damage control for both sides; "never maneuvered together" and its dispute; the planned weekly night quarters of 1941; the star-shell rows; rows 89 to 91 (Omori on November 1943: "lack of training in night operations", substitute ships that "never had an opportunity to train together"), which are about 1943 and limit nothing for August and October 1942; row 88 (a destroyer squadron that was at neither battle) and row 92 (night action as a basis of ship design, not of training); the destroyers' "diverse origins"; the rows that Task Force SUGAR "engaged only in target practice" and the Wikipedia rows on 8 October (not preferred, or about a force); the post-battle judgements. Question 3 does not read `last_refit_completed`, captains or time in theatre.
+
+### Gaps found
+
+- No row names the ships of Destroyer Squadron 4, so its night training cannot be matched to a destroyer.
+- No ship-crew row is dated (`valid_from`, `valid_to`): the periods are carried in the lists, and the research session is asked to date the rows.
+- Five rows of `training_facts.csv` would fail the "earned preferred" rule (lone medium rows marked `unconfirmed`: 3, 30, 31, 33, 79). `oob-check` does not apply that rule to the file in this stage.

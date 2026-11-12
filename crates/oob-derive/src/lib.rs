@@ -17,6 +17,7 @@ mod aircraft;
 mod date;
 mod decimal;
 mod derive;
+mod experience;
 mod input;
 mod output;
 mod problem;
@@ -199,7 +200,24 @@ pub fn derive_with(
         aircraft: &aircraft_results,
         aircraft_used: &aircraft_used,
     };
-    output::render(&context).map_err(|problem| vec![problem])
+    let mut outputs = output::render(&context).map_err(|problem| vec![problem])?;
+    if let Some(exp) = &list.experience {
+        let Some(exp_rules) = &rules.experience else {
+            return Err(vec![Problem::new(
+                "rules",
+                Kind::Rules,
+                "experience",
+                "required by this list's [experience] and not in the rules file",
+            )]);
+        };
+        let names = experience::Names {
+            list_file: list_name,
+            list_title: &list.name,
+            rules_file: &list.rules,
+        };
+        outputs.experience_csv = Some(experience::derive(exp, exp_rules, &data, &names)?);
+    }
+    Ok(outputs)
 }
 
 /// What [`run`] did.
@@ -276,6 +294,9 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         let sources_path = path.with_file_name(aircraft_sources_name(output));
         files.push((path, csv));
         files.push((sources_path, sources));
+    }
+    if let (Some(exp), Some(csv)) = (&list.experience, outputs.experience_csv) {
+        files.push((dir.join(&exp.output), csv));
     }
     let paths: Vec<PathBuf> = files.iter().map(|(p, _)| p.clone()).collect();
     if check_only {

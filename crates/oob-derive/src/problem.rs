@@ -21,6 +21,7 @@ pub enum Kind {
     ZeroToughness,
     Exception,
     UnknownType,
+    Experience,
 }
 
 impl Kind {
@@ -42,6 +43,7 @@ impl Kind {
             Kind::ZeroToughness => "zero-toughness",
             Kind::Exception => "exception",
             Kind::UnknownType => "unknown-type",
+            Kind::Experience => "experience",
         }
     }
 }
