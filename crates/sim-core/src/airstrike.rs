@@ -532,13 +532,15 @@ impl World {
                 .filter_map(|contact| {
                     let distance_nm =
                         Fixed::from_int(i64::from(origin.air_distance_nm(contact.estimated_hex)));
-                    (distance_nm <= strike_range_nm).then_some((
-                        contact.estimated_kind,
-                        distance_nm,
-                        contact.id,
-                        contact.estimated_hex,
-                        contact.last_report_event,
-                    ))
+                    origin
+                        .air_distance_within(contact.estimated_hex, strike_range_nm)
+                        .then_some((
+                            contact.estimated_kind,
+                            distance_nm,
+                            contact.id,
+                            contact.estimated_hex,
+                            contact.last_report_event,
+                        ))
                 })
                 .min_by_key(|(kind, distance_nm, id, _, _)| (*kind, *distance_nm, *id));
             let Some((_, distance_nm, contact, hex, report_event)) = chosen else {
@@ -604,7 +606,7 @@ impl World {
         }
         let hex = target.hex;
         let distance_nm = Fixed::from_int(i64::from(origin.air_distance_nm(hex)));
-        if distance_nm > strike_range_nm {
+        if !origin.air_distance_within(hex, strike_range_nm) {
             return;
         }
         let causes: Vec<Cause> = group.mission_order.map(Cause::Order).into_iter().collect();
@@ -2033,10 +2035,7 @@ fn send_escorts(raids: &mut [Raid], fighters: &mut [FighterGroup]) {
             .map(|(raid_index, _)| raid_index);
         if let Some(raid_index) = chosen {
             let within = group.hex.is_none_or(|hex| {
-                let distance_nm = Fixed::from_int(i64::from(
-                    hex.air_distance_nm(raids[raid_index].strikes[0].hex),
-                ));
-                distance_nm <= group.radius_nm
+                hex.air_distance_within(raids[raid_index].strikes[0].hex, group.radius_nm)
             });
             if within {
                 raids[raid_index].escorts.push(index);

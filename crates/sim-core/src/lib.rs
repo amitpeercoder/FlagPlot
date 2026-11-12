@@ -40,5 +40,6 @@ mod surface;
 mod upkeep;
 
 pub use invariants::InvariantViolation;
+pub use movement::{PassageEnd, PassageForecast, ShipPassage};
 pub use start::StartingContact;
 pub use world::{DaySummary, SimConfig, SimError, World};

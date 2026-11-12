@@ -15,6 +15,12 @@ use sim_core::view::SideView;
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Dec(pub Fixed);
 
+impl std::fmt::Display for Dec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 impl Serialize for Dec {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(&self.0)

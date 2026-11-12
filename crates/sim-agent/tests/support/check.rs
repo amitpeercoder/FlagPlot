@@ -5,7 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::Serialize;
 use serde_json::Value;
 use sim_agent::{
-    briefing, get_entity, list_bases, list_contacts, list_forces, Briefing, Explainer, DEPTH_LIMIT,
+    briefing, get_entity, list_bases, list_contacts, list_forces, measure, Briefing, Explainer,
+    MeasureAnswer, PlaceArg, Question, DEPTH_LIMIT,
 };
 use sim_core::hex::Hex;
 use sim_core::view::SideView;
@@ -25,7 +26,7 @@ fn json<T: Serialize>(value: &T) -> Value {
     serde_json::to_value(value).expect("an answer serialises")
 }
 
-fn valid(schemas: &Schemas, file: &str, value: &Value, label: &str) {
+pub fn valid(schemas: &Schemas, file: &str, value: &Value, label: &str) {
     let errors = schemas.check(file, value);
     assert!(
         errors.is_empty(),
@@ -122,7 +123,7 @@ pub fn allowed_handles(view: &SideView<'_>) -> BTreeSet<String> {
     allowed
 }
 
-fn assert_only_allowed(value: &Value, allowed: &BTreeSet<String>, label: &str) {
+pub fn assert_only_allowed(value: &Value, allowed: &BTreeSet<String>, label: &str) {
     let mut found = BTreeSet::new();
     handles_in(value, &mut found);
     for handle in found {
@@ -179,6 +180,79 @@ pub fn normalised_answers(
             (k.clone(), without_event_numbers(&value, &rank))
         })
         .collect()
+}
+
+/// A sample of questions for `measure` on one view: each of the first
+/// `max_forces` task forces to each of the first `max_targets` bases and
+/// contacts (passage, sea route and air distance), and each air group's reach
+/// to all of them.
+pub fn sample_questions(
+    view: &SideView<'_>,
+    max_forces: usize,
+    max_targets: usize,
+) -> Vec<(String, Question)> {
+    let targets: Vec<String> = view
+        .bases()
+        .map(|b| b.id.to_string())
+        .chain(view.contacts().map(|c| c.id.to_string()))
+        .take(max_targets)
+        .collect();
+    let mut out = Vec::new();
+    for force in view.task_forces().take(max_forces) {
+        let from = force.id.to_string();
+        for to in &targets {
+            let place = |h: &str| PlaceArg::unit(h);
+            out.push((
+                format!("measure:passage:{from}:{to}"),
+                Question::Passage {
+                    task_force: from.clone(),
+                    to: place(to),
+                    speed: None,
+                },
+            ));
+            out.push((
+                format!("measure:sea_route:{from}:{to}"),
+                Question::SeaRoute {
+                    from: place(&from),
+                    to: place(to),
+                },
+            ));
+            out.push((
+                format!("measure:air_distance:{from}:{to}"),
+                Question::AirDistance {
+                    from: place(&from),
+                    to: place(to),
+                },
+            ));
+        }
+    }
+    for group in view.air_groups().take(max_forces * 2) {
+        out.push((
+            format!("measure:air_reach:{}", group.id),
+            Question::AirReach {
+                air_group: group.id.to_string(),
+                to: targets.iter().map(|t| PlaceArg::unit(t)).collect(),
+            },
+        ));
+    }
+    out
+}
+
+/// Asks `measure` one question and checks the answer: valid against its
+/// schema, naming only units the side may see, and with every number of its
+/// text in its data.
+pub fn check_measure(
+    view: &SideView<'_>,
+    question: &Question,
+    schemas: &Schemas,
+    label: &str,
+) -> (MeasureAnswer, Value) {
+    let answer = measure(view, question);
+    let data = json(&answer);
+    valid(schemas, "measure.schema.json", &data, label);
+    assert_only_allowed(&data, &allowed_handles(view), label);
+    assert_numbers_in_data(&answer.to_text(), &data, &format!("{label} text"));
+    (answer, data)
 }
 
 /// Builds the briefing, the lists, every entity and every event's explanation
@@ -274,6 +348,12 @@ pub fn check_view(
         assert_eq!(answer["kind"], "entity", "{label} {handle} is known");
         assert_only_allowed(&answer, &allowed, &format!("{label} {handle}"));
         answers.insert(format!("entity:{handle}"), answer.to_string());
+    }
+
+    // A sample of measurements.
+    for (key, question) in sample_questions(view, 4, 2) {
+        let (_, data) = check_measure(view, &question, schemas, &format!("{label} {key}"));
+        answers.insert(key, data.to_string());
     }
 
     // Every event the side sees.

@@ -13,17 +13,21 @@
 //!    events as well, and the cases where only they differ are counted and
 //!    printed (decision 0047, "gaps in event numbers").
 //! 3. The crate's library code names nothing of the truth.
+//!
+//! `measure` is in all three: its not-known answers are in
+//! `tests/measure.rs`, and a sample of its answers is compared with the rest
+//! under every difference.
 
 mod support;
 
 use std::collections::BTreeMap;
 
 use serde_json::Value;
-use sim_agent::{briefing, get_entity, list_bases, list_contacts, list_forces};
+use sim_agent::{briefing, get_entity, list_bases, list_contacts, list_forces, measure};
 use sim_core::hex::Hex;
 use sim_core::state::Side;
 use sim_core::World;
-use support::check::{normalised_answers, without_event_numbers};
+use support::check::{normalised_answers, sample_questions, without_event_numbers};
 use support::{load, load_text, play, scenario_path, scenario_text};
 
 const SIDES: [Side; 2] = [Side::Allied, Side::Japanese];
@@ -450,6 +454,11 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
         .collect();
     for handle in handles {
         out.insert(format!("entity:{handle}"), json(&get_entity(view, &handle)));
+    }
+    // Measurements: passage, sea route, air distance and air reach, of a few
+    // forces and groups to a few bases and contacts (decision 0049).
+    for (key, question) in sample_questions(view, 3, 2) {
+        out.insert(key, json(&measure(view, &question)));
     }
     out
 }

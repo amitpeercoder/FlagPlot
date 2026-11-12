@@ -155,7 +155,7 @@
         "format": { "const": "flagplot-agent" },
         "version": { "const": 1 },
         "kind": { "const": "not_known" },
-        "query": { "enum": ["get_entity", "explain"] }
+        "query": { "enum": ["get_entity", "explain", "measure"] }
       }
     }
   }
