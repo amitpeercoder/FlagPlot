@@ -88,3 +88,24 @@ The firm contrast is at the two ends of the war: 650 against an unknown US figur
 - A comparison of damage control: one second-hand sentence for Japan against detailed US self-criticism. The US record shows a change between August and October 1942 that could be dated; the Japanese side cannot be placed on the same scale from what was read.
 
 `training_facts.csv` is new and `oob-check` does not read it. Its entities are navies and arms of service (`ijn-aviators`, `ijn-carrier-aviators`, `ijn-land-based-aviators`, `usn-aviators`, `usmc-aviators`, `usaaf-fighter-pilots`, `ijn-cruiser-destroyer-crews`, `ijn-surface-fleet`, `usn-cruiser-destroyer-crews`, `usn-surface-fleet`, `ran-cruiser-crews`); its attributes are `flying_hours_on_joining`, `flying_hours_average_in_unit`, `training_course_months`, `training_hours_in_course`, `pilots_trained_per_year`, `carrier_qualification_note`, `night_training_note`, `service_length_note`, `gunnery_practice_note`, `lookout_training_note`, `damage_control_note`, `training_note`.
+
+## A second source on Japanese night training (12 November 2026)
+
+Asked for by the build session for decision 0064, which admits a statement about a navy as a whole only with a second source. Six rows, `training_facts.csv` ids 87 to 92, all `unconfirmed`. Each quote was copied from a downloaded copy of the page and I read each in its context.
+
+**The second source exists, and it is Japanese testimony.** Vice Admiral Ozawa, asked by the Strategic Bombing Survey in 1945 why Japan put so much emphasis on night operations, answered that the night battle favours the side with the weaker force, "and so we stressed training on that type of battle from before the war" (row 87). It does not rest on the 1950 analysis that row 32 quotes. Its limits: one officer's memory, in answer to a question that already assumed the emphasis; it is about the navy as a whole and names no ship, squadron, exercise or date.
+
+**One statement gives a length of practice, for destroyers.** Captain Toyama, chief of staff of the 2nd Destroyer Squadron at Tassafaronga, said of his divisions' simultaneous column turn: "We had practiced this turn for about a year and one-half at night" (row 88). That is one manoeuvre of one destroyer squadron, which was at neither Savo Island nor Cape Esperance. The Survey's own campaign history repeats it and is not a further source.
+
+**A Japanese-authored history shows night action shaped the ships, not that crews trained for it.** Japanese Monograph 145 says the navy "required their destroyers to carry heavy torpedo equipment to be used for night combat" (row 92).
+
+**Three statements limit the claim, all for late 1943.** Vice Admiral Omori put his collisions at Empress Augusta Bay down to "lack of training in night operations", and said substitute ships from other fleets "never had an opportunity to train together" (rows 89 to 91). They show the skill was not permanent or uniform. They say nothing of August to October 1942.
+
+**Nothing was found against the claim for 1942,** and nothing that confines the training to the battle fleet's destroyers or says it lapsed after December 1941.
+
+**Nothing was found on any named ship.** No source read gives a night firing or torpedo exercise, or the lack of one, for Chokai, the 6th Cruiser Division, Tenryu, Yubari, Yunagi, Fubuki or Hatsuyuki. The one Savo Island interrogation online is of a rear admiral who was a guest passenger in Tenryu, and it does not touch training. So the evidence for these ships stays what it was: Bates's statement that the Savo cruisers "had never maneuvered together before" (row 35) and that their recent night firing is assumed, not shown (row 34).
+
+**Where to look next** (in `gaps.csv`): the war diaries of the 6th and 18th Cruiser Divisions in the Japanese national archives, which may log exercises by date; the interrogations of Chokai's executive officer and the 6th Cruiser Division's chief of staff, which are missing from the online copy; and a 1952 Naval Institute article that could not be opened.
+
+Also read, with nothing usable: the Naval Technical Mission to Japan reports O-29, O-31, O-32, O-38 and E-29, and the Navy's combat narratives of Savo Island and Cape Esperance.
+

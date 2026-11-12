@@ -84,6 +84,51 @@ fn side_name(kind: &SideEventKind) -> String {
     }
 }
 
+/// The words a unit is written with in text and in a `Debug` print.
+type MakeUnit = fn(u32) -> EntityRef;
+const UNIT_WORDS: [(&str, MakeUnit); 3] = [
+    ("ship:", |n| EntityRef::Ship(sim_core::ids::ShipId::new(n))),
+    ("task_force:", |n| {
+        EntityRef::TaskForce(sim_core::ids::TaskForceId::new(n))
+    }),
+    ("air_group:", |n| {
+        EntityRef::AirGroup(sim_core::ids::AirGroupId::new(n))
+    }),
+];
+const UNIT_TYPES: [(&str, MakeUnit); 3] = [
+    ("ShipId(", |n| {
+        EntityRef::Ship(sim_core::ids::ShipId::new(n))
+    }),
+    ("TaskForceId(", |n| {
+        EntityRef::TaskForce(sim_core::ids::TaskForceId::new(n))
+    }),
+    ("AirGroupId(", |n| {
+        EntityRef::AirGroup(sim_core::ids::AirGroupId::new(n))
+    }),
+];
+
+/// Every number that follows `prefix` in `text`.
+fn numbers_after(text: &str, prefix: &str) -> Vec<u32> {
+    text.match_indices(prefix)
+        .filter_map(|(at, _)| {
+            let digits: String = text[at + prefix.len()..]
+                .chars()
+                .take_while(char::is_ascii_digit)
+                .collect();
+            digits.parse().ok()
+        })
+        .collect()
+}
+
+/// Every ship, task force and air group a `Debug` print of an event holds,
+/// whatever field it is in.
+fn units_named(printed: &str) -> Vec<EntityRef> {
+    UNIT_TYPES
+        .iter()
+        .flat_map(|(prefix, make)| numbers_after(printed, prefix).into_iter().map(make))
+        .collect()
+}
+
 /// The side named in the event, for the kinds that name one.
 fn named_side(kind: &EventKind) -> Option<Side> {
     match kind {
@@ -211,18 +256,85 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
                     "{at}: the chance is the breakdown's result"
                 );
             }
+            // The defender sees the raid with its hits and without the air
+            // group that made it; the attacker sees that it attacked.
             EventKind::BaseAttacked { base, .. } => {
                 let defender = unit_side(truth, EntityRef::Base(*base)) == Some(side);
                 assert_eq!(
-                    matches!(event.kind, SideEventKind::Whole(_)),
+                    matches!(event.kind, SideEventKind::BaseAttackedAgainst { .. }),
                     defender,
-                    "{at}: only the defender sees a base attack whole"
+                    "{at}: only the defender sees what a base attack hit"
+                );
+                assert_eq!(
+                    matches!(event.kind, SideEventKind::BaseAttacked { .. }),
+                    !defender,
+                    "{at}: the attacker sees that it attacked"
+                );
+            }
+            // Cut of the enemy's name and nothing else (decision 0065).
+            EventKind::EngagementBegun { .. }
+            | EventKind::EngagementEnded { .. }
+            | EventKind::SightingRoll { .. }
+            | EventKind::ForceSurprised { .. }
+            | EventKind::ForceSlippedAway { .. }
+            | EventKind::AlarmRoll { .. } => {
+                assert!(
+                    !matches!(event.kind, SideEventKind::Whole(_)),
+                    "{at}: an event that names an enemy force is whole"
+                );
+                assert_eq!(name, full_name(&log.kind), "{at}");
+                // Its breakdown is the log's, whole.
+                assert_eq!(
+                    event
+                        .breakdown
+                        .as_ref()
+                        .map(|b| (b.factors.clone(), b.result)),
+                    log.breakdown
+                        .as_ref()
+                        .map(|b| (b.factors.clone(), Some(b.result))),
+                    "{at}"
                 );
             }
             _ => assert!(
                 matches!(event.kind, SideEventKind::Whole(_)),
-                "{at}: only the firing kinds and a search are cut"
+                "{at}: a kind that is cut for no reason"
             ),
+        }
+
+        // No enemy ship, task force or air group is named, in a field or in
+        // the text (decision 0065). The one exception is the target of an
+        // order the side itself gave.
+        let own_order = matches!(
+            event.kind,
+            SideEventKind::Whole(EventKind::OrderAccepted { .. } | EventKind::OrderRejected { .. })
+        );
+        if !own_order {
+            for entity in units_named(&format!("{:?}", event.kind))
+                .into_iter()
+                .chain(event.kind.entities())
+            {
+                if matches!(
+                    entity,
+                    EntityRef::Ship(_) | EntityRef::TaskForce(_) | EntityRef::AirGroup(_)
+                ) {
+                    assert_eq!(
+                        unit_side(truth, entity),
+                        Some(side),
+                        "{at}: names {entity}, which is not the side's own"
+                    );
+                }
+            }
+            let text = event.to_string();
+            for (prefix, make) in UNIT_WORDS {
+                for number in numbers_after(&text, prefix) {
+                    let entity = make(number);
+                    assert_eq!(
+                        unit_side(truth, entity),
+                        Some(side),
+                        "{at}: the text names {entity}: {text}"
+                    );
+                }
+            }
         }
         // Fired at: the view carries no shots (salvo) and no weapon or aircraft
         // figures but the count (air attack); never the chance or the hits.
@@ -233,7 +345,15 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
         if printed.starts_with("AirAttackAgainst") {
             assert!(!printed.contains("weapon:"), "{at}: {printed}");
         }
-        if !matches!(event.kind, SideEventKind::Whole(_)) {
+        // The firing kinds only: an event cut of nothing but the enemy's
+        // name keeps its own figures.
+        if !matches!(
+            event.kind,
+            SideEventKind::Whole(_)
+                | SideEventKind::BaseAttackedAgainst { .. }
+                | SideEventKind::SightingRoll { .. }
+                | SideEventKind::AlarmRoll { .. }
+        ) {
             for field in [
                 "hits",
                 "hits_on_aircraft",
@@ -345,10 +465,14 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
             "{label} {side:?}: ended, fight {first}"
         );
         for event in inside {
-            let SideEventKind::Whole(kind) = &event.kind else {
-                continue;
+            let round = match &event.kind {
+                SideEventKind::Whole(kind) => round_of(kind),
+                SideEventKind::SightingRoll { round, .. }
+                | SideEventKind::ForceSurprised { round, .. }
+                | SideEventKind::ForceSlippedAway { round, .. } => Some(*round),
+                _ => None,
             };
-            if let Some(round) = round_of(kind) {
+            if let Some(round) = round {
                 let known = known.unwrap_or_else(|| {
                     panic!("{label} {side:?} {event} in fight {first}-{last}, which the side does not know of")
                 });

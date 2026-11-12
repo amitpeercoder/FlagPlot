@@ -8,7 +8,9 @@ pub struct Spread {
     pub kept: u64,
     pub least: i64,
     pub p5: i64,
+    pub p25: i64,
     pub median: i64,
+    pub p75: i64,
     pub p95: i64,
     pub greatest: i64,
     /// A count of each value, in value order, when there are 20 or fewer
@@ -40,7 +42,9 @@ pub fn spread(values: &[i64]) -> Option<Spread> {
         kept: sorted.len() as u64,
         least: *sorted.first()?,
         p5: percentile(&sorted, 5)?,
+        p25: percentile(&sorted, 25)?,
         median: percentile(&sorted, 50)?,
+        p75: percentile(&sorted, 75)?,
         p95: percentile(&sorted, 95)?,
         greatest: *sorted.last()?,
         counts: (counts.len() <= 20).then_some(counts),
@@ -51,6 +55,10 @@ pub fn spread(values: &[i64]) -> Option<Spread> {
 #[derive(PartialEq, Eq, Debug)]
 pub enum Verdict {
     Agrees,
+    /// Agrees, and no part of the record lies from the 25th percentile to
+    /// the 75th, ends included. It still agrees and the battle still passes on
+    /// it; the mark keeps a count of agreements from being read as health.
+    AgreesAtEdge,
     /// Which tests failed: the first (the record is outside the middle 90
     /// percent), the second (fewer than 1 run in 20 holds it).
     Miss {
@@ -81,6 +89,8 @@ pub fn judge(values: &[i64], runs: u64, low: i64, high: i64, judged: bool) -> Ju
             let second = holding * 20 < kept;
             if first || second {
                 Verdict::Miss { first, second }
+            } else if !(low <= s.p75 && high >= s.p25) {
+                Verdict::AgreesAtEdge
             } else {
                 Verdict::Agrees
             }
@@ -139,9 +149,30 @@ mod tests {
                 second: true
             }
         );
-        // 0 to 1 overlaps 1 to 1; 950 hold it.
+        // 0 to 1 overlaps 1 to 1; 950 hold it. Rank 250 and rank 750 are
+        // both 1, which it includes: a plain agreement.
         assert_eq!(verdict(0, 1), Verdict::Agrees);
         assert_eq!(judge(&v, 1000, 0, 1, true).holding, 950);
+    }
+
+    /// The architect's second set: one hundred 0, eight hundred 1, one
+    /// hundred 2. Rank 50 is 0 and rank 950 is 2; rank 250 and rank 750 are
+    /// both 1.
+    #[test]
+    fn an_agreement_at_the_edge_of_a_thousand() {
+        let mut v = vec![0; 100];
+        v.extend(vec![1; 800]);
+        v.extend(vec![2; 100]);
+        let s = spread(&v).expect("values");
+        assert_eq!((s.p5, s.p25, s.median, s.p75, s.p95), (0, 1, 1, 1, 2));
+        let verdict = |low, high| judge(&v, 1000, low, high, true).verdict.expect("judged");
+        // 2 is outside 1 to 1; 100 x 20 = 2000 >= 1000.
+        assert_eq!(verdict(2, 2), Verdict::AgreesAtEdge);
+        assert_eq!(verdict(0, 0), Verdict::AgreesAtEdge);
+        assert_eq!(verdict(1, 1), Verdict::Agrees);
+        assert_eq!(verdict(0, 1), Verdict::Agrees);
+        // A reported measure gets no mark.
+        assert_eq!(judge(&v, 1000, 2, 2, false).verdict, None);
     }
 
     #[test]

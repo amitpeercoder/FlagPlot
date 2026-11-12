@@ -34,6 +34,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT] [--reference DIR]
        sim-cli validate <batch.json> <measures.toml> [--out <report.md>] [--reference DIR]
        sim-cli validate <measures.toml> [--out <report.md>]
+       sim-cli validate --passages <passages.toml> --label TEXT [--map <map.csv>] [--places <positions.csv>] [--out <report.md>]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
                      [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli mcp <scenario.toml> --seat allied|japanese
@@ -66,8 +67,12 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             version or state hash layout, or whose inputs no longer match the
             files on disk (give the same --reference). With a measures file
             alone, for a scenario not built, every measure is reported as not
-            run. It exits with success whenever it wrote its report, misses or
-            not.
+            run. With --passages it works each ship passage of a passages file as
+            one calculation (the miles the rules charge between two hexes, at
+            the stated speeds) and reports it beside the record, judged by
+            nothing; it reads data/oob/place_positions.csv (or --places FILE)
+            for the places a passage names. It exits with success whenever it
+            wrote its report, misses or not.
   export    Runs a scenario the same way and writes the finished run as one
             JSON replay file: the map, the starting forces, every event with
             its causes, and the final state.

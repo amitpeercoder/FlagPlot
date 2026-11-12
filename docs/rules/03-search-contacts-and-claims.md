@@ -92,7 +92,7 @@ Events, in order: `SearchFlown` once for each group that flies (it records the g
 
 Because each report goes into belief at once, a later group's report in the same pulse can merge into a contact an earlier group made. Each group looks at its own targets only through its own draws, so this does not change anyone's chance. [0012]
 
-A side sees: its own `SearchFlown` whole. A `SearchAttempt` that sighted, to the searching side only, cut: the air group and the task force, without the distance or the chance, which would say where the force really was when the report names a neighbouring hex. A `SearchAttempt` that did not sight, to nobody. The sighted force is not told, and the enemy sees no part of the search. [0047, 0061]
+A side sees: its own `SearchFlown` whole. A `SearchAttempt` that sighted, to the searching side only, cut: the air group, without the task force (decision 0065) and without the distance or the chance, which would say where the force really was when the report names a neighbouring hex. A `SearchAttempt` that did not sight, to nobody. The sighted force is not told, and the enemy sees no part of the search. [0047, 0061, 0065]
 
 Not built: a group sending only part of itself on search while the rest does something else; night search; radar, weather and coastwatchers; report delay; reports that never arrive. [0012, 0052]
 
@@ -249,7 +249,7 @@ The roll comes from a stream keyed on the force alone, in the surface combat sub
 
 Not built: the alarm reaching neighbouring hexes. [0021]
 
-A side sees: an `AlarmRoll` its force heard, whole. A roll that failed is shown to nobody. [0047]
+A side sees: an `AlarmRoll` its force heard, with its chance and without the forces that fought. A roll that failed is shown to nobody. [0047, 0065]
 
 ### Fatigue of a force
 
