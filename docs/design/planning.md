@@ -1,6 +1,6 @@
 # Design note: planning an operation
 
-Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is built. It says how a player could plan a large operation with the staff, be told what it needs and what it is likely to cost, and be faced with a commander's choices. It says what exists to build on, what is missing, and what is open for the designer. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
+Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is built. It says how a player could plan a large operation with the staff, be told what it needs and what it is likely to cost, and be faced with a commander's choices. The three questions it first left open were answered the same day; the answers are below. It says what exists to build on and what is missing. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
 
 ## The problem
 
@@ -79,8 +79,8 @@ The player chooses, changes a course and asks for it to be tried again, or drops
 | Missing | Where it stands | What it holds up |
 | --- | --- | --- |
 | The staff planner | Step 3; its approach is an open question in the pillars | Everything here. The trial is its central job |
-| Ground combat and land units | Left out of step 1 (decision 0052) | An invasion, and any estimate of troops lost |
-| Weather, light and the moon | Left out of step 1 (decision 0052) | A best date on anything but stocks and arrivals |
+| Ground combat and land units | Left out of step 1 (decision 0052); to be built before step 3 (answer 1 below) | An invasion, and any estimate of troops lost |
+| Weather, light and the moon | Left out of step 1 (decision 0052); after the kill gate (answer 1 below) | A best date on anything but stocks and arrivals |
 | Estimates of enemy intent | Layer 3 of `docs/design/intelligence.md`, which needs the planner | A trial that knows an enemy convoy is expected |
 | Figures set from the record | Step 2, under way | Any trial worth believing. On placeholder figures a spread of losses means nothing |
 | Materials and oil | Step 5 (`docs/design/economy.md`) | In the slice, resources are shipping, fuel and supply stocks, which exist |
@@ -104,13 +104,18 @@ The player chooses, changes a course and asks for it to be tried again, or drops
 ## Order of arrival
 
 1. **Before step 3:** time a trial by hand: the full slice, 30 days, a few hundred seeds, on one machine. It needs no new code beyond what `sim-cli batch` does.
-2. **Step 3:** the plan as an object, requirements and windows from stocks and measuring, the trial, courses of action, follow up. Naval and air operations only.
-3. **When ground combat exists:** invasions and troop losses.
-4. **When weather exists:** windows that read it.
-5. **Step 5:** plans across theatres, and resources that come from the economy.
+2. **Before step 3:** land units and basic ground combat (answer 1 below).
+3. **Step 3:** the plan as an object, requirements and windows from stocks and measuring, the trial, courses of action, follow up, for naval, air and landing operations.
+4. **Step 4:** the small version the kill gate judges (answer 3 below).
+5. **After the kill gate:** weather, light and the moon, and windows that read them.
+6. **Step 5:** plans across theatres, and resources that come from the economy.
 
-## Open questions for the designer
+## Answers from the product managers
 
-1. **Ground combat and weather:** do they enter the slice before the planner is built, so that step 3 plans invasions from the start, or after, with step 3 planning naval and air operations first? The pillars list basic ground combat among the slice's systems; decision 0052 deferred it.
-2. **Should the staff's estimates be imperfect beyond the gap in belief,** for example a staff that leans hopeful? The architect's view is no. Belief already makes the estimates wrong, and a staff that misleads works against the trust the kill gate asks about.
-3. **Is planning judged at the kill gate?** If so the step 4 prototype needs at least requirements, one window and a trial for one operation.
+Agreed by the designer on Nov 12, 2026, on the architect's suggestion. These are directions for the design, not built rules; each becomes a decision record when its part is planned.
+
+1. **Basic ground combat comes before the planner, and weather after the kill gate.** Land units and basic ground combat are built between step 2 and step 3, so that the planner's objectives can say "take and hold a place" from the start; adding land to a planner designed without it is the dearer road. This takes up what decision 0052 deferred, and it needs its own plan and decision records before it is built. Weather, light and the moon follow the kill gate.
+2. **The staff estimates honestly, and a side's hopefulness comes from what it is told.** The trial adds no bias of its own. Where a side's picture was historically too hopeful, that reaches the estimate through its inputs: claims that overstate (decision 0056) and the reliability of each source, which are figures by side and period set from the record (`docs/design/intelligence.md`). A side that believes it sank four carriers plans against an enemy it thinks is weak. A second bias in the estimate would count the same thing twice, would need a figure no source gives, and could not be explained to the player, where a false claim behind an estimate can be opened and seen.
+
+   Left open for later: planning assumptions. A staff that assumes the enemy will do what the plan needs is a failing the record may support for a side and a period. In the trial it is how the enemy's response is drawn. It is not built for the slice, and it is considered only if research finds something to rest it on.
+3. **Planning is judged at the kill gate, in a small version.** The step 4 prototype carries, for one operation: requirements, one window, a trial and two courses of action.
