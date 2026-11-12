@@ -97,3 +97,7 @@ Words and fields only; no rule, result or state hash changes, and every event an
 - **Patrol share, contacts, pulses, radius.** `set_patrol_share` is described as the share kept over the group's own hex; the instructions and the contact tools say that the kind and count of a contact are what the sighting reported and can be wrong; the instructions give the pulses (night from 18:00 the evening before, morning, afternoon, the last in which a group flies) and the `measure` description says a passage leaves at the start of the night pulse; an air group line shows its type's radius and search range.
 - **The recorded games.** Their requests and accounts are as played; their transcripts were regenerated to show today's answers.
 
+## The server in the project's configuration (Nov 12, 2026)
+
+Decision 12 kept the server out of the project's own configuration until the designer had seen the file and said so. He was shown it on Nov 12, 2026 and said to add it. `.mcp.json` at the top of the repository starts one game of the full slice with the player in the Allied seat when Claude Code opens in this folder. It names the build tool by its full path on the designer's machine and gives it the path it needs to find the compiler, since neither is on his shell's path; another machine edits those two lines. The scenario and the seat are the last arguments. The game lasts as long as the session and is not saved.
+

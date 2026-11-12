@@ -32,6 +32,8 @@ struct Replay {
     format: &'static str,
     version: u32,
     scenario: ScenarioOut,
+    /// What the run was made on (decision 0057).
+    inputs: crate::save::Inputs,
     map: MapOut,
     directions: Vec<[i32; 2]>,
     labels: Vec<LabelOut>,
@@ -107,14 +109,20 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
         None => Vec::new(),
     };
     let executed = crate::execute(scenario_path, seed, |_| {})?;
-    let replay = build(&executed, scenario_path, labels);
+    let inputs = crate::save::inputs(scenario_path, &executed.scenario)?;
+    let replay = build(&executed, scenario_path, inputs, labels);
 
     let mut text = serde_json::to_string(&replay).map_err(|e| e.to_string())?;
     text.push('\n');
     fs::write(out, text).map_err(|e| format!("{out}: {e}"))
 }
 
-fn build(executed: &crate::Executed, scenario_path: &str, labels: Vec<LabelOut>) -> Replay {
+fn build(
+    executed: &crate::Executed,
+    scenario_path: &str,
+    inputs: crate::save::Inputs,
+    labels: Vec<LabelOut>,
+) -> Replay {
     let scenario = &executed.scenario;
     let world = &scenario.world;
     Replay {
@@ -127,6 +135,7 @@ fn build(executed: &crate::Executed, scenario_path: &str, labels: Vec<LabelOut>)
             days: scenario.days,
             path: scenario_path.to_string(),
         },
+        inputs,
         map: map::map(world.map()),
         directions: map::directions(),
         labels,

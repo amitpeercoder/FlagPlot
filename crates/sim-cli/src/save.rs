@@ -49,6 +49,44 @@ fn file_hash(path: &Path) -> Result<String, String> {
     Ok(hash_hex(&bytes))
 }
 
+/// What a run was made on, written into every file that holds results (a
+/// batch summary, a replay), so that two files can be told to come from the
+/// same inputs before their numbers are compared (decision 0057). It does not
+/// name the engine's code: `batch --label` carries that, as the caller knows
+/// it.
+#[derive(serde::Serialize)]
+pub struct Inputs {
+    /// The version of the state hash's layout, which changes with the state.
+    pub state_version: String,
+    /// The hash of the scenario file.
+    pub scenario_hash: String,
+    /// Every data file the scenario names, with its hash, in the order the
+    /// scenario names them.
+    pub data: Vec<InputFile>,
+}
+
+#[derive(serde::Serialize)]
+pub struct InputFile {
+    pub file: String,
+    pub hash: String,
+}
+
+/// The inputs of a run of `scenario`, loaded from `scenario_path`.
+pub fn inputs(scenario_path: &str, scenario: &Scenario) -> Result<Inputs, String> {
+    let mut data = Vec::new();
+    for path in scenario.data_files() {
+        data.push(InputFile {
+            file: path.to_string_lossy().into_owned(),
+            hash: file_hash(path)?,
+        });
+    }
+    Ok(Inputs {
+        state_version: String::from_utf8_lossy(sim_core::hash::STATE_VERSION).into_owned(),
+        scenario_hash: file_hash(Path::new(scenario_path))?,
+        data,
+    })
+}
+
 /// Notes the scripted orders and the hash of every data file, before the run.
 pub fn remember(scenario: &Scenario) -> Result<Remembered, String> {
     let mut files = Vec::new();

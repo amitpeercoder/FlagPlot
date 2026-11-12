@@ -2,10 +2,10 @@ Scenario 2b: Fuel run, Espiritu Santo to Guadalcanal
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 4951e08bff4db583  8 events
-day   2  hash ac0d34de53bac22f  15 events
-day   3  hash 686a3ddd7c0cf182  11 events
-day   4  hash 440a9bdab45750df  9 events
+day   1  hash 9d05deb42899661d  8 events
+day   2  hash 513adc1e15290473  15 events
+day   3  hash 21cc7ee3d4615130  11 events
+day   4  hash 498e8fce150ad8bd  9 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 night     ship:1 loaded 1800 t of fuel cargo from base:1, 1800 t of fuel cargo aboard, 4700 t of fuel in stock  <- order:1
