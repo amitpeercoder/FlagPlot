@@ -4,8 +4,8 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 
 | Battle | Report | Judged | Agree | Agree at the edge | Miss |
 | --- | --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 15 | 6 | 4 | 5 |
-| Eastern Solomons | `eastern-solomons-baseline.md` | 11 | 7 | 1 | 3 |
+| Savo Island | `savo-island-baseline.md` | 16 | 7 | 4 | 5 |
+| Eastern Solomons | `eastern-solomons-baseline.md` | 14 | 10 | 0 | 4 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
 | Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
 
@@ -38,6 +38,19 @@ cargo run --release -p sim-cli -- validate BATCH.json data/validation/savo_islan
 - **Ryujo's aircraft, checked over the 1,000 runs** as the spec session asked. In the 265 runs in which she sinks, 23 of her aircraft go down aboard her in 256 and 6 come down in the sea; in the other 9 all 29 are in the air and come down in the sea. None is ever shot down. The record has about 4 lost with the ship and 5 from her strike. The cause is the scenario, not a figure: her fighters are ordered to patrol with seven in ten held on deck, and her attack unit waits for a ship to strike, so most of her aircraft are aboard when she is hit. In the record her strike was over Guadalcanal. Tuning is not to be asked to close this; the order that sends a strike at a named target (strike target priority, still to be planned) is what bears on it.
 - *Nov 12, 2026:* the Ryujo bullet above describes the scenario before the orders of decision 0063 ("As built (the scenario orders)"): her detachment is now in (7,-9) at noon, her attack unit raids Henderson Field, and nothing of hers goes down aboard her. The report is remade by the second session.
 - **The result:** a stalemate in 542 runs, an Allied victory in 363, a defeat in 95.
+
+### The Eastern Solomons report as remade, Nov 12, 2026
+
+The report was remade after the scenario got the orders of decision 0063 and three strike measures became judged. The bullets above describe the first report; these describe the one in the file now.
+
+- **Ryujo's raid on Henderson Field flies in every run,** six attack planes and fifteen fighters, and none of her aircraft goes down aboard her (the record has 4; the measure is reported, not judged). She is sunk in 464 runs of 1,000.
+- **The American strike on her is all or nothing.** It flies in about 470 runs, and then with about 82 aircraft where the record has 36; in the other runs no aircraft attacks her. So the middle run has none, the top of the spread is 84, and no run holds 36: a miss. Every American strike group in reach flies at the one contact, where on the day Enterprise's second strike was held and then found nothing.
+- **The Japanese strike on Enterprise now agrees** (33 aircraft in the middle run against 37; three bomb hits against three).
+- **The American aircraft still do not die:** 5 lost to the enemy in the middle run against 13 to 14, and 6 in all against 20 to 21.
+- **American claims still overstate too little:** about 1.4 for each aircraft shot down against 2.4 to 3.6.
+- **Two of Ryujo's six attack planes run out of fuel on the way home in the middle run,** which the record does not show: her raid flies 200 miles on a derived radius of 175. Noted for tuning, at the radius or at the placeholder fuel figure.
+
+One thing to hold in mind when reading any of these reports: an agreement on a yes-or-no measure, or on a count that is mostly 0 or 1, says only that the record is not surprising in the model, never that the model expects it. Japanese carriers sunk agrees with the middle run sinking none; fights by day at Savo Island agrees with a fight by day in two runs of three. The edge mark cannot show that.
 
 ## Rabaul against Guadalcanal
 
