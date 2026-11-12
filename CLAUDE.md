@@ -6,6 +6,7 @@ Read these before changing anything:
 
 - `docs/pillars.md`: what the game is and the five pillars every feature is tested against.
 - `docs/step1-spec.md`: the spec for the simulation core. It is the source of truth.
+- `docs/step2-spec.md`: the spec for the validation harness, approved on Nov 12, 2026. It is the source of truth for step 2.
 - `docs/decisions/`: choices the spec left open, one short file each.
 - `docs/glossary.md`: one meaning for each word the rules use.
 - `docs/rules/`: the rules as they stand today, in the order a day resolves; the decision records hold the reasons.
