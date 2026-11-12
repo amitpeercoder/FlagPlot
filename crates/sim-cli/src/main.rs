@@ -5,6 +5,8 @@
 
 mod batch;
 mod export;
+mod mcp;
+mod play;
 mod save;
 mod serve;
 
@@ -27,6 +29,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
                      [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
+       sim-cli mcp <scenario.toml> --seat allied|japanese
+                   [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
+       sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
             each day, then where every task force and ship ended up.
@@ -56,6 +61,12 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
             At the end of input it writes --save (a saved game with the seats
             and the orders handed in by both sides, which replay runs with no
             player) and --transcript (one JSON line for each call).
+  mcp       The game as a Model Context Protocol server on standard input and
+            output (tools only: the nine tools of serve, answered as text),
+            with the named seat the player's and the other the script's. At
+            the end of input it writes --save and --transcript as serve does.
+  play      One call to that server from a command line, for a player with
+            nothing else: the game is kept in a file of the calls so far.
   --events  (run) Also prints the full event log, with what caused each event.
   --seed N  Runs with seed N instead of the scenario's own seed.
   --save F  (run) Also writes a saved game: the scenario's file and its hash
@@ -114,6 +125,8 @@ fn main() -> ExitCode {
         Some("batch") => batch::command(&args[1..], USAGE),
         Some("replay") => replay(&args[1..]),
         Some("serve") => serve::command(&args[1..], USAGE),
+        Some("mcp") => mcp::command(&args[1..], USAGE),
+        Some("play") => play::command(&args[1..]),
         Some("hash") => hash(&args[1..]),
         _ => run(&args),
     };

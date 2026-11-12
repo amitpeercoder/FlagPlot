@@ -106,7 +106,7 @@ nothing.
 
 ### Orders
 
-`issue_orders` takes `{"orders": [order, ...], "clear": true?}`. An order is
+`issue_orders` takes `{"orders": [order, ...], "clear": true?, "reason": "..."?}` (`reason` is the player's own words for why, kept in the transcript and never read by the game). An order is
 `{"unit": "task_force:3", "order": {"kind": "set_route", "waypoints": [[2, -4]]}}`;
 `order.schema.json` lists every kind. `clear` empties the seat's queue first.
 For each order in the order given the answer says `queued` or `refused` with a

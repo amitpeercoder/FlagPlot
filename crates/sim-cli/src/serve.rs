@@ -111,21 +111,84 @@ fn script_of(
     by_day
 }
 
-pub fn command(args: &[String], usage: &str) -> Result<(), String> {
-    let options = parse(args, usage)?;
-    let mut scenario = Scenario::load(Path::new(options.scenario)).map_err(|e| e.to_string())?;
-    if let Some(seed) = options.seed {
+/// What the saved game needs of a game besides its session.
+pub struct Kept {
+    scenario_path: String,
+    seed: u64,
+    remembered: save::Remembered,
+    seats: BTreeMap<Side, SeatKind>,
+}
+
+/// Loads a scenario and opens a session over it with the given seats (a side
+/// not named is the script's). `serve`, `mcp` and `play` all open games here.
+pub fn open(
+    scenario_path: &str,
+    seed: Option<u64>,
+    mut seats: BTreeMap<Side, SeatKind>,
+) -> Result<(Session, Kept), String> {
+    for side in Side::ALL {
+        seats.entry(side).or_insert(SeatKind::Script);
+    }
+    let mut scenario = Scenario::load(Path::new(scenario_path)).map_err(|e| e.to_string())?;
+    if let Some(seed) = seed {
         scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
     }
     let remembered = save::remember(&scenario)?;
-    let seat = |side: Side| match options.seats[&side] {
+    let seat = |side: Side| match seats[&side] {
         SeatKind::Player => Seat::Player,
         SeatKind::Script => Seat::Script(script_of(remembered.script(), side)),
     };
     let (allied, japanese) = (seat(Side::Allied), seat(Side::Japanese));
     let seed = scenario.world.seed();
     let (name, days) = (scenario.name.clone(), scenario.days);
-    let mut session = Session::new(scenario.world, &name, days, allied, japanese);
+    let session = Session::new(scenario.world, &name, days, allied, japanese);
+    Ok((
+        session,
+        Kept {
+            scenario_path: scenario_path.to_string(),
+            seed,
+            remembered,
+            seats,
+        },
+    ))
+}
+
+impl Kept {
+    /// Writes the saved game and the transcript, as asked.
+    pub fn finish(
+        &self,
+        session: &Session,
+        save: Option<&str>,
+        transcript: Option<&str>,
+    ) -> Result<(), String> {
+        if let Some(file) = save {
+            let hashes: Vec<(u32, u64)> =
+                (1u32..).zip(session.day_hashes().iter().copied()).collect();
+            save::write(
+                file,
+                &self.scenario_path,
+                self.seed,
+                &self.remembered,
+                session.handed_in(),
+                &self.seats,
+                &hashes,
+            )?;
+        }
+        if let Some(file) = transcript {
+            let mut text = String::new();
+            for entry in session.transcript() {
+                text.push_str(&serde_json::to_string(&entry.to_json()).map_err(|e| e.to_string())?);
+                text.push('\n');
+            }
+            std::fs::write(file, text).map_err(|e| format!("{file}: {e}"))?;
+        }
+        Ok(())
+    }
+}
+
+pub fn command(args: &[String], usage: &str) -> Result<(), String> {
+    let options = parse(args, usage)?;
+    let (mut session, kept) = open(options.scenario, options.seed, options.seats.clone())?;
 
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();
@@ -137,28 +200,7 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
             .and_then(|()| out.flush())
             .map_err(|e| format!("standard output: {e}"))?;
     }
-
-    if let Some(file) = options.save {
-        let hashes: Vec<(u32, u64)> = (1u32..).zip(session.day_hashes().iter().copied()).collect();
-        save::write(
-            file,
-            options.scenario,
-            seed,
-            &remembered,
-            session.handed_in(),
-            &options.seats,
-            &hashes,
-        )?;
-    }
-    if let Some(file) = options.transcript {
-        let mut text = String::new();
-        for entry in session.transcript() {
-            text.push_str(&serde_json::to_string(&entry.to_json()).map_err(|e| e.to_string())?);
-            text.push('\n');
-        }
-        std::fs::write(file, text).map_err(|e| format!("{file}: {e}"))?;
-    }
-    Ok(())
+    kept.finish(&session, options.save, options.transcript)
 }
 
 fn error_line(id: Value, error: &CallError) -> String {
