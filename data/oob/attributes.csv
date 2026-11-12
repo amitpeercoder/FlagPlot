@@ -30,6 +30,9 @@ fate,ship,text,,one,One line on how the ship's service ended
 name_native,ship,text,,one,Name in the navy's own script
 alias,ship,text,,many,Another name or spelling found in sources
 ship_class,ship,ref:ship_class,,one,The class a source assigns the ship to; the class column in ships.csv holds the preferred value
+out_of_action_from,ship,date,,many,Date a ship was put out of action by damage; the note says by what and how badly
+repair_place,ship,text,,many,"A place the ship was repaired after damage, one row per place in order; the dates are the time there and the note says temporary or permanent"
+returned_to_service,ship,date,,many,Date a damaged ship was operational again; the note says what the source counts as return
 max_speed_kn,aircraft_type,decimal,knots,one,Maximum level speed at the altitude given by max_speed_altitude_m
 max_speed_altitude_m,aircraft_type,integer,metres,one,Altitude at which max_speed_kn is quoted
 cruise_speed_kn,aircraft_type,decimal,knots,one,Cruising speed
