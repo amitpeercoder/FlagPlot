@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/explain",
+  "title": "explain: an event as the side may see it and its visible causes; or not_known",
+  "oneOf": [
+    { "$ref": "#/$defs/explain" },
+    { "$ref": "defs.schema.json#/$defs/not_known" }
+  ],
+  "$defs": {
+    "explain": {
+      "type": "object",
+      "required": ["format", "version", "kind", "event", "depth_limit", "truncated", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 1 },
+        "kind": { "const": "explain" },
+        "event": { "type": "integer" },
+        "depth_limit": { "type": "integer" },
+        "truncated": { "type": "boolean" },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "index", "depth", "type", "id", "day", "pulse", "event_kind", "text", "entities",
+        "breakdown", "causes", "hidden_causes", "causes_truncated"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "index": { "type": "integer" },
+        "depth": { "type": "integer" },
+        "type": { "enum": ["event", "order"] },
+        "id": { "type": "integer" },
+        "day": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "pulse": {
+          "type": ["string", "null"],
+          "enum": ["night", "morning", "afternoon", null]
+        },
+        "event_kind": { "$ref": "defs.schema.json#/$defs/string_or_null" },
+        "text": { "$ref": "defs.schema.json#/$defs/string_or_null" },
+        "entities": { "$ref": "defs.schema.json#/$defs/handles" },
+        "breakdown": { "oneOf": [{ "$ref": "#/$defs/breakdown" }, { "type": "null" }] },
+        "causes": { "type": "array", "items": { "type": "integer" } },
+        "hidden_causes": { "type": "boolean" },
+        "causes_truncated": { "type": "boolean" }
+      }
+    },
+    "breakdown": {
+      "type": "object",
+      "required": ["factors", "result"],
+      "additionalProperties": false,
+      "properties": {
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "$ref": "defs.schema.json#/$defs/dec" }
+            }
+          }
+        },
+        "result": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+      }
+    }
+  }
+}

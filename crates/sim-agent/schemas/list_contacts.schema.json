@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/list_contacts",
+  "title": "list_contacts: a line for each contact held",
+  "type": "object",
+  "required": ["format", "version", "kind", "area", "contacts"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 1 },
+    "kind": { "const": "list_contacts" },
+    "area": { "$ref": "#/$defs/area_or_null" },
+    "contacts": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/contact_line" } }
+  },
+  "$defs": {
+    "area_or_null": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["q", "r", "radius_nm"],
+          "additionalProperties": false,
+          "properties": {
+            "q": { "type": "integer" },
+            "r": { "type": "integer" },
+            "radius_nm": { "type": "integer" }
+          }
+        },
+        { "type": "null" }
+      ]
+    }
+  }
+}

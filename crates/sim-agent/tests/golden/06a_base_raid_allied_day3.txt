@@ -1,0 +1,57 @@
+FLAG PLOT BRIEFING
+
+HEADING
+- Side: allied
+- Day: 3
+- Scenario: Scenario 6a: A raid on an airfield
+- Covers: day 2 and the state at the start of day 3
+
+ORDERS
+- Accepted yesterday: 0
+- Refused yesterday: none
+
+CONTACTS
+- New contacts: none
+- Refreshed contacts: none
+- Dropped contacts: none
+- Contacts found not there: none
+- Contacts held: none
+
+ACTION YESTERDAY
+- Fights at sea: none
+- Salvoes fired at sea: none
+- Patrol fire: air_group:3 "Placeholder defending fighters" at the escorts of air_group:2, 6 shots [event 13]
+- Patrol fire: air_group:3 "Placeholder defending fighters" at the bombers of air_group:1, 3 shots [event 14]
+- Anti-aircraft fire: base:2 "Placeholder airfield B" at the raid of air_group:1, 20 shots [event 15]
+- Strikes and attacks flown: none
+- Raid on base:2 "Placeholder airfield B" by air_group:1: 15 aircraft attacked, 4 hits, 2 on aircraft, 0 on supply, 2 on nothing [event 17]
+- Attacks on ships: none
+
+LOSSES YESTERDAY
+- Ships sunk: none
+- Ships damaged: none
+- Aircraft lost: air_group:3 "Placeholder defending fighters": 2 shot down [event 16]
+- Aircraft lost: air_group:4 "Placeholder resting bombers": 2 destroyed on the ground [event 18]
+- Claims of the enemy: none
+
+TASK FORCES
+- Task forces: none
+
+AIR GROUPS
+- air_group:3 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 7 ready, mission combat air patrol
+- air_group:4 "Placeholder resting bombers" (Placeholder dive bomber) at base:2 "Placeholder airfield B" (5,0): 8 ready, mission rest
+- air_group:5 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, mission search
+
+BASES
+- base:2 "Placeholder airfield B" at (5,0): fuel 0 t
+
+ARRIVALS
+- Arrivals due today and on the next two days: none
+- Replacements: none
+
+WARNINGS
+- Ships that cannot reach a base: none
+- Bases short of supply: base supply is not in play
+- Bases without fuel and a force stopped there: none
+- Air groups short of pilots: none
+- Air groups tired: fatigue is not in play

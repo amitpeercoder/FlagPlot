@@ -1,0 +1,82 @@
+FLAG PLOT BRIEFING
+
+HEADING
+- Side: allied
+- Day: 2
+- Scenario: Scenario 5: Eastern Solomons, 24 August 1942
+- Covers: day 1 and the state at the start of day 2
+
+ORDERS
+- Accepted yesterday: 11
+- Refused yesterday: none
+
+CONTACTS
+- New contact: contact:1, 4 ships estimated, taken for carrier, at (7,-10) [event 15]
+- Refreshed contact: contact:1, 5 ships estimated (was 4), taken for carrier, at (7,-10) [event 34]
+- Refreshed contact: contact:1, 4 ships estimated (was 5), taken for cruiser (was carrier), at (7,-10) [event 35]
+- Refreshed contact: contact:1, 3 ships estimated (was 4), taken for carrier (was cruiser), at (7,-10) [event 36]
+- Dropped contacts: none
+- Contacts found not there: none
+- Held contact: contact:1 at (7,-10), 3 ships estimated, taken for carrier, age 0 pulses
+
+ACTION YESTERDAY
+- Fights at sea: none
+- Salvoes fired at sea: none
+- Patrol fire: air_group:1 "VF-6" at the escorts of air_group:11, 6 shots [event 21]
+- Patrol fire: air_group:1 "VF-6" at the bombers of air_group:12, 22 shots [event 22]
+- Patrol fire: air_group:1 "VF-6" at the escorts of air_group:14, 5 shots [event 25]
+- Patrol fire: air_group:1 "VF-6" at the bombers of air_group:15, 21 shots [event 26]
+- Anti-aircraft fire: task_force:1 "Task Force 16" at the raid of air_group:12, 123 shots [event 23]
+- Anti-aircraft fire: task_force:1 "Task Force 16" at the raid of air_group:15, 123 shots [event 27]
+- Naval strike launched: air_group:2 "VB-6" at contact:1, place (7,-10), 17 aircraft, 200 miles [event 16]
+- Naval strike launched: air_group:6 "VB-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 17]
+- Naval strike launched: air_group:7 "VS-3" at contact:1, place (7,-10), 15 aircraft, 200 miles [event 18]
+- Air attack: air_group:2 "VB-6" on ship:33, 16 aircraft, bombs [event 29]
+  - Report: refreshed contact contact:1, 5 ships estimated, taken for carrier, at (7,-10) [event 34]
+- Air attack: air_group:6 "VB-3" on ship:33, 14 aircraft, bombs [event 30]
+  - Report: refreshed contact contact:1, 4 ships estimated, taken for cruiser, at (7,-10) [event 35]
+- Air attack: air_group:7 "VS-3" on ship:33, 15 aircraft, bombs [event 31]
+  - Report: refreshed contact contact:1, 3 ships estimated, taken for carrier, at (7,-10) [event 36]
+- Raids on bases: none
+- Attack on ship:1 "USS Enterprise" by air_group:12: 12 aircraft
+- Attack on ship:1 "USS Enterprise" by air_group:15: 15 aircraft
+
+LOSSES YESTERDAY
+- Ships sunk: none
+- Ship damaged: ship:1 "USS Enterprise": 6 hits, flotation damage 21.043768, fire damage 10.521884, flight deck working to degraded, flight deck degraded to out [events 37, 38, 39, 40, 41]
+- Aircraft lost: air_group:1 "VF-6": 3 shot down [events 24, 28]
+- Aircraft lost: air_group:2 "VB-6": 1 shot down [event 19]
+- Aircraft lost: air_group:6 "VB-3": 1 shot down [event 20]
+- Claims of the enemy: none
+
+TASK FORCES
+- task_force:1 "Task Force 16" at (7,-5): idle, carrier, speed cruise, readiness normal, not alert, 10 ships afloat
+  - Least fuelled: ship:9 "USS Grayson" with 467 t, range 4730 miles at cruising speed
+- task_force:2 "Task Force 11" at (7,-5): idle, carrier, speed cruise, readiness normal, not alert, 8 ships afloat
+  - Least fuelled: ship:14 "USS Farragut" with 607 t, range 5240 miles at cruising speed
+
+AIR GROUPS
+- air_group:1 "VF-6" (Grumman F4F-4 Wildcat) at ship:1 "USS Enterprise" (7,-5): 24 ready, mission combat air patrol
+- air_group:2 "VB-6" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 16 ready, mission naval strike
+- air_group:3 "VS-5" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 16 ready, mission search
+- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 14 ready, mission naval strike
+- air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 27 ready, mission combat air patrol
+- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, mission naval strike
+- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, mission naval strike
+- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, mission naval strike
+- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 13 ready, mission combat air patrol
+- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 11 ready, mission naval strike
+
+BASES
+- base:1 "Henderson Field" at (2,-4): fuel 0 t
+
+ARRIVALS
+- Arrivals due today and on the next two days: none
+- Replacements: none
+
+WARNINGS
+- Ships that cannot reach a base: none
+- Bases short of supply: base supply is not in play
+- Bases without fuel and a force stopped there: none
+- Air groups short of pilots: none
+- Air groups tired: fatigue is not in play

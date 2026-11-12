@@ -1,0 +1,505 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/briefing",
+  "title": "briefing: the situation of one side at the start of a day, in ten parts",
+  "type": "object",
+  "required": [
+    "format", "version", "kind", "heading", "orders", "contacts", "action", "losses",
+    "task_forces", "air_groups", "bases", "arrivals", "warnings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 1 },
+    "kind": { "const": "briefing" },
+    "heading": { "$ref": "#/$defs/heading" },
+    "orders": { "$ref": "#/$defs/orders" },
+    "contacts": { "$ref": "#/$defs/contacts" },
+    "action": { "$ref": "#/$defs/action" },
+    "losses": { "$ref": "#/$defs/losses" },
+    "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },
+    "air_groups": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/air_group_line" } },
+    "bases": { "type": "array", "items": { "$ref": "#/$defs/base" } },
+    "arrivals": { "$ref": "#/$defs/arrivals" },
+    "warnings": { "$ref": "#/$defs/warnings" }
+  },
+  "$defs": {
+    "heading": {
+      "type": "object",
+      "required": ["side", "day", "yesterday", "scenario", "rules_in_play"],
+      "additionalProperties": false,
+      "properties": {
+        "side": { "enum": ["allied", "japanese"] },
+        "day": { "type": "integer" },
+        "yesterday": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "scenario": { "type": "string" },
+        "rules_in_play": {
+          "description": "Which optional rules are in play; the text leaves out what a rule not in play would make meaningless.",
+          "type": "object",
+          "required": ["wear", "fatigue", "pilots", "supply"],
+          "additionalProperties": false,
+          "properties": {
+            "wear": { "type": "boolean" },
+            "fatigue": { "type": "boolean" },
+            "pilots": { "type": "boolean" },
+            "supply": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "orders": {
+      "type": "object",
+      "required": ["accepted", "refused"],
+      "additionalProperties": false,
+      "properties": {
+        "accepted": { "type": "integer" },
+        "refused": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["order", "target", "reason", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "order": { "type": "integer" },
+              "target": { "$ref": "defs.schema.json#/$defs/handle" },
+              "reason": { "type": "string" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "reported_contact": {
+      "type": "object",
+      "required": [
+        "contact", "place", "ship_count", "taken_for", "event", "was_ship_count",
+        "was_taken_for", "was_place"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "contact": { "$ref": "defs.schema.json#/$defs/handle" },
+        "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "ship_count": { "type": "integer" },
+        "taken_for": { "$ref": "#/$defs/ship_kind" },
+        "event": { "type": "integer" },
+        "was_ship_count": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "was_taken_for": {
+          "type": ["string", "null"],
+          "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary", null]
+        },
+        "was_place": { "$ref": "defs.schema.json#/$defs/place_or_null" }
+      }
+    },
+    "contacts": {
+      "type": "object",
+      "required": ["new", "refreshed", "dropped", "not_there", "held"],
+      "additionalProperties": false,
+      "properties": {
+        "new": { "type": "array", "items": { "$ref": "#/$defs/reported_contact" } },
+        "refreshed": { "type": "array", "items": { "$ref": "#/$defs/reported_contact" } },
+        "dropped": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["contact", "age_pulses", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "contact": { "$ref": "defs.schema.json#/$defs/handle" },
+              "age_pulses": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "not_there": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["contact", "place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "contact": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "held": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/contact_line" } }
+      }
+    },
+    "ship_kind": {
+      "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"]
+    },
+    "weapon": { "enum": ["guns", "torpedoes", "bombs"] },
+    "strike_report": {
+      "description": "What a strike reported back: an event that cites its attack or its finding nothing.",
+      "type": "object",
+      "required": ["result", "contact", "ship_count", "taken_for", "place", "claimed_sunk", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "result": {
+          "enum": [
+            "contact_new", "contact_refreshed", "contact_dropped", "contact_not_there", "claim"
+          ]
+        },
+        "contact": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+        "ship_count": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "taken_for": {
+          "type": ["string", "null"],
+          "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary", null]
+        },
+        "place": { "$ref": "defs.schema.json#/$defs/place_or_null" },
+        "claimed_sunk": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "event": { "type": "integer" }
+      }
+    },
+    "weapon_or_null": { "type": ["string", "null"], "enum": ["guns", "torpedoes", "bombs", null] },
+    "action": {
+      "type": "object",
+      "required": [
+        "fights", "fired", "air_fire", "guns", "strikes", "raids_on_bases", "attacks_on_ships"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["forces", "place", "rounds", "ended", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "forces": { "$ref": "defs.schema.json#/$defs/handles" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "rounds": { "type": "integer" },
+              "ended": {
+                "enum": ["slipped_away", "force_sunk", "broke_off", "passed_unseen", "max_rounds"]
+              },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fired": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["firer", "target", "weapon", "salvos", "shots"],
+            "additionalProperties": false,
+            "properties": {
+              "firer": { "$ref": "defs.schema.json#/$defs/handle" },
+              "target": { "$ref": "defs.schema.json#/$defs/handle" },
+              "weapon": { "$ref": "#/$defs/weapon" },
+              "salvos": { "type": "integer" },
+              "shots": { "$ref": "defs.schema.json#/$defs/dec" }
+            }
+          }
+        },
+        "air_fire": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["firing", "firer", "at", "target", "shots", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "firing": { "enum": ["patrol", "escorts"] },
+              "firer": { "$ref": "defs.schema.json#/$defs/handle" },
+              "at": { "enum": ["patrol", "escorts", "bombers"] },
+              "target": { "$ref": "defs.schema.json#/$defs/handle" },
+              "shots": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "guns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["by", "raid", "shots", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "by": { "$ref": "defs.schema.json#/$defs/handle" },
+              "raid": { "$ref": "defs.schema.json#/$defs/handle" },
+              "shots": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "strikes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind", "air_group", "target", "place", "aircraft", "weapon", "distance_nm",
+              "event", "reports"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "naval_strike_launched", "base_strike_launched", "strike_found_nothing",
+                  "air_attack", "base_attack"
+                ]
+              },
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "target": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "place": { "$ref": "defs.schema.json#/$defs/place_or_null" },
+              "aircraft": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "weapon": { "$ref": "#/$defs/weapon_or_null" },
+              "distance_nm": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "event": { "type": "integer" },
+              "reports": { "type": "array", "items": { "$ref": "#/$defs/strike_report" } }
+            }
+          }
+        },
+        "raids_on_bases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "base", "air_group", "aircraft", "hits", "hits_on_aircraft", "hits_on_supply", "event"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "aircraft": { "$ref": "defs.schema.json#/$defs/dec" },
+              "hits": { "type": "integer" },
+              "hits_on_aircraft": { "type": "integer" },
+              "hits_on_supply": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "attacks_on_ships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["by", "against", "weapon", "attacks", "aircraft"],
+            "additionalProperties": false,
+            "properties": {
+              "by": { "$ref": "defs.schema.json#/$defs/handle" },
+              "against": { "$ref": "defs.schema.json#/$defs/handle" },
+              "weapon": { "$ref": "#/$defs/weapon_or_null" },
+              "attacks": { "type": "integer" },
+              "aircraft": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+            }
+          }
+        }
+      }
+    },
+    "losses": {
+      "type": "object",
+      "required": ["ships_sunk", "ships_damaged", "aircraft", "claims"],
+      "additionalProperties": false,
+      "properties": {
+        "ships_sunk": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "task_force", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "ships_damaged": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "hits", "flotation_after", "fire_after", "systems", "events"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "hits": { "type": "integer" },
+              "flotation_after": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "fire_after": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "systems": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["system", "before", "after"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "system": {
+                      "enum": [
+                        "propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"
+                      ]
+                    },
+                    "before": { "enum": ["working", "degraded", "out"] },
+                    "after": { "enum": ["working", "degraded", "out"] }
+                  }
+                }
+              },
+              "events": { "$ref": "defs.schema.json#/$defs/event_numbers" }
+            }
+          }
+        },
+        "aircraft": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "air_group", "shot_down", "destroyed_on_ground", "written_off", "lost_with_ship",
+              "pilots_lost", "events"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "shot_down": { "type": "integer" },
+              "destroyed_on_ground": { "type": "integer" },
+              "written_off": { "type": "integer" },
+              "lost_with_ship": { "type": "integer" },
+              "pilots_lost": { "type": "integer" },
+              "events": { "$ref": "defs.schema.json#/$defs/event_numbers" }
+            }
+          }
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "claimed_sunk", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "claimed_sunk": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "base", "place", "supply_t", "fuel_t", "spent_yesterday_t", "destroyed_yesterday_t",
+        "days_of_supply"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "base": { "$ref": "defs.schema.json#/$defs/handle" },
+        "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "spent_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "destroyed_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+      }
+    },
+    "arrivals": {
+      "type": "object",
+      "required": ["due", "replacements"],
+      "additionalProperties": false,
+      "properties": {
+        "due": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["day", "air_group", "aircraft", "pilots"],
+            "additionalProperties": false,
+            "properties": {
+              "day": { "type": "integer" },
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "aircraft": { "type": "integer" },
+              "pilots": { "type": "integer" }
+            }
+          }
+        },
+        "replacements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "aircraft_type", "aircraft_per_day", "pilots_per_day"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "aircraft_type": { "type": "string" },
+              "aircraft_per_day": { "type": "integer" },
+              "pilots_per_day": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "object",
+      "required": [
+        "ship_cannot_reach_base", "base_supply_low", "base_without_fuel_with_force",
+        "air_group_short_of_pilots", "air_group_tired"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ship_cannot_reach_base": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "nearest_base", "distance_nm", "range_nm"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "nearest_base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "distance_nm": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+              "range_nm": { "type": "integer" }
+            }
+          }
+        },
+        "base_supply_low": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "supply_t", "spent_yesterday_t", "days_of_supply", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "spent_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "reason": { "enum": ["no_supply", "under_three_days"] }
+            }
+          }
+        },
+        "base_without_fuel_with_force": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "fuel_t", "task_forces"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "task_forces": { "$ref": "defs.schema.json#/$defs/handles" }
+            }
+          }
+        },
+        "air_group_short_of_pilots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "pilots", "ready"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "pilots": { "type": "integer" },
+              "ready": { "type": "integer" }
+            }
+          }
+        },
+        "air_group_tired": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "fatigue", "rest_above", "stood_down"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "fatigue": { "$ref": "defs.schema.json#/$defs/dec" },
+              "rest_above": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "stood_down": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

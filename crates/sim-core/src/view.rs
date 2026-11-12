@@ -25,6 +25,15 @@ use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{AirGroup, Arrival, Base, Replacement, Ship, Side, TaskForce, TruthState};
 
+/// Which optional rules have their figures loaded: air wear and repair
+/// (decision 0035), fatigue and rest (0036), and base supply use (0039).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct RulesInPlay {
+    pub wear: bool,
+    pub fatigue: bool,
+    pub supply: bool,
+}
+
 /// One side's view of the game.
 ///
 /// `Debug` is written by hand and prints the side only. A derived one would
@@ -180,6 +189,14 @@ impl<'a> SideView<'a> {
         self.map.get(hex)
     }
 
+    /// The fewest steps by sea from every hex that can reach `target` to it
+    /// (decision 0048, warnings). The map is common knowledge, so this is
+    /// not enemy truth; each step is 40 miles. Empty if ships cannot enter
+    /// `target`.
+    pub fn sea_distances_to(&self, target: Hex) -> BTreeMap<Hex, u32> {
+        self.map.sea_distances_to(target)
+    }
+
     /// Reference data is common knowledge.
     pub fn ship_class(&self, id: ShipClassId) -> Option<&'a ShipClass> {
         self.ref_data.ship_classes.get(&id)
@@ -193,6 +210,17 @@ impl<'a> SideView<'a> {
     /// The search figures are reference data, so common knowledge.
     pub fn search_figures(&self) -> Option<&'a SearchFigures> {
         self.ref_data.search.as_ref()
+    }
+
+    /// Which of the optional rules have their figures loaded for this game
+    /// (decisions 0035, 0036 and 0039). The figures are rules, not enemy
+    /// truth, so they are common knowledge, as the search figures are.
+    pub fn rules_in_play(&self) -> RulesInPlay {
+        RulesInPlay {
+            wear: self.ref_data.air_upkeep.is_some(),
+            fatigue: self.ref_data.fatigue.is_some(),
+            supply: self.ref_data.air_supply.is_some(),
+        }
     }
 
     /// Port handling figures are reference data, so common knowledge.

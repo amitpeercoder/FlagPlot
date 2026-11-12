@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/list_bases",
+  "title": "list_bases: a line for each base",
+  "type": "object",
+  "required": ["format", "version", "kind", "area", "bases"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 1 },
+    "kind": { "const": "list_bases" },
+    "area": { "$ref": "#/$defs/area_or_null" },
+    "bases": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/base_line" } }
+  },
+  "$defs": {
+    "area_or_null": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["q", "r", "radius_nm"],
+          "additionalProperties": false,
+          "properties": {
+            "q": { "type": "integer" },
+            "r": { "type": "integer" },
+            "radius_nm": { "type": "integer" }
+          }
+        },
+        { "type": "null" }
+      ]
+    }
+  }
+}

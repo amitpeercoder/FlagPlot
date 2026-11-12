@@ -226,6 +226,12 @@ dependencies = [
 [[package]]
 name = "sim-agent"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sim-core",
+ "sim-data",
+]
 
 [[package]]
 name = "sim-cli"
