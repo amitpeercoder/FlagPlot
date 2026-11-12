@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "3162d3c82e4ceba4"
+      "hash": "5ddecbf483917c29"
     }
   ],
   "orders": [
@@ -213,7 +213,7 @@
         "waypoints": [
           [
             7,
-            -10
+            -9
           ]
         ]
       },
@@ -306,7 +306,7 @@
       "day": 1,
       "order": {
         "kind": "set_patrol_share",
-        "share": "0.3"
+        "share": "0.35"
       },
       "origin": {
         "intent": null,
@@ -387,6 +387,23 @@
     {
       "day": 1,
       "order": {
+        "kind": "set_target_priority",
+        "kinds": [
+          "carrier",
+          "battleship",
+          "cruiser"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:12"
+    },
+    {
+      "day": 1,
+      "order": {
         "kind": "set_air_mission",
         "mission": "naval_strike"
       },
@@ -413,6 +430,23 @@
     {
       "day": 1,
       "order": {
+        "kind": "set_target_priority",
+        "kinds": [
+          "carrier",
+          "battleship",
+          "cruiser"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:15"
+    },
+    {
+      "day": 1,
+      "order": {
         "kind": "set_air_mission",
         "mission": "naval_strike"
       },
@@ -427,7 +461,21 @@
       "day": 1,
       "order": {
         "kind": "set_air_mission",
-        "mission": "naval_strike"
+        "mission": "base_strike",
+        "target_base": 1
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:19"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_reach",
+        "reach": "extended"
       },
       "origin": {
         "intent": null,
@@ -439,7 +487,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "b775cd9c57b69b43"
+    "hash": "cd7b88c0ca851421"
   },
   "seats": {
     "allied": "player",

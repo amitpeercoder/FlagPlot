@@ -225,14 +225,16 @@ fn every_refresh_of_the_day_is_listed_and_the_last_is_the_contact_held() {
         .iter()
         .map(|r| r.was_ship_count)
         .collect();
-    assert_eq!(
-        was,
-        vec![Some(4), Some(5), Some(4), Some(4), Some(3), Some(4)]
-    );
+    // The third refresh changes the kind and not the count, so it has no
+    // count it was.
+    assert_eq!(was, vec![Some(4), Some(5), None, Some(4), Some(3), Some(4)]);
     assert_eq!(b.contacts.new[0].ship_count, 4);
     let mut before = b.contacts.new[0].ship_count;
     for refresh in &b.contacts.refreshed {
-        assert_eq!(refresh.was_ship_count, Some(before));
+        match refresh.was_ship_count {
+            Some(was) => assert_eq!(was, before),
+            None => assert_eq!(refresh.ship_count, before),
+        }
         before = refresh.ship_count;
     }
     assert_eq!(b.contacts.held[0].ship_count, before);
