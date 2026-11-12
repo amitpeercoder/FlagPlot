@@ -4,7 +4,7 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 
 | Battle | Report | Judged | Agree | Agree at the edge | Miss |
 | --- | --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 16 | 8 | 2 | 6 |
+| Savo Island | `savo-island-baseline.md` | 16 | 8 | 1 | 7 |
 | Eastern Solomons | `eastern-solomons-baseline.md` | 14 | 10 | 0 | 4 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
 | Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
@@ -41,6 +41,16 @@ The report in the file now is on the engine with experience for ships (decision 
 - **The result has turned toward the record:** an Allied defeat of some kind in 440 runs and a victory in 347, where it was 308 and 441. The night was a decisive Japanese victory; ten runs in 1,000 are.
 
 The three strengths are placeholders. They are tuned after decision 0068 is in, and not before.
+
+### The Savo Island report as remade with the readiness rule, Nov 13, 2026
+
+The report in the file now is on the engine with decision 0068 as well: a force not at battle readiness fires its guns at a share, the placeholder 0.5. Both rules that the spec put before tuning at this battle are in.
+
+- **The Allied groups fire half what they did:** 13 hundreds of shells in the middle run, where it was 25, against a record of 4. By ship, the southern group fires about 440 and the northern about 870 in the middle run. It is still three times the record; the share would have to go well below the half that the record states, which the designer has allowed tuning to do.
+- **Gun hits on Japanese ships fall with them,** from 96 to 53 in the middle run against a record of 10 to 17. The measure agreed at the edge before and misses now: fewer than one run in twenty holds the record. Nothing got worse; the spread narrowed off a record it had only been brushing.
+- **Fights by day are rarer:** 518 runs of 1,000 have none, where 438 had.
+- **Neither rule has moved the two things at the heart of the night.** The Japanese guns hit 50 times for each thousand shells against 81 to 117, and no Allied cruiser is sunk in the middle run where four were. These are for tuning: the strength of experience, the share, and the chance to hit itself.
+- **The result has turned further toward the record:** an Allied defeat of some kind in 563 runs and a victory in 216. Ten runs in 1,000 are the decisive Japanese victory the night was.
 
 ## Eastern Solomons
 

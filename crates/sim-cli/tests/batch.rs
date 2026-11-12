@@ -911,9 +911,13 @@ fn the_keys_a_version_1_reader_used_keep_their_values() {
     // could not be made again (the code is gone) and the scenario's orders
     // changed on Nov 12, 2026 (decision 0063, "As built (the scenario
     // orders)"), so its runs and its inputs no longer match any run today.
-    // It is dropped, with its file. Scenarios 4a and 6 keep the test's
-    // purpose: what a version 1 reader used is still where it was.
-    for file in ["04a_night_action", "06_rabaul_guadalcanal"] {
+    // It is dropped, with its file. So is the captured file of scenario 4a:
+    // since decision 0068 a force at normal readiness fires with part of its
+    // guns on the live figures, so that scenario's runs are no longer the
+    // runs of the day it was captured. Scenario 6, which has no surface
+    // fight, keeps the test's purpose: what a version 1 reader used is still
+    // where it was.
+    for file in ["06_rabaul_guadalcanal"] {
         let before_path = PathBuf::from(ROOT)
             .join("crates/sim-cli/tests/batch_before")
             .join(format!("{file}.json"));
