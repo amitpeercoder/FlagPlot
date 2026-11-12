@@ -1,6 +1,6 @@
 # 0067: Two objectives that could be gamed
 
-Status: needs review. A plan for the designer's approval, written on Nov 12, 2026 at his word ("Plan them now"). Nothing is built. If it is approved, the hand calculation is written before any code is delegated, and this record gains an "As built" section.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its three questions. Nothing is built yet. The hand calculation is written before any code is delegated, and this record gains an "As built" section when the rule lands.
 
 ## The gap
 
@@ -70,8 +70,10 @@ A game of four days. The Allied side holds `cargo_landed` at base 1 at 0.005 poi
 | Reads | The `CargoLoaded` and `CargoUnloaded` events of a side's ships at a named base. At the end of each day, the supply and the ready aircraft of every base |
 | Writes | No state. One event a day for every base |
 
-## Questions for the designer
+## Answered by the designer
 
-1. **Cargo landed: net of what was loaded back at that base (recommended), or only cargo that came from another base?** The second is closer to the idea and costs new state for every ship.
-2. **Base open: the share of days (recommended), or open on every day or it does not score?**
-3. **Who builds it?** The rulebook review session, which found the fault in decision 6 and reviewed this plan, offered to build from this record; the build session is on experience (0064) and the surprised-force plan (0066).
+On Nov 12, 2026, as recommended in each case.
+
+1. **Cargo landed: net of what was loaded back at that base, or only cargo that came from another base?** Net (decision 1). The second is closer to the idea and costs new state for every ship.
+2. **Base open: the share of days, or open on every day or it does not score?** The share of days (decision 5).
+3. **Who builds it?** The rulebook review session, which found the two faults, found the fault in the first draft of decision 6 and reviewed this plan. The build session is on experience (0064) and the plan for a force not at battle readiness (0068).
