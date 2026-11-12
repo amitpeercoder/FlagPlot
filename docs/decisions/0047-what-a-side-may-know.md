@@ -22,7 +22,7 @@ A side's belief is its own units, exactly, and the enemy as contacts (decision 0
 7. **A side's view gives the events it may see, each cut down to what it may know.** An event is whole, or has fields removed, or is absent. Nothing is added or altered. The cut event names its number in the full log, so two sides and the umpire can talk about the same event.
 8. **An enemy unit in an event a side may see is named as the log names it.** A side that fought a ship knows which ship fired at it for the length of that fight. Nothing else of that ship is shown.
 9. **The causes of an event are cut the same way.** A cause the side may not see is dropped, and the event says that it has causes the side cannot see, so that "why" is answered honestly: this much is known, and there is more.
-10. **Breakdowns follow the event.** A side sees the breakdown of an event it sees whole. A cut event carries only the factors that are the side's own.
+10. **Breakdowns follow the event.** A side sees the breakdown of an event it sees whole. A cut event carries only the factors that are the side's own. Amended by decision 0060: a claim is seen whole and its breakdown is not shown, because it says how much of the claim is real.
 11. **It is the only door.** Anything that plays the game takes its events from the side's view. The full log stays with the umpire: the runner, the tests and the replay viewer.
 
 ### The kinds
