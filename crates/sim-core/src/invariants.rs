@@ -2,11 +2,11 @@
 //!
 //! A violation is always a bug in the rules, never a legal game state.
 //!
-//! The spec lists three more invariants. "Aircraft ready is never negative"
-//! holds by construction: `ready` is unsigned. "Every air group is at exactly
-//! one base" holds by construction too, since an air group has one `base`
-//! field; the checks here are that the base exists and is the group's own
-//! side's. (Carriers arrive later.) "No belief-state data was written from
+//! Three of the spec's invariants hold by construction. "Aircraft ready is
+//! never negative": `ready` is unsigned. "Every air group is at exactly one
+//! base or carrier": an air group has one location, a base or a ship; the
+//! checks here are that the base or ship exists and is the group's own
+//! side's. "No belief-state data was written from
 //! anything except a report" holds by construction: see
 //! [`crate::belief::BeliefState::apply_report`].
 
@@ -506,9 +506,9 @@ mod tests {
     use super::*;
     use crate::ids::{AircraftTypeId, ShipClassId};
     use crate::map::HexData;
-    use crate::orders::{AirMission, Mission};
+    use crate::orders::Mission;
     use crate::refdata::{ShipClass, ShipKind};
-    use crate::state::{AirGroup, AirGroupLocation, Base, Ship, ShipSystems, Side, TaskForce};
+    use crate::state::{AirGroup, AirGroupLocation, Base, Ship, Side, TaskForce};
 
     fn setup() -> (TruthState, Map) {
         let mut map = Map::new();
@@ -516,39 +516,25 @@ mod tests {
         let mut truth = TruthState::default();
         truth.bases.insert(
             BaseId::new(1),
-            Base {
-                id: BaseId::new(1),
-                name: "Base".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            Base::new(
+                BaseId::new(1),
+                "Base".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            ),
         );
         truth.air_groups.insert(
             AirGroupId::new(1),
             AirGroup {
-                id: AirGroupId::new(1),
-                name: "Group".to_string(),
-                side: Side::Allied,
-                location: AirGroupLocation::Base(BaseId::new(1)),
-                aircraft_type: AircraftTypeId::new(1),
                 ready: 2,
-                damaged: 0,
-                mission: AirMission::Rest,
-                search: None,
-                mission_order: None,
-                arc_order: None,
-                patrol_share: Fixed::ONE,
-                share_order: None,
-                fatigue: Fixed::ZERO,
-                rest_above: None,
-                rest_order: None,
-                stood_down: false,
-                pilots: None,
                 strength: 2,
+                ..AirGroup::new(
+                    AirGroupId::new(1),
+                    "Group".to_string(),
+                    Side::Allied,
+                    AirGroupLocation::Base(BaseId::new(1)),
+                    AircraftTypeId::new(1),
+                )
             },
         );
         (truth, map)
@@ -640,19 +626,16 @@ mod tests {
         truth.ships.insert(
             SHIP,
             Ship {
-                id: SHIP,
-                name: "Ship".to_string(),
-                class: ShipClassId::new(1),
-                side: Side::Allied,
                 fuel_t: Fixed::from_int(100),
-                supply_t: Fixed::ZERO,
-                cargo_fuel_t: Fixed::ZERO,
-                location: ShipLocation::TaskForce(TF),
-                flotation_damage: Fixed::ZERO,
-                fire_damage: Fixed::ZERO,
                 gun_rounds: Fixed::from_int(800),
                 torpedoes_ready: true,
-                systems: ShipSystems::ALL_WORKING,
+                ..Ship::new(
+                    SHIP,
+                    "Ship".to_string(),
+                    ShipClassId::new(1),
+                    Side::Allied,
+                    ShipLocation::TaskForce(TF),
+                )
             },
         );
         (truth, map)

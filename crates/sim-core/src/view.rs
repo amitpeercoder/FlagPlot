@@ -353,7 +353,7 @@ mod tests {
     use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, BaseId, ShipClassId, ShipId, TaskForceId};
     use crate::map::{HexData, Map};
-    use crate::orders::{AirMission, Mission, Readiness};
+    use crate::orders::{Mission, Readiness};
     use crate::refdata::{
         AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
         SurfaceCombatFigures,
@@ -368,25 +368,15 @@ mod tests {
 
     fn group(id: u32, side: Side, base: u32) -> AirGroup {
         AirGroup {
-            id: AirGroupId::new(id),
-            name: format!("Group {id}"),
-            side,
-            location: AirGroupLocation::Base(BaseId::new(base)),
-            aircraft_type: AircraftTypeId::new(1),
             ready: 4,
-            damaged: 0,
-            mission: AirMission::Rest,
-            search: None,
-            mission_order: None,
-            arc_order: None,
-            patrol_share: Fixed::ONE,
-            share_order: None,
-            fatigue: Fixed::ZERO,
-            rest_above: None,
-            rest_order: None,
-            stood_down: false,
-            pilots: None,
             strength: 4,
+            ..AirGroup::new(
+                AirGroupId::new(id),
+                format!("Group {id}"),
+                side,
+                AirGroupLocation::Base(BaseId::new(base)),
+                AircraftTypeId::new(1),
+            )
         }
     }
 
@@ -424,16 +414,12 @@ mod tests {
         for (id, side, hex) in [(1, Side::Allied, 0), (2, Side::Japanese, 5)] {
             truth.bases.insert(
                 BaseId::new(id),
-                Base {
-                    id: BaseId::new(id),
-                    name: format!("Base {id}"),
+                Base::new(
+                    BaseId::new(id),
+                    format!("Base {id}"),
                     side,
-                    hex: Hex::new(hex, 0),
-                    supply_t: Fixed::ZERO,
-                    anti_aircraft: 0,
-                    aircraft_repairs_per_day: 0,
-                    fuel_t: Fixed::ZERO,
-                },
+                    Hex::new(hex, 0),
+                ),
             );
             truth
                 .air_groups

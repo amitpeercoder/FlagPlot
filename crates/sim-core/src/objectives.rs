@@ -702,9 +702,9 @@ mod tests {
     use crate::events::EventKind;
     use crate::hex::Hex;
     use crate::ids::{AirGroupId, AircraftTypeId, ShipClassId, ShipId, TaskForceId};
-    use crate::orders::{AirMission, Cargo};
+    use crate::orders::Cargo;
     use crate::side_events::SideEventKind;
-    use crate::state::{AirGroup, Base, ShipSystems};
+    use crate::state::{AirGroup, Base};
 
     fn fx(text: &str) -> Fixed {
         text.parse().expect("a decimal")
@@ -772,57 +772,34 @@ mod tests {
 
     fn base(id: u32, side: Side, supply: i64) -> Base {
         Base {
-            id: BaseId::new(id),
-            name: format!("Base {id}"),
-            side,
-            hex: Hex::new(0, 0),
             supply_t: n(supply),
-            anti_aircraft: 0,
-            aircraft_repairs_per_day: 0,
-            fuel_t: Fixed::ZERO,
+            ..Base::new(BaseId::new(id), format!("Base {id}"), side, Hex::new(0, 0))
         }
     }
 
     fn group(id: u32, side: Side, base: u32, ready: u32, damaged: u32) -> AirGroup {
         AirGroup {
-            id: AirGroupId::new(id),
-            name: format!("Group {id}"),
-            side,
-            location: AirGroupLocation::Base(BaseId::new(base)),
-            aircraft_type: AircraftTypeId::new(1),
             ready,
             damaged,
-            mission: AirMission::Rest,
-            search: None,
-            mission_order: None,
-            arc_order: None,
-            patrol_share: Fixed::ONE,
-            share_order: None,
-            fatigue: Fixed::ZERO,
-            rest_above: None,
-            rest_order: None,
-            stood_down: false,
-            pilots: None,
             strength: ready + damaged,
+            ..AirGroup::new(
+                AirGroupId::new(id),
+                format!("Group {id}"),
+                side,
+                AirGroupLocation::Base(BaseId::new(base)),
+                AircraftTypeId::new(1),
+            )
         }
     }
 
     fn ship(id: u32, side: Side) -> Ship {
-        Ship {
-            id: ShipId::new(id),
-            name: format!("Ship {id}"),
-            class: ShipClassId::new(1),
+        Ship::new(
+            ShipId::new(id),
+            format!("Ship {id}"),
+            ShipClassId::new(1),
             side,
-            fuel_t: Fixed::ZERO,
-            supply_t: Fixed::ZERO,
-            cargo_fuel_t: Fixed::ZERO,
-            location: ShipLocation::TaskForce(TaskForceId::new(1)),
-            flotation_damage: Fixed::ZERO,
-            fire_damage: Fixed::ZERO,
-            gun_rounds: Fixed::ZERO,
-            torpedoes_ready: false,
-            systems: ShipSystems::ALL_WORKING,
-        }
+            ShipLocation::TaskForce(TaskForceId::new(1)),
+        )
     }
 
     fn unloaded(log: &mut EventLog, ship: u32, base: u32, cargo: Cargo, tons: i64) {

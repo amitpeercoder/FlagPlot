@@ -341,7 +341,7 @@ mod tests {
     use crate::map::{HexData, Map};
     use crate::orders::{Mission, OrderKind, OrderRequest, Origin, TaskForceOrder};
     use crate::refdata::{RefData, ShipClass, ShipKind};
-    use crate::state::{Base, Ship, ShipLocation, ShipSystems, Side, TaskForce, TruthState};
+    use crate::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
     use crate::world::SimConfig;
 
     /// One task force for `world`: its ID, its hex, and its ships as
@@ -427,19 +427,15 @@ mod tests {
                 truth.ships.insert(
                     ship(*ship_id),
                     Ship {
-                        id: ship(*ship_id),
-                        name: format!("Ship {ship_id}"),
-                        class: ShipClassId::new(1),
-                        side: Side::Allied,
                         fuel_t: Fixed::from_int(2000),
                         supply_t: Fixed::from_int(*supply),
-                        cargo_fuel_t: Fixed::ZERO,
-                        location: ShipLocation::TaskForce(tf(*id)),
-                        flotation_damage: Fixed::ZERO,
-                        fire_damage: Fixed::ZERO,
-                        gun_rounds: Fixed::ZERO,
-                        torpedoes_ready: false,
-                        systems: ShipSystems::ALL_WORKING,
+                        ..Ship::new(
+                            ship(*ship_id),
+                            format!("Ship {ship_id}"),
+                            ShipClassId::new(1),
+                            Side::Allied,
+                            ShipLocation::TaskForce(tf(*id)),
+                        )
                     },
                 );
             }
@@ -449,14 +445,8 @@ mod tests {
             truth.bases.insert(
                 BaseId::new(id),
                 Base {
-                    id: BaseId::new(id),
-                    name: format!("Base {id}"),
-                    side: Side::Allied,
-                    hex,
                     supply_t: Fixed::from_int(stock),
-                    anti_aircraft: 0,
-                    aircraft_repairs_per_day: 0,
-                    fuel_t: Fixed::ZERO,
+                    ..Base::new(BaseId::new(id), format!("Base {id}"), Side::Allied, hex)
                 },
             );
         }

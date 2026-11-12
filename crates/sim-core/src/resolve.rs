@@ -763,8 +763,8 @@ mod tests {
         SurfaceCombatFigures,
     };
     use crate::state::{
-        AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystems, Side, SystemState,
-        TaskForce, TruthState,
+        AirGroup, AirGroupLocation, Base, Ship, ShipLocation, Side, SystemState, TaskForce,
+        TruthState,
     };
 
     const TF: TaskForceId = TaskForceId::new(1);
@@ -832,33 +832,24 @@ mod tests {
         truth.ships.insert(
             SHIP,
             Ship {
-                id: SHIP,
-                name: "Test ship".to_string(),
-                class: ShipClassId::new(1),
-                side: Side::Allied,
                 fuel_t: Fixed::from_int(fuel_t),
-                supply_t: Fixed::ZERO,
-                cargo_fuel_t: Fixed::ZERO,
-                location: ShipLocation::TaskForce(TF),
-                flotation_damage: Fixed::ZERO,
-                fire_damage: Fixed::ZERO,
-                gun_rounds: Fixed::ZERO,
-                torpedoes_ready: false,
-                systems: ShipSystems::ALL_WORKING,
+                ..Ship::new(
+                    SHIP,
+                    "Test ship".to_string(),
+                    ShipClassId::new(1),
+                    Side::Allied,
+                    ShipLocation::TaskForce(TF),
+                )
             },
         );
         truth.bases.insert(
             BaseId::new(1),
-            Base {
-                id: BaseId::new(1),
-                name: "Test base".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            Base::new(
+                BaseId::new(1),
+                "Test base".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            ),
         );
 
         World::new(seed, ref_data, map, truth).expect("valid setup")
@@ -1175,19 +1166,14 @@ mod tests {
         world.truth.ships.insert(
             fast_ship,
             Ship {
-                id: fast_ship,
-                name: "Fast ship".to_string(),
-                class: ShipClassId::new(2),
-                side: Side::Allied,
                 fuel_t: Fixed::from_int(2000),
-                supply_t: Fixed::ZERO,
-                cargo_fuel_t: Fixed::ZERO,
-                location: ShipLocation::TaskForce(TF),
-                flotation_damage: Fixed::ZERO,
-                fire_damage: Fixed::ZERO,
-                gun_rounds: Fixed::ZERO,
-                torpedoes_ready: false,
-                systems: ShipSystems::ALL_WORKING,
+                ..Ship::new(
+                    fast_ship,
+                    "Fast ship".to_string(),
+                    ShipClassId::new(2),
+                    Side::Allied,
+                    ShipLocation::TaskForce(TF),
+                )
             },
         );
         world
@@ -1491,25 +1477,15 @@ mod tests {
         world.truth.air_groups.insert(
             GROUP,
             AirGroup {
-                id: GROUP,
-                name: "Test group".to_string(),
-                side: Side::Allied,
-                location: AirGroupLocation::Base(BaseId::new(1)),
-                aircraft_type: AircraftTypeId::new(1),
                 ready: 3,
-                damaged: 0,
-                mission: AirMission::Rest,
-                search: None,
-                mission_order: None,
-                arc_order: None,
-                patrol_share: Fixed::ONE,
-                share_order: None,
-                fatigue: Fixed::ZERO,
-                rest_above: None,
-                rest_order: None,
-                stood_down: false,
-                pilots: None,
                 strength: 3,
+                ..AirGroup::new(
+                    GROUP,
+                    "Test group".to_string(),
+                    Side::Allied,
+                    AirGroupLocation::Base(BaseId::new(1)),
+                    AircraftTypeId::new(1),
+                )
             },
         );
         assert_sound(&world);
@@ -2768,16 +2744,12 @@ mod tests {
         let mut truth = good.truth.clone();
         truth.bases.insert(
             ENEMY_BASE,
-            Base {
-                id: ENEMY_BASE,
-                name: "Enemy base".to_string(),
-                side: Side::Japanese,
-                hex: hx(1, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            Base::new(
+                ENEMY_BASE,
+                "Enemy base".to_string(),
+                Side::Japanese,
+                hx(1, 0),
+            ),
         );
         World::new(7, ref_data, good.map.clone(), truth).expect("valid setup")
     }

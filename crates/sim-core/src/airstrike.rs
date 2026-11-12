@@ -2518,43 +2518,28 @@ mod tests {
 
     fn group(id: AirGroupId, side: Side, ship: u32, type_id: u32, ready: u32) -> AirGroup {
         AirGroup {
-            id,
-            name: format!("Test group {}", id.raw()),
-            side,
-            location: AirGroupLocation::Ship(ShipId::new(ship)),
-            aircraft_type: AircraftTypeId::new(type_id),
             ready,
-            damaged: 0,
-            mission: AirMission::Rest,
-            search: None,
-            mission_order: None,
-            arc_order: None,
-            patrol_share: Fixed::ONE,
-            share_order: None,
-            fatigue: Fixed::ZERO,
-            rest_above: None,
-            rest_order: None,
-            stood_down: false,
-            pilots: None,
             strength: ready,
+            ..AirGroup::new(
+                id,
+                format!("Test group {}", id.raw()),
+                side,
+                AirGroupLocation::Ship(ShipId::new(ship)),
+                AircraftTypeId::new(type_id),
+            )
         }
     }
 
     fn ship(id: u32, class: u32, side: Side, force: TaskForceId) -> Ship {
         Ship {
-            id: ShipId::new(id),
-            name: format!("Test ship {id}"),
-            class: ShipClassId::new(class),
-            side,
             fuel_t: Fixed::from_int(2000),
-            supply_t: Fixed::ZERO,
-            cargo_fuel_t: Fixed::ZERO,
-            location: ShipLocation::TaskForce(force),
-            flotation_damage: Fixed::ZERO,
-            fire_damage: Fixed::ZERO,
-            gun_rounds: Fixed::ZERO,
-            torpedoes_ready: false,
-            systems: ShipSystems::ALL_WORKING,
+            ..Ship::new(
+                ShipId::new(id),
+                format!("Test ship {id}"),
+                ShipClassId::new(class),
+                side,
+                ShipLocation::TaskForce(force),
+            )
         }
     }
 
@@ -3372,16 +3357,12 @@ mod tests {
         deck(&mut world, 1, SystemState::Out);
         world.truth.bases.insert(
             crate::ids::BaseId::new(1),
-            crate::state::Base {
-                id: crate::ids::BaseId::new(1),
-                name: "Test base".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            crate::state::Base::new(
+                crate::ids::BaseId::new(1),
+                "Test base".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            ),
         );
         group_mut(&mut world, BOMBERS).location =
             AirGroupLocation::Base(crate::ids::BaseId::new(1));
@@ -4287,16 +4268,12 @@ mod tests {
         let mut world = world_with_a_good_contact(1);
         world.truth.bases.insert(
             crate::ids::BaseId::new(1),
-            crate::state::Base {
-                id: crate::ids::BaseId::new(1),
-                name: "Test base".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            crate::state::Base::new(
+                crate::ids::BaseId::new(1),
+                "Test base".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            ),
         );
         deck(&mut world, 1, SystemState::Out);
         cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
@@ -4739,16 +4716,12 @@ mod tests {
         for (id, hex) in [(1, Hex::new(5, 0)), (2, Hex::new(6, 0))] {
             world.truth.bases.insert(
                 crate::ids::BaseId::new(id),
-                crate::state::Base {
-                    id: crate::ids::BaseId::new(id),
-                    name: format!("Test base {id}"),
-                    side: Side::Japanese,
+                crate::state::Base::new(
+                    crate::ids::BaseId::new(id),
+                    format!("Test base {id}"),
+                    Side::Japanese,
                     hex,
-                    supply_t: Fixed::ZERO,
-                    anti_aircraft: 0,
-                    aircraft_repairs_per_day: 0,
-                    fuel_t: Fixed::ZERO,
-                },
+                ),
             );
         }
         for (id, base, ready) in [(11, 1, 3), (12, 2, 9)] {
@@ -5091,16 +5064,12 @@ mod tests {
         let mut world = self::world(1, vec![held(Hex::new(3, 0), ShipKind::Cruiser, 0)]);
         world.truth.bases.insert(
             crate::ids::BaseId::new(1),
-            crate::state::Base {
-                id: crate::ids::BaseId::new(1),
-                name: "Test base".to_string(),
-                side: Side::Japanese,
-                hex: Hex::new(3, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            crate::state::Base::new(
+                crate::ids::BaseId::new(1),
+                "Test base".to_string(),
+                Side::Japanese,
+                Hex::new(3, 0),
+            ),
         );
         let mut fighters = group(AirGroupId::new(10), Side::Japanese, 2, 5, 12);
         fighters.location = AirGroupLocation::Base(crate::ids::BaseId::new(1));
@@ -5444,16 +5413,12 @@ mod tests {
         let mut world = world_with_a_good_contact(1);
         world.truth.bases.insert(
             crate::ids::BaseId::new(1),
-            crate::state::Base {
-                id: crate::ids::BaseId::new(1),
-                name: "Test base".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            crate::state::Base::new(
+                crate::ids::BaseId::new(1),
+                "Test base".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            ),
         );
         cap_group(&mut world, 5, Side::Allied, 1, 12, fixed(1, 2));
         group_mut(&mut world, PATROL_A).location = base;
@@ -5978,14 +5943,8 @@ mod tests {
             world.truth.bases.insert(
                 id,
                 crate::state::Base {
-                    id,
-                    name: format!("Test base {}", id.raw()),
-                    side,
-                    hex,
                     supply_t: Fixed::from_int(supply),
-                    anti_aircraft: 0,
-                    aircraft_repairs_per_day: 0,
-                    fuel_t: Fixed::ZERO,
+                    ..crate::state::Base::new(id, format!("Test base {}", id.raw()), side, hex)
                 },
             );
         }
@@ -6255,16 +6214,12 @@ mod tests {
         // A second Allied place and raid on the same base.
         world.truth.bases.insert(
             BaseId::new(3),
-            crate::state::Base {
-                id: BaseId::new(3),
-                name: "Test base 3".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(1, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            crate::state::Base::new(
+                BaseId::new(3),
+                "Test base 3".to_string(),
+                Side::Allied,
+                Hex::new(1, 0),
+            ),
         );
         group_mut(&mut world, AirGroupId::new(1)).ready = 12;
         base_group(
@@ -6321,16 +6276,12 @@ mod tests {
             if let Some(second) = bombers.get(1) {
                 world.truth.bases.insert(
                     BaseId::new(3),
-                    crate::state::Base {
-                        id: BaseId::new(3),
-                        name: "Test base 3".to_string(),
-                        side: Side::Allied,
-                        hex: Hex::new(1, 0),
-                        supply_t: Fixed::ZERO,
-                        anti_aircraft: 0,
-                        aircraft_repairs_per_day: 0,
-                        fuel_t: Fixed::ZERO,
-                    },
+                    crate::state::Base::new(
+                        BaseId::new(3),
+                        "Test base 3".to_string(),
+                        Side::Allied,
+                        Hex::new(1, 0),
+                    ),
                 );
                 base_group(
                     &mut world,
@@ -9205,16 +9156,12 @@ mod tests {
         supply_figures(&mut world);
         world.truth.bases.insert(
             BASE_ALLIED,
-            crate::state::Base {
-                id: BASE_ALLIED,
-                name: "Test base".to_string(),
-                side: Side::Allied,
-                hex: Hex::new(0, 0),
-                supply_t: Fixed::ZERO,
-                anti_aircraft: 0,
-                aircraft_repairs_per_day: 0,
-                fuel_t: Fixed::ZERO,
-            },
+            crate::state::Base::new(
+                BASE_ALLIED,
+                "Test base".to_string(),
+                Side::Allied,
+                Hex::new(0, 0),
+            ),
         );
         world.work_out_grounded_bases();
         assert!(world.grounded_bases.contains(&BASE_ALLIED));
