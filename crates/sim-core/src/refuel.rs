@@ -494,7 +494,12 @@ mod tests {
         let before = empty.state_hash();
         let summary = empty.resolve_day().expect("day resolves");
         assert!(refuelled(&empty).is_empty());
-        assert_eq!(summary.event_count, 0);
+        // Nothing but the base's count at the end of the day (decision 0067).
+        assert_eq!(summary.event_count, 1);
+        assert!(matches!(
+            empty.events().iter().last().expect("an event").kind,
+            EventKind::BaseAtDayEnd { .. }
+        ));
         assert_eq!(fuel(&empty, 1), tons(1000));
 
         // The same world with a fuel stock hashes differently, and two equal

@@ -2,9 +2,9 @@ Scenario 1: Transit, Noumea to Espiritu Santo
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a169b17e09341100  11 events
-day   2  hash 27dbbad2216a018b  4 events
-day   3  hash ae1c8f8c653adaea  0 events
+day   1  hash 5b4a5bb44acfcdc6  13 events
+day   2  hash cfd34f12382145d1  6 events
+day   3  hash a3f8cafdeb5c8efe  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -17,10 +17,16 @@ day   3  hash ae1c8f8c653adaea  0 events
 #9 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (8,0) to (8,3)  <- order:1, order:2
 #10 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #9
 #11 D1 afternoon ship:2 burned 12 t, 452 t remaining  <- #9
-#12 D2 night     task_force:1 steamed 10 nm at 16 kn from (8,3) to (8,3)  <- order:1, order:2
-#13 D2 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #12
-#14 D2 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #12
-#15 D2 night     task_force:1 arrived at (8,3) at D2 18:38  <- #12
+#12 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#13 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#14 D2 night     task_force:1 steamed 10 nm at 16 kn from (8,3) to (8,3)  <- order:1, order:2
+#15 D2 night     ship:1 burned 2.5 t, 1901.5 t remaining  <- #14
+#16 D2 night     ship:2 burned 1.25 t, 450.75 t remaining  <- #14
+#17 D2 night     task_force:1 arrived at (8,3) at D2 18:38  <- #14
+#18 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#19 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#20 D3 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#21 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (8,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1901.5 t of fuel, 0 t of supply

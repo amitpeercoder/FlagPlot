@@ -821,18 +821,27 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
             format!("Objective: enemy aircraft destroyed, points for each: {points}")
         }
         "cargo_landed" => format!(
-            "Objective: tons of supply and fuel you unload at {base}, points for each ton: {points}"
+            "Objective: tons of supply and fuel you unload at {base} and do not load back, points for each ton: {points}"
         ),
         _ if line.closed == Some(true) => format!(
-            "Objective: {base} shut at the end (no supply, or no aircraft ready), points: {points}"
+            "Objective: {base} shut at the end of each day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
         ),
         _ => format!(
-            "Objective: {base} open at the end (supply and an aircraft ready), points: {points}"
+            "Objective: {base} open at the end of each day (supply and an aircraft ready), points if open every day: {points}, earned by the share of days"
         ),
     };
     o.line(what);
     let known = &line.known;
     o.sub(match known.basis {
+        "exact" if known.days.is_some() => format!(
+            "What you know of your progress: {} of {} days{}",
+            known.count.0,
+            known.days.unwrap_or(0),
+            known
+                .points
+                .map(|p| format!(", worth {} points", p.0))
+                .unwrap_or_default()
+        ),
         "exact" => format!(
             "What you know of your progress: {}{}",
             known.count.0,
@@ -882,8 +891,12 @@ fn result_text(o: &mut Out, result: &ResultPart) {
             } else {
                 format!(" ({})", ships.join(", "))
             };
+            let of_days = score
+                .days
+                .map(|days| format!(" of {days} days"))
+                .unwrap_or_default();
             o.sub(format!(
-                "{}{base}: count {}{by_kind}, points {}",
+                "{}{base}: count {}{of_days}{by_kind}, points {}",
                 plain(score.kind),
                 score.count.0,
                 score.points.0

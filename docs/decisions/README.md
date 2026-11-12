@@ -31,7 +31,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0021 | Readiness by order, alertness from belief and events, and an alarm roll when a fight breaks out nearby | Confirmed |
 | 0022 | Movement and fights in one time-ordered step; a force that breaks off avoids action for the rest of the pulse | Confirmed |
 | 0023 | The Savo Island ships: weak rows read by exception, designed rates of fire by named exception, and ammunition not limiting for three ships | Confirmed |
-| 0024 | The Savo Island scenario: one hex, three forces, the pickets and Jarvis left out; what the first runs show | Needs review |
+| 0024 | The Savo Island scenario: one hex, three forces, the pickets and Jarvis left out; what the first runs show | Confirmed |
 | 0025 | Air groups aboard ships: aircraft capacity, position from the ship, search from a carrier, lost with the ship | Confirmed |
 | 0026 | Air strikes on ships: decided on belief, resolved in the same pulse, one hit mechanism; the flight deck as a fifth system | Confirmed |
 | 0027 | Fighters on patrol and escort, anti-aircraft fire, and aircraft lost: escort against patrol one for one, then guns, then the attack | Confirmed |
@@ -41,12 +41,12 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0031 | The Eastern Solomons scenario: one day, four forces and Henderson Field; positions, air groups and orders | Confirmed |
 | 0032 | What the complexity review cut and merged: noticing, contact confidence, two duplicate figures, and clock rounding | Confirmed |
 | 0033 | Hits revised: a system hit depends on the damage, each shot is rolled, and a patrol divides among the raids on its hex | Confirmed |
-| 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed; 3 and 6 need review |
-| 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2, 9 and 12 need review |
-| 0036 | Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies | Confirmed; 4, 5 and 9 need review |
+| 0034 | Raids on a base: the base strike mission, the base's guns, and hits on aircraft on the ground and on supply | Confirmed |
+| 0035 | Wear, repair and operational losses: damaged aircraft, a wear roll that rises with distance, a share written off, repairs a day at a base | Confirmed; 2 needs review, after the air figures are tuned |
+| 0036 | Fatigue and rest: one number for an air group that cuts the aircraft that fly, and a rest threshold the staff applies | Confirmed |
 | 0037 | Fatigue at battle readiness: an alert force tires each pulse, and fatigue cuts its chance to sight | Confirmed |
-| 0038 | Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate | Confirmed; 4, 8 and 10 need review |
-| 0039 | Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing | Confirmed; 4, 6 and 8 need review |
+| 0038 | Pilots and replacements: a pilot is lost with an aircraft shot down away from home, and aircraft and pilots arrive at a base at a daily rate | Confirmed |
+| 0039 | Base supply consumption: supply spent for each sortie, each aircraft a day and each repair, and a base out of supply flies nothing | Confirmed |
 | 0040 | Air distance is a straight line between hex centres, in whole miles, for every rule that asks how far an aircraft flies. Ships are deferred | Confirmed |
 | 0041 | Aircraft that arrive on a day: a scenario may deliver aircraft and pilots to an air group on a named day, raising its strength | Confirmed |
 | 0042 | The Rabaul against Guadalcanal scenario: who is there, what the aircraft can do, and what is a placeholder | Confirmed |
@@ -74,7 +74,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0064 | Experience: a value from 0 to 4 for a ship and an air group, derived from fact rows by yes or no questions and fixed before tuning; ships first, read at night by the hit and sighting chances; air groups second. Approved as a plan; not built yet | Confirmed |
 | 0065 | A side's events name no enemy ship, task force or air group: the cut event has no field for it. A fight holds the side's own force; six kinds that were whole lose only the name. An enemy base and the target of a side's own order are still named. Replaces item 8 of 0047 | Confirmed |
 | 0066 | Land units, carried by sea and fed from a base: a count of men, troop capacity, men worked as cargo at a fixed weight, a landing that forms a base, a daily charge for each man and a share of the unfed lost. Stage 1 of the ground combat plan. Placeholder figures | Confirmed as to the plan; 7, 12 and 14 need review. Not built |
-| 0067 | Two objectives that could be gamed: cargo landed becomes tons unloaded less tons loaded back at that base; base open is counted by days and scored by the share of days, from a record of every base at the end of each day. Approved as a plan; not built yet | Confirmed |
+| 0067 | Two objectives that could be gamed: cargo landed becomes tons unloaded less tons loaded back at that base; base open is counted by days and scored by the share of days, from a record of every base at the end of each day. Built Nov 12, 2026; the state hash of every scenario with a base changed, because the hash counts the log's events | Confirmed |
 | 0068 | A force not at battle readiness fires with part of its guns: one share on its gun shots for the whole of a fight, unless it was ordered to battle readiness or alerted before the pulse began. Found at Savo Island, where the Allied groups fire six times the shells they did. Not built. | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

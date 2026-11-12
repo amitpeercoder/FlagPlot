@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 2` and a `"kind"` that names it.
+`"version": 3` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 2. A field removed from an answer, or a field whose meaning
+`version` is 3. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -51,6 +51,13 @@ of a fight became `force`, the side's own; `target` left a salvo fired and a
 fighter's fire; `raid` left the guns' fire; `air_group` left a raid on a base;
 and `by` of an attack on a ship became `"ship"` or `"aircraft"`. Nothing else
 changed.
+
+Version 3 (decision 0067) changed what two counts mean. The `count` of
+`cargo_landed` is the tons unloaded at the base less the tons loaded back
+there, never below 0. The `count` of `base_open` is the days the base ended
+as wanted, no longer 1 or 0, and a new field `days` beside it says how many
+days were counted; the points are the objective's points times `count` over
+`days`. `days` is null for every other objective.
 
 ## What is not in an answer
 
@@ -230,8 +237,10 @@ or a hash.
   claims say it sank, shot down or destroyed on the ground, decision 0056: they
   can be wrong, so `count` can be above the truth; `points` are for the kind of
   ship each claim names, `null` where none does) or `not_observable` (no unit of its own and
-  no event it may see shows it; `count` is 0 and says nothing). The text says
-  `none` for a scenario without objectives. A side is never given the enemy's
+  no event it may see shows it; `count` is 0 and says nothing). For `base_open`
+  at a base of the side's own, `count` is the days the base ended as wanted and
+  `known.days` the days counted (decision 0067); `days` is `null` otherwise.
+  The text says `none` for a scenario without objectives. A side is never given the enemy's
   mission or objectives.
 - At the end of the game the final briefing's `objectives.result` and the
   `end_day` answer that reports `game_over` carry the result for both sides:

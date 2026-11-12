@@ -40,22 +40,25 @@
 //!   `worn` (damaged and repaired later, not lost), `PilotsLost` (pilots, not
 //!   aircraft; the aircraft's own event counts the aircraft), `AircraftRepaired`
 //!   and every event that adds aircraft.
-//! - `cargo_landed`: `CargoUnloaded` events of the side's own ships at the
-//!   named base, supply and fuel tons together.
-//! - `base_open`: the named base's supply above zero and at least one ready
-//!   aircraft of an air group at it, read from the final truth.
+//! - `cargo_landed`: the tons in the `CargoUnloaded` events of the side's
+//!   own ships at the named base, less the tons in their `CargoLoaded`
+//!   events there, supply and fuel together, never below nothing (decision
+//!   0067). Cargo put ashore and taken off again was not landed.
+//! - `base_open`: the days on which the named base ended the day with supply
+//!   above zero and at least one ready aircraft of an air group at it, from
+//!   the `BaseAtDayEnd` event of each day (decision 0067). With
+//!   `closed = true`, the days on which it did not. The points are the
+//!   objective's points times those days over the days resolved.
 
 use core::fmt;
 use std::collections::BTreeMap;
 
-use crate::events::{EventKind, EventLog};
+use crate::events::{base_is_open, EventKind, EventLog};
 use crate::fixed::Fixed;
 use crate::ids::BaseId;
 use crate::refdata::{RefData, ShipKind};
 use crate::side_events::SideEvent;
-use crate::state::{
-    AirGroupLocation, Ship, ShipLocation, ShipSystem, Side, SystemState, TruthState,
-};
+use crate::state::{Ship, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 
 /// The points for each kind of ship. A kind not listed is worth nothing.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
@@ -257,10 +260,57 @@ pub struct Tally {
     pub crippled: BTreeMap<ShipKind, u32>,
     /// Enemy aircraft lost for good.
     pub aircraft: u32,
-    /// Tons unloaded by the side's ships, by base.
+    /// Tons unloaded by the side's ships less tons they loaded, by base.
+    /// It can be below zero here; the score never is.
     pub cargo_t: BTreeMap<BaseId, Fixed>,
-    /// Whether each base has supply above zero and an aircraft ready.
-    pub open: BTreeMap<BaseId, bool>,
+    /// For each base, the days counted and the days it ended open.
+    pub base_days: BTreeMap<BaseId, BaseDays>,
+}
+
+/// The days a base was counted at their end, and on how many it was open:
+/// supply above zero and an aircraft ready (decision 0067).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct BaseDays {
+    pub days: u32,
+    pub open: u32,
+}
+
+impl BaseDays {
+    /// Adds one day's end.
+    pub fn note(&mut self, supply_t: Fixed, aircraft_ready: u32) {
+        self.days += 1;
+        if base_is_open(supply_t, aircraft_ready) {
+            self.open += 1;
+        }
+    }
+
+    /// The days the base was as the objective wants it: open, or with
+    /// `closed`, shut.
+    pub fn as_wanted(self, closed: bool) -> u32 {
+        if closed {
+            self.days - self.open
+        } else {
+            self.open
+        }
+    }
+
+    /// The points of a `base_open` objective: its points times the days as
+    /// wanted over the days counted. Nothing before a day is counted.
+    pub fn points(self, closed: bool, points: Fixed) -> Fixed {
+        if self.days == 0 {
+            return Fixed::ZERO;
+        }
+        points * i64::from(self.as_wanted(closed)) / Fixed::from_int(i64::from(self.days))
+    }
+}
+
+/// The tons that count as landed: never below nothing.
+fn landed(net_t: Fixed) -> Fixed {
+    if net_t.is_negative() {
+        Fixed::ZERO
+    } else {
+        net_t
+    }
 }
 
 /// The tallies of both sides, from the final truth and the log.
@@ -344,21 +394,39 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
                     *total += *unloaded_t;
                 }
             }
+            // Cargo taken off again at the base was not landed.
+            EventKind::CargoLoaded {
+                ship,
+                base,
+                loaded_t,
+                ..
+            } => {
+                if let Some(ship) = truth.ships.get(ship) {
+                    let total = out
+                        .get_mut(&ship.side)
+                        .expect("both sides")
+                        .cargo_t
+                        .entry(*base)
+                        .or_insert(Fixed::ZERO);
+                    *total -= *loaded_t;
+                }
+            }
+            // Bases: each day's end, for both sides, whichever side holds
+            // them.
+            EventKind::BaseAtDayEnd {
+                base,
+                supply_t,
+                aircraft_ready,
+            } => {
+                for tally in out.values_mut() {
+                    tally
+                        .base_days
+                        .entry(*base)
+                        .or_default()
+                        .note(*supply_t, *aircraft_ready);
+                }
+            }
             _ => {}
-        }
-    }
-
-    // Bases: open or not, for both sides, whichever side holds them.
-    for base in truth.bases.values() {
-        let ready: u32 = truth
-            .air_groups
-            .values()
-            .filter(|g| g.location == AirGroupLocation::Base(base.id))
-            .map(|g| g.ready)
-            .sum();
-        let open = base.supply_t > Fixed::ZERO && ready > 0;
-        for tally in out.values_mut() {
-            tally.open.insert(base.id, open);
         }
     }
     out
@@ -385,8 +453,10 @@ pub struct ObjectiveScore {
     pub base: Option<BaseId>,
     /// For `base_open`: whether the side wanted the base shut.
     pub closed: bool,
-    /// Ships, aircraft, tons, or 1 or 0 for a base.
+    /// Ships, aircraft, tons, or for a base the days it was as wanted.
     pub count: Fixed,
+    /// For `base_open`: the days counted, which `count` is out of.
+    pub days: Option<u32>,
     /// For the two ship objectives: ships by kind.
     pub by_kind: BTreeMap<ShipKind, u32>,
     pub points: Fixed,
@@ -440,6 +510,7 @@ fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
                 base: objective.base(),
                 closed: false,
                 count: Fixed::ZERO,
+                days: None,
                 by_kind: BTreeMap::new(),
                 points: Fixed::ZERO,
             };
@@ -457,7 +528,7 @@ fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
                     score.points = score.count * *points;
                 }
                 Objective::CargoLanded { base, points_per_t } => {
-                    score.count = tally.cargo_t.get(base).copied().unwrap_or(Fixed::ZERO);
+                    score.count = landed(tally.cargo_t.get(base).copied().unwrap_or(Fixed::ZERO));
                     score.points = score.count * *points_per_t;
                 }
                 Objective::BaseOpen {
@@ -465,14 +536,11 @@ fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
                     closed,
                     points,
                 } => {
-                    let open = tally.open.get(base).copied().unwrap_or(false);
+                    let days = tally.base_days.get(base).copied().unwrap_or_default();
                     score.closed = *closed;
-                    score.count = if open != *closed {
-                        Fixed::ONE
-                    } else {
-                        Fixed::ZERO
-                    };
-                    score.points = score.count * *points;
+                    score.count = Fixed::from_int(i64::from(days.as_wanted(*closed)));
+                    score.days = Some(days.days);
+                    score.points = days.points(*closed, *points);
                 }
             }
             score
@@ -558,8 +626,12 @@ pub struct KnownProgress {
     pub base: Option<BaseId>,
     pub closed: bool,
     pub basis: KnownBasis,
-    /// Ships, aircraft, tons, or 1 or 0 for a base. 0 when not observable.
+    /// Ships, aircraft, tons, or for a base the days it was as wanted. 0
+    /// when not observable.
     pub count: Fixed,
+    /// For `base_open` at a base of the side's own: the days counted, which
+    /// `count` is out of.
+    pub days: Option<u32>,
     /// Points of the known count, where the kind of what was counted is
     /// known: for ships claimed sunk, those of the claims that name a kind
     /// (`None` if none does); for aircraft claimed, the count times the
@@ -595,27 +667,20 @@ impl Claimed {
     }
 }
 
-/// A side's own base and what it holds, as the side sees it. The view hands
-/// over its own bases and air groups only.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct OwnBase {
-    pub id: BaseId,
-    pub supply_t: Fixed,
-    pub aircraft_ready: u32,
-}
-
-/// The progress of one side's objectives from its own bases and the events
-/// it may see (`events` is [`SideView::events`](crate::view::SideView::events)).
-/// Reads no truth.
+/// The progress of one side's objectives from the events it may see
+/// (`events` is [`SideView::events`](crate::view::SideView::events)), and
+/// which bases are its own. Reads no truth.
 pub fn known_progress(
     objectives: &SideObjectives,
-    own_bases: &[OwnBase],
+    own_bases: &[BaseId],
     events: &[SideEvent],
 ) -> Vec<KnownProgress> {
     use crate::side_events::SideEventKind;
-    // Tons unloaded at each base by the side's own ships: a side sees its
-    // own unloading whole.
+    // Tons unloaded at each base by the side's own ships, less the tons they
+    // loaded there: a side sees its own cargo events whole.
     let mut cargo: BTreeMap<BaseId, Fixed> = BTreeMap::new();
+    // Each day's end at the side's own bases, which it sees whole.
+    let mut base_days: BTreeMap<BaseId, BaseDays> = BTreeMap::new();
     let mut claimed = Claimed::default();
     for event in events {
         if let SideEventKind::Whole(kind) = &event.kind {
@@ -625,6 +690,17 @@ pub fn known_progress(
                 } => {
                     *cargo.entry(*base).or_insert(Fixed::ZERO) += *unloaded_t;
                 }
+                EventKind::CargoLoaded { base, loaded_t, .. } => {
+                    *cargo.entry(*base).or_insert(Fixed::ZERO) -= *loaded_t;
+                }
+                EventKind::BaseAtDayEnd {
+                    base,
+                    supply_t,
+                    aircraft_ready,
+                } => base_days
+                    .entry(*base)
+                    .or_default()
+                    .note(*supply_t, *aircraft_ready),
                 EventKind::ClaimReceived {
                     claimed_sunk,
                     claimed_kind,
@@ -652,6 +728,7 @@ pub fn known_progress(
                 closed: false,
                 basis: KnownBasis::NotObservable,
                 count: Fixed::ZERO,
+                days: None,
                 points: None,
             };
             match objective {
@@ -684,7 +761,7 @@ pub fn known_progress(
                 }
                 Objective::CargoLanded { base, points_per_t } => {
                     known.basis = KnownBasis::Exact;
-                    known.count = cargo.get(base).copied().unwrap_or(Fixed::ZERO);
+                    known.count = landed(cargo.get(base).copied().unwrap_or(Fixed::ZERO));
                     known.points = Some(known.count * *points_per_t);
                 }
                 Objective::BaseOpen {
@@ -693,15 +770,12 @@ pub fn known_progress(
                     points,
                 } => {
                     known.closed = *closed;
-                    if let Some(own) = own_bases.iter().find(|b| b.id == *base) {
-                        let open = own.supply_t > Fixed::ZERO && own.aircraft_ready > 0;
+                    if own_bases.contains(base) {
+                        let days = base_days.get(base).copied().unwrap_or_default();
                         known.basis = KnownBasis::Exact;
-                        known.count = if open != *closed {
-                            Fixed::ONE
-                        } else {
-                            Fixed::ZERO
-                        };
-                        known.points = Some(known.count * *points);
+                        known.count = Fixed::from_int(i64::from(days.as_wanted(*closed)));
+                        known.days = Some(days.days);
+                        known.points = Some(days.points(*closed, *points));
                     }
                 }
             }
@@ -715,10 +789,10 @@ mod tests {
     use super::*;
     use crate::events::EventKind;
     use crate::hex::Hex;
-    use crate::ids::{AirGroupId, AircraftTypeId, ShipClassId, ShipId, TaskForceId};
+    use crate::ids::{ShipClassId, ShipId, TaskForceId};
     use crate::orders::Cargo;
     use crate::side_events::SideEventKind;
-    use crate::state::{AirGroup, Base};
+    use crate::state::Base;
 
     fn fx(text: &str) -> Fixed {
         text.parse().expect("a decimal")
@@ -788,21 +862,6 @@ mod tests {
         Base {
             supply_t: n(supply),
             ..Base::new(BaseId::new(id), format!("Base {id}"), side, Hex::new(0, 0))
-        }
-    }
-
-    fn group(id: u32, side: Side, base: u32, ready: u32, damaged: u32) -> AirGroup {
-        AirGroup {
-            ready,
-            damaged,
-            strength: ready + damaged,
-            ..AirGroup::new(
-                AirGroupId::new(id),
-                format!("Group {id}"),
-                side,
-                AirGroupLocation::Base(BaseId::new(base)),
-                AircraftTypeId::new(1),
-            )
         }
     }
 
@@ -921,118 +980,250 @@ mod tests {
         assert_eq!(known[0].count, n(7), "only what its own ships landed");
     }
 
-    /// Four bases, as the objectives see them at the end of a game:
-    /// 1 has supply and a ready aircraft (open); 2 has no supply (shut);
-    /// 3 has supply and only damaged aircraft (shut); 4 has supply and no
-    /// aircraft (shut).
-    fn open_scenario() -> TruthState {
+    // -----------------------------------------------------------------
+    // Decision 0067: cargo net of what was loaded back, and a base open by
+    // the share of days.
+    //
+    // # Hand calculation
+    //
+    // Written by the architect before the code, from the worked case of
+    // decision 0067. A game of four days. Base 1 is Allied. The Allied side
+    // holds `cargo_landed` at base 1 at 0.005 points a ton and `base_open`
+    // at base 1 for 10 points; the Japanese side holds `base_open` at base 1
+    // with `closed = true` for 10 points.
+    //
+    // | | Day 1 | Day 2 | Day 3 | Day 4 |
+    // | --- | --- | --- | --- | --- |
+    // | Unloaded at base 1 by Allied ship 1, tons | 1,000 | 0 | 1,000 | 0 |
+    // | Loaded at base 1 by Allied ship 1, tons | 0 | 1,000 | 0 | 0 |
+    // | Supply at the end of the day, tons | 1,000 | 0 | 1,000 | 1,000 |
+    // | Ready aircraft at the end of the day | 3 | 3 | 0 | 2 |
+    // | Open | yes | no | no | yes |
+    //
+    // - Cargo landed: 1,000 + 1,000 unloaded, less 1,000 loaded, is 1,000
+    //   tons. 1,000 x 0.005 = 5 points. (Before the decision: 2,000 tons, 10
+    //   points.)
+    // - Base open: open on days 1 and 4, 2 days of 4. 10 x 2 / 4 = 5 points
+    //   for the Allied side. Shut on days 2 and 3, 2 days of 4: 5 points for
+    //   the Japanese side. The two sum to the 10 of the objective.
+    // - A side that loads more at a base than it unloads there has landed
+    //   nothing: 300 unloaded and 500 loaded is 0 tons, not -200.
+    // - Three days, open on one: 10 x 1 / 3 = 3.333333 for the side that
+    //   wants it open and 10 x 2 / 3 = 6.666666 for the side that wants it
+    //   shut (fixed point keeps six places and cuts the rest).
+    // - No day resolved: 0 days of 0, and 0 points for either side.
+    // -----------------------------------------------------------------
+
+    fn loaded(log: &mut EventLog, day: u32, ship: u32, base: u32, tons: i64) {
+        log.record(
+            day,
+            None,
+            EventKind::CargoLoaded {
+                ship: ShipId::new(ship),
+                task_force: TaskForceId::new(1),
+                base: BaseId::new(base),
+                cargo: Cargo::Supply,
+                loaded_t: n(tons),
+                aboard_t: n(tons),
+                base_stock_t: Fixed::ZERO,
+            },
+            Vec::new(),
+            None,
+        );
+    }
+
+    fn day_end(log: &mut EventLog, day: u32, base: u32, supply: i64, ready: u32) {
+        log.record(
+            day,
+            None,
+            EventKind::BaseAtDayEnd {
+                base: BaseId::new(base),
+                supply_t: n(supply),
+                aircraft_ready: ready,
+            },
+            Vec::new(),
+            None,
+        );
+    }
+
+    /// The worked case of decision 0067, as a truth and a log.
+    fn worked_case() -> (TruthState, EventLog) {
         let mut truth = TruthState::default();
-        truth.bases.insert(BaseId::new(1), base(1, Side::Allied, 5));
-        truth.bases.insert(BaseId::new(2), base(2, Side::Allied, 0));
         truth
             .bases
-            .insert(BaseId::new(3), base(3, Side::Japanese, 5));
-        truth
-            .bases
-            .insert(BaseId::new(4), base(4, Side::Japanese, 5));
-        for (id, base_id, ready, damaged) in [(1, 1, 3, 0), (2, 2, 3, 0), (3, 3, 0, 4)] {
-            let side = truth.bases[&BaseId::new(base_id)].side;
-            truth.air_groups.insert(
-                AirGroupId::new(id),
-                group(id, side, base_id, ready, damaged),
-            );
+            .insert(BaseId::new(1), base(1, Side::Allied, 1000));
+        truth.ships.insert(ShipId::new(1), ship(1, Side::Allied));
+        let mut log = EventLog::default();
+        unloaded(&mut log, 1, 1, Cargo::Supply, 1000);
+        day_end(&mut log, 1, 1, 1000, 3);
+        loaded(&mut log, 2, 1, 1, 1000);
+        day_end(&mut log, 2, 1, 0, 3);
+        unloaded(&mut log, 1, 1, Cargo::Supply, 1000);
+        day_end(&mut log, 3, 1, 1000, 0);
+        day_end(&mut log, 4, 1, 1000, 2);
+        (truth, log)
+    }
+
+    fn worked_objectives() -> Objectives {
+        Objectives {
+            allied: SideObjectives {
+                mission: "Placeholder mission.".to_string(),
+                objectives: vec![
+                    Objective::CargoLanded {
+                        base: BaseId::new(1),
+                        points_per_t: fx("0.005"),
+                    },
+                    Objective::BaseOpen {
+                        base: BaseId::new(1),
+                        closed: false,
+                        points: n(10),
+                    },
+                ],
+            },
+            japanese: SideObjectives {
+                mission: "Placeholder mission.".to_string(),
+                objectives: vec![Objective::BaseOpen {
+                    base: BaseId::new(1),
+                    closed: true,
+                    points: n(10),
+                }],
+            },
+            levels: levels(),
+            history: None,
         }
-        truth
     }
 
     #[test]
-    fn base_open_is_one_with_supply_and_an_aircraft_ready_and_closed_reads_the_other_way() {
-        let truth = open_scenario();
-        let tallies = tallies(&truth, &EventLog::default(), &RefData::default());
-        // (base, closed, points of 7 expected for the base being as wanted)
-        for (base_id, closed, expected) in [
-            (1, false, 7),
-            (1, true, 0),
-            (2, false, 0),
-            (2, true, 7),
-            (3, false, 0),
-            (3, true, 7),
-            (4, false, 0),
-            (4, true, 7),
-        ] {
-            let objectives = one_side(Objective::BaseOpen {
-                base: BaseId::new(base_id),
-                closed,
-                points: n(7),
-            });
-            let result = score(&objectives, &tallies);
-            let line = &result.allied.objectives[0];
-            assert_eq!(
-                line.points,
-                n(expected),
-                "base {base_id} closed {closed}: {line:?}"
-            );
-            assert_eq!(
-                line.count,
-                if expected > 0 {
-                    Fixed::ONE
-                } else {
-                    Fixed::ZERO
-                }
-            );
-            assert_eq!(line.closed, closed);
-        }
-        // Either side's tally says the same of a base, whoever holds it.
-        assert_eq!(tallies[&Side::Allied].open, tallies[&Side::Japanese].open);
+    fn the_worked_case_of_decision_0067_scores_net_cargo_and_the_share_of_days() {
+        let (truth, log) = worked_case();
+        let result = score(
+            &worked_objectives(),
+            &tallies(&truth, &log, &RefData::default()),
+        );
+        let cargo = &result.allied.objectives[0];
+        assert_eq!(
+            (cargo.kind, cargo.count, cargo.points, cargo.days),
+            ("cargo_landed", n(1000), n(5), None)
+        );
+        let open = &result.allied.objectives[1];
+        assert_eq!(
+            (open.kind, open.count, open.points, open.days),
+            ("base_open", n(2), n(5), Some(4))
+        );
+        let shut = &result.japanese.objectives[0];
+        assert!(shut.closed);
+        assert_eq!((shut.count, shut.points, shut.days), (n(2), n(5), Some(4)));
+        // The two sides' objectives on the one base sum to the whole.
+        assert_eq!(open.points + shut.points, n(10));
+        assert_eq!(result.allied.total, n(10));
+        assert_eq!(result.allied.margin, n(5));
     }
 
     #[test]
-    fn a_side_knows_whether_its_own_base_is_open_and_nothing_of_the_enemys() {
-        let objectives = SideObjectives {
-            mission: "Placeholder mission.".to_string(),
-            objectives: vec![
-                Objective::BaseOpen {
-                    base: BaseId::new(1),
-                    closed: false,
-                    points: n(7),
-                },
-                Objective::BaseOpen {
-                    base: BaseId::new(1),
-                    closed: true,
-                    points: n(7),
-                },
-                Objective::BaseOpen {
-                    base: BaseId::new(3),
-                    closed: true,
-                    points: n(7),
-                },
-            ],
-        };
-        let own = [OwnBase {
-            id: BaseId::new(1),
-            supply_t: n(5),
-            aircraft_ready: 3,
-        }];
-        let known = known_progress(&objectives, &own, &[]);
+    fn cargo_loaded_back_beyond_what_was_landed_is_nothing_landed_and_never_less() {
+        let (truth, _) = worked_case();
+        let mut log = EventLog::default();
+        unloaded(&mut log, 1, 1, Cargo::Supply, 300);
+        loaded(&mut log, 1, 1, 1, 500);
+        let tallies = tallies(&truth, &log, &RefData::default());
+        let result = score(&worked_objectives(), &tallies);
+        let cargo = &result.allied.objectives[0];
+        assert_eq!((cargo.count, cargo.points), (Fixed::ZERO, Fixed::ZERO));
+        // Loading at another base takes nothing from this one.
+        let mut log = EventLog::default();
+        unloaded(&mut log, 1, 1, Cargo::Supply, 300);
+        loaded(&mut log, 1, 1, 2, 500);
+        let tallies = self::tallies(&truth, &log, &RefData::default());
+        assert_eq!(
+            score(&worked_objectives(), &tallies).allied.objectives[0].count,
+            n(300)
+        );
+    }
+
+    #[test]
+    fn a_base_is_open_on_a_day_with_supply_and_a_ready_aircraft_and_on_no_other() {
+        // Day by day: both, no supply, no ready aircraft, neither.
+        let mut days = BaseDays::default();
+        for (supply, ready) in [(5, 3), (0, 3), (5, 0), (0, 0)] {
+            days.note(n(supply), ready);
+        }
+        assert_eq!(days, BaseDays { days: 4, open: 1 });
+        assert_eq!((days.as_wanted(false), days.as_wanted(true)), (1, 3));
+        // One day of three, in fixed point.
+        let thirds = BaseDays { days: 3, open: 1 };
+        assert_eq!(thirds.points(false, n(10)), fx("3.333333"));
+        assert_eq!(thirds.points(true, n(10)), fx("6.666666"));
+        // No day resolved: nothing for either side.
+        let none = BaseDays::default();
+        assert_eq!(none.points(false, n(10)), Fixed::ZERO);
+        assert_eq!(none.points(true, n(10)), Fixed::ZERO);
+    }
+
+    #[test]
+    fn either_sides_tally_says_the_same_of_a_base_whoever_holds_it() {
+        let (truth, log) = worked_case();
+        let tallies = tallies(&truth, &log, &RefData::default());
+        assert_eq!(
+            tallies[&Side::Allied].base_days,
+            tallies[&Side::Japanese].base_days
+        );
+        assert_eq!(
+            tallies[&Side::Allied].base_days[&BaseId::new(1)],
+            BaseDays { days: 4, open: 2 }
+        );
+        // A base with no day counted scores nothing, open or shut.
+        let other = one_side(Objective::BaseOpen {
+            base: BaseId::new(9),
+            closed: true,
+            points: n(7),
+        });
+        let line = &score(&other, &tallies).allied.objectives[0];
+        assert_eq!((line.count, line.points, line.days), (n(0), n(0), Some(0)));
+    }
+
+    #[test]
+    fn a_side_knows_the_days_of_its_own_base_and_its_net_cargo_and_nothing_of_the_enemys() {
+        let (truth, log) = worked_case();
+        let owners = crate::side_events::Owners::from_state(&truth, &Default::default());
+        let allied = crate::side_events::project(Side::Allied, log.from_index(0), &owners);
+        let japanese = crate::side_events::project(Side::Japanese, log.from_index(0), &owners);
+        let objectives = worked_objectives();
+        // The Allied side: exact, and the umpire's own numbers.
+        let known = known_progress(&objectives.allied, &[BaseId::new(1)], &allied);
         assert_eq!(
             known
                 .iter()
-                .map(|k| (k.basis, k.count, k.points))
+                .map(|k| (k.basis, k.count, k.days, k.points))
                 .collect::<Vec<_>>(),
             vec![
-                (KnownBasis::Exact, Fixed::ONE, Some(n(7))),
-                (KnownBasis::Exact, Fixed::ZERO, Some(Fixed::ZERO)),
-                // Base 3 is the enemy's: nothing of it is seen.
-                (KnownBasis::NotObservable, Fixed::ZERO, None),
+                (KnownBasis::Exact, n(1000), None, Some(n(5))),
+                (KnownBasis::Exact, n(2), Some(4), Some(n(5))),
             ]
         );
-        // Out of supply: shut.
-        let own = [OwnBase {
-            id: BaseId::new(1),
-            supply_t: Fixed::ZERO,
-            aircraft_ready: 3,
-        }];
-        assert_eq!(known_progress(&objectives, &own, &[])[0].count, Fixed::ZERO);
+        // The Japanese side is given none of base 1's days: it is not its
+        // base.
+        assert!(japanese.is_empty());
+        let known = known_progress(&objectives.japanese, &[], &japanese);
+        assert_eq!(
+            (
+                known[0].basis,
+                known[0].count,
+                known[0].days,
+                known[0].points
+            ),
+            (KnownBasis::NotObservable, Fixed::ZERO, None, None)
+        );
+        // Before any day is resolved a side's own base has 0 days of 0.
+        let known = known_progress(&objectives.allied, &[BaseId::new(1)], &[]);
+        assert_eq!(
+            (
+                known[1].basis,
+                known[1].count,
+                known[1].days,
+                known[1].points
+            ),
+            (KnownBasis::Exact, Fixed::ZERO, Some(0), Some(Fixed::ZERO))
+        );
     }
 
     #[test]

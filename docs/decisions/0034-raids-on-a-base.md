@@ -1,6 +1,6 @@
 # 0034: Raids on a base
 
-Status: confirmed by the architect, within the plan for scenario 6 the designer approved on Nov 11, 2026. Decisions 3 and 6 are choices the plan did not state and are marked for review.
+Status: confirmed by the architect, within the plan for scenario 6 the designer approved on Nov 11, 2026. Decisions 3 and 6 are choices the plan did not state: decision 3 was settled by decision 0063, and the designer confirmed decision 6 on Nov 12, 2026.
 
 ## The gap
 
@@ -20,7 +20,7 @@ Stage 6a adds the raid itself. Damaged aircraft and repair, operational losses, 
 
 4. **A base strike is a raid like any other** (decisions 0027, 0030 and 0033). The strikes of one pulse from one place at one hex are one raid, whether they are sent at ships or at a base. Escorts go with it if the base is within their radius. The defender's patrol over the hex is divided among all the raids attacking that side there. Each raid's escorts and its share of the patrol fight as before.
 5. **The base's guns fire at a raid on the base.** A base has a number of anti-aircraft shots, as a ship has, and they fire as a force's do. Ships in the hex do not fire at a raid on the base, and the base does not fire at a raid on the ships.
-6. **Each bomber left drops at the bomb's chance to hit, whatever weapon its type carries against ships** *(needs review)*. A torpedo bomber sent at an airfield carries bombs. Each shot is rolled on its own.
+6. **Each bomber left drops at the bomb's chance to hit, whatever weapon its type carries against ships** *(confirmed by the designer, Nov 12, 2026)*. A torpedo bomber sent at an airfield carries bombs. Each shot is rolled on its own.
 
 ### What a hit does
 

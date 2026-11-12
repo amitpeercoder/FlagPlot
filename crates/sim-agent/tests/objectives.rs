@@ -130,10 +130,18 @@ fn without_supply() -> String {
 
 #[test]
 fn two_worlds_that_differ_in_an_enemy_base_give_a_side_the_same_known_progress() {
-    let stocked = raid(&raid_text(RAID_OBJECTIVES), 1).world;
-    let empty = raid(&without_supply(), 1).world;
-    // The umpire's view differs: base 2 is open in one world and shut in the
-    // other, so the Japanese objective to shut it scores in one.
+    // A base is counted at the end of each day (decision 0067), so a day is
+    // resolved in each world. Base supply is not in play in this scenario:
+    // the stock changes nothing but the count.
+    let after_a_day = |text: &str| {
+        let mut scenario = raid(text, 1);
+        scenario.next_day().expect("day 1 resolves").expect("a day");
+        scenario.world
+    };
+    let stocked = after_a_day(&raid_text(RAID_OBJECTIVES));
+    let empty = after_a_day(&without_supply());
+    // The umpire's view differs: base 2 ended the day open in one world and
+    // shut in the other, so the Japanese objective to shut it scores in one.
     let (a, b) = (
         stocked.result().expect("a result"),
         empty.result().expect("a result"),
@@ -165,8 +173,11 @@ fn two_worlds_that_differ_in_an_enemy_base_give_a_side_the_same_known_progress()
     );
     assert_ne!(one.known_progress(), two.known_progress());
     assert_eq!(one.known_progress()[0].basis, KnownBasis::Exact);
+    // One day of one, against none of one.
     assert_eq!(one.known_progress()[0].count.raw(), 1_000_000);
+    assert_eq!(one.known_progress()[0].days, Some(1));
     assert_eq!(two.known_progress()[0].count.raw(), 0);
+    assert_eq!(two.known_progress()[0].days, Some(1));
     // The Allied objective to shut the Japanese base 1 (supply 0, in both
     // worlds) is not observable and says nothing.
     assert_eq!(one.known_progress()[1].basis, KnownBasis::NotObservable);
