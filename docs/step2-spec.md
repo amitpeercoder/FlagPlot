@@ -107,7 +107,11 @@ Proposed:
 4. **The run baselines follow the live figures.** The files under `crates/sim-cli/tests/run_baseline` record what each scenario does on the figures in use, so they are remade in the same change as each tuning round, and the change shows the difference.
 5. **A rule change still means a new hand calculation,** written by the architect before the code.
 6. **A rule added during step 2 adds its figures to the frozen copy too, at the value that leaves step 1's results as they were,** where there is such a value, and otherwise at its first value. The frozen copy stands for what step 1 did, so a rule step 1 did not have is switched off there wherever it can be. The pilot of a patrol shot down over its own base is always recovered in the frozen copy, as in step 1, and draws for it in the live figures. The strength of experience is frozen at the value that makes experience do nothing. So no hand calculation of step 1 moves when a rule is added.
-7. **The new rule is then proved in a scenario of its own,** with its own hand calculation, on values that make it act. Switched off in the frozen copy, it is tested nowhere else by hand, so this is not optional: a rule with no scenario of its own on working values has no hand calculation at all.
+7. **The new rule is then proved in a scenario of its own,** on values that make it act. Switched off in the frozen copy, it is tested nowhere else by hand, so this is not optional. The scenario's test has three parts:
+   - **The chance, hand-calculated at a working value** strictly between 0 and 1, and asserted from the event's breakdown. A chance of 0 or 1 shows that the rule switches on and off and exercises no draw.
+   - **A property over many seeds** at that value: the count drawn is close to what the chance expects.
+   - **A pinned outcome for one seed** at that value, labelled as pinned and not as calculated. No hand calculation can say which draw succeeds; a pinned number catches a stream that moved, which the property would miss. It is remade when the rule is changed on purpose, with the change, and never to make a test pass.
+8. **One scenario has every rule of step 2 acting together,** built when the last of them is in and before any figure is tuned. With each new rule switched off in the frozen copy, no other hand calculation has two of them acting at once. It is a cut-down Eastern Solomons that can be read at one sitting: one carrier a side, a patrol, a strike beyond the radius, a deck that goes out with aircraft away, pilots counted, experience unequal. Its hand calculation covers everything that is determined: who is within which reach, each chance at its working value, each expected count, and the order the rules run in. It carries pinned outcomes for its seed. The rule cards of the step's decisions are read together on it, which makes it the complexity review of step 2.
 
 ## Rule work that comes before tuning
 
@@ -146,6 +150,7 @@ It is a blunter test than was hoped. At Savo Island the record gives shells fire
 - All three battles pass, or each miss is written down with its cause and accepted by the designer.
 - No figure in `data/reference` is a placeholder without a note saying what it rests on.
 - The frozen-figure tests, the invariants, the determinism scenario and the soak still pass.
+- The scenario with every rule of step 2 acting together passes ("Tests while figures move", 8), and was built before tuning began.
 - The legibility test is run again on the tuned Eastern Solomons: a cheap model, given one side's briefing and the events, explains an outcome and predicts the next day.
 - A cheap model given only the rulebook (`docs/rules/`), the glossary, the data files and two scenario files reproduces a set of hand calculations exactly. The build session ran this once on the step 1 rules; it is run again after the rule changes of step 2.
 
