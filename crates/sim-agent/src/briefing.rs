@@ -14,10 +14,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
-use sim_core::events::{EventKind, Weapon};
+use sim_core::events::{EventKind, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::HEX_NM;
 use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId};
+use sim_core::orders::{AirMission, Cargo};
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{ShipLocation, TaskForceStatus};
 use sim_core::view::SideView;
@@ -351,6 +352,9 @@ pub struct BriefingBase {
     /// Supply divided by yesterday's spending, truncated to one decimal;
     /// `None` when nothing was spent.
     pub days_of_supply: Option<Dec>,
+    /// Where the base's supply and fuel went and came from yesterday, by
+    /// cause. `None` when nothing moved in or out of either stock.
+    pub stocks_yesterday: Option<StocksYesterday>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -388,6 +392,26 @@ pub struct Warnings {
     /// A sixth, from the review of scenario 9 play: task forces that cannot
     /// move or are slowed by a ship of theirs with damaged propulsion.
     pub task_force_propulsion: Vec<PropulsionWarning>,
+    /// A seventh, from the second round of scenario 9 play: an air group on
+    /// naval_strike that holds contacts and has none within its type's
+    /// strike radius, or on base_strike at a base beyond it, at the time of
+    /// the briefing. It would launch nothing.
+    pub strike_group_out_of_reach: Vec<OutOfReachWarning>,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct OutOfReachWarning {
+    pub air_group: Handle,
+    /// `naval_strike` or `base_strike`.
+    pub mission: &'static str,
+    /// The aircraft type's strike radius in miles.
+    pub radius_nm: Dec,
+    /// For naval_strike, the nearest contact held; for base_strike, the
+    /// target base.
+    pub nearest: Handle,
+    /// Its air distance from the group in whole miles, by the engine's own
+    /// distance (`measure` air_reach gives the same figure).
+    pub distance_nm: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -501,6 +525,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                     .copied()
                     .unwrap_or(Fixed::ZERO)),
                 days_of_supply: days_of_supply(b.supply_t, spent).map(Dec),
+                stocks_yesterday: stocks_yesterday(b, day.stocks.get(&b.id)),
             }
         })
         .collect();
@@ -600,6 +625,115 @@ struct Day {
     losses: LossesPart,
     spent: BTreeMap<BaseId, Fixed>,
     destroyed: BTreeMap<BaseId, Fixed>,
+    stocks: BTreeMap<BaseId, StockMoves>,
+}
+
+/// What moved in and out of a base's stocks yesterday, by cause, from the
+/// side's own events.
+#[derive(Clone, Copy, Default)]
+struct StockMoves {
+    supply_landed: Fixed,
+    supply_loaded: Fixed,
+    sorties_and_upkeep: Fixed,
+    repairs: Fixed,
+    destroyed: Fixed,
+    fuel_landed: Fixed,
+    fuel_loaded: Fixed,
+    fuel_refuelling: Fixed,
+}
+
+impl StockMoves {
+    fn supply_net(&self) -> Fixed {
+        self.supply_landed
+            - self.supply_loaded
+            - self.sorties_and_upkeep
+            - self.repairs
+            - self.destroyed
+    }
+
+    fn fuel_net(&self) -> Fixed {
+        self.fuel_landed - self.fuel_loaded - self.fuel_refuelling
+    }
+}
+
+/// How a base's supply stock moved yesterday. Every cause is a total of the
+/// side's own events; `start_t` is `end_t` less the net of the causes, so the
+/// line adds up by construction.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SupplyChange {
+    pub start_t: Dec,
+    pub end_t: Dec,
+    /// Put ashore by ships.
+    pub landed_t: Dec,
+    /// Taken aboard ships as cargo.
+    pub loaded_onto_ships_t: Dec,
+    /// Paid for sorties flown and for aircraft kept at the base.
+    pub sorties_and_upkeep_t: Dec,
+    /// Paid for repairs.
+    pub repairs_t: Dec,
+    /// Destroyed by raids.
+    pub destroyed_by_raids_t: Dec,
+}
+
+/// How a base's fuel stock moved yesterday.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FuelChange {
+    pub start_t: Dec,
+    pub end_t: Dec,
+    /// Put ashore by ships.
+    pub landed_t: Dec,
+    /// Taken aboard ships as cargo.
+    pub loaded_onto_ships_t: Dec,
+    /// Taken by ships to fill their own tanks.
+    pub refuelling_ships_t: Dec,
+}
+
+/// What changed in a base's stocks yesterday: a part is `None` when nothing
+/// moved in or out of that stock.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct StocksYesterday {
+    pub supply: Option<SupplyChange>,
+    pub fuel: Option<FuelChange>,
+}
+
+fn stocks_yesterday(
+    base: &sim_core::state::Base,
+    moves: Option<&StockMoves>,
+) -> Option<StocksYesterday> {
+    let moves = moves?;
+    let supply_moved = [
+        moves.supply_landed,
+        moves.supply_loaded,
+        moves.sorties_and_upkeep,
+        moves.repairs,
+        moves.destroyed,
+    ]
+    .iter()
+    .any(|t| !t.is_zero());
+    let fuel_moved = [moves.fuel_landed, moves.fuel_loaded, moves.fuel_refuelling]
+        .iter()
+        .any(|t| !t.is_zero());
+    if !supply_moved && !fuel_moved {
+        return None;
+    }
+    Some(StocksYesterday {
+        supply: supply_moved.then(|| SupplyChange {
+            start_t: Dec(base.supply_t - moves.supply_net()),
+            end_t: Dec(base.supply_t),
+            landed_t: Dec(moves.supply_landed),
+            loaded_onto_ships_t: Dec(moves.supply_loaded),
+            sorties_and_upkeep_t: Dec(moves.sorties_and_upkeep),
+            repairs_t: Dec(moves.repairs),
+            destroyed_by_raids_t: Dec(moves.destroyed),
+        }),
+        fuel: fuel_moved.then(|| FuelChange {
+            start_t: Dec(base.fuel_t - moves.fuel_net()),
+            end_t: Dec(base.fuel_t),
+            landed_t: Dec(moves.fuel_landed),
+            loaded_onto_ships_t: Dec(moves.fuel_loaded),
+            refuelling_ships_t: Dec(moves.fuel_refuelling),
+        }),
+    })
 }
 
 impl Day {
@@ -649,6 +783,7 @@ impl Day {
         let mut claims = Vec::new();
         let mut spent: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut destroyed: BTreeMap<BaseId, Fixed> = BTreeMap::new();
+        let mut stocks: BTreeMap<BaseId, StockMoves> = BTreeMap::new();
 
         for e in events {
             let id = ctx.number(e.id);
@@ -662,7 +797,7 @@ impl Day {
                     } => orders.refused.push(RefusedOrder {
                         order: ctx.order_number(*order),
                         target: ctx.entity(*target),
-                        reason: reason.to_string(),
+                        reason: words::refusal(reason),
                         event: id,
                     }),
                     EventKind::ReportReceived {
@@ -893,15 +1028,55 @@ impl Day {
                         from_air: *from_air,
                         event: id,
                     }),
-                    EventKind::BaseSupplySpent { base, paid_t, .. } => {
+                    EventKind::BaseSupplySpent {
+                        base,
+                        paid_t,
+                        reason,
+                        ..
+                    } => {
                         let total = spent.entry(*base).or_insert(Fixed::ZERO);
                         *total += *paid_t;
+                        let moves = stocks.entry(*base).or_default();
+                        match reason {
+                            SupplyUse::Sorties | SupplyUse::Upkeep => {
+                                moves.sorties_and_upkeep += *paid_t;
+                            }
+                            SupplyUse::Repairs => moves.repairs += *paid_t,
+                        }
                     }
                     EventKind::BaseSupplyDestroyed {
                         base, destroyed_t, ..
                     } => {
                         let total = destroyed.entry(*base).or_insert(Fixed::ZERO);
                         *total += *destroyed_t;
+                        stocks.entry(*base).or_default().destroyed += *destroyed_t;
+                    }
+                    EventKind::CargoUnloaded {
+                        base,
+                        cargo,
+                        unloaded_t,
+                        ..
+                    } => {
+                        let moves = stocks.entry(*base).or_default();
+                        match cargo {
+                            Cargo::Supply => moves.supply_landed += *unloaded_t,
+                            Cargo::Fuel => moves.fuel_landed += *unloaded_t,
+                        }
+                    }
+                    EventKind::CargoLoaded {
+                        base,
+                        cargo,
+                        loaded_t,
+                        ..
+                    } => {
+                        let moves = stocks.entry(*base).or_default();
+                        match cargo {
+                            Cargo::Supply => moves.supply_loaded += *loaded_t,
+                            Cargo::Fuel => moves.fuel_loaded += *loaded_t,
+                        }
+                    }
+                    EventKind::ShipRefuelled { base, taken_t, .. } => {
+                        stocks.entry(*base).or_default().fuel_refuelling += *taken_t;
                     }
                     _ => {}
                 },
@@ -1072,6 +1247,7 @@ impl Day {
             },
             spent,
             destroyed,
+            stocks,
         }
     }
 }
@@ -1298,6 +1474,59 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
         })
         .collect();
 
+    // 7. A strike group that could launch nothing for want of a target in
+    // reach, by the radius test the strike decision and `measure` make.
+    let mut strike_group_out_of_reach = Vec::new();
+    for group in ctx.groups.values() {
+        let (Some(origin), Some(aircraft)) = (
+            ctx.group_hex(group),
+            ctx.view.aircraft_type(group.aircraft_type),
+        ) else {
+            continue;
+        };
+        let radius = aircraft.strike_range_nm;
+        match group.mission {
+            AirMission::NavalStrike => {
+                let nearest = ctx
+                    .view
+                    .contacts()
+                    .map(|c| {
+                        (
+                            origin.air_distance_nm(c.estimated_hex),
+                            c.id,
+                            c.estimated_hex,
+                        )
+                    })
+                    .min();
+                if let Some((distance, id, hex)) = nearest {
+                    if !origin.air_distance_within(hex, radius) {
+                        strike_group_out_of_reach.push(OutOfReachWarning {
+                            air_group: ctx.group(group.id),
+                            mission: "naval_strike",
+                            radius_nm: Dec(radius),
+                            nearest: ctx.entity(EntityRef::Contact(id)),
+                            distance_nm: distance,
+                        });
+                    }
+                }
+            }
+            AirMission::BaseStrike(target) => {
+                if let Some(enemy) = ctx.enemy_bases.get(&target) {
+                    if !origin.air_distance_within(enemy.hex, radius) {
+                        strike_group_out_of_reach.push(OutOfReachWarning {
+                            air_group: ctx.group(group.id),
+                            mission: "base_strike",
+                            radius_nm: Dec(radius),
+                            nearest: ctx.base(target),
+                            distance_nm: origin.air_distance_nm(enemy.hex),
+                        });
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     Warnings {
         ship_cannot_reach_base,
         base_supply_low,
@@ -1305,5 +1534,6 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
         air_group_short_of_pilots,
         air_group_tired,
         task_force_propulsion,
+        strike_group_out_of_reach,
     }
 }

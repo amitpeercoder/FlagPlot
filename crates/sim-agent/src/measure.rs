@@ -110,8 +110,28 @@ pub enum Question {
     /// place asked about.
     AirReach {
         air_group: String,
+        /// A list of places; a single place is taken as a list of one.
+        #[serde(deserialize_with = "places_or_one")]
         to: Vec<PlaceArg>,
     },
+}
+
+/// `to` of an air reach question: a list of places, or one place, which is a
+/// list of one. Anything else is an error that names the shape expected.
+fn places_or_one<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<PlaceArg>, D::Error> {
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Raw {
+        Many(Vec<PlaceArg>),
+        One(PlaceArg),
+    }
+    match Raw::deserialize(deserializer) {
+        Ok(Raw::Many(places)) => Ok(places),
+        Ok(Raw::One(place)) => Ok(vec![place]),
+        Err(_) => Err(de::Error::custom(
+            "\"to\" must be a list of places, such as [{\"q\": 2, \"r\": -4}, \"base:1\"], or one place; a place is {\"q\": whole number, \"r\": whole number} or a handle such as \"base:1\"",
+        )),
+    }
 }
 
 impl Question {

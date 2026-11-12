@@ -110,7 +110,12 @@ impl Briefing {
                 "Day: {} (the game is over: day {} was the last)",
                 h.day, last
             )),
-            Some(last) => o.line(format!("Day: {} of {}", h.day, last)),
+            Some(last) => {
+                o.line(format!("Day: {} of {}", h.day, last));
+                if h.day == last {
+                    o.line("This is the last day: the game ends when you end it.".to_string());
+                }
+            }
             None => o.line(format!("Day: {}", h.day)),
         }
         o.line(format!("Scenario: {}", h.scenario));
@@ -130,6 +135,12 @@ impl Briefing {
                 o.line(format!("Mission: {mission}"));
                 for line in &ob.objectives {
                     objective_text(&mut o, line);
+                }
+                if let Some(l) = &ob.levels {
+                    o.line(format!(
+                        "Levels: the result is read from the margin, your points less the enemy's. A margin of {} or more is a minor victory, {} or more a major one, {} or more a decisive one; the same margins against you are defeats; less than {} either way is a stalemate",
+                        l.minor.0, l.major.0, l.decisive.0, l.minor.0
+                    ));
                 }
             }
         }
@@ -440,6 +451,12 @@ impl Briefing {
                 "slowed" => s.push_str(", slowed (propulsion damaged)"),
                 _ => {}
             }
+            if let (Some(supply), Some(fuel)) = (f.cargo_supply_t, f.cargo_fuel_t) {
+                s.push_str(&format!(
+                    ", cargo aboard: {} t supply, {} t fuel",
+                    supply.0, fuel.0
+                ));
+            }
             o.line(s);
             if let Some(fuel) = &f.least_fuelled {
                 let range = match fuel.range_nm {
@@ -482,6 +499,10 @@ impl Briefing {
             if rules.fatigue {
                 s.push_str(&format!(", fatigue {}", g.fatigue.0));
             }
+            s.push_str(&format!(
+                ", radius {} miles, search range {} miles",
+                g.strike_radius_nm.0, g.search_range_nm.0
+            ));
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));
@@ -502,6 +523,35 @@ impl Briefing {
             o.line("Bases: none".to_string());
         }
         for b in &self.bases {
+            let stocks = |o: &mut Out| {
+                let Some(stocks) = &b.stocks_yesterday else {
+                    return;
+                };
+                if let (true, Some(s)) = (rules.supply, &stocks.supply) {
+                    let causes = causes_text(&[
+                        ("landed", s.landed_t.0),
+                        ("loaded onto ships", s.loaded_onto_ships_t.0),
+                        ("sorties and upkeep", s.sorties_and_upkeep_t.0),
+                        ("repairs", s.repairs_t.0),
+                        ("destroyed by raids", s.destroyed_by_raids_t.0),
+                    ]);
+                    o.sub(format!(
+                        "Stocks yesterday: supply {} t to {} t ({causes})",
+                        s.start_t.0, s.end_t.0
+                    ));
+                }
+                if let Some(f) = &stocks.fuel {
+                    let causes = causes_text(&[
+                        ("landed", f.landed_t.0),
+                        ("loaded onto ships", f.loaded_onto_ships_t.0),
+                        ("refuelling ships", f.refuelling_ships_t.0),
+                    ]);
+                    o.sub(format!(
+                        "Stocks yesterday: fuel {} t to {} t ({causes})",
+                        f.start_t.0, f.end_t.0
+                    ));
+                }
+            };
             if rules.supply {
                 o.line(format!(
                     "{} at {}: supply {} t, fuel {} t",
@@ -526,6 +576,7 @@ impl Briefing {
                     b.fuel_t.0
                 ));
             }
+            stocks(&mut o);
         }
 
         o.heading("ARRIVALS");
@@ -650,7 +701,46 @@ impl Briefing {
             },
         );
 
+        o.each(
+            "Strike groups with nothing in reach",
+            &w.strike_group_out_of_reach,
+            |x| {
+                if x.mission == "naval_strike" {
+                    format!(
+                        "Out of reach: {} is on naval strike with a radius of {} miles and holds contacts, but none is within it; the nearest is {}, {} miles away",
+                        x.air_group.text(),
+                        x.radius_nm.0,
+                        x.nearest.text(),
+                        x.distance_nm
+                    )
+                } else {
+                    format!(
+                        "Out of reach: {} is on base strike with a radius of {} miles, but its target {} is {} miles away",
+                        x.air_group.text(),
+                        x.radius_nm.0,
+                        x.nearest.text(),
+                        x.distance_nm
+                    )
+                }
+            },
+        );
+
         o.0
+    }
+}
+
+/// The causes of a stock's change, as `landed 5, repairs 2`: the causes that
+/// moved anything, or `nothing moved` if none did.
+fn causes_text(causes: &[(&str, sim_core::fixed::Fixed)]) -> String {
+    let moved: Vec<String> = causes
+        .iter()
+        .filter(|(_, t)| !t.is_zero())
+        .map(|(name, t)| format!("{name} {t} t"))
+        .collect();
+    if moved.is_empty() {
+        "nothing moved".to_string()
+    } else {
+        moved.join(", ")
     }
 }
 
@@ -749,7 +839,9 @@ fn result_text(o: &mut Out, result: &ResultPart) {
         }
     }
     if let Some(history) = &result.history {
-        o.line(format!("History: {history}"));
+        o.line(format!(
+            "History (what happened in the real battle, not in this game): {history}"
+        ));
     }
 }
 

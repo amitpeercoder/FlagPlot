@@ -145,7 +145,9 @@
         "ships_afloat",
         "least_fuelled",
         "movement",
-        "propulsion_damaged"
+        "propulsion_damaged",
+        "cargo_supply_t",
+        "cargo_fuel_t"
       ],
       "additionalProperties": false,
       "properties": {
@@ -213,6 +215,14 @@
         },
         "propulsion_damaged": {
           "$ref": "#/$defs/propulsion_lines"
+        },
+        "cargo_supply_t": {
+          "description": "Tons of supply carried as cargo, summed over the ships afloat. null unless the force carries some supply or fuel cargo or its mission is transport.",
+          "$ref": "#/$defs/dec_or_null"
+        },
+        "cargo_fuel_t": {
+          "description": "Tons of fuel carried as cargo (not the fuel the ships burn), summed over the ships afloat. null under the same condition.",
+          "$ref": "#/$defs/dec_or_null"
         }
       }
     },
@@ -253,7 +263,9 @@
         "stood_down",
         "rest_above",
         "mission",
-        "target"
+        "target",
+        "strike_radius_nm",
+        "search_range_nm"
       ],
       "additionalProperties": false,
       "properties": {
@@ -299,6 +311,14 @@
         },
         "target": {
           "$ref": "#/$defs/handle_or_null"
+        },
+        "strike_radius_nm": {
+          "description": "The aircraft type's strike radius in miles: how far from the group's place a strike can be flown (for a fighter, the radius within which its escorts go with a raid). \"0\" for a type that cannot strike.",
+          "$ref": "#/$defs/dec"
+        },
+        "search_range_nm": {
+          "description": "The aircraft type's search range in miles: the furthest a search arc can reach. \"0\" for a type that cannot search.",
+          "$ref": "#/$defs/dec"
         }
       }
     },
@@ -357,6 +377,7 @@
           "type": "integer"
         },
         "taken_for": {
+          "description": "The kind of the most important ship the sighting reported. Like ship_count it is what was reported: it can be wrong, and can change when the contact is seen again.",
           "enum": [
             "carrier",
             "battleship",

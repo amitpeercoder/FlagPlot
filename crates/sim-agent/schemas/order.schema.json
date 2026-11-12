@@ -313,6 +313,7 @@
               "const": "set_patrol_share"
             },
             "share": {
+              "description": "The share of the group kept over its own hex, from \"0\" to \"1\". \"1\" keeps every fighter at home and sends no escort; \"0.5\" keeps half and lets half escort raids; \"0\" keeps none at home and sends all as escort.",
               "$ref": "defs.schema.json#/$defs/dec"
             }
           }

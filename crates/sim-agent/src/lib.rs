@@ -44,10 +44,10 @@ pub use answer::{NotKnown, FORMAT, VERSION};
 pub use briefing::{briefing, briefing_for_game, Briefing};
 pub use briefing::{
     ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, BriefingBase, Claim, ContactsPart,
-    DamagedShip, DroppedContact, DueArrival, Fight, Fired, FuelWarning, Heading, LossesPart,
-    NotThere, OrdersPart, PilotWarning, PropulsionWarning, Raid, RefusedOrder, ReplacementStream,
-    ReportedContact, ShipRangeWarning, Strike, SunkShip, SupplyWarning, SystemChange, TiredWarning,
-    Warnings,
+    DamagedShip, DroppedContact, DueArrival, Fight, Fired, FuelChange, FuelWarning, Heading,
+    LossesPart, NotThere, OrdersPart, OutOfReachWarning, PilotWarning, PropulsionWarning, Raid,
+    RefusedOrder, ReplacementStream, ReportedContact, ShipRangeWarning, StocksYesterday, Strike,
+    SunkShip, SupplyChange, SupplyWarning, SystemChange, TiredWarning, Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{
@@ -59,8 +59,8 @@ pub use measure::{
     PassageSpeed, PlaceArg, Question, ReachLine, Resolved, SeaRoute, ShipFuel, SpeedArg,
 };
 pub use objectives::{
-    result_part, KnownLine, ObjectiveLine, ObjectivesPart, ResultPart, ScoreLine, ShipKindPoints,
-    ShipsOfKind, SideResultPart,
+    result_part, KnownLine, LevelsPart, ObjectiveLine, ObjectivesPart, ResultPart, ScoreLine,
+    ShipKindPoints, ShipsOfKind, SideResultPart,
 };
 pub use orders::{is_orderable_unit, order_from_json, order_to_json, unit_text};
 pub use queries::{

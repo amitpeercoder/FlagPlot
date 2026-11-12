@@ -7,13 +7,14 @@ HEADING
 - Covers: day 1 and the state at the start of day 2
 
 OBJECTIVES
-- Mission: Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action.
+- Mission: Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action. The Japanese carriers are expected to come down from the north.
 - Objective: enemy ships sunk, points for each: carrier 10, battleship 8, cruiser 4, destroyer 1, transport 2, auxiliary 1
   - What you know of your progress: 1 enemy ships claimed sunk, worth 10 points for the kinds you attacked (claims can be wrong)
 - Objective: enemy ships left afloat with propulsion or flight deck out, points for each: carrier 5, battleship 4, cruiser 2, destroyer 0.5, transport 1, auxiliary 0.5
   - What you know of your progress: nothing you can see shows it; it is counted at the end of the game
 - Objective: enemy aircraft destroyed, points for each: 0.05
   - What you know of your progress: 51 enemy aircraft claimed shot down or destroyed on the ground, worth 2.55 points (claims can be wrong)
+- Levels: the result is read from the margin, your points less the enemy's. A margin of 3 or more is a minor victory, 8 or more a major one, 16 or more a decisive one; the same margins against you are defeats; less than 3 either way is a stalemate
 
 ORDERS
 - Accepted yesterday: 11
@@ -68,16 +69,16 @@ TASK FORCES
   - Least fuelled: ship:14 "USS Farragut" with 607 t, range 5240 miles at cruising speed
 
 AIR GROUPS
-- air_group:1 "VF-6" (Grumman F4F-4 Wildcat) at ship:1 "USS Enterprise" (7,-5): 24 ready, mission combat air patrol
-- air_group:2 "VB-6" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 16 ready, mission naval strike
-- air_group:3 "VS-5" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 16 ready, mission search
-- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 14 ready, mission naval strike
-- air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 27 ready, mission combat air patrol
-- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, mission naval strike
-- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, mission naval strike
-- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, mission naval strike
-- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 13 ready, mission combat air patrol
-- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 11 ready, mission naval strike
+- air_group:1 "VF-6" (Grumman F4F-4 Wildcat) at ship:1 "USS Enterprise" (7,-5): 24 ready, radius 105 miles, search range 105 miles, mission combat air patrol
+- air_group:2 "VB-6" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 16 ready, radius 200 miles, search range 200 miles, mission naval strike
+- air_group:3 "VS-5" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 16 ready, radius 200 miles, search range 200 miles, mission search
+- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 14 ready, radius 190 miles, search range 190 miles, mission naval strike
+- air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 27 ready, radius 105 miles, search range 105 miles, mission combat air patrol
+- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike
+- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike
+- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, radius 190 miles, search range 190 miles, mission naval strike
+- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 13 ready, radius 105 miles, search range 105 miles, mission combat air patrol
+- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 11 ready, radius 200 miles, search range 200 miles, mission naval strike
 
 BASES
 - base:1 "Henderson Field" at (2,-4): fuel 0 t
@@ -93,3 +94,6 @@ WARNINGS
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
 - Task forces that cannot move or are slowed: none
+- Out of reach: air_group:4 "VT-3" is on naval strike with a radius of 190 miles and holds contacts, but none is within it; the nearest is contact:1, 200 miles away
+- Out of reach: air_group:8 "VT-8" is on naval strike with a radius of 190 miles and holds contacts, but none is within it; the nearest is contact:1, 200 miles away
+- Out of reach: air_group:10 "VMSB-232" is on naval strike with a radius of 200 miles and holds contacts, but none is within it; the nearest is contact:1, 223 miles away

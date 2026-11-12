@@ -109,3 +109,30 @@ pub(crate) fn role(role: AircraftRole) -> &'static str {
         AircraftRole::Fighter => "fighter",
     }
 }
+
+/// A refusal as a player is shown it: the engine's own words, unchanged, and
+/// for the reasons that need one a short hint of what the order needs. The
+/// engine's text is what the events and the saved games hold; the hint is
+/// added here only, where a refusal is shown to a player.
+pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
+    use sim_core::orders::RejectReason as R;
+    let hint = match reason {
+        R::UnderWay => {
+            " (load needs the task force stopped at a base of your own side: a force that is under way, or that a route order in the same day sends under way, cannot load; give the load order on a day the force starts at the base with no route order)"
+        }
+        R::NoOwnBaseHere => {
+            " (load needs the task force stopped in the hex of a base of your own side)"
+        }
+        R::NotAnEnemyBase => {
+            " (a base strike needs the number of a base the enemy holds; list_bases shows them)"
+        }
+        R::WaypointUnreachable(_) => {
+            " (measure with question sea_route tells whether ships can get from one place to another)"
+        }
+        R::NotAFighter => {
+            " (combat_air_patrol and set_patrol_share are for fighter groups; the briefing's air group lines say which type each group is)"
+        }
+        _ => "",
+    };
+    format!("{reason}{hint}")
+}

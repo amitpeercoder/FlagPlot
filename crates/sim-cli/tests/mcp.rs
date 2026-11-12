@@ -256,6 +256,82 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         assert!(instructions.contains(phrase), "instructions lack: {phrase}");
     }
 
+    // The wording pass after the second round: what a player of one day, of
+    // patrol shares, of contacts and of the pulses had to guess.
+    for phrase in [
+        // 4. A one-day game.
+        "A scenario can be only one day long",
+        "you must give all your orders for the whole game before the first end_day",
+        // 1. Levels and the history note.
+        "the levels (the margin of your points over the enemy's",
+        "a stalemate has no level",
+        "what happened in the real battle, not in your game",
+        // 10. The patrol share.
+        "set_patrol_share {share} is the share of the group kept over its own hex: 1 (where it starts) keeps every fighter at home and sends no escort, and 0.5 keeps half at home and lets half escort",
+        // 11. A contact's kind.
+        "the kind it is taken for and the number of ships are what the sighting reported. They can be wrong, and can change when the contact is seen again",
+        // 12. The pulses.
+        "A day is three pulses: night, morning and afternoon",
+        "begins at 18:00 on the evening before the day",
+        "Searches and strikes fly only in the morning and afternoon pulses; the afternoon pulse is the last of the day",
+        // 13. Radius.
+        "give each type's radius",
+    ] {
+        assert!(instructions.contains(phrase), "instructions lack: {phrase}");
+    }
+    for phrase in [
+        // 5. Load and unload.
+        "LOAD AND UNLOAD",
+        "work only while the force is stopped (idle or arrived) in the hex of a base of your own side",
+        "a load in the same day as a sailing is refused",
+        "unload {} is never refused, wherever the force is",
+        "an unload given while the force is at sea is queued, stands as the force's cargo order, and is carried out after the force arrives",
+        // 10. The patrol share.
+        "set_patrol_share {share} is the share of the group kept over its own hex: 1 (where it starts) keeps every fighter at home and sends no escort, 0.5 keeps half at home and lets half escort",
+    ] {
+        assert!(description.contains(phrase), "issue_orders lacks: {phrase}");
+    }
+    let tool_description = |name: &str| {
+        tools.iter().find(|t| t["name"] == name).unwrap()["description"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    // 12 and 9. The passage's departure, and air_reach's places.
+    let measure_description = tool_description("measure");
+    for phrase in [
+        "\"leaves\" at the start of the coming day's night pulse, which is 18:00 on the evening before the day",
+        "one place alone is taken as a list of one",
+        "one such place anywhere in the question makes the whole answer \"not known\"",
+    ] {
+        assert!(measure_description.contains(phrase), "measure lacks: {phrase}");
+    }
+    // 11. The kind a contact is taken for.
+    for tool in ["list_contacts", "get_entity"] {
+        assert!(
+            tool_description(tool)
+                .contains("can be wrong, and can change when the contact is seen again"),
+            "{tool}"
+        );
+    }
+    // 6, 2, 7, 13, 4. What the briefing and the lists now show.
+    assert!(tool_description("list_forces").contains("cargo_supply_t and cargo_fuel_t"));
+    let briefing_description = tool_description("get_briefing");
+    for phrase in [
+        "strike groups that hold contacts or a target but have none within their radius",
+        "stocks yesterday by cause",
+        "each type's radius and search range in miles",
+        "says so in a plain line when the day is the last",
+        "history note of what happened in the real battle",
+    ] {
+        assert!(
+            briefing_description.contains(phrase),
+            "get_briefing lacks: {phrase}"
+        );
+    }
+    let orders_schema = orders["inputSchema"].to_string();
+    assert!(orders_schema.contains("The share of the group kept over its own hex"));
+
     // Every tool, with valid arguments.
     let (briefing, bad) = c.call("get_briefing", json!({}));
     assert!(

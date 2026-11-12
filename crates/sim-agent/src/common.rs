@@ -164,8 +164,9 @@ impl<'a> Ctx<'a> {
                 target,
                 reason,
             }) => format!(
-                "order:{} rejected for {target}: {reason}",
-                self.order_number(*order)
+                "order:{} rejected for {target}: {}",
+                self.order_number(*order),
+                crate::words::refusal(reason)
             ),
             other => other.to_string(),
         }

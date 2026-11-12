@@ -2,7 +2,8 @@
 //! summarised in one way.
 
 use serde::Serialize;
-use sim_core::orders::AirMission;
+use sim_core::fixed::Fixed;
+use sim_core::orders::{AirMission, Mission};
 use sim_core::state::{AirGroup, Base, SystemState, TaskForce};
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
@@ -45,6 +46,13 @@ pub struct ForceLine {
     /// The ships afloat whose propulsion is not working, with the state each
     /// is in.
     pub propulsion_damaged: Vec<PropulsionLine>,
+    /// Tons of supply carried as cargo, summed over the ships afloat. Set
+    /// when above zero (here or in `cargo_fuel_t`) or when the force's
+    /// mission is transport; `None` otherwise.
+    pub cargo_supply_t: Option<Dec>,
+    /// Tons of fuel carried as cargo (not the fuel the ships burn), summed
+    /// over the ships afloat. Set under the same condition.
+    pub cargo_fuel_t: Option<Dec>,
 }
 
 /// A ship afloat whose propulsion is not working.
@@ -73,6 +81,13 @@ pub struct AirGroupLine {
     pub mission: &'static str,
     /// The base a base strike is ordered at.
     pub target: Option<Handle>,
+    /// The aircraft type's strike radius in miles: how far from the group's
+    /// place a strike can be flown (for a fighter, the radius within which
+    /// its escorts go with a raid). Zero for a type that cannot strike.
+    pub strike_radius_nm: Dec,
+    /// The aircraft type's search range in miles: the furthest a search arc
+    /// can reach. Zero for a type that cannot search.
+    pub search_range_nm: Dec,
 }
 
 /// A base in one line.
@@ -138,7 +153,16 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
     } else {
         "slowed"
     };
+    let cargo_supply = afloat.iter().fold(Fixed::ZERO, |sum, s| sum + s.supply_t);
+    let cargo_fuel = afloat
+        .iter()
+        .fold(Fixed::ZERO, |sum, s| sum + s.cargo_fuel_t);
+    let shows_cargo = force.mission == Mission::Transport
+        || cargo_supply > Fixed::ZERO
+        || cargo_fuel > Fixed::ZERO;
     ForceLine {
+        cargo_supply_t: shows_cargo.then_some(Dec(cargo_supply)),
+        cargo_fuel_t: shows_cargo.then_some(Dec(cargo_fuel)),
         task_force: ctx.force(force.id),
         place: ctx.place(force.position()),
         status: words::status(force.status),
@@ -164,11 +188,12 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         AirMission::BaseStrike(base) => Some(ctx.base(base)),
         _ => None,
     };
+    let aircraft_type = ctx.view.aircraft_type(group.aircraft_type);
     AirGroupLine {
+        strike_radius_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.strike_range_nm)),
+        search_range_nm: Dec(aircraft_type.map_or(Fixed::ZERO, |t| t.search_range_nm)),
         air_group: ctx.group(group.id),
-        aircraft_type: ctx
-            .view
-            .aircraft_type(group.aircraft_type)
+        aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),
         location,
         place: ctx.group_hex(group).map(|hex| ctx.place(hex)),

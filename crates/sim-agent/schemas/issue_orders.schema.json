@@ -69,6 +69,7 @@
                 "const": "refused"
               },
               "reason": {
+                "description": "The engine's own words, and for the reasons that need one a short hint in brackets of what the order needs (for a load refused because the force is under way: that load needs the force stopped at a base of the side's own).",
                 "type": "string"
               }
             }

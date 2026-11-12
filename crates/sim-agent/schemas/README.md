@@ -232,3 +232,48 @@ or a hash.
   (`minor`, `major`, `decisive`, or `null`) and `outcome` in words; and the
   scenario's `history` note. The `end_day` answer always has a `result` field,
   `null` before the end and for a scenario without objectives.
+
+## The wording pass after the second round (decision 0051)
+
+Fields added (the version stays 1) and words changed after three models played
+scenarios 5 and 7. No rule, result or hash changes.
+
+- `objectives.levels` (`minor`, `major`, `decisive`, decimal strings, or `null`
+  without objectives): the margins that make a victory or a defeat of each
+  level; a margin of less than `minor` either way is a stalemate. Shown from
+  day 1, in the text as "Levels: ...". A stalemate's `level` stays `null` and
+  its `outcome` says `stalemate`.
+- `objectives.result.history` is what happened in the real battle, not in the
+  game just played; the text labels it so.
+- The briefing's text heading says "This is the last day: the game ends when
+  you end it." on the last day.
+- `warnings.strike_group_out_of_reach` (a seventh part): an own air group on
+  `naval_strike` that holds contacts and has none within its aircraft type's
+  strike radius, or on `base_strike` at a base beyond it. It names the group,
+  the radius, the nearest contact (or the target base) and its air distance,
+  the figures `measure` `air_reach` gives.
+- A force line (briefing, `list_forces`, `get_entity`) has `cargo_supply_t` and
+  `cargo_fuel_t`: the tons of cargo aboard, summed over the ships afloat, set
+  when above zero or when the force's mission is `transport` and `null`
+  otherwise.
+- An air group line has `strike_radius_nm` (for a fighter, its escort radius)
+  and `search_range_nm`, the aircraft type's figures in miles.
+- A briefing base has `stocks_yesterday`: `null` when nothing moved in or out of
+  its stocks, otherwise `supply` and `fuel` parts (each `null` if that stock
+  did not move) with `start_t`, `end_t` and the totals by cause: `landed_t`,
+  `loaded_onto_ships_t`, and for supply `sorties_and_upkeep_t`, `repairs_t` and
+  `destroyed_by_raids_t`, for fuel `refuelling_ships_t`. They come from the
+  side's own events, and `start_t` is `end_t` less the net of the causes.
+- A refusal shown to a player (`issue_orders` results, the briefing's refused
+  orders, and an order's rejection in `explain`) is the engine's own words, and
+  for a few reasons ends with a short hint in brackets of what the order needs
+  (a load refused for being under way or away from a base; a base strike at an
+  own or unknown base; a route that cannot be reached; combat air patrol for a
+  group that is not fighters). The engine's text in the events and saved games
+  is unchanged.
+- `measure` `air_reach` takes `to` as a list of places or as one place (a list
+  of one); a `to` that is neither is an error naming the shape, not `not_known`.
+  One place that is not known anywhere in the question, a hex off the map for
+  instance, still makes the whole answer `not_known`.
+- The words for `set_patrol_share` say what the share is: the share of the group
+  kept over its own hex (1 keeps every fighter at home and sends no escort).
