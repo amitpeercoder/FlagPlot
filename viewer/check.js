@@ -254,10 +254,48 @@ function synthetic() {
   reject('duplicate event ids', Object.assign(base(), { events: [ev(1, 1, null), ev(1, 1, null)] }), 'share');
 }
 
+// ---- The measuring tool against the engine's own answers ----
+// viewer/measure_fixture.json is written by the engine (crates/sim-cli/src/export/measure_fixture.rs).
+function checkMeasuring() {
+  console.log('measuring tool vs the engine (viewer/measure_fixture.json)');
+  let fx;
+  try { fx = JSON.parse(fs.readFileSync(path.join(__dirname, 'measure_fixture.json'), 'utf8')); }
+  catch (e) { fail('cannot read viewer/measure_fixture.json: ' + e.message); return; }
+  assert(fx.format === 'flagplot-measure-fixture' && fx.version === 1, 'unknown fixture format');
+  assert(fx.hex_nm === Core.HEX_NM, 'the page says a hex is ' + Core.HEX_NM + ' nm, the engine says ' + fx.hex_nm);
+  const before = failures;
+  for (const c of fx.air) {
+    const got = Core.airDistanceNm(c.from[0], c.from[1], c.to[0], c.to[1]);
+    if (got !== c.nm) { fail('air distance ' + JSON.stringify(c.from) + ' to ' + JSON.stringify(c.to) + ': page ' + got + ', engine ' + c.nm); if (failures - before > 10) break; }
+  }
+  const sea = Core.makeSeaMap(fx.hexes, fx.directions);
+  let routes = 0, none = 0;
+  for (const c of fx.sea) {
+    const label = 'sea route ' + JSON.stringify(c.from) + ' to ' + JSON.stringify(c.to);
+    const got = Core.measureHexes(sea, c.from, c.to);
+    if (c.path === null) {
+      none++;
+      assert(got.sea === null, label + ': page found a route, engine found none');
+    } else {
+      routes++;
+      assert(got.sea !== null && JSON.stringify(got.sea.path) === JSON.stringify(c.path), label + ': page path differs from the engine path');
+      assert(got.sea !== null && got.sea.steps === c.steps && got.sea.nm === c.nm, label + ': page ' + (got.sea && got.sea.nm) + ' nm, engine ' + c.nm);
+    }
+    assert(got.air === Core.airDistanceNm(c.from[0], c.from[1], c.to[0], c.to[1]), label + ': air distance inconsistent');
+  }
+  // isqrt against exact big-integer arithmetic
+  for (const n of [0, 1, 2, 3, 4, 15, 16, 17, 99999999, 4503599627370495, 2 ** 52 + 1]) {
+    const s = BigInt(Core.isqrt(n)), N = BigInt(n);
+    assert(s * s <= N && (s + 1n) * (s + 1n) > N, 'isqrt(' + n + ') is wrong');
+  }
+  console.log('  air cases ' + fx.air.length + ', sea cases ' + fx.sea.length + ' (' + routes + ' with a route, ' + none + ' with none)' + (failures === before ? '  OK' : '  FAILED'));
+}
+
 // ---- Main ----
 const files = process.argv.slice(2);
 if (!files.length) console.log('(no replay files given: only the script and synthetic checks run)');
 for (const f of files) checkReplay(f);
 synthetic();
+checkMeasuring();
 console.log(failures ? '\n' + failures + ' check(s) FAILED' : '\nAll checks passed.');
 process.exit(failures ? 1 : 0);

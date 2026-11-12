@@ -79,7 +79,15 @@ main { flex: 1 0 auto; min-height: 420px; display: grid; grid-template-columns: 
 .maptool { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
 #mapbtns { top: 8px; left: 8px; display: flex; gap: 4px; padding: 4px; }
 #mapbtns button { min-width: 30px; padding: 2px 8px; }
-#north { top: 8px; left: 150px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
+#mapbtns button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--panel)); }
+#map.measuring { cursor: crosshair; }
+#measurebox { left: 8px; top: 48px; max-width: min(330px, calc(100% - 180px)); font-size: 12.5px; }
+#measurebox div { overflow-wrap: anywhere; }
+#measurebox .big { font-weight: 650; }
+.measure-air { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 7 5; vector-effect: non-scaling-stroke; pointer-events: none; }
+.measure-sea { fill: none; stroke: var(--hl); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.measure-end { fill: color-mix(in srgb, var(--hl) 25%, transparent); stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; pointer-events: none; }
+#north { top: 8px; left: 200px; padding: 2px 8px; display: flex; align-items: center; gap: 4px; }
 #scalebar { right: 10px; bottom: 10px; }
 #scalebar .bar { height: 6px; border: 2px solid var(--ink); border-top: 0; margin-top: 2px; }
 #readout { left: 8px; bottom: 8px; max-width: min(430px, calc(100% - 180px)); font-size: 12.5px; pointer-events: none; }
@@ -201,10 +209,11 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
 <main>
   <section id="mapwrap" aria-label="Map">
     <svg id="map" role="img" aria-label="Hex map of the replay">
-      <g id="world"><g id="gHexes"></g><g id="gClosed"></g><g id="gDyn"></g><g id="gHover"></g></g>
+      <g id="world"><g id="gHexes"></g><g id="gClosed"></g><g id="gDyn"></g><g id="gMeasure"></g><g id="gHover"></g></g>
       <g id="gScreen"></g>
     </svg>
-    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button></div>
+    <div id="mapbtns" class="maptool"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zfit" title="Fit the map to the window">Fit</button><button id="measurebtn" aria-pressed="false" title="Measure: click two hexes (Escape leaves)">Measure</button></div>
+    <div id="measurebox" class="maptool" hidden></div>
     <div id="north" class="maptool" title="North is up"><svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1 L12 16 L7 12.5 L2 16 Z" fill="currentColor"/></svg><b>N</b></div>
     <div id="scalebar" class="maptool" hidden><div id="scalelabel"></div><div class="bar" id="scalebarbar"></div></div>
     <div id="readout" class="maptool"><div class="dim">Move the pointer over the map.</div></div>
@@ -727,8 +736,94 @@ function summarize(model) {
   return { steps: model.steps.length, events: model.events.length, forces: end.forces.size, contacts, labels: model.placements.length };
 }
 
+// ---- Measuring (decisions 0040 and 0017) ----
+// These repeat the engine's own functions with whole numbers. viewer/check.js
+// runs them on viewer/measure_fixture.json, which the engine writes.
+const HEX_NM = 40;
+const SEA_KINDS = new Set(['deep_sea', 'shallow_sea', 'coast']);
+
+/** The largest whole s with s * s <= n, for a whole n below 2^53. */
+function isqrt(n) {
+  let s = Math.floor(Math.sqrt(n));
+  while (s * s > n) s--;
+  while ((s + 1) * (s + 1) <= n) s++;
+  return s;
+}
+
+/** Hex::air_distance_nm: the straight line between two hex centres in whole nautical miles. With x = 40 * 40 * (dq^2 + dr^2 + dq*dr) it is isqrt(4x) divided by 2, rounded up. */
+function airDistanceNm(q1, r1, q2, r2) {
+  const dq = q1 - q2, dr = r1 - r2;
+  const x = HEX_NM * HEX_NM * (dq * dq + dr * dr + dq * dr);
+  return Math.ceil(isqrt(4 * x) / 2);
+}
+
+/** What the sea path needs of the map: which hexes ships can enter and which sides are closed. */
+function makeSeaMap(hexes, directions) {
+  const cells = new Map();
+  for (const h of hexes) {
+    const closed = [false, false, false, false, false, false];
+    for (const d of h.closed || []) if (Number.isInteger(d) && d >= 0 && d <= 5) closed[d] = true;
+    cells.set(hexKey(h.q, h.r), { navigable: SEA_KINDS.has(h.kind), closed });
+  }
+  return { cells, directions };
+}
+
+/** Map::can_step: both hexes on the map and navigable, and the side between them open in both (a side is closed if either hex marks it). */
+function canStep(sea, q, r, d) {
+  const dir = sea.directions[d];
+  if (!dir) return false;
+  const here = sea.cells.get(hexKey(q, r)), there = sea.cells.get(hexKey(q + dir[0], r + dir[1]));
+  return !!(here && there && here.navigable && there.navigable && !here.closed[d] && !there.closed[(d + 3) % 6]);
+}
+
+/** Map::sea_distances_to: fewest steps from every hex that can reach the target (breadth first from the target, directions in order). Empty if ships cannot enter the target. */
+function seaDistancesTo(sea, tq, tr) {
+  const dist = new Map();
+  const t = sea.cells.get(hexKey(tq, tr));
+  if (!t || !t.navigable) return dist;
+  dist.set(hexKey(tq, tr), 0);
+  const queue = [[tq, tr]];
+  for (let head = 0; head < queue.length; head++) {
+    const q = queue[head][0], r = queue[head][1];
+    const next = dist.get(hexKey(q, r)) + 1;
+    for (let d = 0; d < 6; d++) {
+      const nq = q + sea.directions[d][0], nr = r + sea.directions[d][1], k = hexKey(nq, nr);
+      if (!dist.has(k) && canStep(sea, q, r, d)) { dist.set(k, next); queue.push([nq, nr]); }
+    }
+  }
+  return dist;
+}
+
+/** Map::sea_path: every hex entered from (fq, fr) to the target, in order; [] for the same hex; null when ships cannot get there. */
+function seaPath(sea, fq, fr, tq, tr) {
+  const dist = seaDistancesTo(sea, tq, tr);
+  if (!dist.has(hexKey(fq, fr))) return null;
+  const out = [];
+  let q = fq, r = fr;
+  for (;;) {
+    const here = dist.get(hexKey(q, r));
+    if (here === 0) break;
+    let step = null;
+    for (let d = 0; d < 6 && !step; d++) {
+      const nq = q + sea.directions[d][0], nr = r + sea.directions[d][1];
+      if (dist.get(hexKey(nq, nr)) === here - 1 && canStep(sea, q, r, d)) step = [nq, nr];
+    }
+    if (!step) break;
+    out.push(step);
+    q = step[0]; r = step[1];
+  }
+  return out;
+}
+
+/** Both measures between two hexes a and b, each [q, r]: the air distance, and the sea route (null when there is none) with its miles. */
+function measureHexes(sea, a, b) {
+  const path = seaPath(sea, a[0], a[1], b[0], b[1]);
+  return { air: airDistanceNm(a[0], a[1], b[0], b[1]), sea: path ? { path, steps: path.length, nm: path.length * HEX_NM } : null };
+}
+
 const FlagPlotCore = {
   HEX_SPACING, ROW_SPACING, HEX_R, LABEL_COS_LAT, PHASES,
+  HEX_NM, isqrt, airDistanceNm, makeSeaMap, canStep, seaDistancesTo, seaPath, measureHexes,
   hexKey, hexCenter, hexCorner, hexCorners, edgeForDirection, pointToHex, bearingPoint, arcWidth, arcSpec, placeLabels,
   stepLabel, buildSteps, validateReplay, parseEntity, splitText, buildModel, compareWithFinal, whyTree, eventMatches, summarize,
 };
@@ -777,8 +872,10 @@ const S = {
   playing: false, timer: null, speed: 1,
   filter: '', onlySel: false, allSteps: false,
   hoverKey: null,
+  // Measure mode: the two hexes picked so far, each [q, r] or null. sea is the map as the sea path reads it.
+  measure: { on: false, a: null, b: null }, sea: null,
 };
-const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
+const mapEl = $('map'), gHexes = $('gHexes'), gClosed = $('gClosed'), gDyn = $('gDyn'), gMeasure = $('gMeasure'), gHover = $('gHover'), gScreen = $('gScreen'), worldEl = $('world'), wrap = $('mapwrap');
 
 // =====================================================================
 // Loading: file picker, drop, ?replay= fetch
@@ -802,12 +899,15 @@ function loadText(text, sourceName) {
   showMessage('');
   stopPlaying();
   S.replay = obj; S.model = model; S.step = 0; S.selEvent = null; S.selEntity = null; S.hoverKey = null;
+  S.sea = C.makeSeaMap(obj.map.hexes, obj.directions);
+  S.measure.a = null; S.measure.b = null;
   S.filter = ''; $('filter').value = '';
   buildWorld();
   fit();
   initHeader();
   render();
   renderReadout();
+  renderMeasure();
 }
 
 function loadFile(file) {
@@ -1164,6 +1264,7 @@ function initPanZoom() {
     const target = drag.target;
     drag = null;
     mapEl.classList.remove('dragging');
+    if (wasClick && S.measure.on) { pickMeasureHex(e); return; }
     if (wasClick && target && target.getAttribute('data-kind') === 'force') selectEntity({ type: 'force', id: Number(target.getAttribute('data-id')) });
   };
   mapEl.addEventListener('pointerup', end);
@@ -1222,6 +1323,64 @@ function renderReadout() {
 }
 
 // =====================================================================
+// Measuring: two hexes, the air distance and the sea route (decisions 0040, 0017)
+// =====================================================================
+function setMeasureMode(on) {
+  S.measure.on = on;
+  if (!on) { S.measure.a = null; S.measure.b = null; }
+  const btn = $('measurebtn');
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  mapEl.classList.toggle('measuring', on);
+  renderMeasure();
+}
+
+function pickMeasureHex(e) {
+  if (!S.model) return;
+  const r = mapEl.getBoundingClientRect();
+  const h = C.pointToHex((e.clientX - r.left - S.view.tx) / S.view.k, (e.clientY - r.top - S.view.ty) / S.view.k);
+  if (!S.model.hexByKey.has(C.hexKey(h.q, h.r))) return; // off the map: not a hex to measure
+  const m = S.measure;
+  if (!m.a || m.b) { m.a = [h.q, h.r]; m.b = null; } // the first pick, or a third click starting again
+  else m.b = [h.q, h.r];
+  renderMeasure();
+}
+
+function renderMeasure() {
+  const m = S.measure, box = $('measurebox');
+  clear(gMeasure); clear(box);
+  box.hidden = !m.on || !S.model;
+  if (box.hidden) return;
+  const line = (t, cls) => box.append(el('div', { class: cls, text: t }));
+  const hexLine = (label, h) => {
+    const hx = S.model.hexByKey.get(C.hexKey(h[0], h[1]));
+    line(label + ' (' + h[0] + ', ' + h[1] + ')' + (hx ? ', ' + String(hx.kind).replace('_', ' ') : ''));
+  };
+  const ring = h => gMeasure.append(sv('polygon', { class: 'measure-end', points: C.hexCorners(h[0], h[1]).map(c => c.join(',')).join(' ') }));
+  line('Measure', 'big');
+  if (!m.a) { line('Click a first hex. Escape leaves.', 'dim'); return; }
+  ring(m.a);
+  hexLine('From', m.a);
+  if (!m.b) { line('Click a second hex.', 'dim'); return; }
+  ring(m.b);
+  hexLine('To', m.b);
+  const res = C.measureHexes(S.sea, m.a, m.b);
+  const ca = C.hexCenter(m.a[0], m.a[1]), cb = C.hexCenter(m.b[0], m.b[1]);
+  gMeasure.append(sv('line', { class: 'measure-air', x1: ca[0], y1: ca[1], x2: cb[0], y2: cb[1] }));
+  if (res.sea) {
+    const pts = [m.a].concat(res.sea.path).map(h => C.hexCenter(h[0], h[1]).join(','));
+    if (pts.length > 1) gMeasure.append(sv('polyline', { class: 'measure-sea', points: pts.join(' ') }));
+  }
+  line('Air distance: ' + res.air + ' nm', 'big');
+  line(res.sea ? 'Sea route: ' + res.sea.nm + ' nm, ' + res.sea.steps + ' hex' + (res.sea.steps === 1 ? '' : 'es') : 'Sea route: no sea route', 'big');
+  line('Click again to start over.', 'dim');
+}
+
+function initMeasure() {
+  $('measurebtn').addEventListener('click', e => { setMeasureMode(!S.measure.on); e.currentTarget.blur(); });
+}
+
+// =====================================================================
 // Time controls
 // =====================================================================
 function goto(i) {
@@ -1270,7 +1429,7 @@ function initControls() {
   document.addEventListener('keydown', e => {
     const t = e.target, tag = t && t.tagName;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.key === 'Escape') { clearSelection(); return; }
+    if (e.key === 'Escape') { if (S.measure.on) setMeasureMode(false); else clearSelection(); return; }
     if (tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && (t.type === 'text' || t.type === 'search'))) return; // typing in the filter box
     if (tag === 'INPUT' && t.type === 'checkbox' && (e.key === ' ' || e.code === 'Space')) return; // Space toggles the checkbox
     if (!S.model) return;
@@ -1515,6 +1674,7 @@ function init() {
   const checked = document.querySelector('input[name=belief]:checked'); // the browser may restore form state on reload
   if (checked) S.belief = checked.value;
   initPanZoom();
+  initMeasure();
   $('filter').addEventListener('input', e => { S.filter = e.target.value.trim(); renderEvents(); });
   $('onlysel').addEventListener('change', e => { S.onlySel = e.target.checked; renderEvents(); });
   $('allsteps').addEventListener('change', e => { S.allSteps = e.target.checked; renderEvents(); });

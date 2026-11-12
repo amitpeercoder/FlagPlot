@@ -9,6 +9,8 @@
 mod data;
 mod events;
 mod map;
+#[cfg(test)]
+mod measure_fixture;
 mod names;
 mod num;
 mod orders;
