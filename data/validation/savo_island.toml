@@ -166,7 +166,7 @@ take = "shots_in_hundreds"
 side = "japanese"
 weapon = "gun"
 rows = [7]
-reason = "1,867 shells (7), which is 18 hundreds. The count includes the few fired at Ralph Talbot, who is outside the scenario; no row says how many, so nothing is taken off."
+reason = "1,867 shells (7), which is 18 hundreds. The count includes the few fired at Ralph Talbot, who is outside the scenario; no row says how many, so nothing is taken off. The count is of every calibre, secondary guns too (about 654 of the 1,867 were 4.7 and 5 inch), and the rules give a ship one battery. At the baseline the total came near the record by two errors that offset: the heavy cruisers' main batteries fired about what they did, and the three light ships about six times what they did. So an agreement here is not yet proof; a measure by ship is to follow when the batch file records shots by the ship that fired."
 
 [[measure]]
 id = "allied_gun_shells_fired_in_hundreds"
@@ -178,7 +178,7 @@ take = "shots_in_hundreds"
 side = "allied"
 weapon = "gun"
 rows = [10]
-reason = "471 shells (10); 459 without Ralph Talbot's 12, who is outside the scenario. Either is 4 hundreds. At the baseline the Allied groups fired about 2,800 a run. Hits for each thousand shells agreed all the same, and hid it: a force that fires six times too much and hits at the right rate scores six times the hits. This measure is here so that cannot hide again. In the record most of the Allied cruisers never got their guns into effective action."
+reason = "471 shells (10); 459 without Ralph Talbot's 12, who is outside the scenario. Either is 4 hundreds. At the baseline the Allied groups fired about 2,800 a run. Hits for each thousand shells agreed all the same, and hid it: a force that fires six times too much and hits at the right rate scores six times the hits. This measure is here so that cannot hide again. In the record most of the Allied cruisers never got their guns into effective action. The measure counts the whole run, and so counts the shells of any fight by day with Japanese ships that fell behind, about 550 a run at the baseline. The record has no such fight, so those shells are part of the miss and are not taken out: decision 0068, on a force not at battle readiness, is not meant to remove them."
 
 # ------------------------------------------------------- how long it ran
 
@@ -190,7 +190,17 @@ record_high = 30
 judged = true
 take = "minutes_of_action"
 rows = [14, 15, 16]
-reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). It is the measure for when a force breaks off, the last mechanism in the order of tuning. Judged since the batch file gives the rounds each fight ran, whatever ended it (decision 0062). A round in which a force slips away and no shot is fired is counted. A round is five minutes on the frozen figures, so the measure moves in fives."
+reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). It is the measure for when a force breaks off, the last mechanism in the order of tuning. Judged since the batch file gives the rounds each fight ran, whatever ended it (decision 0062). A round in which a force slips away and no shot is fired is counted. Fights by day are counted too: the record has none, so a run that has one runs longer than the night did, and that is a true miss. A round is five minutes on the frozen figures, so the measure moves in fives."
+
+[[measure]]
+id = "surface_fights_by_day"
+counts = "Surface fights in the run that are not in a night pulse"
+record_low = 0
+record_high = 0
+judged = true
+take = "fights_by_day"
+rows = [14, 15]
+reason = "The whole action lay in the half hour from the enemy's appearing round Savo until he ceased fire and passed out to sea, between 01:45 and 02:15 (14, 15). No ship of either side was caught after dawn. At the baseline, fights by day with Japanese ships that had fallen behind cost the Allied groups about 550 shells a run; this measure is how often that happens."
 
 # --------------------------------------------------------------- claims
 

@@ -171,6 +171,7 @@ pub struct Escort {
 
 #[derive(Deserialize)]
 pub struct Fight {
+    pub pulse: String,
     pub rounds: u64,
 }
 
