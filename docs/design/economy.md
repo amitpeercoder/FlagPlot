@@ -1,6 +1,6 @@
 # Design note: materials and economy
 
-Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is decided or built. The pillars place production and war-wide strategy in step 5. This note says what that could be, what exists to build on, and what should be settled early so later steps do not have to be reworked. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts.
+Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is built. The five questions it first left open were answered the same day; the answers are below. The pillars place production and war-wide strategy in step 5. This note says what that could be, what exists to build on, and what should be settled early so later steps do not have to be reworked. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts.
 
 ## Why it matters
 
@@ -59,17 +59,19 @@ These cost little now and are expensive to change later.
 
 Before planning, read its production system and resource rules through `docs/research/witpae-manual-index.md` (the index lists the production system at section 13.0, capturing base resources at 15.6 and cargo kinds at 6.3.2), and note in our own words what it modelled, what the player had to do by hand, and what Flag Plot should do differently. Mechanics and lessons only: none of its tables or figures.
 
-## Open questions for the product managers
+## Answers from the product managers
 
-- How many materials? One ("resources") is too few to make oil matter; a dozen is a spreadsheet.
-- Does the player ever set what industry builds, or only priorities?
-- Is the economy played for both sides from the first version, or scripted for one?
-- Is merchant shipping a stock of tonnage, a list of ships, or both at different distances from the fighting?
-- Does the slice get a taste of it earlier, for instance fuel for Truk and Rabaul arriving by tanker on a schedule that can be attacked, so the idea is tested before step 5?
+Agreed by the designer on Nov 12, 2026, on the architect's suggestion. These are directions for the design, not built rules; each becomes a decision record when it is planned.
+
+1. **Three materials: oil, metals and general cargo.** Oil is crude and everything refined from it, and decides whether ships steam and aircraft fly. Metals (ore, coking coal, bauxite and the like) limit what industry can build. General cargo (food, rubber and the rest) is the baseline everything runs on, and the shipping it uses competes with the other two. Each produces a different kind of shortage, and they come from different places, which gives the war on shipping its geography. Whether aviation fuel is apart from ship fuel is decided at the level of a base, later.
+2. **The player sets priorities, and a handful of named decisions.** No production queue and no factory settings. Priorities are the argument a theatre commander made for a share: aircraft before ships, escorts before battleships, more pilot training at a cost in fuel. They act after long delays, and the staff forecasts the consequence before the player commits. A few rare, large choices are explicit: laying down or cancelling a capital ship, converting a hull, expanding training. Priorities start bounded by what was historically possible.
+3. **One rule set for both sides, built around Japan first.** Sources, shipping, industry and delivery work the same for whoever holds them. The first version is built and tuned on the Japanese side, where the flow can be cut. American production arrives on a schedule from the record, and the American player's part is allocation and cutting the Japanese flow. The American side gets its own choices later by the same mechanism. Japan is never the scripted side: its economy must answer the blockade.
+4. **Merchant shipping is held two ways, by threat.** Where the enemy has anything that can reach a route, shipping is named ships in convoys, as transports are today. Elsewhere it is a pool of tonnage for each side that the staff manages. A convoy is drawn from the pool and returns to it; ships sunk leave it for good; new building joins it. A quiet route becomes a convoy route when a threat appears. Tonnage moving between the two is conserved exactly, with a property test.
+5. **The slice gets scheduled supply lines in step 4, and nothing else of the economy before step 5.** Cargo arrives at the map edge on a schedule from the record, in real ships that can be attacked, and a base's stock depends on it. No sources, no industry, no materials and no tonnage pool. It tests whether "your fuel comes by sea and can be cut" is good to command by intent, and gives the prototype a lasting aim beside the battles. Not sooner: step 2 needs scenarios close to the record. The staff planner of step 3 is designed knowing it is coming.
 
 ## A possible order
 
 1. Now: keep the seams above as they are, and this note.
 2. With step 3: objectives that name a flow, and a staff that can plan a supply line as a lasting plan.
-3. With step 4, if wanted: the taste in the slice, tankers on a schedule.
+3. With step 4: scheduled supply lines in the slice (answer 5).
 4. Step 5: sources, industry and the war on shipping, with the whole map.
