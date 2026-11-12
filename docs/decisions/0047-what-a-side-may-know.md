@@ -31,7 +31,7 @@ A side's belief is its own units, exactly, and the enemy as contacts (decision 0
 | --- | --- |
 | Whole, if the unit is its own | Order accepted, order rejected (the side that gave it); task force steamed, turned back, arrived, out of fuel; fuel burned; ship refuelled; cargo loaded, unloaded, loading complete, unloading complete; search flown; report received, claim received; contact aged, dropped, not there; force alerted by contact, became alert, stood down; ships detached, force retired; force fatigue; aircraft worn, repaired, arrived; replacements received; air group lost, stood down, returned, fatigue; strike launched, base strike launched, strike found nothing; escorts sent; aircraft lost; pilots lost; aircraft destroyed on the ground, damaged aircraft destroyed on the ground; base supply destroyed, base supply spent; ship damaged, system hit, ship sunk; force broke off, slipped away, surprised (the force it happened to) |
 | Whole to both sides, once each knows of the fight | Engagement begun, engagement ended |
-| Whole to its own side if it succeeded; nothing if it did not | Sighting roll; search attempt; alarm roll |
+| Whole to its own side if it succeeded; nothing if it did not | Sighting roll; search attempt (cut since decision 0061: without the distance and the chance); alarm roll |
 | The firer: its own firing, without the chance, the expected hits or the hits scored | Salvo; air attack; air fight; anti-aircraft fire, a base's anti-aircraft fire |
 | The target: that it was fired on. For a salvo the round, the firing ship, the target and the weapon. For an air attack the air group, the target and the aircraft attacking | Salvo; air attack |
 | The attacker: that it attacked, without the hits. The defender: whole | Base attacked |

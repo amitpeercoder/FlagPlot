@@ -68,5 +68,6 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0058 | Ships are charged straight-line miles: a step costs the miles it brings the force closer to its waypoint; 40 a hex only where land forces a detour | Confirmed |
 | 0059 | Aircraft that cannot land where they took off: extended reach by order with ditching for fuel, another deck or a field when the deck is lost, and the crew's fate by where it comes down | Confirmed |
 | 0060 | A claim's breakdown is the umpire's: a side sees its claim whole and no breakdown of it, because the breakdown says how much of the claim is real | Confirmed |
+| 0061 | A search that sighted is shown to its side cut: the group and the force, without the distance or the chance, which are worked from the force's true position. Open: whether an event should name an enemy force by its number | Confirmed; the open question needs review |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

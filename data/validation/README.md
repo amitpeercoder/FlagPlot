@@ -38,7 +38,7 @@ No passage is judged today. Research found no long run at one held speed, and a 
 - **No recorded value without its rows.** If no row gives a fact, there is no measure for it; the gap is said in a `reason` nearby or in `data/oob/gaps.csv`.
 - **A range spans a dispute and does not end it.** No row's standing is changed here. A row that is `unconfirmed` or `disputed` may give one end of a range only if the `reason` says so.
 - **The record is cut to the scenario's scope.** A battle's totals in the histories often cover more days and more forces than the scenario holds.
-- **A measure is not judged where the rules cannot produce what the record counts,** such as aircraft that ditched for want of fuel. It is still reported, so the gap stays in view.
+- **A measure is not judged where the rules cannot produce what the record counts,** such as a strike lost coming home in the dark. It is still reported, so the gap stays in view. Where only a part of the record is out of reach and a row gives that part its own number, the part is taken out of the record, the `reason` says so, and the rest is judged.
 - **A fact that is yes or no is a measure of 0 or 1.** It is judged by the same test as any other.
 - **Whole numbers only,** as in every data file.
 
@@ -50,7 +50,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 
 | File | Battle | State |
 | --- | --- | --- |
-| `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 15 measures, 9 judged |
+| `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 15 measures, 11 judged |
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 13 measures, 12 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
 | `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
