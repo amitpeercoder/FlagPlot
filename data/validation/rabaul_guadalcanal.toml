@@ -31,6 +31,9 @@ counts = "Rabaul's bombers shot down by fighters or by anti-aircraft fire"
 record_low = 12
 record_high = 12
 judged = true
+take = "air_losses"
+air_groups = [1]
+causes = ["shot_down"]
 rows = [1048, 1060, 1020, 1024, 1095, 1101, 1034, 1109]
 reason = "Missing or self-destroyed on the units' forms: 2 on 26 August (1048), 1 on 29 August (1060), 1 on 9 September (1020), 2 on the 10th (1024), 1 on the 11th (1095), 4 on the 12th (1101, 1034) and 1 on the 13th (1109)."
 
@@ -40,17 +43,23 @@ counts = "Fighters of the Tainan and 6th Air Groups shot down by fighters or by 
 record_low = 6
 record_high = 10
 judged = true
+take = "air_losses"
+air_groups = [2, 3]
+causes = ["shot_down"]
 rows = [1202, 1216, 1140, 1231]
 reason = "Low end: 3 on 26 August (1202), 2 on 2 September (1216) and 1 of the 6th on 11 September (1140), all on escort. High end adds the 4 lost on 13 September escorting reconnaissance aircraft (1231), a mission the scenario does not fly but a loss of a unit it holds. Shokaku's fighters from Buka lost 5 and the 2nd Air Group 2; neither unit is in the scenario."
 
 [[measure]]
 id = "japanese_bombers_forced_down"
-counts = "Rabaul's bombers written off after a sortie"
+counts = "Rabaul's bombers worn out after a sortie or ditched for want of fuel"
 record_low = 5
 record_high = 6
 judged = false
+take = "air_losses"
+air_groups = [1]
+causes = ["worn_out", "ditched_fuel"]
 rows = [988, 1049, 1061, 1090, 1110, 1102]
-reason = "Forced landings with the aircraft wrecked: one each on 26 August for two units (988, 1049), 29 August (1061), 10 September (1090) and 13 September (1110); a sixth on 12 September rests on a low-confidence row (1102), read as the high end by exception. Not judged: the forms count a forced landing, not an aircraft that came home and never flew again, so the record is a floor for what the rules call written off."
+reason = "Forced landings with the aircraft wrecked: one each on 26 August for two units (988, 1049), 29 August (1061), 10 September (1090) and 13 September (1110); a sixth on 12 September rests on a low-confidence row (1102), read as the high end by exception. Not judged: the forms count a forced landing, not an aircraft that came home and never flew again, so the record is a floor for what the rules call worn out. A bomber that ditches out of fuel is counted with them: it too is an aircraft that flew and did not come home fit, and that the enemy did not shoot down."
 
 # ---------------------------------------------------------- US aircraft
 
@@ -60,6 +69,9 @@ counts = "Henderson Field's F4Fs shot down by fighters or by bombers' guns"
 record_low = 7
 record_high = 23
 judged = true
+take = "air_losses"
+air_groups = [10, 13, 15, 16]
+causes = ["shot_down"]
 rows = [1263, 1269, 1285]
 reason = "The Navy's statistics by month: Marine fighters 7 in August (1263) and 12 in September (1269), Navy fighters ashore 4 in September (1285). Low end is August alone; high end counts all of September, which runs thirteen days past the scenario. The high end is a ceiling."
 
@@ -69,6 +81,9 @@ counts = "Henderson Field's F4Fs and SBDs destroyed on the ground by bombing"
 record_low = 2
 record_high = 3
 judged = true
+take = "air_losses"
+air_groups = [10, 11, 12, 13, 14, 15, 16, 17]
+causes = ["destroyed_on_ground", "damaged_destroyed_on_ground"]
 rows = [1266, 1272, 1283, 1299, 1330]
 reason = "The Navy's statistics give 2 Marine fighters in August (1266) and none of any type in September (1272, 1283, 1299). A dispatch gives one dive bomber destroyed by bombing on 2 September (1330), which the statistics do not show. Low end without it, high end with it. The P-400s burned on the ground are outside the scenario."
 
@@ -80,6 +95,9 @@ counts = "Days on which a bomber raid from Rabaul attacks Henderson Field"
 record_low = 11
 record_high = 11
 judged = false
+take = "attack_days"
+air_groups = [1]
+target_base = 1
 rows = [954, 1108, 1037]
 reason = "Ten to 12 September: 14 missions launched and 4 aborted (954). The forms add the raid of 13 September (1108, 1037) and show the bombers of the 16th turning back. Not judged: weather turned back about half the bomber sorties of the period and the rules have no weather. The scenario flies about as many raids today, for another reason: fatigue."
 
@@ -89,6 +107,10 @@ counts = "Bombers in the raids that attack Henderson Field, summed over the run"
 record_low = 211
 record_high = 213
 judged = false
+take = "aircraft_attacking"
+air_groups = [1]
+target_base = 1
+escorts = false
 rows = [1115, 1044, 982, 1047, 987, 1059, 1005, 1118, 1065, 1008, 1075, 1011, 1080, 1015, 1085, 1019, 1089, 1023, 1094, 1028, 1100, 1033, 1108, 1037]
 reason = "By day, from the forms: 23 on 25 August (1115, 1044, 982), 16 on the 26th (1047, 987), 18 on the 29th (1059, 1005), 18 or 20 on the 30th (1065, 1008; 1118 is two more of the 4th Air Group, which the research note does not count in the raid), 18 on 2 September (1075, 1011), 18 on the 5th (1080, 1015), 18 on the 9th (1085, 1019), 22 on the 10th (1089, 1023), 24 on the 11th (1094, 1028), 20 on the 12th (1100, 1033) and 16 on the 13th (1108, 1037). Not judged, for the reason raid days are not."
 
@@ -105,8 +127,13 @@ counts = "Aircraft the US side claims shot down, for each 100 Japanese aircraft 
 record_low = 250
 record_high = 382
 judged = true
+take = "claims_per_hundred"
+side = "allied"
+claim = "shot_down"
+air_groups = [1, 2, 3]
+causes = ["shot_down"]
 rows = [534, 546, 557, 560, 1332, 1333, 594, 593, 603, 1345, 612, 1351, 936, 629, 641, 472, 1358, 951, 1048, 1202, 1060, 1149, 1154, 1216, 1020, 1024, 1095, 1140, 1101, 1034, 1133, 1109, 1231, 1137, 988, 1049, 1061, 1090, 1110, 1102, 1138]
-reason = "The eleven days with both a US claim and a Japanese form. Claimed, low end 90: 13 on 26 August (534), 8 on the 29th (546), 14 on the 30th (557), 7 on 2 September (1332), 2 on the 5th (594), 10 on the 9th (603), 4 on the 10th (1345), 7 on the 11th (1351), 13 on the 12th (936), 8 on the 13th (641), 4 on the 14th (1358). High end 111: 19 on 30 August (560), one more by the guns on 2 September (1333), 4 on the 5th (593), 5 on the 10th (612), 16 on the 12th (629), 11 on the 13th (472), 10 on the 14th (951). Really shot down, 29: (1048, 1202, 1060, 1149, 1154, 1216, 1020, 1024, 1095, 1140, 1101, 1034, 1133, 1109, 1231, 1137). With the 7 forced down counted as kills, 36: (988, 1049, 1061, 1090, 1110, 1102, 1138). 90 in 36 is 250 a hundred and 111 in 29 is 382."
+reason = "The eleven days with both a US claim and a Japanese form. Claimed, low end 90: 13 on 26 August (534), 8 on the 29th (546), 14 on the 30th (557), 7 on 2 September (1332), 2 on the 5th (594), 10 on the 9th (603), 4 on the 10th (1345), 7 on the 11th (1351), 13 on the 12th (936), 8 on the 13th (641), 4 on the 14th (1358). High end 111: 19 on 30 August (560), one more by the guns on 2 September (1333), 4 on the 5th (593), 5 on the 10th (612), 16 on the 12th (629), 11 on the 13th (472), 10 on the 14th (951). Really shot down, 29: (1048, 1202, 1060, 1149, 1154, 1216, 1020, 1024, 1095, 1140, 1101, 1034, 1133, 1109, 1231, 1137). The run's figure divides by aircraft shot down and nothing else: the rules have no write-off for damage taken in combat, and a ditching is not a kill. With the record's 7 forced down counted as kills, since combat forced most of them down, 36: (988, 1049, 1061, 1090, 1110, 1102, 1138). 90 in 36 is 250 a hundred and 111 in 29 is 382."
 
 [[measure]]
 id = "japanese_aircraft_claimed_on_ground_per_hundred_destroyed"
@@ -114,6 +141,11 @@ counts = "Aircraft the Japanese side claims destroyed on the ground, for each 10
 record_low = 2066
 record_high = 4600
 judged = false
+take = "claims_per_hundred"
+side = "japanese"
+claim = "on_ground"
+air_groups = [10, 11, 12, 13, 14, 15, 16, 17]
+causes = ["destroyed_on_ground", "damaged_destroyed_on_ground"]
 rows = [985, 1046, 991, 1053, 1063, 1013, 1078, 1106, 1266, 1330]
 reason = "Claimed by the bomber units: 8 on 25 August (985, 1046), 12 on the 26th (991, 1053), 8 on the 29th (1063), 10 on 2 September (1013, 1078), 24 on the 12th (1106). Two units report the same figure on three of those days: counted once the claims are 62, counted twice 92. Really destroyed: 2 or 3, as in us_aircraft_destroyed_on_the_ground (1266, 1330). Not judged: the divisor is two or three aircraft, so one aircraft moves the measure by a third. It is here to show the size of it: a bomber crew's count of aircraft burning on a field was worth almost nothing."
 
@@ -134,6 +166,9 @@ counts = "Aircraft of VMF-223 ready at the end of day 5"
 record_low = 11
 record_high = 11
 judged = true
+take = "ready"
+air_groups = [10]
+day = 5
 rows = [455]
 reason = "The commanding general's count on 25 August: of the 19 fighters that came on the 20th, one had crashed on the field, 4 were lost in action and 3 were under repair (455). That leaves 11."
 
@@ -143,6 +178,9 @@ counts = "Aircraft of VMSB-232 ready at the end of day 5"
 record_low = 9
 record_high = 9
 judged = true
+take = "ready"
+air_groups = [11]
+day = 5
 rows = [455]
 reason = "The same count: of the 12 dive bombers, one had crashed and 2 were under repair (455). That leaves 9. The two figures add to the 20 of 31 the source gives as serviceable."
 
@@ -152,6 +190,9 @@ counts = "Aircraft of VMF-223 ready at the end of day 10"
 record_low = 4
 record_high = 5
 judged = true
+take = "ready"
+air_groups = [10]
+day = 10
 rows = [893, 569, 568]
 reason = "On 30 August, when the second echelon flew in, four fighters of the first were operable by the Marine monograph (893, 569); five that evening by a later Marine history (568)."
 
@@ -161,6 +202,9 @@ counts = "Aircraft of VMF-223 and VMF-224 ready at the end of day 21"
 record_low = 11
 record_high = 11
 judged = true
+take = "ready"
+air_groups = [10, 13]
+day = 21
 rows = [1342, 606]
 reason = "Eleven F4Fs flyable on 10 September by the command's own dispatch (1342), the day before VF-5 arrived; an Army history gives 11 for the 9th (606)."
 
@@ -170,6 +214,9 @@ counts = "Aircraft of VMSB-232, Flight 300 and VMSB-231 ready at the end of day 
 record_low = 22
 record_high = 22
 judged = true
+take = "ready"
+air_groups = [11, 12, 14]
+day = 21
 rows = [1343]
 reason = "Twenty-two SBDs flyable on 10 September by the same dispatch (1343)."
 
@@ -181,6 +228,8 @@ counts = "Pilots of Henderson Field's groups lost"
 record_low = 9
 record_high = 22
 judged = false
+take = "pilots_lost"
+air_groups = [10, 11, 12, 13, 14, 15, 16, 17]
 rows = [484, 1313]
 reason = "Low end: 9 killed from 21 August to 11 September, a figure an encyclopedia cites from a book not read (484), a low-confidence row read by exception. High end: 22 pilots of the Marine air group lost from 20 August to 16 October (1313), a month past the scenario and so a ceiling. Not judged: both ends are weak, and that is so whatever the rules do. It is here because the rules give none: a patrol over its own base keeps every pilot (decision 0038), and the record does not. Decision 0059 adds a draw for the pilot of a fighter shot down over its own base; the measure is judged when better rows bound it, not when that rule lands."
 
