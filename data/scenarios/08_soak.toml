@@ -744,7 +744,6 @@ pilots = 0
 # Squadrons that arrive during the four weeks (decision 0041). Day 1 is 21
 # August. Each arrives with a pilot for each aircraft, which is an
 # assumption: the sources count aircraft.
-# 24 August: eleven dive bombers of Enterprise, Flight 300.
 
 [[air_group]]
 id = 101
@@ -927,11 +926,9 @@ ready = 5
 # Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
 # detachment at 20.
 
-[[arrival]]
-day = 4
-air_group = 12
-aircraft = 11
-pilots = 11
+# 24 August: no scripted arrival of Flight 300 (air group 12). Decision 11 of
+# 0059: the rule lands aircraft of a lost deck at Henderson. Group 12 keeps its
+# day-1 order and its day-75 arrival.
 
 # 30 August: VMF-224.
 
