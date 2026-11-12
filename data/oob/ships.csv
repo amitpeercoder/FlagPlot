@@ -125,7 +125,7 @@ id,key,name,nation,class,hull_number
 1121,zuikaku,Zuikaku,jp,jp-shokaku-class,
 1122,dd-415-obrien,USS O'Brien,us,,DD-415
 1123,bb-57-south-dakota,USS South Dakota,us,,BB-57
-1124,cl-47-boise,USS Boise,us,,CL-47
+1124,cl-47-boise,USS Boise,us,us-brooklyn-class,CL-47
 1125,ca-27-chester,USS Chester,us,,CA-27
 1126,ca-24-pensacola,USS Pensacola,us,,CA-24
 1127,dd-378-smith,USS Smith,us,,DD-378
@@ -133,3 +133,13 @@ id,key,name,nation,class,hull_number
 1129,yugiri,Yugiri,jp,,
 1130,shirakumo,Shirakumo,jp,,
 1131,hagikaze,Hagikaze,jp,,
+1132,cl-50-helena,Helena,us,us-st-louis-class,CL-50
+1133,dd-485-duncan,Duncan,us,us-gleaves-class,DD-485
+1134,dd-459-laffey,Laffey,us,us-benson-class,DD-459
+1135,dd-488-mccalla,McCalla,us,us-gleaves-class,DD-488
+1136,fubuki,Fubuki,jp,jp-fubuki-class,
+1137,hatsuyuki,Hatsuyuki,jp,jp-fubuki-class,
+1138,murakumo,Murakumo,jp,jp-fubuki-class,
+1139,shirayuki,Shirayuki,jp,jp-fubuki-class,
+1140,ayanami,Ayanami,jp,jp-fubuki-class,
+1141,nisshin,Nisshin,jp,jp-nisshin-class,
