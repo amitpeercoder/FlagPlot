@@ -51,6 +51,11 @@ crew_recovered_short_of_home = "0.7"
 # force, samples that favour those who lived to be written of.
 crew_recovered_over_own_base = "0.6"
 crew_recovered_beside_own_force = "0.95"
+# The chance the crew of an aircraft that came down in the sea for want of a
+# deck (decision 9 of 0059) is recovered when no ship of its side is in the
+# hex. With a ship of its side there, crew_recovered_beside_own_force applies.
+# PLACEHOLDER: the record has 6 to 9 of 13 to 16 recovered in open sea.
+crew_recovered_open_sea = "0.5"
 
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).

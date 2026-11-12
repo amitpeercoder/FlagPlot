@@ -26,7 +26,9 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Radius** | How far out an aircraft type goes and comes back. `search_range_nm` is the largest range a search arc may name, and the engine refuses an arc beyond it. `strike_range_nm` is what a group's reach is measured from. Both columns are named range and hold radii | Range |
 | **Reach** | How far an air group's strikes and escorts may go: normal, the type's strike radius, or extended, the radius and a share more. Set by order, normal until then (decision 0059) | Radius |
 | **Extended reach** | The reach of a group that has been ordered to it: the radius times (1 plus the extended reach share), cut to a whole mile. A sortie beyond the radius may cost aircraft that run out of fuel on the way home | Normal reach |
-| **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
+| **In the air** | Describes the aircraft of a group that flew in the pulse and were not shot down, until the wear phase of the pulse brings them home (decision 0059) | Aboard |
+| **Landed elsewhere** | Describes aircraft that were in the air when their own deck was lost and landed at another carrier or a base, joining or forming a group there (decision 0059) | Rebased |
+| **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius, or that found no deck to land on, and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
 | **Range** | How far an aircraft flies one way, as a sourced fact. Only the derivation tool reads it. The engine reads the radius columns, whose names say range (corrected against the code, which reads `search_range_nm`) | |
 | **Crippled** | A ship with flotation damage of 50 or more. It counts toward break-off | Slowed |
 | **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Crippled |

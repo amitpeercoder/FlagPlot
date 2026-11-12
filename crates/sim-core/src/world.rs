@@ -106,6 +106,11 @@ pub struct World {
     /// 0039): their groups fly nothing in it. Worked out once at the start
     /// of each pulse, so not hashed.
     pub(crate) grounded_bases: BTreeSet<BaseId>,
+    /// The ships that sank, or whose flight deck went out, in the air combat
+    /// step of this pulse, with where and what caused it (decision 7 of
+    /// 0059). Read by the landing step of the same pulse's wear phase and
+    /// emptied at the next air combat step, so not hashed.
+    pub(crate) deck_losses: Vec<crate::landing::DeckLoss>,
     /// The scenario's missions and objectives (decision 0054). Fixed
     /// configuration, like the reference data: no rule reads it and nothing
     /// in it changes, so it is not state and is not hashed. The result is a
@@ -263,6 +268,7 @@ impl World {
             strikes_in_flight: Vec::new(),
             sorties: Vec::new(),
             grounded_bases: BTreeSet::new(),
+            deck_losses: Vec::new(),
             objectives: None,
         })
     }

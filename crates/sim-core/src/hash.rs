@@ -144,6 +144,7 @@ fn name_every_field(world: &World) {
         strikes_in_flight: _,
         sorties: _,
         grounded_bases: _,
+        deck_losses: _,
         // Not hashed: fixed for the game and read by no rule (decision 5
         // of 0054).
         objectives: _,

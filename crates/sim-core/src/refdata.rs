@@ -567,6 +567,10 @@ pub struct AirCombatFigures {
     pub crew_recovered_over_own_base: Fixed,
     /// The same for a patrol over its own ships at sea (decision 6a of 0059).
     pub crew_recovered_beside_own_force: Fixed,
+    /// The chance the crew of an aircraft that came down in the sea for want
+    /// of a deck, with no ship of its side in the hex, is recovered
+    /// (decision 9 of 0059).
+    pub crew_recovered_open_sea: Fixed,
 }
 
 impl AirCombatFigures {
@@ -621,6 +625,7 @@ impl AirCombatFigures {
                 "crew recovered beside own force",
                 self.crew_recovered_beside_own_force,
             ),
+            ("crew recovered in open sea", self.crew_recovered_open_sea),
         ] {
             if !in_unit(value) {
                 return Some(format!("air combat {label} {value} is not between 0 and 1"));
@@ -947,6 +952,7 @@ impl AirCombatFigures {
             crew_recovered_short_of_home: tenth(7),
             crew_recovered_over_own_base: tenth(6),
             crew_recovered_beside_own_force: Fixed::from_ratio(95, 100),
+            crew_recovered_open_sea: tenth(5),
         }
     }
 }

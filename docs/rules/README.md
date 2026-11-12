@@ -42,7 +42,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 14 | Morning and afternoon | Air search and its sighting reports | Chapter 3, Air search |
 | 15 | Morning and afternoon | Strike decisions and launches | Chapter 5, The strike decision |
 | 16 | Morning and afternoon | Air combat: escorts, patrols, guns, attacks, damage, reports, claims | Chapter 5, The raid, step by step |
-| 17 | Morning and afternoon | Running out of fuel, then wear, then fatigue, then supply for sorties | Chapter 5, The end of a daylight pulse for aircraft |
+| 17 | Morning and afternoon | Running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties | Chapter 5, The end of a daylight pulse for aircraft |
 | 18 | Morning and afternoon | Movement, as in step 11 | Chapter 2, Movement; chapter 4, Meeting |
 | 19 | Morning and afternoon | Surface engagements: an empty slot | Chapter 1, The morning and afternoon pulses |
 | 20 | Morning and afternoon | Loading and unloading | Chapter 2, Cargo |

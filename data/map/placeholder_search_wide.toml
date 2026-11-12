@@ -1,0 +1,22 @@
+# PLACEHOLDER MAP. The strip of open sea of placeholder_search.toml, six rows
+# either side of r 0 instead of three, so that a hex 200 nm from (9,0) at a
+# bearing the east arc misses exists. Used by scenario 12c. A copy, because
+# widening the original would add neighbours to the report error draws of the
+# scenarios that use it.
+# The geography is invented. The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 24]
+r = [-6, 6]
+
+# Stands in for a seaplane base.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

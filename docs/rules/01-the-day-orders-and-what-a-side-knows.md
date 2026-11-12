@@ -93,7 +93,7 @@ Both use the same list.
 | 1 | Air search | Air groups on the search mission fly their arcs and sighting reports follow. | Chapter 3, Air search |
 | 2 | Strike decisions | Groups on a strike mission decide, on their side's belief, and launch. | Chapter 5, The strike decision |
 | 3 | Air combat | Escorts, patrols, guns and attacks, then the damage. Reports and claims follow. | Chapter 5, The raid, step by step; chapter 3, Claims |
-| 4 | Aircraft wear | Aircraft that flew beyond their radius may run out of fuel, the rest roll for wear, air groups gain fatigue, and bases pay for sorties. | Chapter 5, The end of a daylight pulse for aircraft |
+| 4 | Aircraft wear | Aircraft that flew beyond their radius may run out of fuel, aircraft whose deck is lost land elsewhere or come down in the sea, the rest roll for wear, air groups gain fatigue, and bases pay for sorties. | Chapter 5, The end of a daylight pulse for aircraft |
 | 5 | Movement | The straggler pass, then forces move in order of clock time, and fight where they meet. | Chapter 2, Movement and Stragglers; chapter 4 |
 | 6 | Surface engagements | Empty slot. The fights happen inside movement. | Chapter 4, Meeting |
 | 7 | Loading | Cargo is loaded and unloaded at bases. | Chapter 2, Cargo |
@@ -342,7 +342,7 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Cargo loaded, cargo unloaded | Own ship |
 | Ship damaged, system hit, ship sunk | Own ship |
 | Search flown | Own air group |
-| Aircraft worn, aircraft ditched, aircraft repaired, aircraft arrived, replacements received | Own air group |
+| Aircraft worn, aircraft ditched, aircraft ditched for want of a deck, aircraft landed elsewhere, aircraft repaired, aircraft arrived, replacements received | Own air group |
 | Damaged aircraft destroyed on the ground, aircraft destroyed on the ground | Own air group |
 | Air group lost, air group fatigue, air group stood down, air group returned | Own air group |
 | Strike launched, base strike launched, strike found nothing, escorts sent | Own air group |
@@ -444,7 +444,7 @@ A key is made of:
 
 Each part has its own tag so equal values in different parts cannot cancel. A key opens a stream, and the n-th draw of the stream is mixed from the key and n. A rule that needs several numbers for one key takes them from that one stream in a fixed order. No rule shares one stream between entities and no stream is carried from one pulse to the next. [0003, 0013, 0055]
 
-The values of `Draw` are `Legacy` (0), `Claim` (1, the false claims of a raid, one stream for each side's claim keyed on its first firing unit and the raid's first strike group) and `Ditch` (2, the aircraft that run out of fuel and the recovery of their crews, one stream for each air group and pulse, in the upkeep subsystem, keyed on the air group alone) and `PatrolPilot` (3, the pilots of a patrol's aircraft shot down over its own hex, one stream for each firing roll's losses to a patrol group, in the air combat subsystem, keyed on the patrol group and the firing escort group). [0055, 0056, 0059]
+The values of `Draw` are `Legacy` (0), `Claim` (1, the false claims of a raid, one stream for each side's claim keyed on its first firing unit and the raid's first strike group) and `Ditch` (2, the aircraft that run out of fuel and the recovery of their crews, one stream for each air group and pulse, in the upkeep subsystem, keyed on the air group alone) `NoDeck` (4, the crews of aircraft that came down in the sea for want of a deck, one stream for each source air group and pulse, in the upkeep subsystem, keyed on the air group alone) and `PatrolPilot` (3, the pilots of a patrol's aircraft shot down over its own hex, one stream for each firing roll's losses to a patrol group, in the air combat subsystem, keyed on the patrol group and the firing escort group). [0055, 0056, 0059]
 
 The eleven legacy draws, told apart by the shape of their keys:
 

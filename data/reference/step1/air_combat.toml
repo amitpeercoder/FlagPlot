@@ -55,6 +55,13 @@ crew_recovered_short_of_home = "0.7"
 # (decision 0038), so the hand calculations of step 1 hold on these figures.
 crew_recovered_over_own_base = "1"
 crew_recovered_beside_own_force = "1"
+# The chance the crew of an aircraft that came down in the sea for want of a
+# deck (decision 9 of 0059) is recovered when no ship of its side is in the
+# hex. FROZEN at "1" (every crew recovered, the live figure being 0.5): step 1
+# had no such loss, so it lost no pilot this way and its hand calculations
+# hold on these figures. The frozen "1" of crew_recovered_beside_own_force
+# stands for the same rule.
+crew_recovered_open_sea = "1"
 
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).

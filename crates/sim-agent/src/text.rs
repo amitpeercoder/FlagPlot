@@ -394,6 +394,12 @@ impl Briefing {
             if x.ditched > 0 {
                 causes.push(format!("{} ran out of fuel on the way home", x.ditched));
             }
+            if x.no_deck > 0 {
+                causes.push(format!(
+                    "{} came down in the sea for want of a deck",
+                    x.no_deck
+                ));
+            }
             if x.pilots_lost > 0 {
                 causes.push(plural(x.pilots_lost, "pilot lost", "pilots lost"));
             }
@@ -404,6 +410,17 @@ impl Briefing {
                 evs(&x.events)
             )
         });
+        for x in &l.aircraft_landed_elsewhere {
+            o.line(format!(
+                "Landed elsewhere: {} landed {} aircraft at {}, {} {}{}",
+                x.from.text(),
+                x.aircraft,
+                x.at.text(),
+                if x.formed { "forming" } else { "joining" },
+                x.to.text(),
+                evs(&[x.event])
+            ));
+        }
         o.each("Claims yesterday", &l.claims, |x| {
             if x.from_air {
                 let (place, words) = sim_core::events::air_claim_words(
