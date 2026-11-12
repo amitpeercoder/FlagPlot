@@ -290,5 +290,13 @@ fn describe_side(kind: &SideEventKind) -> (&'static str, Data, bool) {
                 .num("shots", *shots),
             true,
         ),
+        SideEventKind::SearchAttempt {
+            air_group,
+            task_force,
+        } => (
+            "search_attempt",
+            d.id("air_group", *air_group).id("task_force", *task_force),
+            true,
+        ),
     }
 }

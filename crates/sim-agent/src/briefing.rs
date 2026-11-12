@@ -1213,6 +1213,9 @@ impl Day {
                     shots: Dec(*shots),
                     event: id,
                 }),
+                // A search that sighted reaches the briefing as the contact
+                // its report made.
+                SideEventKind::SearchAttempt { .. } => {}
             }
         }
 

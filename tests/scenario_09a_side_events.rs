@@ -185,7 +185,8 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
         assert_eq!((event.day, event.pulse), (log.day, log.pulse), "{at}");
 
         // 1. Firing: the side's own firing is always cut. Only the defender
-        // of a base attack, and nobody else, sees hits.
+        // of a base attack, and nobody else, sees hits. A search that sighted
+        // is cut too: no distance and no chance (decision 0061).
         match &log.kind {
             EventKind::Salvo { .. }
             | EventKind::AirAttack { .. }
@@ -195,6 +196,21 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
                 !matches!(event.kind, SideEventKind::Whole(_)),
                 "{at}: a firing event is whole"
             ),
+            EventKind::SearchAttempt { .. } => {
+                assert!(
+                    matches!(event.kind, SideEventKind::SearchAttempt { .. }),
+                    "{at}: a search that sighted is whole"
+                );
+                let shown = format!("{:?} {:?}", event.kind, event.breakdown);
+                assert!(
+                    !shown.contains("distance") && !shown.contains("chance"),
+                    "{at}: {shown}"
+                );
+                assert!(
+                    event.breakdown.as_ref().is_none_or(|b| b.result.is_none()),
+                    "{at}: the chance is the breakdown's result"
+                );
+            }
             EventKind::BaseAttacked { base, .. } => {
                 let defender = unit_side(truth, EntityRef::Base(*base)) == Some(side);
                 assert_eq!(
@@ -205,7 +221,7 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
             }
             _ => assert!(
                 matches!(event.kind, SideEventKind::Whole(_)),
-                "{at}: only the firing kinds are cut"
+                "{at}: only the firing kinds and a search are cut"
             ),
         }
         // Fired at: the view carries no shots (salvo) and no weapon or aircraft

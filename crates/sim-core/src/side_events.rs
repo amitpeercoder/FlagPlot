@@ -143,6 +143,14 @@ pub enum SideEventKind {
         base: BaseId,
         shots: Fixed,
     },
+    /// The side's own search that sighted a force: which group, and the
+    /// force as the log names it. Not the distance or the chance, which are
+    /// worked from where the force really was, while the report that follows
+    /// may name a neighbouring hex (decision 0061).
+    SearchAttempt {
+        air_group: AirGroupId,
+        task_force: TaskForceId,
+    },
 }
 
 impl SideEventKind {
@@ -187,6 +195,13 @@ impl SideEventKind {
             | SideEventKind::BaseAttacked {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            SideEventKind::SearchAttempt {
+                air_group,
+                task_force,
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::TaskForce(*task_force),
+            ],
         }
     }
 }
@@ -255,6 +270,10 @@ impl fmt::Display for SideEventKind {
                 base,
                 shots,
             } => write!(f, "{air_group} bombs at {base}: {shots} shots"),
+            SideEventKind::SearchAttempt {
+                air_group,
+                task_force,
+            } => write!(f, "{air_group} searched and sighted {task_force}"),
         }
     }
 }
@@ -570,11 +589,22 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
 
-        // The searcher's own act if it sighted, as a sighting roll is. An
-        // attempt that did not is hidden from everyone.
+        // The searcher's own act if it sighted, cut: the distance and the
+        // chance are worked from the force's true position, and the report
+        // may name a neighbouring hex (decision 0061). An attempt that did
+        // not sight is hidden from everyone.
         EventKind::SearchAttempt {
-            air_group, sighted, ..
-        } => whole_if(*sighted && own_group(air_group)),
+            air_group,
+            task_force,
+            sighted,
+            ..
+        } => cut_if(
+            *sighted && own_group(air_group),
+            SideEventKind::SearchAttempt {
+                air_group: *air_group,
+                task_force: *task_force,
+            },
+        ),
     }
 }
 
@@ -596,6 +626,7 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             "fire_control_factor",
         ],
         SideEventKind::AirAttack { .. } | SideEventKind::BaseAttacked { .. } => &["aircraft"],
+        SideEventKind::SearchAttempt { .. } => &["aircraft", "sweep_width_nm", "arc_deg"],
         SideEventKind::AirFight { .. }
         | SideEventKind::AntiAircraftFire { .. }
         | SideEventKind::BaseAntiAircraftFire { .. } => &["shots"],
@@ -1070,8 +1101,9 @@ mod tests {
                 Whole,
                 Nothing,
             ),
-            // A search attempt that sighted is the searcher's own act; one
-            // that did not is hidden from everyone.
+            // A search attempt that sighted is the searcher's own act, cut
+            // of the distance and the chance (decision 0061); one that did
+            // not is hidden from everyone.
             row(
                 EventKind::SearchAttempt {
                     air_group: group(1),
@@ -1080,7 +1112,7 @@ mod tests {
                     chance: Fixed::from_ratio(1, 2),
                     sighted: true,
                 },
-                Whole,
+                Cut("SearchAttempt", &["distance_nm", "chance", "sighted"]),
                 Nothing,
             ),
             row(
@@ -1895,6 +1927,50 @@ mod tests {
     }
 
     // ---- breakdowns ----
+
+    #[test]
+    fn a_search_that_sighted_keeps_its_own_factors_and_loses_the_distance_and_the_chance() {
+        // Decision 0061: the distance and the chance are worked from where
+        // the force really was, and the report may name a neighbouring hex.
+        let factor = |name, n| Factor { name, value: fx(n) };
+        let mut events = log(vec![EventKind::SearchAttempt {
+            air_group: group(1),
+            task_force: force(2),
+            distance_nm: fx(200),
+            chance: Fixed::from_ratio(1, 2),
+            sighted: true,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("degrees_per_radian", 57),
+                factor("aircraft", 15),
+                factor("sweep_width_nm", 20),
+                factor("arc_deg", 180),
+                factor("distance_nm", 200),
+            ],
+            result: Fixed::from_ratio(1, 2),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        assert_eq!(
+            shown[0].kind,
+            SideEventKind::SearchAttempt {
+                air_group: group(1),
+                task_force: force(2),
+            }
+        );
+        assert_eq!(
+            shown[0].breakdown,
+            Some(SideBreakdown {
+                factors: vec![
+                    factor("aircraft", 15),
+                    factor("sweep_width_nm", 20),
+                    factor("arc_deg", 180),
+                ],
+                result: None,
+            })
+        );
+        assert!(project(Side::Japanese, &events, &owners(false)).is_empty());
+    }
 
     #[test]
     fn a_claim_is_whole_to_its_side_and_its_breakdown_is_not_shown() {
