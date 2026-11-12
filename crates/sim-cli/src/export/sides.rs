@@ -18,6 +18,7 @@ use std::collections::BTreeMap;
 
 use serde::Serialize;
 use sim_core::events::Cause;
+use sim_core::fixed::Fixed;
 use sim_core::side_events::{SideBreakdown, SideEvent, SideEventKind};
 use sim_core::state::Side;
 use sim_core::time::Pulse;
@@ -189,94 +190,70 @@ fn describe_side(kind: &SideEventKind) -> (&'static str, Data, bool) {
         SideEventKind::Salvo {
             round,
             firer,
-            target,
             weapon,
             shots,
         } => (
             "salvo",
             d.int("round", *round)
                 .id("firer", *firer)
-                .id("target", *target)
                 .text("weapon", names::weapon(*weapon))
                 .num("shots", *shots),
             true,
         ),
         SideEventKind::SalvoAgainst {
             round,
-            firer,
             target,
             weapon,
         } => (
             "salvo",
             d.int("round", *round)
-                .id("firer", *firer)
                 .id("target", *target)
                 .text("weapon", names::weapon(*weapon)),
             true,
         ),
         SideEventKind::AirAttackAgainst {
-            air_group,
             task_force,
             ship,
             shots,
         } => (
             "air_attack",
-            d.id("air_group", *air_group)
-                .id("task_force", *task_force)
+            d.id("task_force", *task_force)
                 .id("ship", *ship)
                 .num("shots", *shots),
             true,
         ),
         SideEventKind::AirAttack {
             air_group,
-            task_force,
-            ship,
             weapon,
             shots,
         } => (
             "air_attack",
             d.id("air_group", *air_group)
-                .id("task_force", *task_force)
-                .id("ship", *ship)
                 .text("weapon", names::weapon(*weapon))
                 .num("shots", *shots),
             true,
         ),
         SideEventKind::AirFight {
             firer,
-            target,
             firing,
             at,
             shots,
         } => (
             "air_fight",
             d.id("firer", *firer)
-                .id("target", *target)
                 .text("firing", firing.name())
                 .text("at", at.name())
                 .num("shots", *shots),
             true,
         ),
-        SideEventKind::AntiAircraftFire {
-            task_force,
-            air_group,
-            shots,
-        } => (
+        SideEventKind::AntiAircraftFire { task_force, shots } => (
             "anti_aircraft_fire",
-            d.id("task_force", *task_force)
-                .id("air_group", *air_group)
-                .num("shots", *shots),
+            d.id("task_force", *task_force).num("shots", *shots),
             true,
         ),
-        SideEventKind::BaseAntiAircraftFire {
-            base,
-            air_group,
-            shots,
-        } => (
+        SideEventKind::BaseAntiAircraftFire { base, shots } => (
             "base_anti_aircraft_fire",
-            d.id("base", *base)
-                .id("air_group", *air_group)
-                .num("shots", *shots),
+            d.id("base", *base).num("shots", *shots),
             true,
         ),
         SideEventKind::BaseAttacked {
@@ -290,12 +267,83 @@ fn describe_side(kind: &SideEventKind) -> (&'static str, Data, bool) {
                 .num("shots", *shots),
             true,
         ),
-        SideEventKind::SearchAttempt {
-            air_group,
-            task_force,
+        SideEventKind::BaseAttackedAgainst {
+            base,
+            shots,
+            chance,
+            expected,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
         } => (
-            "search_attempt",
-            d.id("air_group", *air_group).id("task_force", *task_force),
+            "base_attacked",
+            d.id("base", *base)
+                .num("shots", *shots)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("hits", *hits)
+                .int("hits_on_aircraft", *hits_on_aircraft)
+                .int("hits_on_supply", *hits_on_supply),
+            true,
+        ),
+        SideEventKind::SearchAttempt { air_group } => {
+            ("search_attempt", d.id("air_group", *air_group), true)
+        }
+        SideEventKind::EngagementBegun {
+            task_force,
+            hex,
+            elapsed_hours,
+        } => (
+            "engagement_begun",
+            d.id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("elapsed_hours", *elapsed_hours),
+            true,
+        ),
+        SideEventKind::EngagementEnded {
+            round,
+            task_force,
+            hex,
+            reason,
+        } => (
+            "engagement_ended",
+            d.int("round", *round)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .text("reason", names::end_reason(*reason)),
+            true,
+        ),
+        SideEventKind::SightingRoll {
+            round,
+            task_force,
+            chance,
+            fatigue_factor,
+        } => {
+            let d = d
+                .int("round", *round)
+                .id("task_force", *task_force)
+                .num("chance", *chance);
+            // Left out where fatigue is not in play (decision 0037).
+            let d = if *fatigue_factor == Fixed::ONE {
+                d
+            } else {
+                d.num("fatigue_factor", *fatigue_factor)
+            };
+            ("sighting_roll", d, true)
+        }
+        SideEventKind::ForceSurprised { round, task_force } => (
+            "force_surprised",
+            d.int("round", *round).id("task_force", *task_force),
+            true,
+        ),
+        SideEventKind::ForceSlippedAway { round, task_force } => (
+            "force_slipped_away",
+            d.int("round", *round).id("task_force", *task_force),
+            true,
+        ),
+        SideEventKind::AlarmRoll { task_force, chance } => (
+            "alarm_roll",
+            d.id("task_force", *task_force).num("chance", *chance),
             true,
         ),
     }

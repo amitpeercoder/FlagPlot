@@ -225,7 +225,7 @@ impl Briefing {
             format!(
                 "Fight at {}: {}, ended {} in round {}{}",
                 at(&x.place),
-                names(&x.forces),
+                x.force.text(),
                 plain(x.ended),
                 x.rounds,
                 ev(x.event)
@@ -233,10 +233,9 @@ impl Briefing {
         });
         o.each("Salvoes fired at sea", &a.fired, |x| {
             format!(
-                "Gunfire: {} {} at {}: {}, {} shots",
+                "Gunfire: {} {}: {}, {} shots",
                 x.firer.text(),
                 x.weapon,
-                x.target.text(),
                 plural(x.salvos, "salvo", "salvos"),
                 x.shots.0
             )
@@ -248,19 +247,17 @@ impl Briefing {
                 "Escort fire"
             };
             format!(
-                "{who}: {} at the {} of {}, {} shots{}",
+                "{who}: {} at the enemy's {}, {} shots{}",
                 x.firer.text(),
                 x.at,
-                x.target.text(),
                 x.shots.0,
                 ev(x.event)
             )
         });
         o.each("Own anti-aircraft fire", &a.guns, |x| {
             format!(
-                "Anti-aircraft fire: {} at the raid of enemy {}, {} shots{}",
+                "Anti-aircraft fire: {} at a raid, {} shots{}",
                 x.by.text(),
-                x.raid.text(),
                 x.shots.0,
                 ev(x.event)
             )
@@ -307,9 +304,8 @@ impl Briefing {
         }
         o.each("Raids on bases", &a.raids_on_bases, |x| {
             format!(
-                "Raid on {} by enemy {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {} on nothing{}",
+                "Raid on {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {} on nothing{}",
                 x.base.text(),
-                x.air_group.text(),
                 x.aircraft.0,
                 x.hits,
                 if x.hits == 1 { "hit" } else { "hits" },
@@ -323,9 +319,8 @@ impl Briefing {
             match x.aircraft {
                 Some(n) => {
                     let mut s = format!(
-                        "Attack on {} by enemy {}: {} aircraft",
+                        "Attack on {} from the air: {} aircraft",
                         x.against.text(),
-                        x.by.text(),
                         n.0
                     );
                     if x.attacks > 1 {
@@ -334,8 +329,7 @@ impl Briefing {
                     s
                 }
                 None => format!(
-                    "Fired on: enemy {} {} at {}: {}",
-                    x.by.text(),
+                    "Fired on: enemy {} at {}: {}",
                     x.weapon.unwrap_or("guns"),
                     x.against.text(),
                     plural(x.attacks, "salvo", "salvos")

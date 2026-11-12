@@ -307,7 +307,7 @@ Anything that plays the game is handed a side's view and never the truth. The tr
 
 A side learns of what its forces did when a day is over. [0007, 0034, 0047, 0050, 0055]
 
-Limit: a side knows the log's own number for an enemy ship it has fought, for the length of that fight and in the log afterwards. It could tell that two enemy ships are the same ship. Contacts are meant to hide that. It is accepted for step 1. [0047, 0055]
+Limit: within a fight a side cannot tell one enemy ship or air group from another. It knows that its ship fired and that its ship was fired on, not at which ship or by which. [0065]
 
 Limit: a force made during a game takes the next free task force number, and the enemy's forces use the same numbers. A side's new force number therefore depends on how many forces the enemy has, and because draws are keyed on a force's number, the luck of later forces depends on it. [0047]
 
@@ -321,7 +321,7 @@ The event log is the truth. It holds both sides' orders, rolls, hits and losses.
 
 The rule is one exhaustive `match` over every kind of event in `side_events.rs`. A new kind of event does not compile until it is placed in the table. [0047]
 
-An enemy unit in an event a side may see is named as the log names it. [0047]
+No event a side may see names an enemy ship, task force or air group. The side's form of the event has no field for it and its text has no word for it. Where the log names two forces of a fight, the side's event holds its own. The enemy reaches a side only as contacts and claims, which hold no identity either, so a side cannot tell that two sightings, two raids or two fights were the same enemy. Two things are still named: an enemy base, which is on the map for both sides, and the target a side itself wrote in an order, in that order's acceptance or rejection. [0065, 0012]
 
 ### The table
 
@@ -336,11 +336,8 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Loading complete, unloading complete | Own force |
 | Force retired, force stood down | Own force |
 | Force alerted by contact, force became alert | Own force |
-| Force surprised | The force surprised, not the one that surprised it |
 | Force broke off | Own force |
-| Force slipped away | The force that slipped away, not the one it slipped away from |
 | Ships detached | The parent force is own |
-| Alarm roll | Own force, and only if the roll succeeded (alarmed). A failed alarm means the force noticed nothing. |
 | Fuel burned, ship refuelled | Own ship |
 | Cargo loaded, cargo unloaded | Own ship |
 | Ship damaged, system hit, ship sunk | Own ship |
@@ -352,20 +349,31 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Aircraft lost, pilots lost | Own air group |
 | Base supply destroyed, base supply spent | Own base |
 | Report received, claim received, contact aged, contact dropped, contact not there | The side that holds the contact or made the report |
-| Engagement begun, engagement ended | A side that has come to know of the fight (below) |
-| Sighting roll | Own force, and only if the roll sighted. A roll that did not is hidden from both sides: it would say there was something to be found. |
+
+**Cut of the enemy's name and nothing else** [0065]
+
+Each keeps every other field and its whole breakdown.
+
+| Event | The side sees |
+| --- | --- |
+| Engagement begun, engagement ended | A side that has come to know of the fight (below): its own force of the two, and the rest. Not the enemy's force. |
+| Sighting roll | Own force, and only if the roll sighted: the round, the force, the chance and the fatigue factor. Not the force sighted. A roll that did not sight is hidden from both sides: it would say there was something to be found. |
+| Force surprised | The force surprised and the round. Not the force that surprised it. |
+| Force slipped away | The force that slipped away and the round. Not the force it slipped away from. |
+| Alarm roll | Own force, and only if the roll succeeded (alarmed): the force and the chance. Not the forces that fought. A failed alarm means the force noticed nothing. |
+| Base attacked, for the base's side | The base, the shots, the chance, the expected hits and the hits, on aircraft and on supply. Not the air group that raided. |
 
 **Cut**
 
 | Event | The firer sees | The target sees |
 | --- | --- | --- |
-| Salvo | Its own salvo: the round, firer, target, weapon and shots. Not the chance, the expected hits or the hits scored. | That it was fired on: the round, the firing ship, the target and the weapon. Not the shots. The hits it took reach it as ship damaged. |
-| Air attack on a ship | Its own attack: group, force, ship, weapon and shots. | That its ship was attacked: the group, the task force, the ship and the shots (one shot for each aircraft that attacked). Not the chance or the hits. |
-| Air fight | Its own fighters firing: firer, target, what fired and at what, and shots. | Nothing. |
-| Anti-aircraft fire (a force's) | Its own force's fire: force, raid group and shots. | Nothing. |
-| Base anti-aircraft fire | Its own base's fire: base, raid group and shots. | Nothing. |
-| Base attacked | The attacker sees that it attacked: group, base and shots. Not what was hit. | The base's side sees the event whole. |
-| Search attempt | Only if it sighted, its own search: the air group and the task force sighted. Not the distance or the chance, which are worked from where the force really was, while the report may name a neighbouring hex. An attempt that did not sight is hidden from everyone. [0061] | Nothing. |
+| Salvo | Its own salvo: the round, firer, weapon and shots. Not the target, the chance, the expected hits or the hits scored. | That it was fired on: the round, the target and the weapon. Not the firing ship or the shots. The hits it took reach it as ship damaged. |
+| Air attack on a ship | Its own attack: group, weapon and shots. Not the ship or its force. | That its ship was attacked: the task force, the ship and the shots (one shot for each aircraft that attacked). Not the air group, the chance or the hits. |
+| Air fight | Its own fighters firing: firer, what fired and at what (patrol, escorts or bombers), and shots. Not the group fired at. | Nothing. |
+| Anti-aircraft fire (a force's) | Its own force's fire: force and shots. Not the raid's group. | Nothing. |
+| Base anti-aircraft fire | Its own base's fire: base and shots. Not the raid's group. | Nothing. |
+| Base attacked | The attacker sees that it attacked: group, base and shots. Not what was hit. | The base's side: see the table above. |
+| Search attempt | Only if it sighted, its own search: the air group. Not the force sighted, and not the distance or the chance, which are worked from where the force really was, while the report may name a neighbouring hex. An attempt that did not sight is hidden from everyone. [0061, 0065] | Nothing. |
 
 **Absent for both sides**
 
@@ -385,7 +393,7 @@ An event of a fight that carries a round is shown only if its round is not befor
 
 The causes of an event are cut the same way. A cause that is an order is kept if the side issued it. A cause that is an event is kept if the side may see that event. A cause that is dropped sets a flag on the event saying it has causes the side cannot see. [0047]
 
-A side sees the whole breakdown, with its result, of an event it sees whole. A cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `torpedo_mount_factor` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A search attempt keeps `aircraft`, `sweep_width_nm` and `arc_deg`. A salvo against the side and an air attack against it keep no factor. [0047, 0061]
+A side sees the whole breakdown, with its result, of an event it sees whole, and of an event cut of the enemy's name and nothing else. Any other cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `torpedo_mount_factor` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A search attempt keeps `aircraft`, `sweep_width_nm` and `arc_deg`. A salvo against the side and an air attack against it keep no factor. [0047, 0061]
 
 A claim is the exception. A side sees its own `ClaimReceived` whole and no breakdown of it, because the breakdown says how much of the claim is real. The log keeps it for the umpire. [0060]
 

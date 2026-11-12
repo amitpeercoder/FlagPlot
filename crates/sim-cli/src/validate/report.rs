@@ -45,6 +45,7 @@ fn verdict_text(v: &Option<Verdict>, judged: bool) -> String {
         None if judged => "not run".to_string(),
         None => "reported".to_string(),
         Some(Verdict::Agrees) => "agrees".to_string(),
+        Some(Verdict::AgreesAtEdge) => "agrees, at the edge".to_string(),
         Some(Verdict::TooFew) => "**MISS**: too few runs kept".to_string(),
         Some(Verdict::Miss { first, second }) => {
             let first_text = "the record is outside the middle 90 percent";
@@ -58,23 +59,20 @@ fn verdict_text(v: &Option<Verdict>, judged: bool) -> String {
     }
 }
 
-/// Judged measures that agree, that miss, and the judged in all.
-pub fn tally(rows: &[Row]) -> (usize, usize, usize) {
+/// Judged measures that agree plainly, that agree at the edge, that miss,
+/// and the judged in all.
+pub fn tally(rows: &[Row]) -> (usize, usize, usize, usize) {
     let judged: Vec<&Row> = rows.iter().filter(|r| r.measure.judged).collect();
-    let agree = judged
-        .iter()
-        .filter(|r| matches!(verdict_of(r), Some(Verdict::Agrees)))
-        .count();
-    let miss = judged
-        .iter()
-        .filter(|r| {
-            matches!(
-                verdict_of(r),
-                Some(Verdict::Miss { .. }) | Some(Verdict::TooFew)
-            )
-        })
-        .count();
-    (agree, miss, judged.len())
+    let count = |f: fn(&Verdict) -> bool| {
+        judged
+            .iter()
+            .filter(|r| verdict_of(r).as_ref().is_some_and(f))
+            .count()
+    };
+    let agree = count(|v| matches!(v, Verdict::Agrees));
+    let edge = count(|v| matches!(v, Verdict::AgreesAtEdge));
+    let miss = count(|v| matches!(v, Verdict::Miss { .. } | Verdict::TooFew));
+    (agree, edge, miss, judged.len())
 }
 
 pub fn write(head: &Head, rows: &[Row]) -> String {
@@ -122,19 +120,7 @@ pub fn write(head: &Head, rows: &[Row]) -> String {
 
     // The result line.
     let judged: Vec<&Row> = rows.iter().filter(|r| r.measure.judged).collect();
-    let agree = judged
-        .iter()
-        .filter(|r| matches!(verdict_of(r), Some(Verdict::Agrees)))
-        .count();
-    let miss = judged
-        .iter()
-        .filter(|r| {
-            matches!(
-                verdict_of(r),
-                Some(Verdict::Miss { .. }) | Some(Verdict::TooFew)
-            )
-        })
-        .count();
+    let (agree, edge, miss, _) = tally(rows);
     match runs {
         None => {
             let _ = writeln!(
@@ -145,7 +131,7 @@ pub fn write(head: &Head, rows: &[Row]) -> String {
         Some(runs) => {
             let _ = writeln!(
                 out,
-                "Judged measures: {agree} agree, {miss} miss, of {}.\n",
+                "Judged measures: {agree} agree, {edge} agree at the edge, {miss} miss, of {}.\n",
                 judged.len()
             );
             if runs < RUNS_ASKED {
@@ -153,7 +139,7 @@ pub fn write(head: &Head, rows: &[Row]) -> String {
                     out,
                     "**No verdict on the battle.** This batch has {runs} runs and the spec asks for {RUNS_ASKED}. Each measure has its verdict below.\n"
                 );
-            } else if miss == 0 && agree == judged.len() {
+            } else if miss == 0 {
                 let _ = writeln!(out, "**The battle passes:** every judged measure agrees.\n");
             } else {
                 let _ = writeln!(
@@ -203,52 +189,24 @@ pub fn write(head: &Head, rows: &[Row]) -> String {
     }
     out.push('\n');
 
-    // The misses.
-    let misses: Vec<&Row> = judged
-        .iter()
-        .copied()
-        .filter(|r| {
-            matches!(
-                verdict_of(r),
-                Some(Verdict::Miss { .. }) | Some(Verdict::TooFew)
-            )
-        })
-        .collect();
-    if !misses.is_empty() {
-        let _ = writeln!(out, "## Misses\n");
-        for row in misses {
-            let m = row.measure;
-            let j = row.judgement.as_ref().expect("a miss has a judgement");
-            let _ = writeln!(out, "### {}\n", m.id);
-            let _ = writeln!(out, "- Counts: {}", m.counts);
-            let rows_text: Vec<String> = m.rows.iter().map(i64::to_string).collect();
-            let _ = writeln!(
-                out,
-                "- Record: {} (rows {})",
-                record(m),
-                rows_text.join(", ")
-            );
-            let _ = writeln!(out, "- Verdict: {}", verdict_text(&j.verdict, true));
-            match &j.spread {
-                Some(s) => {
-                    let _ = writeln!(
-                        out,
-                        "- Spread over {} runs kept ({} left out): least {}, 5th {}, median {}, 95th {}, greatest {}",
-                        s.kept, j.left_out, s.least, s.p5, s.median, s.p95, s.greatest
-                    );
-                    if let Some(counts) = &s.counts {
-                        let list: Vec<String> =
-                            counts.iter().map(|(v, n)| format!("{v}: {n}")).collect();
-                        let _ = writeln!(out, "- Each value and its runs: {}", list.join(", "));
-                    }
-                }
-                None => {
-                    let _ = writeln!(out, "- No run gave a value ({} left out).", j.left_out);
-                }
-            }
-            out.push('\n');
-        }
-    }
+    // The misses, then the agreements at the edge.
+    let with = |f: fn(&Verdict) -> bool| -> Vec<&Row> {
+        judged
+            .iter()
+            .copied()
+            .filter(|r| verdict_of(r).as_ref().is_some_and(f))
+            .collect()
+    };
+    detail(
+        &mut out,
+        "Misses",
+        &with(|v| matches!(v, Verdict::Miss { .. } | Verdict::TooFew)),
+    );
+    detail(
+        &mut out,
+        "At the edge",
+        &with(|v| matches!(v, Verdict::AgreesAtEdge)),
+    );
 
     // The objectives scale.
     if let Some((batch, _)) = head.batch {
@@ -256,10 +214,54 @@ pub fn write(head: &Head, rows: &[Row]) -> String {
     }
 
     let _ = writeln!(out, "## Notes\n");
-    let _ = writeln!(out, "- Percentiles are by nearest rank: the value at place ceil(p x n / 100) of the n kept runs, sorted. The record is inside the middle 90 percent if any part of it lies from the 5th percentile to the 95th, ends included. A run holds the record if its value is from the low end to the high end, ends included.");
+    let _ = writeln!(out, "- Percentiles are by nearest rank: the value at place ceil(p x n / 100) of the n kept runs, sorted. The record is inside the middle 90 percent if any part of it lies from the 5th percentile to the 95th, ends included. The verdict is \"agrees, at the edge\" where a measure agrees and no part of its record lies from the 25th percentile to the 75th, ends included; it still agrees. A run holds the record if its value is from the low end to the high end, ends included.");
     let _ = writeln!(out, "- Hits are counted as rolled: a salvo is rolled at the ships afloat when its round starts, so a hit on a ship another salvo sinks in the same round is counted (decision 0062).");
     let _ = writeln!(out, "- Escorts are matched to a raid's first strike group: an escort entry is added once, when its day, pulse and first group are those of an attack the measure counts (decision 0062).");
     out
+}
+
+/// A section listing measures with what each counts, its record and rows,
+/// and its spread.
+fn detail(out: &mut String, title: &str, rows: &[&Row]) {
+    if rows.is_empty() {
+        return;
+    }
+    let _ = writeln!(out, "## {title}\n");
+    for row in rows {
+        let m = row.measure;
+        let j = row
+            .judgement
+            .as_ref()
+            .expect("a listed measure has a judgement");
+        let _ = writeln!(out, "### {}\n", m.id);
+        let _ = writeln!(out, "- Counts: {}", m.counts);
+        let rows_text: Vec<String> = m.rows.iter().map(i64::to_string).collect();
+        let _ = writeln!(
+            out,
+            "- Record: {} (rows {})",
+            record(m),
+            rows_text.join(", ")
+        );
+        let _ = writeln!(out, "- Verdict: {}", verdict_text(&j.verdict, true));
+        match &j.spread {
+            Some(s) => {
+                let _ = writeln!(
+                    out,
+                    "- Spread over {} runs kept ({} left out): least {}, 5th {}, 25th {}, median {}, 75th {}, 95th {}, greatest {}",
+                    s.kept, j.left_out, s.least, s.p5, s.p25, s.median, s.p75, s.p95, s.greatest
+                );
+                if let Some(counts) = &s.counts {
+                    let list: Vec<String> =
+                        counts.iter().map(|(v, n)| format!("{v}: {n}")).collect();
+                    let _ = writeln!(out, "- Each value and its runs: {}", list.join(", "));
+                }
+            }
+            None => {
+                let _ = writeln!(out, "- No run gave a value ({} left out).", j.left_out);
+            }
+        }
+        out.push('\n');
+    }
 }
 
 fn verdict_of<'a>(row: &'a Row) -> &'a Option<Verdict> {

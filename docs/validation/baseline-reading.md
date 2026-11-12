@@ -2,12 +2,16 @@
 
 This is the architect's reading of the first reports, made Nov 12, 2026 on the figures in use that day, before any figure is tuned. The reports are the fact; this page says what they show and what each miss is likely to rest on. It is not a measure and it judges nothing.
 
-| Battle | Report | Judged | Agree | Miss |
-| --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 13 | 10 | 3 |
-| Eastern Solomons | `eastern-solomons-baseline.md` | 11 | 8 | 3 |
-| Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 4 | 6 |
-| Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run |
+| Battle | Report | Judged | Agree | Agree at the edge | Miss |
+| --- | --- | --- | --- | --- | --- |
+| Savo Island | `savo-island-baseline.md` | 13 | 6 | 4 | 3 |
+| Eastern Solomons | `eastern-solomons-baseline.md` | 11 | 7 | 1 | 3 |
+| Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
+| Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
+
+An agreement at the edge is one whose record has no part in the middle half of the runs (the 25th to the 75th percentile). It still agrees by the rule; whether it counts against a battle at the close of step 2 is the designer's to decide after the first tuning rounds. The reports were remade once, the same day and on the same batches, when that mark was added to `validate`.
+
+The six ship passages are in `passages-baseline.md`. None is judged. Every one but the first is quicker in the rules than in the record, by 5 to 22 percent of the recorded time: a ship in the rules holds its stated speed along the route, and the record's ships did not. That is speed made good, which is not in step 2.
 
 Each batch is 1,000 runs, seeds 1 to 1000, label `baseline`. The batch files are not kept in the repository: a report names the hash of every data file it ran on, and the same command on the same files gives the same report.
 

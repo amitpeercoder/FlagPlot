@@ -444,7 +444,16 @@ fn each_sides_exported_events_are_what_its_side_view_gives() {
                         assert!(earlier < out["n"].as_u64().unwrap(), "{label}: {cause}");
                     }
                 }
-                if cut {
+                // An event cut of nothing but the enemy's name keeps its own
+                // figures (decision 0065): the raid on the side's own base,
+                // its own sighting and its own alarm.
+                let name_only = matches!(
+                    event.kind,
+                    SideEventKind::BaseAttackedAgainst { .. }
+                        | SideEventKind::SightingRoll { .. }
+                        | SideEventKind::AlarmRoll { .. }
+                );
+                if cut && !name_only {
                     // A cut event carries nothing of the hits it did not see.
                     let data = out["data"].as_object().expect("data");
                     for forbidden in ["chance", "expected", "hits", "hits_on_aircraft"] {

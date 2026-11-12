@@ -241,8 +241,9 @@ fn issue_orders_counts_what_was_queued_and_what_was_refused() {
     assert_eq!(answer["queued"], 2);
 }
 
-/// Item 5: an enemy air group in a raid or an attack is called an enemy in
-/// the text, and asking for it is answered as for every unit not known.
+/// Item 5, as decision 0065 leaves it: an enemy air group in a raid or an
+/// attack is not named at all, and asking for it is answered as for every
+/// unit not known.
 #[test]
 fn an_enemy_in_a_raid_is_called_one_and_is_not_known() {
     let mut s = allied("06a_base_raid.toml", 1942);
@@ -250,7 +251,12 @@ fn an_enemy_in_a_raid_is_called_one_and_is_not_known() {
     let text = text_of(&mut s);
     assert!(
         text.lines()
-            .any(|l| l.starts_with("- Raid on base:2 ") && l.contains(" by enemy air_group:1: ")),
+            .any(|l| l.starts_with("- Raid on base:2 ") && !l.contains("air_group")),
+        "{text}"
+    );
+    // The enemy's groups are 1 and 2: the briefing names neither.
+    assert!(
+        !text.contains("air_group:1 ") && !text.contains("air_group:2 "),
         "{text}"
     );
     let known = call(&mut s, "get_entity", json!({"handle": "air_group:1"}));

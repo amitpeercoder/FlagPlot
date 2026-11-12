@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 1 },
+    "version": { "const": 2 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -292,10 +292,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["forces", "place", "rounds", "ended", "event"],
+            "required": ["force", "place", "rounds", "ended", "event"],
             "additionalProperties": false,
             "properties": {
-              "forces": { "$ref": "defs.schema.json#/$defs/handles" },
+              "force": { "$ref": "defs.schema.json#/$defs/handle" },
               "place": { "$ref": "defs.schema.json#/$defs/place" },
               "rounds": { "type": "integer" },
               "ended": {
@@ -309,11 +309,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["firer", "target", "weapon", "salvos", "shots"],
+            "required": ["firer", "weapon", "salvos", "shots"],
             "additionalProperties": false,
             "properties": {
               "firer": { "$ref": "defs.schema.json#/$defs/handle" },
-              "target": { "$ref": "defs.schema.json#/$defs/handle" },
               "weapon": { "$ref": "#/$defs/weapon" },
               "salvos": { "type": "integer" },
               "shots": { "$ref": "defs.schema.json#/$defs/dec" }
@@ -324,13 +323,12 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["firing", "firer", "at", "target", "shots", "event"],
+            "required": ["firing", "firer", "at", "shots", "event"],
             "additionalProperties": false,
             "properties": {
               "firing": { "enum": ["patrol", "escorts"] },
               "firer": { "$ref": "defs.schema.json#/$defs/handle" },
               "at": { "enum": ["patrol", "escorts", "bombers"] },
-              "target": { "$ref": "defs.schema.json#/$defs/handle" },
               "shots": { "$ref": "defs.schema.json#/$defs/dec" },
               "event": { "type": "integer" }
             }
@@ -340,11 +338,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["by", "raid", "shots", "event"],
+            "required": ["by", "shots", "event"],
             "additionalProperties": false,
             "properties": {
               "by": { "$ref": "defs.schema.json#/$defs/handle" },
-              "raid": { "$ref": "defs.schema.json#/$defs/handle" },
               "shots": { "$ref": "defs.schema.json#/$defs/dec" },
               "event": { "type": "integer" }
             }
@@ -382,12 +379,11 @@
           "items": {
             "type": "object",
             "required": [
-              "base", "air_group", "aircraft", "hits", "hits_on_aircraft", "hits_on_supply", "event"
+              "base", "aircraft", "hits", "hits_on_aircraft", "hits_on_supply", "event"
             ],
             "additionalProperties": false,
             "properties": {
               "base": { "$ref": "defs.schema.json#/$defs/handle" },
-              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
               "aircraft": { "$ref": "defs.schema.json#/$defs/dec" },
               "hits": { "type": "integer" },
               "hits_on_aircraft": { "type": "integer" },
@@ -403,7 +399,7 @@
             "required": ["by", "against", "weapon", "attacks", "aircraft"],
             "additionalProperties": false,
             "properties": {
-              "by": { "$ref": "defs.schema.json#/$defs/handle" },
+              "by": { "enum": ["ship", "aircraft"] },
               "against": { "$ref": "defs.schema.json#/$defs/handle" },
               "weapon": { "$ref": "#/$defs/weapon_or_null" },
               "attacks": { "type": "integer" },

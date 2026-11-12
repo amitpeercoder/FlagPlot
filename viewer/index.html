@@ -637,7 +637,8 @@ function buildModel(replay) {
         case 'alarm_roll':
         case 'force_stood_down': {
           const f = cur.forces.get(d.task_force);
-          if (f) f.alerted = ev.kind === 'alarm_roll' ? (d.alarmed ? true : f.alerted) : ev.kind !== 'force_stood_down';
+          // A side is given an alarm roll only if it alarmed, and its cut form has no flag (decision 0065).
+          if (f) f.alerted = ev.kind === 'alarm_roll' ? ((d.alarmed || ev.cut) ? true : f.alerted) : ev.kind !== 'force_stood_down';
           break;
         }
         case 'ship_sunk': {

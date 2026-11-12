@@ -13,6 +13,7 @@
 
 mod input;
 mod judge;
+mod passages;
 mod report;
 mod take;
 
@@ -64,6 +65,12 @@ pub fn command(
 ) -> Result<(), String> {
     let mut positional: Vec<&str> = Vec::new();
     let mut out: Option<PathBuf> = None;
+    let (mut passages, mut label, mut map, mut places): (
+        Option<&str>,
+        Option<&str>,
+        Option<&str>,
+        Option<&str>,
+    ) = (None, None, None, None);
     let mut words = args.iter().map(String::as_str);
     while let Some(word) = words.next() {
         match word {
@@ -75,11 +82,41 @@ pub fn command(
                         .into(),
                 );
             }
+            "--passages" | "--label" | "--map" | "--places" => {
+                let value = words
+                    .next()
+                    .ok_or_else(|| format!("{word} needs a value\n\n{usage}"))?;
+                match word {
+                    "--passages" => passages = Some(value),
+                    "--label" => label = Some(value),
+                    "--map" => map = Some(value),
+                    _ => places = Some(value),
+                }
+            }
             flag if flag.starts_with('-') => {
                 return Err(format!("unknown option \"{flag}\"\n\n{usage}"))
             }
             path => positional.push(path),
         }
+    }
+    if let Some(passages) = passages {
+        if !positional.is_empty() {
+            return Err(format!(
+                "validate --passages takes no batch or measures file\n\n{usage}"
+            ));
+        }
+        return passages::command(&passages::Request {
+            passages,
+            label,
+            map,
+            places,
+            out,
+        });
+    }
+    if label.is_some() || map.is_some() || places.is_some() {
+        return Err(format!(
+            "--label, --map and --places are for validate --passages\n\n{usage}"
+        ));
     }
     let (batch_path, measures_path) = match positional.as_slice() {
         [measures] => (None, *measures),
@@ -255,10 +292,10 @@ pub fn command(
     let path = out.unwrap_or_else(|| {
         PathBuf::from(format!("docs/validation/{}-{label}.md", measures.battle))
     });
-    let (agree, miss, judged) = report::tally(&rows);
+    let (agree, edge, miss, judged) = report::tally(&rows);
     let wrote = write_report(&path, &text)?;
     println!(
-        "{} {}: judged {judged}, agree {agree}, miss {miss}",
+        "{} {}: judged {judged}, agree {agree}, at the edge {edge}, miss {miss}",
         if wrote { "wrote" } else { "unchanged" },
         path.display()
     );
