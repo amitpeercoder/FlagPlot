@@ -157,7 +157,7 @@
       "type": "object",
       "required": [
         "format", "version", "kind", "question", "air_group", "at", "aircraft_type",
-        "role", "radius_nm", "radius_is", "escort_radius_nm", "places"
+        "role", "radius_nm", "radius_is", "reach", "reach_nm", "escort_radius_nm", "places"
       ],
       "additionalProperties": false,
       "properties": {
@@ -171,17 +171,30 @@
         "role": { "enum": ["patrol", "bomber", "fighter"] },
         "radius_nm": { "$ref": "defs.schema.json#/$defs/dec" },
         "radius_is": { "enum": ["strike", "escort", "none"] },
+        "reach": {
+          "description": "The group's reach in force: normal (the radius applies) or extended (the longer reach applies; set by set_reach).",
+          "enum": ["normal", "extended"]
+        },
+        "reach_nm": {
+          "description": "The reach in force in miles: the radius on normal reach, and the radius and a share more, cut to a whole mile, on extended. A place is within if its distance is no more than this.",
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
         "escort_radius_nm": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
         "places": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["to", "distance_nm", "within"],
+            "required": ["to", "distance_nm", "within", "within_radius", "ditch_chance"],
             "additionalProperties": false,
             "properties": {
               "to": { "$ref": "#/$defs/resolved" },
               "distance_nm": { "type": "integer" },
-              "within": { "type": "boolean" }
+              "within": { "description": "Within the reach in force (the radius on normal reach).", "type": "boolean" },
+              "within_radius": { "description": "Within the aircraft type's radius, whatever the reach in force.", "type": "boolean" },
+              "ditch_chance": {
+                "description": "The chance an aircraft that came back from a strike or escort sortie to this distance runs out of fuel and is lost: \"0\" within the radius. null for a type that does not strike or where the scenario has no air combat figures.",
+                "$ref": "defs.schema.json#/$defs/dec_or_null"
+              }
             }
           }
         }

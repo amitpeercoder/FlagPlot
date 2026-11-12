@@ -813,6 +813,30 @@ pub enum EventKind {
         base_fuel_t: Fixed,
         force_restored: bool,
     },
+    /// An air group rolled for running out of fuel after a strike or escort
+    /// sortie that went beyond its type's radius (decisions 3 to 6 of
+    /// `docs/decisions/0059-aircraft-that-cannot-land-where-they-took-off.md`):
+    /// `aircraft` came back from a sortie of one-way distance `distance_nm`,
+    /// `radius_nm` being the type's strike radius, each ran out of fuel at
+    /// `chance`, and `ditched` of them did. A ditched aircraft is gone from
+    /// the group for good. `crews_recovered` is how many of their crews were
+    /// picked up and `pilots_lost` the pilots the group lost, where its
+    /// pilots are counted (`None` and 0 where they are not). `ready` is what
+    /// the group has ready afterwards. Recorded for each such sortie that
+    /// rolled, whether or not an aircraft ditched.
+    AircraftDitched {
+        air_group: AirGroupId,
+        sortie: SortieKind,
+        distance_nm: Fixed,
+        radius_nm: Fixed,
+        aircraft: u32,
+        chance: Fixed,
+        expected: Fixed,
+        ditched: u32,
+        crews_recovered: Option<u32>,
+        pilots_lost: u32,
+        ready: u32,
+    },
 }
 
 impl EventKind {
@@ -902,6 +926,7 @@ impl EventKind {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
             EventKind::AircraftWorn { air_group, .. }
+            | EventKind::AircraftDitched { air_group, .. }
             | EventKind::AirGroupFatigue { air_group, .. }
             | EventKind::AirGroupStoodDown { air_group, .. }
             | EventKind::AirGroupReturned { air_group, .. } => {
@@ -1291,6 +1316,35 @@ impl fmt::Display for EventKind {
                 "{air_group} {} sortie of {distance_nm} nm: {aircraft} aircraft x {chance} = {expected} expected worn, {worn} worn, {written_off} written off, {ready} ready and {damaged} damaged left",
                 sortie.name()
             ),
+            EventKind::AircraftDitched {
+                air_group,
+                sortie,
+                distance_nm,
+                radius_nm,
+                aircraft,
+                chance,
+                expected,
+                ditched,
+                crews_recovered,
+                pilots_lost,
+                ready,
+            } => {
+                write!(
+                    f,
+                    "{air_group} {} sortie of {distance_nm} nm, {} beyond its radius of {radius_nm}: {aircraft} aircraft x {chance} = {expected} expected out of fuel, {ditched} ditched",
+                    sortie.name(),
+                    *distance_nm - *radius_nm
+                )?;
+                if let Some(recovered) = crews_recovered {
+                    write!(
+                        f,
+                        ", {recovered} {} recovered, {pilots_lost} {} lost",
+                        if *recovered == 1 { "crew" } else { "crews" },
+                        if *pilots_lost == 1 { "pilot" } else { "pilots" }
+                    )?;
+                }
+                write!(f, ", {ready} ready left")
+            }
             EventKind::AirGroupFatigue {
                 air_group,
                 change,

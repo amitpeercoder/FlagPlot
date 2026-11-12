@@ -32,6 +32,19 @@ fighter_false_claim_chance = "0.1"
 anti_aircraft_false_claim_chance = "0.05"
 bomb_false_claim_chance = "0.1"
 
+# Reach beyond the radius and running out of fuel (decision 0059). PLACEHOLDER
+# figures, to be set from the record in step 2.
+# An air group on extended reach strikes, and sends its escorts, out to its
+# type's strike radius times (1 + extended_reach_share), cut to a whole mile.
+extended_reach_share = "0.25"
+# An aircraft that came back from a sortie beyond its radius runs out of fuel
+# with this chance for each whole radius beyond it: the chance is this figure
+# times (distance - radius) over radius, 1 at most. It may be more than 1.
+ditch_chance_per_radius_beyond = "2"
+# The chance the crew of such an aircraft is recovered. A crew not recovered
+# is a pilot lost, where the group's pilots are counted.
+crew_recovered_short_of_home = "0.7"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

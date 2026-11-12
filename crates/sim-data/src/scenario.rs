@@ -10,7 +10,7 @@ use sim_core::ids::{
 };
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Readiness,
+    AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::{RefData, ShipKind};
@@ -370,6 +370,10 @@ enum ActionSpec {
     SetRestThreshold {
         fatigue: Quantity,
     },
+    /// `reach` is "normal" or "extended" (decision 0059).
+    SetReach {
+        reach: ReachSpec,
+    },
     SetRulesOfEngagement {
         stance: StanceSpec,
         break_off: Quantity,
@@ -386,6 +390,22 @@ enum ActionSpec {
     Detach {
         ships: Vec<u32>,
     },
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum ReachSpec {
+    Normal,
+    Extended,
+}
+
+impl From<ReachSpec> for Reach {
+    fn from(spec: ReachSpec) -> Reach {
+        match spec {
+            ReachSpec::Normal => Reach::Normal,
+            ReachSpec::Extended => Reach::Extended,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Copy, Default)]
@@ -1109,6 +1129,8 @@ impl Scenario {
                 strength: spec
                     .strength
                     .unwrap_or_else(|| spec.ready.saturating_add(spec.damaged.unwrap_or(0))),
+                reach: Reach::Normal,
+                reach_order: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1270,6 +1292,9 @@ impl Scenario {
                         ActionSpec::SetRestThreshold { .. } => {
                             return Err(wrong_target("set_rest_threshold", "air_group"))
                         }
+                        ActionSpec::SetReach { .. } => {
+                            return Err(wrong_target("set_reach", "air_group"))
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -1343,9 +1368,12 @@ impl Scenario {
                                     .map_err(|e| fail(format!("fatigue on day {day} {e}")))?,
                             }
                         }
+                        ActionSpec::SetReach { reach } => AirGroupOrder::SetReach {
+                            reach: (*reach).into(),
+                        },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share or set_rest_threshold"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold or set_reach"
                             )))
                         }
                     };
@@ -2308,6 +2336,22 @@ r = 0
         .expect("a threshold out of range is rejected by the world, not the loader");
         // An unknown key is rejected.
         assert!(parse_with(&order("air_group = 1", &format!("{rest}\nextra = 1"))).is_err());
+    }
+
+    #[test]
+    fn the_reach_order_loads_for_an_air_group_with_a_name_and_nothing_else() {
+        let reach = |name: &str| format!("kind = \"set_reach\"\nreach = \"{name}\"");
+        parse_with(&order("air_group = 1", &reach("normal"))).expect("normal loads");
+        parse_with(&order("air_group = 1", &reach("extended"))).expect("extended loads");
+        assert!(parse_with(&order("air_group = 1", &reach("long"))).is_err());
+        assert!(parse_with(&order("air_group = 1", "kind = \"set_reach\"")).is_err());
+        assert!(error_of(&order("task_force = 1", &reach("extended"))).contains("air_group"));
+        // An unknown key is rejected.
+        assert!(parse_with(&order(
+            "air_group = 1",
+            &format!("{}\nextra = 1", reach("extended"))
+        ))
+        .is_err());
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.

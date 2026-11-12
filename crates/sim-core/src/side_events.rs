@@ -402,6 +402,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::SearchFlown { air_group, .. }
         | EventKind::DamagedAircraftDestroyedOnGround { air_group, .. }
         | EventKind::AircraftWorn { air_group, .. }
+        | EventKind::AircraftDitched { air_group, .. }
         | EventKind::AircraftRepaired { air_group, .. }
         | EventKind::AirGroupLost { air_group, .. }
         | EventKind::StrikeLaunched { air_group, .. }
@@ -860,7 +861,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 60 kinds ----
+    // ---- the table of the 61 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -1335,6 +1336,23 @@ mod tests {
                 Nothing,
             ),
             row(
+                EventKind::AircraftDitched {
+                    air_group: group(1),
+                    sortie: SortieKind::Strike,
+                    distance_nm: fx(280),
+                    radius_nm: fx(250),
+                    aircraft: 18,
+                    chance: Fixed::from_ratio(24, 100),
+                    expected: Fixed::from_ratio(432, 100),
+                    ditched: 5,
+                    crews_recovered: Some(3),
+                    pilots_lost: 2,
+                    ready: 13,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
                 EventKind::AircraftRepaired {
                     air_group: group(1),
                     at: AirGroupLocation::Base(base(1)),
@@ -1656,7 +1674,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 60, "the log has 60 kinds of event");
+        assert_eq!(all.len(), 61, "the log has 61 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

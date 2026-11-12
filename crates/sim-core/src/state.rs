@@ -20,7 +20,7 @@ use crate::ids::{
 };
 use crate::map::Map;
 use crate::orders::{
-    AirMission, CargoAction, Mission, Readiness, RejectReason, SpeedSetting, Stance,
+    AirMission, CargoAction, Mission, Reach, Readiness, RejectReason, SpeedSetting, Stance,
     StragglerInstruction,
 };
 
@@ -650,6 +650,12 @@ pub struct AirGroup {
     /// the scenario gives (decisions 7 and 10 of 0038). It is read by
     /// nothing else.
     pub strength: u32,
+    /// How far the group's strikes and escorts may go (decision 1 of
+    /// `docs/decisions/0059-aircraft-that-cannot-land-where-they-took-off.md`).
+    /// The default is normal.
+    pub reach: Reach,
+    /// The standing order that set the reach, if any.
+    pub reach_order: Option<OrderId>,
 }
 
 impl AirGroup {
@@ -683,6 +689,8 @@ impl AirGroup {
             stood_down: false,
             pilots: None,
             strength: 0,
+            reach: Reach::Normal,
+            reach_order: None,
         }
     }
 }

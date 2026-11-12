@@ -423,7 +423,14 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
                 .collect()
         })
         .collect();
-    let missing: Vec<&String> = all.difference(&seen).collect();
+    // A kind the full slice cannot record: a ditching needs an air group on
+    // extended reach and the full slice gives no reach order (decision
+    // 0059, stage 1). Scenario 12a records it, and its own test reads it.
+    const NOT_IN_THE_FULL_SLICE: [&str; 1] = ["AircraftDitched"];
+    let missing: Vec<&String> = all
+        .difference(&seen)
+        .filter(|kind| !NOT_IN_THE_FULL_SLICE.contains(&kind.as_str()))
+        .collect();
     assert!(missing.is_empty(), "kinds not in the log: {missing:?}");
     let unknown: Vec<&String> = seen.difference(&all).collect();
     assert!(

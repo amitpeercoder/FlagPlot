@@ -29,10 +29,12 @@
 //!   propulsion out or the flight deck out, by ship kind. A degraded system
 //!   does not count.
 //! - `aircraft_destroyed`: the aircraft of the enemy's air groups lost for
-//!   good, from five events: `AircraftLost` (shot down, in the air),
+//!   good, from six events: `AircraftLost` (shot down, in the air),
 //!   `AirGroupLost` (lost with a sunk ship, ready and damaged),
 //!   `AircraftDestroyedOnGround` (ready), `DamagedAircraftDestroyedOnGround`
-//!   (damaged) and `AircraftWorn::written_off`. Not counted: `AircraftWorn`
+//!   (damaged), `AircraftWorn::written_off` and `AircraftDitched::ditched`
+//!   (out of fuel on the way home, decision 5 of 0059: counted for the enemy
+//!   though no one claims it). Not counted: `AircraftWorn`
 //!   `worn` (damaged and repaired later, not lost), `PilotsLost` (pilots, not
 //!   aircraft; the aircraft's own event counts the aircraft), `AircraftRepaired`
 //!   and every event that adds aircraft.
@@ -306,6 +308,11 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
             | EventKind::AircraftWorn {
                 air_group,
                 written_off: aircraft,
+                ..
+            }
+            | EventKind::AircraftDitched {
+                air_group,
+                ditched: aircraft,
                 ..
             } => {
                 if let Some(group) = truth.air_groups.get(air_group) {

@@ -310,6 +310,38 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .int("aircraft", *aircraft)
                 .int("remaining", *remaining),
         ),
+        EventKind::AircraftDitched {
+            air_group,
+            sortie,
+            distance_nm,
+            radius_nm,
+            aircraft,
+            chance,
+            expected,
+            ditched,
+            crews_recovered,
+            pilots_lost,
+            ready,
+        } => {
+            let data = d
+                .id("air_group", *air_group)
+                .text("sortie", sortie.name())
+                .num("distance_nm", *distance_nm)
+                .num("radius_nm", *radius_nm)
+                .int("aircraft", *aircraft)
+                .num("chance", *chance)
+                .num("expected", *expected)
+                .int("ditched", *ditched);
+            // Left out where the group's pilots are not counted.
+            let data = match crews_recovered {
+                Some(recovered) => data.int("crews_recovered", *recovered),
+                None => data,
+            };
+            (
+                "aircraft_ditched",
+                data.int("pilots_lost", *pilots_lost).int("ready", *ready),
+            )
+        }
         EventKind::AircraftWorn {
             air_group,
             sortie,

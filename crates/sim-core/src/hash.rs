@@ -108,8 +108,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// remade in the same change (decision 9 of 0055). Version 1 kept old hashes
 /// alive by writing a new field only where it was in use, behind a tag byte;
 /// version 2 writes every field of every unit, always, in one order;
-/// version 3 adds a task force's `leg_nm` after its `progress_nm` (decision 0058).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v3";
+/// version 3 adds a task force's `leg_nm` after its `progress_nm` (decision 0058);
+/// version 4 adds an air group's `reach` and `reach_order` after its
+/// `arc_order` (decision 0059).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v4";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -257,6 +259,8 @@ fn name_every_field(world: &World) {
             stood_down: _,
             pilots: _,
             strength: _,
+            reach: _,
+            reach_order: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -475,6 +479,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         h.optional_u32(group.mission_order.map(|id| id.raw()));
         h.optional_u32(group.arc_order.map(|id| id.raw()));
+        h.u8(group.reach.code());
+        h.optional_u32(group.reach_order.map(|id| id.raw()));
     }
 
     h.count(truth.replacements.len());

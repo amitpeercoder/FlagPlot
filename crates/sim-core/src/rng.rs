@@ -63,11 +63,16 @@ pub enum Draw {
     /// claim, keyed on its first firing unit and the raid's first strike
     /// group.
     Claim,
+    /// The aircraft that run out of fuel on the way home after a sortie
+    /// beyond their radius, and the recovery of their crews (decisions 3 and
+    /// 6 of 0059): one stream for each air group and pulse, keyed on the air
+    /// group in the upkeep subsystem.
+    Ditch,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 2] = [Draw::Legacy, Draw::Claim];
+    pub const ALL: [Draw; 3] = [Draw::Legacy, Draw::Claim, Draw::Ditch];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
     /// and is not folded into the key.
@@ -75,6 +80,7 @@ impl Draw {
         match self {
             Draw::Legacy => 0,
             Draw::Claim => 1,
+            Draw::Ditch => 2,
         }
     }
 }

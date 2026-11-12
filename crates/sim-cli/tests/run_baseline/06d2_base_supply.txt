@@ -2,12 +2,12 @@ Scenario 6d2: Base supply
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7ab8e9840873e744  27 events
-day   2  hash 7d88ac901c403068  21 events
-day   3  hash 70ca0b4cfb3c4700  20 events
-day   4  hash 1d3ad22a078a0185  20 events
-day   5  hash 1d362cd17a720006  5 events
-day   6  hash 21e813126402f8a6  5 events
+day   1  hash 5121e9cb7ca9f01a  27 events
+day   2  hash af965e1290f09362  21 events
+day   3  hash 1238d69929495122  20 events
+day   4  hash 44826f053a863d03  20 events
+day   5  hash 38795257430696a4  5 events
+day   6  hash d109fcbe54327d74  5 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0.5, no arc

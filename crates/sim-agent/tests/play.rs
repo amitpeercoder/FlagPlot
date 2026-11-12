@@ -112,8 +112,8 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Mission, OrderKind, OrderRequest, Origin, Readiness, SpeedSetting,
-    Stance, StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
+    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use support::play::{order_json, play_day, session_of, ByDay};
 use support::schemas;
@@ -166,9 +166,10 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetSearchArc { .. } => 5,
         AirGroupOrder::SetPatrolShare { .. } => 6,
         AirGroupOrder::SetRestThreshold { .. } => 7,
+        AirGroupOrder::SetReach { .. } => 8,
     }
 }
-const AG_KINDS: usize = 8;
+const AG_KINDS: usize = 9;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -216,6 +217,12 @@ fn examples() -> Vec<OrderKind> {
         }),
         ag(AirGroupOrder::SetPatrolShare { share: fx("0.75") }),
         ag(AirGroupOrder::SetRestThreshold { fatigue: fx("40") }),
+        ag(AirGroupOrder::SetReach {
+            reach: Reach::Extended,
+        }),
+        ag(AirGroupOrder::SetReach {
+            reach: Reach::Normal,
+        }),
     ];
     for mission in [
         Mission::Transport,

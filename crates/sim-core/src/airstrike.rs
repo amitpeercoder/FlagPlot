@@ -126,7 +126,7 @@ use crate::events::{
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
-use crate::orders::AirMission;
+use crate::orders::{AirMission, Reach};
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
@@ -249,8 +249,8 @@ struct FighterGroup {
     patrol: u32,
     /// Aircraft that go with a raid.
     escorts: u32,
-    /// The fighter type's strike range: how far its escorts go (decision
-    /// 0030).
+    /// How far its escorts go: the fighter type's strike radius on normal
+    /// reach, more on extended (decisions 0030 and 2 of 0059).
     radius_nm: Fixed,
     /// The orders that set the mission and the share.
     orders: Vec<Cause>,
@@ -601,22 +601,16 @@ impl World {
             if aircraft_type.attack_weapon == AttackWeapon::None {
                 continue;
             }
-            let strike_range_nm = aircraft_type.strike_range_nm;
+            // How far the group may strike: its type's radius on normal
+            // reach, more on extended (decision 2 of 0059). The one function.
+            let reach_nm = self.ref_data.reach_nm(group.aircraft_type, group.reach);
             let aircraft = self.aircraft_able_to_fly(&group);
             if aircraft == 0 {
                 continue;
             }
 
             if let AirMission::BaseStrike(base) = group.mission {
-                self.decide_base_strike(
-                    day,
-                    pulse,
-                    &group,
-                    base,
-                    origin,
-                    strike_range_nm,
-                    aircraft,
-                );
+                self.decide_base_strike(day, pulse, &group, base, origin, reach_nm, aircraft);
                 continue;
             }
 
@@ -627,7 +621,7 @@ impl World {
                     let distance_nm =
                         Fixed::from_int(i64::from(origin.air_distance_nm(contact.estimated_hex)));
                     origin
-                        .air_distance_within(contact.estimated_hex, strike_range_nm)
+                        .air_distance_within(contact.estimated_hex, reach_nm)
                         .then_some((
                             contact.estimated_kind,
                             distance_nm,
@@ -645,6 +639,7 @@ impl World {
                 .mission_order
                 .map(Cause::Order)
                 .into_iter()
+                .chain(reach_cause(&group))
                 .chain([Cause::Event(report_event)])
                 .collect();
             let launched = self.events.record(
@@ -687,7 +682,7 @@ impl World {
         group: &AirGroup,
         base: BaseId,
         origin: Hex,
-        strike_range_nm: Fixed,
+        reach_nm: Fixed,
         aircraft: u32,
     ) {
         if pulse != Pulse::Morning {
@@ -701,10 +696,15 @@ impl World {
         }
         let hex = target.hex;
         let distance_nm = Fixed::from_int(i64::from(origin.air_distance_nm(hex)));
-        if !origin.air_distance_within(hex, strike_range_nm) {
+        if !origin.air_distance_within(hex, reach_nm) {
             return;
         }
-        let causes: Vec<Cause> = group.mission_order.map(Cause::Order).into_iter().collect();
+        let causes: Vec<Cause> = group
+            .mission_order
+            .map(Cause::Order)
+            .into_iter()
+            .chain(reach_cause(group))
+            .collect();
         let launched = self.events.record(
             day,
             Some(pulse),
@@ -1574,12 +1574,13 @@ impl World {
                     hex: self.truth.air_group_hex(group),
                     patrol,
                     escorts: flyable - patrol,
-                    radius_nm: self.ref_data.aircraft_types[&group.aircraft_type].strike_range_nm,
+                    radius_nm: self.ref_data.reach_nm(group.aircraft_type, group.reach),
                     orders: group
                         .mission_order
                         .into_iter()
                         .chain(group.share_order)
                         .map(Cause::Order)
+                        .chain(reach_cause(group))
                         .collect(),
                 }
             })
@@ -2354,6 +2355,17 @@ impl World {
 
     fn kind_of(&self, ship: ShipId) -> ShipKind {
         self.ref_data.ship_classes[&self.truth.ships[&ship].class].kind
+    }
+}
+
+/// The reach order as a cause of a launch or of escorts sent, when the group
+/// is on extended reach (decision 0059): without it the group could not have
+/// gone so far. A group on normal reach has no such cause, so nothing in
+/// the log of a game with no reach order changes.
+fn reach_cause(group: &AirGroup) -> Option<Cause> {
+    match (group.reach, group.reach_order) {
+        (Reach::Extended, Some(order)) => Some(Cause::Order(order)),
+        _ => None,
     }
 }
 
@@ -9207,5 +9219,579 @@ mod tests {
             1
         );
         assert!(world.sorties.is_empty());
+    }
+
+    // ---- reach and running out of fuel (decision 0059) ----
+    //
+    // The standard world: the Allied carrier at (0,0) with 18 dive bombers
+    // (group 1, radius 250 nm), a scout group (group 2, 8 scouts), and the
+    // Japanese force at (5,0). Contacts are held at hexes along the axis: a
+    // hex n from (0,0) is 40n nm away.
+
+    fn set_reach(world: &mut World, group: AirGroupId, reach: Reach) {
+        group_mut(world, group).reach = reach;
+    }
+
+    fn ditchings(world: &World) -> Vec<Event> {
+        events_where(world, |k| matches!(k, EventKind::AircraftDitched { .. }))
+    }
+
+    /// (distance, radius, aircraft, chance, ditched, crews recovered, pilots
+    /// lost, ready) of an `AircraftDitched` event.
+    #[allow(clippy::type_complexity)]
+    fn ditching_of(event: &Event) -> (i64, i64, u32, Fixed, u32, Option<u32>, u32, u32) {
+        match event.kind {
+            EventKind::AircraftDitched {
+                distance_nm,
+                radius_nm,
+                aircraft,
+                chance,
+                ditched,
+                crews_recovered,
+                pilots_lost,
+                ready,
+                ..
+            } => (
+                distance_nm.trunc(),
+                radius_nm.trunc(),
+                aircraft,
+                chance,
+                ditched,
+                crews_recovered,
+                pilots_lost,
+                ready,
+            ),
+            _ => unreachable!("an AircraftDitched event"),
+        }
+    }
+
+    /// A world whose bombers (group 1) are on extended reach and hold a
+    /// contact `hexes` hexes out along the axis.
+    fn long_world(seed: u64, hexes: i32, reach: Reach) -> World {
+        let mut world = world(seed, vec![held(Hex::new(hexes, 0), ShipKind::Cruiser, 0)]);
+        set_reach(&mut world, BOMBERS, reach);
+        world
+    }
+
+    #[test]
+    fn the_reach_is_the_radius_normally_and_a_share_more_cut_to_a_mile_when_extended() {
+        let mut figures = AirCombatFigures::from_air_combat_toml();
+        let radius = Fixed::from_int(250);
+        assert_eq!(figures.reach_nm(radius, Reach::Normal), radius);
+        // 250 x 1.25 is 312.5, cut to 312.
+        assert_eq!(
+            figures.reach_nm(radius, Reach::Extended),
+            Fixed::from_int(312)
+        );
+        figures.extended_reach_share = fixed(12, 100);
+        assert_eq!(
+            figures.reach_nm(radius, Reach::Extended),
+            Fixed::from_int(280)
+        );
+        figures.extended_reach_share = fixed(119, 1000);
+        assert_eq!(
+            figures.reach_nm(radius, Reach::Extended),
+            Fixed::from_int(279)
+        );
+        figures.extended_reach_share = Fixed::ZERO;
+        assert_eq!(figures.reach_nm(radius, Reach::Extended), radius);
+        // The one function a group's reach is read through.
+        let world = world(1, vec![]);
+        let bomber = AircraftTypeId::new(2);
+        assert_eq!(
+            world.ref_data.reach_nm(bomber, Reach::Normal),
+            Fixed::from_int(250)
+        );
+        assert_eq!(
+            world.ref_data.reach_nm(bomber, Reach::Extended),
+            Fixed::from_int(312)
+        );
+        // A type that does not exist reaches nowhere; a type with no radius
+        // (the scouts) none.
+        assert_eq!(
+            world
+                .ref_data
+                .reach_nm(AircraftTypeId::new(99), Reach::Extended),
+            Fixed::ZERO
+        );
+        assert_eq!(
+            world
+                .ref_data
+                .reach_nm(AircraftTypeId::new(1), Reach::Extended),
+            Fixed::ZERO
+        );
+    }
+
+    #[test]
+    fn the_chance_of_running_out_of_fuel_is_the_figure_times_the_share_beyond_the_radius() {
+        let figures = AirCombatFigures::from_air_combat_toml();
+        let radius = Fixed::from_int(250);
+        let chance = |nm: i64| figures.ditch_chance(Fixed::from_int(nm), radius);
+        // Within the radius, and at it: nothing.
+        assert_eq!(chance(100), Fixed::ZERO);
+        assert_eq!(chance(250), Fixed::ZERO);
+        // 30 over 250 is 0.12, times 2 is 0.24.
+        assert_eq!(chance(280), fixed(24, 100));
+        assert_eq!(chance(290), fixed(32, 100));
+        assert_eq!(chance(300), fixed(4, 10));
+        assert_eq!(chance(312), fixed(496, 1000));
+        // It never falls as the distance rises, and is cut at 1.
+        let mut last = Fixed::ZERO;
+        for nm in 0..=1000 {
+            let now = chance(nm);
+            assert!(now >= last, "{nm} nm");
+            assert!(now <= Fixed::ONE);
+            last = now;
+        }
+        assert_eq!(chance(1000), Fixed::ONE);
+        // The share is cut to millionths first: 1 over 3 is 0.333333, and
+        // times 2 is 0.666666.
+        assert_eq!(
+            figures.ditch_chance(Fixed::from_int(4), Fixed::from_int(3)),
+            Fixed::from_raw(666_666)
+        );
+        // A type with no radius never rolls.
+        assert_eq!(
+            figures.ditch_chance(Fixed::from_int(280), Fixed::ZERO),
+            Fixed::ZERO
+        );
+    }
+
+    #[test]
+    fn a_naval_strike_goes_to_a_contact_within_the_reach_in_force() {
+        // 7 hexes: 280 nm, beyond the radius of 250 and within 312.
+        for (reach, hexes, launches) in [
+            (Reach::Normal, 7, 0),
+            (Reach::Extended, 7, 1),
+            // 8 hexes: 320 nm, beyond even the extended reach.
+            (Reach::Extended, 8, 0),
+            // 6 hexes: 240 nm, within the radius: either reach strikes.
+            (Reach::Normal, 6, 1),
+            (Reach::Extended, 6, 1),
+        ] {
+            let mut world = long_world(1, hexes, reach);
+            world.decide_strikes(1, Pulse::Morning);
+            assert_eq!(launches_of(&world), launches, "{reach:?} at {hexes}");
+        }
+        // The edge of the reach: 280 nm exactly is within it, 279 is not.
+        for (share, launches) in [(fixed(12, 100), 1), (fixed(119, 1000), 0)] {
+            let mut world = long_world(1, 7, Reach::Extended);
+            air_figures(&mut world).extended_reach_share = share;
+            world.decide_strikes(1, Pulse::Morning);
+            assert_eq!(launches_of(&world), launches, "share {share}");
+        }
+    }
+
+    fn launches_of(world: &World) -> usize {
+        launches(world).len()
+    }
+
+    #[test]
+    fn a_launch_by_a_group_on_extended_reach_cites_the_reach_order_and_normal_reach_does_not() {
+        for hexes in [7, 6] {
+            let mut world = long_world(1, hexes, Reach::Extended);
+            group_mut(&mut world, BOMBERS).mission_order = Some(OrderId::new(1));
+            group_mut(&mut world, BOMBERS).reach_order = Some(OrderId::new(2));
+            world.decide_strikes(1, Pulse::Morning);
+            let causes = &launches(&world)[0].causes;
+            assert!(causes.contains(&Cause::Order(OrderId::new(1))));
+            assert!(causes.contains(&Cause::Order(OrderId::new(2))), "{hexes}");
+        }
+        // On normal reach the order is not a cause, even if one was given.
+        let mut world = long_world(1, 6, Reach::Normal);
+        group_mut(&mut world, BOMBERS).reach_order = Some(OrderId::new(2));
+        world.decide_strikes(1, Pulse::Morning);
+        assert!(!launches(&world)[0]
+            .causes
+            .contains(&Cause::Order(OrderId::new(2))));
+    }
+
+    #[test]
+    fn a_base_strike_goes_to_a_base_within_the_reach_in_force() {
+        for (reach, hexes, launches) in [
+            (Reach::Normal, 7, 0),
+            (Reach::Extended, 7, 1),
+            (Reach::Extended, 8, 0),
+        ] {
+            let mut world = raid_world(1);
+            world.truth.bases.get_mut(&BASE_JAPANESE).expect("base").hex = Hex::new(hexes, 0);
+            set_reach(&mut world, AirGroupId::new(1), reach);
+            world.decide_strikes(1, Pulse::Morning);
+            assert_eq!(
+                base_launches(&world).len(),
+                launches,
+                "{reach:?} at {hexes}"
+            );
+        }
+    }
+
+    #[test]
+    fn escorts_go_with_a_raid_within_the_reach_in_force_of_their_own_group() {
+        // The bombers are on extended reach and strike 280 nm out. Fighters
+        // that send all they fly as escort: on normal reach the raid is
+        // beyond their radius of 250 and they stay as patrol; on extended
+        // reach they go.
+        for (reach, escorts) in [(Reach::Normal, 0), (Reach::Extended, 12)] {
+            let mut world = long_world(1, 7, Reach::Extended);
+            cap_group(&mut world, 5, Side::Allied, 1, 12, Fixed::ZERO);
+            set_reach(&mut world, AirGroupId::new(5), reach);
+            strike_pulse(&mut world, Pulse::Morning);
+            let sent: Vec<_> = escorts_sent(&world).iter().map(escort_of).collect();
+            match escorts {
+                0 => assert!(sent.is_empty(), "{reach:?}"),
+                n => assert_eq!(sent, vec![(5, 1, n)], "{reach:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn a_sortie_within_the_radius_rolls_nothing_whatever_the_reach() {
+        for hexes in [5, 6] {
+            let mut world = long_world(1, hexes, Reach::Extended);
+            strike_pulse(&mut world, Pulse::Morning);
+            assert_eq!(launches_of(&world), 1);
+            world.wear_aircraft(1, Pulse::Morning);
+            assert!(ditchings(&world).is_empty(), "{hexes} hexes");
+            assert_eq!(ready_of(&world, 1), 18);
+        }
+    }
+
+    #[test]
+    fn a_strike_beyond_the_radius_rolls_each_aircraft_that_came_back_on_its_own() {
+        let mut world = long_world(1, 7, Reach::Extended);
+        group_mut(&mut world, BOMBERS).pilots = Some(18);
+        strike_pulse(&mut world, Pulse::Morning);
+        let launch = launches(&world)[0].id;
+        world.wear_aircraft(1, Pulse::Morning);
+        let events = ditchings(&world);
+        assert_eq!(events.len(), 1);
+        // Out and back 560, one way 280; radius 250: 18 aircraft x 0.24.
+        let (distance, radius, aircraft, chance, ditched, crews, pilots_lost, ready) =
+            ditching_of(&events[0]);
+        assert_eq!((distance, radius, aircraft), (280, 250, 18));
+        assert_eq!(chance, fixed(24, 100));
+        // The draws are the stream of the group in the upkeep subsystem
+        // with its own value, the ditching draws and then the crew draws.
+        let mut stream = world.rng(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::Upkeep,
+            Draw::Ditch,
+            EntityRef::AirGroup(BOMBERS),
+        );
+        let expected_ditched = roll_shots(&mut stream, Fixed::from_int(18), fixed(24, 100));
+        let expected_crews = roll_shots(
+            &mut stream,
+            Fixed::from_int(i64::from(expected_ditched)),
+            fixed(7, 10),
+        );
+        assert_eq!(ditched, expected_ditched);
+        assert_eq!(crews, Some(expected_crews));
+        assert_eq!(pilots_lost, expected_ditched - expected_crews);
+        assert_eq!(ready, 18 - ditched);
+        assert_eq!(ready_of(&world, 1), 18 - ditched);
+        assert_eq!(pilots_of(&world, 1), Some(18 - pilots_lost));
+        // It cites the event that says the group flew, and says why.
+        assert_eq!(events[0].causes, vec![Cause::Event(launch)]);
+        // Lost pilots are recorded as the pilots rule records them.
+        let lost = pilot_losses(&world);
+        if pilots_lost > 0 {
+            assert_eq!(lost, vec![(1, pilots_lost, 18 - pilots_lost)]);
+        } else {
+            assert!(lost.is_empty());
+        }
+    }
+
+    #[test]
+    fn at_the_edges_of_the_figures_every_aircraft_ditches_or_none_and_the_crews_follow() {
+        let run = |ditch: i64, crew: Fixed| {
+            let mut world = long_world(3, 7, Reach::Extended);
+            group_mut(&mut world, BOMBERS).pilots = Some(18);
+            let figures = air_figures(&mut world);
+            figures.ditch_chance_per_radius_beyond = Fixed::from_int(ditch);
+            figures.crew_recovered_short_of_home = crew;
+            strike_pulse(&mut world, Pulse::Morning);
+            world.wear_aircraft(1, Pulse::Morning);
+            world
+        };
+        let none = run(0, fixed(7, 10));
+        assert_eq!(ditching_of(&ditchings(&none)[0]).4, 0);
+        assert_eq!((ready_of(&none, 1), pilots_of(&none, 1)), (18, Some(18)));
+        // 10 x 0.12 is 1.2, so 1: every aircraft, and every crew saved.
+        let all_saved = run(10, Fixed::ONE);
+        assert_eq!(ditching_of(&ditchings(&all_saved)[0]).4, 18);
+        assert_eq!(
+            (ready_of(&all_saved, 1), pilots_of(&all_saved, 1)),
+            (0, Some(18))
+        );
+        assert!(pilot_losses(&all_saved).is_empty());
+        // Every crew lost: 18 pilots.
+        let all_lost = run(10, Fixed::ZERO);
+        assert_eq!(ditching_of(&ditchings(&all_lost)[0]).6, 18);
+        assert_eq!(
+            (ready_of(&all_lost, 1), pilots_of(&all_lost, 1)),
+            (0, Some(0))
+        );
+        assert_eq!(pilot_losses(&all_lost), vec![(1, 18, 0)]);
+        // A ditched aircraft still counts as flown: the sortie keeps `sent`.
+        assert!(all_lost.sorties.is_empty(), "the wear phase took them");
+    }
+
+    #[test]
+    fn a_group_whose_pilots_are_not_counted_draws_for_no_crew() {
+        let mut world = long_world(1, 7, Reach::Extended);
+        air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::from_int(10);
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        let (_, _, _, _, ditched, crews, pilots_lost, ready) = ditching_of(&ditchings(&world)[0]);
+        assert_eq!((ditched, crews, pilots_lost, ready), (18, None, 0, 0));
+        assert_eq!(pilots_of(&world, 1), None);
+        assert!(pilot_losses(&world).is_empty());
+    }
+
+    #[test]
+    fn the_pilots_lost_are_never_more_than_the_group_has() {
+        let mut world = long_world(1, 7, Reach::Extended);
+        // Fewer pilots than aircraft: 5 fly, and the rest are on the deck.
+        group_mut(&mut world, BOMBERS).pilots = Some(5);
+        let figures = air_figures(&mut world);
+        figures.ditch_chance_per_radius_beyond = Fixed::from_int(10);
+        figures.crew_recovered_short_of_home = Fixed::ZERO;
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        let (_, _, aircraft, _, ditched, crews, pilots_lost, ready) =
+            ditching_of(&ditchings(&world)[0]);
+        assert_eq!((aircraft, ditched, crews, pilots_lost), (5, 5, Some(0), 5));
+        assert_eq!(ready, 13);
+        assert_eq!(pilots_of(&world, 1), Some(0));
+    }
+
+    #[test]
+    fn a_search_and_a_patrol_never_roll_for_running_out_of_fuel() {
+        let mut world = world_with_a_good_contact(1);
+        group_mut(&mut world, SCOUTS).mission = AirMission::Search;
+        group_mut(&mut world, SCOUTS).search = Some(crate::state::SearchArc {
+            from_deg: 40,
+            to_deg: 130,
+            range_nm: Fixed::from_int(300),
+        });
+        set_reach(&mut world, SCOUTS, Reach::Extended);
+        // A patrol: fighters that keep every aircraft over their hex.
+        cap_group(&mut world, 5, Side::Allied, 1, 6, Fixed::ONE);
+        // Every aircraft would ditch if anything rolled.
+        air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::from_int(100);
+        fly_pulse(&mut world, Pulse::Morning);
+        assert!(ditchings(&world).is_empty());
+        assert_eq!(ready_of(&world, 2), 8);
+        assert_eq!(ready_of(&world, 5), 6);
+    }
+
+    #[test]
+    fn escorts_beyond_their_own_radius_roll_at_their_own_radius() {
+        // Escorts with a radius of 100 nm and a reach of 125: a raid 120 nm
+        // out is within their reach and beyond their radius by 20: 20 over
+        // 100 is 0.2, times 2 is 0.4.
+        let mut world = world_with_a_good_contact(1);
+        set_fighter_radius(&mut world, 100);
+        cap_group(&mut world, 5, Side::Allied, 1, 10, Fixed::ZERO);
+        set_reach(&mut world, AirGroupId::new(5), Reach::Extended);
+        // A raid from the same place at a hex 120 nm out is not a whole
+        // number of hexes: use the scouts' place as the origin, and put the
+        // fighters' sortie in by hand.
+        let sent = world.events.record(
+            1,
+            Some(Pulse::Morning),
+            EventKind::EscortsSent {
+                air_group: AirGroupId::new(5),
+                with_air_group: BOMBERS,
+                aircraft: 10,
+            },
+            Vec::new(),
+            None,
+        );
+        world.sorties.push(Sortie {
+            air_group: AirGroupId::new(5),
+            kind: SortieKind::Escort,
+            aircraft: 10,
+            sent: 10,
+            distance_nm: Fixed::from_int(240),
+            causes: vec![Cause::Event(sent)],
+        });
+        world.wear_aircraft(1, Pulse::Morning);
+        let event = ditchings(&world);
+        assert_eq!(event.len(), 1);
+        let (distance, radius, aircraft, chance, ditched, _, _, ready) = ditching_of(&event[0]);
+        assert_eq!((distance, radius, aircraft), (120, 100, 10));
+        assert_eq!(chance, fixed(4, 10));
+        assert_eq!(ready, 10 - ditched);
+    }
+
+    #[test]
+    fn a_group_aboard_a_ship_that_sank_in_the_pulse_rolls_nothing_for_fuel() {
+        let mut world = long_world(1, 7, Reach::Extended);
+        air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::from_int(10);
+        strike_pulse(&mut world, Pulse::Morning);
+        // The ship sinks in the pulse: its group has no position.
+        ship_mut(&mut world, 1).location = ShipLocation::Sunk;
+        world.wear_aircraft(1, Pulse::Morning);
+        assert!(ditchings(&world).is_empty());
+    }
+
+    #[test]
+    fn an_aircraft_that_ditched_is_not_rolled_for_wear_and_still_counts_as_flown() {
+        let mut world = long_world(1, 7, Reach::Extended);
+        world.ref_data.air_upkeep = Some(crate::refdata::AirUpkeepFigures {
+            wear_base_chance: Fixed::ONE,
+            wear_chance_per_100_nm: Fixed::ZERO,
+            write_off_share: Fixed::ZERO,
+            carrier_repairs_per_day: 0,
+        });
+        world.ref_data.fatigue = Some(FatigueFigures {
+            air_fatigue_per_sortie: Fixed::from_int(5),
+            air_fatigue_per_100_nm: Fixed::ZERO,
+            air_rest_per_pulse: Fixed::ZERO,
+            force_fatigue_per_pulse_alert: Fixed::ZERO,
+            force_rest_per_pulse: Fixed::ZERO,
+        });
+        air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::from_int(10);
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        // Every aircraft ditched: none is worn, no wear event is recorded
+        // for the sortie, and the group is tired from having flown.
+        assert_eq!(ready_of(&world, 1), 0);
+        assert!(events_where(&world, |k| matches!(
+            k,
+            EventKind::AircraftWorn { air_group, .. } if air_group.raw() == 1
+        ))
+        .is_empty());
+        assert!(world.truth.air_groups[&BOMBERS].fatigue > Fixed::ZERO);
+        // With none ditched, wear rolls them all (a wear chance of 1).
+        let mut world = long_world(1, 7, Reach::Extended);
+        world.ref_data.air_upkeep = Some(crate::refdata::AirUpkeepFigures {
+            wear_base_chance: Fixed::ONE,
+            wear_chance_per_100_nm: Fixed::ZERO,
+            write_off_share: Fixed::ZERO,
+            carrier_repairs_per_day: 0,
+        });
+        air_figures(&mut world).ditch_chance_per_radius_beyond = Fixed::ZERO;
+        strike_pulse(&mut world, Pulse::Morning);
+        world.wear_aircraft(1, Pulse::Morning);
+        assert_eq!(ready_of(&world, 1), 0);
+        assert_eq!(ditching_of(&ditchings(&world)[0]).4, 0);
+    }
+
+    #[test]
+    fn a_ditching_event_names_its_factors_and_recording_them_changes_nothing() {
+        let run = |record: bool| {
+            let mut world = long_world(4, 7, Reach::Extended);
+            world.set_config(crate::SimConfig {
+                record_breakdowns: record,
+            });
+            group_mut(&mut world, BOMBERS).pilots = Some(18);
+            strike_pulse(&mut world, Pulse::Morning);
+            world.wear_aircraft(1, Pulse::Morning);
+            world
+        };
+        let with = run(true);
+        let without = run(false);
+        assert_eq!(with.state_hash(), without.state_hash());
+        let event = &ditchings(&with)[0];
+        let breakdown = event.breakdown.as_ref().expect("a breakdown");
+        let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+        assert_eq!(
+            names,
+            [
+                "aircraft",
+                "distance_nm",
+                "radius_nm",
+                "share_beyond_radius",
+                "ditch_chance_per_radius_beyond",
+                "chance",
+                "crew_recovered_short_of_home"
+            ]
+        );
+        assert_eq!(breakdown.result, Fixed::from_int(18) * fixed(24, 100));
+        assert!(ditchings(&without)[0].breakdown.is_none());
+        // It reads as the decision says.
+        assert!(event
+            .kind
+            .to_string()
+            .starts_with("air_group:1 strike sortie of 280 nm, 30 beyond its radius of 250: 18 aircraft x 0.24 = 4.32 expected out of fuel, "));
+    }
+
+    #[test]
+    fn the_reach_order_is_accepted_stays_and_is_replaced_and_the_hash_sees_it() {
+        let order = |reach: Reach| OrderRequest {
+            kind: OrderKind::AirGroup {
+                target: BOMBERS,
+                order: AirGroupOrder::SetReach { reach },
+            },
+            origin: Origin::PLAYER,
+        };
+        let mut world = world(1, vec![]);
+        let before = world.state_hash();
+        world.submit_orders(Side::Allied, vec![order(Reach::Extended)]);
+        world.resolve_day().expect("day resolves");
+        assert!(rejections(&world).is_empty());
+        assert_eq!(group_mut(&mut world, BOMBERS).reach, Reach::Extended);
+        let order_id = group_mut(&mut world, BOMBERS).reach_order;
+        assert!(order_id.is_some());
+        // It stands through the next day and another order replaces it.
+        world.resolve_day().expect("day resolves");
+        assert_eq!(group_mut(&mut world, BOMBERS).reach, Reach::Extended);
+        world.submit_orders(Side::Allied, vec![order(Reach::Normal)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(group_mut(&mut world, BOMBERS).reach, Reach::Normal);
+        assert_ne!(group_mut(&mut world, BOMBERS).reach_order, order_id);
+        // Reach and the order that set it are in the hash.
+        let mut a = self::world(1, vec![]);
+        let mut b = self::world(1, vec![]);
+        assert_eq!(a.state_hash(), b.state_hash());
+        set_reach(&mut b, BOMBERS, Reach::Extended);
+        assert_ne!(a.state_hash(), b.state_hash());
+        set_reach(&mut a, BOMBERS, Reach::Extended);
+        assert_eq!(a.state_hash(), b.state_hash());
+        group_mut(&mut a, BOMBERS).reach_order = Some(OrderId::new(3));
+        assert_ne!(a.state_hash(), b.state_hash());
+        let _ = before;
+    }
+
+    #[test]
+    fn the_reach_order_is_refused_for_an_enemy_group_a_lost_group_and_extended_without_figures() {
+        let order = |target: AirGroupId, reach: Reach| OrderRequest {
+            kind: OrderKind::AirGroup {
+                target,
+                order: AirGroupOrder::SetReach { reach },
+            },
+            origin: Origin::PLAYER,
+        };
+        // An enemy group is not yours.
+        let world = world(1, vec![]);
+        assert_eq!(
+            world.check_order(Side::Japanese, &order(BOMBERS, Reach::Extended)),
+            Err(RejectReason::NotYourUnit)
+        );
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, Reach::Extended)),
+            Ok(())
+        );
+        // A group lost with its ship has nothing to order.
+        let mut world = self::world(1, vec![]);
+        ship_mut(&mut world, 1).location = ShipLocation::Sunk;
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, Reach::Extended)),
+            Err(RejectReason::AirGroupLost)
+        );
+        // Extended reach needs the air combat figures; normal does not.
+        let mut world = self::world(1, vec![]);
+        world.ref_data.air_combat = None;
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, Reach::Extended)),
+            Err(RejectReason::NoAirCombatFigures)
+        );
+        assert_eq!(
+            world.check_order(Side::Allied, &order(BOMBERS, Reach::Normal)),
+            Ok(())
+        );
     }
 }

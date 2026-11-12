@@ -319,6 +319,10 @@
         "search_range_nm": {
           "description": "The aircraft type's search range in miles: the furthest a search arc can reach. \"0\" for a type that cannot search.",
           "$ref": "#/$defs/dec"
+        },
+        "reach_nm": {
+          "description": "Given only for a group on extended reach (set_reach): the reach in force in miles, more than strike_radius_nm. Left out on normal reach, where the reach is strike_radius_nm.",
+          "$ref": "#/$defs/dec"
         }
       }
     },

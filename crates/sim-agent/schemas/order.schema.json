@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/order",
   "title": "order: one order for one unit, as saved games and issue_orders write it",
-  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach and set_readiness; an air group's are set_air_mission, set_search_arc, set_patrol_share and set_rest_threshold. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply.",
+  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach and set_readiness; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold and set_reach. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply.",
   "type": "object",
   "required": [
     "unit",
@@ -331,6 +331,23 @@
             },
             "fatigue": {
               "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "reach"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_reach"
+            },
+            "reach": {
+              "description": "\"normal\" (the default): strikes and escorts go as far as the aircraft type's strike radius. \"extended\": a share more than the radius (the air combat figures' extended_reach_share, 0.25 as shipped, so a type with a radius of 250 miles reaches 312), at the price that an aircraft that flew beyond its radius may run out of fuel and come down in the sea on the way home, and its crew may be lost. Extended reach is refused where the scenario has no air combat figures.",
+              "enum": ["normal", "extended"]
             }
           }
         }

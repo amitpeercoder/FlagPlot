@@ -16,7 +16,7 @@ use crate::fixed::Fixed;
 use crate::ids::{EventId, OrderId, ShipId, TaskForceId};
 use crate::invariants;
 use crate::orders::{
-    AirGroupOrder, AirMission, CargoAction, Order, OrderKind, OrderRequest, RejectReason,
+    AirGroupOrder, AirMission, CargoAction, Order, OrderKind, OrderRequest, Reach, RejectReason,
     SpeedSetting, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
@@ -544,6 +544,17 @@ impl World {
                             Ok(())
                         }
                     }
+                    AirGroupOrder::SetReach { reach } => {
+                        // Decision 1 of 0059. Normal reach is the rule as it
+                        // was and is always accepted, so a group can go back
+                        // to it. Extended reach means something only where
+                        // the air combat figures are.
+                        if *reach == Reach::Extended && self.ref_data.air_combat.is_none() {
+                            Err(RejectReason::NoAirCombatFigures)
+                        } else {
+                            Ok(())
+                        }
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -714,6 +725,10 @@ impl World {
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         group.rest_above = Some(*fatigue);
                         group.rest_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetReach { reach } => {
+                        group.reach = *reach;
+                        group.reach_order = Some(order.id);
                     }
                     AirGroupOrder::SetSearchArc {
                         from_deg,

@@ -23,7 +23,10 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Report** | What a side is told. It can be wrong. Every change to what a side believes is a report | The truth |
 | **Contact** | What a side believes about an enemy force: a hex, a count, a kind and an age. Made and refreshed by reports | The force itself |
 | **Position** | A force's hex: the nearest hex centre. A group aboard a ship is at its ship's force's position | How far along a leg it is, which is working data of movement |
-| **Radius** | How far out an aircraft type goes and comes back. `search_range_nm` is the largest range a search arc may name, and the engine refuses an arc beyond it. `strike_range_nm` limits a strike and an escort. Both columns are named range and hold radii | Range |
+| **Radius** | How far out an aircraft type goes and comes back. `search_range_nm` is the largest range a search arc may name, and the engine refuses an arc beyond it. `strike_range_nm` is what a group's reach is measured from. Both columns are named range and hold radii | Range |
+| **Reach** | How far an air group's strikes and escorts may go: normal, the type's strike radius, or extended, the radius and a share more. Set by order, normal until then (decision 0059) | Radius |
+| **Extended reach** | The reach of a group that has been ordered to it: the radius times (1 plus the extended reach share), cut to a whole mile. A sortie beyond the radius may cost aircraft that run out of fuel on the way home | Normal reach |
+| **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
 | **Range** | How far an aircraft flies one way, as a sourced fact. Only the derivation tool reads it. The engine reads the radius columns, whose names say range (corrected against the code, which reads `search_range_nm`) | |
 | **Crippled** | A ship with flotation damage of 50 or more. It counts toward break-off | Slowed |
 | **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Crippled |
@@ -114,6 +117,6 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Arrival** | Aircraft and pilots a scenario delivers to an air group on a named day (decision 0041) | A replacement |
 | **Replacement** | Aircraft and pilots a base receives each day from day 2, given to its groups below strength (decision 0038) | An arrival |
 | **Out of supply** | Describes a base whose supply stock is exactly zero at the start of a pulse. Its groups fly nothing in that pulse (decision 0039) | |
-| **Strike radius** | An aircraft type's `strike_range_nm`: the radius for a strike and for an escort. The column's name says range, and the glossary's range is the sourced one-way figure | Range |
+| **Strike radius** | An aircraft type's `strike_range_nm`: the radius a strike and an escort are measured from on normal reach, and the distance beyond which a sortie may cost aircraft that run out of fuel. The column's name says range, and the glossary's range is the sourced one-way figure | Range |
 | **Loaded** | Describes a rule whose figures file the scenario file names. A rule whose file is not named does nothing (chapter 1 of the rulebook, Where figures come from and when a rule is loaded) | Read from the code |
 | **Importance** | The order of the kinds of ship, most important first: carrier, battleship, cruiser, destroyer, transport, auxiliary. Rules that pick the most important kind of a set use it | Size or value |

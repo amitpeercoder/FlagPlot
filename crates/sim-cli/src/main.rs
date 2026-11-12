@@ -370,6 +370,10 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         if group.stood_down {
             tired.push_str(", stood down");
         }
+        // Reach is shown only when extended (decision 0059).
+        if group.reach == sim_core::orders::Reach::Extended {
+            tired.push_str(", extended reach");
+        }
         // Pilots are shown only when the scenario tracks them (decision 0038).
         let ready = match group.pilots {
             Some(pilots) => format!("{ready}, {pilots} pilots"),

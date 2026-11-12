@@ -434,8 +434,10 @@ fn objectives_change_no_hash_and_no_event() {
     // 0056 put the claims from the air into belief, and so into the hash,
     // 2f37141bddfdb856 until the hash went to version 2 (decision 9 of
     // 0055), c09495f6039a2a2a until the hash went to version 3 (decision
-    // 0058, `leg_nm`) and the Ryujo detachment moved its start.
-    assert!(baseline.contains("hash e88694a2344625c0"));
+    // 0058, `leg_nm`) and the Ryujo detachment moved its start, and
+    // e88694a2344625c0 until the hash went to version 4 (decision 0059, an
+    // air group's reach).
+    assert!(baseline.contains("hash bbd586296ddd4b8f"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

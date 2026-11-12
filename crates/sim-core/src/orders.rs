@@ -98,6 +98,39 @@ pub enum SpeedSetting {
     Knots(Fixed),
 }
 
+/// How far an air group's strikes and escorts may go (decision 1 of
+/// `docs/decisions/0059-aircraft-that-cannot-land-where-they-took-off.md`).
+/// Normal is the type's strike radius. Extended is the radius and a share
+/// more (`air_combat.toml: extended_reach_share`), at the price of aircraft
+/// that may run out of fuel on the way home.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub enum Reach {
+    /// The type's strike radius. The default.
+    #[default]
+    Normal,
+    /// The radius and a share more.
+    Extended,
+}
+
+impl Reach {
+    /// A stable number for the reach. Part of the state hash. Never
+    /// renumber it; add new values at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            Reach::Normal => 1,
+            Reach::Extended => 2,
+        }
+    }
+
+    /// The reach's name as scenario files, orders and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Reach::Normal => "normal",
+            Reach::Extended => "extended",
+        }
+    }
+}
+
 /// How ready a task force is for action (decision 1 of
 /// `docs/decisions/0021-readiness-and-alarm.md`). A force at battle readiness
 /// is alert.
@@ -311,6 +344,12 @@ pub enum AirGroupOrder {
     /// own kind. Added at the end.
     SetRestThreshold {
         fatigue: Fixed,
+    },
+    /// How far the group's strikes and escorts may go: normal (the type's
+    /// radius) or extended (decision 1 of 0059). A standing order of its own
+    /// kind: it replaces the reach and nothing else. Added at the end.
+    SetReach {
+        reach: Reach,
     },
 }
 

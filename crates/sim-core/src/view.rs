@@ -17,6 +17,7 @@ use std::collections::BTreeMap;
 
 use crate::belief::{BattleClaim, BeliefState, Contact};
 use crate::events::EventLog;
+use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
 use crate::map::{HexData, Map};
@@ -356,6 +357,26 @@ impl<'a> SideView<'a> {
     /// Aircraft types are reference data, so common knowledge.
     pub fn aircraft_type(&self, id: AircraftTypeId) -> Option<&'a AircraftType> {
         self.ref_data.aircraft_types.get(&id)
+    }
+
+    /// How far `group`'s strikes and escorts may go with the reach it has in
+    /// force, in miles: [`RefData::reach_nm`], the one function every test of
+    /// the distance of a strike or an escort uses (decision 2 of 0059). The
+    /// figures are rules, so common knowledge.
+    pub fn reach_nm(&self, group: &AirGroup) -> Fixed {
+        self.ref_data.reach_nm(group.aircraft_type, group.reach)
+    }
+
+    /// The air combat figures' extended reach share and ditching chance are
+    /// reference data, so common knowledge: the chance an aircraft runs out
+    /// of fuel on the way home from a sortie of one-way distance
+    /// `distance_nm`, for a type of strike radius `radius_nm`
+    /// (`AirCombatFigures::ditch_chance`). `None` without the figures.
+    pub fn ditch_chance(&self, distance_nm: Fixed, radius_nm: Fixed) -> Option<Fixed> {
+        self.ref_data
+            .air_combat
+            .as_ref()
+            .map(|figures| figures.ditch_chance(distance_nm, radius_nm))
     }
 
     /// The search figures are reference data, so common knowledge.

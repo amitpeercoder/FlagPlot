@@ -18,7 +18,7 @@ use sim_core::events::{EventKind, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId};
-use sim_core::orders::{AirMission, Cargo};
+use sim_core::orders::{AirMission, Cargo, Reach};
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{ShipLocation, TaskForceStatus};
 use sim_core::view::SideView;
@@ -306,6 +306,10 @@ pub struct SystemChange {
     pub after: &'static str,
 }
 
+fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct AircraftLoss {
     pub air_group: Handle,
@@ -313,6 +317,11 @@ pub struct AircraftLoss {
     pub destroyed_on_ground: u32,
     pub written_off: u32,
     pub lost_with_ship: u32,
+    /// Aircraft that ran out of fuel on the way home from a sortie beyond
+    /// their radius (decision 0059). Left out when 0, so a game with no
+    /// reach order reads as it did.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub ditched: u32,
     pub pilots_lost: u32,
     pub events: Vec<u32>,
 }
@@ -406,6 +415,10 @@ pub struct OutOfReachWarning {
     pub mission: &'static str,
     /// The aircraft type's strike radius in miles.
     pub radius_nm: Dec,
+    /// The reach in force in miles, given only for a group on extended
+    /// reach (decision 0059): the test the warning makes is against it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reach_nm: Option<Dec>,
     /// For naval_strike, the nearest contact held; for base_strike, the
     /// target base.
     pub nearest: Handle,
@@ -1004,6 +1017,11 @@ impl Day {
                     } => {
                         loss(ctx, &mut aircraft, *air_group, id).lost_with_ship += n;
                     }
+                    EventKind::AircraftDitched {
+                        air_group, ditched, ..
+                    } if *ditched > 0 => {
+                        loss(ctx, &mut aircraft, *air_group, id).ditched += ditched;
+                    }
                     EventKind::PilotsLost {
                         air_group, lost, ..
                     } => {
@@ -1340,6 +1358,7 @@ fn loss<'m>(
         destroyed_on_ground: 0,
         written_off: 0,
         lost_with_ship: 0,
+        ditched: 0,
         pilots_lost: 0,
         events: Vec::new(),
     });
@@ -1489,6 +1508,9 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
             continue;
         };
         let radius = aircraft.strike_range_nm;
+        // The reach in force, by the one function the strike decision uses.
+        let reach = ctx.view.reach_nm(group);
+        let reach_nm = (group.reach == Reach::Extended).then_some(Dec(reach));
         match group.mission {
             AirMission::NavalStrike => {
                 let nearest = ctx
@@ -1503,11 +1525,12 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
                     })
                     .min();
                 if let Some((distance, id, hex)) = nearest {
-                    if !origin.air_distance_within(hex, radius) {
+                    if !origin.air_distance_within(hex, reach) {
                         strike_group_out_of_reach.push(OutOfReachWarning {
                             air_group: ctx.group(group.id),
                             mission: "naval_strike",
                             radius_nm: Dec(radius),
+                            reach_nm,
                             nearest: ctx.entity(EntityRef::Contact(id)),
                             distance_nm: distance,
                         });
@@ -1516,11 +1539,12 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
             }
             AirMission::BaseStrike(target) => {
                 if let Some(enemy) = ctx.enemy_bases.get(&target) {
-                    if !origin.air_distance_within(enemy.hex, radius) {
+                    if !origin.air_distance_within(enemy.hex, reach) {
                         strike_group_out_of_reach.push(OutOfReachWarning {
                             air_group: ctx.group(group.id),
                             mission: "base_strike",
                             radius_nm: Dec(radius),
+                            reach_nm,
                             nearest: ctx.base(target),
                             distance_nm: origin.air_distance_nm(enemy.hex),
                         });
