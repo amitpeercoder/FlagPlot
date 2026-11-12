@@ -153,7 +153,7 @@ pub struct NotThere {
 pub struct ActionPart {
     /// Surface fights the side knew of, from the event that ended each.
     pub fights: Vec<Fight>,
-    /// What the side's own ships fired, by firer, target and weapon.
+    /// What the side's own ships fired, by firer and weapon.
     pub fired: Vec<Fired>,
     /// What the side's own fighters fired in fights in the air.
     pub air_fire: Vec<AirFire>,
@@ -163,13 +163,15 @@ pub struct ActionPart {
     pub strikes: Vec<Strike>,
     /// Raids on the side's bases.
     pub raids_on_bases: Vec<Raid>,
-    /// Attacks on the side's ships, by attacker, target and weapon.
+    /// Attacks on the side's ships, by target and weapon.
     pub attacks_on_ships: Vec<AttackOnShip>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct Fight {
-    pub forces: Vec<Handle>,
+    /// The side's own force in the fight. The enemy's is not named
+    /// (decision 0065).
+    pub force: Handle,
     pub place: Place,
     /// The round in which it ended.
     pub rounds: u32,
@@ -182,7 +184,6 @@ pub struct Fight {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct Fired {
     pub firer: Handle,
-    pub target: Handle,
     pub weapon: &'static str,
     pub salvos: u32,
     pub shots: Dec,
@@ -194,7 +195,8 @@ pub struct Strike {
     /// `strike_found_nothing`, `air_attack` or `base_attack`.
     pub kind: &'static str,
     pub air_group: Handle,
-    /// The contact, base or ship it was flown at.
+    /// The contact or base it was flown at. An attack on a ship names none:
+    /// the ship is the enemy's (decision 0065).
     pub target: Option<Handle>,
     pub place: Option<Place>,
     /// Aircraft launched or attacking.
@@ -230,7 +232,6 @@ pub struct AirFire {
     pub firer: Handle,
     /// `patrol`, `escorts` or `bombers`: what they fired at.
     pub at: &'static str,
-    pub target: Handle,
     pub shots: Dec,
     pub event: u32,
 }
@@ -240,8 +241,6 @@ pub struct AirFire {
 pub struct Guns {
     /// The task force or base that fired.
     pub by: Handle,
-    /// The air group whose raid it fired at.
-    pub raid: Handle,
     pub shots: Dec,
     pub event: u32,
 }
@@ -249,8 +248,6 @@ pub struct Guns {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct Raid {
     pub base: Handle,
-    /// The raiding air group, named as the log names it.
-    pub air_group: Handle,
     /// Aircraft that attacked.
     pub aircraft: Dec,
     pub hits: u32,
@@ -261,8 +258,9 @@ pub struct Raid {
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct AttackOnShip {
-    /// The firing ship, or the raiding air group.
-    pub by: Handle,
+    /// `ship` for a salvo fired at it, `aircraft` for an attack from the air.
+    /// The ship or air group that attacked is not named (decision 0065).
+    pub by: &'static str,
     pub against: Handle,
     /// `None` for an air attack, whose weapon the side is not told.
     pub weapon: Option<&'static str>,
@@ -804,13 +802,13 @@ impl Day {
         let mut dropped = Vec::new();
         let mut not_there = Vec::new();
         let mut fights = Vec::new();
-        let mut fired: BTreeMap<(ShipId, ShipId, Weapon), (u32, Fixed)> = BTreeMap::new();
+        let mut fired: BTreeMap<(ShipId, Weapon), (u32, Fixed)> = BTreeMap::new();
         let mut strikes = Vec::new();
         let mut raids = Vec::new();
         let mut air_fire = Vec::new();
         let mut guns = Vec::new();
-        let mut ship_attacks: BTreeMap<(ShipId, ShipId, Weapon), AttackOnShip> = BTreeMap::new();
-        let mut air_attacks: BTreeMap<(AirGroupId, ShipId), AttackOnShip> = BTreeMap::new();
+        let mut ship_attacks: BTreeMap<(ShipId, Weapon), AttackOnShip> = BTreeMap::new();
+        let mut air_attacks: BTreeMap<ShipId, AttackOnShip> = BTreeMap::new();
         let mut sunk = Vec::new();
         let mut sunk_ids: BTreeSet<ShipId> = BTreeSet::new();
         let mut damaged: BTreeMap<ShipId, DamagedShip> = BTreeMap::new();
@@ -878,19 +876,6 @@ impl Day {
                             event: id,
                         });
                     }
-                    EventKind::EngagementEnded {
-                        round,
-                        a,
-                        b,
-                        hex,
-                        reason,
-                    } => fights.push(Fight {
-                        forces: vec![ctx.force(*a), ctx.force(*b)],
-                        place: ctx.place(*hex),
-                        rounds: *round,
-                        ended: words::end_reason(*reason),
-                        event: id,
-                    }),
                     EventKind::StrikeLaunched {
                         air_group,
                         contact,
@@ -935,23 +920,6 @@ impl Day {
                         distance_nm: None,
                         event: id,
                         reports: Vec::new(),
-                    }),
-                    EventKind::BaseAttacked {
-                        air_group,
-                        base,
-                        shots,
-                        hits,
-                        hits_on_aircraft,
-                        hits_on_supply,
-                        ..
-                    } => raids.push(Raid {
-                        base: ctx.base(*base),
-                        air_group: ctx.group(*air_group),
-                        aircraft: Dec(*shots),
-                        hits: *hits,
-                        hits_on_aircraft: *hits_on_aircraft,
-                        hits_on_supply: *hits_on_supply,
-                        event: id,
                     }),
                     EventKind::ShipSunk {
                         ship, task_force, ..
@@ -1149,27 +1117,19 @@ impl Day {
                 },
                 SideEventKind::Salvo {
                     firer,
-                    target,
                     weapon,
                     shots,
                     ..
                 } => {
-                    let entry = fired
-                        .entry((*firer, *target, *weapon))
-                        .or_insert((0, Fixed::ZERO));
+                    let entry = fired.entry((*firer, *weapon)).or_insert((0, Fixed::ZERO));
                     entry.0 += 1;
                     entry.1 += *shots;
                 }
-                SideEventKind::SalvoAgainst {
-                    firer,
-                    target,
-                    weapon,
-                    ..
-                } => {
+                SideEventKind::SalvoAgainst { target, weapon, .. } => {
                     ship_attacks
-                        .entry((*firer, *target, *weapon))
+                        .entry((*target, *weapon))
                         .or_insert_with(|| AttackOnShip {
-                            by: ctx.ship(*firer),
+                            by: "ship",
                             against: ctx.ship(*target),
                             weapon: Some(words::weapon(*weapon)),
                             attacks: 0,
@@ -1177,35 +1137,25 @@ impl Day {
                         })
                         .attacks += 1;
                 }
-                SideEventKind::AirAttackAgainst {
-                    air_group,
-                    ship,
-                    shots,
-                    ..
-                } => {
-                    let entry =
-                        air_attacks
-                            .entry((*air_group, *ship))
-                            .or_insert_with(|| AttackOnShip {
-                                by: ctx.group(*air_group),
-                                against: ctx.ship(*ship),
-                                weapon: None,
-                                attacks: 0,
-                                aircraft: Some(Dec(Fixed::ZERO)),
-                            });
+                SideEventKind::AirAttackAgainst { ship, shots, .. } => {
+                    let entry = air_attacks.entry(*ship).or_insert_with(|| AttackOnShip {
+                        by: "aircraft",
+                        against: ctx.ship(*ship),
+                        weapon: None,
+                        attacks: 0,
+                        aircraft: Some(Dec(Fixed::ZERO)),
+                    });
                     entry.attacks += 1;
                     entry.aircraft = Some(Dec(entry.aircraft.map_or(*shots, |d| d.0 + *shots)));
                 }
                 SideEventKind::AirAttack {
                     air_group,
-                    ship,
                     weapon,
                     shots,
-                    ..
                 } => strikes.push(Strike {
                     kind: "air_attack",
                     air_group: ctx.group(*air_group),
-                    target: Some(ctx.ship(*ship)),
+                    target: None,
                     place: None,
                     aircraft: Some(Dec(*shots)),
                     weapon: Some(words::weapon(*weapon)),
@@ -1228,9 +1178,23 @@ impl Day {
                     event: id,
                     reports: Vec::new(),
                 }),
+                SideEventKind::BaseAttackedAgainst {
+                    base,
+                    shots,
+                    hits,
+                    hits_on_aircraft,
+                    hits_on_supply,
+                    ..
+                } => raids.push(Raid {
+                    base: ctx.base(*base),
+                    aircraft: Dec(*shots),
+                    hits: *hits,
+                    hits_on_aircraft: *hits_on_aircraft,
+                    hits_on_supply: *hits_on_supply,
+                    event: id,
+                }),
                 SideEventKind::AirFight {
                     firer,
-                    target,
                     firing,
                     at,
                     shots,
@@ -1238,30 +1202,38 @@ impl Day {
                     firing: firing.name(),
                     firer: ctx.group(*firer),
                     at: at.name(),
-                    target: ctx.group(*target),
                     shots: Dec(*shots),
                     event: id,
                 }),
-                SideEventKind::AntiAircraftFire {
-                    task_force,
-                    air_group,
-                    shots,
-                } => guns.push(Guns {
+                SideEventKind::AntiAircraftFire { task_force, shots } => guns.push(Guns {
                     by: ctx.force(*task_force),
-                    raid: ctx.group(*air_group),
                     shots: Dec(*shots),
                     event: id,
                 }),
-                SideEventKind::BaseAntiAircraftFire {
-                    base,
-                    air_group,
-                    shots,
-                } => guns.push(Guns {
+                SideEventKind::BaseAntiAircraftFire { base, shots } => guns.push(Guns {
                     by: ctx.base(*base),
-                    raid: ctx.group(*air_group),
                     shots: Dec(*shots),
                     event: id,
                 }),
+                SideEventKind::EngagementEnded {
+                    round,
+                    task_force,
+                    hex,
+                    reason,
+                } => fights.push(Fight {
+                    force: ctx.force(*task_force),
+                    place: ctx.place(*hex),
+                    rounds: *round,
+                    ended: words::end_reason(*reason),
+                    event: id,
+                }),
+                // The rest of a fight reaches the briefing as its end, the
+                // fire and the losses; an alarm as the force's readiness.
+                SideEventKind::EngagementBegun { .. }
+                | SideEventKind::SightingRoll { .. }
+                | SideEventKind::ForceSurprised { .. }
+                | SideEventKind::ForceSlippedAway { .. }
+                | SideEventKind::AlarmRoll { .. } => {}
                 // A search that sighted reaches the briefing as the contact
                 // its report made.
                 SideEventKind::SearchAttempt { .. } => {}
@@ -1292,9 +1264,8 @@ impl Day {
                 fights,
                 fired: fired
                     .into_iter()
-                    .map(|((firer, target, weapon), (salvos, shots))| Fired {
+                    .map(|((firer, weapon), (salvos, shots))| Fired {
                         firer: ctx.ship(firer),
-                        target: ctx.ship(target),
                         weapon: words::weapon(weapon),
                         salvos,
                         shots: Dec(shots),

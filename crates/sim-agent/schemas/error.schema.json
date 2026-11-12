@@ -16,7 +16,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 1
+      "const": 2
     },
     "kind": {
       "const": "error"

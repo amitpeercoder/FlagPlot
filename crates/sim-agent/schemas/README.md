@@ -5,7 +5,7 @@ One JSON Schema file for each kind of answer the agent interface gives
 tests of `crates/sim-agent`, against every answer the scenario tests produce.
 
 Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
-`"version": 1` and a `"kind"` that names it.
+`"version": 2` and a `"kind"` that names it.
 
 | Kind | File | Given by |
 | --- | --- | --- |
@@ -40,17 +40,23 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 1. A field removed from an answer, or a field whose meaning
-changes, makes the version 2. A field added does not change it, so a reader
-must ignore fields it does not know. (The schemas here set
-`additionalProperties: false` because they describe version 1 exactly; a
+`version` is 2. A field removed from an answer, or a field whose meaning
+changes, raises the version by one. A field added does not change it, so a
+reader must ignore fields it does not know. (The schemas here set
+`additionalProperties: false` because they describe this version exactly; a
 reader of a newer minor change should not.)
+
+Version 2 (decision 0065) took the enemy's units out of the briefing: `forces`
+of a fight became `force`, the side's own; `target` left a salvo fired and a
+fighter's fire; `raid` left the guns' fire; `air_group` left a raid on a base;
+and `by` of an attack on a ship became `"ship"` or `"aircraft"`. Nothing else
+changed.
 
 ## What is not in an answer
 
 An answer holds nothing of the enemy that the side may not know (decisions
-0012 and 0047): an enemy unit appears only as a contact or, by the log's
-number, in an event the side may see. Asked about anything it does not know of,
+0012, 0047 and 0065): an enemy ship, task force or air group appears only as a
+contact. No event the side may see names one. Asked about anything it does not know of,
 `get_entity` and `explain` give the same `not_known` document, which carries
 nothing of the question.
 
@@ -175,9 +181,12 @@ changes a rule, a result or a hash.
 - `port_size` and `airfield_size` of a base are the map's, 0 where it has none.
   No rule reads the airfield size; the port size sets only how fast cargo is
   worked.
-- The text calls an enemy unit in a raid, an attack or a gun's target "enemy".
-  The number is the log's and nothing else is known of it (decision 0047, 8);
-  `get_entity` says "not known" for it as for every enemy unit.
+- An enemy unit in a raid, an attack or a fight is not named, in the JSON or
+  in the text (decision 0065, which replaced item 8 of decision 0047). A fight
+  has `force`, the side's own; fire, a raid and an attack on a ship have no
+  field for the enemy; an attack on a ship says `by`: `"ship"` or
+  `"aircraft"`. An air attack flown has `target` null. An enemy base is still
+  named.
 - An arrival "due day N" joins its group in the night pulse that begins day N;
   the text says so.
 - `set_search_arc` and `set_air_mission` carry their rules in the field

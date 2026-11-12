@@ -1,6 +1,6 @@
 # 0061: A search that sighted is shown without its distance or its chance
 
-Status: decisions 1 to 4 are confirmed. The designer approved the change on Nov 12, 2026. It amends the table of kinds in decision 0047, and follows decision 0060. The question at the end needs review.
+Status: decisions 1 to 4 are confirmed. The designer approved the change on Nov 12, 2026. It amends the table of kinds in decision 0047, and follows decision 0060. The question at the end was answered on Nov 12, 2026: the number is hidden, and decision 0065 does it. Since then the cut event holds the air group alone and reads "air_group:7 searched and sighted a force".
 
 ## The gap
 
@@ -38,7 +38,7 @@ Row 40 of `docs/rules/differences.md` recorded it when decision 0060 was made. I
 | Writes | Nothing. No state, no event, no random draw, no change to the hash |
 | Where | `side_events.rs`: `SideEventKind::SearchAttempt`, `seen`, `own_factors` |
 
-## A question this does not settle (needs review)
+## A question this does not settle (answered by decision 0065)
 
 The cut event still names the enemy task force by its number in the log, as decision 0047, item 8, has every event name an enemy unit. So do the cut air fight, air attack and anti-aircraft events.
 

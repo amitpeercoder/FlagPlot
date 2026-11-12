@@ -79,6 +79,10 @@ function checkSideViews(replay) {
   for (const side of Core.SIDES) {
     const label = side + ' view';
     const sv = replay.side_views[side];
+    const enemyUnits = new Set();
+    for (const [list, word] of [['ships', 'ship'], ['task_forces', 'task_force'], ['air_groups', 'air_group']]) {
+      for (const u of replay.initial[list] || []) if (u.side !== side) enemyUnits.add(word + ':' + u.id);
+    }
     let last = 0;
     sv.events.forEach((e, i) => {
       assert(e.n === i + 1, label + ': event ' + (i + 1) + ' is numbered ' + e.n + ', not 1, 2, 3 in order');
@@ -92,7 +96,16 @@ function checkSideViews(replay) {
         if (c.event !== undefined) assert(Number.isInteger(c.event) && c.event >= 1 && c.event < e.n, label + ': event ' + e.n + ' cites event ' + c.event + ', which is not an earlier event of this side');
         else assert(Number.isInteger(c.order), label + ': event ' + e.n + ' has a cause that is neither an order nor an event');
       }
-      if (e.cut) for (const k of ['chance', 'expected', 'hits', 'hits_on_aircraft']) assert(!(e.data && k in e.data), label + ': cut event ' + e.n + ' carries ' + k);
+      // An event cut of nothing but the enemy's name keeps its own figures (decision 0065): a raid on the
+      // side's own base (which has no air group), its own sighting and the alarm its force heard.
+      const nameOnly = e.kind === 'sighting_roll' || e.kind === 'alarm_roll' || (e.kind === 'base_attacked' && !(e.data && 'air_group' in e.data));
+      if (e.cut && !nameOnly) for (const k of ['chance', 'expected', 'hits', 'hits_on_aircraft']) assert(!(e.data && k in e.data), label + ': cut event ' + e.n + ' carries ' + k);
+      // No event a side is given names an enemy ship, task force or air group, in its entities or its
+      // text (decision 0065). The exception is the target the side wrote in its own order.
+      if (!/^order_/.test(e.kind)) {
+        const named = new Set([...(e.entities || []), ...(e.text.match(/(ship|task_force|air_group):\d+/g) || [])]);
+        for (const unit of named) assert(!enemyUnits.has(unit), label + ': event ' + e.n + ' names ' + unit + ', which is the enemy\'s');
+      }
     });
     assert(sv.events.length <= replay.events.length, label + ': more events than the log');
 

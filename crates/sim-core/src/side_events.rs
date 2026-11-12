@@ -44,11 +44,14 @@
 use core::fmt;
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::events::{AirFirer, AirTarget, Breakdown, Cause, Event, EventKind, Factor, Weapon};
+use crate::events::{
+    AirFirer, AirTarget, Breakdown, Cause, EngagementEndReason, Event, EventKind, Factor, Weapon,
+};
 use crate::fixed::Fixed;
+use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::state::{Side, TruthState};
-use crate::time::Pulse;
+use crate::time::{ClockTime, Pulse};
 
 /// An event as one side may know it.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -83,125 +86,140 @@ pub struct SideBreakdown {
 pub enum SideEventKind {
     /// The event as the log has it.
     Whole(EventKind),
-    /// The side's own salvo: that it fired, at what, and with how many shots.
+    /// The side's own salvo: that it fired, and with how many shots. Not the
+    /// ship it fired at, which is the enemy's (decision 0065).
     Salvo {
         round: u32,
         firer: ShipId,
-        target: ShipId,
         weapon: Weapon,
         shots: Fixed,
     },
-    /// A salvo fired at the side's ship: that it was shot at, by which ship
-    /// and with what. Not the shots, nor what they did (the hits it took
-    /// reach it as `ShipDamaged`).
+    /// A salvo fired at the side's ship: that it was shot at, and with what.
+    /// Not the shots, nor what they did (the hits it took reach it as
+    /// `ShipDamaged`), nor the ship that fired.
     SalvoAgainst {
         round: u32,
-        firer: ShipId,
         target: ShipId,
         weapon: Weapon,
     },
-    /// An air attack on the side's ship: by which group, on which ship, and
-    /// how many aircraft it can count. Not the chance or the hits.
+    /// An air attack on the side's ship: on which ship of which force, and
+    /// how many aircraft it can count. Not the chance or the hits, nor the
+    /// air group that attacked.
     AirAttackAgainst {
-        air_group: AirGroupId,
         task_force: TaskForceId,
         ship: ShipId,
         shots: Fixed,
     },
-    /// The side's own air attack on a ship.
+    /// The side's own air attack on a ship. Not the ship or its force.
     AirAttack {
         air_group: AirGroupId,
-        task_force: TaskForceId,
-        ship: ShipId,
         weapon: Weapon,
         shots: Fixed,
     },
-    /// The side's own fighters firing in a fight in the air.
+    /// The side's own fighters firing in a fight in the air. Not the air
+    /// group they fired at.
     AirFight {
         firer: AirGroupId,
-        target: AirGroupId,
         firing: AirFirer,
         at: AirTarget,
         shots: Fixed,
     },
-    /// The side's own ships firing at a raid.
+    /// The side's own ships firing at a raid. Not the raid's air group.
     AntiAircraftFire {
         task_force: TaskForceId,
-        air_group: AirGroupId,
         shots: Fixed,
     },
-    /// The side's own base firing at a raid.
-    BaseAntiAircraftFire {
-        base: BaseId,
-        air_group: AirGroupId,
-        shots: Fixed,
-    },
+    /// The side's own base firing at a raid. Not the raid's air group.
+    BaseAntiAircraftFire { base: BaseId, shots: Fixed },
     /// The side's own bombs falling on an enemy base: that it attacked and
-    /// with how many shots, not what they hit.
+    /// with how many shots, not what they hit. The base is named: a base is
+    /// on the map for both sides, and the side ordered the strike on it.
     BaseAttacked {
         air_group: AirGroupId,
         base: BaseId,
         shots: Fixed,
     },
-    /// The side's own search that sighted a force: which group, and the
-    /// force as the log names it. Not the distance or the chance, which are
-    /// worked from where the force really was, while the report that follows
-    /// may name a neighbouring hex (decision 0061).
-    SearchAttempt {
-        air_group: AirGroupId,
+    /// A raid on the side's own base: everything the log has but the air
+    /// group that raided.
+    BaseAttackedAgainst {
+        base: BaseId,
+        shots: Fixed,
+        chance: Fixed,
+        expected: Fixed,
+        hits: u32,
+        hits_on_aircraft: u32,
+        hits_on_supply: u32,
+    },
+    /// The side's own search that sighted a force: which group. Not the
+    /// distance or the chance, which are worked from where the force really
+    /// was, while the report that follows may name a neighbouring hex
+    /// (decision 0061); and not the force, which the report does not name
+    /// either (decisions 0012 and 0065).
+    SearchAttempt { air_group: AirGroupId },
+    /// A surface fight the side knows of has begun. `task_force` is the
+    /// side's own of the two forces the log names.
+    EngagementBegun {
         task_force: TaskForceId,
+        hex: Hex,
+        elapsed_hours: Fixed,
+    },
+    /// A surface fight the side knows of has ended. `task_force` is the
+    /// side's own of the two forces the log names.
+    EngagementEnded {
+        round: u32,
+        task_force: TaskForceId,
+        hex: Hex,
+        reason: EngagementEndReason,
+    },
+    /// The side's own force looked and sighted. Not the force it sighted.
+    SightingRoll {
+        round: u32,
+        task_force: TaskForceId,
+        chance: Fixed,
+        fatigue_factor: Fixed,
+    },
+    /// The side's own force was surprised. Not by which force.
+    ForceSurprised { round: u32, task_force: TaskForceId },
+    /// The side's own force slipped away. Not from which force.
+    ForceSlippedAway { round: u32, task_force: TaskForceId },
+    /// The side's own force heard a fight and was alarmed. Not the forces
+    /// that fought.
+    AlarmRoll {
+        task_force: TaskForceId,
+        chance: Fixed,
     },
 }
 
 impl SideEventKind {
-    /// The entities the event is about, as the full event names them.
+    /// The entities the event names. A whole event names only the side's own
+    /// units, a base, a contact or the target the side itself gave an order.
     pub fn entities(&self) -> Vec<EntityRef> {
         match self {
             SideEventKind::Whole(kind) => kind.entities(),
-            SideEventKind::Salvo { firer, target, .. }
-            | SideEventKind::SalvoAgainst { firer, target, .. } => {
-                vec![EntityRef::Ship(*firer), EntityRef::Ship(*target)]
+            SideEventKind::Salvo { firer: ship, .. }
+            | SideEventKind::SalvoAgainst { target: ship, .. } => vec![EntityRef::Ship(*ship)],
+            SideEventKind::AirAttackAgainst {
+                task_force, ship, ..
+            } => vec![EntityRef::TaskForce(*task_force), EntityRef::Ship(*ship)],
+            SideEventKind::AirAttack { air_group, .. }
+            | SideEventKind::AirFight {
+                firer: air_group, ..
             }
-            SideEventKind::AirAttack {
-                air_group,
-                task_force,
-                ship,
-                ..
+            | SideEventKind::SearchAttempt { air_group } => vec![EntityRef::AirGroup(*air_group)],
+            SideEventKind::AntiAircraftFire { task_force, .. }
+            | SideEventKind::EngagementBegun { task_force, .. }
+            | SideEventKind::EngagementEnded { task_force, .. }
+            | SideEventKind::SightingRoll { task_force, .. }
+            | SideEventKind::ForceSurprised { task_force, .. }
+            | SideEventKind::ForceSlippedAway { task_force, .. }
+            | SideEventKind::AlarmRoll { task_force, .. } => {
+                vec![EntityRef::TaskForce(*task_force)]
             }
-            | SideEventKind::AirAttackAgainst {
-                air_group,
-                task_force,
-                ship,
-                ..
-            } => vec![
-                EntityRef::AirGroup(*air_group),
-                EntityRef::TaskForce(*task_force),
-                EntityRef::Ship(*ship),
-            ],
-            SideEventKind::AirFight { firer, target, .. } => {
-                vec![EntityRef::AirGroup(*firer), EntityRef::AirGroup(*target)]
-            }
-            SideEventKind::AntiAircraftFire {
-                task_force,
-                air_group,
-                ..
-            } => vec![
-                EntityRef::TaskForce(*task_force),
-                EntityRef::AirGroup(*air_group),
-            ],
-            SideEventKind::BaseAntiAircraftFire {
-                base, air_group, ..
-            }
-            | SideEventKind::BaseAttacked {
+            SideEventKind::BaseAntiAircraftFire { base, .. }
+            | SideEventKind::BaseAttackedAgainst { base, .. } => vec![EntityRef::Base(*base)],
+            SideEventKind::BaseAttacked {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
-            SideEventKind::SearchAttempt {
-                air_group,
-                task_force,
-            } => vec![
-                EntityRef::AirGroup(*air_group),
-                EntityRef::TaskForce(*task_force),
-            ],
         }
     }
 }
@@ -213,67 +231,102 @@ impl fmt::Display for SideEventKind {
             SideEventKind::Salvo {
                 round,
                 firer,
-                target,
                 weapon,
                 shots,
-            } => write!(
-                f,
-                "round {round}: {firer} {} at {target}: {shots} shots",
-                weapon.name()
-            ),
+            } => write!(f, "round {round}: {firer} {}: {shots} shots", weapon.name()),
             SideEventKind::SalvoAgainst {
                 round,
-                firer,
                 target,
                 weapon,
-            } => write!(f, "round {round}: {firer} {} at {target}", weapon.name()),
-            SideEventKind::AirAttackAgainst {
-                air_group,
-                ship,
-                shots,
-                ..
-            } => write!(f, "{air_group} attacks {ship} with {shots} aircraft"),
+            } => write!(f, "round {round}: {} at {target}", weapon.name()),
+            SideEventKind::AirAttackAgainst { ship, shots, .. } => {
+                write!(f, "{ship} attacked by {shots} aircraft")
+            }
             SideEventKind::AirAttack {
                 air_group,
-                ship,
                 weapon,
                 shots,
-                ..
-            } => write!(f, "{air_group} {} at {ship}: {shots} shots", weapon.name()),
+            } => write!(f, "{air_group} {} at a ship: {shots} shots", weapon.name()),
             SideEventKind::AirFight {
                 firer,
-                target,
                 firing,
                 at,
                 shots,
             } => write!(
                 f,
-                "{firer} {} at the {} of {target}: {shots} shots",
+                "{firer} {} at the enemy's {}: {shots} shots",
                 firing.name(),
                 at.name()
             ),
-            SideEventKind::AntiAircraftFire {
-                task_force,
-                air_group,
-                shots,
-            } => write!(
-                f,
-                "{task_force} guns at the raid of {air_group}: {shots} shots"
-            ),
-            SideEventKind::BaseAntiAircraftFire {
-                base,
-                air_group,
-                shots,
-            } => write!(f, "{base} guns at the raid of {air_group}: {shots} shots"),
+            SideEventKind::AntiAircraftFire { task_force, shots } => {
+                write!(f, "{task_force} guns at a raid: {shots} shots")
+            }
+            SideEventKind::BaseAntiAircraftFire { base, shots } => {
+                write!(f, "{base} guns at a raid: {shots} shots")
+            }
             SideEventKind::BaseAttacked {
                 air_group,
                 base,
                 shots,
             } => write!(f, "{air_group} bombs at {base}: {shots} shots"),
-            SideEventKind::SearchAttempt {
-                air_group,
+            SideEventKind::BaseAttackedAgainst {
+                base,
+                shots,
+                chance,
+                expected,
+                hits,
+                hits_on_aircraft,
+                hits_on_supply,
+            } => write!(
+                f,
+                "bombs at {base}: {shots} shots x {chance} = {expected} expected, {hits} {}: {hits_on_aircraft} on aircraft, {hits_on_supply} on supply, {} on nothing",
+                if *hits == 1 { "hit" } else { "hits" },
+                hits - hits_on_aircraft - hits_on_supply
+            ),
+            SideEventKind::SearchAttempt { air_group } => {
+                write!(f, "{air_group} searched and sighted a force")
+            }
+            SideEventKind::EngagementBegun {
                 task_force,
-            } => write!(f, "{air_group} searched and sighted {task_force}"),
+                hex,
+                elapsed_hours,
+            } => write!(
+                f,
+                "{task_force} met the enemy at {hex} at {}: engagement begun",
+                ClockTime::from_elapsed(*elapsed_hours)
+            ),
+            SideEventKind::EngagementEnded {
+                round,
+                task_force,
+                hex,
+                reason,
+            } => write!(
+                f,
+                "engagement of {task_force} at {hex} ended in round {round}: {}",
+                reason.name()
+            ),
+            SideEventKind::SightingRoll {
+                round,
+                task_force,
+                chance,
+                fatigue_factor,
+            } => {
+                write!(f, "round {round}: {task_force} looked, chance {chance}")?;
+                // Shown only where fatigue is in play (decision 0037).
+                if *fatigue_factor != Fixed::ONE {
+                    write!(f, " (fatigue factor {fatigue_factor})")?;
+                }
+                write!(f, ": sighted")
+            }
+            SideEventKind::ForceSurprised { round, task_force } => {
+                write!(f, "round {round}: {task_force} was surprised")
+            }
+            SideEventKind::ForceSlippedAway { round, task_force } => {
+                write!(f, "round {round}: {task_force} slipped away")
+            }
+            SideEventKind::AlarmRoll { task_force, chance } => {
+                write!(f, "{task_force} heard a fight, chance {chance}: alarmed")
+            }
         }
     }
 }
@@ -394,20 +447,43 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::ForceRetired { task_force }
         | EventKind::ForceStoodDown { task_force }
         | EventKind::ForceAlertedByContact { task_force, .. }
-        // The force surprised, not the one that surprised it.
-        | EventKind::ForceSurprised { task_force, .. }
         | EventKind::ForceBecameAlert { task_force, .. }
-        | EventKind::ForceBrokeOff { task_force, .. }
-        // The force that slipped away, not the one it slipped away from.
-        | EventKind::ForceSlippedAway { task_force, .. } => whole_if(own_force(task_force)),
+        | EventKind::ForceBrokeOff { task_force, .. } => whole_if(own_force(task_force)),
+        // The force surprised, without the one that surprised it.
+        EventKind::ForceSurprised {
+            round, task_force, ..
+        } => cut_if(
+            own_force(task_force),
+            SideEventKind::ForceSurprised {
+                round: *round,
+                task_force: *task_force,
+            },
+        ),
+        // The force that slipped away, without the one it slipped away from.
+        EventKind::ForceSlippedAway {
+            round, task_force, ..
+        } => cut_if(
+            own_force(task_force),
+            SideEventKind::ForceSlippedAway {
+                round: *round,
+                task_force: *task_force,
+            },
+        ),
         EventKind::ShipsDetached { parent, .. } => whole_if(own_force(parent)),
         // The hearer's, only if it was alarmed: a failed alarm means the
-        // force noticed nothing. It names the forces that fought.
+        // force noticed nothing. Without the forces that fought.
         EventKind::AlarmRoll {
             task_force,
+            chance,
             alarmed,
             ..
-        } => whole_if(*alarmed && own_force(task_force)),
+        } => cut_if(
+            *alarmed && own_force(task_force),
+            SideEventKind::AlarmRoll {
+                task_force: *task_force,
+                chance: *chance,
+            },
+        ),
 
         // Ships.
         EventKind::FuelBurned { ship, .. }
@@ -443,8 +519,9 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::AirGroupReturned { air_group, .. } => whole_if(own_group(air_group)),
 
         // Bases.
-        EventKind::BaseSupplyDestroyed { base, .. }
-        | EventKind::BaseSupplySpent { base, .. } => whole_if(own_base(base)),
+        EventKind::BaseSupplyDestroyed { base, .. } | EventKind::BaseSupplySpent { base, .. } => {
+            whole_if(own_base(base))
+        }
 
         // A side's own: the report, the claim, what became of its contacts.
         EventKind::ReportReceived { side: owner, .. }
@@ -453,18 +530,56 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::ClaimReceived { side: owner, .. }
         | EventKind::ContactNotThere { side: owner, .. } => whole_if(*owner == side),
 
-        // Whole to a side that has come to know of the fight.
-        EventKind::EngagementBegun { .. } | EventKind::EngagementEnded { .. } => {
-            whole_if(knows_fight)
-        }
+        // For a side that has come to know of the fight, with its own force
+        // of the two and without the enemy's.
+        EventKind::EngagementBegun {
+            a,
+            b,
+            hex,
+            elapsed_hours,
+        } => cut_if(
+            knows_fight,
+            SideEventKind::EngagementBegun {
+                task_force: if own_force(a) { *a } else { *b },
+                hex: *hex,
+                elapsed_hours: *elapsed_hours,
+            },
+        ),
+        EventKind::EngagementEnded {
+            round,
+            a,
+            b,
+            hex,
+            reason,
+        } => cut_if(
+            knows_fight,
+            SideEventKind::EngagementEnded {
+                round: *round,
+                task_force: if own_force(a) { *a } else { *b },
+                hex: *hex,
+                reason: *reason,
+            },
+        ),
 
-        // Its own roll if it sighted. A roll that did not is hidden, for
-        // either side: it would say there was something to be found.
+        // Its own roll if it sighted, without the force it sighted. A roll
+        // that did not is hidden, for either side: it would say there was
+        // something to be found.
         EventKind::SightingRoll {
+            round,
             task_force,
+            chance,
+            fatigue_factor,
             sighted,
             ..
-        } => whole_if(*sighted && own_force(task_force)),
+        } => cut_if(
+            *sighted && own_force(task_force),
+            SideEventKind::SightingRoll {
+                round: *round,
+                task_force: *task_force,
+                chance: *chance,
+                fatigue_factor: *fatigue_factor,
+            },
+        ),
 
         // Its own firing, without the hits scored.
         EventKind::Salvo {
@@ -479,17 +594,15 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                 Seen::Cut(SideEventKind::Salvo {
                     round: *round,
                     firer: *firer,
-                    target: *target,
                     weapon: *weapon,
                     shots: *shots,
                 })
             } else {
-                // Fired at: it knows it was shot at, by what.
+                // Fired at: it knows it was shot at, and with what.
                 cut_if(
                     own_ship(target),
                     SideEventKind::SalvoAgainst {
                         round: *round,
-                        firer: *firer,
                         target: *target,
                         weapon: *weapon,
                     },
@@ -507,8 +620,6 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             if own_group(air_group) {
                 Seen::Cut(SideEventKind::AirAttack {
                     air_group: *air_group,
-                    task_force: *task_force,
-                    ship: *ship,
                     weapon: *weapon,
                     shots: *shots,
                 })
@@ -517,7 +628,6 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                 cut_if(
                     own_ship(ship),
                     SideEventKind::AirAttackAgainst {
-                        air_group: *air_group,
                         task_force: *task_force,
                         ship: *ship,
                         shots: *shots,
@@ -527,7 +637,6 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         }
         EventKind::AirFight {
             firer,
-            target,
             firing,
             at,
             shots,
@@ -536,48 +645,50 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             own_group(firer),
             SideEventKind::AirFight {
                 firer: *firer,
-                target: *target,
                 firing: *firing,
                 at: *at,
                 shots: *shots,
             },
         ),
         EventKind::AntiAircraftFire {
-            task_force,
-            air_group,
-            shots,
-            ..
+            task_force, shots, ..
         } => cut_if(
             own_force(task_force),
             SideEventKind::AntiAircraftFire {
                 task_force: *task_force,
-                air_group: *air_group,
                 shots: *shots,
             },
         ),
-        EventKind::BaseAntiAircraftFire {
-            base,
-            air_group,
-            shots,
-            ..
-        } => cut_if(
+        EventKind::BaseAntiAircraftFire { base, shots, .. } => cut_if(
             own_base(base),
             SideEventKind::BaseAntiAircraftFire {
                 base: *base,
-                air_group: *air_group,
                 shots: *shots,
             },
         ),
 
-        // The attacker sees that it attacked; the defender sees the attack.
+        // The attacker sees that it attacked; the defender sees the attack,
+        // without the air group that made it.
         EventKind::BaseAttacked {
             air_group,
             base,
             shots,
-            ..
+            chance,
+            expected,
+            hits,
+            hits_on_aircraft,
+            hits_on_supply,
         } => {
             if own_base(base) {
-                Seen::Whole
+                Seen::Cut(SideEventKind::BaseAttackedAgainst {
+                    base: *base,
+                    shots: *shots,
+                    chance: *chance,
+                    expected: *expected,
+                    hits: *hits,
+                    hits_on_aircraft: *hits_on_aircraft,
+                    hits_on_supply: *hits_on_supply,
+                })
             } else {
                 cut_if(
                     own_group(air_group),
@@ -598,15 +709,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // may name a neighbouring hex (decision 0061). An attempt that did
         // not sight is hidden from everyone.
         EventKind::SearchAttempt {
-            air_group,
-            task_force,
-            sighted,
-            ..
+            air_group, sighted, ..
         } => cut_if(
             *sighted && own_group(air_group),
             SideEventKind::SearchAttempt {
                 air_group: *air_group,
-                task_force: *task_force,
             },
         ),
     }
@@ -617,7 +724,16 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
 /// sides' counts, and is dropped.
 fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
     match kind {
+        // Whole, or cut of nothing but the enemy's name: `side_breakdown`
+        // gives these their whole breakdown and never asks.
         SideEventKind::Whole(_)
+        | SideEventKind::BaseAttackedAgainst { .. }
+        | SideEventKind::EngagementBegun { .. }
+        | SideEventKind::EngagementEnded { .. }
+        | SideEventKind::SightingRoll { .. }
+        | SideEventKind::ForceSurprised { .. }
+        | SideEventKind::ForceSlippedAway { .. }
+        | SideEventKind::AlarmRoll { .. }
         | SideEventKind::SalvoAgainst { .. }
         | SideEventKind::AirAttackAgainst { .. } => &[],
         SideEventKind::Salvo { .. } => &[
@@ -637,6 +753,23 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
     }
 }
 
+/// True for the cut events that lack only the name of an enemy unit, and a
+/// flag that is always true for an event the side is given (decision 0065).
+/// Every quantity of the event is still shown, so its breakdown is shown
+/// whole: a factor is a name and a number and names no unit.
+fn only_a_name_is_cut(kind: &SideEventKind) -> bool {
+    matches!(
+        kind,
+        SideEventKind::BaseAttackedAgainst { .. }
+            | SideEventKind::EngagementBegun { .. }
+            | SideEventKind::EngagementEnded { .. }
+            | SideEventKind::SightingRoll { .. }
+            | SideEventKind::ForceSurprised { .. }
+            | SideEventKind::ForceSlippedAway { .. }
+            | SideEventKind::AlarmRoll { .. }
+    )
+}
+
 fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option<SideBreakdown> {
     let breakdown = breakdown.as_ref()?;
     // A claim is seen whole, and its breakdown not at all (decision 0060).
@@ -648,7 +781,7 @@ fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option
     if matches!(kind, SideEventKind::Whole(EventKind::ClaimReceived { .. })) {
         return None;
     }
-    if matches!(kind, SideEventKind::Whole(_)) {
+    if matches!(kind, SideEventKind::Whole(_)) || only_a_name_is_cut(kind) {
         return Some(SideBreakdown {
             factors: breakdown.factors.clone(),
             result: Some(breakdown.result),
@@ -915,8 +1048,11 @@ mod tests {
         Nothing,
         /// The cut variant's name and the fields of the full kind it lacks.
         Cut(&'static str, &'static [&'static str]),
+        /// The same, for the two kinds whose cut form holds the side's own
+        /// force of the log's `a` and `b` in the one field `task_force`.
+        CutOwnForce(&'static str, &'static [&'static str]),
     }
-    use Expect::{Cut, Nothing, Whole};
+    use Expect::{Cut, CutOwnForce, Nothing, Whole};
 
     struct Row {
         /// The events the example sits in, and which of them it is.
@@ -973,7 +1109,8 @@ mod tests {
         ]
     }
 
-    const SALVO_CUT: &[&str] = &["chance", "expected", "hits"];
+    /// The firer's cut of an event that also names the enemy's air group.
+    const GUNS_CUT: &[&str] = &["air_group", "chance", "expected", "hits"];
 
     /// One row for every kind of event, and the order and fight they need.
     /// An Allied unit is the first of each kind and a Japanese unit the
@@ -1106,8 +1243,8 @@ mod tests {
                 Nothing,
             ),
             // A search attempt that sighted is the searcher's own act, cut
-            // of the distance and the chance (decision 0061); one that did
-            // not is hidden from everyone.
+            // of the distance and the chance (decision 0061) and of the force
+            // (decision 0065); one that did not is hidden from everyone.
             row(
                 EventKind::SearchAttempt {
                     air_group: group(1),
@@ -1116,7 +1253,10 @@ mod tests {
                     chance: Fixed::from_ratio(1, 2),
                     sighted: true,
                 },
-                Cut("SearchAttempt", &["distance_nm", "chance", "sighted"]),
+                Cut(
+                    "SearchAttempt",
+                    &["task_force", "distance_nm", "chance", "sighted"],
+                ),
                 Nothing,
             ),
             row(
@@ -1160,7 +1300,7 @@ mod tests {
                     fatigue_factor: Fixed::ONE,
                     sighted: true,
                 },
-                Whole,
+                Cut("SightingRoll", &["enemy", "sighted"]),
                 Nothing,
             ),
             row(
@@ -1182,7 +1322,7 @@ mod tests {
                     task_force: force(1),
                     enemy: force(2),
                 },
-                Whole,
+                Cut("ForceSurprised", &["enemy"]),
                 Nothing,
             ),
             // The firer's own, without the hits scored.
@@ -1197,8 +1337,11 @@ mod tests {
                     expected: fx(6),
                     hits: 5,
                 },
-                Cut("Salvo", SALVO_CUT),
-                Cut("SalvoAgainst", &["shots", "chance", "expected", "hits"]),
+                Cut("Salvo", &["target", "chance", "expected", "hits"]),
+                Cut(
+                    "SalvoAgainst",
+                    &["firer", "shots", "chance", "expected", "hits"],
+                ),
             ),
             row(
                 EventKind::ShipDamaged {
@@ -1244,7 +1387,7 @@ mod tests {
                     task_force: force(1),
                     enemy: force(2),
                 },
-                Whole,
+                Cut("ForceSlippedAway", &["enemy"]),
                 Nothing,
             ),
             row(
@@ -1256,21 +1399,22 @@ mod tests {
                 Nothing,
                 Nothing,
             ),
-            // Begun and ended are shown, whole, to a side that has come to
-            // know of the fight. Both did here: one fired and one was fired
-            // on in round 1.
+            // Begun and ended are shown to a side that has come to know of
+            // the fight, each with its own force and without the enemy's
+            // (decision 0065). Both did here: one fired and one was fired on
+            // in round 1.
             Row {
                 log: known_fight(),
                 at: 0,
-                allied: Whole,
-                japanese: Whole,
+                allied: CutOwnForce("EngagementBegun", &["a", "b"]),
+                japanese: CutOwnForce("EngagementBegun", &["a", "b"]),
                 mirrors: true,
             },
             Row {
                 log: known_fight(),
                 at: 2,
-                allied: Whole,
-                japanese: Whole,
+                allied: CutOwnForce("EngagementEnded", &["a", "b"]),
+                japanese: CutOwnForce("EngagementEnded", &["a", "b"]),
                 mirrors: true,
             },
             sided(row(
@@ -1340,7 +1484,7 @@ mod tests {
                     chance: Fixed::from_ratio(1, 2),
                     alarmed: true,
                 },
-                Whole,
+                Cut("AlarmRoll", &["by_a", "by_b", "alarmed"]),
                 Nothing,
             ),
             // A failed alarm means the force noticed nothing.
@@ -1474,10 +1618,13 @@ mod tests {
                     expected: fx(4),
                     hits: 3,
                 },
-                Cut("AirAttack", SALVO_CUT),
+                Cut(
+                    "AirAttack",
+                    &["task_force", "ship", "chance", "expected", "hits"],
+                ),
                 Cut(
                     "AirAttackAgainst",
-                    &["weapon", "chance", "expected", "hits"],
+                    &["air_group", "weapon", "chance", "expected", "hits"],
                 ),
             ),
             row(
@@ -1500,7 +1647,7 @@ mod tests {
                     expected: Fixed::from_ratio(5, 2),
                     hits: 2,
                 },
-                Cut("AirFight", SALVO_CUT),
+                Cut("AirFight", &["target", "chance", "expected", "hits"]),
                 Nothing,
             ),
             row(
@@ -1512,7 +1659,7 @@ mod tests {
                     expected: fx(3),
                     hits: 1,
                 },
-                Cut("AntiAircraftFire", SALVO_CUT),
+                Cut("AntiAircraftFire", GUNS_CUT),
                 Nothing,
             ),
             row(
@@ -1586,10 +1733,11 @@ mod tests {
                     expected: fx(3),
                     hits: 1,
                 },
-                Cut("BaseAntiAircraftFire", SALVO_CUT),
+                Cut("BaseAntiAircraftFire", GUNS_CUT),
                 Nothing,
             ),
-            // The attacker sees that it attacked; the defender sees the raid.
+            // The attacker sees that it attacked; the defender sees the raid,
+            // without the air group that made it.
             row(
                 EventKind::BaseAttacked {
                     air_group: group(1),
@@ -1611,7 +1759,7 @@ mod tests {
                         "hits_on_supply",
                     ],
                 ),
-                Whole,
+                Cut("BaseAttackedAgainst", &["air_group"]),
             ),
             row(
                 EventKind::AircraftDestroyedOnGround {
@@ -1798,7 +1946,7 @@ mod tests {
                     "{who}: {name}"
                 );
             }
-            Cut(variant, removed) => {
+            Cut(variant, removed) | CutOwnForce(variant, removed) => {
                 assert_eq!(here.len(), 1, "{who} does not see a cut {name}");
                 let shown = format!("{:?}", here[0].kind);
                 let shown_name: String = shown
@@ -1807,7 +1955,23 @@ mod tests {
                     .collect();
                 assert_eq!(shown_name, variant, "{who}");
                 let full_fields = field_names(&format!("{:?}", full.kind));
-                let cut_fields = field_names(&shown);
+                let mut cut_fields = field_names(&shown);
+                if matches!(expect, CutOwnForce(..)) {
+                    // The one field that is not a field of the full kind: it
+                    // holds the side's own force of the log's `a` and `b`.
+                    assert!(cut_fields.remove("task_force"), "{who}: {name}");
+                    let own = match &here[0].kind {
+                        SideEventKind::EngagementBegun { task_force, .. }
+                        | SideEventKind::EngagementEnded { task_force, .. } => *task_force,
+                        other => panic!("{other:?}"),
+                    };
+                    let (EventKind::EngagementBegun { a, b, .. }
+                    | EventKind::EngagementEnded { a, b, .. }) = &full.kind
+                    else {
+                        panic!("{name}");
+                    };
+                    assert!(own == *a || own == *b, "{who}: {name}");
+                }
                 let lacks: BTreeSet<String> =
                     full_fields.difference(&cut_fields).cloned().collect();
                 let expected: BTreeSet<String> = removed.iter().map(ToString::to_string).collect();
@@ -1853,6 +2017,94 @@ mod tests {
     }
 
     #[test]
+    fn no_event_a_side_is_given_names_an_enemy_ship_force_or_air_group() {
+        // Decision 0065. Over every row of the table, both ways round: each
+        // unit a side's event names is not the enemy's (a force made in the
+        // game is not in the table's owners), or is a base or a contact. The one exception is the target of an order the side
+        // itself gave, which is the side's own words.
+        for row in table() {
+            let events = log(row.log.clone());
+            for mirror in [false, true] {
+                if mirror && !row.mirrors {
+                    continue;
+                }
+                let owners = owners(mirror);
+                for side in [Side::Allied, Side::Japanese] {
+                    for event in project(side, &events, &owners) {
+                        if matches!(
+                            event.kind,
+                            SideEventKind::Whole(
+                                EventKind::OrderAccepted { .. } | EventKind::OrderRejected { .. }
+                            )
+                        ) {
+                            continue;
+                        }
+                        for entity in event.kind.entities() {
+                            let own = match entity {
+                                EntityRef::Ship(_)
+                                | EntityRef::TaskForce(_)
+                                | EntityRef::AirGroup(_) => {
+                                    owners.entity(entity).is_none_or(|owner| owner == side)
+                                }
+                                EntityRef::Base(_)
+                                | EntityRef::Contact(_)
+                                | EntityRef::Pilot(_)
+                                | EntityRef::LandUnit(_) => true,
+                            };
+                            assert!(own, "{side:?} is shown {entity} in {:?}", event.kind);
+                        }
+                        // And the text of it names none either: unit 1 of
+                        // each kind is one side's and unit 2 the other's.
+                        let enemy = if (side == Side::Allied) == mirror {
+                            1
+                        } else {
+                            2
+                        };
+                        let text = event.kind.to_string();
+                        for unit in ["ship", "task_force", "air_group"] {
+                            assert!(
+                                !text.contains(&format!("{unit}:{enemy}")),
+                                "{side:?} reads {text}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn an_event_cut_of_nothing_but_the_enemys_name_keeps_its_whole_breakdown() {
+        let factor = |name, n| Factor { name, value: fx(n) };
+        let mut events = log(vec![begun(), roll(1, 1, true)]);
+        events[1].breakdown = Some(Breakdown {
+            factors: vec![factor("base_chance", 1), factor("night_factor", 2)],
+            result: fx(2),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        assert_eq!(
+            shown[1].kind,
+            SideEventKind::SightingRoll {
+                round: 1,
+                task_force: force(1),
+                chance: Fixed::from_ratio(1, 4),
+                fatigue_factor: Fixed::ONE,
+            }
+        );
+        assert_eq!(
+            shown[1].breakdown,
+            Some(SideBreakdown {
+                factors: vec![factor("base_chance", 1), factor("night_factor", 2)],
+                result: Some(fx(2)),
+            })
+        );
+        assert_eq!(
+            shown[0].to_string(),
+            "#1 D1 night     task_force:1 met the enemy at (3,-2) at D1 19:00: engagement begun"
+        );
+    }
+
+    #[test]
     fn a_cut_event_is_a_removal_the_whole_is_the_log_event_and_nothing_is_added() {
         // Whole: equal to the log's kind. Cut: only fields of the full kind,
         // with the values the log has.
@@ -1872,14 +2124,13 @@ mod tests {
             SideEventKind::Salvo {
                 round: 2,
                 firer: ship(1),
-                target: ship(2),
                 weapon: Weapon::Torpedo,
                 shots: fx(8),
             }
         );
         assert_eq!(
             shown[0].to_string(),
-            "#1 D1 night     round 2: ship:1 torpedoes at ship:2: 8 shots"
+            "#1 D1 night     round 2: ship:1 torpedoes: 8 shots"
         );
     }
 
@@ -1985,7 +2236,6 @@ mod tests {
             shown[0].kind,
             SideEventKind::SearchAttempt {
                 air_group: group(1),
-                task_force: force(2),
             }
         );
         assert_eq!(
@@ -2199,10 +2449,7 @@ mod tests {
             .iter()
             .filter(|e| e.id.raw() != 1 && e.id.raw() != 8)
             .all(|e| matches!(e.kind, SideEventKind::Salvo { round: 3, .. })
-                || matches!(
-                    &e.kind,
-                    SideEventKind::Whole(EventKind::SightingRoll { round: 3, .. })
-                )));
+                || matches!(&e.kind, SideEventKind::SightingRoll { round: 3, .. })));
     }
 
     #[test]
