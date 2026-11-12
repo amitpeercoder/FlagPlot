@@ -21,9 +21,10 @@ Neither holds up step 2: no measure rests on either, and the result on the objec
 
 ### Base open
 
-4. **Base open is counted by days.** At the end of each day the base is open if its supply is above zero and at least one ready aircraft of an air group is at it: the same two conditions as now, asked every day and not once.
-5. **The points are for the whole game, as now, and are earned by the share of days.** A side holding `base_open` with 10 points for a base that was open on 21 days of 28 scores 7.5. With `closed = true` the share is of the days it was shut. So a scenario's points keep their meaning, and the two sides' objectives on one base still sum to the whole.
-6. **The count comes from the event log,** as every other objective's does. At the end of each day the engine records, for each base that an objective of either side names, its supply and its ready aircraft. The event changes no state. The side that owns the base sees it; the other side does not.
+4. **Base open is counted by days.** At the end of each day, which is after the afternoon pulse when the day's strikes have landed and not the night that opens the next day, the base is open if its supply is above zero and at least one ready aircraft of an air group is at it: the same two conditions as now, asked every day and not once.
+5. **The points are for the whole game, as now, and are earned by the share of days.** A side holding `base_open` with 10 points for a base that was open on 21 days of 28 scores 7.5. The share is of the days resolved, for a game that ends early. With `closed = true` the share is of the days it was shut. So a scenario's points keep their meaning, and the two sides' objectives on one base still sum to the whole.
+6. **The count comes from the event log,** as every other objective's does. At the end of each day the engine records, for every base in the game, its supply and its ready aircraft. The event changes no state. The side that owns the base sees it, and learns nothing it did not know; the other side does not see it.
+6a. **Every base, whatever the objectives say.** The first draft recorded only the bases an objective names. The rulebook review found two faults in that. A side given a daily event for one of its bases and no other would learn that the enemy holds an objective on it, and a side is told its own objectives only (decision 0055). And the engine would be reading the objectives to choose what to record, where chapter 6 says no rule reads them. Recording every base closes both.
 7. **What a side knows is as now.** For a base of its own, basis `exact`: its own days. For an enemy base, `not_observable`, and the count is 0.
 
 ## A small worked case
@@ -53,11 +54,12 @@ A game of four days. The Allied side holds `cargo_landed` at base 1 at 0.005 poi
 - **A base that is open at dusk and was useless all day,** for want of fuel or with every pilot spent. The two conditions are the ones the objective already has. A better test of a working field is a question for the scale as a whole.
 - **"Out of the campaign"** and the other reworking of the scale, which stay on the opening list.
 - **Cargo destroyed ashore.** A ton landed and then bombed still counts as landed.
+- **Fuel landed and then taken as bunker fuel.** A ship that refuels from the base's stock records `ShipRefuelled`, not `CargoLoaded`, so the fuel still counts as landed. Bunker fuel cannot be unloaded again, so there is no way round the rule here: the rulebook review looked for one.
 
 ## What it costs
 
 - The results of the full slice and of Rabaul against Guadalcanal change, and so do the recorded games' scores. Every hand calculation that includes either objective is worked again by the architect before the code.
-- One new kind of event, with its line in `side_events.rs` saying who may see it. No new state. Whether an event that changes no state is the right carrier, or the day's count is better kept another way, is the build architect's to settle before the hand calculation, within decision 6.
+- One new kind of event, with its line in `side_events.rs` saying who may see it. No new state. It is recorded for every base on every day, so the event numbers move in every golden file and transcript of a scenario that has a base, not only in the two scenarios that hold the objective. Whether an event that changes no state is the right carrier, or the day's count is better kept another way, is the build architect's to settle before the hand calculation, within decision 6.
 - Chapter 6 of the rulebook and the glossary change in the same pull request as the code.
 - The baseline reports' tallies of outcomes for the two scenarios are remade.
 
@@ -65,11 +67,11 @@ A game of four days. The Allied side holds `cargo_landed` at base 1 at 0.005 poi
 
 | | |
 | --- | --- |
-| Reads | The `CargoLoaded` and `CargoUnloaded` events of a side's ships at a named base. At the end of each day, the supply and the ready aircraft of each base an objective names |
-| Writes | No state. One event a day for each such base |
+| Reads | The `CargoLoaded` and `CargoUnloaded` events of a side's ships at a named base. At the end of each day, the supply and the ready aircraft of every base |
+| Writes | No state. One event a day for every base |
 
 ## Questions for the designer
 
 1. **Cargo landed: net of what was loaded back at that base (recommended), or only cargo that came from another base?** The second is closer to the idea and costs new state for every ship.
 2. **Base open: the share of days (recommended), or open on every day or it does not score?**
-3. **Who builds it?** The rulebook review session offered to build from this record; the build session is on experience (0064) and the surprised-force plan (0066).
+3. **Who builds it?** The rulebook review session, which found the fault in decision 6 and reviewed this plan, offered to build from this record; the build session is on experience (0064) and the surprised-force plan (0066).
