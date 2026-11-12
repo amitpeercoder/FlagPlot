@@ -216,6 +216,8 @@
 //! often each ship is sunk over seeds 1 to 1000, and asserts nothing about
 //! those counts.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::OnceLock;
@@ -261,7 +263,7 @@ fn load() -> Scenario {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../data/scenarios")
         .join("04_savo_island.toml");
-    Scenario::load(&path).expect("the scenario loads")
+    common::load(&path).expect("the scenario loads")
 }
 
 #[derive(Clone, Debug)]

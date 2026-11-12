@@ -19,6 +19,8 @@
 //!    side cannot know gives the side the same events, field for field, and
 //!    the side that can know it sees the difference.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -27,7 +29,6 @@ use sim_core::ids::{EntityRef, EventId};
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{Side, TruthState};
 use sim_core::World;
-use sim_data::Scenario;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 
@@ -42,7 +43,7 @@ fn scenario_text(name: &str) -> String {
 /// Runs a scenario from `text` (which sits where the file `name` does) with
 /// `seed` to its end.
 fn run_text(text: &str, name: &str, seed: u64) -> World {
-    let scenario = Scenario::from_text(text, &scenario_path(name)).expect("the scenario loads");
+    let scenario = common::from_text(text, &scenario_path(name)).expect("the scenario loads");
     let mut scenario = scenario.with_seed(seed).expect("a seed can be set");
     scenario.run_to_end().expect("the run resolves");
     scenario.world
@@ -968,7 +969,7 @@ struct Found {
 fn compare(base_name: &str, seeds: std::ops::RangeInclusive<u64>, make: Make, found: &mut Found) {
     let text = scenario_text(base_name);
     let doc = parse_doc(&text);
-    let world0 = Scenario::from_text(&text, &scenario_path(base_name))
+    let world0 = common::from_text(&text, &scenario_path(base_name))
         .expect("loads")
         .world;
     for side in SIDES {

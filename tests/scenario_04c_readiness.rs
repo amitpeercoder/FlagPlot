@@ -218,9 +218,11 @@
 //!   was written for.
 //! - A replay of any seed reproduces the daily hash.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{Cause, EngagementEndReason, Event, EventKind, Weapon};
@@ -259,7 +261,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 4c2a loads")
+    common::load(&scenario_path()).expect("scenario 4c2a loads")
 }
 
 fn pulse_index(pulse: Pulse) -> usize {
@@ -910,40 +912,20 @@ fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
 // Variants: the scenario with edits to its text.
 // ---------------------------------------------------------------------
 
-/// Copies the data into a folder under the build directory, makes each
-/// exact, asserted-unique text replacement in the named copied file, and
-/// loads the copied scenario. Nothing in the repository's data folder is
-/// touched. Each edit is (file under data/, original text, changed text).
-fn variant(tag: &str, edits: &[(&str, &str, &str)]) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("readiness_{tag}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        SCENARIO_FILE,
-        "map/placeholder_night_action.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        let mut text = fs::read_to_string(data.join(file)).expect("read a data file");
-        for (target, original, changed) in edits.iter().filter(|(target, ..)| *target == file) {
-            assert_eq!(
-                text.matches(original).count(),
-                1,
-                "{target}: the text {original:?} appears exactly once"
-            );
-            text = text.replace(original, changed);
-        }
-        fs::write(root.join(file), text).expect("write a variant file");
-    }
-    for (target, ..) in edits {
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text. Nothing in the repository's data folder
+/// is touched. Each edit is (file under data/, original text, changed text);
+/// only the scenario file may be named.
+fn variant(_tag: &str, edits: &[(&str, &str, &str)]) -> Scenario {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../data")
+        .join(SCENARIO_FILE);
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
+    for (target, original, changed) in edits {
         assert_eq!(*target, SCENARIO_FILE, "unknown file {target}");
+        text = common::replace_once(&text, original, changed);
     }
-    Scenario::load(&root.join(SCENARIO_FILE)).expect("the variant loads")
+    common::from_text(&text, &path).expect("the variant loads")
 }
 
 /// The anchor in the scenario file before which a contact block goes.
@@ -2036,7 +2018,7 @@ fn a_normal_force_is_alert_only_after_an_event_that_pulse() {
 fn scenario_4a_keeps_its_numbers() {
     let path =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/04a_night_action.toml");
-    let mut scenario = Scenario::load(&path).expect("scenario 4a loads");
+    let mut scenario = common::load(&path).expect("scenario 4a loads");
     scenario.run_to_end().expect("the run resolves");
     let p = parse(
         0,

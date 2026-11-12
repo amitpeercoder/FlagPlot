@@ -133,6 +133,8 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -160,7 +162,7 @@ fn text() -> String {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&path()).expect("scenario 1b loads")
+    common::load(&path()).expect("scenario 1b loads")
 }
 
 /// The scenario with its text edited before the loader sees it. Panics if
@@ -169,7 +171,7 @@ fn variant(edit: impl Fn(&str) -> String) -> Scenario {
     let original = text();
     let edited = edit(&original);
     assert_ne!(original, edited, "the edit changed nothing");
-    Scenario::from_text(&edited, &path()).expect("the variant loads")
+    common::from_text(&edited, &path()).expect("the variant loads")
 }
 
 fn tons(value: i64) -> Fixed {
@@ -763,7 +765,7 @@ fn neither_base_has_fuel_so_nothing_is_refuelled() {
     // The first three days are scenario 1, event for event: its whole log is
     // the start of this one (the same numbers, causes and kinds), and what
     // follows it is the order to go back and the steaming of day 3 and 4.
-    let mut transit = Scenario::load(
+    let mut transit = common::load(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/01_transit.toml"),
     )
     .expect("scenario 1 loads");
@@ -927,7 +929,7 @@ fn scenarios_whose_bases_have_no_fuel_have_no_refuelling() {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../data/scenarios")
             .join(name);
-        let mut scenario = Scenario::load(&path).expect("the scenario loads");
+        let mut scenario = common::load(&path).expect("the scenario loads");
         assert!(scenario
             .world
             .umpire()

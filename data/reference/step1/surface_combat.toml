@@ -1,0 +1,72 @@
+# FROZEN: a copy of data/reference/surface_combat.toml
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0014-surface-combat.md.
+
+placeholder = true
+
+round_minutes = 5
+max_rounds = 6
+
+# Chance a force sights the enemy in a round.
+sighting_chance_night = "0.5"
+sighting_chance_day = "1"
+radar_sighting_bonus = "0.2"
+not_alert_sighting_factor = "0.5"
+
+# Chance one shot hits.
+gun_hit_chance_night = "0.03"
+gun_hit_chance_day = "0.05"
+torpedo_hit_chance_night = "0.04"
+torpedo_hit_chance_day = "0.02"
+
+# Multipliers on the chance to hit.
+surprised_target_factor = "1.5"
+lit_target_factor = "2"
+
+# The chance a gun or bomb hit lands on flotation. The rest land on fire. A
+# torpedo hit lands on flotation.
+gun_hit_flotation = "0.75"
+
+# A hit also knocks a system down one level with this chance for each point
+# of damage it does, 1 at most (decision 0033): guns, torpedoes and bombs
+# alike. Then the factor a degraded system applies. Fire control that is out
+# still gives the last figure.
+system_hit_chance_per_point = "0.06"
+degraded_factor = "0.5"
+fire_control_out_factor = "0.25"
+
+# Alertness (decision 0021). A force at normal readiness is alerted by a
+# contact this close and fresh (fresh_contact_max_age_pulses in search.toml),
+# and by a fight in its hex with this chance.
+alert_contact_distance_hexes = 3
+alarm_chance = "0.5"
+
+# Flotation damage at which a ship counts as crippled, and fire damage at
+# which the enemy believes it is sinking.
+crippled_flotation = 50
+claimed_sunk_fire = 30
+
+# Which system a system hit lands on. Each table adds to 1.
+[gun_system_hit]
+propulsion = "0.2"
+fire_control = "0.3"
+main_battery = "0.35"
+torpedo_mounts = "0.15"
+
+[torpedo_system_hit]
+propulsion = "0.8"
+fire_control = "0.1"
+main_battery = "0.1"
+
+# Escorts given to a straggler that is sent home, by its kind.
+[straggler_escorts]
+carrier = 2
+battleship = 2
+cruiser = 1
+destroyer = 0
+transport = 1
+auxiliary = 0

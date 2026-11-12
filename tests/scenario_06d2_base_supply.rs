@@ -136,10 +136,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind, SupplyUse};
@@ -176,11 +177,11 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6d2 loads")
+    common::load(&scenario_path()).expect("scenario 6d2 loads")
 }
 
 fn six_a() -> Scenario {
-    Scenario::load(
+    common::load(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/06a_base_raid.toml"),
     )
     .expect("scenario 6a loads")
@@ -1495,45 +1496,19 @@ fn assert_conserved(run: &Run, start: [i64; 2]) {
 // directory. Nothing in the repository's data folder is touched.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// applies `edit` to the copied scenario's text and `edit_supply` to the
-/// supply figures, and loads it.
+/// Loads the scenario on the frozen figures with `edit` applied to its text
+/// and `edit_supply` to a copy of the supply figures.
 fn variant_with(
     tag: &str,
     edit: &dyn Fn(String) -> String,
     edit_supply: &dyn Fn(String) -> String,
 ) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    // Tests run in parallel: each variant has a folder of its own.
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "base_supply_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_two_airfields.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        "reference/air_combat.toml",
-        "reference/air_upkeep.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let supply = fs::read_to_string(data.join("reference/air_supply.toml")).expect("read supply");
-    fs::write(root.join("reference/air_supply.toml"), edit_supply(supply))
-        .expect("write the supply figures");
-    let scenario_file = root.join("scenarios/06d2_base_supply.toml");
-    let text = fs::read_to_string(data.join("scenarios/06d2_base_supply.toml"))
-        .expect("read the scenario");
-    fs::write(&scenario_file, edit(text)).expect("write the variant");
-    Scenario::load(&scenario_file).expect("the variant loads")
+    let path = scenario_path();
+    let text = fs::read_to_string(&path).expect("read the scenario");
+    let options = common::altered_reference(tag, |dir| {
+        common::edit_file(dir, "air_supply.toml", edit_supply);
+    });
+    common::from_text_with(&edit(text), &path, &options).expect("the variant loads")
 }
 
 fn variant(tag: &str, edit: &dyn Fn(String) -> String) -> Scenario {
@@ -2835,7 +2810,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
         assert!(!wanted.is_empty(), "{name}");
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join(format!("../data/scenarios/{name}.toml"));
-        let mut scenario = Scenario::load(&path).expect("the scenario loads");
+        // The golden files are the run baselines: they follow the live
+        // figures, so this run does too (docs/step2-spec.md, "Tests while
+        // figures move").
+        let mut scenario = common::load_live(&path).expect("the scenario loads");
         assert!(scenario.world.ref_data().air_supply.is_none(), "{name}");
         scenario.run_to_end().expect("runs");
         assert_eq!(scenario.world.day_hashes(), wanted, "{name}");

@@ -20,16 +20,16 @@ use sim_core::fixed::Fixed;
 use sim_core::orders::{AirMission, Stance};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::DaySummary;
-use sim_data::Scenario;
+use sim_data::{LoadOptions, Scenario};
 
 const USAGE: &str = "\
-Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
-       sim-cli replay <game.json>
-       sim-cli hash <scenario.toml> [--seed N]
-       sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N]
-       sim-cli events <scenario.toml | game.json> --why EVENT [--seed N]
-       sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]
-       sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT]
+Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [--reference DIR]
+       sim-cli replay <game.json> [--reference DIR]
+       sim-cli hash <scenario.toml> [--seed N] [--reference DIR]
+       sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N] [--reference DIR]
+       sim-cli events <scenario.toml | game.json> --why EVENT [--seed N] [--reference DIR]
+       sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>] [--reference DIR]
+       sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT] [--reference DIR]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
                      [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli mcp <scenario.toml> --seat allied|japanese
@@ -90,7 +90,16 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>]
   --runs N  (batch) Number of runs, at least 1. Default 1000.
   --first-seed S  (batch) Seed of the first run. Default 1.
   --labels F  (export) An anchors CSV (place, feature, lat, lon) to put place
-            names on the replay's map.";
+            names on the replay's map.
+  --reference DIR  (run, replay, hash, events, export, batch) Reads the
+            scenario's reference files (ship classes, port sizes, aircraft
+            types, and the search, surface combat, air combat, air upkeep,
+            fatigue and base supply figures) from DIR, each by its file name,
+            in place of where the scenario names it. A file the scenario names
+            that is not in DIR is an error; the map is read where the scenario
+            names it. The hand-calculation tests use data/reference/step1. A
+            saved game made with it names DIR's files and replays only with
+            the same --reference and the same files.";
 
 /// A scenario that has been loaded, given its seed and run to its last day.
 /// Both commands build one with [`execute`].
@@ -101,6 +110,30 @@ struct Executed {
     initial: TruthState,
 }
 
+/// Takes `--reference DIR` out of the words after a command, wherever it is,
+/// and says how the scenario is then loaded. The six commands that load a
+/// scenario for a run (`run`, `replay`, `hash`, `events`, `export`, `batch`)
+/// share this, so each takes the option the same way.
+fn take_reference(args: &[String]) -> Result<(Vec<String>, LoadOptions), String> {
+    let mut rest = Vec::new();
+    let mut options = LoadOptions::default();
+    let mut words = args.iter();
+    while let Some(word) = words.next() {
+        if word == "--reference" {
+            let dir = words
+                .next()
+                .ok_or_else(|| format!("--reference needs a directory\n\n{USAGE}"))?;
+            if options.reference_root.is_some() {
+                return Err(format!("--reference is given twice\n\n{USAGE}"));
+            }
+            options.reference_root = Some(dir.into());
+        } else {
+            rest.push(word.clone());
+        }
+    }
+    Ok((rest, options))
+}
+
 /// The one way a scenario is run: load it, apply the seed if one is given,
 /// call `before_run` (the runner prints its header there, so a run that fails
 /// partway still shows which scenario and seed it was), note the starting
@@ -108,9 +141,10 @@ struct Executed {
 fn execute(
     path: &str,
     seed: Option<u64>,
+    options: &LoadOptions,
     before_run: impl FnOnce(&mut Scenario),
 ) -> Result<Executed, String> {
-    let mut scenario = Scenario::load(Path::new(path)).map_err(|e| e.to_string())?;
+    let mut scenario = Scenario::load_with(Path::new(path), options).map_err(|e| e.to_string())?;
     if let Some(seed) = seed {
         scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
     }
@@ -135,15 +169,16 @@ fn parse_seed(value: Option<&str>) -> Result<u64, String> {
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
-        Some("events") => events::command(&args[1..]),
-        Some("export") => export::command(&args[1..], USAGE),
-        Some("batch") => batch::command(&args[1..], USAGE),
-        Some("replay") => replay(&args[1..]),
+        Some("events") => with_reference(&args[1..], events::command),
+        Some("export") => with_reference(&args[1..], |a, o| export::command(a, USAGE, o)),
+        Some("batch") => with_reference(&args[1..], |a, o| batch::command(a, USAGE, o)),
+        Some("replay") => with_reference(&args[1..], replay),
         Some("serve") => serve::command(&args[1..], USAGE),
         Some("mcp") => mcp::command(&args[1..], USAGE),
         Some("play") => play::command(&args[1..]),
-        Some("hash") => hash(&args[1..]),
-        _ => run(&args),
+        Some("hash") => with_reference(&args[1..], hash),
+        Some("run") => with_reference(&args, run),
+        _ => run(&args, &LoadOptions::default()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -154,7 +189,18 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(args: &[String]) -> Result<(), String> {
+/// Takes `--reference` out of `args` and calls `command` with the rest.
+fn with_reference(
+    args: &[String],
+    command: impl FnOnce(&[String], &LoadOptions) -> Result<(), String>,
+) -> Result<(), String> {
+    let (rest, options) = take_reference(args)?;
+    command(&rest, &options)
+}
+
+/// `run`: `args` are all the words, the first being `run` (or, with no
+/// command, a request for help or an error).
+fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
     let mut scenario_path: Option<&str> = None;
     let mut show_events = false;
     let mut seed: Option<u64> = None;
@@ -194,7 +240,7 @@ fn run(args: &[String]) -> Result<(), String> {
         scenario,
         summaries,
         initial: _,
-    } = execute(scenario_path, seed, |scenario| {
+    } = execute(scenario_path, seed, options, |scenario| {
         if save_path.is_some() {
             remembered = Some(save::remember(scenario));
         }
@@ -508,7 +554,7 @@ fn print_result(world: &sim_core::World) {
 }
 
 /// `sim-cli hash <scenario> [--seed N]`: the daily hashes and nothing else.
-fn hash(args: &[String]) -> Result<(), String> {
+fn hash(args: &[String], options: &LoadOptions) -> Result<(), String> {
     let mut scenario_path: Option<&str> = None;
     let mut seed: Option<u64> = None;
     let mut words = args.iter().map(String::as_str);
@@ -523,7 +569,7 @@ fn hash(args: &[String]) -> Result<(), String> {
         }
     }
     let scenario_path = scenario_path.ok_or_else(|| format!("no scenario given\n\n{USAGE}"))?;
-    let executed = execute(scenario_path, seed, |_| {})?;
+    let executed = execute(scenario_path, seed, options, |_| {})?;
     for summary in &executed.summaries {
         println!("day {} {:016x}", summary.day, summary.state_hash);
     }
@@ -532,13 +578,14 @@ fn hash(args: &[String]) -> Result<(), String> {
 
 /// `sim-cli replay <game.json>`: runs a saved game and compares every day's
 /// hash with the saved one.
-fn replay(args: &[String]) -> Result<(), String> {
+fn replay(args: &[String], options: &LoadOptions) -> Result<(), String> {
     let file = match args {
         [file] if !file.starts_with('-') => file.as_str(),
         _ => return Err(format!("replay needs one saved game\n\n{USAGE}")),
     };
     let saved = save::read(file)?;
-    let scenario = Scenario::load(Path::new(&saved.scenario_file)).map_err(|e| e.to_string())?;
+    let scenario =
+        Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
     saved.check_files(&scenario)?;
     let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
     scenario.replace_script(saved.script.clone());

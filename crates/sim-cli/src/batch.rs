@@ -130,7 +130,11 @@ fn parse_count(flag: &str, value: Option<&str>, usage: &str) -> Result<u64, Stri
 
 /// `sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S]`.
 /// `args` are the words after `batch`.
-pub fn command(args: &[String], usage: &str) -> Result<(), String> {
+pub fn command(
+    args: &[String],
+    usage: &str,
+    options: &sim_data::LoadOptions,
+) -> Result<(), String> {
     let mut scenario_path: Option<&str> = None;
     let mut out: Option<&str> = None;
     let mut runs = DEFAULT_RUNS;
@@ -176,7 +180,7 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
         .checked_add(runs - 1)
         .ok_or_else(|| "--first-seed plus --runs is too large".to_string())?;
 
-    let batch = build(scenario_path, runs, first_seed, label)?;
+    let batch = build(scenario_path, runs, first_seed, label, options)?;
 
     print_summary(&batch);
     let mut text = serde_json::to_string(&batch).map_err(|e| e.to_string())?;
@@ -189,9 +193,10 @@ fn build(
     runs: u64,
     first_seed: u64,
     label: Option<String>,
+    options: &sim_data::LoadOptions,
 ) -> Result<Batch, String> {
     let inputs = {
-        let scenario = sim_data::Scenario::load(std::path::Path::new(scenario_path))
+        let scenario = sim_data::Scenario::load_with(std::path::Path::new(scenario_path), options)
             .map_err(|e| e.to_string())?;
         crate::save::inputs(scenario_path, &scenario)?
     };
@@ -213,7 +218,7 @@ fn build(
         // A batch reads losses, not reasons, so it runs with breakdown
         // recording off (the spec's "can be switched off in batch runs").
         // Recording never changes what happens or a hash.
-        let executed = crate::execute(scenario_path, Some(seed), |scenario| {
+        let executed = crate::execute(scenario_path, Some(seed), options, |scenario| {
             scenario.world.set_config(sim_core::world::SimConfig {
                 record_breakdowns: false,
             });

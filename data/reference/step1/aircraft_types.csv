@@ -1,0 +1,21 @@
+# FROZEN: a copy of data/reference/aircraft_types.csv
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. This type is invented so the engine has something to run.
+# It is not historical and must not be used for validation.
+#
+# search_range_nm: the furthest a search by this type can reach.
+# sweep_width_nm: the width of sea one aircraft covers as it flies.
+# See docs/decisions/0012-search-and-contacts.md.
+# strike_range_nm: how far the type can strike. attack_weapon: none, bomb or
+# torpedo. attack_damage: the damage of one hit. See
+# docs/decisions/0026-air-strikes.md.
+# pilot_armour, self_sealing_tanks: 1 if the type has it, else 0. Each one
+# lowers the chance a shot brings the type down. See
+# docs/decisions/0029-figures-for-carriers-and-aircraft.md.
+id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks
+1,Placeholder flying boat,patrol,600,40,0,none,0,0,0
+2,Placeholder carrier scout,patrol,300,20,0,none,0,0,0
+3,Placeholder dive bomber,bomber,0,0,250,bomb,60,0,0
+4,Placeholder fighter,fighter,0,0,250,none,0,0,0

@@ -55,6 +55,8 @@
 //! - Over seeds 1 to 200 the known count of each objective is never above
 //!   the true count, for both sides.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -82,7 +84,7 @@ fn scenario_text() -> String {
 }
 
 fn load_text(text: &str, seed: u64) -> Scenario {
-    Scenario::from_text(text, &scenario_path())
+    common::from_text(text, &scenario_path())
         .expect("the scenario loads")
         .with_seed(seed)
         .expect("a seed can be set")
@@ -415,12 +417,19 @@ fn objectives_change_no_hash_and_no_event() {
     assert_eq!(with.day_hashes(), without.world.day_hashes());
     assert_eq!(with.state_hash(), without.world.state_hash());
     assert_eq!(with.events().len(), without.world.events().len());
-    // And the hash is the one in the baseline file.
+    // And the hash is the one in the baseline file. The baseline follows the
+    // live figures, so this run does too (docs/step2-spec.md, "Tests while
+    // figures move").
+    let mut live = Scenario::from_text(&text, &scenario_path())
+        .expect("the scenario loads")
+        .with_seed(SEED)
+        .expect("a seed can be set");
+    live.run_to_end().expect("runs");
     let baseline = std::fs::read_to_string(
         PathBuf::from(ROOT).join("crates/sim-cli/tests/run_baseline/05_eastern_solomons.txt"),
     )
     .expect("the baseline reads");
-    assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
+    assert!(baseline.contains(&format!("hash {:016x}", live.world.day_hashes()[0])));
     // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
     // 0056 put the claims from the air into belief, and so into the hash,
     // 2f37141bddfdb856 until the hash went to version 2 (decision 9 of
@@ -430,40 +439,34 @@ fn objectives_change_no_hash_and_no_event() {
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set
-/// to 0, from air combat figures copied under the build directory.
+/// to 0, from a copy of the frozen air combat figures under the build
+/// directory.
 fn run_with_no_false_claims(seed: u64) -> World {
-    let figures =
-        std::fs::read_to_string(PathBuf::from(ROOT).join("data/reference/air_combat.toml"))
-            .expect("the air combat figures read");
-    let figures: Vec<String> = figures
-        .lines()
-        .map(|line| {
-            match [
-                "fighter_false_claim_chance",
-                "anti_aircraft_false_claim_chance",
-                "bomb_false_claim_chance",
-            ]
-            .iter()
-            .find(|key| line.starts_with(&format!("{key} = ")))
-            {
-                Some(key) => format!("{key} = \"0\""),
-                None => line.to_string(),
-            }
-        })
-        .collect();
-    let folder = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
-        .join(format!("objectives_no_false_claims_{}", std::process::id()));
-    std::fs::create_dir_all(&folder).expect("make the folder");
-    let path = folder.join("air_combat.toml");
-    std::fs::write(&path, figures.join("\n")).expect("write the figures");
-    let original = "air_combat = \"../reference/air_combat.toml\"";
-    let text = scenario_text();
-    assert_eq!(text.matches(original).count(), 1);
-    let text = text.replace(
-        original,
-        &format!("air_combat = {:?}", path.to_str().expect("a path")),
-    );
-    let mut scenario = load_text(&text, seed);
+    let options = common::altered_reference("no_false_claims", |dir| {
+        common::edit_file(dir, "air_combat.toml", |figures| {
+            let figures: Vec<String> = figures
+                .lines()
+                .map(|line| {
+                    match [
+                        "fighter_false_claim_chance",
+                        "anti_aircraft_false_claim_chance",
+                        "bomb_false_claim_chance",
+                    ]
+                    .iter()
+                    .find(|key| line.starts_with(&format!("{key} = ")))
+                    {
+                        Some(key) => format!("{key} = \"0\""),
+                        None => line.to_string(),
+                    }
+                })
+                .collect();
+            figures.join("\n")
+        });
+    });
+    let mut scenario = common::from_text_with(&scenario_text(), &scenario_path(), &options)
+        .expect("the scenario loads")
+        .with_seed(seed)
+        .expect("a seed can be set");
     scenario.run_to_end().expect("the run resolves");
     scenario.world
 }

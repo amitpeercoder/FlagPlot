@@ -87,6 +87,8 @@
 //! - In each, the two margins sum to zero and the levels mirror.
 //! - The result from a saved game replayed is the same.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -111,7 +113,7 @@ fn text(name: &str) -> String {
 }
 
 fn load_text(source: &str, name: &str) -> Scenario {
-    Scenario::from_text(source, &path(name))
+    common::from_text(source, &path(name))
         .expect("the scenario loads")
         .with_seed(SEED)
         .expect("a seed can be set")

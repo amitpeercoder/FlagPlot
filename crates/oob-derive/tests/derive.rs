@@ -1714,10 +1714,10 @@ fn the_generated_classes_load_and_a_tiny_scenario_runs() {
          [[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_speed\"\nspeed = \"cruise\"\n",
         data("map/placeholder_transit.toml"),
         dir.join("reference/test_out.csv").display(),
-        data("reference/port_sizes.csv"),
-        data("reference/aircraft_types.csv"),
-        data("reference/search.toml"),
-        data("reference/surface_combat.toml"),
+        data("reference/step1/port_sizes.csv"),
+        data("reference/step1/aircraft_types.csv"),
+        data("reference/step1/search.toml"),
+        data("reference/step1/surface_combat.toml"),
     );
     let path = dir.join("derivation/scenario.toml");
     std::fs::write(&path, scenario).unwrap();

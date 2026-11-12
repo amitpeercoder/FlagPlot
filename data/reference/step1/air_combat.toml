@@ -1,0 +1,58 @@
+# FROZEN: a copy of data/reference/air_combat.toml
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0026-air-strikes.md.
+
+placeholder = true
+
+# A group strikes a contact no older than this. A contact keeps age 0 through
+# the pulse after the one it was reported in (decision 0012, 14), so 0 means
+# reported in this pulse or the one before.
+strike_contact_max_age_pulses = 0
+
+# Chance one aircraft's weapon hits.
+bomb_hit_chance = "0.2"
+torpedo_hit_chance = "0.15"
+
+# Chance one fighter's shot brings down an aircraft, and chance one
+# anti-aircraft shot does (decision 0027).
+fighter_hit_chance = "0.3"
+anti_aircraft_hit_chance = "0.05"
+
+# What either chance is multiplied by when the target type has pilot armour,
+# and again when it has self-sealing fuel tanks (decision 0029, 11).
+pilot_armour_factor = "0.75"
+self_sealing_tanks_factor = "0.75"
+
+# Claims from the air (decision 0056). PLACEHOLDER chances, to be set from
+# the record in step 2. Each whole shot of fighters (or each whole shot of the
+# guns of ships and bases) that missed is claimed as an aircraft shot down with
+# the chance given; each whole bomb or torpedo that missed is claimed as a hit
+# on a ship, or as an aircraft destroyed on the ground, with the last.
+fighter_false_claim_chance = "0.1"
+anti_aircraft_false_claim_chance = "0.05"
+bomb_false_claim_chance = "0.1"
+
+# Whether a bomb or torpedo hit also knocks a system down one level follows
+# surface_combat.toml's system_hit_chance_per_point (decision 0033).
+
+# Raids on a base (decision 0034). PLACEHOLDER figures.
+# A hit on a base's supply destroys this many tons, and no more than the base
+# has (decision 9).
+base_supply_destroyed_per_hit_t = 50
+
+# Which system a bomb's system hit lands on. Adds to 1.
+[bomb_system_hit]
+flight_deck = "0.5"
+propulsion = "0.2"
+fire_control = "0.1"
+main_battery = "0.2"
+
+# Where a bomb hit on a base lands (decision 7 of 0034): one draw for each hit.
+# The two chances add to 1 at most; the rest of the hits land on nothing.
+[base_hit]
+aircraft = "0.3"
+supply = "0.3"

@@ -141,56 +141,81 @@ fn a_tampered_hash_fails_on_that_day_and_names_both_hashes() {
 
 /// A copy of `scenario` in a temp folder whose file names are absolute, so
 /// that it can be changed without touching the repository.
-fn standalone(scenario: &str, label: &str, copy_search_file: bool) -> (PathBuf, Option<PathBuf>) {
+fn standalone(scenario: &str, label: &str) -> PathBuf {
     let dir = temp_dir(label);
     let source = fs::read_to_string(Path::new(ROOT).join(scenario)).expect("reads");
-    let mut changed = source.replace("\"../", &format!("\"{ROOT}/data/"));
-    let mut copy = None;
-    if copy_search_file {
-        let target = dir.join("search_copy.toml");
-        fs::copy(Path::new(ROOT).join("data/reference/search.toml"), &target).expect("copy");
-        changed = changed.replace(
-            &format!("\"{ROOT}/data/reference/search.toml\""),
-            &format!("{:?}", target.to_string_lossy()),
-        );
-        copy = Some(target);
-    }
+    let changed = source.replace("\"../", &format!("\"{ROOT}/data/"));
     let path = dir.join("scenario.toml");
     fs::write(&path, changed).expect("write");
-    (path, copy)
+    path
+}
+
+/// A copy of the figures files of `data/reference` in a temp folder, to be
+/// read with `--reference`, so that one can be changed without touching the
+/// repository.
+fn reference_copy(label: &str) -> PathBuf {
+    let dir = temp_dir(label).join("reference");
+    fs::create_dir_all(&dir).expect("make the folder");
+    for entry in fs::read_dir(Path::new(ROOT).join("data/reference")).expect("reads") {
+        let entry = entry.expect("an entry");
+        if entry.file_type().expect("a type").is_file() {
+            fs::copy(entry.path(), dir.join(entry.file_name())).expect("copy");
+        }
+    }
+    dir
 }
 
 #[test]
 fn a_changed_scenario_file_or_data_file_is_refused_naming_the_file() {
-    let (scenario, search_copy) = standalone("data/scenarios/01_transit.toml", "changed", true);
+    let scenario = standalone("data/scenarios/01_transit.toml", "changed");
+    let reference = reference_copy("changed-reference");
+    let search = reference.join("search.toml");
     let scenario_text = scenario.to_string_lossy().into_owned();
-    let game = save(&scenario_text, "changed-save", &[]);
+    let reference_text = reference.to_string_lossy().into_owned();
+    let game = save(
+        &scenario_text,
+        "changed-save",
+        &["--reference", &reference_text],
+    );
     let game_text = game.to_string_lossy().into_owned();
+    let replay_with = |extra: &[&str]| {
+        let mut args = vec!["replay", game_text.as_str()];
+        args.extend_from_slice(extra);
+        binary(&args)
+    };
     ok(
-        &binary(&["replay", &game_text]),
+        &replay_with(&["--reference", &reference_text]),
         "replay of the untouched files",
     );
 
-    // A data file the scenario names changes.
-    let search_copy = search_copy.expect("a copy");
-    let original = fs::read_to_string(&search_copy).expect("reads");
-    fs::write(&search_copy, format!("{original}\n# changed\n")).expect("write");
-    let refused = binary(&["replay", &game_text]);
+    // A game saved with a reference directory names that directory's files,
+    // so it is not replayed without it (the scenario's own files are not the
+    // ones it ran on).
+    let without = replay_with(&[]);
+    assert!(!without.status.success());
+    let error = text(&without.stderr);
+    assert!(error.contains("different data files"), "{error}");
+
+    // A data file the scenario names, read from the reference directory,
+    // changes.
+    let original = fs::read_to_string(&search).expect("reads");
+    fs::write(&search, format!("{original}\n# changed\n")).expect("write");
+    let refused = replay_with(&["--reference", &reference_text]);
     assert!(!refused.status.success());
     let error = text(&refused.stderr);
-    assert!(error.contains("search_copy.toml"), "{error}");
+    assert!(error.contains("search.toml"), "{error}");
     assert!(error.contains("changed"), "{error}");
     assert!(!text(&refused.stdout).contains("day 1 "), "nothing ran");
-    fs::write(&search_copy, original).expect("restore");
+    fs::write(&search, original).expect("restore");
     ok(
-        &binary(&["replay", &game_text]),
+        &replay_with(&["--reference", &reference_text]),
         "replay with the file restored",
     );
 
     // The scenario file changes.
     let scenario_source = fs::read_to_string(&scenario).expect("reads");
     fs::write(&scenario, format!("{scenario_source}\n# changed\n")).expect("write");
-    let refused = binary(&["replay", &game_text]);
+    let refused = replay_with(&["--reference", &reference_text]);
     assert!(!refused.status.success());
     let error = text(&refused.stderr);
     assert!(error.contains("scenario.toml"), "{error}");

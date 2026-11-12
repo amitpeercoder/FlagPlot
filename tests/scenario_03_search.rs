@@ -165,8 +165,10 @@
 //!   and kind are those of the report that last refreshed it.
 //! - A replay of any seed reproduces every daily hash.
 
+mod common;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{Event, EventKind};
@@ -201,7 +203,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 3 loads")
+    common::load(&scenario_path()).expect("scenario 3 loads")
 }
 
 fn nm(value: i64) -> Fixed {
@@ -800,37 +802,16 @@ fn contacts_age_merge_and_drop_by_the_rules() {
 // Properties.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied scenario
-/// file, and loads it. Nothing in the repository's data folder is touched.
-fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("search_{tag}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_search.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let mut text =
-        fs::read_to_string(data.join("scenarios/03_search.toml")).expect("read the scenario");
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text. Nothing in the repository's data folder
+/// is touched.
+fn variant(_tag: &str, edits: &[(&str, &str)]) -> Scenario {
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
     for (original, changed) in edits {
-        assert_eq!(
-            text.matches(original).count(),
-            1,
-            "the text {original:?} appears exactly once"
-        );
-        text = text.replace(original, changed);
+        text = common::replace_once(&text, original, changed);
     }
-    fs::write(root.join("scenarios/03_search.toml"), text).expect("write the variant");
-    Scenario::load(&root.join("scenarios/03_search.toml")).expect("the variant loads")
+    common::from_text(&text, &path).expect("the variant loads")
 }
 
 /// The chance in the day 2 morning search, 320 nm out, of a scenario run

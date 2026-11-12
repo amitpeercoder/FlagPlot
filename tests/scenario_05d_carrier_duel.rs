@@ -131,6 +131,8 @@
 //!   and every launch by a report to the launching side.
 //! - A replay of any seed reproduces the daily hash.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::OnceLock;
@@ -213,7 +215,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 5d loads")
+    common::load(&scenario_path()).expect("scenario 5d loads")
 }
 
 fn millionths(value: i64) -> Fixed {

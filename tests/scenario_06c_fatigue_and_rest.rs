@@ -201,10 +201,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind, FatigueChange, SortieKind};
@@ -238,11 +239,11 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6c loads")
+    common::load(&scenario_path()).expect("scenario 6c loads")
 }
 
 fn six_a() -> Scenario {
-    Scenario::load(
+    common::load(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/06a_base_raid.toml"),
     )
     .expect("scenario 6a loads")
@@ -1528,54 +1529,18 @@ fn work_the_raid(
 // directory. Nothing in the repository's data folder is touched.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied scenario
-/// and fatigue files, and loads it.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text and in a copy of the fatigue figures.
 fn variant(tag: &str, scenario_edits: &[(&str, &str)], fatigue_edits: &[(&str, &str)]) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    // Tests run in parallel: each variant has a folder of its own.
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "fatigue_and_rest_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
+    for (original, changed) in scenario_edits {
+        text = common::replace_once(&text, original, changed);
     }
-    for file in [
-        "map/placeholder_two_airfields.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        "reference/air_combat.toml",
-        "reference/fatigue.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let edit = |path: &Path, edits: &[(&str, &str)]| {
-        let mut text = fs::read_to_string(path).expect("read a file to edit");
-        for (original, changed) in edits {
-            assert_eq!(
-                text.matches(original).count(),
-                1,
-                "the text {original:?} appears exactly once"
-            );
-            text = text.replace(original, changed);
-        }
-        fs::write(path, text).expect("write the variant");
-    };
-    edit(&root.join("reference/fatigue.toml"), fatigue_edits);
-    let scenario_file = root.join("scenarios/06c_fatigue_and_rest.toml");
-    fs::copy(
-        data.join("scenarios/06c_fatigue_and_rest.toml"),
-        &scenario_file,
-    )
-    .expect("copy the scenario");
-    edit(&scenario_file, scenario_edits);
-    Scenario::load(&scenario_file).expect("the variant loads")
+    let options = common::altered_reference(tag, |dir| {
+        common::edit_file_by(dir, "fatigue.toml", fatigue_edits);
+    });
+    common::from_text_with(&text, &path, &options).expect("the variant loads")
 }
 
 const FATIGUE_KEY: &str = "fatigue = \"../reference/fatigue.toml\"\n";
@@ -2753,7 +2718,10 @@ fn a_scenario_without_the_fatigue_file_has_the_hashes_it_had_before_this_stage()
         assert!(!wanted.is_empty(), "{name}");
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join(format!("../data/scenarios/{name}.toml"));
-        let mut scenario = Scenario::load(&path).expect("the scenario loads");
+        // The golden files are the run baselines: they follow the live
+        // figures, so this run does too (docs/step2-spec.md, "Tests while
+        // figures move").
+        let mut scenario = common::load_live(&path).expect("the scenario loads");
         assert!(scenario.world.ref_data().fatigue.is_none(), "{name}");
         scenario.run_to_end().expect("runs");
         assert_eq!(scenario.world.day_hashes(), wanted, "{name}");
