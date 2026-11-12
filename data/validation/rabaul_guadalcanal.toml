@@ -182,7 +182,7 @@ record_low = 9
 record_high = 22
 judged = false
 rows = [484, 1313]
-reason = "Low end: 9 killed from 21 August to 11 September, a figure an encyclopedia cites from a book not read (484), a low-confidence row read by exception. High end: 22 pilots of the Marine air group lost from 20 August to 16 October (1313), a month past the scenario and so a ceiling. Not judged: both ends are weak. It is here because the rules give none: a patrol over its own base keeps every pilot (decision 0038), and the record does not."
+reason = "Low end: 9 killed from 21 August to 11 September, a figure an encyclopedia cites from a book not read (484), a low-confidence row read by exception. High end: 22 pilots of the Marine air group lost from 20 August to 16 October (1313), a month past the scenario and so a ceiling. Not judged: both ends are weak, and that is so whatever the rules do. It is here because the rules give none: a patrol over its own base keeps every pilot (decision 0038), and the record does not. Decision 0059 adds a draw for the pilot of a fighter shot down over its own base; the measure is judged when better rows bound it, not when that rule lands."
 
 # Japanese aircrew are not a measure of their own. The rules count one
 # pilot an aircraft, so pilots lost is aircraft lost, already measured. A
