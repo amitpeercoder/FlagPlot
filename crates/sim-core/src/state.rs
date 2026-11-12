@@ -88,6 +88,37 @@ pub struct Ship {
     pub systems: ShipSystems,
 }
 
+impl Ship {
+    /// A ship with nothing aboard and nothing damaged: no fuel, supply or
+    /// cargo, no gun rounds, torpedoes spent, every system working. Callers
+    /// set the figures they care about; production code that builds a ship
+    /// from data writes the full literal instead, so a new field is a
+    /// compile error there.
+    pub fn new(
+        id: ShipId,
+        name: String,
+        class: ShipClassId,
+        side: Side,
+        location: ShipLocation,
+    ) -> Ship {
+        Ship {
+            id,
+            name,
+            class,
+            side,
+            fuel_t: Fixed::ZERO,
+            supply_t: Fixed::ZERO,
+            cargo_fuel_t: Fixed::ZERO,
+            location,
+            flotation_damage: Fixed::ZERO,
+            fire_damage: Fixed::ZERO,
+            gun_rounds: Fixed::ZERO,
+            torpedoes_ready: false,
+            systems: ShipSystems::ALL_WORKING,
+        }
+    }
+}
+
 /// A named system of a ship that a hit can knock down (decision 0016).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum ShipSystem {
@@ -238,6 +269,22 @@ pub struct Base {
     /// Fuel stock for ships, in tons (decision 0045). The default is 0: a
     /// base with none refuels nobody.
     pub fuel_t: Fixed,
+}
+
+impl Base {
+    /// A base with no supply or fuel, no anti-aircraft fire and no repairs.
+    pub fn new(id: BaseId, name: String, side: Side, hex: Hex) -> Base {
+        Base {
+            id,
+            name,
+            side,
+            hex,
+            supply_t: Fixed::ZERO,
+            anti_aircraft: 0,
+            aircraft_repairs_per_day: 0,
+            fuel_t: Fixed::ZERO,
+        }
+    }
 }
 
 /// What a task force is doing about its route.
@@ -598,6 +645,41 @@ pub struct AirGroup {
     /// the scenario gives (decisions 7 and 10 of 0038). It is read by
     /// nothing else.
     pub strength: u32,
+}
+
+impl AirGroup {
+    /// An air group at rest with no aircraft, no fatigue, no pilot tracking
+    /// and no standing orders; the whole patrol share. Set `ready` and
+    /// `strength` together.
+    pub fn new(
+        id: AirGroupId,
+        name: String,
+        side: Side,
+        location: AirGroupLocation,
+        aircraft_type: AircraftTypeId,
+    ) -> AirGroup {
+        AirGroup {
+            id,
+            name,
+            side,
+            location,
+            aircraft_type,
+            ready: 0,
+            damaged: 0,
+            mission: AirMission::Rest,
+            search: None,
+            mission_order: None,
+            arc_order: None,
+            patrol_share: Fixed::ONE,
+            share_order: None,
+            fatigue: Fixed::ZERO,
+            rest_above: None,
+            rest_order: None,
+            stood_down: false,
+            pilots: None,
+            strength: 0,
+        }
+    }
 }
 
 /// A stream of replacements a scenario gives a side at a base (decision 6 of
