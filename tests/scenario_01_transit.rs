@@ -8,7 +8,7 @@
 //!
 //! # Hand calculation
 //!
-//! Redone by the architect on Nov 12, 2026 for decision 0057 (ships are
+//! Redone by the architect on Nov 12, 2026 for decision 0058 (ships are
 //! charged straight-line miles). The tests below assert these numbers. If
 //! the code disagrees, the code or the rule is wrong: do not change a number
 //! here to make a test pass.
@@ -18,7 +18,7 @@
 //! - Route: (0,0) to (8,3). The path runs along q to (8,0) and then up r:
 //!   (8,1), (8,2), (8,3). That is 11 steps. No land is in the way, so every
 //!   step is charged the miles it brings the force closer to (8,3) in a
-//!   straight line (decision 0057, 1).
+//!   straight line (decision 0058, 1).
 //! - Both ship classes cruise at 16 kn, so the task force steams at 16 kn.
 //! - Cruiser: 2000 t lasts 8000 nm at cruise, so it burns 0.25 t per nm.
 //! - Destroyer: 500 t lasts 4000 nm at cruise, so it burns 0.125 t per nm.

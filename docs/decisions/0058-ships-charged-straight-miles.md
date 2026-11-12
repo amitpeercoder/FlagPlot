@@ -1,4 +1,4 @@
-# 0057: Ships are charged straight-line miles
+# 0058: Ships are charged straight-line miles
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026. It is the "D" of the choice he made when air distance was settled (decision 0040): straight-line air distance then, ships later.
 
