@@ -25,9 +25,11 @@
 //!   (the hexes differ by 5 in q and 1 in r, which is 7.937 hex widths of
 //!   centre to centre, 7.937 / sqrt 3 = 4.583 steps of 40 nm = 183.3 nm,
 //!   cut to a whole mile).
-//! - In the air from Enterprise: air group 101 (fighters) flew 24 on patrol
-//!   and 3 were shot down, so 21; air group 103 (scouts) flew 11 on search and
-//!   lost none, so 11. Air groups 102 and 104 flew nothing.
+//! - In the air from Enterprise: air group 101 (fighters) has 24 ready and 3
+//!   fatigue, so it flies 24 x (100 - 3) / 100 = 23.28, cut to 23, on patrol;
+//!   2 are shot down by the escorts of air group 111, so 21. Air group 103
+//!   (scouts) flew 11 on search and lost none, so 11. Air groups 102 and 104
+//!   flew nothing.
 //! - One attack's bombs take her flight deck from working to degraded and from
 //!   degraded to out. A deck that is out takes no aircraft.
 //! - Saratoga's room: 90 (her aircraft capacity) less 69 (the ready and
@@ -36,8 +38,8 @@
 //! - Group 101 comes first, the lower number: all 21 fit and land on Saratoga,
 //!   joining her fighters, air group 105. Her room is then 0.
 //! - Group 103 finds no room. The nearest base of its side is Henderson Field,
-//!   within the scout's search range of 200 nm (a scout has no strike radius):
-//!   all 11 land there. No group of their type is at the base, so they form a
+//!   within the strike radius of their type, 200 nm (the SBD-3; its search
+//!   range is 200 nm too): all 11 land there. No group of their type is at the base, so they form a
 //!   new one, "VS-5 landed at base:1", numbered one above the highest air
 //!   group in the game, with 11 ready, at rest.
 //! - Nothing comes down in the sea. Groups 102 and 104, aboard, are untouched.
@@ -57,43 +59,31 @@
 //! - The scenario has no air group 12 and no arrival on day 4; no event names
 //!   air group 12.
 //! - Every `AircraftLandedElsewhere` and `AircraftDitchedNoDeck` in every run
-//!   is what the model of tests/common/no_deck.rs works out from the state at
-//!   that moment: place, count, receiving group, formed or joined, causes.
+//!   is for a group aboard a ship whose deck was lost in that pulse, with that
+//!   loss as its first cause, and the group that receives a landing is the one
+//!   the model of tests/common/no_deck.rs names (the lowest-numbered of the
+//!   type and side at the place, else a new one). The counts, the room and the
+//!   order are checked whole in the pinned run above and in scenarios 5, 5c,
+//!   5d and 12c, not here: see the note below.
 //! - Aircraft land at Henderson Field in some runs and not in all (more than
 //!   none, fewer than all), and only in a pulse in which an Allied carrier's
 //!   deck was lost.
 //!
-//! # What the developer found when the numbers were worked from the events
+//! # What the properties do not check, and why
 //!
-//! These are the developer's notes, for the architect to rule on. The tests
-//! assert what the run gives, and each is marked where it differs from the
-//! text above.
-//!
-//! 1. Group 101 flew 23 on patrol, not 24, and 2 were shot down, not 3. It
-//!    had 24 ready at the start of the afternoon (the morning's wear left 24
-//!    ready and 2 damaged) and 3 fatigue, and a group flies its ready
-//!    aircraft times (100 - fatigue) / 100, cut to a whole number: 24 x 97 /
-//!    100 = 23.28, so 23 (`aircraft_able_to_fly`). Escorts of group 111 hit the
-//!    patrol twice (`AirFight`, 2 hits) and the escorts of 114 not at all, so
-//!    `AircraftLost` is 2, 22 left, and 23 - 2 = 21 landed. The answer of 21
-//!    is the same.
-//! 2. An SBD-3 (type 2001, the type of group 103 and 121) does have a strike
-//!    radius: 200 nm, the same as its search range of 200 nm. The base is
-//!    within 200 nm by either figure, and the model reads the strike radius
-//!    first. The answer is the same.
-//! 3. The model of tests/common/no_deck.rs is used here for what it can be
-//!    given without loosening it: the property that a homecoming is only for
-//!    a group aboard a ship whose deck was lost in that pulse (its function
-//!    `assert_only_for_lost_decks`), and its rule for the receiving group and
-//!    for forming one, which the test below works out event by event. It is
-//!    not run on every event of every seed: `homecoming` needs, at the end of
-//!    the air combat step, the aircraft each group flew less those it lost,
-//!    the ready and damaged aircraft aboard every carrier, and each ship's
-//!    hex, and the full slice does not give them at that moment. The
-//!    `scenario_05d_carrier_duel` test rebuilds them from the events for two
-//!    carriers; for the full slice's ten groups of fighters, scouts and
-//!    bombers and their patrol shares, fatigue and deck factors it would be
-//!    a second copy of the engine.
+//! The model of tests/common/no_deck.rs is used here for what it can be
+//! given without loosening it: the property that a homecoming is only for
+//! a group aboard a ship whose deck was lost in that pulse (its function
+//! `assert_only_for_lost_decks`), and its rule for the receiving group and
+//! for forming one, which the test below works out event by event. It is
+//! not run on every event of every seed: `homecoming` needs, at the end of
+//! the air combat step, the aircraft each group flew less those it lost,
+//! the ready and damaged aircraft aboard every carrier, and each ship's
+//! hex, and the full slice does not give them at that moment. The
+//! `scenario_05d_carrier_duel` test rebuilds them from the events for two
+//! carriers; for the full slice's ten groups of fighters, scouts and
+//! bombers and their patrol shares, fatigue and deck factors it would be
+//! a second copy of the engine.
 
 mod common;
 
@@ -300,7 +290,7 @@ fn seed_28_day_4_afternoon_the_fighters_land_on_saratoga_and_the_scouts_form_a_g
 
     // --- The patrol: 101 flew 23 (24 ready x (100 - 3) / 100 = 23.28), the
     // escorts of 111 hit it twice, of 114 not at all: 2 lost, 21 left in the
-    // air. (The hand calculation said 24 flown, 3 lost; see the notes.)
+    // air.
     let fights_at_101: Vec<u32> = pm
         .iter()
         .filter_map(|e| match e.kind {

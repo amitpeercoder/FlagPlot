@@ -25,7 +25,7 @@
 //!    and damaged aircraft of the groups aboard her at that moment), the rest
 //!    going on to the next.
 //! 2. A base of its side within the type's strike radius of that hex (the
-//!    search range for a type with no strike radius, which a scout is): the
+//!    search range for a type with no strike radius, as some scouts are): the
 //!    nearest, then the lowest number. A base takes any number.
 //! 3. The sea: the aircraft are ditched, and where pilots are counted each
 //!    crew is recovered with `crew_recovered_beside_own_force` if a ship of
