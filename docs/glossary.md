@@ -52,7 +52,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Intake** | The step at the start of a day that numbers, checks and applies or refuses the orders waiting (decision 0008) | |
 | **Standing order** | An accepted order that stays in force until another order of its slot replaces it | An order carried out and finished |
 | **Cause** | An order or an earlier event that an event names as what led to it (decision 0047 cuts them for a side) | |
-| **Breakdown** | The factors of a computed quantity or chance, recorded when recording is on. It never changes what happens or the hash | |
+| **Breakdown** | The factors of a computed quantity or chance, recorded when recording is on. It never changes what happens or the hash. A side sees it as it sees the event, except a claim's, which it is not shown (decision 0060) | |
 | **Whole, cut, absent** | How a side is given an event: as the log has it, cut down to what the side may know, or not at all (decision 0047) | |
 | **Hex kind** | One of deep sea, shallow sea, coast and land | |
 | **Navigable** | Describes a hex a ship may enter: deep sea, shallow sea or coast that is on the map | Land |

@@ -308,9 +308,9 @@ The kind of ship in the claim is the kind the contact was taken for when the str
 
 The draws are from a stream in the intelligence subsystem with the claim draw tag, keyed on the day, the pulse, the claimant's first firing unit, and the raid's first strike group as the second entity. The first firing unit is the air group for fighters and attacks, the task force for ships' guns and the base for a base's guns. The draws come in this order: one for each missed whole shot in each fighter or gun firing event, in the order the events were recorded, at that event's chance; then, for the raiding side only, one for each missed whole bomb or torpedo on ships, or one for each whole bomb on a base that did not destroy an aircraft, at the bomb chance. The draws are made after the raid is resolved and are their own, so no fight draw moves and no battle result changes. [0056, 0055]
 
-The `ClaimReceived` event cites every firing event of the claimant's own that the claim rests on, in the order recorded, and nothing else. Its breakdown, when recorded, lists the real and missed counts, the chances and the false counts. Claims are marked from the air. A claim of nothing is made when a side fired and claims no aircraft and no hit. [0056]
+The `ClaimReceived` event cites every firing event of the claimant's own that the claim rests on, in the order recorded, and nothing else. Its breakdown, when recorded, lists the real and missed counts, the chances and the false counts. The breakdown is the umpire's: the side that made the claim is not shown it (chapter 1, Causes and breakdowns). [0060] Claims are marked from the air. A claim of nothing is made when a side fired and claims no aircraft and no hit. [0056]
 
-A side sees: its own `ClaimReceived` whole. The enemy sees none. [0047, 0056]
+A side sees: its own `ClaimReceived` whole, with the firing events it rests on and without its breakdown. The enemy sees none. [0047, 0056, 0060]
 
 Not built: a claim of ships crippled, a claim of supply destroyed, and setting claims against later intelligence. The chances are the same for both sides and are placeholders for step 2. [0056]
 

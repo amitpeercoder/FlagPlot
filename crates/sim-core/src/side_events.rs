@@ -70,7 +70,8 @@ pub struct SideEvent {
 
 /// A breakdown as a side may see it. For a whole event, every factor and the
 /// result. For a cut event, only the factors that are the side's own, and no
-/// result, because the result is the quantity that was cut.
+/// result, because the result is the quantity that was cut. A claim is the
+/// one whole event with no breakdown for its side (decision 0060).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SideBreakdown {
     pub factors: Vec<Factor>,
@@ -607,6 +608,15 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
 
 fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option<SideBreakdown> {
     let breakdown = breakdown.as_ref()?;
+    // A claim is seen whole, and its breakdown not at all (decision 0060).
+    // Every factor of it is the truth the claim hides or gives that truth
+    // away: the real counts are the enemy's real losses, the false counts are
+    // the claim less the real ones, and the misses are the shots less the
+    // real hits. The result is the claim's own counts added, which the event
+    // already carries. The breakdown is the umpire's.
+    if matches!(kind, SideEventKind::Whole(EventKind::ClaimReceived { .. })) {
+        return None;
+    }
     if matches!(kind, SideEventKind::Whole(_)) {
         return Some(SideBreakdown {
             factors: breakdown.factors.clone(),
@@ -1915,6 +1925,41 @@ mod tests {
     }
 
     // ---- breakdowns ----
+
+    #[test]
+    fn a_claim_is_whole_to_its_side_and_its_breakdown_is_not_shown() {
+        // Decision 0060: the claim's breakdown says how much of the claim is
+        // real, which is the enemy's truth. The side keeps the claim and its
+        // causes and gets no breakdown; the log keeps it for the umpire.
+        let factor = |name, n| Factor { name, value: fx(n) };
+        let claim = EventKind::ClaimReceived {
+            side: Side::Allied,
+            hex: hex(),
+            claimed_sunk: 0,
+            claimed_hits: 0,
+            claimed_kind: None,
+            claimed_shot_down: 30,
+            claimed_on_ground: 0,
+            from_air: true,
+        };
+        let mut events = log(vec![claim.clone()]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("real_shot_down", 18),
+                factor("fighter_misses", 15),
+                factor("gun_misses", 118),
+                factor("false_shot_down", 12),
+            ],
+            result: fx(30),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        assert_eq!(shown.len(), 1);
+        assert_eq!(shown[0].kind, SideEventKind::Whole(claim));
+        assert_eq!(shown[0].breakdown, None);
+        // The log is untouched, and the enemy still sees nothing of it.
+        assert!(events[0].breakdown.is_some());
+        assert!(project(Side::Japanese, &events, &owners(false)).is_empty());
+    }
 
     #[test]
     fn a_cut_event_keeps_only_the_factors_that_are_the_sides_own_and_no_result() {
