@@ -18,7 +18,10 @@
 //! - Japanese claims `shot_down`: run 1 gets 7, run 2 gets 5, the rest 0.
 //!   Japanese claims `sunk`: 2 in run 18, 1 in run 19, 1 in run 20, else 0.
 //! - Air group 2 `shot_down`: run 1 gets 3, run 2 none, runs 3 to 20 one.
-//! - Fights: run 1 has two, of 2 and 3 rounds.
+//! - Fights: run 1 has two, of 2 and 3 rounds, both in the "night" pulse. Run
+//!   2 has one in the "morning" pulse of 1 round. Run 3 has one "night" fight
+//!   of 1 round and one "afternoon" fight of 1 round. No other run has a
+//!   fight.
 //! - Attacks in run 1, all day 1 afternoon by group 1: 12 aircraft on ship 3,
 //!   5 on ship 4, 9 on ship 1. Escorts in run 1 with group 1: 6 in the
 //!   afternoon and 4 in the morning.
@@ -49,9 +52,17 @@
 //!   2: nothing really shot down, left out. Runs 3 to 20: 0 x 100 / 1 = 0.
 //!   Kept 19, left out 1. 5th 0, median 0, 95th 233. Held by 1 of 19.
 //!   REPORTED.
-//! - F (judged, minutes_of_action, record 0): run 1: (2 + 3) x 5 = 25; the
-//!   rest 0. 5th 0, median 0, 95th 0 (rank 19 is 0; the 25 is rank 20). Held
-//!   by 19 of 20. AGREES.
+//! - F (judged, minutes_of_action, record 0): run 1: (2 + 3) x 5 = 25; run 2:
+//!   1 x 5 = 5; run 3: (1 + 1) x 5 = 10; the other seventeen 0. Sorted:
+//!   seventeen 0, then 5, 10, 25. The 5th is 0, the 25th 0, the median 0, the
+//!   75th 0, the 95th (rank 19) is 10. Record 0 is inside both; held by 17 of
+//!   20. Plain AGREES.
+//! - N (judged, fights_by_day, record 0): run 2 counts 1 (the morning fight),
+//!   run 3 counts 1 (the afternoon fight; the night one is not counted), the
+//!   other eighteen 0, run 1's two fights being at night. 20 kept. Sorted:
+//!   eighteen 0, two 1. The 5th percentile (rank 1) is 0, the 25th (rank 5)
+//!   0, the median (rank 10) 0, the 75th (rank 15) 0, the 95th (rank 19) 1.
+//!   Record 0 is inside both; held by 18 of 20. Plain AGREES.
 //! - G (judged, ready air group 2 on day 2, record 4): 4 in eighteen runs;
 //!   run 5: 4 + 2 = 6; run 6: 4 + 1 + 1 = 6, the second 1 from a group formed
 //!   from a formed group. 5th 4, median 4, 95th 6. Held by 18 of 20. AGREES.
@@ -72,8 +83,8 @@
 //!   is rank 15; with 19 kept, ranks ceil(4.75) = 5 and ceil(14.25) = 15.
 //!   A (ten 0, eight 1, two 2; record 1): rank 5 is 0, rank 15 is 1; 1 is
 //!   within 0 to 1. Plain AGREES. D (37, 80, sixteen 100, 133; record 100):
-//!   rank 5 is 100, rank 15 is 100. Plain AGREES. F (nineteen 0, one 25;
-//!   record 0): 0 to 0. Plain AGREES. G (eighteen 4, two 6; record 4): 4 to
+//!   rank 5 is 100, rank 15 is 100. Plain AGREES. F (seventeen 0, then 5,
+//!   10, 25; record 0): 0 to 0. Plain AGREES. G (eighteen 4, two 6; record 4): 4 to
 //!   4. Plain AGREES.
 //! - L (judged, ships_sunk [1,2], record 2): the 5th to 95th is 0 to 2 and 2
 //!   of 20 hold it, 2 x 20 = 40 >= 20, so it agrees; the 25th to 75th is 0 to
@@ -88,8 +99,8 @@
 //!   Unit cases for the calculation alone (`validate/take.rs`): "99.999999"
 //!   gives 0; "100" gives 1; "199.5" gives 1; "2791" gives 27; "1867" gives
 //!   18; "471" gives 4.
-//! - So the fixture's head reads: judged 9 (A, B, C, D, F, G, I, L, M), agree
-//!   5 (A, D, F, G, M), at the edge 1 (L), miss 3 (B, C, I).
+//! - So the fixture's head reads: judged 10 (A, B, C, D, F, G, I, L, M, N),
+//!   agree 6 (A, D, F, G, M, N), at the edge 1 (L), miss 3 (B, C, I).
 //! - The battle: 20 runs is fewer than 1,000, so no verdict on the battle;
 //!   the report says so.
 //!
@@ -252,6 +263,13 @@ fn fixture(dir: &Path, runs: u64) -> Value {
             run["escorts"] = json!([
                 {"day": 1, "pulse": "afternoon", "air_group": 5, "with_air_group": 1, "aircraft": 6},
                 {"day": 1, "pulse": "morning", "air_group": 5, "with_air_group": 1, "aircraft": 4}]);
+        }
+        if r == 2 {
+            run["fights"] = json!([{"day": 1, "pulse": "morning", "rounds": 1}]);
+        }
+        if r == 3 {
+            run["fights"] = json!([{"day": 1, "pulse": "night", "rounds": 1},
+                {"day": 1, "pulse": "afternoon", "rounds": 1}]);
         }
         if r == 5 {
             run["ready"] = json!([ready(vec![3, 4], 2), ready(vec![0, 2], 3)]);
@@ -435,6 +453,16 @@ side = "japanese"
 weapon = "gun"
 rows = [1]
 reason = "r"
+
+[[measure]]
+id = "n"
+counts = "N"
+record_low = 0
+record_high = 0
+judged = true
+take = "fights_by_day"
+rows = [1]
+reason = "r"
 "#;
 
 struct Setup {
@@ -522,7 +550,8 @@ fn the_hand_calculation_of_every_measure() {
     expect(&report, "c", "0 to 2", "0", "0 of 20", "0", "MISS");
     expect(&report, "d", "37 to 133", "100", "16 of 19", "1", "agrees");
     expect(&report, "e", "0 to 233", "0", "1 of 19", "1", "reported");
-    expect(&report, "f", "0 to 0", "0", "19 of 20", "0", "agrees");
+    expect(&report, "f", "0 to 10", "0", "17 of 20", "0", "agrees");
+    expect(&report, "n", "0 to 1", "0", "18 of 20", "0", "agrees");
     expect(&report, "g", "4 to 6", "4", "18 of 20", "0", "agrees");
     expect(&report, "h", "0 to 0", "0", "1 of 20", "0", "reported");
     expect(
@@ -546,8 +575,8 @@ fn the_hand_calculation_of_every_measure() {
         "0",
         "agrees, at the edge",
     );
-    // Nine judged: a, d, f, g, m agree; l agrees at the edge; b, c, i miss.
-    assert!(report.contains("Judged measures: 5 agree, 1 agree at the edge, 3 miss, of 9."));
+    // Ten judged: a, d, f, g, m, n agree; l agrees at the edge; b, c, i miss.
+    assert!(report.contains("Judged measures: 6 agree, 1 agree at the edge, 3 miss, of 10."));
     assert!(report.contains("## At the edge\n\n### l\n"));
     assert!(report.contains("- Verdict: agrees, at the edge"));
     assert!(report.contains("least 0, 5th 0, 25th 0, median 0, 75th 1, 95th 2, greatest 2"));
@@ -740,6 +769,15 @@ fn what_validate_refuses() {
         "day 3",
     );
     refuse(
+        "key-with-fights-by-day",
+        &good,
+        &MEASURES.replace(
+            "take = \"fights_by_day\"\n",
+            "take = \"fights_by_day\"\nside = \"japanese\"\n",
+        ),
+        "fights_by_day takes no keys",
+    );
+    refuse(
         "no-take",
         &good,
         &MEASURES.replace("take = \"minutes_of_action\"\n", ""),
@@ -853,6 +891,7 @@ fn real_batches_of_the_three_battles_are_judged() {
             for id in [
                 "japanese_gun_shells_fired_in_hundreds",
                 "allied_gun_shells_fired_in_hundreds",
+                "surface_fights_by_day",
             ] {
                 assert!(report.contains(&format!("| {id} |")), "{id} missing");
             }

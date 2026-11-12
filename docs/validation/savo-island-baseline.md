@@ -10,11 +10,11 @@ Inputs: state hash layout flagplot-state-v5, scenario file hash a828cd46c317534b
 - data/scenarios/../reference/aircraft_types.csv 92830cbacc0a4328
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 485cfd1b8ba0d4f2
-Measures: data/validation/savo_island.toml (hash a0810935227db0af), 16 measures, 15 judged
+Measures: data/validation/savo_island.toml (hash 5eeb11755f6a96f6), 17 measures, 16 judged
 
-Judged measures: 6 agree, 4 agree at the edge, 5 miss, of 15.
+Judged measures: 7 agree, 4 agree at the edge, 5 miss, of 16.
 
-**The battle does not pass:** 5 of 15 judged measures miss.
+**The battle does not pass:** 5 of 16 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -32,6 +32,7 @@ Judged measures: 6 agree, 4 agree at the edge, 5 miss, of 15.
 | japanese_gun_shells_fired_in_hundreds | 18 | 8 to 34 | 23 | 19 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
 | allied_gun_shells_fired_in_hundreds | 4 | 4 to 50 | 29 | 21 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
 | minutes_of_action | 20 to 30 | 15 to 50 | 30 | 495 of 1000 | 0 | agrees |
+| surface_fights_by_day | 0 | 0 to 4 | 1 | 358 of 1000 | 0 | agrees |
 | japanese_ships_claimed_sunk_per_hundred_sunk | 350 | 100 to 300 | 100 | 1 of 957 | 43 | reported |
 | allied_ships_claimed_sunk | 0 | 0 to 6 | 2 | 240 of 1000 | 0 | agrees, at the edge |
 
