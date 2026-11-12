@@ -27,7 +27,7 @@ pub struct EventOut {
 
 #[derive(Serialize)]
 #[serde(rename_all = "snake_case")]
-enum CauseOut {
+pub(super) enum CauseOut {
     Order(u32),
     Event(u32),
 }
@@ -140,7 +140,7 @@ fn cargo_named(data: Data, cargo: Cargo) -> Data {
     }
 }
 
-fn describe(kind: &EventKind) -> (&'static str, Data) {
+pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
     let d = Data::new();
     match kind {
         EventKind::OrderAccepted { order, target } => (
