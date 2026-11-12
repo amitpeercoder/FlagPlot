@@ -1,6 +1,6 @@
 # 0024: The Savo Island scenario: what is in it and what is left out
 
-Status: needs review. Decisions 2 and 6 change what decision 0019 said would be in the scenario.
+Status: confirmed by the designer on Nov 12, 2026. Decisions 2 and 6 change what decision 0019 said would be in the scenario.
 
 ## The gap
 
