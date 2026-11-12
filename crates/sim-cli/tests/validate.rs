@@ -67,6 +67,19 @@
 //!   is 1 in run 1 and 0 elsewhere; attack_of_at_least 10 aircraft (side
 //!   japanese, task force 2) is 1 in run 1 (12 + 5 = 17 in one day and pulse,
 //!   escorts not counted) and 0 elsewhere. Both not judged, record 1.
+//! - The 25th and 75th percentiles (an agreement at the edge, step 2 spec):
+//!   with 20 kept runs the 25th is rank ceil(25 x 20 / 100) = 5 and the 75th
+//!   is rank 15; with 19 kept, ranks ceil(4.75) = 5 and ceil(14.25) = 15.
+//!   A (ten 0, eight 1, two 2; record 1): rank 5 is 0, rank 15 is 1; 1 is
+//!   within 0 to 1. Plain AGREES. D (37, 80, sixteen 100, 133; record 100):
+//!   rank 5 is 100, rank 15 is 100. Plain AGREES. F (nineteen 0, one 25;
+//!   record 0): 0 to 0. Plain AGREES. G (eighteen 4, two 6; record 4): 4 to
+//!   4. Plain AGREES.
+//! - L (judged, ships_sunk [1,2], record 2): the 5th to 95th is 0 to 2 and 2
+//!   of 20 hold it, 2 x 20 = 40 >= 20, so it agrees; the 25th to 75th is 0 to
+//!   1 and 2 is outside it. AGREES, AT THE EDGE.
+//! - So the fixture's head reads: judged 8 (A, B, C, D, F, G, I, L), agree 4
+//!   (A, D, F, G), at the edge 1 (L), miss 3 (B, C, I).
 //! - The battle: 20 runs is fewer than 1,000, so no verdict on the battle;
 //!   the report says so.
 //!
@@ -75,7 +88,12 @@
 //! is 1 and rank 950 is 1, so the middle 90 percent is 1 to 1; the median,
 //! rank 500, is 1. Record 1: agrees (901 hold it). Record 2: MISS on the first
 //! test only. Record 0: MISS on both (49 x 20 = 980 < 1000). Record 0 to 1:
-//! agrees (950 hold it). And the floor's edge: with 20 runs, 4 kept is judged
+//! agrees (950 hold it), plain, as rank 250 and rank 750 are both 1. A second
+//! set of 1,000: one hundred 0, eight hundred 1, one hundred 2. Rank 50 is 0
+//! and rank 950 is 2; rank 250 and rank 750 are 1. Record 2: agrees (100 x 20
+//! = 2000 >= 1000), at the edge (2 is outside 1 to 1). Record 1: plain agrees.
+//! Record 0 to 1: plain agrees. Record 0: agrees at the edge. And the floor's
+//! edge: with 20 runs, 4 kept is judged
 //! and 3 kept is too few. A battle of 1,000 runs passes when every judged
 //! measure agrees and does not when one misses; that is tested here on a
 //! generated batch of 1,000 runs.
@@ -384,6 +402,17 @@ target_task_forces = [2]
 aircraft = 10
 rows = [1]
 reason = "r"
+
+[[measure]]
+id = "l"
+counts = "L"
+record_low = 2
+record_high = 2
+judged = true
+take = "ships_sunk"
+ships = [1, 2]
+rows = [1]
+reason = "r"
 "#;
 
 struct Setup {
@@ -450,6 +479,10 @@ fn expect(
         "{id} verdict {:?} lacks {verdict:?}",
         c[6]
     );
+    // A plain agreement is not one at the edge.
+    if verdict == "agrees" {
+        assert_eq!(c[6], "agrees", "{id} is a plain agreement");
+    }
 }
 
 #[test]
@@ -481,15 +514,27 @@ fn the_hand_calculation_of_every_measure() {
     );
     expect(&report, "j", "0 to 0", "0", "1 of 20", "0", "reported");
     expect(&report, "k", "0 to 0", "0", "1 of 20", "0", "reported");
-    // Seven judged: a, d, f, g agree; b, c, i miss.
-    assert!(report.contains("Judged measures: 4 agree, 3 miss, of 7."));
+    expect(
+        &report,
+        "l",
+        "0 to 2",
+        "0",
+        "2 of 20",
+        "0",
+        "agrees, at the edge",
+    );
+    // Eight judged: a, d, f, g agree; l agrees at the edge; b, c, i miss.
+    assert!(report.contains("Judged measures: 4 agree, 1 agree at the edge, 3 miss, of 8."));
+    assert!(report.contains("## At the edge\n\n### l\n"));
+    assert!(report.contains("- Verdict: agrees, at the edge"));
+    assert!(report.contains("least 0, 5th 0, 25th 0, median 0, 75th 1, 95th 2, greatest 2"));
     assert!(report.contains(
         "**No verdict on the battle.** This batch has 20 runs and the spec asks for 1000."
     ));
     // A miss carries its counts text, rows and spread.
     assert!(report.contains("### c\n"));
     assert!(report.contains("- Counts: C"));
-    assert!(report.contains("least 0, 5th 0, median 0, 95th 2, greatest 2"));
+    assert!(report.contains("least 0, 5th 0, 25th 0, median 0, 75th 2, 95th 2, greatest 2"));
     assert!(report.contains("- Each value and its runs: 0: 10, 2: 10"));
     // The two standing notes.
     assert!(report.contains("Hits are counted as rolled"));
