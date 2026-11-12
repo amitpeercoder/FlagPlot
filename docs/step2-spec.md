@@ -47,10 +47,10 @@ A measure is one number taken from a run, with the recorded value beside it. Eac
 
 | Battle | Measures |
 | --- | --- |
-| Savo Island | Ships sunk by side and by type; ships crippled by side; which Allied group was hit; minutes of fighting, for when a force breaks off |
-| Eastern Solomons | Ships sunk and crippled by side; bomb hits on each carrier; aircraft lost by side; whether each side found and struck the other |
-| Rabaul against Guadalcanal | Raid days; aircraft lost by side and by cause; aircraft ready at Henderson Field over time; supply used; days the field could not fly |
-| All | The result on the objectives scale (decision 0054), beside history's result on that scale. Reported and not judged, until the scale counts a ship that is out of the campaign |
+| Savo Island | Ships sunk by side and by type, and by Allied group; Japanese ships left with propulsion out; hits by side and by weapon; hits for each thousand shells; minutes of fighting, for when a force breaks off |
+| Eastern Solomons | Carriers sunk by side; bomb hits on each carrier; whether Enterprise's deck is out; aircraft lost by side, to the enemy and to all causes; the aircraft in each side's strike |
+| Rabaul against Guadalcanal | Raid days and bomber sorties; aircraft lost by side and by cause; aircraft ready at Henderson Field over time; pilots lost. Supply used and the days the field could not fly have no measure: no row gives a figure for either |
+| All | The result on the objectives scale (decision 0054): the report gives the tally of outcomes and the Allied margin over the runs. Reported and not judged, until the scale counts a ship that is out of the campaign |
 | Passages | Minutes for the recorded runs the slice holds, set against what the rules charge. Reported and not judged: research found no long run at one held speed |
 | Claims | Claimed over actual, for aircraft and for ships, by side |
 
@@ -68,17 +68,29 @@ One night happened once. A model that gives the recorded outcome every time is a
 
 1. **A measure agrees if the record lies inside the middle 90 percent of the runs.** That is, between the 5th and 95th percentile over 1,000 seeds.
 2. **And if the record is not a freak in the model.** The recorded value, or the range for it, must hold at least 1 run in 20.
-3. **Shape checks are stated per battle, as yes or no.** For example: at Savo Island the Allied side loses more ships than the Japanese in at least 8 runs of 10.
+3. **Shape checks are stated per battle, as yes or no.** For example: at Savo Island the Allied side loses more ships than the Japanese in at least 8 runs of 10. None is stated yet, and the measures files have no form for one. `validate` judges only what the files state; a form is added with the first shape check.
 4. **A battle passes when every judged measure agrees.** A miss is reported with the measure, the record, and the runs' spread.
 
 The designer accepted these widths as a start. They are looked at again after the first reports.
 
+The two tests, exactly, as the architect of the spec session settled them on Nov 12, 2026:
+
+- **The runs kept.** A measure's value is taken from each run. A measure that divides (claims for each hundred, hits for each thousand shells) leaves out a run in which the divisor is nothing. The runs left are the runs kept, and both tests are worked on them.
+- **A percentile is a value that a run gave,** never an average of two. The kept runs' values are sorted, and the percentile p is the value at place ceil(p × n / 100), counting from 1, of n. Of 1,000 runs the 5th is the 50th value and the 95th the 950th.
+- **Inside the middle 90 percent** means from the 5th percentile to the 95th, both ends included. A record that is a range is inside if any part of it is: the range spans a dispute, the true figure is somewhere in it, and a model is not at fault for the width of a dispute.
+- **A run holds the record** if its value is from `record_low` to `record_high`, both ends included. At least 1 run in 20 means the runs that hold it, times 20, are no fewer than the runs kept.
+- **Too few runs kept.** If fewer than 1 run in 5 is kept, a judged measure misses, and the report says that is why. A spread over a handful of runs says nothing. If none is kept the measure has no value and misses for the same reason.
+- **A battle passes only on 1,000 runs or more.** `validate` reports on fewer, and says in plain words how many runs it had and that 1,000 are asked for; such a report gives each measure's verdict and no verdict on the battle.
+
 ## The harness
 
 - **`sim-cli batch` records more for each run** (decision 0062): aircraft lost by group and cause, hits by ship, shots and hits by side, attacks and escorts, aircraft ready by day, claims, supply used, the round a force broke off and the rounds each fight ran.
-- **A new command, `sim-cli validate`,** reads a batch file and a measures file and writes a report: each measure, the record, the spread, and agree or not. It refuses a batch whose `inputs` do not match the data files on disk (decision 0057).
-- **Every batch is labelled** with the revision that made it. `batch` writes one without a label; `validate` refuses it.
-- **Reports are kept** under `docs/validation/`, one per battle per tuning round, so the history of the tuning can be read.
+- **A new command, `sim-cli validate`,** reads a batch file and a measures file and writes a report: each measure, the record, the spread, and agree or not. It refuses a batch whose `inputs` do not match the data files on disk (decision 0057), and one whose hash layout version is not the engine's.
+- **Every batch is labelled with its tuning round:** `baseline` for the first, then a name for each round. The label is letters, digits, dot, dash and underscore. The hashes in `inputs` say which figures the round ran on; the label says which round it was. `batch` writes a file without a label; `validate` refuses it.
+- **Reports are kept** under `docs/validation/`, one per battle per tuning round, as `<battle>-<label>.md`, so the history of the tuning can be read. `validate` does not write over a report of the same name unless what it would write is the same, byte for byte.
+- **What a report holds.** Its head names the batch's label, runs and seeds, every hash in `inputs`, and the measures file with its hash. It carries no date: the same inputs give the same file, and git dates it. Then each measure in the file's order: its id, the record, the 5th to the 95th percentile, the median, how many of the runs kept hold the record, how many runs were left out, and the verdict: agrees, or a miss naming the test that failed, or reported, or not run. A miss also gives what the measure counts, its rows, and the spread as least, 5th, median, 95th and greatest, with a count of each value where there are 20 or fewer. A measure that is not judged shows the same numbers and no verdict. Last, the tally of outcomes and the Allied margin on the objectives scale, reported.
+- **A measures file whose scenario is not built** is given to `validate` with no batch, and the report lists each measure and its record as not run.
+- **A miss is not a failure of the command.** `validate` ends with success when it has written its report, whatever the verdicts. Only a refusal ends with an error.
 
 The harness is an umpire's tool, like the viewer. It reads truth. Nothing that plays the game uses it.
 
@@ -103,7 +115,7 @@ Proposed:
 
 1. **The hand-calculation tests run on a frozen copy of the figures** as they stand at the end of step 1 (`data/reference/step1/`), for the length of step 2. Whether to work the calculations again on the tuned figures, all of them or a few chosen to test the arithmetic at tuned sizes, is decided when step 2 closes.
 2. **One mechanism in the loader points a scenario at them:** a reference root the caller may override. A scenario file names its reference files by path, so without this each test would need its own copy of the scenario. One test already copies a figures file and rewrites the path in the scenario's text; that is replaced by the loader's mechanism, not repeated.
-3. **What such a test then proves is stated:** that the rules compute what the hand calculation says, on known figures. It proves nothing about the figures in use. That is `validate`'s job. Both run in CI.
+3. **What such a test then proves is stated:** that the rules compute what the hand calculation says, on known figures. It proves nothing about the figures in use. That is `validate`'s job. Both run in CI: for `validate` that means its own tests, on a small batch made by hand whose percentiles and verdicts are worked out in the test's doc comment. No batch of 1,000 runs is run in CI.
 4. **The run baselines follow the live figures.** The files under `crates/sim-cli/tests/run_baseline` record what each scenario does on the figures in use, so they are remade in the same change as each tuning round, and the change shows the difference.
 5. **A rule change still means a new hand calculation,** written by the architect before the code.
 6. **A rule added during step 2 adds its figures to the frozen copy too, at the value that leaves step 1's results as they were,** where there is such a value, and otherwise at its first value. The frozen copy stands for what step 1 did, so a rule step 1 did not have is switched off there wherever it can be. The pilot of a patrol shot down over its own base is always recovered in the frozen copy, as in step 1, and draws for it in the live figures. The strength of experience is frozen at the value that makes experience do nothing. So no hand calculation of step 1 moves when a rule is added.
