@@ -40,18 +40,19 @@ mod text;
 mod words;
 
 pub use answer::{NotKnown, FORMAT, VERSION};
-pub use briefing::{briefing, Briefing};
+pub use briefing::{briefing, briefing_for_game, Briefing};
 pub use briefing::{
     ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, BriefingBase, Claim, ContactsPart,
     DamagedShip, DroppedContact, DueArrival, Fight, Fired, FuelWarning, Heading, LossesPart,
-    NotThere, OrdersPart, PilotWarning, Raid, RefusedOrder, ReplacementStream, ReportedContact,
-    ShipRangeWarning, Strike, SunkShip, SupplyWarning, SystemChange, TiredWarning, Warnings,
+    NotThere, OrdersPart, PilotWarning, PropulsionWarning, Raid, RefusedOrder, ReplacementStream,
+    ReportedContact, ShipRangeWarning, Strike, SunkShip, SupplyWarning, SystemChange, TiredWarning,
+    Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
-pub use lines::{AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine};
+pub use lines::{AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, PropulsionLine};
 pub use measure::{
     measure, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer, Moment, Passage,
     PassageSpeed, PlaceArg, Question, ReachLine, Resolved, SeaRoute, ShipFuel, SpeedArg,

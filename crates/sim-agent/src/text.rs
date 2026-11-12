@@ -104,7 +104,14 @@ impl Briefing {
         o.heading("HEADING");
         let h = &self.heading;
         o.line(format!("Side: {}", h.side));
-        o.line(format!("Day: {}", h.day));
+        match h.last_day {
+            Some(last) if h.day > last => o.line(format!(
+                "Day: {} (the game is over: day {} was the last)",
+                h.day, last
+            )),
+            Some(last) => o.line(format!("Day: {} of {}", h.day, last)),
+            None => o.line(format!("Day: {}", h.day)),
+        }
         o.line(format!("Scenario: {}", h.scenario));
         match h.yesterday {
             Some(day) => o.line(format!(
@@ -224,7 +231,7 @@ impl Briefing {
         });
         o.each("Own anti-aircraft fire", &a.guns, |x| {
             format!(
-                "Anti-aircraft fire: {} at the raid of {}, {} shots{}",
+                "Anti-aircraft fire: {} at the raid of enemy {}, {} shots{}",
                 x.by.text(),
                 x.raid.text(),
                 x.shots.0,
@@ -273,7 +280,7 @@ impl Briefing {
         }
         o.each("Raids on bases", &a.raids_on_bases, |x| {
             format!(
-                "Raid on {} by {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {} on nothing{}",
+                "Raid on {} by enemy {}: {} aircraft attacked, {} {}, {} on aircraft, {} on supply, {} on nothing{}",
                 x.base.text(),
                 x.air_group.text(),
                 x.aircraft.0,
@@ -289,7 +296,7 @@ impl Briefing {
             match x.aircraft {
                 Some(n) => {
                     let mut s = format!(
-                        "Attack on {} by {}: {} aircraft",
+                        "Attack on {} by enemy {}: {} aircraft",
                         x.against.text(),
                         x.by.text(),
                         n.0
@@ -300,7 +307,7 @@ impl Briefing {
                     s
                 }
                 None => format!(
-                    "Fired on: {} {} at {}: {}",
+                    "Fired on: enemy {} {} at {}: {}",
                     x.by.text(),
                     x.weapon.unwrap_or("guns"),
                     x.against.text(),
@@ -401,6 +408,11 @@ impl Briefing {
                 s.push_str(&format!(", fatigue {}", f.fatigue.0));
             }
             s.push_str(&format!(", {} afloat", ships(f.ships_afloat)));
+            match f.movement {
+                "cannot_move" => s.push_str(", CANNOT MOVE (propulsion out)"),
+                "slowed" => s.push_str(", slowed (propulsion damaged)"),
+                _ => {}
+            }
             o.line(s);
             if let Some(fuel) = &f.least_fuelled {
                 let range = match fuel.range_nm {
@@ -433,8 +445,12 @@ impl Briefing {
             if rules.wear {
                 s.push_str(&format!(", {} damaged", g.damaged));
             }
-            if let Some(p) = g.pilots {
-                s.push_str(&format!(", {p} pilots"));
+            match g.pilots {
+                Some(p) => s.push_str(&format!(", {p} pilots")),
+                // Pilots are counted for some groups only: where they are
+                // not, no pilot limit applies to what the group flies.
+                None if rules.pilots => s.push_str(", pilots not counted (no pilot limit)"),
+                None => {}
             }
             if rules.fatigue {
                 s.push_str(&format!(", fatigue {}", g.fatigue.0));
@@ -487,11 +503,11 @@ impl Briefing {
 
         o.heading("ARRIVALS");
         o.each(
-            "Arrivals due today and on the next two days",
+            "Arrivals due on the coming day and the next two days",
             &self.arrivals.due,
             |x| {
                 format!(
-                    "Due day {}: {}, {} aircraft, {} pilots",
+                    "Due day {}: {}, {} aircraft, {} pilots, arriving in the night pulse that begins that day, before its morning",
                     x.day,
                     x.air_group.text(),
                     x.aircraft,
@@ -582,6 +598,30 @@ impl Briefing {
         } else {
             o.line("Air groups tired: fatigue is not in play".to_string());
         }
+        o.each(
+            "Task forces that cannot move or are slowed",
+            &w.task_force_propulsion,
+            |x| {
+                let ships: Vec<String> = x
+                    .ships
+                    .iter()
+                    .map(|s| format!("{} propulsion {}", s.ship.text(), s.propulsion))
+                    .collect();
+                if x.effect == "cannot_move" {
+                    format!(
+                        "Cannot move: {} (the force has no speed while a ship's propulsion is out): {}",
+                        x.task_force.text(),
+                        ships.join(", ")
+                    )
+                } else {
+                    format!(
+                        "Slowed: {} (it steams at the speed of its slowest ship): {}",
+                        x.task_force.text(),
+                        ships.join(", ")
+                    )
+                }
+            },
+        );
 
         o.0
     }

@@ -1047,7 +1047,7 @@ fn every_answer_and_the_transcript_are_valid_against_their_schemas() {
 
 #[test]
 fn the_tools_give_what_the_functions_give() {
-    use sim_agent::{briefing, get_entity, list_bases, list_contacts, list_forces};
+    use sim_agent::{briefing_for_game, get_entity, list_bases, list_contacts, list_forces};
     let (mut session, _, _) = eastern_solomons();
     let world = load("05_eastern_solomons.toml", 1942).world;
     let view = world.side_view(Side::Allied);
@@ -1056,7 +1056,11 @@ fn the_tools_give_what_the_functions_give() {
     };
     same(
         call(&mut session, Side::Allied, "get_briefing", json!({})),
-        &briefing(&view, "Scenario 5: Eastern Solomons, 24 August 1942"),
+        &briefing_for_game(
+            &view,
+            "Scenario 5: Eastern Solomons, 24 August 1942",
+            Some(1),
+        ),
     );
     same(
         call(&mut session, Side::Allied, "list_forces", json!({})),

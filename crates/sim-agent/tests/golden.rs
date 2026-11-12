@@ -14,12 +14,16 @@ use support::{load, play};
 fn briefings(name: &str, side: Side, days: &[u32]) -> Vec<(u32, String)> {
     let mut scenario = load(name, 1942);
     let title = scenario.name.clone();
+    let last_day = scenario.days;
     let mut out = Vec::new();
     play(&mut scenario, |s| {
         let view = s.world.side_view(side);
         let day = view.day() + 1;
         if days.contains(&day) {
-            out.push((day, sim_agent::briefing(&view, &title).to_text()));
+            out.push((
+                day,
+                sim_agent::briefing_for_game(&view, &title, Some(last_day)).to_text(),
+            ));
         }
     });
     out
