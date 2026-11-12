@@ -509,9 +509,13 @@ fn the_run_matches_the_hand_calculation_day_by_day() {
             (5, DESTROYER, NOUMEA, 1, 424, 0),
         ]
     );
-    assert_eq!(day5.event_count, 2);
+    // The two refuellings, and the two bases' counts at the end of the day
+    // (decision 0067).
+    assert_eq!(day5.event_count, 2 + 2);
     let last = scenario.world.events().from_index(day5.first_event);
-    assert_eq!(last.len(), 2);
+    assert!(last[2..]
+        .iter()
+        .all(|event| matches!(event.kind, EventKind::BaseAtDayEnd { .. })));
     assert_eq!(last[0].causes, vec![Cause::Event(arrival_day4.0)]);
     assert_eq!(last[1].causes, vec![Cause::Event(arrival_day4.0)]);
     assert_eq!(steamed_nm(&scenario, &day5), 0);
@@ -623,7 +627,7 @@ fn the_refuelling_events_say_what_the_hand_calculation_says() {
     // In the plain style of the fuel events, saying plainly when a base has
     // run out.
     assert!(events[0].to_string().ends_with(
-        "ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 21.5 t left  <- #15"
+        "ship:1 took 98.5 t of fuel at base:2, 2000 t aboard, base:2 has 21.5 t left  <- #17"
     ));
     assert!(events[1]
         .to_string()
@@ -775,7 +779,16 @@ fn neither_base_has_fuel_so_nothing_is_refuelled() {
         .iter()
         .map(|summary| summary.state_hash)
         .collect();
-    let transit_events: Vec<Event> = transit.world.events().iter().cloned().collect();
+    // Scenario 1 through day 2. Its day 3 holds only the bases' counts at
+    // the end of the day (decision 0067), which come after this scenario's
+    // own events of day 3.
+    let transit_events: Vec<Event> = transit
+        .world
+        .events()
+        .iter()
+        .filter(|event| event.day <= 2)
+        .cloned()
+        .collect();
     let ours: Vec<Event> = scenario.world.events().iter().cloned().collect();
     assert_eq!(ours[..transit_events.len()], transit_events[..]);
     assert!(ours[transit_events.len()..]

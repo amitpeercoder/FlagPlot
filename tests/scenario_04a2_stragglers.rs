@@ -824,7 +824,8 @@ fn the_main_case_totals_and_final_fuel() {
     );
     // Events by day: orders, both detachments, the staff order, and all the
     // movement of day 1; only task force 2's last leg and arrival on day 2.
-    assert_eq!(run.day_event_counts, vec![24, 4]);
+    // Each day ends with the one base's count (decision 0067).
+    assert_eq!(run.day_event_counts, vec![24 + 1, 4 + 1]);
 }
 
 // ---------------------------------------------------------------------
@@ -982,8 +983,9 @@ fn the_keep_instruction_detaches_nothing_and_goes_nowhere() {
     }
     assert_eq!(run.force(TF1).status, TaskForceStatus::Underway);
     assert_stopped_at(run.world(), TF1, hex(6, 0));
-    // Only the three orders of intake were logged, all on day 1.
-    assert_eq!(run.day_event_counts, vec![3, 0]);
+    // Only the three orders of intake were logged, all on day 1, and the
+    // one base's count at the end of each day (decision 0067).
+    assert_eq!(run.day_event_counts, vec![3 + 1, 1]);
 }
 
 #[test]

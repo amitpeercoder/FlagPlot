@@ -7,7 +7,7 @@ pub const FORMAT: &str = "flagplot-agent";
 
 /// The version of the format. A field removed or changed in meaning bumps it;
 /// a field added does not (see `schemas/README.md`).
-pub const VERSION: u32 = 2;
+pub const VERSION: u32 = 3;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 2 },
+    "version": { "const": 3 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -85,11 +85,15 @@
         "known": {
           "description": "What the side knows of its progress, from its own units and the events it may see. basis is exact, claims (the enemy ships and aircraft the side's own claims say it sank, shot down or destroyed on the ground: they can be wrong, so count can be above the truth; points are for the kind of ship each claim names, or null where none does) or not_observable (count is 0 and says nothing).",
           "type": "object",
-          "required": ["basis", "count", "points"],
+          "required": ["basis", "count", "days", "points"],
           "additionalProperties": false,
           "properties": {
             "basis": { "enum": ["exact", "claims", "not_observable"] },
             "count": { "$ref": "defs.schema.json#/$defs/dec" },
+            "days": {
+              "description": "For base_open at a base of the side's own: the days counted, which count is out of. Null for everything else.",
+              "type": ["integer", "null"]
+            },
             "points": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
           }
         }
@@ -118,13 +122,17 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["kind", "base", "closed", "count", "ships", "points"],
+            "required": ["kind", "base", "closed", "count", "days", "ships", "points"],
             "additionalProperties": false,
             "properties": {
               "kind": { "enum": ["ships_sunk", "ships_crippled", "aircraft_destroyed", "cargo_landed", "base_open"] },
               "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
               "closed": { "type": ["boolean", "null"] },
               "count": { "$ref": "defs.schema.json#/$defs/dec" },
+              "days": {
+                "description": "For base_open: the days counted, which count is out of. Null for the others.",
+                "type": ["integer", "null"]
+              },
               "ships": {
                 "type": "array",
                 "items": {

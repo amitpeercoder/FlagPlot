@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 542d932f5ab56bbd  290 events
+day   1  hash aa8dd511ac1e7be6  291 events
 
 #1 D0 -         Allied report: 8 ships, cruiser, at (-1,-9), held at the start: new contact:1
 #2 D0 -         Allied contact:1 aged to 1 pulses  <- #1
@@ -297,6 +297,7 @@ day   1  hash 542d932f5ab56bbd  290 events
 #291 D1 afternoon ship:4 burned 35.066037 t, 1790.81546 t remaining  <- #288
 #292 D1 afternoon ship:8 burned 15.775896 t, 300.894107 t remaining  <- #288
 #293 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
+#294 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

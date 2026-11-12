@@ -45,7 +45,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 2 },
+        "version": { "const": 3 },
         "kind": { "const": "measure" },
         "question": { "const": "air_distance" },
         "from": { "$ref": "#/$defs/resolved" },
@@ -62,7 +62,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 2 },
+        "version": { "const": 3 },
         "kind": { "const": "measure" },
         "question": { "const": "sea_route" },
         "from": { "$ref": "#/$defs/resolved" },
@@ -100,7 +100,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 2 },
+        "version": { "const": 3 },
         "kind": { "const": "measure" },
         "question": { "const": "passage" },
         "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
@@ -162,7 +162,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 2 },
+        "version": { "const": 3 },
         "kind": { "const": "measure" },
         "question": { "const": "air_reach" },
         "air_group": { "$ref": "defs.schema.json#/$defs/handle" },

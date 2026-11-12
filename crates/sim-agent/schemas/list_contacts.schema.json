@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 2 },
+    "version": { "const": 3 },
     "kind": { "const": "list_contacts" },
     "area": { "$ref": "#/$defs/area_or_null" },
     "contacts": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/contact_line" } }

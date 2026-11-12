@@ -22,7 +22,7 @@
 //!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
-//! `"version": 2` and a `"kind"`, and has a schema under `schemas/`. A
+//! `"version": 3` and a `"kind"`, and has a schema under `schemas/`. A
 //! quantity of the game is a whole number if it counts things and a decimal
 //! string if it is a [`sim_core::fixed::Fixed`], never a float.
 

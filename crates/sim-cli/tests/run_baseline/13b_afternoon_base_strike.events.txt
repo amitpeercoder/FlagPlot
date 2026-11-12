@@ -2,8 +2,8 @@ Scenario 13b: An afternoon base strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 57107e2971129b73  15 events
-day   2  hash 6c8948bf38bf3c6f  4 events
+day   1  hash 7e350cea2487948c  16 events
+day   2  hash ecf4cd6a84f4afbc  5 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -20,10 +20,12 @@ day   2  hash 6c8948bf38bf3c6f  4 events
 #13 D1 afternoon ship:1 burned 24 t, 2880 t remaining  <- #12
 #14 D1 afternoon ship:2 burned 9 t, 455 t remaining  <- #12
 #15 D1 afternoon task_force:1 arrived at (3,0) at D1 16:30  <- #12
-#16 D2 morning   air_group:1 launched 18 aircraft at base:1 at (0,0), 120 nm  <- order:2
-#17 D2 morning   air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 5 hits: 3 on aircraft, 1 on supply, 1 on nothing  <- #16
-#18 D2 morning   base:1 lost 50 t of supply, 950 t left  <- #17
-#19 D2 morning   Allied claim at (0,0): 2 aircraft destroyed on the ground  <- #17
+#16 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#17 D2 morning   air_group:1 launched 18 aircraft at base:1 at (0,0), 120 nm  <- order:2
+#18 D2 morning   air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 5 hits: 3 on aircraft, 1 on supply, 1 on nothing  <- #17
+#19 D2 morning   base:1 lost 50 t of supply, 950 t left  <- #18
+#20 D2 morning   Allied claim at (0,0): 2 aircraft destroyed on the ground  <- #18
+#21 D2 -         base:1 at the end of the day: 950 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder carrier force" (Allied): Arrived at (3,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder dive bombers" (Allied) aboard ship:1: 18 ready, mission BaseStrike on base:1, no arc

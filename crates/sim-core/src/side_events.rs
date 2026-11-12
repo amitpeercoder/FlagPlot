@@ -519,7 +519,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::AirGroupReturned { air_group, .. } => whole_if(own_group(air_group)),
 
         // Bases.
-        EventKind::BaseSupplyDestroyed { base, .. } | EventKind::BaseSupplySpent { base, .. } => {
+        EventKind::BaseSupplyDestroyed { base, .. }
+        | EventKind::BaseSupplySpent { base, .. }
+        // What its own base held at the end of the day: nothing it did not
+        // know (decision 0067).
+        | EventKind::BaseAtDayEnd { base, .. } => {
             whole_if(own_base(base))
         }
 
@@ -1039,7 +1043,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 63 kinds ----
+    // ---- the table of the 64 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -1854,6 +1858,15 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            row(
+                EventKind::BaseAtDayEnd {
+                    base: base(1),
+                    supply_t: fx(40),
+                    aircraft_ready: 6,
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -1894,7 +1907,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 63, "the log has 63 kinds of event");
+        assert_eq!(all.len(), 64, "the log has 64 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

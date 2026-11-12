@@ -1498,13 +1498,15 @@ fn every_pulse_of_every_run_is_worked_by_the_rule_from_the_counts_at_the_start_o
         assert_eq!(run.hashes.len(), 6);
     }
     // Every event of every run is accounted for: the orders at the start,
-    // and the pulses worked.
+    // the pulses worked, and each base's count at the end of each day
+    // (decision 0067), which belongs to no pulse.
     for run in batch() {
-        let accounted = run
-            .events
-            .iter()
-            .filter(|e| e.pulse.is_none())
-            .all(|e| matches!(e.kind, EventKind::OrderAccepted { .. }));
+        let accounted = run.events.iter().filter(|e| e.pulse.is_none()).all(|e| {
+            matches!(
+                e.kind,
+                EventKind::OrderAccepted { .. } | EventKind::BaseAtDayEnd { .. }
+            )
+        });
         assert!(accounted, "seed {}", run.seed);
     }
 }

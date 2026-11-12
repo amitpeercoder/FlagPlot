@@ -25,16 +25,16 @@ Each objective is a count of something the engine already records, taken for the
 | `ships_sunk` | Enemy ships whose location is sunk, by kind of ship | For each kind of ship |
 | `ships_crippled` | Enemy ships not sunk (afloat or in port) with propulsion out or the flight deck out, by kind | For each kind of ship |
 | `aircraft_destroyed` | Enemy aircraft lost for good, by any cause | For one aircraft |
-| `cargo_landed` | Tons of supply and fuel unloaded by the side's own ships at a named base | For one ton |
-| `base_open` | 1 if a named base has supply above zero and at least one ready aircraft at it, else 0; with `closed = true`, the opposite | For the base |
+| `cargo_landed` | Tons of supply and fuel the side's own ships unloaded at a named base, less the tons they loaded there, never below 0 | For one ton |
+| `base_open` | The days on which a named base ended the day with supply above zero and at least one ready aircraft at it; with `closed = true`, the days on which it did not | For the base being so on every day. The points earned are these times the days counted over the days resolved |
 
 [0054]
 
 - **Enemy** means the other side from the ship's, or the air group's, side, whoever did the damage. A ship counts for the other side if it sank, whatever sank it. [0054]
 - **A ship sunk is not also crippled.** A ship that is degraded in propulsion or flight deck does not count as crippled. Only out counts. This is a different meaning from the glossary's crippled (flotation damage of 50 or more). [0054]
 - **Aircraft destroyed** counts, through the side of the air group that lost them: aircraft shot down (`AircraftLost`), aircraft lost with a sunk ship, ready and damaged (`AirGroupLost`), ready and damaged aircraft destroyed on the ground (`AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`), aircraft written off by wear (`AircraftWorn`, the written off part only), aircraft that ran out of fuel on the way home (`AircraftDitched`, though no one claims them), and aircraft that came down in the sea for want of a deck (`AircraftDitchedNoDeck`). Aircraft that land elsewhere are not counted. It does not count the worn aircraft that are repaired later, pilots lost, or any event that adds aircraft. [0054, 0059]
-- **Cargo landed** counts `CargoUnloaded` events of ships of the side, supply and fuel tons together, at the named base. [0054]
-- **Base open** reads the final truth: the base's supply above zero, and at least one ready aircraft in the air groups located at that base. Aircraft aboard ships do not count. Either side may hold the objective for any base. [0054]
+- **Cargo landed** is the tons in the `CargoUnloaded` events of ships of the side at the named base, less the tons in their `CargoLoaded` events at that base, supply and fuel together. Cargo put ashore and taken off again was not landed. A side that loads more there than it unloads has landed nothing: the count is never below 0. Loading at another base takes nothing from this one. Cargo destroyed ashore after it was landed still counts, and so does fuel landed and then taken as bunker fuel, which records `ShipRefuelled` and cannot be unloaded again. [0054, 0067]
+- **Base open** is counted by days. At the end of each day, after the afternoon pulse when the day's strikes have landed, every base records `BaseAtDayEnd` with its supply and the ready aircraft of the air groups located at it (chapter 1, After the pulses). The base was open that day if the supply is above zero and at least one aircraft is ready. Aircraft aboard ships do not count. The count is the days it was open, or with `closed = true` the days it was not, and the points earned are the objective's points times that count over the days resolved: a base open on 21 days of 28, for 10 points, earns 7.5. So the two sides' objectives on one base sum to its points. Before a day is resolved the count and the points are 0. Either side may hold the objective for any base. [0054, 0067]
 - **Ryujo counts as a carrier.** Points go by the six kinds of ship the engine has (chapter 3, What a report holds). [0054]
 
 Known limit: with ground combat deferred, no base changes hands, so no objective can be to take or hold ground. A kind of ship finer than the six waits for step 2. [0052, 0054]
@@ -70,7 +70,7 @@ A margin exactly equal to a level is that level. A margin strictly between minus
 
 ### Not state
 
-The objectives are the scenario's fixed configuration, held beside the reference data. They are not state and are not in the state hash. No rule reads the objectives or the result. The result is a function of the final truth and the event log, so a replay gives the same result. [0054]
+The objectives are the scenario's fixed configuration, held beside the reference data. They are not state and are not in the state hash. No rule reads the objectives or the result. The result is a function of the final truth and the event log, so a replay gives the same result. The count of a base at the end of each day is recorded for every base whatever the objectives say, so it reads no objective either. [0054, 0067]
 
 A side sees: nothing of the result before the game ends. [0054]
 
@@ -88,8 +88,8 @@ During the game a side sees the progress of each of its objectives as far as it 
 
 | Kind | What the side knows |
 | --- | --- |
-| `cargo_landed` | Basis `exact`. The tons in its own ships' `CargoUnloaded` events at the base, which it sees whole. Points are the tons times points per ton |
-| `base_open` at a base of its own | Basis `exact`. Its own base's supply and ready aircraft. Points are the count times the points |
+| `cargo_landed` | Basis `exact`. The tons in its own ships' `CargoUnloaded` events at the base less the tons in their `CargoLoaded` events there, both of which it sees whole, never below 0. Points are the tons times points per ton |
+| `base_open` at a base of its own | Basis `exact`. The days so far, from its own base's `BaseAtDayEnd` events, which it sees whole: the days as wanted, the days counted, and the points those earn |
 | `base_open` at an enemy base | `not_observable`. The count is 0 |
 | `ships_sunk` | Basis `claims` if the side has a claim that sank a ship or names a kind of ship, else `not_observable`. The count is the sum of the ships its claims say sank. Points are given only for the claims that name a kind, each kind's count times that kind's points. A claim from a surface fight names no kind, so it gives a count and no points |
 | `aircraft_destroyed` | Basis `claims` once the side has any claim from the air, even one claiming none. The count is the aircraft claimed shot down plus those claimed destroyed on the ground. Points are the count times the points for one. Otherwise `not_observable` |

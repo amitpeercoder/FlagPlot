@@ -127,3 +127,37 @@ Attributes used in `troop_lift_facts.csv`: `troop_capacity_men`, `troops_carried
 - The transports are not in `ships.csv` or `ship_classes.csv`, so their capacities are in a file of their own. Moving them to a ship class attribute needs the classes added first.
 - A measure for "each attack the record names failed" can be read from the `jp_attack_held_ground` rows: every one is 0.
 - A measure for how fast an unfed force wasted has nothing inside the period to rest on from these sources; the figures begin in November.
+
+## The transports' loads, read from the page images (12 November 2026, second pass)
+
+The division report's station list of 2 August 1942 (Phase I, Annex K) gives the Marine and Navy personnel of the landing force aboard each ship. The scan's text layer garbles it; the page images are clear, and I read them myself. Rows 111 to 134 of `troop_lift_facts.csv`.
+
+| Ship | Type | Men aboard, 2 August | Stated troop capacity |
+| --- | --- | --- | --- |
+| American Legion | AP | 1,777 | 1,644 |
+| Hunter Liggett | AP | 1,611 | not found |
+| Barnett | AP | 1,404 as typed; the block adds to 1,494 | not found |
+| McCawley | AP | 1,428 | not found |
+| President Hayes | AP | 1,346 | 1,388 |
+| President Adams | AP | 1,334 | 1,350 |
+| George F. Elliott | AP | 1,328 | not found |
+| President Jackson | AP | 1,295 | 1,388 |
+| Neville | AP | 1,199 | 1,150 |
+| Fuller | AP | 1,167 | not found |
+| Heywood | AP | 1,158 | not found |
+| Crescent City | AP | 687 | not found |
+| Alchiba | AK | 539 | |
+| Libra | AK | 280 | |
+| Bellatrix | AK | 255 | |
+| Fomalhaut | AK | 227 | |
+| Alhena | AK | 160 | |
+| Colhoun, Gregory, Little, McKean | APD | 157, 155, 154, 149 | none stated |
+
+- **A destroyer-transport carried about 150 men:** the four carried one Raider company each with its attachments. The fifth Raider group, 213 men, had no destroyer-transport and was split between Neville and Heywood, outside those ships' figures.
+- **Ships sailed over their stated capacity:** American Legion by 133 and Neville by 49, on the ship dictionary's figures; the three President ships sailed under theirs.
+- **The grand total is 18,134,** without the 3d Defense Battalion in Zeilin and Betelgeuse, for which the list says "No figures available".
+- **A correction.** An earlier row (71) from the garbled text gave Fomalhaut 539. That is Alchiba's total; Fomalhaut's is 227. The old row is marked `disputed` and says so.
+- **Barnett.** The typed total is 1,404, but the block's own columns add to 1,494 and the group total needs 1,494. Both are rows; the typed figure is graded low.
+
+These are loads on one voyage, not capacities. With the five stated capacities they are what a derived troop capacity for a transport class can rest on.
+

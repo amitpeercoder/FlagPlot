@@ -1,6 +1,6 @@
 # 0067: Two objectives that could be gamed
 
-Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its three questions. Nothing is built yet. The hand calculation is written before any code is delegated, and this record gains an "As built" section when the rule lands.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its three questions. It is built: see "As built" at the end.
 
 ## The gap
 
@@ -77,3 +77,16 @@ On Nov 12, 2026, as recommended in each case.
 1. **Cargo landed: net of what was loaded back at that base, or only cargo that came from another base?** Net (decision 1). The second is closer to the idea and costs new state for every ship.
 2. **Base open: the share of days, or open on every day or it does not score?** The share of days (decision 5).
 3. **Who builds it?** The rulebook review session, which found the two faults, found the fault in the first draft of decision 6 and reviewed this plan. The build session is on experience (0064) and the plan for a force not at battle readiness (0068).
+
+## As built
+
+Built by the rulebook review session on Nov 12, 2026.
+
+- **The event is the carrier.** `BaseAtDayEnd { base, supply_t, aircraft_ready }` is recorded by a fifth end-of-day phase, the base count, for every base in base order. It belongs to no pulse and has no cause. The test of "open" is one function, `events::base_is_open`, which the log's text, the tally, a side's known progress and the replay export all call.
+- **The state hash of every scenario with a base changes,** which this record did not foresee. No state was added, but the hash counts the events of the log, and the state holds event numbers (a force's arrival, a contact's last report, a claim), which move. The hash version stays at 5: no field was added. The run baselines, the old batch fixtures (hashes only, as decision 0063 did) and the recorded games' saves were remade.
+- **The count of a base is days,** with the days counted beside it (`days`), in the result and in what a side knows. The points are the objective's points times the days as wanted over the days counted, cut to six places: one day of three for 10 points is 3.333333.
+- **A side's known progress reads no state.** It takes the days of its own bases from its own `BaseAtDayEnd` events and its net cargo from its own cargo events. It no longer reads the base's supply or aircraft.
+- **The agent interface is version 3.** The meaning of two counts changed, and the schemas' version rule requires it. The briefing says "open at the end of each day" and "3 of 5 days".
+- **The scores of the two scenarios did not change.** Henderson Field ends every day open in both (28 of 28 and 14 of 14, seed 1942), and nothing is loaded back there in the full slice, so the points are 10 and 4.8 as before. Other seeds can differ; the baseline reports are the spec session's to remake.
+- **Tests.** The worked case of this record is the hand calculation in `objectives.rs` (`the_worked_case_of_decision_0067_scores_net_cargo_and_the_share_of_days` and four beside it). `tests/scenario_10b_objectives.rs` carries each day's supply and ready aircraft at Henderson Field for scenarios 6 and 7 and asserts every day's event against it. Tests that counted a day's events count one more for each base, each with a note.
+- **Rulebook.** Chapter 1 (the base count phase, and who sees the event), chapter 6 and the glossary.

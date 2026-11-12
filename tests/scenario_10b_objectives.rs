@@ -34,8 +34,9 @@
 //! ## Scenario 6, Rabaul against Guadalcanal (`06_rabaul_guadalcanal.toml`)
 //!
 //! The Allied side holds aircraft destroyed (0.05) and base 1, Henderson
-//! Field, open at the end (10). The Japanese side holds aircraft destroyed
-//! (0.05) and base 1 closed at the end (10).
+//! Field, open (10). The Japanese side holds aircraft destroyed (0.05) and
+//! base 1 closed (10). A base is counted at the end of each day and the
+//! points are earned by the share of days (decision 0067).
 //!
 //! | Aircraft lost over the 28 days | Shot down | On the ground | Written off | Total |
 //! | ------------------------------ | --------- | ------------- | ----------- | ----- |
@@ -43,18 +44,35 @@
 //! | Allied   | 38 | 6 | 8  | 52 |
 //!
 //! Henderson Field ends with 2747 t of supply and aircraft ready (groups 11
-//! to 17 hold 9, 11, 1, 12, 13, 16 and 12), so it is open.
+//! to 17 hold 9, 11, 1, 12, 13, 16 and 12).
 //!
-//! Allied points: 61 x 0.05 = 3.05, and 10 for the open field: 13.05.
-//! Japanese points: 52 x 0.05 = 2.6, and 0: 2.6. Allied margin 10.45, at
-//! least 8 and under 16: a major Allied victory.
+//! Henderson Field at the end of each day, from the state as the scenario
+//! runs today (tons of supply, then ready aircraft of the groups at it):
+//!
+//! | Days | Supply and ready aircraft, day by day |
+//! | ---- | ------------------------------------- |
+//! | 1 to 7 | 3827.8 / 25, 3809.6 / 22, 3798.2 / 18, 3785.2 / 30, 3773.7 / 30, 3763.2 / 27, 3753.6 / 28 |
+//! | 8 to 14 | 3748 / 28, 3590.4 / 23, 3562.1 / 52, 3532.3 / 53, 3509.2 / 46, 3489.3 / 46, 3469.9 / 45 |
+//! | 15 to 21 | 3352 / 39, 3341.2 / 39, 3333.4 / 39, 3323.1 / 38, 3313.5 / 38, 3305.9 / 38, 3246.8 / 35 |
+//! | 22 to 28 | 3210.5 / 58, 3176.7 / 56, 3021.1 / 80, 2971 / 80, 2921.9 / 82, 2781.5 / 75, 2747 / 74 |
+//!
+//! Supply is above zero and at least one aircraft is ready on every one of
+//! the 28 days: open on 28 days of 28, shut on 0.
+//!
+//! Allied points: 61 x 0.05 = 3.05, and 10 x 28 / 28 = 10 for the field:
+//! 13.05. Japanese points: 52 x 0.05 = 2.6, and 10 x 0 / 28 = 0: 2.6. Allied
+//! margin 10.45, at least 8 and under 16: a major Allied victory. The points
+//! are what they were when the field was read once at the end; the count is
+//! now days.
 //!
 //! ## Scenario 7, the full slice (`07_full_slice.toml`)
 //!
 //! The Allied side holds ships sunk, ships crippled, aircraft destroyed
-//! (0.05), cargo landed at base 1 at 0.005 a ton, and base 1 open at the end
-//! (10). The Japanese side holds ships sunk, ships crippled, aircraft
-//! destroyed (0.05) and base 1 closed at the end (10).
+//! (0.05), cargo landed at base 1 at 0.005 a ton, and base 1 open (10). The
+//! Japanese side holds ships sunk, ships crippled, aircraft destroyed (0.05)
+//! and base 1 closed (10). Cargo landed is what was unloaded at the base
+//! less what was loaded back there, and a base is counted at the end of
+//! each day (decision 0067).
 //!
 //! This is the pinned outcome of the scenario's own seed, and it follows the
 //! scenario's inputs: it was a major Allied victory (margin 14.85) until the
@@ -74,6 +92,8 @@
 //! | Japanese aircraft lost | shot down 80; lost with Ryujo 1 (group 118's 23 aircraft less the 22 that could fly, 23 x 0.97 = 22.31 for its fatigue of 3, were aboard; group 119's 0); ran out of fuel on the way home from the raid 1 (group 119: 6 x 0.285714 = 1.714284 expected); came down in the sea for want of a deck 23 (group 118: 18, group 119: 5); written off 16: 80 + 1 + 1 + 23 + 16 = 121 |
 //! | Allied aircraft lost | shot down 38, on the ground 4, written off 7: 49 |
 //! | Cargo landed at base 1 by Allied ships | ships 37 and 38, each 62 + 120 + 240 + 58 = 480 t: 960 t (the convoy arrives a little sooner under decision 0058, so the tons fall in other pulses) |
+//! | Cargo loaded at base 1 by Allied ships | none: ships 37 and 38 load only at base 3, on day 1 (480 t each). So the net is the 960 t unloaded |
+//! | Henderson Field at the end of each day (supply / ready aircraft) | 3822.1 / 29, 3797.2 / 26, 3729.8 / 23, 4061 / 21, 4630.3 / 22, 4620.4 / 18, 4611.6 / 19, 4607.8 / 19, 4451.5 / 14, 4424 / 43, 4396 / 44, 4373.7 / 37, 4355.1 / 37, 4339.2 / 35: open on 14 days of 14 |
 //! | Henderson Field at the end | 4339.2 t of supply, aircraft ready: open. From the events: 4000 t at the start + 960 t landed - 350 t destroyed (three raids on the supply) - 270.8 t spent (13 on 13 repairs, 86 on the aircraft at the base for the day and 171.8 on aircraft sent on sorties) = 4339.2 t. (It was 4342.72 t before the change, and 4300.955 t while Flight 300 arrived by script: 41.765 t is what that group's 11 aircraft cost, 11 nights at 2.2 t on the 11 aircraft at the base for the day (24.2), 15.565 t on its strike of the afternoon of day 5 and 2 t on its 2 repairs, decision 11 of 0059) |
 //!
 //! | Objective | Allied | Japanese |
@@ -82,7 +102,7 @@
 //! | Ships crippled | 0 | 0 |
 //! | Aircraft destroyed | 121 x 0.05 = 6.05 | 49 x 0.05 = 2.45 |
 //! | Cargo landed | 960 x 0.005 = 4.8 | |
-//! | Base open / closed | 10 | 0 |
+//! | Base open / closed | 10 x 14 / 14 = 10 | 10 x 0 / 14 = 0 |
 //! | Total | 10 + 0 + 6.05 + 4.8 + 10 = 30.85 | 9 + 0 + 2.45 + 0 = 11.45 |
 //!
 //! Allied margin 30.85 - 11.45 = 19.4, at least 16: a decisive Allied
@@ -148,6 +168,23 @@ fn n(value: i64) -> Fixed {
 
 fn result_of(world: &World) -> GameResult {
     world.result().expect("the scenario has objectives")
+}
+
+/// The supply and the ready aircraft of a base at the end of each day, from
+/// its `BaseAtDayEnd` events in order (decision 0067).
+fn day_ends(world: &World, base: u32) -> Vec<(Fixed, u32)> {
+    world
+        .events()
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::BaseAtDayEnd {
+                base: at,
+                supply_t,
+                aircraft_ready,
+            } if *at == BaseId::new(base) => Some((*supply_t, *aircraft_ready)),
+            _ => None,
+        })
+        .collect()
 }
 
 fn line(side: &SideResult, i: usize) -> (&'static str, Fixed, Fixed) {
@@ -330,7 +367,43 @@ fn rabaul_against_guadalcanal_is_a_major_allied_victory() {
         line(&result.allied, 0),
         ("aircraft_destroyed", n(61), fx("3.05"))
     );
-    assert_eq!(line(&result.allied, 1), ("base_open", n(1), n(10)));
+    // Open on 28 days of 28: each day's count is the table's.
+    assert_eq!(
+        day_ends(&world, 1),
+        [
+            ("3827.8", 25),
+            ("3809.6", 22),
+            ("3798.2", 18),
+            ("3785.2", 30),
+            ("3773.7", 30),
+            ("3763.2", 27),
+            ("3753.6", 28),
+            ("3748", 28),
+            ("3590.4", 23),
+            ("3562.1", 52),
+            ("3532.3", 53),
+            ("3509.2", 46),
+            ("3489.3", 46),
+            ("3469.9", 45),
+            ("3352", 39),
+            ("3341.2", 39),
+            ("3333.4", 39),
+            ("3323.1", 38),
+            ("3313.5", 38),
+            ("3305.9", 38),
+            ("3246.8", 35),
+            ("3210.5", 58),
+            ("3176.7", 56),
+            ("3021.1", 80),
+            ("2971", 80),
+            ("2921.9", 82),
+            ("2781.5", 75),
+            ("2747", 74),
+        ]
+        .map(|(supply, ready)| (fx(supply), ready))
+    );
+    assert_eq!(line(&result.allied, 1), ("base_open", n(28), n(10)));
+    assert_eq!(result.allied.objectives[1].days, Some(28));
     assert_eq!(result.allied.total, fx("13.05"));
     assert_eq!(
         line(&result.japanese, 0),
@@ -338,6 +411,7 @@ fn rabaul_against_guadalcanal_is_a_major_allied_victory() {
     );
     assert_eq!(line(&result.japanese, 1), ("base_open", n(0), n(0)));
     assert!(result.japanese.objectives[1].closed);
+    assert_eq!(result.japanese.objectives[1].days, Some(28));
     assert_eq!(result.japanese.total, fx("2.6"));
     assert_eq!(result.allied.margin, fx("10.45"));
     assert_eq!(result.japanese.margin, fx("-10.45"));
@@ -410,8 +484,35 @@ fn the_full_slice_on_its_own_seed_ends_in_a_decisive_allied_victory() {
         line(&result.allied, 2),
         ("aircraft_destroyed", n(121), fx("6.05"))
     );
+    // Nothing was loaded back at base 1, so the net is what was unloaded.
+    assert!(world.events().iter().all(|event| !matches!(
+        event.kind,
+        EventKind::CargoLoaded { base, .. } if base == BaseId::new(1)
+    )));
     assert_eq!(line(&result.allied, 3), ("cargo_landed", n(960), fx("4.8")));
-    assert_eq!(line(&result.allied, 4), ("base_open", n(1), n(10)));
+    // Open on 14 days of 14: each day's count is the table's.
+    assert_eq!(
+        day_ends(&world, 1),
+        [
+            ("3822.1", 29),
+            ("3797.2", 26),
+            ("3729.8", 23),
+            ("4061", 21),
+            ("4630.3", 22),
+            ("4620.4", 18),
+            ("4611.6", 19),
+            ("4607.8", 19),
+            ("4451.5", 14),
+            ("4424", 43),
+            ("4396", 44),
+            ("4373.7", 37),
+            ("4355.1", 37),
+            ("4339.2", 35),
+        ]
+        .map(|(supply, ready)| (fx(supply), ready))
+    );
+    assert_eq!(line(&result.allied, 4), ("base_open", n(14), n(10)));
+    assert_eq!(result.allied.objectives[4].days, Some(14));
     // 10 + 0 + 6.05 + 4.8 + 10 = 30.85.
     assert_eq!(result.allied.total, fx("30.85"));
 
@@ -424,6 +525,7 @@ fn the_full_slice_on_its_own_seed_ends_in_a_decisive_allied_victory() {
         ("aircraft_destroyed", n(49), fx("2.45"))
     );
     assert_eq!(line(&result.japanese, 3), ("base_open", n(0), n(0)));
+    assert_eq!(result.japanese.objectives[3].days, Some(14));
     assert_eq!(result.japanese.total, fx("11.45"));
 
     // 30.85 - 11.45 = 19.4, at least 16: a decisive Allied victory.

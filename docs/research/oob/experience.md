@@ -180,3 +180,38 @@ From the 6th Cruiser Division's own action report, which I read on the page. Tim
 
 The build session asked whether that rule should be applied to `training_facts.csv`, where five rows (3, 30, 31, 33, 79) are `unconfirmed` at medium confidence. In `ship_facts.csv` the rule already forces a lone medium row to `preferred`, and the new rows there follow it. For the five, the standing is the architect's to set; if they stay `unconfirmed` they would need grading low, which fits rows 30, 31 and 33 (one analyst's judgement) better than rows 3 and 79.
 
+## Cape Esperance: two staff papers, and what was not found (12 November 2026, third pass)
+
+For decision 0068. Rows: `engagement_outcomes.csv` 2276 to 2290 and `engagement_events.csv` 726 to 733, one new source, three gaps.
+
+**No ship's own action report was found.** Title searches of the Japanese archive for Aoba, Kinugasa, Furutaka and Hatsuyuki returned nothing for October 1942. What the archive does hold is two short typed staff papers on the night action, in a file of operations research on the Solomons: seven pages and two pages, with no author or date on them. I read both myself. (The official history's site was still under maintenance, on a fifth try.)
+
+**Rounds fired, from the papers' table of merit:**
+
+| Ship | Main battery | High-angle guns | Torpedoes |
+| --- | --- | --- | --- |
+| Aoba | 7 | | 2 |
+| Furutaka | 20 | 26 | |
+| Kinugasa | 80 | 11 (doubtful) | 4 |
+| Fubuki, Hatsuyuki | not known | | |
+
+The flagship fired seven main battery rounds in the whole action.
+
+**The time table** (Tokyo time) begins at 2148, after the first enemy fire:
+
+- 2148: Aoba reversed course and fired torpedoes; Furutaka's high-angle guns opened fire.
+- 2149: Furutaka's No. 3 turret could not be trained.
+- 2150: Aoba went to local laying at the guns; Furutaka's torpedo mount was hit.
+- 2152: Furutaka fired on an enemy heavy cruiser. This is her first main battery fire in the table.
+- 2154: Kinugasa shelled a destroyer. This is her first fire in the table.
+
+Against the division's report (first enemy fire at 2146), that is two minutes to Furutaka's first shot of any kind, six to her main battery, and eight to Kinugasa's guns. The division's report was read once as having Kinugasa fire from 2152, so her reply is six or eight minutes by source.
+
+**Casualties** differ between the two papers (Aoba 64 or 71 killed) and from the division's report for Furutaka (33 killed with 125 wounded and missing, against 258 including missing in row 1511). All are rows.
+
+**Still not stated anywhere read:** what the guns were loaded with, where they were trained before contact, any recognition signal, and when Fubuki and Hatsuyuki fired. The table says outright that the destroyers' rounds are not known.
+
+**Also learned:** the archive has no war diary of the 3rd Destroyer Squadron between June 1942 and June 1943, so that squadron's runs to Guadalcanal cannot come from its own diary there.
+
+An earlier pass had already registered the division's October report under another source key (`jacar-6sentai-report-oct42`, rows 1506 to 1512 of `engagement_outcomes.csv`). The rows from this pass and the last use `jacar-6s-diary-1942` for the whole six-volume set; they are the same record.
+
