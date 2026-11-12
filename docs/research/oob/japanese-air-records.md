@@ -19,7 +19,7 @@ The Japanese navy's aircraft unit combat action records (飛行機隊戦闘行�
 | 11th Squadron (Hiei, Kirishima; the vanguard) | C08030051500 | The narrative, one signal table and the track chart; most of its signal log is unread |
 | Tanaka's reinforcement group | C08030096400 | Six pages, 23 to 25 August |
 
-**Second readings.** Seven forms were read twice, by the researcher and then by me, and every figure agreed: Tainan on 26 August, 2 September and 13 September; Kisarazu on 12 September; Shokaku's fighters on 30 August; Shokaku's first wave and Zuikaku's first-wave fighters on 24 August. That is seven of about ninety forms. The rest were read once. Rows say where a character was unclear and are graded down there.
+**Second readings.** Seven forms were read twice, by the researcher and then by me, and every figure agreed: Tainan on 26 August, 2 September and 13 September; Kisarazu on 12 September; Shokaku's fighters on 30 August; Shokaku's first wave and Zuikaku's first-wave fighters on 24 August. That was seven of about ninety forms. The rest were read once at the time; a blind second reading of all of them followed later the same day and is reported in the last section of this note. Rows say where a character was unclear and are graded down there.
 
 **What these records are.** A unit's own count of its losses is the best evidence there is. Its count of enemy aircraft shot down is a claim like any other.
 
@@ -131,3 +131,42 @@ The order for the 0900 search, received at 0346, was for six aircraft on a base 
 **The grid code is still unbroken.** Twenty-seven coded positions are now recorded. No key fits them all. The log names the table (地点標示法) but does not contain it. The one pair close in time is the vanguard: 6°S 163°E at 0400 on the 25th and grid ke-ri-tsu 22 at 0500. The carriers' positions remain grid codes only: ke-mu-ke 55 at 0500, ke-ya-ke 44 at the 1300 launch.
 
 **Not resolved:** many signals have no time of origin, so some rows carry the time of receipt; the bombing of Kirishima is timed three ways in the same report.
+
+## Second reading of the forms, 12 November 2026
+
+Every form a row in `engagement_outcomes.csv` cites was read again by four researchers who were not told the first reading and were told not to look for it: 78 forms in all (Tainan 16, Misawa 18, Kisarazu 19, and 25 for the 2nd, 4th and 6th air groups and the carriers Shokaku, Zuikaku and Ryujo). Each wrote down the form's boxes and its formation sheet; I compared their figures with the rows and looked at the page myself wherever the two differed.
+
+**Result.** The two readings agree on every figure a row carries, except three:
+
+| Form | First reading | Second reading | What the page shows | New row |
+| --- | --- | --- | --- | --- |
+| Kisarazu, 24 August (turned back) | 9 bombers, with doubt (row 1042) | 15 in the box and the total; 9 in the log | Box and total say 15 and the formation sheet lists 15 Kisarazu crews; the log says 9 at take-off and 9 at landing | 1909, `unconfirmed` |
+| Shokaku's fighters at Buka, 31 August (turned back) | 6 fighters (row 1155) | 5 | The type box reads 6 or 5; the total reads 5, the log line reads 5 and the sheet names 5 pilots | 1910, `alternative` |
+| Zuikaku's first-wave fighters, 24 August | 4 claimed (row 1167, from the narrative) | 6 in the box, 4 in the sheet's margin | Shot-down box and total box both read 6; the narrative credits the two pilots who returned with two each | 1911, `alternative` |
+
+Rows 1155 and 1167 keep their standing; the new rows sit beside them for the architect. On the 31 August form the page favours 5.
+
+**One second reading was wrong and is not used.** Ryujo's strike on Guadalcanal was read as 16 fighters; the page gives 15 fighters and 6 attack aircraft, total 21, as row 1171 has it. The writer's 5 looks like a 6 and the same figure is the 5 of the losses total on that form.
+
+**Doubts the second readers raised that leave the rows as they are:**
+
+- Shokaku's first wave on 24 August: the self-destroyed box is two strokes, read 11 by both readers, with 2 as the other way to read it. Killed 19 is clear. Row 1160 stays low.
+- Zuikaku's dive bombers on 24 August: the losses total reads 8 or 9; the self-destroyed box reads 8.
+- Ryujo's strike: the losses total reads 5 or 6; the boxes beside it read 3 self-destroyed and 2 missing.
+- Misawa, 12 September: hit aircraft read as 4, possibly 2; the box claims 5 shot down and the narrative 6.
+- Kisarazu, 26 August: the shot-down figure is struck through and reads 4 or 6; lightly wounded reads 4 or 2.
+- Kisarazu, 10 September: the box claims 1 shot down; the log says three enemy fighters shot down, with a bracket nobody could read.
+- Kisarazu, 13 September: the shot-down box is smudged, the probable box says 1, and the sheet says one fighter certain.
+- Kisarazu, 2 September: the box says 1 aircraft hit; the sheet says three, two of them Misawa's.
+- 2nd air group, 12 September and 6th air group, 11 September: each form's box says one missing, but the formation sheet marks no aircraft as missing.
+- Several take-off and return times were read differently or written impossibly on the form (for example 1630 against a 1330 return). No row's value rests on them.
+
+**More than the first reading had, not entered as rows:**
+
+- 2nd air group, 14 September: the fighter that came down at the Shortlands sank; its pilot was unhurt (機体沈没 人員無事).
+- Zuikaku's second wave, 24 August: the form shows one aircraft missing (Sugimura's) and, separately, one forced down whose crew a ship picked up; the ship's name could not be read.
+- Shokaku's first wave, 24 August: the sheet notes one forced landing with the crew unhurt, place not given.
+- Misawa, 28 August: 37 bombs of 60 kg were jettisoned at sea when the raid was called back (the count may be 57).
+
+**What this does and does not show.** Two readings by different readers who could not see each other's work agree, so a slip of one reader is now unlikely in these rows. Both readers were language models working from the same scans, so a figure the scan itself makes ambiguous can still be wrong in both. The rows' confidence grades are left as they were.
+
