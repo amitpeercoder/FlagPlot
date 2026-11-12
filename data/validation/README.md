@@ -41,3 +41,6 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | File | Battle | State |
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | First pass, 12 measures, 7 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | First pass, 9 measures, all judged |
+
+Still to write: Rabaul against Guadalcanal, and the claims and passages checks.
