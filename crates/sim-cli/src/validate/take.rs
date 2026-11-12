@@ -126,6 +126,7 @@ pub enum Take {
     SystemOut(BTreeSet<u32>, String),
     HitsOn(BTreeSet<u32>, Vec<Weapon>),
     HitsPerThousand(Side, Weapon),
+    ShotsInHundreds(Side, Weapon),
     AirLosses(BTreeSet<u32>, Vec<Cause>),
     PilotsLost(BTreeSet<u32>),
     Ready(BTreeSet<u32>, usize),
@@ -200,6 +201,19 @@ fn weapons(measure: &Measure) -> Result<Vec<Weapon>, String> {
                 .ok_or_else(|| format!("measure {}: weapon \"{w}\" is not known", measure.id))
         })
         .collect()
+}
+
+/// The weapon key of a measure of shots fired: gun or torpedo.
+fn fired_weapon(measure: &Measure) -> Result<Weapon, String> {
+    let text = need(measure, "weapon", measure.weapon.as_ref())?;
+    Weapon::parse(text)
+        .filter(|w| matches!(w, Weapon::Gun | Weapon::Torpedo))
+        .ok_or_else(|| {
+            format!(
+                "measure {}: weapon \"{text}\" is not gun or torpedo",
+                measure.id
+            )
+        })
 }
 
 fn causes(measure: &Measure) -> Result<Vec<Cause>, String> {
@@ -281,18 +295,8 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
             Take::SystemOut(ships(measure)?, system.clone())
         }
         "hits_on" => Take::HitsOn(ships(measure)?, weapons(measure)?),
-        "hits_per_thousand_shots" => {
-            let text = need(measure, "weapon", measure.weapon.as_ref())?;
-            let weapon = Weapon::parse(text)
-                .filter(|w| matches!(w, Weapon::Gun | Weapon::Torpedo))
-                .ok_or_else(|| {
-                    format!(
-                        "measure {}: weapon \"{text}\" is not gun or torpedo",
-                        measure.id
-                    )
-                })?;
-            Take::HitsPerThousand(side(measure)?, weapon)
-        }
+        "hits_per_thousand_shots" => Take::HitsPerThousand(side(measure)?, fired_weapon(measure)?),
+        "shots_in_hundreds" => Take::ShotsInHundreds(side(measure)?, fired_weapon(measure)?),
         "air_losses" => Take::AirLosses(groups(measure)?, causes(measure)?),
         "pilots_lost" => Take::PilotsLost(groups(measure)?),
         "ready" => {
@@ -468,6 +472,18 @@ fn attack_set<'r>(
         .collect()
 }
 
+/// The side's fire with a weapon (gun or torpedo) in a run.
+fn fired(run: &PerRun, side: Side, weapon: Weapon) -> &super::input::WeaponFire {
+    let fire = match side {
+        Side::Japanese => &run.fire.japanese,
+        Side::Allied => &run.fire.allied,
+    };
+    match weapon {
+        Weapon::Torpedo => &fire.torpedo,
+        _ => &fire.gun,
+    }
+}
+
 /// `floor(hits x 1000 / shots)`, shots a `Fixed` decimal string; nothing
 /// fired is `None`.
 fn per_thousand(shots: &str, hits: u64) -> Result<Option<i64>, String> {
@@ -482,6 +498,17 @@ fn per_thousand(shots: &str, hits: u64) -> Result<Option<i64>, String> {
     Ok(Some(
         i64::try_from(value).map_err(|_| "a ratio is too large".to_string())?,
     ))
+}
+
+/// `floor(shots / 100)`, shots a `Fixed` decimal string. A run that fires
+/// nothing is 0, not left out.
+fn in_hundreds(shots: &str) -> Result<i64, String> {
+    let shots: Fixed = shots
+        .parse()
+        .map_err(|_| format!("the shots \"{shots}\" are not a decimal number"))?;
+    let raw = i128::from(shots.raw()).max(0);
+    i64::try_from(raw / (100 * i128::from(Fixed::SCALE)))
+        .map_err(|_| "a count is too large".to_string())
 }
 
 /// The value of a measure in one run: `None` when the run is left out.
@@ -500,16 +527,10 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
         }
         Take::HitsOn(ships, weapons) => n(hits_on(run, ships, weapons))?,
         Take::HitsPerThousand(side, weapon) => {
-            let fire = match side {
-                Side::Japanese => &run.fire.japanese,
-                Side::Allied => &run.fire.allied,
-            };
-            let f = match weapon {
-                Weapon::Torpedo => &fire.torpedo,
-                _ => &fire.gun,
-            };
+            let f = fired(run, *side, *weapon);
             return per_thousand(&f.shots, f.hits);
         }
+        Take::ShotsInHundreds(side, weapon) => in_hundreds(&fired(run, *side, *weapon).shots)?,
         Take::AirLosses(groups, causes) => n(air_losses(run, groups, causes))?,
         Take::PilotsLost(groups) => n(run
             .air_losses
@@ -594,4 +615,25 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
             n(rounds * minutes)?
         }
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::in_hundreds;
+
+    #[test]
+    fn shots_in_hundreds_rounds_down() {
+        for (shots, want) in [
+            ("0", 0),
+            ("99.999999", 0),
+            ("100", 1),
+            ("199.5", 1),
+            ("2791", 27),
+            ("1867", 18),
+            ("471", 4),
+        ] {
+            assert_eq!(in_hundreds(shots), Ok(want), "{shots}");
+        }
+        assert!(in_hundreds("many").is_err());
+    }
 }
