@@ -135,6 +135,8 @@ A number for each side that tuning may move would explain any miss. So:
 
 Values set from training records before tuning either bring Cape Esperance out right or they do not. That is the test.
 
+It is a blunter test than was hoped. At Savo Island the record gives shells fired and hits for both sides, so how well each side shot can be measured directly: 81 to 117 hits for each thousand shells for the Japanese, 21 to 36 for the Allies. At Cape Esperance the shells fired are not on record, and research has looked twice. What is on record there is hits received by each side and ships sunk. Those depend on how long each side fired as well as how well. So the direct measure of experience exists only for the battle the figures are fitted on, and the check on the other battle is by its outcome. That makes conditions 1 and 2 carry more weight: if a unit's value could be moved, nothing would catch it.
+
 `docs/step2-opening-list.md` stays the working list of these. Each becomes a decision record with a hand calculation, as in step 1.
 
 ## Done means

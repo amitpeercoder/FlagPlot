@@ -65,11 +65,11 @@ reason = "Duncan, abandoned on fire; she sank by two accounts (1532, 1534) and w
 [[measure]]
 id = "gun_hits_on_japanese_cruisers"
 counts = "Gun hits on Aoba, Furutaka and Kinugasa, all calibres"
-record_low = 134
+record_low = 130
 record_high = 134
 judged = true
-rows = [1598, 1599, 1600, 1601, 1605]
-reason = "Aoba 40 (1598, 1599), Furutaka 90 (1600, 1601), Kinugasa 4 (1605). Aoba's 40 is 'up to' in one source and 'over' in the other, so it is taken as 40. No row counts the hits on Fubuki, which sank, or on Hatsuyuki, so the measure is of the cruisers alone."
+rows = [1598, 1599, 1600, 1601, 1605, 1686, 1687, 1688]
+reason = "Aoba 40 (1598, 1599) and Furutaka 90 (1600, 1601). Kinugasa none by her own signal and her division's report, read twice (1686, 1687, 1688), or 4 by the tabular record (1605): low end without them, high end with. Aoba's 40 is 'up to' in one source and 'over' in the other, so it is taken as 40. No row counts the hits on Fubuki, which sank, or on Hatsuyuki, so the measure is of the cruisers alone."
 
 [[measure]]
 id = "gun_hits_on_us_ships"
@@ -110,6 +110,14 @@ rows = [1656, 1655, 1657, 1506, 1507]
 reason = "The ships' own reports add to 15 (1655); a conference of their captains cut that to 8 (1656) and the fleet commander made it 9 (1657). Two were sunk (1506, 1507). Low end 8 in 2, high end 15 in 2. Not judged: more ships were claimed than the five the scenario would hold, as with the Japanese claim at Savo Island."
 
 # No measure of hits for each thousand shells, the one experience is tested
-# on at Savo Island. The US ships' rounds fired are known for one cruiser
-# and part of another (rows 1636, 1637, 1639), and the Japanese ships' from
-# an encyclopedia alone (1648 to 1653). It is a gap.
+# on at Savo Island, and there will not be one. The US ships' rounds fired
+# are known for one cruiser and part of another (rows 1636, 1637, 1639), and
+# the Japanese ships' from an encyclopedia alone (1648 to 1653). Research
+# looked again and found no US action report online and no count of hits in
+# the Japanese division's report (docs/research/oob, pull request 100).
+#
+# So experience is checked here by hits received on each side, the two
+# measures above, and by ships sunk. Those count what a side did and not how
+# well it shot for the rounds it fired: a force that fires longer scores
+# more. It is a blunter test than Savo Island's, and it is the only one on
+# a battle the figures were not fitted to.
