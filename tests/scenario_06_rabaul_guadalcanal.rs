@@ -311,7 +311,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, OrderId};
 use sim_core::orders::AirMission;
 use sim_core::refdata::AttackWeapon;
-use sim_core::rng::{RngKey, RngStream, Subsystem};
+use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
 use sim_core::state::{AirGroupLocation, Side};
 use sim_core::time::Pulse;
 use sim_data::Scenario;
@@ -750,6 +750,7 @@ fn stream_of(
         subsystem,
         entity,
         other,
+        draw: Draw::Legacy,
     }
     .stream()
 }

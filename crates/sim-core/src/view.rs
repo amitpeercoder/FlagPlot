@@ -197,6 +197,15 @@ impl<'a> SideView<'a> {
         self.belief.claims()
     }
 
+    /// The side's own orders, accepted or not, in the order they were taken
+    /// in. This includes the orders a rule gave for the side's units. The
+    /// numbers are the log's, which both sides share: what plays the game is
+    /// shown the side's own count of them instead (decision 0055).
+    pub fn orders(&self) -> impl Iterator<Item = &'a Order> + '_ {
+        let side = self.side;
+        self.orders.values().filter(move |order| order.side == side)
+    }
+
     /// The events the side may see, each cut down to what it may know, in
     /// log order (decision 0047). Each keeps its number in the full log, so
     /// a gap in the numbers is something that happened that the side may not

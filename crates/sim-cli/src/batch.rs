@@ -185,7 +185,14 @@ fn build(scenario_path: &str, runs: u64, first_seed: u64) -> Result<Batch, Strin
 
     for index in 0..runs {
         let seed = first_seed + index;
-        let executed = crate::execute(scenario_path, Some(seed), |_| {})?;
+        // A batch reads losses, not reasons, so it runs with breakdown
+        // recording off (the spec's "can be switched off in batch runs").
+        // Recording never changes what happens or a hash.
+        let executed = crate::execute(scenario_path, Some(seed), |scenario| {
+            scenario.world.set_config(sim_core::world::SimConfig {
+                record_breakdowns: false,
+            });
+        })?;
         let world = &executed.scenario.world;
         let truth = world.umpire();
 

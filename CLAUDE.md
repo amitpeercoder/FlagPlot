@@ -9,7 +9,7 @@ Read these before changing anything:
 - `docs/decisions/`: choices the spec left open, one short file each.
 - `docs/glossary.md`: one meaning for each word the rules use.
 - `docs/complexity-review-after-scenario-5.md`: what was cut, merged and left alone after scenario 5, and why.
-- `docs/design/`: notes for discussion on things not yet planned (intelligence, materials and economy). Nothing in them is decided.
+- `docs/design/`: notes for discussion on things not yet planned (intelligence, materials and economy). Nothing in them is built; each holds the product managers' answers to its open questions.
 
 If the spec is ambiguous or looks wrong, stop and ask. Do not guess. If you make a design choice the spec did not make, record it in `docs/decisions/` as the next numbered file.
 
@@ -25,19 +25,21 @@ cargo run --release -p sim-cli -- batch data/scenarios/04_savo_island.toml --out
 cargo run -p sim-cli -- run data/scenarios/07_full_slice.toml --save /tmp/slice.save.json
 cargo run -p sim-cli -- replay /tmp/slice.save.json
 cargo run -p sim-cli -- hash data/scenarios/07_full_slice.toml
+cargo run -p sim-cli -- events data/scenarios/05_eastern_solomons.toml --unit ship:33
+cargo run -p sim-cli -- events data/scenarios/05_eastern_solomons.toml --why 133
 cargo run --release -p map-tool -- render
 cargo run -p oob-check -- data/oob
 cargo run -p oob-derive -- data/derivation/savo_island.toml --check
 cargo run -p oob-derive -- data/derivation/rabaul_guadalcanal.toml --check
 ```
 
-`serve SCENARIO --seat allied=player --seat japanese=script` holds a game open and takes one JSON request a line on standard input (decision 0050). `mcp SCENARIO --seat allied` serves the same game and tools as a Model Context Protocol server on standard input and output, and `play --game FILE ... TOOL [ARGUMENTS]` makes one call to it and exits, keeping the game as a file of the calls made (decision 0051); `play` alone prints how. `run --save FILE` writes a saved game (the scenario's name, the seed, each day's orders and the daily hashes); `replay FILE` runs it again and fails on the first day whose hash differs, and refuses a scenario or data file that has changed; `hash` prints the daily hashes only (decision 0043). `export` runs a scenario exactly as `run` does and writes it as one replay file for the viewer (decision 0018); it also takes `--seed N` and `--labels data/map/south_pacific_anchors.csv`. `batch` runs a scenario over many seeds (`--runs N`, default 1000, `--first-seed S`, default 1) and writes one summary file of losses per side, per ship and per run, for step 2 to read. Open `viewer/index.html` in a browser and pick the file. `node viewer/check.js viewer/replays/*.json` checks replays against the page's own rebuild.
+`serve SCENARIO --seat allied=player --seat japanese=script` holds a game open and takes one JSON request a line on standard input (decision 0050). `mcp SCENARIO --seat allied` serves the same game and tools as a Model Context Protocol server on standard input and output, and `play --game FILE ... TOOL [ARGUMENTS]` makes one call to it and exits, keeping the game as a file of the calls made (decision 0051); `play` alone prints how. `run --save FILE` writes a saved game (the scenario's name, the seed, each day's orders and the daily hashes); `replay FILE` runs it again and fails on the first day whose hash differs, and refuses a scenario or data file that has changed; `hash` prints the daily hashes only (decision 0043). `events SCENARIO_OR_SAVE --unit HANDLE [--day N]` is the umpire's question to a finished run: it prints every event that names a ship, task force, air group, base or contact in the text `run --events` prints (a ship's task force's events too, marked `via`), and `events ... --why EVENT` prints one event and its causes down to orders as a tree (decision 0052, item 9). `export` runs a scenario exactly as `run` does and writes it as one replay file for the viewer (decision 0018); it also takes `--seed N` and `--labels data/map/south_pacific_anchors.csv`. `batch` runs a scenario over many seeds (`--runs N`, default 1000, `--first-seed S`, default 1) and writes one summary file of losses per side, per ship and per run, for step 2 to read. Open `viewer/index.html` in a browser and pick the file. `node viewer/check.js viewer/replays/*.json` checks replays against the page's own rebuild.
 
 The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides --hex q,r` (a hex's closed sides and neighbours), `water --lat --lon` (why a position's hex has the water it has) and `generate`, which rebuilds `data/map/south_pacific.csv` from the Natural Earth files under `references/` (the exact command is in the file's header). `generate --anchors data/map/south_pacific_anchors.csv` applies the listed anchorages (decision 0017, decision 6); without it hexes keep their largest body of water. `render` draws `#` land, `+` coast, `%` coast with a closed side toward water and `.` sea, each row labelled with its r and the q of its first hex.
 
 `oob-derive` derives ship classes for a list of real ships from `data/oob` (decision 0020). A ship list may name working assumptions (unknown radar means none, decision 0019; main-gun ammunition not limiting, decision 0023; surface weapons not modelled, decision 0029), may ask for the air figures and may list aircraft types to derive, and the rules file names every exception. With any problem it writes nothing and lists every problem; `--check` only reports; `--facts DIR` reads another facts directory.
 
-All three checks must pass before a commit. CI runs the same three. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build; `oob-check` run by hand lists the problems.
+All three checks must pass before a commit. CI runs the same three, then runs scenario 1, exports every scenario and runs the viewer's check on the exports. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build; `oob-check` run by hand lists the problems.
 
 ## Layout
 
@@ -76,10 +78,10 @@ The same starting state, orders and seed must give the same state hash on any ma
 - **No floats on the way in.** Data files give quantities as whole numbers or decimal strings such as `"0.25"`. The loader rejects TOML floats.
 - **Ordered collections only.** `BTreeMap` and `BTreeSet`, never `HashMap` or `HashSet`. Clippy rejects the hash types across the workspace.
 - **No wall clock, thread timing or locale.** Clippy rejects `SystemTime::now` and `Instant::now`.
-- **All randomness through `World::rng`.** Each draw is keyed on seed, day, pulse, subsystem and entity, so results cannot depend on processing order. Never share one stream between entities, and never carry a stream from one pulse to the next.
+- **All randomness through `World::rng`.** Each draw is keyed on seed, day, pulse, subsystem and entity, so results cannot depend on processing order. Never share one stream between entities, and never carry a stream from one pulse to the next. A new rule that draws adds its own value to `rng::Draw`, at the end, and never uses `Draw::Legacy` (decision 0055).
 - **Never renumber stable codes.** `Subsystem::code`, `Pulse::code`, `EntityRef::kind_code`, `Side::code` and the like feed the random number keys and the state hash. Add new values at the end.
 - **The random number generator's output is pinned** by a test in `rng.rs`. If that test fails, saved games no longer replay. Do not update the pinned numbers without a decision record.
-- **New state goes into the hash.** When a field is added to the state, add it to `hash::hash_world` in the same change.
+- **New state goes into the hash.** When a field is added to the state, add it to `hash::hash_world` in the same change. `hash::name_every_field` stops the build until the field is named there. The next change to the hash's layout raises its version and does not add a tag byte (decision 0055).
 - **Overflow panics in every profile.** `overflow-checks` is on for release builds. Do not turn it off.
 - **No `unsafe`.** It is forbidden workspace-wide.
 
