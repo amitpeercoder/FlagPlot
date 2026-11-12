@@ -63,6 +63,6 @@ The result of a game is worked out from the final state and the log. It is not a
 
 ## Kept true
 
-A change that alters a rule changes its section here in the same pull request, and adds any new term to the glossary. Where a change makes the book and the code differ, the code is right, and the difference is a bug to fix before the merge.
+A pull request that adds a rule, changes one or removes one changes this book in the same pull request: a new rule gets its section and, if it has a phase of its own, its row in the order of a day; a changed rule has its section rewritten and the sections that point to it checked; a removed rule has its section and the pointers to it taken out. New terms go in the glossary, changed ones are corrected there and unused ones removed. A row of `differences.md` that a change settles is removed. A change to a figure in a data file needs no change here. `CLAUDE.md`, under "Rule complexity", holds the rule. Where the book and the code differ, the code is right, and the difference is a bug to report.
 
 The legibility test gives a cheap model this book and a scenario's starting state and asks it for a hand calculation of the first day: who sights whom, with what chance, and what the fight or the raid costs. If it cannot follow a rule, the rule or its section is the thing to simplify before the next scenario starts (see `CLAUDE.md`, Rule complexity).
