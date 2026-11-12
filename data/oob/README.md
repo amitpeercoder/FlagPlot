@@ -12,6 +12,7 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - Proposals of 2026-11-11 for the architect (cruiser floatplanes, the two aerial torpedoes, Enterprise's 20 mm guns): `docs/research/oob/proposals-2026-11-11.md`
 - The record for step 2 (outcomes in scoring terms, claims against losses, ship repair, base sizes), read on 2026-11-12: `docs/research/oob/step2-record.md`. Base facts are in `place_facts.csv`, **not yet checked by `oob-check`**
 - Japanese records, read on 2026-11-12 (the search orders of 24 August 1942 from a Japanese war diary, carrier losses, daily air losses over Guadalcanal): `docs/research/oob/japanese-records-2026-11-12.md`
+- Japanese unit records read from the archive scans (daily air losses over Guadalcanal by unit; Eastern Solomons searches, strikes and positions): `docs/research/oob/japanese-air-records.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.
 
