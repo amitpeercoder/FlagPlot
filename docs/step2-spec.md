@@ -127,7 +127,8 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 - All three battles pass, or each miss is written down with its cause and accepted by the designer.
 - No figure in `data/reference` is a placeholder without a note saying what it rests on.
 - The frozen-figure tests, the invariants, the determinism scenario and the soak still pass.
-- The legibility test is run again on the tuned Eastern Solomons.
+- The legibility test is run again on the tuned Eastern Solomons: a cheap model, given one side's briefing and the events, explains an outcome and predicts the next day.
+- A cheap model given only the rulebook (`docs/rules/`), the glossary, the data files and two scenario files reproduces a set of hand calculations exactly. The build session ran this once on the step 1 rules; it is run again after the rule changes of step 2.
 
 ## Decided by the designer
 
