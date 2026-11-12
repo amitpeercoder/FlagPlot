@@ -380,16 +380,20 @@ fn little_fuel(tons: i64) -> Scenario {
 
 #[test]
 fn a_ship_that_runs_dry_on_the_way_is_named_by_the_forecast_and_the_run() {
-    // The destroyer burns a eighth of a ton a mile; the route is 520 nm.
+    // The destroyer burns a eighth of a ton a mile; the route is 394 nm
+    // (decision 0058), so a destroyer with 45 t, which is 360 nm, runs dry.
     let mut dry_cases = 0;
-    for tons in [20, 33, 50, 100] {
+    for tons in [20, 33, 45, 100] {
         let (p, _) = compare(
             little_fuel(tons),
             &setup(Side::Allied, 1, 1, 8, 3),
             &format!("01 with {tons} t in the destroyer"),
         );
         if p.outcome == "arrives" {
-            assert!(tons * 8 >= 520, "{tons} t is enough for 520 nm");
+            assert!(
+                Fixed::from_int(tons * 8) >= p.route_nm.0,
+                "{tons} t is enough for the route"
+            );
             continue;
         }
         assert_eq!(p.outcome, "runs_out_of_fuel", "{tons} t");
@@ -406,18 +410,21 @@ fn a_ship_that_runs_dry_on_the_way_is_named_by_the_forecast_and_the_run() {
 
 #[test]
 fn a_force_that_starts_between_two_hexes_is_forecast_from_where_it_really_is() {
-    // Scenario 4b's round-the-island force ends day 1 with 24 nm of the leg
-    // from (7,1) to (8,0) steamed, so it is in (8,0), between two centres.
-    // Orders to different places make it go on or turn back; the forecast
-    // makes the engine's choice (decision 0005, 5) and the run agrees.
+    // Scenario 1's transit force ends day 1 with 30 nm of the leg from (8,2)
+    // to (8,3), which is charged 40, steamed, so it is in (8,3), between two
+    // centres (decision 0058: the round-the-island force of scenario 4b now
+    // arrives on day 1, so it no longer stands between hexes at the end of
+    // it). Orders to different places make it go on or turn back; the
+    // forecast makes the engine's choice (decision 0005, 5) and the run
+    // agrees.
     let mut turned = 0;
     let mut went_on = 0;
-    for (q, r) in [(8, 0), (0, 0), (6, 2), (7, 1), (8, -3), (3, 1)] {
-        let mut scenario = load("04b_round_the_island.toml", 1942);
+    for (q, r) in [(8, 3), (8, 0), (0, 0), (8, 2), (4, 1), (6, 3)] {
+        let mut scenario = load("01_transit.toml", 1942);
         advance_to(&mut scenario, 2);
         let force = scenario.world.umpire().task_forces[&TaskForceId::new(1)].clone();
         assert!(force.toward_hex.is_some(), "the force is between two hexes");
-        let label = format!("round the island, to ({q},{r}) from between hexes");
+        let label = format!("transit, to ({q},{r}) from between hexes");
         let (turns, centre) = force
             .reroute_centre(scenario.world.map(), Some(Hex::new(q, r)))
             .expect("reachable");
@@ -938,7 +945,8 @@ fn route(view: &SideView<'_>, from: (i32, i32), to: (i32, i32)) -> sim_agent::Se
 #[test]
 fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
     // Round the island (tests/scenario_04b_pathfinding.rs, part 1): south of
-    // the island, ten steps, 400 nm.
+    // the island, ten steps, 374 nm charged (five detour steps of 40, then
+    // 35, 33, 26, 40 and 40: decision 0058).
     let scenario = load("04b_round_the_island.toml", 1942);
     let view = scenario.world.side_view(Side::Allied);
     let r = route(&view, (0, 0), (8, 0));
@@ -958,7 +966,7 @@ fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
             (8, 0)
         ]
     );
-    assert_eq!((r.steps, r.distance_nm), (Some(10), Some(400)));
+    assert_eq!((r.steps, r.distance_nm), (Some(10), Some(374)));
     assert!(r.route_found);
     // Land has no route, and a hex off the map is not known.
     let none = route(&view, (0, 0), (4, 0));
@@ -975,14 +983,16 @@ fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
     // (2,-4)); Noumea to Espiritu Santo 13 steps, 520 nm ((0,18) to (7,6)).
     let scenario = load("04b_santo_to_lunga.toml", 1942);
     let view = scenario.world.side_view(Side::Allied);
-    for (from, to, steps) in [
-        ((7, 6), (2, -4), 16),
-        ((-5, -13), (2, -4), 16),
-        ((0, 18), (7, 6), 13),
+    // Steps and the miles a ship is charged for them (decision 0058): 629,
+    // 556 and 456 (the tests/scenario_04b_pathfinding.rs table).
+    for (from, to, steps, miles) in [
+        ((7, 6), (2, -4), 16, 629),
+        ((-5, -13), (2, -4), 16, 556),
+        ((0, 18), (7, 6), 13, 456),
     ] {
         let r = route(&view, from, to);
         assert_eq!(r.steps, Some(steps), "{from:?} to {to:?}");
-        assert_eq!(r.distance_nm, Some(steps * 40));
+        assert_eq!(r.distance_nm, Some(miles));
         assert_eq!(
             r.hexes.last().map(|h| (h.q, h.r)),
             Some(to),
@@ -1007,7 +1017,8 @@ fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
     let p = passage_of(answer);
     let r = route(&view, (7, 6), (2, -4));
     assert_eq!(p.route, r.hexes);
-    assert_eq!(p.route_nm.0, Fixed::from_int(640));
+    assert_eq!(p.route_nm.0, Fixed::from_int(629));
+    assert_eq!(r.distance_nm, Some(629));
 }
 
 // ---------------------------------------------------------------------

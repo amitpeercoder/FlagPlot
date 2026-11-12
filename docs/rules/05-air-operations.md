@@ -114,7 +114,7 @@ Search, strike decisions and air combat happen in the two daylight pulses only. 
 
 The air distance between two hexes is the straight line between their centres, in whole miles. With dq and dr the differences of the hexes' q and r coordinates, it is 40 times the square root of (dq squared plus dr squared plus dq times dr), rounded to the nearest mile. It is worked in whole numbers. Along an axis of the grid it is 40 times the number of hexes. Every rule, event and tool that says how far an aircraft flies uses this one function (`Hex::air_distance_nm` in `hex.rs`). A distance is within a radius if it is less than or equal to the radius. [0040]
 
-Ships do not use it: a ship steams hex by hex and each step is 40 miles (chapter 2, Legs and position). A threshold counted in hexes, such as how near a contact must be to alert a force, stays in hexes. [0040]
+A ship steams hex by hex but is charged the same straight-line miles where the way is clear, and 40 a step where land forces a detour (chapter 2, What a step is charged). A threshold counted in hexes, such as how near a contact must be to alert a force, stays in hexes. [0040, 0058]
 
 A side sees: the distance in its own events that carry one.
 

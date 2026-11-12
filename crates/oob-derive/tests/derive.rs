@@ -1696,10 +1696,10 @@ fn the_generated_classes_load_and_a_tiny_scenario_runs() {
     assert!(class.radar);
 
     // The 01 transit scenario, with the derived class: Noumea to Espiritu
-    // Santo, 11 hexes of 40 nm = 440 nm. At the class's 15 kn cruise speed
-    // a 24-hour day covers 360 nm and the remaining 80 nm are finished on
-    // day 2. Fuel burned per nm is 1600 t / 8000 nm = 0.2 t, so
-    // 440 x 0.2 = 88 t, leaving 1512 t.
+    // Santo, 11 hexes charged the straight-line miles, 394 nm (decision
+    // 0058). At the class's 15 kn cruise speed a 24-hour day covers 360 nm
+    // and the remaining 34 nm are finished on day 2. Fuel burned per nm is
+    // 1600 t / 8000 nm = 0.2 t, so 394 x 0.2 = 78.8 t, leaving 1521.2 t.
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let data = |p: &str| repo.join("data").join(p).display().to_string();
     let scenario = format!(
@@ -1725,7 +1725,10 @@ fn the_generated_classes_load_and_a_tiny_scenario_runs() {
     let days = loaded.run_to_end().expect("it runs");
     assert_eq!(days.len(), 2);
     let truth = loaded.world.umpire();
-    assert_eq!(truth.ships[&ShipId::new(1)].fuel_t, Fixed::from_int(1512));
+    assert_eq!(
+        truth.ships[&ShipId::new(1)].fuel_t,
+        "1521.2".parse::<Fixed>().unwrap()
+    );
 }
 
 // Designed rate of fire by exception, and ammunition not limiting.

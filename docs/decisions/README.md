@@ -65,6 +65,7 @@ A record that adds a rule to the simulation ends with a rule card: the state the
 | 0055 | After the architecture review: the day is the smallest command cycle, saved games need not survive rule changes, own units are known exactly; a player's own count of orders, the local commander as issuer, a rule tag on random keys, every state field named beside the hash | Confirmed (1 to 4 and the pillar wording); settled (5 to 9) |
 | 0056 | Claims from the air: one claim a side a raid, of aircraft shot down, hits on ships, ships sunk and aircraft destroyed on the ground; each miss may be claimed | Confirmed |
 | 0057 | The state hash at version 2 with no tag bytes, golden files remade; batch summaries and replays record the inputs they were run on, and `batch --label` | Settled |
+| 0058 | Ships are charged straight-line miles: a step costs the miles it brings the force closer to its waypoint; 40 a hex only where land forces a detour | Confirmed |
 | 0059 | Aircraft that cannot land where they took off: extended reach by order with ditching for fuel, another deck or a field when the deck is lost, and the crew's fate by where it comes down | Confirmed |
 
 "Needs review" means the choice affects how the game plays and the designer should confirm it. "Confirmed" means the designer has. "Settled" means it is an engineering choice with no effect on play.

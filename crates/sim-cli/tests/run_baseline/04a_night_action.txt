@@ -2,7 +2,7 @@ Scenario 4a: Night action, an alert force meets one that is not
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 76e0c06c144fad48  109 events
+day   1  hash 26eebfc2b081f15b  109 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (5,0), 20 nm from (4,0) toward (5,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

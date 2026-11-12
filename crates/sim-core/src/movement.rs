@@ -114,11 +114,6 @@ fn one_hex() -> Fixed {
     Fixed::from_int(HEX_NM)
 }
 
-/// Progress at which a force enters the hex ahead.
-fn half_hex() -> Fixed {
-    one_hex() / Fixed::from_int(2)
-}
-
 /// The pair in (lower ID, higher ID) order.
 fn ordered(a: TaskForceId, b: TaskForceId) -> (TaskForceId, TaskForceId) {
     if a < b {
@@ -137,6 +132,9 @@ struct Mover {
     from_hex: Hex,
     toward_hex: Option<Hex>,
     progress_nm: Fixed,
+    /// What the step in progress is charged (decision 0058, 7); one hex at a
+    /// centre.
+    leg_nm: Fixed,
     next_index: usize,
     /// The distance field to the waypoint being steamed to, worked out once
     /// per waypoint (decision 0017, decision 12: the path itself is never
@@ -158,6 +156,9 @@ struct Mover {
     segment_from: Hex,
     segment_nm: Fixed,
     segment_hexes: Vec<Hex>,
+    /// What each step begun in the open segment is charged, in order. Only
+    /// read for the segment's breakdown.
+    segment_charges: Vec<Fixed>,
     /// Hours steamed in the segments recorded so far, each worked out as one
     /// division of the segment's distance by its speed.
     hours_done: Fixed,
@@ -169,10 +170,16 @@ struct Mover {
 }
 
 impl Mover {
+    /// Progress at which the force enters the hex ahead: half the step's
+    /// charge (decision 0058, 6).
+    fn half_leg(&self) -> Fixed {
+        self.leg_nm / Fixed::from_int(2)
+    }
+
     /// Where the force is: the nearest centre (decision 0005).
     fn position(&self) -> Hex {
         match self.toward_hex {
-            Some(toward) if self.progress_nm >= half_hex() => toward,
+            Some(toward) if self.progress_nm >= self.half_leg() => toward,
             _ => self.from_hex,
         }
     }
@@ -191,18 +198,17 @@ impl Mover {
 
     /// Steams up to `distance_nm` along the route.
     ///
-    /// A leg between two hex centres is 40 nm and, once started, is always
-    /// finished: the next centre reached is the hex ahead, whatever the
-    /// route says. At a centre the next leg goes to the next hex on the
-    /// shortest sea path to the current waypoint (`Map::next_step_in`,
+    /// A leg between two hex centres is charged what the map says
+    /// (`Map::step_charge_nm`, decision 0058), set when it begins, and, once
+    /// started, is always finished: the next centre reached is the hex ahead,
+    /// whatever the route says. At a centre the next leg goes to the next hex
+    /// on the shortest sea path to the current waypoint (`Map::next_step_in`,
     /// decision 0017). The force enters a hex (its position changes) when it
-    /// passes the midpoint of the leg, 20 nm along, so `hexes_entered` and
+    /// passes the midpoint of the leg, half its charge along, so `hexes_entered` and
     /// the `from` and `to` of the event are positions, not centres reached.
     /// Stops early at the end of the route. Adds what it steamed to the open
     /// segment and takes it off the distance left.
     fn steam(&mut self, map: &Map, distance_nm: Fixed) {
-        let one_hex = one_hex();
-        let half_hex = half_hex();
         let mut travelled_nm = Fixed::ZERO;
         loop {
             if self.toward_hex.is_none() {
@@ -226,6 +232,7 @@ impl Mover {
                     // zero progress always means no hex ahead.
                     let index = self.next_index;
                     let from = self.from_hex;
+                    let waypoint = self.waypoints[index];
                     let field = self.field_to(map, index);
                     // Intake proved every waypoint reachable and the map never
                     // changes, so there is always a next step. If there were
@@ -233,22 +240,27 @@ impl Mover {
                     let Some(toward) = map.next_step_in(field, from) else {
                         break;
                     };
+                    let charge = map.step_charge_nm(field, from, toward, waypoint);
+                    self.leg_nm = Fixed::from_int(i64::from(charge));
+                    self.segment_charges.push(self.leg_nm);
                     self.toward_hex = Some(toward);
                     toward
                 }
             };
-            let to_centre_nm = one_hex - self.progress_nm;
+            let half_leg = self.half_leg();
+            let to_centre_nm = self.leg_nm - self.progress_nm;
             if remaining_nm >= to_centre_nm {
                 travelled_nm += to_centre_nm;
-                if self.progress_nm < half_hex {
+                if self.progress_nm < half_leg {
                     self.segment_hexes.push(leg_end);
                 }
                 self.from_hex = leg_end;
                 self.toward_hex = None;
                 self.progress_nm = Fixed::ZERO;
+                self.leg_nm = one_hex();
             } else {
                 travelled_nm += remaining_nm;
-                if self.progress_nm < half_hex && self.progress_nm + remaining_nm >= half_hex {
+                if self.progress_nm < half_leg && self.progress_nm + remaining_nm >= half_leg {
                     self.segment_hexes.push(leg_end);
                 }
                 self.progress_nm += remaining_nm;
@@ -290,18 +302,18 @@ impl Mover {
     }
 
     /// The distance from now to the force's next change of position, if it
-    /// has one: the rest of the way to 20 nm along its leg, or, past that,
-    /// the rest of the leg plus 20 nm along the next one. `None` if the route
+    /// has one: the rest of the way to half its leg's charge, or, past that,
+    /// the rest of the leg plus half the next one's charge. `None` if the route
     /// ends (or cannot go on) first. Pure: steaming that distance gives
     /// exactly the state that steaming more in one go gives at that point.
     fn distance_to_next_change(&mut self, map: &Map) -> Option<Fixed> {
         let mut walked_nm = Fixed::ZERO;
         let mut at = self.from_hex;
         if let Some(toward) = self.toward_hex {
-            if self.progress_nm < half_hex() {
-                return Some(half_hex() - self.progress_nm);
+            if self.progress_nm < self.half_leg() {
+                return Some(self.half_leg() - self.progress_nm);
             }
-            walked_nm = one_hex() - self.progress_nm;
+            walked_nm = self.leg_nm - self.progress_nm;
             at = toward;
         }
         // At a centre: skip the waypoints already reached.
@@ -309,9 +321,11 @@ impl Mover {
         while *self.waypoints.get(index)? == at {
             index += 1;
         }
+        let waypoint = self.waypoints[index];
         let field = self.field_to(map, index);
-        map.next_step_in(field, at)?;
-        Some(walked_nm + half_hex())
+        let next = map.next_step_in(field, at)?;
+        let charge = map.step_charge_nm(field, at, next, waypoint);
+        Some(walked_nm + Fixed::from_int(i64::from(charge)) / Fixed::from_int(2))
     }
 }
 
@@ -391,6 +405,7 @@ fn build_mover<'s>(
         from_hex: task_force.from_hex,
         toward_hex: task_force.toward_hex,
         progress_nm: task_force.progress_nm,
+        leg_nm: task_force.leg_nm,
         next_index: task_force.route.next_index,
         field: None,
         steamers,
@@ -403,6 +418,7 @@ fn build_mover<'s>(
         segment_from: task_force.position(),
         segment_nm: Fixed::ZERO,
         segment_hexes: Vec::new(),
+        segment_charges: Vec::new(),
         hours_done: hours_used,
         last_steamed: None,
         arrival_recorded: false,
@@ -505,10 +521,11 @@ impl World {
             };
             let mover = step.movers.get_mut(&id).expect("the mover exists");
             mover.steam(&self.map, distance_nm);
-            let (from_hex, toward_hex, progress_nm, next_index) = (
+            let (from_hex, toward_hex, progress_nm, leg_nm, next_index) = (
                 mover.from_hex,
                 mover.toward_hex,
                 mover.progress_nm,
+                mover.leg_nm,
                 mover.next_index,
             );
             let hex = mover.position();
@@ -520,6 +537,7 @@ impl World {
             task_force.from_hex = from_hex;
             task_force.toward_hex = toward_hex;
             task_force.progress_nm = progress_nm;
+            task_force.leg_nm = leg_nm;
             task_force.route.next_index = next_index;
             self.meet_in(&mut step, id, hex, pulse_start(day, pulse) + hours);
         }
@@ -756,11 +774,21 @@ impl World {
                     value: limit,
                 });
             }
+            // What each step begun in the segment is charged (decision
+            // 0058): the miles that step brought the force closer in a
+            // straight line, or 40 where land forced a detour.
+            for charge in &mover.segment_charges {
+                factors.push(Factor {
+                    name: "step_charge_nm",
+                    value: *charge,
+                });
+            }
             Breakdown {
                 factors,
                 result: travelled_nm,
             }
         });
+        mover.segment_charges.clear();
         let event = self.events.record(
             day,
             Some(pulse),
@@ -886,6 +914,7 @@ impl World {
         task_force.from_hex = mover.from_hex;
         task_force.toward_hex = mover.toward_hex;
         task_force.progress_nm = mover.progress_nm;
+        task_force.leg_nm = mover.leg_nm;
         let hex = task_force.position();
         task_force.route.next_index = mover.next_index;
         task_force.status = status;
@@ -1147,6 +1176,7 @@ pub(crate) fn forecast_passage(
             force.from_hex = mover.from_hex;
             force.toward_hex = mover.toward_hex;
             force.progress_nm = mover.progress_nm;
+            force.leg_nm = mover.leg_nm;
             force.route.next_index = mover.next_index;
             if mover.arrived() {
                 result.end = PassageEnd::Arrives {
@@ -1693,5 +1723,163 @@ mod tests {
             2,
             hex(5),
         );
+    }
+
+    // ---- steaming in one go and in pieces (decision 0058) ----
+
+    /// A mover for a force on the fixture's strip with a wall of land across
+    /// it at q = 5 that leaves only the row r = 2 open, so that a route east
+    /// has to go round (a detour, charged 40 a step) and then runs clear.
+    fn walled_mover(start: Hex, waypoints: &[Hex]) -> (Mover, Map) {
+        let mut world = world(1, &[Force::new(1, Side::Allied, start).route(waypoints)]);
+        for r in -2..=1 {
+            world.map.insert(
+                Hex::new(5, r),
+                HexData {
+                    kind: crate::map::HexKind::Land,
+                    ..HexData::open_sea()
+                },
+            );
+        }
+        let mover = world
+            .new_mover(TaskForceId::new(1), Pulse::Night, Fixed::ZERO)
+            .expect("the force is under way");
+        (mover, world.map.clone())
+    }
+
+    /// What steaming leaves: the leg, the route index and the open segment.
+    fn state_of(mover: &Mover) -> (Hex, Option<Hex>, Fixed, Fixed, usize, Fixed, Vec<Hex>) {
+        (
+            mover.from_hex,
+            mover.toward_hex,
+            mover.progress_nm,
+            mover.leg_nm,
+            mover.next_index,
+            mover.segment_nm,
+            mover.segment_hexes.clone(),
+        )
+    }
+
+    #[test]
+    fn steaming_a_route_in_one_go_or_in_many_small_pieces_gives_the_same_state() {
+        let routes: [(Hex, Vec<Hex>); 4] = [
+            // Clear and off the axes: charges 40 on an axis, less off it.
+            (Hex::new(-8, -2), vec![Hex::new(4, 2)]),
+            // Round the wall by its open row, then clear.
+            (Hex::new(0, 0), vec![Hex::new(12, 0)]),
+            // Several waypoints, one of them behind the wall.
+            (
+                Hex::new(-6, 1),
+                vec![Hex::new(3, -2), Hex::new(9, 2), Hex::new(0, 0)],
+            ),
+            // Along an axis.
+            (Hex::new(-8, 0), vec![Hex::new(18, 0)]),
+        ];
+        let mut seed = 7u64;
+        let mut next = move || {
+            seed = seed
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            seed >> 33
+        };
+        for (start, waypoints) in routes {
+            let (mut whole, map) = walled_mover(start, &waypoints);
+            whole.steam(&map, Fixed::from_int(2000));
+            for _ in 0..20 {
+                let (mut pieces, _) = walled_mover(start, &waypoints);
+                let mut left = Fixed::from_int(2000);
+                while !left.is_zero() {
+                    // Pieces of 1/8 nm up to about 60 nm, in eighths.
+                    let eighths = i64::try_from(1 + next() % 480).expect("small");
+                    let piece = Fixed::from_ratio(eighths, 8).min(left);
+                    pieces.steam(&map, piece);
+                    left -= piece;
+                }
+                assert_eq!(
+                    state_of(&pieces),
+                    state_of(&whole),
+                    "{start} to {waypoints:?}"
+                );
+            }
+            // The legs are always within what a step can be charged.
+            assert!(whole.leg_nm >= Fixed::ONE && whole.leg_nm <= Fixed::from_int(40));
+        }
+    }
+
+    #[test]
+    fn steaming_the_distance_to_the_next_change_of_position_changes_it() {
+        let (mut mover, map) = walled_mover(Hex::new(-8, -2), &[Hex::new(12, 0)]);
+        let mut changes = 0;
+        while let Some(distance) = mover.distance_to_next_change(&map) {
+            let before = mover.position();
+            // Just short of it the position is the same, and at it, it has
+            // changed.
+            let mut probe = clone_mover(&mover);
+            probe.steam(&map, distance - Fixed::from_ratio(1, 1000));
+            assert_eq!(probe.position(), before);
+            mover.steam(&map, distance);
+            assert_ne!(mover.position(), before);
+            changes += 1;
+            assert!(changes < 200);
+        }
+        // The last change of position is entering the destination; the rest
+        // of its step gets the force to the centre, and it has arrived.
+        assert_eq!(mover.position(), Hex::new(12, 0));
+        mover.steam(&map, Fixed::from_int(40));
+        assert!(mover.arrived());
+        assert_eq!(mover.from_hex, Hex::new(12, 0));
+    }
+
+    fn clone_mover(mover: &Mover) -> Mover {
+        Mover {
+            active: mover.active,
+            waypoints: mover.waypoints.clone(),
+            from_hex: mover.from_hex,
+            toward_hex: mover.toward_hex,
+            progress_nm: mover.progress_nm,
+            leg_nm: mover.leg_nm,
+            next_index: mover.next_index,
+            field: None,
+            steamers: Vec::new(),
+            speed_kn: mover.speed_kn,
+            propulsion_factor: mover.propulsion_factor,
+            time_limit_nm: mover.time_limit_nm,
+            fuel_limit_nm: mover.fuel_limit_nm,
+            fuel_is_the_limit: mover.fuel_is_the_limit,
+            left_nm: mover.left_nm,
+            segment_from: mover.segment_from,
+            segment_nm: mover.segment_nm,
+            segment_hexes: mover.segment_hexes.clone(),
+            segment_charges: mover.segment_charges.clone(),
+            hours_done: mover.hours_done,
+            last_steamed: mover.last_steamed,
+            arrival_recorded: mover.arrival_recorded,
+        }
+    }
+
+    #[test]
+    fn a_detour_is_charged_a_hex_a_step_and_the_clear_way_after_it_the_straight_miles() {
+        let (mut mover, map) = walled_mover(Hex::new(0, 0), &[Hex::new(12, 0)]);
+        mover.steam(&map, Fixed::from_int(10_000));
+        assert!(mover.arrived());
+        let charges: Vec<i64> = mover.segment_charges.iter().map(|c| c.trunc()).collect();
+        // Every step is 1 to 40 miles.
+        assert!(charges.iter().all(|c| (1..=40).contains(c)));
+        // The sea path is longer than the 12 hexes between them, so the
+        // steps are charged 40 until the force is clear of the wall.
+        assert!(charges.len() > 12);
+        assert_eq!(charges[0], 40);
+        // The charged miles are what the force steamed.
+        assert_eq!(
+            mover.segment_nm,
+            Fixed::from_int(charges.iter().sum::<i64>())
+        );
+        assert_eq!(
+            i64::from(map.sea_charged_nm(Hex::new(0, 0), Hex::new(12, 0)).unwrap()),
+            charges.iter().sum::<i64>()
+        );
+        // More than the straight line, at most a hex a step.
+        assert!(mover.segment_nm > Fixed::from_int(480));
+        assert!(mover.segment_nm <= Fixed::from_int(40 * charges.len() as i64));
     }
 }

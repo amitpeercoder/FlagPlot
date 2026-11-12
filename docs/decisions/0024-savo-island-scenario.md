@@ -65,3 +65,7 @@ So the doubts recorded in decision 0023 are not what stands between this scenari
 ## Rule card
 
 No rule. These are scenario inputs.
+
+## Amended by decision 0058 (Nov 12, 2026)
+
+Item 6 worked the column's start back with 40 miles a hex. Ships are now charged straight-line miles (decision 0058), and from hex (-1,-7) the column entered hex (2,-5) at 00:25. The start is now hex (-1,-8) and the speed 25 knots, settled by the architect: it is 208 miles from (2,-5), the column enters that hex after 188 miles at 01:31, and at midnight it is 38 miles short of it, against the source's 37 miles from Cape Esperance. 25 knots is inside the 24 to 26 the sources give. Nothing else of the scenario changes.

@@ -423,9 +423,10 @@ fn objectives_change_no_hash_and_no_event() {
     assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
     // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
     // 0056 put the claims from the air into belief, and so into the hash,
-    // and 2f37141bddfdb856 until the hash went to version 2 (decision 9 of
-    // 0055).
-    assert!(baseline.contains("hash c09495f6039a2a2a"));
+    // 2f37141bddfdb856 until the hash went to version 2 (decision 9 of
+    // 0055), c09495f6039a2a2a until the hash went to version 3 (decision
+    // 0058, `leg_nm`) and the Ryujo detachment moved its start.
+    assert!(baseline.contains("hash e88694a2344625c0"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

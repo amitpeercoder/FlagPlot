@@ -2,34 +2,34 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 599a9da3d375f2b9  48 events
-day   2  hash 233401ffdc64a4e2  34 events
-day   3  hash 005973c784c93ed8  31 events
-day   4  hash 15d4d4dc78c8e5b3  21 events
-day   5  hash 35d0ac37a6caab3f  15 events
-day   6  hash 9a732bb40a9d6b83  34 events
-day   7  hash 330ae238e58d234d  20 events
-day   8  hash 6fdadc0d59bc4637  11 events
-day   9  hash 074e64b397100016  30 events
-day  10  hash 11123a7b3863aed7  23 events
-day  11  hash bc78b042a27bba5e  20 events
-day  12  hash f429877d0ce1aeb6  34 events
-day  13  hash 30190cc209c2ff9a  25 events
-day  14  hash cc0b6e0120382d60  23 events
-day  15  hash 6daa0aadc07aff47  42 events
-day  16  hash dd5335c13cd801b7  21 events
-day  17  hash 86e283c2eb22d520  15 events
-day  18  hash a5e08b2624fa3a91  33 events
-day  19  hash 37f4a8e9f49bc941  19 events
-day  20  hash 336a44dfba66b797  13 events
-day  21  hash 5cb18e74b7337bfc  38 events
-day  22  hash f6af6015e15f67ea  26 events
-day  23  hash a4c7af9ed4f94206  23 events
-day  24  hash 51498ef8cd2163a2  49 events
-day  25  hash ed25683d9427507a  29 events
-day  26  hash 58c8c273c993b539  27 events
-day  27  hash 0d2d255c26c4b320  44 events
-day  28  hash 4445945b0b7086e4  28 events
+day   1  hash a54d086bd643bd98  48 events
+day   2  hash 6a4d7964d8d880cf  34 events
+day   3  hash 90e365062adad915  31 events
+day   4  hash 7fce580bf54ad93a  21 events
+day   5  hash cbcf816f9800dbe2  15 events
+day   6  hash 2b4328a108852a56  34 events
+day   7  hash 8000413f2d6d8394  20 events
+day   8  hash aaabba0e4e9cc1de  11 events
+day   9  hash 7b22b8cdfd3aad27  30 events
+day  10  hash 55a5ceee1f8d830e  23 events
+day  11  hash a819dc60ac348c53  20 events
+day  12  hash 100279b4f170c847  34 events
+day  13  hash 9e438c730538064f  25 events
+day  14  hash ca9d5373095f2c79  23 events
+day  15  hash d9a8ceb94752cb32  42 events
+day  16  hash 6b10ca92cf6a25d2  21 events
+day  17  hash 4eea64b97caf6ec5  15 events
+day  18  hash bcb718f0213556a8  33 events
+day  19  hash ff0614360942ae3c  19 events
+day  20  hash 46923712dbe1bf7e  13 events
+day  21  hash 879a458810548a35  38 events
+day  22  hash 574c6ef569590663  26 events
+day  23  hash 0de452866330785f  23 events
+day  24  hash 6b8141bb3586843f  49 events
+day  25  hash c3c1b305d2c948eb  29 events
+day  26  hash 466921eeae8265ec  27 events
+day  27  hash 562535e2eb3c4d35  44 events
+day  28  hash 7eced43c3628d01d  28 events
 
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 39 ready, 41 pilots, mission BaseStrike on base:1, fatigue 52.64, rests above 45, stood down, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 18 ready, 18 pilots, mission CombatAirPatrol, patrol share 0, fatigue 52.64, rests above 45, stood down, no arc

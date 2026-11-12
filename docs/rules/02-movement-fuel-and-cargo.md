@@ -61,7 +61,7 @@ A task force is a set of ships of one side, with one position, one route, one sp
 | Field | Meaning |
 | --- | --- |
 | `ships` | The ships in it. A ship afloat is in exactly one task force or one port. A sunk ship is in neither |
-| `from_hex`, `toward_hex`, `progress_nm` | Where it is on a leg (see Position) |
+| `from_hex`, `toward_hex`, `progress_nm`, `leg_nm` | Where it is on a leg, and what the leg is charged (see What a step is charged and Legs and position) |
 | `route` | Waypoints and the index of the next one |
 | `status` | idle (no route), underway, arrived (reached the last waypoint), or out of fuel |
 | `speed` | cruise, full, or a speed in knots |
@@ -82,8 +82,6 @@ A detach order splits named ships off into a new task force. Chapter 1, Task for
 A side sees: its own `ShipsDetached` event whole. The enemy sees nothing.
 
 ## Movement
-
-> **Note.** Decision 0058, "Ships are charged straight-line miles", will replace the charge of a step. It is approved and not built. This section and Fuel describe 40 miles a step as the code has it today, and will be rewritten when it lands.
 
 ### Orders that move a force
 
@@ -124,23 +122,38 @@ A side sees: its own steaming events.
 
 ### The path
 
-A force steams from one waypoint to the next by the shortest sea path. The path is not stored. For the waypoint being steamed to, the engine works out for every reachable hex the fewest steps to the waypoint, by a search from the waypoint that takes neighbours in the fixed order and never crosses a closed side. The next hex from a hex is then the first neighbour, in the fixed order, whose fewest steps is one less and whose side is open. A hex that cannot reach the waypoint is not in the result. If the waypoint is off the map or not navigable, nothing can reach it. The field is worked out again when the force turns to the next waypoint, and is the same every time because the map never changes. On open water this is the straight greedy path. Around land it is the shortest way round. Every step costs one hex, whatever the direction. [0005 item 3 as replaced, 0017 items 10 to 13]
+A force steams from one waypoint to the next by the shortest sea path. The path is not stored. For the waypoint being steamed to, the engine works out for every reachable hex the fewest steps to the waypoint, by a search from the waypoint that takes neighbours in the fixed order and never crosses a closed side. The next hex from a hex is then the first neighbour, in the fixed order, whose fewest steps is one less and whose side is open. A hex that cannot reach the waypoint is not in the result. If the waypoint is off the map or not navigable, nothing can reach it. The field is worked out again when the force turns to the next waypoint, and is the same every time because the map never changes. On open water this is the straight greedy path. Around land it is the shortest way round. What each step of the path costs in miles is the rule of the next section. [0005 item 3 as replaced, 0017 items 10 to 13]
+
+A side sees: not an event.
+
+### What a step is charged
+
+Distance, time and fuel for a ship are worked in miles, and the miles of a step from one hex centre to the next are not always 40. A step from H to the next hex N on the path, for the waypoint W the force is steaming for, is charged as follows. [0058 items 1 to 4]
+
+- **The way is clear from H** when the shortest sea path from H to W has as many steps as the hex distance from H to W (the number of hexes between them if there were no land). Land forces no detour from there.
+- **Where the way is clear** the step is charged the miles it brings the force closer to W in a straight line: the air distance (chapter 5, Distance) from H to W less the air distance from N to W, and never less than 1. The charges of the steps from H to W then add up to the air distance from H to W, whatever path the steps take. An air distance is in whole miles, so a charge wobbles by a mile either way. A step is never charged more than 40.
+- **Where the way is not clear** the step is charged 40 miles. Once the force is past the land the rest of the way is clear and is charged as above, so a path round an island is 40 miles a step until the way is clear, and the straight miles from there.
+- Along any of the six directions of the grid the air distance falls by 40 a step, so a route along a hex axis is charged 40 a step, as it always was.
+
+The charge of a step is worked out once, from the force's hex at the start of the step, with the waypoint the force is steaming for then, and is kept (see Legs and position). Everything that states a sea distance uses this one function: movement, the passage forecast, `measure`'s sea route and passage, the briefing's warning of a ship that cannot reach a base (the nearest base is the one with the fewest charged miles), and the viewer's measuring tool. Thresholds counted in hexes, such as how near a contact must be to alert a force, stay in hexes. [0058 item 8, 0049]
+
+A side sees: the miles steamed in its own `TaskForceSteamed` events, and, in the breakdown, the charge of each step begun in the segment. The enemy sees neither.
 
 A side sees: not an event.
 
 ### Legs and position
 
-A leg is the 40 miles between the centres of two neighbouring hexes. A force on a leg has a `from_hex`, the `toward_hex` it steams to, and the miles covered, `progress_nm`, from 0 up to but not including 40. At a centre it has no `toward_hex` and progress 0. `toward_hex` is set exactly when progress is above 0.
+A leg is the step between the centres of two neighbouring hexes, charged by the rule above. A force on a leg has a `from_hex`, the `toward_hex` it steams to, the miles covered, `progress_nm`, and what the leg is charged, `leg_nm`, which is set when the leg begins. Progress runs from 0 up to but not including `leg_nm`. At a centre the force has no `toward_hex`, progress 0 and `leg_nm` 40. `toward_hex` is set exactly when progress is above 0. `leg_nm` is at least 1 and at most 40. It is state and is in the state hash. [0058 item 7]
 
-A leg once started is always finished. The next centre the force reaches is the hex ahead, whatever the route says. At a centre the next leg starts toward the next hex of the path, and only if there is distance left to steam it.
+A leg once started is always finished at the charge it began with. The next centre the force reaches is the hex ahead, whatever the route says: a new route given on the leg or a turn-back keeps the leg's charge. At a centre the next leg starts toward the next hex of the path, with the charge the map gives that step, and only if there is distance left to steam it.
 
-The position of a force is the hex whose centre is nearest: the hex ahead once it is 20 miles or more along its leg, and the hex it left before that. A force is in the hex ahead at exactly 20 miles. Every other rule that asks where a force is reads its position. A force is always in a navigable hex. [0005 item 1, 0017]
+The position of a force is the hex whose centre is nearest: the hex ahead once it is half the leg's charge or more along it (20 miles of a leg of 40), and the hex it left before that. A force is in the hex ahead at exactly half. Every other rule that asks where a force is reads its position. A force is always in a navigable hex. A force split off a leg copies the leg whole, charge included. [0005 item 1, 0017, 0058 items 6 and 7]
 
 A side sees: its own position changes in `TaskForceSteamed` events (the `from` and `to` are positions, not centres reached, and `hexes_entered` lists the hexes entered).
 
 ### Order of movement within a pulse
 
-Within one pulse forces move in order of clock time. The engine works out, for each force that can still steam, the distance to its next change of position: the rest of the way to 20 miles along its leg or, if it is already at 20 or past it, the rest of the leg plus 20 miles of the next, if the path has a next hex. It considers only a change that its remaining budget reaches. For each such force the time of the change is its hours used so far, plus the open segment plus that distance divided by its speed. The force with the earliest time is advanced to that point, and the lower task force number wins a tie. This repeats until no force has a change within its budget. Each force then steams out what is left of its budget. [0022 items 1 and 2]
+Within one pulse forces move in order of clock time. The engine works out, for each force that can still steam, the distance to its next change of position: the rest of the way to half the charge of its leg or, if it is already at half or past it, the rest of the leg plus half the charge of the next, if the path has a next hex. It considers only a change that its remaining budget reaches. For each such force the time of the change is its hours used so far, plus the open segment plus that distance divided by its speed. The force with the earliest time is advanced to that point, and the lower task force number wins a tie. This repeats until no force has a change within its budget. Each force then steams out what is left of its budget. [0022 items 1 and 2]
 
 A side sees: not an event.
 
@@ -166,7 +179,7 @@ A side sees: its own steaming events, in log order before the fight's events.
 
 A force's steaming is recorded in segments: from the start of the pulse or the last fight to the next fight or the end of the pulse. A force that fights nobody has one segment. For a segment with distance above 0 the engine records:
 
-1. `TaskForceSteamed`, with the force, where it was, where it is, the miles, the speed and the hexes entered. It cites the force's route order and speed order, and records a breakdown of the speed, the propulsion factor, the pulse hours, the time limit and the fuel limit.
+1. `TaskForceSteamed`, with the force, where it was, where it is, the miles, the speed and the hexes entered. It cites the force's route order and speed order, and records a breakdown of the speed, the propulsion factor, the pulse hours, the time limit, the fuel limit and the charge of each step begun in the segment (a step begun in one segment and finished in the next is listed in the one that began it).
 2. `FuelBurned` for each ship, citing the steamed event, and the fuel removed from the ship (see Fuel burn).
 
 The hours of a segment are its distance divided by its speed, cut. They are added to the force's hours used in the pulse. [0005, 0006, 0022]
@@ -183,11 +196,11 @@ A side sees: its own `TaskForceArrived`.
 
 A route order given to a force between two centres starts the new route from the centre the force reaches first. The force goes on to the hex ahead or turns back to the hex it left, whichever is the shorter trip to the first waypoint of the new route:
 
-- Going on costs the rest of the leg (40 miles less progress) plus 40 miles for each step of the sea path from the hex ahead.
-- Turning back costs the progress plus 40 miles for each step from the hex it left.
+- Going on costs the rest of the leg (the leg's charge less the progress) plus the charged miles of the sea path from the hex ahead to the waypoint, as What a step is charged gives them.
+- Turning back costs the progress plus the charged miles of the sea path from the hex it left to the waypoint.
 - A tie goes ahead. If only one side can reach the waypoint, that side is taken. If neither can, the order is rejected. A route that ends at the hex ahead or the hex left is a real route.
 
-Turning back swaps the two hexes and sets progress to 40 less its old value. It happens when the order is taken in. The leg is then steamed as usual, and a re-route never gains distance. A force turned back at exactly 20 miles changes position, from the hex ahead to the hex it left, without steaming. A turn-back records `TaskForceTurnedBack` (the hex it now leaves from, the hex it now heads for, the progress and the position), citing the order and recorded just after the order's own event. A route order at a centre records none. [0005 item 5, 0017 item 14, 0044 item 7]
+Turning back swaps the two hexes and sets progress to the leg's charge less its old value; the charge is kept. It happens when the order is taken in. The leg is then steamed as usual, and a re-route never gains distance. A force turned back at exactly 20 miles changes position, from the hex ahead to the hex it left, without steaming. A turn-back records `TaskForceTurnedBack` (the hex it now leaves from, the hex it now heads for, the progress and the position), citing the order and recorded just after the order's own event. A route order at a centre records none. [0005 item 5, 0017 item 14, 0044 item 7, 0058 item 7]
 
 A side sees: its own `TaskForceTurnedBack`.
 

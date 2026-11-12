@@ -154,7 +154,7 @@ To change: differences.md row 17, a load order to a force that is out of fuel is
 
 The stance is engage or avoid. The straggler instruction is keep, detach, leave or retire. Chapter 4, Breaking off, and chapter 2, Stragglers, give what they do. The readiness is read by chapter 3, Readiness, alertness and fatigue of a force. [0014, 0016, 0021]
 
-Detaching ships creates a new force with the next free task force number. It starts at the parent's exact position and leg, idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. To change: differences.md row 24, the acceptance is to be recorded first. [0016, 0037]
+Detaching ships creates a new force with the next free task force number. It starts at the parent's exact position and leg (the charge of the leg with it), idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. To change: differences.md row 24, the acceptance is to be recorded first. [0016, 0037]
 
 ### Air group orders
 
@@ -476,7 +476,7 @@ The checks:
 | --- | --- |
 | Ships | Fuel, supply aboard and cargo fuel are not negative. Fuel does not exceed the class's capacity. Supply and cargo fuel together do not exceed the class's cargo capacity. Flotation and fire damage are from 0 to 100. Gun rounds are not negative. A ship at 100 flotation damage is sunk. A ship has no damaged system its class lacks. |
 | Where a ship is | A ship in a task force is listed by that force. A ship in a port is at a base that exists. A force lists only ships that are in it, that exist, that are not sunk and that are of its side. No ship is listed by more than one force. |
-| Task forces | The force's hex is on the map and navigable. A hex ahead is set if and only if progress toward it is above 0; it is adjacent, on the map, navigable, and the step to it crosses no closed side. Progress is below one hex (40 miles). The keep share is from 0 to 1. Fatigue is from 0 to 100. A home port exists and is of the force's side. |
+| Task forces | The force's hex is on the map and navigable. A hex ahead is set if and only if progress toward it is above 0; it is adjacent, on the map, navigable, and the step to it crosses no closed side. Progress is at least 0 and below the leg's charge, `leg_nm`; `leg_nm` is from 1 to 40 miles and is 40 for a force at a centre. The keep share is from 0 to 1. Fatigue is from 0 to 100. A home port exists and is of the force's side. |
 | Bases | The hex is on the map. Supply and fuel stocks are not negative. A replacement stream names a base that exists. |
 | Air groups | Each is at a base that exists or aboard a ship that exists, of its own side. The ready and damaged aircraft of the groups aboard a ship do not exceed the class's aircraft capacity. Fatigue and the rest threshold are from 0 to 100. |
 
@@ -488,7 +488,7 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v2`. [0004, 0057]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v3`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. [0004, 0057, 0058 item 7]
 
 The hash covers: the seed; the day; every ship, task force, base, air group, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases or air groups, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 
