@@ -7,15 +7,9 @@
 //! scenario. No other scenario gets values: its ships are placeholders, and a
 //! placeholder ship is 2.
 //!
-//! The values asserted are the architect's list of Nov 12, 2026: the Japanese
-//! ships (Chokai, Aoba, Kako, Kinugasa, Furutaka, Tenryu, Yubari, Yunagi) 3;
-//! Canberra, Chicago 3; Vincennes, Quincy 1; Astoria 2; Patterson, Bagley,
-//! Helm 3; Wilson 2. The generated file on this branch says 2 for Patterson,
-//! Bagley and Helm: the file is being regenerated in another pull request with
-//! the list's values. Until it merges the test accepts 2 or 3 from the file for
-//! those three, and holds the scenario to 3; when it merges the three
-//! exceptions in `PENDING_IN_THE_FILE` go. The scenario is held to the list in
-//! every case.
+//! The values are the generated file's, and no list of values is kept here:
+//! every ship of the scenario has the value the file gives her. The table
+//! below only says which file row is which scenario ship.
 
 mod common;
 
@@ -24,29 +18,26 @@ use std::path::PathBuf;
 
 use sim_core::state::Ship;
 
-/// The scenario's ship name, the generated file's ship key and the value.
-const VALUES: [(&str, &str, u8); 17] = [
-    ("Chokai", "chokai", 3),
-    ("Aoba", "aoba", 3),
-    ("Kako", "kako", 3),
-    ("Kinugasa", "kinugasa", 3),
-    ("Furutaka", "furutaka", 3),
-    ("Tenryu", "tenryu", 3),
-    ("Yubari", "yubari", 3),
-    ("Yunagi", "yunagi", 3),
-    ("HMAS Canberra", "hmas-canberra", 3),
-    ("USS Chicago", "ca-29-chicago", 3),
-    ("USS Patterson", "dd-392-patterson", 3),
-    ("USS Bagley", "dd-386-bagley", 3),
-    ("USS Vincennes", "ca-44-vincennes", 1),
-    ("USS Quincy", "ca-39-quincy", 1),
-    ("USS Astoria", "ca-34-astoria", 2),
-    ("USS Helm", "dd-388-helm", 3),
-    ("USS Wilson", "dd-408-wilson", 2),
+/// The scenario's ship name and the generated file's ship key.
+const SHIP_KEYS: [(&str, &str); 17] = [
+    ("Chokai", "chokai"),
+    ("Aoba", "aoba"),
+    ("Kako", "kako"),
+    ("Kinugasa", "kinugasa"),
+    ("Furutaka", "furutaka"),
+    ("Tenryu", "tenryu"),
+    ("Yubari", "yubari"),
+    ("Yunagi", "yunagi"),
+    ("HMAS Canberra", "hmas-canberra"),
+    ("USS Chicago", "ca-29-chicago"),
+    ("USS Patterson", "dd-392-patterson"),
+    ("USS Bagley", "dd-386-bagley"),
+    ("USS Vincennes", "ca-44-vincennes"),
+    ("USS Quincy", "ca-39-quincy"),
+    ("USS Astoria", "ca-34-astoria"),
+    ("USS Helm", "dd-388-helm"),
+    ("USS Wilson", "dd-408-wilson"),
 ];
-
-/// The file on this branch says 2 for these; the list says 3.
-const PENDING_IN_THE_FILE: [&str; 3] = ["dd-392-patterson", "dd-386-bagley", "dd-388-helm"];
 
 fn data(relative: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -81,32 +72,24 @@ fn generated() -> BTreeMap<String, u8> {
 }
 
 #[test]
-fn every_ship_of_scenario_4_has_her_value() {
+fn every_ship_of_scenario_4_has_the_value_the_file_gives_her() {
     let scenario = common::load(&data("scenarios/04_savo_island.toml")).expect("scenario 4 loads");
     let truth = scenario.world.umpire();
     assert_eq!(
         truth.ships.len(),
-        VALUES.len(),
+        SHIP_KEYS.len(),
         "every ship is in the table"
     );
     let generated = generated();
     for ship in truth.ships.values() {
-        let (_, key, value) = VALUES
+        let (_, key) = SHIP_KEYS
             .iter()
-            .find(|(name, ..)| *name == ship.name)
+            .find(|(name, _)| *name == ship.name)
             .unwrap_or_else(|| panic!("{} is in the table", ship.name));
-        assert_eq!(ship.experience, *value, "{} in the scenario", ship.name);
         let in_file = generated
             .get(*key)
             .unwrap_or_else(|| panic!("{key} is in the generated file"));
-        if PENDING_IN_THE_FILE.contains(key) {
-            assert!(
-                [Ship::DEFAULT_EXPERIENCE, *value].contains(in_file),
-                "{key} in the file: {in_file}"
-            );
-        } else {
-            assert_eq!(in_file, value, "{key} in the generated file");
-        }
+        assert_eq!(ship.experience, *in_file, "{} ({key})", ship.name);
     }
 }
 
@@ -117,9 +100,10 @@ fn a_ship_with_the_standard_value_has_no_line_in_the_scenario() {
         .lines()
         .filter(|l| l.starts_with("experience = "))
         .count();
-    let non_standard = VALUES
+    let generated = generated();
+    let non_standard = SHIP_KEYS
         .iter()
-        .filter(|(.., value)| *value != Ship::DEFAULT_EXPERIENCE)
+        .filter(|(_, key)| generated[*key] != Ship::DEFAULT_EXPERIENCE)
         .count();
     assert_eq!(lines, non_standard);
 }

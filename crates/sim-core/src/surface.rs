@@ -5611,7 +5611,6 @@ mod tests {
             let mut world = scene.world();
             world.config = SimConfig {
                 record_breakdowns: record,
-                ..world.config
             };
             strengths(&mut world, "0.4", "0.4", "0.4");
             ship_mut(&mut world, 1).experience = 3;

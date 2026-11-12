@@ -115,6 +115,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Fatigue** | A number from 0 to 100 for an air group or a task force. It rises by flying or by being alert, and falls by rest | |
 | **Stood down** | Describes an air group the staff has stopped from flying for the day because its fatigue is above its rest threshold | |
 | **Rest threshold** | The fatigue above which the staff stands an air group down (decision 0036) | |
+| **Experience** | A whole number from 0 to 4 for a ship's crew, 2 being its service's standard. Set when a scenario loads and never changed by a rule. In a dark surface fight it multiplies a ship's gun and torpedo hit chances, and a force's chance to sight by the mean of its ships' values, by `1 + strength x (experience - 2)` (decision 0064). Not read by day, and not yet by aircraft | Skill, morale, training |
+| **Strength of experience** | One of three figures in `surface_combat.toml`, from 0 to 0.5, the same for both sides: how much experience moves the gun, torpedo and sighting chances. At 0 experience does nothing | |
 | **Escort** | A fighter sent with a raid. Escorts fire at the patrol the raid meets (decisions 0027 and 0030) | A patrol |
 | **Patrol** | Fighters a group keeps over its own hex, which fire at raids that attack there | |
 | **Bomber** | An aircraft of a strike group, whether it carries bombs or a torpedo | |

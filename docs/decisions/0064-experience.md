@@ -1,6 +1,6 @@
 # 0064: Experience
 
-Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its four questions. Nothing is built yet, and no unit has a value. The hand calculation is written before any code is delegated, and this record gains an "As built" section with each stage.
+Status: confirmed. The designer approved the plan on Nov 12, 2026, with the recommended answer to each of its four questions. Stage 1 (ships) is built; see "As built (stage 1)". Stage 2 (air groups) is not. The hand calculation is written before any code is delegated, and this record gains an "As built" section with each stage.
 
 ## The gap
 
@@ -201,3 +201,17 @@ Rows about night training that no question reads: the Japanese lookout, "better 
 - Wilson is named in no row of Destroyer Squadron 4. Blue is named but no row puts her at Brisbane. Jarvis's rows disagree. Their night training, if any, cannot be matched to them.
 - Two ship-crew rows are undated (`valid_from`, `valid_to`): ship_facts 1016 and 1017 (the Atlantic months), whose answers give the period.
 - Five rows of `training_facts.csv` would fail the "earned preferred" rule (lone medium rows marked `unconfirmed`: 3, 30, 31, 33, 79). `oob-check` does not apply that rule to the file in this stage.
+
+## As built (stage 1)
+
+Decisions 1, 6, 7, 8 and 12 in the simulation, for ships.
+
+- **State.** `Ship.experience`, a `u8` from 0 to 4, default 2 (`Ship::DEFAULT_EXPERIENCE`). A scenario's `[[ship]]` may give `experience = N`; the loader refuses a value outside 0 to 4, a float or a string. No rule writes it. It is hashed last in the ship, named in `hash::name_every_field`; `hash::STATE_VERSION` is `flagplot-state-v6`. Every hash in every golden file changes and nothing else does.
+- **Figures.** `experience_gun_strength`, `experience_torpedo_strength` and `experience_sighting_strength` in `surface_combat.toml`, each from 0 to 0.5 (the loader refuses outside). The frozen file has all three at "0", so no step 1 result moves; the live file has "0.25", a placeholder, the middle of the range.
+- **The rule.** The factor is `experience_factor(strength, experience) = 1 + strength x (experience - 2)`. A gun or torpedo salvo in a dark fight takes the firer's own value, multiplied in last after the fire control factor. A force's chance to sight in a dark fight is `min(1, (base + radar_bonus) x alert_factor x experience_factor) x fatigue_factor`, with the mean of the ships in the force's list at the moment of the roll (sum over count in `Fixed`: ships of 3, 3 and 2 have 2.666666, a factor of 1.266666 at 0.4 and a sighting of 0.633333). By day nothing reads it. No new random draw.
+- **Breakdown.** `experience_factor` is last among a salvo's chance factors and after `alert_factor` in a sighting, and is there only in a dark fight when the rule's strength is above 0. On the frozen figures no breakdown and no event changes.
+- **What a side sees.** In `side_events.rs`, `experience_factor` is added to the own factors of `Salvo` (the firer's side). A `SightingRoll` is shown whole to its own force's side and already carried it. `SalvoAgainst` has no breakdown. The query answers `detail` for a ship and for a force's ships give `experience` when it is not 2, for the side's own ships only; no method of `SideView` returns an enemy ship's experience.
+- **Values.** Scenario 4 gives `experience` to each ship whose value is not 2, from `data/reference/ship_experience_savo_island.ships.csv`; a test holds every ship to the file's value. No other scenario gives values.
+- **Tests.** Scenario 14a (`data/scenarios/14a_experience.toml`, `tests/scenario_14a_experience.rs`): scenario 4a with experience 3 and 1, at a working strength of 0.4, with the architect's hand calculation. Unit tests in `sim-core` for the factor, the mean, the breakdown, the hash and the figures' limits, and in `sim-data` for the loader.
+- **Limits.** Night and ships only; no change with time or action; the replay export does not show experience.
+- **Rule card as built.** Reads: a ship's experience, whether the fight is dark, the three strengths. Writes: nothing.
