@@ -1,6 +1,6 @@
 # Design note: intelligence
 
-Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is decided or built. It says what intelligence could be in Flag Plot, what it rests on that exists, and in what order it could arrive. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
+Status: a note for discussion, written by the architect on Nov 12, 2026 at the designer's request. Nothing here is built. The four questions it first left open were answered the same day; the answers are below. It says what intelligence could be in Flag Plot, what it rests on that exists, and in what order it could arrive. Historical statements below are general and unsourced; any figure the game uses must come from sourced facts, as everywhere.
 
 ## Why it belongs in the game
 
@@ -76,12 +76,14 @@ Traffic analysis and codebreaking do not say where a ship is. They say what the 
 
 Before any of this is planned, read how War in the Pacific: Admiral's Edition modelled intelligence (its signals intelligence reports and detection levels) through `docs/research/witpae-manual-index.md`, and note in our own words what worked and where it buried the player in text. Mechanics and lessons only, no numbers.
 
-## Open questions for the product managers
+## Answers from the product managers
 
-- Does an estimate ever lie outright, or is it only partial and late? A source that can be fed false traffic is deception, a subject of its own.
-- How much of the enemy's own intelligence should a side be able to affect: radio silence as an order, for instance?
-- Is the months-later confirmation shown as it arrives, or only in an after-action history?
-- Should the player see a single "intelligence picture" with sources folded in, or each source's reports apart?
+Agreed by the designer on Nov 12, 2026, on the architect's suggestion. These are directions for the design, not built rules; each becomes a decision record when its layer is planned.
+
+1. **A source does not lie outright, at first.** A report can be incomplete, late and mistaken, and that is enough to make intelligence uncertain. Planted information (false traffic, a decoy meant to be seen) is deception: a named later feature of its own, because it needs orders to deceive, a staff and an opponent able to use them, and a way to explain afterwards what must stay hidden during play. Every report carries its source from the start, so a planted report later is a report whose source was compromised.
+2. **A side can make itself harder to read by one order: radio silence.** A force keeping silence gives direction finding and traffic analysis nothing. The price is that its own sightings reach its side late and it cannot be redirected until it breaks silence. It has the shape of the readiness order (decision 0037): one setting on a force, with a benefit and a cost. It arrives with the standing sources (layer 2). A side is never shown how well the enemy is reading it.
+3. **Late confirmation is shown twice.** During the game it arrives as a report like any other, with a source and a date, and revises the earlier claim, so a long campaign is not fought on a belief that can never be corrected. After the game the history shows everything: what happened beside what each side believed on each day. How late and how complete the confirmation is are figures by side and period, and may be "never, within this scenario".
+4. **One picture, with the sources one step down.** The staff presents a single intelligence picture. Any item opens to show the reports behind it: which source, when, what each said. Where sources disagree the picture says so and does not average. A source's record so far, as this side has learned it, is shown beside its name. There is no screen or tool for each source.
 
 ## A possible order
 
