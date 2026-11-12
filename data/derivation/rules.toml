@@ -558,3 +558,62 @@ fact = "bomb_load"
 row = 28
 reason = "Four 250 kg bombs: one weak source, with a second that gives the same total of 1,000 kg. The 250 kg bomb is also one of the two sizes a source names as dropped on Henderson Field. A raid on an airfield takes no account of the bomb's size (decision 0034, 10), so the choice changes no result here. Settled by the architect."
 agreed = "2026-11-11"
+
+# Experience values for ships (decision 0064). A value is a whole number 0
+# to 4 that starts at 2; each of four yes or no questions a fact row answers
+# moves it by 1, once. The questions were fixed by the architect on Nov 12,
+# 2026, before any batch with the rule on existed, and a value changes only
+# when a fact row changes, never to improve a report. The thresholds below
+# are measured to the engagement's first day (engagements.csv, date_from).
+#
+# 1. night_practice_recent, up 1: a preferred row of medium or high
+#    confidence, naming the ship, says she fired or exercised at night, dated
+#    inside the three months that end on that day. "Night training" is
+#    exercising at night. An undated "recently" answers nothing. A statement
+#    about a force or a squadron answers for a ship only if a row names her
+#    as part of it at that time.
+# 2. no_night_practice, down 1: such a row says she held no night practice
+#    over a period that reaches into the twelve months that end on that day,
+#    and no preferred row says she held one in them. A statement about
+#    "practically none of the ships" of a force names no ship and answers
+#    nothing.
+# 3. new_ship, down 1: her commissioned date is later than that day less
+#    twelve months (strictly). Where every commissioning row is disputed, the
+#    question is answered if every row, whatever its standing, gives the same
+#    answer; otherwise it is a problem to settle.
+# 4. navy_night_first, up 1: the rows below say a navy's fleet training put
+#    night action first, for the kinds of ship named. A nation with no row
+#    here is not answered "no": nothing moves.
+#
+# Rows that are not preferred never move a value; the output lists them as
+# not read.
+[experience]
+recent_months = 3
+lookback_months = 12
+new_ship_months = 12
+
+# Japan: training_facts.csv row 32 (Bates 1950, from Japanese officials and
+# records): "The Japanese had placed great stress in their fleet training on
+# night attack procedures". It is a statement about a navy and not about a
+# ship, and several statements about the Japanese were written after the
+# battle by the side that lost it. Decision 0064 (item 5) requires a SECOND
+# source before the values are fixed.
+#
+# The second source is row 87, Vice Admiral Ozawa to the Strategic Bombing
+# Survey, 1945: "we stressed training on that type of battle from before the
+# war". It is Japanese testimony independent of the 1950 analysis behind row
+# 32. Settled by the architect on Nov 12, 2026: a second source is a row of
+# the navy's entity (row 87 is of `ijn-surface-fleet`, the navy's whole
+# surface fleet, which includes its cruisers and destroyers), from a
+# different source than the first row, read at the page, whose standing is
+# not `disputed`; it need not be preferred, and row 87 is `unconfirmed`,
+# being one witness. Its limits: it is about the navy as a whole, names no
+# ship or date, and the question put to him assumed the emphasis.
+# `second_source` empty would mark every Japanese value PROVISIONAL.
+[[experience.navy]]
+nation = "jp"
+entity = "ijn-cruiser-destroyer-crews"
+rows = [32]
+kinds = ["heavy_cruiser", "light_cruiser", "destroyer"]
+second_source = [87]
+second_source_entity = "ijn-surface-fleet"

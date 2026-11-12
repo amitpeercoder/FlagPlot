@@ -52,6 +52,8 @@ pub struct Outputs {
     /// aircraft.
     pub aircraft_csv: Option<String>,
     pub aircraft_sources_csv: Option<String>,
+    /// The ships' experience values, when the list has `[experience]`.
+    pub experience_csv: Option<String>,
 }
 
 /// `<stem>.sources.csv`, the sources file beside an aircraft CSV.
@@ -230,6 +232,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             ships_csv: String::new(),
             aircraft_csv,
             aircraft_sources_csv,
+            experience_csv: None,
         });
     }
     let names: Vec<&str> = (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 })
@@ -481,6 +484,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         ships_csv,
         aircraft_csv,
         aircraft_sources_csv,
+        experience_csv: None,
     })
 }
 

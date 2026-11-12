@@ -1,0 +1,64 @@
+# The ships of the night action at Cape Esperance, 11 to 12 October 1942:
+# Task Force 64's nine ships and the Japanese bombardment force's five
+# (data/validation/cape_esperance.toml). Only their experience values are
+# derived (decision 0064), so the list has no class ships: there is no
+# scenario yet, and the class figures of these ships are not derived.
+# The date is the engagement's first day.
+
+name = "Cape Esperance"
+date = "1942-10-11"
+rules = "rules.toml"
+ships = []
+
+# The questions and thresholds are in rules.toml, under [experience]. The
+# first day is 1942-10-11, so the three months are 1942-07-11 to 1942-10-11,
+# and a new ship is one commissioned after 1941-10-11.
+#
+# The ship-crew rows carry no valid_from or valid_to, so each answer below
+# gives the period its row's text gives.
+#
+# Not answered, on purpose:
+# - Helena. sf:1050 says she joined Task Force SUGAR from Espiritu Santo and
+#   does not say she exercised. Both her commissioning dates are before the
+#   line.
+# - Farenholt, Duncan, Laffey, Buchanan, McCalla. tf:74 (ONI) is about the
+#   force, and no preferred row names these ships in it at the exercises of
+#   7 and 8 October; the rows that would (the Wikipedia rows, sf:1045, 1047,
+#   1049) are not preferred. They are new ships by question 3.
+[experience]
+engagement = "cape-esperance"
+output = "../reference/ship_experience_cape_esperance.ships.csv"
+ships = [
+    "ca-38-san-francisco", "cl-47-boise", "ca-25-salt-lake-city", "cl-50-helena",
+    "dd-491-farenholt", "dd-485-duncan", "dd-459-laffey", "dd-484-buchanan", "dd-488-mccalla",
+    "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
+]
+
+# The night firing practice of 7 October 1942, from the deck log of Salt Lake
+# City: she, San Francisco and Boise in company.
+[[experience.answer]]
+ship = "ca-25-salt-lake-city"
+question = "night_practice_recent"
+row = "ship_facts.csv:1033"
+answer = "yes"
+from = "1942-10-07"
+to = "1942-10-07"
+reason = "Her deck log of 7 October 1942: general quarters for night firing practice with San Francisco and Boise."
+
+[[experience.answer]]
+ship = "ca-38-san-francisco"
+question = "night_practice_recent"
+row = "ship_facts.csv:1036"
+answer = "yes"
+from = "1942-10-07"
+to = "1942-10-07"
+reason = "Salt Lake City's deck log of 7 October 1942 names San Francisco in company and firing on a target in the night firing practice."
+
+[[experience.answer]]
+ship = "cl-47-boise"
+question = "night_practice_recent"
+row = "ship_facts.csv:1037"
+answer = "yes"
+from = "1942-10-07"
+to = "1942-10-07"
+reason = "Salt Lake City's deck log of 7 October 1942 names Boise in company in the night firing practice."

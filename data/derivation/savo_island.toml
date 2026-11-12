@@ -41,3 +41,89 @@ radar_unknown_means_none = [
 # and Yubari 96, far below any plausible outfit, so their main-gun
 # ammunition is treated as not limiting.
 main_gun_ammunition_not_limiting = ["tenryu", "yubari", "yunagi"]
+
+# The experience values of the ships (decision 0064; the questions and their
+# thresholds are in rules.toml, under [experience]). The first day of the
+# engagement is 1942-08-08, so the three months are 1942-05-08 to 1942-08-08
+# and the twelve months 1941-08-08 to 1942-08-08. The ships are the list
+# above, plus HMAS Australia, who is in ships.csv and takes no part in the
+# class derivation.
+#
+# The ship-crew rows carry no valid_from or valid_to, so each answer below
+# gives the period its row's text or note gives. When the research session
+# dates the rows, the answers can go.
+#
+# Not answered, on purpose:
+# - Astoria. sf:1018 says she "had recently held some night target
+#   practices", with no date: question 1 is not answered. Question 2 is not
+#   answered either, because a row says she held some.
+# - Bagley, Patterson, Helm, Wilson, Blue, Ralph Talbot, Jarvis. sf:1019 to
+#   1021 say Chicago, Canberra and Australia trained at night with
+#   Destroyer Squadron 4, but no row names the squadron's ships, and a
+#   statement about a squadron answers for a ship only if a row names her.
+# - tf:71 ("practically none of the ships assigned to TF 62 had engaged in
+#   any night battle exercise") names no ship it answers for.
+[experience]
+engagement = "savo-island"
+output = "../reference/ship_experience_savo_island.ships.csv"
+ships = [
+    "chokai", "aoba", "kako", "kinugasa", "furutaka", "tenryu", "yubari", "yunagi",
+    "hmas-canberra", "hmas-australia", "ca-29-chicago", "dd-386-bagley", "dd-392-patterson",
+    "ca-44-vincennes", "ca-39-quincy", "ca-34-astoria", "dd-388-helm", "dd-408-wilson",
+    "dd-387-blue", "dd-390-ralph-talbot", "dd-393-jarvis",
+]
+
+# Vincennes and Quincy: no night target practice or night battle exercise in
+# at least fifteen months in the Atlantic Fleet. They left it in March 1942
+# (sf:949: sailed from New York 4 March 1942; sf:950: Atlantic Fleet until 14
+# March 1942), so the period ends in March 1942 and began, at the latest, in
+# December 1940. It reaches into the twelve months. No row says either held
+# one after.
+[[experience.answer]]
+ship = "ca-44-vincennes"
+question = "no_night_practice"
+row = "ship_facts.csv:1016"
+answer = "yes"
+from = "1940-12"
+to = "1942-03"
+reason = "Bates: in at least fifteen Atlantic months neither Vincennes nor Quincy held a night target practice or night battle exercise; she left the Atlantic in March 1942 (sf:949)."
+
+[[experience.answer]]
+ship = "ca-39-quincy"
+question = "no_night_practice"
+row = "ship_facts.csv:1017"
+answer = "yes"
+from = "1940-12"
+to = "1942-03"
+reason = "Bates: in at least fifteen Atlantic months neither Vincennes nor Quincy held a night target practice or night battle exercise; she left the Atlantic in March 1942 (sf:950)."
+
+# Chicago, Canberra, Australia: some night training together at Brisbane,
+# May to July 1942, by the note of the rows (Task Force 44 was at Brisbane
+# then). sf:1022 (no ship had fired at night within eight months) is about
+# firing and does not contradict night training, so it is no conflict.
+[[experience.answer]]
+ship = "ca-29-chicago"
+question = "night_practice_recent"
+row = "ship_facts.csv:1021"
+answer = "yes"
+from = "1942-05"
+to = "1942-07"
+reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
+
+[[experience.answer]]
+ship = "hmas-canberra"
+question = "night_practice_recent"
+row = "ship_facts.csv:1019"
+answer = "yes"
+from = "1942-05"
+to = "1942-07"
+reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942. sf:1022 is about firing and does not contradict it."
+
+[[experience.answer]]
+ship = "hmas-australia"
+question = "night_practice_recent"
+row = "ship_facts.csv:1020"
+answer = "yes"
+from = "1942-05"
+to = "1942-07"
+reason = "Crutchley (Gill): Australia and Canberra did some night training with Chicago and Destroyer Squadron 4; the row's note puts it at Brisbane, May to July 1942."

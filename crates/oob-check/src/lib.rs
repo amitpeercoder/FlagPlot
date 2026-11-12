@@ -12,6 +12,7 @@
 //! | `sourcing` | Sourced rows have a source, locator, date read, grades and, where needed, a note |
 //! | `standing` | Chosen rows do not contradict each other, and `preferred` is earned |
 //! | `passages` | Recorded passages: required columns, located ends, forms of times, coordinates and speeds |
+//! | `training` | Statements about training by navy: columns, closed entity and attribute lists, forms of values and dates |
 //!
 //! Sort order is NOT checked. The design asks for fact and fit files to be
 //! sorted by entity, attribute or slot, date and source. Row order changes
@@ -27,6 +28,7 @@ mod sourcing;
 mod standing;
 mod structure;
 pub mod table;
+mod training;
 mod value;
 mod values;
 
@@ -144,6 +146,7 @@ pub fn check_files(files: &BTreeMap<String, String>) -> Report {
         sourcing::check(&data, &mut problems);
         standing::check(&data, &mut problems);
         passages::check(&data, &mut problems);
+        training::check(&data, &mut problems);
     }
     problems.sort();
     problems.dedup();

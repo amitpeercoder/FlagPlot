@@ -1190,3 +1190,150 @@ fn rule5_passages_times_and_numbers() {
         assert_problems(&found, 1, &["passages.csv|id 2|distance_nm_stated"]);
     }
 }
+
+// Rule 7: statements about training (`training_facts.csv`).
+
+const TRAINING_HEADER: &str = "id,entity,attribute,value,as_stated,valid_from,valid_to,\
+source,locator,accessed,confidence,basis,standing,note\n";
+
+/// A good training row (id 1) with the fields before the source columns at
+/// the given 0-based positions replaced: id, entity, attribute, value,
+/// as_stated, valid_from, valid_to.
+fn training_with(changes: &[(usize, &str)]) -> String {
+    let mut fields: Vec<String> =
+        "1,ijn-aviators,flying_hours_on_joining,650,650 hours,1941-12,1941-12"
+            .split(',')
+            .map(str::to_string)
+            .collect();
+    for (index, value) in changes {
+        fields[*index] = (*value).to_string();
+    }
+    format!("{},{}", fields.join(","), src("a", "medium", "preferred"))
+}
+
+fn with_training(rows: &[String]) -> Vec<String> {
+    let mut files = base();
+    let mut text = TRAINING_HEADER.to_string();
+    for row in rows {
+        text.push_str(row);
+        text.push('\n');
+    }
+    files.insert("training_facts.csv".to_string(), text);
+    problems_in(&files)
+}
+
+#[test]
+fn rule7_training_file_is_optional_and_good_rows_pass() {
+    assert_clean(&problems_in(&base()));
+    assert_clean(&with_training(&[
+        training_with(&[]),
+        training_with(&[
+            (0, "2"),
+            (1, "usn-cruiser-destroyer-crews"),
+            (2, "night_training_note"),
+            (3, "a text"),
+            (5, ""),
+            (6, ""),
+        ]),
+        training_with(&[(0, "3"), (5, "1941"), (6, "1942-08-09")]),
+        training_with(&[(0, "4"), (5, "1942-08"), (6, "1942-08")]),
+    ]));
+}
+
+#[test]
+fn rule7_training_columns_in_order_and_present() {
+    let mut files = base();
+    files.insert(
+        "training_facts.csv".to_string(),
+        "id,attribute,entity,value,as_stated,valid_from,valid_to,source,locator,accessed,\
+         confidence,basis,standing,note\n"
+            .to_string(),
+    );
+    assert_problems(
+        &problems_in(&files),
+        1,
+        &["training_facts.csv||columns must be, in order"],
+    );
+    files.insert(
+        "training_facts.csv".to_string(),
+        "id,entity,attribute,value,valid_from,valid_to,source,locator,accessed,confidence,\
+         basis,standing,note\n"
+            .to_string(),
+    );
+    let found = problems_in(&files);
+    assert!(
+        found.contains(&"training_facts.csv||no `as_stated` column".to_string()),
+        "{found:#?}"
+    );
+}
+
+#[test]
+fn rule7_training_entity_and_attribute_are_closed_lists() {
+    let found = with_training(&[training_with(&[(1, "ca-44-vincennes")])]);
+    assert_problems(
+        &found,
+        1,
+        &["training_facts.csv|id 1|unknown entity `ca-44-vincennes`"],
+    );
+    let found = with_training(&[training_with(&[(2, "luck_note")])]);
+    assert_problems(
+        &found,
+        1,
+        &["training_facts.csv|id 1|unknown attribute `luck_note`"],
+    );
+}
+
+#[test]
+fn rule7_training_values_by_attribute() {
+    for bad in ["650.5", "-3", "many", "", "1e3"] {
+        let found = with_training(&[training_with(&[(3, bad)])]);
+        assert!(
+            found
+                .iter()
+                .any(|p| p.starts_with("training_facts.csv|id 1|")),
+            "`{bad}`: {found:#?}"
+        );
+    }
+    let found = with_training(&[training_with(&[(2, "training_note"), (3, "  ")])]);
+    assert_problems(
+        &found,
+        1,
+        &["training_facts.csv|id 1|value of `training_note` is blank"],
+    );
+}
+
+#[test]
+fn rule7_training_dates() {
+    let found = with_training(&[training_with(&[(5, "1941-13")])]);
+    assert_problems(
+        &found,
+        1,
+        &["training_facts.csv|id 1|valid_from `1941-13` is not a date"],
+    );
+    let found = with_training(&[training_with(&[(6, "42")])]);
+    assert_problems(
+        &found,
+        1,
+        &["training_facts.csv|id 1|valid_to `42` is not a date"],
+    );
+    let found = with_training(&[training_with(&[(5, "1942-08-09"), (6, "1942-08-08")])]);
+    assert_problems(&found, 1, &["training_facts.csv|id 1|is after valid_to"]);
+}
+
+#[test]
+fn rule7_training_general_rules_still_apply() {
+    let row = format!(
+        "1,ijn-aviators,flying_hours_on_joining,650,650 hours,,,{}",
+        src("nobody", "medium", "preferred")
+    );
+    assert_problems(
+        &with_training(&[row]),
+        1,
+        &["training_facts.csv|id 1|unknown source `nobody`"],
+    );
+    assert_problems(
+        &with_training(&[training_with(&[]), training_with(&[])]),
+        1,
+        &["training_facts.csv|id 1|duplicate id"],
+    );
+}
