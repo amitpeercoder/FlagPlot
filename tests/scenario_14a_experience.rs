@@ -835,7 +835,9 @@ fn a_daylight_fight_carries_no_experience_factor() {
 // ---------------------------------------------------------------------
 
 /// PINNED, not calculated. On the live figures (strengths 0.25, so A's factor
-/// is 1.25 and B's 0.75), seed 1942, the scenario's own. No hand calculation
+/// is 1.25 and B's 0.75), seed 1942, the scenario's own. Since decision 0068 the
+/// live share of 0.5 halves B's gun shots here, B being at normal readiness and
+/// not ready (B's hits went from 5 to 3 and the log from 75 events to 73). No hand calculation
 /// can say which draw succeeds; this catches a stream that moved, which the
 /// properties above would miss. It follows the live figures: when a
 /// strength in `data/reference/surface_combat.toml` is tuned, or a rule is
@@ -885,6 +887,6 @@ const PINNED: Pinned = Pinned {
     rolls: 2,
     salvos: 15,
     hits_a: 44,
-    hits_b: 5,
-    events: 75,
+    hits_b: 3,
+    events: 73,
 };

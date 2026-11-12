@@ -413,7 +413,14 @@ pub struct SurfaceCombatFigures {
     /// The same for a force's chance to sight the enemy, which reads the
     /// mean experience of the ships it has afloat.
     pub experience_sighting_strength: Fixed,
+    /// The share of its gun shots a force fires, for the whole of a fight,
+    /// when it was not ready as the fight began (decision 0068). From 0.1 to
+    /// 1; at 1 the rule does nothing.
+    pub unready_gun_share: Fixed,
 }
+
+/// The least `unready_gun_share` may be (decision 0068, 7).
+pub const MIN_UNREADY_GUN_SHARE: Fixed = Fixed::from_raw(Fixed::SCALE / 10);
 
 /// The most a strength of experience may be (decision 0064, 6).
 pub const MAX_EXPERIENCE_STRENGTH: Fixed = Fixed::from_raw(Fixed::SCALE / 2);
@@ -528,6 +535,12 @@ impl SurfaceCombatFigures {
                     "surface combat {label} {value} is not between 0 and 0.5"
                 ));
             }
+        }
+        if self.unready_gun_share < MIN_UNREADY_GUN_SHARE || self.unready_gun_share > Fixed::ONE {
+            return Some(format!(
+                "surface combat unready gun share {} is not between 0.1 and 1",
+                self.unready_gun_share
+            ));
         }
         let levels = [
             ("crippled flotation", self.crippled_flotation),
@@ -1051,6 +1064,7 @@ impl SurfaceCombatFigures {
             experience_gun_strength: Fixed::ZERO,
             experience_torpedo_strength: Fixed::ZERO,
             experience_sighting_strength: Fixed::ZERO,
+            unready_gun_share: Fixed::ONE,
         }
     }
 }
@@ -1178,6 +1192,27 @@ mod tests {
             assert_eq!(edge.problem(), None);
             set(&mut edge, Fixed::ZERO);
             assert_eq!(edge.problem(), None);
+        }
+    }
+
+    #[test]
+    fn the_unready_gun_share_must_be_between_a_tenth_and_one() {
+        for (value, ok) in [
+            (Fixed::from_ratio(1, 10), true),
+            (Fixed::from_ratio(1, 2), true),
+            (Fixed::ONE, true),
+            (Fixed::from_ratio(99, 1000), false),
+            (Fixed::ZERO, false),
+            (Fixed::from_ratio(101, 100), false),
+            (Fixed::from_ratio(-1, 2), false),
+        ] {
+            let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+            figures.unready_gun_share = value;
+            let problem = figures.problem();
+            assert_eq!(problem.is_none(), ok, "{value}");
+            if let Some(problem) = problem {
+                assert!(problem.contains("unready gun share"), "{problem}");
+            }
         }
     }
 
