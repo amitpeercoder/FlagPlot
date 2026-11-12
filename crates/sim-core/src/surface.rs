@@ -43,7 +43,7 @@ use crate::hex::Hex;
 use crate::ids::{ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use crate::orders::{Readiness, Stance};
 use crate::refdata::{ShipClass, ShipKind, SurfaceCombatFigures};
-use crate::rng::{RngStream, Subsystem};
+use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
 use crate::state::{Ship, ShipLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
@@ -281,6 +281,7 @@ impl World {
                     fight.day,
                     Some(fight.pulse),
                     Subsystem::SurfaceCombat,
+                    Draw::Legacy,
                     EntityRef::TaskForce(id),
                 )
             });
@@ -557,6 +558,7 @@ impl World {
                     day,
                     Some(pulse),
                     Subsystem::SurfaceCombat,
+                    Draw::Legacy,
                     EntityRef::TaskForce(id),
                     EntityRef::TaskForce(enemy),
                 ),
@@ -888,6 +890,7 @@ impl World {
                 fight.day,
                 Some(fight.pulse),
                 Subsystem::SurfaceCombat,
+                Draw::Legacy,
                 EntityRef::Ship(firer),
                 EntityRef::TaskForce(fight.forces[enemy].id),
             )
@@ -1311,6 +1314,7 @@ impl World {
             fight.day,
             Some(fight.pulse),
             Subsystem::Intelligence,
+            Draw::Legacy,
             EntityRef::TaskForce(force.id),
             EntityRef::TaskForce(enemy.id),
         );
@@ -3694,6 +3698,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::SurfaceCombat,
+            Draw::Legacy,
             EntityRef::Ship(ShipId::new(1)),
             EntityRef::TaskForce(TaskForceId::new(2)),
         )
@@ -4276,6 +4281,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::SurfaceCombat,
+            Draw::Legacy,
             EntityRef::TaskForce(TaskForceId::new(id)),
         )
     }

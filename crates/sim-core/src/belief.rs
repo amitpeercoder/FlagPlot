@@ -58,7 +58,7 @@ pub struct SightingReport {
 }
 
 /// What a side believes came of a fight or a raid: how many enemy ships it
-/// believes sank and, since decision 0055, how many hits it believes it
+/// believes sank and, since decision 0056, how many hits it believes it
 /// scored, what kind of ship it believes it attacked, how many aircraft it
 /// believes it shot down and how many it believes it destroyed on the ground.
 /// Real damage goes into truth, and the two can differ. Each count is zero
@@ -72,18 +72,18 @@ pub struct BattleClaim {
     pub day: u32,
     pub pulse: Pulse,
     pub claimed_sunk: u32,
-    /// Hits believed scored on ships (decision 0055, 4).
+    /// Hits believed scored on ships (decision 0056, 4).
     pub claimed_hits: u32,
     /// The kind of ship the attackers believed they attacked: the kind the
-    /// contact was taken for when the strike was launched (decision 0055,
+    /// contact was taken for when the strike was launched (decision 0056,
     /// 6). `None` for a surface fight and for a raid on a base.
     pub claimed_kind: Option<ShipKind>,
-    /// Enemy aircraft believed shot down (decision 0055, 3).
+    /// Enemy aircraft believed shot down (decision 0056, 3).
     pub claimed_shot_down: u32,
-    /// Enemy aircraft believed destroyed on the ground (decision 0055, 7).
+    /// Enemy aircraft believed destroyed on the ground (decision 0056, 7).
     pub claimed_on_ground: u32,
     /// True for the claim of a raid, which tells a claim of nothing from a
-    /// surface fight's (decision 0055, 1).
+    /// surface fight's (decision 0056, 1).
     pub from_air: bool,
     /// The event that records this claim's arrival.
     pub received_event: EventId,

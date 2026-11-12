@@ -128,7 +128,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
 use crate::orders::AirMission;
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
-use crate::rng::{RngStream, Subsystem};
+use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::build_sighting_report;
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
@@ -162,7 +162,7 @@ pub(crate) struct StrikeInFlight {
     /// The `StrikeLaunched` event.
     launched: EventId,
     /// The kind the contact was taken for when the strike was launched
-    /// (decision 6 of 0055). None for a strike at a base.
+    /// (decision 6 of 0056). None for a strike at a base.
     taken_for: Option<ShipKind>,
 }
 
@@ -360,7 +360,7 @@ fn whole_shots(shots: Fixed) -> u32 {
 }
 
 /// Which false claim chance a missed shot is claimed at (decision 12 of
-/// 0055).
+/// 0056).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum MissKind {
     Fighter,
@@ -368,7 +368,7 @@ enum MissKind {
 }
 
 /// What one side's firing in one raid adds up to, for its claim (decision 2
-/// of 0055): the firing events of its own, the aircraft it really shot down
+/// of 0056): the firing events of its own, the aircraft it really shot down
 /// and the whole shots that missed.
 #[derive(Default)]
 struct SideTally {
@@ -399,7 +399,7 @@ impl SideTally {
     }
 }
 
-/// The claims one raid makes (decision 0055): what each side fired, as
+/// The claims one raid makes (decision 0056): what each side fired, as
 /// recorded, kept until the raid has been resolved.
 struct RaidTally {
     hex: Hex,
@@ -791,7 +791,7 @@ impl World {
         let mut outcomes: Vec<(AirGroupId, Outcome)> = Vec::new();
         let mut losses_of: Vec<(AirGroupId, EventId)> = Vec::new();
         // What each raid that found a target adds up to for the claims, and
-        // the raid each strike group belongs to (decision 0055).
+        // the raid each strike group belongs to (decision 0056).
         let mut tallies: Vec<RaidTally> = Vec::new();
         let mut tally_of: BTreeMap<AirGroupId, usize> = BTreeMap::new();
         for (raid, result) in raids.iter().zip(results) {
@@ -1124,11 +1124,11 @@ impl World {
         }
 
         // Each side that fired in a raid claims what it believes it did, once
-        // the raid is resolved (decision 0055).
+        // the raid is resolved (decision 0056).
         self.record_raid_claims(day, pulse, tallies);
     }
 
-    /// The claims of the raids of one pulse (decision 0055): for each raid
+    /// The claims of the raids of one pulse (decision 0056): for each raid
     /// that found a target, in order, the raiding side's claim and then the
     /// defending side's, each only if it fired. A claim is what really
     /// happened and the false claims drawn for the whole shots that missed,
@@ -1161,6 +1161,7 @@ impl World {
                     day,
                     Some(pulse),
                     Subsystem::Intelligence,
+                    Draw::Claim,
                     first,
                     EntityRef::AirGroup(tally.first_group),
                 );
@@ -1920,6 +1921,7 @@ impl World {
                 day,
                 Some(pulse),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(first_escort),
                 target_entity,
             );
@@ -1946,6 +1948,7 @@ impl World {
                 day,
                 Some(pulse),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(first_patrol),
                 EntityRef::AirGroup(first.air_group),
             );
@@ -2032,6 +2035,7 @@ impl World {
                     day,
                     Some(pulse),
                     Subsystem::AirCombat,
+                    Draw::Legacy,
                     firer,
                     EntityRef::AirGroup(first.air_group),
                 );
@@ -2129,6 +2133,7 @@ impl World {
             day,
             Some(pulse),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(strike.air_group),
             EntityRef::TaskForce(task_force),
         );
@@ -2226,6 +2231,7 @@ impl World {
             day,
             Some(pulse),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(strike.air_group),
             EntityRef::Base(base),
         );
@@ -3098,6 +3104,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
@@ -3232,6 +3239,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(BOMBERS),
             EntityRef::TaskForce(FORCE_B),
         );
@@ -3880,6 +3888,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
@@ -3924,6 +3933,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::AirGroup(BOMBERS),
                 EntityRef::TaskForce(FORCE_B),
             );
@@ -4501,6 +4511,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(PATROL_A),
             EntityRef::TaskForce(FORCE_B),
         );
@@ -4798,6 +4809,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 Subsystem::AirCombat,
+                Draw::Legacy,
                 EntityRef::Ship(ShipId::new(2)),
                 EntityRef::AirGroup(BOMBERS),
             );
@@ -5154,7 +5166,14 @@ mod tests {
             assert_eq!(fights.len(), 3);
             assert_eq!((fights[0].4, fights[1].4, fights[2].4), (6, 6, 6));
             let key = |a: EntityRef, b: EntityRef| {
-                world.rng_pair(1, Some(Pulse::Morning), Subsystem::AirCombat, a, b)
+                world.rng_pair(
+                    1,
+                    Some(Pulse::Morning),
+                    Subsystem::AirCombat,
+                    Draw::Legacy,
+                    a,
+                    b,
+                )
             };
             // Escorts: the first escort group and the task force attacked.
             let mut stream = key(EntityRef::AirGroup(PATROL_A), EntityRef::TaskForce(FORCE_B));
@@ -5212,6 +5231,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(PATROL_B),
             EntityRef::AirGroup(BOMBERS),
         );
@@ -6428,6 +6448,7 @@ mod tests {
             1,
             Some(Pulse::Morning),
             Subsystem::AirCombat,
+            Draw::Legacy,
             EntityRef::AirGroup(AirGroupId::new(1)),
             EntityRef::Base(BASE_JAPANESE),
         );
@@ -6893,6 +6914,7 @@ mod tests {
                 1,
                 Some(Pulse::Morning),
                 crate::rng::Subsystem::Upkeep,
+                crate::rng::Draw::Legacy,
                 EntityRef::AirGroup(AirGroupId::new(5)),
             );
             let (patrol_worn, patrol_off) = replay(&mut stream, 5, base, share);

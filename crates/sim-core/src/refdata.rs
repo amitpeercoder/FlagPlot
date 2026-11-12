@@ -542,13 +542,13 @@ pub struct AirCombatFigures {
     pub base_hit_supply: Fixed,
     /// The chance each whole shot of fighters that missed is claimed as an
     /// aircraft shot down (decision 3 of
-    /// `docs/decisions/0055-claims-from-the-air.md`).
+    /// `docs/decisions/0056-claims-from-the-air.md`).
     pub fighter_false_claim_chance: Fixed,
     /// The same for the guns of ships and bases.
     pub anti_aircraft_false_claim_chance: Fixed,
     /// The chance each whole bomb or torpedo that missed is claimed as a hit
     /// on a ship, or as an aircraft destroyed on the ground (decisions 4 and
-    /// 7 of 0055).
+    /// 7 of 0056).
     pub bomb_false_claim_chance: Fixed,
 }
 

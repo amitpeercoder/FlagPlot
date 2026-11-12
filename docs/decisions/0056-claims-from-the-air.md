@@ -1,4 +1,4 @@
-# 0055: Claims from the air
+# 0056: Claims from the air
 
 Status: confirmed. The designer approved the plan on Nov 12, 2026. The chances are placeholders set by the architect, to be set from the record in step 2.
 
@@ -61,7 +61,7 @@ Built in three stages (11a aircraft shot down, 11b strikes, 11c what a side is t
 
 ### The stream
 
-- Subsystem `Intelligence`, day, pulse, entity = the claimant's first firing unit and other = the raid's first strike group. The first firing unit is `AirGroup(firer)` for fighters (escorts or patrol), `AirGroup(strike group)` for an attack, `TaskForce(force)` for ships' guns and `Base(base)` for a base's. The second part of the key is what makes it unique to the claim: one patrol group can be the first firing unit of the claims of several raids in a pulse. It cannot collide with the surface fight's use of the stream, which is keyed on two task forces.
+- Subsystem `Intelligence`, `Draw::Claim` (code 1, added at the end of `Draw` as decision 7 of 0055 requires of a new rule), day, pulse, entity = the claimant's first firing unit and other = the raid's first strike group. The first firing unit is `AirGroup(firer)` for fighters (escorts or patrol), `AirGroup(strike group)` for an attack, `TaskForce(force)` for ships' guns and `Base(base)` for a base's. The second part of the key is what makes it unique to the claim: one patrol group can be the first firing unit of the claims of several raids in a pulse. It cannot collide with the surface fight's use of the stream, which is keyed on two task forces.
 - The draws, in order: one for each whole shot that missed in each firing event of fighters and guns, in event order, at that event's chance; then, for the raiding side only, one for each whole bomb or torpedo that missed a ship (hits on ships), or one for each bomb dropped on a base that did not destroy an aircraft (aircraft on the ground), at the bomb chance. Each is `roll_shots` on whole shots: one `chance` draw each.
 - Real aircraft shot down are those actually taken off by the raid's firing events (the `AircraftLost` aircraft, after the pool limits), not the hits rolled. Missed shots are the whole shots (shots cut to a whole number) less the hits rolled, never below zero. A torpedo counts as a bomb for the chance. Aircraft really destroyed on the ground count ready and damaged aircraft together, as destroyed, not as hit.
 - The kind is the first strike group's: the kind the contact was taken for when that group was launched, kept in the strike in flight (transient, not hashed). A raid whose groups were sent at contacts of different kinds claims the first group's.
@@ -74,7 +74,7 @@ Built in three stages (11a aircraft shot down, 11b strikes, 11c what a side is t
 
 ### The hash
 
-A claim of the old form hashes as it did. A claim with any air figure (`from_air`, hits, a kind, aircraft shot down or on the ground) adds, after the side's claims, the tag 0xFC, its place in the list, its four counts and `from_air`. So every scenario with no air combat (1 to 4c, Savo Island, 5a) keeps every hash line and its baseline files are unchanged.
+A claim of the old form hashes as it did. A claim with any air figure (`from_air`, hits, a kind, aircraft shot down or on the ground) adds, after the side's claims, the tag 0xFC, its place in the list, its four counts and `from_air`. So every scenario with no air combat (1 to 4c, Savo Island, 5a) keeps every hash line and its baseline files are unchanged. The tag is kept as built: it was designed before decision 9 of 0055 (the next layout change to the hash raises it to v2 and drops the tags), and this stage is the stage in flight that decision mentions. The version bump follows as its own change. `hash::name_every_field` names the five new fields of a claim.
 
 ### What a side is told (stage 11c)
 

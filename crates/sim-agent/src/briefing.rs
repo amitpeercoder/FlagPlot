@@ -317,7 +317,7 @@ pub struct AircraftLoss {
 }
 
 /// What the side's own people believe they did in a fight or a raid
-/// (decisions 0014 and 0055). It can be wrong.
+/// (decisions 0014 and 0056). It can be wrong.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct Claim {
     pub place: Place,
@@ -660,7 +660,7 @@ impl Day {
                         target,
                         reason,
                     } => orders.refused.push(RefusedOrder {
-                        order: order.raw(),
+                        order: ctx.order_number(*order),
                         target: ctx.entity(*target),
                         reason: reason.to_string(),
                         event: id,

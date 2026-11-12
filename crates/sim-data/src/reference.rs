@@ -936,7 +936,7 @@ mod tests {
 
     #[test]
     fn the_false_claim_chances_are_required_in_range_and_not_floats() {
-        // Decision 12 of 0055: three chances, between 0 and 1, as strings.
+        // Decision 12 of 0056: three chances, between 0 and 1, as strings.
         let bad = |from: &str, to: &str| {
             let text = air_combat_text().replace(from, to);
             assert_ne!(text, air_combat_text(), "{from} is in the file");

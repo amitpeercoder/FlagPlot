@@ -50,7 +50,7 @@ pub struct ExplainNode {
     /// `event` or `order`.
     #[serde(rename = "type")]
     pub node_type: &'static str,
-    /// The event's number in the full log, or the order's number.
+    /// The side's own number of the event, or of the order.
     pub id: u32,
     pub day: Option<u32>,
     pub pulse: Option<&'static str>,
@@ -150,7 +150,7 @@ impl<'a> Explainer<'a> {
             for cause in &e.causes {
                 let next = match cause {
                     Cause::Event(c) => Key::Event(self.ctx.number(*c)),
-                    Cause::Order(o) => Key::Order(o.raw()),
+                    Cause::Order(o) => Key::Order(self.ctx.order_number(*o)),
                 };
                 let at = match seen.get(&next) {
                     Some(at) => *at,
@@ -191,7 +191,7 @@ impl<'a> Explainer<'a> {
                     day: Some(e.day),
                     pulse: e.pulse.map(|p| p.name()),
                     event_kind: Some(kind_name(&e.kind)),
-                    text: Some(e.kind.to_string()),
+                    text: Some(ctx.event_text(&e.kind)),
                     entities: e
                         .kind
                         .entities()
@@ -221,7 +221,7 @@ impl<'a> Explainer<'a> {
                     SideEventKind::Whole(
                         EventKind::OrderAccepted { order: o, .. }
                         | EventKind::OrderRejected { order: o, .. },
-                    ) if o.raw() == order => Some(e.kind.to_string()),
+                    ) if ctx.order_number(*o) == order => Some(ctx.event_text(&e.kind)),
                     _ => None,
                 });
                 ExplainNode {

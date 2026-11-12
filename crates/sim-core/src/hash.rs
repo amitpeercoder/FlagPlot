@@ -9,10 +9,14 @@
 //! It detects divergence. It is not a security feature. See
 //! `docs/decisions/0004-state-hash.md`.
 
+use crate::belief::{BattleClaim, Contact};
 use crate::fixed::Fixed;
 use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
-use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState};
+use crate::state::{
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Replacement, Route, RulesOfEngagement,
+    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, SystemState, TaskForce, TruthState,
+};
 use crate::world::World;
 
 /// Marks a flight deck that is degraded or out in the hash of a ship.
@@ -39,7 +43,7 @@ const PILOTS_TAG: u8 = 0xF7;
 const FORCE_FATIGUE_TAG: u8 = 0xF8;
 /// Tag of the scenario's arrivals (decision 0041).
 const ARRIVALS_TAG: u8 = 0xF9;
-/// Tag of the air figures of a claim (decision 0055). See `hash_world`.
+/// Tag of the air figures of a claim (decision 0056). See `hash_world`.
 const CLAIM_EXTRA_TAG: u8 = 0xFC;
 
 const FNV_OFFSET: u64 = 0xCBF2_9CE4_8422_2325;
@@ -127,10 +131,207 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
     }
 }
 
+/// Names every field of the state, with no `..` in any pattern. It does
+/// nothing when it runs. It is here so that a field added to the state does
+/// not compile until it is named below, which is the moment to add it to
+/// [`hash_world`] or to say here why it is not hashed (decision 0055).
+/// [`BeliefState`](crate::belief::BeliefState) keeps its fields private and
+/// is hashed through its accessors, so it is not named here.
+fn name_every_field(world: &World) {
+    let World {
+        seed: _,
+        // Not state: how to record, never what happens.
+        config: _,
+        // Not hashed: the rules and the map are the same for a whole game.
+        // A saved game records the hash of each data file instead.
+        ref_data: _,
+        map: _,
+        truth,
+        beliefs,
+        // Hashed by count and next number only.
+        orders: _,
+        order_ids: _,
+        task_force_ids: _,
+        // Not hashed: orders waiting for the next day are not yet state.
+        pending: _,
+        // Hashed by count only.
+        events: _,
+        // Not hashed: the hashes themselves.
+        day_hashes: _,
+        // Not hashed: scratch state of one pulse, empty when the day ends.
+        strikes_in_flight: _,
+        sorties: _,
+        grounded_bases: _,
+        // Not hashed: fixed for the game and read by no rule (decision 5
+        // of 0054).
+        objectives: _,
+    } = world;
+    let TruthState {
+        day: _,
+        ships,
+        task_forces,
+        bases,
+        air_groups,
+        replacements,
+        arrivals,
+    } = truth;
+    if let Some(ship) = ships.values().next() {
+        let Ship {
+            id: _,
+            // Not hashed: a name changes nothing that happens.
+            name: _,
+            class: _,
+            side: _,
+            fuel_t: _,
+            supply_t: _,
+            cargo_fuel_t: _,
+            location: _,
+            flotation_damage: _,
+            fire_damage: _,
+            gun_rounds: _,
+            torpedoes_ready: _,
+            systems,
+        } = ship;
+        let ShipSystems {
+            propulsion: _,
+            fire_control: _,
+            main_battery: _,
+            torpedo_mounts: _,
+            flight_deck: _,
+        } = systems;
+    }
+    if let Some(task_force) = task_forces.values().next() {
+        let TaskForce {
+            id: _,
+            name: _,
+            side: _,
+            ships: _,
+            mission: _,
+            speed: _,
+            route,
+            from_hex: _,
+            toward_hex: _,
+            progress_nm: _,
+            status: _,
+            route_order: _,
+            speed_order: _,
+            cargo_order,
+            arrived_at_hours: _,
+            arrival_event: _,
+            readiness: _,
+            readiness_order: _,
+            alerted: _,
+            alerted_by: _,
+            rules_of_engagement,
+            rules_order: _,
+            home_port: _,
+            fatigue: _,
+        } = task_force;
+        let Route {
+            waypoints: _,
+            next_index: _,
+        } = route;
+        let RulesOfEngagement {
+            stance: _,
+            break_off: _,
+            stragglers: _,
+            keep_share: _,
+        } = rules_of_engagement;
+        if let Some(CargoOrder {
+            action: _,
+            order: _,
+        }) = cargo_order
+        {}
+    }
+    if let Some(base) = bases.values().next() {
+        let Base {
+            id: _,
+            name: _,
+            side: _,
+            hex: _,
+            supply_t: _,
+            anti_aircraft: _,
+            aircraft_repairs_per_day: _,
+            fuel_t: _,
+        } = base;
+    }
+    if let Some(group) = air_groups.values().next() {
+        let AirGroup {
+            id: _,
+            name: _,
+            side: _,
+            location: _,
+            aircraft_type: _,
+            ready: _,
+            damaged: _,
+            mission: _,
+            search,
+            mission_order: _,
+            arc_order: _,
+            patrol_share: _,
+            share_order: _,
+            fatigue: _,
+            rest_above: _,
+            rest_order: _,
+            stood_down: _,
+            pilots: _,
+            strength: _,
+        } = group;
+        if let Some(SearchArc {
+            from_deg: _,
+            to_deg: _,
+            range_nm: _,
+        }) = search
+        {}
+    }
+    if let Some(Replacement {
+        side: _,
+        base: _,
+        aircraft_type: _,
+        aircraft_per_day: _,
+        pilots_per_day: _,
+    }) = replacements.first()
+    {}
+    if let Some(Arrival {
+        day: _,
+        air_group: _,
+        aircraft: _,
+        pilots: _,
+    }) = arrivals.first()
+    {}
+    for belief in beliefs.values() {
+        if let Some(Contact {
+            id: _,
+            estimated_hex: _,
+            estimated_ship_count: _,
+            estimated_kind: _,
+            age_pulses: _,
+            last_report_event: _,
+        }) = belief.contacts().next()
+        {}
+        if let Some(BattleClaim {
+            hex: _,
+            day: _,
+            pulse: _,
+            claimed_sunk: _,
+            // The air figures of a claim are hashed after the claims, only
+            // when a claim has any (decision 0056).
+            claimed_hits: _,
+            claimed_kind: _,
+            claimed_shot_down: _,
+            claimed_on_ground: _,
+            from_air: _,
+            received_event: _,
+        }) = belief.claims().first()
+        {}
+    }
+}
+
 /// Hashes everything that defines the state of a game. When a field is added
 /// to the state, it must be added here too, or two different states could
 /// share a hash.
 pub(crate) fn hash_world(world: &World) -> u64 {
+    name_every_field(world);
     // A strike launched in a pulse lands in the same pulse.
     debug_assert!(
         world.strikes_in_flight.is_empty(),
@@ -415,7 +616,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u32(claim.claimed_sunk);
             h.u32(claim.received_event.raw());
         }
-        // The air claims of decision 0055 follow the claims, each tagged with
+        // The air claims of decision 0056 follow the claims, each tagged with
         // its place in the list. A claim of the old form (ships sunk only)
         // writes nothing here and hashes as it did before.
         for (index, claim) in belief.claims().iter().enumerate() {

@@ -475,7 +475,7 @@ pub enum EventKind {
         reason: EngagementEndReason,
     },
     /// A claim reached a side's belief: of a surface fight (ships believed
-    /// sunk only) or, since decision 0055, of a raid (also hits believed
+    /// sunk only) or, since decision 0056, of a raid (also hits believed
     /// scored, the kind of ship believed attacked, aircraft believed shot
     /// down and aircraft believed destroyed on the ground).
     ClaimReceived {
@@ -1884,7 +1884,7 @@ impl EventLog {
 }
 
 /// How a claim reads, in the event log and wherever a claim is listed
-/// (decision 0055). A surface fight's claim reads as it always has: "Allied
+/// (decision 0056). A surface fight's claim reads as it always has: "Allied
 /// claims 2 enemy ships sunk at (5,0)". A claim from the air reads "Allied
 /// claim over (7,-5): 12 aircraft shot down" or "Allied claim at (9,0): 5
 /// hits on a carrier, 0 sunk".

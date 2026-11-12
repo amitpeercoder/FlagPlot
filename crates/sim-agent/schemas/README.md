@@ -184,7 +184,7 @@ changes a rule, a result or a hash.
   descriptions of `order.schema.json`, which the MCP server's input schema
   repeats.
 
-## Claims (decision 0055, as built)
+## Claims (decision 0056, as built)
 
 - `losses.claims` lists the claims the side received yesterday, written in the
   text as "Claims yesterday": what its own people believe they did in a fight
@@ -218,7 +218,7 @@ or a hash.
   for each kind of ship, or `points` for one aircraft, one ton or the base), and
   `known`: what the side knows of its progress. `known.basis` is `exact` (the
   side's own units and events), `claims` (the enemy ships and aircraft its own
-  claims say it sank, shot down or destroyed on the ground, decision 0055: they
+  claims say it sank, shot down or destroyed on the ground, decision 0056: they
   can be wrong, so `count` can be above the truth; `points` are for the kind of
   ship each claim names, `null` where none does) or `not_observable` (no unit of its own and
   no event it may see shows it; `count` is 0 and says nothing). The text says

@@ -47,6 +47,38 @@ impl Subsystem {
     }
 }
 
+/// Which rule is drawing. Two rules that draw for the same entities in the
+/// same subsystem and pulse would otherwise open the same stream and see the
+/// same numbers, and nothing would say so (decision 0055).
+///
+/// Every rule that draws names its own value here. The exception is
+/// [`Draw::Legacy`], which is the eleven draws that existed before the tag
+/// did. It adds nothing to the key, so their streams, and every pinned
+/// number, are what they were. They are told apart by the shape of their
+/// keys, listed in decision 0055. No new rule may use it.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Draw {
+    Legacy,
+    /// The false claims of a raid (decision 0056): one stream for each side's
+    /// claim, keyed on its first firing unit and the raid's first strike
+    /// group.
+    Claim,
+}
+
+impl Draw {
+    /// Every value, for the test that their codes differ.
+    pub const ALL: [Draw; 2] = [Draw::Legacy, Draw::Claim];
+
+    /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
+    /// and is not folded into the key.
+    pub const fn code(self) -> u64 {
+        match self {
+            Draw::Legacy => 0,
+            Draw::Claim => 1,
+        }
+    }
+}
+
 /// Everything that identifies one entity's stream of random numbers.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct RngKey {
@@ -61,6 +93,9 @@ pub struct RngKey {
     /// existed. The order of `entity` and `other` is fixed by the rule that
     /// draws (decision 0013).
     pub other: Option<EntityRef>,
+    /// The rule that draws. With [`Draw::Legacy`] the stream is exactly
+    /// what it was before this field existed.
+    pub draw: Draw,
 }
 
 const GOLDEN: u64 = 0x9E37_79B9_7F4A_7C15;
@@ -70,6 +105,8 @@ const TAG_SUBSYSTEM: u64 = 0x8EBC_6AF0_9C88_C6E3;
 const TAG_ENTITY: u64 = 0x5899_65CC_7537_4CC3;
 /// Tag for the second entity of a pair key. Part of the save format.
 const TAG_OTHER: u64 = 0xD1B5_4A32_D192_ED03;
+/// Tag for the rule that draws. Part of the save format.
+const TAG_DRAW: u64 = 0x2545_F491_4F6C_DD1D;
 
 /// SplitMix64 finaliser.
 const fn mix64(mut z: u64) -> u64 {
@@ -98,6 +135,9 @@ impl RngKey {
         base = absorb(base, TAG_ENTITY, self.entity.stable_key());
         if let Some(other) = self.other {
             base = absorb(base, TAG_OTHER, other.stable_key());
+        }
+        if self.draw.code() != 0 {
+            base = absorb(base, TAG_DRAW, self.draw.code());
         }
         RngStream { base, counter: 0 }
     }
@@ -153,6 +193,7 @@ mod tests {
             subsystem: Subsystem::Search,
             entity,
             other: None,
+            draw: Draw::Legacy,
         }
     }
 
@@ -263,6 +304,18 @@ mod tests {
     }
 
     #[test]
+    fn every_rule_that_draws_has_its_own_code_and_only_legacy_is_zero() {
+        let mut seen = BTreeMap::new();
+        for draw in Draw::ALL {
+            assert!(
+                seen.insert(draw.code(), draw).is_none(),
+                "{draw:?} shares a code"
+            );
+            assert_eq!(draw.code() == 0, draw == Draw::Legacy);
+        }
+    }
+
+    #[test]
     fn swapping_values_between_fields_changes_the_stream() {
         let a = RngKey {
             seed: 1,
@@ -271,6 +324,7 @@ mod tests {
             subsystem: Subsystem::Movement,
             entity: ship(1),
             other: None,
+            draw: Draw::Legacy,
         };
         let b = RngKey {
             seed: 2,
@@ -328,6 +382,7 @@ mod tests {
             subsystem: Subsystem::Logistics,
             entity: EntityRef::TaskForce(TaskForceId::new(1)),
             other: None,
+            draw: Draw::Legacy,
         };
         assert_eq!(draws(end_of_day, 2), PINNED_END_OF_DAY);
     }

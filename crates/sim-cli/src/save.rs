@@ -103,6 +103,7 @@ pub fn write(
                     "issuer": match request.origin.issuer {
                         Issuer::Player => "player",
                         Issuer::Staff => "staff",
+                        Issuer::LocalCommander => "local_commander",
                     },
                     "intent": request.origin.intent.map(|i| i.raw()),
                 },
@@ -230,6 +231,7 @@ pub fn read(file: &str) -> Result<Saved, String> {
         let issuer = match text(origin, "issuer").map_err(&bad)? {
             "player" => Issuer::Player,
             "staff" => Issuer::Staff,
+            "local_commander" => Issuer::LocalCommander,
             other => return Err(bad(format!("unknown issuer \"{other}\""))),
         };
         let intent = match origin.get("intent") {

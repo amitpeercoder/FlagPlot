@@ -287,7 +287,7 @@ use sim_core::orders::AirMission;
 use sim_core::refdata::{
     AirCombatFigures, AircraftType, AttackWeapon, SearchFigures, ShipKind, SurfaceCombatFigures,
 };
-use sim_core::rng::{RngKey, RngStream, Subsystem};
+use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
 use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState};
 use sim_core::time::{self, Pulse};
 use sim_data::Scenario;
@@ -579,6 +579,7 @@ fn stream_of(
         subsystem,
         entity,
         other: Some(other),
+        draw: Draw::Legacy,
     }
     .stream()
 }
@@ -709,7 +710,7 @@ fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
     Run {
         seed,
-        // The claims from the air (decision 0055) are not part of what this
+        // The claims from the air (decision 0056) are not part of what this
         // scenario works out: they come after each raid is resolved and are
         // asserted in scenario_11_claims.rs.
         events: run

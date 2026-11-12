@@ -1,4 +1,4 @@
-//! Claims from the air (decision 0055).
+//! Claims from the air (decision 0056).
 //!
 //! # Hand calculation
 //!
@@ -714,7 +714,7 @@ fn recording_the_breakdowns_changes_neither_the_claims_nor_the_hashes() {
 }
 
 // ---------------------------------------------------------------------
-// No battle result changed: the logs from before decision 0055.
+// No battle result changed: the logs from before decision 0056.
 // ---------------------------------------------------------------------
 
 /// The ids of a line `#N ...` and of the causes after `<-`, mapped by
@@ -761,7 +761,7 @@ fn lines_without_claims(world: &World) -> Vec<String> {
 }
 
 #[test]
-fn the_log_without_the_claims_is_the_log_from_before_decision_0055() {
+fn the_log_without_the_claims_is_the_log_from_before_decision_0056() {
     // The logs under tests/claims_before are what `sim-cli run --events`
     // printed for these scenarios before the claims from the air were built
     // (the baselines of that day). Every event that is not a claim is the

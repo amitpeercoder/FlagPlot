@@ -315,7 +315,7 @@ fn the_objectives_are_those_the_decision_gives_both_sides() {
 
 #[test]
 fn what_each_side_knows_at_the_end_is_what_its_claims_say() {
-    // Decision 0055 (decision 14): a side's known progress reads its claims.
+    // Decision 0056 (decision 14): a side's known progress reads its claims.
     // Ships sunk and aircraft destroyed are the sums of the claims, labelled
     // `claims`, and can be above the truth; ships crippled are told by no
     // claim and stay not observable. Which ships a claim counts, and the kind
@@ -422,11 +422,11 @@ fn objectives_change_no_hash_and_no_event() {
     .expect("the baseline reads");
     assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
     // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
-    // 0055 put the claims from the air into belief, and so into the hash.
+    // 0056 put the claims from the air into belief, and so into the hash.
     assert!(baseline.contains("hash d623954551076dee"));
 }
 
-/// The scenario run with the three false claim chances of decision 0055 set
+/// The scenario run with the three false claim chances of decision 0056 set
 /// to 0, from air combat figures copied under the build directory.
 fn run_with_no_false_claims(seed: u64) -> World {
     let figures =
@@ -466,7 +466,7 @@ fn run_with_no_false_claims(seed: u64) -> World {
 }
 
 /// The ships the side's claims count only because they were left burning
-/// (decision 5 of 0055, the rule of decision 0014, 16): the `burning` factor
+/// (decision 5 of 0056, the rule of decision 0014, 16): the `burning` factor
 /// of each of its claims from the air that has one.
 fn burning_credits(world: &World, side: Side) -> Fixed {
     world
@@ -493,7 +493,7 @@ fn burning_credits(world: &World, side: Side) -> Fixed {
 /// left burning is claimed sunk. So for ships sunk the known count is the
 /// true count plus those burning credits, exactly. This replaces the
 /// property without the condition, which held until claims could be false
-/// (decision 0055): a side that claims a hit that was a miss knows more than
+/// (decision 0056): a side that claims a hit that was a miss knows more than
 /// the truth has.
 #[test]
 fn over_seeds_1_to_200_with_no_false_claims_the_known_count_is_never_above_the_true_count() {

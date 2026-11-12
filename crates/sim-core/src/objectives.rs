@@ -515,7 +515,7 @@ pub fn result(
 pub enum KnownBasis {
     /// From the side's own units and events: as exact as the truth.
     Exact,
-    /// From the claims the side received (`ClaimReceived`, decision 0055):
+    /// From the claims the side received (`ClaimReceived`, decision 0056):
     /// the number of enemy ships it believes sunk, and of enemy aircraft it
     /// believes shot down or destroyed on the ground. The claims can be
     /// wrong, so the count can be above the truth. A claim of ships from the
@@ -553,7 +553,7 @@ pub struct KnownProgress {
     pub points: Option<Fixed>,
 }
 
-/// What a side's claims add up to (decision 0055).
+/// What a side's claims add up to (decision 0056).
 #[derive(Default)]
 struct Claimed {
     /// Enemy ships believed sunk, by any claim.

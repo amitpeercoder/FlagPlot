@@ -826,7 +826,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
                 .text("side", names::side(*side))
                 .hex("hex", *hex)
                 .int("claimed_sunk", *claimed_sunk);
-            // A claim from the air (decision 0055) adds its own figures; a
+            // A claim from the air (decision 0056) adds its own figures; a
             // surface fight's claim exports as it always did.
             let d = if *from_air {
                 let d = d

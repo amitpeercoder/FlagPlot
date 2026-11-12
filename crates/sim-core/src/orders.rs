@@ -16,7 +16,14 @@ use crate::state::Side;
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Issuer {
     Player,
+    /// The staff planner, acting on the player's intent between days.
     Staff,
+    /// A rule acting for the commander on the spot inside a day, on the
+    /// standing orders the unit already has: a damaged ship sent home, say.
+    /// Kept apart from `Staff` so that "who decided this" can tell the
+    /// planner's choice from doctrine firing (decision 0055). Added at the
+    /// end.
+    LocalCommander,
 }
 
 /// Where an order came from. Stored and logged in step 1. The staff planner

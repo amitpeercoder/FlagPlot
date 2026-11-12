@@ -164,7 +164,7 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId};
 use sim_core::orders::AirMission;
-use sim_core::rng::{RngKey, RngStream, Subsystem};
+use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
 use sim_core::state::Side;
 use sim_core::time::Pulse;
 use sim_data::Scenario;
@@ -256,7 +256,7 @@ fn run_of(base: &Scenario, seed: u64) -> Run {
 
 fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
-    // The claims from the air (decision 0055) are not part of what this
+    // The claims from the air (decision 0056) are not part of what this
     // scenario works out: they come after each raid is resolved and are
     // asserted in scenario_11_claims.rs.
     let events: Vec<Event> = run
@@ -340,6 +340,7 @@ fn stream_of(seed: u64, day: u32, pulse: Pulse, entity: EntityRef, other: Entity
         subsystem: Subsystem::AirCombat,
         entity,
         other: Some(other),
+        draw: Draw::Legacy,
     }
     .stream()
 }

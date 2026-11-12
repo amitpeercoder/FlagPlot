@@ -1,4 +1,4 @@
-//! What a side is told of its claims (decisions 14 and 15 of 0055).
+//! What a side is told of its claims (decisions 14 and 15 of 0056).
 //!
 //! 1. The briefing lists the claims of the day, one line each, as "Claims
 //!    yesterday", with what each says of hits, the kind attacked, aircraft

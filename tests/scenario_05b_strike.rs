@@ -334,7 +334,7 @@ fn digest(run: &Scenario, seed: u64) -> Run {
     let truth = run.world.umpire();
     Run {
         seed,
-        // The claims from the air (decision 0055) are not part of what this
+        // The claims from the air (decision 0056) are not part of what this
         // scenario works out: they come after each raid is resolved and are
         // asserted in scenario_11_claims.rs.
         events: run

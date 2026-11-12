@@ -23,7 +23,7 @@ anti_aircraft_hit_chance = "0.05"
 pilot_armour_factor = "0.75"
 self_sealing_tanks_factor = "0.75"
 
-# Claims from the air (decision 0055). PLACEHOLDER chances, to be set from
+# Claims from the air (decision 0056). PLACEHOLDER chances, to be set from
 # the record in step 2. Each whole shot of fighters (or each whole shot of the
 # guns of ships and bases) that missed is claimed as an aircraft shot down with
 # the chance given; each whole bomb or torpedo that missed is claimed as a hit
