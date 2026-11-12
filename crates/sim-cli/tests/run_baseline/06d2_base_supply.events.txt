@@ -3,11 +3,11 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 0a09d54efd7ab381  27 events
-day   2  hash 99f85d75446f8842  21 events
-day   3  hash 5e1c869a2ad9ae7e  20 events
-day   4  hash 6a00402d99e960d0  20 events
-day   5  hash 3914ecf6ecc759eb  5 events
-day   6  hash bc39a749672af895  5 events
+day   2  hash 08fafa80512f6019  21 events
+day   3  hash 8b6accf5883d560b  20 events
+day   4  hash b25adc0114bf17e7  20 events
+day   5  hash c24ca9fe2634cb58  5 events
+day   6  hash 15aa3d6dcadf04e2  5 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -29,7 +29,7 @@ day   6  hash bc39a749672af895  5 events
 #18 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #14
 #19 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #10, #18
 #20 D1 morning   base:2 lost 50 t of supply, 944.4 t left  <- #19
-#21 D1 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #12
+#21 D1 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #12, #19
 #22 D1 morning   Allied claim over (5,0): 4 aircraft shot down  <- #13, #14, #15
 #23 D1 morning   base:1 spent 39 t of supply on 30 aircraft sent on sorties, 105 t left  <- #10, order:5, order:6, #11
 #24 D1 morning   base:2 spent 18 t of supply on 18 aircraft sent on sorties, 926.4 t left  <- order:1, #9
@@ -50,7 +50,7 @@ day   6  hash bc39a749672af895  5 events
 #39 D2 morning   air_group:1 lost 1 aircraft, 15 left  <- #35
 #40 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #31, #39
 #41 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #40
-#42 D2 morning   Japanese claim over (5,0): 2 aircraft shot down  <- #33
+#42 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 5 aircraft destroyed on the ground  <- #33, #40
 #43 D2 morning   Allied claim over (5,0): 2 aircraft shot down  <- #34, #35, #36
 #44 D2 morning   base:1 spent 35.5 t of supply on 27 aircraft sent on sorties, 61.6 t left  <- #31, order:5, order:6, #32
 #45 D2 morning   base:2 spent 16.5 t of supply on 15 aircraft sent on sorties, 888.4 t left  <- order:1, #30
@@ -70,7 +70,7 @@ day   6  hash bc39a749672af895  5 events
 #59 D3 morning   air_group:1 lost 1 aircraft, 14 left  <- #56
 #60 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #57
 #61 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #52, #59, #60
-#62 D3 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #54
+#62 D3 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #54, #61
 #63 D3 morning   Allied claim over (5,0): 7 aircraft shot down  <- #55, #56, #57
 #64 D3 morning   base:1 spent 32.5 t of supply on 25 aircraft sent on sorties, 21.6 t left  <- #52, order:5, order:6, #53
 #65 D3 morning   base:2 spent 15.5 t of supply on 13 aircraft sent on sorties, 853.2 t left  <- order:1, #51
@@ -91,7 +91,7 @@ day   6  hash bc39a749672af895  5 events
 #80 D4 morning   air_group:1 lost 1 aircraft, 10 left  <- #77
 #81 D4 morning   air_group:1 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #72, #80
 #82 D4 morning   base:2 lost 50 t of supply, 783.5 t left  <- #81
-#83 D4 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #74
+#83 D4 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #74, #81
 #84 D4 morning   Allied claim over (5,0): 3 aircraft shot down  <- #75, #76, #77
 #85 D4 morning   base:1 spent 15.6 t of supply on 20 aircraft sent on sorties: 26 t was asked and the stock could not cover it, 0 t left: base:1 is out of supply  <- #72, order:5, order:6, #73
 #86 D4 morning   base:2 spent 15.5 t of supply on 13 aircraft sent on sorties, 768 t left  <- order:1, #71
@@ -122,6 +122,6 @@ Allied claim over (5,0): 7 aircraft shot down, day 3 morning
 Allied claim over (5,0): 3 aircraft shot down, day 4 morning
 Japanese: no contacts
 Japanese claim over (5,0): 3 aircraft shot down, day 1 morning
-Japanese claim over (5,0): 2 aircraft shot down, day 2 morning
+Japanese claim at (5,0): 2 aircraft shot down, 5 aircraft destroyed on the ground, day 2 morning
 Japanese claim over (5,0): 1 aircraft shot down, day 3 morning
 Japanese claim over (5,0): 3 aircraft shot down, day 4 morning

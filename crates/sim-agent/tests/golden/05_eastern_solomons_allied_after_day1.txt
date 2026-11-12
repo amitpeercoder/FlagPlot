@@ -9,7 +9,7 @@ HEADING
 OBJECTIVES
 - Mission: Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action.
 - Objective: enemy ships sunk, points for each: carrier 10, battleship 8, cruiser 4, destroyer 1, transport 2, auxiliary 1
-  - What you know of your progress: nothing you can see shows it; it is counted at the end of the game
+  - What you know of your progress: 1 enemy ships reported sunk, of kinds you were not told
 - Objective: enemy ships left afloat with propulsion or flight deck out, points for each: carrier 5, battleship 4, cruiser 2, destroyer 0.5, transport 1, auxiliary 0.5
   - What you know of your progress: nothing you can see shows it; it is counted at the end of the game
 - Objective: enemy aircraft destroyed, points for each: 0.05

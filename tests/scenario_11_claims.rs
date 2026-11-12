@@ -368,9 +368,10 @@ fn the_firing_of_the_base_raid_is_the_table_of_the_hand_calculation() {
 fn at_chances_0_and_1_the_aircraft_claimed_over_the_base_are_the_hand_calculation() {
     // The raiding side is the Japanese (group 1 bombs the Allied base).
     let (raiders, defenders) = (Side::Japanese, Side::Allied);
-    for (chances, raiding, defending) in
-        [(NONE, [3, 2, 0], [3, 2, 5]), (ALL, [6, 6, 5], [32, 29, 27])]
-    {
+    for (chances, raiding, defending, on_ground) in [
+        (NONE, [3, 2, 0], [3, 2, 5], [0, 2, 0]),
+        (ALL, [6, 6, 5], [32, 29, 27], [16, 15, 11]),
+    ] {
         let world = run(RAID, chances, None);
         let claims = air_claims(&world);
         assert_eq!(claims.len(), 6, "{chances:?}: two claims a day, three days");
@@ -380,6 +381,10 @@ fn at_chances_0_and_1_the_aircraft_claimed_over_the_base_are_the_hand_calculatio
             let at = day as usize - 1;
             assert_eq!(raid.down, raiding[at], "{chances:?} day {day}");
             assert_eq!(defence.down, defending[at], "{chances:?} day {day}");
+            // The raiders claim aircraft destroyed on the ground; the
+            // defenders, who dropped no bombs, none.
+            assert_eq!(raid.ground, on_ground[at], "{chances:?} day {day}");
+            assert_eq!(defence.ground, 0, "{chances:?} day {day}");
             // Neither side attacked a ship.
             for claim in [raid, defence] {
                 assert_eq!((claim.sunk, claim.hits, claim.kind), (0, 0, None));
@@ -443,6 +448,8 @@ fn check_claims(world: &World, label: &str, chances_are_zero: bool) {
                     EventKind::AirFight { .. }
                         | EventKind::AntiAircraftFire { .. }
                         | EventKind::BaseAntiAircraftFire { .. }
+                        | EventKind::AirAttack { .. }
+                        | EventKind::BaseAttacked { .. }
                 ),
                 "{label}: {}",
                 cited.kind
@@ -465,7 +472,75 @@ fn check_claims(world: &World, label: &str, chances_are_zero: bool) {
         if chances_are_zero {
             assert_eq!(claim.down, real, "{label}: at 0 nothing false is claimed");
         }
+        // Hits on ships and aircraft destroyed on the ground, the same way.
+        let strikes = strikes_of(world, &claim);
+        assert!(claim.hits >= strikes.hits, "{label}: hits");
+        assert!(
+            claim.hits <= strikes.hits + strikes.missed,
+            "{label}: only misses can be claimed as hits"
+        );
+        assert!(claim.ground >= strikes.destroyed, "{label}: on the ground");
+        assert!(
+            claim.ground <= strikes.bombs.max(strikes.destroyed),
+            "{label}: no more than the bombs dropped"
+        );
+        assert_eq!(
+            claim.kind.is_some(),
+            strikes.attacked_ships,
+            "{label}: the kind goes with an attack on ships"
+        );
+        if chances_are_zero {
+            assert_eq!(claim.hits, strikes.hits, "{label}: at 0 hits are real");
+            assert_eq!(claim.ground, strikes.destroyed, "{label}: at 0 as real");
+        }
     }
+}
+
+/// What the attack events a claim cites say: bombs and torpedoes that hit
+/// ships, that missed them, bombs dropped on a base, and the aircraft those
+/// bombs destroyed on the ground.
+struct Strikes {
+    attacked_ships: bool,
+    hits: u32,
+    missed: u32,
+    bombs: u32,
+    destroyed: u32,
+}
+
+fn strikes_of(world: &World, claim: &Claim) -> Strikes {
+    let mut strikes = Strikes {
+        attacked_ships: false,
+        hits: 0,
+        missed: 0,
+        bombs: 0,
+        destroyed: 0,
+    };
+    for event in world.events().iter() {
+        if claim.causes.contains(&Cause::Event(event.id)) {
+            match &event.kind {
+                EventKind::AirAttack { shots, hits, .. } => {
+                    strikes.attacked_ships = true;
+                    strikes.hits += hits;
+                    strikes.missed += whole(*shots) - hits;
+                }
+                EventKind::BaseAttacked { shots, .. } => strikes.bombs += whole(*shots),
+                _ => {}
+            }
+        } else if event
+            .causes
+            .iter()
+            .any(|cause| claim.causes.contains(cause))
+        {
+            match &event.kind {
+                EventKind::AircraftDestroyedOnGround { aircraft, .. }
+                | EventKind::DamagedAircraftDestroyedOnGround { aircraft, .. } => {
+                    strikes.destroyed += aircraft;
+                }
+                _ => {}
+            }
+        }
+    }
+    strikes
 }
 
 #[test]
@@ -609,17 +684,24 @@ fn recording_the_breakdowns_changes_neither_the_claims_nor_the_hashes() {
                 .value
         };
         let EventKind::ClaimReceived {
-            claimed_shot_down, ..
+            claimed_shot_down,
+            claimed_hits,
+            claimed_on_ground,
+            ..
         } = event.kind
         else {
             unreachable!("filtered to claims")
         };
-        let claimed = Fixed::from_int(i64::from(claimed_shot_down));
+        let count = |n: u32| Fixed::from_int(i64::from(n));
         assert_eq!(
             factor("real_shot_down") + factor("false_shot_down"),
-            claimed
+            count(claimed_shot_down)
         );
-        assert_eq!(breakdown.result, claimed);
+        // The result counts what the claim says of aircraft and of hits.
+        assert_eq!(
+            breakdown.result,
+            count(claimed_shot_down + claimed_hits + claimed_on_ground)
+        );
         assert_eq!(
             factor("fighter_false_claim_chance"),
             "0.1".parse().expect("a decimal")
@@ -725,4 +807,246 @@ fn the_log_without_the_claims_is_the_log_from_before_decision_0055() {
         claims_added += air_claims(&scenario.world).len();
     }
     assert!(claims_added > 0, "the scenarios do make claims");
+}
+
+// ---------------------------------------------------------------------
+// The unopposed strike, 05b_strike.toml.
+// ---------------------------------------------------------------------
+
+const STRIKE: &str = "05b_strike.toml";
+
+#[test]
+fn the_unopposed_strike_claims_what_the_hand_calculation_says() {
+    // Group 2 drops 18 bombs on ship 3 for 5 hits; no ship sinks or burns; no
+    // fighter or gun fires; the contact was taken for a carrier at the launch.
+    for (chances, hits) in [(NONE, Some(5)), (ALL, Some(18)), (PLACEHOLDER, None)] {
+        // At the placeholder chances the draws give what they give for this
+        // seed: only the bounds are asserted for it.
+        let world = run(STRIKE, chances, None);
+        let truth = world.umpire();
+        let ship = &truth.ships[&sim_core::ids::ShipId::new(3)];
+        assert_eq!(ship.flotation_damage, Fixed::from_int(50));
+        assert_eq!(ship.fire_damage, Fixed::ZERO);
+        let attacks: Vec<(u32, u32)> = world
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::AirAttack { shots, hits, .. } => Some((whole(*shots), *hits)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(attacks, vec![(18, 5)]);
+        let claims = air_claims(&world);
+        assert_eq!(claims.len(), 1, "the Japanese side fired nothing");
+        let claim = &claims[0];
+        assert_eq!(claim.side, Side::Allied);
+        assert_eq!(claim.kind, Some(ShipKind::Carrier));
+        assert_eq!((claim.sunk, claim.down, claim.ground), (0, 0, 0));
+        match hits {
+            Some(hits) => assert_eq!(claim.hits, hits, "{chances:?}"),
+            None => assert!((5..=18).contains(&claim.hits), "{}", claim.hits),
+        }
+        // The report after the strike reads the force as a cruiser, and the
+        // claim still says carrier: it is what the contact was taken for at
+        // the launch.
+        let attack = world
+            .events()
+            .iter()
+            .find(|e| matches!(e.kind, EventKind::AirAttack { .. }))
+            .expect("the attack")
+            .id;
+        let report = world
+            .events()
+            .iter()
+            .find_map(|e| match &e.kind {
+                EventKind::ReportReceived { kind, .. }
+                    if e.causes.contains(&Cause::Event(attack)) =>
+                {
+                    Some(*kind)
+                }
+                _ => None,
+            })
+            .expect("a report after the strike");
+        assert_eq!(report, ShipKind::Cruiser);
+        assert!(
+            claim.text.contains("hits on a carrier, 0 sunk"),
+            "{}",
+            claim.text
+        );
+        check_claims(&world, "05b", chances == NONE);
+    }
+}
+
+// ---------------------------------------------------------------------
+// Ships sunk from the air: decision 14 of 0014, again.
+// ---------------------------------------------------------------------
+
+/// The ships of `force` that a claim made against it should count, worked
+/// from the log alone: those its cited attacks sank, and those of the force
+/// afloat when the claim was made with fire damage at the claim level.
+fn ships_a_claim_should_count(world: &World, claim: &Claim) -> u32 {
+    let events: Vec<Event> = world.events().iter().cloned().collect();
+    let level = world
+        .ref_data()
+        .surface_combat
+        .as_ref()
+        .expect("surface combat figures")
+        .claimed_sunk_fire;
+    // The attacks it cites, and the force they attacked.
+    let mut force = None;
+    let mut attacks = Vec::new();
+    for cause in &claim.causes {
+        let Cause::Event(id) = cause else { continue };
+        if let EventKind::AirAttack { task_force, .. } = events[id.raw() as usize - 1].kind {
+            force = Some(task_force);
+            attacks.push(*id);
+        }
+    }
+    let force = force.expect("a claim of ships cites an attack on a force");
+    // Ships those attacks sank: ShipSunk, caused by ShipDamaged, caused by
+    // an attack.
+    let damaged: Vec<_> = events
+        .iter()
+        .filter(|e| {
+            matches!(e.kind, EventKind::ShipDamaged { .. })
+                && e.causes
+                    .iter()
+                    .any(|c| matches!(c, Cause::Event(id) if attacks.contains(id)))
+        })
+        .map(|e| e.id)
+        .collect();
+    let mut sunk: Vec<_> = Vec::new();
+    for event in &events {
+        if let EventKind::ShipSunk { ship, .. } = event.kind {
+            if event
+                .causes
+                .iter()
+                .any(|c| matches!(c, Cause::Event(id) if damaged.contains(id)))
+                && !sunk.contains(&ship)
+            {
+                sunk.push(ship);
+            }
+        }
+    }
+    // The ships of the force afloat at the claim: those in it at the end and
+    // those that sank after it.
+    let mut members: Vec<_> = world.umpire().task_forces[&force]
+        .ships
+        .iter()
+        .copied()
+        .collect();
+    for event in &events {
+        if let EventKind::ShipSunk {
+            ship, task_force, ..
+        } = event.kind
+        {
+            if task_force == force && event.id.raw() > claim.id {
+                members.push(ship);
+            }
+        }
+    }
+    let burning = members
+        .iter()
+        .filter(|ship| {
+            let fire = events
+                .iter()
+                .take_while(|e| e.id.raw() < claim.id)
+                .filter_map(|e| match e.kind {
+                    EventKind::ShipDamaged {
+                        ship: s,
+                        track: sim_core::events::DamageTrack::Fire,
+                        value_after,
+                        ..
+                    } if s == **ship => Some(value_after),
+                    _ => None,
+                })
+                .last()
+                .unwrap_or(Fixed::ZERO);
+            fire >= level
+        })
+        .count();
+    u32::try_from(sunk.len() + burning).expect("few ships")
+}
+
+#[test]
+fn a_claim_of_ships_sunk_from_the_air_is_the_ships_sunk_and_those_burning() {
+    let mut with_a_ship_claimed = 0;
+    for seed in 1..=60 {
+        for name in ["05_eastern_solomons.toml", "05d_carrier_duel.toml"] {
+            let world = run(name, PLACEHOLDER, Some(seed));
+            assert!(
+                !world
+                    .events()
+                    .iter()
+                    .any(|e| matches!(e.kind, EventKind::ShipsDetached { .. })),
+                "no force splits in these runs, so final membership is membership at the claim"
+            );
+            check_claims(&world, &format!("{name} seed {seed}"), false);
+            for claim in air_claims(&world).iter().filter(|c| c.kind.is_some()) {
+                let counted = ships_a_claim_should_count(&world, claim);
+                assert_eq!(claim.sunk, counted, "{name} seed {seed}: {}", claim.text);
+                with_a_ship_claimed += u32::from(claim.sunk > 0);
+            }
+        }
+    }
+    assert!(with_a_ship_claimed > 0, "some run sinks or burns a ship");
+}
+
+#[test]
+fn a_strike_claims_the_kind_it_was_sent_at_whatever_was_there() {
+    // In every run of scenarios 5 and 5d each claim with a kind names the
+    // kind the contact was taken for when its strike was launched: the kind
+    // of the report that the launch cites.
+    for seed in 1..=30 {
+        for name in ["05_eastern_solomons.toml", "05d_carrier_duel.toml"] {
+            let world = run(name, PLACEHOLDER, Some(seed));
+            let events: Vec<Event> = world.events().iter().cloned().collect();
+            for claim in air_claims(&world).iter().filter(|c| c.kind.is_some()) {
+                let attack = claim
+                    .causes
+                    .iter()
+                    .find_map(|cause| match cause {
+                        Cause::Event(id)
+                            if matches!(
+                                events[id.raw() as usize - 1].kind,
+                                EventKind::AirAttack { .. }
+                            ) =>
+                        {
+                            Some(&events[id.raw() as usize - 1])
+                        }
+                        _ => None,
+                    })
+                    .expect("an attack");
+                // The attack cites its launch, which cites the report that
+                // made the contact.
+                let launch = attack
+                    .causes
+                    .iter()
+                    .find_map(|cause| match cause {
+                        Cause::Event(id)
+                            if matches!(
+                                events[id.raw() as usize - 1].kind,
+                                EventKind::StrikeLaunched { .. }
+                            ) =>
+                        {
+                            Some(&events[id.raw() as usize - 1])
+                        }
+                        _ => None,
+                    })
+                    .expect("a launch");
+                let report = launch
+                    .causes
+                    .iter()
+                    .find_map(|cause| match cause {
+                        Cause::Event(id) => match events[id.raw() as usize - 1].kind {
+                            EventKind::ReportReceived { kind, .. } => Some(kind),
+                            _ => None,
+                        },
+                        Cause::Order(_) => None,
+                    })
+                    .expect("the launch cites the report it was sent on");
+                assert_eq!(claim.kind, Some(report), "seed {seed} {name}");
+            }
+        }
+    }
 }

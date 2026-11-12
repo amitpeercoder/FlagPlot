@@ -3,8 +3,8 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 459ad50c7d5a006e  21 events
-day   2  hash c4d4bc7738ccc611  15 events
-day   3  hash 77634bc0568ea6ac  14 events
+day   2  hash 556c7bf72a6fc642  15 events
+day   3  hash dffc31633f46b2d9  14 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -24,7 +24,7 @@ day   3  hash 77634bc0568ea6ac  14 events
 #16 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
 #17 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #16
 #18 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #17
-#19 D1 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #10
+#19 D1 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #10, #17
 #20 D1 morning   Allied claim over (5,0): 4 aircraft shot down  <- #11, #12, #13
 #21 D1 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #22 D2 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
@@ -39,7 +39,7 @@ day   3  hash 77634bc0568ea6ac  14 events
 #31 D2 morning   air_group:1 lost 1 aircraft, 15 left  <- #27
 #32 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #23, #31
 #33 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #32
-#34 D2 morning   Japanese claim over (5,0): 2 aircraft shot down  <- #25
+#34 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 5 aircraft destroyed on the ground  <- #25, #32
 #35 D2 morning   Allied claim over (5,0): 2 aircraft shot down  <- #26, #27, #28
 #36 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #37 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
@@ -53,7 +53,7 @@ day   3  hash 77634bc0568ea6ac  14 events
 #45 D3 morning   air_group:1 lost 1 aircraft, 14 left  <- #42
 #46 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #43
 #47 D3 morning   air_group:1 bombs at base:2: 11 shots x 0.2 = 2.2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #38, #45, #46
-#48 D3 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #40
+#48 D3 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #40, #47
 #49 D3 morning   Allied claim over (5,0): 7 aircraft shot down  <- #41, #42, #43
 #50 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 
@@ -70,5 +70,5 @@ Allied claim over (5,0): 2 aircraft shot down, day 2 morning
 Allied claim over (5,0): 7 aircraft shot down, day 3 morning
 Japanese: no contacts
 Japanese claim over (5,0): 3 aircraft shot down, day 1 morning
-Japanese claim over (5,0): 2 aircraft shot down, day 2 morning
+Japanese claim at (5,0): 2 aircraft shot down, 5 aircraft destroyed on the ground, day 2 morning
 Japanese claim over (5,0): 1 aircraft shot down, day 3 morning

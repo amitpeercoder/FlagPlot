@@ -3,8 +3,8 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 459ad50c7d5a006e  21 events
-day   2  hash c4d4bc7738ccc611  15 events
-day   3  hash 77634bc0568ea6ac  14 events
+day   2  hash 556c7bf72a6fc642  15 events
+day   3  hash dffc31633f46b2d9  14 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 11 ready, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 9 ready, mission CombatAirPatrol, patrol share 0.5, no arc
@@ -19,5 +19,5 @@ Allied claim over (5,0): 2 aircraft shot down, day 2 morning
 Allied claim over (5,0): 7 aircraft shot down, day 3 morning
 Japanese: no contacts
 Japanese claim over (5,0): 3 aircraft shot down, day 1 morning
-Japanese claim over (5,0): 2 aircraft shot down, day 2 morning
+Japanese claim at (5,0): 2 aircraft shot down, 5 aircraft destroyed on the ground, day 2 morning
 Japanese claim over (5,0): 1 aircraft shot down, day 3 morning
