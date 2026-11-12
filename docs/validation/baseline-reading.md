@@ -4,12 +4,14 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 
 | Battle | Report | Judged | Agree | Agree at the edge | Miss |
 | --- | --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 13 | 6 | 4 | 3 |
+| Savo Island | `savo-island-baseline.md` | 15 | 6 | 4 | 5 |
 | Eastern Solomons | `eastern-solomons-baseline.md` | 11 | 7 | 1 | 3 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
 | Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
 
 An agreement at the edge is one whose record has no part in the middle half of the runs (the 25th to the 75th percentile). It still agrees by the rule; whether it counts against a battle at the close of step 2 is the designer's to decide after the first tuning rounds. The reports were remade once, the same day and on the same batches, when that mark was added to `validate`.
+
+The Savo Island report was remade again that day with two more judged measures, the shells each side fires, and both miss: the Japanese fire 8 to 34 hundreds against a record of 18, and the Allies 4 to 50 against 4. That remake ran on the engine after decision 0063 (state layout version 5); the other two reports are still the first ones and will be remade when the Eastern Solomons gets its new orders.
 
 The six ship passages are in `passages-baseline.md`. None is judged. Every one but the first is quicker in the rules than in the record, by 5 to 22 percent of the recorded time: a ship in the rules holds its stated speed along the route, and the record's ships did not. That is speed made good, which is not in step 2.
 
@@ -24,7 +26,7 @@ cargo run --release -p sim-cli -- validate BATCH.json data/validation/savo_islan
 
 - **The Japanese do not hit hard enough.** Their guns score 24 to 51 hits for each thousand shells where the record has 81 to 117, and no run reaches the record.
 - **So the Allied cruisers live.** The record has four sunk. No cruiser is sunk in 681 runs of 1,000 and never more than three; the northern group, which lost all three, loses none in 948.
-- **The Allied guns are about right** (16 to 53 for each thousand against 21 to 36), so the gap is on one side. This is the gap the experience rule is to close, with the readiness rules already in the model.
+- **The Allied guns hit at about the right rate and fire far too much.** Their hits for each thousand shells are 16 to 53 against a record of 21 to 36. But the record has 471 Allied shells fired and the runs average about 2,800, where the Japanese fire about 2,170 against a record of 1,867. So Allied gun hits on Japanese ships are 127 in the middle run against a record of 10 to 17. A rate that agrees hid a count that is six times too high; two measures of shells fired were added on Nov 12, 2026 so that it cannot hide again. In the record most of the Allied cruisers never got their guns into effective action, and nothing in the rules keeps a surprised force from firing its full broadside from the second round.
 - **An agreement that is weaker than it looks:** gun hits on Japanese ships agree because the record of 10 to 17 touches the bottom of a spread of 8 to 224. The median run has 127. The Allies score many more hits than they did; a likely reason is that the fights last while the Japanese fail to win them quickly, which the report does not itself show.
 - **The result:** an Allied victory of some kind in 441 runs and a defeat in 308. The night was a decisive Japanese victory; one run in 1,000 is.
 

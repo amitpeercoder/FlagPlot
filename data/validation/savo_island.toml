@@ -154,6 +154,32 @@ weapon = "gun"
 rows = [10, 11, 115, 125, 141, 156, 151]
 reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as in gun_hits_on_japanese_ships (low end 11; high end 115, 125, 141, 156, 151). 10 in 471 is 21 a thousand and 17 is 36. The shells counted include Ralph Talbot's 12, outside the scenario."
 
+# ---------------------------------------------------------- shells fired
+
+[[measure]]
+id = "japanese_gun_shells_fired_in_hundreds"
+counts = "Gun shots the Japanese force fires in the run, all calibres, in hundreds, rounded down"
+record_low = 18
+record_high = 18
+judged = true
+take = "shots_in_hundreds"
+side = "japanese"
+weapon = "gun"
+rows = [7]
+reason = "1,867 shells (7), which is 18 hundreds. The count includes the few fired at Ralph Talbot, who is outside the scenario; no row says how many, so nothing is taken off."
+
+[[measure]]
+id = "allied_gun_shells_fired_in_hundreds"
+counts = "Gun shots the two Allied groups fire in the run, all calibres, in hundreds, rounded down"
+record_low = 4
+record_high = 4
+judged = true
+take = "shots_in_hundreds"
+side = "allied"
+weapon = "gun"
+rows = [10]
+reason = "471 shells (10); 459 without Ralph Talbot's 12, who is outside the scenario. Either is 4 hundreds. At the baseline the Allied groups fired about 2,800 a run. Hits for each thousand shells agreed all the same, and hid it: a force that fires six times too much and hits at the right rate scores six times the hits. This measure is here so that cannot hide again. In the record most of the Allied cruisers never got their guns into effective action."
+
 # ------------------------------------------------------- how long it ran
 
 [[measure]]
