@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, VecDeque};
 
 use crate::fixed::Fixed;
-use crate::hex::Hex;
+use crate::hex::{Hex, HEX_NM};
 
 /// What a hex is made of.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -221,6 +221,61 @@ impl Map {
             here = next;
         }
         Some(hexes)
+    }
+
+    /// What the step from `from` to its neighbour `next` is charged, in
+    /// miles, for a force steaming for `waypoint` (decision 0058, decisions
+    /// 1 to 3). `field` is [`Map::sea_distances_to`] of `waypoint`.
+    ///
+    /// Where the way is clear, that is where the sea path from `from` to the
+    /// waypoint has as many steps as there are hexes between them
+    /// ([`Hex::distance`]), the step is charged the miles it brings the force
+    /// closer in a straight line, `air(from, waypoint) - air(next,
+    /// waypoint)` ([`Hex::air_distance_nm`]), and never less than 1. Where
+    /// land forces a detour the step is charged [`HEX_NM`] as before. This is
+    /// the one place a ship's step is priced; movement, the passage forecast,
+    /// `measure` and the briefing all come here.
+    pub fn step_charge_nm(
+        &self,
+        field: &BTreeMap<Hex, u32>,
+        from: Hex,
+        next: Hex,
+        waypoint: Hex,
+    ) -> u32 {
+        let clear = field.get(&from) == Some(&from.distance(waypoint));
+        if clear {
+            from.air_distance_nm(waypoint)
+                .saturating_sub(next.air_distance_nm(waypoint))
+                .max(1)
+        } else {
+            HEX_NM as u32
+        }
+    }
+
+    /// The charged miles of the sea path from `from` to `waypoint`: the sum
+    /// of the charges of its steps ([`Map::step_charge_nm`]), which is
+    /// `air(from, waypoint)` when the way is clear from the start. `field` is
+    /// [`Map::sea_distances_to`] of `waypoint`. `None` when ships cannot get
+    /// from one to the other, 0 when they are the same hex.
+    pub fn sea_charged_nm_in(
+        &self,
+        field: &BTreeMap<Hex, u32>,
+        from: Hex,
+        waypoint: Hex,
+    ) -> Option<u32> {
+        field.get(&from)?;
+        let mut miles = 0;
+        let mut here = from;
+        while let Some(next) = self.next_step_in(field, here) {
+            miles += self.step_charge_nm(field, here, next, waypoint);
+            here = next;
+        }
+        Some(miles)
+    }
+
+    /// [`Map::sea_charged_nm_in`] for one pair of hexes.
+    pub fn sea_charged_nm(&self, from: Hex, to: Hex) -> Option<u32> {
+        self.sea_charged_nm_in(&self.sea_distances_to(to), from, to)
     }
 
     pub fn len(&self) -> usize {
@@ -709,5 +764,67 @@ mod tests {
         assert_eq!(map.next_step_in(&open_field, a), None);
         // And the fresh field says A cannot reach T at all.
         assert_eq!(map.sea_distance(a, t), None);
+    }
+
+    #[test]
+    fn a_clear_way_is_charged_the_air_distance_and_a_step_from_one_to_forty_miles() {
+        // The hand calculation of scenario 1: (0,0) to (8,3), 394 miles.
+        let map = sea(-1..=9, -1..=4);
+        let target = hx(8, 3);
+        let field = map.sea_distances_to(target);
+        let path = map.sea_path(hx(0, 0), target).unwrap();
+        let mut here = hx(0, 0);
+        let mut charges = Vec::new();
+        for next in &path {
+            charges.push(map.step_charge_nm(&field, here, *next, target));
+            here = *next;
+        }
+        assert_eq!(charges, [38, 39, 37, 37, 35, 34, 30, 24, 40, 40, 40]);
+        assert_eq!(charges.iter().sum::<u32>(), 394);
+        assert_eq!(map.sea_charged_nm(hx(0, 0), target), Some(394));
+        assert_eq!(map.sea_charged_nm(target, target), Some(0));
+        assert_eq!(map.sea_charged_nm(hx(0, 0), hx(20, 20)), None);
+    }
+
+    #[test]
+    fn a_detour_round_land_is_charged_a_hex_a_step_until_the_way_is_clear() {
+        // A wall at q = 2 from r = -3 to r = 1, open at r = 2.
+        let mut map = sea(-1..=6, -3..=3);
+        make_land(&mut map, &[(2, -3), (2, -2), (2, -1), (2, 0), (2, 1)]);
+        let (from, target) = (hx(0, 0), hx(4, 0));
+        let field = map.sea_distances_to(target);
+        let steps = field[&from];
+        assert!(steps > from.distance(target));
+        let path = map.sea_path(from, target).unwrap();
+        assert_eq!(path.len() as u32, steps);
+        // Not clear from the start: the first step is a hex.
+        assert_eq!(map.step_charge_nm(&field, from, path[0], target), 40);
+        let charged = map.sea_charged_nm(from, target).unwrap();
+        assert!(charged > from.air_distance_nm(target));
+        assert!(charged <= 40 * steps);
+        // Once past the wall the rest is the straight line.
+        let mut here = from;
+        let mut clear_from = None;
+        for (i, next) in path.iter().enumerate() {
+            if field[&here] == here.distance(target) {
+                clear_from = Some(i);
+                break;
+            }
+            here = *next;
+        }
+        // `path[i - 1]` is the first hex from which the way is clear.
+        let i = clear_from.expect("the path becomes clear before the target");
+        assert!(i > 1);
+        let first_clear = path[i - 1];
+        // The step into it is a detour step: a hex.
+        assert_eq!(
+            map.step_charge_nm(&field, path[i - 2], first_clear, target),
+            40
+        );
+        // From there the rest is the straight line.
+        assert_eq!(
+            map.sea_charged_nm_in(&field, first_clear, target),
+            Some(first_clear.air_distance_nm(target))
+        );
     }
 }

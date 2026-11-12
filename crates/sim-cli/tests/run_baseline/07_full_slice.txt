@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 869540b31baf9473  58 events
-day   2  hash ba681214d80792d6  53 events
-day   3  hash 3f9f9b9634f52607  48 events
-day   4  hash 0239c5327d60c5d7  245 events
-day   5  hash 305e9201e832c5be  141 events
-day   6  hash 94e743b27471460a  120 events
-day   7  hash c6e31baa1de53f72  252 events
-day   8  hash 7bf2cc684b341cca  123 events
-day   9  hash 0f480c0ba98b071a  126 events
-day  10  hash 111499977ea45659  77 events
-day  11  hash 1222f163e38a2dba  86 events
-day  12  hash d9c97f99e955cd86  94 events
-day  13  hash 2eae2fe37644a03d  64 events
-day  14  hash 382f7594411ab392  58 events
+day   1  hash fdb3ea0636357131  58 events
+day   2  hash e598d589db2c9454  53 events
+day   3  hash 78a167c3407ad0d9  48 events
+day   4  hash 19004970cbb4a601  230 events
+day   5  hash 385420df80f51a44  141 events
+day   6  hash d0260d9e693b029f  120 events
+day   7  hash fbd4719d79fc4db6  252 events
+day   8  hash 63a78b80c58a519b  123 events
+day   9  hash 0475064c8d78be66  126 events
+day  10  hash 96c1e7ae7090ebc5  77 events
+day  11  hash a60e0ebd90c28328  86 events
+day  12  hash 6034fe63aba49d29  94 events
+day  13  hash f19fdd416436d172  64 events
+day  14  hash 22df6451f0a883c1  58 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -78,20 +78,20 @@ ship:15 "USS Macdonough": afloat in task_force:2; damage flotation 0, fire 0; al
 ship:16 "USS Worden": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
 ship:17 "USS Dale": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 607 t of fuel, 0 t of supply
 ship:18 "USS Phelps": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 651 t of fuel, 0 t of supply
-ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
-ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3964.742269 t of fuel, 0 t of supply
-ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2582.4 t of fuel, 0 t of supply
-ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
-ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6127.44 t of fuel, 0 t of supply
-ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
-ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2213.662193 t of fuel, 0 t of supply
-ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1173.685431 t of fuel, 0 t of supply
-ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
-ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1033.180536 t of fuel, 0 t of supply
-ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 468 t of fuel, 0 t of supply
+ship:19 "Shokaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3972.350516 t of fuel, 0 t of supply
+ship:20 "Zuikaku": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3972.350516 t of fuel, 0 t of supply
+ship:21 "Chikuma": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2588.4525 t of fuel, 0 t of supply
+ship:22 "Hiei": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6138.834 t of fuel, 0 t of supply
+ship:23 "Kirishima": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 6138.834 t of fuel, 0 t of supply
+ship:24 "Kumano": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2219.081195 t of fuel, 0 t of supply
+ship:25 "Suzuya": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2219.081195 t of fuel, 0 t of supply
+ship:26 "Nagara": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1178.540626 t of fuel, 0 t of supply
+ship:27 "Akigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:28 "Kazagumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
+ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1035.30788 t of fuel, 0 t of supply
+ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
 ship:33 "Ryujo": SUNK; damage flotation 100, fire 17.830188; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
 ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
@@ -111,7 +111,7 @@ ship:48 "Placeholder cruiser D1": afloat in task_force:11; damage flotation 0, f
 ship:49 "Placeholder cruiser D2": afloat in task_force:11; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
 ship:50 "Placeholder cruiser E1": afloat in task_force:12; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
 ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
-base:1 "Henderson Field" (Allied) at (2,-4): 4300.955 t of supply in stock, 192 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 4300.955 t of supply in stock, 195.575 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 8910.52 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 600 t of fuel in stock
 Allied: no contacts

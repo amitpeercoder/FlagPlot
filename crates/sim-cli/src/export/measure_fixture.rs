@@ -7,8 +7,9 @@
 //! is the same. To change the cases, run with `FLAGPILOT_UPDATE_GOLDEN=1`.
 //!
 //! * Air distance is `Hex::air_distance_nm` (decision 0040).
-//! * A sea route is `Map::sea_path` (decision 0017); its miles are the number
-//!   of hexes entered times `HEX_NM`, as `measure` counts them (decision 0049).
+//! * A sea route is `Map::sea_path` (decision 0017); its miles are what the
+//!   steps are charged (`Map::step_charge_nm`, decision 0058), as `measure`
+//!   states them (decision 0049). The case lists each step's charge.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -73,12 +74,24 @@ fn air_cases() -> Vec<Value> {
 fn sea_case(map: &Map, from: Hex, to: Hex) -> Value {
     let path = map.sea_path(from, to);
     let steps = path.as_ref().map(Vec::len);
+    let field = map.sea_distances_to(to);
+    let charges: Option<Vec<u32>> = path.as_ref().map(|p| {
+        let mut here = from;
+        p.iter()
+            .map(|next| {
+                let charge = map.step_charge_nm(&field, here, *next, to);
+                here = *next;
+                charge
+            })
+            .collect()
+    });
     json!({
         "from": pair(from),
         "to": pair(to),
         "path": path.as_ref().map(|p| p.iter().map(|h| pair(*h)).collect::<Vec<_>>()),
         "steps": steps,
-        "nm": steps.map(|n| n as i64 * HEX_NM),
+        "charges": charges,
+        "nm": charges.as_ref().map(|c| c.iter().map(|n| i64::from(*n)).sum::<i64>()),
     })
 }
 
@@ -203,7 +216,7 @@ fn fixture_text(map: &Map, air: &[Value], sea: &[Value]) -> String {
     };
     let directions: Vec<Value> = super::map::directions().iter().map(|d| json!(d)).collect();
     format!(
-        "{{\n  \"format\": \"flagplot-measure-fixture\",\n  \"version\": 1,\n  \"note\": \"Worked out by the engine (Hex::air_distance_nm, Map::sea_path) in crates/sim-cli/src/export/measure_fixture.rs. node viewer/check.js runs the page's functions on it. Rewrite with FLAGPILOT_UPDATE_GOLDEN=1 cargo test -p sim-cli measure_fixture.\",\n  \"map\": \"data/map/south_pacific.csv\",\n  \"hex_nm\": {HEX_NM},\n  \"directions\": {},\n  \"hexes\": [\n{}\n  ],\n  \"air\": [\n{}\n  ],\n  \"sea\": [\n{}\n  ]\n}}\n",
+        "{{\n  \"format\": \"flagplot-measure-fixture\",\n  \"version\": 2,\n  \"note\": \"Worked out by the engine (Hex::air_distance_nm, Map::sea_path, Map::step_charge_nm) in crates/sim-cli/src/export/measure_fixture.rs. node viewer/check.js runs the page's functions on it. Rewrite with FLAGPILOT_UPDATE_GOLDEN=1 cargo test -p sim-cli measure_fixture.\",\n  \"map\": \"data/map/south_pacific.csv\",\n  \"hex_nm\": {HEX_NM},\n  \"directions\": {},\n  \"hexes\": [\n{}\n  ],\n  \"air\": [\n{}\n  ],\n  \"sea\": [\n{}\n  ]\n}}\n",
         Value::Array(directions),
         lines(&hexes),
         lines(air),

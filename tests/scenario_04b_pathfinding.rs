@@ -51,20 +51,47 @@
 //! So the task force goes south of the island: (1,0), (2,0), (3,0), (3,1),
 //! (3,2), (4,2), (5,2), (6,2), (7,1), (8,0).
 //!
-//! It steams 192 nm in the night pulse and 96 nm in each day pulse. It
-//! changes hex 20 nm past each centre (decision 0005).
+//! Ships are charged straight-line miles where the way is clear (decision
+//! 0058), 40 where land forces a detour. The way is clear from a hex when the
+//! sea path from it to the waypoint has as many steps as the hex distance. Here
+//! the path has 10 steps for a hex distance of 8, so from (0,0) it is not
+//! clear, and the steps left against the hex distance to (8,0) are: (0,0) 10
+//! and 8; (1,0) 9 and 7; (2,0) 8 and 6; (3,0) 7 and 5; (3,1) 6 and 5. None is
+//! clear, so the five steps from (0,0) to (3,2) are charged 40 each: 200 nm.
+//! From (3,2) the path has 5 steps and the hex distance is 5 (dq -5, dr 2): the
+//! way is clear, and the rest is charged what each step brings the force
+//! nearer to (8,0). The air distance to (8,0), 40 times the root of dq^2 and
+//! dr^2 and dq x dr added, to the nearest mile:
+//!
+//! | Centre | dq, dr | dq^2 + dr^2 + dq x dr | Miles to (8,0) | Step charged |
+//! | ------ | ------ | --------------------- | -------------- | ------------ |
+//! | (3,2)  | -5, 2  | 25 + 4 - 10 = 19      | 174            | 174 - 139 = 35 |
+//! | (4,2)  | -4, 2  | 16 + 4 - 8 = 12       | 139            | 139 - 106 = 33 |
+//! | (5,2)  | -3, 2  | 9 + 4 - 6 = 7         | 106            | 106 - 80 = 26  |
+//! | (6,2)  | -2, 2  | 4 + 4 - 4 = 4         | 80             | 80 - 40 = 40   |
+//! | (7,1)  | -1, 1  | 1                     | 40             | 40 - 0 = 40    |
+//!
+//! The path is 200 + 35 + 33 + 26 + 40 + 40 = 374 nm, which is also 200 +
+//! 174. The centres are at 40, 80, 120, 160 and 200 nm for (1,0) to (3,2),
+//! then (4,2) at 235, (5,2) at 268, (6,2) at 294, (7,1) at 334 and (8,0) at
+//! 374. The force enters each hex after half the step's charge: (1,0) at 20,
+//! (2,0) 60, (3,0) 100, (3,1) 140, (3,2) 180, (4,2) 217.5, (5,2) 251.5, (6,2)
+//! 281, (7,1) 314 and (8,0) 354.
+//!
+//! It steams 192 nm in the night pulse and 96 nm in each day pulse until it
+//! arrives.
 //!
 //! | Pulse           | Total  | Hex left, miles on | Position | Hexes entered                          |
 //! | --------------- | ------ | ------------------ | -------- | -------------------------------------- |
 //! | Day 1 night     | 192 nm | (3,1) plus 32 nm   | (3,2)    | (1,0), (2,0), (3,0), (3,1), (3,2)      |
-//! | Day 1 morning   | 288 nm | (5,2) plus 8 nm    | (5,2)    | (4,2), (5,2)                           |
-//! | Day 1 afternoon | 384 nm | (7,1) plus 24 nm   | (8,0)    | (6,2), (7,1), (8,0)                    |
-//! | Day 2 night     | 400 nm | (8,0), arrived     | (8,0)    | none                                   |
+//! | Day 1 morning   | 288 nm | (5,2) plus 20 nm of a step of 26 | (6,2) | (4,2), (5,2), (6,2)               |
+//! | Day 1 afternoon | 374 nm | (8,0), arrived     | (8,0)    | (7,1), (8,0)                           |
 //!
-//! It arrives 25 hours after the start, at 19:00 on day 2. Fuel: the cruiser
-//! burns 400 x 0.25 = 100 t (48, 24, 24 and 4 by pulse) and ends with 1900 t.
-//! The destroyer burns 400 x 0.125 = 50 t (24, 12, 12 and 2) and ends with
-//! 450 t.
+//! It arrives 374 / 16 = 23.375 hours after the start, 86 nm into the
+//! afternoon pulse of day 1: 17:22 and a half, which the clock states as 17:23.
+//! Fuel: the cruiser burns 374 x 0.25 = 93.5 t (48, 24 and 21.5 by pulse) and
+//! ends with 1906.5 t. The destroyer burns 374 x 0.125 = 46.75 t (24, 12 and
+//! 10.75) and ends with 453.25 t. Nothing happens on day 2.
 //!
 //! The same scenario with one thing changed:
 //!
@@ -73,8 +100,8 @@
 //! | The wall runs the whole height, r = -3 to 3 | The order is rejected: (8,0) cannot be reached. The task force stays idle at (0,0). |
 //! | The waypoint is (4,0), which is land     | The order is rejected: (4,0) cannot be reached. |
 //! | The waypoint is (20,0), off the map      | The order is rejected: the waypoint is off the map. |
-//! | No wall                                  | 8 steps along r = 0: (1,0) to (8,0). 320 nm, arriving at hour 20. This is the path the rule gave before pathfinding. |
-//! | Waypoints (3,-2) then (8,0)              | North of the island: (1,0), (2,-1), (3,-2), then (4,-2), (5,-2), (6,-2), (7,-2), (8,-2), (8,-1), (8,0). 3 steps and then 7: 400 nm, arriving at hour 25. |
+//! | No wall                                  | 8 steps along r = 0: (1,0) to (8,0). Clear, along an axis: every step 40, 320 nm, arriving at hour 20. This is the path the rule gave before pathfinding. |
+//! | Waypoints (3,-2) then (8,0)              | North of the island: (1,0), (2,-1), (3,-2), then (4,-2), (5,-2), (6,-2), (7,-2), (8,-2), (8,-1), (8,0). 3 steps and then 7, each leg clear: 106 + 250 = 356 nm, arriving at hour 22.25 (16:15 on day 1). The charges are 26, 40, 40 for the first leg and 38, 38, 35, 33, 26, 40, 40 for the second (see below). |
 //!
 //! For the last row, the first leg: (3,-2) is 3 steps from (0,0). (+1,0)
 //! leads to (1,0), which is 2 away, so it is taken. From (1,0), (+1,0) leads
@@ -87,6 +114,18 @@
 //! From (8,-2) the first five directions lead to hexes 2 or 3 away, and
 //! (0,+1) leads to (8,-1), 1 away. From (8,-1), again only (0,+1) helps, to
 //! (8,0).
+//!
+//! The charges, both legs clear. First leg, to (3,-2): air distances from
+//! (0,0) dq -3, dr 2 (9 + 4 - 6 = 7): 106; from (1,0) dq -2, dr 2 (4): 80;
+//! from (2,-1) 40; 0. Steps 106 - 80 = 26, 80 - 40 = 40, 40: 106 in all.
+//! Second leg, to (8,0): from (3,-2) dq -5, dr -2 (25 + 4 + 10 = 39): 250;
+//! from (4,-2) (16 + 4 + 8 = 28): 212; (5,-2) (9 + 4 + 6 = 19): 174; (6,-2)
+//! (4 + 4 + 4 = 12): 139; (7,-2) (1 + 4 + 2 = 7): 106; (8,-2) 80; (8,-1) 40;
+//! (8,0) 0. Steps 38, 38, 35, 33, 26, 40, 40: 250 in all. The route is 106 +
+//! 250 = 356 nm: 192 in the night (to (5,-2), 10 nm past its centre at 182
+//! nm), 96 in the morning (to (8,-2), 12 nm past its centre at 276) and 68 in
+//! the afternoon: arriving 356 / 16 = 22.25 hours after the start. The
+//! cruiser burns 89 t and the destroyer 44.5 t.
 //!
 //! ## Part 2: the projection
 //!
@@ -167,9 +206,17 @@
 //!
 //! | From, to                        | Straight line, from the positions | By sea             | Over  |
 //! | ------------------------------- | --------------------------------- | ------------------ | ----- |
-//! | Rabaul to Lunga Point           | 461.5 east, 311.0 south: 556.5 nm | 16 hexes, 640 nm   | 15 %  |
-//! | Espiritu Santo to Lunga Point   | 418.2 west, 368.7 north: 557.5 nm | 16 hexes, 640 nm   | 15 %  |
-//! | Noumea to Espiritu Santo        | 43.1 east, 402.4 north: 404.7 nm  | 13 hexes, 520 nm   | 28 %  |
+//! | Rabaul to Lunga Point           | 461.5 east, 311.0 south: 556.5 nm | 16 hexes, 556 nm   | 0 %   |
+//! | Espiritu Santo to Lunga Point   | 418.2 west, 368.7 north: 557.5 nm | 16 hexes, 629 nm   | 13 %  |
+//! | Noumea to Espiritu Santo        | 43.1 east, 402.4 north: 404.7 nm  | 13 hexes, 456 nm   | 13 %  |
+//!
+//! The miles by sea are what a ship is charged (decision 0058). Rabaul to
+//! Lunga Point is clear (16 steps, hex distance 16), so it is the air distance,
+//! 556. Espiritu Santo to Lunga Point is 16 steps for a hex distance of 15: a
+//! detour, and see the transit below. Noumea to Espiritu Santo is 13 steps for
+//! a hex distance of 12 (dq 7, dr -12): the first step is charged 40 and the
+//! way is clear from the second hex, (1,18), so the rest is the air distance
+//! from there: dq 6, dr -12, 36 + 144 - 72 = 108, 416, and 40 + 416 = 456.
 //!
 //! ### The transit
 //!
@@ -188,17 +235,28 @@
 //! Indispensable Strait, and enters Lunga Point's hex from Tulagi's, which
 //! is the only way in from the east. The straight line is 15 hexes.
 //!
+//! The path is 16 steps and the hex distance is 15, so from (7,6) the way is
+//! not clear, and neither from any centre until (4,-5): from (4,-4) there are
+//! 3 steps left and the hex distance to (2,-4) is 2. The first fourteen steps
+//! are charged 40: 560 nm. From (4,-5) there are 2 steps and the hex distance
+//! is 2 (dq -2, dr 1): the way is clear. Its air distance to (2,-4) is 40 x
+//! root 3 = 69; from (3,-5) (dq -1, dr 1) it is 40. So the step to (3,-5) is
+//! charged 69 - 40 = 29, and the last, to (2,-4), 40. The transit is 560, 29
+//! and 40: 629 nm. The centres are at 40, 80, ..., 560 for (7,5) to (4,-5), then
+//! (3,-5) at 589 and (2,-4) at 629.
+//!
 //! | Pulse           | Total  | Hex left, miles on | Position |
 //! | --------------- | ------ | ------------------ | -------- |
 //! | Day 1 night     | 192 nm | (7,2) plus 32 nm   | (7,1)    |
 //! | Day 1 morning   | 288 nm | (7,-1) plus 8 nm   | (7,-1)   |
 //! | Day 1 afternoon | 384 nm | (7,-3) plus 24 nm  | (7,-4)   |
-//! | Day 2 night     | 576 nm | (4,-5) plus 16 nm  | (4,-5)   |
-//! | Day 2 morning   | 640 nm | (2,-4), arrived    | (2,-4)   |
+//! | Day 2 night     | 576 nm | (4,-5) plus 16 nm of a step of 29 | (3,-5) |
+//! | Day 2 morning   | 629 nm | (2,-4), arrived    | (2,-4)   |
 //!
-//! 640 nm at 16 kn is 40 hours: it arrives at 10:00 on day 2. The cruiser
-//! burns 640 x 0.25 = 160 t and ends with 1840 t. The destroyer burns 640 x
-//! 0.125 = 80 t and ends with 420 t.
+//! 629 nm at 16 kn is 39.3125 hours: it arrives at 09:19 on day 2 (09:18 and
+//! three quarters of a minute). The cruiser burns 629 x 0.25 = 157.25 t and
+//! ends with 1842.75 t. The destroyer burns 629 x 0.125 = 78.625 t and ends
+//! with 421.375 t.
 //!
 //! # Properties
 //!
@@ -475,16 +533,19 @@ fn the_task_force_goes_round_the_island_as_calculated() {
             .from_index(day1.first_event)
             .to_vec(),
     );
-    // After the afternoon pulse: left (7,1) with 24 nm on, in (8,0).
-    assert_leg(&scenario.world, hex(7, 1), Some(hex(8, 0)), 24, hex(8, 0));
+    // After the afternoon pulse: arrived at (8,0), no leg, 374 nm steamed.
+    assert_leg(&scenario.world, hex(8, 0), None, 0, hex(8, 0));
     assert_eq!(
         scenario.world.umpire().task_forces[&TASK_FORCE].status,
-        TaskForceStatus::Underway
+        TaskForceStatus::Arrived
     );
-    assert_eq!(scenario.world.umpire().ships[&CRUISER].fuel_t, nm(1900 + 4));
+    assert_eq!(
+        scenario.world.umpire().ships[&CRUISER].fuel_t,
+        Fixed::from_ratio(3813, 2)
+    );
     assert_eq!(
         scenario.world.umpire().ships[&DESTROYER].fuel_t,
-        nm(450 + 2)
+        Fixed::from_ratio(1813, 4)
     );
 
     let day2 = scenario.next_day().unwrap().unwrap();
@@ -495,14 +556,21 @@ fn the_task_force_goes_round_the_island_as_calculated() {
             .from_index(day2.first_event)
             .to_vec(),
     );
-    // After the night pulse of day 2: arrived at (8,0), no leg.
+    // Day 2 has nothing to do: arrived at (8,0), no leg.
     assert_leg(&scenario.world, hex(8, 0), None, 0, hex(8, 0));
     assert_eq!(
         scenario.world.umpire().task_forces[&TASK_FORCE].status,
         TaskForceStatus::Arrived
     );
-    assert_eq!(scenario.world.umpire().ships[&CRUISER].fuel_t, nm(1900));
-    assert_eq!(scenario.world.umpire().ships[&DESTROYER].fuel_t, nm(450));
+    assert_eq!(
+        scenario.world.umpire().ships[&CRUISER].fuel_t,
+        Fixed::from_ratio(3813, 2)
+    );
+    assert_eq!(
+        scenario.world.umpire().ships[&DESTROYER].fuel_t,
+        Fixed::from_ratio(1813, 4)
+    );
+    assert!(days[1].is_empty());
     assert!(scenario.next_day().unwrap().is_none());
 
     let run = Run { scenario, days };
@@ -544,21 +612,20 @@ fn the_task_force_goes_round_the_island_as_calculated() {
                 Pulse::Morning,
                 nm(96),
                 hex(3, 2),
-                hex(5, 2),
-                vec![hex(4, 2), hex(5, 2)]
+                hex(6, 2),
+                vec![hex(4, 2), hex(5, 2), hex(6, 2)]
             ),
             (
                 1,
                 Pulse::Afternoon,
-                nm(96),
-                hex(5, 2),
+                nm(86),
+                hex(6, 2),
                 hex(8, 0),
-                vec![hex(6, 2), hex(7, 1), hex(8, 0)]
+                vec![hex(7, 1), hex(8, 0)]
             ),
-            (2, Pulse::Night, nm(16), hex(8, 0), hex(8, 0), vec![]),
         ]
     );
-    assert_eq!(total_nm(&run), nm(400));
+    assert_eq!(total_nm(&run), nm(374));
 
     // Fuel by pulse.
     assert_eq!(
@@ -566,8 +633,7 @@ fn the_task_force_goes_round_the_island_as_calculated() {
         vec![
             (1, Pulse::Night, nm(48)),
             (1, Pulse::Morning, nm(24)),
-            (1, Pulse::Afternoon, nm(24)),
-            (2, Pulse::Night, nm(4)),
+            (1, Pulse::Afternoon, Fixed::from_ratio(43, 2)),
         ]
     );
     assert_eq!(
@@ -575,23 +641,23 @@ fn the_task_force_goes_round_the_island_as_calculated() {
         vec![
             (1, Pulse::Night, nm(24)),
             (1, Pulse::Morning, nm(12)),
-            (1, Pulse::Afternoon, nm(12)),
-            (2, Pulse::Night, nm(2)),
+            (1, Pulse::Afternoon, Fixed::from_ratio(43, 4)),
         ]
     );
 
-    // Arrival 25 hours after the start: 19:00 on day 2.
+    // Arrival 374 / 16 = 23.375 hours after the start: 17:22 and a half,
+    // which the clock states as 17:23 on day 1.
     let arrived = arrivals(&run);
-    assert_eq!(arrived, vec![(hex(8, 0), nm(25))]);
+    assert_eq!(arrived, vec![(hex(8, 0), Fixed::from_ratio(187, 8))]);
     assert_eq!(
         ClockTime::from_elapsed(arrived[0].1).to_string(),
-        "D2 19:00"
+        "D1 17:23"
     );
     let arrival_event = run
         .events()
         .find(|event| matches!(event.kind, EventKind::TaskForceArrived { .. }))
         .expect("an arrival");
-    assert_eq!(arrival_event.pulse, Some(Pulse::Night));
+    assert_eq!(arrival_event.pulse, Some(Pulse::Afternoon));
 }
 
 // ---------------------------------------------------------------------
@@ -674,8 +740,9 @@ fn waypoints_to_the_north_take_the_north_route() {
             hex(8, 0),
         ]
     );
-    assert_eq!(total_nm(&run), nm(400));
-    assert_eq!(arrivals(&run), vec![(hex(8, 0), nm(25))]);
+    // 106 + 250 = 356 nm; 22.25 hours (356 / 16).
+    assert_eq!(total_nm(&run), nm(356));
+    assert_eq!(arrivals(&run), vec![(hex(8, 0), Fixed::from_ratio(89, 4))]);
     assert_leg(&run.scenario.world, hex(8, 0), None, 0, hex(8, 0));
 }
 
@@ -1154,8 +1221,15 @@ fn the_task_force_steams_from_santo_to_lunga_as_in_part_3() {
         scenario.world.umpire().task_forces[&TASK_FORCE].status,
         TaskForceStatus::Arrived
     );
-    assert_eq!(scenario.world.umpire().ships[&CRUISER].fuel_t, nm(1840));
-    assert_eq!(scenario.world.umpire().ships[&DESTROYER].fuel_t, nm(420));
+    // 629 nm: 157.25 t and 78.625 t.
+    assert_eq!(
+        scenario.world.umpire().ships[&CRUISER].fuel_t,
+        Fixed::from_ratio(7371, 4)
+    );
+    assert_eq!(
+        scenario.world.umpire().ships[&DESTROYER].fuel_t,
+        Fixed::from_ratio(3371, 8)
+    );
     assert!(scenario.next_day().unwrap().is_none());
     let run = Run { scenario, days };
     assert!(rejections(&run).is_empty());
@@ -1217,39 +1291,48 @@ fn the_task_force_steams_from_santo_to_lunga_as_in_part_3() {
         (192, hex(7, 2), 32, hex(7, 1)),
         (288, hex(7, -1), 8, hex(7, -1)),
         (384, hex(7, -3), 24, hex(7, -4)),
-        (576, hex(4, -5), 16, hex(4, -5)),
-        (640, hex(2, -4), 0, hex(2, -4)),
+        (576, hex(4, -5), 16, hex(3, -5)),
+        (629, hex(2, -4), 0, hex(2, -4)),
     ];
+    // The step charges: fourteen of 40, then 29 and 40 (decision 0058), so
+    // the centres are at 40, 80, ..., 560, 589 and 629 nm.
+    let mut centres: Vec<i64> = (0..=14).map(|k| 40 * k).collect();
+    centres.extend([589, 629]);
     let mut total = Fixed::ZERO;
     let mut with_start = vec![hex(7, 6)];
     with_start.extend(expected.iter().copied());
     for (steam, (cumulative, left, on, position)) in steams.iter().zip(table) {
         total += steam.2;
         assert_eq!(total, nm(cumulative), "{:?}", steam.1);
-        // The hex left is the one the whole 40 nm steps have reached.
-        let whole = (cumulative / 40) as usize;
+        // The hex left is the last centre the force has passed.
+        let whole = centres.iter().rposition(|c| *c <= cumulative).unwrap();
         assert_eq!(with_start[whole], left, "{:?}", steam.1);
-        assert_eq!(cumulative % 40, on, "{:?}", steam.1);
+        assert_eq!(cumulative - centres[whole], on, "{:?}", steam.1);
         assert_eq!(steam.4, position, "{:?}", steam.1);
     }
-    assert_eq!(total_nm(&run), nm(640));
+    assert_eq!(total_nm(&run), nm(629));
 
-    // Arrival 40 hours in: the end of the morning pulse of day 2.
+    // Arrival 629 / 16 = 39.3125 hours in: 53 nm into the morning pulse of
+    // day 2, 09:18 and three quarters of a minute, which the clock states as
+    // 09:19.
     let arrived = arrivals(&run);
-    assert_eq!(arrived, vec![(hex(2, -4), nm(40))]);
-    assert_eq!(ClockTime::from_elapsed(nm(40)).to_string(), "D2 10:00");
+    assert_eq!(arrived, vec![(hex(2, -4), Fixed::from_ratio(629, 16))]);
+    assert_eq!(
+        ClockTime::from_elapsed(Fixed::from_ratio(629, 16)).to_string(),
+        "D2 09:19"
+    );
     let arrival_event = run
         .events()
         .find(|event| matches!(event.kind, EventKind::TaskForceArrived { .. }))
         .expect("an arrival");
     assert_eq!(arrival_event.pulse, Some(Pulse::Morning));
 
-    // Fuel: 640 x 0.25 = 160 t and 640 x 0.125 = 80 t.
+    // Fuel: 629 x 0.25 = 157.25 t and 629 x 0.125 = 78.625 t.
     let burned = |ship| {
         burns(&run, ship)
             .into_iter()
             .fold(Fixed::ZERO, |sum, b| sum + b.2)
     };
-    assert_eq!(burned(CRUISER), nm(160));
-    assert_eq!(burned(DESTROYER), nm(80));
+    assert_eq!(burned(CRUISER), Fixed::from_ratio(629, 4));
+    assert_eq!(burned(DESTROYER), Fixed::from_ratio(629, 8));
 }

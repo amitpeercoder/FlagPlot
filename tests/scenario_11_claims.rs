@@ -769,15 +769,23 @@ fn the_log_without_the_claims_is_the_log_from_before_decision_0056() {
     // the rest renumbered: the fights, hits, losses and movements did not
     // change, and every change of state records an event, so neither did
     // any ship, air group or base.
+    //
+    // Eastern Solomons (05) and the full slice (07) are not in the list. Their
+    // fixtures recorded the game before the claims and also before decision
+    // 0058, which charges ships straight-line miles and so moved their ships
+    // (the carrier forces steam off the grid's axes): the movement events and
+    // the pulse in which a force arrives are no longer the ones in those
+    // files, and the count of events differs. The two fixture files are
+    // removed. That the fights are the same at every setting of the chances
+    // still holds for them, and is checked by
+    // `the_fight_is_the_same_at_every_setting_of_the_chances`.
     let mut claims_added = 0;
     for name in [
-        "05_eastern_solomons",
         "05b_strike",
         "05c_air_combat",
         "05d_carrier_duel",
         "06_rabaul_guadalcanal",
         "06a_base_raid",
-        "07_full_slice",
     ] {
         let before_path = PathBuf::from(ROOT)
             .join("tests/claims_before")

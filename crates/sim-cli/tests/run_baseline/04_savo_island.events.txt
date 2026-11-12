@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d1cc32ff35c02084  290 events
+day   1  hash 7e3ae6475283476f  290 events
 
 #1 D0 -         Allied report: 8 ships, cruiser, at (-1,-9), held at the start: new contact:1
 #2 D0 -         Allied contact:1 aged to 1 pulses  <- #1
@@ -12,16 +12,16 @@ day   1  hash d1cc32ff35c02084  290 events
 #6 D1 -         order:3 accepted for task_force:1  <- order:3
 #7 D1 -         order:4 accepted for task_force:1  <- order:4
 #8 D1 -         order:5 accepted for task_force:1  <- order:5
-#9 D1 night     task_force:1 steamed 180 nm at 24 kn from (-1,-7) to (2,-5)  <- order:3, order:4
-#10 D1 night     ship:1 burned 167.22353 t, 2361.77647 t remaining  <- #9
-#11 D1 night     ship:2 burned 134.88968 t, 1905.11032 t remaining  <- #9
-#12 D1 night     ship:3 burned 124.410536 t, 1733.589464 t remaining  <- #9
-#13 D1 night     ship:4 burned 134.88968 t, 1905.11032 t remaining  <- #9
-#14 D1 night     ship:5 burned 124.410536 t, 1733.589464 t remaining  <- #9
-#15 D1 night     ship:6 burned 95.745224 t, 809.254776 t remaining  <- #9
-#16 D1 night     ship:7 burned 144.150809 t, 757.849191 t remaining  <- #9
-#17 D1 night     ship:8 burned 60.685662 t, 352.314338 t remaining  <- #9
-#18 D1 night     task_force:1 and task_force:2 met at (2,-5) at D1 01:30: engagement begun  <- #9, order:5, order:1
+#9 D1 night     task_force:1 steamed 188 nm at 25 kn from (-1,-8) to (2,-5)  <- order:3, order:4
+#10 D1 night     ship:1 burned 189.513621 t, 2339.486379 t remaining  <- #9
+#11 D1 night     ship:2 burned 152.869825 t, 1887.130175 t remaining  <- #9
+#12 D1 night     ship:3 burned 140.993861 t, 1717.006139 t remaining  <- #9
+#13 D1 night     ship:4 burned 152.869825 t, 1887.130175 t remaining  <- #9
+#14 D1 night     ship:5 burned 140.993861 t, 1717.006139 t remaining  <- #9
+#15 D1 night     ship:6 burned 108.507601 t, 796.492399 t remaining  <- #9
+#16 D1 night     ship:7 burned 163.365416 t, 738.634584 t remaining  <- #9
+#17 D1 night     ship:8 burned 68.774766 t, 344.225234 t remaining  <- #9
+#18 D1 night     task_force:1 and task_force:2 met at (2,-5) at D1 01:31: engagement begun  <- #9, order:5, order:1
 #19 D1 night     round 1: task_force:1 looked for task_force:2, chance 0.5: sighted  <- #18
 #20 D1 night     round 1: task_force:2 looked for task_force:1, chance 0.35: not sighted  <- #18
 #21 D1 night     round 1: task_force:2 was surprised by task_force:1  <- #19
@@ -80,7 +80,7 @@ day   1  hash d1cc32ff35c02084  290 events
 #74 D1 night     Japanese claims 2 enemy ships sunk at (2,-5)  <- #72
 #75 D1 night     Allied report: 8 ships, cruiser, at (2,-5): new contact:2  <- #72
 #76 D1 night     task_force:3 heard the fight of task_force:1 and task_force:2, chance 0.5: not alarmed  <- #72
-#77 D1 night     task_force:1 and task_force:3 met at (2,-5) at D1 01:30: engagement begun  <- #9, order:5, order:2
+#77 D1 night     task_force:1 and task_force:3 met at (2,-5) at D1 01:31: engagement begun  <- #9, order:5, order:2
 #78 D1 night     round 1: task_force:1 looked for task_force:3, chance 0.5: not sighted  <- #77
 #79 D1 night     round 1: task_force:3 looked for task_force:1, chance 0.35: not sighted  <- #77
 #80 D1 night     round 2: task_force:1 looked for task_force:3, chance 0.5: not sighted  <- #77
@@ -204,14 +204,14 @@ day   1  hash d1cc32ff35c02084  290 events
 #198 D1 night     order:6 accepted for task_force:4  <- order:6, #197  [issued by the local commander]
 #199 D1 night     task_force:4 turned back toward (2,-6), 20 nm from (2,-5), now in (2,-6)  <- order:6
 #200 D1 night     task_force:1 left ship:3, ship:5 behind as task_force:5  <- order:5
-#201 D1 night     task_force:1 steamed 108 nm at 24 kn from (2,-5) to (2,-7)  <- order:3, order:4
-#202 D1 night     ship:6 burned 57.447134 t, 751.807642 t remaining  <- #201
-#203 D1 night     ship:7 burned 86.490484 t, 671.358707 t remaining  <- #201
-#204 D1 night     task_force:4 steamed 74.25 nm at 16.5 kn from (2,-6) to (2,-7)  <- order:6, order:4
-#205 D1 night     ship:1 burned 32.603679 t, 2329.172791 t remaining  <- #204
-#206 D1 night     ship:2 burned 26.299527 t, 1878.810793 t remaining  <- #204
-#207 D1 night     ship:4 burned 26.299527 t, 1878.810793 t remaining  <- #204
-#208 D1 night     ship:8 burned 11.831922 t, 340.482416 t remaining  <- #204
+#201 D1 night     task_force:1 steamed 112 nm at 25 kn from (2,-5) to (1,-7)  <- order:3, order:4
+#202 D1 night     ship:6 burned 64.642826 t, 731.849573 t remaining  <- #201
+#203 D1 night     ship:7 burned 97.324076 t, 641.310508 t remaining  <- #201
+#204 D1 night     task_force:4 steamed 73.92 nm at 16.5 kn from (2,-6) to (1,-7)  <- order:6, order:4
+#205 D1 night     ship:1 burned 32.458774 t, 2307.027605 t remaining  <- #204
+#206 D1 night     ship:2 burned 26.182641 t, 1860.947534 t remaining  <- #204
+#207 D1 night     ship:4 burned 26.182641 t, 1860.947534 t remaining  <- #204
+#208 D1 night     ship:8 burned 11.779335 t, 332.445899 t remaining  <- #204
 #209 D1 night     Allied contact:1 aged to 3 pulses  <- #1
 #210 D1 morning   task_force:1 alerted by contact:1  <- #193
 #211 D1 morning   task_force:4 alerted by contact:1  <- #193
@@ -263,15 +263,15 @@ day   1  hash d1cc32ff35c02084  290 events
 #257 D1 morning   Allied claims 2 enemy ships sunk at (2,-5)  <- #255
 #258 D1 morning   Japanese report: 5 ships, battleship, at (2,-5): refreshed contact:1  <- #255
 #259 D1 morning   Japanese claims 0 enemy ships sunk at (2,-5)  <- #255
-#260 D1 morning   task_force:1 steamed 112 nm at 24 kn from (2,-7) to (-1,-7)  <- order:3, order:4
-#261 D1 morning   ship:6 burned 59.574806 t, 692.232836 t remaining  <- #260
-#262 D1 morning   ship:7 burned 89.693835 t, 581.664872 t remaining  <- #260
-#263 D1 morning   task_force:1 arrived at (-1,-7) at D1 10:40  <- #260
-#264 D1 morning   task_force:4 steamed 99 nm at 16.5 kn from (2,-7) to (1,-9)  <- order:6, order:4
-#265 D1 morning   ship:1 burned 43.471572 t, 2285.701219 t remaining  <- #264
-#266 D1 morning   ship:2 burned 35.066037 t, 1843.744756 t remaining  <- #264
-#267 D1 morning   ship:4 burned 35.066037 t, 1843.744756 t remaining  <- #264
-#268 D1 morning   ship:8 burned 15.775896 t, 324.70652 t remaining  <- #264
+#260 D1 morning   task_force:1 steamed 116 nm at 25 kn from (1,-7) to (-1,-8)  <- order:3, order:4
+#261 D1 morning   ship:6 burned 66.951498 t, 664.898075 t remaining  <- #260
+#262 D1 morning   ship:7 burned 100.799939 t, 540.510569 t remaining  <- #260
+#263 D1 morning   task_force:1 arrived at (-1,-8) at D1 10:38  <- #260
+#264 D1 morning   task_force:4 steamed 99 nm at 16.5 kn from (1,-7) to (1,-10)  <- order:6, order:4
+#265 D1 morning   ship:1 burned 43.471572 t, 2263.556033 t remaining  <- #264
+#266 D1 morning   ship:2 burned 35.066037 t, 1825.881497 t remaining  <- #264
+#267 D1 morning   ship:4 burned 35.066037 t, 1825.881497 t remaining  <- #264
+#268 D1 morning   ship:8 burned 15.775896 t, 316.670003 t remaining  <- #264
 #269 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
 #270 D1 afternoon task_force:1 stood down  <- #210
 #271 D1 afternoon task_force:4 stood down  <- #211
@@ -291,26 +291,26 @@ day   1  hash d1cc32ff35c02084  290 events
 #285 D1 afternoon Allied claims 1 enemy ship sunk at (2,-5)  <- #283
 #286 D1 afternoon Japanese report: 2 ships, carrier, at (1,-4): refreshed contact:1  <- #283
 #287 D1 afternoon Japanese claims 0 enemy ships sunk at (2,-5)  <- #283
-#288 D1 afternoon task_force:4 steamed 99 nm at 16.5 kn from (1,-9) to (1,-11)  <- order:6, order:4
-#289 D1 afternoon ship:1 burned 43.471572 t, 2242.229647 t remaining  <- #288
-#290 D1 afternoon ship:2 burned 35.066037 t, 1808.678719 t remaining  <- #288
-#291 D1 afternoon ship:4 burned 35.066037 t, 1808.678719 t remaining  <- #288
-#292 D1 afternoon ship:8 burned 15.775896 t, 308.930624 t remaining  <- #288
+#288 D1 afternoon task_force:4 steamed 99 nm at 16.5 kn from (1,-10) to (0,-12)  <- order:6, order:4
+#289 D1 afternoon ship:1 burned 43.471572 t, 2220.084461 t remaining  <- #288
+#290 D1 afternoon ship:2 burned 35.066037 t, 1790.81546 t remaining  <- #288
+#291 D1 afternoon ship:4 burned 35.066037 t, 1790.81546 t remaining  <- #288
+#292 D1 afternoon ship:8 burned 15.775896 t, 300.894107 t remaining  <- #288
 #293 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
 
-task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-7); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
+task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Northern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:4 "Eighth Fleet striking force, sent home" (Japanese): Underway at (1,-11), 12.25 nm from (1,-11) toward (1,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+task_force:4 "Eighth Fleet striking force, sent home" (Japanese): Underway at (0,-12), 28.92 nm from (1,-12) toward (0,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:5 "Eighth Fleet striking force, left behind" (Japanese): Idle at (2,-5), 20 nm from (2,-6) toward (2,-5); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
-ship:1 "Chokai": afloat in task_force:4; damage flotation 34.625544, fire 0; propulsion degraded; 840 gun rounds, torpedoes gone; 2242.229647 t of fuel, 0 t of supply
-ship:2 "Aoba": afloat in task_force:4; damage flotation 83.18751, fire 16.637502; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 576 gun rounds, torpedoes gone; 1808.678719 t of fuel, 0 t of supply
-ship:3 "Kako": SUNK; damage flotation 100, fire 51.977493; propulsion out, fire control out, main battery degraded, torpedo mounts degraded; 324 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
-ship:4 "Kinugasa": afloat in task_force:4; damage flotation 54.094206, fire 7.055766; fire control out, main battery out; 612 gun rounds, torpedoes gone; 1808.678719 t of fuel, 0 t of supply
-ship:5 "Furutaka": SUNK; damage flotation 100, fire 24.32946; propulsion out, fire control degraded, main battery out, torpedo mounts out; 648 gun rounds, torpedoes gone; 1733.589464 t of fuel, 0 t of supply
-ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39636 gun rounds, torpedoes gone; 692.232836 t of fuel, 0 t of supply
-ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59454 gun rounds, torpedoes gone; 581.664872 t of fuel, 0 t of supply
-ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39666 gun rounds, torpedoes gone; 308.930624 t of fuel, 0 t of supply
+ship:1 "Chokai": afloat in task_force:4; damage flotation 34.625544, fire 0; propulsion degraded; 840 gun rounds, torpedoes gone; 2220.084461 t of fuel, 0 t of supply
+ship:2 "Aoba": afloat in task_force:4; damage flotation 83.18751, fire 16.637502; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 576 gun rounds, torpedoes gone; 1790.81546 t of fuel, 0 t of supply
+ship:3 "Kako": SUNK; damage flotation 100, fire 51.977493; propulsion out, fire control out, main battery degraded, torpedo mounts degraded; 324 gun rounds, torpedoes gone; 1717.006139 t of fuel, 0 t of supply
+ship:4 "Kinugasa": afloat in task_force:4; damage flotation 54.094206, fire 7.055766; fire control out, main battery out; 612 gun rounds, torpedoes gone; 1790.81546 t of fuel, 0 t of supply
+ship:5 "Furutaka": SUNK; damage flotation 100, fire 24.32946; propulsion out, fire control degraded, main battery out, torpedo mounts out; 648 gun rounds, torpedoes gone; 1717.006139 t of fuel, 0 t of supply
+ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39636 gun rounds, torpedoes gone; 664.898075 t of fuel, 0 t of supply
+ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59454 gun rounds, torpedoes gone; 540.510569 t of fuel, 0 t of supply
+ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39666 gun rounds, torpedoes gone; 300.894107 t of fuel, 0 t of supply
 ship:9 "HMAS Canberra": SUNK; damage flotation 100, fire 5.378205; propulsion degraded, main battery degraded; 1040 gun rounds, torpedoes ready; 3400 t of fuel, 0 t of supply
 ship:10 "USS Chicago": afloat in task_force:2; damage flotation 35.969146, fire 9.293276; propulsion degraded, fire control out; 1233 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
 ship:11 "USS Patterson": SUNK; damage flotation 100, fire 42.038688; propulsion degraded, fire control out, main battery out; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply

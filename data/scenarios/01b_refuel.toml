@@ -32,7 +32,12 @@ name = "Espiritu Santo"
 side = "allied"
 q = 8
 r = 3
-fuel_t = 150
+# 120 t, a placeholder, chosen under decision 0058: the transit is now 394 nm
+# and the force lacks 98.5 t and 49.25 t on arriving, 147.75 t in all, so the
+# 150 t this base held before would fill both ships. 120 t is less than that,
+# so the base still cannot fill both: the cruiser, the lower-numbered, takes
+# its 98.5 t and the destroyer the 21.5 t that are left.
+fuel_t = 120
 
 [[task_force]]
 id = 1

@@ -1,7 +1,7 @@
 # Scenario 4: Savo Island, the night of 8 to 9 August 1942.
 #
 # Stage 4c2 of scenario 4. The Japanese column steams down the Slot, enters
-# the hex of Savo Island at 01:30 and meets the southern and then the
+# the hex of Savo Island at 01:31 and meets the southern and then the
 # northern cruiser group there. What is in the scenario and what is left out
 # is docs/decisions/0024-savo-island-scenario.md. The hand calculation is in
 # tests/scenario_04_savo_island.rs.
@@ -37,13 +37,18 @@ q = -5
 r = -13
 supply_t = 0
 
-# The Japanese column, 200 nm up the Slot at 18:00, at battle stations.
+# The Japanese column, 208 nm up the Slot at 18:00, at battle stations. Ships
+# are charged the straight-line miles of their course (decision 0058): from
+# (-1,-8) the six steps to (2,-5) are charged 34, 30, 38, 26, 40 and 40, 208 in
+# all, and the column enters the hex after 188 nm. Worked back so that, at 25
+# knots (inside the sources' 24 to 26), it enters at 01:31 (decision 0024, 6;
+# the start was (-1,-7) and 24 knots when a step was a flat 40 nm).
 [[task_force]]
 id = 1
 name = "Eighth Fleet striking force"
 side = "japanese"
 q = -1
-r = -7
+r = -8
 mission = "surface_combat"
 readiness = "battle"
 home_port = 1
@@ -212,7 +217,7 @@ ship_count = 8
 kind = "cruiser"
 age_pulses = 2
 
-# Japanese: into the hex of Savo Island and back up the Slot, at 24 knots.
+# Japanese: into the hex of Savo Island and back up the Slot, at 25 knots.
 # A ship that cannot keep up is sent home to Rabaul with an escort; one that
 # cannot move is left.
 [[order]]
@@ -220,14 +225,14 @@ day = 1
 side = "japanese"
 task_force = 1
 kind = "set_route"
-waypoints = [[2, -5], [-1, -7]]
+waypoints = [[2, -5], [-1, -8]]
 
 [[order]]
 day = 1
 side = "japanese"
 task_force = 1
 kind = "set_speed"
-knots = "24"
+knots = "25"
 
 [[order]]
 day = 1

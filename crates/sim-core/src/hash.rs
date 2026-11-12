@@ -107,8 +107,9 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// whenever what is hashed, or its order, changes, and the golden files are
 /// remade in the same change (decision 9 of 0055). Version 1 kept old hashes
 /// alive by writing a new field only where it was in use, behind a tag byte;
-/// version 2 writes every field of every unit, always, in one order.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v2";
+/// version 2 writes every field of every unit, always, in one order;
+/// version 3 adds a task force's `leg_nm` after its `progress_nm` (decision 0058).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v3";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -191,6 +192,7 @@ fn name_every_field(world: &World) {
             from_hex: _,
             toward_hex: _,
             progress_nm: _,
+            leg_nm: _,
             status: _,
             route_order: _,
             speed_order: _,
@@ -381,6 +383,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             None => h.u8(0),
         }
         h.i64(task_force.progress_nm.raw());
+        h.i64(task_force.leg_nm.raw());
         h.u8(task_force.status.code());
         h.optional_u32(task_force.route_order.map(|id| id.raw()));
         h.optional_u32(task_force.speed_order.map(|id| id.raw()));

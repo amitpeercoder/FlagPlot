@@ -36,27 +36,50 @@
 //!
 //! ## The approach
 //!
-//! The column starts in (-1,-7) and is ordered to (2,-5) and back, at 24
-//! knots. The shortest sea path is five hexes, 200 nm: (0,-7), (1,-7),
-//! (2,-7), (2,-6), (2,-5). The column enters (2,-5) 20 nm before its centre,
-//! after 180 nm, which at 24 knots is 7.5 hours into the night pulse: 01:30
-//! on 9 August. It meets the southern group, task force 2, and then the
+//! Ships are charged the straight-line miles a step brings them closer to
+//! their waypoint where the way is clear (decision 0058); the start was
+//! worked back with that rule (decision 0024, amended).
+//!
+//! The column starts in (-1,-8) and is ordered to (2,-5) and back, at 25
+//! knots. (-1,-8) to (2,-5) is dq 3, dr 3: 6 hexes, and the shortest sea path
+//! is 6 steps, so the way is clear. The path is (0,-8), (1,-8), (1,-7),
+//! (2,-7), (2,-6), (2,-5). (From (1,-8) the first direction in order, to
+//! (2,-8), is closed toward (2,-7) and (1,-7), so (2,-8) is not one step
+//! nearer by sea; the path goes to (1,-7).) The air distance to (2,-5) from
+//! each centre, 40 times the root of dq^2 + dr^2 + dq x dr, to the nearest
+//! mile, and the charge of the step from it:
+//!
+//! | Centre  | dq, dr | dq^2 + dr^2 + dq x dr | Miles to (2,-5) | Step charged | Entered after |
+//! | ------- | ------ | --------------------- | --------------- | ------------ | ------------- |
+//! | (-1,-8) | -3, -3 | 27                    | 208             | 208 - 174 = 34 | 17 nm       |
+//! | (0,-8)  | -2, -3 | 19                    | 174             | 174 - 144 = 30 | 34 + 15 = 49 nm |
+//! | (1,-8)  | -1, -3 | 13                    | 144             | 144 - 106 = 38 | 64 + 19 = 83 nm |
+//! | (1,-7)  | -1, -2 | 7                     | 106             | 106 - 80 = 26  | 102 + 13 = 115 nm |
+//! | (2,-7)  | 0, -2  | 4                     | 80              | 80 - 40 = 40   | 128 + 20 = 148 nm |
+//! | (2,-6)  | 0, -1  | 1                     | 40              | 40 - 0 = 40    | 168 + 20 = 188 nm |
+//!
+//! The path is 34 + 30 + 38 + 26 + 40 + 40 = 208 nm. The column enters (2,-5)
+//! 20 nm before its centre, after 188 nm, which at 25 knots is 188 / 25 =
+//! 7.52 hours into the night pulse: 01:31 on 9 August (7 h 31.2 min after
+//! 18:00). At midnight, 6 hours in, it has steamed 150 nm and is 188 - 150 =
+//! 38 nm short of the hex, where the source has it 37 miles from Cape
+//! Esperance. It meets the southern group, task force 2, and then the
 //! northern group, task force 3, at that same moment, in that order.
 //!
-//! Every Japanese ship cruises at 14 knots. At 24 knots the burn per mile is
-//! multiplied by (24 / 14) squared: 24 / 14 = 1.714285, squared 2.938773.
+//! Every Japanese ship cruises at 14 knots. At 25 knots the burn per mile is
+//! multiplied by (25 / 14) squared: 25 / 14 = 1.785714, squared 3.188774.
 //! Fuel for a distance is distance x capacity / endurance, times that.
 //!
-//! | Ship       | Capacity | Endurance | 180 nm at cruise rate | Burned by 01:30 | Left      |
+//! | Ship       | Capacity | Endurance | 188 nm at cruise rate | Burned by 01:31 | Left      |
 //! | ---------- | -------- | --------- | --------------------- | --------------- | --------- |
-//! | 1 Chokai   | 2529     | 8000      | 56.9025               | 167.22353       | 2361.77647  |
-//! | 2 Aoba     | 2040     | 8000      | 45.9                  | 134.88968       | 1905.11032  |
-//! | 3 Kako     | 1858     | 7900      | 42.334177             | 124.410536      | 1733.589464 |
-//! | 4 Kinugasa | 2040     | 8000      | 45.9                  | 134.88968       | 1905.11032  |
-//! | 5 Furutaka | 1858     | 7900      | 42.334177             | 124.410536      | 1733.589464 |
-//! | 6 Tenryu   | 905      | 5000      | 32.58                 | 95.745224       | 809.254776  |
-//! | 7 Yubari   | 902      | 3310      | 49.051359             | 144.150809      | 757.849191  |
-//! | 8 Yunagi   | 413      | 3600      | 20.65                 | 60.685662       | 352.314338  |
+//! | 1 Chokai   | 2529     | 8000      | 59.4315               | 189.513621      | 2339.486379 |
+//! | 2 Aoba     | 2040     | 8000      | 47.94                 | 152.869825      | 1887.130175 |
+//! | 3 Kako     | 1858     | 7900      | 44.215696             | 140.993861      | 1717.006139 |
+//! | 4 Kinugasa | 2040     | 8000      | 47.94                 | 152.869825      | 1887.130175 |
+//! | 5 Furutaka | 1858     | 7900      | 44.215696             | 140.993861      | 1717.006139 |
+//! | 6 Tenryu   | 905      | 5000      | 34.028                | 108.507601      | 796.492399  |
+//! | 7 Yubari   | 902      | 3310      | 51.231419             | 163.365416      | 738.634584  |
+//! | 8 Yunagi   | 413      | 3600      | 21.567777             | 68.774766       | 344.225234  |
 //!
 //! ## Who sees whom
 //!
@@ -138,35 +161,41 @@
 //! propulsion, the whole column retires for Rabaul instead, at the speed of
 //! its slowest ship. (Added after the code was run: the first version of
 //! this section left retiring out. It happens in about one run in six.) In
-//! every other run the column itself, if it still has a ship, makes 24
-//! knots after its fights. It had 108 nm of the night left: 20 nm on
-//! to the centre of (2,-5), then 88 nm back, past the centres of (2,-6) and
-//! (2,-7), to end the night 8 nm beyond (2,-7), in hex (2,-7). It has 112 nm
-//! to go and arrives at (-1,-7) 4.666666 hours into the morning pulse,
-//! 16.666666 hours after the start.
+//! every other run the column itself, if it still has a ship, makes 25
+//! knots after its fights. The night pulse is 12 hours, 300 nm at 25 knots,
+//! so it had 300 - 188 = 112 nm of the night left: 20 nm on to the centre of
+//! (2,-5), then 92 nm back along the path (2,-6), (2,-7), (1,-7), (1,-8),
+//! (0,-8), (-1,-8). With (-1,-8) as the waypoint the steps of the way back
+//! are charged 34, 30, 38, 26, 40 and 40 (air distances 208, 174, 144, 106,
+//! 80, 40, 0), the same as the way in. The column passes the centre of (2,-6)
+//! at 34 nm and of (2,-7) at 64 nm, and enters (1,-7) at 64 + 19 = 83 nm, so
+//! it ends the night 92 - 64 = 28 nm along the 38 nm step from (2,-7) to
+//! (1,-7), in hex (1,-7). It has 208 - 92 = 116 nm to go and arrives at
+//! (-1,-8) 116 / 25 = 4.64 hours into the morning pulse, 12 + 4.64 = 16.64
+//! hours after the start (D1 10:38).
 //!
-//! A ship that stays with the column to the end burns, at 24 knots:
+//! A ship that stays with the column to the end burns, at 25 knots:
 //!
-//! | Ship       | 108 nm    | 112 nm     | Left at the end |
+//! | Ship       | 112 nm    | 116 nm     | Left at the end |
 //! | ---------- | --------- | ---------- | --------------- |
-//! | 1 Chokai   | 100.334118 | 104.050196 | 2157.392156    |
-//! | 2 Aoba     | 80.933808  | 83.931356  | 1740.245156    |
-//! | 3 Kako     | 74.646321  | 77.410998  | 1581.532145    |
-//! | 4 Kinugasa | 80.933808  | 83.931356  | 1740.245156    |
-//! | 5 Furutaka | 74.646321  | 77.410998  | 1581.532145    |
-//! | 6 Tenryu   | 57.447134  | 59.574806  | 692.232836     |
-//! | 7 Yubari   | 86.490484  | 89.693835  | 581.664872     |
-//! | 8 Yunagi   | 36.411397  | 37.759965  | 278.142976     |
+//! | 1 Chokai   | 112.901732 | 116.933936 | 2109.650711    |
+//! | 2 Aoba     | 91.071385  | 94.323934  | 1701.734856    |
+//! | 3 Kako     | 83.99634   | 86.996211  | 1546.013588    |
+//! | 4 Kinugasa | 91.071385  | 94.323934  | 1701.734856    |
+//! | 5 Furutaka | 83.99634   | 86.996211  | 1546.013588    |
+//! | 6 Tenryu   | 64.642826  | 66.951498  | 664.898075     |
+//! | 7 Yubari   | 97.324076  | 100.799939 | 540.510569     |
+//! | 8 Yunagi   | 40.972199  | 42.435493  | 260.817542     |
 //!
 //! This holds in every run in which the column has a ship left after its
-//! fights at 01:30 and does not retire: a force that breaks off keeps to
+//! fights at 01:31 and does not retire: a force that breaks off keeps to
 //! its route. A column that retires after the southern fight turns back at
 //! the edge of the hex and does not meet the northern group. A force
 //! sent home is under way and leaving, so it does not fight again. Ships
 //! left behind form a Japanese force that stays in (2,-5). It and the
 //! Allied groups do not move, so they fight again at the start of the
 //! morning and afternoon pulses while both have ships afloat. The column
-//! itself fights nobody after 01:30.
+//! itself fights nobody after 01:31.
 //!
 //! # Properties
 //!
@@ -202,8 +231,8 @@ use sim_data::Scenario;
 
 const SEEDS: u64 = 1000;
 const SAVO: Hex = Hex::new(2, -5);
-const START: Hex = Hex::new(-1, -7);
-const HOME: Hex = Hex::new(-1, -7);
+const START: Hex = Hex::new(-1, -8);
+const HOME: Hex = Hex::new(-1, -8);
 const JAPANESE_SHIPS: [u32; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
 const SOUTHERN_SHIPS: [u32; 4] = [9, 10, 11, 12];
 
@@ -656,20 +685,20 @@ impl Run {
 // The approach.
 // ---------------------------------------------------------------------
 
-/// Burned by 01:30 and left, from the table in the hand calculation.
+/// Burned by 01:31 and left, from the table in the hand calculation.
 const APPROACH: [(u32, &str, &str); 8] = [
-    (1, "167.22353", "2361.77647"),
-    (2, "134.88968", "1905.11032"),
-    (3, "124.410536", "1733.589464"),
-    (4, "134.88968", "1905.11032"),
-    (5, "124.410536", "1733.589464"),
-    (6, "95.745224", "809.254776"),
-    (7, "144.150809", "757.849191"),
-    (8, "60.685662", "352.314338"),
+    (1, "189.513621", "2339.486379"),
+    (2, "152.869825", "1887.130175"),
+    (3, "140.993861", "1717.006139"),
+    (4, "152.869825", "1887.130175"),
+    (5, "140.993861", "1717.006139"),
+    (6, "108.507601", "796.492399"),
+    (7, "163.365416", "738.634584"),
+    (8, "68.774766", "344.225234"),
 ];
 
 #[test]
-fn the_column_steams_180_nm_at_24_kn_into_2_m5() {
+fn the_column_steams_188_nm_at_25_kn_into_2_m5() {
     for run in batch() {
         let seed = run.seed;
         let steps = run.steps(1);
@@ -677,12 +706,13 @@ fn the_column_steams_180_nm_at_24_kn_into_2_m5() {
         assert_eq!(first.pulse, Pulse::Night, "seed {seed}");
         assert_eq!(first.from, START, "seed {seed}");
         assert_eq!(first.to, SAVO, "seed {seed}");
-        assert_eq!(first.distance, fx(180), "seed {seed}");
-        assert_eq!(first.speed, fx(24), "seed {seed}");
+        assert_eq!(first.distance, fx(188), "seed {seed}");
+        assert_eq!(first.speed, fx(25), "seed {seed}");
         assert_eq!(
             first.hexes,
             vec![
-                Hex::new(0, -7),
+                Hex::new(0, -8),
+                Hex::new(1, -8),
                 Hex::new(1, -7),
                 Hex::new(2, -7),
                 Hex::new(2, -6),
@@ -717,14 +747,14 @@ fn the_column_steams_180_nm_at_24_kn_into_2_m5() {
 }
 
 #[test]
-fn the_first_fight_is_with_task_force_2_at_hour_7_5_and_nobody_is_alert() {
+fn the_first_fight_is_with_task_force_2_at_hour_7_52_and_nobody_is_alert() {
     for run in batch() {
         let seed = run.seed;
         let fights = run.fights();
         let first = &fights[0];
         assert_eq!((first.a, first.b), (1, 2), "seed {seed}");
         assert_eq!(first.hex, SAVO, "seed {seed}");
-        assert_eq!(first.elapsed, millionths(7_500_000), "seed {seed}");
+        assert_eq!(first.elapsed, millionths(7_520_000), "seed {seed}");
         assert!(first.night(), "seed {seed}");
         // The Allied contact is seven hexes away: no alert before the fight.
         let alert_before = run.events.iter().any(|e| {
@@ -748,7 +778,7 @@ fn the_first_fight_is_with_task_force_2_at_hour_7_5_and_nobody_is_alert() {
         assert_eq!(round_1[0].chance, d("0.35"), "seed {seed}");
         // The northern fight, if any, is at the same moment and after.
         for fight in run.night_fights().iter().filter(|f| (f.a, f.b) == (1, 3)) {
-            assert_eq!(fight.elapsed, millionths(7_500_000), "seed {seed}");
+            assert_eq!(fight.elapsed, millionths(7_520_000), "seed {seed}");
             assert!(fight.event > first.event, "seed {seed}");
         }
     }
@@ -1057,16 +1087,16 @@ fn the_southern_free_round_matches_the_second_table() {
 // After the fights.
 // ---------------------------------------------------------------------
 
-/// Burned in 108 nm, in 112 nm, and left at the end.
+/// Burned in 112 nm, in 116 nm, and left at the end.
 const FINISH: [(u32, &str, &str, &str); 8] = [
-    (1, "100.334118", "104.050196", "2157.392156"),
-    (2, "80.933808", "83.931356", "1740.245156"),
-    (3, "74.646321", "77.410998", "1581.532145"),
-    (4, "80.933808", "83.931356", "1740.245156"),
-    (5, "74.646321", "77.410998", "1581.532145"),
-    (6, "57.447134", "59.574806", "692.232836"),
-    (7, "86.490484", "89.693835", "581.664872"),
-    (8, "36.411397", "37.759965", "278.142976"),
+    (1, "112.901732", "116.933936", "2109.650711"),
+    (2, "91.071385", "94.323934", "1701.734856"),
+    (3, "83.99634", "86.996211", "1546.013588"),
+    (4, "91.071385", "94.323934", "1701.734856"),
+    (5, "83.99634", "86.996211", "1546.013588"),
+    (6, "64.642826", "66.951498", "664.898075"),
+    (7, "97.324076", "100.799939", "540.510569"),
+    (8, "40.972199", "42.435493", "260.817542"),
 ];
 
 /// `skip_retired` leaves out the runs in which task force 1 retired.
@@ -1101,29 +1131,29 @@ fn check_column_after_the_fights() {
         let night_nm = night_after
             .iter()
             .fold(Fixed::ZERO, |sum, s| sum + s.distance);
-        assert_eq!(night_nm, fx(108), "seed {seed}: rest of the night");
+        assert_eq!(night_nm, fx(112), "seed {seed}: rest of the night");
         assert!(
-            night_after.iter().all(|s| s.speed == fx(24)),
+            night_after.iter().all(|s| s.speed == fx(25)),
             "seed {seed}: speed"
         );
         assert_eq!(
             night_after.last().map(|s| s.to),
-            Some(Hex::new(2, -7)),
+            Some(Hex::new(1, -7)),
             "seed {seed}"
         );
         let day: Vec<&Step> = steps.iter().filter(|s| s.pulse != Pulse::Night).collect();
         assert!(
-            day.iter().all(|s| s.speed == fx(24)),
+            day.iter().all(|s| s.speed == fx(25)),
             "seed {seed}: day speed"
         );
         assert_eq!(
             day.iter().fold(Fixed::ZERO, |sum, s| sum + s.distance),
-            fx(112),
+            fx(116),
             "seed {seed}: by day"
         );
         assert_eq!(
             run.arrivals(1),
-            vec![(HOME, millionths(16_666_666))],
+            vec![(HOME, millionths(16_640_000))],
             "seed {seed}"
         );
         for row in FINISH.iter().filter(|r| remaining.contains(&r.0)) {
@@ -1131,12 +1161,12 @@ fn check_column_after_the_fights() {
             assert_eq!(
                 run.burned(ship, last_fight, true),
                 d(row.1),
-                "seed {seed}: ship {ship} 108 nm"
+                "seed {seed}: ship {ship} 112 nm"
             );
             assert_eq!(
                 run.burned(ship, last_fight, false),
                 d(row.2),
-                "seed {seed}: ship {ship} 112 nm"
+                "seed {seed}: ship {ship} 116 nm"
             );
             assert_eq!(
                 run.ships[&ship].fuel,
@@ -1144,10 +1174,10 @@ fn check_column_after_the_fights() {
                 "seed {seed}: ship {ship} left"
             );
         }
-        // Task force 1 fights nobody after 01:30.
+        // Task force 1 fights nobody after 01:31.
         for fight in run.fights().iter().filter(|f| f.a == 1 || f.b == 1) {
             assert!(fight.night(), "seed {seed}");
-            assert_eq!(fight.elapsed, millionths(7_500_000), "seed {seed}");
+            assert_eq!(fight.elapsed, millionths(7_520_000), "seed {seed}");
         }
     }
     eprintln!("columns with a ship left: {checked}");
@@ -1212,7 +1242,7 @@ fn every_fight_is_in_the_hex_of_savo_island() {
 
 /// The check over the runs in which the column did not retire.
 #[test]
-fn a_column_that_did_not_retire_steams_108_then_112_nm_at_24_kn_and_arrives_at_hour_16_666666() {
+fn a_column_that_did_not_retire_steams_112_then_116_nm_at_25_kn_and_arrives_at_hour_16_64() {
     check_column_after_the_fights();
 }
 

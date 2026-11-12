@@ -64,7 +64,7 @@
 //! | Japanese ships crippled | none (ship 40 has propulsion degraded only) |
 //! | Japanese aircraft lost | shot down 78, lost with Ryujo 29, written off 17: 124 |
 //! | Allied aircraft lost | shot down 32, on the ground 4, written off 7: 43 |
-//! | Cargo landed at base 1 by Allied ships | ships 37 and 38, each 40 + 120 + 240 + 80 = 480 t: 960 t |
+//! | Cargo landed at base 1 by Allied ships | ships 37 and 38, each 62 + 120 + 240 + 58 = 480 t: 960 t (the convoy arrives a little sooner under decision 0058, so the tons fall in other pulses) |
 //! | Henderson Field at the end | 4300.955 t of supply, aircraft ready: open |
 //!
 //! | Objective | Allied | Japanese |
