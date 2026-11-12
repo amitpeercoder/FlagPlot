@@ -8,41 +8,74 @@
 //!
 //! # Hand calculation
 //!
+//! Redone by the architect on Nov 12, 2026 for decision 0057 (ships are
+//! charged straight-line miles). The tests below assert these numbers. If
+//! the code disagrees, the code or the rule is wrong: do not change a number
+//! here to make a test pass.
+//!
 //! Inputs, from the data files:
 //!
-//! - Route: (0,0) to (8,3), which is 11 hexes. At 40 nm per hex: 440 nm.
+//! - Route: (0,0) to (8,3). The path runs along q to (8,0) and then up r:
+//!   (8,1), (8,2), (8,3). That is 11 steps. No land is in the way, so every
+//!   step is charged the miles it brings the force closer to (8,3) in a
+//!   straight line (decision 0057, 1).
 //! - Both ship classes cruise at 16 kn, so the task force steams at 16 kn.
 //! - Cruiser: 2000 t lasts 8000 nm at cruise, so it burns 0.25 t per nm.
 //! - Destroyer: 500 t lasts 4000 nm at cruise, so it burns 0.125 t per nm.
 //! - A day is a 12-hour night pulse, then two 6-hour pulses. It starts at
 //!   18:00.
 //!
+//! The straight distance to (8,3), 40 times the root of dq^2 + dr^2 + dq x
+//! dr to the nearest mile, from each centre on the path, and so the charge
+//! of each step:
+//!
+//! | Centre | dq, dr | dq^2 + dr^2 + dq x dr | Miles to (8,3) | Step to it is charged | Miles steamed |
+//! | ------ | ------ | --------------------- | -------------- | --------------------- | ------------- |
+//! | (0,0)  | 8, 3   | 97                    | 394            |                       | 0             |
+//! | (1,0)  | 7, 3   | 79                    | 356            | 38                    | 38            |
+//! | (2,0)  | 6, 3   | 63                    | 317            | 39                    | 77            |
+//! | (3,0)  | 5, 3   | 49                    | 280            | 37                    | 114           |
+//! | (4,0)  | 4, 3   | 37                    | 243            | 37                    | 151           |
+//! | (5,0)  | 3, 3   | 27                    | 208            | 35                    | 186           |
+//! | (6,0)  | 2, 3   | 19                    | 174            | 34                    | 220           |
+//! | (7,0)  | 1, 3   | 13                    | 144            | 30                    | 250           |
+//! | (8,0)  | 0, 3   | 9                     | 120            | 24                    | 274           |
+//! | (8,1)  | 0, 2   | 4                     | 80             | 40                    | 314           |
+//! | (8,2)  | 0, 1   | 1                     | 40             | 40                    | 354           |
+//! | (8,3)  | 0, 0   | 0                     | 0              | 40                    | 394           |
+//!
+//! The transit is 394 nm, the straight distance, where it was 440.
+//!
+//! A task force is in the hex whose centre is nearest, so it enters the
+//! next hex when half the step's charge is steamed. The miles steamed when
+//! it enters each hex: (1,0) at 19, (2,0) at 57.5, (3,0) at 95.5, (4,0) at
+//! 132.5, (5,0) at 168.5, (6,0) at 203, (7,0) at 235, (8,0) at 262, (8,1)
+//! at 294, (8,2) at 334, (8,3) at 374.
+//!
 //! Day 1:
 //!
-//! | Pulse     | Hours | Distance | Total  | Hex left, miles on  | Position |
-//! | --------- | ----- | -------- | ------ | ------------------- | -------- |
-//! | Night     | 12    | 192 nm   | 192 nm | (4,0) plus 32 nm    | (5,0)    |
-//! | Morning   | 6     | 96 nm    | 288 nm | (7,0) plus 8 nm     | (7,0)    |
-//! | Afternoon | 6     | 96 nm    | 384 nm | (8,1) plus 24 nm    | (8,2)    |
+//! | Pulse     | Hours | Distance | Total  | Centre left, miles on | Position |
+//! | --------- | ----- | -------- | ------ | --------------------- | -------- |
+//! | Night     | 12    | 192 nm   | 192 nm | (5,0) plus 6 of 34    | (5,0)    |
+//! | Morning   | 6     | 96 nm    | 288 nm | (8,0) plus 14 of 40   | (8,0)    |
+//! | Afternoon | 6     | 96 nm    | 384 nm | (8,2) plus 30 of 40   | (8,3)    |
 //!
-//! The route runs along q to (8,0) and then up r: (8,1), (8,2), (8,3). A
-//! task force is in the hex whose centre is nearest, so it changes hex 20 nm
-//! past each centre (decision 0005). The hexes it enters, by pulse:
+//! The hexes it enters, by pulse:
 //!
-//! - Night: (1,0), (2,0), (3,0), (4,0), (5,0). The last at 180 nm.
-//! - Morning: (6,0) at 220 nm, (7,0) at 260 nm.
-//! - Afternoon: (8,0) at 300 nm, (8,1) at 340 nm, (8,2) at 380 nm.
+//! - Night: (1,0), (2,0), (3,0), (4,0), (5,0). The last at 168.5 nm.
+//! - Morning: (6,0) at 203 nm, (7,0) at 235 nm, (8,0) at 262 nm.
+//! - Afternoon: (8,1) at 294 nm, (8,2) at 334 nm, (8,3) at 374 nm.
 //!
-//! At the end of day 1 the task force has left (8,1), is steaming toward
-//! (8,2) and is 24 nm along, so its position is (8,2). Fuel burned: cruiser
-//! 384 x 0.25 = 96 t, destroyer 384 x 0.125 = 48 t.
+//! At the end of day 1 the task force has left (8,2), is steaming toward
+//! (8,3) and is 30 nm along a step of 40, so its position is (8,3). Fuel
+//! burned: cruiser 384 x 0.25 = 96 t, destroyer 384 x 0.125 = 48 t.
 //!
-//! Day 2: 440 - 384 = 56 nm remain. At 16 kn that takes 3.5 hours, so the
-//! task force arrives 27.5 hours after the start, at 21:30 on day 2, during
-//! the night pulse. It enters (8,3) at 420 nm, 20 nm before it arrives. Fuel
-//! burned on the leg: cruiser 14 t, destroyer 7 t.
+//! Day 2: 394 - 384 = 10 nm remain. At 16 kn that takes 0.625 hours, so the
+//! task force arrives 24.625 hours after the start, at 18:37 and a half on
+//! day 2, during the night pulse. It is already in (8,3) and enters no hex.
+//! Fuel burned on the leg: cruiser 2.5 t, destroyer 1.25 t.
 //!
-//! Totals for the transit: cruiser 110 t, destroyer 55 t.
+//! Totals for the transit: cruiser 98.5 t, destroyer 49.25 t.
 //!
 //! Day 3: no new orders. The task force has arrived, so nothing moves and no
 //! fuel is burned.
