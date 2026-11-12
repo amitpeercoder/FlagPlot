@@ -99,12 +99,12 @@
 //!   Unit cases for the calculation alone (`validate/take.rs`): "99.999999"
 //!   gives 0; "100" gives 1; "199.5" gives 1; "2791" gives 27; "1867" gives
 //!   18; "471" gives 4.
-//! - Shots by ship (batch version 3). Ships 1 and 2 fired gun shots "150"
-//!   and "60.5" in run 1 and "99" and "0.999" in run 2, and none in the other
-//!   eighteen runs. (The fixture's per-side `fire` is not changed to match
-//!   them: `validate` takes each measure from its own key and does not add one
-//!   to the other, and run 1's Japanese gun fire stays "0" above.)
-//! - P (judged, shots_in_hundreds, ships [1, 2], weapon gun, record 0): the
+//! - Shots by ship (batch version 3). Ships 3 and 4 (Allied) fired gun shots
+//!   "150" and "60.5" in run 1 and "99" and "0.999" in run 2, and none in the
+//!   other eighteen runs. To stay consistent with them the Allied gun fire of
+//!   the fixture is `shots` "210.5" in run 1 and "99.999" in run 2 (hits 0),
+//!   and "0" in the others; no measure here reads the Allied side's fire.
+//! - P (judged, shots_in_hundreds, ships [3, 4], weapon gun, record 0): the
 //!   ships' shots are summed and floored once. Run 1: floor(210.5 / 100) = 2;
 //!   run 2: floor(99.999 / 100) = 0; the other eighteen 0. No run is left
 //!   out: 20 kept. Sorted: nineteen 0, one 2. The 5th, 25th, median, 75th and
@@ -259,8 +259,14 @@ fn fixture(dir: &Path, runs: u64) -> Value {
         run["fire"]["japanese"]["gun"] = json!({"shots": shots, "hits": hits});
         let by = |ship: u32, gun: &str| json!({"ship": ship, "gun": gun, "torpedo": "0"});
         match r {
-            1 => run["shots_by"] = json!([by(1, "150"), by(2, "60.5")]),
-            2 => run["shots_by"] = json!([by(1, "99"), by(2, "0.999")]),
+            1 => {
+                run["shots_by"] = json!([by(3, "150"), by(4, "60.5")]);
+                run["fire"]["allied"]["gun"] = json!({"shots": "210.5", "hits": 0});
+            }
+            2 => {
+                run["shots_by"] = json!([by(3, "99"), by(4, "0.999")]);
+                run["fire"]["allied"]["gun"] = json!({"shots": "99.999", "hits": 0});
+            }
             _ => {}
         }
         run["claims"]["japanese"]["shot_down"] = json!(match r {
@@ -488,7 +494,7 @@ record_low = 0
 record_high = 0
 judged = true
 take = "shots_in_hundreds"
-ships = [1, 2]
+ships = [3, 4]
 weapon = "gun"
 rows = [1]
 reason = "r"
@@ -859,23 +865,23 @@ fn what_validate_refuses() {
         "ships-and-side",
         &good,
         &MEASURES.replace(
-            "ships = [1, 2]\nweapon = \"gun\"",
-            "ships = [1, 2]\nside = \"japanese\"\nweapon = \"gun\"",
+            "ships = [3, 4]\nweapon = \"gun\"",
+            "ships = [3, 4]\nside = \"japanese\"\nweapon = \"gun\"",
         ),
         "ships or side, not both",
     );
     refuse(
         "neither-ships-nor-side",
         &good,
-        &MEASURES.replace("ships = [1, 2]\nweapon = \"gun\"", "weapon = \"gun\""),
+        &MEASURES.replace("ships = [3, 4]\nweapon = \"gun\"", "weapon = \"gun\""),
         "needs the key side",
     );
     refuse(
         "unknown-ship-in-shots",
         &good,
         &MEASURES.replace(
-            "ships = [1, 2]\nweapon = \"gun\"",
-            "ships = [1, 77]\nweapon = \"gun\"",
+            "ships = [3, 4]\nweapon = \"gun\"",
+            "ships = [3, 77]\nweapon = \"gun\"",
         ),
         "ship 77",
     );
