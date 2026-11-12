@@ -1,0 +1,14 @@
+{"format":"flagplot-game","scenario":"data/scenarios/05_eastern_solomons.toml","seat":"allied","seed":null}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"list_bases"}
+{"arguments":{"handle":"air_group:2"},"tool":"get_entity"}
+{"arguments":{"handle":"air_group:4"},"tool":"get_entity"}
+{"arguments":{"handle":"air_group:9"},"tool":"get_entity"}
+{"arguments":{"orders":[{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"9999","to_deg":0},"unit":"air_group:3"}],"reason":"probe max search range"},"tool":"issue_orders"}
+{"arguments":{"air_group":"air_group:2","question":"air_reach","to":[{"q":7,"r":-15},{"q":7,"r":-25}]},"tool":"measure"}
+{"arguments":{"air_group":"air_group:2","question":"air_reach","to":[{"q":7,"r":-15}]},"tool":"measure"}
+{"arguments":{"from":"task_force:1","question":"air_distance","to":"base:1"},"tool":"measure"}
+{"arguments":{"air_group":"air_group:4","question":"air_reach","to":["base:1"]},"tool":"measure"}
+{"arguments":{"orders":[{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":0},"unit":"air_group:3"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:3"},{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"200","to_deg":90},"unit":"air_group:7"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:7"},{"order":{"from_deg":300,"kind":"set_search_arc","range_nm":"200","to_deg":60},"unit":"air_group:10"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:10"},{"order":{"kind":"set_air_mission","mission":"naval_strike"},"unit":"air_group:2"},{"order":{"kind":"set_air_mission","mission":"naval_strike"},"unit":"air_group:4"},{"order":{"kind":"set_air_mission","mission":"naval_strike"},"unit":"air_group:6"},{"order":{"kind":"set_air_mission","mission":"naval_strike"},"unit":"air_group:8"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:1"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:5"},{"order":{"kind":"set_patrol_share","share":"0.5"},"unit":"air_group:5"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:9"},{"order":{"kind":"set_readiness","readiness":"battle"},"unit":"task_force:1"},{"order":{"kind":"set_readiness","readiness":"battle"},"unit":"task_force:2"}],"reason":"Two dive-bomber scout groups and the Henderson dive-bombers search the northern half out to the 200 nm maximum; the other bomber and torpedo groups are set to strike any contact the search finds; fighters defend the carriers (half of VF-5 escorts); carriers at battle readiness. Contacts cannot be seen before the strike mission must be set, so everything is set now."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}

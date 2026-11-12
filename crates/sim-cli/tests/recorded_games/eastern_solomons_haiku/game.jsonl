@@ -1,0 +1,16 @@
+{"format":"flagplot-game","scenario":"data/scenarios/05_eastern_solomons.toml","seat":"allied","seed":null}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"text":true},"tool":"list_bases"}
+{"arguments":{},"tool":"list_contacts"}
+{"arguments":{},"tool":"list_forces"}
+{"arguments":{"handle":"air_group:1"},"tool":"get_entity"}
+{"arguments":{"handle":"air_group:2"},"tool":"get_entity"}
+{"arguments":{"handle":"air_group:4"},"tool":"get_entity"}
+{"arguments":{"handle":"air_group:9"},"tool":"get_entity"}
+{"arguments":{"orders":[{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"1000","to_deg":0},"unit":"air_group:2"}],"reason":"Probe the search range limit of the dive bombers before setting arcs."},"tool":"issue_orders"}
+{"arguments":{"orders":[{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":90},"unit":"air_group:2"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:2"},{"order":{"from_deg":90,"kind":"set_search_arc","range_nm":"200","to_deg":270},"unit":"air_group:3"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:3"},{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"200","to_deg":180},"unit":"air_group:6"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:6"},{"order":{"from_deg":180,"kind":"set_search_arc","range_nm":"200","to_deg":0},"unit":"air_group:7"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:7"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:1"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:5"}],"reason":"No enemy is known yet. Both carriers search the whole sea around them at 200 miles, the Enterprise scouts north and the Saratoga scouts east and west, and the fighters of both carriers fly patrol over their own forces."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"event":20},"tool":"explain"}
+{"arguments":{"event":31},"tool":"explain"}
+{"arguments":{"event":36},"tool":"explain"}

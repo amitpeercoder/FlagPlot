@@ -61,3 +61,23 @@ Settled by the architect while building, inside the approved plan.
 - **A reason with the orders.** `issue_orders` takes an optional `reason`: the player's own words for why it gives these orders. It is kept in the transcript and the game file, where a reader finds it beside the orders. The game never reads it and it is not in the saved game, so it cannot change a result or a hash. It is the first piece of "why did the player do that" (the engine's own staff will answer the same question through an order's origin and intent, in step 3).
 - **What the tools tell, after the first two games a model played** (scenarios 5 and 7, Nov 12, 2026). Words and fields only; no rule, result or hash changes. The server's instructions and the `issue_orders` description now say what each air mission does and that missions must be set before the contact appears (a strike is decided and flown inside the day), the arc convention (0 is north, clockwise, multiples of 10, range at most the type's), that the game has no score and ends after its last day, and what `pilots: null`, a base size of 0 and an arrival's day mean. The briefing's heading gives the last day (the session hands it in; a view does not hold it), a force line and a sixth warning say that a task force cannot move or is slowed, the text calls enemy units in raids and attacks "enemy" (they are still "not known" to `get_entity`, decision 0047, 8), and `issue_orders` counts what was queued and refused. Rule card: reads the side's view and the number of days the session was started with; writes nothing.
 
+## The games (Nov 12, 2026)
+
+**First round.** Two Sonnet models, each alone with `sim-cli play`. Both finished and kept to the rules. Neither could tell what it was meant to achieve; one left its bombers resting until it had a contact, which is too late; one could not see that its carrier could no longer move. Their requests and a summary are in `docs/research/scenario-9-first-round/`. What they found led to the wording fixes, to objectives (decision 0054) and to claims (decision 0056).
+
+**Second round, the record.** Three games under `crates/sim-cli/tests/recorded_games/`, each with the requests, the transcript, the saved game and the player's own account. The test replays each to the same answers, and each saved game replays with no player.
+
+| Game | Player | What it did | Result |
+| --- | --- | --- | --- |
+| Eastern Solomons | Sonnet | Searched north, set both dive-bomber and both torpedo groups to strike before the day, kept fighters over the carriers. Its dive bombers struck the Ryujo force in the pulse it was found | Stalemate, 6.55 to 5.25. It believed it had sunk two carriers; none sank |
+| Eastern Solomons | Haiku | Searched all round with four groups and set no strike. Named that as its own mistake afterwards, from the tools' wording | Minor Allied defeat, 1.55 to 5.15 |
+| The full slice, five days | Sonnet | Loaded the convoy, sailed it to Henderson Field and landed 746.7 t; rotated tired scouts; struck when a contact appeared; moved its second carrier to bring its torpedo groups in range | No result: the game runs fourteen days |
+
+**The legibility test.** The Haiku player was asked why things happened and what it would do with one more day. It used `explain` three times and read the answers rightly, including a claim's breakdown into real kills and false claims. It said the claim is not what scores. Its plan for a further day was the right one. It passes.
+
+**What the second round found,** to be fixed in a wording pass after this record: a stalemate shows no level and nothing says what margin makes a victory; a strike group that did not fly gives no reason; the history note reads as if it described the game just played; a one-day game deserves a plain warning; a load order is refused under way without saying it needs a port; cargo aboard is not shown in the briefing; a base's fuel spent refuelling ships is not explained; the mission could say where the enemy is expected from. For step 2: two strikes each claimed the same burning carrier as sunk.
+
+**The limit, as decision 11 says.** The players were told to use only `sim-cli play` and each said it did; the game files hold every call they made. Nothing proves a model read nothing else. Each used a shell function, and filters on the output, and one made a directory.
+
+**Spec scenario 9 is met:** a model played the Allied side of scenario 5 through the MCP server's tools from start to finish with no human help, and the saved game replays to the same hashes.
+

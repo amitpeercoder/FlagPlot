@@ -1,0 +1,35 @@
+{"format":"flagplot-game","scenario":"data/scenarios/07_full_slice.toml","seat":"allied","seed":null}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"list_bases"}
+{"arguments":{},"tool":"list_contacts"}
+{"arguments":{"handle":"air_group:101"},"tool":"get_entity"}
+{"arguments":{"from":"base:1","question":"air_distance","to":"base:2"},"tool":"measure"}
+{"arguments":{"air_group":"air_group:11","question":"air_reach","to":["base:2"]},"tool":"measure"}
+{"arguments":{"air_group":"air_group:104","question":"air_reach","to":["base:2"]},"tool":"measure"}
+{"arguments":{"from":"task_force:1","question":"air_distance","to":"base:1"},"tool":"measure"}
+{"arguments":{"orders":[{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:11"},{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":360},"unit":"air_group:11"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:103"},{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":360},"unit":"air_group:103"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:10"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:101"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:105"}],"reason":"Rabaul is out of strike range (556 nm vs 200). Hold the carriers near Guadalcanal, search the northwest approach with Henderson and Enterprise dive bombers, and keep fighters on patrol over both."},"tool":"issue_orders"}
+{"arguments":{"orders":[{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":350},"unit":"air_group:11"},{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":350},"unit":"air_group:103"}],"reason":"Retry search arcs with legal bearings (multiples of 10, max 350)."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"event":16},"tool":"explain"}
+{"arguments":{},"tool":"list_contacts"}
+{"arguments":{"handle":"air_group:1"},"tool":"get_entity"}
+{"arguments":{"orders":[{"order":{"kind":"set_air_mission","mission":"rest"},"unit":"air_group:11"},{"order":{"kind":"set_air_mission","mission":"rest"},"unit":"air_group:103"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:102"},{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":350},"unit":"air_group:102"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:106"},{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"200","to_deg":80},"unit":"air_group:106"}],"reason":"A 41-aircraft raid hit Henderson yesterday and my searches found nothing. Rest the tired search groups (fatigue 22), search with fresh Enterprise and Saratoga bombers on two different arcs, keep fighters on patrol."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"orders":[{"order":{"kind":"set_air_mission","mission":"rest"},"unit":"air_group:102"},{"order":{"kind":"set_air_mission","mission":"rest"},"unit":"air_group:106"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:107"},{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":350},"unit":"air_group:107"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:103"},{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"200","to_deg":80},"unit":"air_group:103"}],"reason":"Still no contacts. Rotate searchers again so no group tires; keep fighters on patrol."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{"orders":[{"order":{"kind":"set_air_mission","mission":"rest"},"unit":"air_group:103"},{"order":{"kind":"set_air_mission","mission":"rest"},"unit":"air_group:107"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:11"},{"order":{"from_deg":270,"kind":"set_search_arc","range_nm":"200","to_deg":350},"unit":"air_group:11"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:108"},{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"200","to_deg":80},"unit":"air_group:108"}],"reason":"Searchers 103 and 107 are tired (34, 22); rest them and use fresher VMSB-232 and VT-8 on the northwest and northeast arcs."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"list_contacts"}
+{"arguments":{"handle":"ship:1"},"tool":"get_entity"}
+{"arguments":{"question":"passage","speed":"full","task_force":"task_force:1","to":"base:3"},"tool":"measure"}
+{"arguments":{"event":178},"tool":"explain"}
+{"arguments":{"orders":[{"order":{"kind":"set_readiness","readiness":"battle"},"unit":"task_force:1"},{"order":{"kind":"set_readiness","readiness":"battle"},"unit":"task_force:2"},{"order":{"from_deg":0,"kind":"set_search_arc","range_nm":"190","to_deg":80},"unit":"air_group:108"}],"reason":"Enterprise is crippled (propulsion out, deck out) and the force cannot move; carriers were raided twice yesterday with no contact on the attackers. Go to battle readiness so the alarm is quicker, keep the fighters on patrol and fix the 108 search arc to its 190 nm limit."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}

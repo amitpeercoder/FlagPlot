@@ -1,0 +1,9 @@
+{"format":"flagplot-game","scenario":"data/scenarios/05_eastern_solomons.toml","seat":"allied","seed":null}
+{"arguments":{},"tool":"get_briefing"}
+{"arguments":{},"tool":"list_bases"}
+{"arguments":{"handle":"air_group:3"},"tool":"get_entity"}
+{"arguments":{"air_group":"air_group:3","question":"air_reach","to":[{"q":2,"r":-4}]},"tool":"measure"}
+{"arguments":{"handle":"task_force:1"},"tool":"get_entity"}
+{"arguments":{"orders":[{"order":{"from_deg":300,"kind":"set_search_arc","range_nm":"200","to_deg":60},"unit":"air_group:3"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:3"},{"order":{"from_deg":330,"kind":"set_search_arc","range_nm":"200","to_deg":90},"unit":"air_group:7"},{"order":{"kind":"set_air_mission","mission":"search"},"unit":"air_group:7"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:1"},{"order":{"kind":"set_air_mission","mission":"combat_air_patrol"},"unit":"air_group:5"},{"order":{"kind":"set_readiness","readiness":"battle"},"unit":"task_force:1"},{"order":{"kind":"set_readiness","readiness":"battle"},"unit":"task_force:2"}],"reason":"No contacts yet. Scout with the two scout dive-bomber squadrons toward the north, fighters on patrol over the carriers, both forces at battle readiness; hold bombers and torpedo planes for a strike once a contact appears."},"tool":"issue_orders"}
+{"arguments":{},"tool":"end_day"}
+{"arguments":{},"tool":"get_briefing"}
