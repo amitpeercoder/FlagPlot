@@ -13,7 +13,7 @@ If a spec or a rule is ambiguous or looks wrong, stop and ask. Do not guess. A d
 | Do anything | `docs/pillars.md`: what the game is and the five pillars every feature is tested against |
 | Ask what the game does today | `docs/rules/`: every rule as the code has it, in the order a day resolves. `docs/glossary.md`: one meaning for each word |
 | Ask why a rule is as it is | `docs/decisions/` (`README.md` is the index). `docs/rules/differences.md`: where a record and the code differ, with a ruling on each |
-| Work on step 2 | `docs/step2-spec.md`, the source of truth for step 2. `docs/step2-opening-list.md`: what is to be decided and built first. `data/validation/`: the measures |
+| Work on step 2 | `docs/step2-spec.md`, the source of truth for step 2. `docs/step2-opening-list.md`: what is to be decided and built first. `data/validation/`: the measures, and its `README.md` for their rules (no recorded value without the rows it rests on; a range spans a dispute and changes no row's standing) |
 | Ask what step 1 was for, or left out | `docs/step1-spec.md`, and decision 0052 |
 | Change or add a rule | `docs/engineering/rule-complexity.md`, `docs/engineering/traceability.md`, and the rule's chapter in `docs/rules/` |
 | Add or change state, a random draw, or anything in `sim-core` | `docs/engineering/determinism.md` |
@@ -46,6 +46,7 @@ Each of these fails with no error and no failing test if it is missed. The page 
 
 - A side knows its own units exactly and the enemy only as contacts and claims. The only way to change a belief is `BeliefState::apply_report`.
 - Never add a method to `SideView` that returns enemy truth. Anything that plays the game gets a `SideView` and nothing else; `sim-agent` library code never takes the world, the umpire's view or the full log.
+- The replay viewer, replay files, batch files, `sim-cli events` and the validation harness are the umpire's: they show the truth. Nothing that plays the game reads them.
 - A side gets events only through `SideView::events()`. A new kind of event does not compile until `side_events.rs` says who may see it: decide it, do not default it.
 
 **Crates** (`docs/engineering/layout.md`)
@@ -67,6 +68,7 @@ Each of these fails with no error and no failing test if it is missed. The page 
 **Tests and numbers** (`docs/engineering/roles-and-tests.md`)
 
 - The hand calculation is written by the architect before any code is delegated, in the test file's doc comment. Nobody else changes an expected number, and never to make a test pass: a mismatch goes back to the architect.
+- When figures are tuned (step 2): a figure moves only toward something a source supports, a unit's experience value is never changed to improve a report (only the strength of its effect is tuned), and the hand-calculation tests run on the frozen step 1 figures. `docs/step2-spec.md` has the rules of tuning.
 - A subagent's summary is a lead, not a fact. Check any claim a design choice will rest on against the source.
 
 **Git**
@@ -113,6 +115,6 @@ Kept short on purpose. The history of how each stage was built is in the decisio
 - **The rules as they stand are in `docs/rules/`.** `docs/rules/differences.md` lists where a decision record and the code differ, with a ruling on each; nine small code fixes it calls for are not made yet.
 - **Step 2 is under way** to `docs/step2-spec.md`. Another session owns the spec and the measures files (`data/validation/`); the build is planned from `docs/step2-opening-list.md`. Before any figure is tuned: decision 0058 (ships charged straight-line miles) and the scenarios re-derived for it, the step 1 figures frozen for the hand-calculation tests, and three rules (strike target priority as an order, reach beyond the radius with ditching, experience), each with its own decision record.
 - **Every combat, wear, fatigue, supply and claim figure, and every point value, is a placeholder** until step 2 sets it from the record. The loss spreads of Savo Island and of the four weeks over Guadalcanal are known not to match history yet (decisions 0024, 0042).
-- **The order-of-battle facts** (`data/oob`) cover Savo Island, the Eastern Solomons, the air campaign of August and September 1942 and strike launch ranges; research on Cape Esperance, ditching and crew recovery, and training is arriving in its own pull requests. Rows are unsettled until a derivation or a measure reads them; `data/oob/README.md` says how firm they are and what is missing.
+- **The order-of-battle facts** (`data/oob`) cover Savo Island, the Eastern Solomons, the air campaign of August and September 1942 and strike launch ranges; research on Cape Esperance, ditching and crew recovery, and training is arriving in its own pull requests. Rows are unsettled until a derivation reads them (a measure takes a range across a dispute and settles nothing); `data/oob/README.md` says how firm they are and what is missing.
 
 When a stage lands, change the line it makes untrue. Do not add a line for it.
