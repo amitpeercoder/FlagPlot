@@ -423,7 +423,7 @@ fn objectives_change_no_hash_and_no_event() {
     assert!(baseline.contains(&format!("hash {:016x}", with.day_hashes()[0])));
     // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
     // 0056 put the claims from the air into belief, and so into the hash.
-    assert!(baseline.contains("hash d623954551076dee"));
+    assert!(baseline.contains("hash 2f37141bddfdb856"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

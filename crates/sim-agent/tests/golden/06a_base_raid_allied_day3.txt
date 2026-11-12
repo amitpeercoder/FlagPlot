@@ -35,7 +35,7 @@ LOSSES YESTERDAY
 - Ships damaged: none
 - Aircraft lost: air_group:3 "Placeholder defending fighters": 2 shot down [event 17]
 - Aircraft lost: air_group:4 "Placeholder resting bombers": 2 destroyed on the ground [event 19]
-- Claim over (5,0) Placeholder airfield B: 2 aircraft shot down [event 20]
+- Claim over (5,0) Placeholder airfield B: 3 aircraft shot down [event 20]
 
 TASK FORCES
 - Task forces: none

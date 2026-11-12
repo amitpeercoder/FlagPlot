@@ -2,7 +2,7 @@ Scenario 5b: Unopposed strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c55fb303da36bf4b  15 events
+day   1  hash 8902603e7e8b3cf0  15 events
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -14,6 +14,6 @@ ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 50, fir
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (9,0): 3 ships, cruiser, age 0 pulses
-Allied claim at (9,0): 7 hits on a carrier, 0 sunk, day 1 afternoon
+Allied claim at (9,0): 6 hits on a carrier, 0 sunk, day 1 afternoon
 Japanese: no contacts
 Japanese: no battle claims

@@ -2,14 +2,14 @@ Scenario 6c: Fatigue and rest
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5676b86b1afdb0a9  32 events
-day   2  hash 0b6ce74b07e5d3cb  23 events
-day   3  hash 47cbb76b17e0997d  20 events
-day   4  hash e08feefed5e1a537  20 events
-day   5  hash debd3bcc08bb5176  22 events
-day   6  hash 8ef88427b80a54aa  16 events
-day   7  hash d318b150e8f87ab9  10 events
-day   8  hash 871ef68981da1f3c  19 events
+day   1  hash 65159250cf4e286c  32 events
+day   2  hash c3df6e7c4231daaf  23 events
+day   3  hash 78109af40d415660  20 events
+day   4  hash bccda0db9af926ab  20 events
+day   5  hash bf2fc2d97d3bc443  22 events
+day   6  hash a492e784531abfd5  16 events
+day   7  hash b6f1f9d01af57dde  10 events
+day   8  hash a9a0989ee0debb01  19 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -32,8 +32,8 @@ day   8  hash 871ef68981da1f3c  19 events
 #19 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #15
 #20 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #11, #19
 #21 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #20
-#22 D1 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #13, #20
-#23 D1 morning   Allied claim over (5,0): 4 aircraft shot down  <- #14, #15, #16
+#22 D1 morning   Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #13, #20
+#23 D1 morning   Allied claim over (5,0): 5 aircraft shot down  <- #14, #15, #16
 #24 D1 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 11  <- #11
 #25 D1 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 11  <- order:7, order:8, #12
 #26 D1 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
@@ -56,7 +56,7 @@ day   8  hash 871ef68981da1f3c  19 events
 #43 D2 morning   air_group:3 lost 1 aircraft on the ground at base:2, 6 left  <- #42
 #44 D2 morning   base:2 lost 50 t of supply, 900 t left  <- #42
 #45 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 3 aircraft destroyed on the ground  <- #36, #42
-#46 D2 morning   Allied claim over (5,0): 2 aircraft shot down  <- #37, #38, #39
+#46 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #37, #38, #39
 #47 D2 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 17  <- #34
 #48 D2 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 25  <- order:7, order:8, #35
 #49 D2 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:1
@@ -76,8 +76,8 @@ day   8  hash 871ef68981da1f3c  19 events
 #63 D3 morning   air_group:2 lost 1 aircraft, 10 left  <- #60
 #64 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #62
 #65 D3 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #57, #64
-#66 D3 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #59, #65
-#67 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #60, #61, #62
+#66 D3 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #59, #65
+#67 D3 morning   Allied claim over (5,0): 4 aircraft shot down  <- #60, #61, #62
 #68 D3 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 23  <- #57
 #69 D3 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 39  <- order:7, order:8, #58
 #70 D3 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:1
@@ -95,7 +95,7 @@ day   8  hash 871ef68981da1f3c  19 events
 #82 D4 morning   air_group:1 lost 1 aircraft, 10 left  <- #80
 #83 D4 morning   air_group:1 lost 1 aircraft, 9 left  <- #81
 #84 D4 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #79, #82, #83
-#85 D4 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #84
+#85 D4 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #84
 #86 D4 morning   Allied claim over (5,0): 3 aircraft shot down  <- #80, #81
 #87 D4 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 29  <- #79
 #88 D4 morning   air_group:2 rested 5 fatigue, now 37  <- #76
@@ -118,7 +118,7 @@ day   8  hash 871ef68981da1f3c  19 events
 #105 D5 morning   air_group:1 lost 1 aircraft, 8 left  <- #102
 #106 D5 morning   air_group:1 lost 3 aircraft, 5 left  <- #103
 #107 D5 morning   air_group:1 bombs at base:2: 2 shots x 0.2 = 0.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #98, #105, #106
-#108 D5 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #100, #107
+#108 D5 morning   Japanese claim over (5,0): 2 aircraft shot down  <- #100, #107
 #109 D5 morning   Allied claim over (5,0): 5 aircraft shot down  <- #101, #102, #103
 #110 D5 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #98
 #111 D5 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 43  <- order:7, order:8, #99
@@ -134,8 +134,8 @@ day   8  hash 871ef68981da1f3c  19 events
 #121 D6 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits  <- #119
 #122 D6 morning   air_group:1 lost 1 aircraft, 4 left  <- #120
 #123 D6 morning   air_group:1 bombs at base:2: 2 shots x 0.2 = 0.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #119, #122
-#124 D6 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #123
-#125 D6 morning   Allied claim over (5,0): 4 aircraft shot down  <- #120, #121
+#124 D6 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #123
+#125 D6 morning   Allied claim over (5,0): 3 aircraft shot down  <- #120, #121
 #126 D6 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #119
 #127 D6 morning   air_group:2 rested 5 fatigue, now 41  <- #118
 #128 D6 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1
@@ -182,17 +182,17 @@ air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, fa
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock
 base:2 "Placeholder airfield B" (Allied) at (5,0): 900 t of supply in stock, 20 anti-aircraft shots
 Allied: no contacts
-Allied claim over (5,0): 4 aircraft shot down, day 1 morning
-Allied claim over (5,0): 2 aircraft shot down, day 2 morning
-Allied claim over (5,0): 6 aircraft shot down, day 3 morning
+Allied claim over (5,0): 5 aircraft shot down, day 1 morning
+Allied claim over (5,0): 3 aircraft shot down, day 2 morning
+Allied claim over (5,0): 4 aircraft shot down, day 3 morning
 Allied claim over (5,0): 3 aircraft shot down, day 4 morning
 Allied claim over (5,0): 5 aircraft shot down, day 5 morning
-Allied claim over (5,0): 4 aircraft shot down, day 6 morning
+Allied claim over (5,0): 3 aircraft shot down, day 6 morning
 Allied claim over (5,0): 3 aircraft shot down, day 8 morning
 Japanese: no contacts
-Japanese claim over (5,0): 3 aircraft shot down, day 1 morning
+Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
 Japanese claim at (5,0): 2 aircraft shot down, 3 aircraft destroyed on the ground, day 2 morning
-Japanese claim over (5,0): 1 aircraft shot down, day 3 morning
-Japanese claim over (5,0): 0 aircraft shot down, day 4 morning
-Japanese claim over (5,0): 1 aircraft shot down, day 5 morning
-Japanese claim over (5,0): 0 aircraft shot down, day 6 morning
+Japanese claim over (5,0): 0 aircraft shot down, day 3 morning
+Japanese claim at (5,0): 1 aircraft destroyed on the ground, day 4 morning
+Japanese claim over (5,0): 2 aircraft shot down, day 5 morning
+Japanese claim at (5,0): 1 aircraft destroyed on the ground, day 6 morning

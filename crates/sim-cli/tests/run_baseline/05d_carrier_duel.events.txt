@@ -2,8 +2,8 @@ Scenario 5d: Carrier duel
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 818a99a9fab12f72  34 events
-day   2  hash a775a9771d57abe2  43 events
+day   1  hash 5bdec423f9ce7a59  34 events
+day   2  hash e4bef3949a229083  43 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -37,8 +37,8 @@ day   2  hash a775a9771d57abe2  43 events
 #30 D1 afternoon ship:4 propulsion hit, working -> degraded  <- #28
 #31 D1 afternoon ship:4 main battery hit, no change, still working  <- #28
 #32 D1 afternoon Allied report: 3 ships, cruiser, at (9,0): refreshed contact:1  <- #28
-#33 D1 afternoon Allied claim at (9,0): 5 hits on a carrier, 0 sunk, 4 aircraft shot down  <- #22, #28
-#34 D1 afternoon Japanese claim over (9,0): 5 aircraft shot down  <- #23, #24
+#33 D1 afternoon Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down  <- #22, #28
+#34 D1 afternoon Japanese claim over (9,0): 4 aircraft shot down  <- #23, #24
 #35 D2 night     Allied contact:1 aged to 1 pulses  <- #32
 #36 D2 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
 #37 D2 morning   air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #36
@@ -57,8 +57,8 @@ day   2  hash a775a9771d57abe2  43 events
 #50 D2 morning   ship:1 took 1 hit on flotation, 10 points, now 10  <- #49
 #51 D2 morning   ship:1 took 1 hit on fire, 10 points, now 10  <- #49
 #52 D2 morning   Japanese report: 3 ships, cruiser, at (4,0): refreshed contact:1  <- #49
-#53 D2 morning   Japanese claim at (4,0): 2 hits on a cruiser, 0 sunk, 1 aircraft shot down  <- #43, #49
-#54 D2 morning   Allied claim over (4,0): 7 aircraft shot down  <- #44, #45, #46
+#53 D2 morning   Japanese claim at (4,0): 3 hits on a cruiser, 0 sunk  <- #43, #49
+#54 D2 morning   Allied claim over (4,0): 9 aircraft shot down  <- #44, #45, #46
 #55 D2 morning   Allied contact:1 aged to 2 pulses  <- #32
 #56 D2 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
 #57 D2 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #56
@@ -80,7 +80,7 @@ day   2  hash a775a9771d57abe2  43 events
 #73 D2 afternoon ship:1 flight deck hit, degraded -> out  <- #67
 #74 D2 afternoon Japanese report: 3 ships, cruiser, at (4,0): refreshed contact:1  <- #67
 #75 D2 afternoon Japanese claim at (4,0): 6 hits on a cruiser, 0 sunk  <- #62, #67
-#76 D2 afternoon Allied claim over (4,0): 4 aircraft shot down  <- #63, #64, #65
+#76 D2 afternoon Allied claim over (4,0): 2 aircraft shot down  <- #63, #64, #65
 #77 D2 afternoon Allied contact:1 aged to 3 pulses  <- #32
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -98,10 +98,10 @@ ship:4 "Placeholder carrier B": afloat in task_force:2; damage flotation 50, fir
 ship:5 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:6 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (9,0): 3 ships, cruiser, age 3 pulses
-Allied claim at (9,0): 5 hits on a carrier, 0 sunk, 4 aircraft shot down, day 1 afternoon
-Allied claim over (4,0): 7 aircraft shot down, day 2 morning
-Allied claim over (4,0): 4 aircraft shot down, day 2 afternoon
+Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down, day 1 afternoon
+Allied claim over (4,0): 9 aircraft shot down, day 2 morning
+Allied claim over (4,0): 2 aircraft shot down, day 2 afternoon
 Japanese contact:1 at (4,0): 3 ships, cruiser, age 0 pulses
-Japanese claim over (9,0): 5 aircraft shot down, day 1 afternoon
-Japanese claim at (4,0): 2 hits on a cruiser, 0 sunk, 1 aircraft shot down, day 2 morning
+Japanese claim over (9,0): 4 aircraft shot down, day 1 afternoon
+Japanese claim at (4,0): 3 hits on a cruiser, 0 sunk, day 2 morning
 Japanese claim at (4,0): 6 hits on a cruiser, 0 sunk, day 2 afternoon

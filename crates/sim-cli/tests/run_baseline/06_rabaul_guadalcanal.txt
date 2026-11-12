@@ -2,34 +2,34 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6e448ef3360a78d0  48 events
-day   2  hash c1416ee432a1f8f2  34 events
-day   3  hash b019afa595d0ace0  31 events
-day   4  hash e295fda750871e78  21 events
-day   5  hash ad4bf994c6438a0b  15 events
-day   6  hash 0dea7b4632611b69  34 events
-day   7  hash 15b34fd06c778201  20 events
-day   8  hash 41d55ccb868dc171  11 events
-day   9  hash 060c65a0f3e2de35  30 events
-day  10  hash 91496c516a301c90  23 events
-day  11  hash ecc0bb7026369c7b  20 events
-day  12  hash ef3b4be123feba39  34 events
-day  13  hash cd3c65a14a7e0541  25 events
-day  14  hash 3a532c111896cf70  23 events
-day  15  hash 6bcbe901d7da45d6  42 events
-day  16  hash acf700ed3352a9bf  21 events
-day  17  hash 6719b1ecb808fb5d  15 events
-day  18  hash c89b4cf35245d605  33 events
-day  19  hash 5f05ccca7bebf92f  19 events
-day  20  hash a62123db9fe0dc05  13 events
-day  21  hash b1dbd0f220673d16  38 events
-day  22  hash 6057ea092c1484ba  26 events
-day  23  hash 5578586e5c51054a  23 events
-day  24  hash b375fa822fdf7929  49 events
-day  25  hash 22d04a0f9cd180b5  29 events
-day  26  hash c869df5ffb0666eb  27 events
-day  27  hash 2df81e4e1a5751f8  44 events
-day  28  hash 495725d7f98feaed  28 events
+day   1  hash 68667ae4805da839  48 events
+day   2  hash 9cbd1a7201301029  34 events
+day   3  hash de621bf265cc8306  31 events
+day   4  hash 0a122872026e626a  21 events
+day   5  hash be4230aebcc1b699  15 events
+day   6  hash 8343d37366c0946f  34 events
+day   7  hash e4ebac8c05916b27  20 events
+day   8  hash 815087efef1ac013  11 events
+day   9  hash c71579d2c7cc3369  30 events
+day  10  hash 370789a33d586970  23 events
+day  11  hash 7cd0c327c6b0cd47  20 events
+day  12  hash 1b3c319a71b63bc7  34 events
+day  13  hash a92fd103c830d69f  25 events
+day  14  hash 68ec64e7757e9712  23 events
+day  15  hash 26d48957b261ac97  42 events
+day  16  hash 092001dca692f592  21 events
+day  17  hash 56686269b3b826fc  15 events
+day  18  hash 7c6ddf2620408e31  33 events
+day  19  hash 52cd6b2c825f8997  19 events
+day  20  hash 0a2fa0ed734350ed  13 events
+day  21  hash 39fe8948e46c2852  38 events
+day  22  hash b0a688851813ab72  26 events
+day  23  hash 8963e9032b77c8ca  23 events
+day  24  hash 8443b574257c3cf8  49 events
+day  25  hash a24aba0a545fc9fc  29 events
+day  26  hash 786a799dee4735a6  27 events
+day  27  hash edfb7db2daff7675  44 events
+day  28  hash 545165000bb11510  28 events
 
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 39 ready, 41 pilots, mission BaseStrike on base:1, fatigue 52.64, rests above 45, stood down, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 18 ready, 18 pilots, mission CombatAirPatrol, patrol share 0, fatigue 52.64, rests above 45, stood down, no arc
@@ -46,28 +46,28 @@ base:1 "Henderson Field" (Allied) at (2,-4): 2747 t of supply in stock, 8 anti-a
 base:2 "Rabaul" (Japanese) at (-5,-13): 7873.8 t of supply in stock, repairs 4 aircraft a day
 Allied: no contacts
 Allied claim over (2,-4): 2 aircraft shot down, day 1 morning
-Allied claim over (2,-4): 7 aircraft shot down, day 2 morning
+Allied claim over (2,-4): 5 aircraft shot down, day 2 morning
 Allied claim over (2,-4): 3 aircraft shot down, day 3 morning
-Allied claim over (2,-4): 2 aircraft shot down, day 6 morning
+Allied claim over (2,-4): 3 aircraft shot down, day 6 morning
 Allied claim over (2,-4): 1 aircraft shot down, day 9 morning
 Allied claim over (2,-4): 4 aircraft shot down, day 12 morning
-Allied claim over (2,-4): 2 aircraft shot down, day 15 morning
-Allied claim over (2,-4): 1 aircraft shot down, day 18 morning
+Allied claim over (2,-4): 4 aircraft shot down, day 15 morning
+Allied claim over (2,-4): 2 aircraft shot down, day 18 morning
 Allied claim over (2,-4): 2 aircraft shot down, day 21 morning
-Allied claim over (2,-4): 15 aircraft shot down, day 24 morning
-Allied claim over (2,-4): 16 aircraft shot down, day 27 morning
+Allied claim over (2,-4): 12 aircraft shot down, day 24 morning
+Allied claim over (2,-4): 12 aircraft shot down, day 27 morning
 Japanese: no contacts
-Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 1 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 2 morning
-Japanese claim at (2,-4): 4 aircraft shot down, 5 aircraft destroyed on the ground, day 3 morning
-Japanese claim at (2,-4): 1 aircraft shot down, 4 aircraft destroyed on the ground, day 6 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 5 aircraft destroyed on the ground, day 9 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 5 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 7 aircraft destroyed on the ground, day 2 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground, day 3 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
+Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
 Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 12 morning
-Japanese claim at (2,-4): 6 aircraft shot down, 4 aircraft destroyed on the ground, day 15 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 5 aircraft destroyed on the ground, day 18 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 4 aircraft destroyed on the ground, day 21 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 24 morning
-Japanese claim over (2,-4): 9 aircraft shot down, day 27 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 15 morning
+Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 18 morning
+Japanese claim at (2,-4): 4 aircraft shot down, 5 aircraft destroyed on the ground, day 21 morning
+Japanese claim at (2,-4): 4 aircraft shot down, 3 aircraft destroyed on the ground, day 24 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 1 aircraft destroyed on the ground, day 27 morning
 
 Result (the placeholder scale of decision 0054):
 Allied: 13.05 points (aircraft_destroyed 61 = 3.05; base_open at base:1 1 = 10), margin 10.45, major victory

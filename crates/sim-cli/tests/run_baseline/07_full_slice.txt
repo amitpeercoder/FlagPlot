@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ca239a04b909e1a5  58 events
-day   2  hash 292745bb58518d72  53 events
-day   3  hash ae399cc1fff4dc10  48 events
-day   4  hash 653eb9252d5efcde  245 events
-day   5  hash 4a5280142b984ba7  141 events
-day   6  hash f4869d4594488040  120 events
-day   7  hash f2d9fe46f642ce78  252 events
-day   8  hash 3db547b6df0cad98  123 events
-day   9  hash 6c1201a5e8641a73  126 events
-day  10  hash 4a98e750bf04163d  77 events
-day  11  hash c451cdd32325eb24  86 events
-day  12  hash c22ae29c04cb687c  94 events
-day  13  hash 5c7f3d29d7dab36b  64 events
-day  14  hash d8e06616bcc2b9af  58 events
+day   1  hash c1d1ebf694a75f78  58 events
+day   2  hash 450337231698b1e9  53 events
+day   3  hash 863746e70a051352  48 events
+day   4  hash 02ed47a2adb74779  245 events
+day   5  hash d724f15bd63107e0  141 events
+day   6  hash d17a87e5d73fb097  120 events
+day   7  hash 5406869bbe6ce4f0  252 events
+day   8  hash c7ad280cc51cd272  123 events
+day   9  hash 826bcdc400c29143  126 events
+day  10  hash 9ccdb79e3f79a767  77 events
+day  11  hash 0e35ee65a962e09e  86 events
+day  12  hash ef55d99b7ccb58b9  94 events
+day  13  hash a3b4ab7c8189ed52  64 events
+day  14  hash aaff74fec12df974  58 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -116,40 +116,40 @@ base:2 "Rabaul" (Japanese) at (-5,-13): 8910.52 t of supply in stock, repairs 4 
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 600 t of fuel in stock
 Allied: no contacts
 Allied claim over (2,-4): 2 aircraft shot down, day 1 morning
-Allied claim over (2,-4): 7 aircraft shot down, day 2 morning
-Allied claim over (2,-4): 4 aircraft shot down, day 3 morning
-Allied claim at (7,-10): 2 hits on a carrier, 0 sunk, day 4 afternoon
-Allied claim at (7,-10): 12 hits on a carrier, 1 sunk, day 4 afternoon
-Allied claim over (7,-5): 24 aircraft shot down, day 4 afternoon
+Allied claim over (2,-4): 5 aircraft shot down, day 2 morning
+Allied claim over (2,-4): 5 aircraft shot down, day 3 morning
+Allied claim at (7,-10): 1 hit on a carrier, 0 sunk, day 4 afternoon
+Allied claim at (7,-10): 9 hits on a carrier, 1 sunk, day 4 afternoon
 Allied claim over (7,-5): 19 aircraft shot down, day 4 afternoon
-Allied claim over (2,-4): 3 aircraft shot down, day 6 morning
+Allied claim over (7,-5): 17 aircraft shot down, day 4 afternoon
+Allied claim over (2,-4): 4 aircraft shot down, day 6 morning
 Allied claims 0 enemy ships sunk at (0,10), day 7 night
-Allied claim over (7,-5): 10 aircraft shot down, day 7 morning
-Allied claim over (7,-5): 21 aircraft shot down, day 7 morning
+Allied claim over (7,-5): 13 aircraft shot down, day 7 morning
+Allied claim over (7,-5): 18 aircraft shot down, day 7 morning
 Allied claims 0 enemy ships sunk at (0,10), day 7 morning
 Allied claims 0 enemy ships sunk at (0,10), day 7 morning
 Allied claim over (2,-4): 2 aircraft shot down, day 9 morning
-Allied claim over (2,-4): 8 aircraft shot down, day 12 morning
-Allied claim over (7,-5): 10 aircraft shot down, day 12 afternoon
-Allied claim over (7,-5): 13 aircraft shot down, day 12 afternoon
+Allied claim over (2,-4): 7 aircraft shot down, day 12 morning
+Allied claim over (7,-5): 16 aircraft shot down, day 12 afternoon
+Allied claim over (7,-5): 9 aircraft shot down, day 12 afternoon
 Japanese: no contacts
-Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 1 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 2 morning
-Japanese claim at (2,-4): 4 aircraft shot down, 5 aircraft destroyed on the ground, day 3 morning
-Japanese claim over (7,-10): 1 aircraft shot down, day 4 afternoon
+Japanese claim at (2,-4): 6 aircraft shot down, 5 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 7 aircraft destroyed on the ground, day 2 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 2 aircraft destroyed on the ground, day 3 morning
+Japanese claim over (7,-10): 4 aircraft shot down, day 4 afternoon
 Japanese claim over (7,-10): 3 aircraft shot down, day 4 afternoon
-Japanese claim at (7,-5): 6 hits on a transport, 0 sunk, 2 aircraft shot down, day 4 afternoon
-Japanese claim at (7,-5): 2 hits on a transport, 0 sunk, 3 aircraft shot down, day 4 afternoon
-Japanese claim at (2,-4): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 6 morning
+Japanese claim at (7,-5): 5 hits on a transport, 0 sunk, 2 aircraft shot down, day 4 afternoon
+Japanese claim at (7,-5): 3 hits on a transport, 0 sunk, 2 aircraft shot down, day 4 afternoon
+Japanese claim at (2,-4): 2 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 night
 Japanese claims 1 enemy ship sunk at (0,10), day 7 night
-Japanese claim at (7,-5): 1 hit on a cruiser, 0 sunk, 1 aircraft shot down, day 7 morning
-Japanese claim at (7,-5): 0 hits on a cruiser, 0 sunk, 2 aircraft shot down, day 7 morning
+Japanese claim at (7,-5): 2 hits on a cruiser, 0 sunk, 2 aircraft shot down, day 7 morning
+Japanese claim at (7,-5): 0 hits on a cruiser, 0 sunk, 1 aircraft shot down, day 7 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
-Japanese claim at (2,-4): 5 aircraft shot down, 5 aircraft destroyed on the ground, day 9 morning
+Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
 Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 12 morning
 Japanese claim at (7,-5): 0 hits on a carrier, 0 sunk, 1 aircraft shot down, day 12 afternoon
 Japanese claim at (7,-5): 0 hits on a carrier, 0 sunk, day 12 afternoon

@@ -2,11 +2,11 @@ Scenario 6b: Wear and repair
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9ca1730e77fa79e0  29 events
-day   2  hash 309cb9956232d2f9  26 events
-day   3  hash a6952561ef67bba3  26 events
-day   4  hash 96b5acc096e5313d  26 events
-day   5  hash d424fcd14f908155  25 events
+day   1  hash 5d10e7027663b399  29 events
+day   2  hash c60dc53a37f5c095  26 events
+day   3  hash 523fc2b0f3ce630b  26 events
+day   4  hash 98374073703922fa  26 events
+day   5  hash bebf9ce6d57e5065  25 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -26,8 +26,8 @@ day   5  hash d424fcd14f908155  25 events
 #16 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
 #17 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #16
 #18 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #17
-#19 D1 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #10, #17
-#20 D1 morning   Allied claim over (5,0): 4 aircraft shot down  <- #11, #12, #13
+#19 D1 morning   Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #10, #17
+#20 D1 morning   Allied claim over (5,0): 5 aircraft shot down  <- #11, #12, #13
 #21 D1 morning   air_group:1 base strike sortie of 400 nm: 16 aircraft x 0.13 = 2.08 expected worn, 1 worn, 0 written off, 15 ready and 1 damaged left  <- #8
 #22 D1 morning   air_group:2 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 1 worn, 0 written off, 10 ready and 1 damaged left  <- order:5, order:6
 #23 D1 morning   air_group:2 escort sortie of 400 nm: 5 aircraft x 0.13 = 0.65 expected worn, 1 worn, 1 written off, 9 ready and 1 damaged left  <- #9
@@ -53,7 +53,7 @@ day   5  hash d424fcd14f908155  25 events
 #43 D2 morning   air_group:1 bombs at base:2: 14 shots x 0.2 = 2.8 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #35, #42
 #44 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #43
 #45 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #37, #43
-#46 D2 morning   Allied claim over (5,0): 2 aircraft shot down  <- #38, #39, #40
+#46 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #38, #39, #40
 #47 D2 morning   air_group:1 base strike sortie of 400 nm: 14 aircraft x 0.13 = 1.82 expected worn, 2 worn, 1 written off, 12 ready and 1 damaged left  <- #35
 #48 D2 morning   air_group:2 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 0 worn, 0 written off, 10 ready and 0 damaged left  <- order:5, order:6
 #49 D2 morning   air_group:2 escort sortie of 400 nm: 5 aircraft x 0.13 = 0.65 expected worn, 1 worn, 0 written off, 9 ready and 1 damaged left  <- #36
@@ -78,8 +78,8 @@ day   5  hash d424fcd14f908155  25 events
 #68 D3 morning   air_group:1 lost 1 aircraft, 12 left  <- #65
 #69 D3 morning   air_group:1 lost 3 aircraft, 9 left  <- #66
 #70 D3 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #61, #68, #69
-#71 D3 morning   Japanese claim over (5,0): 1 aircraft shot down  <- #63, #70
-#72 D3 morning   Allied claim over (5,0): 7 aircraft shot down  <- #64, #65, #66
+#71 D3 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #63, #70
+#72 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #64, #65, #66
 #73 D3 morning   air_group:1 base strike sortie of 400 nm: 9 aircraft x 0.13 = 1.17 expected worn, 1 worn, 0 written off, 8 ready and 1 damaged left  <- #61
 #74 D3 morning   air_group:2 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:5, order:6
 #75 D3 morning   air_group:2 escort sortie of 400 nm: 4 aircraft x 0.13 = 0.52 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- #62
@@ -104,7 +104,7 @@ day   5  hash d424fcd14f908155  25 events
 #94 D4 morning   air_group:1 lost 1 aircraft, 8 left  <- #91
 #95 D4 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 1 on aircraft, 0 on supply, 0 on nothing  <- #86, #94
 #96 D4 morning   air_group:4 lost 1 aircraft on the ground at base:2, 7 left  <- #95
-#97 D4 morning   Japanese claim at (5,0): 2 aircraft shot down, 1 aircraft destroyed on the ground  <- #88, #95
+#97 D4 morning   Japanese claim at (5,0): 2 aircraft shot down, 2 aircraft destroyed on the ground  <- #88, #95
 #98 D4 morning   Allied claim over (5,0): 3 aircraft shot down  <- #89, #90, #91
 #99 D4 morning   air_group:1 base strike sortie of 400 nm: 8 aircraft x 0.13 = 1.04 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- #86
 #100 D4 morning   air_group:2 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- order:5, order:6
@@ -129,7 +129,7 @@ day   5  hash d424fcd14f908155  25 events
 #119 D5 morning   air_group:1 lost 1 aircraft, 7 left  <- #115
 #120 D5 morning   air_group:1 lost 3 aircraft, 4 left  <- #116
 #121 D5 morning   air_group:1 bombs at base:2: 4 shots x 0.2 = 0.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #111, #119, #120
-#122 D5 morning   Japanese claim over (5,0): 2 aircraft shot down  <- #113, #121
+#122 D5 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #113, #121
 #123 D5 morning   Allied claim over (5,0): 6 aircraft shot down  <- #114, #115, #116
 #124 D5 morning   air_group:1 base strike sortie of 400 nm: 4 aircraft x 0.13 = 0.52 expected worn, 1 worn, 0 written off, 3 ready and 1 damaged left  <- #111
 #125 D5 morning   air_group:2 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 1 worn, 0 written off, 5 ready and 1 damaged left  <- order:5, order:6
@@ -149,14 +149,14 @@ air_group:5 "Placeholder scouts" (Allied) at base:2: 5 ready, mission Search, ar
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock, repairs 2 aircraft a day
 base:2 "Placeholder airfield B" (Allied) at (5,0): 950 t of supply in stock, 20 anti-aircraft shots, repairs 3 aircraft a day
 Allied: no contacts
-Allied claim over (5,0): 4 aircraft shot down, day 1 morning
-Allied claim over (5,0): 2 aircraft shot down, day 2 morning
-Allied claim over (5,0): 7 aircraft shot down, day 3 morning
+Allied claim over (5,0): 5 aircraft shot down, day 1 morning
+Allied claim over (5,0): 3 aircraft shot down, day 2 morning
+Allied claim over (5,0): 6 aircraft shot down, day 3 morning
 Allied claim over (5,0): 3 aircraft shot down, day 4 morning
 Allied claim over (5,0): 6 aircraft shot down, day 5 morning
 Japanese: no contacts
-Japanese claim over (5,0): 3 aircraft shot down, day 1 morning
+Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
 Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
-Japanese claim over (5,0): 1 aircraft shot down, day 3 morning
-Japanese claim at (5,0): 2 aircraft shot down, 1 aircraft destroyed on the ground, day 4 morning
-Japanese claim over (5,0): 2 aircraft shot down, day 5 morning
+Japanese claim over (5,0): 0 aircraft shot down, day 3 morning
+Japanese claim at (5,0): 2 aircraft shot down, 2 aircraft destroyed on the ground, day 4 morning
+Japanese claim over (5,0): 3 aircraft shot down, day 5 morning
