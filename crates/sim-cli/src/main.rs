@@ -108,13 +108,13 @@ struct Executed {
 fn execute(
     path: &str,
     seed: Option<u64>,
-    before_run: impl FnOnce(&Scenario),
+    before_run: impl FnOnce(&mut Scenario),
 ) -> Result<Executed, String> {
     let mut scenario = Scenario::load(Path::new(path)).map_err(|e| e.to_string())?;
     if let Some(seed) = seed {
         scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
     }
-    before_run(&scenario);
+    before_run(&mut scenario);
     let initial = scenario.world.umpire().clone();
     let summaries = scenario.run_to_end().map_err(|e| e.to_string())?;
     Ok(Executed {

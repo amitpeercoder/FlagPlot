@@ -39,7 +39,7 @@ The map tool also has `locate --lat --lon`, `path --from q,r --to q,r`, `sides -
 
 `oob-derive` derives ship classes for a list of real ships from `data/oob` (decision 0020). A ship list may name working assumptions (unknown radar means none, decision 0019; main-gun ammunition not limiting, decision 0023; surface weapons not modelled, decision 0029), may ask for the air figures and may list aircraft types to derive, and the rules file names every exception. With any problem it writes nothing and lists every problem; `--check` only reports; `--facts DIR` reads another facts directory.
 
-All three checks must pass before a commit. CI runs the same three. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build; `oob-check` run by hand lists the problems.
+All three checks must pass before a commit. CI runs the same three, then runs scenario 1, exports every scenario and runs the viewer's check on the exports. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build; `oob-check` run by hand lists the problems.
 
 ## Layout
 

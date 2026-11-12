@@ -37,3 +37,16 @@ No rule is added or changed.
 ## As built
 
 Item 9 is built as `sim-cli events`, an umpire's command that reads the truth like `run`. `events SCENARIO_OR_SAVE --unit HANDLE [--day N] [--seed N]` runs the scenario (or replays the saved game) to its end and prints every event that names the unit, in the text `run --events` prints, with a count last. A handle is `ship:N`, `task_force:N`, `air_group:N`, `base:N` or `contact:N`; contact numbers belong to a side, so `allied:contact:N` or `japanese:contact:N` picks one. For a ship it also prints the events of the task force it was in at the time, each marked `via task_force:N`. `events SCENARIO_OR_SAVE --why EVENT` prints the event and its causes down to orders as an indented tree, with each event's breakdown, and an event reached twice is printed once and then referred to by number.
+
+## Added on Nov 12, 2026: more that step 1 leaves out
+
+A second check of the spec against the code found more that was listed and never built, for the same reason: no scenario of step 1 uses it. Settled by the architect, on the same ground the designer agreed for ground combat. The designer was told and may bring any of them back into step 1.
+
+11. **Ship repair is deferred to early in step 2.** No rule lowers a ship's flotation, fire or system damage, in port or at sea (decisions 0014 and 0016 listed it as not built). It matters as soon as a campaign is long: without it fleets only wear down. It comes first in step 2 because the comparison with the record over months depends on it.
+12. **Damage to a base's port and airfield is deferred** (decisions 0011 and 0034 listed it as not built). A raid hits aircraft and supply only.
+13. **Crew experience, air group morale, aircraft in reserve and a base's aviation support are deferred** to step 2 with pilot quality (item 5): they are qualities to tune against the record, and nothing reads them yet. Decision 0032 is the lesson: a quantity no rule reads does not stay.
+14. **Terrain is not read by any rule.** The kinds exist; the generated map marks every land hex as jungle (decision 0017). It waits for ground combat (item 1).
+15. **Port and airfield sizes are zero everywhere on the generated map.** Port size sets only how fast cargo is worked; no rule reads airfield size. Sizes for the real bases are data for step 2.
+16. **"No belief data written except from a report" is kept by construction, not by a daily check:** `BeliefState::apply_report` is the only way in and is not visible outside the crate.
+17. **A batch runs with breakdown recording off,** as the spec allows. That is now so.
+
