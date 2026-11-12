@@ -1,6 +1,6 @@
 # 0039: Base supply consumption
 
-Status: confirmed. The designer approved on Nov 11, 2026 that supply is spent for each sortie and each day, and that a base without supply neither flies nor repairs. Decisions 4, 6 and 8 are choices that answer did not state and are marked for review.
+Status: confirmed. The designer approved on Nov 11, 2026 that supply is spent for each sortie and each day, and that a base without supply neither flies nor repairs. Decisions 4, 6 and 8 are choices that answer did not state; the designer confirmed them on Nov 12, 2026.
 
 ## The gap
 
@@ -13,17 +13,17 @@ A base has a stock of supply, a convoy can add to it (scenario 2) and a raid can
 1. **Each aircraft that flies a sortie from a base costs the base supply:** a figure for the sortie plus a figure for each 100 miles of it, the distance counted as for wear and fatigue (decision 0035, 4). It is counted on the aircraft sent, whether or not they come back.
 2. **Each aircraft at a base, ready or damaged, costs the base a figure a day,** at the start of the day.
 3. **Each repair costs a figure** (decision 0035, 9). A base repairs an aircraft only if it has that much supply, so repair stops when the stock runs short.
-4. **Replacements cost the base nothing** *(needs review)*. They are flown or shipped in from outside. (Decision 0038 said a replacement would draw on base supply. It does not.)
+4. **Replacements cost the base nothing** *(confirmed by the designer, Nov 12, 2026)*. They are flown or shipped in from outside. (Decision 0038 said a replacement would draw on base supply. It does not.)
 
 ### When
 
 5. **Sorties are paid for after the air combat of the pulse they flew in,** all the base's sorties of the pulse in one sum. The daily cost and repairs are paid in the night, at the start of the day: repair first, then replacements, then the daily cost.
-6. **A payment the stock cannot cover takes what is left** *(needs review)*. The stock does not go below nothing and nothing is owed. So the last pulse before a base runs dry is flown in full.
+6. **A payment the stock cannot cover takes what is left** *(confirmed by the designer, Nov 12, 2026)*. The stock does not go below nothing and nothing is owed. So the last pulse before a base runs dry is flown in full.
 
 ### Out of supply
 
 7. **A base with no supply at the start of a daylight pulse flies nothing in that pulse.** Its groups keep their missions. Their aircraft are on the ground.
-8. **Nothing else stops** *(needs review)*: the base's guns still fire, its aircraft are not lost, and a group there still rests. A base flies again in the first pulse that starts with supply in stock.
+8. **Nothing else stops** *(confirmed by the designer, Nov 12, 2026)*: the base's guns still fire, its aircraft are not lost, and a group there still rests. A base flies again in the first pulse that starts with supply in stock.
 9. **Aircraft aboard ships spend nothing yet.** A carrier's supply is not modelled.
 10. **The figures are in a file of their own, and a scenario without it spends nothing.** Scenarios 1 to 6d1 do not name the file and run as before.
 
