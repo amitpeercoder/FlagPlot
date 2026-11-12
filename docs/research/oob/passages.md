@@ -83,3 +83,64 @@ Each end has a place, or a latitude and longitude, or the flag saying it is not 
 - A US deck log with daily positions: the one transcription found has watch entries only.
 - Departure times for the supply ships' runs; Boise's passage home; Enterprise's sailing date from Tongatabu.
 - Passages by Australian and New Zealand ships were not looked for.
+
+## Second pass, 2026-11-12: the Japanese destroyer squadron diaries
+
+The archive's catalogue search was made to work, and it found the 2nd Destroyer Squadron's diaries for September and October 1942 (twelve volumes) and five more volumes of the reinforcement group's August report. **The 3rd Destroyer Squadron's diaries for August to October, which ran most of the September runs, are not in the catalogue:** its entries stop at May 1942. Rows added: `passages.csv` ids 77 to 129, with 18 new gaps. One daily page was read a second time by me and agreed; the researchers re-read every noon position at higher resolution, and most speeds once.
+
+### The answer is unchanged
+
+**Still no run with a start, an end, both times and one held speed.** No row in this pass is marked steady. Every speed found in the reinforcement group's volumes and the 4th Destroyer Squadron's October diary is an order or a plan (a convoy planned at 14 knots on course 120, for example), never a record of a completed run. The 4th Destroyer Squadron's own action reports for the runs of 11 to 16 October are cited in its diary and are not in the volumes found.
+
+### What is new: a daily track from a force's own diary
+
+The 2nd Destroyer Squadron's diary has a noon position for every day at sea. That gives noon-to-noon legs for two sorties from Truk, each beside the speeds the same pages state. The distances and the speed made good are my arithmetic on the positions; they are not statements by the source.
+
+**September sortie with the Advance Force, 9 to 23 September** (flag in a destroyer; the squadron's cruiser was under repair at Truk):
+
+| Noon to noon | Distance between the positions | Made good | Speeds stated on the pages | What the force was doing |
+| --- | --- | --- | --- | --- |
+| 10 to 11 Sep | 359 nm | 15.0 kn | 16 kn from 0545, 14 kn from 1700 | Running south, zigzagging |
+| 11 to 12 Sep | 150 nm | 6.2 kn | 16 kn, then 12 kn | |
+| 12 to 13 Sep | 424 nm | 17.7 kn | 20 kn from 0400 | Running south |
+| 13 to 14 Sep | 74 nm | 3.1 kn | 28 kn, 24 kn under air attack, 20 kn | Off the Solomons, manoeuvring |
+| 14 to 15 Sep | 361 nm | 15.0 kn | 12 kn refuelling, 14 kn | Withdrawing north |
+| 15 to 16 Sep | 261 nm | 10.9 kn | 14 kn | |
+| 16 to 17 Sep | 91 nm | 3.8 kn | 14 kn | Waiting |
+| 19 to 20 Sep | 80 nm | 3.3 kn | 16 kn | Waiting; the operation was cancelled at 1038 on the 20th |
+| 20 to 21 Sep | 367 nm | 15.3 kn | 16 kn | Returning to Truk on course 305 |
+| 21 to 22 Sep | 375 nm | 15.6 kn | 16 kn, 18 kn from 1630 | Returning to Truk |
+
+**October sortie, 11 to 30 October** (the bombardment of the airfield on the night of 13 to 14 October and the carrier battle of the 26th):
+
+| Noon to noon | Distance | Made good | Speeds stated | What the force was doing |
+| --- | --- | --- | --- | --- |
+| 11 to 12 Oct | 395 nm | 16.5 kn | 20 kn from 0500, 16 kn about noon; 30 kn ordered at 0230, stopped at 1140; 14 kn from 1230 | Running south-east from Truk, zigzagging; refuelling from 1305 on the 12th. The 12 October page read twice |
+| 12 to 13 Oct | 424 nm | 17.6 kn | 16 kn at 1800, 18 kn at 2300, 26 kn from 0330, 28 kn from about 0900 | Running south; the bombardment group left the main body at 0330 |
+| 13 to 14 Oct | 74 nm | 3.1 kn | 26, 18 and 21 kn on the run in; 26 and then 29 kn retiring | To Guadalcanal and back in the 24 hours: a round trip, so the figure means nothing as a speed |
+| 14 to 16 Oct | 87 and 157 nm | 3.6 and 6.5 kn | Read once | Refuelling; a second bombardment on the 15th |
+| 16 to 26 Oct | 38 to 243 nm a day | 1.6 to 10.1 kn | 14 to 16 kn, read once | Cruising north of the Solomons, refuelling, waiting |
+| 27 to 28 Oct | 381 nm | 15.9 kn | 18 kn, read once | Returning to Truk |
+| 28 to 29 Oct | 399 nm | 16.6 kn | 20 kn, read once | Returning to Truk |
+
+**What the daily track shows.**
+- **On a passage, a force made good about 15 to 18 knots while the pages state 16 to 20:** six such days in September and October give 359 to 424 nm a day. Speed made good was 80 to 95 per cent of the stated speed, with zigzagging on. That is higher than the half to three quarters found for US carrier forces and convoys in the first pass.
+- **In the operating area the daily run collapses** to 40 to 240 nm, at stated speeds of 14 to 16 knots, because the force was refuelling, waiting or doubling back. A day's stated speed says little about the distance between two noons there.
+- **The bombardment run is fully timed** by the squadron's action report: the group left the main body at 0330 on 13 October at 26 knots, went to 28 at about 0900, was between Cape Esperance and Savo Island at 2237, opened fire at 2337, ceased at 0100 and retired at 26 and then 29 knots. It has no stated start position, and it changed speed, so it is a check and not a single-speed run.
+
+**Usable as the first pass's rows 32 and 34 were: as averages between noon positions.** The six passage days (10 to 11, 12 to 13, 20 to 21 and 21 to 22 September; 11 to 12 and 12 to 13 October) each cover 359 to 424 nm between two positions from the force's own diary. Several lie west of 172°E, inside the map.
+
+### Corrections to the first pass
+
+- The circled numbers on the September track chart are courses, not speeds. No speed is printed on the chart.
+- A position quoted in the first pass's notes for 15 September (11°37'S) was a misreading of 1°37'S; the page's own header gives 2°1'S 164°56'E. Both are recorded.
+
+### Doubts
+
+- Two positions are flagged as implausible and left out or marked: 18 September (the latitude as written does not fit the track) and 30 October (the position conflicts with the ship passing Truk's channel that afternoon).
+- The two researchers read 11 October differently in one respect: one has the force leaving Truk's north channel at 0500 at 20 knots (the diary), the other has it sailing at 0130 with 20 knots from 0500 (the action report). Both are recorded.
+- Speeds for 14 to 30 October were read once at low resolution and are graded low. The noon positions are the firm part.
+
+### Not read
+
+About 480 pages of telegram logs in the reinforcement group's and the 4th Destroyer Squadron's volumes; the 2nd Destroyer Squadron's signal-log volumes; pages 17 to 72 of its October action report, which may hold the convoy of 14 to 15 October.
