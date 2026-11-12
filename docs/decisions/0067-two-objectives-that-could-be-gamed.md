@@ -1,0 +1,75 @@
+# 0067: Two objectives that could be gamed
+
+Status: needs review. A plan for the designer's approval, written on Nov 12, 2026 at his word ("Plan them now"). Nothing is built. If it is approved, the hand calculation is written before any code is delegated, and this record gains an "As built" section.
+
+## The gap
+
+The rulebook review of Nov 12, 2026 found two objectives (decision 0054) that reward play their names do not describe. Both were checked against the code.
+
+- **`cargo_landed` can be scored more than once for the same cargo.** It counts every ton in the `CargoUnloaded` events of the side's ships at the named base. A force at a base of its own side may also load from that base's stock (chapter 2, load orders). So a force can unload, load the same tons back and unload them again, and every unloading scores. The full slice pays the Allied side for cargo landed at Henderson Field.
+- **`base_open` reads only the last moment of the game.** It is 1 if the base has supply above zero and at least one ready aircraft at the end. A base that was out of supply and empty of aircraft for four weeks scores as open with one ton and one ready aircraft on the last night. A base that flew every day scores as closed if it is empty on the last night. Rabaul against Guadalcanal and the full slice both turn on it, for both sides.
+
+Neither holds up step 2: no measure rests on either, and the result on the objectives scale is reported and not judged (`docs/step2-spec.md`, "Decided by the designer", 4). They matter the moment something plays the game for points, and the baseline already shows one effect: Rabaul against Guadalcanal ends as a major Allied victory in all 1,000 runs, because ten of its points hang on the last night alone.
+
+## Decisions
+
+### Cargo landed
+
+1. **Cargo landed is the tons the side's ships unloaded at the named base, less the tons the side's ships loaded there,** supply and fuel together, and never below nothing. Cargo that is put ashore and taken off again was not landed.
+2. **It is still counted from the event log.** `CargoLoaded` names its base as `CargoUnloaded` does, so nothing new is recorded and nothing is added to the state.
+3. **A side still knows it exactly.** It sees both events for its own ships whole (decision 0047), so its known progress keeps the basis `exact`.
+
+### Base open
+
+4. **Base open is counted by days.** At the end of each day the base is open if its supply is above zero and at least one ready aircraft of an air group is at it: the same two conditions as now, asked every day and not once.
+5. **The points are for the whole game, as now, and are earned by the share of days.** A side holding `base_open` with 10 points for a base that was open on 21 days of 28 scores 7.5. With `closed = true` the share is of the days it was shut. So a scenario's points keep their meaning, and the two sides' objectives on one base still sum to the whole.
+6. **The count comes from the event log,** as every other objective's does. At the end of each day the engine records, for each base that an objective of either side names, its supply and its ready aircraft. The event changes no state. The side that owns the base sees it; the other side does not.
+7. **What a side knows is as now.** For a base of its own, basis `exact`: its own days. For an enemy base, `not_observable`, and the count is 0.
+
+## A small worked case
+
+A game of four days. The Allied side holds `cargo_landed` at base 1 at 0.005 points a ton and `base_open` at base 1 for 10 points.
+
+| | Day 1 | Day 2 | Day 3 | Day 4 |
+| --- | --- | --- | --- | --- |
+| Unloaded at base 1, tons | 1,000 | 0 | 1,000 | 0 |
+| Loaded at base 1, tons | 0 | 1,000 | 0 | 0 |
+| Supply at the end of the day | above 0 | 0 | above 0 | above 0 |
+| Ready aircraft at the end of the day | 3 | 3 | 0 | 2 |
+| Open | yes | no | no | yes |
+
+- Cargo landed today: 2,000 tons, 10 points. By this plan: 2,000 less 1,000 is 1,000 tons, 5 points.
+- Base open today: open on the last night, 10 points. By this plan: 2 days of 4, 5 points.
+
+## Why
+
+- **The name is the test.** An objective should pay for what a commander would recognise as the thing: cargo that stayed ashore, a field that was in use.
+- **Net tons, not tons traced to their port.** Paying only for cargo that came from another base would need each ship to remember where its cargo was loaded: new state for every ship, in the hash, to close the same hole.
+- **A share of days, not all or nothing.** Requiring every day would give the enemy the whole objective for one bad night, which is the fault being mended, turned round.
+- **No new mechanism.** Both stay a count read from the log at the end, like every objective.
+
+## What it leaves out
+
+- **A base that is open at dusk and was useless all day,** for want of fuel or with every pilot spent. The two conditions are the ones the objective already has. A better test of a working field is a question for the scale as a whole.
+- **"Out of the campaign"** and the other reworking of the scale, which stay on the opening list.
+- **Cargo destroyed ashore.** A ton landed and then bombed still counts as landed.
+
+## What it costs
+
+- The results of the full slice and of Rabaul against Guadalcanal change, and so do the recorded games' scores. Every hand calculation that includes either objective is worked again by the architect before the code.
+- One new kind of event, with its line in `side_events.rs` saying who may see it. No new state. Whether an event that changes no state is the right carrier, or the day's count is better kept another way, is the build architect's to settle before the hand calculation, within decision 6.
+- Chapter 6 of the rulebook and the glossary change in the same pull request as the code.
+- The baseline reports' tallies of outcomes for the two scenarios are remade.
+
+## Rule card
+
+| | |
+| --- | --- |
+| Reads | The `CargoLoaded` and `CargoUnloaded` events of a side's ships at a named base. At the end of each day, the supply and the ready aircraft of each base an objective names |
+| Writes | No state. One event a day for each such base |
+
+## Questions for the designer
+
+1. **Cargo landed: net of what was loaded back at that base (recommended), or only cargo that came from another base?** The second is closer to the idea and costs new state for every ship.
+2. **Base open: the share of days (recommended), or open on every day or it does not score?**
+3. **Who builds it?** The rulebook review session offered to build from this record; the build session is on experience (0064) and the surprised-force plan (0066).
