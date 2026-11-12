@@ -236,10 +236,10 @@ One Rust workspace with three crates and a data directory.
 
 Step 1 is done when:
 
-- [ ] All eight scenarios run from the command line and pass in CI.
-- [ ] A 180-day run completes in under 60 seconds on one core (target, to be confirmed once it runs).
-- [ ] Replay of any saved run reproduces every daily hash.
-- [ ] The event log answers "what happened to this entity" and "why" for any event in a run.
-- [ ] A batch of 1,000 runs produces a summary file of losses per side that step 2 can read.
+- [x] All eight scenarios run from the command line and pass in CI.
+- [x] A 180-day run completes in under 60 seconds on one core (target, to be confirmed once it runs). Measured at 2.2 seconds in a debug build and 0.27 in a release build (decision 0044).
+- [x] Replay of any saved run reproduces every daily hash.
+- [x] The event log answers "what happened to this entity" and "why" for any event in a run. `sim-cli events` (decision 0052, item 9).
+- [x] A batch of 1,000 runs produces a summary file of losses per side that step 2 can read. It also tallies each run's result where the scenario has objectives (decision 0054).
 
 Suggested first commit: the workspace, the entity IDs, the counter-based random generator with its tests, and scenario 1.
