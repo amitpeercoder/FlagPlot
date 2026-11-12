@@ -42,7 +42,8 @@
 # `speed_changes` holds `speed_kn` until the minute given and the new speed
 # after it. `to_short_by_nm` ends the run that many miles before the place.
 # An end may be a latitude and longitude, as decimal strings, south and
-# west negative, in place of a named place.
+# west negative, in place of a named place. A named place is one with a
+# position in data/oob/place_positions.csv.
 #
 # Settled by the architect of the spec session on 2026-11-12. No row's
 # standing was changed.
@@ -65,7 +66,7 @@ reason = "The order to break off was given at 02:20 (236); the column was at 30 
 id = "japanese_6th_cruiser_division_shortlands_to_savo_island"
 facts = "data/oob/passages.csv"
 counts = "Minutes to steam from the Shortland Islands to the point 10 miles short of Savo Island, at 24 knots for four hours and 30 knots after"
-from_place = "shortland-islands"
+from_place = "shortland-harbor"
 to_place = "savo-island"
 to_short_by_nm = 10
 speed_kn = 24
@@ -74,7 +75,7 @@ record_low = 573
 record_high = 573
 judged = false
 rows = [11]
-reason = "The force's own report for 11 October: sailed at 12:00 at 24 knots, 30 knots from 16:00, and at 21:33 came out of a squall with Savo Island about 10 miles off (11). Four hours at 24 knots and 5 hours 33 minutes at 30 are 262 miles, and the two places are about 265 apart, so here the stated speeds and the times agree. It is the best check in the record. Not judged: the run is six or seven hexes, and a place at the centre of its hex can be 23 miles off at each end, which at 30 knots is 46 minutes."
+reason = "The force's own report for 11 October: sailed at 12:00 at 24 knots, 30 knots from 16:00, and at 21:33 came out of a squall with Savo Island about 10 miles off (11). Four hours at 24 knots and 5 hours 33 minutes at 30 are 262 miles, and the two places are about 265 apart, so here the stated speeds and the times agree. The row names the Shortland Islands; the run is taken from Shortland Harbour, the anchorage in them, which is the place with a position. Not judged: the run is six or seven hexes, and a place at the centre of its hex can be 23 miles off at each end, which at 30 knots is 46 minutes."
 
 [[passage]]
 id = "mcfarland_espiritu_santo_to_lunga_point"
@@ -117,4 +118,17 @@ record_high = 1440
 judged = false
 rows = [100]
 reason = "The squadron's own diary: noon positions a day apart, and every hour between accounted for (100). At 12:00 on 27 October the force turned to 320 degrees at 18 knots; at 21:40 it began refuelling from an oiler at 14 knots; at 09:00 on the 28th it went back to 18 knots and began to zigzag. Those speeds over those hours come to about 387 miles, and the two positions are 381 apart, so the record agrees with itself to within two in a hundred. It is the longest run in the record that lies on the map with a speed for every hour, and the best check there is of the miles a ship is charged. Not judged: a position is taken to be at the centre of its hex, up to 23 miles off at each end, which at these speeds is over an hour and a half each, as much as the error the rule was made to remove."
+
+[[passage]]
+id = "japanese_4th_destroyer_squadron_tassafaronga_to_the_shortlands"
+facts = "data/oob/passages.csv"
+counts = "Minutes to steam from Tassafaronga to Shortland Harbour at 28 knots"
+from_place = "tassafaronga"
+to_place = "shortland-harbor"
+speed_kn = 28
+record_low = 650
+record_high = 650
+judged = false
+rows = [137]
+reason = "The squadron's own action report: assembled off Tassafaronga at 22:40 on 17 October, course 320 at 28 knots, home by the central route, back in the Shortlands at 09:30 on the 18th (137). It is the one run in the record at a single stated speed between two named places. Its track chart draws the central route as the Slot, between Santa Isabel and the New Georgia islands. At 28 knots 650 minutes is about 303 miles, and the two places are about 275 apart in a straight line, so the squadron made about nine tenths of its stated speed good. The row stands unconfirmed and is read here by exception: the log was read twice, and Tassafaronga's position is from one gazetteer. The row names the Shortland Islands; the run is taken to Shortland Harbour. Not judged, as no passage is: seven hexes, and a place is taken to be at its hex centre."
 
