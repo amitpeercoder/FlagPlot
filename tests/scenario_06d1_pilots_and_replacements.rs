@@ -1775,8 +1775,15 @@ fn with_no_replacements_nothing_is_received_and_the_first_three_days_are_scenari
         }
         assert_eq!(ours.len(), reference.events.len(), "seed {seed}");
         for (a, b) in ours.iter().zip(&reference.events) {
+            // The one breakdown the pilots add: a patrol's loss where its
+            // pilots are counted says how many crews were recovered
+            // (decision 6a of 0059).
+            let breakdown = match &a.breakdown {
+                Some(b) if b.factors.iter().any(|f| f.name == "crew_recovered_chance") => None,
+                other => other.clone(),
+            };
             assert_eq!(
-                (a.day, a.pulse, &a.kind, a.breakdown.clone()),
+                (a.day, a.pulse, &a.kind, breakdown),
                 (b.day, b.pulse, &b.kind, b.breakdown.clone()),
                 "seed {seed}"
             );
@@ -2114,7 +2121,9 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 // And the soak, which carries it on for 180 days (decision 0044).
                 && !stem.starts_with("08_")
                 // Scenario 12a gives its bombing squadron pilots (decision 0059).
-                && !stem.starts_with("12a_"))
+                && !stem.starts_with("12a_")
+                // And 12b, which counts pilots for its fighters.
+                && !stem.starts_with("12b_"))
             .then(|| stem.to_string())
         })
         .collect();

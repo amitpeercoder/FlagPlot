@@ -562,6 +562,11 @@ pub struct AirCombatFigures {
     /// The chance the crew of an aircraft out of fuel on the way home is
     /// recovered (decision 6 of 0059).
     pub crew_recovered_short_of_home: Fixed,
+    /// The chance the pilot of a patrol aircraft shot down over its own base
+    /// is recovered (decision 6a of 0059).
+    pub crew_recovered_over_own_base: Fixed,
+    /// The same for a patrol over its own ships at sea (decision 6a of 0059).
+    pub crew_recovered_beside_own_force: Fixed,
 }
 
 impl AirCombatFigures {
@@ -607,6 +612,14 @@ impl AirCombatFigures {
             (
                 "crew recovered short of home",
                 self.crew_recovered_short_of_home,
+            ),
+            (
+                "crew recovered over own base",
+                self.crew_recovered_over_own_base,
+            ),
+            (
+                "crew recovered beside own force",
+                self.crew_recovered_beside_own_force,
             ),
         ] {
             if !in_unit(value) {
@@ -932,6 +945,8 @@ impl AirCombatFigures {
             extended_reach_share: Fixed::from_ratio(25, 100),
             ditch_chance_per_radius_beyond: Fixed::from_int(2),
             crew_recovered_short_of_home: tenth(7),
+            crew_recovered_over_own_base: tenth(6),
+            crew_recovered_beside_own_force: Fixed::from_ratio(95, 100),
         }
     }
 }

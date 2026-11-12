@@ -347,7 +347,7 @@ Hits are taken from the pool: patrol, escorts or bombers, lowest group number fi
 Pilots, where counted:
 
 - An aircraft lost as a bomber or an escort takes its pilot with it, never below 0. `PilotsLost` is recorded right after, caused by `AircraftLost`.
-- An aircraft lost as the patrol over its own hex loses no pilot. The group has one aircraft fewer and keeps the pilot. This holds for a carrier's patrol at sea too: rescue at sea is not modelled.
+- An aircraft lost as the patrol over its own hex draws for its pilot, where the group's pilots are counted: one draw for each aircraft lost, recovered with `air_combat.toml: crew_recovered_over_own_base` for a group based at a base, and with `crew_recovered_beside_own_force` for a group aboard a ship. Each pilot not recovered is a pilot lost, never below 0, and `PilotsLost` is recorded right after the `AircraftLost`, caused by it, when any is lost. The draws are one stream of the air combat subsystem with its own value of `Draw` (`PatrolPilot`, code 3), keyed on the patrol group and the group of escorts whose fire took the loss, so each firing roll's losses to a patrol group have a stream of their own; they are taken in the order the losses come off the groups. The `AircraftLost` of such a loss carries a breakdown, when breakdowns are recorded, of the aircraft lost, the chance and the number of crews recovered, whether or not a pilot was lost. A group whose pilots are not counted draws nothing. A patrol aircraft lost is the only loss that draws here: only escorts' fire takes a patrol's aircraft. [0038, 0059]
 - An aircraft written off after a sortie, or destroyed on the ground, loses no pilot.
 - An aircraft that ran out of fuel on the way home (see "Running out of fuel") draws for its crew, and a crew not recovered is a pilot lost.
 
@@ -504,7 +504,7 @@ Contacts age at the end of every pulse (chapter 3). The end-of-day phases do not
 - **Bases.** A base strike launches once a day, in the morning. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052]
 - **No rebase.** A group cannot move between bases or between a ship and a base. [0025, 0041, 0052]
 - **No landing elsewhere.** Aircraft are lost with their ship. [0025]
-- **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down. [0038, 0052, 0059]
+- **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down, and the pilot of a patrol aircraft shot down over its own hex may be, at a chance for a base and one for ships. [0038, 0052, 0059]
 - **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run. To change: differences.md row 27, a scenario whose arrival would overfill a ship is to be refused when it loads.
 - **Aircraft in reserve, morale, a base's aviation support, ground support, weather** are not built. [0052]
 - **Anti-aircraft ammunition** is not limited. [0027]

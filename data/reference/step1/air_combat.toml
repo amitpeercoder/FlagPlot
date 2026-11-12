@@ -1,7 +1,8 @@
 # FROZEN: a copy of data/reference/air_combat.toml
 # as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
 # (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
-# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# new figure adds it here too, with the value that leaves step 1's results as
+# they were, or else its first value. Otherwise byte for byte the live file.
 # PLACEHOLDER DATA. These figures are invented so the engine has something to
 # run. They are not historical and must not be used for validation.
 # See docs/decisions/0026-air-strikes.md.
@@ -48,6 +49,12 @@ ditch_chance_per_radius_beyond = "2"
 # The chance the crew of such an aircraft is recovered. A crew not recovered
 # is a pilot lost, where the group's pilots are counted.
 crew_recovered_short_of_home = "0.7"
+# The chance the pilot of a patrol aircraft shot down over its own hex is
+# recovered (decision 6a of 0059). FROZEN at "1", not at the live figures
+# (0.6 and 0.95): every such pilot is recovered, which is step 1's rule
+# (decision 0038), so the hand calculations of step 1 hold on these figures.
+crew_recovered_over_own_base = "1"
+crew_recovered_beside_own_force = "1"
 
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
