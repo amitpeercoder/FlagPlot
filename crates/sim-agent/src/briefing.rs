@@ -27,9 +27,12 @@ use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::lines::{
     air_group_line, force_line, is_afloat, AirGroupLine, ContactLine, ForceLine, PropulsionLine,
 };
+use crate::objectives::{objectives_part, result_part, ObjectivesPart};
 use crate::words;
 
-/// The briefing: ten parts, in this order, present every day.
+/// The briefing: eleven parts, present every day. The objectives (decision
+/// 0054) come second, after the heading; they say `none` when the scenario
+/// has none.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct Briefing {
     pub format: &'static str,
@@ -37,6 +40,10 @@ pub struct Briefing {
     pub kind: &'static str,
     /// 1. The side, the day, the scenario.
     pub heading: Heading,
+    /// 1b. The side's mission and objectives, its progress as far as it can
+    /// know it, and at the end of the game the umpire's result (decision
+    /// 0054).
+    pub objectives: ObjectivesPart,
     /// 2. Orders accepted yesterday and those refused, with the reason.
     pub orders: OrdersPart,
     /// 3. Contacts that changed yesterday, then every contact held now.
@@ -520,6 +527,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
             scenario: scenario.to_string(),
             rules_in_play: rules,
         },
+        objectives: objectives_part(&ctx, view),
         orders: day.orders,
         contacts: ContactsPart {
             held: view
@@ -541,6 +549,20 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         bases,
         arrivals,
         warnings,
+    }
+}
+
+impl Briefing {
+    /// Adds the umpire's result, for the final briefing of a finished game
+    /// (decision 8 of 0054). Whoever holds the game hands the result in; the
+    /// view is used for the names of bases only.
+    pub fn with_result(
+        mut self,
+        view: &SideView<'_>,
+        result: &sim_core::objectives::GameResult,
+    ) -> Briefing {
+        self.objectives.result = Some(result_part(view, result));
+        self
     }
 }
 

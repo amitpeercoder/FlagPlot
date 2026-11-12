@@ -32,6 +32,7 @@ mod common;
 mod explain;
 mod lines;
 mod measure;
+mod objectives;
 mod orders;
 mod queries;
 mod record;
@@ -56,6 +57,10 @@ pub use lines::{AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, Propul
 pub use measure::{
     measure, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer, Moment, Passage,
     PassageSpeed, PlaceArg, Question, ReachLine, Resolved, SeaRoute, ShipFuel, SpeedArg,
+};
+pub use objectives::{
+    result_part, KnownLine, ObjectiveLine, ObjectivesPart, ResultPart, ScoreLine, ShipKindPoints,
+    ShipsOfKind, SideResultPart,
 };
 pub use orders::{is_orderable_unit, order_from_json, order_to_json, unit_text};
 pub use queries::{

@@ -183,3 +183,30 @@ changes a rule, a result or a hash.
 - `set_search_arc` and `set_air_mission` carry their rules in the field
   descriptions of `order.schema.json`, which the MCP server's input schema
   repeats.
+
+## Objectives and the result (decision 0054, as built)
+
+A scenario may give each side a mission and objectives; neither changes a rule
+or a hash.
+
+- The briefing has an `objectives` part after the heading (a field added, so
+  the version stays 1): `mission` (text, or `null` without objectives),
+  `objectives` (one line for each, in the scenario's order) and `result`
+  (`null` until the game is over). A line gives the `kind` (`ships_sunk`,
+  `ships_crippled`, `aircraft_destroyed`, `cargo_landed`, `base_open`), the
+  `base` where there is one, `closed` for `base_open`, the points (`ship_points`
+  for each kind of ship, or `points` for one aircraft, one ton or the base), and
+  `known`: what the side knows of its progress. `known.basis` is `exact` (the
+  side's own units and events), `claims` (enemy ships it is told are sunk, of no
+  known kind, so `points` is `null`) or `not_observable` (no unit of its own and
+  no event it may see shows it; `count` is 0 and says nothing). The text says
+  `none` for a scenario without objectives. A side is never given the enemy's
+  mission or objectives.
+- At the end of the game the final briefing's `objectives.result` and the
+  `end_day` answer that reports `game_over` carry the result for both sides:
+  for each `allied` and `japanese`, the points by objective (`count`, the
+  `ships` counted by kind, `points`), `total`, `margin` (its points less the
+  other side's), `result` (`victory`, `defeat` or `stalemate`), `level`
+  (`minor`, `major`, `decisive`, or `null`) and `outcome` in words; and the
+  scenario's `history` note. The `end_day` answer always has a `result` field,
+  `null` before the end and for a scenario without objectives.

@@ -10,6 +10,7 @@ use crate::hash;
 use crate::ids::{BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
 use crate::invariants::{self, InvariantViolation};
 use crate::map::Map;
+use crate::objectives::{self, GameResult, Objectives};
 use crate::orders::{Order, OrderRequest};
 use crate::refdata::RefData;
 use crate::rng::{Draw, RngKey, RngStream, Subsystem};
@@ -105,6 +106,11 @@ pub struct World {
     /// 0039): their groups fly nothing in it. Worked out once at the start
     /// of each pulse, so not hashed.
     pub(crate) grounded_bases: BTreeSet<BaseId>,
+    /// The scenario's missions and objectives (decision 0054). Fixed
+    /// configuration, like the reference data: no rule reads it and nothing
+    /// in it changes, so it is not state and is not hashed. The result is a
+    /// function of the final truth and the event log.
+    pub(crate) objectives: Option<Objectives>,
 }
 
 impl World {
@@ -257,7 +263,45 @@ impl World {
             strikes_in_flight: Vec::new(),
             sorties: Vec::new(),
             grounded_bases: BTreeSet::new(),
+            objectives: None,
         })
+    }
+
+    /// Gives the game its missions and objectives (decision 0054). Fails if
+    /// an objective names a base the game does not have. Changes no state
+    /// and no hash.
+    pub fn set_objectives(&mut self, objectives: Objectives) -> Result<(), SimError> {
+        for base in objectives.bases_named() {
+            if !self.truth.bases.contains_key(&base) {
+                return Err(SimError::InvalidSetup(format!(
+                    "an objective names unknown {base}"
+                )));
+            }
+        }
+        self.objectives = Some(objectives);
+        Ok(())
+    }
+
+    /// The scenario's missions and objectives, if it has any. Both sides' are
+    /// here: this is for the loader, the runner and the umpire, not for
+    /// anything that plays the game, which has [`SideView::mission`] and
+    /// [`SideView::objectives`].
+    pub fn objectives(&self) -> Option<&Objectives> {
+        self.objectives.as_ref()
+    }
+
+    /// The result as the final truth and the log give it, for the umpire.
+    /// `None` if the scenario has no objectives. It reads the truth as it
+    /// stands, so it is a result only when the game is over; asked sooner it
+    /// is the score so far. Never hand it to a side before the game ends.
+    pub fn result(&self) -> Option<GameResult> {
+        let objectives = self.objectives.as_ref()?;
+        Some(objectives::result(
+            objectives,
+            &self.truth,
+            &self.events,
+            &self.ref_data,
+        ))
     }
 
     pub fn set_config(&mut self, config: SimConfig) {
@@ -294,6 +338,7 @@ impl World {
             &self.ref_data,
             &self.events,
             &self.orders,
+            self.objectives.as_ref(),
         )
     }
 
