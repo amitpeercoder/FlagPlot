@@ -259,6 +259,12 @@ impl Session {
             Some(Value::Bool(b)) => *b,
             Some(_) => return Err(CallError::new("\"clear\" must be true or false")),
         };
+        // A reason is for the reader of the transcript. The game never reads
+        // it (decision 0051, as built), but it must be text.
+        match args.get("reason") {
+            None | Some(Value::Null) | Some(Value::String(_)) => {}
+            Some(_) => return Err(CallError::new("\"reason\" must be text")),
+        }
         if clear {
             self.seats
                 .get_mut(&side)

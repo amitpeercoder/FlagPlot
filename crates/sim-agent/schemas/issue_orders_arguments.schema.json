@@ -16,6 +16,10 @@
     },
     "clear": {
       "type": "boolean"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Why you are giving these orders, in your own words. Kept in the record of the game for a reader; the game never reads it."
     }
   }
 }
