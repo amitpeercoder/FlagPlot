@@ -8,12 +8,15 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - What was looked for and not found: `gaps.csv`
 - Savo Island, as a scenario needs it: `docs/research/oob/savo-island.md`. The disputed facts its ships need, for one-pass approval: `savo-island-settlement.md`
 - Eastern Solomons, the same: `docs/research/oob/eastern-solomons.md`. The disputed facts scenario 5 needs, for approval: `eastern-solomons-settlement.md`
+- Cape Esperance (11 to 12 October 1942), the same, with the disputes first: `docs/research/oob/cape-esperance.md`
 - Rabaul against Guadalcanal in the air, 21 August to 17 September 1942, for scenario 6: `docs/research/oob/rabaul-guadalcanal-air.md`
 - Proposals of 2026-11-11 for the architect (cruiser floatplanes, the two aerial torpedoes, Enterprise's 20 mm guns): `docs/research/oob/proposals-2026-11-11.md`
 - The record for step 2 (outcomes in scoring terms, claims against losses, ship repair, base sizes), read on 2026-11-12: `docs/research/oob/step2-record.md`. Base facts are in `place_facts.csv`, **not yet checked by `oob-check`**
 - Japanese records, read on 2026-11-12 (the search orders of 24 August 1942 from a Japanese war diary, carrier losses, daily air losses over Guadalcanal): `docs/research/oob/japanese-records-2026-11-12.md`
 - Japanese unit records read from the archive scans (daily air losses over Guadalcanal by unit; Eastern Solomons searches, strikes and positions): `docs/research/oob/japanese-air-records.md`
 - Strike launch ranges of 1942 and aircraft lost for fuel or on the return: `docs/research/oob/strike-ranges.md`
+- Aircraft lost without being shot down and what became of their crews, 1942 (ditchings by cause, crews recovered by where the aircraft came down, rescue arrangements): `docs/research/oob/ditching-and-rescue.md`
+- What the record gives to rest an experience figure on (pilot hours, air groups' time in action, ships' time in commission and night practice, damage control): `docs/research/oob/experience.md`. Statements by navy are in `training_facts.csv`, **not yet checked by `oob-check`**
 - The US side of the air campaign (losses and credits by month from the Navy's statistics, daily dispatches, claims against losses both ways): `docs/research/oob/us-side-air-losses.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.

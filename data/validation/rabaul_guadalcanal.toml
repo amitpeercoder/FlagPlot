@@ -91,3 +91,32 @@ record_high = 213
 judged = false
 rows = [1115, 1044, 982, 1047, 987, 1059, 1005, 1118, 1065, 1008, 1075, 1011, 1080, 1015, 1085, 1019, 1089, 1023, 1094, 1028, 1100, 1033, 1108, 1037]
 reason = "By day, from the forms: 23 on 25 August (1115, 1044, 982), 16 on the 26th (1047, 987), 18 on the 29th (1059, 1005), 18 or 20 on the 30th (1065, 1008; 1118 is two more of the 4th Air Group, which the research note does not count in the raid), 18 on 2 September (1075, 1011), 18 on the 5th (1080, 1015), 18 on the 9th (1085, 1019), 22 on the 10th (1089, 1023), 24 on the 11th (1094, 1028), 20 on the 12th (1100, 1033) and 16 on the 13th (1108, 1037). Not judged, for the reason raid days are not."
+
+# --------------------------------------------------------------- claims
+#
+# What a side believed it did, for each hundred it really did, rounded down
+# (decision 0056). A claim does not say which unit its victim was from, so
+# these two measures take every Japanese unit on both sides of the
+# division, the ones the scenario leaves out included.
+
+[[measure]]
+id = "us_aircraft_claimed_per_hundred_shot_down"
+counts = "Aircraft the US side claims shot down, for each 100 Japanese aircraft really shot down"
+record_low = 250
+record_high = 382
+judged = true
+rows = [534, 546, 557, 560, 1332, 1333, 594, 593, 603, 1345, 612, 1351, 936, 629, 641, 472, 1358, 951, 1048, 1202, 1060, 1149, 1154, 1216, 1020, 1024, 1095, 1140, 1101, 1034, 1133, 1109, 1231, 1137, 988, 1049, 1061, 1090, 1110, 1102, 1138]
+reason = "The eleven days with both a US claim and a Japanese form. Claimed, low end 90: 13 on 26 August (534), 8 on the 29th (546), 14 on the 30th (557), 7 on 2 September (1332), 2 on the 5th (594), 10 on the 9th (603), 4 on the 10th (1345), 7 on the 11th (1351), 13 on the 12th (936), 8 on the 13th (641), 4 on the 14th (1358). High end 111: 19 on 30 August (560), one more by the guns on 2 September (1333), 4 on the 5th (593), 5 on the 10th (612), 16 on the 12th (629), 11 on the 13th (472), 10 on the 14th (951). Really shot down, 29: (1048, 1202, 1060, 1149, 1154, 1216, 1020, 1024, 1095, 1140, 1101, 1034, 1133, 1109, 1231, 1137). With the 7 forced down counted as kills, 36: (988, 1049, 1061, 1090, 1110, 1102, 1138). 90 in 36 is 250 a hundred and 111 in 29 is 382."
+
+[[measure]]
+id = "japanese_aircraft_claimed_on_ground_per_hundred_destroyed"
+counts = "Aircraft the Japanese side claims destroyed on the ground, for each 100 really destroyed there"
+record_low = 2066
+record_high = 4600
+judged = false
+rows = [985, 1046, 991, 1053, 1063, 1013, 1078, 1106, 1266, 1330]
+reason = "Claimed by the bomber units: 8 on 25 August (985, 1046), 12 on the 26th (991, 1053), 8 on the 29th (1063), 10 on 2 September (1013, 1078), 24 on the 12th (1106). Two units report the same figure on three of those days: counted once the claims are 62, counted twice 92. Really destroyed: 2 or 3, as in us_aircraft_destroyed_on_the_ground (1266, 1330). Not judged: the divisor is two or three aircraft, so one aircraft moves the measure by a third. It is here to show the size of it: a bomber crew's count of aircraft burning on a field was worth almost nothing."
+
+# The Japanese fighters' and bomber gunners' claims of aircraft in the air,
+# about 100 on the forms, cannot be set against US losses: those are by
+# month, and September runs thirteen days past the scenario.

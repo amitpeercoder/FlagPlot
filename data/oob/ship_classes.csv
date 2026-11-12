@@ -45,3 +45,7 @@ id,key,name,nation,type
 1041,us-wasp-class,Wasp class,us,carrier
 1042,us-wickes-class,Wickes class,us,destroyer
 1043,us-yorktown-class,Yorktown class,us,carrier
+1044,us-brooklyn-class,Brooklyn class,us,light_cruiser
+1045,us-st-louis-class,"St. Louis class (Brooklyn-class sub-group, CL-49 and CL-50)",us,light_cruiser
+1046,us-benson-class,Benson class (including the Bristol sub-group),us,destroyer
+1047,jp-nisshin-class,Nisshin class,jp,seaplane_carrier
