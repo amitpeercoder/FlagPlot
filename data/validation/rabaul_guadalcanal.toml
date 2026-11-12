@@ -120,3 +120,71 @@ reason = "Claimed by the bomber units: 8 on 25 August (985, 1046), 12 on the 26t
 # The Japanese fighters' and bomber gunners' claims of aircraft in the air,
 # about 100 on the forms, cannot be set against US losses: those are by
 # month, and September runs thirteen days past the scenario.
+
+# ------------------------------------------- flyable aircraft, by date
+#
+# How many aircraft Henderson Field could put up on a named day. It is what
+# wear, repair, losses and arrivals come to together, so it tests them as
+# one. Day 1 of the scenario is 21 August: day 5 is the 25th, day 10 the
+# 30th, day 21 is 10 September.
+
+[[measure]]
+id = "vmf_223_ready_on_day_5"
+counts = "Aircraft of VMF-223 ready at the end of day 5"
+record_low = 11
+record_high = 11
+judged = true
+rows = [455]
+reason = "The commanding general's count on 25 August: of the 19 fighters that came on the 20th, one had crashed on the field, 4 were lost in action and 3 were under repair (455). That leaves 11."
+
+[[measure]]
+id = "vmsb_232_ready_on_day_5"
+counts = "Aircraft of VMSB-232 ready at the end of day 5"
+record_low = 9
+record_high = 9
+judged = true
+rows = [455]
+reason = "The same count: of the 12 dive bombers, one had crashed and 2 were under repair (455). That leaves 9. The two figures add to the 20 of 31 the source gives as serviceable."
+
+[[measure]]
+id = "vmf_223_ready_on_day_10"
+counts = "Aircraft of VMF-223 ready at the end of day 10"
+record_low = 4
+record_high = 5
+judged = true
+rows = [893, 569, 568]
+reason = "On 30 August, when the second echelon flew in, four fighters of the first were operable by the Marine monograph (893, 569); five that evening by a later Marine history (568)."
+
+[[measure]]
+id = "f4fs_ready_on_day_21"
+counts = "Aircraft of VMF-223 and VMF-224 ready at the end of day 21"
+record_low = 11
+record_high = 11
+judged = true
+rows = [1342, 606]
+reason = "Eleven F4Fs flyable on 10 September by the command's own dispatch (1342), the day before VF-5 arrived; an Army history gives 11 for the 9th (606)."
+
+[[measure]]
+id = "sbds_ready_on_day_21"
+counts = "Aircraft of VMSB-232, Flight 300 and VMSB-231 ready at the end of day 21"
+record_low = 22
+record_high = 22
+judged = true
+rows = [1343]
+reason = "Twenty-two SBDs flyable on 10 September by the same dispatch (1343)."
+
+# ---------------------------------------------------------------- pilots
+
+[[measure]]
+id = "us_pilots_lost"
+counts = "Pilots of Henderson Field's groups lost"
+record_low = 9
+record_high = 22
+judged = false
+rows = [484, 1313]
+reason = "Low end: 9 killed from 21 August to 11 September, a figure an encyclopedia cites from a book not read (484), a low-confidence row read by exception. High end: 22 pilots of the Marine air group lost from 20 August to 16 October (1313), a month past the scenario and so a ceiling. Not judged: both ends are weak, and that is so whatever the rules do. It is here because the rules give none: a patrol over its own base keeps every pilot (decision 0038), and the record does not. Decision 0059 adds a draw for the pilot of a fighter shot down over its own base; the measure is judged when better rows bound it, not when that rule lands."
+
+# Japanese aircrew are not a measure of their own. The rules count one
+# pilot an aircraft, so pilots lost is aircraft lost, already measured. A
+# G4M carried seven men, and the units' forms give killed and missing for
+# some raids only (rows 1025, 1050, 1062, 1096, 1103).
