@@ -125,3 +125,7 @@ Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
+
+Result (the placeholder scale of decision 0054):
+Allied: 31 points (ships_sunk 1 = 10; ships_crippled 0 = 0; aircraft_destroyed 124 = 6.2; cargo_landed at base:1 960 = 4.8; base_open at base:1 1 = 10), margin 14.85, major victory
+Japanese: 16.15 points (ships_sunk 3 = 9; ships_crippled 1 = 5; aircraft_destroyed 43 = 2.15; base_open at base:1 0 = 0), margin -14.85, major defeat

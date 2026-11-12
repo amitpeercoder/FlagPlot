@@ -121,5 +121,9 @@ path = "scenario_09a_side_events.rs"
 name = "scenario_10_objectives"
 path = "scenario_10_objectives.rs"
 
+[[test]]
+name = "scenario_10b_objectives"
+path = "scenario_10b_objectives.rs"
+
 [lints]
 workspace = true

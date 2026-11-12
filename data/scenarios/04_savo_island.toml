@@ -254,3 +254,33 @@ task_force = 3
 kind = "set_rules_of_engagement"
 stance = "engage"
 break_off = "0.5"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Four Allied heavy cruisers were sunk for no Japanese ship lost that night: a decisive Japanese victory, though the transports the screen guarded were left untouched. (The architect's reading; not yet scored from the order-of-battle facts.)"
+
+[objectives.allied]
+mission = "Stop the Japanese column at Savo Island and keep the cruiser screen afloat."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[objectives.japanese]
+mission = "Destroy the Allied cruiser screen off Savo Island and be clear before daylight."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }

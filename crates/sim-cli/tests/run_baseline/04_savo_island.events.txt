@@ -332,3 +332,8 @@ Japanese claims 0 enemy ships sunk at (2,-5), day 1 night
 Japanese claims 0 enemy ships sunk at (2,-5), day 1 morning
 Japanese claims 0 enemy ships sunk at (2,-5), day 1 morning
 Japanese claims 0 enemy ships sunk at (2,-5), day 1 afternoon
+
+Result (the placeholder scale of decision 0054):
+Allied: 8 points (ships_sunk 2 = 8; ships_crippled 0 = 0), margin 3, minor victory
+Japanese: 5 points (ships_sunk 2 = 5; ships_crippled 0 = 0), margin -3, minor defeat
+History: Four Allied heavy cruisers were sunk for no Japanese ship lost that night: a decisive Japanese victory, though the transports the screen guarded were left untouched. (The architect's reading; not yet scored from the order-of-battle facts.)

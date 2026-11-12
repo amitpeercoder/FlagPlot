@@ -1486,3 +1486,56 @@ side = "japanese"
 task_force = 5
 kind = "set_speed"
 speed = "full"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+
+[objectives.allied]
+mission = "Land the convoy at Henderson Field, keep the field flying, and win the carrier fight."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.allied.objective]]
+kind = "cargo_landed"
+base = 1
+points_per_t = "0.005"
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 1
+points = 10
+
+[objectives.japanese]
+mission = "Close Henderson Field, sink what supplies it, and win the carrier fight."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.japanese.objective]]
+kind = "base_open"
+base = 1
+closed = true
+points = 10
