@@ -109,3 +109,74 @@ Asked for by the build session for decision 0064, which admits a statement about
 
 Also read, with nothing usable: the Naval Technical Mission to Japan reports O-29, O-31, O-32, O-38 and E-29, and the Navy's combat narratives of Savo Island and Cape Esperance.
 
+## The cruiser divisions' own war diaries, and four follow-ups (12 November 2026)
+
+Asked for by the build session for decisions 0064 and 0068. Rows: `ship_facts.csv` ids 1060 to 1122, `engagement_events.csv` ids 718 to 725, two new sources, four gaps.
+
+### What was read
+
+Thirteen scanned volumes from the Japanese national archives, about 700 handwritten pages, by four researchers working by eye: the 6th Cruiser Division's war diary and action reports for December 1941 to October 1942 (six volumes), and the 18th Cruiser Division's for May to early September 1942 (seven volumes). I read the pages behind every row graded medium; rows graded low say that I did not.
+
+### The 6th Cruiser Division (Aoba, Kinugasa, Kako, Furutaka)
+
+| When | What the diary records | By night? |
+| --- | --- | --- |
+| 4 and 9 February 1942 | Main battery firing with a rangefinder drill; a tracking drill | Not said |
+| 3 March, 26 March, about 9 April | "Battle drill", numbered first to third | Not said |
+| 20 April | Gunnery practice out of Truk, back the same day | No: the diary calls it daytime |
+| 20 and 21 May | Bomb-avoidance drill by one section | Not said |
+| June (home waters to 15 June) | Repair and refit at Kure, then the passage to Truk; no training in the narrative | Nothing recorded; the day-by-day table is missing |
+| 14 to 16 July | First anti-aircraft practice firing of the half-year; battle drill on two days | Not said |
+| 4 September | A main battery firing drill at Kieta | Not said |
+| 3, 5 and 9 October | Live firing training for the airfield bombardment, and gunnery study daily | Not said |
+
+**No night gunnery, night torpedo or night battle exercise is recorded in any month,** and no exercise with the 18th Division. That is an absence in a diary with holes (December and January abridged, late May and the June table missing), and "battle drill" may hide a night drill. It shows the diary does not record night training. It does not show there was none.
+
+### The 18th Cruiser Division (Tenryu, Tatsuta)
+
+- **Home waters, 23 May to 15 June:** docked and under maintenance at Maizuru; a new division commander on 13 June; no training recorded.
+- **The passage to Truk, 15 to 22 June:** the order for it schedules a searchlight drill on the evening of 15 June, joint range-taking drills, battle training on three days and a night formation-keeping test. The diary records one-round main gun firings and "various underway training" on those days, without saying which.
+- **With the 6th Division:** the two met on 18 June and sailed together, and were in one force from 24 June. Neither diary records a joint drill. This bears on the dispute between Bates ("had never maneuvered together", rows 1023 to 1029) and a web page (training together in the Bungo Strait, rows 1030 and 1031): the diaries show a passage in company and nothing more.
+- **July and August:** operations only.
+
+**The division's lessons after Savo Island** (rows 1121 and 1122) are its own judgement of its night fighting, and I read them on the page:
+
+- Gunnery: "still more earnest, intensive training" is needed on prompt opening of fire and rate of fire.
+- Lookout: an enemy destroyer about 2 km away did not notice the force, "the main cause" of the surprise; and attention fixes on the nearest enemy.
+- Searchlights drew fire but were "extremely effective" for telling friend from foe; the enemy never used them.
+
+The first of these limits the general statements in `training_facts.csv` rows 32 and 87.
+
+### Whether each drill was at night
+
+Every row says so in its value. Only two entries are marked: the firing of 20 April is by day, and the 18th Division's searchlight drill and formation test of June are at night but are orders. For everything else the diary does not say.
+
+### Destroyer Squadron 4 and Scott's destroyers (rows 1060 to 1085)
+
+- Gill lists nine destroyers in the 4th Destroyer Squadron on 7 July 1942: Selfridge, Henley, Mugford, Blue, Helm, Patterson, Ralph Talbot, Jarvis and Bagley. Only Patterson, Ralph Talbot and Jarvis left Brisbane with the force on 14 July.
+- The ship dictionary puts Helm with the force at Brisbane from 19 May and Bagley there from 30 May; it has Blue on the Hawaii to San Francisco run until June and Ralph Talbot in Hawaii until 14 June; it disagrees with Gill on Patterson (left Brisbane 22 June) and Jarvis (at Sydney). Those two pairs are `disputed`.
+- No source names a destroyer in the night training Crutchley mentions.
+- Scott's force: Farenholt, Buchanan and Laffey were with it on 7 and 8 October. Duncan joined on the 10th. McCalla was sent back on the night of the 7th and rejoined on the 11th. That the last two missed the practice of 8 October is my inference from those dates.
+
+### Dates on the older rows
+
+34 rows of `training_facts.csv` and 37 of `ship_facts.csv` now carry the period their own text or note gives. Rows that state no period are left blank, among them the two on Vincennes and Quincy's fifteen months in the Atlantic: the rows do not say when that ended.
+
+### The Japanese force at Cape Esperance (events 718 to 725)
+
+From the 6th Cruiser Division's own action report, which I read on the page. Times are Tokyo time as printed.
+
+- **What it expected:** it judged that a counterattack by a large enemy surface force "had almost no chance", because enemy ships left the area at night.
+- **Lookout:** with no enemy reports from the day's search or from the reinforcement group ahead, "an especially strict lookout was being kept".
+- **Formation:** from 1600, 30 knots in an alert cruising disposition, the cruisers in column with a destroyer on either bow.
+- **2143:** at the moment of ordering a reduction to 26 knots for the bombardment, three ship-like shapes were seen 15 degrees to port at about 10 km. The force "at once deployed to starboard" and battle was ordered.
+- **2146:** "as the flagship was about to open fire" she received concentrated fire with flares and star shell; the first shell hit her bridge.
+- **2146.5:** Furutaka, second in line, ordered action on seeing the gun flashes. Only her high-angle guns fired a salvo; her main battery "had finished training but had not yet fired".
+- Kinugasa is read as firing from 2152 (one reading, not checked).
+
+**For decision 0068:** the report supports an order to action at 2143 tied to the sighting, three minutes before the American fire, and shows neither leading cruiser had fired her main battery when it came. It names no battle stations order or numbered condition before 2143, so it does not settle what state the crews were in before the sighting. It says nothing of what the guns were loaded with, where they were trained, or any recognition signal. The two web encyclopedia rows (630 and 642) are left as they were.
+
+### On the rule that a value has to earn its standing
+
+The build session asked whether that rule should be applied to `training_facts.csv`, where five rows (3, 30, 31, 33, 79) are `unconfirmed` at medium confidence. In `ship_facts.csv` the rule already forces a lone medium row to `preferred`, and the new rows there follow it. For the five, the standing is the architect's to set; if they stay `unconfirmed` they would need grading low, which fits rows 30, 31 and 33 (one analyst's judgement) better than rows 3 and 79.
+
