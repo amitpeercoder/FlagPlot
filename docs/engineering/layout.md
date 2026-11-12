@@ -28,3 +28,4 @@ Crate boundaries:
 - Anything that plays the game (the staff planner, an agent, the UI) gets a `SideView` and nothing else.
 - `sim-agent` depends on `sim-core` only. Its library code takes a `SideView` and never the world, the umpire's view or the full event log; a test reads its source to check.
 - The replay viewer (`viewer/`) is an umpire's tool like `sim-cli`: it shows the truth. Nothing that plays the game may use it or the replay files.
+- `sim-cli validate` (`crates/sim-cli/src/validate/`) reads `data/validation` and a batch file, and writes reports under `docs/validation/`. It is the umpire's tool and shows the truth: nothing that plays the game may depend on it or read its reports. A test reads `sim-agent`'s manifest to check.

@@ -1,0 +1,789 @@
+//! Integration tests of `sim-cli validate` (`docs/step2-spec.md`, "What
+//! counts as agreement" and "The harness").
+//!
+//! # The architect's hand calculation
+//!
+//! The fixture is a batch of 20 runs, seeds 1 to 20, made by hand. Its header
+//! has ships 1 and 2 (Japanese, task force 1) and ships 3 and 4 (Allied, task
+//! force 2); task forces 1 and 2; air groups 1 (Japanese), 2 (Allied) and 5
+//! (Japanese); bases 1 and 2; two days. Everything not stated below is empty
+//! or nothing. Its inputs are those of scenario 4a, so they match the disk.
+//!
+//! Per run:
+//! - `sunk`: runs 1 to 10 none; runs 11 to 17 ship 1; run 18 ships 1 and 3;
+//!   runs 19 and 20 ships 1, 2 and 3.
+//! - Hits: ship 3 takes 2 gun hits in runs 11 to 20.
+//! - Japanese gun fire: run 1 shots "0" hits 0; run 2 "938" and 35; run 3
+//!   "12.5" and 1; run 4 "7.5" and 1; runs 5 to 20 "100" and 10.
+//! - Japanese claims `shot_down`: run 1 gets 7, run 2 gets 5, the rest 0.
+//!   Japanese claims `sunk`: 2 in run 18, 1 in run 19, 1 in run 20, else 0.
+//! - Air group 2 `shot_down`: run 1 gets 3, run 2 none, runs 3 to 20 one.
+//! - Fights: run 1 has two, of 2 and 3 rounds.
+//! - Attacks in run 1, all day 1 afternoon by group 1: 12 aircraft on ship 3,
+//!   5 on ship 4, 9 on ship 1. Escorts in run 1 with group 1: 6 in the
+//!   afternoon and 4 in the morning.
+//! - Ready on day 2 of group 2: 4 in every run. Run 5 has group 3, formed
+//!   from group 2, with 2 ready on day 2. Run 6 has group 3 formed from 2 and
+//!   group 4 formed from 3, each with 1.
+//!
+//! With 20 runs, the 5th percentile is rank ceil(5 x 20 / 100) = 1, the
+//! median rank 10, the 95th rank 19; with 19 kept, ranks ceil(0.95) = 1,
+//! ceil(9.5) = 10, ceil(18.05) = 19.
+//!
+//! - A (judged, ships_sunk [1,2], record 1): values ten 0, eight 1, two 2.
+//!   5th 0, median 0, 95th 2. 1 is inside; held by 8 of 20, 8 x 20 = 160 >=
+//!   20. AGREES.
+//! - B (judged, same take, record 3 to 4): 3 to 4 does not overlap 0 to 2;
+//!   held by 0. MISS, both tests.
+//! - C (judged, hits_on ships [3,4] gun, record 1): values ten 0, ten 2. 5th
+//!   0, median 0, 95th 2. 1 is inside; held by 0 of 20. MISS, the second test
+//!   only.
+//! - D (judged, hits_per_thousand_shots japanese gun, record 100): run 1
+//!   fires "0", left out. Run 2: 35 x 1000 / 938 = 37.31, so 37. Run 3: 1000 /
+//!   12.5 = 80. Run 4: 1000 / 7.5 = 133.33, so 133. Runs 5 to 20: 10 x 1000 /
+//!   100 = 100. Kept 19, left out 1; 19 x 5 = 95 >= 20. Sorted 37, 80, sixteen
+//!   100, 133: 5th 37, median 100, 95th 133. Held by 16 of 19, 320 >= 19.
+//!   AGREES.
+//! - E (not judged, claims_per_hundred japanese shot_down over air group 2's
+//!   shot_down, record 200 to 300): run 1: 7 x 100 / 3 = 233.33, so 233. Run
+//!   2: nothing really shot down, left out. Runs 3 to 20: 0 x 100 / 1 = 0.
+//!   Kept 19, left out 1. 5th 0, median 0, 95th 233. Held by 1 of 19.
+//!   REPORTED.
+//! - F (judged, minutes_of_action, record 0): run 1: (2 + 3) x 5 = 25; the
+//!   rest 0. 5th 0, median 0, 95th 0 (rank 19 is 0; the 25 is rank 20). Held
+//!   by 19 of 20. AGREES.
+//! - G (judged, ready air group 2 on day 2, record 4): 4 in eighteen runs;
+//!   run 5: 4 + 2 = 6; run 6: 4 + 1 + 1 = 6, the second 1 from a group formed
+//!   from a formed group. 5th 4, median 4, 95th 6. Held by 18 of 20. AGREES.
+//! - H (not judged, aircraft_attacking side japanese on task force 2 with
+//!   escorts, record 23): run 1: 12 + 5 = 17 attacking ships 3 and 4, plus the
+//!   6 escorts of the same day, pulse and first group, 23; the morning's 4
+//!   escorts match no attack and the 9 on ship 1 are on task force 1. The rest
+//!   0. 5th 0, median 0, 95th 0. Held by 1 of 20. REPORTED.
+//! - I (judged, claims_per_hundred japanese sunk over ships [3,4], record
+//!   100): ship 3 is sunk only in runs 18, 19, 20: 2 x 100 / 1 = 200, 100,
+//!   100. Kept 3, left out 17; 3 x 5 = 15 < 20. MISS, "too few runs kept".
+//! - J and K on the same attacks: attack_days (side japanese, task force 2)
+//!   is 1 in run 1 and 0 elsewhere; attack_of_at_least 10 aircraft (side
+//!   japanese, task force 2) is 1 in run 1 (12 + 5 = 17 in one day and pulse,
+//!   escorts not counted) and 0 elsewhere. Both not judged, record 1.
+//! - The battle: 20 runs is fewer than 1,000, so no verdict on the battle;
+//!   the report says so.
+//!
+//! The judging function alone, on 1,000 values, is tested in
+//! `validate/judge.rs`: forty-nine 0, nine hundred and one 1, fifty 2. Rank 50
+//! is 1 and rank 950 is 1, so the middle 90 percent is 1 to 1; the median,
+//! rank 500, is 1. Record 1: agrees (901 hold it). Record 2: MISS on the first
+//! test only. Record 0: MISS on both (49 x 20 = 980 < 1000). Record 0 to 1:
+//! agrees (950 hold it). And the floor's edge: with 20 runs, 4 kept is judged
+//! and 3 kept is too few. A battle of 1,000 runs passes when every judged
+//! measure agrees and does not when one misses; that is tested here on a
+//! generated batch of 1,000 runs.
+
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+use serde_json::{json, Value};
+
+const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
+const SCENARIO: &str = "data/scenarios/04a_night_action.toml";
+
+fn binary(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_sim-cli"))
+        .args(args)
+        .current_dir(ROOT)
+        .output()
+        .expect("the binary starts")
+}
+
+fn dir(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("flagplot-validate-{}-{name}", std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(&dir).expect("make the temp dir");
+    dir
+}
+
+fn text(p: &Path) -> String {
+    p.to_string_lossy().into_owned()
+}
+
+/// The `inputs` and scenario of a real batch of scenario 4a.
+fn real_header(dir: &Path) -> Value {
+    let out = dir.join("real.json");
+    let result = binary(&[
+        "batch",
+        SCENARIO,
+        "--runs",
+        "1",
+        "--label",
+        "fixture",
+        "--out",
+        &text(&out),
+    ]);
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    serde_json::from_slice(&fs::read(&out).expect("batch")).expect("json")
+}
+
+fn loss(group: u32, shot_down: u32) -> Value {
+    json!({"air_group": group, "shot_down": shot_down, "destroyed_on_ground": 0,
+        "damaged_destroyed_on_ground": 0, "lost_with_ship": 0, "worn_out": 0,
+        "ditched_fuel": 0, "ditched_no_deck": 0, "pilots_lost": 0})
+}
+
+fn empty_run(seed: u64) -> Value {
+    let none = json!({"shots": "0", "hits": 0});
+    let fire = json!({"gun": none, "torpedo": none});
+    json!({
+        "seed": seed, "final_hash": "0", "sunk": [], "hits_on": [],
+        "fire": {"japanese": fire, "allied": fire},
+        "systems_out": [], "air_losses": [], "ready": [],
+        "claims": {
+            "japanese": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0},
+            "allied": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0}},
+        "attacks": [], "escorts": [], "broke_off": [], "fights": [],
+        "supply": [], "formed_groups": []
+    })
+}
+
+fn attack(ship: u32, aircraft: u32) -> Value {
+    json!({"day": 1, "pulse": "afternoon", "air_group": 1, "target_kind": "ship",
+        "target": ship, "weapon": "bomb", "aircraft": aircraft})
+}
+
+/// The hand-made batch of the doc comment, with `runs` runs when asked (the
+/// first 20 are the hand-made ones; more are empty).
+fn fixture(dir: &Path, runs: u64) -> Value {
+    let mut batch = real_header(dir);
+    batch["scenario"]["days"] = json!(2);
+    batch["label"] = json!("hand");
+    batch["runs"] = json!(runs);
+    batch["first_seed"] = json!(1);
+    batch["ships"] = json!([
+        {"id": 1, "task_force": 1}, {"id": 2, "task_force": 1},
+        {"id": 3, "task_force": 2}, {"id": 4, "task_force": 2}]);
+    batch["task_forces"] = json!([{"id": 1}, {"id": 2}]);
+    batch["air_groups"] = json!([
+        {"id": 1, "side": "japanese"}, {"id": 2, "side": "allied"},
+        {"id": 5, "side": "japanese"}]);
+    batch["bases"] = json!([{"id": 1}, {"id": 2}]);
+    let mut per_run = Vec::new();
+    for r in 1..=runs {
+        let mut run = empty_run(r);
+        let ready =
+            |by: Vec<u32>, group: u32| json!({"air_group": group, "first_day": 1, "by_day": by});
+        run["ready"] = json!([ready(vec![3, 4], 2)]);
+        run["air_losses"] = json!([loss(
+            2,
+            if r == 2 {
+                0
+            } else if r == 1 {
+                3
+            } else {
+                1
+            }
+        )]);
+        if r == 2 {
+            run["air_losses"] = json!([]);
+        }
+        match r {
+            11..=17 => run["sunk"] = json!([1]),
+            18 => run["sunk"] = json!([1, 3]),
+            19 | 20 => run["sunk"] = json!([1, 2, 3]),
+            _ => {}
+        }
+        if (11..=20).contains(&r) {
+            run["hits_on"] = json!([{"ship": 3, "gun": 2, "torpedo": 0, "bomb": 0}]);
+        }
+        let (shots, hits) = match r {
+            1 => ("0", 0),
+            2 => ("938", 35),
+            3 => ("12.5", 1),
+            4 => ("7.5", 1),
+            _ => ("100", 10),
+        };
+        run["fire"]["japanese"]["gun"] = json!({"shots": shots, "hits": hits});
+        run["claims"]["japanese"]["shot_down"] = json!(match r {
+            1 => 7,
+            2 => 5,
+            _ => 0,
+        });
+        run["claims"]["japanese"]["sunk"] = json!(match r {
+            18 => 2,
+            19 | 20 => 1,
+            _ => 0,
+        });
+        if r == 1 {
+            run["fights"] = json!([{"day": 1, "pulse": "night", "rounds": 2},
+                {"day": 1, "pulse": "night", "rounds": 3}]);
+            run["attacks"] = json!([attack(3, 12), attack(4, 5), attack(1, 9)]);
+            run["escorts"] = json!([
+                {"day": 1, "pulse": "afternoon", "air_group": 5, "with_air_group": 1, "aircraft": 6},
+                {"day": 1, "pulse": "morning", "air_group": 5, "with_air_group": 1, "aircraft": 4}]);
+        }
+        if r == 5 {
+            run["ready"] = json!([ready(vec![3, 4], 2), ready(vec![0, 2], 3)]);
+            run["formed_groups"] =
+                json!([{"id": 3, "name": "f", "side": "allied", "aircraft_type": "t", "from": 2}]);
+        }
+        if r == 6 {
+            run["ready"] = json!([
+                ready(vec![3, 4], 2),
+                ready(vec![0, 1], 3),
+                ready(vec![0, 1], 4)
+            ]);
+            run["formed_groups"] = json!([
+                {"id": 3, "name": "f", "side": "allied", "aircraft_type": "t", "from": 2},
+                {"id": 4, "name": "g", "side": "allied", "aircraft_type": "t", "from": 3}]);
+        }
+        per_run.push(run);
+    }
+    batch["per_run"] = json!(per_run);
+    batch["results"] = Value::Null;
+    batch
+}
+
+const MEASURES: &str = r#"
+battle = "hand-made"
+scenario = "data/scenarios/04a_night_action.toml"
+facts = "data/oob/engagement_outcomes.csv"
+
+[[measure]]
+id = "a"
+counts = "A"
+record_low = 1
+record_high = 1
+judged = true
+take = "ships_sunk"
+ships = [1, 2]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "b"
+counts = "B"
+record_low = 3
+record_high = 4
+judged = true
+take = "ships_sunk"
+ships = [1, 2]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "c"
+counts = "C"
+record_low = 1
+record_high = 1
+judged = true
+take = "hits_on"
+ships = [3, 4]
+weapons = ["gun"]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "d"
+counts = "D"
+record_low = 100
+record_high = 100
+judged = true
+take = "hits_per_thousand_shots"
+side = "japanese"
+weapon = "gun"
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "e"
+counts = "E"
+record_low = 200
+record_high = 300
+judged = false
+take = "claims_per_hundred"
+side = "japanese"
+claim = "shot_down"
+air_groups = [2]
+causes = ["shot_down"]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "f"
+counts = "F"
+record_low = 0
+record_high = 0
+judged = true
+take = "minutes_of_action"
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "g"
+counts = "G"
+record_low = 4
+record_high = 4
+judged = true
+take = "ready"
+air_groups = [2]
+day = 2
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "h"
+counts = "H"
+record_low = 23
+record_high = 23
+judged = false
+take = "aircraft_attacking"
+side = "japanese"
+target_task_forces = [2]
+escorts = true
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "i"
+counts = "I"
+record_low = 100
+record_high = 100
+judged = true
+take = "claims_per_hundred"
+side = "japanese"
+claim = "sunk"
+ships = [3, 4]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "j"
+counts = "J"
+record_low = 1
+record_high = 1
+judged = false
+take = "attack_days"
+side = "japanese"
+target_task_forces = [2]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "k"
+counts = "K"
+record_low = 1
+record_high = 1
+judged = false
+take = "attack_of_at_least"
+side = "japanese"
+target_task_forces = [2]
+aircraft = 10
+rows = [1]
+reason = "r"
+"#;
+
+struct Setup {
+    dir: PathBuf,
+    batch: PathBuf,
+    measures: PathBuf,
+}
+
+fn setup(name: &str, batch: &Value, measures: &str) -> Setup {
+    let dir = dir(name);
+    let batch_path = dir.join("batch.json");
+    fs::write(&batch_path, serde_json::to_vec(batch).expect("json")).expect("write");
+    let measures_path = dir.join("measures.toml");
+    fs::write(&measures_path, measures).expect("write");
+    Setup {
+        dir,
+        batch: batch_path,
+        measures: measures_path,
+    }
+}
+
+fn validate(s: &Setup, out: &str) -> Output {
+    binary(&[
+        "validate",
+        &text(&s.batch),
+        &text(&s.measures),
+        "--out",
+        &text(&s.dir.join(out)),
+    ])
+}
+
+fn stderr(o: &Output) -> String {
+    String::from_utf8_lossy(&o.stderr).into_owned()
+}
+
+/// The cells of a measure's row in the report's table.
+fn cells(report: &str, id: &str) -> Vec<String> {
+    let line = report
+        .lines()
+        .find(|l| l.starts_with(&format!("| {id} |")))
+        .unwrap_or_else(|| panic!("no row for {id}"));
+    line.trim_matches('|')
+        .split('|')
+        .map(|c| c.trim().to_string())
+        .collect()
+}
+
+fn expect(
+    report: &str,
+    id: &str,
+    band: &str,
+    median: &str,
+    holding: &str,
+    left: &str,
+    verdict: &str,
+) {
+    let c = cells(report, id);
+    assert_eq!(c[2], band, "{id} band");
+    assert_eq!(c[3], median, "{id} median");
+    assert_eq!(c[4], holding, "{id} holding");
+    assert_eq!(c[5], left, "{id} left out");
+    assert!(
+        c[6].contains(verdict),
+        "{id} verdict {:?} lacks {verdict:?}",
+        c[6]
+    );
+}
+
+#[test]
+fn the_hand_calculation_of_every_measure() {
+    let s = setup("hand", &fixture(&dir("hand-h"), 20), MEASURES);
+    let result = validate(&s, "report.md");
+    assert!(result.status.success(), "{}", stderr(&result));
+    let report = fs::read_to_string(s.dir.join("report.md")).expect("report");
+    expect(&report, "a", "0 to 2", "0", "8 of 20", "0", "agrees");
+    let b = cells(&report, "b");
+    assert!(b[6].contains("outside the middle 90 percent; fewer than 1 run in 20"));
+    expect(&report, "b", "0 to 2", "0", "0 of 20", "0", "MISS");
+    let c = cells(&report, "c");
+    assert!(c[6].contains("fewer than 1 run in 20") && !c[6].contains("outside"));
+    expect(&report, "c", "0 to 2", "0", "0 of 20", "0", "MISS");
+    expect(&report, "d", "37 to 133", "100", "16 of 19", "1", "agrees");
+    expect(&report, "e", "0 to 233", "0", "1 of 19", "1", "reported");
+    expect(&report, "f", "0 to 0", "0", "19 of 20", "0", "agrees");
+    expect(&report, "g", "4 to 6", "4", "18 of 20", "0", "agrees");
+    expect(&report, "h", "0 to 0", "0", "1 of 20", "0", "reported");
+    expect(
+        &report,
+        "i",
+        "100 to 200",
+        "100",
+        "2 of 3",
+        "17",
+        "too few runs kept",
+    );
+    expect(&report, "j", "0 to 0", "0", "1 of 20", "0", "reported");
+    expect(&report, "k", "0 to 0", "0", "1 of 20", "0", "reported");
+    // Seven judged: a, d, f, g agree; b, c, i miss.
+    assert!(report.contains("Judged measures: 4 agree, 3 miss, of 7."));
+    assert!(report.contains(
+        "**No verdict on the battle.** This batch has 20 runs and the spec asks for 1000."
+    ));
+    // A miss carries its counts text, rows and spread.
+    assert!(report.contains("### c\n"));
+    assert!(report.contains("- Counts: C"));
+    assert!(report.contains("least 0, 5th 0, median 0, 95th 2, greatest 2"));
+    assert!(report.contains("- Each value and its runs: 0: 10, 2: 10"));
+    // The two standing notes.
+    assert!(report.contains("Hits are counted as rolled"));
+    assert!(report.contains("Escorts are matched to a raid's first strike group"));
+    assert!(!report.contains("not run"));
+}
+
+#[test]
+fn the_same_inputs_give_the_same_bytes_and_a_report_is_not_written_over() {
+    let s = setup("bytes", &fixture(&dir("bytes-h"), 20), MEASURES);
+    assert!(validate(&s, "one.md").status.success());
+    assert!(validate(&s, "two.md").status.success());
+    let one = fs::read(s.dir.join("one.md")).expect("one");
+    assert_eq!(one, fs::read(s.dir.join("two.md")).expect("two"));
+    // Identical bytes: a no-op that succeeds.
+    let again = validate(&s, "one.md");
+    assert!(again.status.success());
+    assert!(String::from_utf8_lossy(&again.stdout).starts_with("unchanged"));
+    assert_eq!(one, fs::read(s.dir.join("one.md")).expect("one"));
+    // Different bytes: refused, and the file is as it was.
+    fs::write(s.dir.join("one.md"), "something else").expect("write");
+    let refused = validate(&s, "one.md");
+    assert!(!refused.status.success());
+    assert!(stderr(&refused).contains("different contents"));
+    assert_eq!(
+        fs::read_to_string(s.dir.join("one.md")).expect("read"),
+        "something else"
+    );
+}
+
+#[test]
+fn a_battle_of_a_thousand_runs_passes_when_every_judged_measure_agrees() {
+    let dir = dir("thousand");
+    let measures = r#"
+battle = "hand-made"
+scenario = "data/scenarios/04a_night_action.toml"
+facts = "x"
+
+[[measure]]
+id = "a"
+counts = "A"
+record_low = 1
+record_high = 1
+judged = true
+take = "ships_sunk"
+ships = [1, 2]
+rows = [1]
+reason = "r"
+"#;
+    let mut batch = fixture(&dir, 1000);
+    // Runs 1 to 1000: ships 1 and 2 sunk in 0, 1 or 2 as 49, 901, 50 runs.
+    for (i, run) in batch["per_run"]
+        .as_array_mut()
+        .expect("runs")
+        .iter_mut()
+        .enumerate()
+    {
+        run["sunk"] = match i {
+            0..=48 => json!([]),
+            49..=949 => json!([1]),
+            _ => json!([1, 2]),
+        };
+    }
+    let s = setup("thousand-a", &batch, measures);
+    assert!(validate(&s, "pass.md").status.success());
+    let pass = fs::read_to_string(s.dir.join("pass.md")).expect("report");
+    assert!(
+        pass.contains("**The battle passes:** every judged measure agrees."),
+        "{pass}"
+    );
+    expect(&pass, "a", "1 to 1", "1", "901 of 1000", "0", "agrees");
+    // A record of 2 misses on the first test only; the battle does not pass.
+    let missing = measures.replace(
+        "record_low = 1\nrecord_high = 1",
+        "record_low = 2\nrecord_high = 2",
+    );
+    fs::write(&s.measures, missing).expect("write");
+    assert!(validate(&s, "fail.md").status.success());
+    let fail = fs::read_to_string(s.dir.join("fail.md")).expect("report");
+    assert!(fail.contains("**The battle does not pass:** 1 of 1 judged measures miss."));
+    let c = cells(&fail, "a");
+    assert!(c[6].contains("outside the middle 90 percent") && !c[6].contains("fewer than 1 run"));
+}
+
+#[test]
+fn what_validate_refuses() {
+    let h = dir("refuse-h");
+    let good = fixture(&h, 20);
+    let refuse = |name: &str, batch: &Value, measures: &str, want: &str| {
+        let s = setup(name, batch, measures);
+        let result = validate(&s, "r.md");
+        assert!(!result.status.success(), "{name} should be refused");
+        assert!(
+            stderr(&result).contains(want),
+            "{name}: {}",
+            stderr(&result)
+        );
+        assert!(!s.dir.join("r.md").exists(), "{name} wrote a report");
+    };
+    let mut b = good.clone();
+    b.as_object_mut().expect("object").remove("label");
+    refuse("no-label", &b, MEASURES, "no label");
+    let mut b = good.clone();
+    b["label"] = json!("a/b");
+    refuse("bad-label", &b, MEASURES, "not letters, digits");
+    let mut b = good.clone();
+    b["label"] = json!("");
+    refuse("empty-label", &b, MEASURES, "not letters, digits");
+    let mut b = good.clone();
+    b["version"] = json!(1);
+    refuse("version", &b, MEASURES, "version 1");
+    let mut b = good.clone();
+    b["inputs"]["state_version"] = json!("flagplot-state-v0");
+    refuse("state", &b, MEASURES, "state hash layout");
+    let mut b = good.clone();
+    b["inputs"]["scenario_hash"] = json!("0000000000000000");
+    refuse("scenario-hash", &b, MEASURES, "scenario file");
+    let mut b = good.clone();
+    b["inputs"]["data"][1]["hash"] = json!("0000000000000000");
+    refuse("data-hash", &b, MEASURES, "has changed since the batch");
+    let mut b = good.clone();
+    b["inputs"]["data"].as_array_mut().expect("data").pop();
+    refuse("data-names", &b, MEASURES, "different data files");
+    let other = MEASURES.replace("04a_night_action", "01_transit");
+    refuse(
+        "other-scenario",
+        &good,
+        &other,
+        "is for data/scenarios/01_transit.toml",
+    );
+    let mut b = good.clone();
+    b["runs"] = json!(21);
+    refuse("runs", &b, MEASURES, "says 21 runs");
+    let mut b = good.clone();
+    b["per_run"][3]["seed"] = json!(99);
+    refuse("seed", &b, MEASURES, "has seed 99");
+    refuse(
+        "unknown-ship",
+        &good,
+        &MEASURES.replace(
+            "ships = [1, 2]\nrows = [1]\nreason = \"r\"\n\n[[measure]]\nid = \"b\"",
+            "ships = [1, 77]\nrows = [1]\nreason = \"r\"\n\n[[measure]]\nid = \"b\"",
+        ),
+        "ship 77",
+    );
+    refuse(
+        "no-key",
+        &good,
+        &MEASURES.replace("day = 2\n", ""),
+        "needs the key day",
+    );
+    refuse(
+        "bad-take",
+        &good,
+        &MEASURES.replace("\"minutes_of_action\"", "\"nonsense\""),
+        "not known",
+    );
+    refuse(
+        "day-range",
+        &good,
+        &MEASURES.replace("day = 2", "day = 3"),
+        "day 3",
+    );
+    refuse(
+        "no-take",
+        &good,
+        &MEASURES.replace("take = \"minutes_of_action\"\n", ""),
+        "needs the key take",
+    );
+    refuse(
+        "backwards",
+        &good,
+        &MEASURES.replace(
+            "record_low = 3\nrecord_high = 4",
+            "record_low = 5\nrecord_high = 4",
+        ),
+        "record_low above",
+    );
+    refuse(
+        "duplicate",
+        &good,
+        &MEASURES.replace("id = \"b\"", "id = \"a\""),
+        "used twice",
+    );
+    refuse(
+        "unknown-key",
+        &good,
+        &MEASURES.replace("counts = \"A\"", "counts = \"A\"\nbogus = 1"),
+        "bogus",
+    );
+    // A batch with a key missing (a version 1 shape) is refused cleanly.
+    let mut b = good.clone();
+    b["per_run"][0]
+        .as_object_mut()
+        .expect("run")
+        .remove("fights");
+    refuse("old-shape", &b, MEASURES, "not a batch file of version 2");
+}
+
+#[test]
+fn a_measures_file_with_no_scenario_is_reported_not_run() {
+    let d = dir("notbuilt");
+    let out = d.join("cape.md");
+    let result = binary(&[
+        "validate",
+        "data/validation/cape_esperance.toml",
+        "--out",
+        &text(&out),
+    ]);
+    assert!(result.status.success(), "{}", stderr(&result));
+    let report = fs::read_to_string(&out).expect("report");
+    let file = fs::read_to_string(Path::new(ROOT).join("data/validation/cape_esperance.toml"))
+        .expect("file");
+    let measures = file.matches("[[measure]]").count();
+    assert_eq!(
+        report.matches("not run: scenario not built").count(),
+        measures
+    );
+    assert!(report.contains("Not run: the scenario is not built"));
+    // With a batch, a file with no scenario is an error.
+    let s = setup("nb", &fixture(&d, 20), &file);
+    let with_batch = validate(&s, "x.md");
+    assert!(!with_batch.status.success());
+    // A file with a scenario and no batch is an error.
+    let no_batch = binary(&[
+        "validate",
+        "data/validation/savo_island.toml",
+        "--out",
+        &text(&d.join("y.md")),
+    ]);
+    assert!(!no_batch.status.success());
+    assert!(stderr(&no_batch).contains("names a scenario"));
+}
+
+/// Real batches of 20 runs of scenarios 4, 5 and 6, judged by the measures
+/// files on main: every measure id appears, and every `take` and key is known.
+#[test]
+fn real_batches_of_the_three_battles_are_judged() {
+    let d = dir("real");
+    for (scenario, measures, battle) in [
+        (
+            "data/scenarios/04_savo_island.toml",
+            "data/validation/savo_island.toml",
+            "savo-island",
+        ),
+        (
+            "data/scenarios/05_eastern_solomons.toml",
+            "data/validation/eastern_solomons.toml",
+            "eastern-solomons",
+        ),
+        (
+            "data/scenarios/06_rabaul_guadalcanal.toml",
+            "data/validation/rabaul_guadalcanal.toml",
+            "rabaul-guadalcanal-air",
+        ),
+    ] {
+        let batch = d.join(format!("{battle}.json"));
+        let made = binary(&[
+            "batch",
+            scenario,
+            "--runs",
+            "20",
+            "--label",
+            "test",
+            "--out",
+            &text(&batch),
+        ]);
+        assert!(made.status.success(), "{}", stderr(&made));
+        let out = d.join(format!("{battle}.md"));
+        let result = binary(&["validate", &text(&batch), measures, "--out", &text(&out)]);
+        assert!(result.status.success(), "{battle}: {}", stderr(&result));
+        let report = fs::read_to_string(&out).expect("report");
+        let file = fs::read_to_string(Path::new(ROOT).join(measures)).expect("measures");
+        for line in file.lines().filter(|l| l.starts_with("id = ")) {
+            let id = line.trim_start_matches("id = ").trim_matches('"');
+            assert!(
+                report.contains(&format!("| {id} |")),
+                "{battle}: {id} missing"
+            );
+        }
+        assert!(report.contains("**No verdict on the battle.**"));
+    }
+}
+
+#[test]
+fn nothing_that_plays_the_game_depends_on_validate() {
+    let agent =
+        fs::read_to_string(Path::new(ROOT).join("crates/sim-agent/Cargo.toml")).expect("manifest");
+    assert!(
+        !agent.contains("sim-cli"),
+        "sim-agent must not depend on sim-cli, which holds validate"
+    );
+    assert!(!agent.contains("validate"));
+    let core =
+        fs::read_to_string(Path::new(ROOT).join("crates/sim-core/Cargo.toml")).expect("manifest");
+    assert!(!core.contains("sim-cli"));
+}

@@ -11,6 +11,7 @@ mod mcp;
 mod play;
 mod save;
 mod serve;
+mod validate;
 
 use std::env;
 use std::path::Path;
@@ -31,6 +32,8 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
        sim-cli events <scenario.toml | game.json> --why EVENT [--seed N] [--reference DIR]
        sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>] [--reference DIR]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT] [--reference DIR]
+       sim-cli validate <batch.json> <measures.toml> [--out <report.md>] [--reference DIR]
+       sim-cli validate <measures.toml> [--out <report.md>]
        sim-cli serve <scenario.toml> --seat allied=player|script --seat japanese=player|script
                      [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli mcp <scenario.toml> --seat allied|japanese
@@ -55,6 +58,16 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             in, marked `via task_force:N`. --day N keeps one day. --why EVENT
             prints that event and its causes down to orders, as a tree, with
             each event's breakdown.
+  validate  The umpire's judge of a batch (decision 0062's file, version 2)
+            against a measures file of data/validation (docs/step2-spec.md):
+            takes each measure's number from every run and writes a markdown
+            report, by default docs/validation/<battle>-<label>.md, with the
+            verdict on each measure. Refuses a batch with no label, of another
+            version or state hash layout, or whose inputs no longer match the
+            files on disk (give the same --reference). With a measures file
+            alone, for a scenario not built, every measure is reported as not
+            run. It exits with success whenever it wrote its report, misses or
+            not.
   export    Runs a scenario the same way and writes the finished run as one
             JSON replay file: the map, the starting forces, every event with
             its causes, and the final state.
@@ -191,6 +204,7 @@ fn main() -> ExitCode {
         Some("events") => with_reference(&args[1..], events::command),
         Some("export") => with_reference(&args[1..], |a, o| export::command(a, USAGE, o)),
         Some("batch") => with_reference(&args[1..], |a, o| batch::command(a, USAGE, o)),
+        Some("validate") => with_reference(&args[1..], |a, o| validate::command(a, USAGE, o)),
         Some("replay") => with_reference(&args[1..], replay),
         Some("serve") => serve::command(&args[1..], USAGE),
         Some("mcp") => mcp::command(&args[1..], USAGE),
