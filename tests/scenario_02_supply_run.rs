@@ -145,6 +145,8 @@
 //! - No ship ever holds more than its cargo capacity, and no stock goes
 //!   negative. These are also end-of-day invariants.
 
+mod common;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -171,7 +173,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 2 loads")
+    common::load(&scenario_path()).expect("scenario 2 loads")
 }
 
 fn tons(value: i64) -> Fixed {
@@ -820,33 +822,22 @@ fn supply_is_conserved_every_day() {
     assert_eq!(days, 8);
 }
 
-/// Copies the scenario and its data into a fresh folder under the build
+/// Copies the scenario and its map into a fresh folder under the build
 /// directory, with the destination port (8,0) at `port_size`, and loads it.
 /// Nothing in the repository's data folder is touched.
 fn variant(tag: &str, port_size: u8) -> Scenario {
     let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
     let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("supply_run_{tag}_{port_size}"));
-    for folder in ["scenarios", "map", "reference"] {
+    // The map is the one thing this variant changes: the scenario and the
+    // map are copied, and the figures come from the frozen reference root.
+    for folder in ["scenarios", "map"] {
         fs::create_dir_all(root.join(folder)).expect("make the variant folder");
     }
-    let copy = |from: &str, to: &str| {
-        fs::copy(data.join(from), root.join(to)).expect("copy a data file");
-    };
-    copy(
-        "scenarios/02_supply_run.toml",
-        "scenarios/02_supply_run.toml",
-    );
-    copy("reference/ship_classes.csv", "reference/ship_classes.csv");
-    copy("reference/port_sizes.csv", "reference/port_sizes.csv");
-    copy(
-        "reference/aircraft_types.csv",
-        "reference/aircraft_types.csv",
-    );
-    copy("reference/search.toml", "reference/search.toml");
-    copy(
-        "reference/surface_combat.toml",
-        "reference/surface_combat.toml",
-    );
+    fs::copy(
+        data.join("scenarios/02_supply_run.toml"),
+        root.join("scenarios/02_supply_run.toml"),
+    )
+    .expect("copy the scenario");
 
     let map_text = fs::read_to_string(data.join("map/placeholder_supply_run.toml"))
         .expect("read the map file");
@@ -863,7 +854,7 @@ fn variant(tag: &str, port_size: u8) -> Scenario {
     )
     .expect("write the variant map");
 
-    Scenario::load(&root.join("scenarios/02_supply_run.toml")).expect("the variant loads")
+    common::load(&root.join("scenarios/02_supply_run.toml")).expect("the variant loads")
 }
 
 /// The elapsed hour at which unloading completed, if it did.

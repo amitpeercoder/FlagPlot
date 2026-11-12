@@ -270,9 +270,11 @@
 //! - Belief holds nothing the reports did not say.
 //! - A replay of any seed reproduces the daily hash.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
@@ -394,7 +396,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 4a loads")
+    common::load(&scenario_path()).expect("scenario 4a loads")
 }
 
 /// Whether the class of a ship has a system. All six ships are class 1, the
@@ -2831,40 +2833,21 @@ fn firing_first_pays() {
     assert!(b_free[0] > b_free[1], "B's free rounds damage A more");
 }
 
-/// Copies the data into a folder under the build directory, makes each
-/// exact, asserted-unique text replacement in the named copied file, and
-/// loads the copied scenario. Nothing in the repository's data folder is
-/// touched. Each edit is (file under data/, original text, changed text).
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in the named file. A change to the scenario is made
+/// in its text; a change to a figures file is made in a copy of the frozen
+/// reference folder (`common::altered_reference`). Nothing in the repository's
+/// data folder is touched. Each edit is (file under data/, original text,
+/// changed text).
 fn variant(tag: &str, edits: &[(&str, &str, &str)]) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("night_action_{tag}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "scenarios/04a_night_action.toml",
-        "map/placeholder_night_action.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        let mut text = fs::read_to_string(data.join(file)).expect("read a data file");
-        for (target, original, changed) in edits.iter().filter(|(target, ..)| *target == file) {
-            assert_eq!(
-                text.matches(original).count(),
-                1,
-                "{target}: the text {original:?} appears exactly once"
-            );
-            text = text.replace(original, changed);
-        }
-        fs::write(root.join(file), text).expect("write a variant file");
-    }
+    const SCENARIO: &str = "scenarios/04a_night_action.toml";
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../data")
+        .join(SCENARIO);
     for (target, ..) in edits {
         assert!(
             [
-                "scenarios/04a_night_action.toml",
+                SCENARIO,
                 "reference/ship_classes.csv",
                 "reference/surface_combat.toml"
             ]
@@ -2872,7 +2855,26 @@ fn variant(tag: &str, edits: &[(&str, &str, &str)]) -> Scenario {
             "unknown file {target}"
         );
     }
-    Scenario::load(&root.join("scenarios/04a_night_action.toml")).expect("the variant loads")
+    let edits_of = |file: &str| -> Vec<(&str, &str)> {
+        edits
+            .iter()
+            .filter(|(target, ..)| *target == file)
+            .map(|(_, original, changed)| (*original, *changed))
+            .collect()
+    };
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
+    for (original, changed) in edits_of(SCENARIO) {
+        text = common::replace_once(&text, original, changed);
+    }
+    let options = common::altered_reference(tag, |dir| {
+        for file in ["ship_classes.csv", "surface_combat.toml"] {
+            let these = edits_of(&format!("reference/{file}"));
+            if !these.is_empty() {
+                common::edit_file_by(dir, file, &these);
+            }
+        }
+    });
+    common::from_text_with(&text, &path, &options).expect("the variant loads")
 }
 
 const CLASSES: &str = "reference/ship_classes.csv";

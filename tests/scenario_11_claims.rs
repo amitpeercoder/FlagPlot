@@ -91,10 +91,11 @@
 //!   claim holds no identity of an enemy unit.
 //! - Run twice, and from a saved game, the claims are the same.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 
 use sim_core::belief::BattleClaim;
 use sim_core::events::{Cause, Event, EventKind};
@@ -124,56 +125,33 @@ const CHANCE_KEYS: [&str; 3] = [
 // ---------------------------------------------------------------------
 
 /// The scenario `name` (a file under `data/scenarios`) with each exact text
-/// replacement of `edits` made once, its air combat figures copied with the
-/// three chances set to `chances`, and the seed `seed` if there is one.
+/// replacement of `edits` made once, its air combat figures (a copy of the
+/// frozen ones) with the three chances set to `chances`, and the seed `seed`
+/// if there is one.
 fn variant(name: &str, chances: [&str; 3], seed: Option<u64>, edits: &[(&str, &str)]) -> Scenario {
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let data = PathBuf::from(ROOT).join("data");
-    // Tests run in parallel: each variant has a folder of its own.
-    let folder = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "claims_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    fs::create_dir_all(&folder).expect("make the variant folder");
-
-    let figures = fs::read_to_string(data.join("reference/air_combat.toml"))
-        .expect("the air combat figures read");
-    let mut lines: Vec<String> = figures.lines().map(str::to_string).collect();
-    for (key, value) in CHANCE_KEYS.iter().zip(chances) {
-        let mut found = 0;
-        for line in &mut lines {
-            if line.starts_with(&format!("{key} = ")) {
-                *line = format!("{key} = \"{value}\"");
-                found += 1;
+    let options = common::altered_reference("claims", |dir| {
+        common::edit_file(dir, "air_combat.toml", |figures| {
+            let mut lines: Vec<String> = figures.lines().map(str::to_string).collect();
+            for (key, value) in CHANCE_KEYS.iter().zip(chances) {
+                let mut found = 0;
+                for line in &mut lines {
+                    if line.starts_with(&format!("{key} = ")) {
+                        *line = format!("{key} = \"{value}\"");
+                        found += 1;
+                    }
+                }
+                assert_eq!(found, 1, "{key} is set once in the file");
             }
-        }
-        assert_eq!(found, 1, "{key} is set once in the file");
-    }
-    let figures_path = folder.join("air_combat.toml");
-    fs::write(&figures_path, lines.join("\n")).expect("write the figures");
-
-    let scenario_path = data.join("scenarios").join(name);
+            lines.join("\n")
+        });
+    });
+    let scenario_path = PathBuf::from(ROOT).join("data/scenarios").join(name);
     let mut text = fs::read_to_string(&scenario_path).expect("the scenario reads");
-    let original = "air_combat = \"../reference/air_combat.toml\"";
-    assert_eq!(
-        text.matches(original).count(),
-        1,
-        "the scenario names the figures"
-    );
-    text = text.replace(
-        original,
-        &format!("air_combat = {:?}", figures_path.to_str().expect("a path")),
-    );
     for (from, to) in edits {
-        assert_eq!(
-            text.matches(from).count(),
-            1,
-            "the text {from:?} appears once"
-        );
-        text = text.replace(from, to);
+        text = common::replace_once(&text, from, to);
     }
-    let scenario = Scenario::from_text(&text, &scenario_path).expect("the variant loads");
+    let scenario =
+        common::from_text_with(&text, &scenario_path, &options).expect("the variant loads");
     match seed {
         Some(seed) => scenario.with_seed(seed).expect("a seed can be set"),
         None => scenario,
@@ -797,7 +775,7 @@ fn the_log_without_the_claims_is_the_log_from_before_decision_0056() {
             .map(|line| line.trim_end_matches("  [issued by the staff]").to_string())
             .collect();
         let mut scenario =
-            Scenario::load(&PathBuf::from(ROOT).join(format!("data/scenarios/{name}.toml")))
+            common::load(&PathBuf::from(ROOT).join(format!("data/scenarios/{name}.toml")))
                 .expect("the scenario loads");
         scenario.run_to_end().expect("the run resolves");
         let after: Vec<String> = lines_without_claims(&scenario.world)

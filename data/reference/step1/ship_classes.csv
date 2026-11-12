@@ -1,0 +1,27 @@
+# FROZEN: a copy of data/reference/ship_classes.csv
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These classes are invented so the engine has something to
+# run. They are not historical and must not be used for validation. Real
+# classes replace them when the order of battle is researched from sources.
+#
+# cruise_speed_kn: economical speed. endurance_nm is quoted at this speed.
+# fuel_capacity_t / endurance_nm gives the burn per nautical mile at cruise.
+# cargo_capacity_t: supply the ship can carry, in tons. 0 for a ship that carries none.
+# main_guns, gun_rounds_per_min (per gun), gun_rounds_per_gun (ammunition
+# carried), gun_damage: the main battery. torpedo_tubes, torpedo_damage: one
+# salvo. toughness: damage a ship of the class can take. A hit does
+# 100 x damage / toughness points. gun_rounds_per_min, gun_damage,
+# torpedo_damage and toughness may be decimals such as 19.666666. radar: 1 if fitted. See
+# docs/decisions/0014-surface-combat.md.
+# aircraft_capacity: aircraft the ship can carry (decision 0025). anti_aircraft:
+# anti-aircraft shots at a raid (decision 0027). Classes 1 to 4 have none, so
+# the scenarios built before stage 5c are unchanged.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
+1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,0
+2,Placeholder destroyer,destroyer,16,36,500,4000,0,4,6,150,5,8,200,100,0,0,0
+3,Placeholder cargo ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,300,0,0,0
+4,Placeholder carrier,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36,0
+5,Placeholder carrier with guns,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,48,20
+6,Placeholder cruiser with guns,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,8

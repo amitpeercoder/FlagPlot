@@ -133,5 +133,9 @@ path = "scenario_11_claims.rs"
 name = "scenario_12a_long_reach"
 path = "scenario_12a_long_reach.rs"
 
+[[test]]
+name = "frozen_figures_mechanism"
+path = "frozen_figures_mechanism.rs"
+
 [lints]
 workspace = true

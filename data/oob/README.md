@@ -16,8 +16,9 @@ Sourced historical facts for Flag Plot's order of battle. This is the facts laye
 - Japanese unit records read from the archive scans (daily air losses over Guadalcanal by unit; Eastern Solomons searches, strikes and positions): `docs/research/oob/japanese-air-records.md`
 - Strike launch ranges of 1942 and aircraft lost for fuel or on the return: `docs/research/oob/strike-ranges.md`
 - Aircraft lost without being shot down and what became of their crews, 1942 (ditchings by cause, crews recovered by where the aircraft came down, rescue arrangements): `docs/research/oob/ditching-and-rescue.md`
+- Airmen lost and recovered over Guadalcanal by name, 21 August to 17 September 1942: `docs/research/oob/aircrew-fates.md`. The rows are in `aircrew_fates.csv`, **not yet checked by `oob-check`**
 - What the record gives to rest an experience figure on (pilot hours, air groups' time in action, ships' time in commission and night practice, damage control): `docs/research/oob/experience.md`. Statements by navy are in `training_facts.csv`, **not yet checked by `oob-check`**
-- Recorded ship passages, July to October 1942 (start, end, times and stated speed, with what makes each run usable or not): `docs/research/oob/passages.md`. The rows are in `passages.csv`, **not yet checked by `oob-check`**
+- Recorded ship passages, July to October 1942 (start, end, times and stated speed, with what makes each run usable or not): `docs/research/oob/passages.md`. The rows are in `passages.csv`, checked by `oob-check` (columns, located ends, forms of times, coordinates and speeds)
 - The US side of the air campaign (losses and credits by month from the Navy's statistics, daily dispatches, claims against losses both ways): `docs/research/oob/us-side-air-losses.md`
 
 The simulation does not read these files. `data/reference/` is what it loads.

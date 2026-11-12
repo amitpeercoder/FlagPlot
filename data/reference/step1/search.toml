@@ -1,0 +1,57 @@
+# FROZEN: a copy of data/reference/search.toml
+# as it stood at the end of step 1, on Nov 12, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These figures are invented so the engine has something to
+# run. They are not historical and must not be used for validation.
+# See docs/decisions/0012-search-and-contacts.md.
+
+placeholder = true
+
+# A contact that goes this many pulses without a fresh report is dropped
+# (decision 0032).
+contact_drop_age_pulses = 5
+
+# A report refreshes a contact this close, and a contact this fresh also
+# alerts a force nearby (decisions 0012 and 0021, merged by 0032).
+merge_distance_hexes = 2
+fresh_contact_max_age_pulses = 2
+
+# Chance a report names a neighbouring hex.
+position_error_chance = "0.3"
+
+# Chance a report counts one ship too many, or one too few.
+count_over_chance = "0.2"
+count_under_chance = "0.2"
+
+# For each true kind, the chance of each reported kind. Each row adds to 1.
+[kind_confusion.carrier]
+carrier = "0.7"
+battleship = "0.1"
+cruiser = "0.1"
+transport = "0.1"
+
+[kind_confusion.battleship]
+battleship = "0.7"
+carrier = "0.1"
+cruiser = "0.2"
+
+[kind_confusion.cruiser]
+cruiser = "0.7"
+battleship = "0.1"
+destroyer = "0.1"
+carrier = "0.1"
+
+[kind_confusion.destroyer]
+destroyer = "0.7"
+cruiser = "0.2"
+transport = "0.1"
+
+[kind_confusion.transport]
+transport = "0.7"
+auxiliary = "0.2"
+carrier = "0.1"
+
+[kind_confusion.auxiliary]
+auxiliary = "0.7"
+transport = "0.3"

@@ -153,10 +153,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind};
@@ -185,7 +186,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6a loads")
+    common::load(&scenario_path()).expect("scenario 6a loads")
 }
 
 fn tenths(value: i64) -> Fixed {
@@ -987,9 +988,10 @@ fn work_the_run(run: &Run, config: &Config) -> Vec<Raid> {
 // directory. Nothing in the repository's data folder is touched.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied files,
-/// appends `append` to the scenario, and loads it.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text and in copies of the aircraft types and
+/// air combat figures, and `append` added to the scenario's text. Nothing in
+/// the repository's data folder is touched.
 fn variant(
     tag: &str,
     edits: &[(&str, &str)],
@@ -997,55 +999,17 @@ fn variant(
     aircraft_edits: &[(&str, &str)],
     air_combat_edits: &[(&str, &str)],
 ) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    // Tests run in parallel: each variant has a folder of its own.
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "base_raid_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
+    for (original, changed) in edits {
+        text = common::replace_once(&text, original, changed);
     }
-    for file in [
-        "map/placeholder_two_airfields.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        "reference/air_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let edit = |path: &Path, edits: &[(&str, &str)], append: &str| {
-        let mut text = fs::read_to_string(path).expect("read a file to edit");
-        for (original, changed) in edits {
-            assert_eq!(
-                text.matches(original).count(),
-                1,
-                "the text {original:?} appears exactly once"
-            );
-            text = text.replace(original, changed);
-        }
-        text.push_str(append);
-        fs::write(path, text).expect("write the variant");
-    };
-    edit(
-        &root.join("reference/aircraft_types.csv"),
-        aircraft_edits,
-        "",
-    );
-    edit(
-        &root.join("reference/air_combat.toml"),
-        air_combat_edits,
-        "",
-    );
-    let scenario_file = root.join("scenarios/06a_base_raid.toml");
-    fs::copy(data.join("scenarios/06a_base_raid.toml"), &scenario_file).expect("copy the scenario");
-    edit(&scenario_file, edits, append);
-    Scenario::load(&scenario_file).expect("the variant loads")
+    text.push_str(append);
+    let options = common::altered_reference(tag, |dir| {
+        common::edit_file_by(dir, "aircraft_types.csv", aircraft_edits);
+        common::edit_file_by(dir, "air_combat.toml", air_combat_edits);
+    });
+    common::from_text_with(&text, &path, &options).expect("the variant loads")
 }
 
 const GUNS: &str = "anti_aircraft = 20\n";

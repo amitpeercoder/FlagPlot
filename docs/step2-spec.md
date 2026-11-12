@@ -39,6 +39,7 @@ From `docs/step2-opening-list.md`, which the build session keeps, and the decisi
 - The losses of the four weeks over Guadalcanal do not have the shape of the record (decision 0042).
 - Claims overstate less than the record does: about 2.5 to 3 aircraft were claimed for each lost, and 14 ships for 4 at Savo Island.
 - The Japanese search at the Eastern Solomons is a placeholder arc. The real search orders are now in the facts.
+- A force in the game holds its ordered speed on a straight course. In the record a ship's speed made good is a half to three quarters of the speed a source states for it: ships zigzagged, waited, slowed for landfall and towed (`docs/research/oob/passages.md`). No rule covers this. The designer has put it aside for now (see "Decided by the designer", 8). So passages are reported and not judged (`data/validation/passages.toml`).
 
 ## Measures
 
@@ -50,7 +51,7 @@ A measure is one number taken from a run, with the recorded value beside it. Eac
 | Eastern Solomons | Ships sunk and crippled by side; bomb hits on each carrier; aircraft lost by side; whether each side found and struck the other |
 | Rabaul against Guadalcanal | Raid days; aircraft lost by side and by cause; aircraft ready at Henderson Field over time; supply used; days the field could not fly |
 | All | The result on the objectives scale (decision 0054), beside history's result on that scale. Reported and not judged, until the scale counts a ship that is out of the campaign |
-| Passages | Days at sea for the recorded runs the slice holds |
+| Passages | Minutes for the recorded runs the slice holds, set against what the rules charge. Reported and not judged: research found no long run at one held speed |
 | Claims | Claimed over actual, for aircraft and for ships, by side |
 
 The record is uneven and the measures must say so. From the research note:
@@ -113,10 +114,9 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 | Item | State | Must it land before tuning? |
 | --- | --- | --- |
 | The state hash at version 2, and batches that record their inputs | Done (decision 0057) | Done |
-| Ships charged straight-line miles | Decided (decision 0058, confirmed by the designer), being built. The hash goes to version 3 with it | Yes, before passages are compared, and before Savo Island is tuned at all: its start is worked back from the hour the Japanese column enters Savo's hex, and that changes with the rule |
+| Ships charged straight-line miles | Done (decision 0058). Savo Island and the Eastern Solomons are re-derived for it (decisions 0024 and 0031, amended); the hash is at version 3 | Yes, before passages are compared, and before Savo Island is tuned at all: its start is worked back from the hour the Japanese column enters Savo's hex, and that changes with the rule |
 | Strike target priority as an order | On the opening list; not yet decided | Yes for the Eastern Solomons: what a strike goes for decides which ships are hit |
-| Reach beyond the radius, and a range policy order | On the opening list; not yet decided | Yes for the Eastern Solomons and the air campaign: it decides which strikes fly at all |
-| Aircraft lost for want of fuel or a deck (ditching) | Added to the opening list at the designer's word, Nov 12, 2026; not yet decided. Proposed as the price of reach beyond the radius | Yes for the Eastern Solomons: 7 of the 17 US carrier aircraft lost there ditched. Until it lands, losses to all causes are reported and not judged |
+| Aircraft that cannot land where they took off: reach set by order, ditching for want of fuel, landing on another deck or at a base when a deck is lost, and the crew's recovery by where the aircraft comes down | Decided (decision 0059, plan approved by the designer on Nov 12, 2026); built in three stages after decision 0058 | Yes for the Eastern Solomons and the air campaign: it decides which strikes fly, and 7 of the 17 US carrier aircraft lost at the Eastern Solomons ditched. When its first two stages are on `main` the two measures of losses to all causes there are judged. A further stage gives a fighter shot down over its own base or force a draw for its pilot; until then the rules lose no pilot of a patrol |
 | Experience: one number for an air group and one for a ship's crew | Added to the opening list at the designer's word, Nov 12, 2026; not yet decided. Morale is left out | Yes, before Savo Island is tuned, on the condition under "Experience" below |
 | Ship repair | On the opening list; not yet decided | No. It matters to a campaign, not to one battle's losses |
 | "Out of the campaign" on the objectives scale | On the opening list; not yet decided | No. Until it lands the result on the scale is reported and not judged |
@@ -154,5 +154,6 @@ On Nov 12, 2026, on the architect's recommendation in each case.
 3. **Frozen figures.** The hand-calculation tests run on the step 1 figures, frozen, for the length of step 2. Working them again on the tuned figures is decided when step 2 closes.
 4. **Scoring.** The result on the objectives scale is reported and not judged until the scale counts a ship that is out of the campaign. Tuning is judged on direct measures: ships sunk, hits, aircraft lost.
 5. **Order of the rule work.** Strike target priority as an order, and reach beyond the radius, are built before the air figures are tuned.
-6. **Ditching.** Aircraft lost for want of fuel or a deck join the rule work, proposed as the price of reach beyond the radius.
+6. **Ditching.** Aircraft lost for want of fuel or a deck join the rule work. It became one rule with reach beyond the radius, a friendly field and aircraft aloft when their deck is lost: decision 0059.
 7. **Experience.** It is in step 2 and is built before Savo Island is tuned, on the condition that its values come from facts and are fixed before tuning; only the strength of its effect is tuned.
+8. **Speed made good.** Noted and not in step 2. None of the three battles turns on how fast a ship in transit travels. It is taken up when convoys and supply are compared with the record; the simplest answer may be a cruising speed for routine movement below a ship's stated speed, not a new mechanism.

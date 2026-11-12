@@ -113,10 +113,11 @@
 //!   that order's acceptance cites the event that detached the force.
 //! - A replay reproduces both daily hashes.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 
 use sim_core::events::{Cause, DetachReason, Event, EventKind};
 use sim_core::fixed::Fixed;
@@ -208,41 +209,17 @@ fn edits(case: Case) -> Vec<(&'static str, &'static str)> {
     }
 }
 
-static VARIANT_COUNT: AtomicUsize = AtomicUsize::new(0);
-
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied scenario
-/// file, and loads it. Nothing in the repository's data folder is touched.
-/// Every call gets a folder of its own, so tests can run side by side.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text. Nothing in the repository's data folder
+/// is touched.
 fn variant(edits: &[(&str, &str)]) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    let id = VARIANT_COUNT.fetch_add(1, Ordering::SeqCst);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("stragglers_{id}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_stragglers.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let mut text =
-        fs::read_to_string(data.join("scenarios/04a2_stragglers.toml")).expect("read the scenario");
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/04a2_stragglers.toml");
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
     for (original, changed) in edits {
-        assert_eq!(
-            text.matches(original).count(),
-            1,
-            "the text {original:?} appears exactly once"
-        );
-        text = text.replace(original, changed);
+        text = common::replace_once(&text, original, changed);
     }
-    fs::write(root.join("scenarios/04a2_stragglers.toml"), text).expect("write the variant");
-    Scenario::load(&root.join("scenarios/04a2_stragglers.toml")).expect("the variant loads")
+    common::from_text(&text, &path).expect("the variant loads")
 }
 
 fn build(case: Case) -> Scenario {

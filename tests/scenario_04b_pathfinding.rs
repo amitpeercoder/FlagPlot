@@ -268,6 +268,8 @@
 //! - Scenarios 1 to 4a2 keep every number: on their maps the shortest path
 //!   is the path they already took.
 
+mod common;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -309,7 +311,7 @@ fn data_dir() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&data_dir().join(MAIN_FILE)).expect("scenario 4b loads")
+    common::load(&data_dir().join(MAIN_FILE)).expect("scenario 4b loads")
 }
 
 /// The wall of land across the whole height, as extra hex blocks.
@@ -329,24 +331,17 @@ struct Change {
 
 static VARIANT_COUNT: AtomicUsize = AtomicUsize::new(0);
 
-/// Copies the scenario and its data into a folder of its own under the build
+/// Copies the scenario and its map into a folder of its own under the build
 /// directory, changes the copies, and loads them. Nothing in the repository's
 /// data folder is touched.
 fn variant(change: &Change) -> Scenario {
     let data = data_dir();
     let id = VARIANT_COUNT.fetch_add(1, Ordering::SeqCst);
     let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("pathfinding_{id}"));
-    for folder in ["scenarios", "map", "reference"] {
+    // The map is what this variant changes: the scenario and the map are
+    // copied, and the figures come from the frozen reference root.
+    for folder in ["scenarios", "map"] {
         fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
     }
 
     let mut map_text = fs::read_to_string(data.join(MAP_FILE)).expect("read the map");
@@ -367,7 +362,7 @@ fn variant(change: &Change) -> Scenario {
         text = text.replace(ROUTE, route);
     }
     fs::write(root.join(MAIN_FILE), text).expect("write the variant scenario");
-    Scenario::load(&root.join(MAIN_FILE)).expect("the variant loads")
+    common::load(&root.join(MAIN_FILE)).expect("the variant loads")
 }
 
 fn walled() -> Change {
@@ -914,7 +909,7 @@ fn earlier_scenarios_keep_their_paths() {
         let text = fs::read_to_string(&path).expect("read the scenario");
         assert_eq!(text.matches("waypoints").count(), 1, "{file}");
         assert_eq!(text.matches(route_text).count(), 1, "{file}");
-        let scenario = Scenario::load(&path).expect("the scenario loads");
+        let scenario = common::load(&path).expect("the scenario loads");
         let map = scenario.world.map();
         let waypoint = hex(q, r);
         let field = map.sea_distances_to(waypoint);
@@ -965,7 +960,7 @@ fn earlier_scenarios_keep_their_paths() {
 const REAL_FILE: &str = "scenarios/04b_santo_to_lunga.toml";
 
 fn load_real() -> Scenario {
-    Scenario::load(&data_dir().join(REAL_FILE)).expect("the real-map scenario loads")
+    common::load(&data_dir().join(REAL_FILE)).expect("the real-map scenario loads")
 }
 
 /// The anchors file as (place, latitude, longitude), in file order.

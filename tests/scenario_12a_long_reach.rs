@@ -27,14 +27,23 @@
 //!
 //! ## With the bombing squadron on normal reach
 //!
-//! No strike is launched in any pulse, whatever is sighted. Nothing ditches.
-//! The squadron ends with 18 aircraft and 18 pilots.
+//! No strike is launched at (11,0): it is 280 nm away and the radius is 250.
+//! A sighting report can err by one hex (chapter 3, The sighting report). A
+//! report that names (10,0), 240 nm away, is within the radius, so a strike
+//! is launched there, finds nothing and drops the contact; the other five
+//! neighbours of (11,0) are 262 nm or more away and launch nothing. So on
+//! normal reach nothing is launched beyond 250 nm, nothing ditches, and the
+//! squadron ends with 18 aircraft and 18 pilots, less what wear writes off.
 //!
 //! ## With the bombing squadron on extended reach
 //!
 //! In the pulse the force is sighted and reported in its true hex, the
 //! squadron launches all 18 at 280 nm. No fighter or gun fires (the enemy
 //! has none), so 18 attack: 18 bombs at 0.2, 3.6 hits expected, as in 5b.
+//! A report that errs by one hex sends the strike to that hex instead, which
+//! is 240, 262 or more miles away; it finds nothing there, and it is rolled
+//! for fuel at its own distance (at 262 nm, 2 x 12 / 250 = 0.096). The table
+//! below is for the runs whose first strike is at (11,0).
 //!
 //! All 18 come back from the target. The chance that one runs out of fuel
 //! is 2 x (280 - 250) / 250: 30 / 250 = 0.12, times 2 is 0.24. Expected
@@ -56,8 +65,8 @@
 //!
 //! # Properties
 //!
-//! - On normal reach the log holds no launch and no ditching, at any
-//!   setting.
+//! - On normal reach the log holds no launch beyond the radius and no
+//!   ditching, at any setting.
 //! - The aircraft ditched are never more than those that came back, and the
 //!   pilots lost never more than the aircraft ditched.
 //! - A group that flew within its radius never ditches: every scenario that
@@ -72,8 +81,7 @@
 //!   function) it is 0.32 and 0.4.
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 
 use sim_core::events::{Cause, Event, EventKind, SortieKind};
 use sim_core::fixed::Fixed;
@@ -86,6 +94,8 @@ use sim_core::state::Side;
 use sim_core::{SimConfig, World};
 use sim_data::Scenario;
 
+mod common;
+
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SCENARIO: &str = "12a_long_reach.toml";
 const SEEDS: u64 = 1000;
@@ -95,12 +105,9 @@ const TARGET: Hex = Hex::new(11, 0);
 const BOMBER_TYPE: AircraftTypeId = AircraftTypeId::new(3);
 
 // ---------------------------------------------------------------------
-// The one way these tests run the scenario with altered figures. The
-// figures of decision 0059 are written into a copy of the air combat file
-// under the build directory, the scenario is read from a copy of its text
-// that names it, and nothing in the repository's data folder is touched.
-// Everything below goes through `variant`, so changing how figures are
-// altered means changing this function alone.
+// The one way these tests run the scenario with altered figures: an
+// altered copy of the frozen reference (`common::altered_reference`).
+// Everything below goes through `variant`.
 // ---------------------------------------------------------------------
 
 /// The two figures the table of the hand calculation sets. The placeholder
@@ -136,64 +143,43 @@ const WEAR_AND_FATIGUE: &str =
     "air_upkeep = \"../reference/air_upkeep.toml\"\nfatigue = \"../reference/fatigue.toml\"\n";
 
 fn variant(reach: &str, figures: Figures, extra_keys: &str) -> Scenario {
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let data = PathBuf::from(ROOT).join("data");
-    // Tests run in parallel: each variant has a folder of its own.
-    let folder = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "reach_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    fs::create_dir_all(&folder).expect("make the variant folder");
-
-    let text = fs::read_to_string(data.join("reference/air_combat.toml"))
-        .expect("the air combat figures read");
-    let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
-    for (key, value) in [
-        (
-            "ditch_chance_per_radius_beyond",
-            figures.ditch_chance_per_radius_beyond,
-        ),
-        (
-            "crew_recovered_short_of_home",
-            figures.crew_recovered_short_of_home,
-        ),
-    ] {
-        let mut found = 0;
-        for line in &mut lines {
-            if line.starts_with(&format!("{key} = ")) {
-                *line = format!("{key} = \"{value}\"");
-                found += 1;
+    let options = common::altered_reference("reach", |dir| {
+        common::edit_file(dir, "air_combat.toml", |text| {
+            let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
+            for (key, value) in [
+                (
+                    "ditch_chance_per_radius_beyond",
+                    figures.ditch_chance_per_radius_beyond,
+                ),
+                (
+                    "crew_recovered_short_of_home",
+                    figures.crew_recovered_short_of_home,
+                ),
+            ] {
+                let mut found = 0;
+                for line in &mut lines {
+                    if line.starts_with(&format!("{key} = ")) {
+                        *line = format!("{key} = \"{value}\"");
+                        found += 1;
+                    }
+                }
+                assert_eq!(found, 1, "{key} is set once in the file");
             }
-        }
-        assert_eq!(found, 1, "{key} is set once in the file");
-    }
-    let figures_path = folder.join("air_combat.toml");
-    fs::write(&figures_path, lines.join("\n")).expect("write the figures");
-
-    let scenario_path = data.join("scenarios").join(SCENARIO);
+            lines.join("\n")
+        });
+    });
+    let scenario_path = PathBuf::from(ROOT).join("data/scenarios").join(SCENARIO);
     let mut text = fs::read_to_string(&scenario_path).expect("the scenario reads");
-    let original = "air_combat = \"../reference/air_combat.toml\"";
-    assert_eq!(
-        text.matches(original).count(),
-        1,
-        "the scenario names the figures"
+    if !extra_keys.is_empty() {
+        let named = "air_combat = \"../reference/air_combat.toml\"\n";
+        text = common::replace_once(&text, named, &format!("{named}{extra_keys}"));
+    }
+    text = common::replace_once(
+        &text,
+        "reach = \"extended\"",
+        &format!("reach = \"{reach}\""),
     );
-    text = text.replace(
-        original,
-        &format!(
-            "air_combat = {:?}\n{extra_keys}",
-            figures_path.to_str().expect("a path")
-        ),
-    );
-    let order = "reach = \"extended\"";
-    assert_eq!(
-        text.matches(order).count(),
-        1,
-        "the scenario sets the reach"
-    );
-    text = text.replace(order, &format!("reach = \"{reach}\""));
-    Scenario::from_text(&text, &scenario_path).expect("the variant loads")
+    common::from_text_with(&text, &scenario_path, &options).expect("the variant loads")
 }
 
 fn run_seed(base: &Scenario, seed: u64) -> World {
@@ -357,6 +343,28 @@ fn the_target_is_280_nm_out_30_beyond_the_radius_and_within_extended_reach_only(
 }
 
 #[test]
+fn the_neighbours_of_the_target_are_240_262_302_and_320_nm_out_and_262_ditches_at_0_096() {
+    let mut distances: Vec<i64> = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)]
+        .iter()
+        .map(|(dq, dr)| i64::from(HOME.air_distance_nm(Hex::new(TARGET.q + dq, TARGET.r + dr))))
+        .collect();
+    distances.sort_unstable();
+    // (10,0); (10,1) and (11,-1); (12,-1) and (11,1); (12,0).
+    assert_eq!(distances, [240, 262, 262, 302, 302, 320]);
+    let scenario = variant("extended", PLACEHOLDER, "");
+    let figures = scenario
+        .world
+        .ref_data()
+        .air_combat
+        .as_ref()
+        .expect("figures");
+    assert_eq!(
+        figures.ditch_chance(Fixed::from_int(262), Fixed::from_int(250)),
+        Fixed::from_raw(96_000)
+    );
+}
+
+#[test]
 fn the_scouts_chance_to_sight_at_280_nm_is_the_hand_calculation() {
     let world = run_seed(&variant("extended", PLACEHOLDER, ""), 1);
     let attempts = events_of(&world, |k| matches!(k, EventKind::SearchAttempt { .. }));
@@ -383,13 +391,8 @@ fn the_scouts_chance_to_sight_at_280_nm_is_the_hand_calculation() {
 
 #[test]
 fn on_normal_reach_nothing_strikes_the_target_and_nothing_ditches_at_any_setting() {
-    // The hand calculation says no strike is launched in any pulse, whatever
-    // is sighted. MISMATCH, reported to the architect: a sighting report
-    // names a neighbouring hex with chance 0.05 each, and (10,0) is 240 nm
-    // out, within the radius, so a report that lands there launches a strike
-    // on normal reach (it finds nothing: the force is at (11,0)). The test
-    // asserts what holds: no launch at the target hex, none beyond the
-    // radius, no ditching, and the squadron whole.
+    // A report that errs by one hex can name (10,0), 240 nm out, within the
+    // radius: a strike is launched there and finds nothing.
     let mut launched_at_all = 0;
     for figures in [PLACEHOLDER, ALL_DITCH_ALL_LOST] {
         for world in runs("normal", figures, "") {
@@ -810,7 +813,7 @@ fn no_scenario_that_gives_no_reach_order_ditches_anything() {
     // whose bombers strike out to their radius, ditches nothing.
     let path = PathBuf::from(ROOT).join("data/scenarios/05b_strike.toml");
     for seed in 1..=100 {
-        let mut scenario = Scenario::load(&path)
+        let mut scenario = common::load(&path)
             .expect("5b loads")
             .with_seed(seed)
             .expect("a seed");

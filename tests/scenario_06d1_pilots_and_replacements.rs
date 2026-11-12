@@ -150,10 +150,11 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind};
@@ -193,11 +194,11 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 6d1 loads")
+    common::load(&scenario_path()).expect("scenario 6d1 loads")
 }
 
 fn six_a() -> Scenario {
-    Scenario::load(
+    common::load(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/06a_base_raid.toml"),
     )
     .expect("scenario 6a loads")
@@ -1188,36 +1189,11 @@ fn work_the_raid(
 // directory. Nothing in the repository's data folder is touched.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// applies `edit` to the copied scenario's text, and loads it.
-fn variant(tag: &str, edit: &dyn Fn(String) -> String) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    // Tests run in parallel: each variant has a folder of its own.
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "pilots_and_replacements_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_two_airfields.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        "reference/air_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let scenario_file = root.join("scenarios/06d1_pilots_and_replacements.toml");
-    let text = fs::read_to_string(data.join("scenarios/06d1_pilots_and_replacements.toml"))
-        .expect("read the scenario");
-    fs::write(&scenario_file, edit(text)).expect("write the variant");
-    Scenario::load(&scenario_file).expect("the variant loads")
+/// Loads the scenario on the frozen figures with `edit` applied to its text.
+fn variant(_tag: &str, edit: &dyn Fn(String) -> String) -> Scenario {
+    let path = scenario_path();
+    let text = fs::read_to_string(&path).expect("read the scenario");
+    common::from_text(&edit(text), &path).expect("the variant loads")
 }
 
 /// Replaces `original` by `changed`, which must appear exactly once.
@@ -2156,7 +2132,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
         assert!(!wanted.is_empty(), "{name}");
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join(format!("../data/scenarios/{name}.toml"));
-        let mut scenario = Scenario::load(&path).expect("the scenario loads");
+        // The golden files are the run baselines: they follow the live
+        // figures, so this run does too (docs/step2-spec.md, "Tests while
+        // figures move").
+        let mut scenario = common::load_live(&path).expect("the scenario loads");
         let truth = scenario.world.umpire();
         assert!(truth.replacements.is_empty(), "{name}");
         assert!(

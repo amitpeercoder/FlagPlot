@@ -135,8 +135,10 @@
 
 // The test code is written by a developer from the hand calculation above.
 
+mod common;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
@@ -165,7 +167,7 @@ fn data_dir() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&data_dir().join("scenarios/02b_fuel_run.toml")).expect("scenario 2b loads")
+    common::load(&data_dir().join("scenarios/02b_fuel_run.toml")).expect("scenario 2b loads")
 }
 
 /// Resolves the next day and returns its number and its events.
@@ -846,35 +848,17 @@ fn recording_breakdowns_changes_neither_the_events_nor_the_hashes() {
     assert_eq!(stripped, without_events);
 }
 
-/// Loads a copy of scenario 2b whose text has been edited, in a fresh folder
-/// under the build directory with the data it names. Each edit is
-/// (old text, new text, the number of times the old text must appear).
+/// Loads scenario 2b with its text edited, on the frozen figures. Each edit
+/// is (old text, new text, the number of times the old text must appear).
 /// Nothing in the repository's data folder is touched.
-fn variant(tag: &str, edits: &[(&str, &str, usize)]) -> Scenario {
-    let data = data_dir();
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("fuel_run_{tag}"));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_supply_run.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let mut text =
-        fs::read_to_string(data.join("scenarios/02b_fuel_run.toml")).expect("read the scenario");
+fn variant(_tag: &str, edits: &[(&str, &str, usize)]) -> Scenario {
+    let path = data_dir().join("scenarios/02b_fuel_run.toml");
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
     for (old, new, count) in edits {
         assert_eq!(text.matches(old).count(), *count, "edit of {old:?}");
         text = text.replace(old, new);
     }
-    let path = root.join("scenarios/02b_fuel_run.toml");
-    fs::write(&path, text).expect("write the variant");
-    Scenario::load(&path).expect("the variant loads")
+    common::from_text(&text, &path).expect("the variant loads")
 }
 
 const SANTO_FUEL: &str = "supply_t = 10000\nfuel_t = 6500\n";
@@ -937,7 +921,7 @@ fn a_load_order_that_names_no_cargo_loads_supply() {
         &[(LOAD_FUEL, LOAD_SUPPLY, 1), (SANTO_FUEL, SANTO_NO_FUEL, 1)],
     ));
     let mut supply_run =
-        Scenario::load(&data_dir().join("scenarios/02_supply_run.toml")).expect("scenario 2 loads");
+        common::load(&data_dir().join("scenarios/02_supply_run.toml")).expect("scenario 2 loads");
     let mut supply_events: Vec<Event> = Vec::new();
     let mut supply_hashes: Vec<u64> = Vec::new();
     for _ in 0..4 {
@@ -1123,7 +1107,7 @@ fn a_scenario_that_loads_no_fuel_has_the_hashes_it_had() {
     // the hash while it is zero. (The golden files of every other scenario
     // are the standing proof for the rest.)
     let mut scenario =
-        Scenario::load(&data_dir().join("scenarios/02_supply_run.toml")).expect("scenario 2 loads");
+        common::load(&data_dir().join("scenarios/02_supply_run.toml")).expect("scenario 2 loads");
     let before: Vec<u64> = scenario
         .run_to_end()
         .expect("it runs")

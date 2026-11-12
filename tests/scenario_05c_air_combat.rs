@@ -154,10 +154,11 @@
 //!   lost to fighters and guns in that attack.
 //! - A replay of any seed reproduces the daily hash.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use sim_core::events::{AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind, Weapon};
@@ -186,7 +187,7 @@ fn scenario_path() -> PathBuf {
 }
 
 fn load() -> Scenario {
-    Scenario::load(&scenario_path()).expect("scenario 5c loads")
+    common::load(&scenario_path()).expect("scenario 5c loads")
 }
 
 fn millionths(value: i64) -> Fixed {
@@ -1534,77 +1535,32 @@ fn a_morning_attack_that_sinks_carrier_b_takes_group_4_and_the_afternoon_meets_t
 // The variants: the share, and the second carrier's fighters.
 // ---------------------------------------------------------------------
 
-/// Copies the scenario and its data into a folder under the build directory,
-/// makes each exact, asserted-unique text replacement in the copied scenario
-/// file, and loads it. Nothing in the repository's data folder is touched.
+/// Loads the scenario on the frozen figures with each exact, asserted-unique
+/// text replacement made in its text. Nothing in the repository's data folder
+/// is touched.
 fn variant(tag: &str, edits: &[(&str, &str)]) -> Scenario {
     variant_of_data(tag, edits, &[], &[])
 }
 
-/// As `variant`, and makes the same kind of replacement in the copied
-/// aircraft types file, for a variant that changes a figure and not an order.
+/// As `variant`, and makes the same kind of replacement in a copy of the
+/// frozen aircraft types file and air combat figures, for a variant that
+/// changes a figure and not an order.
 fn variant_of_data(
     tag: &str,
     edits: &[(&str, &str)],
     aircraft_edits: &[(&str, &str)],
     air_combat_edits: &[(&str, &str)],
 ) -> Scenario {
-    let data = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-    // Tests run in parallel: each variant has a folder of its own.
-    static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
-        "air_combat_{tag}_{}_{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    for folder in ["scenarios", "map", "reference"] {
-        fs::create_dir_all(root.join(folder)).expect("make the variant folder");
-    }
-    for file in [
-        "map/placeholder_search.toml",
-        "reference/ship_classes.csv",
-        "reference/port_sizes.csv",
-        "reference/aircraft_types.csv",
-        "reference/search.toml",
-        "reference/surface_combat.toml",
-        "reference/air_combat.toml",
-    ] {
-        fs::copy(data.join(file), root.join(file)).expect("copy a data file");
-    }
-    let types_path = root.join("reference/aircraft_types.csv");
-    let mut types = fs::read_to_string(&types_path).expect("read the aircraft types");
-    for (original, changed) in aircraft_edits {
-        assert_eq!(
-            types.matches(original).count(),
-            1,
-            "the text {original:?} appears exactly once"
-        );
-        types = types.replace(original, changed);
-    }
-    fs::write(&types_path, types).expect("write the aircraft types");
-    let air_path = root.join("reference/air_combat.toml");
-    let mut air = fs::read_to_string(&air_path).expect("read the air combat figures");
-    for (original, changed) in air_combat_edits {
-        assert_eq!(
-            air.matches(original).count(),
-            1,
-            "the text {original:?} appears exactly once"
-        );
-        air = air.replace(original, changed);
-    }
-    fs::write(&air_path, air).expect("write the air combat figures");
-    let mut text =
-        fs::read_to_string(data.join("scenarios/05c_air_combat.toml")).expect("read the scenario");
+    let path = scenario_path();
+    let mut text = fs::read_to_string(&path).expect("read the scenario");
     for (original, changed) in edits {
-        assert_eq!(
-            text.matches(original).count(),
-            1,
-            "the text {original:?} appears exactly once"
-        );
-        text = text.replace(original, changed);
+        text = common::replace_once(&text, original, changed);
     }
-    fs::write(root.join("scenarios/05c_air_combat.toml"), text).expect("write the variant");
-    Scenario::load(&root.join("scenarios/05c_air_combat.toml")).expect("the variant loads")
+    let options = common::altered_reference(tag, |dir| {
+        common::edit_file_by(dir, "aircraft_types.csv", aircraft_edits);
+        common::edit_file_by(dir, "air_combat.toml", air_combat_edits);
+    });
+    common::from_text_with(&text, &path, &options).expect("the variant loads")
 }
 
 const SHARE_ORDER: &str = "share = \"0.5\"";

@@ -642,13 +642,62 @@ pub struct Scenario {
     data_files: Vec<PathBuf>,
 }
 
+/// How a scenario is loaded, beyond the file itself.
+///
+/// The default reads every file where the scenario names it.
+#[derive(Clone, Debug, Default)]
+pub struct LoadOptions {
+    /// A directory to read the scenario's reference (figures) files from, in
+    /// place of the places it names. Each reference file the scenario names
+    /// (ship classes, port sizes, aircraft types, and the search, surface
+    /// combat, air combat, air upkeep, fatigue and base supply figures) is
+    /// looked up by its file name directly under this directory. A file that
+    /// is not there is an error that names it: there is no fallback to the
+    /// file the scenario names, which would defeat the purpose. The map is
+    /// not a reference file and is read where the scenario names it.
+    ///
+    /// The hand-calculation tests set this to `data/reference/step1`, the
+    /// figures as they stood at the end of step 1 (`docs/step2-spec.md`,
+    /// "Tests while figures move").
+    pub reference_root: Option<PathBuf>,
+}
+
+/// Where the frozen figures of step 1 are, relative to the repository's root.
+/// The one place the directory is named in code: the tests that read them
+/// (`tests/common`, the agent's tests, the runner's tests) all go through
+/// [`LoadOptions::frozen_step1`].
+pub const FROZEN_REFERENCE_DIR: &str = "data/reference/step1";
+
+impl LoadOptions {
+    /// Options that read the reference files from `root`.
+    pub fn with_reference_root(root: impl Into<PathBuf>) -> LoadOptions {
+        LoadOptions {
+            reference_root: Some(root.into()),
+        }
+    }
+
+    /// Options that read the frozen figures of step 1, as the hand-calculation
+    /// tests do, given the repository's root (`FROZEN_REFERENCE_DIR` under it).
+    pub fn frozen_step1(repo_root: &Path) -> LoadOptions {
+        LoadOptions::with_reference_root(repo_root.join(FROZEN_REFERENCE_DIR))
+    }
+}
+
 impl Scenario {
     /// Loads a scenario and the map and reference files it names.
     pub fn load(path: &Path) -> Result<Scenario, DataError> {
+        Scenario::load_with(path, &LoadOptions::default())
+    }
+
+    /// Loads a scenario as [`Scenario::load`] does, with `options`. The files
+    /// the scenario records as its inputs ([`Scenario::data_files`]) are the
+    /// ones actually read, so a saved game made with a reference root names
+    /// that root's files and its hashes are theirs.
+    pub fn load_with(path: &Path, options: &LoadOptions) -> Result<Scenario, DataError> {
         let fail = |message: String| DataError::in_file(path, message);
 
         let text = fs::read_to_string(path).map_err(|e| fail(e.to_string()))?;
-        Scenario::parse(&text, path)
+        Scenario::parse_with(&text, path, options)
     }
 
     /// Builds a scenario from text that is not (or no longer) the file's own
@@ -659,14 +708,50 @@ impl Scenario {
         Scenario::parse(text, path)
     }
 
+    /// As [`Scenario::from_text`], with `options` as in [`Scenario::load_with`].
+    pub fn from_text_with(
+        text: &str,
+        path: &Path,
+        options: &LoadOptions,
+    ) -> Result<Scenario, DataError> {
+        Scenario::parse_with(text, path, options)
+    }
+
     /// Builds a scenario from its text. `path` says where the text came from:
     /// the files it names are read relative to it.
     fn parse(text: &str, path: &Path) -> Result<Scenario, DataError> {
+        Scenario::parse_with(text, path, &LoadOptions::default())
+    }
+
+    /// As `parse`, reading the reference files as `options` say.
+    fn parse_with(text: &str, path: &Path, options: &LoadOptions) -> Result<Scenario, DataError> {
         let fail = |message: String| DataError::in_file(path, message);
 
         let file: ScenarioFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
 
         let folder = path.parent().unwrap_or_else(|| Path::new("."));
+        // Where a named reference file is read from: where the scenario names
+        // it, or by file name under the options' reference root.
+        let reference = |name: &str| -> Result<PathBuf, DataError> {
+            match &options.reference_root {
+                None => Ok(folder.join(name)),
+                Some(root) => {
+                    let file_name = Path::new(name).file_name().ok_or_else(|| {
+                        fail(format!("\"{name}\" does not name a reference file"))
+                    })?;
+                    let found = root.join(file_name);
+                    if found.is_file() {
+                        Ok(found)
+                    } else {
+                        Err(fail(format!(
+                            "the reference file {} is not in the reference root {}",
+                            file_name.to_string_lossy(),
+                            root.display()
+                        )))
+                    }
+                }
+            }
+        };
         let map = load_map(&folder.join(&file.map))?;
         let class_files = file.ship_classes.names();
         if class_files.is_empty() {
@@ -679,7 +764,7 @@ impl Scenario {
         let mut ref_data = RefData::default();
         let mut class_owner: BTreeMap<ShipClassId, PathBuf> = BTreeMap::new();
         for name in &class_files {
-            let file_path = folder.join(name);
+            let file_path = reference(name)?;
             for (id, class) in load_ship_classes(&file_path)?.ship_classes {
                 if let Some(first) = class_owner.insert(id, file_path.clone()) {
                     return Err(fail(format!(
@@ -691,10 +776,10 @@ impl Scenario {
                 ref_data.ship_classes.insert(id, class);
             }
         }
-        ref_data.port_sizes = load_port_sizes(&folder.join(&file.port_sizes))?;
+        ref_data.port_sizes = load_port_sizes(&reference(&file.port_sizes)?)?;
         let mut type_owner: BTreeMap<AircraftTypeId, PathBuf> = BTreeMap::new();
         for name in &type_files {
-            let file_path = folder.join(name);
+            let file_path = reference(name)?;
             for (id, aircraft_type) in load_aircraft_types(&file_path)? {
                 if let Some(first) = type_owner.insert(id, file_path.clone()) {
                     return Err(fail(format!(
@@ -706,29 +791,33 @@ impl Scenario {
                 ref_data.aircraft_types.insert(id, aircraft_type);
             }
         }
-        ref_data.search = Some(load_search_figures(&folder.join(&file.search))?);
-        ref_data.surface_combat = Some(load_surface_combat_figures(
-            &folder.join(&file.surface_combat),
-        )?);
+        ref_data.search = Some(load_search_figures(&reference(&file.search)?)?);
+        ref_data.surface_combat = Some(load_surface_combat_figures(&reference(
+            &file.surface_combat,
+        )?)?);
         if let Some(air_combat) = &file.air_combat {
-            ref_data.air_combat = Some(load_air_combat_figures(&folder.join(air_combat))?);
+            ref_data.air_combat = Some(load_air_combat_figures(&reference(air_combat)?)?);
         }
         if let Some(air_upkeep) = &file.air_upkeep {
-            ref_data.air_upkeep = Some(load_air_upkeep_figures(&folder.join(air_upkeep))?);
+            ref_data.air_upkeep = Some(load_air_upkeep_figures(&reference(air_upkeep)?)?);
         }
         if let Some(fatigue) = &file.fatigue {
-            ref_data.fatigue = Some(load_fatigue_figures(&folder.join(fatigue))?);
+            ref_data.fatigue = Some(load_fatigue_figures(&reference(fatigue)?)?);
         }
         if let Some(air_supply) = &file.air_supply {
-            ref_data.air_supply = Some(load_air_supply_figures(&folder.join(air_supply))?);
+            ref_data.air_supply = Some(load_air_supply_figures(&reference(air_supply)?)?);
         }
 
         let mut data_files: Vec<PathBuf> = vec![folder.join(&file.map)];
-        data_files.extend(class_files.iter().map(|name| folder.join(name)));
-        data_files.push(folder.join(&file.port_sizes));
-        data_files.extend(type_files.iter().map(|name| folder.join(name)));
-        data_files.push(folder.join(&file.search));
-        data_files.push(folder.join(&file.surface_combat));
+        for name in &class_files {
+            data_files.push(reference(name)?);
+        }
+        data_files.push(reference(&file.port_sizes)?);
+        for name in &type_files {
+            data_files.push(reference(name)?);
+        }
+        data_files.push(reference(&file.search)?);
+        data_files.push(reference(&file.surface_combat)?);
         for name in [
             &file.air_combat,
             &file.air_upkeep,
@@ -738,7 +827,7 @@ impl Scenario {
         .into_iter()
         .flatten()
         {
-            data_files.push(folder.join(name));
+            data_files.push(reference(name)?);
         }
 
         let mut truth = TruthState::default();

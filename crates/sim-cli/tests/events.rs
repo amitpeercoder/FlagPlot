@@ -8,14 +8,20 @@ use std::path::Path;
 use std::process::{Command, Output};
 
 use sim_core::ids::EntityRef;
-use sim_data::Scenario;
+use sim_data::{LoadOptions, Scenario};
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
 const EASTERN: &str = "data/scenarios/05_eastern_solomons.toml";
+/// These tests name events of a run (that a ship sank, that a group lost
+/// aircraft), which the figures decide, so they run on the frozen figures of
+/// step 1 and not on the ones step 2 tunes (docs/step2-spec.md, "Tests while
+/// figures move").
+const FROZEN: &str = sim_data::FROZEN_REFERENCE_DIR;
 
 fn binary(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_sim-cli"))
         .args(args)
+        .args(["--reference", FROZEN])
         .current_dir(ROOT)
         .output()
         .expect("the binary starts")
@@ -68,7 +74,11 @@ fn listing(output: &str) -> Vec<(Option<String>, u32, String)> {
 }
 
 fn world(scenario: &str) -> Scenario {
-    let mut scenario = Scenario::load(&Path::new(ROOT).join(scenario)).expect("loads");
+    let mut scenario = Scenario::load_with(
+        &Path::new(ROOT).join(scenario),
+        &LoadOptions::frozen_step1(Path::new(ROOT)),
+    )
+    .expect("loads");
     scenario.run_to_end().expect("runs");
     scenario
 }

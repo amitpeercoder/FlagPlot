@@ -6,7 +6,7 @@ pub mod validator;
 
 use std::path::{Path, PathBuf};
 
-use sim_data::Scenario;
+use sim_data::{LoadOptions, Scenario};
 
 pub const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
 
@@ -18,8 +18,15 @@ pub fn scenario_text(name: &str) -> String {
     std::fs::read_to_string(scenario_path(name)).expect("the scenario reads")
 }
 
+/// The agent's tests read the figures frozen at the end of step 1
+/// (`data/reference/step1`), not the ones step 2 tunes: the goldens and the
+/// passages and ranges they assert are worked on known figures.
+pub fn frozen() -> LoadOptions {
+    LoadOptions::frozen_step1(Path::new(ROOT))
+}
+
 pub fn load_text(text: &str, name: &str, seed: u64) -> Scenario {
-    Scenario::from_text(text, &scenario_path(name))
+    Scenario::from_text_with(text, &scenario_path(name), &frozen())
         .expect("the scenario loads")
         .with_seed(seed)
         .expect("a seed can be set")

@@ -70,7 +70,11 @@ struct DayOut {
 
 /// `sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]`.
 /// `args` are the words after `export`.
-pub fn command(args: &[String], usage: &str) -> Result<(), String> {
+pub fn command(
+    args: &[String],
+    usage: &str,
+    options: &sim_data::LoadOptions,
+) -> Result<(), String> {
     let mut scenario_path: Option<&str> = None;
     let mut out: Option<&str> = None;
     let mut labels_path: Option<&str> = None;
@@ -108,7 +112,7 @@ pub fn command(args: &[String], usage: &str) -> Result<(), String> {
         Some(path) => map::labels(Path::new(path))?,
         None => Vec::new(),
     };
-    let executed = crate::execute(scenario_path, seed, |_| {})?;
+    let executed = crate::execute(scenario_path, seed, options, |_| {})?;
     let inputs = crate::save::inputs(scenario_path, &executed.scenario)?;
     let replay = build(&executed, scenario_path, inputs, labels);
 
