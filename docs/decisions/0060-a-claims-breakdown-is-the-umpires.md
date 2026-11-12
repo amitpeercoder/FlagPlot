@@ -51,4 +51,4 @@ A claim from a surface fight carries no breakdown, so nothing changes for it.
 - `side_breakdown` returns no breakdown for a whole `ClaimReceived`.
 - Tests: `a_claim_is_whole_to_its_side_and_its_breakdown_is_not_shown` in `side_events.rs`, and `crates/sim-agent/tests/claims.rs` asserts that `explain` on every claim of scenario 5 has no breakdown and names no real or false count.
 - The Haiku game's transcript was regenerated: one `explain` answer lost its breakdown. No other answer, no save and no hash changed.
-- Found on the way: the breakdown of a search that sighted gives the true distance to the force, which can differ from the distance to the hex the report names. It is row 40 of `docs/rules/differences.md`.
+- Found on the way: the breakdown of a search that sighted gives the true distance to the force, which can differ from the distance to the hex the report names. It was row 40 of `docs/rules/differences.md`, and decision 0061 settles it.

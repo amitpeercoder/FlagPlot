@@ -351,7 +351,6 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Report received, claim received, contact aged, contact dropped, contact not there | The side that holds the contact or made the report |
 | Engagement begun, engagement ended | A side that has come to know of the fight (below) |
 | Sighting roll | Own force, and only if the roll sighted. A roll that did not is hidden from both sides: it would say there was something to be found. |
-| Search attempt | Own air group, and only if it sighted. An attempt that did not is hidden from everyone. |
 
 **Cut**
 
@@ -363,6 +362,7 @@ An enemy unit in an event a side may see is named as the log names it. [0047]
 | Anti-aircraft fire (a force's) | Its own force's fire: force, raid group and shots. | Nothing. |
 | Base anti-aircraft fire | Its own base's fire: base, raid group and shots. | Nothing. |
 | Base attacked | The attacker sees that it attacked: group, base and shots. Not what was hit. | The base's side sees the event whole. |
+| Search attempt | Only if it sighted, its own search: the air group and the task force sighted. Not the distance or the chance, which are worked from where the force really was, while the report may name a neighbouring hex. An attempt that did not sight is hidden from everyone. [0061] | Nothing. |
 
 **Absent for both sides**
 
@@ -382,7 +382,7 @@ An event of a fight that carries a round is shown only if its round is not befor
 
 The causes of an event are cut the same way. A cause that is an order is kept if the side issued it. A cause that is an event is kept if the side may see that event. A cause that is dropped sets a flag on the event saying it has causes the side cannot see. [0047]
 
-A side sees the whole breakdown, with its result, of an event it sees whole. A cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `torpedo_mount_factor` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A salvo against the side and an air attack against it keep no factor. [0047]
+A side sees the whole breakdown, with its result, of an event it sees whole. A cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `torpedo_mount_factor` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A search attempt keeps `aircraft`, `sweep_width_nm` and `arc_deg`. A salvo against the side and an air attack against it keep no factor. [0047, 0061]
 
 A claim is the exception. A side sees its own `ClaimReceived` whole and no breakdown of it, because the breakdown says how much of the claim is real. The log keeps it for the umpire. [0060]
 
