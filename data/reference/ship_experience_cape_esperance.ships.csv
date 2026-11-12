@@ -17,12 +17,12 @@ cl-47-boise,3,fixed,up,none,none,none,ship_facts.csv:812|ship_facts.csv:813|ship
 ca-25-salt-lake-city,3,fixed,up,none,none,none,ship_facts.csv:68|ship_facts.csv:1033,ship_facts.csv:1034(preferred)|ship_facts.csv:1035(preferred)|ship_facts.csv:1040(preferred)|ship_facts.csv:1041(disputed)
 cl-50-helena,2,fixed,none,none,none,none,ship_facts.csv:795|ship_facts.csv:796|ship_facts.csv:797|ship_facts.csv:798|ship_facts.csv:925,ship_facts.csv:1050(preferred)
 dd-491-farenholt,1,fixed,none,none,down,none,ship_facts.csv:346|ship_facts.csv:854|ship_facts.csv:855|ship_facts.csv:927,ship_facts.csv:1044(preferred)|ship_facts.csv:1045(disputed)|ship_facts.csv:1053(preferred)
-dd-485-duncan,1,fixed,none,none,down,none,ship_facts.csv:821|ship_facts.csv:822|ship_facts.csv:928,ship_facts.csv:1051(preferred)|ship_facts.csv:1054(preferred)
+dd-485-duncan,1,fixed,none,none,down,none,ship_facts.csv:821|ship_facts.csv:822|ship_facts.csv:928,ship_facts.csv:1051(preferred)|ship_facts.csv:1054(preferred)|ship_facts.csv:1084(preferred)
 dd-459-laffey,1,fixed,none,none,down,none,ship_facts.csv:833|ship_facts.csv:834|ship_facts.csv:929,ship_facts.csv:1048(preferred)|ship_facts.csv:1049(disputed)|ship_facts.csv:1055(preferred)
 dd-484-buchanan,1,fixed,none,none,down,none,ship_facts.csv:340|ship_facts.csv:341,ship_facts.csv:1046(preferred)|ship_facts.csv:1047(disputed)|ship_facts.csv:1056(preferred)
-dd-488-mccalla,1,fixed,none,none,down,none,ship_facts.csv:845|ship_facts.csv:846|ship_facts.csv:930,ship_facts.csv:1052(preferred)|ship_facts.csv:1057(preferred)
-aoba,3,fixed,none,none,none,up,ship_facts.csv:8|ship_facts.csv:9|training_facts.csv:32,ship_facts.csv:1024(disputed)|ship_facts.csv:1030(disputed)
-furutaka,3,fixed,none,none,none,up,ship_facts.csv:387|ship_facts.csv:388|training_facts.csv:32,ship_facts.csv:1027(disputed)
-kinugasa,3,fixed,none,none,none,up,ship_facts.csv:455|ship_facts.csv:456|training_facts.csv:32,ship_facts.csv:1026(disputed)
+dd-488-mccalla,1,fixed,none,none,down,none,ship_facts.csv:845|ship_facts.csv:846|ship_facts.csv:930,ship_facts.csv:1052(preferred)|ship_facts.csv:1057(preferred)|ship_facts.csv:1085(preferred)
+aoba,3,fixed,none,none,none,up,ship_facts.csv:8|ship_facts.csv:9|training_facts.csv:32,ship_facts.csv:1024(disputed)|ship_facts.csv:1030(disputed)|ship_facts.csv:1086(unconfirmed)|ship_facts.csv:1090(unconfirmed)|ship_facts.csv:1094(preferred)|ship_facts.csv:1098(unconfirmed)|ship_facts.csv:1102(preferred)|ship_facts.csv:1106(unconfirmed)|ship_facts.csv:1109(preferred)|ship_facts.csv:1112(unconfirmed)|ship_facts.csv:1120(unconfirmed)
+furutaka,3,fixed,none,none,none,up,ship_facts.csv:387|ship_facts.csv:388|training_facts.csv:32,ship_facts.csv:1027(disputed)|ship_facts.csv:1089(unconfirmed)|ship_facts.csv:1093(unconfirmed)|ship_facts.csv:1097(preferred)|ship_facts.csv:1101(unconfirmed)|ship_facts.csv:1105(preferred)|ship_facts.csv:1108(unconfirmed)|ship_facts.csv:1111(preferred)|ship_facts.csv:1115(unconfirmed)
+kinugasa,3,fixed,none,none,none,up,ship_facts.csv:455|ship_facts.csv:456|training_facts.csv:32,ship_facts.csv:1026(disputed)|ship_facts.csv:1087(unconfirmed)|ship_facts.csv:1091(unconfirmed)|ship_facts.csv:1095(preferred)|ship_facts.csv:1099(unconfirmed)|ship_facts.csv:1103(preferred)|ship_facts.csv:1107(unconfirmed)|ship_facts.csv:1110(preferred)|ship_facts.csv:1113(unconfirmed)
 fubuki,3,fixed,none,none,none,up,ship_facts.csv:863|ship_facts.csv:864|training_facts.csv:32,
 hatsuyuki,3,fixed,none,none,none,up,ship_facts.csv:871|ship_facts.csv:872|training_facts.csv:32,
