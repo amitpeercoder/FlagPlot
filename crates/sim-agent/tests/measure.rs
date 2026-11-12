@@ -945,7 +945,8 @@ fn route(view: &SideView<'_>, from: (i32, i32), to: (i32, i32)) -> sim_agent::Se
 #[test]
 fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
     // Round the island (tests/scenario_04b_pathfinding.rs, part 1): south of
-    // the island, ten steps, 400 nm.
+    // the island, ten steps, 374 nm charged (five detour steps of 40, then
+    // 35, 33, 26, 40 and 40: decision 0058).
     let scenario = load("04b_round_the_island.toml", 1942);
     let view = scenario.world.side_view(Side::Allied);
     let r = route(&view, (0, 0), (8, 0));
@@ -965,7 +966,7 @@ fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
             (8, 0)
         ]
     );
-    assert_eq!((r.steps, r.distance_nm), (Some(10), Some(400)));
+    assert_eq!((r.steps, r.distance_nm), (Some(10), Some(374)));
     assert!(r.route_found);
     // Land has no route, and a hex off the map is not known.
     let none = route(&view, (0, 0), (4, 0));
@@ -982,14 +983,16 @@ fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
     // (2,-4)); Noumea to Espiritu Santo 13 steps, 520 nm ((0,18) to (7,6)).
     let scenario = load("04b_santo_to_lunga.toml", 1942);
     let view = scenario.world.side_view(Side::Allied);
-    for (from, to, steps) in [
-        ((7, 6), (2, -4), 16),
-        ((-5, -13), (2, -4), 16),
-        ((0, 18), (7, 6), 13),
+    // Steps and the miles a ship is charged for them (decision 0058): 629,
+    // 556 and 456 (the tests/scenario_04b_pathfinding.rs table).
+    for (from, to, steps, miles) in [
+        ((7, 6), (2, -4), 16, 629),
+        ((-5, -13), (2, -4), 16, 556),
+        ((0, 18), (7, 6), 13, 456),
     ] {
         let r = route(&view, from, to);
         assert_eq!(r.steps, Some(steps), "{from:?} to {to:?}");
-        assert_eq!(r.distance_nm, Some(steps * 40));
+        assert_eq!(r.distance_nm, Some(miles));
         assert_eq!(
             r.hexes.last().map(|h| (h.q, h.r)),
             Some(to),
@@ -1014,7 +1017,8 @@ fn the_sea_route_is_the_path_of_scenario_4b_pathfinding() {
     let p = passage_of(answer);
     let r = route(&view, (7, 6), (2, -4));
     assert_eq!(p.route, r.hexes);
-    assert_eq!(p.route_nm.0, Fixed::from_int(640));
+    assert_eq!(p.route_nm.0, Fixed::from_int(629));
+    assert_eq!(r.distance_nm, Some(629));
 }
 
 // ---------------------------------------------------------------------

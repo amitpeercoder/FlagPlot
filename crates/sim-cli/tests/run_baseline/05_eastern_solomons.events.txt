@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 07787c20c540fdd5  155 events
+day   1  hash e88694a2344625c0  155 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:2  <- order:2
@@ -49,14 +49,14 @@ day   1  hash 07787c20c540fdd5  155 events
 #43 D1 night     ship:30 burned 20.4 t, 479.6 t remaining  <- #31
 #44 D1 night     ship:31 burned 24.109909 t, 1046.890091 t remaining  <- #31
 #45 D1 night     ship:32 burned 20.4 t, 479.6 t remaining  <- #31
-#46 D1 night     task_force:4 steamed 240 nm at 20 kn from (10,-19) to (7,-12)  <- order:14, order:15
+#46 D1 night     task_force:4 steamed 240 nm at 20 kn from (7,-19) to (7,-13)  <- order:14, order:15
 #47 D1 night     ship:33 burned 121.959104 t, 2368.040896 t remaining  <- #46
 #48 D1 night     ship:34 burned 99.629556 t, 2590.370444 t remaining  <- #46
 #49 D1 night     ship:35 burned 29.629608 t, 470.370392 t remaining  <- #46
 #50 D1 night     ship:36 burned 29.629608 t, 470.370392 t remaining  <- #46
 #51 D1 morning   air_group:3 searched 290-090 out to 200 nm from ship:1 at (7,-5) with 16 aircraft  <- order:3, order:4
 #52 D1 morning   air_group:17 searched 110-200 out to 253 nm from ship:21 at (8,-13) with 5 aircraft  <- order:24, order:25
-#53 D1 morning   air_group:20 searched 110-200 out to 253 nm from ship:34 at (7,-12) with 5 aircraft  <- order:29, order:30
+#53 D1 morning   air_group:20 searched 110-200 out to 253 nm from ship:34 at (7,-13) with 5 aircraft  <- order:29, order:30
 #54 D1 morning   task_force:3 steamed 98 nm at 17 kn from (8,-13) to (8,-11)  <- order:12, order:13
 #55 D1 morning   ship:19 burned 41.42268 t, 3972.350516 t remaining  <- #54
 #56 D1 morning   ship:20 burned 41.42268 t, 3972.350516 t remaining  <- #54
@@ -73,12 +73,12 @@ day   1  hash 07787c20c540fdd5  155 events
 #67 D1 morning   ship:31 burned 11.582211 t, 1035.30788 t remaining  <- #54
 #68 D1 morning   ship:32 burned 9.8 t, 469.8 t remaining  <- #54
 #69 D1 morning   task_force:3 arrived at (8,-11) at D1 11:46  <- #54
-#70 D1 morning   task_force:4 steamed 77 nm at 20 kn from (7,-12) to (7,-10)  <- order:14, order:15
-#71 D1 morning   ship:33 burned 39.128545 t, 2328.912351 t remaining  <- #70
-#72 D1 morning   ship:34 burned 31.964482 t, 2558.405962 t remaining  <- #70
-#73 D1 morning   ship:35 burned 9.506165 t, 460.864227 t remaining  <- #70
-#74 D1 morning   ship:36 burned 9.506165 t, 460.864227 t remaining  <- #70
-#75 D1 morning   task_force:4 arrived at (7,-10) at D1 09:51  <- #70
+#70 D1 morning   task_force:4 steamed 120 nm at 20 kn from (7,-13) to (7,-10)  <- order:14, order:15
+#71 D1 morning   ship:33 burned 60.979552 t, 2307.061344 t remaining  <- #70
+#72 D1 morning   ship:34 burned 49.814778 t, 2540.555666 t remaining  <- #70
+#73 D1 morning   ship:35 burned 14.814804 t, 455.555588 t remaining  <- #70
+#74 D1 morning   ship:36 burned 14.814804 t, 455.555588 t remaining  <- #70
+#75 D1 morning   task_force:4 arrived at (7,-10) at D1 12:00  <- #70
 #76 D1 afternoon air_group:3 searched 290-090 out to 200 nm from ship:1 at (7,-5) with 16 aircraft  <- order:3, order:4
 #77 D1 afternoon air_group:3 searched for task_force:4 at 200 nm, chance 0.572957: sighted  <- #76
 #78 D1 afternoon Allied report: 4 ships, carrier, at (7,-10): new contact:1  <- #77
@@ -216,10 +216,10 @@ ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all syst
 ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
 ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1035.30788 t of fuel, 0 t of supply
 ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
-ship:33 "Ryujo": SUNK; damage flotation 100, fire 53.490564; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2328.912351 t of fuel, 0 t of supply
-ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2558.405962 t of fuel, 0 t of supply
-ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 460.864227 t of fuel, 0 t of supply
-ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 460.864227 t of fuel, 0 t of supply
+ship:33 "Ryujo": SUNK; damage flotation 100, fire 53.490564; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
+ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
+ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
 Allied contact:1 at (7,-10): 3 ships, carrier, age 0 pulses
 Allied claim at (7,-10): 6 hits on a carrier, 0 sunk, day 1 afternoon
