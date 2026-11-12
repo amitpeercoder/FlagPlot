@@ -23,13 +23,22 @@
 //!    first, and the kinds of ship they cover. A nation with no such row is
 //!    not answered "no": nothing moves.
 //!
-//! The ship-crew rows carry no `valid_from` or `valid_to`, so the list
-//! carries each answer with the period the row's text or note gives
-//! (`[[experience.answer]]`). The tool checks the row exists, is of that
-//! ship, is preferred and of medium or high confidence, and that the period
-//! meets the question's window. A row for and a row against on one ship and
-//! question stop the derivation unless the list settles it (`settle`).
-//! Rows that are not preferred never move a value and are listed as not read.
+//! The list carries each answer (`[[experience.answer]]`). The tool checks
+//! the row exists, is of that ship, is preferred and of medium or high
+//! confidence, and that its period meets the question's window. The period
+//! is read from the row's `valid_from` and `valid_to`; an answer may give
+//! dates too, and they must agree, and where the row has none (a row that
+//! states no period) the answer must give them. A statement about a force or
+//! a squadron may answer question 1 for a ship (`named_by`): the statement
+//! row (a night practice row, or a training row) is preferred, firm and dated
+//! inside the window, and each `named_by` row is of that ship, of medium or
+//! high confidence, preferred (or disputed, with every disputed row of hers
+//! that bears on the period named too) and dated so that it puts her with the
+//! force inside the statement's period; the attributes allowed for each are
+//! in the rules file (`[experience.force]`). A row for and a row against on
+//! one ship and question stop the derivation unless the list settles it
+//! (`settle`). Rows that no question read never move a value; they are
+//! printed by a run and by `--check`, never written to the file.
 //!
 //! The Japanese values rest on one statement about a navy. Decision 0064
 //! requires a second source before they are fixed, so while the rules file's
@@ -75,6 +84,8 @@ struct RawAnswer {
     row: String,
     answer: String,
     #[serde(default)]
+    named_by: Vec<String>,
+    #[serde(default)]
     from: String,
     #[serde(default)]
     to: String,
@@ -94,12 +105,32 @@ struct RawSettle {
 pub struct Answer {
     pub ship: String,
     pub question: &'static str,
-    /// Id in `ship_facts.csv`.
-    pub row: i64,
+    /// The row that answers: the ship's own, or, with `named_by`, the
+    /// statement about a force.
+    pub row: RowRef,
+    /// Rows of this ship in `ship_facts.csv` that name her as part of the
+    /// force at that time. Empty for an answer by the ship's own row.
+    pub named_by: Vec<i64>,
     pub yes: bool,
+    /// The period. As written in the list it is optional: the tool reads it
+    /// from the row, and these are what the list gave (filled in with the
+    /// row's own when the facts are read).
     pub from: String,
     pub to: String,
     pub reason: String,
+}
+
+/// A row of `ship_facts.csv` or `training_facts.csv`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RowRef {
+    pub file: &'static str,
+    pub id: i64,
+}
+
+impl std::fmt::Display for RowRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.file, self.id)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -128,13 +159,23 @@ fn question_name(text: &str) -> Option<&'static str> {
     [Q1, Q2].into_iter().find(|q| *q == text)
 }
 
-/// `ship_facts.csv:1016` to 1016.
-fn row_id(text: &str) -> Option<i64> {
-    text.strip_prefix(SHIP_FACTS)?
-        .strip_prefix(':')?
-        .parse()
-        .ok()
-        .filter(|n: &i64| *n >= 0)
+/// `ship_facts.csv:1016` to 1016 of that file, or the same for
+/// `training_facts.csv`.
+fn row_ref(text: &str) -> Option<RowRef> {
+    [SHIP_FACTS, TRAINING_FACTS].into_iter().find_map(|file| {
+        let id = text
+            .strip_prefix(file)?
+            .strip_prefix(':')?
+            .parse()
+            .ok()
+            .filter(|n: &i64| *n >= 0)?;
+        Some(RowRef { file, id })
+    })
+}
+
+/// `ship_facts.csv:1016` to 1016 (a row that names a ship in a force).
+fn ship_row_id(text: &str) -> Option<i64> {
+    row_ref(text).filter(|r| r.file == SHIP_FACTS).map(|r| r.id)
 }
 
 pub fn parse_list(raw: RawExperience) -> (Option<Experience>, Vec<Problem>) {
@@ -182,9 +223,25 @@ pub fn parse_list(raw: RawExperience) -> (Option<Experience>, Vec<Problem>) {
                 a.question
             ));
         }
-        let row = row_id(&a.row);
+        let row = row_ref(&a.row);
         if row.is_none() {
-            fail(format!("row `{}` is not `{SHIP_FACTS}:<id>`", a.row));
+            fail(format!(
+                "row `{}` is not `{SHIP_FACTS}:<id>` or `{TRAINING_FACTS}:<id>`",
+                a.row
+            ));
+        }
+        let mut named_by: Vec<i64> = Vec::new();
+        for text in &a.named_by {
+            match ship_row_id(text) {
+                Some(id) if !named_by.contains(&id) => named_by.push(id),
+                Some(_) => fail(format!("`named_by` names `{text}` twice")),
+                None => fail(format!(
+                    "`named_by` row `{text}` is not `{SHIP_FACTS}:<id>`"
+                )),
+            }
+        }
+        if !named_by.is_empty() && question == Some(Q2) {
+            fail(format!("`named_by` is for {Q1} only"));
         }
         let yes = match a.answer.as_str() {
             "yes" => true,
@@ -204,12 +261,8 @@ pub fn parse_list(raw: RawExperience) -> (Option<Experience>, Vec<Problem>) {
         };
         span("from", &a.from);
         span("to", &a.to);
-        if a.to.is_empty() {
-            fail("`to` is required".to_string());
-        }
-        if question == Some(Q1) && a.from.is_empty() {
-            fail(format!("`from` is required for {Q1}"));
-        }
+        // Whether the row gives the dates or the answer must is known only
+        // when the facts are read (`resolve_period`).
         if let (true, Some(question), Some(row)) = (ok, question, row) {
             if answers
                 .iter()
@@ -221,6 +274,7 @@ pub fn parse_list(raw: RawExperience) -> (Option<Experience>, Vec<Problem>) {
                     ship: a.ship.clone(),
                     question,
                     row,
+                    named_by,
                     yes,
                     from: a.from.clone(),
                     to: a.to.clone(),
@@ -232,7 +286,7 @@ pub fn parse_list(raw: RawExperience) -> (Option<Experience>, Vec<Problem>) {
     let mut settles: Vec<Settle> = Vec::new();
     for (i, s) in raw.settle.iter().enumerate() {
         let figure = format!("experience settle {}", i + 1);
-        let (question, row) = (question_name(&s.question), row_id(&s.row));
+        let (question, row) = (question_name(&s.question), ship_row_id(&s.row));
         if !ships.contains(&s.ship) {
             bad(
                 &figure,
@@ -276,6 +330,26 @@ pub struct RawRulesExperience {
     new_ship_months: u32,
     #[serde(default)]
     navy: Vec<RawNavy>,
+    #[serde(default)]
+    force: Option<RawForce>,
+}
+
+/// Which attributes may carry a statement about a force and which may name
+/// a ship as part of it, each as `<file>:<attribute>`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawForce {
+    statement: Vec<String>,
+    named_by: Vec<String>,
+}
+
+/// The attributes an answer by a force's statement may use.
+#[derive(Clone, Debug)]
+pub struct ForceRules {
+    /// `(file, attribute)` of a row that may be the statement.
+    pub statement: Vec<(&'static str, String)>,
+    /// `(file, attribute)` of a row that may name a ship as part of the force.
+    pub named_by: Vec<(&'static str, String)>,
 }
 
 #[derive(Deserialize)]
@@ -312,6 +386,9 @@ pub struct ExperienceRules {
     pub lookback_months: u32,
     pub new_ship_months: u32,
     pub navies: Vec<Navy>,
+    /// None when the rules file has no `[experience.force]`: then an answer
+    /// with `named_by` is a problem.
+    pub force: Option<ForceRules>,
 }
 
 pub fn parse_rules(raw: RawRulesExperience) -> (Option<ExperienceRules>, Vec<Problem>) {
@@ -352,12 +429,51 @@ pub fn parse_rules(raw: RawRulesExperience) -> (Option<ExperienceRules>, Vec<Pro
             });
         }
     }
+    let force = raw.force.map(|f| {
+        let mut read = |what: &str, list: &[String]| -> Vec<(&'static str, String)> {
+            let mut out = Vec::new();
+            for text in list {
+                let parsed = [SHIP_FACTS, TRAINING_FACTS].into_iter().find_map(|file| {
+                    let attribute = text.strip_prefix(file)?.strip_prefix(':')?;
+                    (!attribute.is_empty()).then(|| (file, attribute.to_string()))
+                });
+                match parsed {
+                    Some(pair) => out.push(pair),
+                    None => problems.push(Problem::new(
+                        "rules",
+                        Kind::Rules,
+                        "experience force",
+                        format!(
+                            "`{what}` entry `{text}` is not `{SHIP_FACTS}:<attribute>` or \
+                             `{TRAINING_FACTS}:<attribute>`"
+                        ),
+                    )),
+                }
+            }
+            if out.is_empty() && list.is_empty() {
+                problems.push(Problem::new(
+                    "rules",
+                    Kind::Rules,
+                    "experience force",
+                    format!("`{what}` must not be empty"),
+                ));
+            }
+            out
+        };
+        let statement = read("statement", &f.statement);
+        let named_by = read("named_by", &f.named_by);
+        ForceRules {
+            statement,
+            named_by,
+        }
+    });
     (
         problems.is_empty().then_some(ExperienceRules {
             recent_months: raw.recent_months,
             lookback_months: raw.lookback_months,
             new_ship_months: raw.new_ship_months,
             navies,
+            force,
         }),
         problems,
     )
@@ -384,6 +500,25 @@ fn firm(row: &Rec) -> bool {
     row.get("standing") == "preferred" && matches!(row.get("confidence"), "medium" | "high")
 }
 
+/// Whether a row puts a ship with the force inside the statement's period
+/// `sf..=st`: its own period meets it. A row with a start and no end goes on
+/// (she joined and stayed); a row with an end and no start has always been so;
+/// a row with neither says nothing about when.
+fn with_force(from: &str, to: &str, sf: Span, st: Span) -> bool {
+    if from.is_empty() && to.is_empty() {
+        return false;
+    }
+    let began = match Span::parse(from) {
+        Some(f) => f.first <= st.last,
+        None => from.is_empty(),
+    };
+    let not_ended = match Span::parse(to) {
+        Some(t) => t.last >= sf.first,
+        None => to.is_empty(),
+    };
+    began && not_ended
+}
+
 /// Whether a period may lie inside `start..=end`: it can begin on or after
 /// `start` and end on or before `end`. A partial date counts as inside if any
 /// day it could stand for is.
@@ -407,6 +542,16 @@ fn reaches(from: &str, to: &str, start: Day, end: Day) -> bool {
     t.last >= start && began
 }
 
+/// A derived experience file, and what the run says beside it.
+pub struct Derived {
+    /// The text of the generated file.
+    pub text: String,
+    /// For each listed ship with any: the rows of hers that no question read,
+    /// as `ship: file:id(standing), ...`. Printed by `--check` and by a run;
+    /// never written to the file, so a new row for a ship leaves it as it was.
+    pub unread: Vec<String>,
+}
+
 struct Verdict {
     /// The question moves the value.
     yes: bool,
@@ -414,24 +559,24 @@ struct Verdict {
 }
 
 pub fn derive(
-    exp: &Experience,
+    listed: &Experience,
     rules: &ExperienceRules,
     data: &Data,
     names: &Names,
-) -> Result<String, Vec<Problem>> {
+) -> Result<Derived, Vec<Problem>> {
     let mut problems = Vec::new();
 
     let engagements = data.rows("engagements.csv");
     let Some(first_day) = engagements
         .iter()
-        .find(|r| r.get("key") == exp.engagement)
+        .find(|r| r.get("key") == listed.engagement)
         .and_then(|r| Day::parse_full(r.get("date_from")))
     else {
         return Err(vec![list_problem(
             "experience",
             format!(
                 "engagement `{}` is not in engagements.csv with a full date_from",
-                exp.engagement
+                listed.engagement
             ),
         )]);
     };
@@ -502,45 +647,141 @@ pub fn derive(
         facts_of.entry(row.get("entity")).or_default().push(*row);
     }
 
-    // Answers that name something that is not there are problems.
-    for a in &exp.answers {
-        let rows = facts_of.get(a.ship.as_str()).map_or(&[][..], Vec::as_slice);
-        match by_id(rows, a.row) {
-            None => problems.push(problem(
-                &a.ship,
-                Kind::Experience,
-                a.question,
-                format!("row {SHIP_FACTS}:{} is not a row of this ship", a.row),
-            )),
-            Some(row) => {
-                if row.get("attribute") != NIGHT_PRACTICE {
-                    problems.push(problem(
-                        &a.ship,
-                        Kind::Experience,
-                        a.question,
-                        format!(
-                            "row {SHIP_FACTS}:{} is a `{}` row, not `{NIGHT_PRACTICE}`",
-                            a.row,
-                            row.get("attribute")
-                        ),
-                    ));
-                } else if !firm(&row) {
-                    problems.push(problem(
-                        &a.ship,
-                        Kind::NotPreferred,
-                        a.question,
-                        format!(
-                            "row {SHIP_FACTS}:{} is {} at {} confidence: only a preferred row of \
-                             medium or high confidence answers",
-                            a.row,
-                            row.get("standing"),
-                            row.get("confidence")
-                        ),
-                    ));
+    // Answers: each is checked against the rows it cites, and its period is
+    // read from the row (or from the answer, where the row has none).
+    let training_rows = data.rows(TRAINING_FACTS);
+    let mut owned = listed.clone();
+    for a in &mut owned.answers {
+        let ship = a.ship.clone();
+        let question = a.question;
+        let mut bad = |kind: Kind, message: String| {
+            problems.push(problem(&ship, kind, question, message));
+        };
+        let stmt = if a.row.file == SHIP_FACTS {
+            by_id(&facts, a.row.id)
+        } else {
+            by_id(&training_rows, a.row.id)
+        };
+        let Some(stmt) = stmt else {
+            bad(Kind::Experience, format!("row {} does not exist", a.row));
+            continue;
+        };
+        let forced = !a.named_by.is_empty();
+        if forced {
+            match &rules.force {
+                None => {
+                    bad(
+                        Kind::Rules,
+                        "`named_by` needs the rules file's `[experience.force]` table".to_string(),
+                    );
+                    continue;
+                }
+                Some(force) => {
+                    if !force
+                        .statement
+                        .iter()
+                        .any(|(f, at)| *f == a.row.file && at == stmt.get("attribute"))
+                    {
+                        bad(
+                            Kind::Experience,
+                            format!(
+                                "row {} is a `{}` row, which the rules file does not allow as the \
+                                 statement about a force",
+                                a.row,
+                                stmt.get("attribute")
+                            ),
+                        );
+                    } else if !firm(&stmt) {
+                        bad(
+                            Kind::NotPreferred,
+                            format!(
+                                "row {} is {} at {} confidence: only a preferred row of medium or \
+                                 high confidence answers",
+                                a.row,
+                                stmt.get("standing"),
+                                stmt.get("confidence")
+                            ),
+                        );
+                    }
                 }
             }
+        } else if a.row.file != SHIP_FACTS {
+            bad(
+                Kind::Experience,
+                format!(
+                    "row {} is not a row of this ship; a statement about a force answers only \
+                     with `named_by`",
+                    a.row
+                ),
+            );
+        } else if stmt.get("entity") != ship {
+            bad(
+                Kind::Experience,
+                format!("row {} is not a row of this ship", a.row),
+            );
+        } else if stmt.get("attribute") != NIGHT_PRACTICE {
+            bad(
+                Kind::Experience,
+                format!(
+                    "row {} is a `{}` row, not `{NIGHT_PRACTICE}`",
+                    a.row,
+                    stmt.get("attribute")
+                ),
+            );
+        } else if !firm(&stmt) {
+            bad(
+                Kind::NotPreferred,
+                format!(
+                    "row {} is {} at {} confidence: only a preferred row of medium or high \
+                     confidence answers",
+                    a.row,
+                    stmt.get("standing"),
+                    stmt.get("confidence")
+                ),
+            );
         }
-        let (start, ok) = if a.question == Q1 {
+
+        // The period: from the row where it has one, and then the answer's, if
+        // it gives one, must agree; where the row has none, the answer gives it.
+        let mut period = |column: &str, row_value: &str, listed: &str, required: bool| {
+            if !row_value.is_empty() {
+                if !listed.is_empty() && listed != row_value {
+                    bad(
+                        Kind::Experience,
+                        format!(
+                            "`{column}` `{listed}` disagrees with row {}, which has `{row_value}`",
+                            a.row
+                        ),
+                    );
+                    None
+                } else {
+                    Some(row_value.to_string())
+                }
+            } else if !listed.is_empty() {
+                Some(listed.to_string())
+            } else if required {
+                bad(
+                    Kind::Experience,
+                    format!("row {} has no `{column}` and the answer gives none", a.row),
+                );
+                None
+            } else {
+                Some(String::new())
+            }
+        };
+        let from = period(
+            "valid_from",
+            stmt.get("valid_from"),
+            &a.from,
+            question == Q1,
+        );
+        let to = period("valid_to", stmt.get("valid_to"), &a.to, true);
+        let (Some(from), Some(to)) = (from, to) else {
+            continue;
+        };
+        a.from = from;
+        a.to = to;
+        let (start, ok) = if question == Q1 {
             (
                 recent_start,
                 within(&a.from, &a.to, recent_start, first_day),
@@ -552,20 +793,107 @@ pub fn derive(
             )
         };
         if !ok {
-            problems.push(problem(
-                &a.ship,
+            bad(
                 Kind::Experience,
-                a.question,
                 format!(
-                    "row {SHIP_FACTS}:{} is dated {}..{}, which does not meet the window {start} \
-                     to {first_day}",
+                    "row {} is dated {}..{}, which does not meet the window {start} to {first_day}",
                     a.row,
                     if a.from.is_empty() { "-" } else { &a.from },
                     a.to
                 ),
-            ));
+            );
+            continue;
+        }
+        if !forced {
+            continue;
+        }
+
+        // Rows that name her as part of the force inside the statement's period.
+        let (Some(force), Some(sf), Some(st)) =
+            (&rules.force, Span::parse(&a.from), Span::parse(&a.to))
+        else {
+            continue;
+        };
+        let hers = facts_of.get(ship.as_str()).map_or(&[][..], Vec::as_slice);
+        let allowed = |r: &Rec| {
+            force
+                .named_by
+                .iter()
+                .any(|(f, at)| *f == SHIP_FACTS && at == r.get("attribute"))
+        };
+        for id in &a.named_by {
+            let Some(row) = by_id(hers, *id) else {
+                bad(
+                    Kind::Experience,
+                    format!("named_by row {SHIP_FACTS}:{id} is not a row of this ship"),
+                );
+                continue;
+            };
+            if !allowed(&row) {
+                bad(
+                    Kind::Experience,
+                    format!(
+                        "named_by row {SHIP_FACTS}:{id} is a `{}` row, which the rules file does \
+                         not allow to name a ship as part of a force",
+                        row.get("attribute")
+                    ),
+                );
+            } else if !matches!(row.get("confidence"), "medium" | "high")
+                || !matches!(row.get("standing"), "preferred" | "disputed")
+            {
+                bad(
+                    Kind::NotPreferred,
+                    format!(
+                        "named_by row {SHIP_FACTS}:{id} is {} at {} confidence: it must be \
+                         preferred (or disputed, with every disputed row of hers named) and of \
+                         medium or high confidence",
+                        row.get("standing"),
+                        row.get("confidence")
+                    ),
+                );
+            } else if !with_force(row.get("valid_from"), row.get("valid_to"), sf, st) {
+                bad(
+                    Kind::NotOnDate,
+                    format!(
+                        "named_by row {SHIP_FACTS}:{id} is dated {}..{}, which does not put her \
+                         with the force inside the statement's period {}..{}",
+                        row.get("valid_from"),
+                        row.get("valid_to"),
+                        a.from,
+                        a.to
+                    ),
+                );
+            }
+        }
+        // A disputed row may name her only if every disputed row of hers that
+        // bears on the period is named, so that all of them are read together.
+        let named_disputed = a
+            .named_by
+            .iter()
+            .filter_map(|id| by_id(hers, *id))
+            .any(|r| r.get("standing") == "disputed");
+        if named_disputed {
+            let missing: Vec<String> = hers
+                .iter()
+                .filter(|r| allowed(r) && r.get("standing") == "disputed")
+                .filter(|r| with_force(r.get("valid_from"), r.get("valid_to"), sf, st))
+                .filter_map(|r| r.get("id").parse::<i64>().ok())
+                .filter(|id| !a.named_by.contains(id))
+                .map(|id| format!("{SHIP_FACTS}:{id}"))
+                .collect();
+            if !missing.is_empty() {
+                bad(
+                    Kind::Conflict,
+                    format!(
+                        "a disputed row names her, so every disputed row of hers that bears on \
+                         the period must be named too; missing {}",
+                        missing.join(", ")
+                    ),
+                );
+            }
         }
     }
+    let exp = &owned;
     for s in &exp.settles {
         let rows: Vec<&Answer> = exp
             .answers
@@ -573,7 +901,11 @@ pub fn derive(
             .filter(|a| a.ship == s.ship && a.question == s.question)
             .collect();
         let conflict = rows.iter().any(|a| a.yes) && rows.iter().any(|a| !a.yes);
-        if !conflict || !rows.iter().any(|a| a.row == s.row) {
+        if !conflict
+            || !rows
+                .iter()
+                .any(|a| a.row.file == SHIP_FACTS && a.row.id == s.row)
+        {
             problems.push(problem(
                 &s.ship,
                 Kind::Experience,
@@ -590,6 +922,7 @@ pub fn derive(
     let mut lines: Vec<Vec<String>> = Vec::new();
     let mut any_provisional = false;
     let mut navy_notes: BTreeSet<String> = BTreeSet::new();
+    let mut unread: Vec<String> = Vec::new();
     for ship in &exp.ships {
         let Some(ship_row) = ship_rows.iter().find(|r| r.get("key") == ship) else {
             problems.push(problem(
@@ -602,8 +935,8 @@ pub fn derive(
         };
         let rows = facts_of.get(ship.as_str()).map_or(&[][..], Vec::as_slice);
 
-        let q1 = answered(exp, ship, Q1, rows, &mut problems);
-        let q2 = answered(exp, ship, Q2, rows, &mut problems);
+        let q1 = answered(exp, ship, Q1, &mut problems);
+        let q2 = answered(exp, ship, Q2, &mut problems);
         let q3 = new_ship(ship, rows, new_cut, &mut problems);
 
         // Question 4: the navy's row, if the nation has one and covers the kind.
@@ -652,15 +985,26 @@ pub fn derive(
             cited.extend(v.cited.iter().cloned());
         }
         cited.extend(q4_cited);
-        let not_read: BTreeSet<(String, i64)> = rows
+        let bears = |r: &Rec| {
+            matches!(r.get("attribute"), NIGHT_PRACTICE | "commissioned")
+                || rules.force.as_ref().is_some_and(|f| {
+                    f.named_by
+                        .iter()
+                        .any(|(file, at)| *file == SHIP_FACTS && at == r.get("attribute"))
+                })
+        };
+        let not_read: Vec<String> = rows
             .iter()
-            .filter(|r| matches!(r.get("attribute"), NIGHT_PRACTICE | "commissioned"))
+            .filter(|r| bears(r))
             .filter_map(|r| {
                 let id = r.get("id").parse::<i64>().ok()?;
-                (!cited.contains(&(SHIP_FACTS.to_string(), id))).then(|| (id, r.get("standing")))
+                (!cited.contains(&(SHIP_FACTS.to_string(), id)))
+                    .then(|| format!("{SHIP_FACTS}:{id}({})", r.get("standing")))
             })
-            .map(|(id, standing)| (format!("{SHIP_FACTS}:{id}({standing})"), id))
             .collect();
+        if !not_read.is_empty() {
+            unread.push(format!("{ship}: {}", not_read.join(", ")));
+        }
         let cite = |c: &Cited| {
             c.iter()
                 .map(|(f, i)| format!("{f}:{i}"))
@@ -676,11 +1020,6 @@ pub fn derive(
             move_word(q3.yes, "down"),
             move_word(q4, "up"),
             cite(&cited),
-            not_read
-                .iter()
-                .map(|(t, _)| t.clone())
-                .collect::<Vec<_>>()
-                .join("|"),
         ]);
     }
     if !problems.is_empty() {
@@ -720,8 +1059,10 @@ pub fn derive(
             .to_string(),
     );
     line(
-        "# rows: file:id of the rows read to answer a question, \"no\" answers included. not_read: the \
-         ship's night practice and commissioning rows that were not read, with their standing."
+        "# rows: file:id of the rows read to answer a question, \"no\" answers included, and of the \
+         rows that name a ship as part of a force. The rows of a listed ship that no question read \
+         are not kept here: `oob-derive` prints them, so a new row for a ship does not make this \
+         file stale."
             .to_string(),
     );
     for note in &navy_notes {
@@ -738,11 +1079,23 @@ pub fn derive(
     }
     for a in &exp.answers {
         line(format!(
-            "# answer: {} {} {} by {SHIP_FACTS}:{}, dated {}..{}: {}",
+            "# answer: {} {} {} by {}{}, dated {}..{}: {}",
             a.ship,
             a.question,
             if a.yes { "yes" } else { "no" },
             a.row,
+            if a.named_by.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    " (she is named in the force by {})",
+                    a.named_by
+                        .iter()
+                        .map(|id| format!("{SHIP_FACTS}:{id}"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            },
             if a.from.is_empty() { "-" } else { &a.from },
             a.to,
             a.reason.replace('\n', " ")
@@ -759,13 +1112,13 @@ pub fn derive(
     }
     line(
         "ship,experience,fixed,night_practice_recent,no_night_practice,new_ship,\
-         navy_night_first,rows,not_read"
+         navy_night_first,rows"
             .to_string(),
     );
     for fields in lines {
         line(fields.join(","));
     }
-    Ok(text)
+    Ok(Derived { text, unread })
 }
 
 fn move_word(yes: bool, word: &str) -> String {
@@ -778,7 +1131,6 @@ fn answered(
     exp: &Experience,
     ship: &str,
     question: &'static str,
-    rows: &[Rec],
     problems: &mut Vec<Problem>,
 ) -> Verdict {
     let given: Vec<&Answer> = exp
@@ -787,10 +1139,13 @@ fn answered(
         .filter(|a| a.ship == ship && a.question == question)
         .collect();
     let (yes, no): (Vec<&Answer>, Vec<&Answer>) = given.iter().partition(|a| a.yes);
+    // The rows an answer read: its own, and those that name her in the force.
     let cite = |list: &[&Answer]| -> Cited {
         list.iter()
-            .filter(|a| by_id(rows, a.row).is_some())
-            .map(|a| (SHIP_FACTS.to_string(), a.row))
+            .flat_map(|a| {
+                std::iter::once((a.row.file.to_string(), a.row.id))
+                    .chain(a.named_by.iter().map(|id| (SHIP_FACTS.to_string(), *id)))
+            })
             .collect()
     };
     if !yes.is_empty() && !no.is_empty() {
@@ -800,20 +1155,20 @@ fn answered(
             .find(|s| s.ship == ship && s.question == question);
         return match settle {
             Some(s) => {
-                let chosen_yes = given.iter().any(|a| a.row == s.row && a.yes);
+                let chosen: Vec<&Answer> = given
+                    .iter()
+                    .filter(|a| a.row.file == SHIP_FACTS && a.row.id == s.row && a.yes)
+                    .copied()
+                    .collect();
                 Verdict {
-                    yes: chosen_yes,
-                    cited: if chosen_yes {
-                        std::iter::once((SHIP_FACTS.to_string(), s.row)).collect()
-                    } else {
-                        Cited::new()
-                    },
+                    yes: !chosen.is_empty(),
+                    cited: cite(&chosen),
                 }
             }
             None => {
                 let list = |l: &[&Answer]| {
                     l.iter()
-                        .map(|a| format!("{SHIP_FACTS}:{}", a.row))
+                        .map(|a| a.row.to_string())
                         .collect::<Vec<_>>()
                         .join(", ")
                 };

@@ -617,3 +617,32 @@ rows = [32]
 kinds = ["heavy_cruiser", "light_cruiser", "destroyer"]
 second_source = [87]
 second_source_entity = "ijn-surface-fleet"
+
+# A statement about a force or a squadron may answer question 1 for a ship
+# (decision 0064, "As built"), with `named_by` in an `[[experience.answer]]`:
+# the row or rows that name her as part of the force at that time. The rule,
+# from pull request 137: "a statement about a force or a squadron answers for
+# a ship only if a row names her as part of it at that time". Settled by the
+# architect on Nov 12, 2026: "at that time" means a row puts her with that
+# force during the period the statement is dated to; a list of the squadron on
+# one day does not by itself show that, as the rows' own note says, so an
+# answer names that list and a row that puts her with the force, together.
+#
+# The attributes that are allowed, checked by the tool:
+# - `statement`: the row of the statement: a `night_practice_note` row in
+#   ship_facts.csv (of any ship in the force) or a `night_training_note` row
+#   in training_facts.csv.
+# - `named_by`: rows of the ship herself that name her as part of the force or
+#   say where she was: her `time_in_theatre_note` rows, and her
+#   `night_practice_note` rows.
+# The statement row is preferred, of medium or high confidence, and dated
+# inside the window. A `named_by` row is of that ship, of medium or high
+# confidence, dated so that it puts her with the force inside the statement's
+# period, and preferred; where her rows about where she was are disputed, the
+# answer may name them if it names EVERY disputed row of hers that bears on
+# the period, and the tool checks that each is dated inside it. The tool reads
+# the dates, not what a row says: that a row puts her with the force, and that
+# disputed rows agree, is the architect's reading, written in the answer.
+[experience.force]
+statement = ["ship_facts.csv:night_practice_note", "training_facts.csv:night_training_note"]
+named_by = ["ship_facts.csv:time_in_theatre_note", "ship_facts.csv:night_practice_note"]
