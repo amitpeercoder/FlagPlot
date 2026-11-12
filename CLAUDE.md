@@ -22,7 +22,7 @@ If a spec or a rule is ambiguous or looks wrong, stop and ask. Do not guess. A d
 | Touch `data/oob`, `data/reference` or `data/derivation`, or use `references/` | `docs/engineering/data-rules.md`, then `data/oob/README.md` |
 | Build a scenario or its test, brief a developer, or open a pull request | `docs/engineering/roles-and-tests.md` |
 | Run a command and want to know what it does | `docs/commands.md` |
-| Think about what is not planned yet | `docs/design/` (intelligence, materials and economy) |
+| Think about what is not planned yet | `docs/design/` (intelligence, materials and economy, storytelling and commands, planning an operation, the plan for ground combat) |
 
 ## Always
 
@@ -114,7 +114,7 @@ Kept short on purpose. The history of how each stage was built is in the decisio
 
 - **Step 1 is complete** against the spec as amended by decision 0052, which lists what it leaves out (ground combat, land units, shore bombardment, ship repair, base damage, crew and pilot quality, among others). All nine scenarios pass; scenario 9's recorded games are under `crates/sim-cli/tests/recorded_games/`.
 - **The rules as they stand are in `docs/rules/`.** `docs/rules/differences.md` lists where a decision record and the code differ, with a ruling on each; nine small code fixes it calls for are not made yet.
-- **Step 2 is under way** to `docs/step2-spec.md`. Another session owns the spec and the measures files (`data/validation/`); the build is planned from `docs/step2-opening-list.md`. Ships are charged straight-line miles (decision 0058) and the scenarios are re-derived for it. Before any figure is tuned: the step 1 figures frozen for the hand-calculation tests, and three rules (strike target priority as an order, reach beyond the radius with ditching, experience), each with its own decision record.
+- **Step 2 is under way** to `docs/step2-spec.md`. Another session owns the spec and the measures files (`data/validation/`); the build is planned from `docs/step2-opening-list.md`. Ships are charged straight-line miles (decision 0058) and the scenarios are re-derived for it. The step 1 figures are frozen for the hand-calculation tests, the reach rule is built (decision 0059), `batch` and `validate` are built for battles, and the baseline reports are in `docs/validation/`. Before any figure is tuned: two rules (strike target priority as an order, and experience), each with its own decision record.
 - **Every combat, wear, fatigue, supply and claim figure, and every point value, is a placeholder** until step 2 sets it from the record. The loss spreads of Savo Island and of the four weeks over Guadalcanal are known not to match history yet (decisions 0024, 0042).
 - **The order-of-battle facts** (`data/oob`) cover Savo Island, the Eastern Solomons, the air campaign of August and September 1942 and strike launch ranges; research on Cape Esperance, ditching and crew recovery, and training is arriving in its own pull requests. Rows are unsettled until a derivation reads them (a measure takes a range across a dispute and settles nothing); `data/oob/README.md` says how firm they are and what is missing.
 

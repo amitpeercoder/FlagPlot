@@ -243,6 +243,7 @@ dependencies = [
  "sim-agent",
  "sim-core",
  "sim-data",
+ "toml",
 ]
 
 [[package]]

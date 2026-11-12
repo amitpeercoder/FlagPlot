@@ -246,3 +246,22 @@ Not entered, because each was read once at low resolution: the barges' own runs 
 - **Volume 6 gives positions as a grid code** (for example ケミ837 for Yura at 1300 on 25 October, course 350, 12 knots) with no key on its pages. Those positions stay unlocated. Its sketch chart on page 79 is the planned route of the order of 20 October, by the north-east side of Choiseul and Santa Isabel, with course figures read once.
 - **One reading was wrong and is not used:** a researcher read the arrival in the 14-knot signal as 2100; the page and the table both say 0100.
 - **The Japanese official history** (Senshi Sosho) was tried again; its site still answers with a maintenance notice. The 3rd Destroyer Squadron's runs of August to October stay a gap.
+
+## Third reading of the convoy's approach order (12 November 2026)
+
+Row 176 (volume 3, PDF page 29) had two readings that disagreed. A third reader, told neither, read the passage from crops at up to 800 dpi, and I checked those crops.
+
+| Figure | First reader | My reading | Third reader | Now |
+| --- | --- | --- | --- | --- |
+| Ramos Island: bearing, distance, new course | 270, 11, 180 | 270, 11, 180 | 270, 11, 180 | Agreed |
+| First Savo point: bearing | 22 or 32 | 322, or 22 | 212 | In doubt: 212 or 32 by the strokes; 322 withdrawn |
+| First Savo point: distance | 7 | 27 | 27 | 27, two of three |
+| Course from it | 213 | 213 | 213 | Agreed |
+| Second Savo point: bearing, distance, course | 25, 8, 136 | 25, 8, 136 | 25, 8, 136 | Agreed |
+| Last point: bearing | 75 | 75 | 175 | In doubt |
+| Last point: distance | 24 | 2.4 | 1.4 | In doubt: 2.4 or 1.4; 24 not supported |
+| Final course | 142 | 142 | 142 | Agreed |
+| Later change (page 34) | | 251, 8 miles, about 2000 | 251, 8 miles, about 2000 | Agreed |
+
+The row's note carries this. The row stays `unconfirmed` and low: the two figures still in doubt are the ones that fix where the track ran. I did not use geometry to choose between them; whether a bearing is taken from the landmark or from the ship is not stated on the page.
+

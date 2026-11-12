@@ -12,6 +12,7 @@ sim-agent = { path = "../sim-agent" }
 serde.workspace = true
 serde_json.workspace = true
 csv.workspace = true
+toml.workspace = true
 
 [lints]
 workspace = true
