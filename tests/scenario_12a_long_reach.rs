@@ -79,6 +79,22 @@
 //! - The chance does not fall as the distance rises: at 290 and 300 nm
 //!   (targets one and two hexes off the axis are not needed; use the
 //!   function) it is 0.32 and 0.4.
+//!
+//! # Pinned outcomes
+//!
+//! These are what the scenario's own seed (1942) gives at the working
+//! figures. They are pinned, not calculated: no hand calculation can say
+//! which draw succeeds. A change here means a stream or the order of draws
+//! moved, and they are remade only with a deliberate change of the rule
+//! (docs/step2-spec.md, "Tests while figures move", 7).
+//!
+//! At the live placeholder figures (ditch chance 2, crew 0.7), reach
+//! extended, seed 1942 (the tests load the frozen figures altered to these
+//! values with `common::altered_reference`, which are the live ones): the
+//! morning search does not sight; the afternoon search does and the strike
+//! is launched in the afternoon pulse at (11,0). 18 aircraft come back, 2
+//! ditch (4.32 were expected), 1 crew is recovered, 1 pilot is lost, and the
+//! squadron ends the day with 16 ready aircraft and 17 pilots.
 
 use std::fs;
 use std::path::PathBuf;
@@ -820,4 +836,45 @@ fn no_scenario_that_gives_no_reach_order_ditches_anything() {
         scenario.run_to_end().expect("the run resolves");
         assert!(ditchings(&scenario.world).is_empty());
     }
+}
+
+#[test]
+fn pinned_the_strike_of_seed_1942_at_the_working_figures() {
+    let world = run_seed(&variant("extended", PLACEHOLDER, ""), 1942);
+    let events = ditchings(&world);
+    assert_eq!(events.len(), 1);
+    let launch = launches(&world);
+    assert_eq!(launch.len(), 1);
+    // The pulse of the strike.
+    assert_eq!(launch[0].pulse, Some(sim_core::time::Pulse::Afternoon));
+    assert_eq!(events[0].pulse, Some(sim_core::time::Pulse::Afternoon));
+    let d = read(&events[0]);
+    assert_eq!(
+        (
+            d.aircraft,
+            d.ditched,
+            d.crews_recovered,
+            d.pilots_lost,
+            d.ready
+        ),
+        (18, 2, Some(1), 1, 16)
+    );
+    assert_eq!(bombers_ready(&world), 16);
+    assert_eq!(bombers_pilots(&world), Some(17));
+    // The chance, from the breakdown: 280, 250, 0.12, 2, 0.24 and 4.32.
+    let breakdown = events[0].breakdown.as_ref().expect("a breakdown");
+    let factor = |name: &str| {
+        breakdown
+            .factors
+            .iter()
+            .find(|f| f.name == name)
+            .unwrap_or_else(|| panic!("the factor {name}"))
+            .value
+    };
+    assert_eq!(factor("distance_nm"), Fixed::from_int(280));
+    assert_eq!(factor("radius_nm"), Fixed::from_int(250));
+    assert_eq!(factor("share_beyond_radius"), hundredths(12));
+    assert_eq!(factor("ditch_chance_per_radius_beyond"), Fixed::from_int(2));
+    assert_eq!(factor("chance"), hundredths(24));
+    assert_eq!(breakdown.result, Fixed::from_ratio(432, 100));
 }

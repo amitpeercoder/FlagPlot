@@ -54,6 +54,29 @@
 //!   and not with the base's figure: with the first at 0 and the second at
 //!   1 a carrier's patrol loses a pilot with every aircraft, and the reverse
 //!   loses none.
+//!
+//! # Pinned outcomes
+//!
+//! These are what the scenario's own seed (1942) gives at the working
+//! figures. They are pinned, not calculated: no hand calculation can say
+//! which draw succeeds. A change here means a stream or the order of draws
+//! moved, and they are remade only with a deliberate change of the rule
+//! (docs/step2-spec.md, "Tests while figures move", 7).
+//!
+//! At `crew_recovered_over_own_base` 0.6 (the live placeholder; the tests
+//! load the frozen figures altered to it with `common::altered_reference`),
+//! seed 1942. The hand-calculated expectation is 3 of the 5 aircraft lost
+//! with their pilots recovered; the seed gave 3 of 5.
+//!
+//! | Day | Group 3 aircraft lost | Crews recovered | Pilots lost | Group 3 at the end of the day |
+//! | --- | --- | --- | --- | --- |
+//! | 1 | 3 | 2 | 1 | 9 aircraft, 11 pilots |
+//! | 2 | 2 | 1 | 1 | 7 and 10 |
+//! | 3 | 0 | none drawn | 0 | 7 and 10 |
+//!
+//! The breakdown of each `AircraftLost` of group 3 says the aircraft lost,
+//! the chance 0.6, and as its result the crews recovered (2 on day 1, 1 on
+//! day 2).
 
 use std::fs;
 use std::path::PathBuf;
@@ -353,4 +376,55 @@ fn a_carriers_patrol_at_sea_draws_at_the_figure_beside_its_own_force() {
     );
     assert!(pilot_losses(world, group).is_empty());
     assert_eq!(world.umpire().air_groups[&group].pilots, Some(12));
+}
+
+#[test]
+fn pinned_the_patrol_pilots_of_seed_1942_at_0_6() {
+    let scenario = twelve_b("0.6");
+    let world = &scenario.world;
+    for (day, lost, recovered, pilots_lost, aircraft, pilots) in [
+        (1, 3, 2, 1, 9, 11),
+        (2, 2, 1, 1, 7, 10),
+        (3, 0, 0, 0, 7, 10),
+    ] {
+        assert_eq!(lost_on(world, PATROL, day), lost, "day {day}");
+        let taken: u32 = pilot_losses(world, PATROL)
+            .iter()
+            .filter(|(d, ..)| *d == day)
+            .map(|(_, l, _)| l)
+            .sum();
+        assert_eq!(taken, pilots_lost, "day {day}");
+        assert_eq!(lost - taken, recovered, "day {day}");
+        assert_eq!(
+            after_day(world, PATROL, day),
+            (aircraft, pilots),
+            "day {day}"
+        );
+    }
+    // The breakdown of each loss: the aircraft lost, 0.6, the crews recovered.
+    let breakdowns: Vec<_> = events_of(
+        world,
+        |k| matches!(k, EventKind::AircraftLost { air_group, .. } if *air_group == PATROL),
+    )
+    .iter()
+    .map(|e| e.breakdown.clone().expect("a breakdown"))
+    .collect();
+    assert_eq!(breakdowns.len(), 2);
+    for (breakdown, (lost, recovered)) in breakdowns.iter().zip([(3, 2), (2, 1)]) {
+        assert_eq!(breakdown.factors.len(), 2);
+        assert_eq!(breakdown.factors[0].name, "aircraft_lost");
+        assert_eq!(
+            breakdown.factors[0].value,
+            sim_core::fixed::Fixed::from_int(lost)
+        );
+        assert_eq!(breakdown.factors[1].name, "crew_recovered_chance");
+        assert_eq!(
+            breakdown.factors[1].value,
+            sim_core::fixed::Fixed::from_ratio(6, 10)
+        );
+        assert_eq!(
+            breakdown.result,
+            sim_core::fixed::Fixed::from_int(recovered)
+        );
+    }
 }
