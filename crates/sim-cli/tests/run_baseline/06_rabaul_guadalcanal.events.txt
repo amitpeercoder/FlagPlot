@@ -803,3 +803,8 @@ Allied: no contacts
 Allied: no battle claims
 Japanese: no contacts
 Japanese: no battle claims
+
+Result (the placeholder scale of decision 0054):
+Allied: 13.05 points (aircraft_destroyed 61 = 3.05; base_open at base:1 1 = 10), margin 10.45, major victory
+Japanese: 2.6 points (aircraft_destroyed 52 = 2.6; base_open at base:1 0 = 0), margin -10.45, major defeat
+History: Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)
