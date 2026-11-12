@@ -9,6 +9,7 @@ Read these before changing anything:
 - `docs/step2-spec.md`: the spec for the validation harness, approved on Nov 12, 2026. It is the source of truth for step 2.
 - `docs/decisions/`: choices the spec left open, one short file each.
 - `docs/glossary.md`: one meaning for each word the rules use.
+- `docs/rules/`: the rules as they stand today, in the order a day resolves; the decision records hold the reasons.
 - `docs/complexity-review-after-scenario-5.md`: what was cut, merged and left alone after scenario 5, and why.
 - `docs/step2-opening-list.md`: what is to be decided and done first in step 2. A list, not decisions.
 - `docs/design/`: notes for discussion on things not yet planned (intelligence, materials and economy). Nothing in them is built; each holds the product managers' answers to its open questions.
@@ -105,6 +106,7 @@ The game must stay something a person and a model can both reason about. A rule 
 - **Every scenario test has property tests beside its hand calculation.** They state what must always hold: more of a helpful thing never makes the outcome worse, and quantities that should be conserved are conserved.
 - **The legibility test, from scenario 3 on.** A cheap model is given only one side's briefing and the event log, and is asked to explain an outcome and predict the next day. If it cannot, the rules or the events need simplifying before the next scenario starts.
 - **Complexity review after scenario 5,** the first scenario where several subsystems meet. The rule cards are read together and anything nobody can explain is cut or merged.
+- **The rulebook is kept true.** A change that alters a rule changes its section in `docs/rules/` in the same pull request, and adds any new term to the glossary.
 
 ## Truth and belief
 
