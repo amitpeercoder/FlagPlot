@@ -201,7 +201,7 @@ day   1  hash f44df8409589036e  290 events
 #195 D1 night     Allied report: 8 ships, cruiser, at (2,-5): refreshed contact:2  <- #192
 #196 D1 night     Allied claims 1 enemy ship sunk at (2,-5)  <- #192
 #197 D1 night     task_force:1 sent ship:1, ship:2 home as task_force:4 with escorts ship:4, ship:8  <- order:5
-#198 D1 night     order:6 accepted for task_force:4  <- order:6, #197  [issued by the staff]
+#198 D1 night     order:6 accepted for task_force:4  <- order:6, #197  [issued by the local commander]
 #199 D1 night     task_force:4 turned back toward (2,-6), 20 nm from (2,-5), now in (2,-6)  <- order:6
 #200 D1 night     task_force:1 left ship:3, ship:5 behind as task_force:5  <- order:5
 #201 D1 night     task_force:1 steamed 108 nm at 24 kn from (2,-5) to (2,-7)  <- order:3, order:4

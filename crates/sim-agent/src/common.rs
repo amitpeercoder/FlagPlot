@@ -3,9 +3,10 @@
 use std::collections::BTreeMap;
 
 use serde::{Serialize, Serializer};
+use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
 use sim_core::side_events::{SideEvent, SideEventKind};
 use sim_core::state::{AirGroup, AirGroupLocation, Base, Ship, ShipLocation, TaskForce};
 use sim_core::view::{PublicBase, SideView};
@@ -83,6 +84,8 @@ pub(crate) struct Ctx<'a> {
     place_names: BTreeMap<Hex, String>,
     /// The side's own number for each event it sees, by the log's number.
     numbers: BTreeMap<u32, u32>,
+    /// The side's own number for each of its orders, by the log's number.
+    order_numbers: BTreeMap<u32, u32>,
 }
 
 impl<'a> Ctx<'a> {
@@ -100,8 +103,14 @@ impl<'a> Ctx<'a> {
             }
             entry.push_str(&base.name);
         }
+        let order_numbers = view
+            .orders()
+            .enumerate()
+            .map(|(i, o)| (o.id.raw(), u32::try_from(i + 1).expect("few orders")))
+            .collect();
         Ctx {
             view,
+            order_numbers,
             ships,
             forces,
             groups,
@@ -130,6 +139,36 @@ impl<'a> Ctx<'a> {
             .numbers
             .get(&id.raw())
             .expect("an event the side sees has a number")
+    }
+
+    /// The side's number of one of its own orders: 1, 2, 3... in the order
+    /// they were taken in. The log numbers both sides' orders in one run, so
+    /// its numbers would tell a side how many orders the enemy gave
+    /// (decision 0055). They never leave the crate.
+    pub fn order_number(&self, id: OrderId) -> u32 {
+        *self
+            .order_numbers
+            .get(&id.raw())
+            .expect("an order the side is shown is its own")
+    }
+
+    /// The line the log writes for an event, with an order named by the
+    /// side's own number.
+    pub fn event_text(&self, kind: &SideEventKind) -> String {
+        match kind {
+            SideEventKind::Whole(EventKind::OrderAccepted { order, target }) => {
+                format!("order:{} accepted for {target}", self.order_number(*order))
+            }
+            SideEventKind::Whole(EventKind::OrderRejected {
+                order,
+                target,
+                reason,
+            }) => format!(
+                "order:{} rejected for {target}: {reason}",
+                self.order_number(*order)
+            ),
+            other => other.to_string(),
+        }
     }
 
     pub fn place(&self, hex: Hex) -> Place {

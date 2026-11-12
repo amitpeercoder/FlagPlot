@@ -16,7 +16,7 @@
 //! - Retire: ships dead in the water are left, and the rest of the force
 //!   heads home together.
 //!
-//! Heading home is a set-route order issued by the staff and taken in at
+//! Heading home is a set-route order issued by the local commander and taken in at
 //! once, so it is validated and applied like any route order.
 
 use std::cmp::Reverse;
@@ -324,7 +324,7 @@ impl World {
                 order: TaskForceOrder::SetRoute(vec![base.hex]),
             },
             origin: Origin {
-                issuer: Issuer::Staff,
+                issuer: Issuer::LocalCommander,
                 intent: None,
             },
         };
@@ -793,7 +793,7 @@ mod tests {
         );
         assert_eq!(breakdown.result, Fixed::from_int(3));
 
-        // The staff order: issued by the staff, cites itself and the event.
+        // The order: issued by the local commander, cites itself and the event.
         let EventKind::OrderAccepted { order, target } = log[1].kind else {
             panic!("{}", log[1]);
         };
@@ -806,7 +806,7 @@ mod tests {
             vec![Cause::Order(order), Cause::Event(log[0].id)]
         );
         let stored = world.order(order).expect("stored");
-        assert_eq!(stored.origin.issuer, Issuer::Staff);
+        assert_eq!(stored.origin.issuer, Issuer::LocalCommander);
         assert_eq!(force(&world, 2).route_order, Some(order));
 
         let EventKind::ShipsDetached {

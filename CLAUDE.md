@@ -75,10 +75,10 @@ The same starting state, orders and seed must give the same state hash on any ma
 - **No floats on the way in.** Data files give quantities as whole numbers or decimal strings such as `"0.25"`. The loader rejects TOML floats.
 - **Ordered collections only.** `BTreeMap` and `BTreeSet`, never `HashMap` or `HashSet`. Clippy rejects the hash types across the workspace.
 - **No wall clock, thread timing or locale.** Clippy rejects `SystemTime::now` and `Instant::now`.
-- **All randomness through `World::rng`.** Each draw is keyed on seed, day, pulse, subsystem and entity, so results cannot depend on processing order. Never share one stream between entities, and never carry a stream from one pulse to the next.
+- **All randomness through `World::rng`.** Each draw is keyed on seed, day, pulse, subsystem and entity, so results cannot depend on processing order. Never share one stream between entities, and never carry a stream from one pulse to the next. A new rule that draws adds its own value to `rng::Draw`, at the end, and never uses `Draw::Legacy` (decision 0055).
 - **Never renumber stable codes.** `Subsystem::code`, `Pulse::code`, `EntityRef::kind_code`, `Side::code` and the like feed the random number keys and the state hash. Add new values at the end.
 - **The random number generator's output is pinned** by a test in `rng.rs`. If that test fails, saved games no longer replay. Do not update the pinned numbers without a decision record.
-- **New state goes into the hash.** When a field is added to the state, add it to `hash::hash_world` in the same change.
+- **New state goes into the hash.** When a field is added to the state, add it to `hash::hash_world` in the same change. `hash::name_every_field` stops the build until the field is named there. The next change to the hash's layout raises its version and does not add a tag byte (decision 0055).
 - **Overflow panics in every profile.** `overflow-checks` is on for release builds. Do not turn it off.
 - **No `unsafe`.** It is forbidden workspace-wide.
 
