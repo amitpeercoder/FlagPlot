@@ -46,6 +46,17 @@
 //!    they are recorded.
 //! 2. For each strike group in order of group number, `StrikeFoundNothing`
 //!    or `AirAttack`. A group with no bombers left records neither.
+//!    Then, for each raid in order of its first strike group, the guns' fire
+//!    after the attack (decision 0079): `AntiAircraftFire` (or
+//!    `BaseAntiAircraftFire`) with `after_attack` true, citing the launch and
+//!    the raid's `AirAttack` or `BaseAttacked` events, then the `AircraftLost`
+//!    it caused. The guns' shots are split by
+//!    `air_combat.toml: anti_aircraft_before_attack_share`: the first
+//!    k = share times n (cut to a whole number) are worked in item 1, the
+//!    other n - k here, from the one stream, in order. Both parts come off the
+//!    one pool of bombers, the lowest group first; the hits after the attack
+//!    come off the bombers the fire before left and do not reduce the attack's
+//!    shots. A part with no shots records nothing.
 //! 3. Then, in group order, each attack's damage and its report, as in 0026,
 //!    and for each group that found nothing its report that nothing is
 //!    there: if the side still holds the contact the strike was sent at and
@@ -320,6 +331,7 @@ pub(crate) fn divide_patrol(patrol: u32, raids: &[(u32, AirGroupId)]) -> Vec<u32
 }
 
 /// Who fired a roll.
+#[derive(Clone)]
 enum Fire {
     Fighters {
         firer: AirGroupId,
@@ -358,6 +370,9 @@ struct RaidResult {
     /// Each fighter group that sends escorts: group, aircraft, its orders.
     escorts_sent: Vec<(AirGroupId, u32, Vec<Cause>)>,
     rolls: Vec<FireRoll>,
+    /// The guns' fire after the attack (decision 0079), if the share leaves
+    /// any shots for it: recorded after the raid's attack events.
+    after_attack: Option<FireRoll>,
     /// By strike group; a group with no bombers left has none.
     outcomes: Vec<(AirGroupId, Outcome)>,
     /// What the raid found, if anything.
@@ -817,7 +832,10 @@ impl World {
         // the raid each strike group belongs to (decision 0056).
         let mut tallies: Vec<RaidTally> = Vec::new();
         let mut tally_of: BTreeMap<AirGroupId, usize> = BTreeMap::new();
-        for (raid, result) in raids.iter().zip(results) {
+        // The guns' fire after the attack, by raid, recorded once the attacks
+        // are (decision 0079): the roll, the raid's index and its tally's.
+        let mut fire_after: Vec<(FireRoll, usize, Option<usize>)> = Vec::new();
+        for (raid_index, (raid, result)) in raids.iter().zip(results).enumerate() {
             let first = &raid.strikes[0];
             let mut tally = result.target.map(|target| RaidTally {
                 hex: first.hex,
@@ -892,6 +910,7 @@ impl World {
                         chance: roll.chance,
                         expected: roll.expected,
                         hits: roll.hits,
+                        after_attack: false,
                     },
                     Fire::BaseGuns { base, air_group } => EventKind::BaseAntiAircraftFire {
                         base: *base,
@@ -900,6 +919,7 @@ impl World {
                         chance: roll.chance,
                         expected: roll.expected,
                         hits: roll.hits,
+                        after_attack: false,
                     },
                 };
                 recorded.push(self.events.record(
@@ -959,6 +979,9 @@ impl World {
                 for strike in &raid.strikes {
                     tally_of.insert(strike.air_group, tallies.len());
                 }
+            }
+            if let Some(roll) = result.after_attack {
+                fire_after.push((roll, raid_index, tally.is_some().then_some(tallies.len())));
             }
             tallies.extend(tally);
             outcomes.extend(result.outcomes);
@@ -1055,6 +1078,69 @@ impl World {
                         side.hit_misses += whole_shots(attack.shots).saturating_sub(attack.hits);
                     }
                 }
+            }
+        }
+
+        // The guns' fire after the attack, raid by raid (decision 0079): the
+        // event, citing the raid's launch and what its groups attacked, then
+        // the aircraft it shot down, as the fire before the attack does. The
+        // attacks are worked out and stand: these losses are not their causes.
+        let attack_of: BTreeMap<AirGroupId, EventId> = outcomes
+            .iter()
+            .zip(&attack_events)
+            .filter(|((_, outcome), _)| !matches!(outcome, Outcome::Nothing { .. }))
+            .map(|((group, _), event)| (*group, *event))
+            .collect();
+        for (roll, raid_index, tally_index) in fire_after {
+            let raid = &raids[raid_index];
+            let first = &raid.strikes[0];
+            let causes: Vec<Cause> = [Cause::Event(first.launched)]
+                .into_iter()
+                .chain(
+                    raid.strikes
+                        .iter()
+                        .filter_map(|strike| attack_of.get(&strike.air_group))
+                        .map(|event| Cause::Event(*event)),
+                )
+                .collect();
+            let kind = match &roll.fire {
+                Fire::Guns {
+                    task_force,
+                    air_group,
+                } => EventKind::AntiAircraftFire {
+                    task_force: *task_force,
+                    air_group: *air_group,
+                    shots: roll.shots,
+                    chance: roll.chance,
+                    expected: roll.expected,
+                    hits: roll.hits,
+                    after_attack: true,
+                },
+                Fire::BaseGuns { base, air_group } => EventKind::BaseAntiAircraftFire {
+                    base: *base,
+                    air_group: *air_group,
+                    shots: roll.shots,
+                    chance: roll.chance,
+                    expected: roll.expected,
+                    hits: roll.hits,
+                    after_attack: true,
+                },
+                Fire::Fighters { .. } => unreachable!("only the guns fire after the attack"),
+            };
+            let cause = self
+                .events
+                .record(day, Some(pulse), kind, causes, roll.breakdown.clone());
+            let mut real = 0;
+            for (group, lost) in &roll.lost {
+                if let Some((_, taken)) =
+                    self.lose_aircraft(day, pulse, *group, *lost, SortieKind::Strike, cause, None)
+                {
+                    self.note_loss(*group, SortieKind::Strike, *lost);
+                    real += taken;
+                }
+            }
+            if let Some(index) = tally_index {
+                tallies[index].note_roll(&roll, cause, real);
             }
         }
 
@@ -1936,6 +2022,7 @@ impl World {
                 target: None,
                 escorts_sent,
                 rolls: Vec::new(),
+                after_attack: None,
                 outcomes: raid
                     .strikes
                     .iter()
@@ -2170,6 +2257,12 @@ impl World {
                 },
             )),
         };
+        // Decision 0079: the shots are split. The first k = share times n,
+        // cut to a whole number, are worked before the attack, the other n - k
+        // after it, rolled in order from the one stream, so the draws are the
+        // same at every share.
+        let share = air.anti_aircraft_before_attack_share;
+        let mut after_attack: Option<FireRoll> = None;
         if let Some((gun_shots, firer, fire)) = guns.filter(|(gun_shots, _, _)| *gun_shots > 0) {
             if bombers_left > 0 {
                 let mut stream = self.rng_pair(
@@ -2181,23 +2274,66 @@ impl World {
                     EntityRef::AirGroup(first.air_group),
                 );
                 let shot = self.shot_chance(air.anti_aircraft_hit_chance, first.air_group, air);
-                let (shots, expected, hits) = roll_hits(&mut stream, gun_shots, shot.chance);
-                rolls.push(FireRoll {
-                    fire,
-                    shots,
-                    chance: shot.chance,
-                    expected,
-                    hits,
-                    lost: take_hits(hits, &mut bombers),
-                    patrol_of: None,
-                    breakdown: breakdown(shots, shot, expected),
-                });
+                let before_shots =
+                    u32::try_from((Fixed::from_int(i64::from(gun_shots)) * share).trunc())
+                        .expect("a share from 0 to 1 of the shots is not negative")
+                        .min(gun_shots);
+                // The guns' breakdown names the shots in all and the share,
+                // before the rest, whenever the share is below 1.
+                let guns_breakdown = |shots: Fixed, expected: Fixed| {
+                    breakdown(shots, shot, expected).map(|mut breakdown| {
+                        if share < Fixed::ONE {
+                            let mut factors = vec![
+                                Factor {
+                                    name: "guns",
+                                    value: Fixed::from_int(i64::from(gun_shots)),
+                                },
+                                Factor {
+                                    name: "anti_aircraft_before_attack_share",
+                                    value: share,
+                                },
+                            ];
+                            factors.append(&mut breakdown.factors);
+                            breakdown.factors = factors;
+                        }
+                        breakdown
+                    })
+                };
+                if before_shots > 0 {
+                    let (shots, expected, hits) = roll_hits(&mut stream, before_shots, shot.chance);
+                    rolls.push(FireRoll {
+                        fire: fire.clone(),
+                        shots,
+                        chance: shot.chance,
+                        expected,
+                        hits,
+                        lost: take_hits(hits, &mut bombers),
+                        patrol_of: None,
+                        breakdown: guns_breakdown(shots, expected),
+                    });
+                }
+                let after_shots = gun_shots - before_shots;
+                if after_shots > 0 {
+                    // Rolled now, from the same stream, but its hits come off
+                    // the bombers after the attack is worked out.
+                    let (shots, expected, hits) = roll_hits(&mut stream, after_shots, shot.chance);
+                    after_attack = Some(FireRoll {
+                        fire,
+                        shots,
+                        chance: shot.chance,
+                        expected,
+                        hits,
+                        lost: Vec::new(),
+                        patrol_of: None,
+                        breakdown: guns_breakdown(shots, expected),
+                    });
+                }
             }
         }
 
         // The bombers that are left attack, each group with what it has
         // left (decision 8 of 0027).
-        let outcomes = bombers
+        let outcomes: Vec<(AirGroupId, Outcome)> = bombers
             .iter()
             .zip(&raid.strikes)
             .filter(|((_, left), _)| *left > 0)
@@ -2217,10 +2353,17 @@ impl World {
                 (*group, outcome)
             })
             .collect();
+        // The hits of the guns' fire after the attack come off what is left
+        // of the bombers, lowest group first. The attack stands (decision 5
+        // of 0079).
+        if let Some(roll) = after_attack.as_mut() {
+            roll.lost = take_hits(roll.hits, &mut bombers);
+        }
         RaidResult {
             target: Some(target),
             escorts_sent,
             rolls,
+            after_attack,
             outcomes,
         }
     }
@@ -10606,5 +10749,219 @@ mod tests {
         world.strikes_in_flight.clear();
         world.decide_strikes(2, Pulse::Afternoon);
         assert_eq!(base_launches(&world).len(), 2);
+    }
+    // ---- the guns before and after the attack (decision 0079) ----
+
+    fn set_share(world: &mut World, share: Fixed) {
+        air_figures(world).anti_aircraft_before_attack_share = share;
+    }
+
+    /// The raid of 18 dive bombers (group 1) and 4 more (group 6) at the
+    /// Japanese force, whose carrier has 20 guns, with no patrol.
+    fn gun_raid(seed: u64, share: Fixed, hit_chance: Fixed) -> World {
+        let mut world = with_fighters(seed, 0, Fixed::ONE, 0);
+        let mut second = group(AirGroupId::new(6), Side::Allied, 1, 2, 4);
+        second.mission = AirMission::NavalStrike;
+        world.truth.air_groups.insert(second.id, second);
+        set_guns(&mut world, 2, 20);
+        air_figures(&mut world).anti_aircraft_hit_chance = hit_chance;
+        set_share(&mut world, share);
+        strike_pulse(&mut world, Pulse::Morning);
+        world
+    }
+
+    /// (shots, hits, after_attack) of each gun event, in order.
+    fn gun_parts(world: &World) -> Vec<(i64, u32, bool)> {
+        gun_fires(world)
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::AntiAircraftFire {
+                    shots,
+                    hits,
+                    after_attack,
+                    ..
+                } => (shots.trunc(), hits, after_attack),
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    fn lost_by_group(world: &World, group: u32) -> u32 {
+        losses(world)
+            .iter()
+            .map(loss_of)
+            .filter(|(g, _, _)| *g == group)
+            .map(|(_, lost, _)| lost)
+            .sum()
+    }
+
+    #[test]
+    fn the_guns_total_hits_and_each_groups_losses_are_the_same_at_every_share() {
+        // Decision 0079, 3 and 5: one stream, the same draws at every share,
+        // and both parts come off one pool in group order.
+        for seed in 1..=60 {
+            let run = |share: Fixed| gun_raid(seed, share, fixed(3, 10));
+            let whole = run(Fixed::ONE);
+            let half = run(fixed(1, 2));
+            let none = run(Fixed::ZERO);
+            let total = |world: &World| gun_parts(world).iter().map(|part| part.1).sum::<u32>();
+            assert_eq!(total(&whole), total(&half), "seed {seed}");
+            assert_eq!(total(&whole), total(&none), "seed {seed}");
+            for group in [1, 6] {
+                assert_eq!(
+                    lost_by_group(&whole, group),
+                    lost_by_group(&half, group),
+                    "seed {seed} group {group}"
+                );
+                assert_eq!(
+                    lost_by_group(&whole, group),
+                    lost_by_group(&none, group),
+                    "seed {seed} group {group}"
+                );
+            }
+            // The parts: 20 / none, 10 / 10, none / 20; a part with no shots
+            // records nothing.
+            let shots = |world: &World| -> Vec<(i64, bool)> {
+                gun_parts(world).iter().map(|p| (p.0, p.2)).collect()
+            };
+            assert_eq!(shots(&whole), vec![(20, false)]);
+            assert_eq!(shots(&half), vec![(10, false), (10, true)]);
+            assert_eq!(shots(&none), vec![(20, true)]);
+            // The attack's shots are the 22 launched less the hits before
+            // the attack (never below 0).
+            for world in [&whole, &half, &none] {
+                let before: u32 = gun_parts(world)
+                    .iter()
+                    .filter(|part| !part.2)
+                    .map(|part| part.1)
+                    .sum();
+                let shots: i64 = attacks(world).iter().map(|e| attack_of(e).4.trunc()).sum();
+                assert_eq!(
+                    shots,
+                    i64::from(22_u32.saturating_sub(before)),
+                    "seed {seed}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn at_a_share_of_1_no_part_is_after_the_attack_and_the_breakdown_is_step_1s() {
+        for seed in 1..=20 {
+            let world = gun_raid(seed, Fixed::ONE, fixed(3, 10));
+            assert!(gun_parts(&world).iter().all(|part| !part.2), "seed {seed}");
+            let breakdown = gun_fires(&world)[0].breakdown.clone().expect("breakdown");
+            let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+            assert_eq!(names, vec!["shots", "hit_chance"]);
+            assert!(!gun_fires(&world)[0]
+                .kind
+                .to_string()
+                .contains("after the attack"));
+        }
+    }
+
+    #[test]
+    fn at_a_share_of_a_half_the_events_come_in_the_order_and_cite_the_causes_of_decision_0079() {
+        // 20 guns that always hit: 10 shots before the attack take 10 of the
+        // 18 bombers of group 1; the 8 of group 1 and 4 of group 6 attack;
+        // 10 more shots after take group 1's last 8 and then 2 of group 6.
+        let world = gun_raid(1, fixed(1, 2), Fixed::ONE);
+        let launch = launches(&world)[0].id;
+        let guns = gun_fires(&world);
+        assert_eq!(guns.len(), 2);
+        assert_eq!(
+            guns[0].kind.to_string(),
+            "task_force:2 guns at the raid of air_group:1: 10 shots x 1 = 10 expected, 10 hits"
+        );
+        assert_eq!(
+            guns[1].kind.to_string(),
+            "task_force:2 guns at the raid of air_group:1: 10 shots x 1 = 10 expected, 10 hits after the attack"
+        );
+        assert_eq!(guns[0].causes, vec![Cause::Event(launch)]);
+        let lost = losses(&world);
+        let rows: Vec<(u32, u32, u32)> = lost.iter().map(loss_of).collect();
+        assert_eq!(rows, vec![(1, 10, 8), (1, 8, 0), (6, 2, 2)]);
+        assert_eq!(lost[0].causes, vec![Cause::Event(guns[0].id)]);
+        assert_eq!(lost[1].causes, vec![Cause::Event(guns[1].id)]);
+        assert_eq!(lost[2].causes, vec![Cause::Event(guns[1].id)]);
+        // Both groups attack with what the fire before left, each citing only
+        // the losses before the attack.
+        let attack_events = attacks(&world);
+        let shots: Vec<(u32, i64)> = attack_events
+            .iter()
+            .map(|e| (attack_of(e).0, attack_of(e).4.trunc()))
+            .collect();
+        assert_eq!(shots, vec![(1, 8), (6, 4)]);
+        assert_eq!(
+            attack_events[0].causes,
+            vec![Cause::Event(launch), Cause::Event(lost[0].id)]
+        );
+        // Group 6 launched on its own event.
+        assert_eq!(
+            attack_events[1].causes,
+            vec![Cause::Event(launches(&world)[1].id)]
+        );
+        // The fire after cites the launch and every attack of the raid.
+        assert_eq!(
+            guns[1].causes,
+            vec![
+                Cause::Event(launch),
+                Cause::Event(attack_events[0].id),
+                Cause::Event(attack_events[1].id)
+            ]
+        );
+        // The order of the log: launch, the fire before, its loss, the
+        // attacks, the fire after, its losses, then the damage.
+        let first_damage = events_where(&world, |k| matches!(k, EventKind::ShipDamaged { .. }))
+            .first()
+            .map(|e| e.id)
+            .expect("the bombs damage the carrier");
+        let ids = [
+            launch,
+            guns[0].id,
+            lost[0].id,
+            attack_events[0].id,
+            attack_events[1].id,
+            guns[1].id,
+            lost[1].id,
+            lost[2].id,
+            first_damage,
+        ];
+        assert!(ids.windows(2).all(|pair| pair[0] < pair[1]), "{ids:?}");
+        // The breakdowns name the guns in all and the share first.
+        for gun in &guns {
+            let breakdown = gun.breakdown.as_ref().expect("breakdown");
+            let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+            assert_eq!(
+                names,
+                vec![
+                    "guns",
+                    "anti_aircraft_before_attack_share",
+                    "shots",
+                    "hit_chance"
+                ]
+            );
+            assert_eq!(breakdown.factors[0].value, Fixed::from_int(20));
+            assert_eq!(breakdown.factors[1].value, fixed(1, 2));
+        }
+    }
+
+    #[test]
+    fn the_shots_before_the_attack_are_the_share_times_the_guns_cut_to_a_whole_number() {
+        for (share, before, after) in [
+            (fixed(33, 100), 6, 14),
+            (fixed(1, 2), 10, 10),
+            (fixed(99, 100), 19, 1),
+            (fixed(1, 100), 0, 20),
+        ] {
+            let world = gun_raid(1, share, fixed(3, 10));
+            let parts: Vec<(i64, bool)> = gun_parts(&world).iter().map(|p| (p.0, p.2)).collect();
+            let mut want = Vec::new();
+            if before > 0 {
+                want.push((before, false));
+            }
+            want.push((after, true));
+            assert_eq!(parts, want, "share {share}");
+        }
     }
 }

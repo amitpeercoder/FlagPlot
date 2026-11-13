@@ -57,7 +57,7 @@ The report in the file now is on the engine with decision 0068 as well: a force 
 Three more judged measures count the shells of the southern group, the northern group, and Tenryu and Yubari, from the shots each ship fired. The report was remade for them on the same engine and figures.
 
 - **Tenryu and Yubari miss, and this is the one to read first:** 4 to 15 hundreds, 9 in the middle run, against a record of 1 to 2. Both are at battle readiness, so neither the readiness rule nor experience touches what they fire. What is wrong is under them: a round is five minutes at a class's designed rate of fire, and no ship fired like that. The spec now puts the rates of fire before any tuning of the surface figures, as a matter for the derivation.
-- **The two Allied groups agree, and neither agreement is strong.** The southern group's record is under a hundred shells; 373 runs of 1,000 hold it, most of them runs in which the group never fired at all, and the middle run fires 4 hundreds. The northern group's record is 3 to 4 hundreds; 79 runs hold it and the middle run fires 8. One round at half manning is 67 shells for a cruiser and 150 for a destroyer, which is already more than any ship of the southern group fired all night.
+- **The two Allied groups agree, and neither agreement is strong.** The southern group's record is under a hundred shells; 373 runs of 1,000 hold it, most of them runs in which the group never fired at all, and the middle run fires 4 hundreds. (Since decision 0084 that measure counts in tens, record 3 to 5, so a run that never fires no longer holds it: on the report of round 2 it misses, 0 to 47 tens with a median of 9, held by 10 runs.) The northern group's record is 3 to 4 hundreds; 79 runs hold it and the middle run fires 8. One round at half manning is 67 shells for a cruiser and 150 for a destroyer, which is already more than any ship of the southern group fired all night.
 - **The order of work that follows,** as the spec has it: the rates of fire in the derivation, from rows on rates achieved; then the fights by day; then the share, which stays at one half until then and goes lower only for the confusion decision 0068 names.
 
 ### The reports tuning starts from, Nov 13, 2026
@@ -89,7 +89,7 @@ Savo Island, where the surface figures are tuned first:
 What it shows:
 
 - **The shells are now about right and the hits are not.** With the achieved rates both sides fire near what they fired. The Japanese hit at about 57 for each thousand shells against 81 to 117, so they land half the hits the record has and no more than two cruisers sink. That is the chance to hit, the second mechanism, and nothing else is left for it to hide behind.
-- **Tenryu and Yubari** (the check of what is derived before what is tuned, step 2 spec, "Tuning", 6). Their rate of fire is derived from rows and did not change between the batches in which this measure moved: it agreed at the edge after decision 0070 and misses again now that the northern group stays and its fight runs longer. What is left is the rounds they fire, about five against three, which is the length of the fight and not the rate. The coordinating architect rules the check explained and not a hold, with a watch: every round's record gives this measure and the rounds the pair fire; if the minutes of action come to the middle of the runs and the pair still fire over the record, tuning stops and it goes back to the derivation; and no figure is moved to mend this measure itself.
+- **Tenryu and Yubari** (the check of what is derived before what is tuned, step 2 spec, "Tuning", 6). Their rate of fire is derived from rows and did not change between the batches in which this measure moved: it agreed at the edge after decision 0070 and misses again now that the northern group stays and its fight runs longer. What is left is the rounds they fire, about five against three, which is the length of the fight and not the rate. The coordinating architect rules the check explained and not a hold, with a watch: every round's record gives this measure and the rounds the pair fire; if the minutes of action come to the middle of the runs and the pair still fire over the record, tuning stops and it goes back to the derivation; and no figure is moved to mend this measure itself. **Said plainly (decision 0084):** this was the check of the derived rates, it failed, and tuning went on. It is a miss, not a passed check, and the rates of fire are not independently certified by it: what the pair fire is the rate times how long they fire, and how long they fire moves with every figure that changes which ships survive.
 - **Finding and surprise.** With no Allied ship given the radar bonus (decision 0077, a mend in the derivation and not a tuning round), the Japanese sight first in 57 night fights of 100, where it was 44, and one run in three has every night fight go their way. The measure now agrees plainly by the rule, with a median of one fight a run still going the other way: mostly both sides sighting in the same round of five minutes. A round aims at the middle half of the runs ("Tuning", 10), so this is still the first mechanism's task. The two measures of rounds surprised are reported only: the rules end a force's surprise in the round after it is first fired on (decision 0076).
 - **Allied torpedoes fired** is judged for the first time and misses by about four times, with the share of decision 0071 at its first value. Half of what is left is tubes that do not bear on one side (decision 0074, held).
 - **Minutes of action and Japanese shells** are at the edge for a cause that is named and left: the Japanese ended each fight by passing on, and the rules have no force that retires when it has done what it came for (decision 0024, the note).
@@ -130,7 +130,7 @@ What it shows:
 
 ### Savo Island after round 2, Nov 13, 2026
 
-Two figures moved, each in a round of its own: the strength of experience for guns to its cap of 0.5 (round 1) and the factor against a surprised target to 2 (round 2). Both act on one side more than the other. The report is `savo-island-r2.md`: judged 23, agree 19, at the edge 1, miss 3. The surface tuning is closed there (`tuning/savo-island-closed.md`).
+Two figures moved, each in a round of its own: the strength of experience for guns to its cap of 0.5 (round 1) and the factor against a surprised target to 2 (round 2). Both act on one side more than the other. The report is `savo-island-r2.md`: judged 23, agree 19, at the edge 1, miss 3. The chance to hit was closed there.
 
 | What | Record | Tuning started | After round 2 |
 | --- | --- | --- | --- |
@@ -146,6 +146,32 @@ Two figures moved, each in a round of its own: the strength of experience for gu
 - **The three misses are named and left:** the Japanese passing on, which no rule has; the pair's rounds, which follow from it, under the watch; and Allied torpedoes, of which Helm and Wilson fire 16 in nearly every run, two ships the rows have not firing for want of orders and for a target that was friendly.
 - **What a hit does and breaking off had no supported move.** A cruiser sinks at about the main battery hits the record's took. What is wrong is where the Japanese torpedoes go: all of them into the first fight, none into the northern group's, so Chicago sinks in about half the runs.
 - **The tuned figures are fitted on Savo Island and not yet checked.** Cape Esperance checks them.
+
+### The round 2 report with the measures of decision 0084, Nov 13, 2026
+
+`savo-island-r2.md` was remade on the same figures and seeds with six measures added and one counted in tens. Judged 29: 21 agree, 2 at the edge, 6 miss. The totals that agreed hid this:
+
+- **The northern group takes no torpedo hit in any run** (record 3 to 6), while the southern group takes a median of 4 (record 1 to 3, held by 418 runs). The total on the nine ships agrees.
+- **Chicago is sunk in 560 runs of 1,000**; the record has her steam away. The measure agrees by the rule (440 runs hold it), with the median run sinking her.
+- **Each northern cruiser takes too few gun hits:** Vincennes misses (median 33 against 57 to 74, one run holds it), Quincy is at the edge (28 against 36 to 54), Astoria agrees (23 against 34 to 65, held by 357).
+- **The southern group fires too much or nothing:** in tens, median 9 against 3 to 5, held by 10 runs. Counted in hundreds it had agreed, because a run that never fired held the record.
+
+Each measure is judged alone. That several agree does not show one run holding them together.
+
+### Savo Island after decision 0083: the closing record, Nov 13, 2026
+
+`savo-island-after-0083.md` is round 2's figures on the engine with decisions 0074 and 0083, and the measures of 0084, with `minutes_of_action` counting the sum of the two fights (32 to 36). Judged 29: 21 agree, 4 at the edge, 4 miss. The surface tuning is closed on it, with no further round (`tuning/savo-island-closed.md`). It is the closing record on its engine and is not remade for later engine changes.
+
+- **Torpedoes now reach the northern group**: 0 to 3, median 0, in 364 runs one or more, at the edge against 3 to 6. Before 0083 it was none in any run. The southern group's agree: median 3, held by 571.
+- **Chicago is still sunk in 565 runs.** The record's southern fight lasted about as long as the model's. The second sides went north in the record because the fights overlapped, which the rules do not do (decision 0083, "Fights that overlap"; a plan for the designer).
+- **Minutes of action agree,** with the record in the middle half. The fights are no shorter (median 40); the record now counts what a run counts.
+- **The four misses are named:**
+  - Allied torpedoes fired: Helm and Wilson fire where the rows have neither firing. That is participation, not the share.
+  - Tenryu and Yubari's shells.
+  - Vincennes's gun hits.
+  - The southern group's shells in tens.
+- **The watch on Tenryu and Yubari was met in form and ruled.** The minutes came to the middle and the pair still fire over the record. The architect did not reopen the derivation: the record's shells fill the rows' short firing window (`engagement_events` 1060, 1069, 1071) at the derived rate. The pair fire through every round of both fights, where they fired for part of the night. Decision 0084's finding 11 stands: the gate failed and certified no rate.
+- **The two tuned figures and the torpedo share stand,** looked at once more on this engine. They are fitted on Savo Island and not yet checked.
 
 ## Eastern Solomons
 
@@ -175,9 +201,10 @@ Remade after decision 0081 set the scenario's remaining orders from the rows: ea
 
 - **The Japanese strike was doubled, and two agreements rested on it.** The first wave is now the record's 27 dive bombers and 10 fighters. Counted as it took part, it holds the record of 37 in 607 runs (it met the American force in 611; in 4 the patrol shot down every bomber before the guns, and the log then names no force, so the measure counts none). Counted the old way, by the bombers left after the fight, it would have held 37 in no run (5 in the middle run, 0 to 17).
 - **Bomb hits on Enterprise now miss:** 0 in the middle run, 0 to 2, against 3 (29 runs hold it; 0.50 a run, against 3.52 before). Of the 27 dive bombers, the patrol of 54 and the guns, all firing before the bombs fall, leave few. That is the finding that the rule changes of decisions 0079 and 0080 answer; nothing here was adjusted for it.
-- **The strike on Ryujo agrees:** 38 aircraft in 488 runs (the record is 36 to 38), none in the others. Ryujo is sunk in 228 runs, against 464, now that Enterprise's groups and VMSB-232 no longer strike her, so Japanese carriers sunk agrees at the edge.
+- **The strike on Ryujo agrees:** 38 aircraft in 488 runs (the record was then 36 to 38; since decision 0084 it is 38, as launched), none in the others. Ryujo is sunk in 228 runs, against 464, now that Enterprise's groups and VMSB-232 no longer strike her, so Japanese carriers sunk agrees at the edge.
 - **The American losses are as far off as before** (4 and 5 in the middle run against 13 to 14 and 20 to 21), and the claims measures are unchanged in verdict. They are read after the fight's rounds.
-- **Two of Ryujo's six attack planes still run out of fuel** coming home (1.72 a run): her raid flies 200 miles on a derived radius of 175. Decision 0081 keeps the radius (C5) and leaves this as evidence for the round of the fuel figure.
+- **Two of Ryujo's six attack planes still run out of fuel** coming home (1.72 a run): her raid flies 200 miles on a derived radius of 175. Decision 0081 keeps the radius (C5). It also called these ditchings evidence for the round of the fuel figure; decision 0084 reverses that: they rest on a radius whose rows state no load, so they are left out of any round that tunes `ditch_chance_per_radius_beyond`.
+- **What took part and what attacked (decision 0084).** Two measures beside the strike measures keep the old count, the aircraft left to attack after the patrol and the guns. Saratoga's strike on Ryujo, left to attack, has the record 36, the aircraft that reached and released; it agrees (on the report as remade after decision 0079: 0 to 38, median 0, held by 130 runs; the strike reaches her in about half the runs, and a run in which the patrol and the guns take none attacks with all 38 it launched, which the rules cannot make 36). The Japanese bombers left to attack Enterprise's force are reported, not judged, since no row counts the bombers that reached release: 0 to 18 with a median of 11 after decision 0079 (0 to 9, median 1, before it, when the guns fired before the attack), against the target's estimate of 20 or more, held by 16 runs.
 - **The result:** a stalemate in 547 runs, an Allied victory in 450, a defeat in 3 (before: 436, 468 and 96).
 
 ## Rabaul against Guadalcanal

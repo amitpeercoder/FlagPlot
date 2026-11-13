@@ -736,7 +736,8 @@ fn work_the_run(run: &Run, config: &Config) -> Vec<Raid> {
                     shots: int(config.guns),
                     chance: hundredths(5),
                     expected,
-                    hits
+                    hits,
+                    after_attack: false,
                 },
                 "seed {seed}"
             );

@@ -57,6 +57,13 @@ crew_recovered_beside_own_force = "0.95"
 # PLACEHOLDER: the record has 6 to 9 of 13 to 16 recovered in open sea.
 crew_recovered_open_sea = "0.5"
 
+# The share of the guns' shots of the raid's target (ships or base) that are
+# worked before the attack, the rest after it (decision 0079). 1 is step 1's
+# rule: every shot before. PLACEHOLDER: decision 0079 sets it to 0, all after
+# the attack. The record has the guns opening on the dive, after the fighters
+# had met the strike (events 222 and 223); no source sizes it.
+anti_aircraft_before_attack_share = "0"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

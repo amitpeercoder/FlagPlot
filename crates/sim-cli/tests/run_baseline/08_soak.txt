@@ -5,183 +5,183 @@ seed 1942
 day   1  hash acbd17a05eca6c5c  77 events
 day   2  hash d92d867e3691028a  72 events
 day   3  hash 6eb8e262def465ec  63 events
-day   4  hash fde35c185f25312e  264 events
-day   5  hash ea11ec3e85796f54  155 events
-day   6  hash 6cdf011314e192cf  118 events
-day   7  hash 99588e2b1029d14b  225 events
-day   8  hash efdab025a2deb1f8  126 events
-day   9  hash 59bf6a81d96bb021  204 events
-day  10  hash 900dea76a99b3c01  167 events
-day  11  hash bbc4085e15d18a9a  172 events
-day  12  hash f10e709969b6cfbe  145 events
-day  13  hash 4c0c1e116b7d4249  155 events
-day  14  hash caff93eaa75074e2  135 events
-day  15  hash 8c3ba72560c4dab0  159 events
-day  16  hash 99a5523abe819f5c  163 events
-day  17  hash 467d39ffdabfb50c  144 events
-day  18  hash 32f997032cca7727  147 events
-day  19  hash 739f872da5ec23ac  128 events
-day  20  hash 4930303c7b39f51a  101 events
-day  21  hash 3fd1ec066b862b9d  96 events
-day  22  hash d8e84a8d91c10d42  105 events
-day  23  hash 9d7ad74a816cd14c  100 events
-day  24  hash ac3dc89735d182f4  104 events
-day  25  hash 7a01f56d8c92bb28  94 events
-day  26  hash 93e3fbad86bf6c77  80 events
-day  27  hash 2bda5d1797313dd2  95 events
-day  28  hash 2450689bf075eb41  84 events
-day  29  hash 52856cd3164b39d7  92 events
-day  30  hash 04a1b8eef42b420d  100 events
-day  31  hash 1e3e6816b17393e5  83 events
-day  32  hash df5ce06f7c3d37f0  80 events
-day  33  hash 29c807854333c235  162 events
-day  34  hash 31f9c6227adbe222  122 events
-day  35  hash 5602beb609df8fee  114 events
-day  36  hash b2501f9ffa447abb  78 events
-day  37  hash 652fde850e9aa235  102 events
-day  38  hash 82a265e4160b48ba  73 events
-day  39  hash 1b6e39dc770e42d6  101 events
-day  40  hash ec56fd5b0e046eb9  156 events
-day  41  hash dab2be2bca600d6b  89 events
-day  42  hash e092de8b93ac6d5f  129 events
-day  43  hash 02aad90430e523ae  158 events
-day  44  hash 66033f55670a418f  94 events
-day  45  hash e250654c00426d33  106 events
-day  46  hash 8c90834897d5faaa  178 events
-day  47  hash 0e213cb104c009b0  117 events
-day  48  hash 91106ff7ed775d5f  104 events
-day  49  hash 1f0722229287d4b0  93 events
-day  50  hash dd5b4cefb583cf8c  148 events
-day  51  hash 01f03587d178b0c8  98 events
-day  52  hash ac979bce97d1b58b  138 events
-day  53  hash c3dda46de6d0f617  84 events
-day  54  hash d2734afe225b3526  99 events
-day  55  hash b34005d84959e3ed  143 events
-day  56  hash 68d60a75f5c4d3d7  129 events
-day  57  hash 21d839bea303b403  84 events
-day  58  hash f7e7cb8cc99b18e6  113 events
-day  59  hash c9870854878e4e4d  83 events
-day  60  hash 0c2929dae3b30e93  142 events
-day  61  hash 261c3a784f3a65c3  104 events
-day  62  hash f7d88790160382e9  80 events
-day  63  hash 201a66db865ccf28  132 events
-day  64  hash a2f2314f3f44f51c  108 events
-day  65  hash 0cd7b608cd7c6e51  99 events
-day  66  hash bd4c621705a2ea42  81 events
-day  67  hash 3f96c9e161c45d7a  96 events
-day  68  hash 4b92cefe84cb0bf5  75 events
-day  69  hash 331d1b37f71eec22  100 events
-day  70  hash 7fc99422af8190e0  141 events
-day  71  hash 65d6e442070778ba  162 events
-day  72  hash 06b1f081c04d5b04  137 events
-day  73  hash 14ada92905f3e522  115 events
-day  74  hash 8e3cd9d670f671bf  108 events
-day  75  hash 0270c599e37a0388  113 events
-day  76  hash bba962ec8cecf94a  104 events
-day  77  hash 1dace9c366bb386e  92 events
-day  78  hash 3f367691bee52b6d  90 events
-day  79  hash f365162773a88a69  98 events
-day  80  hash 43e5d2f343c21ff7  180 events
-day  81  hash ad80c787b67ab409  124 events
-day  82  hash 80464e8aab49c163  144 events
-day  83  hash 18fd4c4bc3ab2f74  88 events
-day  84  hash fab620d2edf05a44  77 events
-day  85  hash e60516900f12269c  115 events
-day  86  hash 7b4ff34ebee6dc27  80 events
-day  87  hash 218db1e2bd2079f9  154 events
-day  88  hash 9a16390fca951d1d  111 events
-day  89  hash 1bbaa4001dd244b2  88 events
-day  90  hash 4d93e8ff50f38b94  82 events
-day  91  hash 6615f5a690d304dc  102 events
-day  92  hash f34a517e26e8b5f1  77 events
-day  93  hash 29b04566505e076b  145 events
-day  94  hash 0e73aea3196854ab  129 events
-day  95  hash 1a9fac2d52489566  117 events
-day  96  hash d751e58b07973f0d  88 events
-day  97  hash caa49569d6b62534  88 events
-day  98  hash 56c915e2acdb4831  76 events
-day  99  hash 40b7b3292dbe1584  84 events
-day 100  hash 80d4f64b9a6bf81a  107 events
-day 101  hash 4812971010076772  139 events
-day 102  hash cb3c44463a627fa4  85 events
-day 103  hash 5d1cf2589f50d98f  135 events
-day 104  hash 28c18237b4a8a69a  144 events
-day 105  hash 407c5353e76a34ef  96 events
-day 106  hash f27c2c432cb1e11f  111 events
-day 107  hash ff25a8e4d0d68e9a  90 events
-day 108  hash 6719413c690e9233  75 events
-day 109  hash 8f56a93466bc2a39  91 events
-day 110  hash fc1e3f17dde733aa  116 events
-day 111  hash 275d0b7a8d57beb6  96 events
-day 112  hash 9cd9611f824d0e31  104 events
-day 113  hash e187f9d03c6b1b14  70 events
-day 114  hash c5d1f79dbc8738ba  83 events
-day 115  hash 2bd1f0ab787da65c  146 events
-day 116  hash 6d4876434e14c65d  96 events
-day 117  hash 3e13361f2c0fd25f  116 events
-day 118  hash 232d24af08b8b1b4  113 events
-day 119  hash af09cae3a4ed01c4  141 events
-day 120  hash 9322f7382f119362  110 events
-day 121  hash 73fd391a8d7144a8  110 events
-day 122  hash a7a078036df538bf  89 events
-day 123  hash 6247e73bf56372de  138 events
-day 124  hash 5923d335631b85bc  103 events
-day 125  hash a96e62490e497811  86 events
-day 126  hash ff7f41983b97e2cb  72 events
-day 127  hash 967929058f43c07c  97 events
-day 128  hash 3489009f2c78febd  74 events
-day 129  hash 88a3d2ef1d8af921  69 events
-day 130  hash 05fd70a3daa2e54a  160 events
-day 131  hash d1c95e29ac05e4b1  113 events
-day 132  hash 0709fcde833a8a0f  86 events
-day 133  hash 6dc4c805f7645339  134 events
-day 134  hash 8a676e734605c421  92 events
-day 135  hash 19af9da6591493ae  91 events
-day 136  hash c238de852e7acadd  100 events
-day 137  hash aeb4e211c5032a70  65 events
-day 138  hash cf8b3fe52e6f5354  68 events
-day 139  hash 5ddab03ff7942314  102 events
-day 140  hash 30c3ac11af17861b  133 events
-day 141  hash 5a8c1e29d3a1293a  85 events
-day 142  hash 2dd2bcc1ff4223aa  119 events
-day 143  hash 2f0c92bffef29bf9  74 events
-day 144  hash b96f271457112334  80 events
-day 145  hash 1c625ae549929326  102 events
-day 146  hash 24269484c5edbf56  114 events
-day 147  hash f9ce75a5277a5078  156 events
-day 148  hash 138f5e475d03c091  102 events
-day 149  hash 462b2b7225ac8a84  84 events
-day 150  hash 1bee22963dc9944b  79 events
-day 151  hash 81c747b04cea87f5  99 events
-day 152  hash 1b1ac4a19c52d055  80 events
-day 153  hash d3a393ab7a2f152a  134 events
-day 154  hash d3c46f59db251913  103 events
-day 155  hash fc07f3109229e1d8  109 events
-day 156  hash a6ea3ce0a73a2d4a  89 events
-day 157  hash 8a8d58b8135df2b1  78 events
-day 158  hash e2300e5c32e2a33c  95 events
-day 159  hash 1f774a194230d6c3  75 events
-day 160  hash b95d2e562537f95e  152 events
-day 161  hash ff63672e00960760  100 events
-day 162  hash 83fc5d701d11bccd  82 events
-day 163  hash 0b0e5f3ea3395fa0  84 events
-day 164  hash 3e5df4df55a35092  88 events
-day 165  hash c4c2af06290e4250  75 events
-day 166  hash 2a842063eb08852f  69 events
-day 167  hash 06e5f11476db708f  104 events
-day 168  hash bc19325bf5098e8b  91 events
-day 169  hash c09e495ec425f16a  77 events
-day 170  hash 2608288f529b1cb5  155 events
-day 171  hash 7fc78c1cf6f85a78  93 events
-day 172  hash 8d4bded620295ecf  108 events
-day 173  hash 3dc8ea9b26d7654d  90 events
-day 174  hash 0c95594da36f9f37  73 events
-day 175  hash ee9c2ed9fd4ba752  84 events
-day 176  hash a576bc6082af6edb  158 events
-day 177  hash bbc31d048910c538  85 events
-day 178  hash 49ae8b9e999fea7a  138 events
-day 179  hash 6c8ea62f19510f48  107 events
-day 180  hash 49718f9a42dec5fe  92 events
+day   4  hash 71a8841f2b4dfa2a  269 events
+day   5  hash 2b4ba03921af2037  155 events
+day   6  hash a6ad11a563eba20f  118 events
+day   7  hash 346c1d9825c2d996  225 events
+day   8  hash d6fba9e9a044d6c4  126 events
+day   9  hash e253a5da485b8358  204 events
+day  10  hash 7d816b020fa7dc04  167 events
+day  11  hash c6ebe7f5aad79318  172 events
+day  12  hash a94927c54db00773  146 events
+day  13  hash 1117222318f0eac7  155 events
+day  14  hash e22de6c5db16ff1f  135 events
+day  15  hash d7e926033a731c96  159 events
+day  16  hash b3d633ccd68aba95  162 events
+day  17  hash fb0ff5636dda3cdb  143 events
+day  18  hash 37776b6d61c7715c  147 events
+day  19  hash e23356a873f4cb55  128 events
+day  20  hash 0df86e2b1173f515  101 events
+day  21  hash af011f37c5266ec6  96 events
+day  22  hash 6f63dd2919a1cf53  105 events
+day  23  hash fd7d4dc7d499d17d  100 events
+day  24  hash 4da8c9fa9535ea34  104 events
+day  25  hash 84ecac70dc3df8b7  94 events
+day  26  hash 9813a799eb95e794  80 events
+day  27  hash d16c108a791ad4ad  95 events
+day  28  hash 3f00e7e9c18524b2  84 events
+day  29  hash 9095a93bfd941438  92 events
+day  30  hash a15a5f4827b7160a  100 events
+day  31  hash c30dfa68d252770a  83 events
+day  32  hash ce7590b301a1c737  80 events
+day  33  hash 53712a03df5a2586  162 events
+day  34  hash 83472b9460f39061  123 events
+day  35  hash 1f30b0483b51f0ec  114 events
+day  36  hash 0e61a4d38da7ad06  78 events
+day  37  hash 0ed6116bacf7f7ab  102 events
+day  38  hash 004cbe78bee604f0  73 events
+day  39  hash f3aafdcde8f2a8c8  101 events
+day  40  hash 2c9dd72d9b53e34e  156 events
+day  41  hash c3b7325693f15315  89 events
+day  42  hash 815d712714242e86  129 events
+day  43  hash 1c82034d21e4e11b  159 events
+day  44  hash 41b640f9afca848b  93 events
+day  45  hash 033859c4a1d1644f  107 events
+day  46  hash d4dbe05119b57b44  178 events
+day  47  hash d3399fd3a9f0512a  117 events
+day  48  hash 57b3d0b5a6216b89  104 events
+day  49  hash 8f146a5677f93c04  93 events
+day  50  hash b1da726b3b90f1d9  148 events
+day  51  hash db9a56710cff227e  98 events
+day  52  hash cf6e7003c230f025  137 events
+day  53  hash 070ea06bf56c6517  84 events
+day  54  hash d5162db2a0f004a0  100 events
+day  55  hash b629134d18499f54  143 events
+day  56  hash a7e1739b4e8bb322  129 events
+day  57  hash c1bffb302c62e0f0  84 events
+day  58  hash 08dc1ccc8e4e45eb  113 events
+day  59  hash 244b9285b87901f5  83 events
+day  60  hash 38ff4e387d5f33fc  142 events
+day  61  hash f93067803e7a7f9d  104 events
+day  62  hash a5a919e71ec2eb0b  80 events
+day  63  hash 8baed34a0db9ab47  132 events
+day  64  hash 3352efb031df4101  108 events
+day  65  hash 082d3096079c18b8  98 events
+day  66  hash 2eeb337f9e67fa26  81 events
+day  67  hash 326f64a9f19af85f  97 events
+day  68  hash 3b59187e3e763d78  75 events
+day  69  hash b8c3e0499c1b55ab  103 events
+day  70  hash ecb50c993f05d2fc  141 events
+day  71  hash 5066fb252d38feb4  162 events
+day  72  hash 900deeb1d603ad12  137 events
+day  73  hash 68524ef983f1342e  115 events
+day  74  hash 527c9df867d6c413  108 events
+day  75  hash d22ee849385df60f  113 events
+day  76  hash cdbf987fc1ed926c  104 events
+day  77  hash f7c5d9f5806b5d5a  92 events
+day  78  hash 36af3f7c1ded387c  90 events
+day  79  hash d5160bc6f8f4d4f2  98 events
+day  80  hash 712292e7ec4bb834  180 events
+day  81  hash 21d93d2757576f39  124 events
+day  82  hash 63d792ab9a2fda9c  144 events
+day  83  hash f71b5a5a0e0c5d88  88 events
+day  84  hash 883c3853ef9ed6ca  77 events
+day  85  hash 5f7853a96c8d0d65  115 events
+day  86  hash 9919f2f3d6e1629e  80 events
+day  87  hash 6d6293489c92b037  154 events
+day  88  hash d6ae50bc6d19fe0e  111 events
+day  89  hash f3ac839929a8332e  88 events
+day  90  hash 743fc654144b65d3  82 events
+day  91  hash ed1ed1305948f37d  102 events
+day  92  hash 5da308584a15f77b  77 events
+day  93  hash ec101e78f35d9b65  145 events
+day  94  hash a1e444a412e6c759  129 events
+day  95  hash 5111a4bf3067318d  117 events
+day  96  hash 7f6d7702b7c90342  88 events
+day  97  hash f2405ea96327d8ed  88 events
+day  98  hash a35a1c50f2603e0e  76 events
+day  99  hash eca19057bd25125e  84 events
+day 100  hash 3283fda87105d65a  107 events
+day 101  hash 6f959a8810e8d03b  139 events
+day 102  hash ecf95c78c80702a2  85 events
+day 103  hash e870ba35ea7fa6c3  136 events
+day 104  hash 698e040e31a41213  144 events
+day 105  hash f9be79ea2d5b0631  96 events
+day 106  hash 04cdf0437bf86842  111 events
+day 107  hash b939f583cf1e7b6e  90 events
+day 108  hash 7de9ea3a85954508  75 events
+day 109  hash 894f95886f6475e2  91 events
+day 110  hash 64f998c5b09d7400  116 events
+day 111  hash fc0f02a6e982b2f8  96 events
+day 112  hash 7e4f7e0cb34e00db  103 events
+day 113  hash 88948cc0f2e3a6b7  70 events
+day 114  hash 91cd48e63c1b5ed7  83 events
+day 115  hash 9804d5bc625f5888  146 events
+day 116  hash 8c58f5a51f7e07ed  96 events
+day 117  hash 42d2c5ec9ae41345  116 events
+day 118  hash 41fe9ecf44046548  113 events
+day 119  hash 9e1602589c232c1e  141 events
+day 120  hash b6cab29ae961d2fd  110 events
+day 121  hash 9cc64b660afccb90  110 events
+day 122  hash de3dd86e3b4361ce  89 events
+day 123  hash 83769d5a48e81b3d  138 events
+day 124  hash 1f436a44dea4edcf  103 events
+day 125  hash d9400841265b2250  86 events
+day 126  hash 75a36279e70c06ef  72 events
+day 127  hash a44ac44875c4347f  97 events
+day 128  hash 096590f6c13e85b4  74 events
+day 129  hash 04454d5b5a42bd0c  69 events
+day 130  hash 2135e16101536b96  161 events
+day 131  hash e6a58045b5a3776b  113 events
+day 132  hash 06cedfd47e30e965  86 events
+day 133  hash 41b3f5692f634186  134 events
+day 134  hash cb40eb3451155e6b  92 events
+day 135  hash cd82d76718e660c2  91 events
+day 136  hash 96d20a5e80a869df  100 events
+day 137  hash 7c45d6ff4c16e7e2  65 events
+day 138  hash 8634aa6d5ac09d93  68 events
+day 139  hash 09f10f459bd3f650  102 events
+day 140  hash 0f3113d3713b8d31  133 events
+day 141  hash 0763b452ffc48bfc  85 events
+day 142  hash 0ee0dfbf40aff5f7  119 events
+day 143  hash dffeb384b07a489e  74 events
+day 144  hash 2659f1217ee6d5dd  80 events
+day 145  hash 02d704ea371bd388  102 events
+day 146  hash 74a118dfeb72874d  114 events
+day 147  hash 3091fcce7efee2dd  156 events
+day 148  hash 7191051b357b6b3a  102 events
+day 149  hash cd2b3f3b2b6ff583  84 events
+day 150  hash bee7daa076fa53f3  79 events
+day 151  hash 39bf089ffba2ed34  99 events
+day 152  hash 73711d67ede50344  80 events
+day 153  hash 25e7d4a75c609ad8  134 events
+day 154  hash f1d36f0823b8dd89  103 events
+day 155  hash ce86eb0175cc5184  109 events
+day 156  hash f94b7373ba1b3c5e  89 events
+day 157  hash 0666f59df1ed2df1  78 events
+day 158  hash ff1127cef33dae5f  95 events
+day 159  hash 66a726179e424c88  75 events
+day 160  hash bfd529656e666d3e  152 events
+day 161  hash 16cac94a0ff41864  100 events
+day 162  hash 27650885cc4b673f  82 events
+day 163  hash b820840679ac61ae  84 events
+day 164  hash b4b58f8697888987  88 events
+day 165  hash 1e0f63cde84c40b0  75 events
+day 166  hash 06c270bea4787992  69 events
+day 167  hash 3a3f7bf599af71cc  104 events
+day 168  hash b48c496263499329  91 events
+day 169  hash 405c78cb2239193c  77 events
+day 170  hash 51ba876ae26cd1a5  155 events
+day 171  hash 791ec46dca676d8e  93 events
+day 172  hash 8742b7365dbaed52  108 events
+day 173  hash 278c34c57f6f0052  90 events
+day 174  hash 0053c78d3ff402ab  73 events
+day 175  hash 88dc5cc6e53ef03c  84 events
+day 176  hash 92aca548bc95f003  158 events
+day 177  hash b975a9dd49082f2b  85 events
+day 178  hash 2019c33227f5b98f  138 events
+day 179  hash 9957d797747879ef  107 events
+day 180  hash 75e78370b21de2fa  92 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -273,7 +273,7 @@ air_group:123 "Shokaku fighter unit, second wave escort" (Japanese) aboard ship:
 air_group:124 "Zuikaku fighter unit, second wave escort" (Japanese) aboard ship:20: 6 ready, mission Rest, no arc
 air_group:125 "VT-3, attack group" (Allied) aboard ship:1: 7 ready, mission Rest, no arc
 air_group:126 "VT-8, second group" (Allied) aboard ship:11: 5 ready, mission Rest, no arc
-ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 5.260942, fire 0; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 21.043768, fire 5.260942; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
 ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
 ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
 ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
@@ -384,7 +384,7 @@ ship:116 "Placeholder cruiser 13A1": afloat in task_force:75; damage flotation 7
 ship:117 "Placeholder cruiser 13A2": afloat in task_force:69; damage flotation 50, fire 5; main battery out; 800 gun rounds, torpedoes ready; 1720 t of fuel, 0 t of supply
 ship:118 "Placeholder picket destroyer": afloat in task_force:70; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
 ship:119 "Placeholder dry cruiser": afloat in task_force:71; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
-base:1 "Henderson Field" (Allied) at (2,-4): 15467.275 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 15367.475 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 136.68 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 6400 t of supply in stock
 Allied contact:66 at (8,-11): 14 ships, carrier, age 3 pulses
@@ -515,8 +515,8 @@ Japanese claim over (2,-4): 6 aircraft shot down, day 2 morning
 Japanese claim over (2,-4): 4 aircraft shot down, day 3 morning
 Japanese claim over (7,-9): 2 aircraft shot down, day 4 afternoon
 Japanese claim over (7,-9): 3 aircraft shot down, day 4 afternoon
+Japanese claim at (7,-5): 4 hits on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
 Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
-Japanese claim at (7,-5): 0 hits on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
 Japanese claim at (2,-4): 4 aircraft shot down, 2 aircraft destroyed on the ground, day 4 afternoon
 Japanese claim at (2,-4): 3 aircraft shot down, 6 aircraft destroyed on the ground, day 5 morning
 Japanese claim at (2,-4): 1 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
@@ -527,10 +527,10 @@ Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
 Japanese claim at (2,-4): 1 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 9 morning
 Japanese claim at (2,-4): 1 aircraft destroyed on the ground, day 10 morning
-Japanese claim over (2,-4): 6 aircraft shot down, day 12 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 12 morning
 Japanese claim at (2,-4): 2 aircraft shot down, 3 aircraft destroyed on the ground, day 13 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 15 morning
-Japanese claim at (2,-4): 1 aircraft shot down, 2 aircraft destroyed on the ground, day 16 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 1 aircraft destroyed on the ground, day 16 morning
 Japanese claim over (2,-4): 1 aircraft shot down, day 18 morning
 Japanese claim at (2,-4): 2 aircraft shot down, 6 aircraft destroyed on the ground, day 20 morning
 Japanese claim at (2,-4): 1 aircraft destroyed on the ground, day 21 morning
@@ -545,7 +545,7 @@ Japanese claims 1 enemy ship sunk at (-4,3), day 33 afternoon
 Japanese claim at (2,-4): 7 aircraft shot down, 1 aircraft destroyed on the ground, day 34 morning
 Japanese claim at (2,-4): 6 aircraft shot down, 3 aircraft destroyed on the ground, day 37 morning
 Japanese claim at (2,-4): 9 aircraft shot down, 5 aircraft destroyed on the ground, day 40 morning
-Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 43 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 43 morning
 Japanese claim over (2,-4): 10 aircraft shot down, day 45 morning
 Japanese claim at (2,-4): 3 aircraft destroyed on the ground, day 46 morning
 Japanese claim over (7,-9): 0 aircraft shot down, day 46 afternoon
@@ -560,9 +560,9 @@ Japanese claim at (2,-4): 5 aircraft shot down, 1 aircraft destroyed on the grou
 Japanese claim over (7,-9): 0 aircraft shot down, day 60 afternoon
 Japanese claim over (7,-9): 0 aircraft shot down, day 60 afternoon
 Japanese claim at (2,-4): 5 aircraft shot down, 2 aircraft destroyed on the ground, day 61 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 64 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 1 aircraft destroyed on the ground, day 64 morning
 Japanese claim at (2,-4): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 67 morning
-Japanese claim at (7,-5): 0 hits on a carrier, 0 sunk, day 69 morning
+Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, day 69 morning
 Japanese claim at (2,-4): 5 aircraft shot down, 1 aircraft destroyed on the ground, day 70 morning
 Japanese claim over (7,-9): 0 aircraft shot down, day 71 afternoon
 Japanese claim at (2,-4): 8 aircraft shot down, 2 aircraft destroyed on the ground, day 73 morning
@@ -577,7 +577,7 @@ Japanese claims 0 enemy ships sunk at (-8,15), day 93 night
 Japanese claim at (2,-4): 5 aircraft shot down, 1 aircraft destroyed on the ground, day 94 morning
 Japanese claim at (2,-4): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 97 morning
 Japanese claim at (2,-4): 2 aircraft shot down, 1 aircraft destroyed on the ground, day 100 morning
-Japanese claim over (2,-4): 1 aircraft shot down, day 103 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 1 aircraft destroyed on the ground, day 103 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 106 morning
 Japanese claim over (2,-4): 7 aircraft shot down, day 109 morning
 Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 112 morning
