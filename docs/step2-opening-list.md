@@ -10,6 +10,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 | Daylight as a limit on a launch | A strike launched late must be recovered in the dark or not launched. Noted, not to be built with the first version | Dusk limited a launch as much as fuel did, and the longest reaches at Midway ended in a night recovery. Today a strike flies in the morning or afternoon pulse with no regard to the hour within it | The same |
 | Experience for air groups | One number for an air group, read by a fighter's and a bomber's chance to hit and the chance of running out of fuel, diluted by replacements (decision 0064, stage 2). **It waits:** worked by hand from the rows, the facts are too thin to rest the values on, and no air group carries a value until research closes the gaps listed | The air figures are tuned meanwhile with every air group alike in experience, a named gap | Decision 0064, "Nov 13, 2026: stage 2 waits"; `docs/research/oob/air-group-experience-proposal.md` |
 | Ship repair | Damage is patched forward in weeks or mended in a yard in months. **Decided (decision 0069, confirmed). Not part of step 2's close: it follows step 2, with land units and ground combat, before step 3** (ruled by the coordinating architect on the designer's delegation, Nov 13, 2026) | Without it a long campaign only wears fleets down. The research gives three bands of time away | Decision 0052, item 11; the step 2 research |
+| The close of step 2 | The designer accepts the named misses and the legibility test's result, or says which is not acceptable; and decides the three questions the spec left for the close: agreements at the edge, the hand calculations on the tuned figures, the objectives scale | It closes step 2 | `docs/validation/step2-close.md` |
 | "Out of the campaign" on the objectives scale | Points for a ship that must leave for repair, not only for one with propulsion or flight deck out at the end. **Not part of step 2's close: it follows step 2 with ship repair** (the same ruling); the result on the scale stays reported and not judged | Enterprise had her deck back within the hour and was away 53 days; the scale gives nothing for that | The step 2 research |
 
 ## Done
@@ -39,6 +40,18 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - `export` takes a saved game as well as a scenario (`docs/commands.md`).
 - Tuning round 2: `surprised_target_factor` from 1.5 to 2, kept; the chance to hit is closed (`docs/validation/tuning/r2-surprised-target-factor.md`, report `docs/validation/savo-island-r2.md`).
 - Tubes that bear on one side, and the other side fired in the ship's next torpedo round: built (decisions 0074 and 0083); the state hash is at version 7.
+- Anti-aircraft fire and the patrol's fire split before and after the attack, and whom the patrol fires at: built (decisions 0079, 0080, 0087). The Eastern Solomons' and Rabaul's orders from the record: set (decisions 0081, 0082).
+- What the agreements show and do not, after an outside review: decided (decision 0084), with measures by ship and group.
+- What a side is told of a fight, and the numbers a side is given: built (decisions 0085, 0086); the state hash is at version 8. The ignored test of a force made in play is switched on and passes.
+- `docs/rules/differences.md`: rows 7 and 27 made, and the batch of small fixes (rows 2 with 38, 15, 17, 24, 25, 32, 34 and 39).
+- Savo Island's surface tuning closed after round 2 and decision 0083, with no further round (`docs/validation/tuning/savo-island-closed.md`, report `docs/validation/savo-island-after-0083.md`).
+- Air round 3, the fighters' chance to hit: nothing moved; the American losses at the Eastern Solomons named misses (`docs/validation/tuning/r3-fighter-hit-chance.md`, `r3-us-losses-named-misses.md`).
+- Air round 4, claims: `fighter_false_claim_chance` from 0.1 to 0.7; the other claim figures stay (`docs/validation/tuning/r4-claims.md`, report `docs/validation/eastern-solomons-r4.md`).
+- Air round 5, the guns' chance to hit: looked at, not moved (`docs/validation/tuning/r5-anti-aircraft-hit-chance.md`).
+- Rabaul round 1: `[base_hit] aircraft` from 0.3 to 0.06 (`docs/validation/tuning/rabaul-r1-base-hit-aircraft.md`, report `docs/validation/rabaul-guadalcanal-air-rabaul-r1.md`). Rounds 2 (fatigue) and 3 (wear): nothing moved (`rabaul-r2-fatigue.md`, `rabaul-r3-wear.md`).
+- A note on every figure of `data/reference` and the derivation parameters (`docs/validation/tuning/air-figures-closed.md`, `surface-and-search-figures-closed.md`).
+- The closing tests: the hundred-seed soak, the legibility test and the rulebook-only hand calculations (`docs/validation/closing-tests.md`).
+- The closing page: `docs/validation/step2-close.md`.
 
 ## Open, named by the work of Nov 13, 2026
 
@@ -54,19 +67,14 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - A search flown in one pulse only (decision 0073, "What the rules cannot express").
 - One kind for every cruiser, so Tenryu and Yubari fire their guns at cruisers (decision 0078, "What it cannot give").
 - Experience for air groups (decision 0064, stage 2; the table above).
-- The ignored test `scenario_09a_side_events::an_enemy_force_that_is_merely_there_changes_nothing_the_side_is_given`: a known truth-and-belief leak, the number of a force made in the game counts the enemy's forces. To be mended before step 3.
-- The nine small code fixes of `docs/rules/differences.md` ("in the batch of small fixes"): to be made in one batch at the close of tuning.
-- `docs/rules/differences.md`, row 7: the report after a strike reads the force after the damage. To be made before the air figures are tuned.
 - The briefing's guns line after the attack (decision 0079): the briefing lists the guns' fire after the attack as a guns line of its own, not marked as after the attack. A wording item.
 - The fuel round leaves out the ditchings of Ryujo's raid on Henderson Field (decision 0084, finding 13): her B5N2s fly 200 miles on a derived radius of 175 whose rows state no load, so their ditchings are not evidence for `ditch_chance_per_radius_beyond`. A radius with a bomb load is asked of research (decision 0081, C5, option 2).
 - Aoba's and Furutaka's hits at Cape Esperance: measured ship by ship since Nov 13, 2026, before the check run (decision 0084, finding 14 and its note); the total of 130 to 134 is retired. Aoba is judged at 40, a weak record; Furutaka is reported only, her rows being lower bounds; Kinugasa is judged at 0 to 4. A row that bounds Aoba or Furutaka and arrives before the check is run changes the record; none changes it after. The check has been run (Nov 13, 2026), so the records stand.
 - Named by the Cape Esperance check (`docs/validation/baseline-reading.md`), for step 3 and not tuned on: fire on a friend and a ship acting apart (Duncan), behind `us_destroyers_sunk` and the Japanese claims; Task Force 64 fighting Japanese stragglers by day in 771 runs of 1,000, since it is ordered to stay in (2,-5), which no measure counts; and its five destroyers firing every tube, where two attacked, the participation named at Savo Island.
-- In progress, numbers reserved: decisions 0079 to 0082, the air work (anti-aircraft fire after the attack; whom the patrol fires at; the Eastern Solomons orders; the Rabaul orders).
 
 ## What the architect settles from the research
 
 - Which figure to prefer where sources disagree: the Japanese aircraft lost at Eastern Solomons (about 40, 62 or 75), and each day's losses over Guadalcanal.
-- The three claim chances of decision 0056 by side, and the surface claim figure of decision 0014, from claims set beside actual losses.
 - In the claims round: with no ship burning, a surface claim of ships sunk equals the truth, against what the briefing promises (a claim "can be well above" it). Decision 0085, 9.
 - Base sizes for the real map (decision 0052, item 15).
 - The points and levels of decision 0054, and history's result on that scale for scenarios 4, 5 and 6.
@@ -75,12 +83,7 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 
 ## Known gaps between the model and the record
 
-The reports in `docs/validation/` give the numbers; `docs/step2-spec.md`, "Where the model stands today", sums them up.
-
-- Savo Island (`savo-island-r2.md`): Allied torpedoes fired, Tenryu and Yubari's shells and the minutes of action miss; gun hits on Allied ships agree only at the edge, the rest being the secondary guns.
-- The Eastern Solomons: the American aircraft lost, the all-or-nothing strike on Ryujo and the American claims miss.
-- The losses of the four weeks over Guadalcanal do not have the shape of the record (decision 0042): fighters die far too fast on both sides, too many aircraft are destroyed on the ground, and Henderson's fighters run down.
-- American claims overstate less than the record does, in both air battles.
+Where step 2 ends, battle by battle, with every named miss and agreement at the edge and its cause: `docs/validation/step2-close.md`. The reports are in `docs/validation/`.
 
 ## Not step 2, kept here so they are not lost
 

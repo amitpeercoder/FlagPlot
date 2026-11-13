@@ -14,7 +14,7 @@ Nov 13, 2026, at the close of step 2. This page lists every figure of `surface_c
 - The Eastern Solomons (scenario 5) loads those and `air_combat.toml`. Its ships and aircraft are derived.
 - Rabaul against Guadalcanal (scenario 6) loads those and the three slow air files. It has no ships and no task forces, so no surface figure and no figure of contacts acts there.
 
-The surface figures are tuned on Savo Island and checked on Cape Esperance, which is not yet run (`docs/step2-spec.md`, "Tuning"; decision 0072).
+The surface figures are tuned on Savo Island and checked on Cape Esperance, which was checked once on Nov 13, 2026, did not pass (judged 8: 4 agree, 1 at the edge, 3 miss) and is not tuned on (`docs/validation/cape-esperance-check.md`; `docs/step2-spec.md`, "Tuning"; decision 0072).
 
 ## `surface_combat.toml`
 
