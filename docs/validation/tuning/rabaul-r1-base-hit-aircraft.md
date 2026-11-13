@@ -94,3 +94,12 @@ The figure moves all the same, on the architect's ruling:
 With fewer fighters destroyed on the ground, more fly. So the fighting moves a little: Japanese bombers lost go from 26 to 29, and American fighters lost from 23 to 25.
 
 The Eastern Solomons report does not change verdict, measure by measure: its one raid on a field is six bombers.
+
+## Note, Nov 13, 2026: why the Japanese fighters lost moved
+
+`japanese_fighters_lost_to_enemy_action` went from 12 (agrees) to 13 (agrees, at the edge, against 6 to 10) in this round, and the record above did not say why. It was counted on the final engine (state version 8) from two 1,000-run batches, at 0.3 on a figure copy and at 0.06 live (`docs/validation/baseline-reading.md`, "The reports on the final engine").
+- American fighters destroyed on the ground fall from 7.0 a run to 2.2.
+- The survivors fly on the patrols that meet the raids: the fighter-patrols in the raid pulses rise from 87.2 a run to 98.3.
+- The escorts sent (169) and the bombers attacking (about 212) stay the same.
+
+So the fights over the field grow on both sides. The Japanese fighters shot down rise from 12.0 a run to 13.5, and the American fighters shot down from 23.2 to 24.8. The cause is the larger patrol, not any air combat figure, and nothing is moved for it.
