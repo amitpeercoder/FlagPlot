@@ -123,24 +123,27 @@ The figure is required in `air_combat.toml`, checked to lie from 0 to 1: 0 live,
 - Case (e)'s totals inside their ranges.
 - Pinned outcomes on the scenario's own seed.
 
-**Before and after, 1,000 runs each, label `d0080`.** The reports are `docs/validation/eastern-solomons-d0080.md` and `rabaul-guadalcanal-air-d0080.md`. "Before" is main with decision 0079.
+**Before and after, 1,000 runs each, label `d0080`.**
+- The reports are `docs/validation/eastern-solomons-d0080.md` and `rabaul-guadalcanal-air-d0080.md`. They were made on the code merged with main after decisions 0081 to 0083, with decision 0079 in, against the measures as they stood then.
+- "Before" is that code without this rule (the `d0079` reports), on the same seeds.
+- An earlier pair, made on the scenarios before 0081 and 0082, was replaced by these.
 
-Rabaul against Guadalcanal, a run:
+Rabaul against Guadalcanal (raid days from the forms, decision 0082), a run:
 
 | | Record | Before | After |
 | --- | --- | --- | --- |
-| The patrol's shots at escorts / at bombers | | 131 / 25 | 67 / 87 |
-| Japanese fighters lost to enemy action | 6 to 10 (forms) | 30 to 50, 39: miss | 13 to 27, 20: miss |
-| Japanese bombers lost to enemy action | 12 (forms) | 6 to 19, 12: agrees | 22 to 40, 31: miss |
-| American fighters lost to enemy aircraft | 7 to 23 | 27 to 40, 34: miss | 28 to 41, 35: miss |
-| Bomber sorties that reach the island (reported) | 211 to 213 | 268 | 241 |
-| Aircraft destroyed on the ground | 2 to 3 | 16: miss | 14: miss |
+| The patrol's shots at escorts / at bombers | | 75 / 87 | 40 / 123 |
+| Japanese fighters lost to enemy action | 6 to 10 (forms) | 16 to 30, 22: miss | 7 to 17, 12: agrees |
+| Japanese bombers lost to enemy action | 12 (forms) | 11 to 22, 16: agrees, at the edge | 19 to 34, 27: miss |
+| American fighters lost to enemy aircraft | 7 to 23 | 16 to 29, 23: agrees | 17 to 30, 23: agrees |
+| F4Fs ready on day 21 | 11 | 2 to 12, 6: miss (44 runs hold 11) | 2 to 12, 6: agrees, at the edge |
+| Bomber sorties that reach the island (reported) | 211 to 213 | 216 | 201 |
 
-- The Japanese now lose about one fighter for every one and a half bombers. Before, it was three fighters for every bomber; the forms have about two bombers for every fighter.
-- Every chance is still the placeholder 0.3, so each fight still kills about five times what the record has. That is the next tuning round's, with the question of height and warning (the air plan's C3), and is not chased here.
-- Judged 10: agree 3, at the edge 1, miss 6 before; agree 2, at the edge 1, miss 7 after. Bombers lost turned from an agreement into a miss, because the patrol now reaches them at a chance of 0.3.
+- Judged 10: before, agree 3, at the edge 3, miss 4; after, agree 4, at the edge 3, miss 3.
+- The Japanese now lose about one fighter for every two bombers, which is the forms' proportion. Before, it was more fighters than bombers.
+- Bombers lost is now a miss on the high side. Every chance is still the placeholder 0.3, so the patrol that reaches the bombers kills about twice what the record has. That is the next tuning round's, with the question of height and warning, and is not chased here.
 
-Ryujo's raid on Henderson Field, at the Eastern Solomons: the Marine patrol of 13 against 15 escorts and 6 attack planes.
+Ryujo's raid on Henderson Field, at the Eastern Solomons: the Marine patrol of 13 against 15 escorts and 6 attack planes. Scenario 5's orders for this raid are unchanged by 0081.
 
 | | Record (rows 271, 312, 1172) | Before | After |
 | --- | --- | --- | --- |
@@ -150,5 +153,4 @@ Ryujo's raid on Henderson Field, at the Eastern Solomons: the Marine patrol of 1
 | Marine fighters shot down by the escorts | 3 to 4 (311, 388, 700) | 2.51 | 2.51 |
 
 - The split is case (e) of the hand calculation exactly.
-- The Eastern Solomons measures do not move: judged 14, agree 8, miss 6, as with decision 0079 alone. Over the carriers the escorts are few against many bombers, so the patrol already fired mostly at the bombers.
-- Japanese aircraft lost to enemy action stays at a median of 28 against 29 to 32.
+- The Eastern Solomons verdicts do not move: judged 14, agree 10, at the edge 1, miss 3, as with decision 0079. Over the carriers the escorts are few against many bombers, so the patrol already fired mostly at the bombers.
