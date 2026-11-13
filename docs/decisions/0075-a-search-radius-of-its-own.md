@@ -1,6 +1,6 @@
 # 0075: An aircraft type has a search radius of its own
 
-Status: settled by the architect on Nov 13, 2026, on the designer's delegation ("Go ahead and decide all matters that need decisions"). A change to a derivation rule, not to a simulation rule: what the rules do with a search range is unchanged (`docs/rules/03-search-contacts-and-claims.md`, an order may name no more than the type's search range). Not built: it changes `data/derivation/rules.toml` and `oob-derive`, which wait until decision 0070 is on main. The exceptions in "Disputes" are proposed and wait for the architect's word.
+Status: settled by the architect on Nov 13, 2026, on the designer's delegation ("Go ahead and decide all matters that need decisions"). A change to a derivation rule, not to a simulation rule: what the rules do with a search range is unchanged (`docs/rules/03-search-contacts-and-claims.md`, an order may name no more than the type's search range). Not built: it changes `data/derivation/rules.toml` and `oob-derive`, which wait until decision 0070 is on main. The five exceptions in "Disputes" were settled by the architect on Nov 13, 2026, with the reasons written there.
 
 ## The gap
 
@@ -20,7 +20,8 @@ These are orders repeated over several days, not a ceiling reached once.
    - a sourced scouting radius, where exactly one can be read for the period;
    - else a third of its range in the scouting condition, rounded down to a whole mile. The scouting condition is the row that states the range as a scout, or at maximum fuel with no strike load;
    - a type with no such row takes a third of its stated maximum range, by the same rule;
-   - a type with no range row at all keeps its strike radius as its search radius, and is listed as a gap.
+   - a type with no range row at all keeps its strike radius as its search radius, and is listed as a gap;
+   - where the existing preference rules cannot settle a type's scouting or maximum range and no scenario orders that type to search, the type keeps its strike radius as its search radius and is listed in the derivation's output and in `data/oob/gaps.csv` as not settled. No exception is written for it. Only a type that some scenario orders to search gets an exception, and each is reported to the architect before it is settled. This keeps the rule from settling disputes that decide nothing.
 2. **The strike radius is as decision 0029 has it.** Nothing in this decision moves a strike radius.
 3. **The search radius is a ceiling.** A scenario's search order names the distance the record has flown, which is at or below it.
 4. **The frozen figures of step 1 are unchanged.** `data/reference/step1` keeps the search ranges it has; the hand-calculation tests do not move.
@@ -43,23 +44,23 @@ Each figure is cut to a whole mile. Beside each, every search distance flown or 
 
 For the record, the other distances by type found by the research of Nov 13, 2026 (`docs/research/oob/air-search.md`, last section): the battleships' floatplanes 300 miles and their Type 94s 250 (1201); the Haruna's Type 95 150 and 180 (1137, 1138, 1143); Japanese searches of 200 by sector at the Coral Sea, type not given (1149 to 1151); the SBD at 150 to 250 in all four actions; one B-17 to 800 (1161). None is for a type the scenarios hold beyond those above, and none contradicts them.
 
-What it does to the derived figures of the Eastern Solomons: B5N2 175 to 358, E13A1 253 to 398, SBD-3 200 to 397, TBF-1 190 to 420. The strike ranges are unchanged. The other types the scenarios hold (F4F-4, A6M2, D3A1, G4M1) are derived by the same rule when it is built; each is listed in the build with its row, and any dispute among its rows is an exception reported before it is settled.
+What it does to the derived figures of the Eastern Solomons: B5N2 175 to 358, E13A1 253 to 398, SBD-3 200 to 397, TBF-1 190 to 420. The strike ranges are unchanged. The other types the scenarios hold (F4F-4, A6M2, D3A1, G4M1) are derived by the same rule when it is built. None is ordered to search in any scenario, so where their rows dispute the range (the F4F-4's 912 against 1,108, the A6M2's 999, 1,373 and 1,677) they keep their strike radius as search radius and are listed as not settled (decision 1).
 
 ## Disputes
 
-Where one row states the range as a scout, that is the row the rule asks for: the SBD-3's 1,191 (270) against 826 (226, "maximum range", no condition), and the TBF-1's 1,260 (290). Where two rows state the same quantity differently, `oob-derive`'s existing preference rules apply. Neither 270 nor 290 is a preferred row (their standing is disputed and unconfirmed), so each needs a named exception like every other row the derivation reads by exception (decision 0020, 3). Proposed, with reasons:
+Where one row states the range as a scout, that is the row the rule asks for. Where two rows state the same quantity differently, `oob-derive`'s existing preference rules apply, and what they cannot settle is a named exception (decision 0020, 3). The five below were settled by the architect on Nov 13, 2026; each reason is written beside its exception in `rules.toml` when it is built. The flown lines are the check in the table above, not a reason for any choice.
 
 | Type | Row | Against | Reason |
 | --- | --- | --- | --- |
-| SBD-3 | 270 (1,191 "as scout") | 226 (826, "Maximum Range", no condition) | The only row that states the scouting condition. 826 would make the radius 275, and the 315 miles flown at Midway (1179) would fall outside it |
-| TBF-1 | 290 (1,260 "as scout") | none in the condition | The only row that states the scouting condition |
-| B5N2 | 408 (1,075, Pacific Wrecks, medium) | 78 (1,075, the same source, low); 413 (1,078, Pacific War Online Encyclopedia, "maximum", low) | Two sources agree to within 3 miles. 408 is the higher-confidence reading of the source that 78 also reads. 413 would give 359 against 358; nothing turns on the mile |
-| E13A1 | 493 (1,194, TAIC Manual 1 data sheet, medium) | 501 (1,796, Japanese Wikipedia, low, "maximum, 14.9 hours", no condition, citing a book not read) | 493 states the condition the rule asks for, maximum fuel of 297 US gallons with no strike load, on the same official sheet whose normal range (494) the derivation already reads by exception. 501 states no condition |
-| PBY-5 | 313 (2,694, "patrol range", 1,478 gal, statute assumed) | 215 (2,190, PBY-5A, Wikipedia, no condition); 323 (2,694, PBY-5A, the same source as 313) | 313 states the patrol condition and its fuel. No scenario holds a PBY yet, so the exception is proposed for the record and built only when a scenario needs the type. With 215 the radius is 730, and every line flown is inside it either way |
+| SBD-3 | 270 (1,191 "as scout") | 226 (826, "Maximum Range") | It is the one row stating the range in the scout condition, which is what the rule asks for; row 226 states no condition |
+| TBF-1 | 290 (1,260 "as scout") | none in the condition | The only row in the scout condition |
+| B5N2 | 408 (1,075, Pacific Wrecks, medium) | 78 (1,075, the same source, low); 413 (1,078, Pacific War Online Encyclopedia, low) | The higher confidence of rows agreeing within 3 miles |
+| E13A1 | 493 (1,194, TAIC Manual 1 data sheet, medium) | 501 (1,796, Japanese Wikipedia, low) | It states its condition, maximum fuel, and is the sheet whose normal range (494) the derivation already reads; row 501 states no condition and cites a book not read |
+| PBY-5 | 313 (2,694, "patrol range", 1,478 gal) | 215 (2,190, PBY-5A, no condition); 323 (2,694, PBY-5A, the same source as 313) | In the record only: built when a scenario holds a PBY. The statute-mile assumption behind 2,694 is a gap to close first |
 
 ## What it costs
 
-- `oob-derive` gains a second radius and `rules.toml` gains its rule text, a rule for the scouting condition and the exceptions above. The derived aircraft files gain new search ranges; their strike ranges, sweep widths and everything else are unchanged.
+- `oob-derive` gains a second radius and `rules.toml` gains its rule text, a rule for the scouting condition and the exceptions above (four built; the PBY-5's waits for a scenario that holds the type). The derived aircraft files gain new search ranges; their strike ranges, sweep widths and everything else are unchanged.
 - A search order may then name the distance flown. Scenario 5, 7 and 8's Chikuma floatplanes go from 253 to 330 (decision 0073). No other order moves: the American search keeps 200 miles (decision 0073, item 4), though the SBD-3 could then be ordered to the 250 of its afternoon search.
 - The run baselines of every scenario whose aircraft file changes are remade; their hashes move only where an order moves, since the search range is read only when an order is checked. The frozen figures are untouched, so no hand calculation moves.
 
