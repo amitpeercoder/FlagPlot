@@ -382,6 +382,9 @@ struct SurfaceCombatFile {
     /// The share of its guns a force not ready fires, from 0.1 to 1 (decision
     /// 0068). Required like every other key.
     unready_gun_share: Quantity,
+    /// The share of its torpedoes a force not ready fires, from 0.1 to 1
+    /// (decision 0071). Required like every other key.
+    unready_torpedo_share: Quantity,
     gun_system_hit: SystemTable,
     torpedo_system_hit: SystemTable,
     straggler_escorts: EscortTable,
@@ -507,6 +510,7 @@ fn parse_surface_combat_figures(
             &file.experience_sighting_strength,
         )?,
         unready_gun_share: number("unready_gun_share", &file.unready_gun_share)?,
+        unready_torpedo_share: number("unready_torpedo_share", &file.unready_torpedo_share)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1576,10 +1580,37 @@ mod tests {
     fn the_live_file_has_the_placeholder_share_and_the_frozen_one_switches_it_off() {
         let live = parse_surface_combat_figures(&combat_text(), here()).expect("parses");
         assert_eq!(live.unready_gun_share, Fixed::from_ratio(1, 2));
+        assert_eq!(live.unready_torpedo_share, Fixed::from_ratio(1, 2));
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../data/reference/step1/surface_combat.toml");
         let frozen = load_surface_combat_figures(&path).expect("the frozen file loads");
         assert_eq!(frozen.unready_gun_share, Fixed::ONE);
+        assert_eq!(frozen.unready_torpedo_share, Fixed::ONE);
+    }
+
+    #[test]
+    fn an_unready_torpedo_share_outside_a_tenth_to_one_or_missing_is_refused() {
+        let from = "unready_torpedo_share = \"0.5\"";
+        for (to, ok) in [
+            ("\"0.1\"", true),
+            ("\"1\"", true),
+            ("1", true),
+            ("\"0.09\"", false),
+            ("\"1.01\"", false),
+            ("\"0\"", false),
+            ("2", false),
+            ("0.5", false),
+        ] {
+            let text = combat_text().replace(from, &format!("unready_torpedo_share = {to}"));
+            assert_ne!(text, combat_text(), "{from} is in the file");
+            let result = parse_surface_combat_figures(&text, here());
+            assert_eq!(result.is_ok(), ok, "unready_torpedo_share = {to}");
+        }
+        let text = combat_text().replace(&format!("{from}\n"), "");
+        let message = parse_surface_combat_figures(&text, here())
+            .expect_err("a missing key is refused")
+            .message;
+        assert!(message.contains("unready_torpedo_share"), "{message}");
     }
 
     #[test]

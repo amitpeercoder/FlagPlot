@@ -417,9 +417,14 @@ pub struct SurfaceCombatFigures {
     /// when it was not ready as the fight began (decision 0068). From 0.1 to
     /// 1; at 1 the rule does nothing.
     pub unready_gun_share: Fixed,
+    /// The share of its torpedo shots a force fires, in the one round in
+    /// which its torpedoes are fired, when it was not ready as the fight
+    /// began (decision 0071). From 0.1 to 1; at 1 the rule does nothing.
+    pub unready_torpedo_share: Fixed,
 }
 
-/// The least `unready_gun_share` may be (decision 0068, 7).
+/// The least `unready_gun_share` and `unready_torpedo_share` may be (decisions
+/// 0068, 7 and 0071).
 pub const MIN_UNREADY_GUN_SHARE: Fixed = Fixed::from_raw(Fixed::SCALE / 10);
 
 /// The most a strength of experience may be (decision 0064, 6).
@@ -540,6 +545,14 @@ impl SurfaceCombatFigures {
             return Some(format!(
                 "surface combat unready gun share {} is not between 0.1 and 1",
                 self.unready_gun_share
+            ));
+        }
+        if self.unready_torpedo_share < MIN_UNREADY_GUN_SHARE
+            || self.unready_torpedo_share > Fixed::ONE
+        {
+            return Some(format!(
+                "surface combat unready torpedo share {} is not between 0.1 and 1",
+                self.unready_torpedo_share
             ));
         }
         let levels = [
@@ -1065,6 +1078,7 @@ impl SurfaceCombatFigures {
             experience_torpedo_strength: Fixed::ZERO,
             experience_sighting_strength: Fixed::ZERO,
             unready_gun_share: Fixed::ONE,
+            unready_torpedo_share: Fixed::ONE,
         }
     }
 }
@@ -1212,6 +1226,27 @@ mod tests {
             assert_eq!(problem.is_none(), ok, "{value}");
             if let Some(problem) = problem {
                 assert!(problem.contains("unready gun share"), "{problem}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_unready_torpedo_share_must_be_between_a_tenth_and_one() {
+        for (value, ok) in [
+            (Fixed::from_ratio(1, 10), true),
+            (Fixed::from_ratio(1, 2), true),
+            (Fixed::ONE, true),
+            (Fixed::from_ratio(99, 1000), false),
+            (Fixed::ZERO, false),
+            (Fixed::from_ratio(101, 100), false),
+            (Fixed::from_ratio(-1, 2), false),
+        ] {
+            let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+            figures.unready_torpedo_share = value;
+            let problem = figures.problem();
+            assert_eq!(problem.is_none(), ok, "{value}");
+            if let Some(problem) = problem {
+                assert!(problem.contains("unready torpedo share"), "{problem}");
             }
         }
     }

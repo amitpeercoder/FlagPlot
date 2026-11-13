@@ -751,6 +751,8 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             // on is given no breakdown at all.
             "unready_gun_share",
             "torpedo_mount_factor",
+            // The same for its torpedoes (decision 0071).
+            "unready_torpedo_share",
             "fire_control_factor",
             // The firing ship's own experience (decision 0064, 12). The
             // target's side is given no breakdown at all.
@@ -2455,6 +2457,55 @@ mod tests {
         assert_eq!(
             names,
             vec!["guns", "main_battery_factor", "unready_gun_share"]
+        );
+        let against = project(Side::Japanese, &events, &owners(false));
+        assert!(matches!(
+            against[0].kind,
+            SideEventKind::SalvoAgainst { .. }
+        ));
+        assert_eq!(against[0].breakdown, None);
+    }
+
+    #[test]
+    fn the_firers_side_keeps_its_unready_torpedo_share_and_the_targets_side_sees_no_breakdown() {
+        // Decision 0071: the share is the firing force's own condition, so its
+        // side keeps it, after the torpedo mount factor; the side fired on is
+        // given a `SalvoAgainst` with no breakdown at all.
+        let factor = |name, n| Factor { name, value: fx(n) };
+        let mut events = log(vec![EventKind::Salvo {
+            round: 1,
+            firer: ship(1),
+            target: ship(2),
+            weapon: Weapon::Torpedo,
+            shots: fx(4),
+            chance: Fixed::from_ratio(1, 25),
+            expected: Fixed::from_ratio(4, 25),
+            hits: 0,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("tubes", 8),
+                factor("torpedo_mount_factor", 1),
+                Factor {
+                    name: "unready_torpedo_share",
+                    value: Fixed::from_ratio(1, 2),
+                },
+                factor("base_chance", 1),
+            ],
+            result: Fixed::from_ratio(4, 25),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        let names: Vec<&str> = shown[0]
+            .breakdown
+            .as_ref()
+            .expect("a breakdown")
+            .factors
+            .iter()
+            .map(|f| f.name)
+            .collect();
+        assert_eq!(
+            names,
+            vec!["tubes", "torpedo_mount_factor", "unready_torpedo_share"]
         );
         let against = project(Side::Japanese, &events, &owners(false));
         assert!(matches!(
