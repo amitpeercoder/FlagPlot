@@ -78,3 +78,37 @@ Wikipedia is flagged "(WP lead)" wherever used. Coverage gaps are listed at the 
 - Wikipedia (leads only): https://en.wikipedia.org/wiki/Battle_of_Savo_Island, https://en.wikipedia.org/wiki/Battle_of_the_Eastern_Solomons, https://en.wikipedia.org/wiki/Battle_of_the_Santa_Cruz_Islands
 
 Not loaded: history.navy.mil pages (certificate error or connection refused), combinedfleet.com (404/403), Sea Power Centre PIAMA32.pdf (timeout), usni.org (403).
+
+## Search distances in the carrier actions of 1942, and the Japanese search signals of 23 to 24 August (13 November 2026)
+
+For the step 2 coordinator's commission on the Japanese search at the Eastern Solomons (decision 0073). Rows: `engagement_events.csv` 1133 to 1210, with a new kind `search_order` for a search as ordered or planned, beside `search_launch` for a search as flown and `sighting` for the distance at which a contact was made. Distances printed in miles are entered in metres as nautical miles, as the earlier search rows are; the note gives the figure as printed. The reading was done by Sonnet researchers; text quotes were checked by program, and the handwritten Japanese pages were read twice by readers who did not see each other's reading.
+
+### The Ryujo detachment and the signals
+
+From the vanguard's battle report (JACAR C08030051500) and the 8th Cruiser Division's war diary and battle report no. 3 (C08030048300):
+
+- No signal numbered 328 is on any page read. The detachment was set up by Mobile Force operations signal no. 3 (機動部隊信令作第三號): battle type 2 has Tone, Ryujo, Tokitsukaze and Amatsukaze as a detachment under the 8th Cruiser Division commander, to support the reinforcement force and attack Guadalcanal. A signal entered at 2345 on the 23rd orders the detachment to separate at 0200 on the 24th and go south west of the main body. The division's diary has the separation at 0200.
+- The diary's report enters no aircraft launch by Tone on the 24th. Ryujo's launches are her two attack groups (6 attack planes and 6 fighters; then 9 fighters at 1048); the first group's time is read 1020 by one reader and 1000 by the other, and the same report gives 1100 and 1200 elsewhere. The vanguard's report has contact aircraft from Hiei and Chikuma, one each, at about 1350. Nothing read supports the website row that has Tone launching searchers with the vanguard at 1100.
+- Ryujo was given the third dawn search of the 24th by signal no. 13 (7 aircraft, 250 nm) and relieved of it by signal no. 15 at 2345, which gave the task to Shokaku.
+
+### What a numbered search method fixes
+
+Signal no. 10 gives Shokaku search method 14 with 8 aircraft, base line 140 degrees, 10 degrees between lines, 250 nm out and a 25 nm lateral leg. Signal no. 13 gives method 17 three times with different numbers: 11 aircraft at 7 degrees to 300 nm; 12 at 10 degrees to 250 nm; 7 at 10 degrees to 250 nm. So the method number does not fix the aircraft count, the angle or the distance. Method 8 and "left half" (左反面) in the 0900 order are not defined on any page read; that order's distance is cut at the page edge and its number is read 19 by one reader and 16 by the other.
+
+### Distances by type
+
+| Navy and type | Distance | Where |
+| --- | --- | --- |
+| Japanese cruiser floatplanes (Type 0, Tone and Chikuma) | 300 miles, then 60 to the left; a monograph gives 40 nm for the leg | Midway, Nagumo's order for 4 June (5 June Tokyo date); rival rows |
+| Japanese Type 95 floatplane (Haruna) | 150 miles, then 40 to the left; 180 miles flown the next afternoon | Midway |
+| Japanese searches, 5 and 6 June | 150 miles then 30; lines of 303 and 180 miles | Midway, Nagumo's orders |
+| Tone's No. 4 aircraft | contact reported 240 miles from Midway | Midway |
+| Chikuma's aircraft | turned back 350 miles from its start | Midway |
+| Japanese carrier attack planes | 250 nm (methods 14 and 17), with a 25 nm leg | Eastern Solomons signals; the 250 nm flights of the 24th were already on file |
+| Japanese 11th Battleship Division floatplanes | 300 nm; Type 94s on the western lines 250 nm | Eastern Solomons, signal no. 13 |
+| Japanese Striking Force, type not given | 200 miles by sector | Coral Sea, from the Naval War College analysis |
+| American SBD | 200 miles (Lexington's northern half, Enterprise at Midway and Santa Cruz, Yorktown's afternoon search), 150 (Lexington's southern half), 180 (Enterprise, 23 August), 250 designated for one Yorktown scout | all four actions |
+| American PBY | 700 miles from Midway and from Noumea; 425, 250, 600 and 550 on 4 to 7 June | Midway, Coral Sea |
+| B-17 | 800 miles, one aircraft | Midway, 2 June |
+
+The sources disagree on several launch times (Yorktown's search of 4 June is 1130, 1150, 1300 or 1320; Enterprise's of 6 June 0502, 0510 or 0710); each is its own row. Not found: Japanese distances by aircraft type for the Coral Sea and Santa Cruz, any line spacing in miles for a Japanese search, and anything for the flying boats and land attack planes beyond one 700 nm patrol.

@@ -215,3 +215,24 @@ Against the division's report (first enemy fire at 2146), that is two minutes to
 
 An earlier pass had already registered the division's October report under another source key (`jacar-6sentai-report-oct42`, rows 1506 to 1512 of `engagement_outcomes.csv`). The rows from this pass and the last use `jacar-6s-diary-1942` for the whole six-volume set; they are the same record.
 
+
+## Air groups: first actions, replacements and what was not found (13 November 2026)
+
+For the step 2 coordinator's commission on the experience of air groups (decision 0064, stage 2). The reading was done by Sonnet researchers quoting from pages they saved; every quote was checked by program against the saved text, and a clerk keyed the records. Rows: `air_unit_facts.csv` 432 to 450 and `training_facts.csv` 93 to 97. All but three are `low` and `unconfirmed`: most rest on secondary pages.
+
+| Asked | Found | Not found |
+| --- | --- | --- |
+| Hours a US Navy carrier pilot had on joining a squadron in 1942 | Course lengths only, from the Navy's 1946 history: a fourteen-week intermediate course and about two months of operational training for carrier pilots | Any figure in hours for 1942. Figures read were for 1943-44 or undated and were not entered |
+| First action of VF-6, VB-6, VS-5 | 1 February 1942, the raid on the Marshalls and Gilberts, from secondary pages (cv6.org as archived, Pacific Wrecks). VF-6 lost five of six Wildcats to friendly fire at Pearl Harbor on 7 December 1941, entered as a loss and not as combat | A primary statement; the Navy's squadron dictionary entries for these three |
+| First action of VT-3 | 4 June 1942 at Midway from Yorktown (the Navy's squadron dictionary, lineage entry) | |
+| First action of VS-3 | Air support for the Guadalcanal landings in August 1942, then the attack on Ryujo on 24 August (squadron dictionary) | The day in August |
+| First action of the rebuilt VT-8 | A strike of 23 August that found no target, then five TBFs against Ryujo on 24 August (an NHHC essay) | A statement that names the 24th as her first action |
+| Shokaku, Zuikaku and Ryujo air groups after their losses | One statement, from Commander Okumiya under interrogation in 1945: there were many survivors of Midway and most of those flyers were put on Shokaku, Zuikaku and Ryujo, being used to carrier work | Numbers, the date they joined, the share of new graduates, anything on Ryujo after the Aleutians |
+| Hours for Japanese aircrew who joined in 1942 | Nothing | The whole question; only late-war figures exist in what was read |
+| Floatplane crews of Chikuma and Tone | Aircraft types (E13A1 and E8N2), the two losses at Midway (Chikuma's No. 5, Tone's No. 3), named pilots, from a tabular record and a magazine article | Numbers of aircrew, experience, training |
+| Hours for VMF-224 and VMSB-231 | Nothing | The Marine histories that would hold them could not be fetched |
+
+Two rows a reader flagged:
+
+- `training_facts` row 5 (650 hours) stays `disputed`, but its note was wrong to list row 17's range against it: 650 lies inside 500 to 800. The note now says the dispute is with the 700 and 800 figures only.
+- `air_unit_facts` row 413 and `training_facts` row 49 are one sentence of one source, entered once for VMF-223 and once for Marine aviators in general. Each note now points to the other, so they are not counted as two statements.

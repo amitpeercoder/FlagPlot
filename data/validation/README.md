@@ -80,7 +80,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | File | Battle | State |
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 16 measures, 14 judged |
-| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 20 measures, 19 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 21 measures, 20 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
 | `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
 | `passages.toml` | Ship passages | 6 passages, none judged |
