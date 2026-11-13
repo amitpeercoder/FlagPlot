@@ -1751,6 +1751,7 @@ fn work_the_raid(
                     chance: roll.chance,
                     expected,
                     hits: roll.hits,
+                    after_attack: false,
                 },
                 vec![Cause::Event(launch.id)],
             )

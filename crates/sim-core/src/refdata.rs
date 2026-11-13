@@ -635,6 +635,10 @@ pub struct AirCombatFigures {
     /// of a deck, with no ship of its side in the hex, is recovered
     /// (decision 9 of 0059).
     pub crew_recovered_open_sea: Fixed,
+    /// The share of the guns' shots of a raid's target that are worked before
+    /// the attack, the rest after it (decision 0079). 1 is step 1's rule, all
+    /// before; 0 all after.
+    pub anti_aircraft_before_attack_share: Fixed,
 }
 
 impl AirCombatFigures {
@@ -690,6 +694,10 @@ impl AirCombatFigures {
                 self.crew_recovered_beside_own_force,
             ),
             ("crew recovered in open sea", self.crew_recovered_open_sea),
+            (
+                "anti-aircraft before attack share",
+                self.anti_aircraft_before_attack_share,
+            ),
         ] {
             if !in_unit(value) {
                 return Some(format!("air combat {label} {value} is not between 0 and 1"));
@@ -1017,6 +1025,8 @@ impl AirCombatFigures {
             crew_recovered_over_own_base: tenth(6),
             crew_recovered_beside_own_force: Fixed::from_ratio(95, 100),
             crew_recovered_open_sea: tenth(5),
+            // Step 1's rule (decision 0079); the unit tests are worked on it.
+            anti_aircraft_before_attack_share: Fixed::ONE,
         }
     }
 }

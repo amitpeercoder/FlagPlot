@@ -121,6 +121,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Strength of experience** | One of three figures in `surface_combat.toml`, from 0 to 0.5, the same for both sides: how much experience moves the gun, torpedo and sighting chances. At 0 experience does nothing | |
 | **Escort** | A fighter sent with a raid. Escorts fire at the patrol the raid meets (decisions 0027 and 0030) | A patrol |
 | **Patrol** | Fighters a group keeps over its own hex, which fire at raids that attack there | |
+| **Fire after the attack** | The part of the guns' fire at a raid that is worked after its bombers have attacked: its hits shoot bombers down but do not stop their bombs. The share worked before is `anti_aircraft_before_attack_share` (decision 0079) | The patrol's fire, which is always before the attack |
 | **Bomber** | An aircraft of a strike group, whether it carries bombs or a torpedo | |
 | **Base strike** | A mission to strike a named enemy base, launched once a day, in the first daylight pulse in which the base is in reach (decisions 0034 and 0063) | A naval strike |
 | **Arrival** | Aircraft and pilots a scenario delivers to an air group on a named day (decision 0041) | A replacement |

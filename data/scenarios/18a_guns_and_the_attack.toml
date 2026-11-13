@@ -1,0 +1,129 @@
+# Scenario 18a: the guns' fire before and after the attack.
+#
+# Decision 0079. A Japanese carrier force sends a raid of twelve dive bombers
+# with four escorts at an Allied carrier that has twenty anti-aircraft shots
+# and six fighters on combat air patrol. The Japanese side starts holding a
+# contact of the Allied force, so the raid goes in the morning with no search.
+# The raid's guns are split by anti_aircraft_before_attack_share: all before
+# the attack (step 1's rule), half and half, a third before, or all after.
+# The hand calculation is in tests/scenario_18a_guns_and_the_attack.rs. The
+# test runs this file with seeds 1 to 1000, with strike_contact_max_age_pulses
+# at 1 (a changed figure: with the live 0 a contact the side starts with is
+# too old to strike in the morning) and the share at each value the cases
+# name. Nothing strikes the Japanese: the Allied side has no strike group and
+# holds no contact.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
+
+name = "Scenario 18a: The guns and the attack"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_search.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# The Allied carrier force lies stopped at (4,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force"
+side = "allied"
+q = 4
+r = 0
+mission = "carrier"
+
+# The Japanese carrier force lies stopped at (9,0), 200 nm east.
+[[task_force]]
+id = 2
+name = "Placeholder enemy carrier force"
+side = "japanese"
+q = 9
+r = 0
+mission = "carrier"
+
+# Class 5: toughness 600, 20 anti-aircraft shots.
+[[ship]]
+id = 1
+name = "Placeholder carrier with guns"
+class = 5
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+# Class 4: no guns.
+[[ship]]
+id = 2
+name = "Placeholder carrier"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+# What the Japanese side starts holding: the Allied force, at its true hex.
+[[contact]]
+side = "japanese"
+q = 4
+r = 0
+ship_count = 1
+kind = "carrier"
+
+# Aboard the Allied carrier: six fighters on patrol, all overhead (the patrol
+# share is its default, 1).
+[[air_group]]
+id = 1
+name = "Placeholder fighting squadron A"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 6
+
+# Aboard the Japanese carrier: twelve dive bombers and four fighters.
+[[air_group]]
+id = 2
+name = "Placeholder bombing squadron"
+side = "japanese"
+ship = 2
+aircraft_type = 3
+ready = 12
+
+[[air_group]]
+id = 3
+name = "Placeholder fighting squadron B"
+side = "japanese"
+ship = 2
+aircraft_type = 4
+ready = 4
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# The Japanese fighters all go with the raid as escorts: none stays over the
+# carrier.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_patrol_share"
+share = "0"
