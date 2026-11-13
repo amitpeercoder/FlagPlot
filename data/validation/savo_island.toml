@@ -96,6 +96,44 @@ system = "propulsion"
 rows = [779, 780, 781, 782, 783, 785, 787, 778]
 reason = "No Japanese ship was sunk and none was slowed: the rows of japanese_ships_sunk and of japanese_ships_with_propulsion_out together. The two are also judged apart, and at the baseline each agreed because a ship stopped in the night was sunk by day and so left the count of the stopped. Taken together they cannot hide each other."
 
+# ------------------------------------------------- finding and surprise
+
+[[measure]]
+id = "night_fights_the_japanese_did_not_sight_first"
+counts = "Surface fights by night in which the Allied force sighted first, or both sighted in the same round, or neither sighted"
+record_low = 0
+record_high = 0
+judged = true
+take = "fights_sighted_first"
+by = ["allied", "both", "neither"]
+facts = "data/oob/engagement_events.csv"
+rows = [53, 54, 62, 64, 72, 88]
+reason = "Chokai sighted Canberra and Chicago at 01:36 (53) and a cruiser of the northern group at 01:37 (54); Tenryu sighted the northern group at 01:46 (72). The first Allied sight of the enemy was Canberra's lookout at 01:43 (62) and Bagley at 01:44 (64) in the south, and Astoria's gunnery officer at about 01:50 in the north (88). So the Japanese sighted each group first, by about seven minutes in the south and thirteen in the north, more than a round of five minutes in each. It is the measure for finding and surprise, the first mechanism in the order of tuning."
+
+[[measure]]
+id = "southern_group_rounds_surprised"
+counts = "Rounds the southern group is surprised in the run's night fights"
+record_low = 1
+record_high = 2
+judged = false
+take = "rounds_surprised"
+task_forces = [2]
+facts = "data/oob/engagement_events.csv"
+rows = [53, 59, 62, 64]
+reason = "Sighted at 01:36 (53), fired on from about 01:43 (59), and its own first sight of the enemy at 01:43 and 01:44 (62, 64): seven or eight minutes, which is one round of five minutes and part of a second. Not judged: the record is in minutes between two sightings, a round is the rules' unit, and where a fight begins on the clock is the architect's reading, not a row's. The rules end a force's surprise in the round after it is first fired on, so a run gives 0 or 1 and never more; the record's longer surprise is out of the rules' reach, and no figure is to be asked to supply it."
+
+[[measure]]
+id = "northern_group_rounds_surprised"
+counts = "Rounds the northern group is surprised in the run's night fights"
+record_low = 2
+record_high = 3
+judged = false
+take = "rounds_surprised"
+task_forces = [3]
+facts = "data/oob/engagement_events.csv"
+rows = [54, 72, 88]
+reason = "Sighted at 01:37 (54) and again by Tenryu at 01:46 (72); its own first sight of the enemy at about 01:50 (88). Thirteen minutes, which is two rounds and part of a third. Not judged, for the reason the southern group's is not. The rules end a force's surprise in the round after it is first fired on, so a run gives 0 or 1 and never more; the record's longer surprise is out of the rules' reach, and no figure is to be asked to supply it."
+
 # ----------------------------------------------------------------- hits
 
 [[measure]]
@@ -151,12 +189,12 @@ id = "allied_torpedoes_fired"
 counts = "Torpedoes the two Allied groups fire in the run"
 record_low = 4
 record_high = 6
-judged = false
+judged = true
 take = "shots"
 side = "allied"
 weapon = "torpedo"
-rows = [46, 47, 57, 30, 180]
-reason = "Bagley fired four (46, 47). Patterson fired none (57). Canberra none or two (30, 180). Helm and Wilson have no row. Not judged until rows for those two exist: the record is a floor. It is reported because at the baseline the Allied groups fired about 48 a run."
+rows = [46, 47, 57, 3211, 30, 180, 3179, 3180]
+reason = "Bagley fired four (46, 47). Patterson fired none (57, 3211). Canberra none or two (30, 180). Neither Helm nor Wilson fired any: one passage of the 1950 analysis says so of both (3179, 3180; medium, unconfirmed). Chicago and the three cruisers of the northern group carry no tubes. So the two groups fired 4 to 6. The pickets Blue and Ralph Talbot are outside the scenario and are not counted (Blue fired none, 3220; Ralph Talbot one or four, 104, 105). Judged from Nov 13, 2026, when the rows for Helm and Wilson arrived; until then it was reported only, the record being a floor."
 
 # ---------------------------------------------------------- hits a round
 #

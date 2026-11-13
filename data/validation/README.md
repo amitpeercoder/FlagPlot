@@ -22,6 +22,7 @@ Then one `[[measure]]` table for each measure:
 | `judged` | `true` if the measure counts toward agreement. `false` if it is only reported |
 | `take` | How the number is taken from a run in the batch file, with the keys that go with it (see "What a measure takes"). Left out while the scenario is not built |
 | `rows` | The ids of the fact rows the record rests on |
+| `facts` | Only where the measure's rows are in another fact file than the one the file names at its head: that file |
 | `reason` | Which rows give each end of the range, and for a measure not judged, why not |
 
 ## What a measure takes
@@ -47,6 +48,8 @@ Then one `[[measure]]` table for each measure:
 | `claims_per_hundred` | `side`, `claim`, and what was really done: `ships` for `sunk`; `ships` and `weapons` for `hits`; `air_groups` and `causes` for `shot_down` and `on_ground` | The claims, times 100, divided by what was really done, rounded down. A run in which nothing was really done is left out |
 | `minutes_of_action` | none | The rounds each surface fight ran (the batch file's `fights`), summed, times `round_minutes` from the surface combat figures the batch was run on |
 | `fights_by_day` | none | The number of surface fights in the run that are not in a night pulse |
+| `fights_sighted_first` | `by` | The number of surface fights in a night pulse in which `sighted_first` is one of the values listed in `by` ("allied", "japanese", "both", "neither") |
+| `rounds_surprised` | `task_forces` | The rounds those task forces were surprised, summed over the run's surface fights in a night pulse |
 
 **Lost to enemy action is aircraft shot down, and nothing else.** The rules have no write-off for damage taken in combat: an aircraft worn out after a sortie is worn out whoever it met. Where the record counts aircraft expended for combat damage or forced down by it, they stay in the record, and the aircraft shot down in a run stand for them. A ditching, for want of fuel or of a deck, is never enemy action; it is counted where a measure takes every cause.
 
@@ -82,7 +85,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | File | Battle | State |
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 16 measures, 14 judged |
-| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 23 measures, 21 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 26 measures, 23 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
 | `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
 | `passages.toml` | Ship passages | 6 passages, none judged |

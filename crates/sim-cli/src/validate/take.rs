@@ -149,6 +149,10 @@ pub enum Take {
     ClaimsPerHundred(Side, Claim, Real),
     Minutes,
     FightsByDay,
+    /// Night fights whose `sighted_first` is one of these.
+    FightsSightedFirst(Vec<String>),
+    /// The rounds these task forces were surprised in night fights.
+    RoundsSurprised(BTreeSet<u32>),
 }
 
 const SYSTEMS: [&str; 5] = [
@@ -243,6 +247,42 @@ fn claim(measure: &Measure) -> Result<Claim, String> {
     let text = need(measure, "claim", measure.claim.as_ref())?;
     Claim::parse(text)
         .ok_or_else(|| format!("measure {}: claim \"{text}\" is not known", measure.id))
+}
+
+/// Refuses a measure that gives a key its take does not use (`take`, `facts`
+/// and the keys every measure has are not counted).
+fn no_other_keys(measure: &Measure, allowed: &[&str]) -> Result<(), String> {
+    let given = [
+        ("ships", measure.ships.is_some()),
+        ("system", measure.system.is_some()),
+        ("weapons", measure.weapons.is_some()),
+        ("weapon", measure.weapon.is_some()),
+        ("side", measure.side.is_some()),
+        ("air_groups", measure.air_groups.is_some()),
+        ("causes", measure.causes.is_some()),
+        ("day", measure.day.is_some()),
+        ("escorts", measure.escorts.is_some()),
+        ("target_task_forces", measure.target_task_forces.is_some()),
+        ("target_base", measure.target_base.is_some()),
+        ("aircraft", measure.aircraft.is_some()),
+        ("claim", measure.claim.is_some()),
+        ("by", measure.by.is_some()),
+        ("task_forces", measure.task_forces.is_some()),
+    ];
+    let take = measure.take.as_deref().unwrap_or("");
+    for (key, present) in given {
+        if present && !allowed.contains(&key) {
+            return Err(if allowed.is_empty() {
+                format!("measure {}: take {take} takes no keys", measure.id)
+            } else {
+                format!(
+                    "measure {}: take {take} does not take the key {key}",
+                    measure.id
+                )
+            });
+        }
+    }
+    Ok(())
 }
 
 /// Reads a measure's `take` and keys, checking each id against the batch.
@@ -377,26 +417,42 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
         }
         "minutes_of_action" => Take::Minutes,
         "fights_by_day" => {
-            let given = measure.ships.is_some()
-                || measure.system.is_some()
-                || measure.weapons.is_some()
-                || measure.weapon.is_some()
-                || measure.side.is_some()
-                || measure.air_groups.is_some()
-                || measure.causes.is_some()
-                || measure.day.is_some()
-                || measure.escorts.is_some()
-                || measure.target_task_forces.is_some()
-                || measure.target_base.is_some()
-                || measure.aircraft.is_some()
-                || measure.claim.is_some();
-            if given {
-                return Err(format!(
-                    "measure {}: take fights_by_day takes no keys",
-                    measure.id
-                ));
-            }
+            no_other_keys(measure, &[])?;
             Take::FightsByDay
+        }
+        "fights_sighted_first" => {
+            no_other_keys(measure, &["by"])?;
+            let by = need(measure, "by", measure.by.as_ref())?;
+            let mut seen = BTreeSet::new();
+            for word in by {
+                if !["allied", "japanese", "both", "neither"].contains(&word.as_str()) {
+                    return Err(format!(
+                        "measure {}: by names \"{word}\", which is not allied, japanese, both or neither",
+                        measure.id
+                    ));
+                }
+                if !seen.insert(word.as_str()) {
+                    return Err(format!("measure {}: by names \"{word}\" twice", measure.id));
+                }
+            }
+            if by.is_empty() {
+                return Err(format!("measure {}: by is empty", measure.id));
+            }
+            Take::FightsSightedFirst(by.clone())
+        }
+        "rounds_surprised" => {
+            no_other_keys(measure, &["task_forces"])?;
+            let forces = ids(
+                measure,
+                "task_forces",
+                &measure.task_forces,
+                &known.forces,
+                "task force",
+            )?;
+            if forces.is_empty() {
+                return Err(format!("measure {}: task_forces is empty", measure.id));
+            }
+            Take::RoundsSurprised(forces)
         }
         other => {
             return Err(format!(
@@ -723,6 +779,19 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
             n(rounds * minutes)?
         }
         Take::FightsByDay => n(run.fights.iter().filter(|f| f.pulse != "night").count() as u64)?,
+        Take::FightsSightedFirst(by) => n(run
+            .fights
+            .iter()
+            .filter(|f| f.pulse == "night" && by.contains(&f.sighted_first))
+            .count() as u64)?,
+        Take::RoundsSurprised(forces) => n(run
+            .fights
+            .iter()
+            .filter(|f| f.pulse == "night")
+            .flat_map(|f| &f.forces)
+            .filter(|force| forces.contains(&force.task_force))
+            .map(|force| force.rounds_surprised)
+            .sum::<u64>())?,
     }))
 }
 
