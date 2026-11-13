@@ -59,6 +59,13 @@ as wanted, no longer 1 or 0, and a new field `days` beside it says how many
 days were counted; the points are the objective's points times `count` over
 `days`. `days` is null for every other objective.
 
+Land units (decision 0066) add only fields, so `version` stays 3: the
+briefing's `land_units` part and `men_fed_t` of a base's supply change, the
+`land_units` list of `list_forces`, the `land_unit` entity, `troops` of a ship
+and of a ship line, and the `unit` and `"none"` cargo of a load order (see
+"Land units" below). Each is left out when it has nothing to say, so an answer
+for a scenario without a land unit is byte for byte what it was.
+
 ## What is not in an answer
 
 An answer holds nothing of the enemy that the side may not know (decisions
@@ -300,3 +307,43 @@ scenarios 5 and 7. No rule, result or hash changes.
   instance, still makes the whole answer `not_known`.
 - The words for `set_patrol_share` say what the share is: the share of the group
   kept over its own hex (1 keeps every fighter at home and sends no escort).
+
+## Land units (decision 0066, as built)
+
+A side knows its own land units exactly and nothing of the enemy's; no answer
+has a field for an enemy land unit, and a base the enemy formed by a landing is
+not among `enemy_bases` and is `not_known` to `get_entity` and refused by a base
+strike as a base that does not exist.
+
+- **Handles.** A side's land units are `land_unit:1`, `land_unit:2`... in the
+  order of the engine's numbers, destroyed ones counted, so a number never
+  changes; a unit made in play (a unit divided, decision 14) takes the next.
+  Bases keep the engine's numbers, a base formed by a landing included.
+- **The load order** takes an optional `unit` (`"land_unit:N"`) and `cargo` may
+  be `"supply"`, `"fuel"` or `"none"`: `{"kind": "load", "unit": "land_unit:2",
+  "cargo": "none"}`. With a unit and no `cargo` the cargo is supply. `"none"`
+  without a unit is refused (`malformed order`). Without a unit the order is as
+  it always was, and a load of supply is still written `{"kind": "load"}`. In a
+  saved game `unit` holds the engine's number; `issue_orders` takes the side's.
+  A unit that is not the side's own and one that does not exist are refused in
+  the same words, and the refusal names no number.
+- **`list_forces`** has `land_units` (left out when the side has none): a
+  `land_unit_line` for each unit, in `area` if one is given (a unit with men
+  ashore is where they are, one wholly aboard where its first ship is).
+- **`get_entity("land_unit:N")`** gives `entity_kind` `land_unit` with that
+  `summary`: `men_ashore` and `place`, `men_aboard` with `aboard` (each ship
+  and its count), `destroyed`, and `fed_last_night` (`fed`, `partly_fed`,
+  `unfed` from the side's own `MenFed` event of the last night pulse in the
+  unit's hex; `not_ashore`; `not_known` when the side holds no such event).
+  A ship's detail and a ship line have `troops` when she carries men.
+- **The briefing's `land_units`** part follows `bases` and is left out when the
+  side has no unit: the units, then yesterday's men landed and embarked, bases
+  formed, units divided, loads finished, how the men ashore were fed, men lost
+  (`unfed` or `lost_with_ship`) and units destroyed, then `supply_by_hex`: for
+  each hex with men ashore, the base that feeds them (the side's lowest-numbered
+  there, or null), the aircraft at it, its stock, the daily charge (aircraft
+  times `daily_supply_t_per_aircraft` plus men times `daily_supply_t_per_man`)
+  and the days it lasts at that charge. A base's `stocks_yesterday.supply` has
+  `men_fed_t` when anything was paid for men. `rules_in_play.supply` is true
+  where the ground figures are loaded as well as where the air supply figures
+  are, since bases then spend supply on men.

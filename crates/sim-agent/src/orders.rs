@@ -9,9 +9,9 @@
 use serde_json::{json, Map, Value};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Mission, OrderKind, Reach, Readiness, SpeedSetting, Stance,
+    AirGroupOrder, AirMission, Cargo, Mission, OrderKind, Reach, Readiness, SpeedSetting, Stance,
     StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
@@ -73,6 +73,17 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 json!({ "kind": "set_readiness", "readiness": readiness.name() })
             }
             TaskForceOrder::SendToYard => json!({ "kind": "send_to_yard" }),
+            // A load with a land unit always names its cargo, `"none"`
+            // included (decision 0066, 5): the unit is the engine's number
+            // of it, as `set_home_port` and `detach` hold the engine's.
+            TaskForceOrder::LoadUnit { unit, cargo } => json!({
+                "kind": "load",
+                "unit": format!("land_unit:{}", unit.raw()),
+                "cargo": match cargo {
+                    Some(cargo) => cargo.name(),
+                    None => "none",
+                },
+            }),
         },
         OrderKind::AirGroup { order, .. } => match order {
             AirGroupOrder::SetAirMission(mission) => {
@@ -173,6 +184,48 @@ pub fn is_orderable_unit(unit: &str) -> bool {
     }
 }
 
+/// A land unit written `land_unit:N`: `N` whole, nothing after it.
+pub fn land_unit_number(handle: &str) -> Option<u32> {
+    handle.strip_prefix("land_unit:")?.parse().ok()
+}
+
+/// The body of a load order (decisions 5 and 6 of 0066). Without a land unit
+/// it is as it always was: supply, or fuel when named. With one, the cargo is
+/// supply when none is named, or `"supply"`, `"fuel"` or `"none"`.
+fn load_from(value: &Value) -> Result<TaskForceOrder, String> {
+    let cargo = match value.get("cargo") {
+        None => None,
+        Some(_) => Some(text(value, "cargo")?),
+    };
+    match value.get("unit") {
+        None => match cargo {
+            None | Some("supply") => Ok(TaskForceOrder::Load),
+            Some("fuel") => Ok(TaskForceOrder::LoadFuel),
+            Some("none") => Err(
+                "\"cargo\": \"none\" needs a \"unit\": a load that names no land unit loads supply or fuel"
+                    .to_string(),
+            ),
+            Some(other) => Err(format!("unknown cargo \"{other}\"")),
+        },
+        Some(unit) => {
+            let unit = unit
+                .as_str()
+                .and_then(land_unit_number)
+                .ok_or("\"unit\" must be a land unit written \"land_unit:N\"")?;
+            let cargo = match cargo {
+                None | Some("supply") => Some(Cargo::Supply),
+                Some("fuel") => Some(Cargo::Fuel),
+                Some("none") => None,
+                Some(other) => return Err(format!("unknown cargo \"{other}\"")),
+            };
+            Ok(TaskForceOrder::LoadUnit {
+                unit: LandUnitId::new(unit),
+                cargo,
+            })
+        }
+    }
+}
+
 /// Reads an order from its unit and its body.
 pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
     let (kind_of_unit, raw) = unit
@@ -213,14 +266,7 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     }
                 }),
                 "set_mission" => TaskForceOrder::SetMission(mission_from(text(value, "mission")?)?),
-                "load" => match value.get("cargo") {
-                    None => TaskForceOrder::Load,
-                    Some(_) => match text(value, "cargo")? {
-                        "supply" => TaskForceOrder::Load,
-                        "fuel" => TaskForceOrder::LoadFuel,
-                        other => return Err(format!("unknown cargo \"{other}\"")),
-                    },
-                },
+                "load" => load_from(value)?,
                 "unload" => TaskForceOrder::Unload,
                 "set_rules_of_engagement" => TaskForceOrder::SetRulesOfEngagement {
                     stance: match text(value, "stance")? {
@@ -368,6 +414,43 @@ mod tests {
             Ok(TaskForceOrder::LoadFuel)
         );
         assert_eq!(written(TaskForceOrder::Unload), json!({ "kind": "unload" }));
+    }
+
+    #[test]
+    fn a_load_with_a_land_unit_names_its_cargo_and_reads_back() {
+        let unit = LandUnitId::new(4);
+        for cargo in [Some(Cargo::Supply), Some(Cargo::Fuel), None] {
+            let order = TaskForceOrder::LoadUnit { unit, cargo };
+            assert_eq!(load_of(&written(order.clone())), Ok(order));
+        }
+        assert_eq!(
+            written(TaskForceOrder::LoadUnit { unit, cargo: None }),
+            json!({ "kind": "load", "unit": "land_unit:4", "cargo": "none" })
+        );
+        // No cargo key with a unit is supply.
+        let bare: Value =
+            serde_json::from_str(r#"{"kind":"load","unit":"land_unit:4"}"#).expect("JSON");
+        assert_eq!(
+            load_of(&bare),
+            Ok(TaskForceOrder::LoadUnit {
+                unit,
+                cargo: Some(Cargo::Supply)
+            })
+        );
+    }
+
+    #[test]
+    fn no_cargo_without_a_unit_is_refused_and_a_bad_unit_is_malformed() {
+        let none: Value = serde_json::from_str(r#"{"kind":"load","cargo":"none"}"#).expect("JSON");
+        let error = load_of(&none).expect_err("refused");
+        assert!(error.contains("needs a \"unit\""), "{error}");
+        for bad in [
+            r#"{"kind":"load","unit":"ship:1"}"#,
+            r#"{"kind":"load","unit":3}"#,
+        ] {
+            let bad: Value = serde_json::from_str(bad).expect("JSON");
+            assert!(load_of(&bad).is_err());
+        }
     }
 
     #[test]

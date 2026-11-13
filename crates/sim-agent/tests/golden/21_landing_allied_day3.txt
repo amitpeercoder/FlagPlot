@@ -1,0 +1,80 @@
+FLAG PLOT BRIEFING
+
+HEADING
+- Side: allied
+- Day: 3 of 7
+- Scenario: Scenario 21: A landing, carried by sea and fed from a base
+- Covers: day 2 and the state at the start of day 3
+
+OBJECTIVES
+- none: this scenario gives no mission and no objectives
+
+ORDERS
+- Accepted yesterday: 0
+- Refused yesterday: none
+
+CONTACTS
+- New contacts: none
+- Refreshed contacts: none
+- Dropped contacts: none
+- Contacts found not there: none
+- Contacts held: none
+
+ACTION YESTERDAY
+- Fights at sea: none
+- Salvoes fired at sea: none
+- Own fighters' fire: none
+- Own anti-aircraft fire: none
+- Strikes and attacks flown: none
+- Raids on bases: none
+- Attacks on ships: none
+
+LOSSES YESTERDAY
+- Ships sunk: none
+- Ships damaged: none
+- Aircraft lost: none
+- Claims yesterday: none
+
+TASK FORCES
+- task_force:1 "Placeholder landing convoy" at (8,0) Landing at (8,0): arrived, transport, speed cruise, readiness normal, not alert, 2 ships afloat, cargo aboard: 0 t supply, 0 t fuel
+  - Least fuelled: ship:1 "Placeholder troop transport 1" with 968 t, range 9680 miles at cruising speed
+- task_force:2 "Placeholder fast transport group" at (10,0): idle, transport, speed cruise, readiness normal, not alert, 1 ship afloat, cargo aboard: 0 t supply, 0 t fuel
+  - Least fuelled: ship:3 "Placeholder fast transport 1" with 500 t, range 4000 miles at cruising speed
+
+AIR GROUPS
+- Air groups: none
+
+BASES
+- base:1 "Placeholder embarkation port" at (0,0): supply 1000 t, fuel 0 t (for ships; aircraft do not use it)
+  - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
+- base:2 "Landing at (8,0)" at (8,0): supply 14 t, fuel 0 t (for ships; aircraft do not use it)
+  - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
+  - Stocks yesterday: supply 0 t to 14 t (landed 14 t)
+
+LAND UNITS
+- land_unit:1 "Placeholder battalion 1": 600 men ashore at (8,0) Landing at (8,0); not known whether fed last night
+- land_unit:2 "Placeholder battalion 2": 400 men ashore at (8,0) Landing at (8,0); not known whether fed last night
+- land_unit:3 "Placeholder battalion 3": 262 men ashore at (10,0); 200 men aboard (ship:3 "Placeholder fast transport 1" 200); unfed last night
+- Landed yesterday: 320 men of land_unit:1 "Placeholder battalion 1" from ship:1 "Placeholder troop transport 1" at (8,0) Landing at (8,0), 320 ashore and 280 left aboard [event 26]
+- Landed yesterday: 320 men of land_unit:2 "Placeholder battalion 2" from ship:2 "Placeholder troop transport 2" at (8,0) Landing at (8,0), 320 ashore and 80 left aboard [event 27]
+- Landed yesterday: 280 men of land_unit:1 "Placeholder battalion 1" from ship:1 "Placeholder troop transport 1" at (8,0) Landing at (8,0), 600 ashore and 0 left aboard [event 28]
+- Landed yesterday: 80 men of land_unit:2 "Placeholder battalion 2" from ship:2 "Placeholder troop transport 2" at (8,0) Landing at (8,0), 400 ashore and 0 left aboard [event 30]
+- Base formed yesterday: base:2 "Landing at (8,0)" at (8,0) Landing at (8,0) by the landing of task_force:1 "Placeholder landing convoy" [event 25]
+- Fed last night: 275 men ashore at (10,0): none fed, no base of the side in the hex, 275 unfed [event 19]
+- Men lost yesterday: land_unit:3 "Placeholder battalion 3" lost 13 men unfed at (10,0), 262 left ashore [event 20]
+- Supply at (8,0) Landing at (8,0): base:2 "Landing at (8,0)" holds 14 t, the daily charge is 5 t (0 aircraft and 1000 men), so it lasts 2.8 days at the present charge
+- Supply at (10,0): no base of the side here, so the 262 men ashore get none
+
+ARRIVALS
+- Arrivals due on the coming day and the next two days: none
+- Replacements: none
+
+WARNINGS
+- Ships that cannot reach a base: none
+- Bases short of supply: none
+- No fuel: base:2 "Landing at (8,0)" has no fuel and task_force:1 "Placeholder landing convoy" stopped there
+- Air groups short of pilots: none
+- Air groups tired: fatigue is not in play
+- Aircraft wear: not in play
+- Task forces that cannot move or are slowed: none
+- Strike groups with nothing in reach: none

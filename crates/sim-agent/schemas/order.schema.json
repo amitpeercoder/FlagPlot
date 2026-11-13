@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/order",
   "title": "order: one order for one unit, as saved games and issue_orders write it",
-  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach, set_readiness and send_to_yard (no other key); an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach and set_target_priority. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply.",
+  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach, set_readiness and send_to_yard (no other key); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach and set_target_priority. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
   "type": "object",
   "required": [
     "unit",
@@ -117,10 +117,16 @@
               "const": "load"
             },
             "cargo": {
+              "description": "What is loaded: supply or fuel. \"none\" is for a load with a unit and loads the unit's men only; a load with no unit that names \"none\" is refused as malformed.",
               "enum": [
                 "supply",
-                "fuel"
+                "fuel",
+                "none"
               ]
+            },
+            "unit": {
+              "description": "A land unit of the side, written land_unit:N in the side's own numbering (decision 0066, 5): the load then takes the unit's men ashore in the force's hex aboard first and the cargo after. With a unit and no cargo key the cargo is supply. In a saved game the number is the engine's. The decoder checks the form land_unit:N.",
+              "type": "string"
             }
           }
         },

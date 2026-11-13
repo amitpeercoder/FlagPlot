@@ -95,6 +95,16 @@ pub fn group_handle(view: &sim_core::view::SideView<'_>, id: sim_core::ids::AirG
     format!("air_group:{}", place + 1)
 }
 
+pub fn land_unit_handle(
+    view: &sim_core::view::SideView<'_>,
+    id: sim_core::ids::LandUnitId,
+) -> String {
+    let mut ids: Vec<_> = view.land_units().map(|s| s.id).collect();
+    ids.sort();
+    let place = ids.iter().position(|i| *i == id).expect("an own land unit");
+    format!("land_unit:{}", place + 1)
+}
+
 /// An entity of an event, written as the side is shown it: an own unit by its
 /// number, anything else as the log writes it.
 pub fn entity_handle(
@@ -108,6 +118,9 @@ pub fn entity_handle(
             force_handle(view, id)
         }
         EntityRef::AirGroup(id) if view.air_groups().any(|s| s.id == id) => group_handle(view, id),
+        EntityRef::LandUnit(id) if view.land_units().any(|s| s.id == id) => {
+            land_unit_handle(view, id)
+        }
         other => other.to_string(),
     }
 }

@@ -13,7 +13,7 @@ use sim_core::ids::UmpireKey;
 use sim_core::view::SideView;
 
 use super::validator::Schemas;
-use super::{entity_handle, force_handle, group_handle, ship_handle};
+use super::{entity_handle, force_handle, group_handle, land_unit_handle, ship_handle};
 
 /// What was produced for one view: the briefing and its text, and every answer
 /// as JSON text under a label, for comparing worlds.
@@ -117,6 +117,7 @@ pub fn allowed_handles(view: &SideView<'_>) -> BTreeSet<String> {
     allowed.extend(view.ships().map(|s| ship_handle(view, s.id)));
     allowed.extend(view.task_forces().map(|s| force_handle(view, s.id)));
     allowed.extend(view.air_groups().map(|s| group_handle(view, s.id)));
+    allowed.extend(view.land_units().map(|s| land_unit_handle(view, s.id)));
     allowed.extend(view.bases().map(|s| s.id.to_string()));
     // The bases of the other side are on the map (decision 0034, 2): their
     // numbers, names, places and holders are public, and nothing else of them.
@@ -352,6 +353,7 @@ pub fn check_view(
         .map(|s| ship_handle(view, s.id))
         .chain(view.task_forces().map(|s| force_handle(view, s.id)))
         .chain(view.air_groups().map(|s| group_handle(view, s.id)))
+        .chain(view.land_units().map(|s| land_unit_handle(view, s.id)))
         .chain(view.bases().map(|s| s.id.to_string()))
         .chain(
             view.contacts()

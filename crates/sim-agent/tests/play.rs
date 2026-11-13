@@ -110,9 +110,9 @@ use sim_agent::{
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
+    AirGroupOrder, AirMission, Cargo, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
@@ -152,9 +152,10 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::SetReadiness(_) => 8,
         TaskForceOrder::LoadFuel => 9,
         TaskForceOrder::SendToYard => 10,
+        TaskForceOrder::LoadUnit { .. } => 11,
     }
 }
-const TF_KINDS: usize = 11;
+const TF_KINDS: usize = 12;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -214,6 +215,18 @@ fn examples() -> Vec<OrderKind> {
         tf(TaskForceOrder::SetReadiness(Readiness::Battle)),
         tf(TaskForceOrder::SetReadiness(Readiness::Normal)),
         tf(TaskForceOrder::SendToYard),
+        tf(TaskForceOrder::LoadUnit {
+            unit: LandUnitId::new(2),
+            cargo: Some(Cargo::Supply),
+        }),
+        tf(TaskForceOrder::LoadUnit {
+            unit: LandUnitId::new(2),
+            cargo: Some(Cargo::Fuel),
+        }),
+        tf(TaskForceOrder::LoadUnit {
+            unit: LandUnitId::new(2),
+            cargo: None,
+        }),
         ag(AirGroupOrder::SetSearchArc {
             from_deg: 90,
             to_deg: 180,

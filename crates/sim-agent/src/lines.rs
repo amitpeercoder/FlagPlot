@@ -2,11 +2,17 @@
 //! summarised in one way.
 
 use serde::Serialize;
+use std::collections::BTreeMap;
+
+use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
 use sim_core::ids::EntityRef;
 use sim_core::orders::{AirMission, Mission, Reach};
 use sim_core::refdata::ShipKind;
-use sim_core::state::{AirGroup, Base, ShipLocation, SystemState, TaskForce};
+use sim_core::side_events::SideEventKind;
+use sim_core::state::{AirGroup, Base, LandUnit, ShipLocation, SystemState, TaskForce};
+use sim_core::time::Pulse;
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::words;
@@ -307,4 +313,111 @@ pub(crate) fn is_afloat(ctx: &Ctx<'_>, force: &TaskForce) -> bool {
 /// away at the yard with its ships (decision 0069).
 pub(crate) fn is_listed(ctx: &Ctx<'_>, force: &TaskForce) -> bool {
     is_afloat(ctx, force) || force.yard_trip.is_some()
+}
+
+/// Men of a land unit aboard one ship (decision 0066, 21).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AboardLine {
+    pub ship: Handle,
+    pub men: u32,
+}
+
+/// A land unit of the side in one line (decision 0066, 21): its men ashore
+/// and where, its men aboard by ship, and whether its men were fed last
+/// night. Only a side's own units have one; there is none for the enemy's
+/// (decision 0066, 22).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LandUnitLine {
+    pub land_unit: Handle,
+    pub men_ashore: u32,
+    /// The hex the men ashore are in; `None` when none is ashore.
+    pub place: Option<Place>,
+    /// The men aboard the side's ships, all together.
+    pub men_aboard: u32,
+    /// The ships that carry them, in ship order.
+    pub aboard: Vec<AboardLine>,
+    /// No man left, ashore or aboard. The unit keeps its number.
+    pub destroyed: bool,
+    /// `fed`, `partly_fed` or `unfed`: how the side's men ashore in the
+    /// unit's hex were fed in the last night pulse, from the side's own
+    /// `MenFed` event. `not_ashore` for a unit with no man ashore, and
+    /// `not_known` when the side holds no such event for the hex (no night
+    /// has been resolved, or the unit came ashore since).
+    pub fed_last_night: &'static str,
+}
+
+/// How the side's men ashore were fed in the last night pulse, by hex, from
+/// the side's own `MenFed` events (decision 0066, 16 and 17).
+pub(crate) fn fed_last_night(ctx: &Ctx<'_>) -> BTreeMap<Hex, &'static str> {
+    let day = ctx.view.day();
+    let mut out = BTreeMap::new();
+    for e in ctx.view.events() {
+        if e.day != day || e.pulse != Some(Pulse::Night) {
+            continue;
+        }
+        if let SideEventKind::Whole(EventKind::MenFed {
+            hex,
+            men,
+            fed,
+            unfed,
+            ..
+        }) = &e.kind
+        {
+            let word = if *unfed == 0 && fed == men {
+                "fed"
+            } else if *fed == 0 {
+                "unfed"
+            } else {
+                "partly_fed"
+            };
+            out.insert(*hex, word);
+        }
+    }
+    out
+}
+
+/// The ships of the side that carry men of `unit`, afloat or at the yard.
+fn aboard_lines(ctx: &Ctx<'_>, unit: &LandUnit) -> Vec<AboardLine> {
+    ctx.ships
+        .values()
+        .filter(|s| s.location != ShipLocation::Sunk)
+        .filter_map(|s| {
+            let troops = s.troops?;
+            (troops.unit == unit.id).then(|| AboardLine {
+                ship: ctx.ship(s.id),
+                men: troops.men,
+            })
+        })
+        .collect()
+}
+
+/// Where a land unit is: the hex of its men ashore, else the hex of the first
+/// ship that carries it.
+pub(crate) fn land_unit_hex(ctx: &Ctx<'_>, unit: &LandUnit) -> Option<Hex> {
+    unit.hex.or_else(|| {
+        ctx.ships
+            .values()
+            .filter(|s| s.troops.is_some_and(|t| t.unit == unit.id))
+            .find_map(|s| ctx.ship_hex(s))
+    })
+}
+
+pub(crate) fn land_unit_line(
+    ctx: &Ctx<'_>,
+    unit: &LandUnit,
+    fed: &BTreeMap<Hex, &'static str>,
+) -> LandUnitLine {
+    let men_aboard = ctx.view.men_aboard(unit.id).unwrap_or(0);
+    LandUnitLine {
+        land_unit: ctx.land_unit(unit.id),
+        men_ashore: unit.men_ashore,
+        place: unit.hex.map(|hex| ctx.place(hex)),
+        men_aboard,
+        aboard: aboard_lines(ctx, unit),
+        destroyed: unit.men_ashore == 0 && men_aboard == 0,
+        fed_last_night: match unit.hex {
+            None => "not_ashore",
+            Some(hex) => fed.get(&hex).copied().unwrap_or("not_known"),
+        },
+    }
 }

@@ -8,7 +8,7 @@
 //! fixed words contain no digits, so every number in the text comes from the
 //! data.
 
-use crate::briefing::{Briefing, StrikeReport};
+use crate::briefing::{Briefing, LandUnitsPart, StrikeReport};
 use crate::common::{Handle, Place};
 use crate::objectives::{ObjectiveLine, ResultPart, ShipKindPoints};
 
@@ -620,6 +620,10 @@ impl Briefing {
                         ("loaded onto ships", s.loaded_onto_ships_t.0),
                         ("sorties and upkeep", s.sorties_and_upkeep_t.0),
                         ("repairs", s.repairs_t.0),
+                        (
+                            "feeding men ashore",
+                            s.men_fed_t.map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                        ),
                         ("destroyed by raids", s.destroyed_by_raids_t.0),
                     ]);
                     o.sub(format!(
@@ -697,6 +701,10 @@ impl Briefing {
                     ));
                 }
             }
+        }
+
+        if let Some(land) = &self.land_units {
+            land_units_text(&mut o, land);
         }
 
         o.heading("ARRIVALS");
@@ -873,6 +881,173 @@ impl Briefing {
         }
 
         o.0
+    }
+}
+
+/// The land units part (decision 0066, 21): each unit's men and place, then
+/// what yesterday's events say happened to them, then the days of supply.
+fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
+    o.heading("LAND UNITS");
+    for u in &land.units {
+        if u.destroyed {
+            o.line(format!("{}: destroyed, no man left", u.land_unit.text()));
+            continue;
+        }
+        let mut s = format!("{}: ", u.land_unit.text());
+        let mut parts: Vec<String> = Vec::new();
+        if let Some(place) = &u.place {
+            parts.push(format!("{} men ashore at {}", u.men_ashore, at(place)));
+        }
+        if u.men_aboard > 0 {
+            let ships: Vec<String> = u
+                .aboard
+                .iter()
+                .map(|a| format!("{} {}", a.ship.text(), a.men))
+                .collect();
+            parts.push(format!(
+                "{} men aboard ({})",
+                u.men_aboard,
+                ships.join(", ")
+            ));
+        }
+        s.push_str(&parts.join("; "));
+        s.push_str(match u.fed_last_night {
+            "fed" => "; fed last night",
+            "partly_fed" => "; partly fed last night",
+            "unfed" => "; unfed last night",
+            "not_known" => "; not known whether fed last night",
+            _ => "",
+        });
+        o.line(s);
+    }
+    let before = o.0.len();
+    for m in &land.landed_yesterday {
+        o.line(format!(
+            "Landed yesterday: {} men of {} from {} at {}, {} ashore and {} left aboard{}",
+            m.men,
+            m.land_unit.text(),
+            m.ship.text(),
+            at(&m.place),
+            m.ashore,
+            m.aboard,
+            ev(m.event)
+        ));
+    }
+    for m in &land.embarked_yesterday {
+        o.line(format!(
+            "Embarked yesterday: {} men of {} aboard {} at {}, {} in the ship and {} left ashore{}",
+            m.men,
+            m.land_unit.text(),
+            m.ship.text(),
+            at(&m.place),
+            m.aboard,
+            m.ashore,
+            ev(m.event)
+        ));
+    }
+    for b in &land.bases_formed_yesterday {
+        o.line(format!(
+            "Base formed yesterday: {} at {} by the landing of {}{}",
+            b.base.text(),
+            at(&b.place),
+            b.task_force.text(),
+            ev(b.event)
+        ));
+    }
+    for d in &land.divided_yesterday {
+        o.line(format!(
+            "Unit divided yesterday: the {} men of {} aboard {} became {}, since {} has men ashore elsewhere{}",
+            d.men,
+            d.from.text(),
+            d.task_force.text(),
+            d.land_unit.text(),
+            d.from.text(),
+            ev(d.event)
+        ));
+    }
+    for l in &land.loading_complete_yesterday {
+        let cargo = match l.cargo {
+            Some(cargo) => format!(" and {cargo}"),
+            None => String::new(),
+        };
+        let place = match &l.base {
+            Some(base) => format!(" at {}", base.text()),
+            None => " off the shore".to_string(),
+        };
+        o.line(format!(
+            "Loading finished yesterday: {} loaded {}{cargo}{place}{}",
+            l.task_force.text(),
+            l.land_unit.text(),
+            ev(l.event)
+        ));
+    }
+    for f in &land.fed_last_night {
+        let from = match &f.base {
+            Some(base) => format!("{} fed from {}", f.fed, base.text()),
+            None => "none fed, no base of the side in the hex".to_string(),
+        };
+        o.line(format!(
+            "Fed last night: {} men ashore at {}: {}, {} unfed{}",
+            f.men,
+            at(&f.place),
+            from,
+            f.unfed,
+            ev(f.event)
+        ));
+    }
+    for l in &land.lost_yesterday {
+        let line = match l.cause {
+            "unfed" => format!(
+                "{} lost {} men unfed{}, {} left ashore",
+                l.land_unit.text(),
+                l.men,
+                l.place
+                    .as_ref()
+                    .map_or(String::new(), |p| format!(" at {}", at(p))),
+                l.ashore.unwrap_or(0)
+            ),
+            _ => format!(
+                "{} lost {} men with {}",
+                l.land_unit.text(),
+                l.men,
+                l.ship.as_ref().map_or(String::new(), Handle::text)
+            ),
+        };
+        o.line(format!("Men lost yesterday: {line}{}", ev(l.event)));
+    }
+    for d in &land.destroyed_yesterday {
+        o.line(format!(
+            "Destroyed yesterday: {} has no man left{}",
+            d.land_unit.text(),
+            ev(d.event)
+        ));
+    }
+    if o.0.len() == before {
+        o.line("Yesterday: no man was landed, embarked, fed, unfed or lost".to_string());
+    }
+    for h in &land.supply_by_hex {
+        match (&h.base, h.supply_t) {
+            (Some(base), Some(stock)) => {
+                let lasts = match h.days_of_supply {
+                    Some(days) => format!("lasts {} days at the present charge", days.0),
+                    None => "has no charge".to_string(),
+                };
+                o.line(format!(
+                    "Supply at {}: {} holds {} t, the daily charge is {} t ({} aircraft and {} men), so it {lasts}",
+                    at(&h.place),
+                    base.text(),
+                    stock.0,
+                    h.daily_charge_t.0,
+                    h.aircraft,
+                    h.men_ashore
+                ));
+            }
+            _ => o.line(format!(
+                "Supply at {}: no base of the side here, so the {} men ashore get none",
+                at(&h.place),
+                h.men_ashore
+            )),
+        }
     }
 }
 

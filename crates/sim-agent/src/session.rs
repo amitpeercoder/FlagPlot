@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::state::Side;
 use sim_core::World;
@@ -24,7 +24,7 @@ use crate::common::{map_unit_tokens, Ctx};
 use crate::explain::explain;
 use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
-use crate::orders::{is_orderable_unit, order_from_json};
+use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
 use crate::record::{seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
 
@@ -42,6 +42,22 @@ const FIRST_STAND_IN: u32 = 4_000_000_000;
 /// refusal can show the number the side wrote.
 fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32, u32>) -> Value {
     let mut body = body.clone();
+    // A load with a land unit names it by the side's number (decision 0086,
+    // 3); a number that names none of the side's units becomes one no unit
+    // has, so an enemy unit and one that does not exist are refused alike.
+    if body.get("kind").and_then(Value::as_str) == Some("load") {
+        if let Some(number) = body
+            .get("unit")
+            .and_then(Value::as_str)
+            .and_then(land_unit_number)
+        {
+            let raw = ctx
+                .own_land_unit(number)
+                .map_or(NO_SUCH_UNIT, |unit| unit.id.raw());
+            body["unit"] = json!(format!("land_unit:{raw}"));
+        }
+        return body;
+    }
     if body.get("kind").and_then(Value::as_str) != Some("detach") {
         return body;
     }
@@ -460,6 +476,7 @@ impl Session {
                         .copied()
                         .or_else(|| ctx.ship_number(ShipId::new(raw))),
                     "task_force" => ctx.force_number(TaskForceId::new(raw)),
+                    "land_unit" => ctx.land_unit_number(LandUnitId::new(raw)),
                     _ => ctx.group_number(AirGroupId::new(raw)),
                 },
             )),

@@ -173,3 +173,27 @@ fn the_ten_parts_come_in_the_same_order_every_day_and_day_one_has_no_yesterday()
         });
     }
 }
+
+#[test]
+fn the_landing_every_day_for_both_sides() {
+    // Scenario 21 has land units and no enemy: the Japanese side is served
+    // the same document shapes and sees nothing of a land unit.
+    let schemas = schemas();
+    let mut scenario = load("21_landing.toml", 1942);
+    let name = scenario.name.clone();
+    let mut units_seen = 0;
+    play(&mut scenario, |s| {
+        for side in SIDES {
+            let view = s.world.side_view(side);
+            let checked = check_view(&view, &name, &schemas, true);
+            if side == Side::Japanese {
+                assert!(checked.briefing.land_units.is_none());
+                assert!(!checked.text.contains("LAND UNITS"));
+            } else if let Some(part) = &checked.briefing.land_units {
+                units_seen = units_seen.max(part.units.len());
+            }
+        }
+    });
+    // Unit 3 is divided on the way: four units by the end.
+    assert_eq!(units_seen, 4);
+}

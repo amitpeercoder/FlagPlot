@@ -6,9 +6,11 @@ use serde::{Serialize, Serializer};
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use sim_core::ids::{
+    AirGroupId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
+};
 use sim_core::side_events::{SideEvent, SideEventKind};
-use sim_core::state::{AirGroup, AirGroupLocation, Base, Ship, ShipLocation, TaskForce};
+use sim_core::state::{AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, TaskForce};
 use sim_core::view::{PublicBase, SideView};
 
 /// A [`Fixed`] written as a decimal string, exactly: `"12"`, `"0.25"`. No
@@ -79,6 +81,8 @@ pub(crate) struct Ctx<'a> {
     pub forces: BTreeMap<TaskForceId, &'a TaskForce>,
     pub groups: BTreeMap<AirGroupId, &'a AirGroup>,
     pub bases: BTreeMap<BaseId, &'a Base>,
+    /// The side's own land units (decision 0066), destroyed ones too.
+    pub land_units: BTreeMap<LandUnitId, &'a LandUnit>,
     /// The public facts of the bases the side does not own.
     pub enemy_bases: BTreeMap<BaseId, PublicBase>,
     place_names: BTreeMap<Hex, String>,
@@ -93,10 +97,11 @@ pub(crate) struct Ctx<'a> {
     ship_ids: Vec<ShipId>,
     force_ids: Vec<TaskForceId>,
     group_ids: Vec<AirGroupId>,
+    land_unit_ids: Vec<LandUnitId>,
 }
 
 /// The unit kinds whose numbers are the side's own.
-const OWN_KINDS: [&str; 3] = ["ship", "task_force", "air_group"];
+const OWN_KINDS: [&str; 4] = ["ship", "task_force", "air_group", "land_unit"];
 
 impl<'a> Ctx<'a> {
     pub fn new(view: SideView<'a>) -> Ctx<'a> {
@@ -104,6 +109,7 @@ impl<'a> Ctx<'a> {
         let forces: BTreeMap<_, _> = view.task_forces().map(|f| (f.id, f)).collect();
         let groups: BTreeMap<_, _> = view.air_groups().map(|g| (g.id, g)).collect();
         let bases: BTreeMap<_, _> = view.bases().map(|b| (b.id, b)).collect();
+        let land_units: BTreeMap<_, _> = view.land_units().map(|u| (u.id, u)).collect();
         let enemy_bases: BTreeMap<_, _> = view.enemy_bases().map(|b| (b.id, b)).collect();
         let mut place_names: BTreeMap<Hex, String> = BTreeMap::new();
         for base in bases.values() {
@@ -121,12 +127,15 @@ impl<'a> Ctx<'a> {
         let ship_ids = ships.keys().copied().collect();
         let force_ids = forces.keys().copied().collect();
         let group_ids = groups.keys().copied().collect();
+        let land_unit_ids = land_units.keys().copied().collect();
         Ctx {
             view,
             order_numbers,
             ship_ids,
             force_ids,
             group_ids,
+            land_unit_ids,
+            land_units,
             ships,
             forces,
             groups,
@@ -202,6 +211,22 @@ impl<'a> Ctx<'a> {
         self.group_ids.binary_search(&id).ok().map(position_number)
     }
 
+    /// The side's number of one of its own land units, destroyed ones
+    /// counted (decision 0086, 3; decision 0066, 1).
+    pub fn land_unit_number(&self, id: LandUnitId) -> Option<u32> {
+        self.land_unit_ids
+            .binary_search(&id)
+            .ok()
+            .map(position_number)
+    }
+
+    /// The own land unit a side number names; `None` for a number that
+    /// names none.
+    pub fn own_land_unit(&self, number: u32) -> Option<&'a LandUnit> {
+        let id = *self.land_unit_ids.get(number_position(number)?)?;
+        self.land_units.get(&id).copied()
+    }
+
     /// The own ship a side number names; `None` for a number that names none.
     pub fn own_ship(&self, number: u32) -> Option<&'a Ship> {
         let id = *self.ship_ids.get(number_position(number)?)?;
@@ -226,6 +251,7 @@ impl<'a> Ctx<'a> {
         map_unit_tokens(text, |kind, raw| match kind {
             "ship" => self.ship_number(ShipId::new(raw)),
             "task_force" => self.force_number(TaskForceId::new(raw)),
+            "land_unit" => self.land_unit_number(LandUnitId::new(raw)),
             _ => self.group_number(AirGroupId::new(raw)),
         })
     }
@@ -268,6 +294,15 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    pub fn land_unit(&self, id: LandUnitId) -> Handle {
+        Handle {
+            handle: self
+                .land_unit_number(id)
+                .map_or_else(|| id.to_string(), |n| format!("land_unit:{n}")),
+            name: self.land_units.get(&id).map(|u| u.name.clone()),
+        }
+    }
+
     pub fn base(&self, id: BaseId) -> Handle {
         Handle {
             handle: id.to_string(),
@@ -286,7 +321,7 @@ impl<'a> Ctx<'a> {
             EntityRef::AirGroup(id) => self.group(id),
             EntityRef::Base(id) => self.base(id),
             EntityRef::Pilot(id) => bare(id.to_string()),
-            EntityRef::LandUnit(id) => bare(id.to_string()),
+            EntityRef::LandUnit(id) => self.land_unit(id),
             EntityRef::Contact(id) => bare(format!("contact:{}", self.view.contact_number(id))),
         }
     }
