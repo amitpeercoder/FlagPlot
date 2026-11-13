@@ -101,6 +101,17 @@ pub enum InvariantViolation {
     /// ready, or its class has no second side to fire (decision 0083).
     /// Added at the end of the enum.
     TorpedoSideFiredWithoutASecondSide(ShipId),
+    /// The ship is at the yard with a task force that does not exist or is
+    /// not away (decision 0069). Added at the end of the enum.
+    ShipAtYardOfForceNotAway(ShipId, TaskForceId),
+    /// A task force away at the yard lists a ship (decision 0069).
+    TaskForceAwayHasShips(TaskForceId),
+    /// A ship's banked repair points are negative, or not below the points a
+    /// system costs (decision 0069).
+    ShipRepairPointsOutOfRange(ShipId),
+    /// A base's daily repair points are negative or its yard passage is 0
+    /// (decision 0069).
+    BaseRepairFigureOutOfRange(BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -252,6 +263,27 @@ impl fmt::Display for InvariantViolation {
                     "{ship} has fired one side of its torpedoes but has no second side to fire"
                 )
             }
+            InvariantViolation::ShipAtYardOfForceNotAway(ship, task_force) => {
+                write!(
+                    f,
+                    "{ship} is at the yard with {task_force}, which is not away"
+                )
+            }
+            InvariantViolation::TaskForceAwayHasShips(task_force) => {
+                write!(f, "{task_force} is away at the yard but lists ships")
+            }
+            InvariantViolation::ShipRepairPointsOutOfRange(ship) => {
+                write!(
+                    f,
+                    "{ship} has banked repair points outside 0 to the cost of a system"
+                )
+            }
+            InvariantViolation::BaseRepairFigureOutOfRange(base) => {
+                write!(
+                    f,
+                    "{base} has a negative repair figure or a yard passage of 0"
+                )
+            }
             InvariantViolation::TaskForceHomePortOfOtherSide(task_force, base) => {
                 write!(
                     f,
@@ -297,6 +329,13 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 ship.id,
             ));
         }
+        if ship.system_repair_points.is_negative()
+            || ref_data.surface_combat.as_ref().is_some_and(|figures| {
+                ship.system_repair_points >= figures.forward_repair_system_points
+            })
+        {
+            violations.push(InvariantViolation::ShipRepairPointsOutOfRange(ship.id));
+        }
         if let Some(class) = ref_data.ship_classes.get(&ship.class) {
             if ship.torpedoes_one_side_fired
                 && ship.torpedoes_ready
@@ -338,6 +377,21 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             }
             // Sunk ships are in no set: the task force loop below checks it.
             ShipLocation::Sunk => {}
+            // A ship at the yard is in no force's set (a force that lists her
+            // is reported by the loop below as listing a stray ship) and her
+            // force is away.
+            ShipLocation::Yard(task_force_id) => {
+                let away = truth
+                    .task_forces
+                    .get(&task_force_id)
+                    .is_some_and(|task_force| task_force.yard_trip.is_some());
+                if !away {
+                    violations.push(InvariantViolation::ShipAtYardOfForceNotAway(
+                        ship.id,
+                        task_force_id,
+                    ));
+                }
+            }
         }
     }
 
@@ -357,6 +411,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 task_force.id,
                 task_force.from_hex,
             ));
+        }
+        if task_force.yard_trip.is_some() && !task_force.ships.is_empty() {
+            violations.push(InvariantViolation::TaskForceAwayHasShips(task_force.id));
         }
         if task_force.toward_hex.is_some() != (task_force.progress_nm.raw() > 0) {
             violations.push(InvariantViolation::TaskForceLegStateInconsistent(
@@ -485,6 +542,9 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         }
         if base.fuel_t.is_negative() {
             violations.push(InvariantViolation::NegativeBaseFuel(base.id));
+        }
+        if base.ship_repair_points_per_day.is_negative() || base.yard_passage_days == Some(0) {
+            violations.push(InvariantViolation::BaseRepairFigureOutOfRange(base.id));
         }
     }
 

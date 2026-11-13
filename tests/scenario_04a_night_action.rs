@@ -3236,6 +3236,7 @@ fn no_ammunition_is_negative_no_track_leaves_0_to_100_and_every_ship_has_one_pla
                 }
                 ShipLocation::Sunk => assert!(homes.is_empty(), "seed {seed} ship {ship}"),
                 ShipLocation::Port(_) => panic!("seed {seed}: ship {ship} in port"),
+                ShipLocation::Yard(_) => panic!("seed {seed}: ship {ship} at the yard"),
             }
             assert_eq!(end.side, SIDES[force_of_ship(*ship)]);
         }

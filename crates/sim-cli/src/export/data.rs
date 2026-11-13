@@ -21,6 +21,8 @@ pub enum Field {
     Hex(Hex),
     Hexes(Vec<Hex>),
     Ids(Vec<u32>),
+    /// A list of words.
+    Texts(Vec<&'static str>),
     Obj(Data),
 }
 
@@ -41,6 +43,7 @@ impl Serialize for Field {
                 seq.end()
             }
             Field::Ids(ids) => ids.serialize(serializer),
+            Field::Texts(words) => words.serialize(serializer),
             Field::Obj(data) => data.serialize(serializer),
         }
     }

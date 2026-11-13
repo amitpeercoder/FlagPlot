@@ -660,6 +660,7 @@ mod tests {
                         torpedoes_one_side_fired: false,
                         systems: ShipSystems::ALL_WORKING,
                         experience: Ship::DEFAULT_EXPERIENCE,
+                        system_repair_points: Fixed::ZERO,
                     },
                 );
             }

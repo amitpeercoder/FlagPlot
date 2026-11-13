@@ -1777,6 +1777,9 @@ impl World {
             .air_groups
             .values()
             .filter(|group| group.mission == AirMission::CombatAirPatrol && group.ready > 0)
+            // A group aboard a ship away at the yard flies nothing (decision
+            // 0069); its hex is `None`, which must not read as "anywhere".
+            .filter(|group| !self.truth.air_group_at_yard(group))
             .map(|group| {
                 let flyable = self.aircraft_able_to_fly(group);
                 let patrol = (Fixed::from_int(i64::from(flyable)) * group.patrol_share).trunc();

@@ -388,6 +388,12 @@ struct SurfaceCombatFile {
     /// The share of its torpedoes a force not ready fires, from 0.1 to 1
     /// (decision 0071). Required like every other key.
     unready_torpedo_share: Quantity,
+    /// Repair (decision 0069). Required like every other key.
+    forward_repair_max_flotation: Quantity,
+    forward_repair_system_points: Quantity,
+    yard_days_per_flotation_point: Quantity,
+    yard_days_per_system_degraded: Quantity,
+    yard_days_per_system_out: Quantity,
     gun_system_hit: SystemTable,
     torpedo_system_hit: SystemTable,
     straggler_escorts: EscortTable,
@@ -514,6 +520,26 @@ fn parse_surface_combat_figures(
         )?,
         unready_gun_share: number("unready_gun_share", &file.unready_gun_share)?,
         unready_torpedo_share: number("unready_torpedo_share", &file.unready_torpedo_share)?,
+        forward_repair_max_flotation: number(
+            "forward_repair_max_flotation",
+            &file.forward_repair_max_flotation,
+        )?,
+        forward_repair_system_points: number(
+            "forward_repair_system_points",
+            &file.forward_repair_system_points,
+        )?,
+        yard_days_per_flotation_point: number(
+            "yard_days_per_flotation_point",
+            &file.yard_days_per_flotation_point,
+        )?,
+        yard_days_per_system_degraded: number(
+            "yard_days_per_system_degraded",
+            &file.yard_days_per_system_degraded,
+        )?,
+        yard_days_per_system_out: number(
+            "yard_days_per_system_out",
+            &file.yard_days_per_system_out,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1652,6 +1678,63 @@ mod tests {
         let frozen = load_surface_combat_figures(&path).expect("the frozen file loads");
         assert_eq!(frozen.unready_gun_share, Fixed::ONE);
         assert_eq!(frozen.unready_torpedo_share, Fixed::ONE);
+    }
+
+    #[test]
+    fn the_repair_figures_are_read_and_checked_in_both_files() {
+        let live = parse_surface_combat_figures(&combat_text(), here()).expect("parses");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/reference/step1/surface_combat.toml");
+        let frozen = load_surface_combat_figures(&path).expect("the frozen file loads");
+        for figures in [&live, &frozen] {
+            assert_eq!(figures.forward_repair_max_flotation, Fixed::from_int(10));
+            assert_eq!(figures.forward_repair_system_points, Fixed::from_int(10));
+            assert_eq!(figures.yard_days_per_flotation_point, Fixed::from_int(2));
+            assert_eq!(figures.yard_days_per_system_degraded, Fixed::from_int(5));
+            assert_eq!(figures.yard_days_per_system_out, Fixed::from_int(30));
+        }
+        for (key, to, ok) in [
+            ("forward_repair_max_flotation", "\"101\"", false),
+            ("forward_repair_max_flotation", "\"-1\"", false),
+            ("forward_repair_max_flotation", "\"0\"", true),
+            ("forward_repair_system_points", "\"0\"", false),
+            ("forward_repair_system_points", "\"2.5\"", true),
+            ("yard_days_per_flotation_point", "\"-1\"", false),
+            ("yard_days_per_system_degraded", "\"-1\"", false),
+            ("yard_days_per_system_degraded", "\"31\"", false),
+            ("yard_days_per_system_out", "\"4\"", false),
+            ("yard_days_per_system_out", "5.5", false),
+            ("yard_days_per_system_out", "\"5\"", true),
+        ] {
+            let text = combat_text();
+            let line = text
+                .lines()
+                .find(|line| line.starts_with(key))
+                .expect("the key is in the file")
+                .to_string();
+            let text = text.replace(&line, &format!("{key} = {to}"));
+            let result = parse_surface_combat_figures(&text, here());
+            assert_eq!(result.is_ok(), ok, "{key} = {to}");
+        }
+        for key in [
+            "forward_repair_max_flotation",
+            "forward_repair_system_points",
+            "yard_days_per_flotation_point",
+            "yard_days_per_system_degraded",
+            "yard_days_per_system_out",
+        ] {
+            let text = combat_text();
+            let line = text
+                .lines()
+                .find(|line| line.starts_with(key))
+                .expect("the key is in the file")
+                .to_string();
+            let text = text.replace(&format!("{line}\n"), "");
+            let message = parse_surface_combat_figures(&text, here())
+                .expect_err("a missing key is refused")
+                .message;
+            assert!(message.contains(key), "{message}");
+        }
     }
 
     #[test]

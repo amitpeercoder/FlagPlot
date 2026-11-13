@@ -292,12 +292,13 @@ impl<'a> Ctx<'a> {
     }
 
     /// Where an own ship is: its task force's hex, or its port. `None` for a
-    /// ship that is sunk.
+    /// ship that is sunk, and for one away at the yard (decision 0069), which
+    /// is afloat but off the map.
     pub fn ship_hex(&self, ship: &Ship) -> Option<Hex> {
         match ship.location {
             ShipLocation::TaskForce(id) => self.forces.get(&id).map(|f| f.position()),
             ShipLocation::Port(base) => self.bases.get(&base).map(|b| b.hex),
-            ShipLocation::Sunk => None,
+            ShipLocation::Sunk | ShipLocation::Yard(_) => None,
         }
     }
 

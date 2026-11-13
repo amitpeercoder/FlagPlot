@@ -60,6 +60,11 @@ pub enum ShipLocation {
     Port(BaseId),
     /// Sunk. In no task force and no port, and out of every rule.
     Sunk,
+    /// Away at a yard with the task force named (decision 0069). The ship is
+    /// afloat but in no force's `ships` set; the force keeps its place and
+    /// `yard_trip`, and takes her back on its day of return. Added at the
+    /// end: the hash code is 4.
+    Yard(TaskForceId),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -96,6 +101,19 @@ pub struct Ship {
     /// [`Ship::MAX_EXPERIENCE`] (decision 0064). Set when the scenario loads
     /// and written by no rule. Three chances of a dark surface fight read it.
     pub experience: u8,
+    /// Points already put into the first degraded system, in system order,
+    /// that a forward repair base has not finished (decision 0069). From 0
+    /// to below `forward_repair_system_points`.
+    pub system_repair_points: Fixed,
+}
+
+impl ShipLocation {
+    /// Whether the ship is afloat and on the map: in a task force or a port.
+    /// A ship at the yard is afloat but off the map (decision 0069), and a
+    /// sunk ship is neither.
+    pub const fn is_on_the_map(self) -> bool {
+        matches!(self, ShipLocation::TaskForce(_) | ShipLocation::Port(_))
+    }
 }
 
 impl Ship {
@@ -133,6 +151,7 @@ impl Ship {
             torpedoes_one_side_fired: false,
             systems: ShipSystems::ALL_WORKING,
             experience: Ship::DEFAULT_EXPERIENCE,
+            system_repair_points: Fixed::ZERO,
         }
     }
 }
@@ -287,6 +306,12 @@ pub struct Base {
     /// Fuel stock for ships, in tons (decision 0045). The default is 0: a
     /// base with none refuels nobody.
     pub fuel_t: Fixed,
+    /// The points of damage the base mends in a day, shared by every force of
+    /// its side stopped there (decision 0069). The default is 0.
+    pub ship_repair_points_per_day: Fixed,
+    /// `Some(n)` makes the base a port for the yard, with a passage there and
+    /// back of n days, n at least 1 (decision 0069). The default is `None`.
+    pub yard_passage_days: Option<u32>,
 }
 
 impl Base {
@@ -301,6 +326,8 @@ impl Base {
             anti_aircraft: 0,
             aircraft_repairs_per_day: 0,
             fuel_t: Fixed::ZERO,
+            ship_repair_points_per_day: Fixed::ZERO,
+            yard_passage_days: None,
         }
     }
 }
@@ -444,6 +471,20 @@ pub struct TaskForce {
     /// not; it cuts the force's chance to sight the enemy and does nothing
     /// else. Stays 0 where the scenario names no fatigue figures.
     pub fatigue: Fixed,
+    /// `Some` while the force is away at the yard (decision 0069). Its ships
+    /// are then at `ShipLocation::Yard(force)` and out of `ships`.
+    pub yard_trip: Option<YardTrip>,
+}
+
+/// A task force's trip to the yard (decision 0069).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct YardTrip {
+    /// The port the force left from.
+    pub base: BaseId,
+    /// The day the force is back, at the start of that day.
+    pub return_day: u32,
+    /// The `ForceLeftForYard` event.
+    pub departure: EventId,
 }
 
 impl TaskForce {
@@ -590,6 +631,7 @@ impl TaskForce {
             rules_order: None,
             home_port: None,
             fatigue: Fixed::ZERO,
+            yard_trip: None,
         }
     }
 }
@@ -784,6 +826,20 @@ pub struct TruthState {
 }
 
 impl TruthState {
+    /// Whether an air group is aboard a ship that is away at the yard
+    /// (decision 0069). Such a group flies nothing, wears nothing, is not
+    /// repaired, gets no replacement or arrival, and tires and rests not at
+    /// all while the ship is away.
+    pub fn air_group_at_yard(&self, group: &AirGroup) -> bool {
+        match group.location {
+            AirGroupLocation::Ship(ship) => self
+                .ships
+                .get(&ship)
+                .is_some_and(|ship| matches!(ship.location, ShipLocation::Yard(_))),
+            AirGroupLocation::Base(_) => false,
+        }
+    }
+
     /// The hex an air group is in (decision 3 of
     /// `docs/decisions/0025-carrier-air-groups.md`): its base's hex, or the
     /// position of the task force its ship is in, or the hex of the base its
@@ -798,6 +854,9 @@ impl TruthState {
                 }
                 ShipLocation::Port(base) => self.bases.get(&base).map(|base| base.hex),
                 ShipLocation::Sunk => None,
+                // A ship at the yard is off the map (decision 0069). Callers
+                // must not read this as "lost": the ship is afloat.
+                ShipLocation::Yard(_) => None,
             },
         }
     }

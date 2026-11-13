@@ -316,6 +316,10 @@ pub enum TaskForceOrder {
     /// fuel: `Load` names supply. A standing order of the "cargo" kind,
     /// accepted under the same conditions as `Load`. Added at the end.
     LoadFuel,
+    /// Send the whole force to the yard, from the base it is stopped at
+    /// (decision 0069). It goes with all its ships, is repaired and returns
+    /// on its day of return. Added at the end.
+    SendToYard,
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -413,7 +417,7 @@ pub enum RejectReason {
     EmptyRoute,
     /// A waypoint is not on the map.
     WaypointOffMap(Hex),
-    /// A load order needs a task force that is stopped.
+    /// The order needs a task force that is stopped.
     UnderWay,
     /// A load order needs a base of the side in the task force's hex.
     NoOwnBaseHere,
@@ -479,6 +483,12 @@ pub enum RejectReason {
     /// refused (rows 17 and 34 of `docs/rules/differences.md`). Added at the
     /// end of the enum.
     OutOfFuel,
+    /// The task force is away at a yard until its day of return (decision
+    /// 0069). Added at the end of the enum.
+    AwayAtYard,
+    /// No base of the side in the task force's hex is a port for the yard
+    /// (decision 0069). Added at the end of the enum.
+    NotAYardPort,
 }
 
 impl fmt::Display for RejectReason {
@@ -538,6 +548,12 @@ impl fmt::Display for RejectReason {
             RejectReason::AirGroupLost => f.write_str("the air group was lost with its ship"),
             RejectReason::TargetListEmpty => f.write_str("the target list names no kind of ship"),
             RejectReason::OutOfFuel => f.write_str("the task force is out of fuel"),
+            RejectReason::AwayAtYard => {
+                f.write_str("the task force is away at a yard until its day of return")
+            }
+            RejectReason::NotAYardPort => {
+                f.write_str("no base of your side in the task force's hex is a port for the yard")
+            }
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())
             }

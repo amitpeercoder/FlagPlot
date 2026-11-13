@@ -316,7 +316,7 @@ fn recomputed(world: &World, side: Side) {
                 view.task_forces().find(|x| x.id == f).unwrap().position()
             }
             ShipLocation::Port(b) => view.bases().find(|x| x.id == b).unwrap().hex,
-            ShipLocation::Sunk => unreachable!(),
+            ShipLocation::Sunk | ShipLocation::Yard(_) => unreachable!(),
         };
         let nearest = view
             .bases()

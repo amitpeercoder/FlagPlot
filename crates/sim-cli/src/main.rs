@@ -514,6 +514,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             ShipLocation::TaskForce(id) => id.to_string(),
             ShipLocation::Port(id) => id.to_string(),
             ShipLocation::Sunk => "no task force or port".to_string(),
+            ShipLocation::Yard(id) => format!("{id}, away at the yard"),
         };
         let state = if ship.location == ShipLocation::Sunk {
             "SUNK".to_string()

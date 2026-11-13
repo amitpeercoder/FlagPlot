@@ -329,7 +329,8 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
         "ship" => {
             let ship = ctx.own_ship(id)?;
             let (task_force, port) = match ship.location {
-                ShipLocation::TaskForce(f) => (Some(ctx.force(f)), None),
+                // Away at the yard with the force named (decision 0069).
+                ShipLocation::TaskForce(f) | ShipLocation::Yard(f) => (Some(ctx.force(f)), None),
                 ShipLocation::Port(b) => (None, Some(ctx.base(b))),
                 ShipLocation::Sunk => (None, None),
             };

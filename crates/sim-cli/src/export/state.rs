@@ -90,13 +90,15 @@ pub struct ShipOut {
     torpedoes_ready: bool,
 }
 
-/// `{"task_force": n}`, `{"port": n}` or `"sunk"`.
+/// `{"task_force": n}`, `{"port": n}`, `"sunk"` or `{"yard": n}`, a ship
+/// away at the yard with task force n (decision 0069).
 #[derive(Serialize)]
 #[serde(rename_all = "snake_case")]
 enum LocationOut {
     TaskForce(u32),
     Port(u32),
     Sunk,
+    Yard(u32),
 }
 
 #[derive(Serialize)]
@@ -201,6 +203,13 @@ pub struct BaseOut {
     /// Fuel stock for ships in tons (decision 0045). Left out when 0.
     #[serde(skip_serializing_if = "num_is_zero")]
     fuel: Num,
+    /// Points of ship damage mended a day (decision 0069). Left out when 0.
+    #[serde(skip_serializing_if = "num_is_zero")]
+    ship_repair_points_per_day: Num,
+    /// The days of passage to and from the yard, for a base that is a port
+    /// for it (decision 0069). Left out when the base is not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    yard_passage_days: Option<u32>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -247,6 +256,8 @@ fn base(base: &Base) -> BaseOut {
         anti_aircraft: base.anti_aircraft,
         aircraft_repairs_per_day: base.aircraft_repairs_per_day,
         fuel: Num(base.fuel_t),
+        ship_repair_points_per_day: Num(base.ship_repair_points_per_day),
+        yard_passage_days: base.yard_passage_days,
     }
 }
 
@@ -298,6 +309,7 @@ fn ship(ship: &Ship, ref_data: &RefData) -> ShipOut {
             ShipLocation::TaskForce(id) => LocationOut::TaskForce(id.raw()),
             ShipLocation::Port(id) => LocationOut::Port(id.raw()),
             ShipLocation::Sunk => LocationOut::Sunk,
+            ShipLocation::Yard(id) => LocationOut::Yard(id.raw()),
         },
         fuel: Num(ship.fuel_t),
         supply: Num(ship.supply_t),

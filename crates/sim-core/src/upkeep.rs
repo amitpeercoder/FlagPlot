@@ -124,7 +124,7 @@ use crate::fixed::Fixed;
 use crate::ids::{AirGroupId, BaseId, EntityRef};
 use crate::refdata::AirCombatFigures;
 use crate::rng::{Draw, RngStream, Subsystem};
-use crate::state::{AirGroupLocation, ShipLocation};
+use crate::state::AirGroupLocation;
 use crate::time::Pulse;
 use crate::world::World;
 
@@ -743,6 +743,11 @@ impl World {
         }
         let ids: Vec<AirGroupId> = self.truth.air_groups.keys().copied().collect();
         for id in ids {
+            // A group aboard a ship away at the yard is neither stood down nor
+            // returned (decision 0069).
+            if self.truth.air_group_at_yard(&self.truth.air_groups[&id]) {
+                continue;
+            }
             let group = self
                 .truth
                 .air_groups
@@ -818,11 +823,12 @@ impl World {
                     AirGroupLocation::Ship(ship) => Some(ship),
                     AirGroupLocation::Base(_) => None,
                 })
+                // A ship at the yard repairs no aircraft (decision 0069).
                 .filter(|ship| {
                     self.truth
                         .ships
                         .get(ship)
-                        .is_some_and(|ship| ship.location != ShipLocation::Sunk)
+                        .is_some_and(|ship| ship.location.is_on_the_map())
                 })
                 .collect();
             places.extend(carriers.into_iter().map(|ship| {
@@ -959,12 +965,14 @@ impl World {
                 continue;
             };
             if let AirGroupLocation::Ship(ship) = group.location {
-                let afloat = self
+                // Not delivered to a group lost with its ship, nor to one
+                // aboard a ship away at the yard (decision 0069).
+                let on_the_map = self
                     .truth
                     .ships
                     .get(&ship)
-                    .is_some_and(|ship| ship.location != ShipLocation::Sunk);
-                if !afloat {
+                    .is_some_and(|ship| ship.location.is_on_the_map());
+                if !on_the_map {
                     continue;
                 }
             }

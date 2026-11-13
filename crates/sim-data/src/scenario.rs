@@ -186,6 +186,14 @@ struct BaseSpec {
     /// Damaged aircraft the base repairs each day (decision 0035). Defaults
     /// to 0.
     aircraft_repairs_per_day: Option<u32>,
+    /// The points of ship damage the base mends in a day, shared by the
+    /// forces of its side stopped there (decision 0069). Defaults to 0. May
+    /// not be negative.
+    ship_repair_points_per_day: Option<Quantity>,
+    /// Makes the base a port for the yard, with a passage there and back of
+    /// this many days (decision 0069). A whole number, at least 1. Defaults
+    /// to none.
+    yard_passage_days: Option<i64>,
 }
 
 #[derive(Deserialize)]
@@ -279,6 +287,11 @@ struct ShipSpec {
     /// The crew's experience, a whole number from 0 to 4 (decision 0064).
     /// Defaults to 2. Set here and written by no rule.
     experience: Option<i64>,
+    /// Flotation damage at the start, from 0 to below 100 (decision 0069): a
+    /// ship sunk is not given this way. Defaults to 0.
+    flotation_damage: Option<Quantity>,
+    /// Fire damage at the start, from 0 to 100 (decision 0069). Defaults to 0.
+    fire_damage: Option<Quantity>,
     /// The state of each named system at the start. Each defaults to
     /// working, and anything else needs a class that has the system.
     propulsion: Option<SystemStateSpec>,
@@ -400,6 +413,9 @@ enum ActionSpec {
     Detach {
         ships: Vec<u32>,
     },
+    /// Send the whole force to the yard from the base it is stopped at
+    /// (decision 0069). No other key.
+    SendToYard {},
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -869,6 +885,33 @@ impl Scenario {
                     }
                     None => Fixed::ZERO,
                 },
+                ship_repair_points_per_day: match &spec.ship_repair_points_per_day {
+                    Some(quantity) => {
+                        let points = quantity
+                            .to_fixed()
+                            .map_err(|e| fail(format!("{id}: ship_repair_points_per_day {e}")))?;
+                        if points < Fixed::ZERO {
+                            return Err(fail(format!(
+                                "{id}: ship_repair_points_per_day is negative"
+                            )));
+                        }
+                        points
+                    }
+                    None => Fixed::ZERO,
+                },
+                yard_passage_days: match spec.yard_passage_days {
+                    Some(days) => Some(
+                        u32::try_from(days)
+                            .ok()
+                            .filter(|days| *days >= 1)
+                            .ok_or_else(|| {
+                                fail(format!(
+                                    "{id}: yard_passage_days {days} is not a whole number of at least 1"
+                                ))
+                            })?,
+                    ),
+                    None => None,
+                },
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -987,6 +1030,34 @@ impl Scenario {
                         ))
                     })?,
             };
+            let flotation_damage = match &spec.flotation_damage {
+                Some(quantity) => {
+                    let damage = quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: flotation_damage {e}")))?;
+                    if damage < Fixed::ZERO || damage >= Fixed::from_int(100) {
+                        return Err(fail(format!(
+                            "{id}: flotation_damage {damage} is not from 0 to below 100"
+                        )));
+                    }
+                    damage
+                }
+                None => Fixed::ZERO,
+            };
+            let fire_damage = match &spec.fire_damage {
+                Some(quantity) => {
+                    let damage = quantity
+                        .to_fixed()
+                        .map_err(|e| fail(format!("{id}: fire_damage {e}")))?;
+                    if damage < Fixed::ZERO || damage > Fixed::from_int(100) {
+                        return Err(fail(format!(
+                            "{id}: fire_damage {damage} is not from 0 to 100"
+                        )));
+                    }
+                    damage
+                }
+                None => Fixed::ZERO,
+            };
             let mut systems = ShipSystems::ALL_WORKING;
             for (system, wanted) in [
                 (ShipSystem::Propulsion, spec.propulsion),
@@ -1054,13 +1125,14 @@ impl Scenario {
                 supply_t,
                 cargo_fuel_t,
                 location,
-                flotation_damage: Fixed::ZERO,
-                fire_damage: Fixed::ZERO,
+                flotation_damage,
+                fire_damage,
                 gun_rounds,
                 torpedoes_ready: ship_class.torpedo_tubes > 0,
                 torpedoes_one_side_fired: false,
                 systems,
                 experience,
+                system_repair_points: Fixed::ZERO,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1340,6 +1412,7 @@ impl Scenario {
                         ActionSpec::Detach { ships } => TaskForceOrder::DetachShips(
                             ships.iter().map(|raw| ShipId::new(*raw)).collect(),
                         ),
+                        ActionSpec::SendToYard {} => TaskForceOrder::SendToYard,
                         ActionSpec::SetAirMission { .. } => {
                             return Err(wrong_target("set_air_mission", "air_group"))
                         }
@@ -2283,6 +2356,78 @@ r = 0
         );
         assert!(repairs("aircraft_repairs_per_day = 1.5\n").is_err());
         assert!(repairs("aircraft_repairs_per_day = -1\n").is_err());
+    }
+
+    #[test]
+    fn a_base_takes_repair_points_a_day_and_a_yard_passage_of_at_least_a_day() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let base = |extra: &str| {
+            let head = HEAD.replace("q = 5\nr = 0\n", &format!("q = 5\nr = 0\n{extra}"));
+            Scenario::parse(&head, &path)
+        };
+        let figures = |scenario: Scenario| {
+            let base = scenario.world.umpire().bases[&BaseId::new(2)].clone();
+            (base.ship_repair_points_per_day, base.yard_passage_days)
+        };
+        assert_eq!(figures(base("").expect("loads")), (Fixed::ZERO, None));
+        assert_eq!(
+            figures(
+                base("ship_repair_points_per_day = 6\nyard_passage_days = 4\n").expect("loads")
+            ),
+            (Fixed::from_int(6), Some(4))
+        );
+        assert_eq!(
+            figures(base("ship_repair_points_per_day = \"2.5\"\n").expect("loads")).0,
+            Fixed::from_ratio(5, 2)
+        );
+        assert_eq!(
+            figures(base("ship_repair_points_per_day = 0\n").expect("loads")).0,
+            Fixed::ZERO
+        );
+        // Negative points, a float, and a passage of 0, below 0 or not whole.
+        assert!(base("ship_repair_points_per_day = -1\n").is_err());
+        assert!(base("ship_repair_points_per_day = \"-0.5\"\n").is_err());
+        assert!(base("ship_repair_points_per_day = 1.5\n").is_err());
+        assert!(base("yard_passage_days = 0\n").is_err());
+        assert!(base("yard_passage_days = -3\n").is_err());
+        assert!(base("yard_passage_days = 2.5\n").is_err());
+        assert!(base("yard_passage_days = \"4\"\n").is_err());
+    }
+
+    #[test]
+    fn a_ship_may_start_with_flotation_and_fire_damage_within_range() {
+        let damage = |extra: &str| {
+            parse_with(&with_force(&ship(extra))).map(|scenario| {
+                let ship = scenario.world.umpire().ships[&ShipId::new(1)].clone();
+                (ship.flotation_damage, ship.fire_damage)
+            })
+        };
+        assert_eq!(damage("").expect("loads"), (Fixed::ZERO, Fixed::ZERO));
+        assert_eq!(
+            damage("flotation_damage = 12\nfire_damage = \"2.5\"").expect("loads"),
+            (Fixed::from_int(12), Fixed::from_ratio(5, 2))
+        );
+        assert_eq!(
+            damage("flotation_damage = \"99.999999\"\nfire_damage = 100").expect("loads"),
+            (Fixed::from_raw(99_999_999), Fixed::from_int(100))
+        );
+        // Flotation: not negative, below 100, no float. Fire: not negative,
+        // at most 100, no float.
+        assert!(damage("flotation_damage = -1").is_err());
+        assert!(damage("flotation_damage = 100").is_err());
+        assert!(damage("flotation_damage = 101").is_err());
+        assert!(damage("flotation_damage = 12.5").is_err());
+        assert!(damage("fire_damage = -1").is_err());
+        assert!(damage("fire_damage = 101").is_err());
+        assert!(damage("fire_damage = 2.5").is_err());
+    }
+
+    #[test]
+    fn a_send_to_yard_order_takes_no_other_key() {
+        let orders = loaded_orders("kind = \"send_to_yard\"").expect("loads");
+        assert_eq!(orders, vec![TaskForceOrder::SendToYard]);
+        assert!(loaded_orders("kind = \"send_to_yard\"\nbase = 1").is_err());
+        assert!(error_of(&order("air_group = 1", "kind = \"send_to_yard\"")).contains("air_group"));
     }
 
     #[test]

@@ -54,6 +54,7 @@ fn text(kind: &OrderKind) -> String {
             ),
             TaskForceOrder::SetHomePort(base) => format!("home port {base}"),
             TaskForceOrder::SetReadiness(readiness) => format!("readiness {}", readiness.name()),
+            TaskForceOrder::SendToYard => "send to the yard".to_string(),
             TaskForceOrder::DetachShips(ships) => {
                 let ships: Vec<String> = ships.iter().map(ToString::to_string).collect();
                 format!("detach {}", ships.join(", "))
