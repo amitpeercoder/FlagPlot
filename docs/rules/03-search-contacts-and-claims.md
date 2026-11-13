@@ -216,13 +216,13 @@ The flag is stored with the event that set it (`alerted_by`). It is set in three
 - by the force's own sighting of the enemy, or by being fired on, in a fight (Alerted inside a pulse);
 - by an alarm, after a fight nearby (The alarm).
 
-It is cleared in one place: by Alert from belief, at the start of a pulse, when no fresh contact is near. A force made by a split takes its parent's flag and the event behind it (chapter 1, Task force orders). [0021]
+It is cleared in one place: by Alert from belief, at the start of a pulse, when no fresh contact is near a force at normal readiness. A force made by a split takes its parent's flag and the event behind it (chapter 1, Task force orders). [0021]
 
 ### Alert from belief
 
-At the start of every pulse, before any phase, each task force with a ship afloat looks at its own side's contacts. A contact counts if its age is no more than `search.toml: fresh_contact_max_age_pulses` and its estimated hex is within `surface_combat.toml: alert_contact_distance_hexes` of the force's position, counted as hexes (`Hex::distance`). Among those the nearest is the one cited, the lowest number on a tie. The rule reads belief only, never the truth of an enemy force. It does nothing in a game with no surface combat figures. [0021, 0032]
+At the start of every pulse, before any phase, each task force with a ship afloat that is at normal readiness looks at its own side's contacts. A force at battle readiness is skipped: a contact neither alerts it nor stands it down, nothing is recorded for it, and its flag is left as it is (differences.md row 2). A contact counts if its age is no more than `search.toml: fresh_contact_max_age_pulses` and its estimated hex is within `surface_combat.toml: alert_contact_distance_hexes` of the force's position, counted as hexes (`Hex::distance`). Among those the nearest is the one cited, the lowest number on a tie. The rule reads belief only, never the truth of an enemy force. It does nothing in a game with no surface combat figures. [0021, 0032]
 
-The rule reads the flag, not the readiness:
+For a force at normal readiness the rule reads the flag:
 
 | Flag now | A contact counts | Result |
 | --- | --- | --- |
@@ -233,7 +233,7 @@ The rule reads the flag, not the readiness:
 
 So the rule gives the same results whatever set the flag. A force alerted by a fight or an alarm stays alerted at the start of the next pulse only if its side then holds a fresh contact within the distance. The report a fight sends makes or refreshes a contact at the fight's hex (or at a neighbour of it, if the position error struck), at age 0, which the ageing at the end of the pulse skips once. So a force that sighted or was fired on in a fight stays alerted for as long as that contact is fresh and the force is within the distance of it, and stands down at the first pulse start where no contact qualifies. A force alerted only by an alarm has sent no report, and stands down at the next pulse's start unless a contact of its side qualifies. [0021, 0032]
 
-A force at battle readiness is handled like any other: the flag is set and cleared, and the two events are recorded, though the force is alert either way. To change: differences.md row 2, a contact is to neither alert nor stand down a force at battle readiness, and the events are not to be recorded for it. [0021]
+A force at battle readiness is alert by its readiness whatever its flag says, so the rule does not touch it. A flag set while the force was at normal readiness stays set while it is at battle readiness, and is read again by this rule once the force is back at normal readiness. [0021]
 
 A side sees: both events whole, its own force's. [0047]
 

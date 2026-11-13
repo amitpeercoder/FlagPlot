@@ -4,7 +4,7 @@ seed 1942
 
 day   1  hash ec60590ef8cea786  5 events
 day   2  hash 40183aed7c584e7c  3 events
-day   3  hash 451e117f3d45d827  60 events
+day   3  hash 532855dc41b7be5e  58 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, fatigue 15, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness battle, alert, fatigue 45, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

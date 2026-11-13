@@ -4,7 +4,7 @@ seed 1942
 
 day   1  hash ec60590ef8cea786  5 events
 day   2  hash 40183aed7c584e7c  3 events
-day   3  hash 451e117f3d45d827  60 events
+day   3  hash 532855dc41b7be5e  58 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -56,24 +56,22 @@ day   3  hash 451e117f3d45d827  60 events
 #48 D3 night     ship:1 burned 3 t, 1952 t remaining  <- #47
 #49 D3 night     ship:2 burned 3 t, 1952 t remaining  <- #47
 #50 D3 night     ship:3 burned 3 t, 1952 t remaining  <- #47
-#51 D3 morning   task_force:1 alerted by contact:1  <- #44
-#52 D3 morning   task_force:2 alerted by contact:1  <- #46
-#53 D3 morning   task_force:1 gained 5 fatigue, alert at the start of the pulse, now 10  <- order:3
-#54 D3 morning   task_force:2 gained 5 fatigue, alert at the start of the pulse, now 40
-#55 D3 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:4, order:5
-#56 D3 morning   ship:1 burned 24 t, 1928 t remaining  <- #55
-#57 D3 morning   ship:2 burned 24 t, 1928 t remaining  <- #55
-#58 D3 morning   ship:3 burned 24 t, 1928 t remaining  <- #55
-#59 D3 morning   Allied contact:1 aged to 1 pulses  <- #46
-#60 D3 morning   Japanese contact:1 aged to 1 pulses  <- #44
-#61 D3 afternoon task_force:1 gained 5 fatigue, alert at the start of the pulse, now 15  <- order:3
-#62 D3 afternoon task_force:2 gained 5 fatigue, alert at the start of the pulse, now 45
-#63 D3 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:4, order:5
-#64 D3 afternoon ship:1 burned 24 t, 1904 t remaining  <- #63
-#65 D3 afternoon ship:2 burned 24 t, 1904 t remaining  <- #63
-#66 D3 afternoon ship:3 burned 24 t, 1904 t remaining  <- #63
-#67 D3 afternoon Allied contact:1 aged to 2 pulses  <- #46
-#68 D3 afternoon Japanese contact:1 aged to 2 pulses  <- #44
+#51 D3 morning   task_force:1 gained 5 fatigue, alert at the start of the pulse, now 10  <- order:3
+#52 D3 morning   task_force:2 gained 5 fatigue, alert at the start of the pulse, now 40
+#53 D3 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:4, order:5
+#54 D3 morning   ship:1 burned 24 t, 1928 t remaining  <- #53
+#55 D3 morning   ship:2 burned 24 t, 1928 t remaining  <- #53
+#56 D3 morning   ship:3 burned 24 t, 1928 t remaining  <- #53
+#57 D3 morning   Allied contact:1 aged to 1 pulses  <- #46
+#58 D3 morning   Japanese contact:1 aged to 1 pulses  <- #44
+#59 D3 afternoon task_force:1 gained 5 fatigue, alert at the start of the pulse, now 15  <- order:3
+#60 D3 afternoon task_force:2 gained 5 fatigue, alert at the start of the pulse, now 45
+#61 D3 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:4, order:5
+#62 D3 afternoon ship:1 burned 24 t, 1904 t remaining  <- #61
+#63 D3 afternoon ship:2 burned 24 t, 1904 t remaining  <- #61
+#64 D3 afternoon ship:3 burned 24 t, 1904 t remaining  <- #61
+#65 D3 afternoon Allied contact:1 aged to 2 pulses  <- #46
+#66 D3 afternoon Japanese contact:1 aged to 2 pulses  <- #44
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, fatigue 15, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness battle, alert, fatigue 45, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -2,7 +2,7 @@ Scenario 14a: Night action, experienced crews against green ones
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash fa54ce0a1b1d536e  59 events
+day   1  hash 17b4088f651262a2  58 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -50,19 +50,18 @@ day   1  hash fa54ce0a1b1d536e  59 events
 #44 D1 night     ship:1 burned 3 t, 1952 t remaining  <- #43
 #45 D1 night     ship:2 burned 3 t, 1952 t remaining  <- #43
 #46 D1 night     ship:3 burned 3 t, 1952 t remaining  <- #43
-#47 D1 morning   task_force:1 alerted by contact:1  <- #40
-#48 D1 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:2, order:3
-#49 D1 morning   ship:1 burned 24 t, 1928 t remaining  <- #48
-#50 D1 morning   ship:2 burned 24 t, 1928 t remaining  <- #48
-#51 D1 morning   ship:3 burned 24 t, 1928 t remaining  <- #48
-#52 D1 morning   Allied contact:1 aged to 1 pulses  <- #42
-#53 D1 morning   Japanese contact:1 aged to 1 pulses  <- #40
-#54 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:2, order:3
-#55 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #54
-#56 D1 afternoon ship:2 burned 24 t, 1904 t remaining  <- #54
-#57 D1 afternoon ship:3 burned 24 t, 1904 t remaining  <- #54
-#58 D1 afternoon Allied contact:1 aged to 2 pulses  <- #42
-#59 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #40
+#47 D1 morning   task_force:1 steamed 96 nm at 16 kn from (5,0) to (7,0)  <- order:2, order:3
+#48 D1 morning   ship:1 burned 24 t, 1928 t remaining  <- #47
+#49 D1 morning   ship:2 burned 24 t, 1928 t remaining  <- #47
+#50 D1 morning   ship:3 burned 24 t, 1928 t remaining  <- #47
+#51 D1 morning   Allied contact:1 aged to 1 pulses  <- #42
+#52 D1 morning   Japanese contact:1 aged to 1 pulses  <- #40
+#53 D1 afternoon task_force:1 steamed 96 nm at 16 kn from (7,0) to (10,0)  <- order:2, order:3
+#54 D1 afternoon ship:1 burned 24 t, 1904 t remaining  <- #53
+#55 D1 afternoon ship:2 burned 24 t, 1904 t remaining  <- #53
+#56 D1 afternoon ship:3 burned 24 t, 1904 t remaining  <- #53
+#57 D1 afternoon Allied contact:1 aged to 2 pulses  <- #42
+#58 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #40
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

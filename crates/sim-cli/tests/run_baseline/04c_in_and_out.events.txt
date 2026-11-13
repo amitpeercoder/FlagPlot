@@ -2,7 +2,7 @@ Scenario 4c2b: In and out
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bb0742b1e4415d5d  72 events
+day   1  hash 6059dbe3594ea6a2  70 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2
@@ -65,17 +65,15 @@ day   1  hash bb0742b1e4415d5d  72 events
 #59 D1 night     ship:1 burned 60.75 t, 1838 t remaining  <- #58
 #60 D1 night     ship:2 burned 60.75 t, 1838 t remaining  <- #58
 #61 D1 night     ship:3 burned 60.75 t, 1838 t remaining  <- #58
-#62 D1 morning   task_force:1 alerted by contact:1  <- #54
-#63 D1 morning   task_force:1 steamed 112 nm at 24 kn from (3,0) to (0,0)  <- order:2, order:3
-#64 D1 morning   ship:1 burned 63 t, 1775 t remaining  <- #63
-#65 D1 morning   ship:2 burned 63 t, 1775 t remaining  <- #63
-#66 D1 morning   ship:3 burned 63 t, 1775 t remaining  <- #63
-#67 D1 morning   task_force:1 arrived at (0,0) at D1 10:40  <- #63
-#68 D1 morning   Allied contact:1 aged to 1 pulses  <- #56
-#69 D1 morning   Japanese contact:1 aged to 1 pulses  <- #54
-#70 D1 afternoon task_force:1 stood down  <- #62
-#71 D1 afternoon Allied contact:1 aged to 2 pulses  <- #56
-#72 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #54
+#62 D1 morning   task_force:1 steamed 112 nm at 24 kn from (3,0) to (0,0)  <- order:2, order:3
+#63 D1 morning   ship:1 burned 63 t, 1775 t remaining  <- #62
+#64 D1 morning   ship:2 burned 63 t, 1775 t remaining  <- #62
+#65 D1 morning   ship:3 burned 63 t, 1775 t remaining  <- #62
+#66 D1 morning   task_force:1 arrived at (0,0) at D1 10:40  <- #62
+#67 D1 morning   Allied contact:1 aged to 1 pulses  <- #56
+#68 D1 morning   Japanese contact:1 aged to 1 pulses  <- #54
+#69 D1 afternoon Allied contact:1 aged to 2 pulses  <- #56
+#70 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #54
 
 task_force:1 "Placeholder raiding force" (Japanese): Arrived at (0,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

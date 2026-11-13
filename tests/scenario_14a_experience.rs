@@ -894,5 +894,5 @@ const PINNED: Pinned = Pinned {
     salvos: 6,
     hits_a: 30,
     hits_b: 0,
-    events: 59,
+    events: 58,
 };
