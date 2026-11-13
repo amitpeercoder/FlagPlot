@@ -12,7 +12,7 @@
 //!
 //! ## The scenario
 //!
-//! `data/scenarios/18a_guns_and_the_attack.toml`, one day, on the frozen
+//! `data/scenarios/19a_guns_and_the_attack.toml`, one day, on the frozen
 //! step 1 figures (`data/reference/step1`), altered by
 //! `common::altered_reference` where a case says so:
 //!
@@ -179,7 +179,7 @@ use sim_core::World;
 use sim_data::{LoadOptions, Scenario};
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-const SCENARIO: &str = "18a_guns_and_the_attack.toml";
+const SCENARIO: &str = "19a_guns_and_the_attack.toml";
 const SEEDS: u64 = 1000;
 /// The shares of the cases, as written in the figures file, and the guns'
 /// shots (before, after) each gives: k = floor(b x 20), then 20 - k.
@@ -252,7 +252,7 @@ fn case_2(share: &str) -> Scenario {
 
 /// Case 3: 15 dive bombers raid a base with 8 guns and no patrol.
 fn case_3(share: &str) -> Scenario {
-    let text = r#"name = "Scenario 18a, case 3: a raid on a base"
+    let text = r#"name = "Scenario 19a, case 3: a raid on a base"
 placeholder = true
 seed = 1942
 days = 1

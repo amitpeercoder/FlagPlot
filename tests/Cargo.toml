@@ -182,8 +182,8 @@ name = "scenario_17a_target_choice"
 path = "scenario_17a_target_choice.rs"
 
 [[test]]
-name = "scenario_18a_guns_and_the_attack"
-path = "scenario_18a_guns_and_the_attack.rs"
+name = "scenario_19a_guns_and_the_attack"
+path = "scenario_19a_guns_and_the_attack.rs"
 
 [[test]]
 name = "frozen_figures_mechanism"

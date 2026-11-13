@@ -126,7 +126,7 @@ Nothing of this rule was run: it was written from the air tuning plan's counts (
 - Every hand calculation on the frozen figures passes untouched.
 
 **Its scenario.**
-- `18a_guns_and_the_attack`, with the hand calculation of the cases above. Every number matched with no difference.
+- `19a_guns_and_the_attack`, with the hand calculation of the cases above. Every number matched with no difference.
 - Properties over seeds 1 to 1,000 at shares 1, 0.5, 0.33 and 0. The guns' hits, each group's losses, the defender's claims and the raider's aircraft claimed are equal at every share, and the attack-shot totals are inside their ranges.
 - Pinned outcomes. The scenario's own seed, 1942, has the guns miss all 20 shots, so seed 10 is pinned beside it as the first seed on which the share moves hits across the attack.
 - The defender's claims are equal at every share, and so is the raider's claim of aircraft shot down. The raider's claim of hits rests on the bombs it dropped, which differ by share; decision 10 was corrected to say so when the build found it.
