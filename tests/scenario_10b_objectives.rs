@@ -137,8 +137,21 @@ use sim_data::Scenario;
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SEED: u64 = 1942;
 
+/// Every run here is on the frozen figures, and frozen figures go with frozen
+/// scenarios (decision 0073, `data/scenarios/step2-frozen/README.md`): scenarios
+/// 5, 7 and 8 (here scenario 7, the full slice) run on their frozen copies in
+/// `data/scenarios/step2-frozen`; every other scenario on `data/scenarios`.
 fn path(name: &str) -> PathBuf {
-    PathBuf::from(ROOT).join("data/scenarios").join(name)
+    let frozen_copy = matches!(
+        name,
+        "05_eastern_solomons.toml" | "07_full_slice.toml" | "08_soak.toml"
+    );
+    let folder = if frozen_copy {
+        "data/scenarios/step2-frozen"
+    } else {
+        "data/scenarios"
+    };
+    PathBuf::from(ROOT).join(folder).join(name)
 }
 
 fn text(name: &str) -> String {

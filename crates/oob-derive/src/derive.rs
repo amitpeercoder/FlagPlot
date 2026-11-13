@@ -346,9 +346,15 @@ impl<'a> Env<'a> {
 
     /// Problems for exceptions that name no row of the facts.
     pub fn exception_problems(&self) -> Vec<Problem> {
+        let search = self
+            .rules
+            .search_radius
+            .as_ref()
+            .map_or(&[][..], |s| s.exceptions.as_slice());
         self.rules
             .exceptions
             .iter()
+            .chain(search)
             .filter(|e| !self.index.has_row(e))
             .map(|e| {
                 Problem::new(

@@ -18,10 +18,17 @@
 #   g4m1-11 range_normal_nm: aircraft_type_facts.csv row 532 (unconfirmed); reason: 1,834 miles 'with normal fuel and bomb loads': the one row that states the condition a bombing radius needs. It is an Allied summary of late 1943 with no model number. A third of it is 611. No source read states a radius. Settled by the architect; researchers looked for a stated radius twice and found none.; agreed 2026-11-11
 #   g4m1-11 pilot_armour: aircraft_type_facts.csv row 536 (unconfirmed); reason: No: two low-grade sources agree and nothing read says otherwise for 1942. Protection was added from 1943. Settled by the architect.; agreed 2026-11-11
 #   g4m1-11 bomb_load: fits.csv row 28 (unconfirmed); reason: Four 250 kg bombs: one weak source, with a second that gives the same total of 1,000 kg. The 250 kg bomb is also one of the two sizes a source names as dropped on Henderson Field. A raid on an airfield takes no account of the bomb's size (decision 0034, 10), so the choice changes no result here. Settled by the architect.; agreed 2026-11-11
+# Search radius (decision 0075): a type's range in the scouting condition / 3, rounded down; where it cannot be read the strike radius is kept and the type is listed as not settled
+# Search radius exceptions used (decision 0075):
+#   sbd-3 range_max_nm: aircraft_type_facts.csv row 270 (disputed); reason: It is the one row stating the range in the scout condition, which is what the rule asks for; row 226 states no condition.; agreed 2026-11-13
+# Search radius not settled (the strike radius is kept):
+#   f4f-4: range_max_nm of aircraft type f4f-4: rows that hold on 1942-08-24 are not preferred, and no exception names one: aircraft_type_facts.csv:242 (disputed; 912; valid -..-; holds), aircraft_type_facts.csv:243 (disputed; 1108; valid -..-; holds)
+#   a6m2-21: range_max_nm of aircraft type a6m2-21: rows that hold on 1942-08-24 are not preferred, and no exception names one: aircraft_type_facts.csv:28 (disputed; 1677; valid -..-; holds), aircraft_type_facts.csv:29 (disputed; 1677; valid -..-; holds), aircraft_type_facts.csv:365 (disputed; 999; valid -..-; holds), aircraft_type_facts.csv:386 (disputed; 1677; valid -..-; holds), aircraft_type_facts.csv:518 (disputed; 1373; valid -..-; holds)
+#   g4m1-11: range_max_nm of aircraft type g4m1-11: rows that hold on 1942-08-24 are not preferred, and no exception names one: aircraft_type_facts.csv:170 (unconfirmed; 1540; valid -..-; holds)
 # Radius rows chosen by this list itself, instead of the rules file's rule or exception for the same figure:
 #   a6m2-21 combat_radius_nm: aircraft_type_facts.csv row 517 (unconfirmed); the list's own choice, reason: 556 miles: the escort flown from Rabaul to Guadalcanal and back on 7 August 1942, the mission this scenario repeats. The 261 miles the Eastern Solomons list reads is the radius from a carrier.
 id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks
 2100,Grumman F4F-4 Wildcat,fighter,105,20,105,none,0,1,1
-2101,Douglas SBD-3 Dauntless,bomber,200,20,200,bomb,75.6,1,1
+2101,Douglas SBD-3 Dauntless,bomber,397,20,200,bomb,75.6,1,1
 2102,Mitsubishi A6M2 Type 0 Carrier Fighter Model 21,fighter,556,20,556,none,0,0,0
 2103,Mitsubishi G4M1 Type 1 Attack Bomber Model 11,bomber,611,20,611,bomb,41.666666,0,0

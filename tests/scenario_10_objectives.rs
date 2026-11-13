@@ -80,7 +80,18 @@ const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const NAME: &str = "05_eastern_solomons.toml";
 const SEED: u64 = 1942;
 
+/// The scenario the tests run on the frozen figures is the frozen copy,
+/// `data/scenarios/step2-frozen/05_eastern_solomons.toml`, as decision 0073 and
+/// the folder's README say: frozen figures go with frozen scenarios. Only the
+/// comparison with the run baseline (`live_scenario_path`) reads the live file,
+/// on the live figures.
 fn scenario_path() -> PathBuf {
+    PathBuf::from(ROOT)
+        .join("data/scenarios/step2-frozen")
+        .join(NAME)
+}
+
+fn live_scenario_path() -> PathBuf {
     PathBuf::from(ROOT).join("data/scenarios").join(NAME)
 }
 
@@ -470,7 +481,8 @@ fn objectives_change_no_hash_and_no_event() {
     // And the hash is the one in the baseline file. The baseline follows the
     // live figures, so this run does too (docs/step2-spec.md, "Tests while
     // figures move").
-    let mut live = Scenario::from_text(&text, &scenario_path())
+    let live_text = std::fs::read_to_string(live_scenario_path()).expect("the live scenario reads");
+    let mut live = Scenario::from_text(&live_text, &live_scenario_path())
         .expect("the scenario loads")
         .with_seed(SEED)
         .expect("a seed can be set");
@@ -497,8 +509,9 @@ fn objectives_change_no_hash_and_no_event() {
     // That was 9887acc2b651abb9 until decision 0067 recorded each base's
     // count at the end of the day: the hash counts the events of the log. And
     // it was 798ce5b9ab626198 until the hash went to version 6 (decision
-    // 0064, a ship's experience).
-    assert!(baseline.contains("hash 1710b81aa6539e01"));
+    // 0064, a ship's experience). And it was 1710b81aa6539e01 until
+    // decisions 0073 and 0075 set the Japanese search from the record.
+    assert!(baseline.contains("hash 2ca5a5dd9f150a5d"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

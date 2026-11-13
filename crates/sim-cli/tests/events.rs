@@ -11,7 +11,10 @@ use sim_core::ids::EntityRef;
 use sim_data::{LoadOptions, Scenario};
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-const EASTERN: &str = "data/scenarios/05_eastern_solomons.toml";
+/// Scenario 5's frozen copy: these tests run on the frozen figures, and
+/// frozen figures go with frozen scenarios (decision 0073,
+/// `data/scenarios/step2-frozen/README.md`).
+const EASTERN: &str = "data/scenarios/step2-frozen/05_eastern_solomons.toml";
 /// These tests name events of a run (that a ship sank, that a group lost
 /// aircraft), which the figures decide, so they run on the frozen figures of
 /// step 1 and not on the ones step 2 tunes (docs/step2-spec.md, "Tests while

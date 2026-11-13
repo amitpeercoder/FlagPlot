@@ -145,7 +145,15 @@ fn variant(name: &str, chances: [&str; 3], seed: Option<u64>, edits: &[(&str, &s
             lines.join("\n")
         });
     });
-    let scenario_path = PathBuf::from(ROOT).join("data/scenarios").join(name);
+    // On the frozen figures, so on the frozen copy of scenario 5 in
+    // `data/scenarios/step2-frozen` (decision 0073 and the folder's README:
+    // frozen figures go with frozen scenarios).
+    let folder = if name == "05_eastern_solomons.toml" {
+        "data/scenarios/step2-frozen"
+    } else {
+        "data/scenarios"
+    };
+    let scenario_path = PathBuf::from(ROOT).join(folder).join(name);
     let mut text = fs::read_to_string(&scenario_path).expect("the scenario reads");
     for (from, to) in edits {
         text = common::replace_once(&text, from, to);
