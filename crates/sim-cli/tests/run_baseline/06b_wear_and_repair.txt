@@ -2,19 +2,19 @@ Scenario 6b: Wear and repair
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d0aaea78ac92ad37  32 events
-day   2  hash 4d776ed028ca72ee  30 events
-day   3  hash 3dff80f801e6055c  30 events
-day   4  hash 180f3015ba9f0747  28 events
-day   5  hash 13a391305b7abc4c  27 events
+day   1  hash 6c4f387077c0bf82  32 events
+day   2  hash 233aa961a4000342  29 events
+day   3  hash 00606cec6501890b  30 events
+day   4  hash 88df4b0f5335fea0  28 events
+day   5  hash 0926fa38c09b7121  27 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 2 ready, 1 damaged, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 5 ready, 2 damaged, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:3 "Placeholder defending fighters" (Allied) at base:2: 3 ready, mission CombatAirPatrol, patrol share 1, no arc
-air_group:4 "Placeholder resting bombers" (Allied) at base:2: 7 ready, mission Rest, no arc
+air_group:4 "Placeholder resting bombers" (Allied) at base:2: 10 ready, mission Rest, no arc
 air_group:5 "Placeholder scouts" (Allied) at base:2: 5 ready, mission Search, arc 040-130 to 300 nm
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock, repairs 2 aircraft a day
-base:2 "Placeholder airfield B" (Allied) at (5,0): 900 t of supply in stock, 20 anti-aircraft shots, repairs 3 aircraft a day
+base:2 "Placeholder airfield B" (Allied) at (5,0): 800 t of supply in stock, 20 anti-aircraft shots, repairs 3 aircraft a day
 Allied: no contacts
 Allied claim over (5,0): 9 aircraft shot down, day 1 morning
 Allied claim over (5,0): 9 aircraft shot down, day 2 morning
@@ -22,8 +22,8 @@ Allied claim over (5,0): 11 aircraft shot down, day 3 morning
 Allied claim over (5,0): 5 aircraft shot down, day 4 morning
 Allied claim over (5,0): 7 aircraft shot down, day 5 morning
 Japanese: no contacts
-Japanese claim at (5,0): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 1 morning
-Japanese claim at (5,0): 5 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
+Japanese claim at (5,0): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (5,0): 5 aircraft shot down, 2 aircraft destroyed on the ground, day 2 morning
 Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 3 morning
 Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 4 morning
 Japanese claim over (5,0): 3 aircraft shot down, day 5 morning

@@ -34,7 +34,7 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "5476f2d8aa7681d5"
+      "hash": "c0cd9c5313d38b5b"
     },
     {
       "file": "data/scenarios/../reference/air_upkeep.toml",
@@ -69,7 +69,7 @@
     },
     {
       "day": 5,
-      "hash": "247e6acd46571519"
+      "hash": "7fcb21f368d0168b"
     }
   ],
   "orders": [
