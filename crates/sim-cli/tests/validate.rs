@@ -963,8 +963,8 @@ fn real_batches_of_the_three_battles_are_judged() {
         let file = fs::read_to_string(Path::new(ROOT).join(measures)).expect("measures");
         if battle == "savo-island" {
             for id in [
-                "japanese_gun_shells_fired_in_hundreds",
-                "allied_gun_shells_fired_in_hundreds",
+                "japanese_main_battery_shells_fired_in_hundreds",
+                "allied_main_battery_shells_fired_in_hundreds",
                 "surface_fights_by_day",
             ] {
                 assert!(report.contains(&format!("| {id} |")), "{id} missing");
