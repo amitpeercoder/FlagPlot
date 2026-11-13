@@ -182,6 +182,10 @@ name = "scenario_17a_target_choice"
 path = "scenario_17a_target_choice.rs"
 
 [[test]]
+name = "scenario_18_torpedo_sides"
+path = "scenario_18_torpedo_sides.rs"
+
+[[test]]
 name = "scenario_19a_guns_and_the_attack"
 path = "scenario_19a_guns_and_the_attack.rs"
 

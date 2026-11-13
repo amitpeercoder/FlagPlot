@@ -30,6 +30,8 @@ struct ShipClassRow {
     gun_rounds_per_gun: u32,
     gun_damage: String,
     torpedo_tubes: u32,
+    /// Tubes that bear on one side (decisions 0074 and 0083). Required.
+    torpedo_tubes_one_side: u32,
     torpedo_damage: String,
     toughness: String,
     /// 0 or 1.
@@ -103,6 +105,7 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
             gun_rounds_per_gun: row.gun_rounds_per_gun,
             gun_damage: number("gun_damage", &row.gun_damage)?,
             torpedo_tubes: row.torpedo_tubes,
+            torpedo_tubes_one_side: row.torpedo_tubes_one_side,
             torpedo_damage: number("torpedo_damage", &row.torpedo_damage)?,
             toughness: number("toughness", &row.toughness)?,
             radar: match row.radar {
@@ -1293,7 +1296,7 @@ mod tests {
         assert_eq!(five.lighter_rate_t_per_h, Fixed::from_int(20));
     }
 
-    const CLASS_HEADER: &str = "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar\n";
+    const CLASS_HEADER: &str = "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar\n";
 
     fn classes(rows: &str) -> Result<RefData, DataError> {
         parse_ship_classes(&format!("# c\n{CLASS_HEADER}{rows}"), here())
@@ -1302,8 +1305,8 @@ mod tests {
     #[test]
     fn ship_classes_parse_with_their_combat_columns() {
         let data = classes(
-            "1,Cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,1\n\
-             2,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,300,0\n",
+            "1,Cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,1\n\
+             2,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0\n",
         )
         .expect("parses");
         let cruiser = &data.ship_classes[&ShipClassId::new(1)];
@@ -1312,6 +1315,7 @@ mod tests {
         assert_eq!(cruiser.gun_rounds_per_gun, 100);
         assert_eq!(cruiser.gun_damage, Fixed::from_int(20));
         assert_eq!(cruiser.torpedo_tubes, 8);
+        assert_eq!(cruiser.torpedo_tubes_one_side, 8);
         assert_eq!(cruiser.torpedo_damage, Fixed::from_int(200));
         assert_eq!(cruiser.toughness, Fixed::from_int(400));
         assert!(cruiser.radar);
@@ -1323,9 +1327,38 @@ mod tests {
     }
 
     #[test]
+    fn the_tubes_on_one_side_column_is_read_required_and_checked() {
+        // A wing fit: 8 tubes, 4 on a side.
+        let data =
+            classes("1,Wing,cruiser,16,32,2000,8000,0,8,3,100,20,8,4,200,400,1\n").expect("parses");
+        assert_eq!(data.ship_classes[&ShipClassId::new(1)].torpedo_tubes, 8);
+        assert_eq!(
+            data.ship_classes[&ShipClassId::new(1)].torpedo_tubes_one_side,
+            4
+        );
+        // A file without the column is refused, not read as the whole count.
+        let old_header = CLASS_HEADER.replace("torpedo_tubes_one_side,", "");
+        let old =
+            format!("# c\n{old_header}1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,1\n");
+        let message = parse_ship_classes(&old, here())
+            .expect_err("refused")
+            .message;
+        assert!(message.contains("torpedo_tubes_one_side"), "{message}");
+        // More on a side than tubes, and none on a side with tubes, are refused.
+        let more = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,9,200,400,1\n")
+            .expect_err("refused")
+            .message;
+        assert!(more.contains("one side"), "{more}");
+        let none = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,0,200,400,1\n")
+            .expect_err("refused")
+            .message;
+        assert!(none.contains("one side"), "{none}");
+    }
+
+    #[test]
     fn gun_rate_of_fire_may_be_a_decimal() {
         let data =
-            classes("1,A,cruiser,16,32,2000,8000,0,8,3.5,100,20,8,200,400,0\n").expect("parses");
+            classes("1,A,cruiser,16,32,2000,8000,0,8,3.5,100,20,8,8,200,400,0\n").expect("parses");
         let rate = data.ship_classes[&ShipClassId::new(1)].gun_rounds_per_min;
         assert_eq!(rate, "3.5".parse::<Fixed>().expect("fixed"));
         assert_eq!(rate * 2, Fixed::from_int(7));
@@ -1333,7 +1366,7 @@ mod tests {
 
     #[test]
     fn damage_and_toughness_may_be_decimals() {
-        let data = classes("1,A,cruiser,16,32,2000,8000,0,9,3.5,100,19.666666,8,196,405.44,0\n")
+        let data = classes("1,A,cruiser,16,32,2000,8000,0,9,3.5,100,19.666666,8,8,196,405.44,0\n")
             .expect("parses");
         let class = &data.ship_classes[&ShipClassId::new(1)];
         assert_eq!(class.gun_damage.raw(), 19_666_666);
@@ -1345,26 +1378,28 @@ mod tests {
     fn ship_class_combat_errors_are_rejected() {
         let bad = |row: &str| classes(row).expect_err("rejected").message;
         // Zero toughness.
-        assert!(bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,0,0\n").contains("toughness"));
+        assert!(
+            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,0,0\n").contains("toughness")
+        );
         // Radar must be 0 or 1.
         assert!(
-            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,2\n").contains("radar is 2")
+            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,2\n").contains("radar is 2")
         );
         // Toughness must be above zero, and damage may not be negative.
         assert!(
-            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,0.0,0\n").contains("toughness")
+            bad("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,0.0,0\n").contains("toughness")
         );
-        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,-20,8,200,400,0\n").is_err());
-        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,1e2,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,-20,8,8,200,400,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,1e2,0\n").is_err());
         // Whole numbers only for counts: a fraction, a negative and text are rejected.
-        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8.5,3,100,20,8,200,400,0\n").is_err());
-        assert!(classes("1,A,cruiser,16,32,2000,8000,0,-8,3,100,20,8,200,400,0\n").is_err());
-        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,yes\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8.5,3,100,20,8,8,200,400,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,-8,3,100,20,8,8,200,400,0\n").is_err());
+        assert!(classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,yes\n").is_err());
         // A missing column and an extra one.
         let short = "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t\n1,A,cruiser,16,32,2000,8000,0\n";
         assert!(parse_ship_classes(short, here()).is_err());
         let extra = format!(
-            "{}\n1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,9\n",
+            "{}\n1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,9\n",
             CLASS_HEADER.trim_end().to_string() + ",extra"
         );
         let message = parse_ship_classes(&extra, here())
@@ -1377,7 +1412,7 @@ mod tests {
     fn the_aircraft_capacity_column_is_optional() {
         // Without the column every class carries no aircraft (decision 8 of
         // 0025).
-        let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n")
+        let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0\n")
             .expect("parses without the column");
         assert_eq!(data.ship_classes[&ShipClassId::new(1)].aircraft_capacity, 0);
 
@@ -1392,8 +1427,8 @@ mod tests {
             )
         };
         let data = with_column(
-            "1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0\n\
-             2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36\n",
+            "1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0\n\
+             2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,0,600,0,36\n",
         )
         .expect("parses with the column");
         assert_eq!(data.ship_classes[&ShipClassId::new(1)].aircraft_capacity, 0);
@@ -1404,17 +1439,17 @@ mod tests {
 
         // With the column, every row needs a whole number.
         for bad in ["", "-1", "2.5", "many"] {
-            let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0,{bad}\n");
+            let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,{bad}\n");
             assert!(with_column(&row).is_err(), "capacity \"{bad}\"");
         }
         // A row that stops before the column is not read as 0.
-        assert!(with_column("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n").is_err());
+        assert!(with_column("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0\n").is_err());
     }
 
     #[test]
     fn the_anti_aircraft_column_is_optional_and_read_when_there() {
         // Absent: no shots, whether or not the capacity column is there.
-        let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0\n")
+        let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0\n")
             .expect("parses without the columns");
         assert_eq!(data.ship_classes[&ShipClassId::new(1)].anti_aircraft, 0);
 
@@ -1428,8 +1463,8 @@ mod tests {
             )
         };
         let data = with_column(
-            "1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,8\n\
-             2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36,20\n",
+            "1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,8\n\
+             2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,0,600,0,36,20\n",
         )
         .expect("parses with the column");
         assert_eq!(data.ship_classes[&ShipClassId::new(1)].anti_aircraft, 8);
@@ -1439,7 +1474,7 @@ mod tests {
             36
         );
         for bad in ["", "-1", "2.5", "many"] {
-            let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,{bad}\n");
+            let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,{bad}\n");
             assert!(with_column(&row).is_err(), "anti_aircraft \"{bad}\"");
         }
 

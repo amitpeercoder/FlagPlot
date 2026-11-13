@@ -1,8 +1,10 @@
 //! Scenario 6: Rabaul against Guadalcanal in the air, 21 August to 17
 //! September 1942.
 //!
-//! Stage 6e, which closes scenario 6 (decision 0042). The data is
-//! `data/scenarios/06_rabaul_guadalcanal.toml`, run with seeds 1 to 1000.
+//! Stage 6e, which closes scenario 6 (decision 0042). The data is the frozen
+//! copy `data/scenarios/step2-frozen/06_rabaul_guadalcanal.toml`, the
+//! scenario as it stood before decision 0082 set its orders from the record,
+//! run on the frozen figures with seeds 1 to 1000.
 //! The air groups, aircraft types, arrivals and airfields are historical.
 //! The combat, wear, fatigue and supply figures, each base's supply and
 //! repairs a day, and the replacement rates are placeholders.
@@ -354,8 +356,13 @@ const ARRIVALS: [(u32, u32, u32); 7] = [
 ];
 const RAID_DAYS: [u32; 11] = [1, 2, 3, 6, 9, 12, 15, 18, 21, 24, 27];
 
+/// The frozen copy of scenario 6 (`data/scenarios/step2-frozen`), as it stood
+/// before decision 0082 set its raid days and the dive bombers' searches from
+/// the record: this test runs on the frozen figures, and frozen figures go
+/// with frozen scenarios (`docs/step2-spec.md`, "Tests while figures move", 9).
 fn scenario_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/06_rabaul_guadalcanal.toml")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../data/scenarios/step2-frozen/06_rabaul_guadalcanal.toml")
 }
 
 fn load() -> Scenario {
@@ -2593,7 +2600,7 @@ fn radius_of_the_g4m1(nm: i64) -> Source {
 fn without_the_fatigue_file() -> Source {
     variant(
         "no_fatigue",
-        &|text| once(text, "fatigue = \"../reference/fatigue.toml\"\n", ""),
+        &|text| once(text, "fatigue = \"../../reference/fatigue.toml\"\n", ""),
         None,
     )
 }

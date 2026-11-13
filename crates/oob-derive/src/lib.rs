@@ -255,6 +255,10 @@ pub enum Outcome {
         /// strike radius is kept (decision 0075), one line a type. They are
         /// also in the header of the aircraft file.
         not_settled: Vec<String>,
+        /// Ships with tubes no readable row says how they bear (decision
+        /// 0074, 3), one line a ship. They are also in the header of the
+        /// class file.
+        torpedo_not_split: Vec<String>,
     },
 }
 
@@ -307,6 +311,7 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
     let list = list.expect("a list that derives has parsed");
     let unread = std::mem::take(&mut outputs.experience_unread);
     let not_settled = std::mem::take(&mut outputs.search_not_settled);
+    let torpedo_not_split = std::mem::take(&mut outputs.torpedo_not_split);
     let mut files = Vec::new();
     if !list.ships.is_empty() {
         let class_path = dir.join(&list.output);
@@ -335,6 +340,7 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
             written: false,
             unread,
             not_settled,
+            torpedo_not_split,
         });
     }
     let mut done: Vec<&Path> = Vec::new();
@@ -352,5 +358,6 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         written: true,
         unread,
         not_settled,
+        torpedo_not_split,
     })
 }
