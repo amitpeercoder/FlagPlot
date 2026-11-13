@@ -17,9 +17,9 @@ use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
 use crate::hex::HEX_NM;
 use crate::ids::{BaseId, EventId, ShipId, TaskForceId};
-use crate::refdata::SurfaceCombatFigures;
+use crate::refdata::{RefData, SurfaceCombatFigures};
 use crate::state::{
-    Ship, ShipLocation, ShipSystem, SystemState, TaskForce, TaskForceStatus, YardTrip,
+    Ship, ShipLocation, ShipSystem, SystemState, TaskForce, TaskForceStatus, TruthState, YardTrip,
 };
 use crate::world::World;
 use std::collections::BTreeMap;
@@ -87,19 +87,52 @@ impl YardPlan {
     }
 }
 
+/// [`World::yard_port`], on the truth state alone.
+pub(crate) fn yard_port_in(truth: &TruthState, force: &TaskForce) -> Option<BaseId> {
+    truth
+        .bases
+        .values()
+        .find(|base| {
+            base.side == force.side
+                && base.hex == force.position()
+                && base.yard_passage_days.is_some()
+        })
+        .map(|base| base.id)
+}
+
+/// [`World::yard_plan`], on the truth state and the reference data alone.
+pub(crate) fn yard_plan_in(
+    truth: &TruthState,
+    ref_data: &RefData,
+    force: TaskForceId,
+) -> Option<YardPlan> {
+    let force = truth.task_forces.get(&force)?;
+    let figures = ref_data.surface_combat.as_ref()?;
+    let base = yard_port_in(truth, force)?;
+    let passage_days = truth.bases[&base].yard_passage_days?;
+    let ships: Vec<(ShipId, u32)> = force
+        .ships
+        .iter()
+        .filter(|id| truth.ships[id].location != ShipLocation::Sunk)
+        .map(|id| (*id, days_of_repair(&truth.ships[id], figures)))
+        .collect();
+    if ships.is_empty() {
+        return None;
+    }
+    let days_away = days_away(passage_days, &ships);
+    Some(YardPlan {
+        base,
+        passage_days,
+        ships,
+        days_away,
+    })
+}
+
 impl World {
     /// The port for the yard that serves a force at its hex: the
     /// lowest-numbered base of its side there with a `yard_passage_days`.
     pub fn yard_port(&self, force: &TaskForce) -> Option<BaseId> {
-        self.truth
-            .bases
-            .values()
-            .find(|base| {
-                base.side == force.side
-                    && base.hex == force.position()
-                    && base.yard_passage_days.is_some()
-            })
-            .map(|base| base.id)
+        yard_port_in(&self.truth, force)
     }
 
     /// What a yard order given to `force` now would do: its port, passage,
@@ -108,26 +141,7 @@ impl World {
     /// scenario has no surface combat figures. Reads the state as it stands
     /// and checks nothing else (the order's checks are `check_order`'s).
     pub fn yard_plan(&self, force: TaskForceId) -> Option<YardPlan> {
-        let force = self.truth.task_forces.get(&force)?;
-        let figures = self.ref_data.surface_combat.as_ref()?;
-        let base = self.yard_port(force)?;
-        let passage_days = self.truth.bases[&base].yard_passage_days?;
-        let ships: Vec<(ShipId, u32)> = force
-            .ships
-            .iter()
-            .filter(|id| self.truth.ships[id].location != ShipLocation::Sunk)
-            .map(|id| (*id, days_of_repair(&self.truth.ships[id], figures)))
-            .collect();
-        if ships.is_empty() {
-            return None;
-        }
-        let days_away = days_away(passage_days, &ships);
-        Some(YardPlan {
-            base,
-            passage_days,
-            ships,
-            days_away,
-        })
+        yard_plan_in(&self.truth, &self.ref_data, force)
     }
 
     /// Applies an accepted yard order on `day` (decision 0069): the ships go

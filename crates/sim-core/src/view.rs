@@ -394,6 +394,21 @@ impl<'a> SideView<'a> {
         ))
     }
 
+    /// What a yard order given to one of the side's own task forces now would
+    /// do (decision 0069): the port, the passage, each ship's days of repair
+    /// and the days away, worked by the function the order itself uses.
+    /// `None` if `task_force` is not one of the side's own, or has no ship
+    /// afloat in it (a force away has none) or no port for the yard here. It
+    /// reads only the side's own force, ships and bases and checks nothing
+    /// else; whether the order would be accepted is `World::check_order`'s.
+    pub fn yard_plan(&self, task_force: TaskForceId) -> Option<crate::repair::YardPlan> {
+        let force = self.truth.task_forces.get(&task_force)?;
+        if force.side != self.side {
+            return None;
+        }
+        crate::repair::yard_plan_in(self.truth, self.ref_data, task_force)
+    }
+
     /// Reference data is common knowledge.
     pub fn ship_class(&self, id: ShipClassId) -> Option<&'a ShipClass> {
         self.ref_data.ship_classes.get(&id)

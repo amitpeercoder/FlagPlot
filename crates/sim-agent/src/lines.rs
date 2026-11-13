@@ -6,7 +6,7 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::EntityRef;
 use sim_core::orders::{AirMission, Mission, Reach};
 use sim_core::refdata::ShipKind;
-use sim_core::state::{AirGroup, Base, SystemState, TaskForce};
+use sim_core::state::{AirGroup, Base, ShipLocation, SystemState, TaskForce};
 
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::words;
@@ -26,7 +26,8 @@ pub struct FuelLine {
 pub struct ForceLine {
     pub task_force: Handle,
     pub place: Place,
-    /// `idle`, `underway`, `arrived` or `out_of_fuel`.
+    /// `idle`, `underway`, `arrived`, `out_of_fuel` or `away_at_yard`
+    /// (decision 0069).
     pub status: &'static str,
     pub mission: &'static str,
     /// `cruise`, `full` or knots, such as `24 kn`.
@@ -151,6 +152,9 @@ pub(crate) fn fuel_line(ctx: &Ctx<'_>, ship: &sim_core::state::Ship) -> FuelLine
 }
 
 pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
+    if force.yard_trip.is_some() {
+        return away_force_line(ctx, force);
+    }
     let afloat: Vec<_> = ctx.afloat_in(force).collect();
     let least = afloat
         .iter()
@@ -204,6 +208,34 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         least_fuelled: least,
         movement,
         propulsion_damaged,
+    }
+}
+
+/// The line of a force away at the yard (decision 0069): at its port, with
+/// its ships (which are off the map) counted, and nothing of fuel or
+/// movement to say.
+fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
+    let at_yard = ctx
+        .ships
+        .values()
+        .filter(|s| s.location == ShipLocation::Yard(force.id))
+        .count();
+    ForceLine {
+        task_force: ctx.force(force.id),
+        place: ctx.place(force.position()),
+        status: "away_at_yard",
+        mission: words::mission(force.mission),
+        speed: words::speed(force.speed),
+        destination: None,
+        readiness: force.readiness.name(),
+        alert: false,
+        fatigue: Dec(force.fatigue),
+        ships_afloat: u32::try_from(at_yard).expect("a force has few ships"),
+        least_fuelled: None,
+        movement: "normal",
+        propulsion_damaged: Vec::new(),
+        cargo_supply_t: None,
+        cargo_fuel_t: None,
     }
 }
 
@@ -269,4 +301,10 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
 /// A force with a ship afloat. The briefing and the lists show these only.
 pub(crate) fn is_afloat(ctx: &Ctx<'_>, force: &TaskForce) -> bool {
     ctx.afloat_in(force).next().is_some()
+}
+
+/// A force the briefing and the lists show: one with a ship afloat, or one
+/// away at the yard with its ships (decision 0069).
+pub(crate) fn is_listed(ctx: &Ctx<'_>, force: &TaskForce) -> bool {
+    is_afloat(ctx, force) || force.yard_trip.is_some()
 }

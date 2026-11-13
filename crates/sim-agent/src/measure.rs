@@ -19,15 +19,16 @@ use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::EntityRef;
-use sim_core::orders::SpeedSetting;
+use sim_core::ids::{AirGroupId, EntityRef, ShipId, TaskForceId};
+use sim_core::orders::{RejectReason, SpeedSetting};
 use sim_core::refdata::{AircraftRole, AttackWeapon};
+use sim_core::state::{Ship, ShipLocation};
 use sim_core::time::{pulse_start, ClockTime, Pulse};
 use sim_core::view::SideView;
 use sim_core::{PassageEnd, PassageForecast};
 
 use crate::answer::{NotKnown, FORMAT, VERSION};
-use crate::common::{Ctx, Dec, Handle, Place};
+use crate::common::{map_unit_tokens, Ctx, Dec, Handle, Place};
 use crate::words;
 
 /// A place in a question: a hex as `{"q": 2, "r": -4}`, or a unit or contact
@@ -106,6 +107,9 @@ pub enum Question {
         #[serde(default)]
         speed: Option<SpeedArg>,
     },
+    /// What sending one of the side's task forces to the yard would cost in
+    /// days (decision 0069), or when a force already away is back.
+    Yard { task_force: String },
     /// How far an air group of the side reaches, and whether it reaches each
     /// place asked about.
     AirReach {
@@ -329,7 +333,73 @@ pub struct AirReach {
     pub places: Vec<ReachLine>,
 }
 
-/// The answer to `measure`: one of the four, or the one answer given for
+/// One ship of a force asked about for the yard.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct YardShip {
+    pub ship: Handle,
+    pub class: String,
+    pub flotation_damage: Dec,
+    pub systems_degraded: u32,
+    pub systems_out: u32,
+    /// Her days of repair (decision 0069), from her damage alone, with no
+    /// passage. Not given for a ship already away, whose days were worked
+    /// out when the force left.
+    pub days_of_repair: Option<u32>,
+}
+
+/// The yard question: what a `send_to_yard` order given now would do, or
+/// where a force already away is and when it is back.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct Yard {
+    pub format: &'static str,
+    pub version: u32,
+    pub kind: &'static str,
+    pub question: &'static str,
+    pub task_force: Handle,
+    /// The force is away at the yard now.
+    pub away: bool,
+    /// `accepted` or `refused`: whether a `send_to_yard` order given now
+    /// would be taken, by the engine's own check. `None` when the question
+    /// was not asked of a game's engine (a bare view cannot check an order).
+    pub order: Option<&'static str>,
+    /// The engine's reason when the order would be refused.
+    pub refusal: Option<String>,
+    /// The port: the base the force is at, or left from.
+    pub port: Option<Handle>,
+    pub passage_days: Option<u32>,
+    /// Each ship afloat of the force (or at the yard), in number order.
+    pub ships: Vec<YardShip>,
+    /// The passage plus the largest days of repair of any ship.
+    pub days_away: Option<u32>,
+    /// The day the force would leave: the coming day, the day an order given
+    /// now is taken in.
+    pub leaves: Option<u32>,
+    /// The day the force is back, at the start of that day.
+    pub return_day: Option<u32>,
+    /// Whether the return falls on or before the game's last day. Not given
+    /// when the last day is not known.
+    pub returns_before_end: Option<bool>,
+    pub last_day: Option<u32>,
+    pub assumptions: &'static str,
+}
+
+const YARD_ASSUMPTION: &str =
+    "the days are worked out from each ship's damage as it is now, with no random draw; the force is away for the days away and back at the start of the day of return";
+
+/// Asks the engine whether it would take a `send_to_yard` order for the task
+/// force (by its umpire's id) now: `World::check_order`.
+pub type YardCheck<'a> = &'a dyn Fn(sim_core::ids::TaskForceId) -> Result<(), RejectReason>;
+
+/// What `measure` needs of the game beyond the side's view: the day the game
+/// ends, and the engine's own check of a yard order. Both optional.
+#[derive(Clone, Copy, Default)]
+pub struct MeasureContext<'a> {
+    /// The last day of the game, if known.
+    pub last_day: Option<u32>,
+    pub yard_check: Option<YardCheck<'a>>,
+}
+
+/// The answer to `measure`: one of the five, or the one answer given for
 /// everything the side does not know.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 #[serde(untagged)]
@@ -337,6 +407,7 @@ pub enum MeasureAnswer {
     AirDistance(AirDistance),
     SeaRoute(SeaRoute),
     Passage(Box<Passage>),
+    Yard(Box<Yard>),
     AirReach(AirReach),
     NotKnown(NotKnown),
 }
@@ -349,8 +420,18 @@ fn not_known() -> MeasureAnswer {
 /// side knows; if any is not, or the unit asked about is not the side's own,
 /// the answer is [`NotKnown`], whichever it was.
 pub fn measure(view: &SideView<'_>, question: &Question) -> MeasureAnswer {
+    measure_in(view, question, &MeasureContext::default())
+}
+
+/// [`measure`] with what a game knows besides the view: the last day and the
+/// engine's check of a yard order.
+pub fn measure_in(
+    view: &SideView<'_>,
+    question: &Question,
+    context: &MeasureContext<'_>,
+) -> MeasureAnswer {
     let ctx = Ctx::new(*view);
-    answer(&ctx, question).unwrap_or_else(not_known)
+    answer(&ctx, question, context).unwrap_or_else(not_known)
 }
 
 /// Reads a question from JSON text, answers it and writes the answer as JSON.
@@ -413,7 +494,11 @@ fn resolve(ctx: &Ctx<'_>, arg: &PlaceArg) -> Option<(Hex, Resolved)> {
     ))
 }
 
-fn answer(ctx: &Ctx<'_>, question: &Question) -> Option<MeasureAnswer> {
+fn answer(
+    ctx: &Ctx<'_>,
+    question: &Question,
+    context: &MeasureContext<'_>,
+) -> Option<MeasureAnswer> {
     match question {
         Question::AirDistance { from, to } => {
             let (a, from) = resolve(ctx, from)?;
@@ -454,8 +539,102 @@ fn answer(ctx: &Ctx<'_>, question: &Question) -> Option<MeasureAnswer> {
             to,
             speed,
         } => passage(ctx, task_force, to, *speed).map(|p| MeasureAnswer::Passage(Box::new(p))),
+        Question::Yard { task_force } => {
+            yard(ctx, task_force, context).map(|y| MeasureAnswer::Yard(Box::new(y)))
+        }
         Question::AirReach { air_group, to } => air_reach(ctx, air_group, to),
     }
+}
+
+fn yard_ship(ctx: &Ctx<'_>, ship: &Ship, days: Option<u32>) -> YardShip {
+    let (degraded, out) = sim_core::repair::systems_degraded_and_out(ship);
+    YardShip {
+        ship: ctx.ship(ship.id),
+        class: ctx
+            .view
+            .ship_class(ship.class)
+            .map_or_else(|| ship.class.to_string(), |c| c.name.clone()),
+        flotation_damage: Dec(ship.flotation_damage),
+        systems_degraded: degraded,
+        systems_out: out,
+        days_of_repair: days,
+    }
+}
+
+fn yard(ctx: &Ctx<'_>, handle: &str, context: &MeasureContext<'_>) -> Option<Yard> {
+    let force = own_force(ctx, handle)?;
+    let last_day = context.last_day;
+    let before_end = |day: u32| last_day.map(|last| day <= last);
+    let mut answer = Yard {
+        format: FORMAT,
+        version: VERSION,
+        kind: "measure",
+        question: "yard",
+        task_force: ctx.force(force.id),
+        away: false,
+        order: None,
+        refusal: None,
+        port: None,
+        passage_days: None,
+        ships: Vec::new(),
+        days_away: None,
+        leaves: None,
+        return_day: None,
+        returns_before_end: None,
+        last_day,
+        assumptions: YARD_ASSUMPTION,
+    };
+    if let Some(check) = context.yard_check {
+        match check(force.id) {
+            Ok(()) => answer.order = Some("accepted"),
+            Err(reason) => {
+                answer.order = Some("refused");
+                answer.refusal =
+                    Some(map_unit_tokens(
+                        &words::refusal(&reason),
+                        |kind, raw| match kind {
+                            "ship" => ctx.ship_number(ShipId::new(raw)),
+                            "task_force" => ctx.force_number(TaskForceId::new(raw)),
+                            _ => ctx.group_number(AirGroupId::new(raw)),
+                        },
+                    ));
+            }
+        }
+    }
+    if let Some(trip) = force.yard_trip {
+        // Away: where, and the day it is back.
+        answer.away = true;
+        answer.port = Some(ctx.base(trip.base));
+        answer.return_day = Some(trip.return_day);
+        answer.returns_before_end = before_end(trip.return_day);
+        answer.ships = ctx
+            .ships
+            .values()
+            .filter(|ship| ship.location == ShipLocation::Yard(force.id))
+            .map(|ship| yard_ship(ctx, ship, None))
+            .collect();
+        return Some(answer);
+    }
+    if let Some(plan) = ctx.view.yard_plan(force.id) {
+        let leaves = ctx.view.day() + 1;
+        let return_day = plan.return_day(leaves);
+        answer.port = Some(ctx.base(plan.base));
+        answer.passage_days = Some(plan.passage_days);
+        answer.ships = plan
+            .ships
+            .iter()
+            .filter_map(|(id, days)| {
+                ctx.ships
+                    .get(id)
+                    .map(|ship| yard_ship(ctx, ship, Some(*days)))
+            })
+            .collect();
+        answer.days_away = Some(plan.days_away);
+        answer.leaves = Some(leaves);
+        answer.return_day = Some(return_day);
+        answer.returns_before_end = before_end(return_day);
+    }
+    Some(answer)
 }
 
 /// An own task force named `task_force:N`.
@@ -664,6 +843,7 @@ impl MeasureAnswer {
             MeasureAnswer::AirDistance(a) => a.to_text(),
             MeasureAnswer::SeaRoute(a) => a.to_text(),
             MeasureAnswer::Passage(a) => a.to_text(),
+            MeasureAnswer::Yard(a) => a.to_text(),
             MeasureAnswer::AirReach(a) => a.to_text(),
             MeasureAnswer::NotKnown(_) => "FLAG PLOT MEASURE\n- Not known.\n".to_string(),
         }
@@ -781,6 +961,67 @@ impl Passage {
         for assumption in [a.departs, a.speed, a.meets, a.losses, a.fuel] {
             line(format!("Assumes: {assumption}"));
         }
+        text
+    }
+}
+
+impl Yard {
+    pub fn to_text(&self) -> String {
+        let mut text = String::from("FLAG PLOT MEASURE: YARD\n");
+        let mut line = |s: String| {
+            text.push_str("- ");
+            text.push_str(&s);
+            text.push('\n');
+        };
+        line(format!("Task force: {}", self.task_force.text()));
+        let end = match (self.returns_before_end, self.last_day) {
+            (Some(true), Some(last)) => format!(", before the game ends (day {last} is the last)"),
+            (Some(false), Some(last)) => {
+                format!(", after the game ends (day {last} is the last): it does not return")
+            }
+            _ => String::new(),
+        };
+        if self.away {
+            line("Away at the yard".to_string());
+            if let Some(port) = &self.port {
+                line(format!("Port: {}", port.text()));
+            }
+            if let Some(day) = self.return_day {
+                line(format!("Back on day {day}{end}"));
+            }
+        } else {
+            match (self.order, &self.refusal) {
+                (Some("refused"), Some(reason)) => {
+                    line(format!("Order: refused, {reason}"));
+                }
+                (Some(_), _) => line("Order: accepted".to_string()),
+                _ => {}
+            }
+            if let (Some(port), Some(passage)) = (&self.port, self.passage_days) {
+                line(format!(
+                    "Port: {}, a passage of {passage} days",
+                    port.text()
+                ));
+            }
+            for ship in &self.ships {
+                line(format!(
+                    "{}: flotation damage {}, {} systems degraded, {} out, {} days of repair",
+                    ship.ship.text(),
+                    ship.flotation_damage,
+                    ship.systems_degraded,
+                    ship.systems_out,
+                    ship.days_of_repair.unwrap_or(0)
+                ));
+            }
+            if let (Some(away), Some(leaves), Some(back)) =
+                (self.days_away, self.leaves, self.return_day)
+            {
+                line(format!(
+                    "Days away: {away}; leaves on day {leaves}, back on day {back}{end}"
+                ));
+            }
+        }
+        line(format!("Assumes: {}", self.assumptions));
         text
     }
 }

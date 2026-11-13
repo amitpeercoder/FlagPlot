@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 use serde_json::{json, Value};
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, ShipId, TaskForceId};
-use sim_core::orders::{OrderRequest, Origin, RejectReason};
+use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::state::Side;
 use sim_core::World;
 
@@ -22,7 +22,7 @@ use crate::answer::{FORMAT, VERSION};
 use crate::briefing::briefing_for_game;
 use crate::common::{map_unit_tokens, Ctx};
 use crate::explain::explain;
-use crate::measure::{measure, Question};
+use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
@@ -262,7 +262,30 @@ impl Session {
             "measure" => {
                 let question = Question::from_json(&arguments.to_string())
                     .map_err(|e| CallError::new(format!("not a question to measure: {e}")))?;
-                to_value(&measure(&self.world.side_view(side), &question))
+                // The engine's own check of a yard order, and the last day,
+                // for the yard question.
+                let world = &self.world;
+                let check = |id: TaskForceId| {
+                    world.check_order(
+                        side,
+                        &OrderRequest {
+                            kind: OrderKind::TaskForce {
+                                target: id,
+                                order: TaskForceOrder::SendToYard,
+                            },
+                            origin: Origin::PLAYER,
+                        },
+                    )
+                };
+                let context = MeasureContext {
+                    last_day: Some(self.days),
+                    yard_check: Some(&check),
+                };
+                to_value(&measure_in(
+                    &self.world.side_view(side),
+                    &question,
+                    &context,
+                ))
             }
             "explain" => {
                 let event = args
@@ -336,12 +359,27 @@ impl Session {
         for (index, judgement) in judged.into_iter().enumerate() {
             match judgement {
                 Ok(request) => {
+                    // A yard order's acceptance states the day of return,
+                    // worked by the function the order itself uses on the
+                    // state as it stands (decision 0069).
+                    let mut result = json!({ "index": index, "status": "queued" });
+                    if let OrderKind::TaskForce {
+                        target,
+                        order: TaskForceOrder::SendToYard,
+                    } = &request.kind
+                    {
+                        if let Some(plan) = self.world.side_view(side).yard_plan(*target) {
+                            let day = plan.return_day(self.world.day() + 1);
+                            result["day_of_return"] = json!(day);
+                            result["returns"] = json!(day <= self.days);
+                        }
+                    }
                     self.seats
                         .get_mut(&side)
                         .expect("both seats exist")
                         .queued
                         .push(request);
-                    results.push(json!({ "index": index, "status": "queued" }));
+                    results.push(result);
                 }
                 Err(reason) => {
                     results.push(json!({ "index": index, "status": "refused", "reason": reason }));

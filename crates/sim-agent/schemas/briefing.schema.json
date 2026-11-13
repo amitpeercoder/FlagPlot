@@ -19,6 +19,11 @@
     "action": { "$ref": "#/$defs/action" },
     "losses": { "$ref": "#/$defs/losses" },
     "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },
+    "away_at_yard": {
+      "description": "The forces away at the yard (decision 0069), each with the day it is back. Left out when none is away.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/away_force" }
+    },
     "air_groups": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/air_group_line" } },
     "bases": { "type": "array", "items": { "$ref": "#/$defs/base" } },
     "arrivals": { "$ref": "#/$defs/arrivals" },
@@ -538,6 +543,49 @@
         }
       }
     },
+    "away_force": {
+      "type": "object",
+      "required": ["task_force", "port", "ships", "return_day", "returns_before_end", "last_day"],
+      "additionalProperties": false,
+      "properties": {
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "port": { "$ref": "defs.schema.json#/$defs/handle" },
+        "ships": { "$ref": "defs.schema.json#/$defs/handles" },
+        "return_day": { "type": "integer" },
+        "returns_before_end": { "type": ["boolean", "null"] },
+        "last_day": { "$ref": "defs.schema.json#/$defs/count_or_null" }
+      }
+    },
+    "repaired_ship": {
+      "description": "A ship a base mended yesterday by forward repair (decision 0069): the points spent on her, what she has left of fire and flotation damage, the systems put back to working yesterday, and the systems she still has degraded or out.",
+      "type": "object",
+      "required": [
+        "ship", "task_force", "points", "fire_damage", "flotation_damage", "restored",
+        "systems_degraded", "systems_out", "event"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "points": { "$ref": "defs.schema.json#/$defs/dec" },
+        "fire_damage": { "$ref": "defs.schema.json#/$defs/dec" },
+        "flotation_damage": { "$ref": "defs.schema.json#/$defs/dec" },
+        "restored": { "type": "array", "items": { "enum": ["propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"] } },
+        "systems_degraded": { "type": "array", "items": { "enum": ["propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"] } },
+        "systems_out": { "type": "array", "items": { "enum": ["propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"] } },
+        "event": { "type": "integer" }
+      }
+    },
+    "returned_force": {
+      "type": "object",
+      "required": ["task_force", "ships", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "ships": { "$ref": "defs.schema.json#/$defs/handles" },
+        "event": { "type": "integer" }
+      }
+    },
     "base": {
       "type": "object",
       "required": [
@@ -553,6 +601,8 @@
         "spent_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "destroyed_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+        "repaired_yesterday": { "type": "array", "items": { "$ref": "#/$defs/repaired_ship" } },
+        "returned_yesterday": { "type": "array", "items": { "$ref": "#/$defs/returned_force" } },
         "stocks_yesterday": {
           "description": "Where the base's supply and fuel went and came from yesterday, by cause, from the side's own events. null when nothing moved in or out of either stock; otherwise supply and fuel are each null when that stock did not move. start_t is end_t less the net of the causes (landed less the others).",
           "oneOf": [

@@ -15,7 +15,7 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `list_contacts` | `list_contacts.schema.json` | `list_contacts` |
 | `entity` | `entity.schema.json` | `get_entity` |
 | `explain` | `explain.schema.json` | `explain` |
-| `measure` | `measure.schema.json` | `measure`: one of four answers, told apart by `question` (`air_distance`, `sea_route`, `passage`, `air_reach`) |
+| `measure` | `measure.schema.json` | `measure`: one of five answers, told apart by `question` (`air_distance`, `sea_route`, `passage`, `yard`, `air_reach`) |
 | `not_known` | `not_known.schema.json` | `get_entity`, `explain` and `measure`, for anything the side does not know of |
 | `briefing_text` | `briefing_text.schema.json` | `get_briefing` with `{"text": true}` |
 | `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |
@@ -77,6 +77,7 @@ nothing of the question.
 | `air_distance` | `from`, `to`: places | the straight-line air distance, in whole miles (decision 0040) |
 | `sea_route` | `from`, `to`: places | whether ships can get there, the hexes entered in order and the miles |
 | `passage` | `task_force`: `"task_force:N"`; `to`: a place; `speed` (optional): `"cruise"`, `"full"` or knots above zero, `17` or `"17.5"` | a forecast of the force's passage: the route, the speed, the hours, the day, pulse and clock time of arrival, and each ship's fuel |
+| `yard` | `task_force`: `"task_force:N"` | what a `send_to_yard` order given now would do (decision 0069): whether the engine would take it and why not, the port and passage, each ship's days of repair, the days away, the day it leaves, `return_day` and `returns_before_end`; for a force away, its port and `return_day` |
 | `air_reach` | `air_group`: `"air_group:N"`; `to`: a list of places | the type's radius, and for each place the air distance and whether it is within the radius |
 
 A place is `{"q": 2, "r": -4}`, or the handle of one of the side's own ships,

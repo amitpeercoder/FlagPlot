@@ -26,7 +26,8 @@ use sim_core::view::SideView;
 use crate::answer::{FORMAT, VERSION};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::lines::{
-    air_group_line, force_line, is_afloat, AirGroupLine, ContactLine, ForceLine, PropulsionLine,
+    air_group_line, force_line, is_afloat, is_listed, AirGroupLine, ContactLine, ForceLine,
+    PropulsionLine,
 };
 use crate::objectives::{objectives_part, result_part, ObjectivesPart};
 use crate::words;
@@ -53,8 +54,13 @@ pub struct Briefing {
     pub action: ActionPart,
     /// 5. Ships and aircraft lost, and what the side claims.
     pub losses: LossesPart,
-    /// 6. Task forces with a ship afloat.
+    /// 6. Task forces with a ship afloat, and those away at the yard.
     pub task_forces: Vec<ForceLine>,
+    /// 6b. The forces away at the yard (decision 0069), with the day each is
+    /// back. Empty, and left out of the data and the text, when none is away,
+    /// so a side that has nothing at the yard sees no such part.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub away_at_yard: Vec<AwayForce>,
     /// 7. Air groups.
     pub air_groups: Vec<AirGroupLine>,
     /// 8. Bases.
@@ -374,6 +380,48 @@ pub struct Claim {
     pub event: u32,
 }
 
+/// A force away at the yard (decision 0069).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AwayForce {
+    pub task_force: Handle,
+    /// The base it left from.
+    pub port: Handle,
+    pub ships: Vec<Handle>,
+    /// The day it is back, at the start of that day.
+    pub return_day: u32,
+    /// Whether that day is within the game: `None` when the last day is not
+    /// known.
+    pub returns_before_end: Option<bool>,
+    pub last_day: Option<u32>,
+}
+
+/// A ship a base mended yesterday (decision 0069), from the side's own
+/// `ShipRepaired` event and the ship as she is now.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RepairedShip {
+    pub ship: Handle,
+    pub task_force: Handle,
+    /// The points spent on her yesterday.
+    pub points: Dec,
+    /// What she has left of fire and flotation damage after it.
+    pub fire_damage: Dec,
+    pub flotation_damage: Dec,
+    /// Systems put back to working yesterday.
+    pub restored: Vec<&'static str>,
+    /// The systems she still has degraded, and the ones out.
+    pub systems_degraded: Vec<&'static str>,
+    pub systems_out: Vec<&'static str>,
+    pub event: u32,
+}
+
+/// A force that came back from the yard at a base yesterday.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ReturnedForce {
+    pub task_force: Handle,
+    pub ships: Vec<Handle>,
+    pub event: u32,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct BriefingBase {
     pub base: Handle,
@@ -389,6 +437,12 @@ pub struct BriefingBase {
     /// Where the base's supply and fuel went and came from yesterday, by
     /// cause. `None` when nothing moved in or out of either stock.
     pub stocks_yesterday: Option<StocksYesterday>,
+    /// Ships mended here yesterday by forward repair (decision 0069).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub repaired_yesterday: Vec<RepairedShip>,
+    /// Forces that came back here from the yard yesterday.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub returned_yesterday: Vec<ReturnedForce>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -563,8 +617,28 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
     let task_forces: Vec<ForceLine> = ctx
         .forces
         .values()
-        .filter(|f| is_afloat(&ctx, f))
+        .filter(|f| is_listed(&ctx, f))
         .map(|f| force_line(&ctx, f))
+        .collect();
+    let away_at_yard: Vec<AwayForce> = ctx
+        .forces
+        .values()
+        .filter_map(|f| {
+            let trip = f.yard_trip?;
+            Some(AwayForce {
+                task_force: ctx.force(f.id),
+                port: ctx.base(trip.base),
+                ships: ctx
+                    .ships
+                    .values()
+                    .filter(|s| s.location == ShipLocation::Yard(f.id))
+                    .map(|s| ctx.ship(s.id))
+                    .collect(),
+                return_day: trip.return_day,
+                returns_before_end: last_day.map(|last| trip.return_day <= last),
+                last_day,
+            })
+        })
         .collect();
     let air_groups: Vec<AirGroupLine> = ctx
         .groups
@@ -589,6 +663,8 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                     .unwrap_or(Fixed::ZERO)),
                 days_of_supply: days_of_supply(b.supply_t, spent).map(Dec),
                 stocks_yesterday: stocks_yesterday(b, day.stocks.get(&b.id)),
+                repaired_yesterday: day.repaired.get(&b.id).cloned().unwrap_or_default(),
+                returned_yesterday: day.returned.get(&b.id).cloned().unwrap_or_default(),
             }
         })
         .collect();
@@ -649,6 +725,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         action: day.action,
         losses: day.losses,
         task_forces,
+        away_at_yard,
         air_groups,
         bases,
         arrivals,
@@ -689,6 +766,8 @@ struct Day {
     spent: BTreeMap<BaseId, Fixed>,
     destroyed: BTreeMap<BaseId, Fixed>,
     stocks: BTreeMap<BaseId, StockMoves>,
+    repaired: BTreeMap<BaseId, Vec<RepairedShip>>,
+    returned: BTreeMap<BaseId, Vec<ReturnedForce>>,
 }
 
 /// What moved in and out of a base's stocks yesterday, by cause, from the
@@ -848,6 +927,8 @@ impl Day {
         let mut spent: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut destroyed: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut stocks: BTreeMap<BaseId, StockMoves> = BTreeMap::new();
+        let mut repaired: BTreeMap<BaseId, Vec<RepairedShip>> = BTreeMap::new();
+        let mut returned: BTreeMap<BaseId, Vec<ReturnedForce>> = BTreeMap::new();
 
         for e in events {
             let id = ctx.number(e.id);
@@ -1143,6 +1224,53 @@ impl Day {
                     EventKind::ShipRefuelled { base, taken_t, .. } => {
                         stocks.entry(*base).or_default().fuel_refuelling += *taken_t;
                     }
+                    EventKind::ShipRepaired {
+                        ship,
+                        task_force,
+                        base,
+                        points,
+                        fire_damage,
+                        flotation_damage,
+                        restored,
+                        ..
+                    } => {
+                        // What she has left in systems is read from the ship
+                        // as she is now: the briefing is taken before the
+                        // day's orders, so it is what yesterday left.
+                        let with_state =
+                            |wanted: sim_core::state::SystemState| -> Vec<&'static str> {
+                                ctx.ships
+                                    .get(ship)
+                                    .map(|s| {
+                                        sim_core::state::ShipSystem::ALL
+                                            .iter()
+                                            .filter(|system| s.systems.get(**system) == wanted)
+                                            .map(|system| words::system(*system))
+                                            .collect()
+                                    })
+                                    .unwrap_or_default()
+                            };
+                        repaired.entry(*base).or_default().push(RepairedShip {
+                            ship: ctx.ship(*ship),
+                            task_force: ctx.force(*task_force),
+                            points: Dec(*points),
+                            fire_damage: Dec(*fire_damage),
+                            flotation_damage: Dec(*flotation_damage),
+                            restored: restored.iter().map(|s| words::system(*s)).collect(),
+                            systems_degraded: with_state(sim_core::state::SystemState::Degraded),
+                            systems_out: with_state(sim_core::state::SystemState::Out),
+                            event: id,
+                        });
+                    }
+                    EventKind::ForceReturnedFromYard {
+                        task_force,
+                        base,
+                        ships,
+                    } => returned.entry(*base).or_default().push(ReturnedForce {
+                        task_force: ctx.force(*task_force),
+                        ships: ships.iter().map(|s| ctx.ship(*s)).collect(),
+                        event: id,
+                    }),
                     _ => {}
                 },
                 SideEventKind::Salvo {
@@ -1326,6 +1454,8 @@ impl Day {
             spent,
             destroyed,
             stocks,
+            repaired,
+            returned,
         }
     }
 }
