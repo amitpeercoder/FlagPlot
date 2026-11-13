@@ -971,7 +971,7 @@ mod tests {
         assert_eq!(figures.base_supply_destroyed_per_hit_t, Fixed::from_int(50));
         assert_eq!(figures.base_hit_aircraft, Fixed::from_ratio(3, 10));
         assert_eq!(figures.base_hit_supply, Fixed::from_ratio(3, 10));
-        assert_eq!(figures.fighter_false_claim_chance, Fixed::from_ratio(1, 10));
+        assert_eq!(figures.fighter_false_claim_chance, Fixed::from_ratio(7, 10));
         assert_eq!(
             figures.anti_aircraft_false_claim_chance,
             Fixed::from_ratio(5, 100)
@@ -1022,7 +1022,7 @@ mod tests {
         for (key, value, label) in [
             (
                 "fighter_false_claim_chance",
-                "0.1",
+                "0.7",
                 "fighter false claim chance",
             ),
             (
