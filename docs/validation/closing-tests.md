@@ -79,7 +79,7 @@ The Japanese carrier force (Ryujo's, task force 4) steamed overnight to (7,-12) 
 
 ### Findings: what confused the model, with a proposed wording fix for each
 
-The architect's rulings, Nov 13, 2026: L1, L4, L9 and L11 are fixed in the glossary and the rulebook in this pull request (below, "What was changed"); L2, L3, L5, L8 and L12 change served text (the briefing and the tools) and go in a second pull request, cut from `main` after this one, with the agent's goldens and the recorded games remade (made: the briefing now tells two groups of one squadron apart, says a base's fuel is for ships, puts the side's event numbers on the attack-on-a-ship line, says aircraft wear is not in play when it is not, and prints "hit, no change" for a system hit that changed nothing; no save, hash or outcome changed); L6 and L7 are put on `docs/step2-opening-list.md` for step 3; L10 needs nothing.
+The architect's rulings, Nov 13, 2026: L1, L4, L9 and L11 are fixed in the glossary and the rulebook in this pull request (below, "What was changed"); L2, L3, L5, L8 and L12 change served text (the briefing and the tools) and go in a second pull request, cut from `main` after this one, with the agent's goldens and the recorded games remade (made: the briefing now tells two groups of one squadron apart, says a base's fuel is for ships, puts the side's event numbers on the attack-on-a-ship line, says aircraft wear is not in play when it is not, and prints "hit, no change" for a system hit that changed nothing; no save, hash or outcome changed); L6 and L7 are put on `docs/open-work.md` for step 3; L10 needs nothing.
 
 | # | What confused it | Where | Proposed fix |
 | --- | --- | --- | --- |
@@ -226,7 +226,7 @@ Wording only, each saying what the code already does; no rule changes its meanin
 | R6 | `docs/engineering/roles-and-tests.md`, Tests | A chance worked by hand over several draws is written cut to six places |
 | R7 | Chapter 4, Each shot is rolled | n shots at p all miss with chance (1 − p)^n |
 | R8 | Chapter 5, Coming home to no deck | A degraded deck still lands them |
-| L6, L7 | `docs/step2-opening-list.md` | One line each, for step 3 |
+| L6, L7 | `docs/open-work.md` | One line each, for step 3 |
 
 **Served text that says "crippled" in the old, flotation sense,** which would have to change for the word to have one meaning everywhere (not changed here; listed as the architect asked):
 

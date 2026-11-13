@@ -69,7 +69,8 @@ impl World {
                 self.truth.task_forces.get(&force).map(|f| f.position())
             }
             ShipLocation::Port(base) => self.truth.bases.get(&base).map(|b| b.hex),
-            ShipLocation::Sunk => None,
+            // Off the map while at the yard (decision 0069).
+            ShipLocation::Sunk | ShipLocation::Yard(_) => None,
         }
     }
 

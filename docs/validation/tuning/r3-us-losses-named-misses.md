@@ -39,4 +39,4 @@ The American claims measure divides by these losses' Japanese counterpart, not b
 
 ## For step 3
 
-Named in `docs/step2-opening-list.md`: bombers' return fire; a search meeting fighters; an aircraft written off for combat damage; a deck closed for a time.
+Named in `docs/open-work.md`: bombers' return fire; a search meeting fighters; an aircraft written off for combat damage; a deck closed for a time.

@@ -50,6 +50,14 @@
               },
               "status": {
                 "const": "queued"
+              },
+              "day_of_return": {
+                "description": "For a queued send_to_yard order: the day the force would be back, worked from the ships' damage as it stands (decision 0069).",
+                "type": "integer"
+              },
+              "returns": {
+                "description": "For a queued send_to_yard order: false if day_of_return is after the game's last day.",
+                "type": "boolean"
               }
             }
           },

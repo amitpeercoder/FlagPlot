@@ -8,7 +8,7 @@ use sim_core::view::SideView;
 use crate::answer::{NotKnown, FORMAT, VERSION};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::lines::{
-    air_group_line, base_line, force_line, is_afloat, AirGroupLine, BaseLine, ContactLine,
+    air_group_line, base_line, force_line, is_listed, AirGroupLine, BaseLine, ContactLine,
     ForceLine,
 };
 use crate::words;
@@ -93,7 +93,7 @@ pub fn list_forces(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListForces 
         task_forces: ctx
             .forces
             .values()
-            .filter(|f| is_afloat(&ctx, f) && within(area, f.position()))
+            .filter(|f| is_listed(&ctx, f) && within(area, f.position()))
             .map(|f| force_line(&ctx, f))
             .collect(),
     }
@@ -329,7 +329,8 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
         "ship" => {
             let ship = ctx.own_ship(id)?;
             let (task_force, port) = match ship.location {
-                ShipLocation::TaskForce(f) => (Some(ctx.force(f)), None),
+                // Away at the yard with the force named (decision 0069).
+                ShipLocation::TaskForce(f) | ShipLocation::Yard(f) => (Some(ctx.force(f)), None),
                 ShipLocation::Port(b) => (None, Some(ctx.base(b))),
                 ShipLocation::Sunk => (None, None),
             };

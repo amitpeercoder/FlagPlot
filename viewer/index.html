@@ -863,6 +863,18 @@ function buildModel(replay) {
           }
           break;
         }
+        // A force away at the yard has no ship on the map and is not sunk: its ships leave the force's list and come
+        // back on its day of return (decision 0069). The force itself stays where it is.
+        case 'force_left_for_yard': {
+          const f = cur.forces.get(d.task_force);
+          if (f) f.ships = f.ships.filter(x => !(d.ships || []).includes(x));
+          break;
+        }
+        case 'force_returned_from_yard': {
+          const f = cur.forces.get(d.task_force);
+          if (f) for (const s of d.ships || []) if (!f.ships.includes(s)) f.ships.push(s);
+          break;
+        }
         // Readiness is set by an accepted order; alerted follows the alert and stand-down events and a successful
         // alarm roll, which are all the engine changes it by (a force that stays alerted from one pulse to the next
         // has no event, and a failed alarm roll changes nothing).

@@ -198,6 +198,10 @@ name = "scenario_19c_patrol_after_the_attack"
 path = "scenario_19c_patrol_after_the_attack.rs"
 
 [[test]]
+name = "scenario_20a_ship_repair"
+path = "scenario_20a_ship_repair.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 

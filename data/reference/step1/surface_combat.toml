@@ -68,6 +68,16 @@ unready_gun_share = "1"
 # no step 1 result moves. The live file has the placeholder figure.
 unready_torpedo_share = "1"
 
+# Repair (decision 0069). Step 1 had no such rule, and no base of a step 1
+# scenario has a repair figure or a yard port, so these are the live file's first
+# values: no step 1 result moves. Placeholders; see the section "The yard
+# function's figures from the record" of docs/decisions/0069-ship-repair.md.
+forward_repair_max_flotation = "10"
+forward_repair_system_points = "10"
+yard_days_per_flotation_point = "2"
+yard_days_per_system_degraded = "5"
+yard_days_per_system_out = "30"
+
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]
 propulsion = "0.2"

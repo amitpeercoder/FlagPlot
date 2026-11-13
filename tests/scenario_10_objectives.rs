@@ -528,7 +528,10 @@ fn objectives_change_no_hash_and_no_event() {
     // hash.
     // And it was de197a1edf53a1ae until the state went to version 8 (decision
     // 0086, the counters of units made in play are hashed).
-    assert!(baseline.contains("hash 0d70319bcaa38438"));
+    // And it was 0d70319bcaa38438 until the state went to version 9 (decision
+    // 0069, ship repair) and five figures were added to surface_combat.toml;
+    // the event log did not change.
+    assert!(baseline.contains("hash a730ebb0db042017"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

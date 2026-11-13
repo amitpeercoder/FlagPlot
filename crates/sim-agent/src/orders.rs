@@ -72,6 +72,7 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             TaskForceOrder::SetReadiness(readiness) => {
                 json!({ "kind": "set_readiness", "readiness": readiness.name() })
             }
+            TaskForceOrder::SendToYard => json!({ "kind": "send_to_yard" }),
         },
         OrderKind::AirGroup { order, .. } => match order {
             AirGroupOrder::SetAirMission(mission) => {
@@ -258,6 +259,7 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     "battle" => Readiness::Battle,
                     other => return Err(format!("unknown readiness \"{other}\"")),
                 }),
+                "send_to_yard" => TaskForceOrder::SendToYard,
                 other => return Err(format!("unknown task force order \"{other}\"")),
             };
             Ok(OrderKind::TaskForce {

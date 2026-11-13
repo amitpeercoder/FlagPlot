@@ -192,7 +192,8 @@ A ship has two damage tracks, flotation and fire, each from 0 to 100. A hit adds
 - Flotation damage of 100 sinks the ship. Nothing else sinks it. [0014]
 - Flotation damage of `surface_combat.toml: crippled_flotation` or more makes a ship heavily damaged. A heavily damaged ship counts toward its force's break-off level. It has no other effect. (The figure, the break-off event's text and its breakdown keep the older word, crippled; in this book and the glossary a crippled ship is the objectives' one, with propulsion or flight deck out, chapter 6.) [0014]
 - Fire damage above 0 lights the ship at night: it is easier to hit (the lit factor). Fire damage of `claimed_sunk_fire` or more makes the enemy claim it as sunk (chapter 3, Claims). It has no other effect. [0014]
-- Fire does not grow, spread or burn out, and is not fought. Fire damage changes only by hits. [0014]
+- Fire does not grow, spread or burn out, and is not fought. Fire damage changes by hits, and falls only by repair (below). [0014, 0069]
+- A ship starts a scenario with no flotation or fire damage unless its `[[ship]]` entry gives `flotation_damage` (from 0 to below 100: a ship sunk is not given this way) or `fire_damage` (from 0 to 100), each a whole number or a decimal string; the loader refuses a value outside the range and a float. [0069]
 
 A side sees: `ShipDamaged`, `SystemHit` and `ShipSunk` whole, for its own ships. It does not see the damage it does. [0047]
 
@@ -285,11 +286,80 @@ A side sees: its own `ReportReceived` and `ClaimReceived`, whole. It never sees 
 - **Guns and sighting.** Main battery, torpedo mounts and fire control change shots and hit chances as the table of named systems gives. Radar is not damaged and no sensor is. [0016]
 - **Stragglers.** A straggler is a ship whose propulsion is degraded or out. It is not the same as a heavily damaged ship. The standing instruction for stragglers is applied after each fight to the two forces that fought, lower number first, and at the start of every movement step. Chapter 2, Stragglers, gives the rule. [0016, 0022]
 
-## No repair
+## Repair
 
-No rule ever lowers a ship's flotation damage, fire damage or the state of a system, in port or at sea. A damaged ship stays damaged for the rest of the game. A system once out stays out. Aircraft repair is a separate rule for aircraft and is not this. [0014, 0016, 0052]
+A ship's damage is mended in two ways, and nowhere else. Aircraft repair is a separate rule for aircraft and is not this (chapter 5). Both ways read `surface_combat.toml` and a base's keys; a scenario with no base that has a repair figure or a yard passage has no ship repair. Neither uses a random number. [0014, 0016, 0052, 0069]
 
-Known limit: ship repair is not built; decision 0069 plans it, for after step 2. Flooding that slows a ship, magazine explosions and damage to radar are not built. Shore bombardment and ships at anchor as targets are not built. Real hit chances and damage come from sources in step 2. [0014, 0016, 0052]
+### Forward repair
+
+At the start of each day, after the day's orders are taken in (chapter 1, Before the pulses), a base that mends points of damage a day spends them, with no order, on the forces of its side stopped in its hex.
+
+- **The allowance.** Each base's allowance for the day is its `ship_repair_points_per_day`. It is shared by every force of its side stopped there, and what is not spent is lost at the end of the day. A base with 0 mends nothing.
+- **Who is served.** A force is served if it is stopped (not under way and with no hex ahead, as for refuelling, chapter 2), is not away at the yard and has a ship afloat. A force ordered to sail that morning is under way when the repair runs and is not served. A force that was given an order that was refused, or one that does not move it, is stopped and is served. A ship lying in port (`ShipLocation::Port`, a ship that is in no force) is not repaired, and no scenario of the slice starts a damaged ship there. [0069]
+- **In which order.** Forces in order of their number, ships within a force in order of theirs. Each ship takes from the lowest-numbered base of its side in the hex whose allowance left is above 0. If there is none, the rest of the force gets nothing.
+- **How a ship's points are spent.** In this order, each step taking the smaller of the allowance left and what the ship needs:
+  1. Fire damage, down toward 0.
+  2. Flotation damage, down toward 0, only if the ship's flotation damage is below `forward_repair_max_flotation` at the start of this step. Flotation damage at or above the figure is not touched.
+  3. Degraded systems, in the order of the named systems (propulsion, fire control, main battery, torpedo mounts, flight deck; the order of Where a hit lands), the first degraded one only at a time. A system needs `forward_repair_system_points` less the points already banked on the ship. If the allowance left covers that, the system works again, the bank returns to 0 and the next degraded system is taken. If not, all the allowance left goes into the bank and the ship is done.
+- **The bank.** A ship's `system_repair_points` holds the points put into her first degraded system that a base has not finished, so a base that mends fewer points a day than a system needs still mends it in time. It is from 0 up to below `forward_repair_system_points`. The banked points belong to the first degraded system in order at the time they are spent: if that system is then hit to out, they go to the next degraded one. When step 3 finds no degraded system the bank is set to 0, spending nothing.
+- **A system that is out is never mended forward.** Only the yard mends it. Forward repair never adds damage, and leaves fuel, ammunition and torpedoes as they are.
+- **What is recorded.** A ship that takes points records one `ShipRepaired`, after her points are spent and before the next ship is served: the points spent on her this day, her fire and flotation damage after, the systems made to work, and her bank after. It cites the force's arrival event, if it has one. A ship that takes no points records nothing. The one exception is a ship whose bank was set to 0 at step 3: that is a change to her, so if it is the only change that day it is recorded as a `ShipRepaired` of 0 points. Its breakdown holds the allowance before and after, the fire, flotation and system points spent, and `forward_repair_max_flotation` when her flotation damage was too high to be mended. [0069]
+
+### The yard
+
+A force stopped at a base of its side that is a port for the yard (a base with a `yard_passage_days`) can be ordered to the yard (chapter 1, Task force orders). Its ships then leave the map and come back, whole, on a day worked out from their damage and told when the order is given. Two quantities are named and kept apart:
+
+- **Days of repair** of one ship is the time she needs from her damage alone, with no passage: `yard_days_per_flotation_point` times her flotation damage, plus `yard_days_per_system_degraded` for each system degraded, plus `yard_days_per_system_out` for each system out, the three products added and the sum rounded up to a whole day (a part of a day is a day). A system her class lacks is working and counts for nothing. Fire damage adds nothing: the yard mends it with the rest. A ship with no damage has 0 days of repair.
+- **Days away** of a force is the port's `yard_passage_days` plus the largest days of repair of its ships afloat. The passage is at least 1, so the days away are at least 1. No passage is steamed: the force is simply away.
+- **Day of return** is the day the order is taken in plus the days away. A force sent on day D with 34 days away is away on days D to D + 33 and is back at the start of day D + 34.
+
+One function works out days of repair, and the order, its acceptance, `measure` and the count that decision 0088 plans all read it. Where two bases of the side in the hex are ports for the yard, the lowest-numbered is the port. The days are worked from the state when the order is taken in, which is before that day's forward repair, so the days stated are the days the force leaves with.
+
+When the order is taken in, the ships leave the force (their location becomes away at the yard, `ShipLocation::Yard`) and the force stays at its base's hex, idle, with no ship, route, cargo order, leg, alert or the event that alerted it. The force keeps its mission, speed and its order, readiness and its order, rules of engagement and their order, home port and fatigue while it is away. `ForceLeftForYard` is recorded as the order's follow-up, with each ship's days of repair, the passage, the days away and the day of return. The acceptance states the day: an answer to a queued order carries the day of return, or says the force does not return if that day is after the last day of the game.
+
+**While away,** a force is on no hex of the map as far as any rule goes: it is not moved, fought, sighted, searched for, struck or alerted, takes no fatigue, is not refuelled or repaired forward, and takes no order (chapter 1, Every reason an order is refused). Its ships are afloat, with the damage they left with. Chapter 2 says what the enemy knows of it.
+
+**When it returns,** at the start of its day of return, before refuelling, each ship of the force in number order is made whole:
+
+| Field | Becomes |
+| --- | --- |
+| Flotation damage, fire damage, her bank | 0 |
+| Each named system | Working |
+| Fuel | Her class's `fuel_capacity_t` |
+| Gun rounds | Her class's `main_guns` times `gun_rounds_per_gun`, the load a scenario gives a ship with no `gun_rounds` key |
+| Torpedoes ready | Yes if her class has torpedo tubes |
+| Side fired (`torpedoes_one_side_fired`) | No |
+| Cargo aboard, experience | Unchanged |
+
+The force is idle at its base's hex, with no route, cargo order, alert or fatigue. Its mission, speed, readiness, rules of engagement and home port are as they were when it left. Its arrival event is the `ForceReturnedFromYard` that is then recorded, citing the departure, so the day's refuelling and forward repair cite it. The force's orders are taken as for any force.
+
+A force whose day of return is after the last day of the game never returns: its ships end the game afloat at the yard, with the damage they left with. The engine does not hold the last day; the session that plays the game does, and tells it in the briefing and in `measure`. A whole force goes and returns together, until forces can be formed by order. [0069]
+
+### The figures
+
+Five figures of `surface_combat.toml`, required like every key there, each a placeholder. The same values stand in the frozen step 1 copy, which no step 1 scenario can reach.
+
+| Figure | Means | The loader refuses |
+| --- | --- | --- |
+| `forward_repair_max_flotation` | Forward repair mends flotation damage only below this many points | Below 0 or above 100 |
+| `forward_repair_system_points` | The points a forward base must put into one degraded system to make it work | 0 or below |
+| `yard_days_per_flotation_point` | Days of repair for each point of flotation damage | Below 0 |
+| `yard_days_per_system_degraded` | Days of repair for each system degraded | Below 0 |
+| `yard_days_per_system_out` | Days of repair for each system out | Below 0, or below `yard_days_per_system_degraded` |
+
+A base's points a day and a port's passage are not figures of this file: they are the scenario's, on the base's entry (chapter 2, Bases on hexes). [0069]
+
+### Events
+
+| Event | When | Who sees it |
+| --- | --- | --- |
+| `ShipRepaired` | A ship is mended forward (above) | Own ship |
+| `ForceLeftForYard` | A yard order is applied | Own force |
+| `ForceReturnedFromYard` | A force returns | Own force |
+
+The enemy is shown none of the three (chapter 1, What a side sees of an event). [0069]
+
+Known limit: flooding that slows a ship, magazine explosions and damage to radar are not built. Shore bombardment and ships at anchor as targets are not built. Repair of a ship lying in port and of port damage is not built, nor is sending part of a force to the yard. Real hit chances, damage and repair figures come from sources in step 2. [0014, 0016, 0052, 0069]
 
 ## Random draws
 

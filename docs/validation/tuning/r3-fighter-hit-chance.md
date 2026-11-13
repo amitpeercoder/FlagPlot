@@ -96,6 +96,8 @@ No move: `fighter_hit_chance` stays 0.3.
 - **0.35 was declined.** It would put the median on the record, and it was declined because the tuning battle does not need it and nothing sizes it.
 - **Still a placeholder.** The figure remains a placeholder that no source sizes.
 
+*Note, Nov 13, 2026 (decision 0089, ruling 1):* this round ran with `patrol_drawn_off_share` at 0, which the ruling on it had taken as an end the rows support (decision 0087, 11). It is not: under decision 0080's cap both ends send the same 10 of 53 fighters at the escorts on the day, so the rows do not tell them apart. The figure is fitted, not checked, with no row behind either end.
+
 **The named miss.** Rabaul's Japanese bombers lost (26 against 12) and F4Fs ready on day 21 (a median of 6 against 11) are the named miss of the air plan's C3. There is no height-and-warning rule in step 2, and no row counts the fighters in contact at Henderson Field. They are not chased.
 
 ## The reports

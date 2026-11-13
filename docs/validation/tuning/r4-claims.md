@@ -86,6 +86,7 @@ From 1,000 runs on the figures in use, in the runs where each firer fired: its r
 A claim is the real count plus the chance times the missed shots.
 
 - **Fighters.** (43 − 16) / 38 = 0.71. The size is taken against the model's own real kills by those fighters. That is an assumption, stated here: no row gives the fighters' real kills apart from the guns'.
+  *Note, Nov 13, 2026 (decision 0089, ruling 4):* so the size is fitted to the model's own kills, not sized from rows: only the 43 claimed is a row; the 16 real kills and 38 missed shots are the runs'. It also carries what the rules lack, a fighter that never engaged and claims nothing in the record. `fighter_false_claim_chance` is fitted, not checked; Rabaul's agreement on the American claims at 0.7 is a check of that fit on a second battle.
 - **Guns.** 0.05 gives the rows' low end of 24 already. The range the rows allow is 0.05 to 0.12.
 - **Marines.** They cannot reach 16 to 21 at any chance up to 1. Thirteen fighters fire one shot each in the rules, and the Marines claimed more aircraft than they had fighters.
 
@@ -107,7 +108,7 @@ At 0.7 no other measure of the Eastern Solomons changes its verdict.
 
 `fighter_false_claim_chance` moves from 0.1 to 0.7.
 
-- **The size** comes from rows: 43 claimed by VF-5 and VF-6, against the runs' 16 real kills and 38 missed shots. It is sized against the model's own kills, which is a stated assumption, since no row gives the fighters' real kills apart from the guns'.
+- **The size** comes from rows: 43 claimed by VF-5 and VF-6, against the runs' 16 real kills and 38 missed shots. It is sized against the model's own kills, which is a stated assumption, since no row gives the fighters' real kills apart from the guns'. *Note, Nov 13, 2026 (decision 0089, ruling 4): it is fitted to the model's own kills, not sized from rows; see the note under "Fighters" above.*
 - **Rabaul is a check.** It is checked on Rabaul's American claims, which agree (891 runs hold the record) and were not tuned to.
 - **The others stay.** `anti_aircraft_false_claim_chance` (0.05, the rows' low end), `bomb_false_claim_chance` and `claimed_sunk_fire` stay. No Savo Island rerun is needed, since `claimed_sunk_fire` did not move.
 

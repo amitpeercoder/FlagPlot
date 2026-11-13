@@ -1456,4 +1456,49 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn a_ship_at_the_yard_is_afloat_and_counts_as_crippled_by_the_damage_she_left_with() {
+        use crate::refdata::{ShipClass, ShipKind};
+        let class = ShipClass {
+            id: ShipClassId::new(1),
+            name: "Cruiser".to_string(),
+            kind: ShipKind::Cruiser,
+            cruise_speed_kn: n(16),
+            max_speed_kn: n(20),
+            fuel_capacity_t: n(2000),
+            endurance_nm: n(8000),
+            cargo_capacity_t: Fixed::ZERO,
+            main_guns: 0,
+            gun_rounds_per_min: Fixed::ZERO,
+            gun_rounds_per_gun: 0,
+            gun_damage: Fixed::ZERO,
+            torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
+            torpedo_damage: Fixed::ZERO,
+            toughness: n(100),
+            radar: false,
+            aircraft_capacity: 0,
+            anti_aircraft: 0,
+        };
+        let mut ref_data = RefData::default();
+        ref_data.ship_classes.insert(class.id, class);
+        let mut truth = TruthState::default();
+        // Ship 1 is at the yard with her propulsion out; ship 2 is at the
+        // yard with nothing out; ship 3 is sunk.
+        let mut crippled = ship(1, Side::Japanese);
+        crippled.location = ShipLocation::Yard(TaskForceId::new(1));
+        crippled.systems.propulsion = SystemState::Out;
+        let mut whole = ship(2, Side::Japanese);
+        whole.location = ShipLocation::Yard(TaskForceId::new(1));
+        let mut sunk = ship(3, Side::Japanese);
+        sunk.location = ShipLocation::Sunk;
+        for ship in [crippled, whole, sunk] {
+            truth.ships.insert(ship.id, ship);
+        }
+        let tallies = tallies(&truth, &EventLog::default(), &ref_data);
+        let taken = &tallies[&Side::Allied];
+        assert_eq!(taken.sunk.get(&ShipKind::Cruiser), Some(&1));
+        assert_eq!(taken.crippled.get(&ShipKind::Cruiser), Some(&1));
+    }
 }

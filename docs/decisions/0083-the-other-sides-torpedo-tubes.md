@@ -125,7 +125,7 @@ What the Savo Island list gives:
     - "At 0205 Kako fired two additional torpedoes at Astoria" (`engagement_events` 1102), after her starboard and port salvos.
     - Her own table of ordnance expended reads 消耗数量 一〇 残額 六: ten expended and six remaining (`engagement_outcomes` 3501).
     - The Takao class's row on tubes per side names 次発装填装置, a gear for loading spare torpedoes quickly (`ship_class_facts` 1341).
-    Torpedo reloads are on the open list of `docs/step2-opening-list.md`.
+    Torpedo reloads are on the open list of `docs/open-work.md`.
   - **A ship that holds her torpedoes for a better target.**
   - **Readiness.** That is decision 0071's share, which multiplies each salvo and is not changed here.
   - **How many ships of a force fire at all,** which no figure carries (decision 0071, "What the share carries").

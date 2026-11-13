@@ -15,7 +15,7 @@ use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Replacement, Route, RulesOfEngagement,
-    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, TruthState,
+    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -119,8 +119,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `torpedoes_ready` (decision 0083);
 /// version 8 replaces the one task force counter with a counter for each side
 /// and each kind of unit made in play, hashed Allied then Japanese, task
-/// forces then air groups (decision 0086).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v8";
+/// forces then air groups (decision 0086);
+/// version 9 adds a base's `ship_repair_points_per_day` and `yard_passage_days`
+/// after its `fuel_t`, a ship's `system_repair_points` after its `experience`,
+/// the ship location `Yard` (code 4), and a task force's `yard_trip` after its
+/// `fatigue` (decision 0069).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v9";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -186,6 +190,7 @@ fn name_every_field(world: &World) {
             torpedoes_one_side_fired: _,
             systems,
             experience: _,
+            system_repair_points: _,
         } = ship;
         let ShipSystems {
             propulsion: _,
@@ -222,6 +227,7 @@ fn name_every_field(world: &World) {
             rules_order: _,
             home_port: _,
             fatigue: _,
+            yard_trip,
         } = task_force;
         let Route {
             waypoints: _,
@@ -238,6 +244,12 @@ fn name_every_field(world: &World) {
             order: _,
         }) = cargo_order
         {}
+        if let Some(YardTrip {
+            base: _,
+            return_day: _,
+            departure: _,
+        }) = yard_trip
+        {}
     }
     if let Some(base) = bases.values().next() {
         let Base {
@@ -249,6 +261,8 @@ fn name_every_field(world: &World) {
             anti_aircraft: _,
             aircraft_repairs_per_day: _,
             fuel_t: _,
+            ship_repair_points_per_day: _,
+            yard_passage_days: _,
         } = base;
     }
     if let Some(group) = air_groups.values().next() {
@@ -371,9 +385,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u32(id.raw());
             }
             ShipLocation::Sunk => h.u8(3),
+            ShipLocation::Yard(id) => {
+                h.u8(4);
+                h.u32(id.raw());
+            }
         }
-        // Last in the ship (decision 0064).
+        // After the location (decision 0064).
         h.u8(ship.experience);
+        // Last in the ship (decision 0069).
+        h.i64(ship.system_repair_points.raw());
     }
 
     h.count(truth.task_forces.len());
@@ -437,6 +457,16 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.optional_u32(task_force.rules_order.map(|id| id.raw()));
         h.optional_u32(task_force.home_port.map(|id| id.raw()));
         h.i64(task_force.fatigue.raw());
+        // Last in the task force (decision 0069).
+        match task_force.yard_trip {
+            Some(trip) => {
+                h.u8(1);
+                h.u32(trip.base.raw());
+                h.u32(trip.return_day);
+                h.u32(trip.departure.raw());
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.bases.len());
@@ -449,6 +479,15 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(base.anti_aircraft);
         h.u32(base.aircraft_repairs_per_day);
         h.i64(base.fuel_t.raw());
+        // Last in the base (decision 0069).
+        h.i64(base.ship_repair_points_per_day.raw());
+        match base.yard_passage_days {
+            Some(days) => {
+                h.u8(1);
+                h.u32(days);
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.air_groups.len());

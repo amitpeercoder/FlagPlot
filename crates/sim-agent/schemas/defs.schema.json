@@ -162,7 +162,8 @@
             "idle",
             "underway",
             "arrived",
-            "out_of_fuel"
+            "out_of_fuel",
+            "away_at_yard"
           ]
         },
         "mission": {

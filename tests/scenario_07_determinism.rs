@@ -439,7 +439,18 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // (Enterprise's deck goes out in about a quarter of other seeds), so
     // `AircraftLandedElsewhere` stays out of this log. Scenarios 12c and 12d
     // record it. `AircraftDitchedNoDeck` is in the log and needs no entry.
-    const NOT_IN_THE_FULL_SLICE: [&str; 2] = ["AircraftDitched", "AircraftLandedElsewhere"];
+    //
+    // `ShipRepaired`, `ForceLeftForYard` and `ForceReturnedFromYard` are the
+    // three of decision 0069: no base of the full slice mends a ship or is a
+    // port for the yard. Scenario 20a records them, and its own test reads
+    // them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 5] = [
+        "AircraftDitched",
+        "AircraftLandedElsewhere",
+        "ShipRepaired",
+        "ForceLeftForYard",
+        "ForceReturnedFromYard",
+    ];
     let missing: Vec<&String> = all
         .difference(&seen)
         .filter(|kind| !NOT_IN_THE_FULL_SLICE.contains(&kind.as_str()))
