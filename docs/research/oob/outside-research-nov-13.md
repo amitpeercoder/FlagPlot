@@ -1,8 +1,8 @@
 # Outside answers of 13 November 2026, checked against their sources
 
-On 13 November 2026 the designer put eight research prompts to an outside model (ChatGPT, through Codex). Its answers are tables of claims, each with a source, a page and a quoted sentence. An outside model's answer is a lead, not a source. A row was keyed here only where one of our readers opened the cited document, found the statement in it, and keyed the row from the document's own words. The answer files stay outside the repository.
+On 13 November 2026 the designer put nine research prompts to an outside model (ChatGPT, through Codex). Its answers are tables of claims, each with a source, a page and a quoted sentence. An outside model's answer is a lead, not a source. A row was keyed here only where one of our readers opened the cited document, found the statement in it, and keyed the row from the document's own words. The answer files stay outside the repository.
 
-The reading was done by Sonnet agents, one for each answer file. Each fetched the cited document as raw text (HTML, or PDF through pdftotext; two scanned USSBS interrogations were read by OCR and the key pages by eye), searched it for the quoted words, and read the passage around them. Every staged row's quote was checked by program as a span of the saved text: 86 of 86 passed. 85 were keyed; one was withdrawn, as the Q1.8 section says. The lead re-read the disputed cases (the Cape Esperance table quote, the misdated Saratoga strike, the Gunnery Bulletin figures) in the saved text. This page says what the rows hold, what the answers got wrong and what is still missing. It settles nothing.
+The reading was done by Sonnet agents, one for each answer file. Each fetched the cited document as raw text (HTML, or PDF through pdftotext; two scanned USSBS interrogations were read by OCR and the key pages by eye), searched it for the quoted words, and read the passage around them. Every staged row's quote was checked by program as a span of the saved text: 93 of 93 passed. 92 were keyed; one was withdrawn, as the Q1.8 section says. The lead re-read the disputed cases (the Cape Esperance table quote, the misdated Saratoga strike, the Gunnery Bulletin figures) in the saved text. This page says what the rows hold, what the answers got wrong and what is still missing. It settles nothing.
 
 ## How far the answers can be trusted
 
@@ -18,7 +18,8 @@ A claim is one row of an answer's table. An "absence" claim says a source does n
 | 06 Pilot training | 11 | 6 | 0 | 1 | 4 | 0 | 2 |
 | 07 Cape Esperance | 22 | 19 | 12 | 1 | 2 | 0 | 3, and 2 that could not be traced |
 | 08 Air effectiveness | 12 | 12 | 0 | 0 | 0 | 0 | 0 |
-| **All** | **148** | **129** | **44** | **9** | **9** | **1** | **15 (10%)** |
+| 09 Air upkeep | 8 | 7 | 2 | 0 | 0 | 0 | 1 |
+| **All** | **156** | **136** | **46** | **9** | **9** | **1** | **16 (10%)** |
 
 What this says about the channel:
 
@@ -33,7 +34,7 @@ What this says about the channel:
   - the standard practice of sending the P-400s and SBDs off on warning;
   - Yorktown's rounds per gun at Coral Sea.
 - **Its searches were shallow.** File 02 opened one document; the other four timed out. File 04 never opened Enterprise's own reports, which answer Q4.3.
-- **What it adds is small.** 44 of the 129 verified claims were already in the database from the same source. The new rows below come mostly from passages our readers found next to the cited quote, not from the answers themselves.
+- **What it adds is small.** 46 of the 136 verified claims were already in the database from the same source. The new rows below come mostly from passages our readers found next to the cited quote, not from the answers themselves.
 
 Used this way, as a list of documents worth opening, the channel is useful. Used as a source, it would have entered about one wrong attribution in ten.
 
@@ -47,6 +48,7 @@ Used this way, as a list of documents worth opening, the channel is useful. Used
 | `ship_class_facts.csv` | 1375 to 1381 | 7 | Japanese torpedo tubes by class, from a wartime US Army recognition manual, and Myoko as designed |
 | `fits.csv` | 758 | 1 | Benham's 16 tubes |
 | `training_facts.csv` | 98 to 105 | 8 | Japanese carrier pilots' hours and who flew in August 1942, from two USSBS interrogations |
+| `sources.csv`, `engagement_outcomes.csv` | source 1232; outcomes 3972 to 3978 | 8 | Air upkeep at Guadalcanal and Rabaul (file 09) |
 | `gaps.csv` | last line | 1 | Warning minutes and fighters in contact, by raid over Henderson Field |
 
 Every row's note ends with the words "Lead from an outside model's answer (Nov 13, 2026), checked against the source", so the rows of this pass can be found.
@@ -269,6 +271,36 @@ The two USSBS interrogations on Wikimedia Commons are scans. They were read by O
 - US Navy pilots' hours at the end of training or on joining a squadron in 1942. The answer has none (gaps 898, 1110).
 - Whether the Japanese carrier air groups of August 1942 were the crews of December 1941. No source gives a share. What the interrogations give is above: Midway survivors went to Shokaku and Zuikaku, and the best pilots were put on Shokaku, Zuikaku and Ryujo.
 - The Museum of Flight transcript (Carl, VMF-223) no longer resolves, either directly or in the web archive.
+
+## Air upkeep (file 09)
+
+This file feeds the slow figures of the Rabaul against Guadalcanal scenario. All its quotes were found. Two of its facts were already held: Mersky's figure (outcomes 568) and Miller's (495).
+
+**New rows.**
+
+- **Aircraft at Henderson Field, 26 October** (USSBS Campaigns, p. 119): 23 fighters, 16 dive bombers and one torpedo plane available for its defence (outcomes 3972 to 3974). The text says "available", not serviceable, and says the fuel shortage limited their flying.
+- **Fuel by air** (same page): each transport flew in enough fuel "to maintain 12 fighters in the air for 1 hour" (3975).
+- **Japanese availability at Rabaul in 1942** (Shaw and Kane, vol. II, p. 453): after an all-out attack, 80% of the aircraft were available the next day and 50% on the third (3976, 3977).
+  - The passage rests on USSBS Interrogation 446, the 25th Air Flotilla's senior staff officer, from memory.
+  - It puts the low availability of 1942 down to a lack of supply.
+  - For 1943 it gives 50% at any time and 30% the day after an all-out operation; not keyed.
+- **4,000 gallons of 100-octane petrol** found at the edge of Henderson Field (3978, low).
+  - The cited document is misattributed. The PDF is Goralski and Freeburg, *Oil & War* (1987, reprinted 2021), a popular history that gives no source, not the US Navy history of energy security of 2010 the answer names. The row cites the real book, reliability C.
+
+**Not keyed.**
+
+- Japanese aircrews crashed stretching the range of the Val and the Kate (Shaw and Kane, p. 453). No count and no date.
+- By October there was no fourth-echelon repair in the South Pacific, and major repair went to Australia. The 13th Air Depot Group reached Noumea on 22 November (Craven and Cate, vol. IV, p. 76). Qualitative.
+
+**What each slow figure now has.**
+
+| Figure | Sized by a row? |
+| --- | --- |
+| Wear | Partly. Japanese availability after an all-out day (3976, 3977) is one officer's recollection, and the source ties it to supply. No new US operational-loss rate: the older rows 482 and 487 stand |
+| Repair time | None. Only the statement that major repair went to Australia |
+| Fatigue | None |
+| Pilots | None that sizes replacement |
+| Supply | US fuel only: fighter-hours per transport load (3975), the 4,000 gallons (3978, low), and the 26 October counts held back by fuel. No figure for bombs, and nothing for Japanese supply beyond "lack of supply" |
 
 ## Not found, and leads for the next pass
 
