@@ -436,6 +436,41 @@ All of this is a later judgement or postwar testimony. No contemporary Japanese 
 
 **For the architect.** Bates's text and footnote call Mikawa's order "8th Fleet Signal Order No. 25". Positions row 193 calls it No. 26. The page image was not read.
 
+## Cape Esperance hits (file 14, added after the merge of the first eleven)
+
+File 14 asked for shell hits on Aoba, Furutaka, Kinugasa and the destroyers, for shells fired by ship, and for hits on the American ships by firer.
+
+All 16 of its claims were checked. Seven were verified and nine were already held. Nothing was invented, and nothing in the file was misattributed.
+
+**No source gives a Japanese damage survey's or a crew's count of hits on Aoba or Furutaka.**
+
+- The 6th Cruiser Division's own report gives no count (rows 1510, 1694).
+- Every number below is a historian's figure, and none names the counter.
+
+**Aoba, hits received.**
+
+- combinedfleet: "up to forty 6-inch and 8-inch shells" (1598). An upper bound.
+- H-Gram 011: "over 40 hits" (1599). A lower bound.
+- Gill, vol. II ch. 8: "40 hits on Aoba entailed her return to Japan for major repairs" (outcomes 4034, new, disputed). A flat 40 with no bound stated.
+- Japanese Wikipedia gives no number. It says many of the hits were duds.
+
+**Furutaka, hits received.**
+
+- combinedfleet: "About 90" (1600).
+- H-Gram 011: "over 90" (1601).
+- Warfare History Network: "hit over 90 times" (outcomes 4035, new, low).
+- Japanese Wikipedia: 90 or more hit places above the waterline alone (1602).
+- None gives an upper bound, and nothing shows the four are independent counts.
+
+**Kinugasa.** Naval Encyclopedia's four hits (outcomes 4036, low) repeat combinedfleet's (1605).
+
+**Shells fired and hits together.**
+
+- Boise: the Secretary of the Navy's public report of 1943 says she fired 1,000 rounds of 5-inch and 6-inch together (outcomes 4037, new source `navy-report-1943`, low). The calibres cannot be split.
+- Shells fired and hits received are now held for one and the same ship for Salt Lake City and Boise: rounds in 1636, 1639, 2517 and 4037; hits in 1587, 1590 to 1592 and 3965.
+- They are also held for Aoba, Furutaka and Kinugasa: rounds in 2276 and 2278 to 2281; hits in 1598 to 1605.
+- No row gives the American shells fired at Aoba or at Furutaka by ship.
+
 ## Not found, and leads for the next pass
 
 **In `gaps.csv`:** warning minutes and fighters in contact by raid over Henderson Field. Every other wanted fact this pass did not find was already a gap.
