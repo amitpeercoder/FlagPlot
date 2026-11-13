@@ -10,11 +10,11 @@
 //!
 //! # Hand calculation
 //!
-//! Drafted by the team lead for the coordinating architect's check, Nov 13,
-//! 2026. NOT YET ADOPTED: no code is delegated until the architect has
-//! checked every number. Once adopted, the tests below assert these numbers;
-//! if the code disagrees, the code or the rule is wrong: do not change a
-//! number here to make a test pass.
+//! Drafted by the team lead, checked number by number and adopted by the
+//! coordinating architect on Nov 13, 2026. The tests below assert these
+//! numbers. If the code disagrees, the code or the rule is wrong: do not
+//! change a number here to make a test pass; a mismatch goes back to the
+//! architect.
 //!
 //! Quantities are cut to six decimal places at each step. Every quantity in
 //! this scenario is exact at two places, so nothing is cut.
@@ -282,6 +282,14 @@
 //!   the other.
 //! - A degraded system hit to out while points are banked: the bank goes to
 //!   the next degraded system.
+//! - The same with no other degraded system: the bank is kept until forward
+//!   repair next reaches step 3, which finds no degraded system, sets it to 0
+//!   and spends nothing for it.
+//! - Decision 0085's projection: a force that lost a ship in a fight that
+//!   ended force-sunk by the enemy's loss, and then leaves for the yard, is
+//!   still told its own true reason for that fight, not "force sunk".
+//! - The objectives tally: a ship at the yard at the end with propulsion
+//!   out counts as crippled (in this scenario, ship 5).
 //! - A carrier with an air group aboard sent to the yard: the group flies
 //!   nothing while away and returns with its aircraft, damaged aircraft and
 //!   pilots as they were (pending the architect's choice).
