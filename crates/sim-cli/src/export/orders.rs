@@ -1,6 +1,7 @@
 //! Orders as JSON.
 
 use serde::Serialize;
+use sim_core::ids::UmpireKey;
 use sim_core::orders::{AirGroupOrder, AirMission, Order, OrderKind, TaskForceOrder};
 
 use super::names;
@@ -17,9 +18,9 @@ pub struct OrderOut {
     text: String,
 }
 
-pub fn order(order: &Order) -> OrderOut {
+pub fn order(order: &Order, key: &UmpireKey) -> OrderOut {
     OrderOut {
-        id: order.id.raw(),
+        id: order.id.umpire_raw(key),
         side: names::side(order.side),
         day: order.day_issued,
         issuer: names::issuer(order.origin.issuer),

@@ -3,6 +3,7 @@
 use serde::Serialize;
 use sim_core::events::{Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange};
 use sim_core::fixed::Fixed;
+use sim_core::ids::UmpireKey;
 use sim_core::orders::{Cargo, RejectReason};
 use sim_core::state::AirGroupLocation;
 
@@ -44,10 +45,10 @@ struct FactorOut {
     value: Num,
 }
 
-pub fn event(event: &Event) -> EventOut {
-    let (kind, data) = describe(&event.kind);
+pub fn event(event: &Event, key: &UmpireKey) -> EventOut {
+    let (kind, data) = describe(&event.kind, key);
     EventOut {
-        id: event.id.raw(),
+        id: event.id.umpire_raw(key),
         day: event.day,
         pulse: event.pulse.map(|pulse| pulse.name()),
         kind,
@@ -56,8 +57,8 @@ pub fn event(event: &Event) -> EventOut {
             .causes
             .iter()
             .map(|cause| match cause {
-                Cause::Order(id) => CauseOut::Order(id.raw()),
-                Cause::Event(id) => CauseOut::Event(id.raw()),
+                Cause::Order(id) => CauseOut::Order(id.umpire_raw(key)),
+                Cause::Event(id) => CauseOut::Event(id.umpire_raw(key)),
             })
             .collect(),
         entities: event
@@ -144,12 +145,12 @@ fn cargo_named(data: Data, cargo: Cargo) -> Data {
     }
 }
 
-pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
+pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data) {
     let d = Data::new();
     match kind {
         EventKind::OrderAccepted { order, target } => (
             "order_accepted",
-            d.id("order", *order)
+            d.int("order", order.umpire_raw(key))
                 .with("target", Field::Str(target.to_string())),
         ),
         EventKind::OrderRejected {
@@ -158,7 +159,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
             reason,
         } => (
             "order_rejected",
-            d.id("order", *order)
+            d.int("order", order.umpire_raw(key))
                 .with("target", Field::Str(target.to_string()))
                 .with("reason", Field::Obj(reject_reason(reason))),
         ),
@@ -489,7 +490,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
         } => (
             "strike_launched",
             d.id("air_group", *air_group)
-                .id("contact", *contact)
+                .int("contact", contact.umpire_raw(key))
                 .hex("hex", *hex)
                 .int("aircraft", *aircraft)
                 .num("distance_nm", *distance_nm),
@@ -591,7 +592,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
         EventKind::ContactNotThere { side, contact, hex } => (
             "contact_not_there",
             d.text("side", names::side(*side))
-                .id("contact", *contact)
+                .int("contact", contact.umpire_raw(key))
                 .hex("hex", *hex),
         ),
         EventKind::AirAttack {
@@ -740,7 +741,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
         } => (
             "report_received",
             d.text("side", names::side(*side))
-                .id("contact", *contact)
+                .int("contact", contact.umpire_raw(key))
                 .hex("hex", *hex)
                 .int("ship_count", *ship_count)
                 .text("kind", kind.name())
@@ -753,7 +754,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
         } => (
             "contact_aged",
             d.text("side", names::side(*side))
-                .id("contact", *contact)
+                .int("contact", contact.umpire_raw(key))
                 .int("age_pulses", *age_pulses),
         ),
         EventKind::ContactDropped {
@@ -763,7 +764,7 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
         } => (
             "contact_dropped",
             d.text("side", names::side(*side))
-                .id("contact", *contact)
+                .int("contact", contact.umpire_raw(key))
                 .int("age_pulses", *age_pulses),
         ),
         EventKind::EngagementBegun {
@@ -963,7 +964,8 @@ pub(super) fn describe(kind: &EventKind) -> (&'static str, Data) {
             contact,
         } => (
             "force_alerted_by_contact",
-            d.id("task_force", *task_force).id("contact", *contact),
+            d.id("task_force", *task_force)
+                .int("contact", contact.umpire_raw(key)),
         ),
         EventKind::ForceStoodDown { task_force } => {
             ("force_stood_down", d.id("task_force", *task_force))

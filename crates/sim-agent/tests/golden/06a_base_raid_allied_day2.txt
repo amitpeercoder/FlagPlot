@@ -23,8 +23,8 @@ CONTACTS
 ACTION YESTERDAY
 - Fights at sea: none
 - Salvoes fired at sea: none
-- Patrol fire: air_group:3 "Placeholder defending fighters" at the enemy's escorts, 6 shots [event 5]
-- Patrol fire: air_group:3 "Placeholder defending fighters" at the enemy's bombers, 6 shots [event 6]
+- Patrol fire: air_group:1 "Placeholder defending fighters" at the enemy's escorts, 6 shots [event 5]
+- Patrol fire: air_group:1 "Placeholder defending fighters" at the enemy's bombers, 6 shots [event 6]
 - Anti-aircraft fire: base:2 "Placeholder airfield B" at a raid, 20 shots [event 7]
 - Strikes and attacks flown: none
 - Raid on base:2 "Placeholder airfield B": 16 aircraft attacked, 1 hit, 0 on aircraft, 1 on supply, 0 on nothing [event 9]
@@ -33,16 +33,16 @@ ACTION YESTERDAY
 LOSSES YESTERDAY
 - Ships sunk: none
 - Ships damaged: none
-- Aircraft lost: air_group:3 "Placeholder defending fighters": 3 shot down [event 8]
+- Aircraft lost: air_group:1 "Placeholder defending fighters": 3 shot down [event 8]
 - Claim over (5,0) Placeholder airfield B: 5 aircraft shot down [event 11]
 
 TASK FORCES
 - Task forces: none
 
 AIR GROUPS
-- air_group:3 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 9 ready, radius 250 miles, search range 0 miles, mission combat air patrol
-- air_group:4 "Placeholder resting bombers" (Placeholder dive bomber) at base:2 "Placeholder airfield B" (5,0): 10 ready, radius 250 miles, search range 0 miles, mission rest
-- air_group:5 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, radius 0 miles, search range 300 miles, mission search
+- air_group:1 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 9 ready, radius 250 miles, search range 0 miles, mission combat air patrol
+- air_group:2 "Placeholder resting bombers" (Placeholder dive bomber) at base:2 "Placeholder airfield B" (5,0): 10 ready, radius 250 miles, search range 0 miles, mission rest
+- air_group:3 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, radius 0 miles, search range 300 miles, mission search
 
 BASES
 - base:2 "Placeholder airfield B" at (5,0): fuel 0 t

@@ -1,3 +1,5 @@
+> Note (decision 0086): the handles this account quotes are the numbers of before decision 0086, when a side saw its own units by the scenario's numbers. Now each side's own ships, task forces and air groups are numbered 1, 2, 3... ; see `handles_0086.json` for the table from the old numbers to the new.
+
 # The player's account
 
 A Haiku model, playing alone on Nov 12, 2026 with `sim-cli play` and nothing else. It was also asked to say why things happened and what it would do with one more day, as the legibility test. Its report as it gave it.

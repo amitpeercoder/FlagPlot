@@ -28,7 +28,9 @@ use sim_core::time::{ClockTime, Pulse};
 use sim_core::view::SideView;
 use sim_data::{LoadOptions, Scenario};
 use support::check::{check_measure, sample_questions};
-use support::{load, load_text, scenario_text, schemas, ROOT};
+use support::{
+    force_handle, group_handle, load, load_text, scenario_text, schemas, ship_handle, ROOT,
+};
 
 fn asked(view: &SideView<'_>, question: &Question) -> (MeasureAnswer, Value) {
     check_measure(view, question, &schemas(), "measure")
@@ -62,7 +64,9 @@ struct Observed {
     ran_dry: Option<(u32, Pulse, Hex)>,
 }
 
-fn observe(events: &[Event], force: TaskForceId) -> Observed {
+/// What the events say of a force's passage. `names` gives the side's handle
+/// (decision 0086) for each ship by the log's text of it.
+fn observe(events: &[Event], force: TaskForceId, names: &BTreeMap<String, String>) -> Observed {
     let mut seen = Observed::default();
     for event in events {
         match &event.kind {
@@ -81,7 +85,10 @@ fn observe(events: &[Event], force: TaskForceId) -> Observed {
                 burned_t,
                 ..
             } if *task_force == force => {
-                *seen.burned.entry(ship.to_string()).or_default() += *burned_t;
+                *seen
+                    .burned
+                    .entry(names[&ship.to_string()].clone())
+                    .or_default() += *burned_t;
             }
             EventKind::TaskForceArrived {
                 task_force,
@@ -213,12 +220,22 @@ fn compare(mut scenario: Scenario, setup: &Setup, label: &str) -> (Passage, usiz
     advance_to(&mut scenario, setup.order_day);
     let force_id = TaskForceId::new(setup.force);
     let view = scenario.world.side_view(setup.side);
+    // The setup names the force by the scenario's number; the question names
+    // it by the side's own (decision 0086).
     let (answer, _) = asked(
         &view,
-        &passage_question(setup.force, setup.to.clone(), setup.speed),
+        &Question::Passage {
+            task_force: force_handle(&view, force_id),
+            to: setup.to.clone(),
+            speed: setup.speed,
+        },
     );
     let passage = passage_of(answer);
     assert_eq!(passage.order, "accepted", "{label}");
+    let names: BTreeMap<String, String> = view
+        .ships()
+        .map(|s| (s.id.to_string(), ship_handle(&view, s.id)))
+        .collect();
     let first = scenario.world.events().len();
     if let Some(order) = &setup.order {
         scenario.world.submit_orders(
@@ -245,7 +262,7 @@ fn compare(mut scenario: Scenario, setup: &Setup, label: &str) -> (Passage, usiz
         }
     }
     let events = &scenario.world.events().from_index(first);
-    let seen = observe(events, force_id);
+    let seen = observe(events, force_id, &names);
     let compared = assert_agrees(&passage, &seen, label);
     (passage, compared)
 }
@@ -347,7 +364,8 @@ fn the_dry_destroyer_is_named_with_the_miles_it_steams() {
     assert_eq!(p.outcome, "runs_out_of_fuel");
     let dry: Vec<&sim_agent::ShipFuel> = p.ships.iter().filter(|s| s.runs_dry).collect();
     assert_eq!(dry.len(), 1);
-    assert_eq!(dry[0].ship.handle, "ship:45");
+    // Ship 45 of the scenario is the Allied side's `ship:25`.
+    assert_eq!(dry[0].ship.handle, "ship:25");
     assert_eq!(
         dry[0].runs_dry_after_nm.map(|d| d.0),
         Some(Fixed::from_int(40))
@@ -360,7 +378,8 @@ fn the_dry_destroyer_is_named_with_the_miles_it_steams() {
     advance_to(&mut scenario, 2);
     let text = measure(
         &scenario.world.side_view(Side::Allied),
-        &passage_question(9, PlaceArg::hex(4, 14), None),
+        // Task force 9 of the scenario is the Allied side's `task_force:6`.
+        &passage_question(6, PlaceArg::hex(4, 14), None),
     )
     .to_text();
     assert!(text.contains("Runs out of fuel"), "{text}");
@@ -612,7 +631,7 @@ fn eastern_solomons_the_reach_of_the_carrier_groups_agrees_with_their_launches()
         let (answer, _) = asked(
             &view,
             &Question::AirReach {
-                air_group: group.id.to_string(),
+                air_group: group_handle(&view, group.id),
                 to: targets.iter().map(|h| PlaceArg::hex(h.q, h.r)).collect(),
             },
         );
@@ -924,7 +943,7 @@ fn the_air_distance_has_the_vectors_of_decision_0040_and_is_symmetric() {
     assert_eq!(air(&view, PlaceArg::hex(2, -4), PlaceArg::hex(2, -4)), 0);
     // Every pair of the side's bases and forces, both ways round.
     for a in ["base:1"] {
-        for b in view.air_groups().map(|g| g.id.to_string()) {
+        for b in view.air_groups().map(|g| group_handle(&view, g.id)) {
             let one = air(&view, PlaceArg::unit(a), PlaceArg::unit(&b));
             let two = air(&view, PlaceArg::unit(&b), PlaceArg::unit(a));
             assert_eq!(one, two, "{a} {b}");
@@ -1067,19 +1086,19 @@ fn every_kind_of_place_resolves_to_its_hex() {
     let cases = [
         (PlaceArg::hex(7, -5), (7, -5), None),
         (
-            PlaceArg::unit(&force.id.to_string()),
+            PlaceArg::unit(&force_handle(&view, force.id)),
             (force.position().q, force.position().r),
-            Some(force.id.to_string()),
+            Some(force_handle(&view, force.id)),
         ),
         (
-            PlaceArg::unit(&ship.id.to_string()),
+            PlaceArg::unit(&ship_handle(&view, ship.id)),
             (force.position().q, force.position().r),
-            Some(ship.id.to_string()),
+            Some(ship_handle(&view, ship.id)),
         ),
         (
-            PlaceArg::unit(&group.id.to_string()),
+            PlaceArg::unit(&group_handle(&view, group.id)),
             (force.position().q, force.position().r),
-            Some(group.id.to_string()),
+            Some(group_handle(&view, group.id)),
         ),
         (
             PlaceArg::unit(&base.id.to_string()),
@@ -1087,9 +1106,9 @@ fn every_kind_of_place_resolves_to_its_hex() {
             Some(base.id.to_string()),
         ),
         (
-            PlaceArg::unit(&contact.id.to_string()),
+            PlaceArg::unit(&format!("contact:{}", view.contact_number(contact.id))),
             (contact.estimated_hex.q, contact.estimated_hex.r),
-            Some(contact.id.to_string()),
+            Some(format!("contact:{}", view.contact_number(contact.id))),
         ),
     ];
     for (arg, hex, unit) in cases {
@@ -1136,7 +1155,10 @@ fn a_contact_is_the_hex_the_side_believes_not_the_truth() {
                         let (answer, _) = asked(
                             &view,
                             &Question::AirDistance {
-                                from: PlaceArg::unit(&contact.id.to_string()),
+                                from: PlaceArg::unit(&format!(
+                                    "contact:{}",
+                                    view.contact_number(contact.id)
+                                )),
                                 to: PlaceArg::hex(contact.estimated_hex.q, contact.estimated_hex.r),
                             },
                         );
@@ -1205,7 +1227,7 @@ fn a_contact_off_by_a_hex_is_measured_at_the_estimate() {
             let (answer, data) = asked(
                 &view,
                 &Question::AirDistance {
-                    from: PlaceArg::unit(&contact.id.to_string()),
+                    from: PlaceArg::unit(&format!("contact:{}", view.contact_number(contact.id))),
                     to: PlaceArg::hex(real.q, real.r),
                 },
             );
@@ -1237,44 +1259,28 @@ fn what_the_side_does_not_know_is_one_and_the_same_answer() {
     ] {
         let mut scenario = load(name, 1942);
         scenario.run_to_end().expect("the run resolves");
-        let truth_units = {
-            let truth = scenario.world.umpire();
-            let mut enemy: Vec<(Side, String)> = Vec::new();
-            for side in [Side::Allied, Side::Japanese] {
-                let theirs = |s: Side| s != side;
-                enemy.extend(
-                    truth
-                        .ships
-                        .values()
-                        .filter(|u| theirs(u.side))
-                        .map(|u| (side, u.id.to_string())),
-                );
-                enemy.extend(
-                    truth
-                        .task_forces
-                        .values()
-                        .filter(|u| theirs(u.side))
-                        .map(|u| (side, u.id.to_string())),
-                );
-                enemy.extend(
-                    truth
-                        .air_groups
-                        .values()
-                        .filter(|u| theirs(u.side))
-                        .map(|u| (side, u.id.to_string())),
-                );
-                // An enemy base is a place the side knows (decision 0050, as
-                // amended): see `an_enemy_base_is_a_place_by_its_public_facts`.
-            }
-            enemy
-        };
         for side in [Side::Allied, Side::Japanese] {
             let view = scenario.world.side_view(side);
-            let mut handles: Vec<String> = truth_units
-                .iter()
-                .filter(|(s, _)| *s == side)
-                .map(|(_, h)| h.clone())
-                .collect();
+            // A side has no handle for an enemy unit (decision 0086): the
+            // numbers just above its own count of each kind, as many as the
+            // enemy has units of that kind, stand for them. An enemy base is
+            // a place the side knows (decision 0050, as amended): see
+            // `an_enemy_base_is_a_place_by_its_public_facts`.
+            let truth = scenario.world.umpire();
+            let mut handles: Vec<String> = Vec::new();
+            let enemy_ships = truth.ships.values().filter(|u| u.side != side).count();
+            let own_ships = view.ships().count();
+            handles.extend((1..=enemy_ships).map(|i| format!("ship:{}", own_ships + i)));
+            let enemy_forces = truth
+                .task_forces
+                .values()
+                .filter(|u| u.side != side)
+                .count();
+            let own_forces = view.task_forces().count();
+            handles.extend((1..=enemy_forces).map(|i| format!("task_force:{}", own_forces + i)));
+            let enemy_groups = truth.air_groups.values().filter(|u| u.side != side).count();
+            let own_groups = view.air_groups().count();
+            handles.extend((1..=enemy_groups).map(|i| format!("air_group:{}", own_groups + i)));
             for kind in [
                 "ship",
                 "task_force",
@@ -1291,16 +1297,16 @@ fn what_the_side_does_not_know_is_one_and_the_same_answer() {
             );
             // A force of its own if it has one; else the question is asked
             // of a number no side has (not known all the same).
-            let own_force = view
-                .task_forces()
-                .next()
-                .map_or_else(|| "task_force:99998".to_string(), |f| f.id.to_string());
-            let own_group = view.air_groups().next().map(|g| g.id.to_string());
+            let own_force = view.task_forces().next().map_or_else(
+                || "task_force:99998".to_string(),
+                |f| force_handle(&view, f.id),
+            );
+            let own_group = view.air_groups().next().map(|g| group_handle(&view, g.id));
             let own_base = view
                 .bases()
                 .next()
                 .map(|b| b.id.to_string())
-                .or_else(|| view.task_forces().next().map(|f| f.id.to_string()))
+                .or_else(|| view.task_forces().next().map(|f| force_handle(&view, f.id)))
                 .or_else(|| own_group.clone())
                 .expect("a unit");
             let off_map = PlaceArg::hex(100_000, 100_000);
@@ -1551,7 +1557,7 @@ fn an_enemy_base_is_a_place_by_its_public_facts() {
     );
     assert_eq!(data["kind"], "not_known");
     // The reach of an own air group to the enemy base names it.
-    let group = view.air_groups().next().expect("a group").id.to_string();
+    let group = group_handle(&view, view.air_groups().next().expect("a group").id);
     let (_, data) = check_measure(
         &view,
         &Question::AirReach {

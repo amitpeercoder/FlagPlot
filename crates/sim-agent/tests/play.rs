@@ -116,7 +116,7 @@ use sim_core::orders::{
     SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
-use support::play::{order_json, play_day, session_of, ByDay};
+use support::play::{order_json, play_day, served_json, session_of, ByDay};
 use support::schemas;
 
 fn call(session: &mut Session, side: Side, tool: &str, args: Value) -> Value {
@@ -344,9 +344,17 @@ fn eastern_solomons() -> (Session, BTreeMap<Side, ByDay>, Units) {
                 .raw(),
         )
     };
+    // A side has no handle for an enemy unit (decision 0086): the numbers
+    // just above its own count of each kind stand for them.
+    let view = scenario.world.side_view(Side::Allied);
+    let counts = |n: usize| u32::try_from(n + 1).expect("few units");
     let units = Units {
         own: first(Side::Allied),
-        enemy: first(Side::Japanese),
+        enemy: (
+            counts(view.task_forces().count()),
+            counts(view.air_groups().count()),
+            counts(view.ships().count()),
+        ),
     };
     let (session, scripts) = session_of(scenario, &[Side::Allied]);
     (session, scripts, units)
@@ -723,7 +731,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(!allied.is_empty() && !japanese.is_empty());
         let end = |s: &mut Session, side| call(s, side, "end_day", json!({}));
         let issue = |s: &mut Session, side, orders: &[OrderRequest]| {
-            let list: Vec<Value> = orders.iter().map(order_json).collect();
+            let list: Vec<Value> = orders.iter().map(|o| served_json(side, o)).collect();
             call(s, side, "issue_orders", json!({"orders": list}))
         };
         let last = match variant {
@@ -786,7 +794,10 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
 #[test]
 fn clear_withdraws_what_is_queued_and_orders_after_end_day_are_refused() {
     let (mut session, scripts, _) = eastern_solomons();
-    let orders: Vec<Value> = scripts[&Side::Allied][&1].iter().map(order_json).collect();
+    let orders: Vec<Value> = scripts[&Side::Allied][&1]
+        .iter()
+        .map(|o| served_json(Side::Allied, o))
+        .collect();
     let n = orders.len();
     let first = call(
         &mut session,
@@ -1011,7 +1022,10 @@ fn a_route_into_a_hex_with_an_unseen_enemy_is_judged_by_the_map_alone() {
 fn every_answer_and_the_transcript_are_valid_against_their_schemas() {
     let schemas = schemas();
     let (mut session, scripts, _) = eastern_solomons();
-    let orders: Vec<Value> = scripts[&Side::Allied][&1].iter().map(order_json).collect();
+    let orders: Vec<Value> = scripts[&Side::Allied][&1]
+        .iter()
+        .map(|o| served_json(Side::Allied, o))
+        .collect();
     let args = json!({"orders": orders, "clear": true});
     assert!(schemas
         .check("issue_orders_arguments.schema.json", &args)

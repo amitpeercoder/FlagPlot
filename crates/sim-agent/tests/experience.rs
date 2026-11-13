@@ -7,7 +7,10 @@
 //!
 //! Scenario 4 (Savo Island) has the values: ship 10 (Chicago) 3, ship 13
 //! (Vincennes) 1, ship 15 (Astoria) 2 on the Allied side; ship 1 (Chokai) 3 on
-//! the Japanese.
+//! the Japanese. Those are the scenario's numbers; a side is shown its own
+//! units numbered from 1 (decision 0086), so the Allied ships 9 to 17 are
+//! `ship:1` to `ship:9` and Chicago is `ship:2`, Vincennes `ship:5`, Astoria
+//! `ship:7`; the Allied task force 3 is `task_force:2`.
 
 mod support;
 
@@ -27,24 +30,25 @@ fn a_side_sees_its_own_ships_experience_when_it_is_not_2_and_never_an_enemys() {
 
     // Own ships: 3 and 1 are shown, the standard 2 is left out.
     assert_eq!(
-        entity(&scenario, Side::Allied, "ship:10")["entity"]["experience"],
+        entity(&scenario, Side::Allied, "ship:2")["entity"]["experience"],
         3
     );
     assert_eq!(
-        entity(&scenario, Side::Allied, "ship:13")["entity"]["experience"],
+        entity(&scenario, Side::Allied, "ship:5")["entity"]["experience"],
         1
     );
-    let astoria = entity(&scenario, Side::Allied, "ship:15");
-    assert_eq!(astoria["entity"]["ship"]["handle"], "ship:15");
+    let astoria = entity(&scenario, Side::Allied, "ship:7");
+    assert_eq!(astoria["entity"]["ship"]["handle"], "ship:7");
     assert!(astoria["entity"].get("experience").is_none());
     assert_eq!(
         entity(&scenario, Side::Japanese, "ship:1")["entity"]["experience"],
         3
     );
 
-    // The force's ships: the same rule, line by line. Task force 3 holds
-    // Vincennes (1), Quincy (1), Astoria (2), Helm (3) and Wilson (2).
-    let force = entity(&scenario, Side::Allied, "task_force:3");
+    // The force's ships: the same rule, line by line. The Allied task force
+    // 3 of the scenario, `task_force:2`, holds Vincennes (1), Quincy (1),
+    // Astoria (2), Helm (3) and Wilson (2).
+    let force = entity(&scenario, Side::Allied, "task_force:2");
     let lines = force["entity"]["ships"].as_array().expect("ship lines");
     let experience_of = |handle: &str| {
         lines
@@ -54,19 +58,21 @@ fn a_side_sees_its_own_ships_experience_when_it_is_not_2_and_never_an_enemys() {
             .get("experience")
             .cloned()
     };
-    assert_eq!(experience_of("ship:13"), Some(Value::from(1)));
-    assert_eq!(experience_of("ship:14"), Some(Value::from(1)));
-    assert_eq!(experience_of("ship:16"), Some(Value::from(3)));
-    assert_eq!(experience_of("ship:15"), None);
-    assert_eq!(experience_of("ship:17"), None);
+    assert_eq!(experience_of("ship:5"), Some(Value::from(1)));
+    assert_eq!(experience_of("ship:6"), Some(Value::from(1)));
+    assert_eq!(experience_of("ship:8"), Some(Value::from(3)));
+    assert_eq!(experience_of("ship:7"), None);
+    assert_eq!(experience_of("ship:9"), None);
 
-    // An enemy ship is not known, whatever its value: the same document as
-    // for a ship that does not exist, with nothing of the question.
+    // A side has no handle for an enemy ship: a number above the side's own
+    // count (the Allied side has 9 ships, the Japanese 8; decision 0086) is
+    // not known, the same document as for a ship that does not exist, with
+    // nothing of the question.
     let absent = entity(&scenario, Side::Allied, "ship:999");
     for (side, handle) in [
-        (Side::Allied, "ship:1"),
-        (Side::Allied, "ship:5"),
-        (Side::Japanese, "ship:10"),
+        (Side::Allied, "ship:10"),
+        (Side::Allied, "ship:13"),
+        (Side::Japanese, "ship:9"),
         (Side::Japanese, "ship:13"),
     ] {
         let answer = entity(&scenario, side, handle);

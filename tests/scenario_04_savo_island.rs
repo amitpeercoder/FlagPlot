@@ -326,7 +326,10 @@ fn run_scenario(scenario: &Scenario, seed: u64) -> Run {
     let truth = world.umpire();
     let events: Vec<Event> = world.events().iter().cloned().collect();
     for (index, event) in events.iter().enumerate() {
-        assert_eq!(usize::try_from(event.id.raw()).expect("small"), index + 1);
+        assert_eq!(
+            usize::try_from(event.id.umpire_raw(common::umpire_key())).expect("small"),
+            index + 1
+        );
     }
     Run {
         seed,
@@ -485,7 +488,7 @@ impl Run {
                     hex,
                     elapsed_hours,
                 } => fights.push(Fight {
-                    event: event.id.raw(),
+                    event: event.id.umpire_raw(common::umpire_key()),
                     day: event.day,
                     pulse: event.pulse.expect("a fight has a pulse"),
                     a: a.raw(),
@@ -507,7 +510,7 @@ impl Run {
                     .expect("a roll inside a fight")
                     .rolls
                     .push(Roll {
-                        event: event.id.raw(),
+                        event: event.id.umpire_raw(common::umpire_key()),
                         round: *round,
                         force: task_force.raw(),
                         chance: *chance,
@@ -527,7 +530,7 @@ impl Run {
                     .expect("a salvo inside a fight")
                     .salvos
                     .push(SalvoRec {
-                        event: event.id.raw(),
+                        event: event.id.umpire_raw(common::umpire_key()),
                         round: *round,
                         firer: firer.raw(),
                         target: target.raw(),
@@ -546,7 +549,7 @@ impl Run {
                     ..
                 } => {
                     let cause = event.causes.iter().find_map(|c| match c {
-                        Cause::Event(id) => Some(id.raw()),
+                        Cause::Event(id) => Some(id.umpire_raw(common::umpire_key())),
                         Cause::Order(_) => None,
                     });
                     let fight = fights.last_mut().expect("damage inside a fight");
@@ -606,7 +609,7 @@ impl Run {
                     speed_kn,
                     hexes_entered,
                 } if task_force.raw() == force => Some(Step {
-                    event: event.id.raw(),
+                    event: event.id.umpire_raw(common::umpire_key()),
                     pulse: event.pulse.expect("a step has a pulse"),
                     from: *from,
                     to: *to,
@@ -638,7 +641,10 @@ impl Run {
     fn burned(&self, ship: u32, after: u32, night: bool) -> Fixed {
         self.events
             .iter()
-            .filter(|e| e.id.raw() > after && (e.pulse == Some(Pulse::Night)) == night)
+            .filter(|e| {
+                e.id.umpire_raw(common::umpire_key()) > after
+                    && (e.pulse == Some(Pulse::Night)) == night
+            })
             .filter_map(|e| match &e.kind {
                 EventKind::FuelBurned {
                     ship: s, burned_t, ..
@@ -652,7 +658,7 @@ impl Run {
     /// became alert in a fight, or passed its alarm roll.
     fn alert_before(&self, force: u32, before: u32) -> bool {
         self.events.iter().any(|e| {
-            e.id.raw() < before
+            e.id.umpire_raw(common::umpire_key()) < before
                 && match &e.kind {
                     EventKind::ForceBecameAlert { task_force, .. }
                     | EventKind::ForceAlertedByContact { task_force, .. } => {
@@ -679,7 +685,7 @@ impl Run {
                     chance,
                     alarmed,
                 } if task_force.raw() == 3 && by_a.raw() == 1 && by_b.raw() == 2 => {
-                    Some((e.id.raw(), *chance, *alarmed))
+                    Some((e.id.umpire_raw(common::umpire_key()), *chance, *alarmed))
                 }
                 _ => None,
             })
@@ -706,7 +712,7 @@ impl Run {
                     new_force,
                     reason: r,
                     ..
-                } if *r == reason => Some((e.id.raw(), new_force.raw())),
+                } if *r == reason => Some((e.id.umpire_raw(common::umpire_key()), new_force.raw())),
                 _ => None,
             })
             .collect()
@@ -756,14 +762,19 @@ fn the_column_steams_188_nm_at_25_kn_into_2_m5() {
         let burns: Vec<(u32, Fixed, Fixed, u32)> = run
             .events
             .iter()
-            .filter(|e| e.id.raw() > first.event)
+            .filter(|e| e.id.umpire_raw(common::umpire_key()) > first.event)
             .map_while(|e| match &e.kind {
                 EventKind::FuelBurned {
                     ship,
                     burned_t,
                     remaining_t,
                     ..
-                } => Some((ship.raw(), *burned_t, *remaining_t, e.id.raw())),
+                } => Some((
+                    ship.raw(),
+                    *burned_t,
+                    *remaining_t,
+                    e.id.umpire_raw(common::umpire_key()),
+                )),
                 _ => None,
             })
             .collect();
@@ -790,7 +801,7 @@ fn the_first_fight_is_with_task_force_2_at_hour_7_52_and_nobody_is_alert() {
         assert!(first.night(), "seed {seed}");
         // The Allied contact is seven hexes away: no alert before the fight.
         let alert_before = run.events.iter().any(|e| {
-            e.id.raw() < first.event
+            e.id.umpire_raw(common::umpire_key()) < first.event
                 && matches!(
                     e.kind,
                     EventKind::ForceBecameAlert { .. } | EventKind::ForceAlertedByContact { .. }
@@ -1356,7 +1367,9 @@ fn a_sunk_ship_fires_in_no_later_round() {
             .events
             .iter()
             .filter_map(|e| match &e.kind {
-                EventKind::ShipSunk { ship, .. } => Some((ship.raw(), e.id.raw())),
+                EventKind::ShipSunk { ship, .. } => {
+                    Some((ship.raw(), e.id.umpire_raw(common::umpire_key())))
+                }
                 _ => None,
             })
             .collect();
@@ -1364,7 +1377,7 @@ fn a_sunk_ship_fires_in_no_later_round() {
             if let EventKind::Salvo { firer, .. } = &e.kind {
                 for (ship, at) in &sunk {
                     assert!(
-                        !(ship == &firer.raw() && e.id.raw() > *at),
+                        !(ship == &firer.raw() && e.id.umpire_raw(common::umpire_key()) > *at),
                         "seed {}: sunk ship {ship} fired",
                         run.seed
                     );
