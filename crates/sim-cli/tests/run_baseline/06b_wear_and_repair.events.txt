@@ -5,8 +5,8 @@ seed 1942
 day   1  hash 90510bb94cb7909e  31 events
 day   2  hash 17f37eba9820b1f5  28 events
 day   3  hash 6b7baef2eff9607f  28 events
-day   4  hash 1bc9cbe9f2ffe0ca  28 events
-day   5  hash bd7c28d7256bc724  27 events
+day   4  hash c00d75211656ae01  27 events
+day   5  hash 90826937515d1521  27 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -20,14 +20,14 @@ day   5  hash bd7c28d7256bc724  27 events
 #10 D1 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 3 hits  <- #8, #9
 #11 D1 morning   air_group:3 patrol at the escorts of air_group:2: 6 shots x 0.3 = 1.8 expected, 1 hit  <- #8, #9
 #12 D1 morning   air_group:3 patrol at the bombers of air_group:1: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #8
-#13 D1 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits  <- #8
-#14 D1 morning   air_group:3 lost 3 aircraft, 9 left  <- #10
-#15 D1 morning   air_group:2 lost 1 aircraft, 11 left  <- #11
-#16 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
-#17 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #16
-#18 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #17
-#19 D1 morning   Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #10, #17
-#20 D1 morning   Allied claim over (5,0): 5 aircraft shot down  <- #11, #12, #13
+#13 D1 morning   air_group:3 lost 3 aircraft, 9 left  <- #10
+#14 D1 morning   air_group:2 lost 1 aircraft, 11 left  <- #11
+#15 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
+#16 D1 morning   air_group:1 bombs at base:2: 16 shots x 0.2 = 3.2 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #8, #15
+#17 D1 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #8, #16
+#18 D1 morning   base:2 lost 50 t of supply, 950 t left  <- #16
+#19 D1 morning   Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #10, #16
+#20 D1 morning   Allied claim over (5,0): 5 aircraft shot down  <- #11, #12, #17
 #21 D1 morning   air_group:1 base strike sortie of 400 nm: 16 aircraft x 0.13 = 2.08 expected worn, 1 worn, 0 written off, 15 ready and 1 damaged left  <- #8
 #22 D1 morning   air_group:2 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 1 worn, 0 written off, 10 ready and 1 damaged left  <- order:5, order:6
 #23 D1 morning   air_group:2 escort sortie of 400 nm: 5 aircraft x 0.13 = 0.65 expected worn, 1 worn, 1 written off, 9 ready and 1 damaged left  <- #9
@@ -49,13 +49,13 @@ day   5  hash bd7c28d7256bc724  27 events
 #39 D2 morning   air_group:2 escorts at the patrol of air_group:3: 5 shots x 0.3 = 1.5 expected, 2 hits  <- #37, #38
 #40 D2 morning   air_group:3 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 0 hits  <- #37, #38
 #41 D2 morning   air_group:3 patrol at the bombers of air_group:1: 4 shots x 0.3 = 1.2 expected, 2 hits  <- #37
-#42 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits  <- #37
-#43 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #39
-#44 D2 morning   air_group:1 lost 2 aircraft, 14 left  <- #41
-#45 D2 morning   air_group:1 bombs at base:2: 14 shots x 0.2 = 2.8 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #37, #44
-#46 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #45
-#47 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #39, #45
-#48 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #40, #41, #42
+#42 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #39
+#43 D2 morning   air_group:1 lost 2 aircraft, 14 left  <- #41
+#44 D2 morning   air_group:1 bombs at base:2: 14 shots x 0.2 = 2.8 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #37, #43
+#45 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #37, #44
+#46 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #44
+#47 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #39, #44
+#48 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #40, #41, #45
 #49 D2 morning   air_group:1 base strike sortie of 400 nm: 14 aircraft x 0.13 = 1.82 expected worn, 2 worn, 1 written off, 12 ready and 1 damaged left  <- #37
 #50 D2 morning   air_group:2 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 0 worn, 0 written off, 10 ready and 0 damaged left  <- order:5, order:6
 #51 D2 morning   air_group:2 escort sortie of 400 nm: 5 aircraft x 0.13 = 0.65 expected worn, 1 worn, 0 written off, 9 ready and 1 damaged left  <- #38
@@ -77,13 +77,13 @@ day   5  hash bd7c28d7256bc724  27 events
 #67 D3 morning   air_group:2 escorts at the patrol of air_group:3: 5 shots x 0.3 = 1.5 expected, 0 hits  <- #65, #66
 #68 D3 morning   air_group:3 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #65, #66
 #69 D3 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #65
-#70 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits  <- #65
-#71 D3 morning   air_group:2 lost 1 aircraft, 8 left  <- #68
-#72 D3 morning   air_group:1 lost 1 aircraft, 12 left  <- #69
-#73 D3 morning   air_group:1 lost 3 aircraft, 9 left  <- #70
-#74 D3 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #65, #72, #73
-#75 D3 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #67, #74
-#76 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #68, #69, #70
+#70 D3 morning   air_group:2 lost 1 aircraft, 8 left  <- #68
+#71 D3 morning   air_group:1 lost 1 aircraft, 12 left  <- #69
+#72 D3 morning   air_group:1 bombs at base:2: 12 shots x 0.2 = 2.4 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #65, #71
+#73 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #65, #72
+#74 D3 morning   air_group:1 lost 3 aircraft, 9 left  <- #73
+#75 D3 morning   Japanese claim over (5,0): 0 aircraft shot down  <- #67, #72
+#76 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #68, #69, #73
 #77 D3 morning   air_group:1 base strike sortie of 400 nm: 9 aircraft x 0.13 = 1.17 expected worn, 1 worn, 0 written off, 8 ready and 1 damaged left  <- #65
 #78 D3 morning   air_group:2 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:5, order:6
 #79 D3 morning   air_group:2 escort sortie of 400 nm: 4 aircraft x 0.13 = 0.52 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- #66
@@ -104,57 +104,56 @@ day   5  hash bd7c28d7256bc724  27 events
 #94 D4 morning   air_group:2 escorts at the patrol of air_group:3: 4 shots x 0.3 = 1.2 expected, 2 hits  <- #92, #93
 #95 D4 morning   air_group:3 patrol at the escorts of air_group:2: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #92, #93
 #96 D4 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #92
-#97 D4 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 1 hit  <- #92
-#98 D4 morning   air_group:3 lost 2 aircraft, 5 left  <- #94
-#99 D4 morning   air_group:2 lost 1 aircraft, 7 left  <- #95
-#100 D4 morning   air_group:1 lost 1 aircraft, 8 left  <- #97
-#101 D4 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 1 on aircraft, 0 on supply, 0 on nothing  <- #92, #100
-#102 D4 morning   air_group:4 lost 1 aircraft on the ground at base:2, 7 left  <- #101
-#103 D4 morning   Japanese claim at (5,0): 2 aircraft shot down, 2 aircraft destroyed on the ground  <- #94, #101
-#104 D4 morning   Allied claim over (5,0): 3 aircraft shot down  <- #95, #96, #97
-#105 D4 morning   air_group:1 base strike sortie of 400 nm: 8 aircraft x 0.13 = 1.04 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- #92
-#106 D4 morning   air_group:2 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- order:5, order:6
-#107 D4 morning   air_group:2 escort sortie of 400 nm: 3 aircraft x 0.13 = 0.39 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- #93
-#108 D4 morning   air_group:3 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 1 worn, 0 written off, 4 ready and 1 damaged left  <- order:1
-#109 D4 morning   air_group:5 search sortie of 600 nm: 4 aircraft x 0.17 = 0.68 expected worn, 0 worn, 0 written off, 4 ready and 1 damaged left  <- #91
-#110 D4 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 4 aircraft  <- order:2, order:3
-#111 D4 afternoon air_group:2 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- order:5, order:6
-#112 D4 afternoon air_group:3 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 4 ready and 1 damaged left  <- order:1
-#113 D4 afternoon air_group:5 search sortie of 600 nm: 4 aircraft x 0.17 = 0.68 expected worn, 1 worn, 0 written off, 3 ready and 2 damaged left  <- #110
-#114 D4 -         base:1 at the end of the day: 0 t of supply, 15 aircraft ready: not open
-#115 D4 -         base:2 at the end of the day: 950 t of supply, 14 aircraft ready: open
-#116 D5 night     air_group:3 had 1 aircraft repaired at base:2, 5 ready and 0 damaged  <- #108
-#117 D5 night     air_group:5 had 2 aircraft repaired at base:2, 5 ready and 0 damaged  <- #113
-#118 D5 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 5 aircraft  <- order:2, order:3
-#119 D5 morning   air_group:1 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:4
-#120 D5 morning   air_group:2 sent 4 escorts with air_group:1  <- order:5, order:6, #119
-#121 D5 morning   air_group:2 escorts at the patrol of air_group:3: 4 shots x 0.3 = 1.2 expected, 2 hits  <- #119, #120
-#122 D5 morning   air_group:3 patrol at the escorts of air_group:2: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #119, #120
-#123 D5 morning   air_group:3 patrol at the bombers of air_group:1: 1 shots x 0.3 = 0.3 expected, 1 hit  <- #119
-#124 D5 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits  <- #119
-#125 D5 morning   air_group:3 lost 2 aircraft, 3 left  <- #121
-#126 D5 morning   air_group:2 lost 1 aircraft, 6 left  <- #122
-#127 D5 morning   air_group:1 lost 1 aircraft, 7 left  <- #123
-#128 D5 morning   air_group:1 lost 3 aircraft, 4 left  <- #124
-#129 D5 morning   air_group:1 bombs at base:2: 4 shots x 0.2 = 0.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #119, #127, #128
-#130 D5 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #121, #129
-#131 D5 morning   Allied claim over (5,0): 6 aircraft shot down  <- #122, #123, #124
-#132 D5 morning   air_group:1 base strike sortie of 400 nm: 4 aircraft x 0.13 = 0.52 expected worn, 1 worn, 0 written off, 3 ready and 1 damaged left  <- #119
-#133 D5 morning   air_group:2 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 1 worn, 0 written off, 5 ready and 1 damaged left  <- order:5, order:6
-#134 D5 morning   air_group:2 escort sortie of 400 nm: 3 aircraft x 0.13 = 0.39 expected worn, 1 worn, 0 written off, 4 ready and 2 damaged left  <- #120
-#135 D5 morning   air_group:3 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 3 ready and 0 damaged left  <- order:1
-#136 D5 morning   air_group:5 search sortie of 600 nm: 5 aircraft x 0.17 = 0.85 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- #118
-#137 D5 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 5 aircraft  <- order:2, order:3
-#138 D5 afternoon air_group:2 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 2 damaged left  <- order:5, order:6
-#139 D5 afternoon air_group:3 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 3 ready and 0 damaged left  <- order:1
-#140 D5 afternoon air_group:5 search sortie of 600 nm: 5 aircraft x 0.17 = 0.85 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- #137
-#141 D5 -         base:1 at the end of the day: 0 t of supply, 7 aircraft ready: not open
-#142 D5 -         base:2 at the end of the day: 950 t of supply, 15 aircraft ready: open
+#97 D4 morning   air_group:3 lost 2 aircraft, 5 left  <- #94
+#98 D4 morning   air_group:2 lost 1 aircraft, 7 left  <- #95
+#99 D4 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #92
+#100 D4 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 1 hit after the attack  <- #92, #99
+#101 D4 morning   air_group:1 lost 1 aircraft, 8 left  <- #100
+#102 D4 morning   Japanese claim at (5,0): 2 aircraft shot down, 1 aircraft destroyed on the ground  <- #94, #99
+#103 D4 morning   Allied claim over (5,0): 3 aircraft shot down  <- #95, #96, #100
+#104 D4 morning   air_group:1 base strike sortie of 400 nm: 8 aircraft x 0.13 = 1.04 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- #92
+#105 D4 morning   air_group:2 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- order:5, order:6
+#106 D4 morning   air_group:2 escort sortie of 400 nm: 3 aircraft x 0.13 = 0.39 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- #93
+#107 D4 morning   air_group:3 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 1 worn, 0 written off, 4 ready and 1 damaged left  <- order:1
+#108 D4 morning   air_group:5 search sortie of 600 nm: 4 aircraft x 0.17 = 0.68 expected worn, 0 worn, 0 written off, 4 ready and 1 damaged left  <- #91
+#109 D4 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 4 aircraft  <- order:2, order:3
+#110 D4 afternoon air_group:2 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 7 ready and 0 damaged left  <- order:5, order:6
+#111 D4 afternoon air_group:3 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 4 ready and 1 damaged left  <- order:1
+#112 D4 afternoon air_group:5 search sortie of 600 nm: 4 aircraft x 0.17 = 0.68 expected worn, 1 worn, 0 written off, 3 ready and 2 damaged left  <- #109
+#113 D4 -         base:1 at the end of the day: 0 t of supply, 15 aircraft ready: not open
+#114 D4 -         base:2 at the end of the day: 950 t of supply, 15 aircraft ready: open
+#115 D5 night     air_group:3 had 1 aircraft repaired at base:2, 5 ready and 0 damaged  <- #107
+#116 D5 night     air_group:5 had 2 aircraft repaired at base:2, 5 ready and 0 damaged  <- #112
+#117 D5 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 5 aircraft  <- order:2, order:3
+#118 D5 morning   air_group:1 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#119 D5 morning   air_group:2 sent 4 escorts with air_group:1  <- order:5, order:6, #118
+#120 D5 morning   air_group:2 escorts at the patrol of air_group:3: 4 shots x 0.3 = 1.2 expected, 2 hits  <- #118, #119
+#121 D5 morning   air_group:3 patrol at the escorts of air_group:2: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #118, #119
+#122 D5 morning   air_group:3 patrol at the bombers of air_group:1: 1 shots x 0.3 = 0.3 expected, 1 hit  <- #118
+#123 D5 morning   air_group:3 lost 2 aircraft, 3 left  <- #120
+#124 D5 morning   air_group:2 lost 1 aircraft, 6 left  <- #121
+#125 D5 morning   air_group:1 lost 1 aircraft, 7 left  <- #122
+#126 D5 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #118, #125
+#127 D5 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #118, #126
+#128 D5 morning   air_group:1 lost 3 aircraft, 4 left  <- #127
+#129 D5 morning   Japanese claim over (5,0): 3 aircraft shot down  <- #120, #126
+#130 D5 morning   Allied claim over (5,0): 6 aircraft shot down  <- #121, #122, #127
+#131 D5 morning   air_group:1 base strike sortie of 400 nm: 4 aircraft x 0.13 = 0.52 expected worn, 1 worn, 0 written off, 3 ready and 1 damaged left  <- #118
+#132 D5 morning   air_group:2 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 1 worn, 0 written off, 5 ready and 1 damaged left  <- order:5, order:6
+#133 D5 morning   air_group:2 escort sortie of 400 nm: 3 aircraft x 0.13 = 0.39 expected worn, 1 worn, 0 written off, 4 ready and 2 damaged left  <- #119
+#134 D5 morning   air_group:3 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 3 ready and 0 damaged left  <- order:1
+#135 D5 morning   air_group:5 search sortie of 600 nm: 5 aircraft x 0.17 = 0.85 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- #117
+#136 D5 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 5 aircraft  <- order:2, order:3
+#137 D5 afternoon air_group:2 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 2 damaged left  <- order:5, order:6
+#138 D5 afternoon air_group:3 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 3 ready and 0 damaged left  <- order:1
+#139 D5 afternoon air_group:5 search sortie of 600 nm: 5 aircraft x 0.17 = 0.85 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- #136
+#140 D5 -         base:1 at the end of the day: 0 t of supply, 7 aircraft ready: not open
+#141 D5 -         base:2 at the end of the day: 950 t of supply, 16 aircraft ready: open
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 3 ready, 1 damaged, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 4 ready, 2 damaged, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:3 "Placeholder defending fighters" (Allied) at base:2: 3 ready, mission CombatAirPatrol, patrol share 1, no arc
-air_group:4 "Placeholder resting bombers" (Allied) at base:2: 7 ready, mission Rest, no arc
+air_group:4 "Placeholder resting bombers" (Allied) at base:2: 8 ready, mission Rest, no arc
 air_group:5 "Placeholder scouts" (Allied) at base:2: 5 ready, mission Search, arc 040-130 to 300 nm
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock, repairs 2 aircraft a day
 base:2 "Placeholder airfield B" (Allied) at (5,0): 950 t of supply in stock, 20 anti-aircraft shots, repairs 3 aircraft a day
@@ -168,5 +167,5 @@ Japanese: no contacts
 Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
 Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
 Japanese claim over (5,0): 0 aircraft shot down, day 3 morning
-Japanese claim at (5,0): 2 aircraft shot down, 2 aircraft destroyed on the ground, day 4 morning
+Japanese claim at (5,0): 2 aircraft shot down, 1 aircraft destroyed on the ground, day 4 morning
 Japanese claim over (5,0): 3 aircraft shot down, day 5 morning

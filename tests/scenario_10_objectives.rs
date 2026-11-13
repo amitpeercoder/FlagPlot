@@ -513,8 +513,10 @@ fn objectives_change_no_hash_and_no_event() {
     // decisions 0073 and 0075 set the Japanese search from the record. And it
     // was 2ca5a5dd9f150a5d until the strike report read the force after the
     // damage (rulebook differences, row 7): Ryujo sinks on this seed, and the
-    // later reports of her detachment count the ships left afloat.
-    assert!(baseline.contains("hash 0703fe7c146fc0f8"));
+    // later reports of her detachment count the ships left afloat. And it was
+    // 0703fe7c146fc0f8 until decision 0079 had the live guns fire after the
+    // attack.
+    assert!(baseline.contains("hash b418991aaf7e4cce"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set
