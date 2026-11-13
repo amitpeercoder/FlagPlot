@@ -53,23 +53,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "9f5105bdb77d063a"
+      "hash": "323045f0ceae20df"
     },
     {
       "day": 2,
-      "hash": "481f0a1b712d5b57"
+      "hash": "53e17cc86d4fe46e"
     },
     {
       "day": 3,
-      "hash": "bffb5a51d90dece3"
+      "hash": "539dc9a82a3504c1"
     },
     {
       "day": 4,
-      "hash": "56e69ef90ab94b64"
+      "hash": "5aa342d4aec1f434"
     },
     {
       "day": 5,
-      "hash": "d3497d2e7e864f88"
+      "hash": "da4b1523243c142b"
     }
   ],
   "orders": [
@@ -264,21 +264,7 @@
       "day": 1,
       "order": {
         "kind": "set_air_mission",
-        "mission": "base_strike",
-        "target_base": 1
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:1"
-    },
-    {
-      "day": 1,
-      "order": {
-        "fatigue": "45",
-        "kind": "set_rest_threshold"
+        "mission": "rest"
       },
       "origin": {
         "intent": null,
@@ -316,19 +302,6 @@
     {
       "day": 1,
       "order": {
-        "fatigue": "45",
-        "kind": "set_rest_threshold"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:2"
-    },
-    {
-      "day": 1,
-      "order": {
         "kind": "set_air_mission",
         "mission": "combat_air_patrol"
       },
@@ -344,19 +317,6 @@
       "order": {
         "kind": "set_patrol_share",
         "share": "0"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:3"
-    },
-    {
-      "day": 1,
-      "order": {
-        "fatigue": "45",
-        "kind": "set_rest_threshold"
       },
       "origin": {
         "intent": null,
@@ -928,6 +888,20 @@
     {
       "day": 5,
       "order": {
+        "kind": "set_air_mission",
+        "mission": "base_strike",
+        "target_base": 1
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:1"
+    },
+    {
+      "day": 5,
+      "order": {
         "kind": "set_route",
         "waypoints": [
           [
@@ -959,7 +933,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "17971e14bda08cdc"
+    "hash": "c2ae35f541de3eda"
   },
   "seats": {
     "allied": "player",

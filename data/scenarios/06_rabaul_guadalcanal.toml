@@ -6,8 +6,10 @@
 # the architect from data/oob (docs/decisions/0042-rabaul-against-guadalcanal.md).
 # It is the first scenario in which wear, fatigue, pilots, replacements,
 # arrivals and base supply all run together. The hand calculation is in
-# tests/scenario_06_rabaul_guadalcanal.rs. The test runs this file with
-# seeds 1 to 1000.
+# tests/scenario_06_rabaul_guadalcanal.rs; it runs the frozen copy of this
+# file (data/scenarios/step2-frozen/06_rabaul_guadalcanal.toml), as it stood
+# before decision 0082 set the raid days and the dive bombers' searches from
+# the record.
 #
 # PLACEHOLDER DATA in part. The combat, wear, fatigue and supply figures are
 # placeholders, as in every scenario. So are each base's supply and repairs
@@ -209,7 +211,12 @@ pilots = 12
 
 # Replacements at Rabaul: two bombers and two fighters a day, each with a
 # pilot. A reading of weak totals, see decision 0042. The Allies receive
-# nothing but the squadrons above.
+# nothing but the squadrons above. INVENTED, NOT FROM A ROW (decision 0082,
+# 3): the rows give totals with no day and no unit (air_unit_facts 335, 336:
+# 60 fighters and 72 bombers; 337: 85 aircraft from 15 to 28 September) and
+# one dated arrival, the 6th Air Group's 13 (row 32), which is the arrival
+# above. Rows giving aircraft reaching the scenario's units at Rabaul by day
+# and type would settle it. Left as decision 0042 set it.
 [[replacement]]
 side = "japanese"
 base = 2
@@ -224,11 +231,32 @@ aircraft_type = 2102
 aircraft_per_day = 2
 pilots_per_day = 2
 
-# Rabaul: the bombers raid Henderson Field. Both fighter groups keep nothing
-# over Rabaul and send every fighter that can fly as escort. The staff rests
-# each group above a fatigue of 45.
+# Rabaul (decision 0082). THE RAID DAYS ARE THE RECORD'S. The bombers fly
+# the base strike on the eleven days a raid reached Henderson Field by the
+# units' own forms, and rest on the others: 25 and 26 August (days 5, 6), 29
+# and 30 August (9, 10), 2 September (13), 5 September (16), and 9 to 13
+# September (20 to 24). The forms are in
+# docs/research/oob/japanese-air-records.md, section 1, rows 1115, 1044, 982,
+# 1047, 987, 1059, 1005, 1065, 1008, 1075, 1011, 1080, 1015, 1085, 1019,
+# 1089, 1023, 1094, 1028, 1100, 1033, 1108 and 1037; row 954 counts 14
+# missions launched and 4 aborted to 12 September. How many bombers fly on a
+# raid day is what the group has ready, cut by its fatigue (the rules
+# decide); the forms' numbers sent are the check, in decision 0082.
+# Raids that turned back (23, 24, 27, 28 and 31 August, 1, 4 and 16
+# September by the forms) are not flown: the rules have no weather and no
+# raid that turns back. No row sets a rest threshold, so none is given
+# (the default): the record's schedule, not fatigue, sets the days. Decision
+# 0042 had fatigue stand in for weather; a recorded schedule replaces it.
+
 [[order]]
 day = 1
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 5
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
@@ -236,11 +264,79 @@ mission = "base_strike"
 target_base = 1
 
 [[order]]
-day = 1
+day = 7
 side = "japanese"
 air_group = 1
-kind = "set_rest_threshold"
-fatigue = 45
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 9
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 11
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 13
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 14
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 16
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 17
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 20
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 25
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+# Both fighter groups keep nothing over Rabaul and send every fighter that can
+# fly as escort, which they do only on a raid day. Decision 0042, 15: nothing
+# attacks Rabaul. No rest threshold (decision 0082). The record's escorts
+# include units the scenario leaves out (Shokaku's fighters from Buka on 29
+# and 30 August and 2 September, the 2nd Air Group on 12 September), and on
+# 30 August the Tainan Air Group's eight turned back; here every escort is
+# the Tainan's and, from 31 August, the 6th's, and none turns back.
 
 [[order]]
 day = 1
@@ -259,13 +355,6 @@ share = "0"
 [[order]]
 day = 1
 side = "japanese"
-air_group = 2
-kind = "set_rest_threshold"
-fatigue = 45
-
-[[order]]
-day = 1
-side = "japanese"
 air_group = 3
 kind = "set_air_mission"
 mission = "combat_air_patrol"
@@ -276,17 +365,16 @@ side = "japanese"
 air_group = 3
 kind = "set_patrol_share"
 share = "0"
-
-[[order]]
-day = 1
-side = "japanese"
-air_group = 3
-kind = "set_rest_threshold"
-fatigue = 45
 
 # Henderson Field: every fighter group patrols over the field with all it
-# can fly, and the staff rests each above a fatigue of 40. The dive bombers
-# are held for ships, and there are none: they stay on the ground.
+# can fly, and the staff rests each above a fatigue of 40. INVENTED, NOT FROM
+# A ROW (decision 0082, 3): no row says the fighters kept a standing patrol
+# or sets a rest threshold. The rows have them scrambled on a coastwatcher's
+# alarm (engagement_outcomes 545, 572, 1328) and reaching height late (544,
+# 1334); none gives the warning in minutes. A row giving the warning time, or
+# the fighters' daily patrol routine, would settle it. Left as decision 0042
+# set it.
+
 [[order]]
 day = 1
 side = "allied"
@@ -342,34 +430,82 @@ side = "allied"
 air_group = 16
 kind = "set_rest_threshold"
 fatigue = 40
+
+# The dive bombers search (decision 0082, 2). That they searched is from
+# rows: engagement_events 1189, engagement_outcomes 314, 418, 419 and 475,
+# aircrew_fates 115 and 117. The arc and the distance are A READING, not a
+# row: 300 to 030 true takes in the north and the Slot, where the rows'
+# contacts lie (1189, 1765, 1777, 1817); 200 miles is the distance the
+# SBD-3's search rows record as flown elsewhere (aircraft_type_facts 280,
+# 282). The arc matters little while the scenario holds no ships; the
+# distance sets the wear. No row sets a rest threshold, so none is given.
+# LIMITS: a group searches whole in both daylight pulses, where the record
+# sent sections; and their strikes on ships (1763, 1765, 1777, 1817, 1867)
+# cannot be flown, since the scenario holds no ships.
 
 [[order]]
 day = 1
 side = "allied"
 air_group = 11
 kind = "set_air_mission"
-mission = "naval_strike"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 11
+kind = "set_search_arc"
+from_deg = 300
+to_deg = 30
+range_nm = 200
 
 [[order]]
 day = 1
 side = "allied"
 air_group = 12
 kind = "set_air_mission"
-mission = "naval_strike"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 12
+kind = "set_search_arc"
+from_deg = 300
+to_deg = 30
+range_nm = 200
 
 [[order]]
 day = 1
 side = "allied"
 air_group = 14
 kind = "set_air_mission"
-mission = "naval_strike"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 14
+kind = "set_search_arc"
+from_deg = 300
+to_deg = 30
+range_nm = 200
 
 [[order]]
 day = 1
 side = "allied"
 air_group = 17
 kind = "set_air_mission"
-mission = "naval_strike"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 17
+kind = "set_search_arc"
+from_deg = 300
+to_deg = 30
+range_nm = 200
 
 # Missions and objectives (decision 0054). The points and the levels are the
 # placeholder scale of that decision, to be set from the record in step 2.
