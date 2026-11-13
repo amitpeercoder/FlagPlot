@@ -834,8 +834,12 @@ fn a_daylight_fight_carries_no_experience_factor() {
 // Part 3: a pinned outcome on the live figures.
 // ---------------------------------------------------------------------
 
-/// PINNED, not calculated. On the live figures (strengths 0.25, so A's factor
-/// is 1.25 and B's 0.75), seed 1942, the scenario's own. Since decision 0068 the
+/// PINNED, not calculated. On the live figures, seed 1942, the scenario's own.
+/// Remade on Nov 13, 2026 with tuning round 1, which set the gun strength to
+/// 0.5 (A's gun factor 1.5 and B's 0.5; the torpedo and sighting strengths are
+/// still 0.25): A's hits went from 44 to 23, B's from 3 to 0, the salvos from
+/// 15 to 6 and the log from 73 events to 55, the fight ending sooner. Before
+/// that the strengths were all 0.25 (A's factor 1.25 and B's 0.75). Since decision 0068 the
 /// live share of 0.5 halves B's gun shots here, B being at normal readiness and
 /// not ready (B's hits went from 5 to 3 and the log from 75 events to 73). No hand calculation
 /// can say which draw succeeds; this catches a stream that moved, which the
@@ -885,8 +889,8 @@ const PINNED: Pinned = Pinned {
     way: Opening::AFreeRound,
     first_round: Some(1),
     rolls: 2,
-    salvos: 15,
-    hits_a: 44,
-    hits_b: 3,
-    events: 73,
+    salvos: 6,
+    hits_a: 23,
+    hits_b: 0,
+    events: 55,
 };
