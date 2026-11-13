@@ -396,7 +396,7 @@ A fight is told from the round the side first knew of it. That round is the side
 
 The ending is told as the side's own force made it. "A force was sunk" is told only to the side whose force lost its last ship in the fight (its force has no ship, and its last sinking was in this fight); "a force broke off" only to the side whose force broke off in the last round. Otherwise the side is told **contact lost**. Slipped away, passed unseen and the last round fought are told as they are. What the side learns of the enemy's losses is its claim. [0085]
 
-An event of a fight that carries a round is shown only if its round is not before the round the side first knew. Round 0 hits are outside a fight. A force that breaks off in a round in which it has neither sighted nor been fired on, because its ships were crippled before the meeting, is not shown the break-off. The force's state still changes. [0014, 0047]
+An event of a fight that carries a round is shown only if its round is not before the round the side first knew. Round 0 hits are outside a fight. A force that breaks off in a round in which it has neither sighted nor been fired on, because its ships were sunk or heavily damaged before the meeting, is not shown the break-off. The force's state still changes. [0014, 0047]
 
 ### Causes and breakdowns
 

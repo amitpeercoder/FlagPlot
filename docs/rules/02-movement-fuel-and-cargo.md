@@ -302,7 +302,7 @@ A ship at sea does not load or unload, and there is no refuelling at sea, no tan
 
 ## Stragglers
 
-A straggler is a ship whose propulsion is degraded or out. A ship with flotation damage of 50 or more is crippled, which is a separate matter. A task force has a standing instruction for stragglers and a share to keep, set with its rules of engagement: keep (the default), detach, leave or retire. The instruction is applied to every force that has a straggler and an instruction other than keep, at the start of every movement step, in order of force number, and straight after each fight, to the two forces that fought, lower number first. A force made by the pass is not processed in the same pass. [0016 items 10 to 12, 0022 item 5]
+A straggler is a ship whose propulsion is degraded or out. A ship with flotation damage of 50 or more is heavily damaged, which is a separate matter. A task force has a standing instruction for stragglers and a share to keep, set with its rules of engagement: keep (the default), detach, leave or retire. The instruction is applied to every force that has a straggler and an instruction other than keep, at the start of every movement step, in order of force number, and straight after each fight, to the two forces that fought, lower number first. A force made by the pass is not processed in the same pass. [0016 items 10 to 12, 0022 item 5]
 
 The ships of the force are sorted by propulsion into sound (working), able to steam (degraded) and dead in the water (out).
 

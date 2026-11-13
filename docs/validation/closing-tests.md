@@ -1,6 +1,6 @@
 # The closing tests of step 2
 
-Three of the lines of `docs/step2-spec.md`, "Done means", as the coordinating architect ruled they are met ("How each line is met"): the hundred-seed soak run by hand, the legibility test on the tuned Eastern Solomons run as predict, run, explain, and the rulebook-only hand calculations defined afresh. Run on Nov 13, 2026 by an Opus team lead for the architect, on commit `b54840b` (`main` after pull request 228, the small-fixes batch; the branch adds only these Markdown files). No test and no build step reads these files.
+Three of the lines of `docs/step2-spec.md`, "Done means", as the coordinating architect ruled they are met ("How each line is met"): the hundred-seed soak run by hand, the legibility test on the tuned Eastern Solomons run as predict, run, explain, and the rulebook-only hand calculations defined afresh. Run on Nov 13, 2026 by an Opus team lead for the architect, on commit `b54840b` (`main` after pull request 228, the small-fixes batch). The pull request that carries this record also carries the rulebook and glossary fixes the architect ruled on afterwards (below, "What was changed in this pull request"); it changes no code and no data. No test and no build step reads these files.
 
 The long texts are in the folder `closing-tests/`:
 
@@ -8,13 +8,14 @@ The long texts are in the folder `closing-tests/`:
 - `legibility-answers.md`: both prompts and both answers, word for word.
 - `legibility-umpire-log.md`: the umpire's log of the same game, which the model never saw.
 - `rulebook-sittings.md`: the files each sitting was given, how the figures were altered, and the four prompts, word for word.
-- `rulebook-answers-1.md` to `rulebook-answers-4.md`: the four answers, word for word.
+- `rulebook-answers-1.md` to `rulebook-answers-4.md`: the four answers of the first run, word for word.
+- `rulebook-answers-4-rerun.md`: the control sitting run again after the rulebook fixes, word for word.
 
 | Test | Result |
 | --- | --- |
 | 1. The hundred-seed soak, with the live determinism and invariant tests | **Pass.** 100 seeds of 180 days, every check holding; nothing else failed |
 | 2. Legibility on the tuned Eastern Solomons | **Fails the procedure's rule by one item:** the explanation, the claims and truth and belief pass, but only two of the four predictions do (three are needed). Both misses are of the enemy's movements, which nothing the side is given shows. Twelve findings |
-| 3. The rulebook-only hand calculations | **Every number of the step 2 rules is exact**, but for two derived chances of 19a that are the cut where the hand calculation rounds. One number of the step 1 control is wrong, on a term the rulebook does not define, and two more of its derived chances are the cut. Not a pass under the procedure until the architect rules on the findings. Eleven findings |
+| 3. The rulebook-only hand calculations | **Every number of the step 2 rules is exact**, but for two derived chances of 19a that are the cut where the hand calculation rounds. One number of the step 1 control is wrong, on a term the rulebook does not define, and two more of its derived chances are the cut. Eleven findings. The architect ruled on each; the rulebook and glossary fixes are in this pull request; the control sitting, **run again after those fixes**, got every number exact, in the cut form the new rule of hand calculations asks |
 
 ## Test 1: the hundred-seed soak, by hand
 
@@ -74,9 +75,11 @@ The Japanese carrier force (Ryujo's, task force 4) steamed overnight to (7,-12) 
 
 **Verdict by the procedure's rule** (pass if 5, 6 and 7 pass and at least three of 1 to 4): **not passed**, 5, 6 and 7 passing and two of 1 to 4. The architect may weigh that both misses are of where the enemy would be, which nothing the side is given can show (the opening briefing holds no contact and no enemy force; its mission says only "expected to come down from the north"); neither is a misreading of a rule. The procedure's "judge the reason, not the dice" does not reach them: they are not dice but the fog the game is meant to have. The explanation, the part of the line that the spec asks for in its own words ("explains an outcome"), passed.
 
+**The architect's reading** (the coordinating architect, Nov 13, 2026, on the designer's delegation; added beneath the verdict, which stands as recorded): both failed predictions are about where the enemy is, which the opening briefing cannot show; the three items that test legibility itself, the explanation chain, claims against truth, and truth and belief, pass. The test goes to the designer on this page to accept or not. It is not run again, and the verdict rule is not changed after the result.
+
 ### Findings: what confused the model, with a proposed wording fix for each
 
-None is made here; each is for the architect.
+The architect's rulings, Nov 13, 2026: L1, L4, L9 and L11 are fixed in the glossary and the rulebook in this pull request (below, "What was changed"); L2, L3, L5, L8 and L12 change served text (the briefing and the tools) and go in a second pull request, cut from `main` after this one, with the agent's goldens and the recorded games remade; L6 and L7 are put on `docs/step2-opening-list.md` for step 3; L10 needs nothing.
 
 | # | What confused it | Where | Proposed fix |
 | --- | --- | --- | --- |
@@ -174,11 +177,11 @@ Exact: equal to the sixth decimal, by the route the rulebook gives. "Different r
 
 **In all:** every number exact but five: four right to the fifth decimal by cutting where the hand calculation rounds, one wrong. Every number of a step 2 rule is exact but two derived chances of 19a case 2, which differ in the sixth decimal only. The one miss and the other two rounding differences are in the step 1 control.
 
-**Against the procedure's pass rule** ("every listed number matches, and every finding is fixed or ruled"): not yet a pass. It becomes one if the architect rules that the four derived chances are the hand calculations' rounding (the rulebook says "cut"; these chances are not engine quantities, and no test asserts them) and that the 04a miss is the question's term, and fixes or rules each finding below.
+**Against the procedure's pass rule** ("every listed number matches, and every finding is fixed or ruled"): as the first run came out, not a pass, and it is recorded as it came out. The architect then ruled (R6) that a chance worked by hand over several draws is written cut, as the engine cuts, so the model's four cut values are the right form; had the findings fixed; and had the control sitting run again (below, "The control sitting run again, after the fixes").
 
 ### Findings: where the rulebook is unclear or wrong, with a proposed wording fix
 
-None is made here; each is for the architect. "Unclear" means the model had to infer, whether or not its number came out right.
+"Unclear" means the model had to infer, whether or not its number came out right. The architect's rulings, Nov 13, 2026: R1, R2, R3, R4, R5, R7 and R8 are fixed in this pull request as proposed (below, "What was changed"); R6 is ruled as a rule of the hand calculations, written into `docs/engineering/roles-and-tests.md`; R9, R10 and R11 need nothing.
 
 | # | Where | The line | Unclear or wrong | Proposed fix |
 | --- | --- | --- | --- | --- |
@@ -194,4 +197,60 @@ None is made here; each is for the architect. "Unclear" means the model had to i
 | R10 | Ch. 4, Torpedo shots | "After any other salvo, torpedoes_ready and torpedoes_one_side_fired are both cleared" | Inferred correctly that a class with both figures equal fires once; the book is clear enough | None, or "(a class whose tubes all bear on one side fires them all at once and is then spent)". |
 | R11 | Ch. 3, Alert from belief, with ch. 4, Ready | "A force is ready if its readiness is battle … or if it was alert before the present pulse began." | Inferred correctly that staying alert into the next pulse needs a fresh contact near; clear | None. |
 
-Two things the model raised are of this test's making, not the book's: the altered copies of the frozen figures still carry their `# FROZEN` header, so a share of 0.5 sat beside the book's "1 in the frozen step 1 file" (sitting 2 flagged it); and a question of sitting 1 said "lit (guns only)", where the book's lit factor applies to torpedoes too (the model said so). A next run should say in the prompt that the figures are altered copies, and should not use the hand calculations' own terms without defining them.
+**Two slips of the tester's, not the book's.** The altered copies of the frozen figures kept their `# FROZEN` header, so a share of 0.5 sat beside the book's "1 in the frozen step 1 file" and sitting 2 had to say so; the prompt should have said the figures were altered copies. And a question of sitting 1 said "lit (guns only)", where the book's lit factor applies to torpedoes too; the model said so and answered both. Neither changed a number, and neither is run again (the architect's ruling). The 04a question's use of the hand calculations' own terms, which the book did not define, was the tester's too; the book now defines them (R5) and the rerun asked for them as defined.
+
+**Hand calculations that round a derived chance** (R6). They are not edited: nobody changes an expected number, and none of these is asserted by a test; each lies only in a doc comment. Found in the doc comments this test read and in those that repeat them; this is not a search of every test.
+
+| File | Written | Cut |
+| --- | --- | --- |
+| `tests/scenario_19a_guns_and_the_attack.rs`, case 2 | 0.95^20 = 0.358486; 0.95^10 = 0.598737 | 0.358485; 0.598736 |
+| `tests/scenario_04a_night_action.rs`, how a fight opens | 0.375^6 = 0.002781; B's free round, and both from the start, 0.199444 | 0.002780; 0.199443 |
+| `tests/scenario_15a_unready_fire.rs`, `tests/scenario_04c_readiness.rs` | 4a's 0.199444 and 0.002781, repeated | 0.199443; 0.002780 |
+| `tests/scenario_14a_experience.rs`, how a fight opens | 0.255^6 = 0.000275; both from the start 0.140901 | 0.000274; 0.140900 |
+
+### What was changed in this pull request
+
+Wording only, each saying what the code already does; no rule changes its meaning.
+
+| Finding | File | Change |
+| --- | --- | --- |
+| L1 | Glossary, Pulse | Air searches and strikes fly only in the morning and afternoon; the night's search phase is empty and no strike is launched in it |
+| L4 | Glossary, Breakdown | What a side is shown, as chapter 1 already has it (`side_events.rs`: `own_factors`, `side_breakdown`): a whole event's breakdown less any raw draw; a claim's not at all; of an event cut of more than an enemy's name, only its own factors and no result, with the search, attack, fighters', guns' and salvo cases |
+| L9 | Glossary (Crippled, Heavily damaged (new), Break off, Straggler, Dead in the water); chapters 1, 2, 4 and 6; `differences.md` row 3 | One meaning of crippled, the objective's: afloat with propulsion or flight deck out. Flotation damage of `crippled_flotation` or more is now "heavily damaged" |
+| L11 | Glossary, Contact | A report's hex, count and kind can each be wrong, and a later report of the contact replaces them |
+| R1 | Chapter 4, Who fires | Places p and i are among the ships afloat, in ship ID order, counted from 0, with an example (`surface.rs`: `choose_targets`, over the force's ordered set of ships) |
+| R2 | Chapter 4, Ready | Being ready changes the shots only; sighting reads alert, not ready |
+| R3 | Chapter 3, Starting contacts | `age_pulses`, 0 when not given (`sim-data`, `ContactSpec`) |
+| R4 | Chapter 4, Named systems | A ship starts with every system working unless its `[[ship]]` entry sets one (`sim-data`, `ShipSystems::ALL_WORKING`) |
+| R5 | Chapter 4, Surprise; glossary, Free round and Both firing from the start (new) | The free round, and the four ways a fight between two engaging forces opens |
+| R6 | `docs/engineering/roles-and-tests.md`, Tests | A chance worked by hand over several draws is written cut to six places |
+| R7 | Chapter 4, Each shot is rolled | n shots at p all miss with chance (1 − p)^n |
+| R8 | Chapter 5, Coming home to no deck | A degraded deck still lands them |
+| L6, L7 | `docs/step2-opening-list.md` | One line each, for step 3 |
+
+**Served text that says "crippled" in the old, flotation sense,** which would have to change for the word to have one meaning everywhere (not changed here; listed as the architect asked):
+
+- The break-off event's text, "round N: task_force:X broke off, S of its ships sunk or crippled" (`crates/sim-core/src/events.rs`, the break-off text), shown to a side.
+- The break-off breakdown factor `sunk_or_crippled` (`crates/sim-core/src/surface.rs`), shown to the side whose force broke off.
+- The figure `surface_combat.toml: crippled_flotation` and its loader check's message "crippled flotation" (`crates/sim-core/src/refdata.rs`): a data key, not served to a player.
+
+The objective `ships_crippled` (the briefing, `crates/sim-agent/src/text.rs`; `briefing.schema.json`) already has the one meaning. The batch file's `crippled_runs` (`sim-cli batch`, the umpire's) was not checked for which meaning it counts.
+
+### The control sitting run again, after the fixes
+
+Run on the architect's ruling, **after the rulebook and glossary fixes above were made**: a fresh Haiku session, the same folder as sitting 4 with `rules/` and `glossary.md` replaced by the fixed ones, and the same questions, but question 7 asks for the free rounds and "both fire from the start", "each as the rulebook and the glossary define these terms". The answer is `closing-tests/rulebook-answers-4-rerun.md`.
+
+| Q | Expected (as the doc comment writes it) | First run | Rerun | Mark of the rerun |
+| --- | --- | --- | --- | --- |
+| 19c, every question | As the first run's marking | Exact | Every number the same | Exact |
+| 04a: the meeting, sighting, salvoes, points, system chances, 0.390431 | As the first run's marking | Exact | Every number the same | Exact |
+| 04a: never sights | 0.002781 | 0.002780 | 0.002780 | Exact in the form R6 asks (the doc comment rounds) |
+| 04a: A has a free round | 0.598331 | 0.598331 | 0.598331 | Exact |
+| 04a: B has a free round | 0.199444 | 0.199443 | 0.199443 | Exact in the form R6 asks |
+| 04a: both fire from the start | 0.199444 | 0.125 (wrong) | 0.199443, "both sight in the same round, round 1 or later" | Exact in the form R6 asks |
+
+So after the fixes the control is exact on every number. The rerun named one new place it had to infer. It is a finding for the architect, not fixed here:
+
+| # | Where | The line | Unclear | Proposed fix |
+| --- | --- | --- | --- | --- |
+| R12 | Ch. 3, Starting contacts, and Ageing and dropping | "Events are recorded on day 0, with no pulse", beside "each contact that was not made or refreshed in that pulse gains one pulse of age" | Whether a starting contact is aged at the end of the night pulse like any other. It is: `tests/scenario_19a_guns_and_the_attack.rs` says a contact a side starts holding at age 0 "is aged at the end of the night pulse, so it is 1 pulse old at the morning's decision". The model took age 1 and noted that 0 gave the same answer | Starting contacts: "From then on it is aged like any other contact: one entered at age 0 is 1 pulse old after the night pulse of day 1." |

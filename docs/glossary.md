@@ -15,14 +15,14 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Alarm** | The roll a force that is not alert makes when a fight with gunfire happens in its hex | |
 | **Stance** | A force's ordered way of meeting an enemy: engage or avoid (decision 0014) | |
 | **Avoiding for the pulse** | What a force does after it breaks off or slips away: it takes the avoid stance until the pulse ends, whatever its orders (decision 0022) | A change to its orders |
-| **Break off** | To end a fight because the share of a force's ships sunk or crippled has reached its break-off level, or because it is avoiding and was fired on | To move. A force that breaks off keeps to its route |
+| **Break off** | To end a fight because the share of a force's ships sunk or heavily damaged has reached its break-off level, or because it is avoiding and was fired on | To move. A force that breaks off keeps to its route |
 | **Slip away** | To end a fight unseen: an avoiding force that has seen an enemy that has not seen it | |
 | **Keep share** | The share of its fit ships a force must keep when it detaches stragglers (decision 0016) | |
 | **Patrol share** | The share of its aircraft a fighter group keeps over its own hex (decision 0027) | |
 | **Sight** | What an air search does to a force: it sights it, and a report follows | |
 | **See** | What a force does in a fight, round by round | |
 | **Report** | What a side is told. It can be wrong. Every change to what a side believes is a report | The truth |
-| **Contact** | What a side believes about an enemy force: a hex, a count, a kind and an age. Made and refreshed by reports | The force itself |
+| **Contact** | What a side believes about an enemy force: a hex, a count, a kind and an age. Made and refreshed by reports. Each report gives a hex, a count and a kind, any of which can be wrong; a later report of the same contact replaces them, so its kind and count can change from report to report | The force itself |
 | **Position** | A force's hex: the nearest hex centre. A group aboard a ship is at its ship's force's position | How far along a leg it is, which is working data of movement |
 | **Radius** | How far out an aircraft type goes and comes back. `search_range_nm` is the largest range a search arc may name, and the engine refuses an arc beyond it; it is the search radius, derived on its own from the range in the scouting condition (decision 0075). `strike_range_nm` is what a group's reach is measured from. Both columns are named range and hold radii | Range |
 | **Reach** | How far an air group's strikes and escorts may go: normal, the type's strike radius, or extended, the radius and a share more. Set by order, normal until then (decision 0059) | Radius |
@@ -32,14 +32,15 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Landed elsewhere** | Describes aircraft that were in the air when their own deck was lost and landed at another carrier or a base, joining or forming a group there (decision 0059) | Rebased |
 | **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius, or that found no deck to land on, and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
 | **Range** | How far an aircraft flies one way, as a sourced fact. Only the derivation tool reads it. The engine reads the radius columns, whose names say range (corrected against the code, which reads `search_range_nm`) | |
-| **Crippled** | A ship with flotation damage of 50 or more. It counts toward break-off | Slowed |
-| **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Crippled |
+| **Crippled** | A ship afloat, at sea or in port, whose propulsion or flight deck is out. The objective `ships_crippled` counts them; degraded does not count (decision 0054) | Heavily damaged; slowed |
+| **Heavily damaged** | A ship with flotation damage of `surface_combat.toml: crippled_flotation` (50) or more. It counts toward its force's break-off level and has no other effect. The figure, the break-off event's text and its breakdown factor still say crippled | Crippled |
+| **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Heavily damaged |
 | **Degraded, out** | The two damaged states of a named system. Degraded halves what the system does; out stops it | |
 | **Raid** | The strikes launched in one pulse from one place at one hex, with their escorts | One air group's strike |
 | **Mission** | What an air group is ordered to fly: rest, search, naval strike, combat air patrol. A task force also has a mission, which no rule reads yet | |
 | **Placeholder** | A figure invented so that the engine runs. Never historical | |
 | **Settled** | A choice between sourced figures, made by the architect and written down with its reason | Stated by a source |
-| **Pulse** | One of the three parts of a game day, resolved in this order: night, morning, afternoon. A pulse is the same across the whole map (decision 0001) | Darkness. The night pulse is dark, and light is asked of one function |
+| **Pulse** | One of the three parts of a game day, resolved in this order: night, morning, afternoon. A pulse is the same across the whole map (decision 0001). Air searches and strikes fly only in the morning and afternoon: the night pulse is dark, its search phase is empty and no strike is launched in it | Darkness. The night pulse is dark, and light is asked of one function |
 | **Phase** | A named step the day runs in a fixed order, inside a pulse or after the last pulse. Some phases are empty slots | A pulse |
 | **Draw** | One random number taken from a stream keyed on the seed, day, pulse, subsystem, entity and rule. A chance succeeds if its draw is below it (decision 0003) | A number from a generator that advances as the game runs |
 | **Hash** | The 64-bit summary of the state at the end of a day. Two runs agree if their daily hashes agree (decision 0004) | A security measure |
@@ -54,7 +55,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Intake** | The step at the start of a day that numbers, checks and applies or refuses the orders waiting (decision 0008) | |
 | **Standing order** | An accepted order that stays in force until another order of its slot replaces it | An order carried out and finished |
 | **Cause** | An order or an earlier event that an event names as what led to it (decision 0047 cuts them for a side) | |
-| **Breakdown** | The factors of a computed quantity or chance, recorded when recording is on. It never changes what happens or the hash. A side sees it as it sees the event, except a claim's, which it is not shown (decision 0060) | |
+| **Breakdown** | The factors of a computed quantity or chance, recorded when recording is on. It never changes what happens or the hash. A side is shown a whole event's breakdown whole, less any raw draw; a claim's not at all (decision 0060); and of an event cut of more than an enemy's name, only the factors that are its own, with no result (decisions 0047 and 0061); an event cut of nothing but the enemy's name keeps its whole breakdown. So its own search that sighted shows the aircraft, sweep width and arc but no distance or chance; its own attack shows the aircraft but no chance; its own fighters' and guns' fire show the shots but no chance; its own salvo shows its guns or tubes, rate and its own factors but no chance. The side fired on is given no breakdown | |
 | **Whole, cut, absent** | How a side is given an event: as the log has it, cut down to what the side may know, or not at all (decision 0047). A cut event never names an enemy ship, task force or air group (decision 0065) | |
 | **Contact lost** | How a side is told a fight ended when its own force did not end it: the enemy's force sank, or broke off. The enemy's losses reach the side as its claim (decision 0085) | That the enemy got away |
 | **Hidden causes** | The flag on a side's event that says it may have causes the side cannot see. It is set for every event of a kind that can have them, so it says nothing of what the enemy did (decision 0085) | That this event had a cause that was dropped |
@@ -73,7 +74,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Arrived** | The status of a force that has reached the centre of its last waypoint | Docked |
 | **Out of fuel** | The status of a force whose fuel ran out before its last waypoint. It takes no route, load or load-fuel order until it has taken fuel in port | A force with no fuel that is not under way |
 | **Stopped** | Not under way: idle, arrived or out of fuel. Refuelling and cargo handling also ask that the force is exactly at a hex centre | |
-| **Dead in the water** | Describes a ship whose propulsion is out, or the force it slows. Its speed is 0 | Crippled |
+| **Dead in the water** | Describes a ship whose propulsion is out, or the force it slows. Its speed is 0. Such a ship is also crippled | Heavily damaged |
 | **Sound ship** | A ship whose propulsion is working | A ship with no damage |
 | **Cargo** | Supply or fuel carried in a ship's hold, in tons, up to the class's cargo capacity | The fuel a ship steams on |
 | **Stock** | The tons of supply or of fuel a base holds | |
@@ -102,6 +103,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Toughness** | A ship class's figure that divides a weapon's damage into damage points | |
 | **Lit** | Describes a ship with fire damage above 0 in a dark fight. It is easier to hit | |
 | **Surprised** | Describes a force that has not sighted the enemy in a round when the enemy has, and the enemy has shots to fire. It does not fire | |
+| **Free round** | A round of a fight in which one force fires and the other, surprised, does not (chapter 4 of the rulebook, Surprise) | |
+| **Both firing from the start** | How a fight opens when both forces sight first in the same round, round 1 or later: both fire from that round on, and neither has a free round. The start is of the fire, not of the fight | Both sighting in round 1 |
 | **Effective stance** | A force's stance in a fight: avoid if it broke off or slipped away earlier in the pulse, otherwise its ordered stance (decision 0022) | |
 | **Firing event** | An event of a side's own fire in a raid: its escorts' or patrol's fight, its guns, or its attack. A raid's claim rests on them (decision 0056) | |
 | **Objective** | A count of something the engine records, taken for one side, with points (decision 0054) | An order |

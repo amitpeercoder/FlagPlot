@@ -97,7 +97,7 @@ A side sees: `ForceSlippedAway` for the force that slipped, without the force it
 
 Every ship afloat at the start of the round, of every force that has sighted, fires. A ship that is sunk in the round still fires in it. [0014]
 
-A ship chooses a target for its guns and a target for its torpedoes at the start of the round, among the enemy ships afloat. Kinds are in the order of importance: carrier, battleship, cruiser, destroyer, transport, auxiliary. **Guns:** a ship fires at enemy ships of its own kind; if none is afloat, at those of the nearest more important kind; if none of those, at those of the most important kind afloat. Among them it takes the ship in place (p modulo their number), in ship ID order, where p is the firing ship's place among the ships of its own kind in its force. **Torpedoes:** a ship fires at the enemy ships of the most important kind afloat, taking the ship in place (i modulo their number), where i is the firing ship's place in its force. Every ship afloat counts for its place, armed or not, and an unarmed ship fires nothing. Burning or nearer ships do not draw fire. A ship fires its gun salvo first and then its torpedo salvo. [0014, 0078]
+A ship chooses a target for its guns and a target for its torpedoes at the start of the round, among the enemy ships afloat. Kinds are in the order of importance: carrier, battleship, cruiser, destroyer, transport, auxiliary. **Guns:** a ship fires at enemy ships of its own kind; if none is afloat, at those of the nearest more important kind; if none of those, at those of the most important kind afloat. Among them, in ship ID order, it takes the ship in place (p modulo their number), where p is the firing ship's place among the ships afloat of its own kind in its force, in ship ID order. **Torpedoes:** a ship fires at the enemy ships of the most important kind afloat, taking the ship in place (i modulo their number), where i is the firing ship's place among the ships afloat in its force, in ship ID order. Places are counted from 0: the first ship is in place 0, so with three targets the firer in place 4 takes the second. Every ship afloat counts for its place, armed or not, and an unarmed ship fires nothing. Burning or nearer ships do not draw fire. A ship fires its gun salvo first and then its torpedo salvo. [0014, 0078]
 
 Known limit: there is no range. There is one night chance and one day chance, and no opening or closing of the range. Target choice is by kind, as above; choice by value, fire or distance is not built. [0014, 0078]
 
@@ -106,6 +106,8 @@ A side sees: its own ship's salvo, cut: the round, the firer, the weapon and the
 ### Surprise
 
 A force is surprised in a round if it has not sighted the enemy after the sighting step, the enemy has, and at least one ship of the enemy has shots above zero to fire this round, from its guns or its torpedoes. A force that is surprised does not fire: only forces that have sighted fire. Fire at a surprised force is more accurate (see the hit chance). `ForceSurprised` records it, citing the enemy's sighting roll or else the beginning of the fight. [0014]
+
+A round in which one force fires and the other, surprised, does not is that force's **free round**. The fired-on force has sighted from the next round (Sighting, above). So a fight between two forces that engage opens in one of four ways (an avoiding force may also slip away, above), decided by the first round in which either force sights: one force alone sights and has a free round; the other alone sights and has it; both sight first in the same round, in round 1 or later, and fire from that round on, which is called **both firing from the start** (the start of the fire, not of the fight); or neither ever sights and they pass unseen. [0014]
 
 A side sees: `ForceSurprised` for the force that was surprised, without the force that surprised it. The enemy does not see it. [0047, 0065]
 
@@ -129,7 +131,7 @@ A force is ready for action, or not, once, as a fight begins, and the answer is 
 
 - A force is ready if its readiness is battle (by order or from the start of the scenario), or if it was alert before the present pulse began. [0068, 0021]
 - A force at normal readiness that was alerted in the present pulse is not ready: by a contact at the start of this pulse (chapter 3, Alert from belief), by being sighted or fired on in an earlier fight of this pulse, or by the alarm of a fight earlier in this pulse. A force alerted in an earlier pulse and still alert is ready. A force at normal readiness that is not alert is not ready. When a force was alerted is read from the event that alerted it (`alerted_by`, an event of a day and a pulse); no field of the state holds it. An alerted force with no such event is taken to have been alerted before. [0068]
-- A force that is not ready fires every ship's guns at `unready_gun_share` of their shots in every round of that fight, and every ship's torpedoes at `unready_torpedo_share` of their shots in each round in which a side of them is fired, as the formulas above and below say. [0083] The chance to hit, sighting, surprise, the alarm and breaking off are unchanged. The force's readiness does not rise during the fight: a force that becomes alert in a fight is not ready in a later fight of the same pulse either, and is ready in a fight of a later pulse only if it is still alert then (chapter 3, Alert from belief, says when it stands down). [0068, 0071]
+- A force that is not ready fires every ship's guns at `unready_gun_share` of their shots in every round of that fight, and every ship's torpedoes at `unready_torpedo_share` of their shots in each round in which a side of them is fired, as the formulas above and below say. [0083] Being ready changes the shots and nothing else: the chance to hit, surprise, the alarm and breaking off do not read it, and sighting reads whether the force is alert (Sighting, above, and chapter 3), not whether it is ready. A force at normal readiness that is not alert is both not ready and not alert, so it fires at the shares and sights at `not_alert_sighting_factor`, each by its own rule. The force's readiness does not rise during the fight: a force that becomes alert in a fight is not ready in a later fight of the same pulse either, and is ready in a fight of a later pulse only if it is still alert then (chapter 3, Alert from belief, says when it stands down). [0068, 0071]
 - Each figure is a placeholder (0.5 in the live file, 1 in the frozen step 1 file, at which the rule does nothing). The gun share's 0.5 is the half of the armament manned that Condition II means; the torpedo share's first value mirrors it and has no row of its own, and the one count the record states is Bagley's four of sixteen tubes. Each is one figure for both sides and every battle. [0068, 0071]
 - The torpedo share does not carry how many tubes bear on a broadside, how many ships fire, the range or the chance to hit. [0071]
 
@@ -165,7 +167,7 @@ Known limit: experience is read by ships in a dark fight only, and not at all by
 
 ### Each shot is rolled
 
-Each whole shot is one draw at the chance. A part of a shot is one more draw at the chance times the part. The hits are the draws that succeed. With no fractional part there is no extra draw. The number of draws depends only on the shots. [0033]
+Each whole shot is one draw at the chance. A part of a shot is one more draw at the chance times the part. The hits are the draws that succeed. With no fractional part there is no extra draw. The number of draws depends only on the shots. Each draw is its own, so n whole shots at chance p all miss with chance (1 − p)^n, and score at least one hit with chance 1 − (1 − p)^n. [0033]
 
 Draws come from the firing ship's fire stream, keyed on the firing ship and the enemy force. It is opened when the ship first fires and kept for the whole fight. For each salvo the draws come in this order: the shots, then for each hit its track (guns only) and then its system. A ship's gun salvo is drawn before its torpedo salvo. [0014, 0033]
 
@@ -188,7 +190,7 @@ One mechanism applies damage to a ship, shared by surface fire and air attack. [
 A ship has two damage tracks, flotation and fire, each from 0 to 100. A hit adds its points to its track, 100 at most. `ShipDamaged` records the hits on one track from one salvo, with the points and the value after. The third track of decision 0014, system damage, no longer exists: it was replaced by named systems. [0014, 0016]
 
 - Flotation damage of 100 sinks the ship. Nothing else sinks it. [0014]
-- Flotation damage of `surface_combat.toml: crippled_flotation` or more makes a ship crippled. A crippled ship counts toward its force's break-off level. It has no other effect. [0014]
+- Flotation damage of `surface_combat.toml: crippled_flotation` or more makes a ship heavily damaged. A heavily damaged ship counts toward its force's break-off level. It has no other effect. (The figure, the break-off event's text and its breakdown keep the older word, crippled; in this book and the glossary a crippled ship is the objectives' one, with propulsion or flight deck out, chapter 6.) [0014]
 - Fire damage above 0 lights the ship at night: it is easier to hit (the lit factor). Fire damage of `claimed_sunk_fire` or more makes the enemy claim it as sunk (chapter 3, Claims). It has no other effect. [0014]
 - Fire does not grow, spread or burn out, and is not fought. Fire damage changes only by hits. [0014]
 
@@ -208,7 +210,7 @@ A ship that sinks has its location set to sunk and leaves its task force. It is 
 
 ### Named systems
 
-A ship has named systems, each working, degraded or out. Which it has follows from its class: propulsion always; main battery and fire control if the class has main guns; torpedo mounts if it has tubes; the flight deck if it carries aircraft. A system the class does not have stays working. [0016, 0026]
+A ship has named systems, each working, degraded or out. A ship starts the scenario with every system working unless its `[[ship]]` entry sets one (`propulsion`, `fire_control`, `main_battery`, `torpedo_mounts` or `flight_deck`); the loader refuses a damaged state for a system its class does not have. Which it has follows from its class: propulsion always; main battery and fire control if the class has main guns; torpedo mounts if it has tubes; the flight deck if it carries aircraft. A system the class does not have stays working. [0016, 0026]
 
 A system hit steps a system down one level: working to degraded, degraded to out. Out stays out. A hit on a system the ship does not have changes nothing, and `SystemHit` still records it with the state before and after. [0016]
 
@@ -237,7 +239,7 @@ Each force has rules of engagement, set by one order and kept until another repl
 | Part | Meaning | Default |
 | --- | --- | --- |
 | Stance | Engage or avoid | Engage |
-| Break-off level | The share of ships sunk or crippled, from 0 to 1, at which the force breaks off | 0.5 |
+| Break-off level | The share of ships sunk or heavily damaged, from 0 to 1, at which the force breaks off | 0.5 |
 | Straggler instruction | Keep, leave, detach or retire (chapter 2, Stragglers) | Keep |
 | Keep share | The share of its sound ships a force keeps when it detaches stragglers, from 0 to 1 | 0 |
 
@@ -281,7 +283,7 @@ A side sees: its own `ReportReceived` and `ClaimReceived`, whole. It never sees 
 
 - **Speed.** A damaged propulsion slows the ship, and the force steams at its slowest ship's speed. A ship dead in the water stops the force, which stays under way and burns nothing. Chapter 2, Speed, gives the rule. [0005, 0016, 0021]
 - **Guns and sighting.** Main battery, torpedo mounts and fire control change shots and hit chances as the table of named systems gives. Radar is not damaged and no sensor is. [0016]
-- **Stragglers.** A straggler is a ship whose propulsion is degraded or out. It is not the same as a crippled ship. The standing instruction for stragglers is applied after each fight to the two forces that fought, lower number first, and at the start of every movement step. Chapter 2, Stragglers, gives the rule. [0016, 0022]
+- **Stragglers.** A straggler is a ship whose propulsion is degraded or out. It is not the same as a heavily damaged ship. The standing instruction for stragglers is applied after each fight to the two forces that fought, lower number first, and at the start of every movement step. Chapter 2, Stragglers, gives the rule. [0016, 0022]
 
 ## No repair
 

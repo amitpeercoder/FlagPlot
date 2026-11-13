@@ -455,7 +455,7 @@ Not built: a landing at another deck or a field instead of the sea when the deck
 
 ### Coming home to no deck
 
-The second part of the wear phase, after running out of fuel and before wear. It runs if `air_combat.toml` is loaded. A group's aircraft are in the air if they flew in the pulse (a search, strike, patrol or escort) and were not shot down or ditched for fuel: they are what its noted sorties still hold. Their own deck cannot take them if the group is aboard a ship that has sunk in the pulse, or whose flight deck is out at this moment. A degraded deck takes them. A group at a base is never affected: no rule damages a field.
+The second part of the wear phase, after running out of fuel and before wear. It runs if `air_combat.toml` is loaded. A group's aircraft are in the air if they flew in the pulse (a search, strike, patrol or escort) and were not shot down or ditched for fuel: they are what its noted sorties still hold. Their own deck cannot take them if the group is aboard a ship that has sunk in the pulse, or whose flight deck is out at this moment. A degraded deck still lands them: only a deck that is out, or a ship that has sunk, does not. A group at a base is never affected: no rule damages a field.
 
 Groups are worked in group number order, each group's aircraft as one body that may be split by room, in this order:
 
