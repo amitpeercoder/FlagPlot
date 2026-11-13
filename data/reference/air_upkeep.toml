@@ -4,6 +4,13 @@
 
 placeholder = true
 
+# The wear figures are placeholders that no row sizes. Rabaul round 3 looked
+# at them and moved none (docs/validation/tuning/rabaul-r3-wear.md). It read
+# NACS's operational losses (engagement_outcomes 1262 to 1299) and the Rabaul
+# forms' forced landings (988, 1049, 1061, 1090, 1110). The rules are in their
+# size for the American types, and the distance term is pulled opposite ways
+# by side, which is the rule's shape, not its size.
+#
 # Chance an aircraft that flew comes back worn: the base chance, plus this
 # much for each 100 nm of the sortie.
 wear_base_chance = "0.05"
@@ -12,5 +19,8 @@ wear_chance_per_100_nm = "0.02"
 # Share of the worn aircraft that are written off. The rest are damaged.
 write_off_share = "0.2"
 
+# carrier_repairs_per_day is a placeholder that no battle of the slice reads:
+# scenario 5 does not load this file and scenario 6 has no carriers
+# (docs/step2-spec.md, "Tuning").
 # Damaged aircraft a carrier repairs each day, for the groups aboard it.
 carrier_repairs_per_day = 2
