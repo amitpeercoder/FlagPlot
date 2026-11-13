@@ -1160,6 +1160,17 @@ fn nothing_that_plays_the_game_depends_on_validate() {
 ///   would give 3). Ships [1, 3], torpedo: 0.75 + 1.5 = 2.25: 2.
 /// - `side` with `ships`, or neither: refused.
 ///
+/// `shots` with `unit` (decision 0084). Allied gun fire: `shots` "57.5";
+/// `shots_by` gun: ship 3 "33.5", ship 4 "16.9", ship 1 "0".
+/// - side allied, gun, unit tens: floor(57.5 / 10) = 5.
+/// - ships [3, 4], gun, unit tens: 33.5 + 16.9 = 50.4, floored once after
+///   the division: 5 (flooring each ship's tens would give 3 + 1 = 4).
+/// - ships [3, 4], gun, unit shells (the default named): floor(50.4) = 50.
+/// - ships [3], gun, unit tens: floor(3.35) = 3. Ships [1], gun, tens: 0.
+/// - unit "hundreds", and unit on any take but `shots`: refused.
+///
+/// Every measure here has the record 0 to 99, so each is held in all 20 runs.
+///
 /// `ships_sunk_or_system_out`, system propulsion:
 /// - ships [1]: ship 1 is sunk, no system out: 1.
 /// - ships [2]: afloat with propulsion out: 1.
@@ -1177,12 +1188,17 @@ fn the_kinds_shots_and_ships_sunk_or_system_out_are_the_hand_calculated_ones() {
             {"ship": 4, "system": "fire_control"}]);
         run["fire"]["allied"]["torpedo"] = json!({"shots": "4.75", "hits": 0});
         run["fire"]["japanese"]["torpedo"] = json!({"shots": "9.5", "hits": 0});
-        let by = |ship: u32, torpedo: &str| json!({"ship": ship, "gun": "0", "torpedo": torpedo});
-        run["shots_by"] = json!([by(1, "0.75"), by(3, "1.5"), by(4, "2.5")]);
+        run["fire"]["allied"]["gun"] = json!({"shots": "57.5", "hits": 0});
+        let by = |ship: u32, gun: &str, torpedo: &str| json!({"ship": ship, "gun": gun, "torpedo": torpedo});
+        run["shots_by"] = json!([
+            by(1, "0", "0.75"),
+            by(3, "33.5", "1.5"),
+            by(4, "16.9", "2.5")
+        ]);
     }
     let measure = |id: &str, body: &str| {
         format!(
-            "\n[[measure]]\nid = \"{id}\"\ncounts = \"X\"\nrecord_low = 0\nrecord_high = 9\n\
+            "\n[[measure]]\nid = \"{id}\"\ncounts = \"X\"\nrecord_low = 0\nrecord_high = 99\n\
              judged = false\n{body}\nrows = [1]\nreason = \"r\"\n"
         )
     };
@@ -1207,6 +1223,31 @@ fn the_kinds_shots_and_ships_sunk_or_system_out_are_the_hand_calculated_ones() {
             "s4",
             "take = \"shots\"\nships = [1, 3]\nweapon = \"torpedo\"",
             "2",
+        ),
+        (
+            "t1",
+            "take = \"shots\"\nside = \"allied\"\nweapon = \"gun\"\nunit = \"tens\"",
+            "5",
+        ),
+        (
+            "t2",
+            "take = \"shots\"\nships = [3, 4]\nweapon = \"gun\"\nunit = \"tens\"",
+            "5",
+        ),
+        (
+            "t3",
+            "take = \"shots\"\nships = [3, 4]\nweapon = \"gun\"\nunit = \"shells\"",
+            "50",
+        ),
+        (
+            "t4",
+            "take = \"shots\"\nships = [3]\nweapon = \"gun\"\nunit = \"tens\"",
+            "3",
+        ),
+        (
+            "t5",
+            "take = \"shots\"\nships = [1]\nweapon = \"gun\"\nunit = \"tens\"",
+            "0",
         ),
         (
             "u1",
@@ -1255,6 +1296,14 @@ fn the_kinds_shots_and_ships_sunk_or_system_out_are_the_hand_calculated_ones() {
             "take = \"shots\"\nside = \"allied\"\nships = [3]\nweapon = \"torpedo\"",
         ),
         ("neither", "take = \"shots\"\nweapon = \"torpedo\""),
+        (
+            "unit-hundreds",
+            "take = \"shots\"\nside = \"allied\"\nweapon = \"gun\"\nunit = \"hundreds\"",
+        ),
+        (
+            "unit-on-hundreds",
+            "take = \"shots_in_hundreds\"\nside = \"allied\"\nweapon = \"gun\"\nunit = \"tens\"",
+        ),
     ] {
         let s = setup(
             &format!("two-kinds-{name}"),
