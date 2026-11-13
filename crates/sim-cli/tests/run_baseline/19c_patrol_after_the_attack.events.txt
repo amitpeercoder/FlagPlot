@@ -1,0 +1,26 @@
+Scenario 19c: The patrol after the attack
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash a93aff022ecf7f64  7 events
+
+#1 D0 -         Japanese report: 1 ship, carrier, at (4,0), held at the start: new contact:1
+#2 D1 -         order:1 accepted for air_group:1  <- order:1
+#3 D1 -         order:2 accepted for air_group:2  <- order:2
+#4 D1 -         order:3 accepted for air_group:3  <- order:3
+#5 D1 -         order:4 accepted for air_group:3  <- order:4
+#6 D1 night     Japanese contact:1 aged to 1 pulses  <- #1
+#7 D1 morning   Japanese contact:1 aged to 2 pulses  <- #1
+#8 D1 afternoon Japanese contact:1 aged to 3 pulses  <- #1
+
+task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder fighting squadron A" (Allied) aboard ship:1: 13 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:2 "Placeholder bombing squadron" (Japanese) aboard ship:2: 12 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder fighting squadron B" (Japanese) aboard ship:2: 4 ready, mission CombatAirPatrol, patrol share 0, no arc
+ship:1 "Placeholder carrier": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder carrier": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+Allied: no contacts
+Allied: no battle claims
+Japanese contact:1 at (4,0): 1 ships, carrier, age 3 pulses
+Japanese: no battle claims

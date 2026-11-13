@@ -73,6 +73,17 @@ anti_aircraft_before_attack_share = "0"
 # fighters lost at Henderson Field); no source sizes it.
 patrol_drawn_off_share = "0"
 
+# The share of the patrol's shots at a raid's bombers that are worked before the
+# attack, the rest after it (decision 0087). 1 is step 1's rule: every shot
+# before. PLACEHOLDER: decision 0087 sets it to 0.4. Simpler's study of 38
+# fighters at the Eastern Solomons (engagement_outcomes 3979 to 3981): of the 18
+# who first engaged the bombers, 4 did so before the push-over, 7 at it or in
+# the dive and 7 in retirement. The supported range is 0.22 (before the
+# push-over only) to 0.61 (the whole dive); no row divides the seven in the
+# dive, so 0.4 is a placeholder inside the range, chosen before any result was
+# read. A later round may move it only inside 0.22 to 0.61.
+patrol_before_attack_share = "0.4"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 
