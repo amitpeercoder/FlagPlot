@@ -129,6 +129,7 @@ What the Savo Island list gives:
   - **A ship that holds her torpedoes for a better target.**
   - **Readiness.** That is decision 0071's share, which multiplies each salvo and is not changed here.
   - **How many ships of a force fire at all,** which no figure carries (decision 0071, "What the share carries").
+  - **Fights that overlap.** At Savo Island the column was on the northern group before it had done with the southern, and its ships' second sides went there. In the rules a force meeting two enemy forces at one moment fights them one after the other. One fight of three forces would let a ship take her targets from both enemy forces in the same rounds. It is recorded as a plan for the designer at the close of step 2 and not built, by the architect's ruling of Nov 13, 2026. With it would go Mikawa's split into two columns (decision 0024, 3) and Chicago leaving the fight (decision 0078). Chicago's fate and the northern group's torpedo hits at Savo Island are named differences resting on it.
 
 ## Rule card
 
@@ -246,4 +247,11 @@ Remade, in a commit of their own:
 
 Torpedo hits by ship, runs with one or more: Vincennes 212, Quincy 219, Astoria 128, where each had none. The record has Vincennes 1 to 3, Quincy 2 or 3, Astoria none. Every other measure moved by less than the runs' own spread. The Japanese main battery shells went to the edge, with 101 runs holding.
 
-**Chicago is not mended.** She is sunk in 565 runs, against 560 before; both southern cruisers sink in 451 runs, against 471. The rule sends a second side to whatever the ship next fights, and the southern fight lasts two rounds or more in 682 runs of 1,000. So in most runs the second side goes into the same group, where the record has Chokai and Kako turning theirs on the northern group ten and fifteen minutes later. The cause is the length of the southern fight. That is the cause already named for `minutes_of_action`: the Japanese ended each fight by passing on, and no rule has that (decision 0024, the note on break-off levels). It is not this rule's timing, which no row gives a size to. Nothing is tuned for it.
+**Chicago is not mended.** She is sunk in 565 runs, against 560 before; both southern cruisers sink in 451 runs, against 471. The rule sends a second side to whatever the ship next fights, and the southern fight lasts two rounds or more in 682 runs of 1,000. So in most runs the second side goes into the southern group again.
+
+That is not because the southern fight runs too long. The record's own southern fight lasted about two rounds:
+- the Japanese opened fire about 01:43 (`engagement_events` 59);
+- the group was "dissolved into independent ships by 0150" (`engagement_events` 81);
+- the fight "seems to have lasted no more than 10 minutes" (`engagement_outcomes` 17).
+
+The second sides went north in the record because the two fights overlapped. The northern group was lit at 01:50 (`engagement_events` 90). Chokai fired her starboard side at Vincennes at 01:48 (100, 1098), while Kinugasa was still firing at Canberra at about 01:53 (101). The rules fight the two groups one after the other, so they cannot give that. It is a named difference, resting on the plan for one fight of three forces below. Nothing is tuned for it.
