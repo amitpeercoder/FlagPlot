@@ -29,6 +29,7 @@ pub enum Table {
     ClassFits,
     AircraftFacts,
     AircraftFits,
+    SensorFacts,
 }
 
 /// One row of a facts file or of `fits.csv`, reduced to what reading needs.
@@ -100,6 +101,7 @@ impl Index {
             ("ship_class_facts.csv", Table::ClassFacts),
             ("weapon_facts.csv", Table::WeaponFacts),
             ("aircraft_type_facts.csv", Table::AircraftFacts),
+            ("sensor_facts.csv", Table::SensorFacts),
         ] {
             for rec in data.rows(file) {
                 let row = Row {

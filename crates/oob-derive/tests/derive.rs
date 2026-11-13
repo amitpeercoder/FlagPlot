@@ -187,7 +187,7 @@ fn base() -> Files {
         ),
         (
             "sensors.csv",
-            "id,key\n1000,radar-a\n1001,radar-b\n1002,jp-radar-any\n".to_string(),
+            "id,key\n1000,radar-a\n1001,radar-b\n1002,jp-radar-any\n1003,radar-c\n1004,radar-d\n".to_string(),
         ),
         ("air_units.csv", "id,key,parent\n".to_string()),
         (
@@ -203,7 +203,8 @@ fn base() -> Files {
              shell_weight_kg,weapon,decimal,one\n\
              rate_of_fire_practical_rpm,weapon,decimal,one\n\
              rate_of_fire_rpm,weapon,decimal,one\n\
-             warhead_kg,weapon,decimal,one\n"
+             warhead_kg,weapon,decimal,one\n\
+             display,sensor,text,one\n"
                 .to_string(),
         ),
         ("gaps.csv", "entity_type,entity,what\n".to_string()),
@@ -237,7 +238,17 @@ fn base() -> Files {
                 ],
             ),
         ),
-        ("sensor_facts.csv", empty_fact.clone()),
+        (
+            "sensor_facts.csv",
+            table(
+                FACT_HEADER,
+                &[
+                    fact(1, "radar-a", "display", "PPI and A-scope"),
+                    fact(2, "radar-b", "display", "A-scope"),
+                    fact(3, "radar-d", "display", "A-scope and PPI"),
+                ],
+            ),
+        ),
         ("air_unit_facts.csv", empty_fact),
         (
             "fits.csv",
@@ -765,7 +776,8 @@ fn count_zero_in_both_radar_slots_means_no_radar() {
 }
 
 #[test]
-fn an_air_search_radar_alone_is_a_radar() {
+fn an_air_search_radar_alone_does_not_give_the_figure() {
+    // Decision 0077, 2: radar-a's display has a PPI, and it does not matter.
     let mut files = base();
     replace_row(
         &mut files,
@@ -774,7 +786,10 @@ fn an_air_search_radar_alone_is_a_radar() {
         class_fit(3, "air_search_radar", "sensor", "radar-a", "1"),
     );
     let outputs = derives(&["shp"], &files);
-    assert!(class_lines(&outputs)[0].ends_with(",400,1"));
+    assert!(class_lines(&outputs)[0].ends_with(",400,0"));
+    assert_eq!(source_of(&outputs, "1000", "radar")[5], "");
+    assert!(comments(&outputs.class_csv)
+        .contains("not counted, no row gives their display (decision 0077, 3): none"));
 }
 
 #[test]
@@ -2600,7 +2615,7 @@ fn two_different_radar_sets_do_not_conflict() {
     assert_eq!(class_lines(&outputs), [BASE_ROW]);
     assert_eq!(
         source_of(&outputs, "1000", "radar")[4],
-        "fits.csv:3 fits.csv:40"
+        "fits.csv:3 fits.csv:40 sensor_facts.csv:1 sensor_facts.csv:2"
     );
 }
 
@@ -2631,13 +2646,16 @@ fn a_row_naming_a_real_set_with_no_count_means_radar() {
         "fits.csv",
         &format!(
             "{}\n",
-            class_fit(40, "air_search_radar", "sensor", "radar-a", "")
+            class_fit(40, "surface_search_radar", "sensor", "radar-a", "")
         ),
     );
     let outputs = derive_text(&list(&["shp"], &[]), &air_rules(""), &files)
         .unwrap_or_else(|p| panic!("{p:#?}"));
     assert_eq!(class_lines(&outputs), [BASE_ROW]);
-    assert_eq!(source_of(&outputs, "1000", "radar")[4], "fits.csv:40");
+    assert_eq!(
+        source_of(&outputs, "1000", "radar")[4],
+        "fits.csv:40 sensor_facts.csv:1"
+    );
 }
 
 // Surface weapons not modelled.
@@ -4538,4 +4556,256 @@ fn the_search_radius_divisor_must_be_a_whole_number_above_zero() {
             "{bad}: {problems:#?}"
         );
     }
+}
+
+// Decision 0077: which radar sets give the radar figure. The expected values
+// are the architect's hand derivation in that record ("The hand derivation").
+
+/// The sets of the base data: radar-a has a display of "PPI and A-scope"
+/// (sensor_facts row 1), radar-b "A-scope" (row 2), radar-d "A-scope and
+/// PPI" (row 3), radar-c no display row. Each case replaces the base ship's
+/// fit (row 3) and gives the figure and the note.
+fn radar_case(
+    slot: &str,
+    item: &str,
+    count: &str,
+    assumed: &[&str],
+) -> Result<Outputs, Vec<String>> {
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "fits.csv",
+        3,
+        class_fit(3, slot, "sensor", item, count),
+    );
+    derive_with_rules(&["shp"], assumed, RULES, &files)
+}
+
+#[track_caller]
+fn radar_figure(outputs: &Outputs) -> String {
+    source_of(outputs, "1000", "radar")[2].clone()
+}
+
+const NOT_COUNTED: &str = "Radar sets not counted, no row gives their display (decision 0077, 3):";
+
+#[test]
+fn made_case_a_surface_set_with_a_ppi_display_counts() {
+    let outputs = radar_case("surface_search_radar", "radar-a", "1", &[]).expect("derives");
+    assert_eq!(radar_figure(&outputs), "1");
+    assert!(class_lines(&outputs)[0].ends_with(",400,1"));
+    // The display row is cited beside the fit.
+    assert_eq!(
+        source_of(&outputs, "1000", "radar")[4],
+        "fits.csv:3 sensor_facts.csv:1"
+    );
+    assert_eq!(source_of(&outputs, "1000", "radar")[5], "");
+}
+
+#[test]
+fn made_case_the_same_set_at_count_zero_does_not() {
+    // A count of 0 of a specific set says only that it was absent: with
+    // nothing else on record the radar is unknown, so it is refused without
+    // the list's assumption and 0 with it; and a second slot at 0 says none.
+    let problems = radar_case("surface_search_radar", "radar-a", "0", &[]).expect_err("unknown");
+    assert_one(&problems, &["shp: radar-unknown: radar:", "radar-a x 0"]);
+    let outputs = radar_case("surface_search_radar", "radar-a", "0", &["shp"]).expect("derives");
+    assert_eq!(radar_figure(&outputs), "0");
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "fits.csv",
+        3,
+        class_fit(3, "surface_search_radar", "sensor", "radar-a", "0"),
+    );
+    add_row(
+        &mut files,
+        "fits.csv",
+        class_fit(10, "air_search_radar", "sensor", "radar-a", "0"),
+    );
+    let outputs = derives(&["shp"], &files);
+    assert_eq!(radar_figure(&outputs), "0");
+    assert!(!comments(&outputs.class_csv).contains("shp: "));
+}
+
+#[test]
+fn made_case_a_surface_set_with_an_a_scope_only_gives_0_with_no_note() {
+    let outputs = radar_case("surface_search_radar", "radar-b", "1", &[]).expect("derives");
+    assert_eq!(radar_figure(&outputs), "0");
+    assert!(class_lines(&outputs)[0].ends_with(",400,0"));
+    assert_eq!(source_of(&outputs, "1000", "radar")[5], "");
+    assert!(comments(&outputs.class_csv).contains(&format!("{NOT_COUNTED} none")));
+}
+
+#[test]
+fn made_case_a_surface_set_with_no_display_row_gives_0_and_is_named() {
+    let outputs = radar_case("surface_search_radar", "radar-c", "1", &[]).expect("derives");
+    assert_eq!(radar_figure(&outputs), "0");
+    assert!(class_lines(&outputs)[0].ends_with(",400,0"));
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains(&format!("{NOT_COUNTED}\n#   shp: radar-c (fits.csv:3)")),
+        "{header}"
+    );
+    assert_eq!(
+        source_of(&outputs, "1000", "radar")[5],
+        "not counted: no row gives the display of radar-c (fits.csv:3) (decision 0077)"
+    );
+}
+
+#[test]
+fn made_case_an_air_search_set_with_a_ppi_display_and_no_surface_fit_gives_0() {
+    let outputs = radar_case("air_search_radar", "radar-d", "1", &[]).expect("derives");
+    assert_eq!(radar_figure(&outputs), "0");
+    assert!(class_lines(&outputs)[0].ends_with(",400,0"));
+    // A radar fit is on record, so this is no assumption and no gap.
+    let header = comments(&outputs.class_csv);
+    assert!(header.contains("Radar assumptions used (decision 0019, 5): none"));
+    assert!(header.contains(&format!("{NOT_COUNTED} none")));
+}
+
+#[test]
+fn made_case_the_no_radar_stand_in_at_count_zero_gives_0() {
+    let outputs = radar_case("surface_search_radar", "jp-radar-any", "0", &[]).expect("derives");
+    assert_eq!(radar_figure(&outputs), "0");
+    assert_eq!(source_of(&outputs, "1000", "radar")[4], "fits.csv:3");
+}
+
+#[test]
+fn made_case_no_radar_fit_at_all_is_0_under_the_assumption_and_refused_without_it() {
+    let mut files = base();
+    remove_row(&mut files, "fits.csv", 3);
+    let outputs = derive_with_rules(&["shp"], &["shp"], RULES, &files).expect("derives");
+    assert_eq!(radar_figure(&outputs), "0");
+    assert!(comments(&outputs.class_csv)
+        .contains("shp: radar unknown in the facts, treated as not fitted"));
+    assert_eq!(
+        source_of(&outputs, "1000", "radar")[5],
+        "radar assumed none for shp"
+    );
+    let problems = fails(&["shp"], &files);
+    assert_one(&problems, &["shp: radar-unknown: radar:"]);
+}
+
+#[test]
+fn a_display_row_that_is_not_preferred_is_not_read_and_the_set_is_named() {
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "sensor_facts.csv",
+        1,
+        fact_row(
+            1,
+            "radar-a",
+            "display",
+            "PPI and A-scope",
+            "",
+            "",
+            "low",
+            "unconfirmed",
+        ),
+    );
+    let outputs = derives(&["shp"], &files);
+    assert_eq!(radar_figure(&outputs), "0");
+    assert!(comments(&outputs.class_csv).contains("shp: radar-a (fits.csv:3)"));
+}
+
+/// Decision 0077, "Savo Island": every class of the real list, worked by
+/// the architect. The ship, the radar figure, and whether the tool names a
+/// set as not counted for it.
+#[test]
+fn savo_island_every_class_has_radar_0_and_two_sets_are_named() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        "savo_island.toml",
+        &read("data/derivation/savo_island.toml"),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    let class_of: BTreeMap<String, String> = records(&outputs.ships_csv)
+        .into_iter()
+        .map(|r| (r[0].clone(), r[1].clone()))
+        .collect();
+    let radar_of: BTreeMap<String, String> = records(&outputs.class_csv)
+        .into_iter()
+        .map(|r| (r[0].clone(), r.last().expect("a figure").clone()))
+        .collect();
+    // Canberra (County, Kent subclass): Type 271, no display row.
+    // Astoria, Quincy (New Orleans): no surface set read. Chicago
+    // (Northampton): a set of type not stated. Blue, Ralph Talbot (Bagley):
+    // an air-search SC. Bagley, Patterson, Helm, Jarvis (Bagley), Wilson
+    // (Benham) and Vincennes (New Orleans): the list's assumption. The
+    // Japanese: the stand-in for no radar.
+    let ships = [
+        "chokai",
+        "aoba",
+        "kako",
+        "kinugasa",
+        "furutaka",
+        "tenryu",
+        "yubari",
+        "yunagi",
+        "hmas-canberra",
+        "ca-29-chicago",
+        "dd-386-bagley",
+        "dd-392-patterson",
+        "ca-44-vincennes",
+        "ca-39-quincy",
+        "ca-34-astoria",
+        "dd-388-helm",
+        "dd-408-wilson",
+        "dd-387-blue",
+        "dd-390-ralph-talbot",
+        "dd-393-jarvis",
+    ];
+    for ship in ships {
+        let class = &class_of[ship];
+        assert_eq!(radar_of[class], "0", "{ship}");
+    }
+    assert_eq!(class_of.len(), ships.len());
+    assert!(
+        radar_of.values().all(|v| v == "0"),
+        "every class of the list has radar 0: {radar_of:?}"
+    );
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains(&format!(
+            "{NOT_COUNTED}\n#   hmas-canberra: uk-type271-radar (fits.csv:102)\n#   ca-29-chicago: us-radar-type-unstated (fits.csv:291)\n"
+        )),
+        "{header}"
+    );
+    // The assumption is used for these six and for no others.
+    for ship in [
+        "dd-386-bagley",
+        "dd-392-patterson",
+        "dd-388-helm",
+        "dd-408-wilson",
+        "dd-393-jarvis",
+        "ca-44-vincennes",
+    ] {
+        assert!(
+            header.contains(&format!(
+                "{ship}: radar unknown in the facts, treated as not fitted"
+            )),
+            "{ship}"
+        );
+    }
+    assert_eq!(header.matches("radar unknown in the facts").count(), 6);
+    // The two classes whose set is not counted say so in the sources file,
+    // and no other class does.
+    let noted: Vec<String> = records(&outputs.sources_csv)
+        .into_iter()
+        .filter(|r| r[1] == "radar" && r[5].contains("not counted"))
+        .map(|r| r[5].clone())
+        .collect();
+    assert_eq!(
+        noted,
+        [
+            "not counted: no row gives the display of uk-type271-radar (fits.csv:102) (decision 0077)",
+            "not counted: no row gives the display of us-radar-type-unstated (fits.csv:291) (decision 0077)",
+        ]
+    );
 }

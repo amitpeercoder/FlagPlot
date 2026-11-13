@@ -27,7 +27,7 @@ const RULES: [&str; 16] = [
     "count of the torpedo_tubes fit",
     "warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted",
     "displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",
-    "1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0",
+    "1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0",
     "aircraft_capacity of the ship, else of its class; 0 where no row exists (an error for a carrier) (decision 0029, 2)",
     "heavy guns (counts of the weapons in the heavy_aa slot) x anti_aircraft_heavy_weight + light barrels (light_aa slot) x anti_aircraft_light_weight, rounded down (decision 0029, 1); the slot of the ship if it has a readable row there, else of its class",
 ];
@@ -350,6 +350,25 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             line(format!(
                 "  {ship}: radar unknown in the facts, treated as not fitted"
             ));
+        }
+    }
+    let uncounted: Vec<(&str, &str)> = results
+        .iter()
+        .flat_map(|r| {
+            r.radar_not_counted
+                .iter()
+                .map(move |set| (r.ship.as_str(), set.as_str()))
+        })
+        .collect();
+    if uncounted.is_empty() {
+        line(
+            "Radar sets not counted, no row gives their display (decision 0077, 3): none"
+                .to_string(),
+        );
+    } else {
+        line("Radar sets not counted, no row gives their display (decision 0077, 3):".to_string());
+        for (ship, set) in &uncounted {
+            line(format!("  {ship}: {set}"));
         }
     }
     if ammunition.is_empty() {

@@ -61,7 +61,7 @@ Each round, each force that has not yet sighted the enemy is taken in turn, lowe
   `chance = min(1, (base + radar_bonus) x alert_factor x experience_factor) x fatigue_factor`
 
   - `base` is `surface_combat.toml: sighting_chance_night` if the fight is dark, else `sighting_chance_day`.
-  - `radar_bonus` is `radar_sighting_bonus` if any ship afloat in the force has a class with `radar` true, else 0. Radar is a yes or no for a class. [0014, 0019]
+  - `radar_bonus` is `radar_sighting_bonus` if any ship afloat in the force has a class with `radar` true, else 0. Radar is a yes or no for a class. A derived class has it only if a ship of it has a surface-search set whose display has a plan position indicator, read from the facts; an air-search set does not give it, and a surface-search set with no row for its display does not either and is named as not counted. [0014, 0019, 0077]
   - `alert_factor` is 1 if the force is alert, else `not_alert_sighting_factor`.
   - `experience_factor` is 1 if the fight is light or `surface_combat.toml: experience_sighting_strength` is 0. In a dark fight with the strength above 0 it is `1 + strength x (mean - 2)`, where the mean is the sum of the experience of the ships in the force's list at the moment of the roll, over their count, in the fixed arithmetic (three ships of 3, 3 and 2 have a mean of 2.666666). It is inside the cap, so it cannot lift a chance past 1. [0064]
   - `fatigue_factor` is (100 less the force's fatigue) over 100, when the scenario names fatigue figures, else 1. It is applied after the cap at 1. The fatigue is its value after the start-of-pulse change (chapter 3, Fatigue of a force). [0037]
