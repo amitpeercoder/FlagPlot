@@ -275,6 +275,108 @@ The report, `rabaul-guadalcanal-air-baseline.md`, is remade from that scenario: 
 - **The fatigue figures cannot fly the record's five raid days running** (days 20 to 24). The bombers launch 28, 18, 10, 2 and 1 in the median run, against the forms' 18, 22, 24, 20 and 16. So 8 or 9 of the 11 ordered raids reach the field. The early raids are too big: 41 on the first against 23 sent. Bomber sorties that reach the field total 212 against 211 to 213, right by a wrong path. Decision 0082 tables the bombers by raid day beside the forms; the fatigue round will be judged on that table.
 - **Claims** are unchanged in kind (about 1.4 for each shot down).
 
+## The reports on the final engine, Nov 13, 2026
+
+The three battles' closing reports were made on state version 7. Decision 0086 part 2 (state version 8) then changed how forces made in play are numbered, and so their random draws. At Savo Island, for example, the Japanese stragglers are detached as new forces. The batch of small fixes of `docs/rules/differences.md` came after that.
+
+So each battle was run again on main as it stands (0d3e229): 1,000 runs, seeds 1 to 1,000, label `close`, validated against the measures files on main. The reports are:
+- `savo-island-close.md`;
+- `eastern-solomons-close.md`;
+- `rabaul-guadalcanal-air-close.md`.
+
+Cape Esperance is not rerun. Its one check (`cape-esperance-check.md`) stands. **No figure moves on this comparison.**
+
+**No judged measure changes verdict in any of the three battles.** Every agreement, every agreement at the edge and every named miss of the closing reports stands as recorded, in the same words.
+
+### Savo Island: `savo-island-after-0083` against `close`
+
+| Measure | Record | Closing: median, runs holding, verdict | Close: median, runs holding, verdict | Changed |
+| --- | --- | --- | --- | --- |
+| `allied_cruisers_sunk` | 4 | 3, 220 of 1000, agrees | 3, 218 of 1000, agrees | runs |
+| `southern_group_cruisers_sunk` | 1 | 1, 381 of 1000, agrees | 1, 383 of 1000, agrees | runs |
+| `chicago_sunk` | 0 | 1, 435 of 1000, agrees | 1, 438 of 1000, agrees | runs |
+| `northern_group_cruisers_sunk` | 3 | 2, 424 of 1000, agrees | 2, 423 of 1000, agrees | runs |
+| `allied_destroyers_sunk` | 0 | 0, 754 of 1000, agrees | 0, 758 of 1000, agrees | runs |
+| `japanese_ships_sunk` | 0 | 0, 877 of 1000, agrees | 0, 882 of 1000, agrees | runs |
+| `japanese_ships_with_propulsion_out` | 0 | 0, 877 of 1000, agrees | 0, 870 of 1000, agrees | runs |
+| `japanese_ships_sunk_or_stopped` | 0 | 0, 767 of 1000, agrees | 0, 767 of 1000, agrees | none |
+| `night_fights_the_japanese_did_not_sight_first` | 0 | 1, 335 of 1000, agrees | 1, 335 of 1000, agrees | none |
+| `gun_hits_on_allied_ships` | 153 to 219 | 109, 86 of 1000, at the edge | 109, 83 of 1000, at the edge | runs |
+| `gun_hits_on_vincennes` | 57 to 74 | 27, 1 of 1000, MISS | 27, 1 of 1000, MISS | none |
+| `gun_hits_on_quincy` | 36 to 54 | 24, 156 of 1000, at the edge | 24, 157 of 1000, at the edge | runs |
+| `gun_hits_on_astoria` | 34 to 65 | 21, 314 of 1000, agrees | 21, 314 of 1000, agrees | none |
+| `gun_hits_on_japanese_ships` | 10 to 17 | 24, 193 of 1000, agrees | 24, 190 of 1000, agrees | runs |
+| `torpedo_hits_on_allied_ships` | 4 to 9 | 4, 560 of 1000, agrees | 4, 560 of 1000, agrees | none |
+| `torpedo_hits_on_the_southern_group` | 1 to 3 | 3, 571 of 1000, agrees | 3, 571 of 1000, agrees | none |
+| `torpedo_hits_on_the_northern_group` | 3 to 6 | 0, 93 of 1000, at the edge | 0, 93 of 1000, at the edge | none |
+| `torpedo_hits_on_japanese_ships` | 0 | 1, 303 of 1000, agrees | 1, 303 of 1000, agrees | none |
+| `allied_torpedoes_fired` | 4 to 6 | 26, 0 of 1000, MISS | 26, 0 of 1000, MISS | none |
+| `japanese_gun_hits_per_thousand_shells` | 81 to 117 | 74, 274 of 1000, agrees | 74, 271 of 1000, agrees | runs |
+| `allied_gun_hits_per_thousand_shells` | 21 to 36 | 44, 256 of 1000, agrees | 44, 264 of 1000, agrees | runs |
+| `japanese_main_battery_shells_fired_in_hundreds` | 10 to 11 | 14, 101 of 1000, at the edge | 14, 98 of 1000, at the edge | runs |
+| `allied_main_battery_shells_fired_in_hundreds` | 3 | 5, 116 of 1000, agrees | 5, 115 of 1000, agrees | runs |
+| `southern_group_main_battery_shells_fired_in_tens` | 3 to 5 | 9, 25 of 1000, MISS | 9, 25 of 1000, MISS | none |
+| `northern_group_main_battery_shells_fired_in_hundreds` | 3 | 4, 179 of 1000, agrees | 4, 179 of 1000, agrees | none |
+| `tenryu_and_yubari_main_battery_shells_fired_in_hundreds` | 1 | 3, 35 of 1000, MISS | 3, 35 of 1000, MISS | none |
+| `minutes_of_action` | 32 to 36 | 40, 224 of 1000, agrees | 40, 221 of 1000, agrees | runs |
+| `surface_fights_by_day` | 0 | 0, 803 of 1000, agrees | 0, 803 of 1000, agrees | none |
+| `allied_ships_claimed_sunk` | 0 | 0, 844 of 1000, agrees | 0, 849 of 1000, agrees | runs |
+
+Every median, and every 5th and 95th percentile, is the same. The runs holding the record differ by at most 8 in 1,000 (`japanese_ships_with_propulsion_out`, 877 to 870, and `allied_gun_hits_per_thousand_shells`, 256 to 264). This is the new numbering's draws for the stragglers, at the size of noise. The reported claim ratio goes from 2 to 3 of 957 runs holding.
+
+### The Eastern Solomons: `eastern-solomons-r4` against `close`
+
+| Measure | Record | Closing: median, runs holding, verdict | Close: median, runs holding, verdict | Changed |
+| --- | --- | --- | --- | --- |
+| `japanese_carriers_sunk` | 1 | 0, 249 of 1000, at the edge | 0, 249 of 1000, at the edge | none |
+| `us_carriers_sunk` | 0 | 0, 1000 of 1000, agrees | 0, 1000 of 1000, agrees | none |
+| `bomb_hits_on_enterprise` | 3 | 3, 105 of 1000, agrees | 3, 105 of 1000, agrees | none |
+| `bomb_hits_on_saratoga` | 0 | 0, 1000 of 1000, agrees | 0, 1000 of 1000, agrees | none |
+| `enterprise_flight_deck_out_at_end` | 0 | 0, 891 of 1000, agrees | 0, 891 of 1000, agrees | none |
+| `japanese_carrier_aircraft_lost_to_enemy_action` | 29 to 32 | 26, 234 of 1000, agrees | 26, 234 of 1000, agrees | none |
+| `japanese_carrier_aircraft_lost_all_causes` | 35 to 54 | 29, 189 of 1000, agrees | 29, 189 of 1000, agrees | none |
+| `us_aircraft_lost_to_enemy_action` | 13 to 14 | 4, 2 of 1000, MISS | 4, 2 of 1000, MISS | none |
+| `us_aircraft_lost_all_causes` | 20 to 21 | 5, 0 of 1000, MISS | 5, 0 of 1000, MISS | none |
+| `japanese_aircraft_attacking_enterprise_force` | 37 | 37, 611 of 1000, agrees | 37, 611 of 1000, agrees | none |
+| `us_aircraft_attacking_ryujo` | 38 | 0, 488 of 1000, agrees | 0, 488 of 1000, agrees | none |
+| `us_aircraft_left_to_attack_ryujo` | 38 | 0, 273 of 1000, agrees | 0, 273 of 1000, agrees | none |
+| `us_strike_on_the_japanese_fleet_carriers` | 0 | 0, 1000 of 1000, agrees | 0, 1000 of 1000, agrees | none |
+| `us_aircraft_claimed_per_hundred_shot_down` | 237 to 362 | 251, 548 of 997, agrees | 251, 548 of 997, agrees | none |
+| `japanese_aircraft_claimed_per_hundred_shot_down` | 171 to 261 | 440, 67 of 980, at the edge | 440, 67 of 980, at the edge | none |
+
+The only difference in any line is the 95th percentile of `us_aircraft_lost_all_causes`, 11 to 10. Its median and verdict are unchanged.
+
+### Rabaul against Guadalcanal: `rabaul-guadalcanal-air-rabaul-r1` against `close`
+
+| Measure | Record | Closing: median, runs holding, verdict | Close: median, runs holding, verdict | Changed |
+| --- | --- | --- | --- | --- |
+| `japanese_bombers_lost_to_enemy_action` | 12 | 29, 0 of 1000, MISS | 29, 0 of 1000, MISS | none |
+| `japanese_fighters_lost_to_enemy_action` | 6 to 10 | 13, 187 of 1000, at the edge | 13, 187 of 1000, at the edge | none |
+| `us_fighters_lost_to_enemy_aircraft` | 7 to 23 | 25, 380 of 1000, agrees | 25, 380 of 1000, agrees | none |
+| `us_aircraft_destroyed_on_the_ground` | 2 to 3 | 2, 476 of 1000, agrees | 2, 476 of 1000, agrees | none |
+| `us_aircraft_claimed_per_hundred_shot_down` | 250 to 382 | 312, 911 of 1000, agrees | 312, 911 of 1000, agrees | none |
+| `vmf_223_ready_on_day_5` | 11 | 12, 130 of 1000, agrees | 12, 130 of 1000, agrees | none |
+| `vmsb_232_ready_on_day_5` | 9 | 10, 160 of 1000, agrees | 10, 160 of 1000, agrees | none |
+| `vmf_223_ready_on_day_10` | 4 to 5 | 5, 241 of 1000, agrees | 5, 241 of 1000, agrees | none |
+| `f4fs_ready_on_day_21` | 11 | 9, 89 of 1000, agrees | 9, 89 of 1000, agrees | none |
+| `sbds_ready_on_day_21` | 22 | 30, 0 of 1000, MISS | 30, 0 of 1000, MISS | none |
+
+Every line is the same.
+
+**Why `japanese_fighters_lost_to_enemy_action` moved from 12 to 13 in Rabaul round 1.** That round set `[base_hit] aircraft` from 0.3 to 0.06, and no record had named why the measure moved. It was counted from two 1,000-run batches on this engine, at 0.3 on a figure copy and at 0.06 live. Means a run:
+
+| | 0.3 | 0.06 |
+| --- | --- | --- |
+| US fighters destroyed on the ground | 7.0 | 2.2 |
+| US fighters on patrol in the pulses of a raid | 87.2 | 98.3 |
+| Escorts sent | 168.6 | 169.3 |
+| Bombers attacking | 213.7 | 211.2 |
+| Japanese fighters shot down (median) | 12.0 (12) | 13.5 (13) |
+| US fighters shot down | 23.2 | 24.8 |
+| Japanese bombers shot down | 26.6 | 29.0 |
+
+**The cause.** About five more American fighters a run survive on the ground. They fly on the patrols that meet the raids: about 11 more fighter-patrols over the raid pulses of a run, about 13% more. The raids are the same size. So the fighting over the field is larger on both sides: the escorts lose about 1.5 more a run, and the patrol about 1.6 more. The measure moves to the edge (13 against 6 to 10) through a fighting patrol that is the right size, not through any air combat figure. It is written in the Rabaul round 1 record as a dated note.
+
 ## What this says about the order of work
 
 1. The surface gap at Savo Island is one-sided and large. It waits for the experience rule.
