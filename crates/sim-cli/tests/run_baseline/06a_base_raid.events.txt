@@ -2,9 +2,9 @@ Scenario 6a: A raid on an airfield
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0b9c44abce2ef64f  24 events
-day   2  hash 0373c5c395b9959a  18 events
-day   3  hash 06cfb49770c1e431  18 events
+day   1  hash 35f4f143514359c9  24 events
+day   2  hash 7c39aa90d8bc208a  18 events
+day   3  hash dbf42b2bb04b617b  18 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -25,8 +25,8 @@ day   3  hash 06cfb49770c1e431  18 events
 #17 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #16
 #18 D1 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #8, #15
 #19 D1 morning   air_group:4 lost 1 aircraft on the ground at base:2, 9 left  <- #15
-#20 D1 morning   Japanese claim at (5,0): 4 aircraft shot down, 2 aircraft destroyed on the ground  <- #10, #15
-#21 D1 morning   Allied claim over (5,0): 5 aircraft shot down  <- #11, #12, #16, #18
+#20 D1 morning   Japanese claim at (5,0): 6 aircraft shot down, 2 aircraft destroyed on the ground  <- #10, #15
+#21 D1 morning   Allied claim over (5,0): 9 aircraft shot down  <- #11, #12, #16, #18
 #22 D1 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #23 D1 -         base:1 at the end of the day: 0 t of supply, 27 aircraft ready: not open
 #24 D1 -         base:2 at the end of the day: 1000 t of supply, 24 aircraft ready: open
@@ -43,8 +43,8 @@ day   3  hash 06cfb49770c1e431  18 events
 #35 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #26, #32
 #36 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 7 left  <- #32
 #37 D2 morning   base:2 lost 50 t of supply, 950 t left  <- #32
-#38 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #28, #32
-#39 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #29, #30, #33, #35
+#38 D2 morning   Japanese claim at (5,0): 6 aircraft shot down, 4 aircraft destroyed on the ground  <- #28, #32
+#39 D2 morning   Allied claim over (5,0): 9 aircraft shot down  <- #29, #30, #33, #35
 #40 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #41 D2 -         base:1 at the end of the day: 0 t of supply, 25 aircraft ready: not open
 #42 D2 -         base:2 at the end of the day: 950 t of supply, 20 aircraft ready: open
@@ -61,8 +61,8 @@ day   3  hash 06cfb49770c1e431  18 events
 #53 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #44, #50
 #54 D3 morning   air_group:1 lost 3 aircraft, 10 left  <- #53
 #55 D3 morning   base:2 lost 50 t of supply, 900 t left  <- #50
-#56 D3 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #46, #50
-#57 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #47, #48, #51, #53
+#56 D3 morning   Japanese claim at (5,0): 5 aircraft shot down, 1 aircraft destroyed on the ground  <- #46, #50
+#57 D3 morning   Allied claim over (5,0): 11 aircraft shot down  <- #47, #48, #51, #53
 #58 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
 #59 D3 -         base:1 at the end of the day: 0 t of supply, 20 aircraft ready: not open
 #60 D3 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
@@ -75,10 +75,10 @@ air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, ar
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock
 base:2 "Placeholder airfield B" (Allied) at (5,0): 900 t of supply in stock, 20 anti-aircraft shots
 Allied: no contacts
-Allied claim over (5,0): 5 aircraft shot down, day 1 morning
-Allied claim over (5,0): 3 aircraft shot down, day 2 morning
-Allied claim over (5,0): 6 aircraft shot down, day 3 morning
+Allied claim over (5,0): 9 aircraft shot down, day 1 morning
+Allied claim over (5,0): 9 aircraft shot down, day 2 morning
+Allied claim over (5,0): 11 aircraft shot down, day 3 morning
 Japanese: no contacts
-Japanese claim at (5,0): 4 aircraft shot down, 2 aircraft destroyed on the ground, day 1 morning
-Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
-Japanese claim at (5,0): 1 aircraft destroyed on the ground, day 3 morning
+Japanese claim at (5,0): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (5,0): 6 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
+Japanese claim at (5,0): 5 aircraft shot down, 1 aircraft destroyed on the ground, day 3 morning

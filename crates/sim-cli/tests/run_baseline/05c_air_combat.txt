@@ -2,7 +2,7 @@ Scenario 5c: Escort, patrol and guns
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b4d12aea896622ea  33 events
+day   1  hash e087ef474ea9e75f  33 events
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -16,6 +16,6 @@ ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 40, fir
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (9,0): 3 ships, battleship, age 0 pulses
-Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down, day 1 afternoon
+Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 6 aircraft shot down, day 1 afternoon
 Japanese: no contacts
-Japanese claim over (9,0): 6 aircraft shot down, day 1 afternoon
+Japanese claim over (9,0): 15 aircraft shot down, day 1 afternoon
