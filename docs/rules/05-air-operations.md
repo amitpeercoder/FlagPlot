@@ -404,7 +404,7 @@ A side sees: the attacker sees `BaseAttacked` cut to the aircraft and shots. The
 
 ### The report and the claim
 
-**The sighting report.** After a strike group attacks ships, in step 5 and right after its damage lands, the attacking side receives a sighting report of the force attacked. Chapter 3, Reports from a strike, gives what it holds and how its errors are drawn. The event is `ReportReceived`, caused by the `AirAttack`. A strike at a base sends no report. What the report does to the contact the strike was sent at, and whether the group can strike it again, is in chapter 3, Reports from a strike. To change: differences.md row 7. [0026, 0012]
+**The sighting report.** After a strike group attacks ships, in step 5 and right after its damage lands, the attacking side receives a sighting report of the force attacked. Chapter 3, Reports from a strike, gives what it holds and how its errors are drawn. The event is `ReportReceived`, caused by the `AirAttack`. A strike at a base sends no report. What the report does to the contact the strike was sent at, and whether the group can strike it again, is in chapter 3, Reports from a strike. It reads the force after the damage. [0026, 0012]
 
 **The claim.** Step 6 makes the claims of the pulse's raids, the raiding side's first and then the defending side's, for each raid in order of its first strike group. A raid that found nothing makes none. Chapter 3, The claim after a raid from the air, gives who claims, what a claim counts and how its false counts are drawn. The claim is recorded as `ClaimReceived`, caused by the claimant's own firing events. [0056]
 
