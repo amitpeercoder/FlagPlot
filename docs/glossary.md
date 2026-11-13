@@ -88,6 +88,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Meeting** | Two opposing forces in one hex, either because one entered it or because both began a pulse there and neither will move. Each meeting is one fight (decision 0022) | |
 | **Round** | One step of a fight, `surface_combat.toml: round_minutes` minutes long | |
 | **Salvo** | One ship's gun fire or its torpedo fire in one round at one target | |
+| **Radar** | A yes or no for a ship class, read by one rule: a force with a ship afloat of a class that has it adds `radar_sighting_bonus` to its chance to sight in a fight. A derived class has it only if a ship of it has a surface-search set whose display has a plan position indicator; an air-search set does not give it, and a surface-search set with no row for its display does not either (decision 0077) | Radar fire control, which no rule has; an air-search set |
 | **Shot** | One unit of fire that can hit: one gun round, one torpedo tube or one aircraft's weapon. Each whole shot is one draw (decision 0033) | |
 | **Hit** | A shot that succeeded | |
 | **Damage points** | What one hit adds to a ship's track: 100 times the weapon's damage over the target class's toughness | |
@@ -127,4 +128,4 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Out of supply** | Describes a base whose supply stock is exactly zero at the start of a pulse. Its groups fly nothing in that pulse (decision 0039) | |
 | **Strike radius** | An aircraft type's `strike_range_nm`: the radius a strike and an escort are measured from on normal reach, and the distance beyond which a sortie may cost aircraft that run out of fuel. The column's name says range, and the glossary's range is the sourced one-way figure | Range |
 | **Loaded** | Describes a rule whose figures file the scenario file names. A rule whose file is not named does nothing (chapter 1 of the rulebook, Where figures come from and when a rule is loaded) | Read from the code |
-| **Importance** | The order of the kinds of ship, most important first: carrier, battleship, cruiser, destroyer, transport, auxiliary. Rules that pick the most important kind of a set use it | Size or value |
+| **Importance** | The order of the kinds of ship, most important first: carrier, battleship, cruiser, destroyer, transport, auxiliary. Rules that pick the most important kind of a set use it, a ship's choice of target in a fight among them (decision 0078) | Size or value |
