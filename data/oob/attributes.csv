@@ -123,3 +123,4 @@ losses_before_scenario_note,air_unit,text,,many,"Pilots or aircraft the unit los
 torpedo_tubes,ship_class,integer,tubes,one,Torpedo tubes fitted in all; 0 where a source says none were carried or all had been removed
 torpedo_tubes_per_broadside,ship_class,integer,tubes,one,"Torpedo tubes that can fire on one side: all of a centreline mount, and the wing or beam mounts of that side only"
 torpedo_mount_position,ship_class,text,,one,"Where the torpedo mounts stand: centreline, wing (beam mounts firing to their own side), mixed or fixed"
+torpedo_model,ship_class,text,,many,"Torpedo model a source says the class carried in the period of the row, as a key of weapons.csv; a statement of type only, with no tube count (tube counts are in fits.csv)"
