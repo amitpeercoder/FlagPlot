@@ -1,6 +1,6 @@
 # 0073: The Japanese search at the Eastern Solomons, from the record
 
-Status: settled by the architect, on the designer's delegation of Nov 13, 2026 ("Go ahead and decide all matters that need decisions"). The orders were revised on Nov 13, 2026: the carriers' attack units stay on naval strike, and Chikuma's floatplanes search to the recorded 330 miles once decision 0075 gives the type a search radius of its own. Scenario data, not a rule: no rule changed and nothing under `crates/*/src` changed. It replaces item 8 of decision 0031 for the Japanese side.
+Status: settled by the architect, on the designer's delegation of Nov 13, 2026 ("Go ahead and decide all matters that need decisions"). The orders were revised on Nov 13, 2026: the carriers' attack units stay on naval strike, and Chikuma's floatplanes search to the recorded 330 miles, which decision 0075 lets an order name. Scenario data, not a rule: no rule changed and nothing under `crates/*/src` changed. It replaces item 8 of decision 0031 for the Japanese side.
 
 ## The gap
 
@@ -58,46 +58,43 @@ The full slice (07) and the soak (08) copy scenario 5's orders on day 4, with gr
 
 No rule. These are scenario inputs.
 
-## The hand-calculation tests run on frozen copies of the scenarios
+## Frozen figures go with frozen scenarios
 
-Settled by the architect on Nov 13, 2026, an engineering choice; the spec session took it into `docs/step2-spec.md` as "Tests while figures move", 9.
+Settled by the architect on Nov 13, 2026, an engineering choice; the spec session took it into `docs/step2-spec.md` as "Tests while figures move", 9. First made for the hand calculations, then widened to every test on the frozen figures (decision 0075, "As built").
 
-1. **The hand calculations of scenario 5 and of Flight 300 in the full slice run on frozen copies of the scenarios,** `data/scenarios/step2-frozen/05_eastern_solomons.toml` (read by `tests/scenario_05_eastern_solomons.rs`) and `data/scenarios/step2-frozen/07_full_slice.toml` (read by `tests/scenario_12d_flight_300.rs`): each scenario as it stood on main with decision 0063's orders, before this record. They are the counterpart of the frozen figures in `data/reference/step1`, and the tests load them on those figures. The only difference from those files is that their paths to the map and the reference files are one folder deeper. They are not scenarios anyone plays: `data/scenarios/*.toml` does not match them, so CI's export loop and the tests that walk the scenarios folder skip them.
-2. **Limits.** One frozen copy for a scenario and no more. A copy changes only with a rule change's new hand calculation, written by the architect; nothing remakes it otherwise, and a change to the live scenario's data does not reach it. The doc comment of every test that reads one says it runs on the frozen copy. The folder's `README.md` says the same.
-3. **What such a test proves:** that the rules compute what the hand calculation says, on known orders and known figures. It says nothing about the live scenario. The live orders are covered by the run baselines (`crates/sim-cli/tests/run_baseline`) and by `validate`.
-4. **Why not the other ways.** Reworking the hand calculations now would be done twice, because the orders move again with decision 0075. Having the test rewrite the scenario's text to put the old orders back is what the spec forbids for figures, and it would hide in a test what the test runs on.
+1. **Every test that runs scenario 5, 7 or 8 on the frozen figures runs a frozen copy of the scenario,** hand calculation or not, the agent's tests included: `data/scenarios/step2-frozen/05_eastern_solomons.toml`, `07_full_slice.toml` and `08_soak.toml`, each scenario as it stood on main with decision 0063's orders, before this record. They are the counterpart of the frozen figures in `data/reference/step1`. The only difference from those files, below a "FROZEN COPY" header, is that their paths to the map and the reference files are one folder deeper. They are not scenarios anyone plays: `data/scenarios/*.toml` does not match them, so CI's export loop and the tests that walk the scenarios folder skip them.
+2. **Why every test and not only the hand calculations.** A live order may name a distance the frozen ceilings refuse: Chikuma's floatplanes are ordered to the 330 miles flown, and the frozen E13A1's search range is 253. Run on the frozen figures, the live scenario loses that order without a word. Live scenarios run with live figures, and frozen with frozen.
+3. **Limits.** One frozen copy for a scenario and no more. A copy changes only with a rule change's new hand calculation, written by the architect; nothing remakes it otherwise, and a change to the live scenario's data does not reach it. The doc comment of every test (or of the helper it loads through) that reads one says it runs on the frozen copy. The folder's `README.md` says the same.
+4. **What such a test proves:** that the rules compute what the test says, on known orders and known figures. It says nothing about the live scenario. The live orders are covered by the run baselines (`crates/sim-cli/tests/run_baseline`) and by `validate`.
+5. **Why not the other ways.** Reworking the hand calculations now would be undone by the next change of orders. Having the test rewrite the scenario's text to put the old orders back is what the spec forbids for figures, and it would hide in a test what the test runs on. Raising the frozen search ranges was tried and withdrawn (decision 0075, "As built").
 
 ## As built
 
-In progress on branch `eastern-solomons-search`. No rule changed and nothing under `crates/*/src` changed.
+Built Nov 13, 2026, on branch `eastern-solomons-search`. No rule changed and nothing under `crates/*/src` changed for this record.
 
-- The orders are in `05_eastern_solomons.toml`, `07_full_slice.toml` and `08_soak.toml`, with their reasons as comments. Chikuma's range is 253 until decision 0075 is built.
-- `tests/scenario_05_eastern_solomons.rs` and `tests/scenario_12d_flight_300.rs` read the frozen copies. None of their expected numbers changed, and both pass.
-- To be remade once, when the orders are final, in commits of their own: the run baselines of scenarios 5, 7 and 8, the pinned hash of scenario 5 in `tests/scenario_10_objectives.rs`, the recorded games, and the full slice's pinned outcome in `tests/scenario_10b_objectives.rs`.
+- The orders are in `05_eastern_solomons.toml`, `07_full_slice.toml` and `08_soak.toml`, with their reasons as comments: group 17 (117) 120 to 180 to 330 miles; groups 13 and 16 (113, 116) on naval strike with the comment naming the limit; group 20 (120) with no order.
+- The tests on the frozen figures read the frozen copies: `tests/scenario_05_eastern_solomons.rs`, `scenario_07_determinism.rs` (its frozen run), `scenario_08_soak.rs` (its frozen runs), `scenario_09a_side_events.rs`, `scenario_10_objectives.rs` (its live comparison with the run baseline reads the live file), `scenario_10b_objectives.rs`, `scenario_11_claims.rs`, `scenario_12d_flight_300.rs`, `crates/sim-cli/tests/events.rs` (it runs the binary with `--reference` on the frozen figures), and every test of `crates/sim-agent/tests`, through `support::scenario_path`. No expected number, golden or wording changed in any of them.
+- Remade because they follow live data, in commits of their own: the run baselines of scenarios 5, 7 and 8; the pinned hash of scenario 5 in `tests/scenario_10_objectives.rs` (1710b81aa6539e01 to 2ca5a5dd9f150a5d); the three recorded games (`crates/sim-cli/tests/recorded_games/README.md` says what differs: in the full slice game a search to 250 miles, refused as played, is now accepted); and the hash of the aircraft file in the captured batch file of scenario 6 (`crates/sim-cli/tests/batch_before`). No seed-pinned test had to move to another seed.
 
-What 1,000 runs of the Eastern Solomons show (seeds 1 to 1000, live figures; `validate` against `data/validation/eastern_solomons.toml`; no report committed). "Interim" is the branch as it stands, Chikuma's floatplanes at 253; the final measures are added when decision 0075 is built.
+What 1,000 runs of the Eastern Solomons show (seeds 1 to 1000, live figures; `validate` against `data/validation/eastern_solomons.toml`; no report committed). "Before" is main at ec6e1de; "after" is this branch.
 
-| Measure | Record | Before (main): 5th to 95th, median, runs holding, verdict | Interim |
+| Measure | Record | Before: 5th to 95th, median, runs holding, verdict | After |
 | --- | --- | --- | --- |
 | japanese_carriers_sunk | 1 | 0 to 1, 0, 464, agrees | the same |
 | us_carriers_sunk | 0 | 0 to 0, 0, 1000, agrees | the same |
-| bomb_hits_on_enterprise | 3 | 0 to 9, 3, 55, agrees | 0 to 9, 0, 51, agrees |
+| bomb_hits_on_enterprise | 3 | 0 to 9, 3, 55, agrees | 0 to 9, 4, 63, agrees |
 | bomb_hits_on_saratoga | 0 | 0 to 0, 0, 1000, agrees | the same |
-| enterprise_flight_deck_out_at_end | 0 | 0 to 1, 0, 867, agrees | 0 to 1, 0, 876, agrees |
-| japanese_carrier_aircraft_lost_to_enemy_action | 29 to 32 | 2 to 40, 26, 165, agrees | 2 to 39, 7, 147, agrees |
-| japanese_carrier_aircraft_lost_all_causes | 35 to 54 | 4 to 62, 29, 195, agrees | 4 to 61, 29, 169, agrees |
+| enterprise_flight_deck_out_at_end | 0 | 0 to 1, 0, 867, agrees | 0 to 1, 0, 846, agrees |
+| japanese_carrier_aircraft_lost_to_enemy_action | 29 to 32 | 2 to 40, 26, 165, agrees | 2 to 40, 28, 186, agrees |
+| japanese_carrier_aircraft_lost_all_causes | 35 to 54 | 4 to 62, 29, 195, agrees | 4 to 62, 31, 213, agrees |
 | ryujo_aircraft_lost_with_the_ship | 4 | 0 to 0, 0, 0, reported | the same |
-| us_aircraft_lost_to_enemy_action | 13 to 14 | 1 to 10, 5, 6, miss | 1 to 10, 5, 11, miss |
-| us_aircraft_lost_all_causes | 20 to 21 | 1 to 12, 6, 0, miss | 1 to 12, 5, 0, miss |
-| japanese_aircraft_attacking_enterprise_force | 37 | 0 to 46, 33, 50, agrees | 0 to 46, 0, 40, **miss** |
+| us_aircraft_lost_to_enemy_action | 13 to 14 | 1 to 10, 5, 6, miss | 1 to 11, 5, 14, miss |
+| us_aircraft_lost_all_causes | 20 to 21 | 1 to 12, 6, 0, miss | 1 to 12, 6, 0, miss |
+| japanese_aircraft_attacking_enterprise_force | 37 | 0 to 46, 33, 50, agrees | 0 to 46, 35, 50, agrees |
 | us_aircraft_attacking_ryujo | 36 | 0 to 84, 0, 0, miss | the same |
 | us_strike_on_the_japanese_fleet_carriers | 0 | 0 to 0, 0, 1000, agrees | the same |
-| us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200, 142, 15 of 998, miss | 100 to 200, 141, 12 of 997, miss |
-| japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 320, 166, 358 of 983, agrees | 100 to 320, 166, 364 of 981, agrees |
+| us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200, 142, 15 of 998, miss | 100 to 200, 144, 9 of 997, miss |
+| japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 320, 166, 358 of 983, agrees | 100 to 300, 166, 371 of 982, agrees |
 | us_hits_claimed_per_hundred_scored | 50 to 140 | 115 to 191, 144, 193 of 469, reported | the same |
 
-Judged 14: before 10 agree and 4 miss; interim 9 agree and 5 miss.
-
-In the interim the Japanese strike on Enterprise's force falls from a middle run of 33 aircraft to none: the dive bombers strike the American carriers in 495 runs of 1,000, against 551 before. Two things do it, both from the record and neither from a figure. Tone's search is gone: her floatplanes searched from (7,-9), 150 miles from the Americans, with a chance of about 0.4 in the afternoon, and the record has no such search (decision 3). And the range flown is beyond the derived search range: the vanguard's floatplanes flew to 330 miles, and until decision 0075 an order may name only 253. Chikuma's arc is narrower than before (60 degrees, not 90), which raises its chance, but it is the only Japanese search that reaches the Americans. A scratch batch with the E13A1 at 330 (a copy of the figures outside the repository) gave 611 runs with a strike and a middle run of 35 aircraft attacking, 50 runs holding 37, 10 measures agreeing; the built result is to be reported against it.
-
-The attack groups struck in no run before and none after. The American strike on Ryujo is unchanged (469 runs). Nothing in `data/reference` was changed in answer to this: no tuning in this stage.
+Judged 14: before 10 agree and 4 miss; after 10 agree and 4 miss. `japanese_aircraft_attacking_enterprise_force` holds the record of 37 in exactly 50 runs of 1,000 after, as before: it agrees at exactly one run in twenty, the edge of the rule, and nothing was adjusted for it. The Japanese dive bombers strike the American carriers in 611 runs of 1,000, against 551 before. Tone's search is gone (decision 3), and Chikuma's floatplanes reach farther (330 against 253) on a narrower arc (60 degrees against 90): the narrower arc raises the chance of a sighting at a given distance, and the longer range takes in American positions the 253-mile search could not reach. With Chikuma's floatplanes held at 253 (the interim of this branch) the strike fell to 495 runs and the measure missed (40 runs of 37). The attack groups struck in no run before and none after; the American strike on Ryujo is unchanged (469 runs). Nothing in `data/reference` was changed in answer to this: no tuning in this stage.

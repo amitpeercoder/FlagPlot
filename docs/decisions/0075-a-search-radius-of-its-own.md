@@ -1,6 +1,6 @@
 # 0075: An aircraft type has a search radius of its own
 
-Status: settled by the architect on Nov 13, 2026, on the designer's delegation ("Go ahead and decide all matters that need decisions"). A change to a derivation rule, not to a simulation rule: what the rules do with a search range is unchanged (`docs/rules/03-search-contacts-and-claims.md`, an order may name no more than the type's search range). Not built: it changes `data/derivation/rules.toml` and `oob-derive`, which wait until decision 0070 is on main. The five exceptions in "Disputes" were settled by the architect on Nov 13, 2026, with the reasons written there.
+Status: settled by the architect on Nov 13, 2026, on the designer's delegation ("Go ahead and decide all matters that need decisions"). A change to a derivation rule, not to a simulation rule: what the rules do with a search range is unchanged (`docs/rules/03-search-contacts-and-claims.md`, an order may name no more than the type's search range). Built Nov 13, 2026 (see "As built"). The five exceptions in "Disputes" were settled by the architect on Nov 13, 2026, with the reasons written there.
 
 ## The gap
 
@@ -70,3 +70,20 @@ Where one row states the range as a scout, that is the row the rule asks for. Wh
 | --- | --- |
 | Reads | The fact rows of a type's range in the scouting condition, or its maximum range; a sourced scouting radius where one exists |
 | Writes | The type's `search_range_nm` in the derived aircraft file. No state, no event, no draw, no hash change in the simulation |
+
+## As built
+
+Built Nov 13, 2026, on branch `eastern-solomons-search`, after decision 0070 reached main.
+
+- `data/derivation/rules.toml` has a `[search_radius]` block of its own after the `[fire_rate]` block: `divisor_of_scouting_range = 3` and four `[[search_radius.exception]]` entries (SBD-3 row 270, TBF-1 row 290, B5N2 row 408, E13A1 row 493) with the reasons of "Disputes". No PBY-5 entry: no list derives the type.
+- `oob-derive` (`crates/oob-derive/src/aircraft.rs`, `input.rs`, `output.rs`) derives `search_range_nm` on its own when the block is present: a readable `scouting_radius_nm`, else `range_max_nm` / 3 in whole numbers, read with the top-level exceptions and the block's own; else the strike radius, with the figure's rule saying "search radius not settled: ...; the strike radius is kept (decision 0075)", the type listed under "Search radius not settled" in the file's header and in the run's output. Without the block the search range is the strike radius, as before. The block's exceptions are read only for the search radius, and are listed in a header section of their own.
+- Derived figures: B5N2 358, E13A1 398, SBD-3 397 (in both the Eastern Solomons and the Rabaul files), TBF-1 420. Strike ranges and every other figure are unchanged. Not settled, keeping their strike radius: F4F-4 (rows 242, 243), A6M2 (28, 29, 365, 386, 518), D3A1 (394) and G4M1 (170), each listed in `data/oob/gaps.csv`.
+- Tests (`crates/oob-derive/tests/derive.rs`): a preferred maximum range of 1,200 gives 400 against a strike radius of 175; a sourced scouting radius is read first; a range row that is not preferred is read only through an exception of the block (a top-level exception for another fact does not count; one for the range does); rows that disagree with nothing to settle them, and no range row at all, keep the strike radius and say so, and the run succeeds; without the block the search range is the strike radius; an exception naming a missing row or a row of another type or attribute is a problem; the divisor must be a whole number above zero. No existing expected number changed.
+- The rulebook (chapter 5, the air group's figures) and the glossary (Radius) say the search range is a radius of its own.
+
+### The frozen figures, and the proof that failed
+
+The first ruling put the new search ranges into the frozen figures of step 1 as well, on the reasoning that `search_range_nm` is read only as the ceiling of a search order and no step 1 order names more than the old figure, so no step 1 result could move. That was to be proved, not assumed: main at ec6e1de, with only the two frozen aircraft files changed, was run whole. No event, outcome, hash, chance or count moved, but six tests failed, because they assert the figure itself or quote it: two of scenario 5's hand calculation (`the_aircraft_table_is_read_from_the_reference_data`, `the_morning_flies_every_search_and_finds_nothing_and_does_nothing`), one of Flight 300's (`seed_28_the_figures_of_the_hand_calculation`), the agent's Eastern Solomons golden briefing ("search range 200 miles" on eight lines), and two wording tests of the agent (the refusal "at most the aircraft's 200 nm" and the air group's line). So the frozen figures stay exactly as they were, search ranges included: the value that leaves step 1 as it was is the old value.
+
+The principle ruled instead: frozen figures go with frozen scenarios, live scenarios with live figures. Every test that runs scenario 5, 7 or 8 on the frozen figures runs its frozen copy in `data/scenarios/step2-frozen/` (decision 0073, "Frozen figures go with frozen scenarios"), so that no live order that names a distance the frozen ceilings refuse is silently dropped. No expected number, golden or wording changed in those tests.
+
