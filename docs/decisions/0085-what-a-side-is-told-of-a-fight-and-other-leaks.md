@@ -29,7 +29,7 @@ On Nov 13, 2026 a reviewer from outside the project was asked whether a side can
 
 - **A fight's end is less specific.** A player who sank the enemy's force reads "contact lost" and must read its claim. That is the intent.
 - **Round numbers differ between sides.** The umpire's round 3 is a late side's round 1. The event numbers still match, so two sides and the umpire can still talk about one event.
-- **An emptied force is judged from the state as it is now.** A force that lost its last ship is never refilled today, so "own force sunk" is read as: the force has no ship now, and its last sinking was in this fight. If a rule ever refills an emptied force this must be looked at again.
+- **An emptied force is judged from the state as it is now.** A force that lost its last ship is never refilled today, so "own force sunk" is read as: the force has no ship now, and its last sinking was in this fight. If a rule ever refills an emptied force this must be looked at again. One case reads wrongly and is accepted: a force that loses a ship in a fight and then detaches all its other ships in the same fight is told "a force was sunk". It is told so of its own force only, and a side knows its own units.
 
 ## Built
 
