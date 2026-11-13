@@ -27,7 +27,8 @@ use sim_agent::{
     briefing, get_entity, list_bases, list_contacts, list_forces, measure, PlaceArg, Question,
 };
 use sim_core::hex::Hex;
-use sim_core::state::Side;
+use sim_core::ids::AirGroupId;
+use sim_core::state::{Arrival, Side};
 use sim_core::World;
 use support::check::{normalised_answers, sample_questions, without_event_numbers};
 use support::{load, load_text, play, scenario_path, scenario_text};
@@ -982,23 +983,37 @@ fn the_library_code_names_nothing_of_the_truth() {
 
 // ---------------------------------------------------------------------
 // Findings of the outside review of Nov 13, 2026 (prompt 11). Kept switched
-// off until the architect rules on each; run with `--ignored` to see them.
+// ruled in decision 0085.
 // ---------------------------------------------------------------------
 
 #[test]
-#[ignore = "outside review finding 4: a day that cannot be resolved answers end_day with the engine's own words, which name an enemy ship"]
 fn a_day_that_cannot_be_resolved_names_no_enemy_unit() {
-    // Scenario 12c with no orders, and an arrival the loader accepts that
-    // puts 100 more aircraft into Japanese group 3 aboard carrier B (ship 3),
-    // which has room for 36. Nothing of it is ever reported to the Allied
-    // side, which plays and ends the day.
+    // Scenario 12c with no orders, and an arrival that puts 100 more aircraft
+    // into Japanese group 3 aboard carrier B (ship 3), which has room for 36.
+    // The loader refuses such an arrival (the next test), so the world is
+    // built directly. Nothing of it is ever reported to the Allied side,
+    // which plays and ends the day.
     let name = "12c_no_deck.toml";
     let text = scenario_text(name);
     let (head, _orders) = text
         .split_once("\n[[order]]")
         .expect("12c's orders come last");
-    let text = format!("{head}\n[[arrival]]\nday = 1\nair_group = 3\naircraft = 100\n");
-    let scenario = load_text(&text, name, 1942);
+    let mut scenario = load_text(head, name, 1942);
+    let world = &scenario.world;
+    let mut truth = world.umpire().clone();
+    truth.arrivals.push(Arrival {
+        day: 1,
+        air_group: AirGroupId::new(3),
+        aircraft: 100,
+        pilots: 0,
+    });
+    scenario.world = World::new(
+        world.seed(),
+        world.ref_data().clone(),
+        world.map().clone(),
+        truth,
+    )
+    .expect("the world is valid at the start");
     let japanese: Vec<String> = scenario
         .world
         .umpire()
@@ -1023,5 +1038,23 @@ fn a_day_that_cannot_be_resolved_names_no_enemy_unit() {
     assert!(
         named.is_empty(),
         "the Allied player's end_day names enemy ships {named:?}: {said}"
+    );
+}
+
+#[test]
+fn the_loader_refuses_the_arrival_that_would_overfill_a_ship() {
+    let name = "12c_no_deck.toml";
+    let text = scenario_text(name);
+    let (head, _orders) = text
+        .split_once("\n[[order]]")
+        .expect("12c's orders come last");
+    let text = format!("{head}\n[[arrival]]\nday = 1\nair_group = 3\naircraft = 100\n");
+    let error = sim_data::Scenario::from_text_with(&text, &scenario_path(name), &support::frozen())
+        .expect_err("the loader refuses it")
+        .to_string();
+    assert!(
+        error.contains("arrival 1 would put 134 aircraft aboard ship:3")
+            && error.contains("class carries 36"),
+        "{error}"
     );
 }
