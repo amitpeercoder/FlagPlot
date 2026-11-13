@@ -1,6 +1,6 @@
 # 0087: The patrol's fire and the attack
 
-Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code; its two choices (the guns' condition after the patrol's fire before the attack, and the patrol's after-roll before the guns' in step 4a) were ruled as written.
+Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code; its two choices (the guns' condition after the patrol's fire before the attack, and the patrol's after-roll before the guns' in step 4a) were ruled as written. Built on Nov 13, 2026; see "As built".
 
 ## The gap
 
@@ -98,3 +98,45 @@ At Santa Cruz the same fighter director found the same, in words: "most enemy ai
 - A dated note in decision 0079.
 - The run baselines, recorded games and pins of the live air scenarios.
 - No hand calculation on the frozen figures moves.
+
+## As built
+
+**The code.**
+- `crates/sim-core/src/airstrike.rs`, in `work_out_raid`: the patrol's roll at the bombers rolls the first k shots and then the other n − k on the patrol's stream. The second part is carried, and its hits are taken from the bombers after the attack outcomes and before the guns' after-roll.
+- The guns' condition reads the bombers left after the patrol's fire before the attack.
+- `resolve_strikes` records the patrol's after-roll in step 4a before the guns', with its losses, its pilots and its note in the claim tally.
+- `AirFight` carries `after_attack`. The export layer writes it only when true.
+- The figure is required, checked from 0 to 1: live 0.4, frozen 1.
+- No state, hash layout, stream or `Draw` value changed.
+
+**The proof that a share of 1 is step 1.**
+- The event logs on the frozen figures of 05, 05c, 06, 06a, 12b, 13a, 13b, 16, 19a and 19b, and case 1 of 19c for seeds 1 to 100, are byte for byte those of the binary before the rule.
+- No expected number of any hand calculation moved.
+
+**Its scenario.**
+- `19c_patrol_after_the_attack`: the architect's four cases, the properties over seeds 1 to 1,000, and pinned outcomes.
+  - The pins are seed 1942 and seed 1 in each case and at each share. Seed 1942 already moves patrol hits across the attack.
+  - The property tests add four-standard-deviation ranges for cases 2 to 4, worked by the developer and reviewed.
+- Every number of the hand calculation matched.
+
+**Before and after, 1,000 runs each, label `d0087`.**
+- The reports are `docs/validation/eastern-solomons-d0087.md` and `rabaul-guadalcanal-air-d0087.md`, made on the code with decisions 0079, 0080 and 0081 to 0084.
+- "Before" is the `d0080` pair, the same code without this rule.
+
+| Eastern Solomons | Record | Before: 5th to 95th, median (runs holding) | After |
+| --- | --- | --- | --- |
+| Bomb hits on Enterprise | 3 | 0 to 5, 1 (123): agrees | 0 to 7, 3 (105): agrees |
+| Japanese bombers left to attack TF16 and TF11 (reported) | 20 to 27 | 0 to 18, 11 | 0 to 24, 20 |
+| US aircraft left to attack the Ryujo detachment | 36 | 0 to 38, 0 (130): agrees | 0 to 38, 0 (34): miss |
+| Japanese carrier aircraft lost to enemy action | 29 to 32 | 2 to 35, 26 | 2 to 35, 26 |
+
+- Judged 15: before, agree 11, at the edge 1, miss 3; after, agree 10, at the edge 1, miss 4.
+- The patrol's hits at bombers are the same a run (9.18 on Japanese raids, 0.65 on American ones). The Japanese bombs dropped at ships rise from 8.5 to 13.4 a run, and their hits from 1.7 to 2.7.
+- The middle run now puts three bombs into Enterprise, as the record has. The bombers left to attack come into the record's 20 to 27.
+- **The new miss is a question for the measure.** The record's 36 US aircraft left to attack the Ryujo detachment are the 38 Saratoga launched less 2 forced back by mechanical trouble (row 333). None was shot down before the attack (rows 237, 354 to 357). The rules have no abort. So a run held 36 only when Ryujo's patrol shot down two before the attack, and with less of that fire before the attack fewer runs do. The runs give 38 in 273, 37 in 181 and 36 in 34. The agreement before rested on that substitution, not on the record's cause.
+
+At Rabaul against Guadalcanal:
+- Judged 10: before, agree 4, at the edge 3, miss 3; after, agree 4, at the edge 2, miss 4.
+- Bombers lost (26 against 27), fighters lost (12) and US fighters lost (23) do not move: the patrol's hits are the same.
+- The bombers it hits after the attack now bomb. Bomber sorties that reach the island go from 201 to 214, against a record of 211 to 213. Aircraft destroyed on the ground go from 12 to 13 in the middle run.
+- F4Fs ready on day 21 keeps its spread and median (2 to 12, 6). Runs holding 11 go from 50 to 40, so it falls from the edge to a miss on the one-in-twenty test, as it did under decision 0079 for the same cause: a few more aircraft hit on the ground.
