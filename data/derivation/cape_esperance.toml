@@ -1,9 +1,40 @@
 # The ships of the night action at Cape Esperance, 11 to 12 October 1942:
 # Task Force 64's nine ships and the Japanese bombardment force's five
 # (data/validation/cape_esperance.toml). Only their experience values are
-# derived (decision 0064), so the list has no class ships: there is no
-# scenario yet, and the class figures of these ships are not derived.
-# The date is the engagement's first day.
+# derived (decision 0064), so the list has no class ships yet: the class
+# figures of these ships cannot all be derived yet. The date is the
+# engagement's first day.
+#
+# THE CLASS LIST, NOT YET ENABLED (decision 0072, "The ships"). The
+# experience test derives this whole file and fails on any problem, so the
+# lines below stay comments until every ship derives. With the rows
+# settled for decision 0072, seven ships derive cleanly now: Farenholt,
+# Duncan, Buchanan, McCalla, Aoba, Furutaka, Kinugasa. The other seven
+# wait for exceptions in rules.toml (after decision 0070 lands; the rates
+# of fire are re-derived then in any case), for decision 0070 itself
+# (Fubuki and Hatsuyuki's 12.7 cm rate) and, for Laffey, for research.
+# Decision 0072 lists each.
+#
+# output = "../reference/ship_classes_cape_esperance.csv"
+# first_class_id = 3000
+# ships = [
+#     # Task Force 64, in the battle disposition of 22:35.
+#     "dd-491-farenholt", "dd-485-duncan", "dd-459-laffey",
+#     "ca-38-san-francisco", "cl-47-boise", "ca-25-salt-lake-city", "cl-50-helena",
+#     "dd-484-buchanan", "dd-488-mccalla",
+#     # The bombardment group (Goto).
+#     "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
+# ]
+#
+# Working assumption, not a fact (decision 0019, 5): no fit row holds for a
+# search radar on these ships on the date, and they are treated as not
+# fitted. For the four destroyers it changes nothing the rules read, since
+# a force sights with radar if any ship of it has it, and Boise, Helena and
+# Salt Lake City have a sourced surface-search set.
+# radar_unknown_means_none = [
+#     "dd-459-laffey", "dd-484-buchanan", "dd-485-duncan", "dd-488-mccalla",
+#     "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
+# ]
 
 name = "Cape Esperance"
 date = "1942-10-11"
