@@ -111,8 +111,8 @@ fn millionths(value: i64) -> Fixed {
 }
 
 fn load() -> Scenario {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../data/scenarios/17_cape_esperance.toml");
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/17_cape_esperance.toml");
     common::load(&path).expect("the scenario loads")
 }
 

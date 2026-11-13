@@ -1,0 +1,35 @@
+Scenario 17: Cape Esperance, 11 to 12 October 1942
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 734d1bcd803b1f5b  224 events
+
+task_force:1 "Bombardment group" (Japanese): Arrived at (-2,-8); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
+task_force:2 "Task Force 64" (Allied): Arrived at (2,-5); readiness battle, alert, rules of engagement: engage, break off at 1, stragglers: keep, keep 0; no home port
+task_force:2000001 "Bombardment group, left behind" (Japanese): Idle at (2,-5), 20 nm from (2,-6) toward (2,-5); readiness normal, alert (alerted), rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Aoba": SUNK; damage flotation 100, fire 17.808758; propulsion out, fire control out, main battery out; 703.071435 gun rounds, torpedoes ready; 1893.939712 t of fuel, 0 t of supply
+ship:2 "Furutaka": SUNK; damage flotation 100, fire 15.118335; propulsion out, fire control out, main battery out, torpedo mounts out; 669.214305 gun rounds, torpedoes gone; 1723.286666 t of fuel, 0 t of supply
+ship:3 "Kinugasa": SUNK; damage flotation 100, fire 26.661396; propulsion out, fire control out, main battery out, torpedo mounts out; 711.535718 gun rounds, torpedoes gone; 1893.939712 t of fuel, 0 t of supply
+ship:4 "Fubuki": afloat in task_force:1; damage flotation 59.8086, fire 49.8405; fire control out, main battery degraded; 826.66668 gun rounds, torpedoes gone; 338.454686 t of fuel, 0 t of supply
+ship:5 "Hatsuyuki": afloat in task_force:1; damage flotation 19.9362, fire 14.95215; fire control degraded, main battery degraded, torpedo mounts degraded; 826.66668 gun rounds, torpedoes gone; 338.454686 t of fuel, 0 t of supply
+ship:6 "USS Farenholt": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1244.44448 gun rounds, torpedoes gone; 413.120711 t of fuel, 0 t of supply
+ship:7 "USS Duncan": afloat in task_force:2; damage flotation 5.915637, fire 11.831274; torpedo mounts degraded; 1244.44448 gun rounds, torpedoes gone; 413.120711 t of fuel, 0 t of supply
+ship:8 "USS Laffey": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1244.44448 gun rounds, torpedoes gone; 416.136608 t of fuel, 0 t of supply
+ship:9 "USS San Francisco": afloat in task_force:2; damage flotation 10.5402, fire 10.5402; propulsion degraded; 921.85722 gun rounds, torpedoes gone; 1740.483226 t of fuel, 0 t of supply
+ship:10 "USS Boise": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 2553.8463 gun rounds, torpedoes gone; 1845.698128 t of fuel, 0 t of supply
+ship:11 "USS Salt Lake City": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1274.2858 gun rounds, torpedoes gone; 1951.50804 t of fuel, 0 t of supply
+ship:12 "USS Helena": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 2553.8463 gun rounds, torpedoes gone; 1757.735589 t of fuel, 0 t of supply
+ship:13 "USS Buchanan": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1244.44448 gun rounds, torpedoes gone; 413.120711 t of fuel, 0 t of supply
+ship:14 "USS McCalla": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1244.44448 gun rounds, torpedoes gone; 413.120711 t of fuel, 0 t of supply
+base:1 "Shortland" (Japanese) at (-2,-8): 0 t of supply in stock
+Allied contact:1 at (2,-5): 1 ships, cruiser, age 1 pulses
+Allied claims 3 enemy ships sunk at (2,-5), day 1 night
+Allied claims 1 enemy ship sunk at (2,-5), day 1 morning
+Japanese contact:1 at (2,-5): 10 ships, cruiser, age 1 pulses
+Japanese claims 0 enemy ships sunk at (2,-5), day 1 night
+Japanese claims 0 enemy ships sunk at (2,-5), day 1 morning
+
+Result (the placeholder scale of decision 0054):
+Allied: 12 points (ships_sunk 3 = 12; ships_crippled 0 = 0), margin 12, major victory
+Japanese: 0 points (ships_sunk 0 = 0; ships_crippled 0 = 0), margin -12, major defeat
+History: Two Japanese ships, the heavy cruiser Furutaka and the destroyer Fubuki, were sunk that night for one American destroyer, Duncan; Aoba was badly damaged and the bombardment of Henderson Field was not carried out. (From the order-of-battle facts; not yet scored from them.)
