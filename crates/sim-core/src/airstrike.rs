@@ -604,7 +604,8 @@ impl World {
     /// figures a group is never tired or stood down. A group whose pilots
     /// are tracked starts from the smaller of its ready aircraft and its
     /// pilots (decision 2 of 0038). A group at a base with no supply at the
-    /// start of the pulse flies none (decision 7 of 0039).
+    /// start of the pulse flies none (decision 7 of 0039). A group that
+    /// moved to another base by order today flies none (decision 0091, 6).
     pub(crate) fn aircraft_able_to_fly(&self, group: &AirGroup) -> u32 {
         // A base with no supply at the start of the pulse flies nothing
         // (decision 7 of 0039). Groups aboard ships are never affected.
@@ -612,6 +613,12 @@ impl World {
             if self.grounded_bases.contains(&base) {
                 return 0;
             }
+        }
+        // A group that moved to another base today flies nothing (decision
+        // 0091, 6). The day being resolved is the one after the last day
+        // resolved.
+        if group.rebased_day == Some(self.truth.day + 1) {
+            return 0;
         }
         let crewed = group
             .pilots

@@ -126,6 +126,10 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "kind": "set_target_priority",
                 "kinds": kinds.iter().map(|kind| kind.name()).collect::<Vec<_>>(),
             }),
+            AirGroupOrder::Rebase { base } => json!({
+                "kind": "rebase",
+                "base": base.raw(),
+            }),
         },
     }
 }

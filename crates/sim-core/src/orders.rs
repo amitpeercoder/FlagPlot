@@ -393,6 +393,13 @@ pub enum AirGroupOrder {
     SetTargetPriority {
         kinds: Vec<ShipKind>,
     },
+    /// Move the whole group to another base of its side (decision 0091). Not
+    /// a standing order: it is done when it is accepted, at the start of the
+    /// day, and is then spent. The group flies nothing that day. Added at the
+    /// end.
+    Rebase {
+        base: BaseId,
+    },
 }
 
 /// An order together with the unit it is for.
@@ -530,6 +537,23 @@ pub enum RejectReason {
     /// A load order names a land unit, and no ship of the task force can
     /// carry men (decision 0066, 6). Added at the end of the enum.
     NoTroopCapacity,
+    /// A rebase order to an air group aboard a ship (decision 0091, 2).
+    /// Added at the end of the enum.
+    AirGroupAboardShip,
+    /// A rebase order to an air group aboard a ship that is away at the yard
+    /// (decision 0091, 2). Added at the end of the enum.
+    AirGroupAwayAtYard,
+    /// A rebase order names the base the air group is already at (decision
+    /// 0091, 2). Added at the end of the enum.
+    AlreadyAtBase,
+    /// A rebase order names a base further from the air group's base than
+    /// its type's transfer range (decisions 2 and 3 of 0091). `distance_nm`
+    /// is the air distance between the two bases. Added at the end of the
+    /// enum.
+    BeyondTransferRange { distance_nm: Fixed, range_nm: Fixed },
+    /// A second rebase order to an air group on the day it has already moved
+    /// (decision 0091, "As built"). Added at the end of the enum.
+    AlreadyMovedToday,
 }
 
 impl fmt::Display for RejectReason {
@@ -600,6 +624,21 @@ impl fmt::Display for RejectReason {
                 f.write_str("the land unit has no men ashore where the task force is")
             }
             RejectReason::NoTroopCapacity => f.write_str("no ship of the task force can carry men"),
+            RejectReason::AirGroupAboardShip => f.write_str("the air group is aboard a ship"),
+            RejectReason::AirGroupAwayAtYard => {
+                f.write_str("the air group is aboard a ship that is away at a yard")
+            }
+            RejectReason::AlreadyAtBase => f.write_str("the air group is already at that base"),
+            RejectReason::BeyondTransferRange {
+                distance_nm,
+                range_nm,
+            } => write!(
+                f,
+                "the base is {distance_nm} nm away, beyond the air group's transfer range of {range_nm} nm"
+            ),
+            RejectReason::AlreadyMovedToday => {
+                f.write_str("the air group has already moved to another base today")
+            }
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())
             }

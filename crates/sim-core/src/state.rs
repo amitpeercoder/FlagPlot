@@ -748,6 +748,10 @@ pub struct AirGroup {
     /// 0063): a base strike launches once in a game day. `None` until it
     /// has launched one.
     pub last_base_strike_day: Option<u32>,
+    /// The game day on which the group last moved to another base by order
+    /// (decision 0091). On that day it flies nothing. `None` until it has
+    /// moved.
+    pub rebased_day: Option<u32>,
 }
 
 impl AirGroup {
@@ -803,6 +807,7 @@ impl AirGroup {
             target_priority: ShipKind::ALL.to_vec(),
             target_order: None,
             last_base_strike_day: None,
+            rebased_day: None,
         }
     }
 }

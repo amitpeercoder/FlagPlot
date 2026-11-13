@@ -944,6 +944,20 @@ impl RefData {
             None => radius,
         }
     }
+
+    /// How far an air group of type `aircraft_type` may fly to another base
+    /// in one move (decision 3 of 0091): twice the longer of the type's search
+    /// range and its strike radius, the distance it flies out and back, flown
+    /// one way. The group's reach does not change it. This is the one
+    /// function the rebase order, `measure` and the briefing read. A type
+    /// that does not exist has none: 0.
+    pub fn transfer_range_nm(&self, aircraft_type: AircraftTypeId) -> Fixed {
+        self.aircraft_types
+            .get(&aircraft_type)
+            .map_or(Fixed::ZERO, |aircraft| {
+                aircraft.search_range_nm.max(aircraft.strike_range_nm) * 2
+            })
+    }
 }
 
 /// The figures of the base supply rule. See

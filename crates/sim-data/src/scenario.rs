@@ -430,6 +430,11 @@ enum ActionSpec {
     SetTargetPriority {
         kinds: Vec<String>,
     },
+    /// Move the air group to the named base of its side (decision 0091). A
+    /// base that is not the side's, or out of reach, is refused at intake.
+    Rebase {
+        base: u32,
+    },
     SetRulesOfEngagement {
         stance: StanceSpec,
         break_off: Quantity,
@@ -1420,6 +1425,7 @@ impl Scenario {
                 target_priority: ShipKind::ALL.to_vec(),
                 target_order: None,
                 last_base_strike_day: None,
+                rebased_day: None,
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1624,6 +1630,9 @@ impl Scenario {
                         ActionSpec::SetTargetPriority { .. } => {
                             return Err(wrong_target("set_target_priority", "air_group"))
                         }
+                        ActionSpec::Rebase { .. } => {
+                            return Err(wrong_target("rebase", "air_group"))
+                        }
                     };
                     OrderKind::TaskForce {
                         target: TaskForceId::new(*raw),
@@ -1711,9 +1720,12 @@ impl Scenario {
                             }
                             AirGroupOrder::SetTargetPriority { kinds: parsed }
                         }
+                        ActionSpec::Rebase { base } => AirGroupOrder::Rebase {
+                            base: BaseId::new(*base),
+                        },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach or set_target_priority"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority or rebase"
                             )))
                         }
                     };

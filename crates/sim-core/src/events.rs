@@ -1014,6 +1014,29 @@ pub enum EventKind {
         /// Elapsed hours since the scenario began.
         elapsed_hours: Fixed,
     },
+    /// The damaged aircraft of an air group, which cannot fly, were written
+    /// off at the base it left by a rebase order (decision 0091, 5). They are
+    /// lost for good. Recorded before the group's `AirGroupRebased`, and only
+    /// if it had damaged aircraft.
+    AircraftWrittenOff {
+        air_group: AirGroupId,
+        base: BaseId,
+        aircraft: u32,
+    },
+    /// An air group moved by order from base `from` to base `to`,
+    /// `distance_nm` apart by air, within its type's `transfer_range_nm`
+    /// (decision 0091). Its `ready` aircraft and all its pilots went with it
+    /// (`pilots`, `None` where they are not counted). It flies nothing that
+    /// day.
+    AirGroupRebased {
+        air_group: AirGroupId,
+        from: BaseId,
+        to: BaseId,
+        distance_nm: Fixed,
+        transfer_range_nm: Fixed,
+        ready: u32,
+        pilots: Option<u32>,
+    },
 }
 
 impl EventKind {
@@ -1326,6 +1349,19 @@ impl EventKind {
                 entities.extend(base.iter().map(|b| EntityRef::Base(*b)));
                 entities
             }
+            EventKind::AircraftWrittenOff {
+                air_group, base, ..
+            } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
+            EventKind::AirGroupRebased {
+                air_group,
+                from,
+                to,
+                ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::Base(*from),
+                EntityRef::Base(*to),
+            ],
         }
     }
 }
@@ -2242,6 +2278,32 @@ impl fmt::Display for EventKind {
                     None => f.write_str(" off the shore")?,
                 }
                 write!(f, " at {}", ClockTime::from_elapsed(*elapsed_hours))
+            }
+            EventKind::AircraftWrittenOff {
+                air_group,
+                base,
+                aircraft,
+            } => write!(
+                f,
+                "{air_group} wrote off {aircraft} damaged aircraft at {base}, which could not fly"
+            ),
+            EventKind::AirGroupRebased {
+                air_group,
+                from,
+                to,
+                distance_nm,
+                transfer_range_nm,
+                ready,
+                pilots,
+            } => {
+                write!(
+                    f,
+                    "{air_group} moved from {from} to {to}, {distance_nm} nm within its transfer range of {transfer_range_nm} nm, with {ready} ready"
+                )?;
+                if let Some(pilots) = pilots {
+                    write!(f, " and {pilots} pilots")?;
+                }
+                f.write_str("; it flies nothing today")
             }
         }
     }

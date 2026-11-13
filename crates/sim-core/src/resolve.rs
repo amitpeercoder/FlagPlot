@@ -333,10 +333,10 @@ impl World {
         let target = order.kind.target();
         let result = self.validate_order(&order);
         let accepted = result.is_ok();
-        let mut follow_up: Option<EventKind> = None;
+        let mut follow_ups: Vec<EventKind> = Vec::new();
         let kind = match result {
             Ok(()) => {
-                follow_up = self.apply_order(&order);
+                follow_ups = self.apply_order(&order);
                 EventKind::OrderAccepted { order: id, target }
             }
             Err(reason) => EventKind::OrderRejected {
@@ -348,14 +348,18 @@ impl World {
         let mut causes = vec![Cause::Order(id)];
         causes.extend(extra_causes);
         let event = self.events.record(day, pulse, kind, causes, None);
-        // The follow-up event of an accepted order, recorded after the
-        // acceptance and citing the order: a route order that turned the
-        // force round between two hexes changed its leg and maybe its
-        // position, and an ordered detach names the new force.
-        if let Some(follow_up) = follow_up {
+        // The follow-up events of an accepted order, recorded after the
+        // acceptance in order and each citing the order: a route order that
+        // turned the force round between two hexes changed its leg and maybe
+        // its position, an ordered detach names the new force, and a rebase
+        // writes off the damaged aircraft and moves the group.
+        for follow_up in follow_ups {
             // The yard order's follow-up carries a breakdown of the days away
-            // (decision 0069); no other follow-up has one.
-            let breakdown = self.yard_breakdown(&follow_up);
+            // (decision 0069), and the rebase's of the distance and transfer
+            // range (decision 0091); no other follow-up has one.
+            let breakdown = self
+                .yard_breakdown(&follow_up)
+                .or_else(|| self.rebase_breakdown(&follow_up));
             let departed = match &follow_up {
                 EventKind::ForceLeftForYard { task_force, .. } => Some(*task_force),
                 _ => None,
@@ -734,6 +738,9 @@ impl World {
                         }
                         Ok(())
                     }
+                    AirGroupOrder::Rebase { base } => {
+                        self.check_rebase(group, *base, order.side, order.day_issued)
+                    }
                     AirGroupOrder::SetSearchArc {
                         from_deg,
                         to_deg,
@@ -767,12 +774,14 @@ impl World {
     /// Makes an accepted order the standing one. It stays in force until
     /// another order replaces it.
     ///
-    /// Returns the follow-up event to record after the order's own
-    /// acceptance, if there is one: `ShipsDetached` for an ordered detach
-    /// (the split itself happens here), or `TaskForceTurnedBack` if a route
-    /// order turned a task force round between two hexes (see
-    /// `TaskForce::turn_back`).
-    fn apply_order(&mut self, order: &Order) -> Option<EventKind> {
+    /// Returns the follow-up events to record after the order's own
+    /// acceptance, in order, if there are any: `ShipsDetached` for an
+    /// ordered detach (the split itself happens here), `TaskForceTurnedBack`
+    /// if a route order turned a task force round between two hexes (see
+    /// `TaskForce::turn_back`), `ForceLeftForYard` for a yard order, or
+    /// `AircraftWrittenOff` and `AirGroupRebased` for a rebase (decision
+    /// 0091).
+    fn apply_order(&mut self, order: &Order) -> Vec<EventKind> {
         match &order.kind {
             OrderKind::TaskForce {
                 target,
@@ -785,18 +794,18 @@ impl World {
                     // Name the new force in the log: the order's acceptance
                     // names only the parent. The caller records this after
                     // the acceptance, citing the order.
-                    return Some(EventKind::ShipsDetached {
+                    return vec![EventKind::ShipsDetached {
                         parent: *target,
                         new_force,
                         ships: listed.iter().copied().collect(),
                         escorts: Vec::new(),
                         reason: DetachReason::Ordered,
-                    });
+                    }];
                 }
                 if let TaskForceOrder::SendToYard = task_force_order {
                     // The ships leave the force and the map; the caller
                     // records the event and notes its number in the trip.
-                    return Some(self.send_force_to_yard(*target, order.day_issued));
+                    return vec![self.send_force_to_yard(*target, order.day_issued)];
                 }
                 let task_force = self
                     .truth
@@ -895,12 +904,17 @@ impl World {
                         unreachable!("yard orders are applied above")
                     }
                 }
-                follow_up
+                follow_up.into_iter().collect()
             }
             OrderKind::AirGroup {
                 target,
                 order: air_group_order,
             } => {
+                if let AirGroupOrder::Rebase { base } = air_group_order {
+                    // Done now and spent: it is not stored as a standing
+                    // order (decision 0091, 1 and 4).
+                    return self.rebase_air_group(*target, *base, order.day_issued);
+                }
                 let group = self
                     .truth
                     .air_groups
@@ -939,8 +953,11 @@ impl World {
                         });
                         group.arc_order = Some(order.id);
                     }
+                    AirGroupOrder::Rebase { .. } => {
+                        unreachable!("rebase orders are applied above")
+                    }
                 }
-                None
+                Vec::new()
             }
         }
     }
