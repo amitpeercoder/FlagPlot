@@ -307,7 +307,7 @@
               "place": { "$ref": "defs.schema.json#/$defs/place" },
               "rounds": { "type": "integer" },
               "ended": {
-                "enum": ["slipped_away", "force_sunk", "broke_off", "passed_unseen", "max_rounds"]
+                "enum": ["slipped_away", "force_sunk", "broke_off", "passed_unseen", "max_rounds", "contact_lost"]
               },
               "event": { "type": "integer" }
             }

@@ -230,7 +230,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         }),
         would_strike: ctx
             .view
-            .strike_choice(group)
+            .strike_choice(group.id)
             .filter(|_| group.ready > 0)
             .map(|choice| WouldStrike {
                 contact: ctx.entity(EntityRef::Contact(choice.contact)),

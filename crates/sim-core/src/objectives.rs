@@ -962,7 +962,7 @@ mod tests {
     #[test]
     fn what_a_side_knows_of_cargo_landed_is_its_own_unloading_whole() {
         let (truth, log) = cargo_scenario();
-        let owners = crate::side_events::Owners::from_state(&truth, &Default::default());
+        let owners = crate::side_events::Owners::from_state(&truth, &Default::default(), 0);
         let allied_events = crate::side_events::project(Side::Allied, log.from_index(0), &owners);
         let japanese_events =
             crate::side_events::project(Side::Japanese, log.from_index(0), &owners);
@@ -1184,7 +1184,7 @@ mod tests {
     #[test]
     fn a_side_knows_the_days_of_its_own_base_and_its_net_cargo_and_nothing_of_the_enemys() {
         let (truth, log) = worked_case();
-        let owners = crate::side_events::Owners::from_state(&truth, &Default::default());
+        let owners = crate::side_events::Owners::from_state(&truth, &Default::default(), 0);
         let allied = crate::side_events::project(Side::Allied, log.from_index(0), &owners);
         let japanese = crate::side_events::project(Side::Japanese, log.from_index(0), &owners);
         let objectives = worked_objectives();

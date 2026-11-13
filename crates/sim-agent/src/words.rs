@@ -91,14 +91,16 @@ pub(crate) fn system_state(state: SystemState) -> &'static str {
     }
 }
 
-pub(crate) fn end_reason(reason: sim_core::events::EngagementEndReason) -> &'static str {
-    use sim_core::events::EngagementEndReason as R;
+/// A fight's ending as a side is told it (decision 0085).
+pub(crate) fn side_end_reason(reason: sim_core::side_events::SideEndReason) -> &'static str {
+    use sim_core::side_events::SideEndReason as R;
     match reason {
         R::SlippedAway => "slipped_away",
         R::ForceSunk => "force_sunk",
         R::BrokeOff => "broke_off",
         R::PassedUnseen => "passed_unseen",
         R::MaxRounds => "max_rounds",
+        R::ContactLost => "contact_lost",
     }
 }
 

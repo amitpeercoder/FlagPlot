@@ -20,7 +20,9 @@ use crate::belief::{BattleClaim, BeliefState, Contact};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
+};
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
 use crate::objectives::{self, KnownProgress, Objective, SideObjectives};
@@ -214,7 +216,14 @@ impl<'a> SideView<'a> {
     /// see. This is the only way events leave for anything that plays the
     /// game; the full log stays with the umpire.
     pub fn events(&self) -> Vec<SideEvent> {
-        let owners = Owners::from_state(self.truth, self.orders);
+        let owners = Owners::from_state(
+            self.truth,
+            self.orders,
+            self.ref_data
+                .surface_combat
+                .as_ref()
+                .map_or(0, |figures| figures.round_minutes),
+        );
         side_events::project(self.side, self.log.from_index(0), &owners)
     }
 
@@ -360,11 +369,15 @@ impl<'a> SideView<'a> {
     /// The contact `group` would launch a strike at now (decision 6 of 0063):
     /// `contact_to_strike` (`airstrike.rs`) on this side's belief and the
     /// group's own state, orders and reach, which is what the strike decision
-    /// calls. `None` for a group that is not this side's, is not on the naval
-    /// strike mission, has no position, or has no contact that qualifies. It
-    /// reads belief and the side's own unit and nothing of the enemy.
-    pub fn strike_choice(&self, group: &AirGroup) -> Option<StrikeChoice> {
-        if group.side != self.side || group.mission != AirMission::NavalStrike {
+    /// calls. The group is named by its number and looked up among this
+    /// side's own groups, so a caller cannot hand in a group of its own
+    /// making. `None` for a number that is not one of this side's groups, a
+    /// group that is not on the naval strike mission, has no position, or has
+    /// no contact that qualifies. It reads belief and the side's own unit and
+    /// nothing of the enemy.
+    pub fn strike_choice(&self, group: AirGroupId) -> Option<StrikeChoice> {
+        let group = self.air_groups().find(|own| own.id == group)?;
+        if group.mission != AirMission::NavalStrike {
             return None;
         }
         let figures = self.ref_data.air_combat.as_ref()?;

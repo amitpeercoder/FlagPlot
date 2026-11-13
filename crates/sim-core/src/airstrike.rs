@@ -10341,7 +10341,7 @@ mod tests {
             set_priority(&mut world, BOMBERS, &kinds);
             let asked = world
                 .side_view(Side::Allied)
-                .strike_choice(&world.truth.air_groups[&BOMBERS])
+                .strike_choice(BOMBERS)
                 .map(|choice| (choice.contact.raw(), choice.hex, choice.distance_nm));
             world.decide_strikes(1, Pulse::Morning);
             let launched = launches(&world)
@@ -10352,17 +10352,24 @@ mod tests {
         }
         // It answers for a naval strike group of the asking side only.
         let world = world(1, contacts());
-        let group = &world.truth.air_groups[&BOMBERS];
-        assert!(world.side_view(Side::Allied).strike_choice(group).is_some());
-        assert!(world
-            .side_view(Side::Japanese)
-            .strike_choice(group)
-            .is_none());
-        let mut resting = group.clone();
-        resting.mission = AirMission::Rest;
         assert!(world
             .side_view(Side::Allied)
-            .strike_choice(&resting)
+            .strike_choice(BOMBERS)
+            .is_some());
+        assert!(world
+            .side_view(Side::Japanese)
+            .strike_choice(BOMBERS)
+            .is_none());
+        let mut world = world;
+        world
+            .truth
+            .air_groups
+            .get_mut(&BOMBERS)
+            .expect("the bombers")
+            .mission = AirMission::Rest;
+        assert!(world
+            .side_view(Side::Allied)
+            .strike_choice(BOMBERS)
             .is_none());
     }
 

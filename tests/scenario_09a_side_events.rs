@@ -296,15 +296,21 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
                     "{at}: an event that names an enemy force is whole"
                 );
                 assert_eq!(name, full_name(&log.kind), "{at}");
-                // Its breakdown is the log's, whole.
+                // Its breakdown is the log's, whole but for a raw draw, which
+                // a side is never given (decision 0085, C).
                 assert_eq!(
                     event
                         .breakdown
                         .as_ref()
                         .map(|b| (b.factors.clone(), b.result)),
-                    log.breakdown
-                        .as_ref()
-                        .map(|b| (b.factors.clone(), Some(b.result))),
+                    log.breakdown.as_ref().map(|b| (
+                        b.factors
+                            .iter()
+                            .filter(|f| f.name != "draw")
+                            .copied()
+                            .collect::<Vec<_>>(),
+                        Some(b.result)
+                    )),
                     "{at}"
                 );
             }
@@ -442,7 +448,8 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
             }
         }
         // The causes kept are a subset of the log's, in the log's order, and
-        // the flag says whether any were dropped.
+        // the flag, set by the kind, is true wherever any were dropped
+        // (decision 0085, F7).
         let kept: Vec<Cause> = log
             .causes
             .iter()
@@ -450,10 +457,9 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
             .filter(|cause| event.causes.contains(cause))
             .collect();
         assert_eq!(kept, event.causes, "{at}: causes are a subsequence");
-        assert_eq!(
-            event.hidden_causes,
-            event.causes.len() < log.causes.len(),
-            "{at}: the flag"
+        assert!(
+            event.hidden_causes || event.causes.len() == log.causes.len(),
+            "{at}: a cause was dropped and the flag does not say so"
         );
     }
 
@@ -489,9 +495,19 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
                 let known = known.unwrap_or_else(|| {
                     panic!("{label} {side:?} {event} in fight {first}-{last}, which the side does not know of")
                 });
+                // The log's round is not before the side knew of the fight,
+                // and the side is given it counted from that round
+                // (decision 0085, F6).
+                let log_round = round_of(&full[&event.id].kind).expect("a fight event");
                 assert!(
-                    round >= known,
-                    "{label} {side:?} #{}: round {round} is before the side knew of the fight (round {known})",
+                    log_round >= known,
+                    "{label} {side:?} #{}: round {log_round} is before the side knew of the fight (round {known})",
+                    event.id.raw()
+                );
+                assert_eq!(
+                    round,
+                    log_round - (known - 1),
+                    "{label} {side:?} #{}: not counted from the round the side first knew",
                     event.id.raw()
                 );
             }
@@ -507,9 +523,13 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
             if let (
                 Some(known),
                 SideEventKind::Salvo { round, .. } | SideEventKind::SalvoAgainst { round, .. },
-            ) = (known, &event.kind)
+                EventKind::Salvo {
+                    round: log_round, ..
+                },
+            ) = (known, &event.kind, &full[&event.id].kind)
             {
-                assert!(*round >= known, "{label} {side:?} {kind}");
+                assert!(*log_round >= known, "{label} {side:?} {kind}");
+                assert_eq!(*round, log_round - (known - 1), "{label} {side:?} {kind}");
             }
         }
     }
@@ -1295,7 +1315,6 @@ fn met_where_they_lie_with_and_without_a_restated_enemy_order() -> (String, Stri
 }
 
 #[test]
-#[ignore = "outside review finding 7: an enemy order that changes nothing sets hidden_causes on the side's view of the fight"]
 fn an_enemy_order_that_changes_nothing_changes_nothing_the_side_is_given() {
     let (plain, ordered) = met_where_they_lie_with_and_without_a_restated_enemy_order();
     let name = "04a_night_action.toml";
@@ -1333,6 +1352,52 @@ fn an_enemy_order_that_changes_nothing_changes_nothing_the_side_is_given() {
             "seed {seed}: the Allied side's events changed with an enemy order that did nothing: {first:?}"
         );
     }
+}
+
+/// The flag of hidden causes is set by the kind of event and never
+/// under-reports (decision 0085, F7): wherever projection drops a cause of an
+/// event, the event says it may have causes the side cannot see, and the
+/// flag is the same for every event of a kind.
+#[test]
+fn the_flag_of_hidden_causes_is_set_by_the_kind_and_is_true_wherever_a_cause_was_dropped() {
+    let mut dropped = 0;
+    let mut flagged_kinds: BTreeMap<String, bool> = BTreeMap::new();
+    for (name, seeds) in [
+        ("07_full_slice.toml", 1..=3u64),
+        ("04a_night_action.toml", 1..=10),
+        ("04_savo_island.toml", 1..=3),
+        ("05c_air_combat.toml", 1..=3),
+        ("05_eastern_solomons.toml", 1..=2),
+        ("06_rabaul_guadalcanal.toml", 1..=2),
+        ("06a_base_raid.toml", 1..=2),
+        ("04c_three_forces.toml", 1..=5),
+    ] {
+        for seed in seeds {
+            let world = run(name, seed);
+            for side in SIDES {
+                for event in world.side_view(side).events() {
+                    let full = world.events().get(event.id).expect("in the log");
+                    let kind = side_name(&event.kind);
+                    // The same flag for every event of a kind.
+                    let before = flagged_kinds.insert(kind.clone(), event.hidden_causes);
+                    assert!(
+                        before.is_none_or(|flag| flag == event.hidden_causes),
+                        "{name} seed {seed} {side:?}: {kind} is flagged both ways"
+                    );
+                    if full.causes.len() > event.causes.len() {
+                        dropped += 1;
+                        assert!(
+                            event.hidden_causes,
+                            "{name} seed {seed} {side:?}: #{} ({kind}) lost a cause and does not say so",
+                            event.id.raw()
+                        );
+                    }
+                }
+            }
+        }
+    }
+    assert!(dropped > 100, "only {dropped} dropped causes were checked");
+    println!("{flagged_kinds:?}");
 }
 
 #[test]
@@ -1384,15 +1449,12 @@ fn the_numbers_a_side_view_carries_do_not_move_with_what_the_enemy_does() {
 }
 
 #[test]
-#[ignore = "outside review finding 1: SideView::strike_choice takes a caller's AirGroup and measures from the true position of any ship it names, an enemy's included"]
 fn a_side_view_measures_nothing_from_an_enemy_ships_true_place() {
-    // A Rust caller holding only a side's view builds an air group of its
-    // own side on naval strike, of the type with the longest strike radius,
-    // at extended reach, aboard an enemy ship, and asks the view where it
-    // would strike. The view should answer only for the side's own groups.
-    use sim_core::orders::{AirMission, Reach};
-    use sim_core::refdata::ShipKind;
-    use sim_core::state::{AirGroupLocation, ShipLocation};
+    // The review's probe: a Rust caller holding only a side's view builds an
+    // air group of its own side on naval strike, of the type with the longest
+    // strike radius, at extended reach, aboard an enemy ship, and asks the
+    // view where it would strike. The view answers only for the side's own
+    // groups, named by number (decision 0085).
     let mut leaks: Vec<String> = Vec::new();
     let mut fresh_contacts = 0;
     for name in [
@@ -1406,38 +1468,46 @@ fn a_side_view_measures_nothing_from_an_enemy_ships_true_place() {
             common::from_text(&scenario_text(name), &scenario_path(name)).expect("loads");
         loop {
             let world = &scenario.world;
-            let longest = world
-                .ref_data()
-                .aircraft_types
-                .values()
-                .max_by_key(|t| t.strike_range_nm)
-                .expect("an aircraft type");
             for side in SIDES {
                 let view = world.side_view(side);
                 fresh_contacts += view.contacts().filter(|c| c.age_pulses == 0).count();
-                let Some(own) = view.air_groups().next() else {
-                    continue;
-                };
-                for enemy_ship in world.umpire().ships.values().filter(|s| s.side != side) {
-                    let ShipLocation::TaskForce(force) = enemy_ship.location else {
-                        continue;
-                    };
-                    let mut probe = own.clone();
-                    probe.side = side;
-                    probe.mission = AirMission::NavalStrike;
-                    probe.aircraft_type = longest.id;
-                    probe.reach = Reach::Extended;
-                    probe.target_priority = ShipKind::ALL.to_vec();
-                    probe.location = AirGroupLocation::Ship(enemy_ship.id);
-                    if let Some(choice) = view.strike_choice(&probe) {
-                        let truly_at = world.umpire().task_forces[&force].position();
+                // The view is asked by number and looks the group up among
+                // the side's own, so a group of a caller's making (the
+                // forged probe of the review, aboard an enemy ship) can no
+                // longer be passed. Asked for each of the side's own groups,
+                // any answer must be measured from that group's own place;
+                // asked for any group of the enemy's, it must answer nothing.
+                for own in view.air_groups() {
+                    let probe = own.id;
+                    if let Some(choice) = view.strike_choice(probe) {
+                        let own_place = world.umpire().air_group_hex(own);
+                        let measured = own_place.map(|at| {
+                            sim_core::fixed::Fixed::from_int(i64::from(
+                                at.air_distance_nm(choice.hex),
+                            ))
+                        });
+                        if measured != Some(choice.distance_nm) {
+                            leaks.push(format!(
+                                "{name} day {} {side:?}: for {probe} the view measured {} nm to the contact at {:?}; its own place {own_place:?} is {measured:?} nm from it",
+                                world.day(),
+                                choice.distance_nm,
+                                choice.hex,
+                            ));
+                        }
+                    }
+                }
+                for enemy in world
+                    .umpire()
+                    .air_groups
+                    .values()
+                    .filter(|g| g.side != side)
+                {
+                    if let Some(choice) = view.strike_choice(enemy.id) {
                         leaks.push(format!(
-                            "{name} day {} {side:?}: aboard enemy {} the view measured {} nm to the contact at {:?}; the ship's true place {truly_at:?} is {} nm from it",
+                            "{name} day {} {side:?}: the view answered for the enemy's {} with a contact at {:?}",
                             world.day(),
-                            enemy_ship.id,
-                            choice.distance_nm,
+                            enemy.id,
                             choice.hex,
-                            truly_at.air_distance_nm(choice.hex),
                         ));
                     }
                 }
