@@ -1,6 +1,6 @@
 # Measures for validation
 
-One file per battle: what step 2 measures in a run, and what the record gives for it. `docs/step2-spec.md` says how they are used. Nothing in the simulation reads these files; `sim-cli validate` will, once it is built.
+One file per battle: what step 2 measures in a run, and what the record gives for it. `docs/step2-spec.md` says how they are used. Nothing in the simulation reads these files; `sim-cli validate` does.
 
 ## Format
 
@@ -42,6 +42,7 @@ Then one `[[measure]]` table for each measure:
 | `pilots_lost` | `air_groups` | Pilots of those groups lost |
 | `ready` | `air_groups`, `day` | Aircraft of those groups ready at the end of that day, the first day being 1 |
 | `aircraft_attacking` | `side` or `air_groups`; `target_task_forces` or `target_base`; `escorts` | Aircraft in every attack by that side or those groups on a ship of those task forces or on that base, summed over the run. With `escorts = true` the aircraft escorting an attacking group in the same day and pulse are added. The batch file names a raid's first strike group as the one escorted, so the escorts are matched to that group's attacks |
+| `aircraft_taking_part` | `side` or `air_groups`; `target_task_forces` (no `target_base`); `escorts` | Aircraft as launched, not as they attack, in the ship strikes of that side or those groups that did not find nothing and whose raid met a force of those task forces, summed over the run. With `escorts = true` the aircraft of every escort entry of the same day and pulse that went with the first strike group of a counted launch are added, each entry once. The wave that took part, not the bombers that survive the patrol and the guns (decision 0081) |
 | `attack_days` | as `aircraft_attacking`, without `escorts` | The number of days with at least one such attack |
 | `attack_of_at_least` | `side`, `target_task_forces`, `aircraft` | 1 if in some one day and pulse the aircraft attacking ships of those task forces come to that many or more, escorts not counted; else 0 |
 | `claims` | `side`, `claim` | What the side claims of that kind (`sunk`, `hits`, `shot_down`, `on_ground`) |
@@ -76,9 +77,13 @@ No passage is judged today. Research found no long run at one held speed, and a 
 - **A fact that is yes or no is a measure of 0 or 1.** It is judged by the same test as any other.
 - **Whole numbers only,** as in every data file.
 
+## Figures a battle cannot reach
+
+- **The attack on a field (`air_combat.toml`, `[base_hit]`) cannot be tuned on the Eastern Solomons.** That battle has one raid on a field, six bombers from Ryujo on Henderson Field: about 0.4 hits on aircraft are expected in a run, which no measure can read. The spec puts "the attack on a ship or a field" among the figures tuned on the Eastern Solomons and checked on Rabaul. For the field, this cannot be done. The `[base_hit]` figures are tuned on Rabaul against Guadalcanal (`us_aircraft_destroyed_on_the_ground`) and are not checked on any battle, like the slow figures. Ruled by the architect on Nov 13, 2026 (decision 0082, M5), and put to the spec session for `docs/step2-spec.md`.
+
 ## Who settles them
 
-The ranges are settled by the architect of the session that owns the step 2 spec, and each file says so with the date. Rows that feed derivation and scenarios are settled by the build session's architect.
+The ranges, and the rows the measures read, are settled by the coordinating architect (the main session), who keeps these files and the step 2 spec since Nov 13, 2026; each file says who settled it, with the date. Files settled before then name the spec session's architect, whose session is archived.
 
 ## Files
 
@@ -87,7 +92,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 16 measures, 14 judged |
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 26 measures, 23 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
-| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
+| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is written (`data/scenarios/not-run/17_cape_esperance.toml`) and not run, and the file has no `take` yet; it says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
 | `passages.toml` | Ship passages | 6 passages, none judged |
 
 Still to write: for Cape Esperance, who sighted whom first, when the scenario is scoped.

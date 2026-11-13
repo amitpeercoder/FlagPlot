@@ -85,6 +85,11 @@ pub struct Ship {
     pub gun_rounds: Fixed,
     /// True while the ship still has its torpedoes to fire.
     pub torpedoes_ready: bool,
+    /// True once the ship has fired the first side of a class whose
+    /// `torpedo_tubes` is above `torpedo_tubes_one_side`, and until she fires
+    /// the other side (decision 0083). Set only while `torpedoes_ready` is
+    /// set and only on such a class.
+    pub torpedoes_one_side_fired: bool,
     /// The state of each named system (decision 0016).
     pub systems: ShipSystems,
     /// The crew's experience, a whole number from 0 to
@@ -125,6 +130,7 @@ impl Ship {
             fire_damage: Fixed::ZERO,
             gun_rounds: Fixed::ZERO,
             torpedoes_ready: false,
+            torpedoes_one_side_fired: false,
             systems: ShipSystems::ALL_WORKING,
             experience: Ship::DEFAULT_EXPERIENCE,
         }

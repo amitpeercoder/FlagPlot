@@ -50,6 +50,7 @@ fn main() -> ExitCode {
             written,
             unread,
             not_settled,
+            torpedo_not_split,
         }) => {
             println!("{list}: no problems");
             println!("{}", if written { "wrote:" } else { "would write:" });
@@ -59,6 +60,12 @@ fn main() -> ExitCode {
             if !unread.is_empty() {
                 println!("rows of the listed ships that no question read (not in the file):");
                 for line in unread {
+                    println!("  {line}");
+                }
+            }
+            if !torpedo_not_split.is_empty() {
+                println!("torpedo tubes not split: no row says how the tubes bear, so the tubes on one side are all of them (decision 0074, 3):");
+                for line in torpedo_not_split {
                     println!("  {line}");
                 }
             }

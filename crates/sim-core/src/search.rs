@@ -122,27 +122,62 @@ pub(crate) fn build_sighting_report(
     figures: &SearchFigures,
     received_event: EventId,
 ) -> SightingReport {
+    draw_report(stream, figures).read(
+        map,
+        true_hex,
+        true_count,
+        true_kind,
+        figures,
+        received_event,
+    )
+}
+
+/// The draws of a sighting report, taken from the stream before the report
+/// is read (decision 0012: position error, then count, then kind). The
+/// number of draws does not depend on what is reported, so a report can be
+/// drawn at one moment and read against the truth of a later one: a strike
+/// draws its report with its attack and reads the force after the damage has
+/// landed (`docs/rules/differences.md`, row 7).
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct ReportDraws {
+    direction: Option<usize>,
+    count: u64,
+    kind: u64,
+}
+
+pub(crate) fn draw_report(stream: &mut RngStream, figures: &SearchFigures) -> ReportDraws {
     let direction = if stream.chance(figures.position_error_chance) {
         Some(usize::try_from(stream.below(6)).expect("below 6"))
     } else {
         None
     };
-    let estimated_hex = report_hex(map, true_hex, direction);
-    let estimated_ship_count = reported_count(
-        true_count,
-        stream.below(Fixed::SCALE.unsigned_abs()),
-        figures,
-    );
-    let estimated_kind = reported_kind(
-        true_kind,
-        stream.below(Fixed::SCALE.unsigned_abs()),
-        figures,
-    );
-    SightingReport {
-        estimated_hex,
-        estimated_ship_count,
-        estimated_kind,
-        received_event,
+    let count = stream.below(Fixed::SCALE.unsigned_abs());
+    let kind = stream.below(Fixed::SCALE.unsigned_abs());
+    ReportDraws {
+        direction,
+        count,
+        kind,
+    }
+}
+
+impl ReportDraws {
+    /// The report these draws make of a force of `true_count` ships whose
+    /// most important kind is `true_kind`, at `true_hex`.
+    pub(crate) fn read(
+        self,
+        map: &Map,
+        true_hex: Hex,
+        true_count: u32,
+        true_kind: ShipKind,
+        figures: &SearchFigures,
+        received_event: EventId,
+    ) -> SightingReport {
+        SightingReport {
+            estimated_hex: report_hex(map, true_hex, self.direction),
+            estimated_ship_count: reported_count(true_count, self.count, figures),
+            estimated_kind: reported_kind(true_kind, self.kind, figures),
+            received_event,
+        }
     }
 }
 
@@ -582,6 +617,7 @@ mod tests {
                     gun_rounds_per_gun: 0,
                     gun_damage: Fixed::ZERO,
                     torpedo_tubes: 0,
+                    torpedo_tubes_one_side: 0,
                     torpedo_damage: Fixed::ZERO,
                     toughness: Fixed::from_int(100),
                     radar: false,

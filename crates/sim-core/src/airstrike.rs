@@ -116,7 +116,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::belief::{ApplyOutcome, BattleClaim, BeliefState, Report, SightingReport};
+use crate::belief::{ApplyOutcome, BattleClaim, BeliefState, Report};
 use crate::damage::{
     damage_per_hit, raw_u64, roll_shots, system_for_draw, system_hit_chance, DamageSite, HitSet,
 };
@@ -129,7 +129,7 @@ use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, Task
 use crate::orders::{AirMission, Reach};
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind};
 use crate::rng::{Draw, RngStream, Subsystem};
-use crate::search::build_sighting_report;
+use crate::search::{draw_report, ReportDraws};
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side};
 use crate::time::{self, Pulse};
 use crate::upkeep::Sortie;
@@ -183,8 +183,16 @@ struct Attack {
     track_hits: [u32; 2],
     system_hits: Vec<ShipSystem>,
     breakdown: Option<Breakdown>,
-    /// The sighting report of the force attacked (decision 12).
-    report: SightingReport,
+    /// The draws of the sighting report of the force attacked (decision 12).
+    /// They are taken with the attack's other draws and read against the
+    /// force after the damage has landed (`docs/rules/differences.md`,
+    /// row 7).
+    report: ReportDraws,
+    /// The hex the strike was sent to, where the report puts the force.
+    hex: Hex,
+    /// The force's ships afloat at the start of the step, which the report
+    /// reads if the damage leaves none afloat, as a fight's report does.
+    began_with: Vec<ShipId>,
 }
 
 /// What the strike found at its hex.
@@ -1114,8 +1122,28 @@ impl World {
                 }
             }
 
-            let mut report = attack.report.clone();
-            report.received_event = self.events.next_id();
+            // The report reads the force after the damage: the ships still
+            // afloat in it, or those it had at the start of the step if none
+            // is left, as a fight's report does (`docs/rules/differences.md`,
+            // row 7).
+            let afloat: Vec<ShipId> = self.truth.task_forces[&attack.task_force]
+                .ships
+                .iter()
+                .copied()
+                .collect();
+            let seen = if afloat.is_empty() {
+                &attack.began_with
+            } else {
+                &afloat
+            };
+            let report = attack.report.read(
+                &self.map,
+                attack.hex,
+                u32::try_from(seen.len()).expect("few ships"),
+                self.most_important_kind_of(seen),
+                &search,
+                self.events.next_id(),
+            );
             let ApplyOutcome::Contact(outcome) = self
                 .beliefs
                 .get_mut(&attack.side)
@@ -1771,13 +1799,14 @@ impl World {
     /// The most important kind among the ships afloat in `force`: the true
     /// kind of the sighting report an attack on the force sends, whichever
     /// ship was attacked (chapter 3, What a report holds).
-    fn most_important_kind_in(&self, force: TaskForceId) -> ShipKind {
-        self.truth.task_forces[&force]
-            .ships
+    /// The most important kind among `ships` (decision 0012: the smallest
+    /// kind is the most important).
+    fn most_important_kind_of(&self, ships: &[ShipId]) -> ShipKind {
+        ships
             .iter()
             .map(|ship| self.kind_of(*ship))
             .min()
-            .expect("the force the raid found has a ship afloat")
+            .expect("the force the raid found had a ship afloat")
     }
 
     /// What the raid whose first strike is `first` attacks, on the truth at
@@ -2179,8 +2208,7 @@ impl World {
                         // first in the force the raid found (decision 4 of
                         // 0063).
                         let ship = self.ship_to_attack(strike.air_group, task_force);
-                        let kind = self.most_important_kind_in(task_force);
-                        self.work_out_attack(day, pulse, strike, *left, (kind, task_force, ship))
+                        self.work_out_attack(day, pulse, strike, *left, (task_force, ship))
                     }
                     RaidTarget::Base(base) => {
                         self.work_out_base_attack(day, pulse, strike, *left, base)
@@ -2209,9 +2237,9 @@ impl World {
         pulse: Pulse,
         strike: &StrikeInFlight,
         aircraft: u32,
-        target: (ShipKind, TaskForceId, ShipId),
+        target: (TaskForceId, ShipId),
     ) -> Outcome {
-        let (kind, task_force, ship) = target;
+        let (task_force, ship) = target;
 
         let air = self
             .ref_data
@@ -2276,18 +2304,14 @@ impl World {
             system_hits.extend(system_for_draw(draw, system_chance, system_table));
         }
 
-        let ship_count =
-            u32::try_from(self.truth.task_forces[&task_force].ships.len()).expect("few ships");
-        let report = build_sighting_report(
-            &mut stream,
-            &self.map,
-            strike.hex,
-            ship_count,
-            kind,
-            search,
-            // Replaced with the event that records the report's arrival.
-            EventId::new(0),
-        );
+        // The report's draws come last from the stream, as they always have;
+        // what they report is read once the damage has landed.
+        let report = draw_report(&mut stream, search);
+        let began_with: Vec<ShipId> = self.truth.task_forces[&task_force]
+            .ships
+            .iter()
+            .copied()
+            .collect();
 
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: vec![
@@ -2318,6 +2342,8 @@ impl World {
             system_hits,
             breakdown,
             report,
+            hex: strike.hex,
+            began_with,
         }))
     }
 
@@ -2628,6 +2654,7 @@ mod tests {
         AirCombatFigures, AircraftRole, AircraftType, PortSize, RefData, SearchFigures, ShipClass,
         SurfaceCombatFigures,
     };
+    use crate::search::build_sighting_report;
     use crate::start::StartingContact;
     use crate::state::{
         AirGroup, Ship, ShipLocation, ShipSystems, SystemState, TaskForce, TruthState,
@@ -2680,6 +2707,7 @@ mod tests {
                 Fixed::ZERO
             },
             torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
             torpedo_damage: Fixed::ZERO,
             toughness: Fixed::from_int(toughness),
             radar: false,

@@ -73,8 +73,9 @@ function checkGeometry(replay, label) {
 }
 
 // ---- A side's view (decision 0047): what the engine let each side see, and a page built from nothing else ----
-function checkSideViews(replay) {
+function checkSideViews(replay, umpireModel) {
   const notes = [];
+  const airTotals = { raids: 0, bombers: 0, escorts: 0, launches: 0, nothing: 0 };
   const byLogId = new Map(replay.events.map(e => [e.id, e]));
   for (const side of Core.SIDES) {
     const label = side + ' view';
@@ -128,13 +129,108 @@ function checkSideViews(replay) {
     const seen = new Set();
     model.steps.forEach(s => s.events.forEach(ei => seen.add(ei)));
     assert(seen.size === sv.events.length, label + ': not every side event is in a step');
+    const air = checkAirModel(replay, model, label);
+    for (const k of Object.keys(airTotals)) airTotals[k] += air[k];
     notes.push(side + ' ' + sv.events.length + '/' + replay.events.length + ' events, ' + model.steps.length + ' steps');
   }
+  // Every launch of the log is some side's own launch, so the sides' raids add up to the umpire's.
+  const u = checkAirModel(replay, umpireModel, 'umpire');
+  for (const k of Object.keys(airTotals)) assert(airTotals[k] === u[k], 'the two sides\' ' + k + ' (' + airTotals[k] + ') do not add up to the umpire\'s (' + u[k] + ')');
+  // A strike that found nothing: the umpire's raid says where the force truly was, the sides' do not. In the full slice every one can be traced.
+  if (/07_full_slice/.test(currentFile)) assert(u.nothing > 0 && u.untraced === 0, 'the full slice: ' + u.nothing + ' raids found nothing, ' + u.untraced + ' without a true hex');
+  notes.push('air: ' + u.launches + ' launches in ' + u.raids + ' raids' + (u.nothing ? ', ' + u.nothing + ' found nothing' + (u.untraced ? ' (' + u.untraced + ' not traceable)' : '') : ''));
   return notes.join(', ');
 }
 
+// ---- The air layer: raids, launch hexes, reach, and what a side's page may hold ----
+function eventHexes(events) {
+  const out = new Set();
+  const visit = v => {
+    if (Array.isArray(v)) {
+      if (v.length === 2 && Number.isInteger(v[0]) && Number.isInteger(v[1])) out.add(v[0] + ',' + v[1]);
+      else v.forEach(visit);
+    } else if (v && typeof v === 'object') Object.values(v).forEach(visit);
+  };
+  for (const e of events) visit(e.data);
+  return out;
+}
+
+/** Checks the air layer of one model (the umpire's or a side's) and returns its totals. */
+function checkAirModel(replay, model, label) {
+  const side = model.replay.view_side;
+  const tot = { raids: 0, bombers: 0, escorts: 0, launches: 0, nothing: 0, untraced: 0 };
+  const types = model.aircraftTypes;
+  const known = side ? eventHexes(model.events) : null; // hexes a side's own events name
+  if (side) {
+    for (const b of model.bases.values()) if (b.side === side) known.add(b.q + ',' + b.r);
+    for (const st of model.states) for (const f of st.forces.values()) for (const h of f.trail) known.add(h[0] + ',' + h[1]);
+  }
+  model.steps.forEach((s, si) => {
+    const st = model.states[si], air = st.air;
+    const inStep = new Set(s.events.map(ei => model.events[ei].id));
+    const raidOfEvent = new Map();
+    const raidIds = new Set();
+    for (const raid of air.raids) {
+      assert(!raidIds.has(raid.id), label + ': raid id ' + raid.id + ' is used twice');
+      raidIds.add(raid.id);
+      tot.raids++; tot.bombers += raid.bombers; tot.escorts += raid.escorts;
+      assert(raid.step === si, label + ': raid ' + raid.id + ' is not in step ' + si);
+      for (const id of raid.events) {
+        assert(model.eventById.has(id), label + ': raid ' + raid.id + ' names event ' + id + ', which is not in the model');
+        assert(inStep.has(id), label + ': raid ' + raid.id + ' holds event ' + id + ', which is not in its step');
+        assert(!raidOfEvent.has(id), label + ': event ' + id + ' is in raids ' + raidOfEvent.get(id) + ' and ' + raid.id);
+        raidOfEvent.set(id, raid.id);
+      }
+      assert(raid.events.includes(raid.keyEvent), label + ': raid ' + raid.id + ' key event is not one of its events');
+      if (raid.outcome === 'nothing') tot.nothing++;
+      if (side) {
+        assert(raid.trueHex === undefined && raid.trueNote === undefined, label + ': a side raid holds a true hex');
+        assert(raid.side === side, label + ': raid ' + raid.id + ' is the other side\'s');
+        assert(raid.launch && raid.target, label + ': raid ' + raid.id + ' has no launch or target hex');
+        assert(raid.target && known.has(raid.target.join(',')), label + ': raid ' + raid.id + ' target ' + raid.target + ' is in none of the side\'s own events');
+        assert(raid.launch && known.has(raid.launch.join(',')), label + ': raid ' + raid.id + ' launch ' + raid.launch + ' is where none of the side\'s own groups was');
+      } else if (raid.outcome === 'nothing') { if (raid.trueHex === null) tot.untraced++; assert(raid.trueHex !== undefined && (raid.trueHex !== null || raid.trueNote === 'not traceable'), label + ': a found-nothing raid has neither a true hex nor a note'); }
+      else assert(raid.trueHex === null && raid.trueNote === null, label + ': raid ' + raid.id + ' found something but has a true hex');
+    }
+    for (const t of air.tallies) {
+      for (const id of t.events) assert(raidOfEvent.has(id), label + ': tally ' + t.key + ' holds event ' + id + ' that is in no raid');
+      assert(t.events.length === air.raids.filter(r => t.raids.includes(r.id)).reduce((n, r) => n + r.events.length, 0), label + ': tally ' + t.key + ' does not hold exactly its raids\' events');
+      if (side) assert(t.patrolEngaged === null || t.patrolEngaged === 0, label + ': a side tally knows the patrol that engaged');
+    }
+    if (side) {
+      assert(air.misses.length === 0, label + ': a side page has a miss mark');
+      for (const m of air.sighted) { assert(m.trueHex === null, label + ': a side sighting mark has a true hex'); assert(known.has(m.q + ',' + m.r), label + ': sighted mark at ' + m.q + ',' + m.r + ' is in none of the side\'s own events'); }
+    }
+    // Launches: the hex they were launched from is the one the group was at, so the engine's distance comes out.
+    const raidOfLaunch = new Map();
+    for (const raid of air.raids) for (const id of raid.launchEvents) raidOfLaunch.set(id, raid);
+    for (const ei of s.events) {
+      const ev = model.events[ei], d = ev.data || {};
+      if (ev.kind === 'strike_launched' || ev.kind === 'base_strike_launched') {
+        tot.launches++;
+        const raid = raidOfLaunch.get(ev.id);
+        if (!raid) { fail(label + ': launch ' + ev.id + ' is in no raid'); continue; }
+        if (!raid.launch) { fail(label + ': launch ' + ev.id + ' has no launch hex'); continue; }
+        const dist = Core.airDistanceNm(raid.launch[0], raid.launch[1], d.hex[0], d.hex[1]);
+        assert(dist === d.distance_nm, label + ': launch ' + ev.id + ' from (' + raid.launch + ') to (' + d.hex + ') is ' + dist + ' nm by the page, ' + d.distance_nm + ' by the engine');
+        const g = model.groupTable.get(d.air_group), t = g && types.get(g.typeId);
+        if (t) {
+          const limit = st.reach.get(d.air_group) === 'extended' ? t.extended_reach_nm : t.strike_radius_nm;
+          assert(d.distance_nm <= limit, label + ': launch ' + ev.id + ' is ' + d.distance_nm + ' nm for a group with a reach of ' + limit);
+        }
+      } else if (ev.kind === 'search_flown') {
+        const g = model.groupTable.get(d.air_group), t = g && types.get(g.typeId);
+        if (t) assert(d.range_nm <= t.search_range_nm, label + ': search ' + ev.id + ' range ' + d.range_nm + ' is over its type\'s ' + t.search_range_nm);
+      }
+    }
+  });
+  return tot;
+}
+
 // ---- One replay ----
+let currentFile = '';
 function checkReplay(file) {
+  currentFile = path.basename(file);
   console.log(path.basename(file));
   let replay;
   try { replay = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { fail('not JSON: ' + e.message); return; }
@@ -224,7 +320,7 @@ function checkReplay(file) {
     assert(model.placements.length === replay.labels.length, 'not every label was placed');
   } else assert(model.placements.length === 0, 'labels placed on a map without lat/lon');
 
-  const sideNote = replay.side_views ? checkSideViews(replay) : 'no side views (version ' + replay.version + ')';
+  const sideNote = replay.side_views ? checkSideViews(replay, model) : 'no side views (version ' + replay.version + ')';
 
   const s = Core.summarize(model);
   const unclosed = new Set(replay.events.map(e => e.kind));
@@ -309,17 +405,117 @@ function synthetic() {
     else console.log('  ok: rejects ' + name + ': ' + msg);
   };
   reject('wrong format', Object.assign(base(), { format: 'something-else' }), 'format');
-  reject('version 3', Object.assign(base(), { version: 3 }), '3');
+  reject('version 4', Object.assign(base(), { version: 4 }), '1, 2 and 3');
   reject('version 2 without side views', Object.assign(base(), { version: 2 }), 'side_views');
+  reject('version 3 without side views', Object.assign(base(), { version: 3, aircraft_types: [] }), 'side_views');
   reject('version 2 with a side event without its number', Object.assign(base(), { version: 2, side_views: { allied: { events: [{ log_id: 1, day: 1, kind: 'x' }] }, japanese: { events: [] } } }), 'allied');
   const ok2 = Object.assign(base(), { version: 2, side_views: { allied: { events: [] }, japanese: { events: [] } } });
   if (Core.validateReplay(ok2)) fail('a version 2 file with empty side views was rejected: ' + Core.validateReplay(ok2));
   else { const m = Core.buildModel(Core.sideReplay(ok2, 'allied')); assert(m.steps.length === 1, 'empty side view should have only the Start step'); console.log('  ok: version 2 with empty side views, and a side page built from it'); }
+  // Version 3: aircraft_types, each with an id, a name and three figures, the extended reach not below the radius
+  const typ = (extra) => Object.assign({ id: 2000, name: 'Test Fighter', strike_radius_nm: 100, extended_reach_nm: 130, search_range_nm: 150 }, extra || {});
+  const v3 = (types) => Object.assign(base(), { version: 3, side_views: { allied: { events: [] }, japanese: { events: [] } }, aircraft_types: types });
+  const ok3 = v3([typ(), typ({ id: 2001, name: 'Other', extended_reach_nm: 100 })]);
+  if (Core.validateReplay(ok3)) fail('a version 3 file with valid aircraft_types was rejected: ' + Core.validateReplay(ok3));
+  else console.log('  ok: version 3 with valid aircraft_types');
+  if (Core.validateReplay(v3([]))) fail('a version 3 file with no aircraft types was rejected'); else console.log('  ok: version 3 with an empty aircraft_types list');
+  reject('version 3 without aircraft_types', Object.assign(v3([]), { aircraft_types: undefined }), 'aircraft_types');
+  reject('version 3 with an aircraft type without a name', v3([typ({ name: undefined })]), 'aircraft_types');
+  reject('version 3 with extended reach below the radius', v3([typ({ extended_reach_nm: 99 })]), 'aircraft_types');
+  reject('version 3 with a non-number figure', v3([typ({ search_range_nm: '150' })]), 'aircraft_types');
+  reject('version 3 with a negative radius', v3([typ({ strike_radius_nm: -1, extended_reach_nm: 0 })]), 'aircraft_types');
+  const side3 = Core.sideReplay(ok3, 'allied');
+  assert(Array.isArray(side3.aircraft_types) && side3.aircraft_types.length === 0, 'a side page carries aircraft types of groups it does not have');
+  const v1 = base();
+  if (Core.validateReplay(v1)) fail('a version 1 file was rejected'); else console.log('  ok: version 1 still opens');
+  const m1 = Core.buildModel(v1);
+  assert(m1.aircraftTypes.size === 0 && !m1.hasAir, 'version 1: aircraft types or air activity out of nothing');
   reject('missing version', Object.assign(base(), { version: undefined }), 'version');
   reject('array', [1, 2], 'object');
   reject('null', null, 'object');
   reject('no events list', Object.assign(base(), { events: undefined }), 'events');
   reject('duplicate event ids', Object.assign(base(), { events: [ev(1, 1, null), ev(1, 1, null)] }), 'share');
+}
+
+// ---- A hand-built version 3 replay: one strike that found nothing, asserted exactly ----
+function syntheticAir() {
+  console.log('synthetic air layer');
+  const dirs = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+  const hex = (q, r) => ({ q, r, kind: 'deep_sea', land_percent: 0, closed: [], port_size: 0, airfield_size: 0, anchorage: false, terrain: null });
+  const grp = (id, name, side, ship, mission, extra) => Object.assign({ id, name, side, ship, aircraft_type: 'Test Type', aircraft_type_id: side === 'allied' ? 2000 : 2001, ready: 10, mission, arc: null }, extra || {});
+  const tf = (id, side, q, r, ship) => ({ id, name: 'TF' + id, side, position: { q, r }, ships: [ship], readiness: 'normal', alerted: false, mission: 'carrier', status: 'idle' });
+  const types = [{ id: 2000, name: 'Allied Type', strike_radius_nm: 100, extended_reach_nm: 130, search_range_nm: 150 }, { id: 2001, name: 'Japanese Type', strike_radius_nm: 90, extended_reach_nm: 90, search_range_nm: 90 }];
+  const raw = [
+    // [pulse, kind, data, causes, entities]
+    ['night', 'order_accepted', { order: 1, target: 'air_group:10' }, [{ order: 1 }], ['air_group:10']],
+    ['morning', 'search_attempt', { air_group: 11, task_force: 2, distance_nm: 80, chance: 0.4, sighted: false }, [], ['air_group:11', 'task_force:2']],
+    ['morning', 'search_attempt', { air_group: 11, task_force: 2, distance_nm: 60, chance: 0.5, sighted: true }, [], ['air_group:11', 'task_force:2']],
+    ['morning', 'report_received', { side: 'allied', contact: 1, hex: [3, 0], ship_count: 1, kind: 'cruiser', created: true }, [{ event: 3 }], ['contact:1']],
+    ['afternoon', 'strike_launched', { air_group: 10, contact: 1, hex: [3, 0], aircraft: 12, distance_nm: 120 }, [{ event: 4 }], ['air_group:10', 'contact:1']],
+    ['afternoon', 'escorts_sent', { air_group: 12, with_air_group: 10, aircraft: 4 }, [{ event: 5 }], ['air_group:12', 'air_group:10']],
+    ['afternoon', 'strike_found_nothing', { air_group: 10, hex: [3, 0] }, [{ event: 5 }], ['air_group:10']],
+    ['afternoon', 'contact_not_there', { side: 'allied', contact: 1, hex: [3, 0] }, [{ event: 7 }], ['contact:1']],
+    ['afternoon', 'aircraft_ditched', { air_group: 10, sortie: 'strike', distance_nm: 120, radius_nm: 100, aircraft: 12, chance: 0.5, expected: 6, ditched: 2, pilots_lost: 0, ready: 10 }, [], ['air_group:10']],
+  ];
+  const events = raw.map((r, i) => ({ id: i + 1, day: 1, pulse: r[0] === 'night' ? null : r[0], kind: r[1], text: '#' + (i + 1) + ' D1 ' + (r[0] || '-') + ' ' + r[1], causes: r[3], entities: r[4], data: r[2] }));
+  const replay = {
+    format: 'flagplot-replay', version: 3, scenario: { name: 'Synthetic air', placeholder: true, seed: 1, days: 1, path: 'x' },
+    map: { hex_nm: 40, real: false, hexes: [hex(0, 0), hex(2, 0), hex(3, 0)] }, directions: dirs, labels: [], bases: [],
+    aircraft_types: types,
+    initial: {
+      task_forces: [tf(1, 'allied', 0, 0, 1), tf(2, 'japanese', 2, 0, 2)], ships: [{ id: 1, name: 'A', side: 'allied' }, { id: 2, name: 'J', side: 'japanese' }],
+      air_groups: [grp(10, 'VB', 'allied', 1, 'naval_strike'), grp(11, 'VS', 'allied', 1, 'search'), grp(12, 'VF', 'allied', 1, 'combat_air_patrol'), grp(20, 'J-VB', 'japanese', 2, 'rest')], bases: [],
+    },
+    orders: [{ id: 1, side: 'allied', day: 1, issuer: 'player', target: 'air_group:10', text: 'reach extended' }], events, days: [],
+    final: {
+      task_forces: [tf(1, 'allied', 0, 0, 1), tf(2, 'japanese', 2, 0, 2)], ships: [{ id: 1, location: { task_force: 1 } }, { id: 2, location: { task_force: 2 } }],
+      air_groups: [grp(10, 'VB', 'allied', 1, 'naval_strike', { reach: 'extended' }), grp(11, 'VS', 'allied', 1, 'search'), grp(12, 'VF', 'allied', 1, 'combat_air_patrol'), grp(20, 'J-VB', 'japanese', 2, 'rest')], bases: [],
+      contacts: { allied: [], japanese: [] }, claims: { allied: [], japanese: [] },
+    },
+  };
+  // What the engine gives the allied side of these events: the attempt cut to its group, only when it sighted; no miss.
+  // [log id, the side's number, data if cut, causes in the side's numbers, cut]
+  const mine = [[3, 2, { air_group: 11 }, [], true], [4, 3, null, [{ event: 2 }]], [5, 4, null, [{ event: 3 }]], [6, 5, null, [{ event: 4 }]], [7, 6, null, [{ event: 4 }]], [8, 7, null, [{ event: 6 }]], [9, 8, null, []]];
+  const sideEvents = [[1, 1], ...mine.map(m => [m[0], m[1]])].map(([logId, n]) => {
+    const e = events[logId - 1], m = mine.find(x => x[0] === logId);
+    return { n, log_id: logId, day: 1, pulse: e.pulse, kind: e.kind, text: '#' + n + ' D1 ' + (e.pulse || '-') + ' ' + e.kind, cut: !!(m && m[4]), causes: m && m[3] ? m[3] : [{ order: 1 }], entities: e.entities.filter(x => !/task_force:2/.test(x)), data: m && m[2] ? m[2] : e.data, hidden_causes: false };
+  });
+  replay.side_views = { allied: { events: sideEvents }, japanese: { events: [] } };
+  const bad = Core.validateReplay(replay);
+  if (bad) { fail('synthetic air replay rejected: ' + bad); return; }
+  const before = failures;
+  const um = Core.buildModel(replay);
+  const stepIx = label => um.steps.findIndex(s => s.label.startsWith(label));
+  const morning = um.states[stepIx('Day 1, morning')].air, afternoon = um.states[stepIx('Day 1, afternoon')].air;
+  assert(um.hasAir, 'umpire: no air activity found');
+  // Reach follows the accepted order
+  assert(um.states[0].reach.get(10) === 'normal' && um.states[um.states.length - 1].reach.get(10) === 'extended' && um.states[um.states.length - 1].reach.get(11) === 'normal', 'umpire: reach of group 10 not tracked from the accepted order');
+  // The morning: a miss where the force truly was, and a sighting where the report put it, with the truth beside it
+  assert(morning.misses.length === 1 && morning.misses[0].q === 2 && morning.misses[0].r === 0 && morning.misses[0].side === 'allied' && morning.misses[0].event === 2, 'umpire: the miss mark is wrong: ' + JSON.stringify(morning.misses));
+  assert(morning.sighted.length === 1 && morning.sighted[0].q === 3 && morning.sighted[0].r === 0 && JSON.stringify(morning.sighted[0].trueHex) === '[2,0]' && morning.sighted[0].event === 4 && morning.sighted[0].attempt === 3, 'umpire: the sighted mark is wrong: ' + JSON.stringify(morning.sighted));
+  // The afternoon: one raid from the carrier's hex to the hex it was told of, which found nothing, with the force truly at (2, 0)
+  assert(afternoon.raids.length === 1, 'umpire: expected one raid, got ' + afternoon.raids.length);
+  const raid = afternoon.raids[0];
+  assert(raid.bombers === 12 && raid.escorts === 4 && JSON.stringify(raid.launch) === '[0,0]' && JSON.stringify(raid.target) === '[3,0]' && raid.kind === 'ship' && raid.side === 'allied', 'umpire: raid figures wrong: ' + JSON.stringify(raid));
+  assert(raid.outcome === 'nothing' && JSON.stringify(raid.trueHex) === '[2,0]' && raid.trueNote === null, 'umpire: the raid should have found nothing with the force truly at (2,0): ' + JSON.stringify(raid));
+  assert(JSON.stringify(raid.strikeGroups) === '[10]' && JSON.stringify(raid.escortGroups) === '[12]', 'umpire: raid groups wrong');
+  assert(JSON.stringify(raid.events) === '[5,6,7,8,9]' && raid.keyEvent === 7, 'umpire: raid events or key event wrong: ' + JSON.stringify(raid.events) + ' ' + raid.keyEvent);
+  assert(afternoon.tallies.length === 1, 'umpire: expected one tally');
+  const t = afternoon.tallies[0];
+  assert(t.key === '3,0' && t.raids.length === 1 && t.bombers === 12 && t.escorts === 4 && t.ditched === 2 && t.hits === null && t.sunk === 0 && t.patrolEngaged === 0 && t.gunShots === 0 && t.landed === 0 && JSON.stringify(t.events) === '[5,6,7,8,9]' && t.keyEvent === 7, 'umpire: tally wrong: ' + JSON.stringify(t));
+  assert(JSON.stringify(Core.airReach(um, um.states[stepIx('Day 1, afternoon')], 10).type) === JSON.stringify(types[0]) && Core.airReach(um, um.states[stepIx('Day 1, afternoon')], 10).reach === 'extended', 'umpire: airReach is wrong');
+  // The allied page: the same raid from its own events, with no truth in it
+  const sm = Core.buildModel(Core.sideReplay(replay, 'allied'));
+  const sAfternoon = sm.states[sm.steps.findIndex(s => s.label.startsWith('Day 1, afternoon'))].air, sMorning = sm.states[sm.steps.findIndex(s => s.label.startsWith('Day 1, morning'))].air;
+  assert(sAfternoon.raids.length === 1 && sAfternoon.raids[0].outcome === 'nothing' && sAfternoon.raids[0].trueHex === undefined && sAfternoon.raids[0].trueNote === undefined, 'allied: the raid should found nothing, with no true hex');
+  assert(sAfternoon.raids[0].bombers === 12 && sAfternoon.raids[0].escorts === 4 && JSON.stringify(sAfternoon.raids[0].launch) === '[0,0]' && JSON.stringify(sAfternoon.raids[0].target) === '[3,0]', 'allied: raid figures wrong');
+  assert(sAfternoon.tallies.length === 1 && sAfternoon.tallies[0].ditched === 2 && sAfternoon.tallies[0].events.length === 5, 'allied: tally wrong: ' + JSON.stringify(sAfternoon.tallies));
+  assert(sMorning.misses.length === 0 && sMorning.sighted.length === 1 && sMorning.sighted[0].trueHex === null && sMorning.sighted[0].q === 3, 'allied: a miss or a true hex on the side page: ' + JSON.stringify(sMorning));
+  assert(sm.aircraftTypes.size === 1 && sm.aircraftTypes.has(2000), 'allied: aircraft types are not exactly its own');
+  const japan = Core.buildModel(Core.sideReplay(replay, 'japanese'));
+  assert(japan.states.every(st => st.air.raids.length === 0 && st.air.sighted.length === 0 && st.air.misses.length === 0) && japan.aircraftTypes.size === 1 && japan.aircraftTypes.has(2001), 'japanese: the enemy\'s raid is on its page, or it carries the enemy\'s aircraft types');
+  checkAirModel(replay, um, 'synthetic umpire'); checkAirModel(replay, sm, 'synthetic allied');
+  if (failures === before) console.log('  ok: one strike that found nothing: raid, tally, true hex, and the allied page without it');
 }
 
 // ---- The measuring tool against the engine's own answers ----
@@ -365,6 +561,7 @@ const files = process.argv.slice(2);
 if (!files.length) console.log('(no replay files given: only the script and synthetic checks run)');
 for (const f of files) checkReplay(f);
 synthetic();
+syntheticAir();
 checkMeasuring();
 console.log(failures ? '\n' + failures + ' check(s) FAILED' : '\nAll checks passed.');
 process.exit(failures ? 1 : 0);

@@ -1,6 +1,6 @@
 # Round 2: the factor against a surprised target, 1.5 to 2. The chance to hit is then closed
 
-Savo Island, Nov 13, 2026. The second mechanism in the order of tuning, the chance of a hit. Ruled by the coordinating architect before the move, at 2 and not at the 2.5 the build session proposed. Whether it is kept or reverted is the coordinating architect's word, on this record.
+Savo Island, Nov 13, 2026. The second mechanism in the order of tuning, the chance of a hit. Ruled by the coordinating architect before the move, at 2 and not at the 2.5 the build session proposed. **Kept by the architect, Nov 13, 2026.**
 
 ## What moved
 

@@ -169,6 +169,17 @@ The report was remade after the scenario got the orders of decision 0063 and thr
 
 One thing to hold in mind when reading any of these reports: an agreement on a yes-or-no measure, or on a count that is mostly 0 or 1, says only that the record is not surprising in the model, never that the model expects it. Japanese carriers sunk agrees with the middle run sinking none; fights by day at Savo Island agrees with a fight by day in two runs of three. The edge mark cannot show that.
 
+### The Eastern Solomons report as remade with the orders from the record, Nov 13, 2026
+
+Remade after decision 0081 set the scenario's remaining orders from the rows: each launch the record has apart is an air group of its own (the Japanese carriers' second wave, Enterprise's attack group, Saratoga's second group, all at rest), Enterprise's search is the afternoon's 16 SBDs and 7 TBFs to 250 miles, VMSB-232 rests, and the two strike measures count the aircraft that took part, not those left after the fight. Same figures, 1,000 runs, seeds 1 to 1000; before is main at cdae5bc validated against the measures as changed.
+
+- **The Japanese strike was doubled, and two agreements rested on it.** The first wave is now the record's 27 dive bombers and 10 fighters. Counted as it took part, it holds the record of 37 in 607 runs (it met the American force in 611; in 4 the patrol shot down every bomber before the guns, and the log then names no force, so the measure counts none). Counted the old way, by the bombers left after the fight, it would have held 37 in no run (5 in the middle run, 0 to 17).
+- **Bomb hits on Enterprise now miss:** 0 in the middle run, 0 to 2, against 3 (29 runs hold it; 0.50 a run, against 3.52 before). Of the 27 dive bombers, the patrol of 54 and the guns, all firing before the bombs fall, leave few. That is the finding that the rule changes of decisions 0079 and 0080 answer; nothing here was adjusted for it.
+- **The strike on Ryujo agrees:** 38 aircraft in 488 runs (the record is 36 to 38), none in the others. Ryujo is sunk in 228 runs, against 464, now that Enterprise's groups and VMSB-232 no longer strike her, so Japanese carriers sunk agrees at the edge.
+- **The American losses are as far off as before** (4 and 5 in the middle run against 13 to 14 and 20 to 21), and the claims measures are unchanged in verdict. They are read after the fight's rounds.
+- **Two of Ryujo's six attack planes still run out of fuel** coming home (1.72 a run): her raid flies 200 miles on a derived radius of 175. Decision 0081 keeps the radius (C5) and leaves this as evidence for the round of the fuel figure.
+- **The result:** a stalemate in 547 runs, an Allied victory in 450, a defeat in 3 (before: 436, 468 and 96).
+
 ## Rabaul against Guadalcanal
 
 - **Fighters die far too fast on both sides.** Japanese fighters lost to the enemy: 30 to 50 against a record of 6 to 10. American fighters lost to enemy aircraft: 27 to 40 against 7 to 23.
@@ -178,6 +189,21 @@ One thing to hold in mind when reading any of these reports: an agreement on a y
 - **American claims overstate too little here too:** about 1.3 for each shot down against 2.5 to 3.8.
 - **Too many bombers reach the island** (252 to 272 against 211 to 213, reported and not judged): the model has no weather and no raid that turns back.
 - **The result is the same in every run:** a major Allied victory, margin 10 to 11.9. The points do not yet tell one run of this scenario from another.
+
+### The Rabaul report as remade with the orders from the record, Nov 13, 2026
+
+Decision 0082 changed the scenario's orders before any air figure is tuned on Rabaul or checked there:
+- the bombers raid on the eleven days of the units' forms, and the Japanese rest thresholds are gone;
+- Henderson's dive bombers search 300 to 030 to 200 miles, a reading.
+
+The report, `rabaul-guadalcanal-air-baseline.md`, is remade from that scenario: judged 10, 3 agree, 4 at the edge, 3 miss (before: 3, 1, 6).
+
+- **American fighters lost now agree** (16 to 29, median 23, against 7 to 23). Japanese fighters lost still miss (16 to 30 against 6 to 10), at a little over half what they were.
+- **F4Fs on day 21 and SBDs on day 21 agree, at the edge.** The SBDs now wear on their searches; until this decision they never flew. Their measures rest on the 200-mile reading; at 150 miles the medians move by one aircraft or none.
+- **Japanese bombers lost go from agreeing to agreeing at the edge** (median 16 against 12). The patrol now meets raids it outnumbers (days 10 and 22 to 24) and reaches the bombers with 87 shots a run, against 25.
+- **Aircraft destroyed on the ground still miss** (7 to 19 against 2 to 3). The dive bombers lose half as many on the ground as before.
+- **The fatigue figures cannot fly the record's five raid days running** (days 20 to 24). The bombers launch 28, 18, 10, 2 and 1 in the median run, against the forms' 18, 22, 24, 20 and 16. So 8 or 9 of the 11 ordered raids reach the field. The early raids are too big: 41 on the first against 23 sent. Bomber sorties that reach the field total 212 against 211 to 213, right by a wrong path. Decision 0082 tables the bombers by raid day beside the forms; the fatigue round will be judged on that table.
+- **Claims** are unchanged in kind (about 1.4 for each shot down).
 
 ## What this says about the order of work
 

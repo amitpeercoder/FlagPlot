@@ -38,6 +38,9 @@ struct Replay {
     directions: Vec<[i32; 2]>,
     labels: Vec<LabelOut>,
     bases: Vec<BaseOut>,
+    /// The reach figures of each aircraft type (version 3), for the viewer's
+    /// rings: reference data, not state.
+    aircraft_types: Vec<state::AircraftTypeOut>,
     initial: Snapshot,
     orders: Vec<OrderOut>,
     events: Vec<events::EventOut>,
@@ -147,7 +150,7 @@ fn build(
     let world = &scenario.world;
     Replay {
         format: "flagplot-replay",
-        version: 2,
+        version: 3,
         scenario: ScenarioOut {
             name: scenario.name.clone(),
             placeholder: scenario.placeholder,
@@ -160,6 +163,7 @@ fn build(
         directions: map::directions(),
         labels,
         bases: state::bases(&executed.initial),
+        aircraft_types: state::aircraft_types(world.ref_data()),
         initial: state::snapshot(&executed.initial, world.ref_data()),
         orders: world.orders().map(orders::order).collect(),
         events: world.events().iter().map(events::event).collect(),
