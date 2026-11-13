@@ -523,7 +523,10 @@ fn objectives_change_no_hash_and_no_event() {
     // fire at the escorts and the bombers in proportion.
     // And it was 6de9a643409a90ac until decision 0087 had part of the live
     // patrol's fire at the bombers come after the attack.
-    assert!(baseline.contains("hash 8a7cf075a69f2982"));
+    // And it was 8a7cf075a69f2982 until air round 4 set
+    // fighter_false_claim_chance to 0.7: claims are in belief, and so in the
+    // hash.
+    assert!(baseline.contains("hash de197a1edf53a1ae"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

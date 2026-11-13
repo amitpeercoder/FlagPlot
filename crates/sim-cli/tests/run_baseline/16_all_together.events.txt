@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c6705d340a8acebd  153 events
+day   1  hash d865d9733ec8a5cc  153 events
 
 #1 D1 -         order:1 accepted for task_force:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -140,8 +140,8 @@ day   1  hash c6705d340a8acebd  153 events
 #134 D1 afternoon ship:1 took 1 hit on flotation, 10 points, now 10  <- #128
 #135 D1 afternoon Japanese report: 1 ship, carrier, at (2,0): refreshed contact:2  <- #128
 #136 D1 afternoon Allied claim at (9,0): 1 hit on a carrier, 0 sunk  <- #127
-#137 D1 afternoon Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down  <- #121, #128
-#138 D1 afternoon Allied claim over (2,0): 4 aircraft shot down  <- #122, #123, #130
+#137 D1 afternoon Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down  <- #121, #128
+#138 D1 afternoon Allied claim over (2,0): 10 aircraft shot down  <- #122, #123, #130
 #139 D1 afternoon Japanese claim over (9,-6): 0 aircraft shot down  <- #129
 #140 D1 afternoon air_group:2 strike sortie of 280 nm, 30 beyond its radius of 250: 1 aircraft x 0.24 = 0.24 expected out of fuel, 0 ditched, 0 crews recovered, 0 pilots lost, 1 ready left  <- #117
 #141 D1 afternoon air_group:5 strike sortie of 280 nm, 30 beyond its radius of 250: 5 aircraft x 0.24 = 1.2 expected out of fuel, 3 ditched, 3 crews recovered, 0 pilots lost, 2 ready left  <- #118
@@ -182,11 +182,11 @@ Allied contact:1 at (2,-4): 3 ships, cruiser, age 2 pulses
 Allied contact:2 at (9,0): 1 ships, carrier, age 0 pulses
 Allied claims 0 enemy ships sunk at (2,-4), day 1 night
 Allied claim at (9,0): 1 hit on a carrier, 0 sunk, day 1 afternoon
-Allied claim over (2,0): 4 aircraft shot down, day 1 afternoon
+Allied claim over (2,0): 10 aircraft shot down, day 1 afternoon
 Japanese contact:1 at (1,-4): 2 ships, cruiser, age 2 pulses
 Japanese contact:2 at (2,0): 1 ships, carrier, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-4), day 1 night
-Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
+Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down, day 1 afternoon
 Japanese claim over (9,-6): 0 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
