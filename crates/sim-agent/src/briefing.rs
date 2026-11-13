@@ -1225,6 +1225,7 @@ impl Day {
                     firing,
                     at,
                     shots,
+                    ..
                 } => air_fire.push(AirFire {
                     firing: firing.name(),
                     firer: ctx.group(*firer),

@@ -27,6 +27,14 @@
 # Changed again on 2026-11-13 with decision 0084: two measures with new ids
 # keep the old take of the strike measures (aircraft_attacking, those left
 # to attack after the patrol and the guns), judged where a row counts them.
+#
+# Changed on 2026-11-13 after the result of decision 0087 was seen:
+# us_aircraft_left_to_attack_ryujo has the record 38, not 36. The two
+# Saratoga aircraft that turned back for mechanical trouble are outside the
+# rules, so by this file's rule they are taken out of the record, and none
+# was shot down before attacking: in the rules' terms every aircraft
+# launched was left to attack. The ruling of 36 let a run agree only when
+# fighters stood in for the aborts, which the 0087 result exposed.
 
 battle = "eastern-solomons"
 scenario = "data/scenarios/05_eastern_solomons.toml"
@@ -198,15 +206,15 @@ reason = "What the old take of japanese_aircraft_attacking_enterprise_force coun
 [[measure]]
 id = "us_aircraft_left_to_attack_ryujo"
 counts = "US aircraft that attack a ship of the Ryujo detachment after the patrol and the guns have fired at their raid, escorts not counted, summed over the run"
-record_low = 36
-record_high = 36
+record_low = 38
+record_high = 38
 judged = true
 take = "aircraft_attacking"
 side = "allied"
 target_task_forces = [4]
 escorts = false
-rows = [333, 1238, 334, 335, 234, 235, 351]
-reason = "What the old take of us_aircraft_attacking_ryujo counted, kept beside it by decision 0084: the aircraft that came through to the attack. All 36 that reached the target attacked (333): 29 dive bombers, whose bombs the 1943 narrative counts as 15 of VS-3, 13 of VB-3 and the leader's (234, 235, 334), and 7 torpedo planes, 5 at Ryujo and 2 at her escorting cruiser (335, 351), every one of them in the detachment. None was lost (1238). Judged: the rows count the aircraft that released. The record is the 36 that reached and released. The two that turned back for mechanical trouble are outside the rules, which launch them: so a run's count can only fall short of the 38 it launches by what the patrol and the guns take, and a run in which they take none attacks with 38 and does not hold the record. That limit is named here; the record is not widened for it."
+rows = [231, 333, 1238, 237, 354, 355, 356, 357, 334, 335, 234, 235, 351]
+reason = "What the old take of us_aircraft_attacking_ryujo counted, kept beside it by decision 0084: the aircraft left to attack after the patrol and the guns. Saratoga launched 38, 30 dive bombers and 8 torpedo planes (231); one of each turned back for mechanical trouble and the 36 that reached the target all attacked (333; the bombs by squadron 234, 235, 334; the torpedo planes at Ryujo and her cruiser 335, 351). None was shot down before attacking or at all (1238, 237, 354, 355, 356, 357). The two aborts are outside the rules, which have no abort, so by this file's rule that part of the record is taken out: in the rules' terms every aircraft launched was left to attack, and the record is 38. Changed from 36 on 2026-11-13, after the result of decision 0087 showed that 36 could be held only when fighters shot down two aircraft before the attack, standing in for the aborts."
 
 [[measure]]
 id = "us_strike_on_the_japanese_fleet_carriers"

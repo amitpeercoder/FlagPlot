@@ -555,6 +555,8 @@ struct AirCombatFile {
     anti_aircraft_before_attack_share: Quantity,
     /// Decision 0080.
     patrol_drawn_off_share: Quantity,
+    /// Decision 0087.
+    patrol_before_attack_share: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -635,6 +637,10 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             &file.anti_aircraft_before_attack_share,
         )?,
         patrol_drawn_off_share: number("patrol_drawn_off_share", &file.patrol_drawn_off_share)?,
+        patrol_before_attack_share: number(
+            "patrol_before_attack_share",
+            &file.patrol_before_attack_share,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -975,6 +981,8 @@ mod tests {
         assert_eq!(figures.anti_aircraft_before_attack_share, Fixed::ZERO);
         // Decision 0080: the live figure is a placeholder, 0.
         assert_eq!(figures.patrol_drawn_off_share, Fixed::ZERO);
+        // Decision 0087: the live figure is a placeholder, 0.4.
+        assert_eq!(figures.patrol_before_attack_share, Fixed::from_ratio(4, 10));
     }
 
     #[test]
@@ -1086,6 +1094,8 @@ mod tests {
             ("anti_aircraft_before_attack_share", "0", "1", "1.5", "0.5"),
             // Decision 0080; the live value is 0.
             ("patrol_drawn_off_share", "0", "1", "1.5", "0.5"),
+            // Decision 0087; the live value is 0.4.
+            ("patrol_before_attack_share", "0.4", "1", "1.5", "0.5"),
         ] {
             let line = format!("{key} = \"{value}\"");
             assert!(

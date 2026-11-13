@@ -293,7 +293,7 @@ The air combat step runs in each daylight pulse after the strike decision. Every
 2. Work out every raid on the start-of-step counts, whatever the others do. Nothing is written.
 3. For each raid in order of its first strike group, record `EscortsSent` for each group that sends escorts, then each fire roll before the attack as an event (`AirFight`, then `AntiAircraftFire` or `BaseAntiAircraftFire`), then take the losses of each roll off the groups and record `AircraftLost` for each group that lost aircraft, and `PilotsLost` where the rule below says.
 4. For each strike group in order of group number, record what it found: `StrikeFoundNothing`, `AirAttack` or `BaseAttacked`. A strike group with no bomber left records nothing and sends no report.
-4a. For each raid in order of its first strike group, record the guns' fire after the attack, if it has shots (see "Anti-aircraft fire"), then the `AircraftLost` and `PilotsLost` it causes. [0079]
+4a. For each raid in order of its first strike group, record the patrol's fire at the bombers after the attack, if it has shots (see "The patrol against the escorts and the bombers"), then the guns' fire after the attack, if it has shots (see "Anti-aircraft fire"), each followed by the `AircraftLost` and `PilotsLost` it causes. [0079, 0087]
 5. In the same group order, apply each attack: for ships, apply the damage and send the sighting report; for a base, apply the hits on aircraft and supply; for a strike that found nothing, send the report that nothing is there.
 6. Record the claims of the pulse's raids (see "The report and the claim").
 
@@ -322,9 +322,11 @@ If the raid meets a patrol, the patrol fires from one stream keyed on (the first
 1. At the escorts: shots = D + X. Chance: `fighter_hit_chance` times the protection factors of the first escort group's type. Hits come off the escorts, lowest group first, no more than they have. Skipped if the raid has no escorts or the shots are 0.
 2. At the bombers: shots = R − X. Skipped if 0. Chance: `fighter_hit_chance` times the protection factors of the first strike group's type. Hits come off the raid's strike groups, lowest group first, no more than they have.
 
+The shots at the bombers are split by `air_combat.toml: patrol_before_attack_share`: the first k = the shots times the share, cut to a whole number, are worked before the attack, and the others after it, in order from the one stream, so the draws and the patrol's hits are the same at every share. The hits before the attack come off the bombers before they attack, and the guns then fire if any bomber is left. The hits after come off the bombers that are left, after their attack is worked out, and whatever the attack did stands. The roll at the escorts is not split. A part with no shots records nothing. The fire after the attack is the same `AirFight` with `after_attack` set, recorded in step 4a before the guns' fire after the attack; it cites the raid's launch and the `AirAttack` or `BaseAttacked` events of its groups. When the share is below 1 the breakdown of each part also names the shots at the bombers in all and the share. [0087]
+
 At a share of 1 the escorts draw the patrol off the bombers one for one, and a raid with no escorts takes its whole share: the rule as it was before decision 0080. Records `AirFight` for each roll (firer: first patrol group, target: first escort or first strike group, firing patrol, at escorts or bombers). The breakdown of a patrol roll lists, first, the whole patrol, the raid's aircraft, the aircraft of all the raids, and the raid's share; when the share drawn off is below 1, also that share, the fighters drawn off (D) and the rest's shots at the escorts (X); then the shots and chance. [0027, 0029, 0033, 0080]
 
-A side sees: `AirFight` for its own patrol, cut to the shots and without the group fired at (decision 0065). The attacker sees only its own `AircraftLost`.
+A side sees: `AirFight` for its own patrol, cut to the shots and whether it was after the attack, without the group fired at (decisions 0065, 0087). The attacker sees only its own `AircraftLost`.
 
 ### Anti-aircraft fire
 

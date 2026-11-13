@@ -68,6 +68,8 @@ The Japanese measure is not judged: no row counts the bombers that reached relea
 
 The review's further point, that the second wave and Enterprise's attack group are put at rest because their recorded outcome was no attack, is a limit of decision 0081 that it states itself ("What the rules cannot express"): those groups cannot fail a measure of attacks by attacking.
 
+*Note, Nov 13, 2026, after decision 0087's result:* `us_aircraft_left_to_attack_ryujo` now has the record 38, not 36. The two aborts for mechanical trouble are outside the rules and come out of the record by the same rule this finding applies, and no aircraft was shot down before attacking (rows 237, 354 to 357), so in the rules' terms every aircraft launched was left to attack. The 36 ruled above let a run agree only when fighters stood in for the aborts; decision 0087, which moves part of the patrol's fire after the attack, showed it (held by 34 runs where it had been 130). The measures file says so at its head and in the measure's reason.
+
 ### 5. The two endpoint shares of decisions 0079 and 0080. Accepted as wording
 
 Decisions 0079 (open in pull request 210) and 0080 (being built) are not edited here. This record states: `anti_aircraft_before_attack_share = 0` and `patrol_drawn_off_share = 0` are endpoint placeholders, chosen with both air battles' results known. No row sizes either. They are moved in the air rounds only toward rows. Rabaul against Guadalcanal is a tuning battle for them, not a check: its losses were in view when they were chosen.

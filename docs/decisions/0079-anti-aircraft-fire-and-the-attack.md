@@ -109,6 +109,15 @@ Nothing of this rule was run: it was written from the air tuning plan's counts (
 - No hand calculation on the frozen figures moves.
 - `docs/rules/05` and the glossary in the same pull request.
 
+
+## Note, Nov 13, 2026
+
+The research of that day (pull request 214) corrects two statements above.
+
+- "What it carries" says the patrol's hits stay before the attack. Simpler's study of 38 fighters at the Eastern Solomons (`engagement_outcomes` 3979 to 3984) has 4 first engaging before the push-over, 7 at it or in the dive and 7 in the retirement, so much of the patrol's fire fell during and after the attack. That is carried by a separate rule on the patrol, decision 0087, which reuses this decision's split, and not by this one.
+- "No row gives a share of gun hits that came before release" still holds for kills. Events 1242 to 1245 confirm that the guns opened as the dives began (no 5-inch fire at altitude). Row 3955 (Coral Sea, low, unconfirmed) says gunfire before release turned bombers back and made them drop sooner. That is an effect on aim, not a kill before release, and it is not carried by this share.
+- The live value 0 stands.
+
 ## As built
 
 **The code.**

@@ -661,6 +661,10 @@ pub struct AirCombatFigures {
     /// proportion (decision 0080). 1 is step 1's rule; 0 is the split in
     /// proportion alone.
     pub patrol_drawn_off_share: Fixed,
+    /// The share of the patrol's shots at a raid's bombers that are worked
+    /// before the attack, the rest after it (decision 0087). 1 is step 1's
+    /// rule, all before; 0 all after.
+    pub patrol_before_attack_share: Fixed,
 }
 
 impl AirCombatFigures {
@@ -721,6 +725,10 @@ impl AirCombatFigures {
                 self.anti_aircraft_before_attack_share,
             ),
             ("patrol drawn off share", self.patrol_drawn_off_share),
+            (
+                "patrol before attack share",
+                self.patrol_before_attack_share,
+            ),
         ] {
             if !in_unit(value) {
                 return Some(format!("air combat {label} {value} is not between 0 and 1"));
@@ -1052,6 +1060,8 @@ impl AirCombatFigures {
             anti_aircraft_before_attack_share: Fixed::ONE,
             // Step 1's rule (decision 0080); the unit tests are worked on it.
             patrol_drawn_off_share: Fixed::ONE,
+            // Step 1's rule (decision 0087); the unit tests are worked on it.
+            patrol_before_attack_share: Fixed::ONE,
         }
     }
 }
