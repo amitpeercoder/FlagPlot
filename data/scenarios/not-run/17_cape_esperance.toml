@@ -1,0 +1,281 @@
+# Scenario 17: Cape Esperance, the night of 11 to 12 October 1942.
+#
+# NOT RUN. No batch of this scenario is run or looked at before Savo Island
+# is tuned, and it is never tuned on (decision 0072; docs/step2-spec.md,
+# "Tuning"). It sits in data/scenarios/not-run/ so that no loop over
+# data/scenarios/*.toml (CI's export, the run baselines, the saved-games
+# test) runs it to an outcome. Its one test, tests/scenario_17_cape_esperance.rs,
+# proves only that it loads, where and when the two forces meet, each side's
+# readiness and the order of the ships.
+#
+# What is in the scenario and what is left out is
+# docs/decisions/0072-cape-esperance-scenario.md. The bombardment group steams
+# down the Slot and enters the hex of Savo Island, (2,-5), at 23:42, where
+# Task Force 64 has stood since 23:02. The reinforcement group is left out.
+#
+# The ships are real: their figures are derived from sourced facts
+# (data/reference/ship_classes_cape_esperance.csv, decision 0072). The map is
+# real. Positions, speeds and readiness are from data/oob, worked as decision
+# 0072 says.
+#
+# PLACEHOLDER DATA all the same: the combat figures in surface_combat.toml are
+# placeholders until step 2 sets them, and the Japanese break-off level is
+# invented (no row gives one). Full fuel and ammunition at the start is an
+# assumption.
+
+name = "Scenario 17: Cape Esperance, 11 to 12 October 1942"
+placeholder = true
+seed = 1942
+days = 1
+map = "../../map/south_pacific.csv"
+ship_classes = "../../reference/ship_classes_cape_esperance.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+
+# Shortland, where the bombardment group came from and where Aoba and
+# Kinugasa returned (engagement_positions 493, engagement_events 529), and
+# where a ship it sends home goes. The base holds nothing: only its place
+# matters here.
+[[base]]
+id = 1
+name = "Shortland"
+side = "japanese"
+q = -2
+r = -8
+supply_t = 0
+
+# The bombardment group (Goto), at 18:00 in (0,-8), the hex of its 18:26
+# position (Guadalcanal bearing 310, 200 miles, read from Lunga;
+# engagement_positions 494), at normal readiness: its staff expected no
+# enemy surface force (engagement_events 497, 718, 719). It holds no contact.
+[[task_force]]
+id = 1
+name = "Bombardment group"
+side = "japanese"
+q = 0
+r = -8
+mission = "surface_combat"
+home_port = 1
+
+# Task Force 64 (Scott), at 18:00 in (2,-2), between its 16:00 position and
+# Salt Lake City's 18:45 fix (engagement_positions 510, 513), at battle
+# readiness: Condition One was set at 18:15 (engagement_events 584, 585).
+[[task_force]]
+id = 2
+name = "Task Force 64"
+side = "allied"
+q = 2
+r = -2
+mission = "surface_combat"
+readiness = "battle"
+
+# The ships, in the order of decision 0072, 1 and 12: the Japanese column with
+# its screen, then Task Force 64's battle disposition of 22:35. Experience is
+# data/reference/ship_experience_cape_esperance.ships.csv (decision 0064);
+# fuel is each class's full load.
+[[ship]]
+id = 1
+name = "Aoba"
+class = 3000
+side = "japanese"
+experience = 3
+fuel_t = 2040
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Furutaka"
+class = 3001
+side = "japanese"
+experience = 3
+fuel_t = 1858
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Kinugasa"
+class = 3000
+side = "japanese"
+experience = 3
+fuel_t = 2040
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Fubuki"
+class = 3002
+side = "japanese"
+experience = 3
+fuel_t = 475
+task_force = 1
+
+[[ship]]
+id = 5
+name = "Hatsuyuki"
+class = 3002
+side = "japanese"
+experience = 3
+fuel_t = 475
+task_force = 1
+
+[[ship]]
+id = 6
+name = "USS Farenholt"
+class = 3003
+side = "allied"
+fuel_t = 467
+task_force = 2
+
+[[ship]]
+id = 7
+name = "USS Duncan"
+class = 3003
+side = "allied"
+experience = 1
+fuel_t = 467
+task_force = 2
+
+[[ship]]
+id = 8
+name = "USS Laffey"
+class = 3004
+side = "allied"
+fuel_t = 466
+task_force = 2
+
+[[ship]]
+id = 9
+name = "USS San Francisco"
+class = 3005
+side = "allied"
+experience = 3
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 10
+name = "USS Boise"
+class = 3006
+side = "allied"
+experience = 3
+fuel_t = 1981
+task_force = 2
+
+[[ship]]
+id = 11
+name = "USS Salt Lake City"
+class = 3007
+side = "allied"
+experience = 3
+fuel_t = 2116
+task_force = 2
+
+[[ship]]
+id = 12
+name = "USS Helena"
+class = 3008
+side = "allied"
+fuel_t = 1892
+task_force = 2
+
+[[ship]]
+id = 13
+name = "USS Buchanan"
+class = 3003
+side = "allied"
+fuel_t = 467
+task_force = 2
+
+[[ship]]
+id = 14
+name = "USS McCalla"
+class = 3003
+side = "allied"
+experience = 1
+fuel_t = 467
+task_force = 2
+
+# The bombardment group: into the hex of Savo Island and back to Shortland, at
+# 27 knots, worked back from the hour fire opened (decision 0072, 6). The
+# bombardment of Henderson Field is not modelled (decision 0052). Break-off
+# level 0.5: INVENTED, no row gives one (decision 0072, 11). A ship that
+# cannot keep up is sent home to Shortland with an escort.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[2, -5], [-2, -8]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+knots = "27"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+# Task Force 64: west of Guadalcanal by (1,-4) to the hex of Savo Island,
+# where it stays, at the 29 knots of the approach (decision 0072, 5). Break-off
+# level 1, by its conduct (decision 0072, 11). It keeps its stragglers.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_route"
+waypoints = [[1, -4], [2, -5]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_speed"
+knots = "29"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "1"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Two Japanese ships, the heavy cruiser Furutaka and the destroyer Fubuki, were sunk that night for one American destroyer, Duncan; Aoba was badly damaged and the bombardment of Henderson Field was not carried out. (From the order-of-battle facts; not yet scored from them.)"
+
+[objectives.allied]
+mission = "Intercept the Japanese force coming down the Slot off Savo Island and stop it shelling Henderson Field."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[objectives.japanese]
+mission = "Shell Henderson Field by night and be clear of Guadalcanal by daylight."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }

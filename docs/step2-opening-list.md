@@ -33,7 +33,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Savo Island's orders from the record: the northern group's break-off level set at 1, and Yunagi in a task force of her own (decision 0024, the notes of Nov 13, 2026).
 - Frozen figures go with frozen scenarios: every test on the frozen figures reads a frozen copy of scenarios 4, 5, 7 and 8 in `data/scenarios/step2-frozen/` (decisions 0073 and 0075; `docs/step2-spec.md`, "Tests while figures move", 9).
 - `batch` at version 4, with who sighted first in each surface fight and the rounds each force was surprised (decision 0062).
-- Cape Esperance planned (decision 0072): who is there, where and when they meet, readiness, break-off levels and class disputes. Its class figures are not derived and the scenario is not built.
+- Cape Esperance (decision 0072): planned, its ships derived and the class file frozen, and scenario 17 written in `data/scenarios/not-run/` with a test of the meeting only. It is not run before Savo Island is tuned.
 - Tuning round 0, finding and surprise: nothing moved (`docs/validation/tuning/r0-finding-and-surprise.md`).
 - Tuning round 1: `experience_gun_strength` from 0.25 to 0.5, kept (`docs/validation/tuning/r1-experience-gun-strength.md`).
 - `export` takes a saved game as well as a scenario (`docs/commands.md`).
@@ -47,7 +47,7 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - A raiding force that fights and passes on: no rule has a force retire when it has done what it came for, so `minutes_of_action` misses at Savo Island (decision 0024, the note on break-off levels).
 - Secondary guns: a cruiser's secondary battery has no counterpart in the rules (`docs/step2-spec.md`, "Where the model stands today").
 - Identification under fire, and a force seen and stalked before the first shot (decision 0076, "The gaps, named").
-- Radar fire control, and land behind a target masking a set (decisions 0072 and 0077).
+- Radar fire control, and land behind a target masking a set (decisions 0072 and 0077). No rule of radar fire control before Cape Esperance is run (0072, "Built", 1).
 - A search flown in one pulse only (decision 0073, "What the rules cannot express").
 - One kind for every cruiser, so Tenryu and Yubari fire their guns at cruisers (decision 0078, "What it cannot give").
 - Experience for air groups (decision 0064, stage 2; the table above).
