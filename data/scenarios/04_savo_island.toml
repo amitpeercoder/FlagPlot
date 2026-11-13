@@ -256,12 +256,25 @@ knots = "25"
 day = 1
 side = "japanese"
 task_force = 1
+# Break-off level 0.5: INVENTED, the rule's default. No row gives a share of
+# loss at which the column would leave: Mikawa ordered the withdrawal at 02:20
+# with no ship sunk or crippled (engagement_events 110), which a level cannot
+# say. Decision 0024, the note of Nov 13, 2026.
 kind = "set_rules_of_engagement"
 stance = "engage"
 break_off = "0.5"
 stragglers = "detach"
 
-# Allied: hold station, and fight.
+# Allied: hold station, and fight. A break-off level is the commander's order,
+# and each group's is read from rows about that group (decision 0024, the note
+# of Nov 13, 2026; docs/step2-spec.md, "Tuning", 8). It is not moved in tuning.
+#
+# Southern group, 0.5: INVENTED, the rule's default. No row gives a level.
+# What is quoted of Crutchley's special instructions says how the groups act,
+# not that they hold a station (engagement_outcomes 3697, 3698, 3529), and the
+# group's one cruiser left able to fight stood away to the westward on her
+# captain's chosen course (engagement_outcomes 3639, 3711; engagement_events
+# 81, 114): neither an order to hold nor a force with no part leaving.
 [[order]]
 day = 1
 side = "allied"
@@ -270,13 +283,16 @@ kind = "set_rules_of_engagement"
 stance = "engage"
 break_off = "0.5"
 
+# Northern group, 1: it never breaks off. It fought where it stood and lost
+# three of its five ships (engagement_outcomes 762, 763 and 764: Vincennes,
+# Quincy and Astoria sunk), and no row has any part of it leave by choice.
 [[order]]
 day = 1
 side = "allied"
 task_force = 3
 kind = "set_rules_of_engagement"
 stance = "engage"
-break_off = "0.5"
+break_off = "1"
 
 # Missions and objectives (decision 0054). The points and the levels are the
 # placeholder scale of that decision, to be set from the record in step 2.
