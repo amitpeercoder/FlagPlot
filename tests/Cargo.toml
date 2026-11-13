@@ -211,3 +211,7 @@ path = "frozen_figures_mechanism.rs"
 
 [lints]
 workspace = true
+
+[[test]]
+name = "scenario_21_landing"
+path = "scenario_21_landing.rs"
