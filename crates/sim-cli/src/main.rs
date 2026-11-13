@@ -658,6 +658,11 @@ fn print_result(world: &sim_core::World) {
                 // A base's count is days out of the days counted (decision
                 // 0067).
                 let of_days = o.days.map(|d| format!(" of {d} days")).unwrap_or_default();
+                // Ships out of action are over the horizon (decision 0088).
+                let of_days = o
+                    .horizon_days
+                    .map(|d| format!(" over {d} days"))
+                    .unwrap_or(of_days);
                 format!("{}{target} {}{of_days} = {}", o.kind, o.count, o.points)
             })
             .collect();
@@ -669,6 +674,21 @@ fn print_result(world: &sim_core::World) {
             r.margin,
             r.outcome
         );
+        // One line a ship, so that the sum can be checked by eye.
+        for o in &r.objectives {
+            for out in &o.ships_out {
+                println!(
+                    "  ship {} {}: {} days at the end + {} left with = {} days out, share {}, points {}",
+                    out.ship.raw(),
+                    out.kind.name(),
+                    out.at_end,
+                    out.left_with,
+                    out.days_out,
+                    out.share,
+                    out.points
+                );
+            }
+        }
     }
     if let Some(history) = &result.history {
         println!("History: {history}");

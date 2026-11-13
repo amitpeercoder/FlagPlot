@@ -1,0 +1,46 @@
+Scenario 20b: Ships out of action
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 1b4d29ad7be23772  5 events
+day   2  hash 2d065e3a0125635c  7 events
+day   3  hash cfb733c236b37153  5 events
+day   4  hash 5fe7533091670a86  7 events
+day   5  hash 61a8805e96ebcea2  6 events
+day   6  hash 5544e2b98eb5512b  5 events
+
+task_force:1 "Placeholder force 1" (Japanese): Idle at (0,4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder force 2" (Japanese): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder force 3" (Japanese): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Placeholder force 4" (Japanese): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:5 "Placeholder force 5" (Allied): Idle at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder carrier 1": afloat in task_force:1; damage flotation 12, fire 0; flight deck degraded; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder cruiser 2": afloat in task_force:1; damage flotation 0, fire 0; propulsion out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser 3": afloat in task_force:1; damage flotation 40, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser 4": afloat in task_force:1; damage flotation 6, fire 0; fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder destroyer 5": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:6 "Placeholder destroyer 6": afloat in task_force:3, away at the yard; damage flotation 3.25, fire 0; torpedo mounts degraded; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:7 "Placeholder destroyer 7": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:8 "Placeholder cruiser 8": afloat in task_force:4; damage flotation 2, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:9 "Placeholder battleship 9": afloat in task_force:5; damage flotation 20, fire 0; main battery out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder yard port" (Japanese) at (0,0): 0 t of supply in stock
+base:2 "Placeholder repair anchorage" (Japanese) at (4,0): 0 t of supply in stock
+base:3 "Placeholder bare anchorage" (Japanese) at (0,4): 0 t of supply in stock
+base:4 "Placeholder Allied anchorage" (Allied) at (8,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
+
+Result (the placeholder scale of decision 0054):
+Allied: 6.233329 points (ships_sunk 0 = 0; ships_out_of_action 7 over 60 days = 6.233329), margin 2.233329, stalemate
+  ship 1 carrier: 29 days at the end + 0 left with = 29 days out, share 0.483333, points 2.416665
+  ship 2 cruiser: 30 days at the end + 0 left with = 30 days out, share 0.5, points 1
+  ship 3 cruiser: 80 days at the end + 0 left with = 80 days out, share 1, points 2
+  ship 4 cruiser: 17 days at the end + 0 left with = 17 days out, share 0.283333, points 0.566666
+  ship 5 destroyer: 0 days at the end + 2 left with = 2 days out, share 0.033333, points 0.016666
+  ship 6 destroyer: 0 days at the end + 12 left with = 12 days out, share 0.2, points 0.1
+  ship 8 cruiser: 4 days at the end + 0 left with = 4 days out, share 0.066666, points 0.133332
+Japanese: 4 points (ships_sunk 0 = 0; ships_out_of_action 1 over 60 days = 4), margin -2.233329, stalemate
+  ship 9 battleship: 70 days at the end + 0 left with = 70 days out, share 1, points 4
+History: No battle: a placeholder case of the scale, not a day of the war.

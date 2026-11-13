@@ -306,6 +306,14 @@ impl<'a> SideView<'a> {
         self.objectives.map(|o| o.levels)
     }
 
+    /// The days the scenario's result is judged over (decision 0088), or
+    /// `None` if the scenario has no objectives. It is the scenario's
+    /// configuration, common to both sides like [`SideView::levels`], and
+    /// says nothing of the enemy's objectives or of any damage.
+    pub fn horizon_days(&self) -> Option<u32> {
+        self.objectives.map(|o| o.horizon_days)
+    }
+
     /// The side's own objectives, in the order the scenario gives them
     /// (decision 6 of 0054). Never the enemy's.
     pub fn objectives(&self) -> &'a [Objective] {

@@ -336,9 +336,14 @@ impl World {
     }
 
     /// Gives the game its missions and objectives (decision 0054). Fails if
-    /// an objective names a base the game does not have. Changes no state
-    /// and no hash.
+    /// an objective names a base the game does not have, or if the horizon
+    /// is 0 (decision 0088). Changes no state and no hash.
     pub fn set_objectives(&mut self, objectives: Objectives) -> Result<(), SimError> {
+        if objectives.horizon_days == 0 {
+            return Err(SimError::InvalidSetup(
+                "the objectives' horizon_days must be at least 1".to_string(),
+            ));
+        }
         for base in objectives.bases_named() {
             if !self.truth.bases.contains_key(&base) {
                 return Err(SimError::InvalidSetup(format!(

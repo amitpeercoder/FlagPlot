@@ -158,7 +158,9 @@ fn line(ctx: &Ctx<'_>, objective: &Objective, known: &KnownProgress) -> Objectiv
         },
     };
     match objective {
-        Objective::ShipsSunk(points) | Objective::ShipsCrippled(points) => {
+        Objective::ShipsSunk(points)
+        | Objective::ShipsCrippled(points)
+        | Objective::ShipsOutOfAction(points) => {
             line.ship_points = ship_points(points);
         }
         Objective::AircraftDestroyed { points } => line.points = Some(Dec(*points)),

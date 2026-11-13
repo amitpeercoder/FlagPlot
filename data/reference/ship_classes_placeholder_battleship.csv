@@ -1,0 +1,8 @@
+# PLACEHOLDER DATA. This class is invented so that scenario 20b has a battleship:
+# the classes of ship_classes.csv have none. It is not historical and must not be
+# used for validation. It is class 1 of ship_classes.csv with the kind battleship,
+# every other column as class 1 has it (docs/decisions/0088-out-of-the-campaign.md).
+# Only scenario 20b names this file, so that no other scenario's data hashes move.
+# The columns are those of ship_classes.csv, which says what each is.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
+9,Placeholder battleship,battleship,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,0
