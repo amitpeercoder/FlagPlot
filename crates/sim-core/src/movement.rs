@@ -1308,6 +1308,7 @@ mod tests {
                 gun_rounds_per_gun: 100,
                 gun_damage: Fixed::from_int(20),
                 torpedo_tubes: 8,
+                torpedo_tubes_one_side: 8,
                 torpedo_damage: Fixed::from_int(200),
                 toughness: Fixed::from_int(400),
                 radar: false,

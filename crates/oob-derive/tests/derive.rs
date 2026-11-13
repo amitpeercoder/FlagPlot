@@ -22,12 +22,13 @@
 //! | gun_rounds_per_gun | main_rounds_per_gun 150 | | 150 |
 //! | gun_damage | shell_weight_kg 118 | 118 / 6 = 19.666666 (truncated at six places) | 19.666666 |
 //! | torpedo_tubes | torpedo_tubes fit, count 6 | | 6 |
+//! | torpedo_tubes_one_side | no split row: not split | the whole count | 6 |
 //! | torpedo_damage | warhead_kg 490 | 490 x 0.4 = 196 | 196 |
 //! | toughness | displacement_standard_lt 10,000 | 10,000 / 25 = 400 | 400 |
 //! | radar | surface_search_radar fit, count 1 | | 1 |
 //!
 //! So the class row is
-//! `1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1`.
+//! `1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,6,196,400,1`.
 //!
 //! The gun's design rate of fire (`rate_of_fire_rpm` 5, a theoretical rate)
 //! is also in the facts; the tool does not read it.
@@ -47,7 +48,7 @@ const RULES: &str = "constants_are_placeholders = true\n\
     displacement_lt_per_toughness = 25\n";
 
 const BASE_ROW: &str =
-    "1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1";
+    "1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,6,196,400,1";
 
 /// The class of each ship key the made data uses, for pinning class rows
 /// (decision 0077): ships of one class share an id, as the tool's old
@@ -461,7 +462,7 @@ fn a_ship_with_everything_preferred_derives_exactly() {
         Some(
             "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,\
              cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,\
-             torpedo_tubes,torpedo_damage,toughness,radar"
+             torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar"
         )
     );
 
@@ -492,8 +493,8 @@ fn a_ship_with_everything_preferred_derives_exactly() {
         source_of(&outputs, "1000", "kind")[4],
         "ship_classes.csv:1000 ships.csv:1000"
     );
-    // 14 figures for the one class row.
-    assert_eq!(records(&outputs.sources_csv).len(), 14);
+    // 15 figures for the one class row.
+    assert_eq!(records(&outputs.sources_csv).len(), 15);
 
     assert_eq!(records(&outputs.ships_csv), [["shp", "1000", "Test class"]]);
 }
@@ -923,7 +924,7 @@ fn a_toughness_below_one_is_kept_as_a_decimal() {
     let outputs = derives(&["shp"], &files);
     assert_eq!(
         class_lines(&outputs),
-        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,0.96,1"]
+        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,6,196,0.96,1"]
     );
     assert_eq!(source_of(&outputs, "1000", "toughness")[2], "0.96");
     assert_eq!(source_of(&outputs, "1000", "toughness")[5], "");
@@ -955,7 +956,7 @@ fn decimal_damage_and_toughness_are_written_exactly_with_trailing_zeros_trimmed(
     let outputs = derives(&["shp"], &files);
     assert_eq!(
         class_lines(&outputs),
-        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.75,6,196.2,405.44,1"]
+        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.75,6,6,196.2,405.44,1"]
     );
     assert_eq!(source_of(&outputs, "1000", "gun_damage")[2], "19.75");
     assert_eq!(source_of(&outputs, "1000", "torpedo_damage")[2], "196.2");
@@ -1149,8 +1150,8 @@ fn a_ship_fit_replaces_the_class_fit_for_that_slot_only() {
     assert_eq!(
         class_lines(&outputs),
         [
-            "1000,\"Test class, main_guns 8\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1",
-            "1001,\"Test class, main_guns 9\",cruiser,15,32.5,1600,8000,0,9,3.5,150,19.666666,6,196,400,1",
+            "1000,\"Test class, main_guns 8\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,6,196,400,1",
+            "1001,\"Test class, main_guns 9\",cruiser,15,32.5,1600,8000,0,9,3.5,150,19.666666,6,6,196,400,1",
         ]
     );
     assert_eq!(source_of(&outputs, "1001", "main_guns")[4], "fits.csv:10");
@@ -1429,7 +1430,7 @@ fn a_count_zero_torpedo_row_gives_no_tubes_and_no_damage() {
     let row = &class_lines(&outputs)[0];
     assert_eq!(
         row,
-        "1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,0,0,400,1"
+        "1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,0,0,0,400,1"
     );
     assert_eq!(
         source_of(&outputs, "1000", "torpedo_tubes")[4],
@@ -1463,8 +1464,8 @@ fn two_ships_of_one_class_with_different_radar_get_two_named_rows() {
     assert_eq!(
         class_lines(&outputs),
         [
-            "1000,\"Test class, radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1",
-            "1001,\"Test class, no radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,0",
+            "1000,\"Test class, radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,6,196,400,1",
+            "1001,\"Test class, no radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,6,196,400,0",
         ]
     );
     assert_eq!(
@@ -1850,7 +1851,7 @@ fn a_designed_rate_is_read_only_by_exception_when_there_is_no_practical_rate() {
     // The designed rate is 5, not the practical 3.5.
     assert_eq!(
         class_lines(&outputs),
-        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,5,150,19.666666,6,196,400,1"]
+        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,5,150,19.666666,6,6,196,400,1"]
     );
     let source = source_of(&outputs, "1000", "gun_rounds_per_min");
     assert!(
@@ -1948,7 +1949,7 @@ fn ammunition_not_limiting_is_assumed_only_when_no_row_exists() {
         derive_ammunition(&["shp"], &["shp"], &files).unwrap_or_else(|p| panic!("{p:#?}"));
     assert_eq!(
         class_lines(&outputs),
-        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,9999,19.666666,6,196,400,1"]
+        ["1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,9999,19.666666,6,6,196,400,1"]
     );
     let source = source_of(&outputs, "1000", "gun_rounds_per_gun");
     assert_eq!(source[4], "");
@@ -2717,7 +2718,7 @@ fn not_modelled_ok(ships: &[&str], keys: &str, files: &Files) -> Outputs {
     ok_text(&air_list(ships, keys, ""), &air_rules(""), files)
 }
 
-const NOT_MODELLED_ROW_TAIL: &str = "0,0,0,0,0,0,400,1";
+const NOT_MODELLED_ROW_TAIL: &str = "0,0,0,0,0,0,0,400,1";
 
 #[test]
 fn all_ships_not_modelled_get_zero_surface_weapons_without_reading_any_fact() {
@@ -5076,4 +5077,420 @@ fn every_ship_of_the_savo_island_and_eastern_solomons_lists_keeps_its_id() {
             .collect();
         assert_eq!(names.len(), records(&outputs.class_csv).len(), "{list}");
     }
+}
+
+// Torpedo tubes that bear on one side (decisions 0074 and 0083).
+//
+// # The hand derivation, from decision 0074
+//
+// Each test is one line of that decision's table, on the base class
+// `us-test-class` whose tubes fit is set to T. B is `torpedo_tubes_one_side`.
+//
+// | Test | T | Rows read | Working | B |
+// | --- | --- | --- | --- | --- |
+// | Bagley | 16 | 8 on a side (preferred, medium); wing | the number is read: 8; wing gives 16 / 2 = 8, they agree | 8 |
+// | Takao, for Chokai | 8 | 4 on a side, by exception, unconfirmed | the number is read: 4 | 4 |
+// | Tenryu | 6 | 6 on a side, by exception; centreline, unconfirmed and not read | 6 | 6 |
+// | Yubari | 4 | 4 on a side, by exception | 4 | 4 |
+// | Farragut | 8 | 8 on a side; centreline | the number is read: 8; centreline gives all 8, they agree | 8 |
+// | Farragut, number taken out | 8 | centreline | no number; the position gives T | 8 |
+// | Bagley, number taken out | 16 | wing | no number; the position gives 16 / 2 | 8 |
+// | Kamikaze | 6 | none | not split: T, and the class is named | 6 |
+// | Mahan | 12 | 8 on a side; mixed | the number is read: 8; mixed says nothing against it | 8 |
+// | Mahan, number taken out | 12 | mixed | stops: a mixed fit with no number | refused |
+//
+// A class with no tubes has B = 0 and reads nothing more.
+
+const SPLIT_FIGURE: &str = "torpedo_tubes_one_side";
+
+/// The base ship with T tubes, and the split rows given: (attribute, value,
+/// confidence, standing).
+fn with_split(tubes: u32, rows: &[(&str, &str, &str, &str)]) -> Files {
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "fits.csv",
+        2,
+        class_fit(2, "torpedo_tubes", "weapon", "tube", &tubes.to_string()),
+    );
+    let mut attributes = files["attributes.csv"].clone();
+    attributes.push_str("torpedo_tubes_per_broadside,ship_class,integer,one\n");
+    attributes.push_str("torpedo_mount_position,ship_class,text,one\n");
+    files.insert("attributes.csv".to_string(), attributes);
+    for (n, (attribute, value, confidence, standing)) in rows.iter().enumerate() {
+        let id = 100 + u32::try_from(n).expect("a few rows");
+        add_row(
+            &mut files,
+            "ship_class_facts.csv",
+            fact_row(
+                id,
+                "us-test-class",
+                attribute,
+                value,
+                "",
+                "",
+                confidence,
+                standing,
+            ),
+        );
+    }
+    files
+}
+
+const NUMBER: &str = "torpedo_tubes_per_broadside";
+const POSITION: &str = "torpedo_mount_position";
+
+fn rules_excepting(rows: &[u32]) -> String {
+    let mut text = RULES.to_string();
+    for row in rows {
+        text.push_str(&format!(
+            "\n[[exception]]\nentity = \"us-test-class\"\nfact = \"{NUMBER}\"\nrow = {row}\n\
+             reason = \"One weak source; read for the test\"\nagreed = \"2026-11-13\"\n"
+        ));
+    }
+    text
+}
+
+#[track_caller]
+fn tubes_and_one_side(outputs: &Outputs) -> (String, String) {
+    let row = records(&outputs.class_csv).remove(0);
+    // id, name, kind, speeds .. gun_damage (12 columns), then the two tubes.
+    (row[12].clone(), row[13].clone())
+}
+
+#[track_caller]
+fn assert_split(outputs: &Outputs, tubes: &str, one_side: &str) {
+    assert_eq!(
+        tubes_and_one_side(outputs),
+        (tubes.to_string(), one_side.to_string())
+    );
+}
+
+#[test]
+fn bagley_a_number_and_a_wing_position_that_agree_give_the_number() {
+    let files = with_split(
+        16,
+        &[
+            (NUMBER, "8", "medium", "preferred"),
+            (POSITION, "wing", "medium", "preferred"),
+        ],
+    );
+    let outputs = derives(&["shp"], &files);
+    assert_split(&outputs, "16", "8");
+    let figure = source_of(&outputs, "1000", SPLIT_FIGURE);
+    assert_eq!(figure[2], "8");
+    assert!(figure[4].contains("ship_class_facts.csv:100"), "{figure:?}");
+    assert!(figure[4].contains("ship_class_facts.csv:101"), "{figure:?}");
+    assert!(!figure[5].contains("not split"), "{figure:?}");
+    assert!(
+        comments(&outputs.class_csv).contains("Torpedo tubes not split (decision 0074, 3): none")
+    );
+}
+
+#[test]
+fn takao_for_chokai_an_unconfirmed_number_is_read_by_exception() {
+    let files = with_split(8, &[(NUMBER, "4", "low", "unconfirmed")]);
+    // Without the exception the row is not readable: not split, 8 of 8.
+    let outputs = derives(&["shp"], &files);
+    assert_split(&outputs, "8", "8");
+    // With it, 4.
+    let outputs = derive_with_rules(&["shp"], &[], &rules_excepting(&[100]), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_split(&outputs, "8", "4");
+    assert_eq!(
+        source_of(&outputs, "1000", SPLIT_FIGURE)[5],
+        "rests on an exception"
+    );
+}
+
+#[test]
+fn tenryu_a_number_by_exception_wins_over_an_unread_position() {
+    let files = with_split(
+        6,
+        &[
+            (NUMBER, "6", "low", "unconfirmed"),
+            (POSITION, "centreline", "low", "unconfirmed"),
+        ],
+    );
+    let outputs = derive_with_rules(&["shp"], &[], &rules_excepting(&[100]), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_split(&outputs, "6", "6");
+    // The position row is not preferred and no exception names it: not cited.
+    let figure = source_of(&outputs, "1000", SPLIT_FIGURE);
+    assert!(figure[4].contains("ship_class_facts.csv:100"), "{figure:?}");
+    assert!(
+        !figure[4].contains("ship_class_facts.csv:101"),
+        "{figure:?}"
+    );
+}
+
+#[test]
+fn yubari_four_of_four_by_exception() {
+    let files = with_split(4, &[(NUMBER, "4", "low", "unconfirmed")]);
+    let outputs = derive_with_rules(&["shp"], &[], &rules_excepting(&[100]), &files)
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_split(&outputs, "4", "4");
+}
+
+#[test]
+fn farragut_a_number_and_a_centreline_position_agree() {
+    let rows = [
+        (NUMBER, "8", "medium", "preferred"),
+        (POSITION, "centreline", "medium", "preferred"),
+    ];
+    let outputs = derives(&["shp"], &with_split(8, &rows));
+    assert_split(&outputs, "8", "8");
+
+    // With the number taken out, the position gives T.
+    let outputs = derives(&["shp"], &with_split(8, &rows[1..]));
+    assert_split(&outputs, "8", "8");
+    assert!(!source_of(&outputs, "1000", SPLIT_FIGURE)[5].contains("not split"));
+}
+
+#[test]
+fn bagley_with_the_number_taken_out_the_wing_position_halves() {
+    let outputs = derives(
+        &["shp"],
+        &with_split(16, &[(POSITION, "wing", "medium", "preferred")]),
+    );
+    assert_split(&outputs, "16", "8");
+}
+
+#[test]
+fn kamikaze_with_no_row_is_not_split_and_is_named() {
+    let outputs = derives(&["shp"], &with_split(6, &[]));
+    assert_split(&outputs, "6", "6");
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains("not split: no row says how its tubes bear"),
+        "{header}"
+    );
+    assert!(header.contains("  shp (Test class)"), "{header}");
+    assert_eq!(outputs.torpedo_not_split, ["shp (Test class)"]);
+    assert_eq!(
+        source_of(&outputs, "1000", SPLIT_FIGURE)[5],
+        "not split: no row says how its tubes bear"
+    );
+}
+
+#[test]
+fn mahan_a_number_is_read_and_a_mixed_position_says_nothing_against_it() {
+    let rows = [
+        (NUMBER, "8", "medium", "preferred"),
+        (POSITION, "mixed", "medium", "preferred"),
+    ];
+    let outputs = derives(&["shp"], &with_split(12, &rows));
+    assert_split(&outputs, "12", "8");
+    // With the number taken out a mixed fit stops the derivation.
+    let problems = fails(&["shp"], &with_split(12, &rows[1..]));
+    assert_one(
+        &problems,
+        &[
+            "shp: bad-value: torpedo_tubes_one_side:",
+            "`mixed`",
+            "the position alone does not give the tubes on one side",
+            "ship_class_facts.csv:100",
+        ],
+    );
+}
+
+#[test]
+fn a_fixed_position_with_no_number_stops_the_derivation() {
+    let problems = fails(
+        &["shp"],
+        &with_split(6, &[(POSITION, "fixed", "medium", "preferred")]),
+    );
+    assert_one(&problems, &["bad-value", "`fixed`", "alone does not give"]);
+}
+
+#[test]
+fn a_number_above_the_tubes_stops_the_derivation() {
+    let problems = fails(
+        &["shp"],
+        &with_split(6, &[(NUMBER, "7", "medium", "preferred")]),
+    );
+    assert_one(
+        &problems,
+        &[
+            "shp: bad-value: torpedo_tubes_one_side:",
+            "7 tubes on one side is above the 6 tubes",
+            "ship_class_facts.csv:100",
+        ],
+    );
+}
+
+#[test]
+fn a_number_of_zero_where_there_are_tubes_stops_the_derivation() {
+    let problems = fails(
+        &["shp"],
+        &with_split(6, &[(NUMBER, "0", "medium", "preferred")]),
+    );
+    assert_one(
+        &problems,
+        &["bad-value", "0 tubes on one side where the fit has 6"],
+    );
+}
+
+#[test]
+fn wing_mounts_with_an_odd_number_of_tubes_stop_the_derivation() {
+    let problems = fails(
+        &["shp"],
+        &with_split(5, &[(POSITION, "wing", "medium", "preferred")]),
+    );
+    assert_one(&problems, &["bad-value", "an odd number, cannot be halved"]);
+}
+
+#[test]
+fn a_number_and_a_position_that_disagree_stop_the_derivation() {
+    // Centreline mounts bear all the tubes on either side: 4 of 8 disagrees.
+    let problems = fails(
+        &["shp"],
+        &with_split(
+            8,
+            &[
+                (NUMBER, "4", "medium", "preferred"),
+                (POSITION, "centreline", "medium", "preferred"),
+            ],
+        ),
+    );
+    assert_one(
+        &problems,
+        &[
+            "shp: conflict: torpedo_tubes_one_side:",
+            "centreline mounts bear all 8",
+        ],
+    );
+    // Wing mounts give half: 6 of 8 disagrees.
+    let problems = fails(
+        &["shp"],
+        &with_split(
+            8,
+            &[
+                (NUMBER, "6", "medium", "preferred"),
+                (POSITION, "wing", "medium", "preferred"),
+            ],
+        ),
+    );
+    assert_one(
+        &problems,
+        &[
+            "shp: conflict: torpedo_tubes_one_side:",
+            "wing mounts give 4",
+        ],
+    );
+}
+
+#[test]
+fn rows_of_the_number_that_disagree_stop_the_derivation_as_for_any_fact() {
+    // Two disputed rows, both read by exception, that say different things.
+    let files = with_split(
+        8,
+        &[
+            (NUMBER, "4", "low", "disputed"),
+            (NUMBER, "8", "low", "disputed"),
+        ],
+    );
+    let problems = derive_with_rules(&["shp"], &[], &rules_excepting(&[100, 101]), &files)
+        .expect_err("a problem");
+    let problems: Vec<String> = problems.iter().map(ToString::to_string).collect();
+    assert_one(
+        &problems,
+        &["shp: conflict: torpedo_tubes_one_side:", "disagree"],
+    );
+}
+
+#[test]
+fn a_class_with_no_tubes_has_none_on_one_side_and_reads_no_split_row() {
+    // Rows that would stop the derivation are not read where T is 0.
+    let mut files = with_split(0, &[(POSITION, "mixed", "medium", "preferred")]);
+    // A count of 0 is a fit row with count 0.
+    replace_row(
+        &mut files,
+        "fits.csv",
+        2,
+        class_fit(2, "torpedo_tubes", "weapon", "tube", "0"),
+    );
+    let outputs = derives(&["shp"], &files);
+    assert_split(&outputs, "0", "0");
+    assert!(outputs.torpedo_not_split.is_empty());
+}
+
+#[test]
+fn the_figure_follows_torpedo_tubes_in_the_header_and_the_sources() {
+    let outputs = derives(&["shp"], &with_split(6, &[]));
+    let header = outputs
+        .class_csv
+        .lines()
+        .find(|l| l.starts_with("id,"))
+        .expect("a header");
+    assert!(
+        header.contains("gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,"),
+        "{header}"
+    );
+    let sources: Vec<String> = records(&outputs.sources_csv)
+        .into_iter()
+        .map(|r| r[1].clone())
+        .collect();
+    let at = sources.iter().position(|f| f == "torpedo_tubes").unwrap();
+    assert_eq!(sources[at + 1], SPLIT_FIGURE);
+}
+
+#[test]
+fn a_class_whose_surface_weapons_are_not_modelled_has_none_on_one_side() {
+    let outputs = not_modelled_ok(
+        &["shp"],
+        "surface_weapons_not_modelled = \"all\"\n",
+        &with_split(6, &[]),
+    );
+    assert_split(&outputs, "0", "0");
+    assert!(outputs.torpedo_not_split.is_empty());
+}
+
+/// The Savo Island list on the real facts and rules (decision 0083's table):
+/// T and B of each class row.
+#[test]
+fn the_savo_island_list_gives_the_tubes_of_decision_0083() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        "savo_island.toml",
+        &read("data/derivation/savo_island.toml"),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    let got: BTreeMap<String, (String, String)> = records(&outputs.class_csv)
+        .into_iter()
+        .map(|r| (r[1].clone(), (r[12].clone(), r[13].clone())))
+        .collect();
+    let pair = |t: &str, b: &str| (t.to_string(), b.to_string());
+    let want = [
+        ("Aoba class", pair("8", "4")),
+        ("Furutaka class", pair("8", "4")),
+        ("Takao class", pair("8", "4")),
+        ("Tenryu class", pair("6", "6")),
+        ("Yubari class", pair("4", "4")),
+        ("Kamikaze class (1922)", pair("6", "6")),
+        ("County class (Kent subclass)", pair("8", "4")),
+        (
+            "Bagley class (Bagley, Patterson, Helm, Jarvis)",
+            pair("16", "8"),
+        ),
+        ("Bagley class (Blue, Ralph Talbot)", pair("16", "8")),
+        ("Benham class", pair("16", "8")),
+        ("New Orleans class (Vincennes)", pair("0", "0")),
+        ("New Orleans class (Quincy, Astoria)", pair("0", "0")),
+        ("Northampton class", pair("0", "0")),
+    ];
+    assert_eq!(got.len(), want.len(), "{got:#?}");
+    for (name, expected) in want {
+        assert_eq!(got[name], expected, "{name}");
+    }
+    // Only Kamikaze (Yunagi) is not split.
+    assert_eq!(
+        outputs.torpedo_not_split,
+        ["yunagi (Kamikaze class (1922))"]
+    );
 }

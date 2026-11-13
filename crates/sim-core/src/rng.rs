@@ -76,16 +76,21 @@ pub enum Draw {
     /// (decision 9 of 0059): one stream for each source air group and pulse,
     /// in the upkeep subsystem, keyed on the air group.
     NoDeck,
+    /// The second side's torpedo salvo (decision 0083): one stream for that
+    /// salvo, keyed on the day, the pulse, the surface combat subsystem, the
+    /// firing ship and the enemy force.
+    TorpedoOtherSide,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 5] = [
+    pub const ALL: [Draw; 6] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
         Draw::PatrolPilot,
         Draw::NoDeck,
+        Draw::TorpedoOtherSide,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -97,6 +102,7 @@ impl Draw {
             Draw::Ditch => 2,
             Draw::PatrolPilot => 3,
             Draw::NoDeck => 4,
+            Draw::TorpedoOtherSide => 5,
         }
     }
 }

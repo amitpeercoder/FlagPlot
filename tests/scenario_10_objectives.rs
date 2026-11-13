@@ -515,8 +515,10 @@ fn objectives_change_no_hash_and_no_event() {
     // orders of decision 0081 (remade for 0081 as it was for 0073). The strike
     // report reading the force after the damage (rulebook differences, row 7)
     // made it 0703fe7c146fc0f8 on the scenario before 0081, and leaves the
-    // scenario of 0081 at this hash: Ryujo is not sunk on its day 1.
-    assert!(baseline.contains("hash 08c55b5f26162af0"));
+    // scenario of 0081 at 08c55b5f26162af0: Ryujo is not sunk on its day 1.
+    // That was its hash until the state went to version 7 (decision 0083,
+    // the side of a ship's torpedo tubes fired).
+    assert!(baseline.contains("hash 02e1306e58d84811"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

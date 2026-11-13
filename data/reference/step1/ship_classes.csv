@@ -18,10 +18,12 @@
 # aircraft_capacity: aircraft the ship can carry (decision 0025). anti_aircraft:
 # anti-aircraft shots at a raid (decision 0027). Classes 1 to 4 have none, so
 # the scenarios built before stage 5c are unchanged.
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
-1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,0
-2,Placeholder destroyer,destroyer,16,36,500,4000,0,4,6,150,5,8,200,100,0,0,0
-3,Placeholder cargo ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,300,0,0,0
-4,Placeholder carrier,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,36,0
-5,Placeholder carrier with guns,carrier,16,30,3000,9000,0,0,0,0,0,0,0,600,0,48,20
-6,Placeholder cruiser with guns,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0,0,8
+# Class 8 exists for decision 0083's scenario only: class 1 with 4 of its 8 tubes bearing on one side.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
+1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,0
+2,Placeholder destroyer,destroyer,16,36,500,4000,0,4,6,150,5,8,8,200,100,0,0,0
+3,Placeholder cargo ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0
+4,Placeholder carrier,carrier,16,30,3000,9000,0,0,0,0,0,0,0,0,600,0,36,0
+5,Placeholder carrier with guns,carrier,16,30,3000,9000,0,0,0,0,0,0,0,0,600,0,48,20
+6,Placeholder cruiser with guns,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,8
+8,Placeholder cruiser with wing tubes,cruiser,16,32,2000,8000,0,8,3,100,20,8,4,200,400,0,0,0

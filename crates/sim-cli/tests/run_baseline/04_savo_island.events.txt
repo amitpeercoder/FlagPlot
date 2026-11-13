@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash fa960727bd1a7a58  282 events
+day   1  hash 7e8b13702d992036  287 events
 
 #1 D0 -         Allied report: 8 ships, cruiser, at (-1,-9), held at the start: new contact:1
 #2 D0 -         Allied contact:1 aged to 1 pulses  <- #1
@@ -27,15 +27,15 @@ day   1  hash fa960727bd1a7a58  282 events
 #21 D1 night     round 1: task_force:2 looked for task_force:1, chance 0.3125: not sighted  <- #19
 #22 D1 night     round 1: task_force:2 was surprised by task_force:1  <- #20
 #23 D1 night     round 1: ship:1 guns at ship:9: 56.42855 shots x 0.09 = 5.078569 expected, 7 hits  <- #19
-#24 D1 night     round 1: ship:1 torpedoes at ship:9: 8 shots x 0.1 = 0.8 expected, 0 hits  <- #19
+#24 D1 night     round 1: ship:1 torpedoes at ship:9: 4 shots x 0.1 = 0.4 expected, 0 hits  <- #19
 #25 D1 night     round 1: ship:2 guns at ship:10: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #19
-#26 D1 night     round 1: ship:2 torpedoes at ship:10: 8 shots x 0.1 = 0.8 expected, 2 hits  <- #19
+#26 D1 night     round 1: ship:2 torpedoes at ship:10: 4 shots x 0.1 = 0.4 expected, 1 hit  <- #19
 #27 D1 night     round 1: ship:3 guns at ship:9: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #19
-#28 D1 night     round 1: ship:3 torpedoes at ship:9: 8 shots x 0.1 = 0.8 expected, 2 hits  <- #19
+#28 D1 night     round 1: ship:3 torpedoes at ship:9: 4 shots x 0.1 = 0.4 expected, 1 hit  <- #19
 #29 D1 night     round 1: ship:4 guns at ship:10: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #19
-#30 D1 night     round 1: ship:4 torpedoes at ship:10: 8 shots x 0.1 = 0.8 expected, 0 hits  <- #19
+#30 D1 night     round 1: ship:4 torpedoes at ship:10: 4 shots x 0.1 = 0.4 expected, 0 hits  <- #19
 #31 D1 night     round 1: ship:5 guns at ship:9: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #19
-#32 D1 night     round 1: ship:5 torpedoes at ship:9: 8 shots x 0.1 = 0.8 expected, 1 hit  <- #19
+#32 D1 night     round 1: ship:5 torpedoes at ship:9: 4 shots x 0.1 = 0.4 expected, 0 hits  <- #19
 #33 D1 night     round 1: ship:6 guns at ship:10: 22.57142 shots x 0.09 = 2.031427 expected, 0 hits  <- #19
 #34 D1 night     round 1: ship:6 torpedoes at ship:10: 6 shots x 0.1 = 0.6 expected, 0 hits  <- #19
 #35 D1 night     round 1: ship:7 guns at ship:9: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #19
@@ -45,280 +45,286 @@ day   1  hash fa960727bd1a7a58  282 events
 #39 D1 night     round 1: ship:9 torpedo mounts hit, working -> degraded  <- #23
 #40 D1 night     round 1: ship:10 took 1 hit on flotation, 5.794198 points, now 5.794198  <- #25
 #41 D1 night     round 1: ship:10 took 1 hit on fire, 5.794198 points, now 5.794198  <- #25
-#42 D1 night     round 1: ship:10 took 2 hits on flotation, 108.287292 points, now 100  <- #26
-#43 D1 night     round 1: ship:10 of task_force:2 sank  <- #42
-#44 D1 night     round 1: ship:10 propulsion hit, working -> degraded  <- #26
-#45 D1 night     round 1: ship:10 fire control hit, working -> degraded  <- #26
-#46 D1 night     round 1: ship:9 took 1 hit on fire, 5.378205 points, now 21.51282  <- #27
-#47 D1 night     round 1: ship:9 took 2 hits on flotation, 100.51282 points, now 100  <- #28
-#48 D1 night     round 1: ship:9 of task_force:2 sank  <- #47
-#49 D1 night     round 1: ship:9 propulsion hit, working -> degraded  <- #28
-#50 D1 night     round 1: ship:9 propulsion hit, degraded -> out  <- #28
-#51 D1 night     round 1: ship:10 took 2 hits on fire, 11.588396 points, now 17.382594  <- #29
-#52 D1 night     round 1: ship:10 fire control hit, degraded -> out  <- #29
-#53 D1 night     round 1: ship:10 main battery hit, working -> degraded  <- #29
-#54 D1 night     round 1: ship:9 took 3 hits on flotation, 16.134615 points, now 100  <- #31
-#55 D1 night     round 1: ship:9 main battery hit, working -> degraded  <- #31
-#56 D1 night     round 1: ship:9 took 1 hit on flotation, 50.25641 points, now 100  <- #32
-#57 D1 night     round 1: ship:9 propulsion hit, no change, still out  <- #32
-#58 D1 night     round 1: ship:9 took 2 hits on flotation, 3.247862 points, now 100  <- #35
-#59 D1 night     round 1: ship:9 took 1 hit on fire, 1.623931 points, now 23.136751  <- #35
-#60 D1 night     round 1: ship:9 fire control hit, working -> degraded  <- #35
-#61 D1 night     round 1: ship:9 took 1 hit on flotation, 35.384615 points, now 100  <- #36
-#62 D1 night     round 1: ship:9 propulsion hit, no change, still out  <- #36
-#63 D1 night     round 1: task_force:2 became alert  <- #23
-#64 D1 night     round 1: task_force:2 broke off, 0.5 of its ships sunk or crippled  <- #37, #38, #40, #41, #42, #46, #47, #51, #54, #56, #58, #59, #61, order:1
-#65 D1 night     engagement of task_force:1 and task_force:2 at (2,-5) ended in round 1: a force broke off  <- #64
-#66 D1 night     Japanese report: 1 ship, transport, at (1,-5): new contact:1  <- #65
-#67 D1 night     Japanese claims 2 enemy ships sunk at (2,-5)  <- #65
-#68 D1 night     Allied report: 7 ships, cruiser, at (2,-5): new contact:2  <- #65
-#69 D1 night     task_force:3 heard the fight of task_force:1 and task_force:2, chance 0.5: not alarmed  <- #65
-#70 D1 night     task_force:1 and task_force:3 met at (2,-5) at D1 01:31: engagement begun  <- #11, order:5, order:2
-#71 D1 night     round 1: task_force:1 looked for task_force:3, chance 0.625: sighted  <- #70
-#72 D1 night     round 1: task_force:3 looked for task_force:1, chance 0.2375: not sighted  <- #70
-#73 D1 night     round 1: task_force:3 was surprised by task_force:1  <- #71
-#74 D1 night     round 1: ship:1 guns at ship:13: 56.42855 shots x 0.09 = 5.078569 expected, 5 hits  <- #70
-#75 D1 night     round 1: ship:2 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #70
-#76 D1 night     round 1: ship:3 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#77 D1 night     round 1: ship:4 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#78 D1 night     round 1: ship:5 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#79 D1 night     round 1: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 2 hits  <- #70
-#80 D1 night     round 1: ship:7 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 6 hits  <- #70
-#81 D1 night     round 1: ship:13 took 2 hits on flotation, 10.5402 points, now 10.5402  <- #74
-#82 D1 night     round 1: ship:13 took 3 hits on fire, 15.8103 points, now 15.8103  <- #74
-#83 D1 night     round 1: ship:13 main battery hit, working -> degraded  <- #74
-#84 D1 night     round 1: ship:14 took 1 hit on flotation, 5.2701 points, now 5.2701  <- #75
-#85 D1 night     round 1: ship:15 took 3 hits on flotation, 15.8103 points, now 15.8103  <- #76
-#86 D1 night     round 1: ship:15 took 1 hit on fire, 5.2701 points, now 5.2701  <- #76
-#87 D1 night     round 1: ship:15 fire control hit, working -> degraded  <- #76
-#88 D1 night     round 1: ship:13 took 2 hits on flotation, 10.5402 points, now 21.0804  <- #77
-#89 D1 night     round 1: ship:14 took 4 hits on flotation, 21.0804 points, now 26.3505  <- #78
-#90 D1 night     round 1: ship:14 torpedo mounts hit, no change, still working  <- #78
-#91 D1 night     round 1: ship:14 fire control hit, working -> degraded  <- #78
-#92 D1 night     round 1: ship:15 took 2 hits on flotation, 3.182578 points, now 18.992878  <- #79
-#93 D1 night     round 1: ship:13 took 2 hits on flotation, 3.182578 points, now 24.262978  <- #80
-#94 D1 night     round 1: ship:13 took 4 hits on fire, 6.365156 points, now 22.175456  <- #80
-#95 D1 night     round 1: task_force:3 became alert  <- #74
-#96 D1 night     round 2: ship:1 guns at ship:13: 56.42855 shots x 0.09 = 5.078569 expected, 2 hits  <- #70
-#97 D1 night     round 2: ship:2 guns at ship:14: 33.85713 shots x 0.045 = 1.52357 expected, 0 hits  <- #70
-#98 D1 night     round 2: ship:3 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #70
-#99 D1 night     round 2: ship:4 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#100 D1 night     round 2: ship:5 guns at ship:14: 33.85713 shots x 0.045 = 1.52357 expected, 1 hit  <- #70
-#101 D1 night     round 2: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 1 hit  <- #70
-#102 D1 night     round 2: ship:7 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#103 D1 night     round 2: ship:13 guns at ship:1: 12.696423 shots x 0.015 = 0.190446 expected, 0 hits  <- #70
-#104 D1 night     round 2: ship:14 guns at ship:2: 25.392847 shots x 0.0075 = 0.190446 expected, 0 hits  <- #70
-#105 D1 night     round 2: ship:15 guns at ship:3: 25.392847 shots x 0.015 = 0.380892 expected, 0 hits  <- #70
-#106 D1 night     round 2: ship:16 guns at ship:1: 24.44444 shots x 0.045 = 1.099999 expected, 3 hits  <- #70
-#107 D1 night     round 2: ship:16 torpedoes at ship:4: 8 shots x 0.05 = 0.4 expected, 0 hits  <- #70
-#108 D1 night     round 2: ship:17 guns at ship:2: 24.44444 shots x 0.03 = 0.733333 expected, 0 hits  <- #70
-#109 D1 night     round 2: ship:17 torpedoes at ship:5: 8 shots x 0.04 = 0.32 expected, 0 hits  <- #70
-#110 D1 night     round 2: ship:13 took 2 hits on fire, 10.5402 points, now 32.715656  <- #96
-#111 D1 night     round 2: ship:13 torpedo mounts hit, no change, still working  <- #96
-#112 D1 night     round 2: ship:15 took 1 hit on flotation, 5.2701 points, now 24.262978  <- #98
-#113 D1 night     round 2: ship:15 main battery hit, working -> degraded  <- #98
-#114 D1 night     round 2: ship:13 took 1 hit on flotation, 5.2701 points, now 29.533078  <- #99
-#115 D1 night     round 2: ship:13 took 1 hit on fire, 5.2701 points, now 37.985756  <- #99
-#116 D1 night     round 2: ship:13 main battery hit, degraded -> out  <- #99
-#117 D1 night     round 2: ship:14 took 1 hit on fire, 5.2701 points, now 5.2701  <- #100
-#118 D1 night     round 2: ship:15 took 1 hit on fire, 1.591289 points, now 6.861389  <- #101
-#119 D1 night     round 2: ship:13 took 1 hit on flotation, 1.591289 points, now 31.124367  <- #102
-#120 D1 night     round 2: ship:13 took 1 hit on fire, 1.591289 points, now 39.577045  <- #102
-#121 D1 night     round 2: ship:1 took 2 hits on flotation, 1.835534 points, now 1.835534  <- #106
-#122 D1 night     round 2: ship:1 took 1 hit on fire, 0.917767 points, now 0.917767  <- #106
-#123 D1 night     round 3: ship:1 guns at ship:13: 56.42855 shots x 0.09 = 5.078569 expected, 4 hits  <- #70
-#124 D1 night     round 3: ship:2 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#125 D1 night     round 3: ship:3 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#126 D1 night     round 3: ship:4 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #70
-#127 D1 night     round 3: ship:5 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#128 D1 night     round 3: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 3 hits  <- #70
-#129 D1 night     round 3: ship:7 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #70
-#130 D1 night     round 3: ship:14 guns at ship:2: 25.392847 shots x 0.0075 = 0.190446 expected, 0 hits  <- #70
-#131 D1 night     round 3: ship:15 guns at ship:3: 12.696423 shots x 0.015 = 0.190446 expected, 1 hit  <- #70
-#132 D1 night     round 3: ship:16 guns at ship:1: 24.44444 shots x 0.09 = 2.199999 expected, 3 hits  <- #70
-#133 D1 night     round 3: ship:17 guns at ship:2: 24.44444 shots x 0.03 = 0.733333 expected, 0 hits  <- #70
-#134 D1 night     round 3: ship:13 took 3 hits on flotation, 15.8103 points, now 46.934667  <- #123
-#135 D1 night     round 3: ship:13 took 1 hit on fire, 5.2701 points, now 44.847145  <- #123
-#136 D1 night     round 3: ship:13 propulsion hit, working -> degraded  <- #123
-#137 D1 night     round 3: ship:14 took 2 hits on flotation, 10.5402 points, now 36.8907  <- #124
-#138 D1 night     round 3: ship:14 took 2 hits on fire, 10.5402 points, now 15.8103  <- #124
-#139 D1 night     round 3: ship:14 torpedo mounts hit, no change, still working  <- #124
-#140 D1 night     round 3: ship:15 took 3 hits on flotation, 15.8103 points, now 40.073278  <- #125
-#141 D1 night     round 3: ship:15 took 1 hit on fire, 5.2701 points, now 12.131489  <- #125
-#142 D1 night     round 3: ship:15 main battery hit, degraded -> out  <- #125
-#143 D1 night     round 3: ship:15 fire control hit, degraded -> out  <- #125
-#144 D1 night     round 3: ship:15 propulsion hit, working -> degraded  <- #125
-#145 D1 night     round 3: ship:13 took 1 hit on flotation, 5.2701 points, now 52.204767  <- #126
-#146 D1 night     round 3: ship:13 took 2 hits on fire, 10.5402 points, now 55.387345  <- #126
-#147 D1 night     round 3: ship:14 took 3 hits on flotation, 15.8103 points, now 52.701  <- #127
-#148 D1 night     round 3: ship:14 took 1 hit on fire, 5.2701 points, now 21.0804  <- #127
-#149 D1 night     round 3: ship:14 main battery hit, working -> degraded  <- #127
-#150 D1 night     round 3: ship:14 propulsion hit, working -> degraded  <- #127
-#151 D1 night     round 3: ship:15 took 3 hits on flotation, 4.773867 points, now 44.847145  <- #128
-#152 D1 night     round 3: ship:15 main battery hit, no change, still out  <- #128
-#153 D1 night     round 3: ship:15 fire control hit, no change, still out  <- #128
-#154 D1 night     round 3: ship:13 took 3 hits on flotation, 4.773867 points, now 56.978634  <- #129
-#155 D1 night     round 3: ship:3 took 1 hit on flotation, 5.736891 points, now 5.736891  <- #131
-#156 D1 night     round 3: ship:3 main battery hit, working -> degraded  <- #131
-#157 D1 night     round 3: ship:1 took 2 hits on flotation, 1.835534 points, now 3.671068  <- #132
-#158 D1 night     round 3: ship:1 took 1 hit on fire, 0.917767 points, now 1.835534  <- #132
-#159 D1 night     round 4: ship:1 guns at ship:13: 56.42855 shots x 0.09 = 5.078569 expected, 2 hits  <- #70
-#160 D1 night     round 4: ship:2 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#161 D1 night     round 4: ship:3 guns at ship:15: 16.928565 shots x 0.09 = 1.52357 expected, 1 hit  <- #70
-#162 D1 night     round 4: ship:4 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#163 D1 night     round 4: ship:5 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #70
-#164 D1 night     round 4: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 3 hits  <- #70
-#165 D1 night     round 4: ship:7 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#166 D1 night     round 4: ship:14 guns at ship:2: 12.696423 shots x 0.0075 = 0.095223 expected, 1 hit  <- #70
-#167 D1 night     round 4: ship:16 guns at ship:1: 24.44444 shots x 0.09 = 2.199999 expected, 3 hits  <- #70
-#168 D1 night     round 4: ship:17 guns at ship:2: 24.44444 shots x 0.03 = 0.733333 expected, 1 hit  <- #70
-#169 D1 night     round 4: ship:13 took 1 hit on flotation, 5.2701 points, now 62.248734  <- #159
-#170 D1 night     round 4: ship:13 took 1 hit on fire, 5.2701 points, now 60.657445  <- #159
-#171 D1 night     round 4: ship:14 took 2 hits on flotation, 10.5402 points, now 63.2412  <- #160
-#172 D1 night     round 4: ship:15 took 1 hit on flotation, 5.2701 points, now 50.117245  <- #161
-#173 D1 night     round 4: ship:13 took 2 hits on flotation, 10.5402 points, now 72.788934  <- #162
-#174 D1 night     round 4: ship:14 took 1 hit on flotation, 5.2701 points, now 68.5113  <- #163
-#175 D1 night     round 4: ship:15 took 2 hits on flotation, 3.182578 points, now 53.299823  <- #164
-#176 D1 night     round 4: ship:15 took 1 hit on fire, 1.591289 points, now 13.722778  <- #164
-#177 D1 night     round 4: ship:15 fire control hit, no change, still out  <- #164
-#178 D1 night     round 4: ship:13 took 1 hit on flotation, 1.591289 points, now 74.380223  <- #165
-#179 D1 night     round 4: ship:13 took 1 hit on fire, 1.591289 points, now 62.248734  <- #165
-#180 D1 night     round 4: ship:2 took 1 hit on fire, 5.545834 points, now 5.545834  <- #166
-#181 D1 night     round 4: ship:1 took 2 hits on flotation, 1.835534 points, now 5.506602  <- #167
-#182 D1 night     round 4: ship:1 took 1 hit on fire, 0.917767 points, now 2.753301  <- #167
-#183 D1 night     round 4: ship:2 took 1 hit on flotation, 1.175961 points, now 1.175961  <- #168
-#184 D1 night     round 5: ship:1 guns at ship:13: 56.42855 shots x 0.09 = 5.078569 expected, 7 hits  <- #70
-#185 D1 night     round 5: ship:2 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#186 D1 night     round 5: ship:3 guns at ship:15: 16.928565 shots x 0.09 = 1.52357 expected, 3 hits  <- #70
-#187 D1 night     round 5: ship:4 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #70
-#188 D1 night     round 5: ship:5 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 6 hits  <- #70
-#189 D1 night     round 5: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 3 hits  <- #70
-#190 D1 night     round 5: ship:7 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#191 D1 night     round 5: ship:14 guns at ship:2: 12.696423 shots x 0.015 = 0.190446 expected, 0 hits  <- #70
-#192 D1 night     round 5: ship:16 guns at ship:1: 24.44444 shots x 0.09 = 2.199999 expected, 4 hits  <- #70
-#193 D1 night     round 5: ship:17 guns at ship:2: 24.44444 shots x 0.06 = 1.466666 expected, 1 hit  <- #70
-#194 D1 night     round 5: ship:13 took 6 hits on flotation, 31.6206 points, now 100  <- #184
-#195 D1 night     round 5: ship:13 of task_force:3 sank  <- #194
-#196 D1 night     round 5: ship:13 took 1 hit on fire, 5.2701 points, now 67.518834  <- #184
-#197 D1 night     round 5: ship:13 main battery hit, no change, still out  <- #184
-#198 D1 night     round 5: ship:13 propulsion hit, degraded -> out  <- #184
-#199 D1 night     round 5: ship:14 took 2 hits on flotation, 10.5402 points, now 79.0515  <- #185
-#200 D1 night     round 5: ship:14 took 2 hits on fire, 10.5402 points, now 31.6206  <- #185
-#201 D1 night     round 5: ship:14 propulsion hit, degraded -> out  <- #185
-#202 D1 night     round 5: ship:14 propulsion hit, no change, still out  <- #185
-#203 D1 night     round 5: ship:15 took 1 hit on flotation, 5.2701 points, now 58.569923  <- #186
-#204 D1 night     round 5: ship:15 took 2 hits on fire, 10.5402 points, now 24.262978  <- #186
-#205 D1 night     round 5: ship:15 main battery hit, no change, still out  <- #186
-#206 D1 night     round 5: ship:13 took 1 hit on flotation, 5.2701 points, now 100  <- #187
-#207 D1 night     round 5: ship:13 propulsion hit, no change, still out  <- #187
-#208 D1 night     round 5: ship:14 took 5 hits on flotation, 26.3505 points, now 100  <- #188
-#209 D1 night     round 5: ship:14 of task_force:3 sank  <- #208
-#210 D1 night     round 5: ship:14 took 1 hit on fire, 5.2701 points, now 36.8907  <- #188
-#211 D1 night     round 5: ship:14 fire control hit, degraded -> out  <- #188
-#212 D1 night     round 5: ship:15 took 2 hits on flotation, 3.182578 points, now 61.752501  <- #189
-#213 D1 night     round 5: ship:15 took 1 hit on fire, 1.591289 points, now 25.854267  <- #189
-#214 D1 night     round 5: ship:15 main battery hit, no change, still out  <- #189
-#215 D1 night     round 5: ship:13 took 2 hits on flotation, 3.182578 points, now 100  <- #190
-#216 D1 night     round 5: ship:1 took 2 hits on flotation, 1.835534 points, now 7.342136  <- #192
-#217 D1 night     round 5: ship:1 took 2 hits on fire, 1.835534 points, now 4.588835  <- #192
-#218 D1 night     round 5: ship:2 took 1 hit on flotation, 1.175961 points, now 2.351922  <- #193
-#219 D1 night     round 6: ship:1 guns at ship:15: 56.42855 shots x 0.09 = 5.078569 expected, 6 hits  <- #70
-#220 D1 night     round 6: ship:2 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #70
-#221 D1 night     round 6: ship:3 guns at ship:15: 16.928565 shots x 0.09 = 1.52357 expected, 2 hits  <- #70
-#222 D1 night     round 6: ship:4 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#223 D1 night     round 6: ship:5 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#224 D1 night     round 6: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 4 hits  <- #70
-#225 D1 night     round 6: ship:7 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #70
-#226 D1 night     round 6: ship:16 guns at ship:1: 24.44444 shots x 0.09 = 2.199999 expected, 3 hits  <- #70
-#227 D1 night     round 6: ship:17 guns at ship:2: 24.44444 shots x 0.06 = 1.466666 expected, 1 hit  <- #70
-#228 D1 night     round 6: ship:15 took 2 hits on flotation, 10.5402 points, now 72.292701  <- #219
-#229 D1 night     round 6: ship:15 took 4 hits on fire, 21.0804 points, now 46.934667  <- #219
-#230 D1 night     round 6: ship:15 torpedo mounts hit, no change, still working  <- #219
-#231 D1 night     round 6: ship:15 torpedo mounts hit, no change, still working  <- #219
-#232 D1 night     round 6: ship:15 took 4 hits on flotation, 21.0804 points, now 93.373101  <- #220
-#233 D1 night     round 6: ship:15 fire control hit, no change, still out  <- #220
-#234 D1 night     round 6: ship:15 propulsion hit, degraded -> out  <- #220
-#235 D1 night     round 6: ship:15 took 1 hit on flotation, 5.2701 points, now 98.643201  <- #221
-#236 D1 night     round 6: ship:15 took 1 hit on fire, 5.2701 points, now 52.204767  <- #221
-#237 D1 night     round 6: ship:15 took 2 hits on flotation, 10.5402 points, now 100  <- #222
-#238 D1 night     round 6: ship:15 of task_force:3 sank  <- #237
-#239 D1 night     round 6: ship:15 took 1 hit on flotation, 5.2701 points, now 100  <- #223
-#240 D1 night     round 6: ship:15 took 1 hit on fire, 5.2701 points, now 57.474867  <- #223
-#241 D1 night     round 6: ship:15 main battery hit, no change, still out  <- #223
-#242 D1 night     round 6: ship:15 took 3 hits on flotation, 4.773867 points, now 100  <- #224
-#243 D1 night     round 6: ship:15 took 1 hit on fire, 1.591289 points, now 59.066156  <- #224
-#244 D1 night     round 6: ship:15 main battery hit, no change, still out  <- #224
-#245 D1 night     round 6: ship:15 took 2 hits on flotation, 3.182578 points, now 100  <- #225
-#246 D1 night     round 6: ship:1 took 3 hits on flotation, 2.753301 points, now 10.095437  <- #226
-#247 D1 night     round 6: ship:2 took 1 hit on fire, 1.175961 points, now 6.721795  <- #227
-#248 D1 night     round 6: ship:2 torpedo mounts hit, working -> degraded  <- #227
-#249 D1 night     engagement of task_force:1 and task_force:3 at (2,-5) ended in round 6: reached the last round  <- #70
-#250 D1 night     Japanese report: 2 ships, destroyer, at (2,-5): refreshed contact:1  <- #249
-#251 D1 night     Japanese claims 3 enemy ships sunk at (2,-5)  <- #249
-#252 D1 night     Allied report: 7 ships, cruiser, at (2,-5): refreshed contact:2  <- #249
-#253 D1 night     Allied claims 0 enemy ships sunk at (2,-5)  <- #249
-#254 D1 night     task_force:1 steamed 112 nm at 25 kn from (2,-5) to (1,-7)  <- order:3, order:4
-#255 D1 night     ship:1 burned 112.901732 t, 2226.584647 t remaining  <- #254
-#256 D1 night     ship:2 burned 91.071385 t, 1796.05879 t remaining  <- #254
-#257 D1 night     ship:3 burned 83.99634 t, 1633.009799 t remaining  <- #254
-#258 D1 night     ship:4 burned 91.071385 t, 1796.05879 t remaining  <- #254
-#259 D1 night     ship:5 burned 83.99634 t, 1633.009799 t remaining  <- #254
-#260 D1 night     ship:6 burned 64.642826 t, 731.849573 t remaining  <- #254
-#261 D1 night     ship:7 burned 97.324076 t, 641.310508 t remaining  <- #254
-#262 D1 night     task_force:4 steamed 300 nm at 25 kn from (-1,-8) to (0,-8)  <- order:6, order:7
-#263 D1 night     ship:8 burned 109.746969 t, 303.253031 t remaining  <- #262
-#264 D1 night     Allied contact:1 aged to 3 pulses  <- #1
-#265 D1 morning   task_force:1 alerted by contact:1  <- #250
+#42 D1 night     round 1: ship:10 took 1 hit on flotation, 54.143646 points, now 59.937844  <- #26
+#43 D1 night     round 1: ship:10 propulsion hit, working -> degraded  <- #26
+#44 D1 night     round 1: ship:9 took 1 hit on fire, 5.378205 points, now 21.51282  <- #27
+#45 D1 night     round 1: ship:9 took 1 hit on flotation, 50.25641 points, now 71.76923  <- #28
+#46 D1 night     round 1: ship:9 propulsion hit, working -> degraded  <- #28
+#47 D1 night     round 1: ship:10 took 2 hits on fire, 11.588396 points, now 17.382594  <- #29
+#48 D1 night     round 1: ship:10 fire control hit, working -> degraded  <- #29
+#49 D1 night     round 1: ship:10 main battery hit, working -> degraded  <- #29
+#50 D1 night     round 1: ship:9 took 3 hits on flotation, 16.134615 points, now 87.903845  <- #31
+#51 D1 night     round 1: ship:9 main battery hit, working -> degraded  <- #31
+#52 D1 night     round 1: ship:9 took 2 hits on flotation, 3.247862 points, now 91.151707  <- #35
+#53 D1 night     round 1: ship:9 took 1 hit on fire, 1.623931 points, now 23.136751  <- #35
+#54 D1 night     round 1: ship:9 fire control hit, working -> degraded  <- #35
+#55 D1 night     round 1: ship:9 took 1 hit on flotation, 35.384615 points, now 100  <- #36
+#56 D1 night     round 1: ship:9 of task_force:2 sank  <- #55
+#57 D1 night     round 1: ship:9 propulsion hit, degraded -> out  <- #36
+#58 D1 night     round 1: task_force:2 became alert  <- #23
+#59 D1 night     round 1: task_force:2 broke off, 0.5 of its ships sunk or crippled  <- #37, #38, #40, #41, #42, #44, #45, #47, #50, #52, #53, #55, order:1
+#60 D1 night     engagement of task_force:1 and task_force:2 at (2,-5) ended in round 1: a force broke off  <- #59
+#61 D1 night     Japanese report: 2 ships, destroyer, at (1,-5): new contact:1  <- #60
+#62 D1 night     Japanese claims 1 enemy ship sunk at (2,-5)  <- #60
+#63 D1 night     Allied report: 7 ships, cruiser, at (2,-5): new contact:2  <- #60
+#64 D1 night     task_force:3 heard the fight of task_force:1 and task_force:2, chance 0.5: not alarmed  <- #60
+#65 D1 night     task_force:1 and task_force:3 met at (2,-5) at D1 01:31: engagement begun  <- #11, order:5, order:2
+#66 D1 night     round 1: task_force:1 looked for task_force:3, chance 0.625: sighted  <- #65
+#67 D1 night     round 1: task_force:3 looked for task_force:1, chance 0.2375: not sighted  <- #65
+#68 D1 night     round 1: task_force:3 was surprised by task_force:1  <- #66
+#69 D1 night     round 1: ship:1 guns at ship:13: 56.42855 shots x 0.09 = 5.078569 expected, 5 hits  <- #65
+#70 D1 night     round 1: ship:1 torpedoes at ship:13: 4 shots x 0.1 = 0.4 expected, 1 hit  <- #65
+#71 D1 night     round 1: ship:2 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #65
+#72 D1 night     round 1: ship:2 torpedoes at ship:14: 4 shots x 0.1 = 0.4 expected, 2 hits  <- #65
+#73 D1 night     round 1: ship:3 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #65
+#74 D1 night     round 1: ship:3 torpedoes at ship:15: 4 shots x 0.1 = 0.4 expected, 0 hits  <- #65
+#75 D1 night     round 1: ship:4 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #65
+#76 D1 night     round 1: ship:4 torpedoes at ship:13: 4 shots x 0.1 = 0.4 expected, 1 hit  <- #65
+#77 D1 night     round 1: ship:5 guns at ship:14: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #65
+#78 D1 night     round 1: ship:5 torpedoes at ship:14: 4 shots x 0.1 = 0.4 expected, 0 hits  <- #65
+#79 D1 night     round 1: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 2 hits  <- #65
+#80 D1 night     round 1: ship:7 guns at ship:13: 33.85713 shots x 0.09 = 3.047141 expected, 6 hits  <- #65
+#81 D1 night     round 1: ship:13 took 2 hits on flotation, 10.5402 points, now 10.5402  <- #69
+#82 D1 night     round 1: ship:13 took 3 hits on fire, 15.8103 points, now 15.8103  <- #69
+#83 D1 night     round 1: ship:13 main battery hit, working -> degraded  <- #69
+#84 D1 night     round 1: ship:13 took 1 hit on flotation, 37.688442 points, now 48.228642  <- #70
+#85 D1 night     round 1: ship:13 propulsion hit, working -> degraded  <- #70
+#86 D1 night     round 1: ship:14 took 1 hit on flotation, 5.2701 points, now 5.2701  <- #71
+#87 D1 night     round 1: ship:14 took 2 hits on flotation, 98.492462 points, now 100  <- #72
+#88 D1 night     round 1: ship:14 of task_force:3 sank  <- #87
+#89 D1 night     round 1: ship:14 propulsion hit, working -> degraded  <- #72
+#90 D1 night     round 1: ship:14 main battery hit, working -> degraded  <- #72
+#91 D1 night     round 1: ship:15 took 3 hits on flotation, 15.8103 points, now 15.8103  <- #73
+#92 D1 night     round 1: ship:15 took 1 hit on fire, 5.2701 points, now 5.2701  <- #73
+#93 D1 night     round 1: ship:15 fire control hit, working -> degraded  <- #73
+#94 D1 night     round 1: ship:13 took 2 hits on flotation, 10.5402 points, now 58.768842  <- #75
+#95 D1 night     round 1: ship:13 took 1 hit on flotation, 49.246231 points, now 100  <- #76
+#96 D1 night     round 1: ship:13 of task_force:3 sank  <- #95
+#97 D1 night     round 1: ship:13 propulsion hit, degraded -> out  <- #76
+#98 D1 night     round 1: ship:14 took 4 hits on flotation, 21.0804 points, now 100  <- #77
+#99 D1 night     round 1: ship:14 torpedo mounts hit, no change, still working  <- #77
+#100 D1 night     round 1: ship:14 fire control hit, working -> degraded  <- #77
+#101 D1 night     round 1: ship:15 took 2 hits on flotation, 3.182578 points, now 18.992878  <- #79
+#102 D1 night     round 1: ship:13 took 2 hits on flotation, 3.182578 points, now 100  <- #80
+#103 D1 night     round 1: ship:13 took 4 hits on fire, 6.365156 points, now 22.175456  <- #80
+#104 D1 night     round 1: task_force:3 became alert  <- #69
+#105 D1 night     round 2: ship:1 guns at ship:15: 56.42855 shots x 0.09 = 5.078569 expected, 2 hits  <- #65
+#106 D1 night     round 2: ship:2 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #65
+#107 D1 night     round 2: ship:3 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #65
+#108 D1 night     round 2: ship:4 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #65
+#109 D1 night     round 2: ship:5 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #65
+#110 D1 night     round 2: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 1 hit  <- #65
+#111 D1 night     round 2: ship:7 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #65
+#112 D1 night     round 2: ship:15 guns at ship:1: 25.392847 shots x 0.015 = 0.380892 expected, 0 hits  <- #65
+#113 D1 night     round 2: ship:16 guns at ship:1: 24.44444 shots x 0.045 = 1.099999 expected, 3 hits  <- #65
+#114 D1 night     round 2: ship:16 torpedoes at ship:2: 4 shots x 0.05 = 0.2 expected, 0 hits  <- #65
+#115 D1 night     round 2: ship:17 guns at ship:2: 24.44444 shots x 0.03 = 0.733333 expected, 0 hits  <- #65
+#116 D1 night     round 2: ship:17 torpedoes at ship:3: 4 shots x 0.04 = 0.16 expected, 0 hits  <- #65
+#117 D1 night     round 2: ship:15 took 2 hits on fire, 10.5402 points, now 15.8103  <- #105
+#118 D1 night     round 2: ship:15 torpedo mounts hit, no change, still working  <- #105
+#119 D1 night     round 2: ship:15 took 1 hit on flotation, 5.2701 points, now 24.262978  <- #106
+#120 D1 night     round 2: ship:15 took 2 hits on fire, 10.5402 points, now 26.3505  <- #106
+#121 D1 night     round 2: ship:15 main battery hit, working -> degraded  <- #106
+#122 D1 night     round 2: ship:15 main battery hit, degraded -> out  <- #106
+#123 D1 night     round 2: ship:15 fire control hit, degraded -> out  <- #106
+#124 D1 night     round 2: ship:15 took 1 hit on flotation, 5.2701 points, now 29.533078  <- #107
+#125 D1 night     round 2: ship:15 main battery hit, no change, still out  <- #107
+#126 D1 night     round 2: ship:15 took 1 hit on flotation, 5.2701 points, now 34.803178  <- #108
+#127 D1 night     round 2: ship:15 took 1 hit on fire, 5.2701 points, now 31.6206  <- #108
+#128 D1 night     round 2: ship:15 main battery hit, no change, still out  <- #108
+#129 D1 night     round 2: ship:15 took 1 hit on fire, 5.2701 points, now 36.8907  <- #109
+#130 D1 night     round 2: ship:15 took 1 hit on fire, 1.591289 points, now 38.481989  <- #110
+#131 D1 night     round 2: ship:15 took 1 hit on flotation, 1.591289 points, now 36.394467  <- #111
+#132 D1 night     round 2: ship:15 took 1 hit on fire, 1.591289 points, now 40.073278  <- #111
+#133 D1 night     round 2: ship:1 took 2 hits on flotation, 1.835534 points, now 1.835534  <- #113
+#134 D1 night     round 2: ship:1 took 1 hit on fire, 0.917767 points, now 0.917767  <- #113
+#135 D1 night     round 3: ship:1 guns at ship:15: 56.42855 shots x 0.09 = 5.078569 expected, 4 hits  <- #65
+#136 D1 night     round 3: ship:2 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #65
+#137 D1 night     round 3: ship:3 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #65
+#138 D1 night     round 3: ship:4 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #65
+#139 D1 night     round 3: ship:5 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 4 hits  <- #65
+#140 D1 night     round 3: ship:6 guns at ship:15: 22.57142 shots x 0.09 = 2.031427 expected, 3 hits  <- #65
+#141 D1 night     round 3: ship:7 guns at ship:15: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #65
+#142 D1 night     round 3: ship:16 guns at ship:1: 24.44444 shots x 0.09 = 2.199999 expected, 2 hits  <- #65
+#143 D1 night     round 3: ship:16 torpedoes at ship:2: 4 shots x 0.05 = 0.2 expected, 0 hits  <- #65
+#144 D1 night     round 3: ship:17 guns at ship:2: 24.44444 shots x 0.03 = 0.733333 expected, 0 hits  <- #65
+#145 D1 night     round 3: ship:17 torpedoes at ship:3: 4 shots x 0.04 = 0.16 expected, 0 hits  <- #65
+#146 D1 night     round 3: ship:15 took 3 hits on flotation, 15.8103 points, now 52.204767  <- #135
+#147 D1 night     round 3: ship:15 took 1 hit on fire, 5.2701 points, now 45.343378  <- #135
+#148 D1 night     round 3: ship:15 propulsion hit, working -> degraded  <- #135
+#149 D1 night     round 3: ship:15 took 4 hits on flotation, 21.0804 points, now 73.285167  <- #136
+#150 D1 night     round 3: ship:15 torpedo mounts hit, no change, still working  <- #136
+#151 D1 night     round 3: ship:15 propulsion hit, degraded -> out  <- #136
+#152 D1 night     round 3: ship:15 main battery hit, no change, still out  <- #136
+#153 D1 night     round 3: ship:15 took 3 hits on flotation, 15.8103 points, now 89.095467  <- #137
+#154 D1 night     round 3: ship:15 took 1 hit on fire, 5.2701 points, now 50.613478  <- #137
+#155 D1 night     round 3: ship:15 main battery hit, no change, still out  <- #137
+#156 D1 night     round 3: ship:15 fire control hit, no change, still out  <- #137
+#157 D1 night     round 3: ship:15 propulsion hit, no change, still out  <- #137
+#158 D1 night     round 3: ship:15 took 1 hit on flotation, 5.2701 points, now 94.365567  <- #138
+#159 D1 night     round 3: ship:15 took 2 hits on fire, 10.5402 points, now 61.153678  <- #138
+#160 D1 night     round 3: ship:15 took 3 hits on flotation, 15.8103 points, now 100  <- #139
+#161 D1 night     round 3: ship:15 of task_force:3 sank  <- #160
+#162 D1 night     round 3: ship:15 took 1 hit on fire, 5.2701 points, now 66.423778  <- #139
+#163 D1 night     round 3: ship:15 main battery hit, no change, still out  <- #139
+#164 D1 night     round 3: ship:15 propulsion hit, no change, still out  <- #139
+#165 D1 night     round 3: ship:15 took 3 hits on flotation, 4.773867 points, now 100  <- #140
+#166 D1 night     round 3: ship:15 main battery hit, no change, still out  <- #140
+#167 D1 night     round 3: ship:15 fire control hit, no change, still out  <- #140
+#168 D1 night     round 3: ship:15 took 3 hits on flotation, 4.773867 points, now 100  <- #141
+#169 D1 night     round 3: ship:1 took 1 hit on flotation, 0.917767 points, now 2.753301  <- #142
+#170 D1 night     round 3: ship:1 took 1 hit on fire, 0.917767 points, now 1.835534  <- #142
+#171 D1 night     round 4: ship:1 guns at ship:16: 56.42855 shots x 0.045 = 2.539284 expected, 0 hits  <- #65
+#172 D1 night     round 4: ship:2 guns at ship:17: 33.85713 shots x 0.045 = 1.52357 expected, 0 hits  <- #65
+#173 D1 night     round 4: ship:3 guns at ship:16: 33.85713 shots x 0.045 = 1.52357 expected, 2 hits  <- #65
+#174 D1 night     round 4: ship:4 guns at ship:17: 33.85713 shots x 0.045 = 1.52357 expected, 2 hits  <- #65
+#175 D1 night     round 4: ship:5 guns at ship:16: 33.85713 shots x 0.045 = 1.52357 expected, 0 hits  <- #65
+#176 D1 night     round 4: ship:6 guns at ship:17: 22.57142 shots x 0.045 = 1.015713 expected, 1 hit  <- #65
+#177 D1 night     round 4: ship:7 guns at ship:16: 33.85713 shots x 0.045 = 1.52357 expected, 1 hit  <- #65
+#178 D1 night     round 4: ship:16 guns at ship:1: 24.44444 shots x 0.09 = 2.199999 expected, 3 hits  <- #65
+#179 D1 night     round 4: ship:17 guns at ship:2: 24.44444 shots x 0.03 = 0.733333 expected, 0 hits  <- #65
+#180 D1 night     round 4: ship:16 took 1 hit on flotation, 32.2891 points, now 32.2891  <- #173
+#181 D1 night     round 4: ship:16 took 1 hit on fire, 32.2891 points, now 32.2891  <- #173
+#182 D1 night     round 4: ship:16 fire control hit, working -> degraded  <- #173
+#183 D1 night     round 4: ship:16 propulsion hit, working -> degraded  <- #173
+#184 D1 night     round 4: ship:17 took 2 hits on flotation, 63.292094 points, now 63.292094  <- #174
+#185 D1 night     round 4: ship:17 fire control hit, working -> degraded  <- #174
+#186 D1 night     round 4: ship:17 main battery hit, working -> degraded  <- #174
+#187 D1 night     round 4: ship:17 took 1 hit on fire, 9.55542 points, now 9.55542  <- #176
+#188 D1 night     round 4: ship:17 propulsion hit, working -> degraded  <- #176
+#189 D1 night     round 4: ship:16 took 1 hit on fire, 9.749588 points, now 42.038688  <- #177
+#190 D1 night     round 4: ship:1 took 2 hits on flotation, 1.835534 points, now 4.588835  <- #178
+#191 D1 night     round 4: ship:1 took 1 hit on fire, 0.917767 points, now 2.753301  <- #178
+#192 D1 night     round 4: ship:1 propulsion hit, working -> degraded  <- #178
+#193 D1 night     round 5: ship:1 guns at ship:16: 56.42855 shots x 0.09 = 5.078569 expected, 7 hits  <- #65
+#194 D1 night     round 5: ship:2 guns at ship:17: 33.85713 shots x 0.09 = 3.047141 expected, 5 hits  <- #65
+#195 D1 night     round 5: ship:3 guns at ship:16: 33.85713 shots x 0.09 = 3.047141 expected, 3 hits  <- #65
+#196 D1 night     round 5: ship:4 guns at ship:17: 33.85713 shots x 0.09 = 3.047141 expected, 1 hit  <- #65
+#197 D1 night     round 5: ship:5 guns at ship:16: 33.85713 shots x 0.09 = 3.047141 expected, 7 hits  <- #65
+#198 D1 night     round 5: ship:6 guns at ship:17: 22.57142 shots x 0.09 = 2.031427 expected, 2 hits  <- #65
+#199 D1 night     round 5: ship:7 guns at ship:16: 33.85713 shots x 0.09 = 3.047141 expected, 2 hits  <- #65
+#200 D1 night     round 5: ship:16 guns at ship:1: 24.44444 shots x 0.045 = 1.099999 expected, 1 hit  <- #65
+#201 D1 night     round 5: ship:17 guns at ship:2: 12.22222 shots x 0.015 = 0.183333 expected, 1 hit  <- #65
+#202 D1 night     round 5: ship:16 took 5 hits on flotation, 161.4455 points, now 100  <- #193
+#203 D1 night     round 5: ship:16 of task_force:3 sank  <- #202
+#204 D1 night     round 5: ship:16 took 2 hits on fire, 64.5782 points, now 100  <- #193
+#205 D1 night     round 5: ship:16 fire control hit, degraded -> out  <- #193
+#206 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #193
+#207 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #193
+#208 D1 night     round 5: ship:16 propulsion hit, degraded -> out  <- #193
+#209 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #193
+#210 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #193
+#211 D1 night     round 5: ship:16 main battery hit, working -> degraded  <- #193
+#212 D1 night     round 5: ship:17 took 3 hits on flotation, 94.938141 points, now 100  <- #194
+#213 D1 night     round 5: ship:17 of task_force:3 sank  <- #212
+#214 D1 night     round 5: ship:17 took 2 hits on fire, 63.292094 points, now 72.847514  <- #194
+#215 D1 night     round 5: ship:17 main battery hit, degraded -> out  <- #194
+#216 D1 night     round 5: ship:17 propulsion hit, degraded -> out  <- #194
+#217 D1 night     round 5: ship:17 main battery hit, no change, still out  <- #194
+#218 D1 night     round 5: ship:17 main battery hit, no change, still out  <- #194
+#219 D1 night     round 5: ship:17 torpedo mounts hit, working -> degraded  <- #194
+#220 D1 night     round 5: ship:16 took 2 hits on flotation, 64.5782 points, now 100  <- #195
+#221 D1 night     round 5: ship:16 took 1 hit on fire, 32.2891 points, now 100  <- #195
+#222 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #195
+#223 D1 night     round 5: ship:16 main battery hit, degraded -> out  <- #195
+#224 D1 night     round 5: ship:16 torpedo mounts hit, working -> degraded  <- #195
+#225 D1 night     round 5: ship:17 took 1 hit on flotation, 31.646047 points, now 100  <- #196
+#226 D1 night     round 5: ship:17 propulsion hit, no change, still out  <- #196
+#227 D1 night     round 5: ship:16 took 6 hits on flotation, 193.7346 points, now 100  <- #197
+#228 D1 night     round 5: ship:16 took 1 hit on fire, 32.2891 points, now 100  <- #197
+#229 D1 night     round 5: ship:16 main battery hit, no change, still out  <- #197
+#230 D1 night     round 5: ship:16 propulsion hit, no change, still out  <- #197
+#231 D1 night     round 5: ship:16 torpedo mounts hit, degraded -> out  <- #197
+#232 D1 night     round 5: ship:16 main battery hit, no change, still out  <- #197
+#233 D1 night     round 5: ship:16 main battery hit, no change, still out  <- #197
+#234 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #197
+#235 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #197
+#236 D1 night     round 5: ship:17 took 2 hits on flotation, 19.11084 points, now 100  <- #198
+#237 D1 night     round 5: ship:17 propulsion hit, no change, still out  <- #198
+#238 D1 night     round 5: ship:17 main battery hit, no change, still out  <- #198
+#239 D1 night     round 5: ship:16 took 2 hits on flotation, 19.499176 points, now 100  <- #199
+#240 D1 night     round 5: ship:16 main battery hit, no change, still out  <- #199
+#241 D1 night     round 5: ship:16 fire control hit, no change, still out  <- #199
+#242 D1 night     round 5: ship:1 took 1 hit on fire, 0.917767 points, now 3.671068  <- #200
+#243 D1 night     round 5: ship:2 took 1 hit on flotation, 1.175961 points, now 1.175961  <- #201
+#244 D1 night     engagement of task_force:1 and task_force:3 at (2,-5) ended in round 5: a force was sunk  <- #213
+#245 D1 night     Japanese report: 5 ships, cruiser, at (2,-5): refreshed contact:1  <- #244
+#246 D1 night     Japanese claims 5 enemy ships sunk at (2,-5)  <- #244
+#247 D1 night     Allied report: 7 ships, cruiser, at (2,-5): refreshed contact:2  <- #244
+#248 D1 night     Allied claims 0 enemy ships sunk at (2,-5)  <- #244
+#249 D1 night     task_force:1 sent ship:1 home as task_force:5 with escorts ship:2  <- order:5
+#250 D1 night     order:8 accepted for task_force:5  <- order:8, #249  [issued by the local commander]
+#251 D1 night     task_force:5 turned back toward (2,-6), 20 nm from (2,-5), now in (2,-6)  <- order:8
+#252 D1 night     task_force:1 steamed 112 nm at 25 kn from (2,-5) to (1,-7)  <- order:3, order:4
+#253 D1 night     ship:3 burned 83.99634 t, 1633.009799 t remaining  <- #252
+#254 D1 night     ship:4 burned 91.071385 t, 1796.05879 t remaining  <- #252
+#255 D1 night     ship:5 burned 83.99634 t, 1633.009799 t remaining  <- #252
+#256 D1 night     ship:6 burned 64.642826 t, 731.849573 t remaining  <- #252
+#257 D1 night     ship:7 burned 97.324076 t, 641.310508 t remaining  <- #252
+#258 D1 night     task_force:4 steamed 300 nm at 25 kn from (-1,-8) to (0,-8)  <- order:6, order:7
+#259 D1 night     ship:8 burned 109.746969 t, 303.253031 t remaining  <- #258
+#260 D1 night     task_force:5 steamed 79.52 nm at 17.75 kn from (2,-6) to (1,-7)  <- order:8, order:4
+#261 D1 night     ship:1 burned 40.408772 t, 2299.077607 t remaining  <- #260
+#262 D1 night     ship:2 burned 32.595451 t, 1854.534724 t remaining  <- #260
+#263 D1 night     Allied contact:1 aged to 3 pulses  <- #1
+#264 D1 morning   task_force:1 alerted by contact:1  <- #245
+#265 D1 morning   task_force:5 alerted by contact:1  <- #245
 #266 D1 morning   task_force:1 steamed 116 nm at 25 kn from (1,-7) to (-1,-8)  <- order:3, order:4
-#267 D1 morning   ship:1 burned 116.933936 t, 2109.650711 t remaining  <- #266
-#268 D1 morning   ship:2 burned 94.323934 t, 1701.734856 t remaining  <- #266
-#269 D1 morning   ship:3 burned 86.996211 t, 1546.013588 t remaining  <- #266
-#270 D1 morning   ship:4 burned 94.323934 t, 1701.734856 t remaining  <- #266
-#271 D1 morning   ship:5 burned 86.996211 t, 1546.013588 t remaining  <- #266
-#272 D1 morning   ship:6 burned 66.951498 t, 664.898075 t remaining  <- #266
-#273 D1 morning   ship:7 burned 100.799939 t, 540.510569 t remaining  <- #266
-#274 D1 morning   task_force:1 arrived at (-1,-8) at D1 10:38  <- #266
-#275 D1 morning   task_force:4 steamed 48 nm at 25 kn from (0,-8) to (-1,-8)  <- order:6, order:7
-#276 D1 morning   ship:8 burned 17.559513 t, 285.693518 t remaining  <- #275
-#277 D1 morning   task_force:4 arrived at (-1,-8) at D1 07:55  <- #275
-#278 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
-#279 D1 morning   Allied contact:2 aged to 1 pulses  <- #252
-#280 D1 morning   Japanese contact:1 aged to 1 pulses  <- #250
-#281 D1 afternoon task_force:1 stood down  <- #265
-#282 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
-#283 D1 afternoon Allied contact:2 aged to 2 pulses  <- #252
-#284 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #250
-#285 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#267 D1 morning   ship:3 burned 86.996211 t, 1546.013588 t remaining  <- #266
+#268 D1 morning   ship:4 burned 94.323934 t, 1701.734856 t remaining  <- #266
+#269 D1 morning   ship:5 burned 86.996211 t, 1546.013588 t remaining  <- #266
+#270 D1 morning   ship:6 burned 66.951498 t, 664.898075 t remaining  <- #266
+#271 D1 morning   ship:7 burned 100.799939 t, 540.510569 t remaining  <- #266
+#272 D1 morning   task_force:1 arrived at (-1,-8) at D1 10:38  <- #266
+#273 D1 morning   task_force:4 steamed 48 nm at 25 kn from (0,-8) to (-1,-8)  <- order:6, order:7
+#274 D1 morning   ship:8 burned 17.559513 t, 285.693518 t remaining  <- #273
+#275 D1 morning   task_force:4 arrived at (-1,-8) at D1 07:55  <- #273
+#276 D1 morning   task_force:5 steamed 106.5 nm at 17.75 kn from (1,-7) to (1,-10)  <- order:8, order:4
+#277 D1 morning   ship:1 burned 54.118891 t, 2244.958716 t remaining  <- #276
+#278 D1 morning   ship:2 burned 43.654622 t, 1810.880102 t remaining  <- #276
+#279 D1 morning   Allied contact:1 aged to 4 pulses  <- #1
+#280 D1 morning   Allied contact:2 aged to 1 pulses  <- #247
+#281 D1 morning   Japanese contact:1 aged to 1 pulses  <- #245
+#282 D1 afternoon task_force:1 stood down  <- #264
+#283 D1 afternoon task_force:5 stood down  <- #265
+#284 D1 afternoon task_force:5 steamed 106.5 nm at 17.75 kn from (1,-10) to (0,-12)  <- order:8, order:4
+#285 D1 afternoon ship:1 burned 54.118891 t, 2190.839825 t remaining  <- #284
+#286 D1 afternoon ship:2 burned 43.654622 t, 1767.22548 t remaining  <- #284
+#287 D1 afternoon Allied contact:1 dropped at 5 pulses  <- #1
+#288 D1 afternoon Allied contact:2 aged to 2 pulses  <- #247
+#289 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #245
+#290 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Northern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 1, stragglers: keep, keep 0; no home port
 task_force:4 "Yunagi" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
-ship:1 "Chokai": afloat in task_force:1; damage flotation 10.095437, fire 4.588835; all systems working; 805.00015 gun rounds, torpedoes gone; 2109.650711 t of fuel, 0 t of supply
-ship:2 "Aoba": afloat in task_force:1; damage flotation 2.351922, fire 6.721795; torpedo mounts degraded; 483.00009 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
-ship:3 "Kako": afloat in task_force:1; damage flotation 5.736891, fire 0; main battery degraded; 533.785785 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
-ship:4 "Kinugasa": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 483.00009 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
-ship:5 "Furutaka": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 483.00009 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
-ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39838.00006 gun rounds, torpedoes gone; 664.898075 t of fuel, 0 t of supply
-ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59757.00009 gun rounds, torpedoes gone; 540.510569 t of fuel, 0 t of supply
+task_force:5 "Eighth Fleet striking force, sent home" (Japanese): Underway at (0,-12), 10.52 nm from (0,-12) toward (-1,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Chokai": afloat in task_force:5; damage flotation 4.588835, fire 3.671068; propulsion degraded; 861.4287 gun rounds, torpedoes gone; 2190.839825 t of fuel, 0 t of supply
+ship:2 "Aoba": afloat in task_force:5; damage flotation 1.175961, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1767.22548 t of fuel, 0 t of supply
+ship:3 "Kako": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
+ship:4 "Kinugasa": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
+ship:5 "Furutaka": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
+ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39860.57148 gun rounds, torpedoes gone; 664.898075 t of fuel, 0 t of supply
+ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59790.85722 gun rounds, torpedoes gone; 540.510569 t of fuel, 0 t of supply
 ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39996 gun rounds, torpedoes ready; 285.693518 t of fuel, 0 t of supply
 ship:9 "HMAS Canberra": SUNK; damage flotation 100, fire 23.136751; propulsion out, fire control degraded, main battery degraded, torpedo mounts degraded; 1040 gun rounds, torpedoes ready; 3400 t of fuel, 0 t of supply
-ship:10 "USS Chicago": SUNK; damage flotation 100, fire 17.382594; propulsion degraded, fire control out, main battery degraded; 1503 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
+ship:10 "USS Chicago": afloat in task_force:2; damage flotation 59.937844, fire 17.382594; propulsion degraded, fire control degraded, main battery degraded; 1503 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
 ship:11 "USS Patterson": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
 ship:12 "USS Bagley": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
-ship:13 "USS Vincennes": SUNK; damage flotation 100, fire 67.518834; propulsion out, main battery out; 1337.303577 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:14 "USS Quincy": SUNK; damage flotation 100, fire 36.8907; propulsion out, fire control out, main battery degraded; 1273.82146 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:15 "USS Astoria": SUNK; damage flotation 100, fire 59.066156; propulsion out, fire control out, main battery out; 1311.91073 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:16 "USS Helm": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 1077.7778 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
-ship:17 "USS Wilson": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 1077.7778 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
+ship:13 "USS Vincennes": SUNK; damage flotation 100, fire 22.175456; propulsion out, main battery degraded; 1350 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:14 "USS Quincy": SUNK; damage flotation 100, fire 0; propulsion degraded, fire control degraded, main battery degraded; 1350 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:15 "USS Astoria": SUNK; damage flotation 100, fire 66.423778; propulsion out, fire control out, main battery out; 1324.607153 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:16 "USS Helm": SUNK; damage flotation 100, fire 100; propulsion out, fire control out, main battery out, torpedo mounts out; 1102.22224 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
+ship:17 "USS Wilson": SUNK; damage flotation 100, fire 72.847514; propulsion out, fire control degraded, main battery out, torpedo mounts degraded; 1114.44446 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
 base:1 "Rabaul" (Japanese) at (-5,-13): 0 t of supply in stock
 Allied contact:2 at (2,-5): 7 ships, cruiser, age 2 pulses
 Allied claims 0 enemy ships sunk at (2,-5), day 1 night
-Japanese contact:1 at (2,-5): 2 ships, destroyer, age 2 pulses
-Japanese claims 2 enemy ships sunk at (2,-5), day 1 night
-Japanese claims 3 enemy ships sunk at (2,-5), day 1 night
+Japanese contact:1 at (2,-5): 5 ships, cruiser, age 2 pulses
+Japanese claims 1 enemy ship sunk at (2,-5), day 1 night
+Japanese claims 5 enemy ships sunk at (2,-5), day 1 night
 
 Result (the placeholder scale of decision 0054):
-Allied: 0 points (ships_sunk 0 = 0; ships_crippled 0 = 0), margin -20, decisive defeat
-Japanese: 20 points (ships_sunk 5 = 20; ships_crippled 0 = 0), margin 20, decisive victory
+Allied: 0 points (ships_sunk 0 = 0; ships_crippled 0 = 0), margin -18, decisive defeat
+Japanese: 18 points (ships_sunk 6 = 18; ships_crippled 0 = 0), margin 18, decisive victory
 History: Four Allied heavy cruisers were sunk for no Japanese ship lost that night: a decisive Japanese victory, though the transports the screen guarded were left untouched. (The architect's reading; not yet scored from the order-of-battle facts.)

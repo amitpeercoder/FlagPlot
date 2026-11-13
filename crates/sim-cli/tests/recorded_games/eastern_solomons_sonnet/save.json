@@ -6,7 +6,7 @@
     },
     {
       "file": "data/scenarios/../reference/ship_classes_eastern_solomons.csv",
-      "hash": "95e5a244ff64eada"
+      "hash": "2716ae28c805274f"
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "ef64414d0401a286"
+      "hash": "efd5690fa78bdf33"
     }
   ],
   "orders": [

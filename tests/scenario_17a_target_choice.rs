@@ -589,7 +589,7 @@ fn case_6_a_target_sunk_in_the_round_and_the_places_counted_again() {
                 text.push('\n');
             }
             text.push_str(
-                "7,Placeholder tough cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,4000,0,0,0\n",
+                "7,Placeholder tough cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,4000,0,0,0\n",
             );
             text
         });
@@ -630,9 +630,11 @@ fn case_7_an_unarmed_ship_counting_for_its_place() {
 }
 
 /// The event log of case 8 as `sim-cli run --events` prints it, captured on
-/// main before decision 0078 was built, and its hash.
+/// main before decision 0078 was built, and its hash. The hash was
+/// 0x7baddf6faffed244 until the state went to version 7 (decision 0083, a
+/// ship's flag for the side of her torpedo tubes fired); the log is unchanged.
 const CASE_8_LOG: &str = include_str!("golden/17a_case_8_events.txt");
-const CASE_8_HASH: u64 = 0x7baddf6faffed244;
+const CASE_8_HASH: u64 = 0x8339eb579d472d65;
 
 fn log_text(events: &[Event]) -> String {
     let mut text = String::new();

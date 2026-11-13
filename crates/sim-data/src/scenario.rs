@@ -1052,6 +1052,7 @@ impl Scenario {
                 fire_damage: Fixed::ZERO,
                 gun_rounds,
                 torpedoes_ready: ship_class.torpedo_tubes > 0,
+                torpedoes_one_side_fired: false,
                 systems,
                 experience,
             };
