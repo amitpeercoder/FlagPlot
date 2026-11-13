@@ -98,6 +98,36 @@ No figure of finding and surprise is moved: `docs/validation/tuning/r0-finding-a
 
 The Eastern Solomons and Rabaul reports keep the misses they had: American aircraft lost, the all-or-nothing strike on Ryujo and claims at the Eastern Solomons; fighter losses, aircraft destroyed on the ground, claims and the aircraft ready after three weeks at Rabaul. Nothing in this remake was aimed at them.
 
+### Savo Island with the rule for whom a ship fires at, Nov 13, 2026
+
+Remade once more after decision 0078 (guns like at like, torpedoes at the most important kind afloat) and with Yunagi in a task force of her own (decision 0024, the note). The other two reports did not change: no run of theirs has a fight between forces of mixed kinds. Judged 23, agree 14, at the edge 4, miss 5. This is the report the tuning rounds start from.
+
+| What | Record | Before 0078 | Now | Verdict now |
+| --- | --- | --- | --- | --- |
+| Allied cruisers sunk | 4 | 0 to 2, 1 | 0 to 4, 2 | agrees, at the edge (113 runs hold it) |
+| Northern group cruisers sunk | 3 | 0 to 2, 0 | 0 to 3, 1 | agrees, at the edge |
+| Southern group cruisers sunk | 1 | 0 to 1, 0 | 0 to 2, 1 | agrees |
+| Allied destroyers sunk | 0 | 1 to 4, 3 | 0 to 0, 0 | agrees |
+| Japanese ships sunk | 0 | 0 to 1, 0 | 0 to 1, 0 | agrees |
+| Gun hits on Allied ships | 153 to 219 | 35 to 139, 100 | 30 to 129, 87 | miss |
+| Gun hits on Japanese ships | 10 to 17 | 2 to 45, 13 | 9 to 68, 25 | agrees |
+| Japanese gun hits for each thousand shells | 81 to 117 | 37 to 71, 57 | 38 to 72, 58 | miss |
+| Allied gun hits for each thousand shells | 21 to 36 | 10 to 50, 29 | 21 to 60, 40 | agrees |
+| Japanese main battery shells, in hundreds | 10 to 11 | 9 to 21, 17 | 6 to 19, 14 | agrees |
+| Allied main battery shells, in hundreds | 3 | 1 to 10, 4 | 3 to 13, 6 | agrees, at the edge |
+| Tenryu and Yubari's shells, in hundreds | 1 | 2 to 4, 3 | 2 to 5, 3 | miss |
+| Allied torpedoes fired | 4 to 6 | 8 to 36, 20 | 16 to 36, 36 | miss |
+| Minutes of action | 20 to 30 | 30 to 60, 35 | 35 to 65, 40 | miss |
+
+What it shows:
+
+- **The hits now fall where the record's did.** No Allied destroyer is sunk in 984 runs of 1,000, and four cruisers sunk is held by one run in nine where it was held by four in a thousand. The two measures that missed in opposite directions for one cause have both come in.
+- **Gun hits on Allied ships fall** (median 87 from 100), though the cruisers take more: the destroyers no longer take any, and with Yunagi away there is one ship fewer firing. The hit rate itself is unmoved at 58 for each thousand against 81 to 117. That is the next round's, and it is now the whole of what stands between the model and the cruisers' losses.
+- **The Allied ships live longer and fire longer,** so gun hits on Japanese ships rise to a median of 25 against 10 to 17 (still agreeing, by its spread) and Allied shells go to the edge.
+- **Minutes of action now misses** (35 to 65 against 20 to 30). The cause is named and not tuned: the Japanese ended each fight by passing on, and no rule has a force retire when it has done what it came for (decision 0024, the note on break-off levels). With the northern group never leaving and its cruisers hard to sink, its fight runs the full six rounds in many runs.
+- **Allied torpedoes fired** misses further (36 against 4 to 6): every Allied destroyer now lives to fire. What is left is readiness (decision 0071's share, at its first value) and tubes that do not bear (decision 0074, held).
+- **Tenryu and Yubari** still miss, for the length of the fight and not the rate; the watch on them stands.
+
 ## Eastern Solomons
 
 - **The American aircraft do not die.** The record has 13 to 14 lost to the enemy and 20 to 21 in all; the middle run loses 2, and no run reaches the record.
