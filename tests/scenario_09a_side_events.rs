@@ -32,8 +32,21 @@ use sim_core::World;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 
+/// Every run here is on the frozen figures, and frozen figures go with frozen
+/// scenarios (decision 0073, `data/scenarios/step2-frozen/README.md`): scenarios
+/// 5, 7 and 8 are read from their frozen copies in `data/scenarios/step2-frozen`;
+/// every other scenario from `data/scenarios`.
 fn scenario_path(name: &str) -> PathBuf {
-    Path::new(ROOT).join("data/scenarios").join(name)
+    let frozen_copy = matches!(
+        name,
+        "05_eastern_solomons.toml" | "07_full_slice.toml" | "08_soak.toml"
+    );
+    let folder = if frozen_copy {
+        "data/scenarios/step2-frozen"
+    } else {
+        "data/scenarios"
+    };
+    Path::new(ROOT).join(folder).join(name)
 }
 
 fn scenario_text(name: &str) -> String {

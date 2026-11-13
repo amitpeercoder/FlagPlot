@@ -104,6 +104,16 @@ fn scenario_path(name: &str) -> PathBuf {
     Path::new(ROOT).join("data/scenarios").join(name)
 }
 
+/// Where the frozen copy of a scenario is, `data/scenarios/step2-frozen`: the
+/// runs on the frozen figures read the frozen copies of scenarios 7 and 8, as
+/// decision 0073 and the folder's README say (frozen figures go with frozen
+/// scenarios). The runs on the live figures read the live files.
+fn frozen_scenario_path(name: &str) -> PathBuf {
+    Path::new(ROOT)
+        .join("data/scenarios/step2-frozen")
+        .join(name)
+}
+
 /// Which figures a soak runs on. The tests that assert only that the run
 /// completes, repeats, stays in range and conserves what it should (claims 1,
 /// 4 and 5 and the repeat) run on the live figures, so that the figures step 2
@@ -123,7 +133,7 @@ fn load(name: &str, seed: u64) -> Scenario {
 
 fn load_on(name: &str, seed: u64, figures: Figures) -> Scenario {
     match figures {
-        Figures::Frozen => common::load(&scenario_path(name)),
+        Figures::Frozen => common::load(&frozen_scenario_path(name)),
         Figures::Live => common::load_live(&scenario_path(name)),
     }
     .expect("the scenario loads")
@@ -1060,7 +1070,7 @@ fn two_forces_left_in_one_hex_with_no_home_port_fight_in_every_pulse() {
     let parted = run(SOAK, 1942);
     // The pairs of part D meet the day they are ordered to, and part two days
     // later (days 35, 52, 65, 82, 95, 112, 125, 142, 155 and 172).
-    let text = std::fs::read_to_string(scenario_path(SOAK)).expect("the file reads");
+    let text = std::fs::read_to_string(frozen_scenario_path(SOAK)).expect("the file reads");
     let mut kept = String::new();
     let mut table = String::new();
     let flush = |table: &mut String, kept: &mut String| {
@@ -1087,7 +1097,8 @@ fn two_forces_left_in_one_hex_with_no_home_port_fight_in_every_pulse() {
     }
     flush(&mut table, &mut kept);
     assert_ne!(kept, text, "some orders were left out");
-    let mut scenario = common::from_text(&kept, &scenario_path(SOAK)).expect("the variant loads");
+    let mut scenario =
+        common::from_text(&kept, &frozen_scenario_path(SOAK)).expect("the variant loads");
     scenario.run_to_end().expect("the variant runs");
     let variant = Run {
         seed: 1942,

@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 
 use crate::derive::{number, overflow, Cite, Env, Fit, Got, Work};
-use crate::input::{AircraftEntry, RadiusChoice};
+use crate::input::{AircraftEntry, Exception, RadiusChoice, SearchRadiusRules};
 use crate::problem::{Kind, Problem};
 use crate::reading::{resolve, Failure, Read, Row, Table};
 
@@ -62,6 +62,21 @@ pub struct AircraftResult {
     /// The list's own choice of the combat radius row, with its reason:
     /// the row read and the reason the list gave.
     pub radius_choice: Option<(Row, String)>,
+    /// Exceptions of the rules file's `[search_radius]` block that the
+    /// search radius used: index into that block's list, and the row read.
+    pub search_used: Vec<(usize, Row)>,
+    /// Why the search radius was not settled and the strike radius was kept
+    /// (decision 0075), when that is so.
+    pub search_not_settled: Option<String>,
+}
+
+/// What the search radius rule gave (decision 0075).
+struct Searched {
+    value: i64,
+    rule: String,
+    got: Got<()>,
+    notes: Vec<String>,
+    used: Vec<(usize, Row)>,
 }
 
 fn figure(value: impl Into<String>, rule: impl Into<String>, got: Got<()>) -> AircraftFigure {
@@ -94,6 +109,158 @@ impl Env<'_> {
             self.date,
             &self.rules.exceptions,
         )
+    }
+
+    /// The search radius of a type (decision 0075), by the rules file's
+    /// `[search_radius]` block. `Ok(Ok(..))` is a figure of its own;
+    /// `Ok(Err(why))` is a recorded fallback (the strike radius is kept);
+    /// `Err` is a problem, already recorded.
+    fn search_radius(
+        &self,
+        w: &mut Work,
+        key: &str,
+        block: &SearchRadiusRules,
+    ) -> Result<Result<Searched, String>, ()> {
+        let name = AIRCRAFT_FIGURES[SEARCH];
+        // The top-level exceptions, then the block's own: an index past the
+        // first list's end is the block's.
+        let top = self.rules.exceptions.len();
+        let all: Vec<Exception> = self
+            .rules
+            .exceptions
+            .iter()
+            .chain(&block.exceptions)
+            .cloned()
+            .collect();
+        let read_of = |attribute: &str| {
+            resolve(
+                self.index.rows(Table::AircraftFacts, key, attribute),
+                &format!("{attribute} of aircraft type {key}"),
+                self.date,
+                &all,
+            )
+        };
+        let unsettled = |kind: Kind| {
+            matches!(
+                kind,
+                Kind::Missing | Kind::NotPreferred | Kind::NotOnDate | Kind::Conflict
+            )
+        };
+        // Splits the exceptions a read used between the two lists.
+        let split = |w: &mut Work, read: &Read| -> Vec<(usize, Row)> {
+            let mut own = Vec::new();
+            for (index, row) in &read.excepted {
+                if *index < top {
+                    w.used.push((*index, row.clone()));
+                } else {
+                    own.push((*index - top, row.clone()));
+                }
+            }
+            own
+        };
+        let mut notes = Vec::new();
+        let mut why = Vec::new();
+        // A sourced scouting radius, where exactly one can be read. No
+        // such attribute is in the closed list yet, so this finds nothing
+        // until one is added.
+        match read_of("scouting_radius_nm") {
+            Ok(read) => {
+                let value = match number(&read, "scouting_radius_nm") {
+                    Ok(value) => value,
+                    Err(failure) => {
+                        w.failed(name, failure);
+                        return Err(());
+                    }
+                };
+                if value.has_fraction() {
+                    w.fail(
+                        Kind::BadValue,
+                        name,
+                        format!("scouting_radius_nm of aircraft type {key}: {value} is not a whole number"),
+                    );
+                    return Err(());
+                }
+                let used = split(w, &read);
+                let got = Got {
+                    value: (),
+                    cites: read.rows.iter().map(Row::cite_key).collect(),
+                    excepted: !read.excepted.is_empty(),
+                    doubts: BTreeSet::new(),
+                };
+                return Ok(Ok(Searched {
+                    value: value.whole(),
+                    rule: "scouting_radius_nm of the type: the one value that can be read (decision 0075)"
+                        .to_string(),
+                    got,
+                    notes,
+                    used,
+                }));
+            }
+            Err(failure) if unsettled(failure.kind) => {
+                if failure.kind != Kind::Missing {
+                    why.push(failure.message);
+                }
+            }
+            Err(failure) => {
+                w.failed(name, failure);
+                return Err(());
+            }
+        }
+        // A third of the range in the scouting condition.
+        match read_of("range_max_nm") {
+            Ok(read) => {
+                let value = match number(&read, "range_max_nm") {
+                    Ok(value) => value,
+                    Err(failure) => {
+                        w.failed(name, failure);
+                        return Err(());
+                    }
+                };
+                if value.has_fraction() {
+                    w.fail(
+                        Kind::BadValue,
+                        name,
+                        format!(
+                            "range_max_nm of aircraft type {key}: {value} is not a whole number"
+                        ),
+                    );
+                    return Err(());
+                }
+                let divisor = block.divisor;
+                let result = value.whole() / divisor;
+                let exact = crate::decimal::Dec::from_int(divisor).and_then(|d| value.div(d));
+                notes.push(format!(
+                    "range_max_nm {value} / {divisor} = {}, rounded down; the row is {} ({})",
+                    exact.map_or_else(String::new, |e| e.to_string()),
+                    read.rows[0].cite(),
+                    read.rows[0].standing
+                ));
+                let used = split(w, &read);
+                let got = Got {
+                    value: (),
+                    cites: read.rows.iter().map(Row::cite_key).collect(),
+                    excepted: !read.excepted.is_empty(),
+                    doubts: BTreeSet::new(),
+                };
+                Ok(Ok(Searched {
+                    value: result,
+                    rule: format!(
+                        "range_max_nm of the type, its range in the scouting condition, / divisor_of_scouting_range ({divisor}), rounded down to a whole number (decision 0075)"
+                    ),
+                    got,
+                    notes,
+                    used,
+                }))
+            }
+            Err(failure) if unsettled(failure.kind) => {
+                why.push(failure.message);
+                Ok(Err(why.join("; ")))
+            }
+            Err(failure) => {
+                w.failed(name, failure);
+                Err(())
+            }
+        }
     }
 
     /// The radius of action (decision 0029, 6): the one sourced combat
@@ -509,13 +676,41 @@ impl Env<'_> {
         }
 
         // radius, search and strike
+        let mut search_used = Vec::new();
+        let mut search_not_settled = None;
         if let Some((radius, rule, got, notes)) =
             self.radius(&mut w, key, entry.radius_choice.as_ref())
         {
-            for i in [SEARCH, STRIKE] {
+            // The strike radius, and the search range where it is the same.
+            let strike_figure = || {
                 let mut fig = figure(radius.to_string(), rule.clone(), got.clone());
                 fig.notes.extend(notes.iter().cloned());
-                figs[i] = Some(fig);
+                fig
+            };
+            figs[STRIKE] = Some(strike_figure());
+            match &self.rules.search_radius {
+                None => figs[SEARCH] = Some(strike_figure()),
+                Some(block) => match self.search_radius(&mut w, key, block) {
+                    // A problem, already recorded.
+                    Err(()) => {}
+                    Ok(Ok(searched)) => {
+                        let mut fig =
+                            figure(searched.value.to_string(), searched.rule, searched.got);
+                        fig.notes.extend(searched.notes);
+                        figs[SEARCH] = Some(fig);
+                        search_used = searched.used;
+                    }
+                    Ok(Err(why)) => {
+                        let text = format!(
+                            "search radius not settled: {why}; the strike radius is kept (decision 0075)"
+                        );
+                        let mut fig = strike_figure();
+                        fig.rule = text.clone();
+                        fig.notes.insert(0, text);
+                        figs[SEARCH] = Some(fig);
+                        search_not_settled = Some(why);
+                    }
+                },
             }
         }
 
@@ -562,6 +757,8 @@ impl Env<'_> {
                     .aircraft_fact(choice.row)
                     .map(|row| (row.clone(), choice.reason.clone()))
             }),
+            search_used,
+            search_not_settled,
         })
     }
 }

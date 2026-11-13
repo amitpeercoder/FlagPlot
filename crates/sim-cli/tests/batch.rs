@@ -60,7 +60,7 @@ fn ids_of(side: &str, summary: &Value) -> Vec<u64> {
 fn the_summary_adds_up_and_matches_single_runs() {
     let summary = parse(&batch("fight", FIGHT, &["--runs", "20"]));
     assert_eq!(summary["format"], "flag-plot-batch");
-    assert_eq!(summary["version"], 3);
+    assert_eq!(summary["version"], 4);
     assert_eq!(summary["runs"], 20);
     assert_eq!(summary["first_seed"], 1);
     assert_eq!(summary["scenario"]["file"], FIGHT);
@@ -688,6 +688,244 @@ fn check_run(file: &str, seed: u64, record: &Value, played: &Played) {
         .iter()
         .all(|row| ["night", "morning", "afternoon"]
             .contains(&row["pulse"].as_str().expect("a pulse"))));
+
+    check_sighting(&what, record, &events, truth);
+}
+
+/// Who sighted first and the rounds surprised, recounted from the log by
+/// position (a fight's events lie between its `EngagementBegun` and its
+/// `EngagementEnded`) and not by the causes the batch code ties them by. A
+/// salvo's target force is the force of the pair on the target ship's side.
+fn check_sighting(
+    what: &str,
+    record: &Value,
+    events: &[&sim_core::events::Event],
+    truth: &sim_core::state::TruthState,
+) {
+    let side_of_force = |id: u32| {
+        truth.task_forces[&sim_core::ids::TaskForceId::new(id)]
+            .side
+            .name()
+            .to_lowercase()
+    };
+    let mut expected = Vec::new();
+    // Per fight: the round of each force's successful roll, and the rounds
+    // each side's ships were fired on.
+    let mut rolled: BTreeMap<u32, u32> = BTreeMap::new();
+    let mut fired_on: BTreeMap<String, Vec<u32>> = BTreeMap::new();
+    let mut in_fight = false;
+    let mut surprised_events = 0u32;
+    for event in events {
+        match &event.kind {
+            EventKind::EngagementBegun { .. } => {
+                assert!(!in_fight, "{what}: fights do not overlap");
+                in_fight = true;
+                rolled.clear();
+                fired_on.clear();
+                surprised_events = 0;
+            }
+            EventKind::SightingRoll {
+                round,
+                task_force,
+                sighted: true,
+                ..
+            } => {
+                rolled.insert(task_force.raw(), *round);
+            }
+            EventKind::Salvo { round, target, .. } => {
+                fired_on
+                    .entry(truth.ships[target].side.name().to_lowercase())
+                    .or_default()
+                    .push(*round);
+            }
+            EventKind::ForceSurprised { .. } => surprised_events += 1,
+            EventKind::EngagementEnded { round, a, b, .. } => {
+                assert!(in_fight, "{what}: a fight began");
+                in_fight = false;
+                let [low, high] = [a.raw().min(b.raw()), a.raw().max(b.raw())];
+                let has = |id: u32, r: u32| {
+                    rolled.get(&id).is_some_and(|x| *x <= r)
+                        || fired_on
+                            .get(&side_of_force(id))
+                            .is_some_and(|rounds| rounds.iter().any(|f| *f < r))
+                };
+                let mut forces = Vec::new();
+                let mut total = 0u32;
+                let mut firsts = Vec::new();
+                for (id, enemy) in [(low, high), (high, low)] {
+                    let first = (1..=*round).find(|r| has(id, *r));
+                    let mut surprised = 0u32;
+                    for r in 1..=*round {
+                        if !has(id, r) && has(enemy, r) {
+                            surprised += 1;
+                        }
+                    }
+                    total += surprised;
+                    firsts.push((side_of_force(id), first));
+                    forces.push((id, first, surprised));
+                }
+                assert!(
+                    total >= surprised_events,
+                    "{what}: rounds surprised {total} cover the {surprised_events} ForceSurprised events"
+                );
+                let who = match (firsts[0].1, firsts[1].1) {
+                    (None, None) => "neither".to_string(),
+                    (Some(x), Some(y)) if x == y => "both".to_string(),
+                    (Some(_), None) => firsts[0].0.clone(),
+                    (None, Some(_)) => firsts[1].0.clone(),
+                    (Some(x), Some(y)) => firsts[usize::from(y < x)].0.clone(),
+                };
+                expected.push((who, forces));
+            }
+            _ => {}
+        }
+    }
+    let recorded = record["fights"].as_array().expect("fights");
+    assert_eq!(recorded.len(), expected.len(), "{what}: fights");
+    for (row, (who, forces)) in recorded.iter().zip(&expected) {
+        assert_eq!(
+            row["sighted_first"],
+            who.as_str(),
+            "{what}: who sighted first"
+        );
+        let listed = row["forces"].as_array().expect("two forces");
+        assert_eq!(listed.len(), 2, "{what}: two forces");
+        for (entry, (id, first, surprised)) in listed.iter().zip(forces) {
+            assert_eq!(num(&entry["task_force"]), u64::from(*id), "{what}");
+            assert_eq!(entry["side"], side_of_force(*id).as_str(), "{what}");
+            assert_eq!(
+                entry["first_sighted_round"],
+                first.map_or(Value::Null, Value::from),
+                "{what}: force {id} first sighted"
+            );
+            assert_eq!(
+                num(&entry["rounds_surprised"]),
+                u64::from(*surprised),
+                "{what}: force {id} rounds surprised"
+            );
+        }
+    }
+}
+
+/// Who sighted first (batch version 4)
+///
+/// Both scenarios are run on the frozen step 1 figures (`--reference
+/// data/reference/step1`), on seed 1942, so that no tuning round moves these
+/// numbers. Scenario 4's orders are fixed from the record (decision 0024, the
+/// note of Nov 13, 2026) and do not move either. A fight by day has both
+/// forces sight in round 1, at chance 1.
+///
+/// Scenario 4a (data/scenarios/04a_night_action.toml). Task force 1 is
+/// Japanese, task force 2 Allied. Three fights. By night, two rounds. Round 1:
+/// task force 1 rolls and sights; task force 2 rolls and does not; task force
+/// 1 fires on it. Round 2: task force 2 has sighted, having been fired on in
+/// round 1, with no roll. So: sighted_first "japanese"; forces [{1, japanese,
+/// first 1, surprised 0}, {2, allied, first 2, surprised 1}]. Then in the
+/// morning and in the afternoon, one round each: "both"; [{1, japanese, 1,
+/// 0}, {2, allied, 1, 0}].
+///
+/// Scenario 4 (data/scenarios/04_savo_island.toml). Five fights, in log
+/// order.
+/// 1. Night, task force 1 (Japanese) and 2 (Allied), one round: 1 sights in
+///    round 1, 2 does not, and the fight ends in round 1. "japanese"; [{1,
+///    japanese, 1, 0}, {2, allied, null, 1}].
+/// 2. Night, task force 1 and 3 (Allied), five rounds: neither sights in
+///    rounds 1 and 2; in round 3 task force 3 rolls and sights, 1 does not,
+///    and 3 fires on it; so 1 has sighted in round 4. "allied"; [{1,
+///    japanese, 4, 1}, {3, allied, 3, 0}].
+/// 3. Morning, task force 2 and task force 5 (the Japanese ships left
+///    behind), one round: "both"; [{2, allied, 1, 0}, {5, japanese, 1, 0}].
+/// 4. Morning, task force 3 and 5, one round: "both"; [{3, allied, 1, 0},
+///    {5, japanese, 1, 0}].
+/// 5. Afternoon, task force 2 and 5, one round: "both"; [{2, allied, 1, 0},
+///    {5, japanese, 1, 0}].
+///
+/// Five made cases (six: A to F), for the function that works the record out
+/// from a fight's facts, are in `batch_record.rs`, as a unit test of the
+/// function (this crate is a binary, so an integration test cannot call it).
+#[test]
+fn the_fights_of_scenarios_4a_and_4_record_who_sighted_first() {
+    use serde_json::json;
+    let frozen = [
+        "--runs",
+        "1",
+        "--first-seed",
+        "1942",
+        "--reference",
+        "data/reference/step1",
+    ];
+    let summary = parse(&batch("sighted-4a", FIGHT, &frozen));
+    assert_eq!(
+        summary["per_run"][0]["fights"],
+        json!([
+            {
+                "day": 1, "pulse": "night", "rounds": 2, "sighted_first": "japanese",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 2, "rounds_surprised": 1},
+                ]
+            },
+            {
+                "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "afternoon", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+        ])
+    );
+    let summary = parse(&batch(
+        "sighted-4",
+        "data/scenarios/04_savo_island.toml",
+        &frozen,
+    ));
+    assert_eq!(
+        summary["per_run"][0]["fights"],
+        json!([
+            {
+                "day": 1, "pulse": "night", "rounds": 1, "sighted_first": "japanese",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": null, "rounds_surprised": 1},
+                ]
+            },
+            {
+                "day": 1, "pulse": "night", "rounds": 5, "sighted_first": "allied",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 4, "rounds_surprised": 1},
+                    {"task_force": 3, "side": "allied", "first_sighted_round": 3, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 3, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "afternoon", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+        ])
+    );
 }
 
 #[test]
@@ -929,7 +1167,7 @@ fn the_keys_a_version_1_reader_used_keep_their_values() {
             &["--runs", "3"],
         ));
         assert_eq!(before["version"], 1);
-        assert_eq!(after["version"], 3);
+        assert_eq!(after["version"], 4);
         for (key, value) in before.as_object().expect("an object") {
             if key == "version" {
                 continue;

@@ -13,7 +13,11 @@
 //! auxiliary 1; a ship crippled is half of that; an aircraft destroyed is
 //! 0.05. Levels in all three: minor 3, major 8, decisive 16.
 //!
-//! ## Scenario 4, Savo Island (`04_savo_island.toml`)
+//! ## Scenario 4, Savo Island (`step2-frozen/04_savo_island.toml`)
+//!
+//! This runs on the frozen copy of scenario 4, as it stood before the
+//! northern group's break-off level was set from the record on Nov 13, 2026
+//! (decision 0024; `docs/step2-spec.md`, "Tests while figures move", 9).
 //!
 //! Both sides hold two objectives: ships sunk and ships crippled.
 //!
@@ -133,8 +137,21 @@ use sim_data::Scenario;
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SEED: u64 = 1942;
 
+/// Every run here is on the frozen figures, and frozen figures go with frozen
+/// scenarios (decision 0073, `data/scenarios/step2-frozen/README.md`): scenarios
+/// 5, 7 and 8 (here scenario 7, the full slice) run on their frozen copies in
+/// `data/scenarios/step2-frozen`; every other scenario on `data/scenarios`.
 fn path(name: &str) -> PathBuf {
-    PathBuf::from(ROOT).join("data/scenarios").join(name)
+    let frozen_copy = matches!(
+        name,
+        "05_eastern_solomons.toml" | "07_full_slice.toml" | "08_soak.toml"
+    );
+    let folder = if frozen_copy {
+        "data/scenarios/step2-frozen"
+    } else {
+        "data/scenarios"
+    };
+    PathBuf::from(ROOT).join(folder).join(name)
 }
 
 fn text(name: &str) -> String {
@@ -295,7 +312,11 @@ fn fuel_losses(world: &World, side: Side) -> u32 {
 
 #[test]
 fn savo_island_is_a_minor_allied_victory_by_the_margin_of_exactly_three() {
-    let world = run("04_savo_island.toml");
+    // The frozen copy of scenario 4 (data/scenarios/step2-frozen): the scoring
+    // below was worked on the scenario as it stood before the northern
+    // group's break-off level was set from the record on Nov 13, 2026
+    // (decision 0024), and no number of it changes.
+    let world = run("step2-frozen/04_savo_island.toml");
     // Japanese ships sunk: Kako (3) and Furutaka (5), cruisers.
     assert_eq!(ship_ids(&world, Side::Japanese, sunk), vec![3, 5]);
     assert!([3, 5]

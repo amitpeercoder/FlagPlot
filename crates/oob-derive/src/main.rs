@@ -49,6 +49,7 @@ fn main() -> ExitCode {
             files,
             written,
             unread,
+            not_settled,
         }) => {
             println!("{list}: no problems");
             println!("{}", if written { "wrote:" } else { "would write:" });
@@ -58,6 +59,12 @@ fn main() -> ExitCode {
             if !unread.is_empty() {
                 println!("rows of the listed ships that no question read (not in the file):");
                 for line in unread {
+                    println!("  {line}");
+                }
+            }
+            if !not_settled.is_empty() {
+                println!("aircraft types whose search radius is not settled (the strike radius is kept, decision 0075):");
+                for line in not_settled {
                     println!("  {line}");
                 }
             }

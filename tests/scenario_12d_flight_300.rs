@@ -20,6 +20,13 @@
 //! Pinned outcome: it is what this seed gives on the frozen figures, and it
 //! is here because it is the history. No chance is drawn in it.
 //!
+//! This file runs on the frozen copy of the full slice,
+//! `data/scenarios/step2-frozen/07_full_slice.toml`: the scenario as it stood
+//! with decision 0063's orders, before decision 0073 set the Japanese search
+//! from the record. It proves the rules on known orders and known figures;
+//! the live scenario is covered by the run baselines and `validate`. The copy
+//! changes only with a rule change's new hand calculation.
+//!
 //! - Task Force 16 (Enterprise, ship 1) and Task Force 11 (Saratoga, ship 11)
 //!   are in (7,-5). Henderson Field, base 1, is at (2,-4), 183 nm away
 //!   (the hexes differ by 5 in q and 1 in r, which is 7.937 hex widths of
@@ -99,7 +106,8 @@ use sim_core::time::Pulse;
 use sim_data::Scenario;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-const FULL: &str = "data/scenarios/07_full_slice.toml";
+/// The frozen copy of the full slice (decision 0073), not the live file.
+const FULL: &str = "data/scenarios/step2-frozen/07_full_slice.toml";
 const ENTERPRISE: ShipId = ShipId::new(1);
 const SARATOGA: ShipId = ShipId::new(11);
 const HENDERSON: BaseId = BaseId::new(1);

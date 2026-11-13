@@ -1,0 +1,4308 @@
+# FROZEN COPY. Do not edit. Scenario 8 as it stood on main with decision
+# 0063's orders (Nov 13, 2026), before decision 0073 set the Japanese search
+# from the record. Every test that runs scenario 8 on the frozen figures of
+# step 1 reads it (tests/scenario_08_soak.rs). The paths to the map and the
+# reference files are one folder deeper than in the live file; nothing else
+# differs. See README.md beside it.
+#
+# Scenario 8: the soak. The full slice of scenario 7 carried on for 180 days
+# from 21 August 1942, seed 1942 (decision 0044).
+#
+# A machine test and not history. Nothing in it is compared with the record.
+# Its forces do what keeps every subsystem busy to the end, and each kind of
+# running out happens in it at least once (tests/scenario_08_soak.rs).
+#
+# PART 1, from the name line to the last order of the scenario-7 text, is the
+# file of scenario 7 (data/scenarios/07_full_slice.toml) with these changes:
+#   - days is 180.
+#   - Rabaul's supply is 9640 t, set so that it runs out late in the run
+#     (a placeholder invented for the soak; scenario 7 gave 10,000 t).
+#   - Espiritu Santo's supply is 40000 t, so that convoys can load there
+#     for the whole run (a placeholder invented for the soak; scenario 7 gave
+#     960 t).
+# Everything else in part 1, its real units, placeholders and orders,
+# is as scenario 7 has it.
+#
+# PART 2 is what the soak adds, grouped by what it keeps busy:
+#   A. The air campaign: arrivals and replacements at both bases, two doomed
+#      placeholder groups (4 and 5) and two scout flights (6 and 7).
+#   B. Search and strikes on ships: Japanese raiding forces that come, one
+#      every 15 days from day 40, to within reach of Henderson Field's scouts
+#      and dive bombers.
+#   C. Convoys: three shuttles between Espiritu Santo and Lunga Point.
+#   D. Surface actions: ten pairs of placeholder forces that meet in the open
+#      Coral Sea, two pairs in each 30 days after the first, a picket held at
+#      battle readiness and a cruiser that runs out of fuel.
+#   E. Orders and arrivals for units that no longer have anything, which the
+#      engine rejects or does not deliver.
+#
+# Facts about the engine that this file works around and does not hide:
+#   - Ships cannot take on fuel, in port or at sea. A ship's fuel only falls.
+#     Every shuttle ship, then, is good for a number of cycles and no more,
+#     and the escort of convoy 5 runs dry first. Convoys are listed from the
+#     start in numbers that cover the whole run.
+#   - Two forces that survive a fight stay in the hex they fought in, since a
+#     force that retires and has no home port stays where it is (decision
+#     0016, 14), and they fight again in the next pulse, and the next, with
+#     no end. Without orders to part, one pair made 92 engagements in 30
+#     days. Each pair of part D is therefore ordered to part two days after
+#     it meets.
+#   - A base with no supply flies nothing (decision 0039), and nothing
+#     brings supply to Rabaul, which has no convoy.
+#
+# PLACEHOLDER DATA. Every unit, quantity and order in part 2 is invented for
+# the soak: the names start "Placeholder", the figures files are placeholders.
+
+name = "Scenario 8: The soak, 180 days from 21 August 1942"
+placeholder = true
+seed = 1942
+days = 180
+map = "../../map/south_pacific.csv"
+ship_classes = [
+    "../../reference/ship_classes_eastern_solomons.csv",
+    "../../reference/ship_classes.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = [
+    "../../reference/aircraft_types_eastern_solomons.csv",
+    "../../reference/aircraft_types_rabaul_guadalcanal.csv",
+]
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+air_upkeep = "../../reference/air_upkeep.toml"
+fatigue = "../../reference/fatigue.toml"
+air_supply = "../../reference/air_supply.toml"
+
+[[base]]
+id = 1
+name = "Henderson Field"
+side = "allied"
+q = 2
+r = -4
+supply_t = 4000
+anti_aircraft = 8
+aircraft_repairs_per_day = 3
+
+# The Rabaul airfields, Lakunai and Vunakanau, in one hex. Nothing attacks
+# them in this scenario, so they are given no guns. Supply and repairs a day
+# are placeholders.
+
+[[base]]
+id = 2
+name = "Rabaul"
+side = "japanese"
+q = -5
+r = -13
+supply_t = 9640
+aircraft_repairs_per_day = 4
+
+# Espiritu Santo, where the convoy loads (the hex of Segond Channel, port
+# size 2 on the real map). The supply is a placeholder.
+[[base]]
+id = 3
+name = "Espiritu Santo"
+side = "allied"
+q = 7
+r = 6
+supply_t = 40000
+
+[[task_force]]
+id = 1
+name = "Task Force 16"
+side = "allied"
+q = 7
+r = -5
+mission = "carrier"
+
+# Task Force 11, Saratoga, in the same hex.
+
+[[task_force]]
+id = 2
+name = "Task Force 11"
+side = "allied"
+q = 7
+r = -5
+mission = "carrier"
+
+# Nagumo's carriers with the ships of the vanguard, at the map's northern
+# edge at 18:00 on 23 August.
+
+[[task_force]]
+id = 3
+name = "Carrier striking force"
+side = "japanese"
+q = 9
+r = -19
+mission = "carrier"
+
+# The Ryujo detachment. It starts in (10,-19), 356 nm charged from its noon
+# hex (7,-9), which it reaches at 11:48 on day 4 at 20 knots and holds at noon.
+# Ryujo's noon hex is (7,-9) and not (7,-10). The record has her launch from
+# 200 to 202 miles from Guadalcanal (engagement_events 331, the 8th Cruiser
+# Division's war diary: "20 degrees 202 nm from the Guadalcanal base";
+# engagement_positions 310: 200 nautical miles north of Lunga Point). (7,-9)
+# is 200 miles from Henderson Field at (2,-4) by hex centres; (7,-10) is 223,
+# which is the grid's error and not the record.
+
+[[task_force]]
+id = 4
+name = "Ryujo detachment"
+side = "japanese"
+q = 10
+r = -19
+mission = "carrier"
+
+# The convoy: two placeholder cargo ships and a placeholder destroyer, loading
+# at Espiritu Santo on day 1 and steaming for Lunga Point.
+[[task_force]]
+id = 5
+name = "Placeholder supply convoy"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+# The night action in the open Coral Sea well south of the rest. Force A is
+# ordered to battle readiness on day 4 and so has three days of fatigue
+# (decision 0037) when it steams on force B's hex, 8 hexes off, on day 7.
+[[task_force]]
+id = 6
+name = "Placeholder night force A"
+side = "japanese"
+q = -8
+r = 10
+mission = "surface_combat"
+
+[[task_force]]
+id = 7
+name = "Placeholder night force B"
+side = "allied"
+q = 0
+r = 10
+mission = "surface_combat"
+
+# A third night action, on day 11, both forces at normal readiness.
+[[task_force]]
+id = 12
+name = "Placeholder night force E"
+side = "japanese"
+q = -8
+r = 12
+mission = "surface_combat"
+
+[[task_force]]
+id = 13
+name = "Placeholder night force F"
+side = "allied"
+q = 0
+r = 12
+mission = "surface_combat"
+
+# A second Allied force in the hex force 7 holds, at normal readiness and not
+# alerted, so that it is called on by the alarm when force 6 fights force 7
+# (decision 0021, as scenario 4c's three forces).
+[[task_force]]
+id = 8
+name = "Placeholder bystander"
+side = "allied"
+q = 0
+r = 10
+mission = "escort"
+
+# A placeholder destroyer with almost no fuel, to run dry on day 2.
+[[task_force]]
+id = 9
+name = "Placeholder dry destroyer"
+side = "allied"
+q = 4
+r = 12
+mission = "escort"
+
+# A second night action, 8 hexes apart on the next row south: force D avoids.
+[[task_force]]
+id = 10
+name = "Placeholder night force C"
+side = "japanese"
+q = -8
+r = 14
+mission = "surface_combat"
+
+[[task_force]]
+id = 11
+name = "Placeholder night force D"
+side = "allied"
+q = 0
+r = 14
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "USS Enterprise"
+class = 2020
+side = "allied"
+fuel_t = 4360
+task_force = 1
+
+[[ship]]
+id = 2
+name = "USS North Carolina"
+class = 2017
+side = "allied"
+fuel_t = 5550
+task_force = 1
+
+[[ship]]
+id = 3
+name = "USS Portland"
+class = 2019
+side = "allied"
+fuel_t = 2614
+task_force = 1
+
+[[ship]]
+id = 4
+name = "USS Atlanta"
+class = 2010
+side = "allied"
+fuel_t = 1481
+task_force = 1
+
+[[ship]]
+id = 5
+name = "USS Balch"
+class = 2018
+side = "allied"
+fuel_t = 651
+task_force = 1
+
+[[ship]]
+id = 6
+name = "USS Benham"
+class = 2011
+side = "allied"
+fuel_t = 491
+task_force = 1
+
+[[ship]]
+id = 7
+name = "USS Ellet"
+class = 2011
+side = "allied"
+fuel_t = 491
+task_force = 1
+
+[[ship]]
+id = 8
+name = "USS Maury"
+class = 2014
+side = "allied"
+fuel_t = 525
+task_force = 1
+
+[[ship]]
+id = 9
+name = "USS Grayson"
+class = 2013
+side = "allied"
+fuel_t = 467
+task_force = 1
+
+[[ship]]
+id = 10
+name = "USS Monssen"
+class = 2013
+side = "allied"
+fuel_t = 467
+task_force = 1
+
+[[ship]]
+id = 11
+name = "USS Saratoga"
+class = 2015
+side = "allied"
+fuel_t = 8400
+task_force = 2
+
+[[ship]]
+id = 12
+name = "USS New Orleans"
+class = 2016
+side = "allied"
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 13
+name = "USS Minneapolis"
+class = 2016
+side = "allied"
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 14
+name = "USS Farragut"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 15
+name = "USS Macdonough"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 16
+name = "USS Worden"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 17
+name = "USS Dale"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 18
+name = "USS Phelps"
+class = 2018
+side = "allied"
+fuel_t = 651
+task_force = 2
+
+[[ship]]
+id = 19
+name = "Shokaku"
+class = 2007
+side = "japanese"
+fuel_t = 4100
+task_force = 3
+
+[[ship]]
+id = 20
+name = "Zuikaku"
+class = 2006
+side = "japanese"
+fuel_t = 4100
+task_force = 3
+
+[[ship]]
+id = 21
+name = "Chikuma"
+class = 2008
+side = "japanese"
+fuel_t = 2690
+task_force = 3
+
+[[ship]]
+id = 22
+name = "Hiei"
+class = 2002
+side = "japanese"
+fuel_t = 6330
+task_force = 3
+
+[[ship]]
+id = 23
+name = "Kirishima"
+class = 2002
+side = "japanese"
+fuel_t = 6330
+task_force = 3
+
+[[ship]]
+id = 24
+name = "Kumano"
+class = 2003
+side = "japanese"
+fuel_t = 2310
+task_force = 3
+
+[[ship]]
+id = 25
+name = "Suzuya"
+class = 2003
+side = "japanese"
+fuel_t = 2310
+task_force = 3
+
+[[ship]]
+id = 26
+name = "Nagara"
+class = 2004
+side = "japanese"
+fuel_t = 1260
+task_force = 3
+
+[[ship]]
+id = 27
+name = "Akigumo"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 28
+name = "Kazagumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 29
+name = "Makigumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 30
+name = "Yugumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 31
+name = "Akizuki"
+class = 2000
+side = "japanese"
+fuel_t = 1071
+task_force = 3
+
+[[ship]]
+id = 32
+name = "Hatsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 33
+name = "Ryujo"
+class = 2005
+side = "japanese"
+fuel_t = 2490
+task_force = 4
+
+[[ship]]
+id = 34
+name = "Tone"
+class = 2008
+side = "japanese"
+fuel_t = 2690
+task_force = 4
+
+[[ship]]
+id = 35
+name = "Amatsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 4
+
+[[ship]]
+id = 36
+name = "Tokitsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 4
+
+# Air groups. Each strength cites its row in data/oob/air_unit_facts.csv.
+
+# aircraft_operational row 213.
+
+[[ship]]
+id = 37
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 5
+
+[[ship]]
+id = 38
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 5
+
+[[ship]]
+id = 39
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+# A placeholder ship. The figure is chosen so that it runs dry at a hex centre
+# under decision 0058: before day 39 it has steamed 3 x 629 nm out and 3 x 578
+# nm back, 3621 nm, and 3621 + 360 = 3981 nm at 0.125 t a nm is 497.625 t, so
+# the fuel ends exactly at the centre of (7,-3), nine steps out, not in the
+# middle of a step.
+fuel_t = "497.625"
+task_force = 5
+
+[[ship]]
+id = 40
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 6
+
+[[ship]]
+id = 41
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 6
+
+[[ship]]
+id = 42
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 7
+
+[[ship]]
+id = 43
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 7
+
+[[ship]]
+id = 44
+name = "Placeholder destroyer bystander"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 8
+
+[[ship]]
+id = 45
+name = "Placeholder dry destroyer"
+class = 2
+side = "allied"
+fuel_t = 5
+task_force = 9
+
+[[ship]]
+id = 50
+name = "Placeholder cruiser E1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 12
+
+[[ship]]
+id = 51
+name = "Placeholder cruiser F1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 13
+
+[[ship]]
+id = 46
+name = "Placeholder cruiser C1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 10
+
+[[ship]]
+id = 47
+name = "Placeholder cruiser C2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 10
+
+[[ship]]
+id = 48
+name = "Placeholder cruiser D1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 11
+
+[[ship]]
+id = 49
+name = "Placeholder cruiser D2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 11
+
+[[air_group]]
+id = 1
+name = "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)"
+side = "japanese"
+base = 2
+aircraft_type = 2103
+ready = 41
+pilots = 41
+
+[[air_group]]
+id = 2
+name = "Tainan Air Group"
+side = "japanese"
+base = 2
+aircraft_type = 2102
+ready = 24
+pilots = 24
+
+[[air_group]]
+id = 3
+name = "6th Air Group"
+side = "japanese"
+base = 2
+aircraft_type = 2102
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 10
+name = "VMF-223"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 19
+# Not in scenario 6: six of its aircraft start damaged, so that a raid on
+# Henderson Field can destroy damaged aircraft on the ground (a placeholder).
+damaged = 6
+pilots = 19
+
+[[air_group]]
+id = 11
+name = "VMSB-232"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 12
+pilots = 12
+
+[[air_group]]
+id = 12
+name = "Flight 300"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 13
+name = "VMF-224"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 14
+name = "VMSB-231"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 15
+name = "VF-5"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 16
+name = "Fighters from Hornet and Wasp"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 17
+name = "VS-3"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+# Squadrons that arrive during the four weeks (decision 0041). Day 1 is 21
+# August. Each arrives with a pilot for each aircraft, which is an
+# assumption: the sources count aircraft.
+
+[[air_group]]
+id = 101
+name = "VF-6"
+side = "allied"
+ship = 1
+aircraft_type = 2000
+ready = 27
+
+# aircraft_on_hand rows 92, 214.
+
+[[air_group]]
+id = 102
+name = "VB-6"
+side = "allied"
+ship = 1
+aircraft_type = 2001
+ready = 17
+
+# aircraft_operational row 216.
+
+[[air_group]]
+id = 103
+name = "VS-5"
+side = "allied"
+ship = 1
+aircraft_type = 2001
+ready = 16
+
+# aircraft_operational row 218.
+
+[[air_group]]
+id = 104
+name = "VT-3"
+side = "allied"
+ship = 1
+aircraft_type = 2002
+ready = 14
+
+# aircraft_on_hand row 207.
+
+[[air_group]]
+id = 105
+name = "VF-5"
+side = "allied"
+ship = 11
+aircraft_type = 2000
+ready = 27
+
+# aircraft_operational row 209.
+
+[[air_group]]
+id = 106
+name = "VB-3"
+side = "allied"
+ship = 11
+aircraft_type = 2001
+ready = 15
+
+# aircraft_on_hand rows 151, 210.
+
+[[air_group]]
+id = 107
+name = "VS-3"
+side = "allied"
+ship = 11
+aircraft_type = 2001
+ready = 15
+
+# aircraft_on_hand rows 177, 211.
+
+[[air_group]]
+id = 108
+name = "VT-8"
+side = "allied"
+ship = 11
+aircraft_type = 2002
+ready = 13
+
+# aircraft_on_hand row 223.
+
+[[air_group]]
+id = 111
+name = "Shokaku fighter unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2003
+ready = 26
+
+# aircraft_on_hand row 228.
+
+[[air_group]]
+id = 112
+name = "Shokaku bomber unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2004
+ready = 27
+
+# aircraft_on_hand row 229.
+
+[[air_group]]
+id = 113
+name = "Shokaku attack unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2005
+ready = 18
+
+# aircraft_operational row 231.
+
+[[air_group]]
+id = 114
+name = "Zuikaku fighter unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2003
+ready = 25
+
+# aircraft_on_hand row 232.
+
+[[air_group]]
+id = 115
+name = "Zuikaku bomber unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2004
+ready = 27
+
+# aircraft_on_hand row 233.
+
+[[air_group]]
+id = 116
+name = "Zuikaku attack unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2005
+ready = 18
+
+# aircraft_on_hand row 290, an establishment of June 1942.
+
+[[air_group]]
+id = 117
+name = "Chikuma floatplanes"
+side = "japanese"
+ship = 21
+aircraft_type = 2006
+ready = 5
+
+# aircraft_operational row 235.
+
+[[air_group]]
+id = 118
+name = "Ryujo fighter unit"
+side = "japanese"
+ship = 33
+aircraft_type = 2003
+ready = 23
+
+# aircraft_operational row 262.
+
+[[air_group]]
+id = 119
+name = "Ryujo attack unit"
+side = "japanese"
+ship = 33
+aircraft_type = 2005
+ready = 6
+
+# aircraft_on_hand row 285, an establishment of June 1942.
+
+[[air_group]]
+id = 120
+name = "Tone floatplanes"
+side = "japanese"
+ship = 34
+aircraft_type = 2006
+ready = 5
+
+# Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
+# detachment at 20.
+
+# 24 August: no scripted arrival of Flight 300 (air group 12). Decision 11 of
+# 0059: the rule lands aircraft of a lost deck at Henderson. Group 12 keeps its
+# day-1 order and its day-75 arrival.
+
+# 30 August: VMF-224.
+
+[[arrival]]
+day = 10
+air_group = 13
+aircraft = 19
+pilots = 19
+
+# 30 August: VMSB-231.
+
+[[arrival]]
+day = 10
+air_group = 14
+aircraft = 12
+pilots = 12
+
+# 31 August: the 6th Air Group's Zeros reach Rabaul.
+
+[[arrival]]
+day = 11
+air_group = 3
+aircraft = 13
+pilots = 13
+
+# 11 September: VF-5, from Saratoga.
+
+[[replacement]]
+side = "japanese"
+base = 2
+aircraft_type = 2103
+aircraft_per_day = 2
+pilots_per_day = 2
+
+[[replacement]]
+side = "japanese"
+base = 2
+aircraft_type = 2102
+aircraft_per_day = 2
+pilots_per_day = 2
+
+# Rabaul: the bombers raid Henderson Field. Both fighter groups keep nothing
+# over Rabaul and send every fighter that can fly as escort. The staff rests
+# each group above a fatigue of 45.
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 1
+kind = "set_rest_threshold"
+fatigue = 45
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_rest_threshold"
+fatigue = 45
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_rest_threshold"
+fatigue = 45
+
+# Henderson Field: every fighter group patrols over the field with all it
+# can fly, and the staff rests each above a fatigue of 40. The dive bombers
+# are held for ships, and there are none: they stay on the ground.
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 10
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 10
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 13
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 13
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 15
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 15
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 16
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 16
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 11
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 12
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 14
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 17
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# The Eastern Solomons orders, on day 4. Group numbers are 100 more than in
+# scenario 5.
+
+[[order]]
+day = 4
+side = "japanese"
+task_force = 3
+kind = "set_route"
+waypoints = [[8, -11]]
+
+[[order]]
+day = 4
+side = "japanese"
+task_force = 3
+kind = "set_speed"
+knots = "17"
+
+[[order]]
+day = 4
+side = "japanese"
+task_force = 4
+kind = "set_route"
+waypoints = [[7, -9]]
+
+[[order]]
+day = 4
+side = "japanese"
+task_force = 4
+kind = "set_speed"
+knots = "20"
+
+# Air orders. Fighters patrol; the American fighters keep everything
+# overhead, the Japanese carriers keep four fifths and Ryujo 0.35 (so that 15
+# of her 23 fighters escort her raid and 8 stay over her).
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 101
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 105
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 111
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 111
+kind = "set_patrol_share"
+share = "0.8"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 114
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 114
+kind = "set_patrol_share"
+share = "0.8"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 118
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 118
+kind = "set_patrol_share"
+share = "0.35"
+
+# Enterprise's scouting squadron searches the northern half; the cruisers'
+# floatplanes search to the south-east.
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 103
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 103
+kind = "set_search_arc"
+from_deg = 290
+to_deg = 90
+range_nm = 200
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 117
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 117
+kind = "set_search_arc"
+from_deg = 110
+to_deg = 200
+range_nm = 253
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 120
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 120
+kind = "set_search_arc"
+from_deg = 110
+to_deg = 200
+range_nm = 253
+
+# Every bomber group is ordered to strike ships.
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 102
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 104
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 106
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 107
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 108
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# The fleet carriers' dive bomber groups (112 and 115) hold their strike for the
+# enemy's fleet: target list carrier, battleship, cruiser, transport. The
+# record names the enemy carriers as the object of their first wave
+# (engagement_events 371, Shokaku's action report: heading to attack enemy
+# carriers), and the enemy surface force if no carrier is found (425). The
+# architect reads the surface force as any force of ships but a destroyer or
+# an auxiliary met alone: a contact reported as a destroyer or an auxiliary is
+# a picket or a tender, not the fleet they were kept for, and the strike is
+# held for it. This is a reading of two rows, not a row. It was fixed on Nov
+# 12, 2026 after two trials: the default list sent both groups 250 miles at
+# one destroyer in the full slice on its own seed, and a list without
+# transports held them all day for a ten-ship force reported as transports.
+# Their torpedo units and Ryujo's groups get no target order.
+[[order]]
+day = 4
+side = "japanese"
+air_group = 112
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 112
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 113
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 115
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 115
+kind = "set_target_priority"
+kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 116
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# Ryujo's attack unit raids Henderson Field (decision 0063, "What it costs"):
+# the record has her launch 15 fighters and 6 attack planes at it
+# (engagement_outcomes 1171, her action report) from 200 to 202 miles
+# (engagement_events 331, engagement_positions 310). That is beyond the B5N2's
+# derived radius of 175 and within extended reach (218), so the raid is a base
+# strike at base 1 on extended reach.
+[[order]]
+day = 4
+side = "japanese"
+air_group = 119
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 119
+kind = "set_reach"
+reach = "extended"
+
+# The convoy: load on day 1, steam for Lunga Point from day 2 and unload there.
+[[order]]
+day = 1
+side = "allied"
+task_force = 5
+kind = "load"
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 5
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 5
+kind = "unload"
+
+# The night action. Force A goes to battle readiness on day 4. On day 7 force A
+# steams for force B's hex and will fight (rules of
+# engagement as scenario 4c's head-on meeting).
+[[order]]
+day = 4
+side = "japanese"
+task_force = 6
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 7
+side = "japanese"
+task_force = 6
+kind = "set_route"
+waypoints = [[0, 10]]
+
+[[order]]
+day = 7
+side = "japanese"
+task_force = 6
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 7
+side = "japanese"
+task_force = 6
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+[[order]]
+day = 7
+side = "allied"
+task_force = 7
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "retire"
+
+# The dry destroyer is ordered 80 nm on day 2. With 5 t of fuel it steams 40 nm and stops.
+[[order]]
+day = 2
+side = "allied"
+task_force = 9
+kind = "set_route"
+waypoints = [[4, 14]]
+
+# The second night action, on day 9: force D avoids.
+[[order]]
+day = 9
+side = "japanese"
+task_force = 10
+kind = "set_route"
+waypoints = [[0, 14]]
+
+[[order]]
+day = 9
+side = "japanese"
+task_force = 10
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+[[order]]
+day = 9
+side = "allied"
+task_force = 11
+kind = "set_route"
+waypoints = [[-8, 14]]
+
+[[order]]
+day = 9
+side = "allied"
+task_force = 11
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+
+# The third night action, day 11.
+[[order]]
+day = 11
+side = "japanese"
+task_force = 12
+kind = "set_route"
+waypoints = [[0, 12]]
+
+[[order]]
+day = 11
+side = "japanese"
+task_force = 12
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 13
+kind = "set_route"
+waypoints = [[-8, 12]]
+
+[[order]]
+day = 11
+side = "allied"
+task_force = 13
+kind = "set_speed"
+knots = "32"
+
+# An order to a unit that is not the giver's: refused (decision 0008).
+[[order]]
+day = 5
+side = "japanese"
+task_force = 5
+kind = "set_speed"
+speed = "full"
+
+# ====================================================================
+# PART 2. WHAT THE SOAK ADDS. Placeholders, invented for the soak.
+# ====================================================================
+
+# --- A. The air campaign ---------------------------------------------
+#
+# Two doomed placeholder groups. Group 4 is a flight of Wildcats at
+# Henderson Field with no pilots: it never flies, sits on the ground, and
+# the first raid that finds it destroys it (the lowest-numbered group loses
+# aircraft first). It uses type 2000, which no replacement stream names, so
+# nothing rebuilds it. Group 5 is a flight of bombers at Rabaul with more
+# aircraft than pilots: it flies as many as it has pilots and loses one for
+# every one shot down, and group 1 is topped up before it. Groups 6 and 7
+# are scout flights of Dauntlesses at Henderson Field (part B). They are
+# numbered below the fighter groups so that the base repairs them first.
+
+[[air_group]]
+id = 4
+name = "Placeholder Henderson fighter flight, no pilots"
+side = "allied"
+base = 1
+aircraft_type = 2000
+ready = 6
+pilots = 0
+
+[[air_group]]
+id = 5
+name = "Placeholder Rabaul bomber flight"
+side = "japanese"
+base = 2
+aircraft_type = 2103
+ready = 8
+pilots = 3
+
+[[air_group]]
+id = 6
+name = "Placeholder Henderson scout flight 1"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 8
+pilots = 8
+
+[[air_group]]
+id = 7
+name = "Placeholder Henderson scout flight 2"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 8
+pilots = 8
+
+# Orders of the placeholder groups.
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 5
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 5
+kind = "set_rest_threshold"
+fatigue = 45
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_search_arc"
+from_deg = 240
+to_deg = 300
+range_nm = 200
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 6
+kind = "set_rest_threshold"
+fatigue = 30
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 7
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 7
+kind = "set_search_arc"
+from_deg = 240
+to_deg = 300
+range_nm = 200
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 7
+kind = "set_rest_threshold"
+fatigue = 45
+
+# Real arrivals of scenario 6 that scenario 7 left out (days 22 and 24).
+[[arrival]]
+day = 22
+air_group = 15
+aircraft = 24
+pilots = 24
+
+[[arrival]]
+day = 24
+air_group = 16
+aircraft = 18
+pilots = 18
+
+[[arrival]]
+day = 24
+air_group = 17
+aircraft = 12
+pilots = 12
+
+# Placeholder reinforcements, one wave in each 30 days, for the Allied
+# fighter and dive bomber groups that raids and strikes wear down, and for
+# the Japanese fighters.
+[[arrival]]
+day = 35
+air_group = 10
+aircraft = 14
+pilots = 14
+
+[[arrival]]
+day = 40
+air_group = 13
+aircraft = 12
+pilots = 12
+
+[[arrival]]
+day = 45
+air_group = 11
+aircraft = 8
+pilots = 8
+
+[[arrival]]
+day = 65
+air_group = 15
+aircraft = 14
+pilots = 14
+
+[[arrival]]
+day = 70
+air_group = 16
+aircraft = 12
+pilots = 12
+
+[[arrival]]
+day = 75
+air_group = 12
+aircraft = 8
+pilots = 8
+
+[[arrival]]
+day = 95
+air_group = 10
+aircraft = 14
+pilots = 14
+
+[[arrival]]
+day = 100
+air_group = 13
+aircraft = 12
+pilots = 12
+
+[[arrival]]
+day = 125
+air_group = 15
+aircraft = 14
+pilots = 14
+
+[[arrival]]
+day = 130
+air_group = 16
+aircraft = 12
+pilots = 12
+
+[[arrival]]
+day = 135
+air_group = 17
+aircraft = 8
+pilots = 8
+
+[[arrival]]
+day = 155
+air_group = 10
+aircraft = 14
+pilots = 14
+
+[[arrival]]
+day = 160
+air_group = 13
+aircraft = 12
+pilots = 12
+
+[[arrival]]
+day = 165
+air_group = 11
+aircraft = 8
+pilots = 8
+
+# Ten Dauntlesses reach group 14 on day 105 with no pilots, so that the
+# group has more aircraft than pilots until its replacement pilots catch up.
+[[arrival]]
+day = 105
+air_group = 14
+aircraft = 10
+pilots = 0
+
+[[arrival]]
+day = 40
+air_group = 2
+aircraft = 10
+pilots = 10
+
+[[arrival]]
+day = 80
+air_group = 2
+aircraft = 10
+pilots = 10
+
+[[arrival]]
+day = 120
+air_group = 2
+aircraft = 10
+pilots = 10
+
+[[arrival]]
+day = 160
+air_group = 2
+aircraft = 10
+pilots = 10
+
+# Replacement streams for the Allies at Henderson Field (scenario 7 has
+# none for them).
+[[replacement]]
+side = "allied"
+base = 1
+aircraft_type = 2100
+aircraft_per_day = 2
+pilots_per_day = 2
+
+[[replacement]]
+side = "allied"
+base = 1
+aircraft_type = 2101
+aircraft_per_day = 2
+pilots_per_day = 2
+
+# --- B. Search and strikes on ships ----------------------------------
+#
+# Groups 6 and 7 search the whole circle out to 200 nm from Henderson Field
+# every day (its orders are in A). Ten placeholder Japanese raiding forces,
+# a cruiser and a destroyer each, wait 11 hexes west of Henderson Field,
+# out of reach, and come, one after another every 15 days from day 40, to a hex 2 hexes
+# west of it, inside the 200 nm radius of its dive bombers. Five days
+# later they turn back. A force that is sighted is struck by the groups on
+# the naval strike mission; a force that has moved is not found.
+
+[[task_force]]
+id = 30
+name = "Placeholder raiding force A"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 60
+name = "Placeholder raider cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 30
+
+[[ship]]
+id = 61
+name = "Placeholder raider destroyer A2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 30
+
+[[task_force]]
+id = 31
+name = "Placeholder raiding force B"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 62
+name = "Placeholder raider cruiser B1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 31
+
+[[ship]]
+id = 63
+name = "Placeholder raider destroyer B2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 31
+
+[[task_force]]
+id = 32
+name = "Placeholder raiding force C"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 64
+name = "Placeholder raider cruiser C1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 32
+
+[[ship]]
+id = 65
+name = "Placeholder raider destroyer C2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 32
+
+[[task_force]]
+id = 33
+name = "Placeholder raiding force D"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 66
+name = "Placeholder raider cruiser D1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 33
+
+[[ship]]
+id = 67
+name = "Placeholder raider destroyer D2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 33
+
+[[task_force]]
+id = 34
+name = "Placeholder raiding force E"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 68
+name = "Placeholder raider cruiser E1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 34
+
+[[ship]]
+id = 69
+name = "Placeholder raider destroyer E2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 34
+
+[[task_force]]
+id = 35
+name = "Placeholder raiding force F"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 70
+name = "Placeholder raider cruiser F1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 35
+
+[[ship]]
+id = 71
+name = "Placeholder raider destroyer F2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 35
+
+[[task_force]]
+id = 36
+name = "Placeholder raiding force G"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 72
+name = "Placeholder raider cruiser G1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 36
+
+[[ship]]
+id = 73
+name = "Placeholder raider destroyer G2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 36
+
+[[task_force]]
+id = 37
+name = "Placeholder raiding force H"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 74
+name = "Placeholder raider cruiser H1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 37
+
+[[ship]]
+id = 75
+name = "Placeholder raider destroyer H2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 37
+
+[[task_force]]
+id = 38
+name = "Placeholder raiding force I"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 76
+name = "Placeholder raider cruiser I1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 38
+
+[[ship]]
+id = 77
+name = "Placeholder raider destroyer I2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 38
+
+[[task_force]]
+id = 39
+name = "Placeholder raiding force J"
+side = "japanese"
+q = -9
+r = -4
+mission = "surface_combat"
+
+[[ship]]
+id = 78
+name = "Placeholder raider cruiser J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 39
+
+[[ship]]
+id = 79
+name = "Placeholder raider destroyer J2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 39
+
+[[order]]
+day = 40
+side = "japanese"
+task_force = 30
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 40
+side = "japanese"
+task_force = 30
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 45
+side = "japanese"
+task_force = 30
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 55
+side = "japanese"
+task_force = 31
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 55
+side = "japanese"
+task_force = 31
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 60
+side = "japanese"
+task_force = 31
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 70
+side = "japanese"
+task_force = 32
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 70
+side = "japanese"
+task_force = 32
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 75
+side = "japanese"
+task_force = 32
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 85
+side = "japanese"
+task_force = 33
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 85
+side = "japanese"
+task_force = 33
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 90
+side = "japanese"
+task_force = 33
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 100
+side = "japanese"
+task_force = 34
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 100
+side = "japanese"
+task_force = 34
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 105
+side = "japanese"
+task_force = 34
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 115
+side = "japanese"
+task_force = 35
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 115
+side = "japanese"
+task_force = 35
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 120
+side = "japanese"
+task_force = 35
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 130
+side = "japanese"
+task_force = 36
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 130
+side = "japanese"
+task_force = 36
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 135
+side = "japanese"
+task_force = 36
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 145
+side = "japanese"
+task_force = 37
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 145
+side = "japanese"
+task_force = 37
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 150
+side = "japanese"
+task_force = 37
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 160
+side = "japanese"
+task_force = 38
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 160
+side = "japanese"
+task_force = 38
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 165
+side = "japanese"
+task_force = 38
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+[[order]]
+day = 175
+side = "japanese"
+task_force = 39
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 175
+side = "japanese"
+task_force = 39
+kind = "set_speed"
+knots = "24"
+
+[[order]]
+day = 180
+side = "japanese"
+task_force = 39
+kind = "set_route"
+waypoints = [[-9, -4]]
+
+# --- C. Convoys ------------------------------------------------------
+#
+# Three shuttles between Espiritu Santo (7,6) and Lunga Point (2,-4), 15
+# hexes, about 2.5 days each way at 10 knots. A cycle is 12 days: load at
+# Espiritu Santo for two days, steam, unload at Lunga Point for most of a
+# week, steam back. Ships cannot refuel in port (decision 0006 leaves it
+# for later) so each cycle burns 120 t of a cargo ship's 1,000, and a
+# convoy is good for about eight cycles. Convoy 5, the scenario-7 convoy,
+# has a destroyer escort that carries 500 t and runs dry first, a little
+# after day 38. Convoys 21 and 22 are placeholder pairs of cargo ships, no
+# escort, that wait at Espiritu Santo until their first cycle.
+
+[[task_force]]
+id = 21
+name = "Placeholder supply convoy 2"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 80
+name = "Placeholder convoy 2 cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 21
+
+[[ship]]
+id = 81
+name = "Placeholder convoy 2 cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 21
+
+[[task_force]]
+id = 22
+name = "Placeholder supply convoy 3"
+side = "allied"
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 82
+name = "Placeholder convoy 3 cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 22
+
+[[ship]]
+id = 83
+name = "Placeholder convoy 3 cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 22
+
+# Convoy 5 (scenario 7) already has its first load on day 1 and sails on day 2.
+# Its further cycles start on days 13, 25 and 37; its escort runs dry on the
+# way, and the orders that follow are sent to a convoy that cannot answer them.
+# Its day-2 order of scenario 7 sets the route to Lunga Point; the order home
+# is new.
+[[order]]
+day = 10
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 13
+side = "allied"
+task_force = 5
+kind = "load"
+
+[[order]]
+day = 15
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 15
+side = "allied"
+task_force = 5
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 15
+side = "allied"
+task_force = 5
+kind = "unload"
+
+[[order]]
+day = 22
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 25
+side = "allied"
+task_force = 5
+kind = "load"
+
+[[order]]
+day = 27
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 27
+side = "allied"
+task_force = 5
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 27
+side = "allied"
+task_force = 5
+kind = "unload"
+
+[[order]]
+day = 34
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 37
+side = "allied"
+task_force = 5
+kind = "load"
+
+[[order]]
+day = 39
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 39
+side = "allied"
+task_force = 5
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 39
+side = "allied"
+task_force = 5
+kind = "unload"
+
+[[order]]
+day = 46
+side = "allied"
+task_force = 5
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 49
+side = "allied"
+task_force = 5
+kind = "load"
+
+# Convoy 21: cycles from day 30 to day 114.
+[[order]]
+day = 30
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 32
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 32
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 32
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 39
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 42
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 44
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 44
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 44
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 51
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 54
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 56
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 56
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 56
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 63
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 66
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 68
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 68
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 68
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 75
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 78
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 80
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 80
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 80
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 87
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 90
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 92
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 92
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 92
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 99
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 102
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 104
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 104
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 104
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 111
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 114
+side = "allied"
+task_force = 21
+kind = "load"
+
+[[order]]
+day = 116
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 116
+side = "allied"
+task_force = 21
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 116
+side = "allied"
+task_force = 21
+kind = "unload"
+
+[[order]]
+day = 123
+side = "allied"
+task_force = 21
+kind = "set_route"
+waypoints = [[7, 6]]
+
+# Convoy 22: cycles from day 118 to the end.
+[[order]]
+day = 118
+side = "allied"
+task_force = 22
+kind = "load"
+
+[[order]]
+day = 120
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 120
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 120
+side = "allied"
+task_force = 22
+kind = "unload"
+
+[[order]]
+day = 127
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 130
+side = "allied"
+task_force = 22
+kind = "load"
+
+[[order]]
+day = 132
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 132
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 132
+side = "allied"
+task_force = 22
+kind = "unload"
+
+[[order]]
+day = 139
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 142
+side = "allied"
+task_force = 22
+kind = "load"
+
+[[order]]
+day = 144
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 144
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 144
+side = "allied"
+task_force = 22
+kind = "unload"
+
+[[order]]
+day = 151
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 154
+side = "allied"
+task_force = 22
+kind = "load"
+
+[[order]]
+day = 156
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 156
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 156
+side = "allied"
+task_force = 22
+kind = "unload"
+
+[[order]]
+day = 163
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 166
+side = "allied"
+task_force = 22
+kind = "load"
+
+[[order]]
+day = 168
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 168
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 168
+side = "allied"
+task_force = 22
+kind = "unload"
+
+[[order]]
+day = 175
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[7, 6]]
+
+[[order]]
+day = 178
+side = "allied"
+task_force = 22
+kind = "load"
+
+[[order]]
+day = 180
+side = "allied"
+task_force = 22
+kind = "set_route"
+waypoints = [[2, -4]]
+
+[[order]]
+day = 180
+side = "allied"
+task_force = 22
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 180
+side = "allied"
+task_force = 22
+kind = "unload"
+
+# --- D. Surface actions ----------------------------------------------
+#
+# Ten pairs of placeholder forces, one Japanese and one Allied, 8 hexes
+# apart on one row of the open Coral Sea, two pairs in each 30 days after
+# the first. Each pair is ordered to steam at 32 knots for the other and
+# fights where they meet; the forces are listed from the start and lie idle
+# until their day. C is a placeholder cruiser, D a placeholder destroyer.
+# Some ships are lost and some forces lose every ship. Forces of a pair
+# that keeps battle readiness for three days before the meeting gain
+# fatigue on the way.
+
+[[task_force]]
+id = 50
+name = "Placeholder surface force 4J"
+side = "japanese"
+q = -8
+r = 3
+mission = "surface_combat"
+
+[[ship]]
+id = 84
+name = "Placeholder cruiser 4J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 50
+
+[[ship]]
+id = 85
+name = "Placeholder cruiser 4J2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 50
+
+[[task_force]]
+id = 51
+name = "Placeholder surface force 4A"
+side = "allied"
+q = 0
+r = 3
+mission = "surface_combat"
+
+[[ship]]
+id = 86
+name = "Placeholder cruiser 4A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 51
+
+[[task_force]]
+id = 52
+name = "Placeholder surface force 5J"
+side = "japanese"
+q = -8
+r = 5
+mission = "surface_combat"
+
+[[ship]]
+id = 87
+name = "Placeholder cruiser 5J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 52
+
+[[task_force]]
+id = 53
+name = "Placeholder surface force 5A"
+side = "allied"
+q = 0
+r = 5
+mission = "surface_combat"
+
+[[ship]]
+id = 88
+name = "Placeholder destroyer 5A1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 53
+
+[[ship]]
+id = 89
+name = "Placeholder destroyer 5A2"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 53
+
+[[task_force]]
+id = 54
+name = "Placeholder surface force 6J"
+side = "japanese"
+q = -8
+r = 7
+mission = "surface_combat"
+
+[[ship]]
+id = 90
+name = "Placeholder destroyer 6J1"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 54
+
+[[ship]]
+id = 91
+name = "Placeholder destroyer 6J2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 54
+
+[[task_force]]
+id = 55
+name = "Placeholder surface force 6A"
+side = "allied"
+q = 0
+r = 7
+mission = "surface_combat"
+
+[[ship]]
+id = 92
+name = "Placeholder cruiser 6A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 55
+
+[[ship]]
+id = 93
+name = "Placeholder cruiser 6A2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 55
+
+[[task_force]]
+id = 56
+name = "Placeholder surface force 7J"
+side = "japanese"
+q = -8
+r = 9
+mission = "surface_combat"
+
+[[ship]]
+id = 94
+name = "Placeholder cruiser 7J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 56
+
+[[ship]]
+id = 95
+name = "Placeholder destroyer 7J2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 56
+
+[[task_force]]
+id = 57
+name = "Placeholder surface force 7A"
+side = "allied"
+q = 0
+r = 9
+mission = "surface_combat"
+
+[[ship]]
+id = 96
+name = "Placeholder cruiser 7A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 57
+
+[[ship]]
+id = 97
+name = "Placeholder destroyer 7A2"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 57
+
+[[task_force]]
+id = 58
+name = "Placeholder surface force 8J"
+side = "japanese"
+q = -12
+r = 15
+mission = "surface_combat"
+
+[[ship]]
+id = 98
+name = "Placeholder cruiser 8J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 58
+
+[[task_force]]
+id = 59
+name = "Placeholder surface force 8A"
+side = "allied"
+q = -4
+r = 15
+mission = "surface_combat"
+
+[[ship]]
+id = 99
+name = "Placeholder cruiser 8A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 59
+
+[[task_force]]
+id = 60
+name = "Placeholder surface force 9J"
+side = "japanese"
+q = -12
+r = 16
+mission = "surface_combat"
+
+[[ship]]
+id = 100
+name = "Placeholder destroyer 9J1"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 60
+
+[[task_force]]
+id = 61
+name = "Placeholder surface force 9A"
+side = "allied"
+q = -4
+r = 16
+mission = "surface_combat"
+
+[[ship]]
+id = 101
+name = "Placeholder cruiser 9A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 61
+
+[[ship]]
+id = 102
+name = "Placeholder cruiser 9A2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 61
+
+[[task_force]]
+id = 62
+name = "Placeholder surface force 10J"
+side = "japanese"
+q = -12
+r = 17
+mission = "surface_combat"
+
+[[ship]]
+id = 103
+name = "Placeholder cruiser 10J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 62
+
+[[ship]]
+id = 104
+name = "Placeholder cruiser 10J2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 62
+
+[[task_force]]
+id = 63
+name = "Placeholder surface force 10A"
+side = "allied"
+q = -4
+r = 17
+mission = "surface_combat"
+
+[[ship]]
+id = 105
+name = "Placeholder destroyer 10A1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 63
+
+[[task_force]]
+id = 64
+name = "Placeholder surface force 11J"
+side = "japanese"
+q = -12
+r = 18
+mission = "surface_combat"
+
+[[ship]]
+id = 106
+name = "Placeholder destroyer 11J1"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 64
+
+[[ship]]
+id = 107
+name = "Placeholder destroyer 11J2"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 64
+
+[[ship]]
+id = 108
+name = "Placeholder destroyer 11J3"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 64
+
+[[task_force]]
+id = 65
+name = "Placeholder surface force 11A"
+side = "allied"
+q = -4
+r = 18
+mission = "surface_combat"
+
+[[ship]]
+id = 109
+name = "Placeholder cruiser 11A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 65
+
+[[task_force]]
+id = 66
+name = "Placeholder surface force 12J"
+side = "japanese"
+q = -12
+r = 19
+mission = "surface_combat"
+
+[[ship]]
+id = 110
+name = "Placeholder cruiser 12J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 66
+
+[[task_force]]
+id = 67
+name = "Placeholder surface force 12A"
+side = "allied"
+q = -4
+r = 19
+mission = "surface_combat"
+
+[[ship]]
+id = 111
+name = "Placeholder destroyer 12A1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 67
+
+[[ship]]
+id = 112
+name = "Placeholder destroyer 12A2"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 67
+
+[[ship]]
+id = 113
+name = "Placeholder destroyer 12A3"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 67
+
+[[task_force]]
+id = 68
+name = "Placeholder surface force 13J"
+side = "japanese"
+q = -12
+r = 20
+mission = "surface_combat"
+
+[[ship]]
+id = 114
+name = "Placeholder cruiser 13J1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 68
+
+[[ship]]
+id = 115
+name = "Placeholder cruiser 13J2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 68
+
+[[task_force]]
+id = 69
+name = "Placeholder surface force 13A"
+side = "allied"
+q = -4
+r = 20
+mission = "surface_combat"
+
+[[ship]]
+id = 116
+name = "Placeholder cruiser 13A1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 69
+
+[[ship]]
+id = 117
+name = "Placeholder cruiser 13A2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 69
+
+[[order]]
+day = 33
+side = "japanese"
+task_force = 50
+kind = "set_route"
+waypoints = [[0, 3]]
+
+[[order]]
+day = 33
+side = "japanese"
+task_force = 50
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 33
+side = "japanese"
+task_force = 50
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+[[order]]
+day = 33
+side = "allied"
+task_force = 51
+kind = "set_route"
+waypoints = [[-8, 3]]
+
+[[order]]
+day = 33
+side = "allied"
+task_force = 51
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 33
+side = "allied"
+task_force = 51
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "retire"
+
+[[order]]
+day = 35
+side = "japanese"
+task_force = 50
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 35
+side = "japanese"
+task_force = 50
+kind = "set_route"
+waypoints = [[-8, 3]]
+
+[[order]]
+day = 35
+side = "allied"
+task_force = 51
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 35
+side = "allied"
+task_force = 51
+kind = "set_route"
+waypoints = [[0, 3]]
+
+[[order]]
+day = 47
+side = "japanese"
+task_force = 52
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 47
+side = "allied"
+task_force = 53
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 50
+side = "japanese"
+task_force = 52
+kind = "set_route"
+waypoints = [[0, 5]]
+
+[[order]]
+day = 50
+side = "japanese"
+task_force = 52
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 50
+side = "japanese"
+task_force = 52
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 50
+side = "allied"
+task_force = 53
+kind = "set_route"
+waypoints = [[-8, 5]]
+
+[[order]]
+day = 50
+side = "allied"
+task_force = 53
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 50
+side = "allied"
+task_force = 53
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 52
+side = "japanese"
+task_force = 52
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 52
+side = "japanese"
+task_force = 52
+kind = "set_route"
+waypoints = [[-8, 5]]
+
+[[order]]
+day = 52
+side = "allied"
+task_force = 53
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 52
+side = "allied"
+task_force = 53
+kind = "set_route"
+waypoints = [[0, 5]]
+
+[[order]]
+day = 63
+side = "japanese"
+task_force = 54
+kind = "set_route"
+waypoints = [[0, 7]]
+
+[[order]]
+day = 63
+side = "japanese"
+task_force = 54
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 63
+side = "japanese"
+task_force = 54
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 63
+side = "allied"
+task_force = 55
+kind = "set_route"
+waypoints = [[-8, 7]]
+
+[[order]]
+day = 63
+side = "allied"
+task_force = 55
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 63
+side = "allied"
+task_force = 55
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+[[order]]
+day = 65
+side = "japanese"
+task_force = 54
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 65
+side = "japanese"
+task_force = 54
+kind = "set_route"
+waypoints = [[-8, 7]]
+
+[[order]]
+day = 65
+side = "allied"
+task_force = 55
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 65
+side = "allied"
+task_force = 55
+kind = "set_route"
+waypoints = [[0, 7]]
+
+[[order]]
+day = 77
+side = "japanese"
+task_force = 56
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 77
+side = "allied"
+task_force = 57
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 80
+side = "japanese"
+task_force = 56
+kind = "set_route"
+waypoints = [[0, 9]]
+
+[[order]]
+day = 80
+side = "japanese"
+task_force = 56
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 80
+side = "japanese"
+task_force = 56
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+[[order]]
+day = 80
+side = "allied"
+task_force = 57
+kind = "set_route"
+waypoints = [[-8, 9]]
+
+[[order]]
+day = 80
+side = "allied"
+task_force = 57
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 80
+side = "allied"
+task_force = 57
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "retire"
+
+[[order]]
+day = 82
+side = "japanese"
+task_force = 56
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 82
+side = "japanese"
+task_force = 56
+kind = "set_route"
+waypoints = [[-8, 9]]
+
+[[order]]
+day = 82
+side = "allied"
+task_force = 57
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 82
+side = "allied"
+task_force = 57
+kind = "set_route"
+waypoints = [[0, 9]]
+
+[[order]]
+day = 93
+side = "japanese"
+task_force = 58
+kind = "set_route"
+waypoints = [[-4, 15]]
+
+[[order]]
+day = 93
+side = "japanese"
+task_force = 58
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 93
+side = "japanese"
+task_force = 58
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 93
+side = "allied"
+task_force = 59
+kind = "set_route"
+waypoints = [[-12, 15]]
+
+[[order]]
+day = 93
+side = "allied"
+task_force = 59
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 93
+side = "allied"
+task_force = 59
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 95
+side = "japanese"
+task_force = 58
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 95
+side = "japanese"
+task_force = 58
+kind = "set_route"
+waypoints = [[-12, 15]]
+
+[[order]]
+day = 95
+side = "allied"
+task_force = 59
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 95
+side = "allied"
+task_force = 59
+kind = "set_route"
+waypoints = [[-4, 15]]
+
+[[order]]
+day = 110
+side = "japanese"
+task_force = 60
+kind = "set_route"
+waypoints = [[-4, 16]]
+
+[[order]]
+day = 110
+side = "japanese"
+task_force = 60
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 110
+side = "japanese"
+task_force = 60
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 110
+side = "allied"
+task_force = 61
+kind = "set_route"
+waypoints = [[-12, 16]]
+
+[[order]]
+day = 110
+side = "allied"
+task_force = 61
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 110
+side = "allied"
+task_force = 61
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 112
+side = "japanese"
+task_force = 60
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 112
+side = "japanese"
+task_force = 60
+kind = "set_route"
+waypoints = [[-12, 16]]
+
+[[order]]
+day = 112
+side = "allied"
+task_force = 61
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 112
+side = "allied"
+task_force = 61
+kind = "set_route"
+waypoints = [[-4, 16]]
+
+[[order]]
+day = 120
+side = "japanese"
+task_force = 62
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 120
+side = "allied"
+task_force = 63
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 123
+side = "japanese"
+task_force = 62
+kind = "set_route"
+waypoints = [[-4, 17]]
+
+[[order]]
+day = 123
+side = "japanese"
+task_force = 62
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 123
+side = "japanese"
+task_force = 62
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "retire"
+
+[[order]]
+day = 123
+side = "allied"
+task_force = 63
+kind = "set_route"
+waypoints = [[-12, 17]]
+
+[[order]]
+day = 123
+side = "allied"
+task_force = 63
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 123
+side = "allied"
+task_force = 63
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 125
+side = "japanese"
+task_force = 62
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 125
+side = "japanese"
+task_force = 62
+kind = "set_route"
+waypoints = [[-12, 17]]
+
+[[order]]
+day = 125
+side = "allied"
+task_force = 63
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 125
+side = "allied"
+task_force = 63
+kind = "set_route"
+waypoints = [[-4, 17]]
+
+[[order]]
+day = 140
+side = "japanese"
+task_force = 64
+kind = "set_route"
+waypoints = [[-4, 18]]
+
+[[order]]
+day = 140
+side = "japanese"
+task_force = 64
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 140
+side = "japanese"
+task_force = 64
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+[[order]]
+day = 140
+side = "allied"
+task_force = 65
+kind = "set_route"
+waypoints = [[-12, 18]]
+
+[[order]]
+day = 140
+side = "allied"
+task_force = 65
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 140
+side = "allied"
+task_force = 65
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+[[order]]
+day = 142
+side = "japanese"
+task_force = 64
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 142
+side = "japanese"
+task_force = 64
+kind = "set_route"
+waypoints = [[-12, 18]]
+
+[[order]]
+day = 142
+side = "allied"
+task_force = 65
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 142
+side = "allied"
+task_force = 65
+kind = "set_route"
+waypoints = [[-4, 18]]
+
+[[order]]
+day = 153
+side = "japanese"
+task_force = 66
+kind = "set_route"
+waypoints = [[-4, 19]]
+
+[[order]]
+day = 153
+side = "japanese"
+task_force = 66
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 153
+side = "japanese"
+task_force = 66
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 153
+side = "allied"
+task_force = 67
+kind = "set_route"
+waypoints = [[-12, 19]]
+
+[[order]]
+day = 153
+side = "allied"
+task_force = 67
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 153
+side = "allied"
+task_force = 67
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 155
+side = "japanese"
+task_force = 66
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 155
+side = "japanese"
+task_force = 66
+kind = "set_route"
+waypoints = [[-12, 19]]
+
+[[order]]
+day = 155
+side = "allied"
+task_force = 67
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 155
+side = "allied"
+task_force = 67
+kind = "set_route"
+waypoints = [[-4, 19]]
+
+[[order]]
+day = 167
+side = "japanese"
+task_force = 68
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 167
+side = "allied"
+task_force = 69
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 170
+side = "japanese"
+task_force = 68
+kind = "set_route"
+waypoints = [[-4, 20]]
+
+[[order]]
+day = 170
+side = "japanese"
+task_force = 68
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 170
+side = "japanese"
+task_force = 68
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 170
+side = "allied"
+task_force = 69
+kind = "set_route"
+waypoints = [[-12, 20]]
+
+[[order]]
+day = 170
+side = "allied"
+task_force = 69
+kind = "set_speed"
+knots = "32"
+
+[[order]]
+day = 170
+side = "allied"
+task_force = 69
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "retire"
+
+[[order]]
+day = 172
+side = "japanese"
+task_force = 68
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 172
+side = "japanese"
+task_force = 68
+kind = "set_route"
+waypoints = [[-12, 20]]
+
+[[order]]
+day = 172
+side = "allied"
+task_force = 69
+kind = "set_rules_of_engagement"
+stance = "avoid"
+break_off = "0.5"
+stragglers = "keep"
+
+[[order]]
+day = 172
+side = "allied"
+task_force = 69
+kind = "set_route"
+waypoints = [[-4, 20]]
+
+# Two single-ship forces that give out. A destroyer picket held at battle
+# readiness from day 5 to the end, so that its fatigue climbs to the
+# ceiling and stays there. A cruiser with 5 t of fuel that sets out on day 75
+# and stops.
+[[task_force]]
+id = 70
+name = "Placeholder battle picket"
+side = "japanese"
+q = -12
+r = 1
+mission = "escort"
+
+[[ship]]
+id = 118
+name = "Placeholder picket destroyer"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 70
+
+[[order]]
+day = 5
+side = "japanese"
+task_force = 70
+kind = "set_readiness"
+readiness = "battle"
+
+[[task_force]]
+id = 71
+name = "Placeholder dry cruiser"
+side = "allied"
+q = -12
+r = 0
+mission = "escort"
+
+[[ship]]
+id = 119
+name = "Placeholder dry cruiser"
+class = 1
+side = "allied"
+fuel_t = 5
+task_force = 71
+
+[[order]]
+day = 75
+side = "allied"
+task_force = 71
+kind = "set_route"
+waypoints = [[-4, 0]]
+
+# --- E. Orders to units that no longer have anything ------------------
+#
+# Forces that lost every ship in part 1 (force 7 and the bystander, force
+# 8), the air groups of Ryujo, which went down on day 4, and group 4 after
+# its aircraft are gone get orders and an arrival, as a staff would send
+# them. The orders are rejected, a force with no ship afloat and an air group
+# lost with its ship taking none; the arrival for a group lost with its ship
+# is not delivered (decision 6 of 0041).
+
+[[order]]
+day = 20
+side = "allied"
+task_force = 7
+kind = "set_route"
+waypoints = [[0, 8]]
+
+[[order]]
+day = 20
+side = "allied"
+task_force = 7
+kind = "set_speed"
+knots = "20"
+
+[[order]]
+day = 21
+side = "allied"
+task_force = 7
+kind = "set_readiness"
+readiness = "battle"
+
+[[order]]
+day = 22
+side = "allied"
+task_force = 8
+kind = "set_route"
+waypoints = [[0, 8]]
+
+[[order]]
+day = 60
+side = "allied"
+task_force = 7
+kind = "unload"
+
+[[order]]
+day = 21
+side = "japanese"
+air_group = 118
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 21
+side = "japanese"
+air_group = 119
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[arrival]]
+day = 30
+air_group = 118
+aircraft = 6
+pilots = 0
+
+[[order]]
+day = 60
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[arrival]]
+day = 90
+air_group = 4
+aircraft = 4
+pilots = 0

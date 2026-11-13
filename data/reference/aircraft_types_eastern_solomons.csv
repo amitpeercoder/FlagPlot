@@ -28,11 +28,21 @@
 #   e13a1 range_normal_nm: aircraft_type_facts.csv row 494 (disputed); reason: 760 miles on normal fuel, from the US intelligence data sheet of December 1944. The 1,128 of the other row matches no condition on the sheet and is probably a maximum-fuel figure.; agreed 2026-11-11
 #   e13a1 pilot_armour: aircraft_type_facts.csv row 498 (unconfirmed); reason: No: the same data sheet, in a hedged sentence. Nothing read says otherwise.; agreed 2026-11-11
 #   e13a1 self_sealing_tanks: aircraft_type_facts.csv row 499 (unconfirmed); reason: No: the same data sheet.; agreed 2026-11-11
+# Search radius (decision 0075): a type's range in the scouting condition / 3, rounded down; where it cannot be read the strike radius is kept and the type is listed as not settled
+# Search radius exceptions used (decision 0075):
+#   sbd-3 range_max_nm: aircraft_type_facts.csv row 270 (disputed); reason: It is the one row stating the range in the scout condition, which is what the rule asks for; row 226 states no condition.; agreed 2026-11-13
+#   tbf-1 range_max_nm: aircraft_type_facts.csv row 290 (unconfirmed); reason: The only row in the scout condition.; agreed 2026-11-13
+#   b5n2 range_max_nm: aircraft_type_facts.csv row 408 (disputed); reason: The higher confidence of rows agreeing within 3 miles (rows 78 and 413).; agreed 2026-11-13
+#   e13a1 range_max_nm: aircraft_type_facts.csv row 493 (disputed); reason: It states its condition, maximum fuel, and is the sheet whose normal range (row 494) the derivation already reads; row 501 states no condition and cites a book not read.; agreed 2026-11-13
+# Search radius not settled (the strike radius is kept):
+#   f4f-4: range_max_nm of aircraft type f4f-4: rows that hold on 1942-08-24 are not preferred, and no exception names one: aircraft_type_facts.csv:242 (disputed; 912; valid -..-; holds), aircraft_type_facts.csv:243 (disputed; 1108; valid -..-; holds)
+#   a6m2-21: range_max_nm of aircraft type a6m2-21: rows that hold on 1942-08-24 are not preferred, and no exception names one: aircraft_type_facts.csv:28 (disputed; 1677; valid -..-; holds), aircraft_type_facts.csv:29 (disputed; 1677; valid -..-; holds), aircraft_type_facts.csv:365 (disputed; 999; valid -..-; holds), aircraft_type_facts.csv:386 (disputed; 1677; valid -..-; holds), aircraft_type_facts.csv:518 (disputed; 1373; valid -..-; holds)
+#   d3a1-11: range_max_nm of aircraft type d3a1-11: rows that hold on 1942-08-24 are not preferred, and no exception names one: aircraft_type_facts.csv:394 (disputed; 1130; valid -..-; holds)
 id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks
 2000,Grumman F4F-4 Wildcat,fighter,105,20,105,none,0,1,1
-2001,Douglas SBD-3 Dauntless,bomber,200,20,200,bomb,75.6,1,1
-2002,Grumman TBF-1 Avenger,bomber,190,20,190,torpedo,73.2,1,1
+2001,Douglas SBD-3 Dauntless,bomber,397,20,200,bomb,75.6,1,1
+2002,Grumman TBF-1 Avenger,bomber,420,20,190,torpedo,73.2,1,1
 2003,Mitsubishi A6M2 Type 0 Carrier Fighter Model 21,fighter,261,20,261,none,0,0,0
 2004,Aichi D3A1 Type 99 Carrier Bomber Model 11,bomber,252,20,252,bomb,41.666666,0,0
-2005,Nakajima B5N2 Type 97 Carrier Attack Bomber,bomber,175,20,175,torpedo,81.64,0,0
-2006,Aichi E13A1 Type 0 Reconnaissance Seaplane,patrol,253,20,253,none,0,0,0
+2005,Nakajima B5N2 Type 97 Carrier Attack Bomber,bomber,358,20,175,torpedo,81.64,0,0
+2006,Aichi E13A1 Type 0 Reconnaissance Seaplane,patrol,398,20,253,none,0,0,0

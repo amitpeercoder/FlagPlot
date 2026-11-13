@@ -14,7 +14,7 @@
     },
     {
       "file": "data/scenarios/../reference/aircraft_types_eastern_solomons.csv",
-      "hash": "487d803eb95dba01"
+      "hash": "b7a5c0d9ce3928e0"
     },
     {
       "file": "data/scenarios/../reference/search.toml",
@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "0d04cb0974969f1f"
+      "hash": "277e259efed4908b"
     }
   ],
   "orders": [
@@ -407,10 +407,10 @@
     {
       "day": 1,
       "order": {
-        "from_deg": 110,
+        "from_deg": 120,
         "kind": "set_search_arc",
-        "range_nm": "253",
-        "to_deg": 200
+        "range_nm": "330",
+        "to_deg": 180
       },
       "origin": {
         "intent": null,
@@ -418,34 +418,6 @@
       },
       "side": "japanese",
       "unit": "air_group:17"
-    },
-    {
-      "day": 1,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "search"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:20"
-    },
-    {
-      "day": 1,
-      "order": {
-        "from_deg": 110,
-        "kind": "set_search_arc",
-        "range_nm": "253",
-        "to_deg": 200
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:20"
     },
     {
       "day": 1,
@@ -565,7 +537,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "f6e1a405a8039d60"
+    "hash": "ca56f9c14e417648"
   },
   "seats": {
     "allied": "player",
