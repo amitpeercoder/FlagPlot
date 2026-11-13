@@ -1,4 +1,4 @@
-//! What `validate` reads: a batch file of version 4 (decision 0062) and a
+//! What `validate` reads: a batch file of version 5 (decision 0062) and a
 //! measures file (`data/validation/README.md`). Only the keys it needs are
 //! named; every key it names must be there, so a file from before is refused
 //! rather than read as empty.
@@ -89,6 +89,7 @@ pub struct PerRun {
     pub claims: Claims,
     pub attacks: Vec<Attack>,
     pub escorts: Vec<Escort>,
+    pub launches: Vec<Launch>,
     pub fights: Vec<Fight>,
     pub formed_groups: Vec<Formed>,
 }
@@ -181,6 +182,17 @@ pub struct Escort {
     pub pulse: String,
     pub with_air_group: u32,
     pub aircraft: u64,
+}
+
+#[derive(Deserialize)]
+pub struct Launch {
+    pub day: u32,
+    pub pulse: String,
+    pub air_group: u32,
+    pub aircraft: u64,
+    pub target_kind: String,
+    pub found_nothing: bool,
+    pub task_force: Option<u32>,
 }
 
 #[derive(Deserialize)]

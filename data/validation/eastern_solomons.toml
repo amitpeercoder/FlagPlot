@@ -16,6 +16,12 @@
 # The ranges were settled by the architect of the spec session on
 # 2026-11-12. No row's standing was changed: a range spans a dispute, it
 # does not end it.
+#
+# Changed on 2026-11-13 by the architect, who now owns this file, with
+# decision 0081: the two strike measures take the aircraft that took part
+# (aircraft_taking_part), the record of the strike on Ryujo is 36 to 38, the
+# air group lists hold the groups that decision added (21 to 26), and the
+# claims measures say they are read after the fight's rounds.
 
 battle = "eastern-solomons"
 scenario = "data/scenarios/05_eastern_solomons.toml"
@@ -90,10 +96,10 @@ record_low = 29
 record_high = 32
 judged = true
 take = "air_losses"
-air_groups = [11, 12, 13, 14, 15, 16, 18, 19]
+air_groups = [11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 24]
 causes = ["shot_down"]
 rows = [291, 287, 288, 1165, 1166, 296, 1172, 271]
-reason = "First wave on Enterprise's force: 24, where the tabular record's total (291) equals Shokaku's 13 (287, 288) plus Zuikaku's own record of 8 dive bombers and 3 fighters (1165, 1166); 25 if Zuikaku lost all 9 dive bombers (296, disputed). Ryujo's strike on Henderson Field: 5 by her own record (1172), 7 by the tabular record (271). Low end 24 + 5, high end 25 + 7."
+reason = "First wave on Enterprise's force: 24, where the tabular record's total (291) equals Shokaku's 13 (287, 288) plus Zuikaku's own record of 8 dive bombers and 3 fighters (1165, 1166); 25 if Zuikaku lost all 9 dive bombers (296, disputed). Ryujo's strike on Henderson Field: 5 by her own record (1172), 7 by the tabular record (271). Low end 24 + 5, high end 25 + 7. The second wave (groups 21 to 24 since decision 0081) met no enemy and lost nothing to enemy action (409, 1163, 1169), so its groups add nothing to the record and are counted in a run for what they lose there."
 
 [[measure]]
 id = "japanese_carrier_aircraft_lost_all_causes"
@@ -102,10 +108,10 @@ record_low = 35
 record_high = 54
 judged = true
 take = "air_losses"
-air_groups = [11, 12, 13, 14, 15, 16, 18, 19]
+air_groups = [11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 24]
 causes = ["shot_down", "destroyed_on_ground", "damaged_destroyed_on_ground", "lost_with_ship", "worn_out", "ditched_fuel", "ditched_no_deck"]
 rows = [291, 1172, 289, 270, 293, 974]
-reason = "Low end: 24 in the first wave (291), 5 of Ryujo's strike (1172), 2 fighters ditched (289) and 4 lost with Ryujo (270). High end: 59, the official history's figure as Japanese Wikipedia gives it (974), a low-confidence disputed row read here by exception, as an upper bound only, less 5. The 5 are the dive bombers of the second wave that did not return after dark (293): they are taken out of both ends because the scenario ends at 18:00, before that wave came back, and the rules have no loss on a recovery in the dark (decision 0059 leaves it out). A total for the day must hold them, so they come off the high end too. Judged since stages 1 and 2 of decision 0059: the rules now ditch an aircraft out of fuel or with no deck to land on."
+reason = "Low end: 24 in the first wave (291), 5 of Ryujo's strike (1172), 2 fighters ditched (289) and 4 lost with Ryujo (270). High end: 59, the official history's figure as Japanese Wikipedia gives it (974), a low-confidence disputed row read here by exception, as an upper bound only, less 5. The 5 are the dive bombers of the second wave that did not return after dark (293): they are taken out of both ends because the scenario ends at 18:00, before that wave came back, and the rules have no loss on a recovery in the dark (decision 0059 leaves it out). A total for the day must hold them, so they come off the high end too. Judged since stages 1 and 2 of decision 0059: the rules now ditch an aircraft out of fuel or with no deck to land on. The second wave's groups (21 to 24, decision 0081) are counted: its losses in the record are the 5 taken out above, and in a run it rests aboard and is lost only with its carrier."
 
 [[measure]]
 id = "ryujo_aircraft_lost_with_the_ship"
@@ -126,10 +132,10 @@ record_low = 13
 record_high = 14
 judged = true
 take = "air_losses"
-air_groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+air_groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 26]
 causes = ["shot_down"]
 rows = [305, 311, 700]
-reason = "Of 17 carrier aircraft lost, 7 in combat and 3 expended for severe damage (305). Marine fighters over Guadalcanal: 3 (305, 311) or 4 (700). The 3 expended stay in the record: the rules have no write-off for damage taken in combat (an aircraft written off in a run is worn out, whoever it met), so an aircraft shot down in a run stands for every aircraft the enemy cost. A ditching is never counted here."
+reason = "Of 17 carrier aircraft lost, 7 in combat and 3 expended for severe damage (305). Marine fighters over Guadalcanal: 3 (305, 311) or 4 (700). The 3 expended stay in the record: the rules have no write-off for damage taken in combat (an aircraft written off in a run is worn out, whoever it met), so an aircraft shot down in a run stands for every aircraft the enemy cost. A ditching is never counted here. Groups 25 and 26 (decision 0081: VT-3's attack group and VT-8's second group of 17:08) are counted, since the record's 17 carrier aircraft are all of each air group's losses: Saratoga's second group lost 2 (367)."
 
 [[measure]]
 id = "us_aircraft_lost_all_causes"
@@ -138,38 +144,38 @@ record_low = 20
 record_high = 21
 judged = true
 take = "air_losses"
-air_groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+air_groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 26]
 causes = ["shot_down", "destroyed_on_ground", "damaged_destroyed_on_ground", "lost_with_ship", "worn_out", "ditched_fuel", "ditched_no_deck"]
 rows = [305, 306, 307, 700]
-reason = "Twenty by three sources (305, 306, 307); 21 if the Marines lost 4 (700). Seven of them came down in the water (305). Judged since stages 1 and 2 of decision 0059: the rules now ditch an aircraft out of fuel or with no deck to land on."
+reason = "Twenty by three sources (305, 306, 307); 21 if the Marines lost 4 (700). Seven of them came down in the water (305). Judged since stages 1 and 2 of decision 0059: the rules now ditch an aircraft out of fuel or with no deck to land on. Groups 25 and 26 (decision 0081) are counted, as in us_aircraft_lost_to_enemy_action."
 
 # -------------------------------------------------------------- strikes
 
 [[measure]]
 id = "japanese_aircraft_attacking_enterprise_force"
-counts = "Japanese aircraft that attack a ship of Task Force 16 or Task Force 11, with the fighters that escort them, summed over the run"
+counts = "Japanese aircraft that take part in a raid on a ship of Task Force 16 or Task Force 11, as launched and before the patrol and the guns fire, with the fighters that escort them, summed over the run"
 record_low = 37
 record_high = 37
 judged = true
-take = "aircraft_attacking"
+take = "aircraft_taking_part"
 side = "japanese"
 target_task_forces = [1, 2]
 escorts = true
 rows = [290, 1159, 1164, 409]
-reason = "The first wave, 27 dive bombers and 10 fighters (290; 22 from Shokaku, 1159, and 15 from Zuikaku, 1164). The second wave of 36 found nothing (409). Judged since strike target priority (decision 0063) and reach beyond the radius (decision 0059) are built: they decide what flies."
+reason = "The first wave as it took part: 27 dive bombers and 10 fighters (290; 22 from Shokaku, 1159, and 15 from Zuikaku, 1164, the units' own forms). The record counts the wave that attacked, not those that came through the fighters and the guns, so since decision 0081 the measure takes the aircraft as launched in a raid that met the force (aircraft_taking_part), not the bombers that attack after the fight (aircraft_attacking, which agreed only because the scenario then launched both waves, 54 dive bombers, and the fight halved them). The second wave of 27 dive bombers and 9 fighters found nothing (409, 1163, 1169) and is not counted. A raid whose every bomber the patrol shoots down before the guns fire names no force in the log and is not counted (decision 0062, version 5). Judged since strike target priority (decision 0063) and reach beyond the radius (decision 0059) are built: they decide what flies."
 
 [[measure]]
 id = "us_aircraft_attacking_ryujo"
-counts = "US aircraft that attack a ship of the Ryujo detachment, with the fighters that escort them, summed over the run"
+counts = "US aircraft that take part in a raid on a ship of the Ryujo detachment, as launched and before the patrol and the guns fire, with the fighters that escort them, summed over the run"
 record_low = 36
-record_high = 36
+record_high = 38
 judged = true
-take = "aircraft_attacking"
+take = "aircraft_taking_part"
 side = "allied"
 target_task_forces = [4]
 escorts = true
-rows = [333, 334, 335]
-reason = "Saratoga's strike: 29 dive bombers and 7 torpedo planes reached the target (333); the row counts no fighters with them. Judged, for the same reason."
+rows = [231, 333, 1238, 334, 335]
+reason = "Saratoga's strike: 30 dive bombers and 8 torpedo planes launched (231), of which one of each turned back with mechanical trouble, so 29 and 7, 36, reached the target (333, 1238; 334, 335 by type); the rows count no fighters with them. The range is not a dispute, the rows agree: the two that turned back for mechanical trouble are a part of the record outside the rules, which have no such abort, so by this file's rule the record runs from the 36 that reached to the 38 launched. The measure takes the aircraft as launched in a raid that met the force (aircraft_taking_part, decision 0081), as japanese_aircraft_attacking_enterprise_force does. Row 232 (37, 31 and 6) is the strike of 23 August and is not read here. Judged since strike target priority (decision 0063) and reach beyond the radius (decision 0059) are built: they decide what flies."
 
 [[measure]]
 id = "us_strike_on_the_japanese_fleet_carriers"
@@ -200,10 +206,10 @@ judged = true
 take = "claims_per_hundred"
 side = "allied"
 claim = "shot_down"
-air_groups = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+air_groups = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
 causes = ["shot_down"]
 rows = [257, 255, 310, 215, 244, 252, 254, 710, 711, 713, 309, 291, 296, 1172, 271, 974]
-reason = "Claimed, low end 83: the two fighter squadrons 43 (257), Task Force 16's guns 24 by Enterprise's captain (255), the Marines over Guadalcanal 16 (310). High end 105: the fighters 43, the ships' own highest figures 41 (215, 244, 252, 254, 710, 711, 713), the Marines 21 (309). Really shot down: 29 to 32, as in japanese_carrier_aircraft_lost_to_enemy_action (291, 296, 1172, 271). A claim does not say what unit its victim was from, so the run's figure divides by every Japanese aircraft shot down, the floatplanes with the rest. The record's low end does the same: 3 floatplanes lost that day (974, a low-confidence disputed row read by exception, for this end only) make 35. 83 in 35 is 237 a hundred and 105 in 29 is 362."
+reason = "Claimed, low end 83: the two fighter squadrons 43 (257), Task Force 16's guns 24 by Enterprise's captain (255), the Marines over Guadalcanal 16 (310). High end 105: the fighters 43, the ships' own highest figures 41 (215, 244, 252, 254, 710, 711, 713), the Marines 21 (309). Really shot down: 29 to 32, as in japanese_carrier_aircraft_lost_to_enemy_action (291, 296, 1172, 271). A claim does not say what unit its victim was from, so the run's figure divides by every Japanese aircraft shot down, the floatplanes with the rest. The record's low end does the same: 3 floatplanes lost that day (974, a low-confidence disputed row read by exception, for this end only) make 35. 83 in 35 is 237 a hundred and 105 in 29 is 362. It divides by the aircraft really shot down, so it is read only after the rounds that tune the fight between aircraft and the guns: a claim figure moved before them would be bent to cover a count of kills (decision 0081)."
 
 [[measure]]
 id = "japanese_aircraft_claimed_per_hundred_shot_down"
@@ -214,10 +220,10 @@ judged = true
 take = "claims_per_hundred"
 side = "japanese"
 claim = "shot_down"
-air_groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+air_groups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 26]
 causes = ["shot_down"]
 rows = [1161, 1167, 1173, 1174, 305, 311, 700]
-reason = "Claimed, low end 24: Shokaku's first wave 5 (1161), Zuikaku's fighters 4 (1167), Ryujo's strike on Guadalcanal 15 (1173). High end 34 adds 10 by Ryujo's patrol (1174), a low-confidence row read by exception. Really lost: 13 or 14, as in us_aircraft_lost_to_enemy_action (305, 311, 700). 24 in 14 is 171 a hundred and 34 in 13 is 261."
+reason = "Claimed, low end 24: Shokaku's first wave 5 (1161), Zuikaku's fighters 4 (1167), Ryujo's strike on Guadalcanal 15 (1173). High end 34 adds 10 by Ryujo's patrol (1174), a low-confidence row read by exception. Really lost: 13 or 14, as in us_aircraft_lost_to_enemy_action (305, 311, 700). 24 in 14 is 171 a hundred and 34 in 13 is 261. It divides by the aircraft really lost, so it is read only after the rounds that tune the fight between aircraft and the guns: a claim figure moved before them would be bent to cover a count of kills (decision 0081)."
 
 [[measure]]
 id = "us_hits_claimed_per_hundred_scored"
