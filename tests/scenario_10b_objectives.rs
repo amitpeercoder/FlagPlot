@@ -13,7 +13,11 @@
 //! auxiliary 1; a ship crippled is half of that; an aircraft destroyed is
 //! 0.05. Levels in all three: minor 3, major 8, decisive 16.
 //!
-//! ## Scenario 4, Savo Island (`04_savo_island.toml`)
+//! ## Scenario 4, Savo Island (`step2-frozen/04_savo_island.toml`)
+//!
+//! This runs on the frozen copy of scenario 4, as it stood before the
+//! northern group's break-off level was set from the record on Nov 13, 2026
+//! (decision 0024; `docs/step2-spec.md`, "Tests while figures move", 9).
 //!
 //! Both sides hold two objectives: ships sunk and ships crippled.
 //!
@@ -295,7 +299,11 @@ fn fuel_losses(world: &World, side: Side) -> u32 {
 
 #[test]
 fn savo_island_is_a_minor_allied_victory_by_the_margin_of_exactly_three() {
-    let world = run("04_savo_island.toml");
+    // The frozen copy of scenario 4 (data/scenarios/step2-frozen): the scoring
+    // below was worked on the scenario as it stood before the northern
+    // group's break-off level was set from the record on Nov 13, 2026
+    // (decision 0024), and no number of it changes.
+    let world = run("step2-frozen/04_savo_island.toml");
     // Japanese ships sunk: Kako (3) and Furutaka (5), cruisers.
     assert_eq!(ship_ids(&world, Side::Japanese, sunk), vec![3, 5]);
     assert!([3, 5]
