@@ -1,0 +1,315 @@
+# FROZEN COPY (docs/step2-spec.md, "Tests while figures move", 9): scenario 4
+# as it stood on Nov 13, 2026, before the northern group's break-off level was
+# set from the record (decision 0024, the note of Nov 13, 2026). Only the paths
+# differ from that file: they are one folder deeper. Read by
+# tests/scenario_10b_objectives.rs alone. See README.md in this folder.
+#
+# Scenario 4: Savo Island, the night of 8 to 9 August 1942.
+#
+# Stage 4c2 of scenario 4. The Japanese column steams down the Slot, enters
+# the hex of Savo Island at 01:31 and meets the southern and then the
+# northern cruiser group there. What is in the scenario and what is left out
+# is docs/decisions/0024-savo-island-scenario.md. The hand calculation is in
+# tests/scenario_04_savo_island.rs.
+#
+# The ships are real: their figures are derived from sourced facts
+# (data/reference/ship_classes_savo_island.csv, decisions 0020 and 0023).
+# The map is real. The positions, readiness and the Allied contact are from
+# data/oob (engagement_positions.csv, engagement_events.csv).
+#
+# PLACEHOLDER DATA all the same: the combat figures in surface_combat.toml
+# and the three scaling constants are invented, and so are the break-off
+# levels. Full fuel and ammunition at the start is an assumption.
+
+name = "Scenario 4: Savo Island, 8 to 9 August 1942"
+placeholder = true
+seed = 1942
+days = 1
+map = "../../map/south_pacific.csv"
+ship_classes = "../../reference/ship_classes_savo_island.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+
+# Rabaul, where the column came from and where a ship it sends home goes.
+# The position is the anchorage's (data/map/south_pacific_anchors.csv). The
+# base holds nothing: only its place matters here.
+[[base]]
+id = 1
+name = "Rabaul"
+side = "japanese"
+q = -5
+r = -13
+supply_t = 0
+
+# The Japanese column, 208 nm up the Slot at 18:00, at battle stations. Ships
+# are charged the straight-line miles of their course (decision 0058): from
+# (-1,-8) the six steps to (2,-5) are charged 34, 30, 38, 26, 40 and 40, 208 in
+# all, and the column enters the hex after 188 nm. Worked back so that, at 25
+# knots (inside the sources' 24 to 26), it enters at 01:31 (decision 0024, 6;
+# the start was (-1,-7) and 24 knots when a step was a flat 40 nm).
+[[task_force]]
+id = 1
+name = "Eighth Fleet striking force"
+side = "japanese"
+q = -1
+r = -8
+mission = "surface_combat"
+readiness = "battle"
+home_port = 1
+
+# The southern group, south-east of Savo Island. Condition II.
+[[task_force]]
+id = 2
+name = "Southern group"
+side = "allied"
+q = 2
+r = -5
+mission = "surface_combat"
+
+# The northern group, east of Savo Island. Condition II.
+[[task_force]]
+id = 3
+name = "Northern group"
+side = "allied"
+q = 2
+r = -5
+mission = "surface_combat"
+
+# Each ship's experience, where it is not 2, is the value in
+# data/reference/ship_experience_savo_island.ships.csv (decision 0064). Read
+# only in a dark fight, by the strengths in surface_combat.toml.
+[[ship]]
+id = 1
+name = "Chokai"
+class = 1003
+side = "japanese"
+experience = 3
+fuel_t = 2529
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Aoba"
+class = 1000
+side = "japanese"
+experience = 3
+fuel_t = 2040
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Kako"
+class = 1001
+side = "japanese"
+experience = 3
+fuel_t = 1858
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Kinugasa"
+class = 1000
+side = "japanese"
+experience = 3
+fuel_t = 2040
+task_force = 1
+
+[[ship]]
+id = 5
+name = "Furutaka"
+class = 1001
+side = "japanese"
+experience = 3
+fuel_t = 1858
+task_force = 1
+
+[[ship]]
+id = 6
+name = "Tenryu"
+class = 1004
+side = "japanese"
+experience = 3
+fuel_t = 905
+task_force = 1
+
+[[ship]]
+id = 7
+name = "Yubari"
+class = 1005
+side = "japanese"
+experience = 3
+fuel_t = 902
+task_force = 1
+
+[[ship]]
+id = 8
+name = "Yunagi"
+class = 1002
+side = "japanese"
+experience = 3
+fuel_t = 413
+task_force = 1
+
+[[ship]]
+id = 9
+name = "HMAS Canberra"
+class = 1006
+side = "allied"
+experience = 3
+fuel_t = 3400
+task_force = 2
+
+[[ship]]
+id = 10
+name = "USS Chicago"
+class = 1012
+side = "allied"
+experience = 3
+fuel_t = 2987
+task_force = 2
+
+[[ship]]
+id = 11
+name = "USS Patterson"
+class = 1007
+side = "allied"
+experience = 3
+fuel_t = 506
+task_force = 2
+
+[[ship]]
+id = 12
+name = "USS Bagley"
+class = 1007
+side = "allied"
+experience = 3
+fuel_t = 506
+task_force = 2
+
+[[ship]]
+id = 13
+name = "USS Vincennes"
+class = 1010
+side = "allied"
+experience = 1
+fuel_t = 1900
+task_force = 3
+
+[[ship]]
+id = 14
+name = "USS Quincy"
+class = 1011
+side = "allied"
+experience = 1
+fuel_t = 1900
+task_force = 3
+
+[[ship]]
+id = 15
+name = "USS Astoria"
+class = 1011
+side = "allied"
+fuel_t = 1900
+task_force = 3
+
+[[ship]]
+id = 16
+name = "USS Helm"
+class = 1007
+side = "allied"
+experience = 3
+fuel_t = 506
+task_force = 3
+
+[[ship]]
+id = 17
+name = "USS Wilson"
+class = 1009
+side = "allied"
+fuel_t = 491
+task_force = 3
+
+# The Hudson's 10:26 report of the column, as the Allied side held it at
+# 18:00: eight ships at the reported position, two pulses old.
+[[contact]]
+side = "allied"
+q = -1
+r = -9
+ship_count = 8
+kind = "cruiser"
+age_pulses = 2
+
+# Japanese: into the hex of Savo Island and back up the Slot, at 25 knots.
+# A ship that cannot keep up is sent home to Rabaul with an escort; one that
+# cannot move is left.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[2, -5], [-1, -8]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+knots = "25"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+stragglers = "detach"
+
+# Allied: hold station, and fight.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Four Allied heavy cruisers were sunk for no Japanese ship lost that night: a decisive Japanese victory, though the transports the screen guarded were left untouched. (The architect's reading; not yet scored from the order-of-battle facts.)"
+
+[objectives.allied]
+mission = "Stop the Japanese column at Savo Island and keep the cruiser screen afloat."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[objectives.japanese]
+mission = "Destroy the Allied cruiser screen off Savo Island and be clear before daylight."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
