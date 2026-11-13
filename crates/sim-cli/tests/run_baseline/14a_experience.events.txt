@@ -35,11 +35,11 @@ day   1  hash 7f7e4fd95b798e72  73 events
 #29 D1 night     round 2: ship:2 guns at ship:5: 120 shots x 0.075 = 9 expected, 15 hits  <- #9
 #30 D1 night     round 2: ship:3 guns at ship:6: 120 shots x 0.075 = 9 expected, 7 hits  <- #9
 #31 D1 night     round 2: ship:4 guns at ship:1: 60 shots x 0.0225 = 1.35 expected, 1 hit  <- #9
-#32 D1 night     round 2: ship:4 torpedoes at ship:1: 8 shots x 0.03 = 0.24 expected, 0 hits  <- #9
+#32 D1 night     round 2: ship:4 torpedoes at ship:1: 4 shots x 0.03 = 0.12 expected, 0 hits  <- #9
 #33 D1 night     round 2: ship:5 guns at ship:2: 30 shots x 0.0225 = 0.675 expected, 2 hits  <- #9
-#34 D1 night     round 2: ship:5 torpedoes at ship:2: 4 shots x 0.03 = 0.12 expected, 0 hits  <- #9
+#34 D1 night     round 2: ship:5 torpedoes at ship:2: 2 shots x 0.03 = 0.06 expected, 0 hits  <- #9
 #35 D1 night     round 2: ship:6 guns at ship:3: 30 shots x 0.0225 = 0.675 expected, 0 hits  <- #9
-#36 D1 night     round 2: ship:6 torpedoes at ship:3: 8 shots x 0.03 = 0.24 expected, 0 hits  <- #9
+#36 D1 night     round 2: ship:6 torpedoes at ship:3: 4 shots x 0.03 = 0.12 expected, 0 hits  <- #9
 #37 D1 night     round 2: ship:4 took 4 hits on flotation, 20 points, now 55  <- #28
 #38 D1 night     round 2: ship:4 took 1 hit on fire, 5 points, now 5  <- #28
 #39 D1 night     round 2: ship:5 took 9 hits on flotation, 45 points, now 65  <- #29
