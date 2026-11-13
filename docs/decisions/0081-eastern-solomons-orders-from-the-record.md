@@ -84,6 +84,8 @@ Ryujo's six attack planes flew 200 to 202 miles with bombs to Henderson Field an
 
 The lead recommended 3. **Ruled by the architect on Nov 13, 2026: option 1, with research commissioned.** The B5N2's strike radius stays 175, a third of the 528 miles of rows 79 and 412. A distance flown is not taken as a radius: decision 0075 refused that for the search radius, and one raid flown once is a ceiling case, not a radius. The SBD-3's and TBF-1's exceptions that do take a distance flown (`aircraft_type_facts` 280 and 310) are an inconsistency of the derivation, to be looked at with the fuel round, not followed. The one change made here in `data/derivation`: the exception's reason now says what the rows say ("528 miles, the normal range, with no load stated; two weak sources that agree (rows 79 and 412)"); the Eastern Solomons aircraft file was derived again and only its header changed. Ryujo's raid stays on extended reach at 200 miles. Its 1.72 aircraft ditched a run, against none in the record (1172; events 331), is evidence for the round of the fuel figure, `ditch_chance_per_radius_beyond`, where it is judged. A radius with bombs is asked of outside research (option 2).
 
+**Note, Nov 13, 2026: decision 0084 reverses one ruling of this paragraph.** The ditchings of Ryujo's raid are not evidence for `ditch_chance_per_radius_beyond` and are left out of any round that tunes it: they rest on a derived radius whose rows state no load, and fitting the shared figure to them would bend every type's ditching to one type's unsourced radius, the objection option 1 itself makes. The text above stands as it was ruled.
+
 ## What was seen before, and that the orders rest on the rows
 
 The plan's scratch variants (first wave alone; groups 2, 4 and 10 at rest; both) showed what the orders do before any was written: with the first wave alone the bomb hits on Enterprise fall to 0 in the middle run, and with Enterprise's groups and VMSB-232 at rest Ryujo sinks about half as often. Neither was a reason for any order: each order above is the rows', by the reading, and would be the same had the scratch runs shown the opposite. The two findings in the rows that changed a ruling (row 232 is the 23rd's strike; VT-8 and VT-3 were two launches) were taken back to the architect before the orders were written.
@@ -111,12 +113,12 @@ Seeds 1 to 1000, live figures, `validate` against `data/validation/eastern_solom
 | japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 300, 166, 371 of 982, agrees | 100 to 300, 150, 298 of 980, agrees |
 | us_hits_claimed_per_hundred_scored | 50 to 140 | 115 to 191, 144, 193 of 469, reported | 100 to 200, 140, 259 of 488, reported |
 
-Judged 14: before 9 agree and 5 miss on the measures as changed; after 9 agree (one at the edge) and 4 miss.
+Judged 14: before 9 agree and 5 miss on the measures as changed; after 10 agree (one at the edge) and 4 miss. (Corrected Nov 13, 2026, by decision 0084: this line had read "after 9 agree (one at the edge)", which with 4 misses makes 13; the table has 9 plain agreements, 1 at the edge and 4 misses.)
 
 - **The finding: with the true first wave, the bombs on Enterprise miss.** 0.50 bomb hits a run against 3.52 before, 3 in the record. The Japanese raids met the American force in 611 runs before and after; their bombers reached the attack in 508 runs after, against 611. The patrol of 54 and the guns, all firing before any bomb falls, leave few of 27. The plan traced this to the order of the fight (the guns fire before the dive, where the record has them open fire as the dives began) and to whom the patrol fires at; decisions 0079 and 0080, built by another team, answer it. Nothing here was adjusted for it.
 - **The two strike measures agree on what took part.** M1 holds 37 in 607 runs (611 met the force; 4 are the raids the patrol wiped out before the guns, which name no force). Taken the old way, by the bombers left after the fight, it would hold 37 in no run (5 in the middle run, 0 to 17). M2 holds 38 in the 488 runs in which Saratoga's strike reaches Ryujo, and 0 in the others: the strike is still all or nothing on one sighting and one hex.
 - **Ryujo is sunk half as often** (228 against 464; crippled in 234 more), since Enterprise's groups and VMSB-232 no longer strike her. Japanese carriers sunk agrees at the edge.
-- **Ryujo's attack planes still ditch** 1.72 a run (C5: evidence for the fuel figure's round).
+- **Ryujo's attack planes still ditch** 1.72 a run (C5: evidence for the fuel figure's round; reversed by decision 0084, which leaves them out of that round).
 - **The result:** a stalemate in 547 runs, an Allied victory in 450, a defeat in 3 (before 436, 468, 96).
 
 ## Who follows

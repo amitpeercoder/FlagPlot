@@ -110,11 +110,18 @@ rows = [1656, 1655, 1657, 1506, 1507]
 reason = "The ships' own reports add to 15 (1655); a conference of their captains cut that to 8 (1656) and the fleet commander made it 9 (1657). Two were sunk (1506, 1507). Low end 8 in 2, high end 15 in 2. Not judged: more ships were claimed than the five the scenario would hold, as with the Japanese claim at Savo Island."
 
 # No measure of hits for each thousand shells, the one experience is tested
-# on at Savo Island, and there will not be one. The US ships' rounds fired
-# are known for one cruiser and part of another (rows 1636, 1637, 1639), and
-# the Japanese ships' from an encyclopedia alone (1648 to 1653). Research
-# looked again and found no US action report online and no count of hits in
-# the Japanese division's report (docs/research/oob, pull request 100).
+# on at Savo Island, and there will not be one. Checked again by decision
+# 0084 before the run, against the rows as they stand. The US main battery
+# shells are on record for Salt Lake City (296: 1636, 1704) and Helena (580
+# or 560: 2980, 3001), with Boise's 5-inch and 6-inch together as "more
+# than 1,000" from the press (1715) and McCalla's 390 (1641); none for San
+# Francisco, Farenholt, Duncan, Laffey or Buchanan, and the hits on the
+# Japanese ships are the whole force's. The Japanese cruisers' main
+# batteries fired 7, 20 or 36, and 80 (2276 to 2282; 1648 to 1653, 1700),
+# the destroyers' are not known (2283), and the hits on US ships include an
+# uncounted share from their own side. So neither side has both its shells
+# and its hits on record. The rates of fire derived from Salt Lake City and
+# Helena here are cases of decision 0070, so they could not check it either.
 #
 # So experience is checked here by hits received on each side, the two
 # measures above, and by ships sunk. Those count what a side did and not how

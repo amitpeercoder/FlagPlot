@@ -22,6 +22,10 @@ Experience acts on one side more than the other: every Japanese ship has the val
 
 **Why this size.** 0.5 is the cap decision 0064 set. The half step to 0.35 was tried and bought a third as much. At the cap, any gap left between the sides is not experience's to carry.
 
+**What 0.5 is, said plainly (decision 0084, Nov 13, 2026).** It is an effect size fitted at Savo Island, at the cap of the range decision 0064 allows. The sources give its sign and no size; the cap bounds the search and is not a historical estimate. That the gap left at the cap "is not experience's to carry" is a ruling, not a division of causes any row makes: training, fire control and how the fight was fought are not separated by these rows.
+
+**It sits badly with round 0, and that is said here.** Round 0 left `not_alert_sighting_factor` alone because no row gives a size, though rows give its sign (the Allied ships at their second condition, captains asleep) and four values were tried. That reason applies to this figure just as much. The one difference between the two is that round 0's measure already agreed and this round's did not; and the spec asks a round to aim at the middle of the runs even after a measure agrees ("Tuning", 10), so that is not a difference of principle. The two rounds applied the rule of support differently. Both figures stay placeholders, and the round for each is left as it was.
+
 ## Every measure, before and after
 
 1,000 runs each, seeds 1 to 1,000. Each cell is the 5th to the 95th percentile, the median, and in brackets the runs holding the record. Before is `savo-island-baseline.md` as it stood; after is `savo-island-r1.md`.
