@@ -1,0 +1,442 @@
+# Scenario 16: every rule of step 2 acting together, in one night and one day.
+#
+# A cut-down Eastern Solomons on the wide open map, with one carrier a side
+# (docs/step2-spec.md, "Tests while figures move", 8). It is the complexity
+# review of step 2: decisions 0058 (ships charged straight-line miles), 0059
+# (reach, the fuel roll, a lost deck, landing
+# elsewhere, ditching for want of a deck, the patrol pilot), 0063 (target
+# lists, the afternoon base strike), 0064 (experience), 0067 (the base count at
+# the day's end) and 0068 (a force not ready fires part of its guns).
+#
+# Night. A Japanese cruiser force (force 4, battle readiness, experience 3)
+# steams west along row -4 and meets an Allied cruiser force (force 3, normal
+# readiness, stopped at (2,-4), experience 1) 200 nm from its start.
+#
+# Morning. The Allied dive bombers (group 2) are ordered to go for carriers only
+# and are on extended reach. The only contact the Allied side holds is the
+# cruiser force of the night, so they hold. The Japanese carrier (force 2) is
+# 360 nm from the Allied carrier, out of every search.
+#
+# Afternoon. The Japanese carrier has steamed to (9,0), 280 nm from the Allied
+# carrier at (2,0): beyond the dive bombers' radius of 250 nm and within
+# extended reach (312). Both sides' scouts sight the other carrier. The Allied
+# dive bomber strikes it; the Japanese dive bombers, with fighters as escorts,
+# strike the Allied carrier through its patrol and put her flight deck out
+# while her aircraft are away; the Japanese attack unit (group 6) raids the
+# Allied field at (9,-6), which is 288 nm from the Japanese carrier at 06:00
+# and 240 nm from her at noon. Aircraft that flew beyond their radius may run
+# out of fuel. The Allied aircraft come home to no deck: the scouts to the
+# field (262 nm: beyond the dive bombers' and fighters' radius of 250, within
+# the scouts' search range of 300), the rest into the sea beside their
+# carrier. At the day's end the field is recorded and the result is scored.
+#
+# The test runs this file on an altered copy of the frozen figures (the
+# pattern of scenarios 12a, 14a and 15a): see the architect's hand
+# calculation in tests/scenario_16_all_together.rs.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
+
+name = "Scenario 16: All together"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_search_wide.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+air_upkeep = "../reference/air_upkeep.toml"
+air_supply = "../reference/air_supply.toml"
+
+# The Allied field. Supply to lose; no aircraft, no guns.
+[[base]]
+id = 1
+name = "Placeholder Allied field"
+side = "allied"
+q = 9
+r = -6
+supply_t = 500
+
+# The Allied carrier force lies stopped at (2,0).
+[[task_force]]
+id = 1
+name = "Placeholder Allied carrier force"
+side = "allied"
+q = 2
+r = 0
+mission = "carrier"
+
+# The Japanese carrier force starts at (14,3) and steams to (9,0): 280 nm by
+# air, off the grid's axes, so that every step is charged the miles it brings
+# the force nearer in a straight line (decision 0058). At 06:00 it is in (11,0)
+# and at noon in (9,0).
+[[task_force]]
+id = 2
+name = "Placeholder Japanese carrier force"
+side = "japanese"
+q = 14
+r = 3
+mission = "carrier"
+
+# The Allied cruiser force lies stopped at (2,-4), 160 nm north of the carrier.
+# Normal readiness, and its side holds no contact: not alert, so not ready.
+[[task_force]]
+id = 3
+name = "Placeholder Allied cruiser force"
+side = "allied"
+q = 2
+r = -4
+mission = "surface_combat"
+
+# The Japanese cruiser force starts at (7,-4), 200 nm east of the Allied one, at
+# battle readiness.
+[[task_force]]
+id = 4
+name = "Placeholder Japanese cruiser force"
+side = "japanese"
+q = 7
+r = -4
+mission = "surface_combat"
+readiness = "battle"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier A"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder carrier J"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+# Allied cruisers: crews of experience 1.
+[[ship]]
+id = 3
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 3
+experience = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 3
+experience = 1
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B3"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 3
+experience = 1
+
+# Japanese cruisers: crews of experience 3.
+[[ship]]
+id = 6
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 4
+experience = 3
+
+[[ship]]
+id = 7
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 4
+experience = 3
+
+[[ship]]
+id = 8
+name = "Placeholder cruiser A3"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 4
+experience = 3
+
+# Aboard carrier A (18 of 36): scouts, one dive bomber, fighters. Pilots are
+# counted for every group, one for each aircraft.
+[[air_group]]
+id = 1
+name = "Placeholder Allied scouts"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 5
+pilots = 5
+
+[[air_group]]
+id = 2
+name = "Placeholder Allied dive bombers"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 1
+pilots = 1
+
+[[air_group]]
+id = 3
+name = "Placeholder Allied fighters"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+pilots = 12
+
+# Aboard carrier J (27 of 36): scouts, dive bombers, the attack unit, fighters.
+[[air_group]]
+id = 4
+name = "Placeholder Japanese scouts"
+side = "japanese"
+ship = 2
+aircraft_type = 2
+ready = 5
+pilots = 5
+
+[[air_group]]
+id = 5
+name = "Placeholder Japanese dive bombers"
+side = "japanese"
+ship = 2
+aircraft_type = 3
+ready = 6
+pilots = 6
+
+[[air_group]]
+id = 6
+name = "Placeholder Japanese attack unit"
+side = "japanese"
+ship = 2
+aircraft_type = 3
+ready = 4
+pilots = 4
+
+[[air_group]]
+id = 7
+name = "Placeholder Japanese fighters"
+side = "japanese"
+ship = 2
+aircraft_type = 4
+ready = 12
+pilots = 12
+
+# ---------------------------------------------------------------------------
+# Orders, day 1.
+
+# The night: the Japanese cruiser force steams west to (0,-4), through the
+# Allied force at (2,-4). Both engage.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_route"
+waypoints = [[0, -4]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# The Japanese carrier steams to (9,0) at cruise speed (16 knots).
+[[order]]
+day = 1
+side = "japanese"
+task_force = 2
+kind = "set_route"
+waypoints = [[9, 0]]
+
+# The Allied scouts search due east: arc 080 to 100 degrees, 300 nm.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 80
+to_deg = 100
+range_nm = 300
+
+# The Allied dive bombers: carriers only, and on extended reach.
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_target_priority"
+kinds = ["carrier"]
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_reach"
+reach = "extended"
+
+# The Allied fighters keep all their aircraft over the carrier.
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+# The Japanese scouts search due west: arc 260 to 280 degrees, 300 nm.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 4
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 4
+kind = "set_search_arc"
+from_deg = 260
+to_deg = 280
+range_nm = 300
+
+# The Japanese dive bombers strike ships, on extended reach, default list.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 5
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 5
+kind = "set_reach"
+reach = "extended"
+
+# The attack unit strikes the Allied field, on normal reach.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 6
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+# The Japanese fighters all go as escorts, on extended reach.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 7
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 7
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 7
+kind = "set_reach"
+reach = "extended"
+
+# ---------------------------------------------------------------------------
+# Missions and objectives (decision 0054). Placeholder scale.
+[objectives]
+minor = 5
+major = 15
+decisive = 30
+history = "Invented: a night action of cruisers, a carrier duel beyond the dive bombers' radius, and a raid on the field where the broken carrier's aircraft came down."
+
+[objectives.allied]
+mission = "Sink the Japanese cruisers and the carrier's aircraft, and keep the field open."
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.5"
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { cruiser = 5 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 10 }
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 1
+points = 5
+
+[objectives.japanese]
+mission = "Sink the Allied cruisers, put the Allied carrier's flight deck out and close the field."
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.5"
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { cruiser = 5 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 10 }
+
+[[objectives.japanese.objective]]
+kind = "base_open"
+base = 1
+closed = true
+points = 5
