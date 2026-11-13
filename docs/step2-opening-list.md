@@ -45,6 +45,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 Where an item says when it is done, that is the coordinating architect's ruling of Nov 13, 2026, on the designer's delegation.
 
 - One fight for three forces, so that fights can overlap: a plan for the designer at the close, not built in step 2 (decision 0083, "What it carries and what it does not"). Chicago's fate and the northern group's torpedo hits at Savo Island rest on it.
+- Ships of a force that do not fire at all: at Savo Island Helm and Wilson fired no torpedo, Wilson's order to attack not received and Helm's target friendly (`engagement_outcomes` 3217 to 3219), where in the rules every ship of a force that has sighted fires. `allied_torpedoes_fired` is a named miss resting on it; it is participation, not the torpedo share (architect's ruling, Nov 13, 2026; `docs/validation/tuning/savo-island-closed.md`).
 - Torpedo reloads: each tube fires once in a game, where Kako fired ten torpedoes from eight tubes at Savo Island and the Takao class had a gear for quick reloading (decision 0083, "What it carries and what it does not").
 - A raiding force that fights and passes on: no rule has a force retire when it has done what it came for, so `minutes_of_action` misses at Savo Island (decision 0024, the note on break-off levels).
 - Secondary guns: a cruiser's secondary battery has no counterpart in the rules (`docs/step2-spec.md`, "Where the model stands today").

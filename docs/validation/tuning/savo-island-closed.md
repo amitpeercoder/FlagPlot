@@ -1,6 +1,6 @@
 # Savo Island: the surface tuning closed, with its misses named
 
-Nov 13, 2026. Savo Island's surface tuning ends after round 2 and decision 0083. The third and fourth mechanisms in the order of tuning, what a hit does and when a force breaks off (`docs/step2-spec.md`, "Tuning", 2), were tested for a supported move, and none was found. The rule work this brought up is built: tubes that bear on one side, with the other side fired later (decisions 0074 and 0083). No further figure moves at Savo Island. The surface figures go to Cape Esperance to be checked, once, on the coordinating architect's word.
+Nov 13, 2026. Savo Island's surface tuning ends after round 2 and decision 0083. The third and fourth mechanisms in the order of tuning, what a hit does and when a force breaks off (`docs/step2-spec.md`, "Tuning", 2), were tested for a supported move, and none was found. The rule work this brought up is built: tubes that bear on one side, with the other side fired later (decisions 0074 and 0083). No further figure moves at Savo Island, and there is no further round (the architect's ruling of Nov 13, 2026). The surface figures go to Cape Esperance to be checked, once, on the coordinating architect's word.
 
 The report this page reads is `docs/validation/savo-island-after-0083.md`: the figures of round 2, on the engine with decision 0083, and the measures with decision 0084's.
 
@@ -28,7 +28,7 @@ Judged 29: 21 agree, 4 at the edge, 4 miss. Each figure in the tables below is t
 
 | Measure | Record | Runs | Cause | Recorded in |
 | --- | --- | --- | --- | --- |
-| `allied_torpedoes_fired`, miss | 4 to 6 | 16 to 44, 26 (0) | Helm and Wilson fire 16 between them in nearly every run. On the rows neither fired: Wilson's order to attack was not received and her captain held fire without his group commander's instructions (`engagement_outcomes` 3217); Helm's target proved friendly and she had no other orders (3218, 3219). That is how many ships of a force fire at all, which the torpedo share does not carry. Every other Allied ship fires as the rows have her: Bagley four of the eight that bear on her side | Decision 0071, "What the share carries"; this page, "The torpedo share" |
+| `allied_torpedoes_fired`, miss | 4 to 6 | 16 to 44, 26 (0) | Helm and Wilson fire 16 between them in nearly every run. On the rows neither fired: Wilson's order to attack was not received and her captain held fire without his group commander's instructions (`engagement_outcomes` 3217); Helm's target proved friendly and she had no other orders (3218, 3219). It is participation, not the share: how many ships of a force fire at all, which the torpedo share does not carry. Named by the architect's ruling and put on the open list beside one fight of three forces (`docs/step2-opening-list.md`). Every other Allied ship fires as the rows have her: Bagley four of the eight that bear on her side | Decision 0071, "What the share carries"; this page, "The torpedo share" |
 | `tenryu_and_yubari_main_battery_shells_fired_in_hundreds`, miss | 1 | 2 to 4, 3 (35) | The pair fire in a mean of 6.6 rounds each against about 3. See "The watch on Tenryu and Yubari" | Decision 0084, finding 11; this page |
 | `gun_hits_on_vincennes`, miss | 57 to 74 | 4 to 44, 27 (1) | The record counts every calibre, and the rules fire main batteries only. In the record the column was on the northern group before it had done with the southern; the rules fight the two groups one after the other | Decisions 0084 (3) and 0083 ("Fights that overlap") |
 | `southern_group_main_battery_shells_fired_in_tens`, miss | 3 to 5 | 0 to 47, 9 (25) | The group fires nothing, or several times the record | Decision 0084, finding 9 |
@@ -103,7 +103,7 @@ The minutes came to the middle because the record was corrected to the sum of th
 
 The pair fire in a mean of 6.6 rounds each. The record's shells are about 3.5 and 2.8 rounds at the derived rate. Its times have Tenryu open fire on Quincy at 01:59 (`engagement_events` 1060) and cease at 02:06 (1071), and Yubari cease at 02:08 (1069). That is a short window, about the length the record's shells give at the derived rate. So the rows do not show the rate to be too high. What they show is the pair firing for part of the night, where in the rules they fire through every round of both fights. Decision 0084 records the gate as failed and the rates as not certified by it (finding 11).
 
-Under the watch this goes back to the derivation, as the architect rules. It is not a tuning round.
+**Ruled by the architect on Nov 13, 2026: the derivation is not reopened.** The record's shells fill the rows' short firing window at the derived rate, so the rows do not show the rate too high. The measure stays a named miss, resting on which ships fire in which rounds: the fights that overlap (decision 0083, "Fights that overlap"). Decision 0084's finding 11 stands: the gate failed, and it certified no rate.
 
 ## What no figure may be asked to carry
 
@@ -130,7 +130,7 @@ What the check can and cannot show is in decision 0084, finding 1. The check is 
 
 ## Watches that still bind
 
-- **Tenryu and Yubari:** as above, with the architect.
+- **Tenryu and Yubari:** the watch was met in form and ruled: no reopening of the derivation (above).
 - **Fights by day:** if `surface_fights_by_day` misses once the night's hits on Japanese ships are near the record, scuttling a ship left dead in the water is next (decision 0071, 5). It agrees: 803 runs hold none.
 - **No order moves.** The break-off levels and Yunagi's task force are not moved again (decision 0024, the notes).
 - **The step 1 figures stay frozen** for the hand calculations ("Tests while figures move", 1).
