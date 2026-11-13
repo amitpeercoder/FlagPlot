@@ -664,11 +664,11 @@ mod tests {
         world.handle_stragglers(1, Pulse::Night);
 
         assert_eq!(members(&world, 1), ids(&[1, 3]));
-        assert_eq!(members(&world, 2), ids(&[2, 4]));
-        assert_eq!(force(&world, 2).name, "Test force, left behind");
-        assert_eq!(force(&world, 2).position(), hx(6, 0));
-        assert_stays(&world, 2);
-        assert_settled(&world, 2);
+        assert_eq!(members(&world, 1_000_001), ids(&[2, 4]));
+        assert_eq!(force(&world, 1_000_001).name, "Test force, left behind");
+        assert_eq!(force(&world, 1_000_001).position(), hx(6, 0));
+        assert_stays(&world, 1_000_001);
+        assert_settled(&world, 1_000_001);
         // The parent's rules are not touched.
         assert_eq!(
             force(&world, 1).rules_of_engagement.stragglers,
@@ -682,7 +682,7 @@ mod tests {
         let (event, parent, new_force, reason) = events[0];
         assert_eq!(
             (parent, new_force, reason),
-            (TF, TaskForceId::new(2), DetachReason::LeftBehind)
+            (TF, TaskForceId::new(1_000_001), DetachReason::LeftBehind)
         );
         let EventKind::ShipsDetached { ships, escorts, .. } = &event.kind else {
             unreachable!()
@@ -728,15 +728,15 @@ mod tests {
         world.handle_stragglers(1, Pulse::Night);
 
         assert_eq!(members(&world, 1), ids(&[1, 3, 5]));
-        assert_eq!(members(&world, 2), ids(&[2, 4]));
-        assert_eq!(members(&world, 3), ids(&[6]));
-        assert_eq!(force(&world, 2).name, "Test force, sent home");
-        assert_eq!(force(&world, 3).name, "Test force, left behind");
-        assert_settled(&world, 2);
-        assert_settled(&world, 3);
-        assert_goes_home(&world, 2);
-        assert_stays(&world, 3);
-        assert_eq!(force(&world, 3).position(), hx(6, 0));
+        assert_eq!(members(&world, 1_000_001), ids(&[2, 4]));
+        assert_eq!(members(&world, 1_000_002), ids(&[6]));
+        assert_eq!(force(&world, 1_000_001).name, "Test force, sent home");
+        assert_eq!(force(&world, 1_000_002).name, "Test force, left behind");
+        assert_settled(&world, 1_000_001);
+        assert_settled(&world, 1_000_002);
+        assert_goes_home(&world, 1_000_001);
+        assert_stays(&world, 1_000_002);
+        assert_eq!(force(&world, 1_000_002).position(), hx(6, 0));
         // The parent is unchanged.
         assert_eq!(
             force(&world, 1).rules_of_engagement.stragglers,
@@ -759,7 +759,7 @@ mod tests {
         };
         assert_eq!(
             (*parent, *new_force, *reason),
-            (TF, TaskForceId::new(2), DetachReason::SentHome)
+            (TF, TaskForceId::new(1_000_001), DetachReason::SentHome)
         );
         assert_eq!(ships, &ids(&[2]));
         assert_eq!(escorts, &ids(&[4]));
@@ -787,7 +787,7 @@ mod tests {
         };
         assert_eq!(
             target,
-            crate::ids::EntityRef::TaskForce(TaskForceId::new(2))
+            crate::ids::EntityRef::TaskForce(TaskForceId::new(1_000_001))
         );
         assert_eq!(
             log[1].causes,
@@ -795,7 +795,7 @@ mod tests {
         );
         let stored = world.order(order).expect("stored");
         assert_eq!(stored.origin.issuer, Issuer::LocalCommander);
-        assert_eq!(force(&world, 2).route_order, Some(order));
+        assert_eq!(force(&world, 1_000_001).route_order, Some(order));
 
         let EventKind::ShipsDetached {
             parent,
@@ -809,7 +809,7 @@ mod tests {
         };
         assert_eq!(
             (*parent, *new_force, *reason),
-            (TF, TaskForceId::new(3), DetachReason::LeftBehind)
+            (TF, TaskForceId::new(1_000_002), DetachReason::LeftBehind)
         );
         assert_eq!(ships, &ids(&[6]));
         assert!(escorts.is_empty());
@@ -828,9 +828,9 @@ mod tests {
         );
         world.handle_stragglers(1, Pulse::Night);
         assert_eq!(members(&world, 1), ids(&[1, 2]));
-        assert_eq!(members(&world, 2), ids(&[3]));
+        assert_eq!(members(&world, 1_000_001), ids(&[3]));
         assert_eq!(world.truth.task_forces.len(), 2);
-        assert_stays(&world, 2);
+        assert_stays(&world, 1_000_001);
         let events = detached(&world);
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].3, DetachReason::LeftBehind);
@@ -854,10 +854,10 @@ mod tests {
         world.handle_stragglers(1, Pulse::Night);
 
         assert_eq!(members(&world, 1), ids(&[1, 2, 3, 4, 5]));
-        assert_eq!(members(&world, 2), ids(&[6]));
-        assert_eq!(force(&world, 2).name, "Test force, left behind");
-        assert_stays(&world, 2);
-        assert_settled(&world, 2);
+        assert_eq!(members(&world, 1_000_001), ids(&[6]));
+        assert_eq!(force(&world, 1_000_001).name, "Test force, left behind");
+        assert_stays(&world, 1_000_001);
+        assert_settled(&world, 1_000_001);
         assert_settled(&world, 1);
         // The parent's rules order is left as it was; its route is the
         // staff's.
@@ -906,7 +906,7 @@ mod tests {
         );
         world.handle_stragglers(1, Pulse::Night);
         assert_eq!(members(&world, 1), ids(&[1, 2, 3, 4, 5]));
-        assert_eq!(members(&world, 2), ids(&[6]));
+        assert_eq!(members(&world, 1_000_001), ids(&[6]));
         assert_eq!(world.truth.task_forces.len(), 2);
         assert_goes_home(&world, 1);
         assert_settled(&world, 1);
@@ -944,7 +944,7 @@ mod tests {
         );
         world.handle_stragglers(1, Pulse::Night);
         assert_eq!(members(&world, 1), ids(&[1, 2, 3, 4, 5]));
-        assert_eq!(members(&world, 2), ids(&[6]));
+        assert_eq!(members(&world, 1_000_001), ids(&[6]));
         assert_goes_home(&world, 1);
         assert_eq!(retired(&world).len(), 1);
         let breakdown = retired(&world)[0].breakdown.clone().expect("recorded");
@@ -983,7 +983,7 @@ mod tests {
         );
         world.handle_stragglers(1, Pulse::Night);
         assert_eq!(members(&world, 1), ids(&[3]));
-        assert_eq!(members(&world, 2), ids(&[1, 2, 4, 5, 6, 7]));
+        assert_eq!(members(&world, 1_000_001), ids(&[1, 2, 4, 5, 6, 7]));
         let EventKind::ShipsDetached { ships, escorts, .. } =
             &world.events().iter().next().unwrap().kind
         else {
@@ -1006,7 +1006,7 @@ mod tests {
             Fixed::ZERO,
         );
         one.handle_stragglers(1, Pulse::Night);
-        assert_eq!(members(&one, 2), ids(&[1, 3]));
+        assert_eq!(members(&one, 1_000_001), ids(&[1, 3]));
         // And a tie on kind goes to the lowest ID.
         let mut tie = self::world(
             &[
@@ -1018,7 +1018,7 @@ mod tests {
             Fixed::ZERO,
         );
         tie.handle_stragglers(1, Pulse::Night);
-        assert_eq!(members(&tie, 2), ids(&[1, 2]));
+        assert_eq!(members(&tie, 1_000_001), ids(&[1, 2]));
     }
 
     #[test]
@@ -1037,7 +1037,7 @@ mod tests {
             Fixed::ZERO,
         );
         world.handle_stragglers(1, Pulse::Night);
-        assert_eq!(members(&world, 2), ids(&[1, 3]));
+        assert_eq!(members(&world, 1_000_001), ids(&[1, 3]));
         assert_eq!(members(&world, 1), ids(&[2, 4]));
         assert_sound(&world);
 
@@ -1050,7 +1050,7 @@ mod tests {
             half(),
         );
         alone.handle_stragglers(1, Pulse::Night);
-        assert_eq!(members(&alone, 2), ids(&[1]));
+        assert_eq!(members(&alone, 1_000_001), ids(&[1]));
         assert_eq!(members(&alone, 1), ids(&[2]));
         let EventKind::ShipsDetached { escorts, .. } = &alone.events().iter().next().unwrap().kind
         else {
@@ -1077,18 +1077,18 @@ mod tests {
         let mut world = world(&scenario_ships(), StragglerInstruction::Detach, half());
         mid_leg(&mut world, hx(7, 0), 10);
         world.handle_stragglers(1, Pulse::Night);
-        let sent = force(&world, 2);
+        let sent = force(&world, 1_000_001);
         assert_eq!(sent.from_hex, hx(7, 0));
         assert_eq!(sent.toward_hex, Some(hx(6, 0)));
         assert_eq!(sent.progress_nm, Fixed::from_int(30));
-        assert_goes_home(&world, 2);
+        assert_goes_home(&world, 1_000_001);
         // The parent and the left-behind force keep the leg as it was.
         assert_eq!(force(&world, 1).from_hex, hx(6, 0));
         assert_eq!(force(&world, 1).toward_hex, Some(hx(7, 0)));
-        assert_eq!(force(&world, 3).from_hex, hx(6, 0));
-        assert_eq!(force(&world, 3).toward_hex, Some(hx(7, 0)));
-        assert_eq!(force(&world, 3).progress_nm, Fixed::from_int(10));
-        assert_eq!(force(&world, 3).status, TaskForceStatus::Idle);
+        assert_eq!(force(&world, 1_000_002).from_hex, hx(6, 0));
+        assert_eq!(force(&world, 1_000_002).toward_hex, Some(hx(7, 0)));
+        assert_eq!(force(&world, 1_000_002).progress_nm, Fixed::from_int(10));
+        assert_eq!(force(&world, 1_000_002).status, TaskForceStatus::Idle);
         assert_sound(&world);
     }
 
@@ -1100,11 +1100,11 @@ mod tests {
         let mut world = world(&scenario_ships(), StragglerInstruction::Detach, half());
         mid_leg(&mut world, hx(5, 0), 10);
         world.handle_stragglers(1, Pulse::Night);
-        let sent = force(&world, 2);
+        let sent = force(&world, 1_000_001);
         assert_eq!(sent.from_hex, hx(6, 0));
         assert_eq!(sent.toward_hex, Some(hx(5, 0)));
         assert_eq!(sent.progress_nm, Fixed::from_int(10));
-        assert_goes_home(&world, 2);
+        assert_goes_home(&world, 1_000_001);
         assert_sound(&world);
     }
 
@@ -1127,9 +1127,9 @@ mod tests {
         let mut world = world(&scenario_ships(), StragglerInstruction::Detach, half());
         world.truth.task_forces.get_mut(&TF).unwrap().home_port = None;
         world.handle_stragglers(1, Pulse::Night);
-        assert_eq!(members(&world, 2), ids(&[2, 4]));
-        assert_eq!(members(&world, 3), ids(&[6]));
-        assert_stays(&world, 2);
+        assert_eq!(members(&world, 1_000_001), ids(&[2, 4]));
+        assert_eq!(members(&world, 1_000_002), ids(&[6]));
+        assert_stays(&world, 1_000_001);
         assert!(accepted_orders(&world).is_empty());
         assert_eq!(world.events().len(), 2);
 
@@ -1162,9 +1162,9 @@ mod tests {
             force.from_hex = hx(0, 0);
         }
         world.handle_stragglers(1, Pulse::Night);
-        assert_eq!(members(&world, 2), ids(&[2, 4]));
-        assert_stays(&world, 2);
-        assert_eq!(force(&world, 2).position(), hx(0, 0));
+        assert_eq!(members(&world, 1_000_001), ids(&[2, 4]));
+        assert_stays(&world, 1_000_001);
+        assert_eq!(force(&world, 1_000_001).position(), hx(0, 0));
         assert!(accepted_orders(&world).is_empty());
 
         let mut retiring = self::world(&scenario_ships(), StragglerInstruction::Retire, half());
@@ -1187,7 +1187,7 @@ mod tests {
             },
         );
         world.handle_stragglers(1, Pulse::Night);
-        assert_stays(&world, 2);
+        assert_stays(&world, 1_000_001);
         assert!(world
             .events()
             .iter()
@@ -1201,8 +1201,8 @@ mod tests {
         let mut world = world(&scenario_ships(), StragglerInstruction::Detach, half());
         world.run_pulse_phase(1, Pulse::Night, PulsePhase::Movement);
         assert_eq!(members(&world, 1), ids(&[1, 3, 5]));
-        assert_eq!(members(&world, 2), ids(&[2, 4]));
-        assert_eq!(members(&world, 3), ids(&[6]));
+        assert_eq!(members(&world, 1_000_001), ids(&[2, 4]));
+        assert_eq!(members(&world, 1_000_002), ids(&[6]));
         assert_sound(&world);
     }
 
@@ -1264,7 +1264,6 @@ mod tests {
             force.readiness = Readiness::Normal;
         }
         let enemy = TaskForceId::new(2);
-        world.task_force_ids.alloc();
         let mut force = TaskForce::at(
             enemy,
             "Enemy".to_string(),
@@ -1331,12 +1330,12 @@ mod tests {
         }
         world.handle_stragglers(1, Pulse::Night);
         assert!(force(&world, 1).ships.is_empty());
-        assert_eq!(members(&world, 2), ids(&[1, 2]));
+        assert_eq!(members(&world, 1_000_001), ids(&[1, 2]));
         world.resolve_day().expect("day 1 with an empty force");
         world.resolve_day().expect("day 2 with an empty force");
         // The empty force never moved and the stragglers stayed.
         assert_eq!(force(&world, 1).position(), hx(0, 0));
-        assert_eq!(force(&world, 2).position(), hx(0, 0));
+        assert_eq!(force(&world, 1_000_001).position(), hx(0, 0));
         assert_sound(&world);
     }
 
@@ -1371,10 +1370,10 @@ mod tests {
         );
         world.handle_stragglers(1, Pulse::Night);
         assert!(force(&world, 1).ships.is_empty());
-        assert_eq!(members(&world, 2), ids(&[1, 2]));
+        assert_eq!(members(&world, 1_000_001), ids(&[1, 2]));
         assert!(retired(&world).is_empty());
         assert!(accepted_orders(&world).is_empty());
-        assert_stays(&world, 2);
+        assert_stays(&world, 1_000_001);
         world.resolve_day().expect("day 1");
         world.resolve_day().expect("day 2");
         assert_eq!(force(&world, 1).position(), hx(6, 0));
@@ -1447,7 +1446,11 @@ mod tests {
             steamed,
             vec![
                 (TF, Fixed::from_int(192), Fixed::from_int(16)),
-                (TaskForceId::new(2), Fixed::from_int(96), Fixed::from_int(8)),
+                (
+                    TaskForceId::new(1_000_001),
+                    Fixed::from_int(96),
+                    Fixed::from_int(8)
+                ),
             ]
         );
         assert_sound(&world);

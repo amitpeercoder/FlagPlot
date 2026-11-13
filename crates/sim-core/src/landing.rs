@@ -370,13 +370,7 @@ impl World {
             }
             return (id, false);
         }
-        let id = AirGroupId::new(
-            self.truth
-                .air_groups
-                .keys()
-                .next_back()
-                .map_or(1, |highest| highest.raw() + 1),
-        );
+        let id = self.made_ids.alloc_air_group(source.side);
         let mut group = AirGroup::new(
             id,
             format!("{} landed at {}", source.name, place),

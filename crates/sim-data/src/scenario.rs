@@ -18,6 +18,7 @@ use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Replacement, Ship, ShipLocation, ShipSystem,
     ShipSystems, Side, SystemState, TaskForce, TruthState,
 };
+use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, StartingContact, World};
 
 use crate::error::DataError;
@@ -876,6 +877,11 @@ impl Scenario {
 
         for spec in &file.task_force {
             let id = TaskForceId::new(spec.id);
+            if spec.id >= MADE_IDS_FLOOR {
+                return Err(fail(format!(
+                    "{id} is numbered {MADE_IDS_FLOOR} or above: those numbers are kept for forces made in play (decision 0086)"
+                )));
+            }
             let hex = match (spec.at_base, spec.q, spec.r) {
                 (Some(raw), None, None) => {
                     truth
@@ -1065,6 +1071,11 @@ impl Scenario {
         let mut aboard: BTreeMap<ShipId, u32> = BTreeMap::new();
         for spec in &file.air_group {
             let id = AirGroupId::new(spec.id);
+            if spec.id >= MADE_IDS_FLOOR {
+                return Err(fail(format!(
+                    "{id} is numbered {MADE_IDS_FLOOR} or above: those numbers are kept for groups made in play (decision 0086)"
+                )));
+            }
             let side: Side = spec.side.into();
             let location = match (spec.base, spec.ship) {
                 (Some(raw), None) => {
@@ -1811,6 +1822,23 @@ r = 0
                 "{bad}: {message}"
             );
         }
+    }
+
+    #[test]
+    fn a_unit_numbered_in_the_range_kept_for_units_made_in_play_is_refused() {
+        // Decision 0086: 1,000,000 and above belong to the sides' series.
+        let high_force = task_force("at_base = 2").replace("id = 1", "id = 1000000");
+        let error = error_of(&high_force);
+        assert!(error.contains("decision 0086"), "{error}");
+        assert!(error.contains("task_force:1000000"), "{error}");
+        let high_group = air_group(1, 1).replace("id = 1", "id = 2000001");
+        let error = error_of(&high_group);
+        assert!(error.contains("decision 0086"), "{error}");
+        assert!(error.contains("air_group:2000001"), "{error}");
+        // The number just below the floor loads.
+        parse_with(&task_force("at_base = 2").replace("id = 1", "id = 999999"))
+            .expect("999999 loads");
+        parse_with(&air_group(1, 1).replace("id = 1", "id = 999999")).expect("999999 loads");
     }
 
     #[test]

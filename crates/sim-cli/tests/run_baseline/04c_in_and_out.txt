@@ -2,7 +2,7 @@ Scenario 4c2b: In and out
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 39b1e6bed7520a83  72 events
+day   1  hash bb0742b1e4415d5d  72 events
 
 task_force:1 "Placeholder raiding force" (Japanese): Arrived at (0,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
