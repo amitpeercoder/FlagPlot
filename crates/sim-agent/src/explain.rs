@@ -63,7 +63,7 @@ pub struct ExplainNode {
     pub breakdown: Option<NodeBreakdown>,
     /// The nodes of the causes the side may see, by index.
     pub causes: Vec<u32>,
-    /// True if the event has causes the side may not see.
+    /// True if the event is of a kind that may have causes the side cannot see (decision 0085): set by the kind, not by this event.
     pub hidden_causes: bool,
     /// True if the causes were not followed because of the depth limit.
     pub causes_truncated: bool,

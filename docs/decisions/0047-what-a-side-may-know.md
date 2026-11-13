@@ -1,6 +1,6 @@
 # 0047: What a side may know of what happened
 
-Status: confirmed. The designer approved the plan for the agent interface on Nov 11, 2026, with this rule as its first choice. The table of event kinds is the architect's working out of it.
+Status: confirmed. The designer approved the plan for the agent interface on Nov 11, 2026, with this rule as its first choice. The table of event kinds is the architect's working out of it. Amended by decision 0065 (no enemy unit named) and decision 0085 (a fight's ending and start as the side knew them, the rounds counted from there, hidden causes flagged by kind).
 
 ## The gap
 

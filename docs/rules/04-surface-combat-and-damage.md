@@ -22,7 +22,7 @@ Two task forces of opposing sides meet when one's position becomes a hex where t
 - A game with no surface combat figures has no meetings. [0014, 0022]
 - Forces that meet and neither sights the other in `max_rounds` rounds pass unseen (see the ending checks). [0014]
 
-A side sees: it learns of a fight from the round in which its own force first sights the enemy or is first fired on, and not before. A fight a side never knows of is wholly absent from its view, including the events that begin and end it. The enemy learns the same way. [0047]
+A side sees: it learns of a fight from the round in which its own force first sights the enemy or is first fired on, and not before. A fight a side never knows of is wholly absent from its view, including the events that begin and end it. The enemy learns the same way. [0047] The side is told the fight from that round, as its round 1, and is told a sinking or a break-off as the ending only if its own force made it, otherwise "contact lost" (chapter 1, A surface fight). [0085]
 
 Known limit: forces in neighbouring hexes do not fight, and a force cannot pursue one that breaks off. A commander's choice to press on or retire after a fight is not built. [0022]
 
