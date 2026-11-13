@@ -2,7 +2,7 @@
 
 On 13 November 2026 the designer put eight research prompts to an outside model (ChatGPT, through Codex). Its answers are tables of claims, each with a source, a page and a quoted sentence. An outside model's answer is a lead, not a source. A row was keyed here only where one of our readers opened the cited document, found the statement in it, and keyed the row from the document's own words. The answer files stay outside the repository.
 
-The reading was done by Sonnet agents, one for each answer file. Each fetched the cited document as raw text (HTML, or PDF through pdftotext; two scanned USSBS interrogations were read by OCR and the key pages by eye), searched it for the quoted words, and read the passage around them. Every staged row's quote was checked by program as a span of the saved text: 86 of 86 passed. The lead re-read the disputed cases (the Cape Esperance table quote, the misdated Saratoga strike, the Gunnery Bulletin figures) in the saved text. This page says what the rows hold, what the answers got wrong and what is still missing. It settles nothing.
+The reading was done by Sonnet agents, one for each answer file. Each fetched the cited document as raw text (HTML, or PDF through pdftotext; two scanned USSBS interrogations were read by OCR and the key pages by eye), searched it for the quoted words, and read the passage around them. Every staged row's quote was checked by program as a span of the saved text: 86 of 86 passed. 85 were keyed; one was withdrawn, as the Q1.8 section says. The lead re-read the disputed cases (the Cape Esperance table quote, the misdated Saratoga strike, the Gunnery Bulletin figures) in the saved text. This page says what the rows hold, what the answers got wrong and what is still missing. It settles nothing.
 
 ## How far the answers can be trusted
 
@@ -41,11 +41,11 @@ Used this way, as a list of documents worth opening, the channel is useful. Used
 
 | File | Ids | Rows | What |
 | --- | --- | --- | --- |
-| `sources.csv` | 1223 to 1231 | 9 | New sources: Bombing Squadron Six's Midway report; CINCPAC Gunnery Bulletin 2-42; FM 30-58; ShipCraft 5; Benham's Eastern Solomons report; RAN radar notes; the War Damage Reports for San Francisco, South Dakota and Boise |
+| `sources.csv` | 1223 to 1227, 1229 to 1231 | 8 | New sources: Bombing Squadron Six's Midway report; CINCPAC Gunnery Bulletin 2-42; FM 30-58; ShipCraft 5; Benham's Eastern Solomons report; the War Damage Reports for San Francisco, South Dakota and Boise |
 | `engagement_events.csv` | 1241 to 1279 | 39 | Opening of fire at the Eastern Solomons; Henderson Field's scramble routine; Salt Lake City's firing at Cape Esperance; Savo and 15 November times |
 | `engagement_outcomes.csv` | 3942 to 3971 | 30 | Rounds per gun at Coral Sea; Midway bomb hits; hits received by San Francisco, South Dakota, Boise and Salt Lake City; aircraft at Henderson Field |
 | `ship_class_facts.csv` | 1375 to 1381 | 7 | Japanese torpedo tubes by class, from a wartime US Army recognition manual, and Myoko as designed |
-| `fits.csv` | 758, 759 | 2 | Benham's 16 tubes; Canberra's Type 271 |
+| `fits.csv` | 758 | 1 | Benham's 16 tubes |
 | `training_facts.csv` | 98 to 105 | 8 | Japanese carrier pilots' hours and who flew in August 1942, from two USSBS interrogations |
 | `gaps.csv` | last line | 1 | Warning minutes and fighters in contact, by raid over Henderson Field |
 
@@ -207,7 +207,11 @@ Every row's note ends with the words "Lead from an outside model's answer (Nov 1
 
 **Q1.4.** Benham's Eastern Solomons report gives 16 tubes in four mounts (fits 758, new source, primary). Her General Information Book is a scan with no text layer and was not checked.
 
-**Q1.8.** The Canberra radar passage in the RAN radar notes is by Lieutenant Commander Gregory, Canberra's officer of the watch, not by Stevens, who compiled the notes. It gives Type 271 (fits 759). It is not independent of the Gregory rows already held. Madsen's sentence is reworded in the answer; it is already held (103, 355).
+**Q1.8.** The Canberra radar passage in the RAN radar notes is by Lieutenant Commander Gregory, Canberra's officer of the watch, not by Stevens, who compiled the notes. It gives Type 271.
+
+- **Not keyed.** It is Gregory's account again, and his rows (102, 353) already hold it; two copies are one source. Keyed, it would also have been read into the Savo Island derivation's provenance list, which changes that generated file for no new fact.
+- The row was staged as fits 759 and removed before this pull request. Fits id 759 and source id 1228 are left unused.
+- Madsen's sentence is reworded in the answer; it is already held (103, 355).
 
 ## Cape Esperance (file 07)
 
