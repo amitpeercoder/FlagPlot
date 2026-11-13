@@ -214,6 +214,8 @@ pub struct Context<'a> {
     pub aircraft: &'a [AircraftResult],
     /// Exceptions the aircraft types used.
     pub aircraft_used: &'a BTreeMap<(usize, String, u64), Row>,
+    /// The achieved rates of fire (decision 0070), when the rules have them.
+    pub fire_rate: Option<&'a crate::fire_rate::Achieved>,
 }
 
 pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
@@ -325,6 +327,15 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                 one_line(&e.reason),
                 e.agreed
             ));
+        }
+    }
+    if let (Some(block), Some(achieved), true) = (
+        rules.fire_rate.as_ref(),
+        ctx.fire_rate,
+        results.iter().any(|r| !r.weapons_not_modelled),
+    ) {
+        for text in crate::fire_rate::header_lines(block, achieved) {
+            line(text);
         }
     }
     if assumed.is_empty() {

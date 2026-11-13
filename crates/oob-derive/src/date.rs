@@ -52,6 +52,17 @@ impl Day {
         }
     }
 
+    /// Days since 1970-01-01 (proleptic Gregorian), to subtract two days.
+    pub fn day_number(self) -> i64 {
+        let y = i64::from(self.year) - i64::from(self.month <= 2);
+        let era = y.div_euclid(400);
+        let yoe = y - era * 400;
+        let m = i64::from(self.month);
+        let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + i64::from(self.day) - 1;
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        era * 146_097 + doe - 719_468
+    }
+
     /// A full `YYYY-MM-DD`.
     pub fn parse_full(text: &str) -> Option<Day> {
         let span = Span::parse(text)?;

@@ -169,6 +169,18 @@ impl Index {
             .map_or(&[], Vec::as_slice)
     }
 
+    /// Every row of a table about one entity, whatever attribute.
+    pub fn rows_of_entity<'a>(
+        &'a self,
+        table: Table,
+        entity: &'a str,
+    ) -> impl Iterator<Item = &'a Row> + 'a {
+        self.rows
+            .iter()
+            .filter(move |((t, e, _), _)| *t == table && e == entity)
+            .flat_map(|(_, rows)| rows)
+    }
+
     /// The row of `aircraft_type_facts.csv` with this id, whatever it says.
     pub fn aircraft_fact(&self, id: i64) -> Option<&Row> {
         let id = id.to_string();
