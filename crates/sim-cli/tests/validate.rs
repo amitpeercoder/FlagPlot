@@ -110,8 +110,42 @@
 //!   out: 20 kept. Sorted: nineteen 0, one 2. The 5th, 25th, median, 75th and
 //!   95th (rank 19) are all 0. Record 0 is inside both; held by 19 of 20.
 //!   Plain AGREES.
-//! - So the fixture's head reads: judged 11 (A, B, C, D, F, G, I, L, M, N,
-//!   P), agree 7 (A, D, F, G, M, N, P), at the edge 1 (L), miss 3 (B, C, I).
+//! - The fights of the fixture (batch version 4). Task force 1 is Japanese and
+//!   task force 2 Allied. Run 1, first night fight, 2 rounds: `sighted_first`
+//!   "japanese"; task force 1 first sighted in round 1, surprised 0 rounds;
+//!   task force 2 first sighted in round 2, surprised 1. Run 1, second night
+//!   fight, 3 rounds: "both"; each first sighted in round 1, surprised 0. Run
+//!   2, the morning fight, 1 round: "allied"; task force 1 never sighted,
+//!   surprised 1; task force 2 first sighted in round 1, surprised 0. Run 3,
+//!   the night fight, 1 round: "allied"; task force 1 never sighted, surprised
+//!   1; task force 2 first sighted in round 1, surprised 0. Run 3, the
+//!   afternoon fight, 1 round: "japanese"; task force 1 first sighted in round
+//!   1, surprised 0; task force 2 never sighted, surprised 1.
+//! - S (judged, fights_sighted_first by ["allied", "both", "neither"], record
+//!   0): run 1 counts 1 (its second night fight is "both"; its first is
+//!   "japanese"). Run 2 counts 0: its fight is "allied" but in the morning.
+//!   Run 3 counts 1 (the night fight is "allied"; the afternoon one is not
+//!   counted). The other seventeen 0. 20 kept. Sorted: eighteen 0, two 1. The
+//!   5th (rank 1) is 0, the 25th (rank 5) 0, the median 0, the 75th (rank 15)
+//!   0, the 95th (rank 19) 1. Record 0 is inside both; held by 18 of 20. Plain
+//!   AGREES.
+//! - T (not judged, rounds_surprised task forces [2], record 1 to 2): run 1:
+//!   1 + 0 = 1. Run 2: 0 (not surprised, and by day). Run 3: 0 by night; the 1
+//!   of the afternoon fight is not counted. The rest 0. Sorted: nineteen 0,
+//!   one 1. The 5th, median and 95th (rank 19) are 0. Held by 1 of 20.
+//!   REPORTED.
+//! - U (not judged, rounds_surprised task forces [1], record 0): run 1: 0. Run
+//!   2: its 1 is by day, not counted: 0. Run 3: 1, by night. The rest 0.
+//!   Sorted: nineteen 0, one 1. The 5th, median and 95th are 0. Held by 19 of
+//!   20. REPORTED.
+//! - The head line gains S among the judged and among the plain agreements:
+//!   one more judged and one more agree than the line had before this change
+//!   (11 and 7 became 12 and 8, if the line still read 11 and 7 when you
+//!   start; if main changed it, add one to each of its two numbers and tell me
+//!   what it read).
+//! - So the fixture's head reads: judged 12 (A, B, C, D, F, G, I, L, M, N,
+//!   P, S), agree 8 (A, D, F, G, M, N, P, S), at the edge 1 (L), miss 3 (B,
+//!   C, I).
 //! - The battle: 20 runs is fewer than 1,000, so no verdict on the battle;
 //!   the report says so.
 //!
@@ -200,6 +234,18 @@ fn empty_run(seed: u64) -> Value {
     })
 }
 
+/// A surface fight of batch version 4 between task force 1 (Japanese) and
+/// task force 2 (Allied): each force's first round of having sighted and its
+/// rounds surprised.
+fn fight(pulse: &str, rounds: u32, who: &str, forces: [(Option<u32>, u32); 2]) -> Value {
+    let force = |id: u32, side: &str, (first, surprised): (Option<u32>, u32)| {
+        json!({"task_force": id, "side": side, "first_sighted_round": first,
+            "rounds_surprised": surprised})
+    };
+    json!({"day": 1, "pulse": pulse, "rounds": rounds, "sighted_first": who,
+        "forces": [force(1, "japanese", forces[0]), force(2, "allied", forces[1])]})
+}
+
 fn attack(ship: u32, aircraft: u32) -> Value {
     json!({"day": 1, "pulse": "afternoon", "air_group": 1, "target_kind": "ship",
         "target": ship, "weapon": "bomb", "aircraft": aircraft})
@@ -280,19 +326,23 @@ fn fixture(dir: &Path, runs: u64) -> Value {
             _ => 0,
         });
         if r == 1 {
-            run["fights"] = json!([{"day": 1, "pulse": "night", "rounds": 2},
-                {"day": 1, "pulse": "night", "rounds": 3}]);
+            run["fights"] = json!([
+                fight("night", 2, "japanese", [(Some(1), 0), (Some(2), 1)]),
+                fight("night", 3, "both", [(Some(1), 0), (Some(1), 0)])
+            ]);
             run["attacks"] = json!([attack(3, 12), attack(4, 5), attack(1, 9)]);
             run["escorts"] = json!([
                 {"day": 1, "pulse": "afternoon", "air_group": 5, "with_air_group": 1, "aircraft": 6},
                 {"day": 1, "pulse": "morning", "air_group": 5, "with_air_group": 1, "aircraft": 4}]);
         }
         if r == 2 {
-            run["fights"] = json!([{"day": 1, "pulse": "morning", "rounds": 1}]);
+            run["fights"] = json!([fight("morning", 1, "allied", [(None, 1), (Some(1), 0)])]);
         }
         if r == 3 {
-            run["fights"] = json!([{"day": 1, "pulse": "night", "rounds": 1},
-                {"day": 1, "pulse": "afternoon", "rounds": 1}]);
+            run["fights"] = json!([
+                fight("night", 1, "allied", [(None, 1), (Some(1), 0)]),
+                fight("afternoon", 1, "japanese", [(Some(1), 0), (None, 1)])
+            ]);
         }
         if r == 5 {
             run["ready"] = json!([ready(vec![3, 4], 2), ready(vec![0, 2], 3)]);
@@ -498,6 +548,40 @@ ships = [3, 4]
 weapon = "gun"
 rows = [1]
 reason = "r"
+
+[[measure]]
+id = "s"
+counts = "S"
+record_low = 0
+record_high = 0
+judged = true
+take = "fights_sighted_first"
+by = ["allied", "both", "neither"]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "t"
+counts = "T"
+record_low = 1
+record_high = 2
+judged = false
+take = "rounds_surprised"
+task_forces = [2]
+rows = [1]
+reason = "r"
+
+[[measure]]
+id = "u"
+counts = "U"
+record_low = 0
+record_high = 0
+judged = false
+take = "rounds_surprised"
+task_forces = [1]
+facts = "y"
+rows = [1]
+reason = "r"
 "#;
 
 struct Setup {
@@ -602,6 +686,9 @@ fn the_hand_calculation_of_every_measure() {
     expect(&report, "k", "0 to 0", "0", "1 of 20", "0", "reported");
     expect(&report, "m", "0 to 1", "1", "16 of 20", "0", "agrees");
     expect(&report, "p", "0 to 0", "0", "19 of 20", "0", "agrees");
+    expect(&report, "s", "0 to 1", "0", "18 of 20", "0", "agrees");
+    expect(&report, "t", "0 to 0", "0", "1 of 20", "0", "reported");
+    expect(&report, "u", "0 to 0", "0", "19 of 20", "0", "reported");
     expect(
         &report,
         "l",
@@ -611,9 +698,9 @@ fn the_hand_calculation_of_every_measure() {
         "0",
         "agrees, at the edge",
     );
-    // Eleven judged: a, d, f, g, m, n, p agree; l agrees at the edge; b, c, i
-    // miss.
-    assert!(report.contains("Judged measures: 7 agree, 1 agree at the edge, 3 miss, of 11."));
+    // Twelve judged: a, d, f, g, m, n, p, s agree; l agrees at the edge; b, c,
+    // i miss.
+    assert!(report.contains("Judged measures: 8 agree, 1 agree at the edge, 3 miss, of 12."));
     assert!(report.contains("## At the edge\n\n### l\n"));
     assert!(report.contains("- Verdict: agrees, at the edge"));
     assert!(report.contains("least 0, 5th 0, 25th 0, median 0, 75th 1, 95th 2, greatest 2"));
@@ -735,18 +822,22 @@ fn what_validate_refuses() {
     let mut b = good.clone();
     b["version"] = json!(1);
     refuse("version", &b, MEASURES, "version 1");
-    // A version 2 batch, the shape before the shots of each ship, is refused
-    // for its version and told to be made again.
+    // A version 3 batch, the shape before who sighted first, is refused for
+    // its version and told to be made again.
+    let mut b = good.clone();
+    b["version"] = json!(3);
+    for fight in b["per_run"][0]["fights"].as_array_mut().expect("fights") {
+        let fight = fight.as_object_mut().expect("fight");
+        fight.remove("sighted_first");
+        fight.remove("forces");
+    }
+    refuse("version-3", &b, MEASURES, "version 3; validate reads");
+    let mut b = good.clone();
+    b["version"] = json!(3);
+    refuse("version-3-again", &b, MEASURES, "make it again");
     let mut b = good.clone();
     b["version"] = json!(2);
-    b["per_run"][0]
-        .as_object_mut()
-        .expect("run")
-        .remove("shots_by");
-    refuse("version-2", &b, MEASURES, "version 2; validate reads");
-    let mut b = good.clone();
-    b["version"] = json!(2);
-    refuse("version-2-again", &b, MEASURES, "make it again");
+    refuse("version-2", &b, MEASURES, "make it again");
     let mut b = good.clone();
     b["inputs"]["state_version"] = json!("flagplot-state-v0");
     refuse("state", &b, MEASURES, "state hash layout");
@@ -826,6 +917,62 @@ fn what_validate_refuses() {
         ),
         "fights_by_day takes no keys",
     );
+    // The takes of version 4.
+    let sighted = |by: &str| {
+        MEASURES.replace(
+            "by = [\"allied\", \"both\", \"neither\"]",
+            &format!("by = {by}"),
+        )
+    };
+    refuse("by-empty", &good, &sighted("[]"), "measure s: by is empty");
+    refuse(
+        "by-enemy",
+        &good,
+        &sighted("[\"enemy\"]"),
+        "measure s: by names \"enemy\"",
+    );
+    refuse(
+        "by-twice",
+        &good,
+        &sighted("[\"both\", \"both\"]"),
+        "measure s: by names \"both\" twice",
+    );
+    refuse(
+        "surprised-no-forces",
+        &good,
+        &MEASURES.replace("\ntask_forces = [2]\n", "\n"),
+        "needs the key task_forces",
+    );
+    refuse(
+        "surprised-force-9",
+        &good,
+        &MEASURES.replace("\ntask_forces = [2]", "\ntask_forces = [9]"),
+        "task force 9, which the batch does not have",
+    );
+    refuse(
+        "surprised-empty",
+        &good,
+        &MEASURES.replace("\ntask_forces = [2]", "\ntask_forces = []"),
+        "task_forces is empty",
+    );
+    refuse(
+        "sighted-with-other-key",
+        &good,
+        &MEASURES.replace(
+            "take = \"fights_sighted_first\"\n",
+            "take = \"fights_sighted_first\"\nside = \"japanese\"\n",
+        ),
+        "does not take the key side",
+    );
+    refuse(
+        "fights-by-day-with-by",
+        &good,
+        &MEASURES.replace(
+            "take = \"fights_by_day\"\n",
+            "take = \"fights_by_day\"\nby = [\"both\"]\n",
+        ),
+        "fights_by_day takes no keys",
+    );
     refuse(
         "no-take",
         &good,
@@ -859,7 +1006,7 @@ fn what_validate_refuses() {
         .as_object_mut()
         .expect("run")
         .remove("fights");
-    refuse("old-shape", &b, MEASURES, "not a batch file of version 3");
+    refuse("old-shape", &b, MEASURES, "not a batch file of version 4");
     // `ships` and `side` together are an error, and so is neither.
     refuse(
         "ships-and-side",

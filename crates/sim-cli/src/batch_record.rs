@@ -1,5 +1,6 @@
 //! What `batch` counts from one run's event log and end state (decision
-//! 0062; `shots_by` was added at version 3). It only reads: the log, the truth after each day and at the end.
+//! 0062; `shots_by` was added at version 3, and who sighted first in each
+//! fight at version 4). It only reads: the log, the truth after each day and at the end.
 //! Every quantity is a whole number or, for a `Fixed`, a decimal string. A
 //! list is empty when there is nothing, and every key is always written, so
 //! a reader can tell an old file (key missing) from a run with none.
@@ -8,12 +9,12 @@
 //! read from the world's state except the systems out at the end and the
 //! aircraft ready at the end of each day.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
-use sim_core::events::{EventKind, SupplyUse, Weapon};
+use sim_core::events::{Cause, EventKind, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
-use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, EventId, ShipId, TaskForceId};
 use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::time::Pulse;
 use sim_core::World;
@@ -238,11 +239,101 @@ pub struct BrokeOff {
 }
 
 #[derive(Serialize)]
+pub struct FightForceOut {
+    task_force: u32,
+    side: String,
+    /// The first round in which the force had sighted the enemy (a
+    /// successful roll in it or an earlier round, or fire on it in an earlier
+    /// round), within the rounds fought; null if there is none.
+    first_sighted_round: Option<u32>,
+    /// The rounds in which this force had not sighted and the enemy had.
+    rounds_surprised: u32,
+}
+
+#[derive(Serialize)]
 pub struct FightOut {
     day: u32,
     pulse: &'static str,
     /// The rounds fought: the round the fight ended in, whatever the reason.
     rounds: u32,
+    /// `allied`, `japanese`, `both` or `neither`: whose force first had
+    /// sighted the enemy.
+    sighted_first: &'static str,
+    /// The two forces, lower task force ID first.
+    forces: Vec<FightForceOut>,
+}
+
+/// What the log says of one force in one fight, the input of the sighting
+/// record.
+#[derive(Default, Clone)]
+struct ForceFacts {
+    /// The round of the force's successful sighting roll, if it made one.
+    roll_round: Option<u32>,
+    /// The rounds in which a ship of the force was the target of a salvo.
+    fired_on: BTreeSet<u32>,
+}
+
+impl ForceFacts {
+    /// Whether the force has sighted the enemy in `round`: it rolled a
+    /// sighting in this round or an earlier one, or it was fired on in an
+    /// earlier round (docs/rules/04, Sighting).
+    fn has_sighted(&self, round: u32) -> bool {
+        self.roll_round.is_some_and(|rolled| rolled <= round)
+            || self.fired_on.iter().any(|fired| *fired < round)
+    }
+
+    /// The first round, within `rounds`, in which the force has sighted.
+    fn first_sighted(&self, rounds: u32) -> Option<u32> {
+        let by_fire = self.fired_on.iter().next().map(|fired| fired + 1);
+        [self.roll_round, by_fire]
+            .into_iter()
+            .flatten()
+            .min()
+            .filter(|round| *round <= rounds)
+    }
+}
+
+/// The sighting record of one fight of `rounds` rounds from the facts of its
+/// two forces: each force's first round of having sighted and the rounds it
+/// was surprised, meaning that it had not sighted and the enemy had. It does
+/// not depend on whether a `ForceSurprised` event was recorded: that needs
+/// the enemy to have shots, and this is a record of who knew.
+fn sighting_record(rounds: u32, facts: &[ForceFacts; 2]) -> ([Option<u32>; 2], [u32; 2]) {
+    let first = [
+        facts[0].first_sighted(rounds),
+        facts[1].first_sighted(rounds),
+    ];
+    let surprised = [0, 1].map(|me| {
+        (1..=rounds)
+            .filter(|round| !facts[me].has_sighted(*round) && facts[1 - me].has_sighted(*round))
+            .count() as u32
+    });
+    (first, surprised)
+}
+
+/// Whose force had sighted first, given the forces' sides and first rounds.
+fn sighted_first(sides: [Side; 2], first: [Option<u32>; 2]) -> &'static str {
+    match (first[0], first[1]) {
+        (None, None) => "neither",
+        (Some(a), Some(b)) if a == b => "both",
+        (Some(_), None) => side_label(sides[0]),
+        (None, Some(_)) => side_label(sides[1]),
+        (Some(a), Some(b)) => side_label(sides[usize::from(b < a)]),
+    }
+}
+
+fn side_label(side: Side) -> &'static str {
+    match side {
+        Side::Japanese => "japanese",
+        Side::Allied => "allied",
+    }
+}
+
+/// A fight whose `EngagementEnded` has not come yet.
+struct OpenFight {
+    a: TaskForceId,
+    b: TaskForceId,
+    facts: BTreeMap<TaskForceId, ForceFacts>,
 }
 
 #[derive(Default)]
@@ -321,6 +412,12 @@ pub fn count(
     let mut fights = Vec::new();
     let mut supply: BTreeMap<BaseId, SupplyTotals> = BTreeMap::new();
     let mut formed_from: BTreeMap<AirGroupId, AirGroupId> = BTreeMap::new();
+    // Fights not yet ended, by the `EngagementBegun` event that the fight's
+    // sighting rolls and salvos cite as a cause. The force a ship is in is
+    // taken from the start and from `ShipsDetached`; a ship that sinks stays
+    // in the map, so a salvo at it is still tied to its force.
+    let mut open_fights: BTreeMap<EventId, OpenFight> = BTreeMap::new();
+    let mut force_of = initial_force_of(initial);
 
     fn loss(losses: &mut BTreeMap<AirGroupId, AirLoss>, group: AirGroupId) -> &mut AirLoss {
         losses.entry(group).or_insert_with(|| AirLoss {
@@ -330,16 +427,71 @@ pub fn count(
     }
     let slot = |side: Side| SIDES.iter().position(|s| *s == side).expect("a side");
 
+    // The fight an event belongs to: the open one it cites as a cause.
+    fn fight_of<'a>(
+        open: &'a mut BTreeMap<EventId, OpenFight>,
+        causes: &[Cause],
+    ) -> Option<&'a mut OpenFight> {
+        let id = causes.iter().find_map(|cause| match cause {
+            Cause::Event(id) if open.contains_key(id) => Some(*id),
+            _ => None,
+        })?;
+        open.get_mut(&id)
+    }
+
     for event in world.events().iter() {
         match &event.kind {
+            EventKind::EngagementBegun { a, b, .. } => {
+                open_fights.insert(
+                    event.id,
+                    OpenFight {
+                        a: *a,
+                        b: *b,
+                        facts: BTreeMap::new(),
+                    },
+                );
+            }
+            EventKind::SightingRoll {
+                round,
+                task_force,
+                sighted: true,
+                ..
+            } => {
+                if let Some(fight) = fight_of(&mut open_fights, &event.causes) {
+                    let facts = fight.facts.entry(*task_force).or_default();
+                    facts.roll_round = Some(facts.roll_round.map_or(*round, |old| old.min(*round)));
+                }
+            }
+            EventKind::ShipsDetached {
+                new_force,
+                ships,
+                escorts,
+                ..
+            } => {
+                for ship in ships.iter().chain(escorts) {
+                    force_of.insert(*ship, *new_force);
+                }
+            }
             EventKind::Salvo {
                 firer,
                 target,
                 weapon,
                 shots,
                 hits,
+                round,
                 ..
             } => {
+                if let (Some(fight), Some(force)) = (
+                    fight_of(&mut open_fights, &event.causes),
+                    force_of.get(target),
+                ) {
+                    fight
+                        .facts
+                        .entry(*force)
+                        .or_default()
+                        .fired_on
+                        .insert(*round);
+                }
                 let hits = u64::from(*hits);
                 let column = match weapon {
                     Weapon::Torpedo => 1,
@@ -479,11 +631,38 @@ pub fn count(
                     round: *round,
                 });
             }
-            EventKind::EngagementEnded { round, .. } => fights.push(FightOut {
-                day: event.day,
-                pulse: pulse_name(event.pulse),
-                rounds: *round,
-            }),
+            EventKind::EngagementEnded { round, a, b, .. } => {
+                // The fights of a pulse are held one after another, so one
+                // open fight has this pair.
+                let begun = open_fights
+                    .iter()
+                    .rev()
+                    .find(|(_, fight)| fight.a == *a && fight.b == *b)
+                    .map(|(id, _)| *id);
+                let fight = begun
+                    .and_then(|id| open_fights.remove(&id))
+                    .expect("an engagement ends a fight that began");
+                let [low, high] = if a <= b { [*a, *b] } else { [*b, *a] };
+                let facts = [low, high].map(|id| fight.facts.get(&id).cloned().unwrap_or_default());
+                let (first, surprised) = sighting_record(*round, &facts);
+                let sides = [low, high].map(|id| truth.task_forces[&id].side);
+                fights.push(FightOut {
+                    day: event.day,
+                    pulse: pulse_name(event.pulse),
+                    rounds: *round,
+                    sighted_first: sighted_first(sides, first),
+                    forces: [low, high]
+                        .iter()
+                        .enumerate()
+                        .map(|(index, id)| FightForceOut {
+                            task_force: id.raw(),
+                            side: side_name(sides[index]),
+                            first_sighted_round: first[index],
+                            rounds_surprised: surprised[index],
+                        })
+                        .collect(),
+                });
+            }
             EventKind::BaseSupplySpent {
                 base,
                 reason,
@@ -607,5 +786,91 @@ pub fn count(
             })
             .collect(),
         formed_groups,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The sighting record of a fight, from its facts (the architect's made
+    /// cases, A to F; the same text is in `tests/batch.rs`). X is task force
+    /// 1, Japanese; Y is task force 2, Allied.
+    ///
+    /// A. Both roll and sight in round 1; 3 rounds. "both"; X first 1,
+    ///    surprised 0; Y first 1, surprised 0.
+    /// B. Neither sights by roll and nobody fires; 6 rounds. "neither"; both
+    ///    first null, surprised 0.
+    /// C. X sights by roll in round 2 and fires on Y in rounds 2, 3 and 4; Y
+    ///    never sights by roll; 4 rounds. X first 2, Y first 3. "japanese".
+    ///    Y surprised 1 (round 2); X surprised 0. In round 1 neither had
+    ///    sighted, so nobody was surprised.
+    /// D. X sights by roll in round 1 and never fires (it has no shots); Y
+    ///    fails in rounds 1 and 2 and sights by roll in round 3; 3 rounds.
+    ///    "japanese"; X first 1, surprised 0; Y first 3, surprised 2.
+    /// E. Y sights by roll in round 1 and never fires; X sights by roll in
+    ///    round 3; 4 rounds. "allied"; Y first 1, surprised 0; X first 3,
+    ///    surprised 2.
+    /// F. X sights by roll in round 1 and fires on Y in round 1; the fight
+    ///    ends in round 1. "japanese"; X first 1, surprised 0; Y first null,
+    ///    surprised 1.
+    #[test]
+    fn the_sighting_record_of_the_architects_six_cases() {
+        let roll = |round: u32| ForceFacts {
+            roll_round: Some(round),
+            fired_on: BTreeSet::new(),
+        };
+        let none = ForceFacts::default;
+        let fired = |rounds: &[u32]| ForceFacts {
+            roll_round: None,
+            fired_on: rounds.iter().copied().collect(),
+        };
+        let sides = [Side::Japanese, Side::Allied];
+        // (rounds, [X, Y], who, first, surprised)
+        type Case = (
+            u32,
+            [ForceFacts; 2],
+            &'static str,
+            [Option<u32>; 2],
+            [u32; 2],
+        );
+        let cases: [Case; 6] = [
+            (3, [roll(1), roll(1)], "both", [Some(1), Some(1)], [0, 0]),
+            (6, [none(), none()], "neither", [None, None], [0, 0]),
+            (
+                4,
+                [roll(2), fired(&[2, 3, 4])],
+                "japanese",
+                [Some(2), Some(3)],
+                [0, 1],
+            ),
+            (
+                3,
+                [roll(1), roll(3)],
+                "japanese",
+                [Some(1), Some(3)],
+                [0, 2],
+            ),
+            (4, [roll(3), roll(1)], "allied", [Some(3), Some(1)], [2, 0]),
+            (
+                1,
+                [
+                    roll(1),
+                    ForceFacts {
+                        roll_round: None,
+                        fired_on: BTreeSet::from([1]),
+                    },
+                ],
+                "japanese",
+                [Some(1), None],
+                [0, 1],
+            ),
+        ];
+        for (index, (rounds, facts, who, first, surprised)) in cases.into_iter().enumerate() {
+            let (got_first, got_surprised) = sighting_record(rounds, &facts);
+            assert_eq!(got_first, first, "case {index}: first rounds");
+            assert_eq!(got_surprised, surprised, "case {index}: rounds surprised");
+            assert_eq!(sighted_first(sides, got_first), who, "case {index}: who");
+        }
     }
 }

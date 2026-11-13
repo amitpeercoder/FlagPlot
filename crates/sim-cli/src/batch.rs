@@ -355,7 +355,7 @@ fn build(
     let header = header.ok_or_else(|| "no runs were made".to_string())?;
     Ok(Batch {
         format: "flag-plot-batch",
-        version: 3,
+        version: 4,
         scenario: scenario_out.ok_or_else(|| "no runs were made".to_string())?,
         inputs,
         label,

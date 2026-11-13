@@ -1,4 +1,4 @@
-//! What `validate` reads: a batch file of version 3 (decision 0062) and a
+//! What `validate` reads: a batch file of version 4 (decision 0062) and a
 //! measures file (`data/validation/README.md`). Only the keys it needs are
 //! named; every key it names must be there, so a file from before is refused
 //! rather than read as empty.
@@ -187,6 +187,18 @@ pub struct Escort {
 pub struct Fight {
     pub pulse: String,
     pub rounds: u64,
+    pub sighted_first: String,
+    pub forces: Vec<FightForce>,
+}
+
+#[derive(Deserialize)]
+pub struct FightForce {
+    pub task_force: u32,
+    #[allow(dead_code)]
+    pub side: String,
+    #[allow(dead_code)]
+    pub first_sighted_round: Option<u32>,
+    pub rounds_surprised: u64,
 }
 
 #[derive(Deserialize)]
@@ -249,4 +261,13 @@ pub struct Measure {
     pub aircraft: Option<u64>,
     #[serde(default)]
     pub claim: Option<String>,
+    #[serde(default)]
+    pub by: Option<Vec<String>>,
+    #[serde(default)]
+    pub task_forces: Option<Vec<u32>>,
+    /// Only where the measure's rows are in another fact file than the one
+    /// the file names at its head. Nothing checks rows against a fact file.
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub facts: Option<String>,
 }
