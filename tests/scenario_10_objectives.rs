@@ -510,8 +510,11 @@ fn objectives_change_no_hash_and_no_event() {
     // count at the end of the day: the hash counts the events of the log. And
     // it was 798ce5b9ab626198 until the hash went to version 6 (decision
     // 0064, a ship's experience). And it was 1710b81aa6539e01 until
-    // decisions 0073 and 0075 set the Japanese search from the record.
-    assert!(baseline.contains("hash 2ca5a5dd9f150a5d"));
+    // decisions 0073 and 0075 set the Japanese search from the record. And it
+    // was 2ca5a5dd9f150a5d until the strike report read the force after the
+    // damage (rulebook differences, row 7): Ryujo sinks on this seed, and the
+    // later reports of her detachment count the ships left afloat.
+    assert!(baseline.contains("hash 0703fe7c146fc0f8"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

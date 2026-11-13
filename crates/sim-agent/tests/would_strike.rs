@@ -164,8 +164,10 @@ fn the_line_names_the_contact_the_briefings_own_figures_give() {
 }
 
 #[test]
-fn after_the_eastern_solomons_the_dive_bombers_would_strike_the_carrier_contact() {
-    // The contact is a "carrier", 160 miles from the carriers since Ryujo's
+fn after_the_eastern_solomons_the_dive_bombers_would_strike_the_contact() {
+    // On this seed Ryujo sank in the afternoon, and the strike reports after it
+    // read the ships left afloat (differences row 7), so the contact is held
+    // as a "cruiser". It is 160 miles from the carriers since Ryujo's
     // detachment reaches (7,-9) at noon (decision 0063, "As built (the
     // scenario orders)"); it was 200. The dive bombers' radius is 200 and the
     // torpedo bombers' 190, so every strike group aboard with aircraft would
@@ -189,7 +191,7 @@ fn after_the_eastern_solomons_the_dive_bombers_would_strike_the_carrier_contact(
         assert!(radius == "200" || radius == "190", "{radius}");
         assert_ne!(group["ready"], 0);
         assert_eq!(w["contact"]["handle"], "contact:1");
-        assert_eq!(w["taken_for"], "carrier");
+        assert_eq!(w["taken_for"], "cruiser");
         let distance = w["distance_nm"].as_u64().expect("a distance");
         assert!(distance == 160 || distance == 200, "{distance}");
         assert!(distance <= radius.parse::<u64>().expect("a whole radius"));
@@ -212,5 +214,5 @@ fn after_the_eastern_solomons_the_dive_bombers_would_strike_the_carrier_contact(
     }
     assert!(made
         .to_text()
-        .contains("would strike contact:1 now (carrier, 160 miles)"));
+        .contains("would strike contact:1 now (cruiser, 160 miles)"));
 }

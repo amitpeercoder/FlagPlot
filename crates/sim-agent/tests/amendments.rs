@@ -212,22 +212,25 @@ fn every_refresh_of_the_day_is_listed_and_the_last_is_the_contact_held() {
     let b = briefing(&scenario.world.side_view(Side::Allied), &title);
     // On the scenario's own seed, with Ryujo in (7,-9) and six American groups
     // striking her, the contact is refreshed six times in the afternoon: 4 ships
-    // first seen, then 5, 4, 4, 3, 4 and 5 (the third refresh changes the kind
-    // from carrier to cruiser and not the count). Each refresh says what the
+    // first seen, then 5, 3, 3, 2, 3 and 4. Ryujo sinks in the second attack,
+    // and from then on each report reads the three ships left afloat
+    // (differences row 7): the second refresh changes the kind from carrier to
+    // cruiser, and the third changes neither count nor kind. Pinned on the
+    // live scenario, not calculated. Each refresh says what the
     // count was before, so the chain can be followed: the count was is always
     // the count the contact had before, starting from the one that was new,
     // and the last refresh is the contact held.
     let counts: Vec<u32> = b.contacts.refreshed.iter().map(|r| r.ship_count).collect();
-    assert_eq!(counts, vec![5, 4, 4, 3, 4, 5]);
+    assert_eq!(counts, vec![5, 3, 3, 2, 3, 4]);
     let was: Vec<Option<u32>> = b
         .contacts
         .refreshed
         .iter()
         .map(|r| r.was_ship_count)
         .collect();
-    // The third refresh changes the kind and not the count, so it has no
+    // The third refresh changes neither the count nor the kind, so it has no
     // count it was.
-    assert_eq!(was, vec![Some(4), Some(5), None, Some(4), Some(3), Some(4)]);
+    assert_eq!(was, vec![Some(4), Some(5), None, Some(3), Some(2), Some(3)]);
     assert_eq!(b.contacts.new[0].ship_count, 4);
     let mut before = b.contacts.new[0].ship_count;
     for refresh in &b.contacts.refreshed {
@@ -238,10 +241,10 @@ fn every_refresh_of_the_day_is_listed_and_the_last_is_the_contact_held() {
         before = refresh.ship_count;
     }
     assert_eq!(b.contacts.held[0].ship_count, before);
-    assert_eq!(b.contacts.held[0].ship_count, 5);
+    assert_eq!(b.contacts.held[0].ship_count, 4);
     let text = b.to_text();
     assert!(text.contains("5 ships estimated (was 4)"), "{text}");
-    assert!(text.contains("3 ships estimated (was 4)"), "{text}");
+    assert!(text.contains("3 ships estimated (was 5)"), "{text}");
 }
 
 /// Change 6: Rules not in play are not shown.
