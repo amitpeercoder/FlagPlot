@@ -105,3 +105,5 @@ It found two things hard:
 | Rules of engagement order intake | Ownership | Task force rules of engagement |
 
 Movement writes the position that meeting reads. Cargo handling and search both read task force ships, which sinking now changes. Air search reads darkness, as sighting does.
+
+Nov 13, 2026: the pairing of firers with targets in decision 8 above and the target-choice line under "Deferred" (ship in place i takes the enemy ship in place i modulo their number, both weapons at one target) is replaced by decision 0078: guns like at like and torpedoes at the most important kind afloat, each its own target.
