@@ -824,20 +824,20 @@ fn check_sighting(
 /// morning and in the afternoon, one round each: "both"; [{1, japanese, 1,
 /// 0}, {2, allied, 1, 0}].
 ///
-/// Scenario 4 (data/scenarios/04_savo_island.toml). Five fights, in log
-/// order.
-/// 1. Night, task force 1 (Japanese) and 2 (Allied), one round: 1 sights in
-///    round 1, 2 does not, and the fight ends in round 1. "japanese"; [{1,
-///    japanese, 1, 0}, {2, allied, null, 1}].
-/// 2. Night, task force 1 and 3 (Allied), five rounds: neither sights in
+/// Scenario 4 (data/scenarios/04_savo_island.toml). Worked again on Nov 13,
+/// 2026 for decision 0078 (whom a ship fires at) and for Yunagi's task force
+/// of her own (decision 0024), which changed how long each fight runs. Four
+/// fights, in log order.
+/// 1. Night, task force 1 (Japanese) and 2 (Allied), two rounds: 1 sights in
+///    round 1, 2 does not and is fired on, so 2 has sighted in round 2.
+///    "japanese"; [{1, japanese, 1, 0}, {2, allied, 2, 1}].
+/// 2. Night, task force 1 and 3 (Allied), three rounds: neither sights in
 ///    rounds 1 and 2; in round 3 task force 3 rolls and sights, 1 does not,
-///    and 3 fires on it; so 1 has sighted in round 4. "allied"; [{1,
-///    japanese, 4, 1}, {3, allied, 3, 0}].
+///    3 fires on it, and the fight ends in round 3, so 1 never sights.
+///    "allied"; [{1, japanese, null, 1}, {3, allied, 3, 0}].
 /// 3. Morning, task force 2 and task force 5 (the Japanese ships left
 ///    behind), one round: "both"; [{2, allied, 1, 0}, {5, japanese, 1, 0}].
 /// 4. Morning, task force 3 and 5, one round: "both"; [{3, allied, 1, 0},
-///    {5, japanese, 1, 0}].
-/// 5. Afternoon, task force 2 and 5, one round: "both"; [{2, allied, 1, 0},
 ///    {5, japanese, 1, 0}].
 ///
 /// Five made cases (six: A to F), for the function that works the record out
@@ -890,16 +890,16 @@ fn the_fights_of_scenarios_4a_and_4_record_who_sighted_first() {
         summary["per_run"][0]["fights"],
         json!([
             {
-                "day": 1, "pulse": "night", "rounds": 1, "sighted_first": "japanese",
+                "day": 1, "pulse": "night", "rounds": 2, "sighted_first": "japanese",
                 "forces": [
                     {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
-                    {"task_force": 2, "side": "allied", "first_sighted_round": null, "rounds_surprised": 1},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 2, "rounds_surprised": 1},
                 ]
             },
             {
-                "day": 1, "pulse": "night", "rounds": 5, "sighted_first": "allied",
+                "day": 1, "pulse": "night", "rounds": 3, "sighted_first": "allied",
                 "forces": [
-                    {"task_force": 1, "side": "japanese", "first_sighted_round": 4, "rounds_surprised": 1},
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": null, "rounds_surprised": 1},
                     {"task_force": 3, "side": "allied", "first_sighted_round": 3, "rounds_surprised": 0},
                 ]
             },
@@ -914,13 +914,6 @@ fn the_fights_of_scenarios_4a_and_4_record_who_sighted_first() {
                 "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
                 "forces": [
                     {"task_force": 3, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
-                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
-                ]
-            },
-            {
-                "day": 1, "pulse": "afternoon", "rounds": 1, "sighted_first": "both",
-                "forces": [
-                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
                     {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
                 ]
             },

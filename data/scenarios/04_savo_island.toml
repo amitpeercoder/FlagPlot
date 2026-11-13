@@ -53,6 +53,26 @@ mission = "surface_combat"
 readiness = "battle"
 home_port = 1
 
+# Yunagi, the column's one destroyer, in a task force of her own (decision
+# 0024, the note of Nov 13, 2026). She took no part in the cruiser action: she
+# "engaged Jarvis, turned away from the cruiser action" (engagement_outcomes
+# 158), opening fire on Jarvis at 01:55 and breaking off about 02:00
+# (engagement_events 1061, 1062), with her one searchlight seen sweeping from
+# about 15,000 yards at 02:10 (105, 108). Jarvis is not in this scenario. So
+# she steams with the column to the hex west of the hex of Savo Island and
+# turns for home there, meeting neither Allied group. That she was with the
+# column until about 01:55 is the rows'; the hex she turns in, (1,-5), is the
+# architect's choice, the last hex before the column's fight.
+[[task_force]]
+id = 4
+name = "Yunagi"
+side = "japanese"
+q = -1
+r = -8
+mission = "surface_combat"
+readiness = "battle"
+home_port = 1
+
 # The southern group, south-east of Savo Island. Condition II.
 [[task_force]]
 id = 2
@@ -144,7 +164,7 @@ class = 1002
 side = "japanese"
 experience = 3
 fuel_t = 413
-task_force = 1
+task_force = 4
 
 [[ship]]
 id = 9
@@ -264,6 +284,22 @@ kind = "set_rules_of_engagement"
 stance = "engage"
 break_off = "0.5"
 stragglers = "detach"
+
+# Yunagi: with the column to (1,-5), the hex west of the hex of Savo Island,
+# and back up the Slot at the column's speed.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_route"
+waypoints = [[1, -5], [-1, -8]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 4
+kind = "set_speed"
+knots = "25"
 
 # Allied: hold station, and fight. A break-off level is the commander's order,
 # and each group's is read from rows about that group (decision 0024, the note

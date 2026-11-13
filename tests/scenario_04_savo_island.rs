@@ -13,6 +13,13 @@
 //! for that in step 2. This file asserts what the rules fix and prints the
 //! spread of losses beside what happened.
 //!
+//! This test runs on the frozen copy of scenario 4
+//! (`data/scenarios/step2-frozen/04_savo_island.toml`) and the frozen step 1
+//! figures (`docs/step2-spec.md`, "Tests while figures move", 9): the
+//! scenario as it stood before the northern group's break-off level and
+//! Yunagi's detachment were set from the record (decision 0024, the notes of
+//! Nov 13, 2026).
+//!
 //! # Hand calculation
 //!
 //! Written by the architect before the test code. The tests below assert
@@ -113,35 +120,58 @@
 //!
 //! ## The first salvos
 //!
-//! Ships are matched in ID order, starting again at the first when the enemy
-//! has fewer ships. Gun shots in a round are guns x rounds a minute x 5. At
-//! night a gun shot hits with chance 0.03 and a torpedo with 0.04, each
-//! times 1.5 against a surprised target: 0.045 and 0.06. A ship fires all
-//! its tubes once, in the first round it fires. A hit does 100 x the
-//! weapon's damage / the target's toughness points.
+//! Worked again under decision 0078 (Nov 13, 2026), which changed the rule
+//! for whom a ship fires at; the tables before it matched ships in ID order.
+//! A ship's guns go at enemy ships of its own kind, in place (p modulo their
+//! number), p being its place among the ships of its own kind in its force;
+//! its torpedoes go at the enemy's most important kind afloat, in place (i
+//! modulo their number), i being its place in its force. The column is seven
+//! cruisers (ships 1 to 7) and the destroyer Yunagi (8); the southern group
+//! is the cruisers Canberra and Chicago (9, 10) and the destroyers Patterson
+//! and Bagley (11, 12).
+//!
+//! Gun shots in a round are guns x rounds a minute x 5. At night a gun shot
+//! hits with chance 0.03 and a torpedo with 0.04, each times 1.5 against a
+//! surprised target: 0.045 and 0.06. A ship fires all its tubes once, in the
+//! first round it fires. A hit does 100 x the weapon's damage / the target's
+//! toughness points.
 //!
 //! The Japanese column's free round against the southern group, when it has
-//! one. Every ship's propulsion, guns and tubes are still whole.
+//! one. Every ship's propulsion, guns and tubes are still whole. The seven
+//! cruisers' guns go at the two cruisers by p 0 to 6: Canberra, Chicago,
+//! Canberra, Chicago, Canberra, Chicago, Canberra. Yunagi's guns go at the
+//! destroyers, p 0: Patterson. All eight ships' torpedoes go at the cruisers
+//! by i 0 to 7, so Yunagi's (i 7) go at Chicago.
 //!
-//! | Firer      | Target       | Gun shots          | Expected hits | Points a hit | Tubes | Expected hits | Points a hit |
-//! | ---------- | ------------ | ------------------ | ------------- | ------------ | ----- | ------------- | ------------ |
-//! | 1 Chokai   | 9 Canberra   | 10 x 2.4 x 5 = 120 | 5.4           | 5.378205     | 8     | 0.48          | 38.461538    |
-//! | 2 Aoba     | 10 Chicago   | 6 x 2.4 x 5 = 72   | 3.24          | 5.794198     | 8     | 0.48          | 54.143646    |
-//! | 3 Kako     | 11 Patterson | 72                 | 3.24          | 32.2891      | 8     | 0.48          | 301.724137   |
-//! | 4 Kinugasa | 12 Bagley    | 72                 | 3.24          | 32.2891      | 8     | 0.48          | 301.724137   |
-//! | 5 Furutaka | 9 Canberra   | 72                 | 3.24          | 5.378205     | 8     | 0.48          | 50.25641     |
-//! | 6 Tenryu   | 10 Chicago   | 4 x 6 x 5 = 120    | 5.4           | 1.749539     | 6     | 0.36          | 22.099447    |
-//! | 7 Yubari   | 11 Patterson | 6 x 6 x 5 = 180    | 8.1           | 9.749588     | 4     | 0.24          | 212.438423   |
-//! | 8 Yunagi   | 12 Bagley    | 4 x 5.5 x 5 = 110  | 4.95          | 5.208332     | 6     | 0.36          | 123.152709   |
+//! | Firer      | Gun target   | Gun shots          | Expected hits | Points a hit | Torpedo target | Tubes | Expected hits | Points a hit |
+//! | ---------- | ------------ | ------------------ | ------------- | ------------ | -------------- | ----- | ------------- | ------------ |
+//! | 1 Chokai   | 9 Canberra   | 10 x 2.4 x 5 = 120 | 5.4           | 5.378205     | 9 Canberra     | 8     | 0.48          | 38.461538    |
+//! | 2 Aoba     | 10 Chicago   | 6 x 2.4 x 5 = 72   | 3.24          | 5.794198     | 10 Chicago     | 8     | 0.48          | 54.143646    |
+//! | 3 Kako     | 9 Canberra   | 72                 | 3.24          | 5.378205     | 9 Canberra     | 8     | 0.48          | 50.25641     |
+//! | 4 Kinugasa | 10 Chicago   | 72                 | 3.24          | 5.794198     | 10 Chicago     | 8     | 0.48          | 54.143646    |
+//! | 5 Furutaka | 9 Canberra   | 72                 | 3.24          | 5.378205     | 9 Canberra     | 8     | 0.48          | 50.25641     |
+//! | 6 Tenryu   | 10 Chicago   | 4 x 6 x 5 = 120    | 5.4           | 1.749539     | 10 Chicago     | 6     | 0.36          | 22.099447    |
+//! | 7 Yubari   | 9 Canberra   | 6 x 6 x 5 = 180    | 8.1           | 1.623931     | 9 Canberra     | 4     | 0.24          | 35.384615    |
+//! | 8 Yunagi   | 11 Patterson | 4 x 5.5 x 5 = 110  | 4.95          | 5.208332     | 10 Chicago     | 6     | 0.36          | 22.099447    |
 //!
-//! The southern group's free round against the column, when it has one:
+//! Yubari on Canberra: 100 x 6.333333 / 390 = 1.623931 a shell and 100 x 138
+//! / 390 = 35.384615 a torpedo. Yunagi's torpedo on Chicago: 100 x 80 / 362 =
+//! 22.099447.
 //!
-//! | Firer        | Target     | Gun shots           | Expected hits | Points a hit | Tubes | Expected hits | Points a hit |
-//! | ------------ | ---------- | ------------------- | ------------- | ------------ | ----- | ------------- | ------------ |
-//! | 9 Canberra   | 1 Chokai   | 8 x 3.5 x 5 = 140   | 6.3           | 4.262114     | 8     | 0.48          | 29.577092    |
-//! | 10 Chicago   | 2 Aoba     | 9 x 3 x 5 = 135     | 6.075         | 5.545834     | 0     |               |              |
-//! | 11 Patterson | 3 Kako     | 4 x 15 x 5 = 300    | 13.5          | 1.216473     | 16    | 0.96          | 26.170734    |
-//! | 12 Bagley    | 4 Kinugasa | 300                 | 13.5          | 1.175961     | 16    | 0.96          | 25.299164    |
+//! The southern group's free round against the column, when it has one. The
+//! two cruisers' guns go at the column's cruisers by p 0 and 1: Chokai, Aoba.
+//! The two destroyers' guns go at its one destroyer, Yunagi. The torpedoes go
+//! at the cruisers by i 0 to 3: Canberra's at Chokai, Patterson's (i 2) at
+//! Kako, Bagley's (i 3) at Kinugasa; Chicago has no tubes.
+//!
+//! | Firer        | Gun target | Gun shots           | Expected hits | Points a hit | Torpedo target | Tubes | Expected hits | Points a hit |
+//! | ------------ | ---------- | ------------------- | ------------- | ------------ | -------------- | ----- | ------------- | ------------ |
+//! | 9 Canberra   | 1 Chokai   | 8 x 3.5 x 5 = 140   | 6.3           | 4.262114     | 1 Chokai       | 8     | 0.48          | 29.577092    |
+//! | 10 Chicago   | 2 Aoba     | 9 x 3 x 5 = 135     | 6.075         | 5.545834     |                | 0     |               |              |
+//! | 11 Patterson | 8 Yunagi   | 4 x 15 x 5 = 300    | 13.5          | 8.202098     | 3 Kako         | 16    | 0.96          | 26.170734    |
+//! | 12 Bagley    | 8 Yunagi   | 300                 | 13.5          | 8.202098     | 4 Kinugasa     | 16    | 0.96          | 25.299164    |
+//!
+//! A destroyer's shell on Yunagi: 100 x 4.166666 / 50.8 = 8.202098.
 //!
 //! Each shot is rolled on its own (decision 0033), so a salvo scores
 //! anything from no hit to its shots, the expected figure on average. Over
@@ -261,7 +291,7 @@ fn is_allied_force(force: u32) -> bool {
 
 fn load() -> Scenario {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../data/scenarios")
+        .join("../data/scenarios/step2-frozen")
         .join("04_savo_island.toml");
     common::load(&path).expect("the scenario loads")
 }
@@ -896,33 +926,37 @@ fn the_alarm_is_rolled_once_when_shots_were_fired_in_the_southern_fight() {
 
 /// Firer, target, gun shots, expected hits, points a hit, tubes, expected
 /// hits, points a hit.
+/// Firer, gun target, gun shots, expected hits, points a hit; torpedo target,
+/// tubes, expected hits, points a hit. Worked under decision 0078: the gun
+/// target and the torpedo target are chosen apart.
 type Row = (
     u32,
     u32,
     i64,
     &'static str,
     &'static str,
+    u32,
     i64,
     &'static str,
     &'static str,
 );
 
 const JAPANESE_FIRST: [Row; 8] = [
-    (1, 9, 120, "5.4", "5.378205", 8, "0.48", "38.461538"),
-    (2, 10, 72, "3.24", "5.794198", 8, "0.48", "54.143646"),
-    (3, 11, 72, "3.24", "32.2891", 8, "0.48", "301.724137"),
-    (4, 12, 72, "3.24", "32.2891", 8, "0.48", "301.724137"),
-    (5, 9, 72, "3.24", "5.378205", 8, "0.48", "50.25641"),
-    (6, 10, 120, "5.4", "1.749539", 6, "0.36", "22.099447"),
-    (7, 11, 180, "8.1", "9.749588", 4, "0.24", "212.438423"),
-    (8, 12, 110, "4.95", "5.208332", 6, "0.36", "123.152709"),
+    (1, 9, 120, "5.4", "5.378205", 9, 8, "0.48", "38.461538"),
+    (2, 10, 72, "3.24", "5.794198", 10, 8, "0.48", "54.143646"),
+    (3, 9, 72, "3.24", "5.378205", 9, 8, "0.48", "50.25641"),
+    (4, 10, 72, "3.24", "5.794198", 10, 8, "0.48", "54.143646"),
+    (5, 9, 72, "3.24", "5.378205", 9, 8, "0.48", "50.25641"),
+    (6, 10, 120, "5.4", "1.749539", 10, 6, "0.36", "22.099447"),
+    (7, 9, 180, "8.1", "1.623931", 9, 4, "0.24", "35.384615"),
+    (8, 11, 110, "4.95", "5.208332", 10, 6, "0.36", "22.099447"),
 ];
 
 const SOUTHERN_FIRST: [Row; 4] = [
-    (9, 1, 140, "6.3", "4.262114", 8, "0.48", "29.577092"),
-    (10, 2, 135, "6.075", "5.545834", 0, "", ""),
-    (11, 3, 300, "13.5", "1.216473", 16, "0.96", "26.170734"),
-    (12, 4, 300, "13.5", "1.175961", 16, "0.96", "25.299164"),
+    (9, 1, 140, "6.3", "4.262114", 1, 8, "0.48", "29.577092"),
+    (10, 2, 135, "6.075", "5.545834", 0, 0, "", ""),
+    (11, 8, 300, "13.5", "8.202098", 3, 16, "0.96", "26.170734"),
+    (12, 8, 300, "13.5", "8.202098", 4, 16, "0.96", "25.299164"),
 ];
 
 /// One salvo against one row of a table. `seed` is for messages.
@@ -1007,7 +1041,8 @@ fn check_free_round(seed: u64, fight: &Fight, rows: &[Row], sums: &mut Sums) {
     let in_round = fight.salvos_in(round);
     let mut expected_count = 0;
     for row in rows {
-        let (firer, target, gun_shots, gun_exp, gun_pph, tubes, torp_exp, torp_pph) = *row;
+        let (firer, target, gun_shots, gun_exp, gun_pph, torp_target, tubes, torp_exp, torp_pph) =
+            *row;
         let guns: Vec<&&SalvoRec> = in_round
             .iter()
             .filter(|s| s.firer == firer && s.weapon == Weapon::Gun)
@@ -1035,7 +1070,7 @@ fn check_free_round(seed: u64, fight: &Fight, rows: &[Row], sums: &mut Sums) {
             check_salvo(
                 seed,
                 torps[0],
-                target,
+                torp_target,
                 fx(tubes),
                 "0.06",
                 torp_exp,

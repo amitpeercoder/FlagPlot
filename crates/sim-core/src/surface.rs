@@ -898,17 +898,68 @@ impl World {
             }
         }
 
-        // Ships are matched in ID order: firer i takes target i mod count.
+        // Each ship chooses a gun target and a torpedo target among the enemy
+        // ships afloat at the start of the round (decision 0078).
         for index in 0..2 {
             if !fight.forces[index].sighted {
                 continue;
             }
             let enemy = Fight::enemy(index);
             for (place, firer) in afloat[index].iter().enumerate() {
-                let target = afloat[enemy][place % afloat[enemy].len()];
-                self.fire_ship(fight, round, index, *firer, target);
+                let (gun_target, torpedo_target) =
+                    self.choose_targets(&afloat[index], &afloat[enemy], place);
+                self.fire_ship(fight, round, index, *firer, gun_target, torpedo_target);
             }
         }
+    }
+
+    /// The gun target and the torpedo target of the ship in place `place` of
+    /// `own`, the ships afloat in its force, among `enemy`, the enemy ships
+    /// afloat, both in ship ID order (decision 0078).
+    ///
+    /// Guns go like at like: at the enemy ships of the firer's own kind; if
+    /// none is afloat, at those of the nearest more important kind afloat; if
+    /// none of those, at those of the most important kind afloat. Among them
+    /// the ship in place (p modulo their number), p being the firer's place
+    /// among the ships of its own kind in `own`. Torpedoes go at the enemy
+    /// ships of the most important kind afloat, the one in place (i modulo
+    /// their number), i being the firer's place in `own`. The order of kinds
+    /// is that of `ShipKind`, where the most important is the least.
+    fn choose_targets(&self, own: &[ShipId], enemy: &[ShipId], place: usize) -> (ShipId, ShipId) {
+        let kind_of = |ship: &ShipId| self.class_of(*ship).kind;
+        let firer_kind = kind_of(&own[place]);
+        let enemy_kinds: BTreeSet<ShipKind> = enemy.iter().map(kind_of).collect();
+        let most_important = *enemy_kinds
+            .iter()
+            .next()
+            .expect("an enemy ship is afloat when a force fires");
+
+        let gun_kind = if enemy_kinds.contains(&firer_kind) {
+            firer_kind
+        } else {
+            enemy_kinds
+                .range(..firer_kind)
+                .next_back()
+                .copied()
+                .unwrap_or(most_important)
+        };
+        let among = |kind: ShipKind| -> Vec<ShipId> {
+            enemy
+                .iter()
+                .copied()
+                .filter(|ship| kind_of(ship) == kind)
+                .collect()
+        };
+        let guns_at = among(gun_kind);
+        let place_among_own_kind = own[..place]
+            .iter()
+            .filter(|ship| kind_of(ship) == firer_kind)
+            .count();
+        let gun_target = guns_at[place_among_own_kind % guns_at.len()];
+
+        let torpedoes_at = among(most_important);
+        let torpedo_target = torpedoes_at[place % torpedoes_at.len()];
+        (gun_target, torpedo_target)
     }
 
     fn ships_afloat(&self, force: TaskForceId) -> Vec<ShipId> {
@@ -939,22 +990,25 @@ impl World {
             || torpedo_shots(state, class, &fight.figures, torpedo_share) > Fixed::ZERO
     }
 
-    /// One ship's fire for the round: a gun salvo if it has shots, then a
-    /// torpedo salvo if its torpedoes are ready and its mounts give shots.
-    /// Both go at the same target. Torpedoes are gone after this round
-    /// whatever the mounts gave.
+    /// One ship's fire for the round: a gun salvo at `gun_target` if it has
+    /// shots, then a torpedo salvo at `torpedo_target` if its torpedoes are
+    /// ready and its mounts give shots. The two targets may be different
+    /// ships (decision 0078). Torpedoes are gone after this round whatever
+    /// the mounts gave.
     fn fire_ship(
         &mut self,
         fight: &mut Fight,
         round: &mut Round,
         force: usize,
         firer: ShipId,
-        target: ShipId,
+        gun_target: ShipId,
+        torpedo_target: ShipId,
     ) {
         let enemy = Fight::enemy(force);
         let ship = &self.truth.ships[&firer];
         let class = self.class_of(firer);
-        let target_class = self.class_of(target);
+        let gun_target_class = self.class_of(gun_target);
+        let torpedo_target_class = self.class_of(torpedo_target);
         let figures = &fight.figures;
         let share = fight.gun_share(force);
         let shots = gun_shots(ship, class, figures.round_minutes, figures, share);
@@ -963,7 +1017,6 @@ impl World {
         let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
         let fire_control =
             figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
-        let per_hit = |damage: Fixed| damage_per_hit(damage, target_class.toughness);
         // The firer's own experience, in a dark fight, when the weapon's
         // strength is above zero (decision 0064).
         let experience_for = |strength: Fixed| {
@@ -972,7 +1025,7 @@ impl World {
         };
         let gun = (shots > Fixed::ZERO).then(|| Shot {
             firer,
-            target,
+            target: gun_target,
             target_force: enemy,
             weapon: Weapon::Gun,
             shots,
@@ -993,11 +1046,11 @@ impl World {
             unready_share: (share < Fixed::ONE).then_some(share),
             fire_control_factor: fire_control,
             experience_factor: experience_for(figures.experience_gun_strength),
-            damage_per_hit: per_hit(class.gun_damage),
+            damage_per_hit: damage_per_hit(class.gun_damage, gun_target_class.toughness),
         });
         let torpedo = (torpedo_shot_count > Fixed::ZERO).then(|| Shot {
             firer,
-            target,
+            target: torpedo_target,
             target_force: enemy,
             weapon: Weapon::Torpedo,
             shots: torpedo_shot_count,
@@ -1017,7 +1070,7 @@ impl World {
             unready_share: (torpedo_share < Fixed::ONE).then_some(torpedo_share),
             fire_control_factor: Fixed::ONE,
             experience_factor: experience_for(figures.experience_torpedo_strength),
-            damage_per_hit: per_hit(class.torpedo_damage),
+            damage_per_hit: damage_per_hit(class.torpedo_damage, torpedo_target_class.toughness),
         });
 
         // The stream is opened the first time the ship fires and kept for

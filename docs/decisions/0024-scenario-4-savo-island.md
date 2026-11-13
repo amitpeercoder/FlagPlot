@@ -39,3 +39,15 @@ The southern group was read twice: once on the rows of Nov 12, 2026, and once mo
 What got worse: the minutes of action (the median is five more from the record, and the shortest runs are now at its top), Japanese shells, and Tenryu and Yubari's. What got better: gun hits on Allied ships, and the northern group's cruisers can now be sunk, which they could not be in 19 runs of 20. Allied destroyers and the torpedo hits did not move. What the worse rows show is named and left: the Japanese ended each fight by passing on, and no rule has a force that has done what it came for retire. That would be a rule, planned for the designer, if the tuning rounds show it is needed.
 
 **The hand calculation.** The scoring of Savo Island in `tests/scenario_10b_objectives.rs` was worked on the scenario as it stood. It now runs on a frozen copy, `data/scenarios/step2-frozen/04_savo_island.toml`, and no number of it changes ("Tests while figures move", 9). The scenario's own hand calculation (`tests/scenario_04_savo_island.rs`) reads no break-off level and runs on the live file as before.
+
+## Note of Nov 13, 2026: Yunagi in a task force of her own
+
+Ruled by the coordinating architect on the designer's delegation, as scenario data from rows, set with decision 0078 and before the reports tuning starts from were remade. It is not moved again.
+
+**The rows.** Yunagi, the column's one destroyer, took no part in the cruiser action. She "engaged Jarvis, turned away from the cruiser action" (`engagement_outcomes` 158, medium, preferred). She "opened fire on the JARVIS" at 01:55 and broke off about 02:00 (`engagement_events` 1061 and 1062, the 1950 analysis, medium, unconfirmed). Her one searchlight was seen sweeping from about 15,000 yards at 02:10 (`engagement_events` 105 and 108). Jarvis, damaged the day before and steaming away alone, is not in this scenario.
+
+**The scenario.** She is task force 4, starting with the column at (-1,-8) at 25 knots, with a route to (1,-5), the hex west of the hex of Savo Island, and back to (-1,-8). She meets neither Allied group and is home at 07:55. That she was with the column until about 01:55 is the rows'. The hex she turns in is the architect's choice: the last hex before the column's fight. Her ship id is 8 as before, and every measure that lists ships 1 to 8 reads as it did: the record's Japanese shells have none of hers ("Yunagi's main battery has no row"), and the record has her take no hit.
+
+**How it came to be looked at.** After the prototypes of decision 0078 had been seen: under that rule a destroyer's guns go at destroyers, so with Yunagi in the column the four Allied destroyers all fired at her. It rests on the rows above and not on the prototypes.
+
+**The frozen copy** (`data/scenarios/step2-frozen/04_savo_island.toml`) keeps her in the column, as it stood. The scenario's own hand calculation (`tests/scenario_04_savo_island.rs`) now runs on that copy, as its scoring test does, so neither moves with the live scenario.
