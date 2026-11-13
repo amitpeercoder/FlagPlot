@@ -10,12 +10,12 @@ Step 2 built the harness, measured the slice's battles against the record, tuned
 
 | Line of the spec | Met? | Shown by |
 | --- | --- | --- |
-| All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not yet.** No battle passes. Every miss is written down with its cause; your acceptance is the decision asked above. One agreement at the edge, Rabaul's Japanese fighters lost, has no cause named in any record | This page; the four reports in the table below |
+| All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not met until you decide.** No battle passes. Every miss is written down with its cause; your acceptance is the decision asked above. <!-- GAP: the cause of Rabaul's edge agreement on Japanese fighters lost, from `final-reports`. --> | This page; the four reports in the table below |
 | No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met.** A note above every figure in its file (pull requests 226 and 227), and two summary pages list them. Outside `data/reference` and so outside the line: scenario 6's own figures, placeholders with notes in the scenario file and on the air page; and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" (left so by the architect's ruling, `docs/step2-opening-list.md`) | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
 | The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **Met.** The frozen-figure tests, the invariants and the determinism scenario run in `cargo test` on every pull request. The hundred-seed soak, which CI does not run, was run by hand on Nov 13, 2026: 100 seeds of 180 days, 1,978,115 events, every check holding; the determinism scenario 9 of 9 and the invariants' tests 24 of 24 beside it | `docs/validation/closing-tests.md`, test 1 |
 | The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/step2-opening-list.md`, "Done" |
-| The legibility test is run again on the tuned Eastern Solomons | **Not met by the test's own rule, by one item.** The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again. For you to accept or not (below) | `docs/validation/closing-tests.md`, test 2 |
-| A cheap model given only the rulebook, the glossary, the data files and two scenarios reproduces a set of hand calculations exactly | **Not yet.** First sitting: every number of the step 2 rules exact, but two derived chances cut where the hand calculations round; one number of the step 1 control wrong, on a term the rulebook does not define ("free round"). The term is being defined and that one sitting run again. **The rerun's result: pending, not yet recorded** | `docs/validation/closing-tests.md`, test 3 |
+| The legibility test is run again on the tuned Eastern Solomons | **Not met by its own rule.** The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again, and the rule not changed after the result. For you to accept or not (below) | `docs/validation/closing-tests.md`, test 2 |
+| A cheap model given only the rulebook, the glossary, the data files and two scenarios reproduces a set of hand calculations exactly | **Met after a rerun, not at the first sitting.** First run: every number of the step 2 rules exact, but two derived chances cut where the hand calculations round; in the step 1 control one number wrong, on a term the rulebook did not define ("free round", "both fire from the start"), and two chances cut. The architect then ruled that such chances are written cut (R6), and the rulebook and glossary were fixed. The control sitting, run again on the fixed book, got every number exact. One new finding (R12) is open | `docs/validation/closing-tests.md`, test 3 |
 
 ## The four battles
 
@@ -145,7 +145,7 @@ From decision 0084, and the Cape Esperance check read under it:
 
 ## The figures by status
 
-From the two "figures closed" pages.
+From the two "figures closed" pages, which sort the figures alike (the figure notes in the files are the authority).
 
 **Surface, search, air combat and derivation figures** (`surface-and-search-figures-closed.md`): 101 figures.
 
@@ -168,9 +168,7 @@ Fitted, not checked:
 - `anti_aircraft_before_attack_share` 0 (decision 0079).
 - `patrol_drawn_off_share` 0 (decision 0080).
 
-**The slow air files** (`air-figures-closed.md`): `air_upkeep.toml` 3 placeholders and 1 read by no battle; `fatigue.toml` 3 placeholders and 2 read by no battle; `air_supply.toml` 4 placeholders. They are tuned on Rabaul and have no battle to check them. Scenario 6's own 7 figures (repairs a day, supply, replacements, the rest threshold, the dive bombers' search) are placeholders or readings.
-
-The two pages do not use the same words for `air_combat.toml`. See "Where the records disagree" at the end.
+**The slow air files** (`air-figures-closed.md`): `air_upkeep.toml` 3 placeholders and 1 read by no battle; `fatigue.toml` 3 placeholders and 2 read by no battle; `air_supply.toml` 4 placeholders. They are tuned on Rabaul and have no battle to check them; rounds 2 and 3 looked at fatigue and wear and moved nothing. Scenario 6's own 7 figures (repairs a day, supply, replacements, the rest threshold, the dive bombers' search) are placeholders or readings.
 
 ## The closing tests
 
@@ -180,11 +178,11 @@ Run on Nov 13, 2026 on `main` after the batch of small fixes (pull request 228).
 | --- | --- |
 | The hundred-seed soak | **Pass.** 100 seeds of 180 days, 1,978,115 events; the invariants checked at the end of each of the 18,000 days |
 | Legibility, on the tuned Eastern Solomons | **Fails its rule by one item.** A cheap model (Claude Haiku) predicted the day from the opening briefing, the day was run, and a fresh one explained it. The rule asks the explanation, claims and truth-and-belief items to pass and three of four predictions. The three pass, and two predictions. It said the American search would find the Japanese carriers in the morning (it was the afternoon), and would not say whether a Japanese strike would come (one came) |
-| The rulebook-only hand calculations | **First sitting not a pass under its rule.** Every number of a step 2 rule exact, except two derived chances of scenario 19a that differ in the sixth decimal (cut where the hand calculation rounds). In the step 1 control (scenario 04a), one number wrong: "both fire from the start", a term from the test that the rulebook does not define, and two more chances cut. **Rerun of that sitting, with "free round" defined: pending** |
+| The rulebook-only hand calculations | **First run not a pass under its rule; the control rerun exact.** First run: every number of a step 2 rule exact, except two derived chances of scenario 19a that differ in the sixth decimal (cut where the hand calculation rounds). In the step 1 control (scenario 04a) one number wrong, "both fire from the start", a term the rulebook did not define, and two more chances cut. After the architect's ruling that such chances are written cut, and the rulebook's fixes, the control sitting was run again: every number exact |
 
 **The legibility test, for you to accept or not.** *The architect's reading:* both misses are about where the enemy would be. The opening briefing holds no contact and no enemy force, only that the enemy is "expected to come down from the north". So the misses are the fog the game is meant to have, not a misreading of a rule. The explanation, the part the spec names in its own words ("explains an outcome"), passed. The test was not run again.
 
-**What follows from the tests.** Twelve findings of the legibility test and eleven of the rulebook test, each with a proposed wording fix, are listed in the record. Wording fixes to the glossary and the rulebook go with pull request 230. Five fixes to the briefing's wording follow in a second pull request. Two findings go to step 3 (listed below): an enemy strike shown with its causes hidden and nothing saying it rested on a contact, and a task force's mission shown in the briefing while no rule reads it.
+**What followed from the tests** (the architect's rulings, recorded with the tests). Of the legibility test's twelve findings, four are fixed in the glossary and the rulebook, among them one meaning of "crippled": a ship afloat with propulsion or flight deck out; flotation damage of 50 or more is now "heavily damaged". Five change the briefing's wording and follow in a second pull request. Two go to step 3 (listed below), and one needs nothing. Of the rulebook test's eleven findings, seven are fixed in the rulebook and glossary, one is a rule of the hand calculations, and three need nothing. The rerun found one more, R12 (how a starting contact ages), which is open.
 
 ## The three decisions the spec left for the close
 
@@ -271,18 +269,18 @@ Gathered from `docs/step2-opening-list.md` and the round records, with duplicate
 
 **Research asked for:** a B5N2 radius with a bomb load (decision 0081, C5); Rabaul's replacements by date (decision 0082); bounds on Aoba's and Furutaka's hits (decision 0084, 14).
 
-**For the architect to settle from research:** the points and levels of decision 0054; base sizes for the real map; a surface claim with no ship burning (decision 0085, 9); the two names for "crippled".
+**For the architect to settle from research:** the points and levels of decision 0054; base sizes for the real map; a surface claim with no ship burning (decision 0085, 9).
 
 **Not step 2, kept:** speed made good; coastwatchers and reconnaissance as standing sources.
 
-## Where the records disagree
+## Where the records disagreed, and how it was settled
 
-Listed, not settled:
+Found while this page was assembled, and corrected in the same pull request on the coordinating architect's rulings of Nov 13, 2026:
 
-1. **The air combat figures by status.** `air-figures-closed.md` counts 23 rows of `air_combat.toml`: 2 sized from rows, 2 "placeholder, bounded", 19 placeholders. `surface-and-search-figures-closed.md` counts 26 entries: 2 sized, 2 fitted, 7 looked at, 12 placeholders, 3 read by no battle. The differences: the surface page calls the two zero shares of 0079 and 0080 "fitted", where the air page calls them placeholders; the air page calls `anti_aircraft_false_claim_chance` "bounded", where the surface page counts it as looked at; the air page counts `[bomb_system_hit]` as one row, the surface page as four.
-2. **The `crew_recovered_*` figures.** The air page says all four have no check battle. The surface page, and the spec as corrected with it, say three of the four are read by no battle at all, and only `crew_recovered_over_own_base` is read, at Rabaul.
-3. **Cape Esperance.** `surface-and-search-figures-closed.md` says it is "not yet run"; `cape-esperance-check.md` records the check run on Nov 13, 2026.
-4. **The Ryujo "left to attack" record.** The decisions index (0084) and `baseline-reading.md` give it as 36. Decision 0084's own dated note and `eastern-solomons-r4.md` give 38.
-5. **Decision 0074's status line** still says "not built"; its note and the index say it was built with 0083.
-6. **`savo-island-r2.md` as the spec quotes it.** The spec's "Where the model stands today" gives it as 19 agree, 1 at the edge, 3 miss, of 23. The file, remade for decision 0084's measures, now reads 21, 2, 6 of 29.
-7. **The state version of the closing reports.** Savo Island, the Eastern Solomons and Rabaul were made on version 7. Decision 0086 (version 8) came after. Its pull request says scenarios 7 and 8 moved because a Japanese straggler force's draws are now keyed on a new number, and scenario 4's baseline changed only in that number. The batch of small fixes (pull request 228) compared batches before and after itself, both on version 8: the Eastern Solomons and Rabaul identical, Savo Island different only in its final hash. No record compares a batch on version 7 with one on version 8, so none says whether version 8 moves the three closing reports, Savo Island's above all, where Japanese stragglers are detached.
+1. **The air combat figures by status.** The two figures pages sorted `air_combat.toml` differently. The figure notes' sorting is the one; `air-figures-closed.md` now follows it (the counts above).
+2. **The `crew_recovered_*` figures.** Three of the four are read by no battle of the slice; only `crew_recovered_over_own_base` is read, at Rabaul. Both pages and the spec say so.
+3. **Cape Esperance** was still "not yet run" on `surface-and-search-figures-closed.md`; it now says checked once, did not pass, not tuned on.
+4. **The Ryujo "left to attack" record** is 38. The decisions index and `baseline-reading.md` said 36; both now say 38, with a note that it was 36 for some hours on Nov 13, 2026.
+5. **Decision 0074's status line** said "not built"; it now says built with decision 0083.
+6. **The spec's quote of `savo-island-r2.md`** (19, 1, 3 of 23) now says that was the file when written, and that it was remade with decision 0084's measures and reads 21, 2, 6 of 29.
+7. **The state version of the closing reports.** Savo Island, the Eastern Solomons and Rabaul were reported on state version 7, before decision 0086 moved the engine to version 8, and no record compared the two. One batch of each on the final engine (label `close`) is being run and compared measure by measure with the closing reports. <!-- GAP: when `final-reports` lands, the four-battle table takes the `close` reports for the three tuned battles, the totals are recounted, and any verdict that changed is said here. -->

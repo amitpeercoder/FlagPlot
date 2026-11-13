@@ -32,7 +32,7 @@ Two smaller checks ride with them: ship passages against recorded times, and cla
 
 ## Where the model stands today
 
-*Nov 13, 2026: this section is as it stood after Savo Island's round 2 and before the air rounds, and is not brought up to date; `savo-island-r2.md` has since been remade for the measures of decision 0084. Where step 2 ends, battle by battle, is `docs/validation/step2-close.md`.*
+*Nov 13, 2026: this section is as it stood after Savo Island's round 2 and before the air rounds, and is not brought up to date; `savo-island-r2.md` read 19 agree, 1 at the edge, 3 miss, of 23 when this was written; it was remade with decision 0084's measures and now reads 21, 2, 6 of 29. Where step 2 ends, battle by battle, is `docs/validation/step2-close.md`.*
 
 From the reports in `docs/validation/`, each of 1,000 runs, which `docs/validation/baseline-reading.md` reads. These are the misses:
 
@@ -165,7 +165,7 @@ A figure cannot be tuned to cover for a rule that is missing. So the rules that 
 | Ship repair | Decided (decision 0069, confirmed by the designer on Nov 13, 2026); not built. Not part of step 2's close: it adds an order and a briefing line, which "Scope" leaves out of step 2. It follows step 2, with land units and ground combat, before step 3 (ruled by the coordinating architect on the designer's delegation, Nov 13, 2026) | No. It matters to a campaign, not to one battle's losses |
 | "Out of the campaign" on the objectives scale | Not decided. Not part of step 2's close: it follows step 2 with ship repair, before step 3 (the same ruling) | No. The result on the scale stays reported and not judged |
 | Two objectives that can be gamed: cargo unloaded and loaded back scored each time, and a base scored open by the last moment only | Built (decision 0067): cargo landed is tons unloaded less tons loaded back at that base, and base open is scored by the share of days | No. No measure rests on either, and the result on the scale is reported and not judged |
-| Two names for "crippled" | Not started | No, but soon: the glossary means flotation damage of 50 or more, and the objective `ships_crippled` means propulsion or flight deck out |
+| Two names for "crippled" | Done in the glossary and the rulebook on Nov 13, 2026, with the closing tests (`docs/validation/closing-tests.md`, L9): crippled has the objective's meaning, and flotation damage of `crippled_flotation` or more is "heavily damaged". The served text that still says "crippled" in the old sense is listed there. As first written: not started | No, but soon: the glossary means flotation damage of 50 or more, and the objective `ships_crippled` means propulsion or flight deck out |
 
 ### Experience
 
