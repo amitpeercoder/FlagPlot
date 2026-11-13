@@ -68,7 +68,7 @@ struct DayOut {
     event_count: usize,
 }
 
-/// `sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>]`.
+/// `sim-cli export <scenario.toml | game.json> --out <file.json> [--seed N] [--labels <anchors.csv>]`.
 /// `args` are the words after `export`.
 pub fn command(
     args: &[String],
@@ -105,16 +105,32 @@ pub fn command(
             extra => return Err(format!("unexpected argument \"{extra}\"\n\n{usage}")),
         }
     }
-    let scenario_path = scenario_path.ok_or_else(|| format!("no scenario given\n\n{usage}"))?;
+    let scenario_path =
+        scenario_path.ok_or_else(|| format!("no scenario or saved game given\n\n{usage}"))?;
     let out = out.ok_or_else(|| format!("export needs --out <file.json>\n\n{usage}"))?;
 
     let labels = match labels_path {
         Some(path) => map::labels(Path::new(path))?,
         None => Vec::new(),
     };
-    let executed = crate::execute(scenario_path, seed, options, |_| {})?;
-    let inputs = crate::save::inputs(scenario_path, &executed.scenario)?;
-    let replay = build(&executed, scenario_path, inputs, labels);
+    let (executed, saved) = crate::execute_source(scenario_path, seed, options)?;
+    // A saved game is of the scenario it names; the replay says so, and says
+    // which game it is.
+    let (scenario_file, title) = match &saved {
+        Some(saved) => (
+            saved.scenario_file.as_str(),
+            Some(format!(
+                "{} (saved game {scenario_path})",
+                executed.scenario.name
+            )),
+        ),
+        None => (scenario_path, None),
+    };
+    let inputs = crate::save::inputs(scenario_file, &executed.scenario)?;
+    let mut replay = build(&executed, scenario_file, inputs, labels);
+    if let Some(title) = title {
+        replay.scenario.name = title;
+    }
 
     let mut text = serde_json::to_string(&replay).map_err(|e| e.to_string())?;
     text.push('\n');

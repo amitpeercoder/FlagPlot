@@ -30,7 +30,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
        sim-cli hash <scenario.toml> [--seed N] [--reference DIR]
        sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N] [--reference DIR]
        sim-cli events <scenario.toml | game.json> --why EVENT [--seed N] [--reference DIR]
-       sim-cli export <scenario.toml> --out <file.json> [--seed N] [--labels <anchors.csv>] [--reference DIR]
+       sim-cli export <scenario.toml | game.json> --out <file.json> [--seed N] [--labels <anchors.csv>] [--reference DIR]
        sim-cli batch <scenario.toml> --out <file.json> [--runs N] [--first-seed S] [--label TEXT] [--reference DIR]
        sim-cli validate <batch.json> <measures.toml> [--out <report.md>] [--reference DIR]
        sim-cli validate <measures.toml> [--out <report.md>]
@@ -73,9 +73,12 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             nothing; it reads data/oob/place_positions.csv (or --places FILE)
             for the places a passage names. It exits with success whenever it
             wrote its report, misses or not.
-  export    Runs a scenario the same way and writes the finished run as one
-            JSON replay file: the map, the starting forces, every event with
-            its causes, and the final state.
+  export    Runs a scenario the same way, or replays a saved game as replay
+            does (with --reference as it was made; --seed does not go with
+            it), and writes the finished run as one JSON replay file: the map,
+            the starting forces, every event with its causes, and the final
+            state. A saved game's replay is titled with the game's file and
+            its scenario.
   batch     Runs a scenario N times with seeds S, S+1, ... one after another
             and writes one JSON summary file: ships sunk per side (a
             histogram and totals), per ship, and the final hash and sunk
@@ -193,6 +196,79 @@ fn execute_observing(
         summaries,
         initial,
     })
+}
+
+/// A saved game run again, the one way `replay`, `events` and `export` do it:
+/// load the scenario file the game names, refuse it if it or a data file has
+/// changed, give it the game's seed and orders, then run it day by day and
+/// compare each day's hash with the saved one, failing on the first that
+/// differs. `before_run` sees the scenario and the game before day 1;
+/// `on_day` sees each summary before it is compared. With `to_end` the run
+/// goes on to the scenario's last day after the saved days (`replay` stops
+/// with them).
+fn execute_saved(
+    file: &str,
+    options: &LoadOptions,
+    to_end: bool,
+    before_run: impl FnOnce(&Scenario, &save::Saved),
+    mut on_day: impl FnMut(&DaySummary),
+) -> Result<(Executed, save::Saved), String> {
+    let saved = save::read(file)?;
+    let scenario =
+        Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
+    saved.check_files(&scenario)?;
+    let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
+    scenario.replace_script(saved.script.clone());
+    before_run(&scenario, &saved);
+    let initial = scenario.world.umpire().clone();
+    let mut summaries = Vec::new();
+    for (day, hash) in &saved.hashes {
+        let summary = scenario
+            .next_day()
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| format!("the scenario has no day {day}"))?;
+        on_day(&summary);
+        let now = format!("{:016x}", summary.state_hash);
+        let differs = summary.day != *day || &now != hash;
+        summaries.push(summary);
+        if differs {
+            return Err(format!(
+                "replay differs on day {day}: saved hash {hash}, replayed hash {now}"
+            ));
+        }
+    }
+    if to_end {
+        while let Some(summary) = scenario.next_day().map_err(|e| e.to_string())? {
+            on_day(&summary);
+            summaries.push(summary);
+        }
+    }
+    let executed = Executed {
+        scenario,
+        summaries,
+        initial,
+    };
+    Ok((executed, saved))
+}
+
+/// What `events` and `export` take: a scenario file, run with its own
+/// orders (and `--seed` if given), or a saved game, replayed to its end
+/// ([`execute_saved`]); a saved game holds its own seed, so `--seed` does not
+/// go with it. The second part is the saved game, when it was one.
+fn execute_source(
+    source: &str,
+    seed: Option<u64>,
+    options: &LoadOptions,
+) -> Result<(Executed, Option<save::Saved>), String> {
+    let text = std::fs::read_to_string(source).map_err(|e| format!("{source}: {e}"))?;
+    if !text.trim_start().starts_with('{') {
+        return Ok((execute(source, seed, options, |_| {})?, None));
+    }
+    if seed.is_some() {
+        return Err("--seed does not go with a saved game: it holds its own seed".to_string());
+    }
+    let (executed, saved) = execute_saved(source, options, true, |_, _| {}, |_| {})?;
+    Ok((executed, Some(saved)))
 }
 
 /// Reads the number after `--seed`.
@@ -628,39 +704,28 @@ fn replay(args: &[String], options: &LoadOptions) -> Result<(), String> {
         [file] if !file.starts_with('-') => file.as_str(),
         _ => return Err(format!("replay needs one saved game\n\n{USAGE}")),
     };
-    let saved = save::read(file)?;
-    let scenario =
-        Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
-    saved.check_files(&scenario)?;
-    let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
-    scenario.replace_script(saved.script.clone());
-    println!("{}", scenario.name);
-    println!("seed {}", saved.seed);
-    // A game that had a player says so; the orders it handed in are replayed
-    // and nobody is asked for any.
-    if saved
-        .seats
-        .values()
-        .any(|k| *k == sim_agent::SeatKind::Player)
-    {
-        println!(
-            "seats allied {}, japanese {} (replayed with no player)",
-            saved.seats[&Side::Allied].name(),
-            saved.seats[&Side::Japanese].name()
-        );
-    }
-    for (day, hash) in &saved.hashes {
-        let summary = scenario
-            .next_day()
-            .map_err(|e| e.to_string())?
-            .ok_or_else(|| format!("the scenario has no day {day}"))?;
-        let now = format!("{:016x}", summary.state_hash);
-        println!("day {} {now}", summary.day);
-        if summary.day != *day || &now != hash {
-            return Err(format!(
-                "replay differs on day {day}: saved hash {hash}, replayed hash {now}"
-            ));
-        }
-    }
+    execute_saved(
+        file,
+        options,
+        false,
+        |scenario, saved| {
+            println!("{}", scenario.name);
+            println!("seed {}", saved.seed);
+            // A game that had a player says so; the orders it handed in are
+            // replayed and nobody is asked for any.
+            if saved
+                .seats
+                .values()
+                .any(|k| *k == sim_agent::SeatKind::Player)
+            {
+                println!(
+                    "seats allied {}, japanese {} (replayed with no player)",
+                    saved.seats[&Side::Allied].name(),
+                    saved.seats[&Side::Japanese].name()
+                );
+            }
+        },
+        |summary| println!("day {} {:016x}", summary.day, summary.state_hash),
+    )?;
     Ok(())
 }

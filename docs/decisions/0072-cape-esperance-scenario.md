@@ -1,6 +1,6 @@
 # 0072: The Cape Esperance scenario: what is in it and what is left out
 
-Status: plan; settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
+Status: plan; settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. Second stage built the same day: the ships derived and the scenario written, not run ("Built", at the end). The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
 
 **No batch of this scenario is run or looked at before Savo Island is tuned, and it is never tuned on.** This stage ran no batch, no `validate` and no run of the scenario, and nothing below was set in answer to an outcome.
 
@@ -44,8 +44,9 @@ The map puts every point of the action in hex (2,-5), the hex of Savo Island and
 10. **Neither side starts with a contact.** The American air reports of 13:45 and 18:10 (engagement_events 565 to 569, 580 to 582) were of "two cruisers and six destroyers", which the sources read as the reinforcement group; the observers did not see Goto's three cruisers (558, 574). A contact of a force that is not in the scenario would be a belief of nothing; and Task Force 64 is alert by its readiness in any case. Nothing in the Japanese record says they had seen Task Force 64.
 11. **Both forces engage. Their break-off levels are read from the rows, each apart, by the reading being written into decision 0024 for Savo Island:** a break-off level is the commander's order. A row stating an order to hold or fight on, or failing that the force's recorded conduct with no part of it leaving by choice at any loss, sets the level at 1. A row stating that the force withdrew by choice at a stated loss sets it at that share. A force with no such row keeps the default 0.5, marked invented. The bombardment group detaches a ship that cannot keep up, sent home to Shortland with an escort; Task Force 64 keeps its own. Every ship starts with full fuel and a full outfit (decision 0024, 10). The scenario was not run to see what either level does.
 
-    - **Task Force 64: 1, by its conduct.** No row gives Scott an order to hold or fight on at any loss. His orders before the action are about the attack: the approach, illumination, torpedoes and gunfire (engagement_events 549, 550, 553), the attack that evening (555), and "ships out of formation drop out on the disengaged side" (552), a rule for a ship, not a withdrawal of the force. His conduct: the force fought from 23:46 until the enemy was gone. The cease-fire of 23:47 was ordered because he took his targets for his own destroyers (674, 675, 803), and firing resumed by 23:51 (681, 801, 1037); the one at about midnight was to rectify the formation (736, 806), and firing resumed at 00:04 (806). At 00:16 he turned to close the enemy (699). Only "after the last desultory firing" did he decide to retire, at 00:27 (699, 701), when San Francisco had ceased fire on the last target at 00:20 (700). Two ships left the line, and neither by choice: Boise fell out at 00:13 with her magazines on fire (696, 693), and Duncan left the column to attack, towards the enemy (532 in engagement_positions), and was abandoned on fire. No part of the force left by choice at any loss, so the level is 1.
-    - **The bombardment group: 0.2, from its own flash signal.** The group's battle flash No. 6, sent by Aoba's captain (engagement_events 534, medium, preferred, the 4th Destroyer Squadron's copy), says it met the enemy at 21:45 (23:45 US), "fought 15 minutes and mostly beat them, but since shelling the shore became impossible all forces ordered to withdraw". That is a withdrawal of the force by choice. Fifteen minutes from 23:46 is about 00:01; by then Fubuki had sunk, at about 23:53 (the research report; her sinking rows), and she is one of the five. Furutaka had been hit and was burning from 23:50 (730) but was still under way and firing (731); the flash's own damage list ("Furutaka unable to proceed", "all Aoba's turrets unusable", Kinugasa sound) is as of its sending, and Furutaka's steering failed only at 00:40 (engagement_positions 504). So at the order one ship of five was sunk and none other was crippled by any row: the share is 1/5, and the level 0.2. The order was given after Goto was mortally wounded, by those who took command on Aoba (665, low; 528 says Aoba's captain took over formally at 06:00). Two things are written down so that the reading is not taken for more than it is. The flash gives the reason as the bombardment having become impossible, not the loss. And Aoba's first turn at 23:46 to 23:50, "for the moment to break away and put the force in order" (512), is not read as the withdrawal: the same row has her fighting on (gun and torpedo action to both sides), Kinugasa and Hatsuyuki turned and fought on for some 25 minutes (521, 525) and Furutaka fired from 23:52 (731). Were Furutaka counted from the flash's damage list, the share would be 2/5; she was not disabled when the order was given, so 0.2 stands.
+    - **Task Force 64: 1, by its conduct.** No row gives Scott an order to hold or fight on at any loss. His orders before the action are about the attack: the approach, illumination, torpedoes and gunfire (engagement_events 549, 550, 553), the attack that evening (555), and "ships out of formation drop out on the disengaged side" (552), a rule for a ship, not a withdrawal of the force. His conduct: the force fought from 23:46 until the enemy was gone. The cease-fire of 23:47 was ordered because he took his targets for his own destroyers (674, 675, 803), and firing resumed by 23:51 (681, 801, 1037); the one at about midnight was to rectify the formation (736, 806), and firing resumed at 00:04 (806). At 00:16 he turned to close the enemy (699). Only "after the last desultory firing" did he decide to retire, at 00:27 (699, 701), when San Francisco had ceased fire on the last target at 00:20 (700). Two ships left the line, and neither by choice: Boise fell out at 00:13 with her magazines on fire (696, 693), and Duncan left the column to attack, towards the enemy (532 in engagement_positions), and was abandoned on fire. No part of the force left by choice at any loss, so the level is 1. The orders and course changes of the night, read again by the research of Nov 13, 2026 (engagement_events 1222 to 1240; `docs/research/oob/orders-and-conduct.md`), agree: the cease-fire of 23:47 because he thought his cruisers were firing on his own destroyers (1227), recognition lights at 23:50 (1228), "commence firing" at 23:51 with no doubt left of the enemy (1229, 1237), cease fire and resume at 00:01 to 00:04 (1230), the turn of 00:05 (1231), and the turn away at 00:27 with an attempt to detail a destroyer to stand by Boise (1232, 1238). None is a withdrawal at a loss.
+    - **The bombardment group: 0.5, invented. The architect's ruling of Nov 13, 2026, which replaces the reading of 0.2 below.** The reading's test is a row stating that the force withdrew by choice at a stated loss. It is not met. The orders-and-conduct research read the Japanese pages twice, blind, and both readings agree that no page names who gave the order to break off (outcomes 3834, 3835, 3837; the decision is written in the honorific passive); the older row that names Goto for the order of 23:43 (engagement_events 509) is now disputed; and the flash (534) gives as its reason that the bombardment had become impossible, not the loss, while the staff paper gives the commander's death, poor communication and a very unfavourable position (outcomes 3836). So no row gives a level, and the force keeps the default, 0.5, marked invented, with the note that no row gives a level. The reading of 0.2 is kept below as the record of how it was first read.
+    - *Superseded: the bombardment group at 0.2, from its own flash signal.* The group's battle flash No. 6, sent by Aoba's captain (engagement_events 534, medium, preferred, the 4th Destroyer Squadron's copy), says it met the enemy at 21:45 (23:45 US), "fought 15 minutes and mostly beat them, but since shelling the shore became impossible all forces ordered to withdraw". That is a withdrawal of the force by choice. Fifteen minutes from 23:46 is about 00:01; by then Fubuki had sunk, at about 23:53 (the research report; her sinking rows), and she is one of the five. Furutaka had been hit and was burning from 23:50 (730) but was still under way and firing (731); the flash's own damage list ("Furutaka unable to proceed", "all Aoba's turrets unusable", Kinugasa sound) is as of its sending, and Furutaka's steering failed only at 00:40 (engagement_positions 504). So at the order one ship of five was sunk and none other was crippled by any row: the share is 1/5, and the level 0.2. The order was given after Goto was mortally wounded, by those who took command on Aoba (665, low; 528 says Aoba's captain took over formally at 06:00). Two things are written down so that the reading is not taken for more than it is. The flash gives the reason as the bombardment having become impossible, not the loss. And Aoba's first turn at 23:46 to 23:50, "for the moment to break away and put the force in order" (512), is not read as the withdrawal: the same row has her fighting on (gun and torpedo action to both sides), Kinugasa and Hatsuyuki turned and fought on for some 25 minutes (521, 525) and Furutaka fired from 23:52 (731). Were Furutaka counted from the flash's damage list, the share would be 2/5; she was not disabled when the order was given, so 0.2 stands.
 
     Both levels are the architect's reading of the rows, as decision 0024's are, and are to be reviewed with it. Neither is a source's figure.
 12. **Ship order inside each force,** which decides who fires at whom (chapter 4, Who fires), is the order of decision 1: the American battle disposition of 22:35 and the Japanese column with its screen. The column turn that changed the American order is not modelled.
@@ -89,6 +90,8 @@ With these and the radar list below, **seven ships derive cleanly now:** Farenho
 
 ### What is left, and what closes it
 
+*As it stood after the first stage. Every item was closed in the second stage, by research, by the architect's rulings and by exceptions: see "Built", at the end.*
+
 | Ship | Problem | What closes it | Recommended |
 | --- | --- | --- | --- |
 | San Francisco | Main battery: only the class row (fits 246: nine 8-inch/55, mark inferred, low) | An exception reading row 246, or a ship-level row | Exception, as decisions 0023 e4 and e5 did for her sisters. Research is cheap too (DANFS) |
@@ -119,7 +122,7 @@ The night turned on several things no rule covers. None is designed here.
 
 | What happened | What the rules do | Recommendation |
 | --- | --- | --- |
-| **Radar fire control.** Helena and Boise laid their guns by radar at about 4,000 yards; the American cruisers hit the Japanese cruisers some 130 times in 34 minutes | Radar enters sighting only; a hit is as likely with or without it | **A rule may be needed, and the architect should decide before Savo Island is tuned.** The spec's argument for experience holds here too: if radar fire control is not a rule, tuning on Savo Island (where the side with radar fired almost nothing) cannot set it, and Cape Esperance then misses for a reason no figure can mend. Flag for the architect |
+| **Radar fire control.** Helena and Boise laid their guns by radar at about 4,000 yards; the American cruisers hit the Japanese cruisers some 130 times in 34 minutes | Radar enters sighting only; a hit is as likely with or without it | A rule may be needed: the spec's argument for experience holds here too, since tuning on Savo Island (where the side with radar fired almost nothing) cannot set it. **The architect ruled on Nov 13, 2026 not to build it before the check is run.** Accepted and noted with the others; if Cape Esperance misses for it when it is run, that is written as the cause and a plan follows then |
 | **Fire on a friend.** Farenholt and Duncan were hit by their own cruisers; Scott ceased fire believing he was hitting his own destroyers | No fire on a friend; no cease-fire | Accept and note. The measure of hits on American ships is already unjudged for this reason (`data/validation/cape_esperance.toml`) |
 | **The column turn.** The countermarch at 23:32 to 23:36 left three destroyers between the lines | No formation or positions inside a hex | Accept and note |
 | **Seeing and recognising.** Each side saw the other before fire opened; the Japanese took the Americans for their own landing group | Sighting is recognition. The Japanese mistake is carried only as not alert and not ready | Accept and note. If later battles turn on it too, an identification rule is a candidate |
@@ -134,58 +137,117 @@ The night turned on several things no rule covers. None is designed here.
 
 ## What is a placeholder
 
-- Every combat figure in `surface_combat.toml` and the objectives scale, as in every scenario until step 2 sets them. The break-off levels are not placeholders: they are read from rows (decision 11), as the architect's reading.
+- Every combat figure in `surface_combat.toml` and the objectives scale, as in every scenario until step 2 sets them.
+- The bombardment group's break-off level, 0.5: invented, since no row gives one (decision 11). Task Force 64's level of 1 is read from its conduct.
 - Full fuel and full outfits at the start (decision 0024, 10).
 - The 18:00 positions of both forces and the Japanese speed of 27 knots, worked back as decisions 5 and 6 say. They are the architect's settlement, not a source's statement.
-- The rates of fire, until decision 0070 lands and the classes are derived.
+- Laffey's guns, displacement and fuel, read by exception and by inference ("Built", below), until a better source is found.
 
 ## Gaps
 
-- The class figures of decision "What is left", above; the new rows in `gaps.csv`.
+- The class figures still read by exception or inference ("Built", below), each open in `gaps.csv`.
 - Positions of either force in latitude and longitude near the contact, and column intervals (the research report).
 - Rounds fired and hits by ship; the American ships' action reports are not online (the research report). The measures already allow for it.
 - Torpedoes fired by the American ships: no count for any (Buchanan and Duncan attacked; Farenholt's mount jammed at 23:50). The Japanese counts are Aoba's 2 and Kinugasa's 4 (engagement_outcomes 2277, 2282). Research pull request 174 added the tubes that bear on one side for each class (ship_class_facts 1176 to 1353, `docs/research/oob/torpedoes-fired.md`); no rule reads them yet (decision 0074).
 - The Japanese group's state at contact beyond what decision 9 cites: what its guns were loaded with, where they were trained, and whether a recognition signal was made (the flagship's signal log was lost). These stay gaps; decision 9 does not rest on them.
 
-## For the next stage
+## Built, Nov 13, 2026 (the second stage)
 
-The scenario file is left for the next stage, for two reasons:
+The ships are derived and the scenario is written. **Nothing ran the battle to an outcome that anyone reads:** no batch, no `validate`, no events printed past the meeting, and no run baseline.
 
-1. **It cannot load without a class file,** which waits on the table above.
-2. **Its test needs a decision.** A scenario test loads through `tests/common` on the frozen figures of step 1 (`docs/engineering/roles-and-tests.md`), and `--reference data/reference/step1` reads every reference file the scenario names from that directory, so `ship_classes_cape_esperance.csv` would have to be there. It is not a figure of step 1. The architect decides whether the class file is copied into the frozen directory when it is derived, or the test loads on the live figures (`common::load_live`) and asserts only what no figure decides: the meeting, the readiness and the order of the ships, not the sighting chances.
+### The architect's rulings of Nov 13, 2026
 
-When it is built, it is `data/scenarios/17_cape_esperance.toml` (16 is being built by another session; check `origin/main` again first), with these task forces and ships, the ids being what the measures' `take` keys are written against:
+1. **No rule of radar fire control before the check is run** (see "What the rules cannot show here").
+2. **The class file is copied into `data/reference/step1`** when it is first derived, by "Tests while figures move", 6: what step 2 adds goes into the frozen copy too. Scenario 17's test runs on the frozen figures like the others. The step1 README says so.
+3. **The bombardment group's break-off level is 0.5, invented** (decision 11 above).
+4. **Laffey is in, and the scenario does not go to 13 ships.** Leaving out a ship that fought changes the battle more than a marked settlement does. Her three figures are read by exception (below) and stay open in `gaps.csv`. The architect has asked research for Friedman on all three; if it contradicts, she is re-derived before the scenario is ever run.
+5. **The Fubuki class's torpedo** comes from the fit row that has a count (726), by exception. The type-only statements are now `torpedo_model` rows (ship_class_facts 1359 to 1362, research pull request 198).
 
-| Id | Task force | Ship | Class (to be derived) | Experience |
+### The data settled in this stage
+
+Each settlement has its reason on the row or in `rules.toml`. Rows changed: standing and note only.
+
+- **Fuel, read alike for every ship.** Savo Island and the Eastern Solomons read FTP 218 Table V's "Full load" (for example rows 712, 864, 877), with endurance from the 15-knot row (834, 862, 875). The same was read here, from the HyperWar transcription on Nov 13, 2026:
+
+  | Class | Full load | Endurance at 15 kn | Rows |
+  | --- | --- | --- | --- |
+  | Brooklyn (CL 47, Boise's own table) | 1,981 t | 7,990 miles (Table I, radius-oil basis) | 1363 to 1365 |
+  | St. Louis (CL 49 alone; read for Helena by inference) | 1,892 t | 7,690 miles (Table I) | 1366 to 1368 |
+  | Pensacola (CA 24 and 25) | 2,116 t | 7,020 miles (Table I) | 1369 to 1371 |
+  | Benson (DD 421/459, which does not list Laffey; read for her as a ship of the class, by inference) | 466 t | 5,100 miles (Table IAA; radius oil and maximum capacity are one figure for this class) | 1372 to 1374 |
+
+  The maximum-capacity rows (1354 to 1357) and the earlier range-ends and design endurances became `alternative`. Row 999 (Navypedia's 2,116 for the Pensacola class) agrees with the full load and became `preferred`.
+- **The 12.7 cm/50's rate (Fubuki, Hatsuyuki):** row 480 (5.0 a minute, from the US Naval Technical Mission's figure for the Type A twin mount) is preferred over 481 (Lengerer's 4.4 to 5.0, lower end). The technical examination outranks the compilation. Under decision 0070 the class fires at the lesser of this and its kind's achieved rate.
+- **San Francisco's main battery** is now read from her own row (fits 756, DANFS, medium, preferred), with no exception.
+
+The exceptions, appended at the end of `rules.toml`:
+
+| Ship or class | Fact | Row | In short |
+| --- | --- | --- | --- |
+| Laffey | Main battery, four 5-inch | fits 749 | The two rows dated at or near the action say four: 748, the Cominch bulletin's table of 13 November, a primary source not itself read as it is dated after the list's day; and 749, DANFS. The two that say five are a launch-time caption (750) and an undated compilation (713). Low confidence. The architect's ruling |
+| Benson class (Laffey) | Standard displacement, 1,620 t | 1093 | A lone row; every source calls the class 1,620-ton. The architect's ruling |
+| Brooklyn class (Boise) | No torpedo tubes | fits 701 | No armament line lists any |
+| St. Louis class (Helena) | No torpedo tubes | fits 712 | As above |
+| Pensacola class (Salt Lake City) | 150 rounds a gun | 1016 | Not specific to the class. The list's `main_gun_ammunition_not_limiting` is not applied over a row, so the row is read. She fired 296 of 1,500, so it does not limit her |
+| Fubuki class | Nine tubes, Type 90 | fits 726 | Every source agrees on the type (1359 to 1362), and none disputes the count (727 to 729). The architect's ruling |
+
+**Radar under decision 0077:**
+- Boise and Helena read 1 (SG, a plan position indicator).
+- San Francisco reads 0 (no SG; her SC is an air-search set).
+- Farenholt's set of type not stated is named as not counted.
+- **Duncan.** Her two disputed rows do not stop the derivation. The tool finds no surface-search row that holds and reports her radar as unknown. She is on the list's `radar_unknown_means_none` and is named there (0077, rule 5).
+- **Salt Lake City reads 0 and is named nowhere.** Her one surface-search row for the date (fits 649, the SG, "so, presumably") is disputed, so it is not read. Her air-search fit is read, so a radar fit is on record, and the tool gives 0 without a note. Rule 3's naming of a set it does not count does not reach a set whose row is disputed. That is how the tool behaves, reported here and not changed. For the force it changes nothing, since Boise and Helena have the figure.
+
+**The class ids are pinned** (decision 0077) in `data/derivation/cape_esperance.toml`. They are 3000 to 3008, which no other list uses.
+
+| Id | Class | Ships | Top speed | Radar |
 | --- | --- | --- | --- | --- |
-| TF 1 | Bombardment group, Japanese, normal readiness | | | |
-| 1 | 1 | Aoba | Aoba class | 3 |
-| 2 | 1 | Furutaka | Furutaka class | 3 |
-| 3 | 1 | Kinugasa | Aoba class | 3 |
-| 4 | 1 | Fubuki | Fubuki class | 3 |
-| 5 | 1 | Hatsuyuki | Fubuki class | 3 |
-| TF 2 | Task Force 64, Allied, battle readiness | | | |
-| 6 | 2 | USS Farenholt | Gleaves class | 2 |
-| 7 | 2 | USS Duncan | Gleaves class | 1 |
-| 8 | 2 | USS Laffey | Benson class | 2 |
-| 9 | 2 | USS San Francisco | New Orleans class | 3 |
-| 10 | 2 | USS Boise | Brooklyn class | 3 |
-| 11 | 2 | USS Salt Lake City | Pensacola class | 3 |
-| 12 | 2 | USS Helena | St. Louis class | 2 |
-| 13 | 2 | USS Buchanan | Gleaves class | 2 |
-| 14 | 2 | USS McCalla | Gleaves class | 1 |
+| 3000 | Aoba | Aoba, Kinugasa | 33 | 0 |
+| 3001 | Furutaka | Furutaka | 33 | 0 |
+| 3002 | Fubuki | Fubuki, Hatsuyuki | 34 | 0 |
+| 3003 | Gleaves | Farenholt, Duncan, Buchanan, McCalla | 35 | 0 |
+| 3004 | Benson | Laffey | 35 | 0 |
+| 3005 | New Orleans | San Francisco | 32.7 | 0 |
+| 3006 | Brooklyn | Boise | 32.5 | 1 |
+| 3007 | Pensacola | Salt Lake City | 32.5 | 0 |
+| 3008 | St. Louis | Helena | 32.5 | 1 |
 
-Base 1 is Shortland, Japanese, hex (-2,-8), holding nothing, as Rabaul is in scenario 4; that the hex takes a base is to be checked when the file is written.
+Every top speed is above both ordered speeds, 27 and 29 knots, so the hand calculation of the meeting holds on the derived classes. The experience file did not change.
 
-The hand calculation its test asserts, all of it fixed by orders, the map and the readiness, none of it by a draw:
+FTP 218 lists DD 491, Farenholt, in its DD 421/459 (Benson) table. That bears on the open Benson-or-Gleaves question for her (`gaps.csv`). She is left in the Gleaves class, as the rows have her.
 
-- Task Force 2 from (2,-2) at 29 knots: steps (2,-3), (1,-3), (1,-4) charged 37, 29 and 40 (106, the air distance), then (2,-5) charged 40. It enters (2,-5) after 126 miles, 4.344827 hours (22:20), and arrives at its centre after 146, 5.034482 hours (23:02).
-- Task Force 1 from (0,-8) at 27 knots: steps charged 30, 38, 26, 40, 40. It enters (2,-6) after 114 miles (4.222222 hours, 22:13) and (2,-5) after 154 (5.703703 hours, 23:42).
-- One meeting, Task Force 1 and Task Force 2, night pulse of day 1, hex (2,-5), elapsed 5.703703 hours, dark. No other `EngagementBegun` in the game's night pulse.
-- At the meeting Task Force 2 is at battle readiness, alert and ready; Task Force 1 is at normal readiness, not alerted, not ready.
-- In round 1, ship i of one force fires at ship (i mod n) of the other: Farenholt at Aoba, Duncan at Furutaka, Laffey at Kinugasa, San Francisco at Fubuki, Boise at Hatsuyuki, Salt Lake City at Aoba, Helena at Furutaka, Buchanan at Kinugasa, McCalla at Fubuki; Aoba at Farenholt, Furutaka at Duncan, Kinugasa at Laffey, Fubuki at San Francisco, Hatsuyuki at Boise. (Who fires in round 1 depends on who sighted, which is drawn; the pairing is fixed.)
+### The scenario and its test
 
-The test asserts or prints no outcome: no hit, no loss, no claim.
+- **`data/scenarios/not-run/17_cape_esperance.toml`, not `data/scenarios/`.** Every scenario in `data/scenarios/*.toml` is walked by three loops:
+  - CI's export of every scenario;
+  - `crates/sim-cli/tests/export.rs`, which requires a golden of every scenario's full run in `crates/sim-cli/tests/run_baseline`;
+  - `crates/sim-cli/tests/saved_games.rs`.
+
+  A golden would record the outcome. None of the three looks in a sub-folder, as with `step2-frozen/`. The file moves to `data/scenarios/` when the scenario may be run, after Savo Island is tuned.
+- **Scenario 17 is free;** the test file `tests/scenario_17a_target_choice.rs` is decision 0078's and has no scenario file of its own.
+- **Shortland's hex (-2,-8)** takes the base: the scenario loads with it.
+- **Ids,** for the measures' `take` keys:
+  - task force 1, Japanese, at normal readiness: ships 1 Aoba, 2 Furutaka, 3 Kinugasa, 4 Fubuki, 5 Hatsuyuki.
+  - task force 2, Allied, at battle readiness: ships 6 Farenholt, 7 Duncan, 8 Laffey, 9 San Francisco, 10 Boise, 11 Salt Lake City, 12 Helena, 13 Buchanan, 14 McCalla.
+  - base 1, Shortland.
+- **Its test,** `tests/scenario_17_cape_esperance.rs`, runs the one day on the frozen figures and reads only the state as loaded and the events up to the first `EngagementBegun`. Its hand calculation is in its doc comment. It proves:
+  - the scenario loads;
+  - the ship order and classes;
+  - the readiness as loaded;
+  - the two approaches;
+  - the one meeting of the night: forces 1 and 2, hex (2,-5), 5.703703 hours (23:42), dark. Force 2 has stood in (2,-5) since it entered at 22:20, after 126 miles. Its last 20 miles to the centre and its arrival (by the clock 23:02) are recorded after the fight, by decision 0022, 6, so the test does not read them; the first stage's "arrives at 23:02 before the meeting" was wrong as to the order of the events;
+  - no alert of force 1 before it.
+
+**Who fires at whom, by decision 0078.** This replaces the pairing by place of the first stage. The test does not assert it: who fires in a round depends on who has sighted, which is drawn, and reading salvos would read the fight. It is worked here for the record, for round 1 with every ship afloat.
+
+- **Guns, like at like.** A ship takes the ship in place (p mod n) among the enemy ships of its own kind, where p is its place among its own kind in its force.
+  - American cruisers at the Japanese cruisers: San Francisco at Aoba, Boise at Furutaka, Salt Lake City at Kinugasa, Helena at Aoba.
+  - American destroyers at the Japanese destroyers: Farenholt at Fubuki, Duncan at Hatsuyuki, Laffey at Fubuki, Buchanan at Hatsuyuki, McCalla at Fubuki.
+  - Japanese cruisers at the American cruisers: Aoba at San Francisco, Furutaka at Boise, Kinugasa at Salt Lake City.
+  - Japanese destroyers at the American destroyers: Fubuki at Farenholt, Hatsuyuki at Duncan.
+- **Torpedoes, at the most important kind afloat, the cruisers.** A ship takes the ship in place (i mod n), where i is its place in its force.
+  - American ships with tubes: Farenholt (i = 0) at Aoba, Duncan (1) at Furutaka, Laffey (2) at Kinugasa, Buchanan (7) at Furutaka, McCalla (8) at Kinugasa. The four American cruisers have no tubes.
+  - Japanese ships: Aoba (0) at San Francisco, Furutaka (1) at Boise, Kinugasa (2) at Salt Lake City, Fubuki (3) at Helena, Hatsuyuki (4) at San Francisco.
 
 ## Why
 
