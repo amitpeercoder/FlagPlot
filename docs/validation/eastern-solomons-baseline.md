@@ -2,86 +2,96 @@
 
 Battle: eastern-solomons
 Scenario: data/scenarios/05_eastern_solomons.toml
-Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash 0b110392256847e4
-Inputs: state hash layout flagplot-state-v6, scenario file hash ca56f9c14e417648
+Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash a1aa6a8766281053
+Inputs: state hash layout flagplot-state-v6, scenario file hash a9443b066a393e0b
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes_eastern_solomons.csv 95e5a244ff64eada
 - data/scenarios/../reference/port_sizes.csv da12e2b751976274
 - data/scenarios/../reference/aircraft_types_eastern_solomons.csv b7a5c0d9ce3928e0
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
-- data/scenarios/../reference/surface_combat.toml d51cd2bd52324e8e
+- data/scenarios/../reference/surface_combat.toml 1a9a0ae06d7282b1
 - data/scenarios/../reference/air_combat.toml 7019eca7f6998d5c
-Measures: data/validation/eastern_solomons.toml (hash 016ae4090a817434), 16 measures, 14 judged
+Measures: data/validation/eastern_solomons.toml (hash 86d416372040b1ea), 16 measures, 14 judged
 
-Judged measures: 10 agree, 0 agree at the edge, 4 miss, of 14.
+Judged measures: 9 agree, 1 agree at the edge, 4 miss, of 14.
 
 **The battle does not pass:** 4 of 14 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| japanese_carriers_sunk | 1 | 0 to 1 | 0 | 464 of 1000 | 0 | agrees |
+| japanese_carriers_sunk | 1 | 0 to 1 | 0 | 228 of 1000 | 0 | agrees, at the edge |
 | us_carriers_sunk | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
-| bomb_hits_on_enterprise | 3 | 0 to 9 | 4 | 63 of 1000 | 0 | agrees |
+| bomb_hits_on_enterprise | 3 | 0 to 2 | 0 | 29 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | bomb_hits_on_saratoga | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
-| enterprise_flight_deck_out_at_end | 0 | 0 to 1 | 0 | 846 of 1000 | 0 | agrees |
-| japanese_carrier_aircraft_lost_to_enemy_action | 29 to 32 | 2 to 40 | 28 | 186 of 1000 | 0 | agrees |
-| japanese_carrier_aircraft_lost_all_causes | 35 to 54 | 4 to 62 | 31 | 213 of 1000 | 0 | agrees |
+| enterprise_flight_deck_out_at_end | 0 | 0 to 0 | 0 | 996 of 1000 | 0 | agrees |
+| japanese_carrier_aircraft_lost_to_enemy_action | 29 to 32 | 2 to 35 | 26 | 234 of 1000 | 0 | agrees |
+| japanese_carrier_aircraft_lost_all_causes | 35 to 54 | 4 to 58 | 30 | 195 of 1000 | 0 | agrees |
 | ryujo_aircraft_lost_with_the_ship | 4 | 0 to 0 | 0 | 0 of 1000 | 0 | reported |
-| us_aircraft_lost_to_enemy_action | 13 to 14 | 1 to 11 | 5 | 14 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
-| us_aircraft_lost_all_causes | 20 to 21 | 1 to 12 | 6 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
-| japanese_aircraft_attacking_enterprise_force | 37 | 0 to 46 | 35 | 50 of 1000 | 0 | agrees |
-| us_aircraft_attacking_ryujo | 36 | 0 to 84 | 0 | 0 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| us_aircraft_lost_to_enemy_action | 13 to 14 | 1 to 9 | 4 | 2 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
+| us_aircraft_lost_all_causes | 20 to 21 | 1 to 9 | 5 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
+| japanese_aircraft_attacking_enterprise_force | 37 | 0 to 37 | 37 | 607 of 1000 | 0 | agrees |
+| us_aircraft_attacking_ryujo | 36 to 38 | 0 to 38 | 0 | 488 of 1000 | 0 | agrees |
 | us_strike_on_the_japanese_fleet_carriers | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
-| us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200 | 144 | 9 of 997 | 3 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
-| japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 300 | 166 | 371 of 982 | 18 | agrees |
-| us_hits_claimed_per_hundred_scored | 50 to 140 | 115 to 191 | 144 | 193 of 469 | 531 | reported |
+| us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200 | 148 | 9 of 997 | 3 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
+| japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 300 | 150 | 298 of 980 | 20 | agrees |
+| us_hits_claimed_per_hundred_scored | 50 to 140 | 100 to 200 | 140 | 259 of 488 | 512 | reported |
 
 ## Misses
+
+### bomb_hits_on_enterprise
+
+- Counts: Bomb hits on USS Enterprise
+- Record: 3 (rows 181, 182, 183, 184)
+- Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
+- Spread over 1000 runs kept (0 left out): least 0, 5th 0, 25th 0, median 0, 75th 1, 95th 2, greatest 6
+- Each value and its runs: 0: 687, 1: 185, 2: 87, 3: 29, 4: 11, 6: 1
 
 ### us_aircraft_lost_to_enemy_action
 
 - Counts: US aircraft shot down by fighters or by anti-aircraft fire
 - Record: 13 to 14 (rows 305, 311, 700)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
-- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 3, median 5, 75th 7, 95th 11, greatest 17
-- Each value and its runs: 0: 18, 1: 61, 2: 94, 3: 125, 4: 119, 5: 137, 6: 131, 7: 105, 8: 76, 9: 48, 10: 35, 11: 24, 12: 12, 13: 4, 14: 10, 17: 1
+- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 3, median 4, 75th 6, 95th 9, greatest 14
+- Each value and its runs: 0: 20, 1: 63, 2: 123, 3: 160, 4: 155, 5: 147, 6: 125, 7: 92, 8: 48, 9: 36, 10: 18, 11: 9, 12: 2, 14: 2
 
 ### us_aircraft_lost_all_causes
 
 - Counts: US aircraft lost to any cause
 - Record: 20 to 21 (rows 305, 306, 307, 700)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
-- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 4, median 6, 75th 8, 95th 12, greatest 17
-- Each value and its runs: 0: 11, 1: 50, 2: 83, 3: 95, 4: 108, 5: 117, 6: 106, 7: 99, 8: 81, 9: 68, 10: 66, 11: 52, 12: 30, 13: 12, 14: 16, 15: 4, 16: 1, 17: 1
-
-### us_aircraft_attacking_ryujo
-
-- Counts: US aircraft that attack a ship of the Ryujo detachment, with the fighters that escort them, summed over the run
-- Record: 36 (rows 333, 334, 335)
-- Verdict: **MISS**: fewer than 1 run in 20 holds the record
-- Spread over 1000 runs kept (0 left out): least 0, 5th 0, 25th 0, median 0, 75th 82, 95th 84, greatest 85
-- Each value and its runs: 0: 531, 76: 2, 77: 8, 78: 17, 79: 39, 80: 52, 81: 97, 82: 117, 83: 83, 84: 49, 85: 5
+- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 3, median 5, 75th 7, 95th 9, greatest 15
+- Each value and its runs: 0: 13, 1: 49, 2: 103, 3: 144, 4: 165, 5: 139, 6: 120, 7: 115, 8: 56, 9: 48, 10: 22, 11: 13, 12: 9, 13: 1, 14: 2, 15: 1
 
 ### us_aircraft_claimed_per_hundred_shot_down
 
 - Counts: Aircraft the US side claims shot down, for each 100 Japanese aircraft really shot down, floatplanes included
 - Record: 237 to 362 (rows 257, 255, 310, 215, 244, 252, 254, 710, 711, 713, 309, 291, 296, 1172, 271, 974)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
-- Spread over 997 runs kept (3 left out): least 100, 5th 100, 25th 126, median 144, 75th 158, 95th 200, greatest 400
+- Spread over 997 runs kept (3 left out): least 100, 5th 100, 25th 130, median 148, 75th 161, 95th 200, greatest 400
+
+## At the edge
+
+### japanese_carriers_sunk
+
+- Counts: Japanese carriers sunk at the end of the run
+- Record: 1 (rows 666, 667, 1175, 273, 274)
+- Verdict: agrees, at the edge
+- Spread over 1000 runs kept (0 left out): least 0, 5th 0, 25th 0, median 0, 75th 0, 95th 1, greatest 1
+- Each value and its runs: 0: 772, 1: 228
 
 ## Result on the objectives scale (reported, not judged)
 
 Seen from the Allied side, runs of each result:
 
 - decisive victory: 0 of 1000
-- major victory: 381 of 1000
-- minor victory: 87 of 1000
-- stalemate: 436 of 1000
-- minor defeat: 96 of 1000
+- major victory: 227 of 1000
+- minor victory: 223 of 1000
+- stalemate: 547 of 1000
+- minor defeat: 3 of 1000
 - major defeat: 0 of 1000
 - decisive defeat: 0 of 1000
 
-Allied margin over 1000 runs: 5th -3.85, median 1.8, 95th 12.7
+Allied margin over 1000 runs: 5th 0.05, median 1.55, 95th 12.5
 
 ## Notes
 
