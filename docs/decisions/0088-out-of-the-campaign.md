@@ -1,90 +1,113 @@
-# 0088: Out of the campaign
+# 0088: Ships out of action, counted by the time they are away
 
-Status: a plan, written by the architect on Nov 13, 2026, for the designer's approval. Nothing is built. It reads the yard function of decision 0069, which is being specified for its build; the figures here are placeholders for the example only.
+Status: a plan, written by the architect on Nov 13, 2026, for the designer's approval. Nothing is built. It reads the yard function of decision 0069, which is being built; the figures here are placeholders for the example only.
+
+Rewritten the same day. The first version drew one line at about thirty days and called a ship past it "out of the campaign". The designer asked what that means in a game that runs from Pearl Harbor to 1945, where a month away takes no ship out of anything. The line was wrong at that length, and so was the name. This version counts the time a ship is away against the length of what is being fought over. The file keeps its first name so that references to it hold.
 
 ## The gap
 
 The objectives scale counts an enemy ship in two ways: sunk, or crippled, which is afloat at the end with propulsion out or flight deck out (decision 0054). Anything less scores nothing.
 
-That misses the commonest serious result of a battle. At the Eastern Solomons Enterprise took three bombs, had her flight deck back within the hour and steamed away under her own power. On the scale she scores nothing for the Japanese. She was away for 53 days. Saratoga, torpedoed a week later, was away 71 with no system out. Boise after Cape Esperance was away 160.
+That misses the commonest serious result of a battle. At the Eastern Solomons Enterprise took three bombs, had her flight deck back within the hour and steamed away under her own power. On the scale she scores nothing for the Japanese. She was away for 53 days of the fight for Guadalcanal. Saratoga, torpedoed a week later, was away 71 with no system out. Boise after Cape Esperance was away 160.
 
-A commander of 1942 counted such a ship as lost to the campaign, and so should the scale. Until it does, the designer has ruled that a result on the scale is reported and not judged (`docs/step2-spec.md`, "Decided by the designer", 4 and 16).
+Until the scale counts this, the designer has ruled that a result on it is reported and not judged (`docs/step2-spec.md`, "Decided by the designer", 4 and 16).
 
 ## What decision 0069 gives
 
-Decision 0069, item 6, works out the days a ship needs in a yard from her damage, with no random draw: a figure for each point of flotation damage, a figure for each system degraded and a larger one for each system out, plus the days of the passage. It was written so that this record could read it: "a ship is out of the campaign if the yard would keep her longer than some number of days".
-
-This record uses the days of repair alone, without the passage. The passage belongs to a port; how badly a ship is hurt does not.
+Decision 0069 works out a ship's **days of repair** from her damage, with no random draw: a figure for each point of flotation damage, one for each system degraded and a larger one for each system out. It does not include the passage to the yard, which belongs to a port and not to the ship. When a force leaves for a yard, the event records each ship's days of repair.
 
 ## Decisions proposed
 
-1. **A sixth kind of objective, `ships_out_of_campaign`,** with points for each kind of ship, as `ships_sunk` and `ships_crippled` have.
-2. **A ship is out of the campaign** if she is not sunk and either of these is true:
-   - at the end of the game, her days of repair by the yard function are at or above a figure, `out_of_campaign_days`;
-   - during the game she left for a yard (decision 0069, item 5) with days of repair at or above the figure, whether or not she has come back.
-3. **A ship counts once, in the highest class she reaches:** sunk, then out of the campaign, then crippled. A ship out of the campaign is not also crippled.
-4. **One figure for every scenario.** `out_of_campaign_days` sits with the repair figures in `data/reference`, not in a scenario: one set of figures serves every battle.
-5. **No rule reads it and it adds no state.** Like every objective it is a count the umpire reads from the final truth and the event log (decision 0054, item 5). The second half of item 2 reads the yard-departure event, which must therefore carry each ship's days of repair. That is a requirement on decision 0069's build, and the only one.
-6. **A side cannot see it during the game.** Its progress line says so, as it does for crippled ships today: the enemy's damage is not something a side knows. At the end both sides are told the umpire's count, with the rest of the result.
-7. **The slice's scenarios take the new kind in place of `ships_crippled`** when the scale is set from the record. Until then no scenario changes, and no result changes.
+1. **A scenario's objectives may state a horizon:** `horizon_days`, the number of days its result is judged over. For a battle it is the length of the operation the battle belongs to. For a long game it is what the scenario's author says it is, most simply the length of the game.
+2. **A sixth kind of objective, `ships_out_of_action`,** with points for each kind of ship. The points are what a ship of that kind is worth if she is away for the whole horizon.
+3. **A ship's days out** are:
+   - her days of repair at the end of the game, if she is afloat and damaged;
+   - plus, for each time she left for a yard during the game, the days of repair she left with.
+
+   A ship sunk is not counted here: she is counted as sunk.
+4. **Her share is her days out divided by the horizon, and never more than 1.** The side that holds the objective scores her kind's points times her share. Fixed point, cut to six places, as every sum on the scale is.
+5. **A ship counts as sunk or as out of action, never both, and not also as crippled.** A scenario that uses `ships_out_of_action` does not also use `ships_crippled`; the loader refuses the pair. `ships_crippled` stays in the engine for a scenario that wants only the state of the fleet on the last day.
+6. **No rule reads it and it adds no state.** Like every objective it is worked out from the final truth and the event log when the result is asked for (decision 0054, item 5).
+7. **A side cannot see it during the game.** Its progress line says so, as it does for crippled ships today: the enemy's damage is not something a side knows. At the end both sides are told the umpire's count with the rest of the result.
+8. **The slice's scenarios take it up when the scale is set from the record,** with their horizons. Until then no scenario changes and no result changes.
 
 ## A small worked case
 
-Placeholder figures, for the example only: 1 day for each point of flotation damage, 10 days for a system degraded, 30 for a system out; `out_of_campaign_days` 30. Points: a carrier sunk 10, out of the campaign 5, crippled 5; a cruiser 4, 2 and 2.
+Placeholder figures, for the example only: 2 days for each point of flotation damage, 5 for a system degraded, 30 for a system out. A carrier out for the whole horizon is worth 5 points and a cruiser 2 (their "crippled" values today); a carrier sunk is worth 10.
 
-| Ship at the end | Days of repair | On the scale today | With this rule |
+The same carrier, flotation damage 12 and flight deck degraded: 24 + 5 = 29 days of repair.
+
+| Scenario | Horizon | Her share | Points to the enemy |
 | --- | --- | --- | --- |
-| Carrier, flotation 35, flight deck degraded | 35 + 10 = 45 | nothing | out of the campaign: 5 |
-| Carrier, flotation 10, flight deck out | 10 + 30 = 40 | crippled: 5 | out of the campaign: 5 |
-| Cruiser, flotation 12, fire control degraded | 12 + 10 = 22 | nothing | nothing |
-| Cruiser, propulsion out, flotation 0 | 30 | crippled: 2 | out of the campaign: 2 |
-| Cruiser, flotation 45, sent to the yard on day 3 of 60 and back on day 58, whole | 45 when she left | nothing | out of the campaign: 2 |
+| A one-day battle in a 60-day operation | 60 | 29 / 60 = 0.483333 | 2.416665 |
+| A four-week game | 28 | 1 (29 is more than 28) | 5 |
+| A four-year war | 1,300 | 29 / 1,300 = 0.022307 | 0.111535 |
+
+Other ships, with a horizon of 60:
+
+| Ship | Days out | Today | With this rule |
+| --- | --- | --- | --- |
+| Cruiser, propulsion out, no other damage | 30 | crippled: 2 | 2 x 30 / 60 = 1 |
+| Cruiser, flotation 40, every system working | 80 | nothing | 2 x 1 = 2 |
+| Cruiser, flotation 6, fire control degraded | 17 | nothing | 2 x 17 / 60 = 0.566666 |
+| Cruiser that left for a yard on day 3 with 45 days of repair and came back whole on day 55 | 45 | nothing | 2 x 45 / 60 = 1.5 |
 | Destroyer, sunk | | sunk: 1 | sunk: 1 |
 
-The first row is Enterprise on 24 August. The fifth is why item 2 has a second half.
+The first table is the designer's question answered: the same damage is half a carrier in a two-month fight and next to nothing in a four-year war.
 
 ## The choices, and why these
 
-**Why the function and not the order.** The scale could count a ship only when her side sends her to a yard. Then a side could deny the enemy his points by keeping a wreck in the line to the end. Reading the damage itself closes that. Decision 0069 said so in advance.
+**Why time away and not a line.** A line says a ship is out or she is not. Where the line should be depends on how long the game is, which is the fault the designer found. A share of the horizon needs no line: it is right at every length, and Shokaku's 125 days score more than Enterprise's 53 without a second rule.
 
-**Why a ship that came back still counts.** Without the second half of item 2, a ship knocked out for 55 days of a 60-day game scores nothing if she returns on day 58. And a side would be paid, in points taken from the enemy, for repairing early. With it, repairing a ship neither gives nor takes points: she counts if she was hurt that badly, whatever her side did next. The player decides about repair on what the ship is worth to him, which is the decision the game wants him to make.
+**Why the damage and not the order.** The scale could count a ship only when her side sends her to a yard. Then a side could deny the enemy his points by keeping a wreck in the line to the end. Reading her damage closes that. Decision 0069 said so in advance.
 
-**Why a line and not a slope.** The alternative is points in proportion to the days away, so that Shokaku's 125 days score more than Enterprise's 53. It is finer, and it is closer to the record. It is also harder to read: a result becomes a sum of fractions nobody can check at a glance, and the player and the staff planner of step 3 must reason about days instead of about ships. One line, at about a month, is the simplest rule that says what a commander meant by "out of it". If the scale later needs a second line (out for the season), it is one more figure in the same rule.
+**Why a ship that came back still counts.** Without the second part of item 3, a ship knocked out for 45 days of a 60-day game scores nothing if she returns before the end, and a side would be paid for repairing early. With it, repairing a ship neither gives nor takes points. The player decides about repair on what the ship is worth to him, which is the decision the game wants him to make.
 
-**Why it takes the place of crippled in the slice.** A ship with propulsion or flight deck out at the end is almost always out of the campaign as well: one system out is already about a month in a yard. Keeping both in a scenario would be two names for nearly the same ships. `ships_crippled` stays in the engine, for a scenario that wants the state of the fleet on the last day and nothing more.
+**Why the horizon is the scenario's.** A battle scenario lasts a day, and the ships it damages are missed for the two months that follow. Only the scenario knows what operation it stands in. A long game knows its own length. One figure for every scenario could not serve both.
+
+**Why it takes the place of crippled.** A ship with a system out is already about a month from service, so she is counted here. Two kinds in one scenario would be two names for nearly the same ships. It also removes a small unfairness in the scale today, where a cruiser with propulsion out and one a hit short of sinking score the same.
+
+## What the closing reports would show
+
+Counted from the 1,000 runs of each closing batch, on the placeholder yard figures above. "Crippled" is today's rule. The Rabaul scenario has no ships.
+
+| Battle, side | Ships with 30 days of repair or more, mean a run | 60 or more | 90 or more | Crippled today |
+| --- | --- | --- | --- | --- |
+| Savo Island, Allied | 2.06 | 1.93 | 1.77 | 0.57 |
+| Savo Island, Japanese | 2.35 | 1.08 | 0.68 | 0.16 |
+| Eastern Solomons, Allied (Enterprise only) | 0.42 | 0.15 | 0.03 | 0.13 |
+| Eastern Solomons, Japanese (Ryujo only) | 0.24 | 0.24 | 0.23 | 0.21 |
+
+Two things to read from it. The rule counts three to fifteen times as many damaged ships as "crippled" does, which is the gap. And Enterprise reaches 30 days of repair in about four runs in ten, against the 36 days she spent in the yard in the record: the scale would at last see her. The counts at Savo Island are swollen by destroyers, which take many flotation points from one hit; that is a matter for the yard figures, which are placeholders no source sizes yet (decision 0069, "The yard function's figures from the record").
 
 ## What it costs
 
-- A new kind of objective in the loader, the tally, the briefing's objectives line and the result. No state, no hash change, no random draw.
-- One figure, a placeholder until the scale is set.
-- The yard-departure event of decision 0069 carries each ship's days of repair.
-- The rulebook's chapter on objectives and results, and the glossary ("Out of the campaign", and the order of sunk, out of the campaign, crippled).
-- Until the scale is set from the record, "out of the campaign" is a statement about placeholder figures, as every result on the scale is today.
+- A new kind of objective and the `horizon_days` key in the loader, the tally, the briefing's objectives line and the result. No state, no hash change, no random draw.
+- The rulebook's chapter on objectives and results, and the glossary: "Out of action", "Days out", "Horizon".
+- A result is no longer a count of ships times whole points. It is a sum with fractions, and the result shown to a player must list each ship with her days out and her share so that it can be checked by eye.
+- Until the scale is set from the record, the points, the horizons and the yard figures are all placeholders, as every result on the scale is today.
 
 ## What it leaves out
 
-- **Aircraft and air groups.** A carrier out of the campaign takes her air group's deck with her; the scale counts aircraft only as destroyed.
-- **Points that fall with time,** for a ship that will be back before a long game ends. That belongs with objectives that name a flow, which are not planned yet (`docs/design/economy.md`).
-- **Setting the points, the levels and the figure from the record.** That is the next piece of work after this and ship repair: history's result on the scale for the three battles, from the facts on each ship's damage and time away.
-- **A ship that is forward-repaired during the game** to below the figure does not count, unless she left for a yard first. That is intended: a fortnight with a repair ship is not out of the campaign.
+- **The days a ship was actually absent,** counted day by day. A ship kept in the line while damaged is counted by what her repair would take, not by what her side chose. That is intended (see "Why the damage and not the order").
+- **Aircraft and air groups.** A carrier out of action takes her deck with her; the scale counts aircraft only as destroyed.
+- **Forward repair during the game** lowers a ship's days of repair, and so her share, unless she left for a yard first. A fortnight with a repair ship is a fortnight, and the scale should see the difference.
+- **Setting the points, the horizons and the yard figures from the record.** That is the next piece of work: history's result on the scale for the three battles, from the facts on each ship's damage and time away.
 
 ## Rule card
 
 | | |
 | --- | --- |
-| Reads | Each ship's flotation damage and systems at the end; the yard-departure events and the days of repair they carry; the yard function's figures and `out_of_campaign_days`; the scenario's objectives |
+| Reads | Each ship's flotation damage and systems at the end; the yard-departure events and the days of repair they carry; the yard function's figures; the scenario's objectives and horizon |
 | Writes | Nothing. The count is worked out when the result is asked for |
-
-## What the reports would show
-
-To be added before the designer decides: for Savo Island, the Eastern Solomons and Rabaul, how many ships each side has out of the campaign in the runs of the closing batches, at 30, 60 and 90 days, on the placeholder yard figures, beside what the record has (Chicago after Savo Island; Enterprise after the Eastern Solomons). It is being counted from the batch files.
 
 ## Questions for the designer
 
 Each with the architect's recommendation.
 
-1. **Is a ship out of the campaign judged from her damage, by the yard function, and not from whether her side sent her away?** Recommended: yes (item 2).
-2. **Does a ship that left for a yard and came back before the end still count?** Recommended: yes (item 2, second half).
-3. **One line at a number of days, or points in proportion to the days away?** Recommended: one line, with the number a placeholder of 30 days until the scale is set.
-4. **Does it take the place of "crippled" in the slice's scenarios, once the scale is set?** Recommended: yes; crippled stays available in the engine.
-5. **Is it built with ship repair, as one piece of work?** Recommended: yes. It is small, it has no state of its own, and its one requirement falls on the yard event.
+1. **Is a damaged ship counted by the share of a horizon she is away, and not by a line she is past?** Recommended: yes (items 1 to 4).
+2. **Whose is the horizon?** Recommended: the scenario's, stated in its objectives. The alternatives are one figure for every scenario, which cannot serve a battle and a long war alike, or always the days left in the game, which gives a one-day battle a horizon of nothing.
+3. **Is she counted from her damage, by the yard function, and not from whether her side sent her away?** Recommended: yes (item 3).
+4. **Does a ship that left for a yard and came back before the end still count?** Recommended: yes (item 3, second part).
+5. **Does it take the place of "crippled" in a scenario that uses it?** Recommended: yes; crippled stays in the engine.
+6. **Is it built straight after ship repair, before the scale is set from the record?** Recommended: yes. It is small and has no state of its own.
