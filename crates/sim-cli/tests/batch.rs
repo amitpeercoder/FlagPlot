@@ -60,7 +60,7 @@ fn ids_of(side: &str, summary: &Value) -> Vec<u64> {
 fn the_summary_adds_up_and_matches_single_runs() {
     let summary = parse(&batch("fight", FIGHT, &["--runs", "20"]));
     assert_eq!(summary["format"], "flag-plot-batch");
-    assert_eq!(summary["version"], 4);
+    assert_eq!(summary["version"], 5);
     assert_eq!(summary["runs"], 20);
     assert_eq!(summary["first_seed"], 1);
     assert_eq!(summary["scenario"]["file"], FIGHT);
@@ -652,6 +652,55 @@ fn check_run(file: &str, seed: u64, record: &Value, played: &Played) {
         record["escorts"].as_array().expect("escorts").len(),
         escorts
     );
+    // Launches (version 5), in log order: every strike launch with the
+    // aircraft launched, and the groups' StrikeFoundNothing marked.
+    let launched: Vec<(u32, u32, u32)> = events
+        .iter()
+        .filter_map(|event| match &event.kind {
+            EventKind::StrikeLaunched {
+                air_group,
+                aircraft,
+                ..
+            }
+            | EventKind::BaseStrikeLaunched {
+                air_group,
+                aircraft,
+                ..
+            } => Some((event.day, air_group.raw(), *aircraft)),
+            _ => None,
+        })
+        .collect();
+    let launches = record["launches"].as_array().expect("launches");
+    let recorded: Vec<(u32, u32, u32)> = launches
+        .iter()
+        .map(|row| {
+            (
+                num(&row["day"]) as u32,
+                num(&row["air_group"]) as u32,
+                num(&row["aircraft"]) as u32,
+            )
+        })
+        .collect();
+    assert_eq!(recorded, launched, "{what}: launches");
+    let nothing = events
+        .iter()
+        .filter(|event| matches!(event.kind, EventKind::StrikeFoundNothing { .. }))
+        .count();
+    assert_eq!(
+        launches
+            .iter()
+            .filter(|row| row["found_nothing"] == true)
+            .count(),
+        nothing,
+        "{what}: found nothing"
+    );
+    for row in launches {
+        let ship = row["target_kind"] == "ship";
+        assert_eq!(row["base"].is_null(), ship, "{what}: base");
+        if !ship || row["found_nothing"] == true {
+            assert!(row["task_force"].is_null(), "{what}: task force");
+        }
+    }
     let rounds: Vec<u32> = events
         .iter()
         .filter_map(|event| match &event.kind {
@@ -952,7 +1001,7 @@ fn the_header_names_what_the_counts_name() {
     assert_eq!(forces[0]["name"], "Task Force 16");
     assert_eq!(forces[0]["side"], "allied");
     let groups = summary["air_groups"].as_array().expect("air_groups");
-    assert_eq!(groups.len(), 20);
+    assert_eq!(groups.len(), 26);
     assert_eq!(groups[10]["name"], "Shokaku fighter unit");
     assert_eq!(groups[10]["side"], "japanese");
     assert!(groups[10]["aircraft_type"]
@@ -994,6 +1043,7 @@ fn a_scenario_with_nothing_to_count_still_writes_every_key_empty() {
         "ready",
         "attacks",
         "escorts",
+        "launches",
         "broke_off",
         "fights",
         "supply",
@@ -1160,7 +1210,7 @@ fn the_keys_a_version_1_reader_used_keep_their_values() {
             &["--runs", "3"],
         ));
         assert_eq!(before["version"], 1);
-        assert_eq!(after["version"], 4);
+        assert_eq!(after["version"], 5);
         for (key, value) in before.as_object().expect("an object") {
             if key == "version" {
                 continue;

@@ -2,34 +2,39 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0703fe7c146fc0f8  198 events
+day   1  hash 08c55b5f26162af0  161 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-9); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-air_group:1 "VF-6" (Allied) aboard ship:1: 0 ready, mission CombatAirPatrol, patrol share 1, no arc
-air_group:2 "VB-6" (Allied) aboard ship:1: 0 ready, mission NavalStrike, no arc
-air_group:3 "VS-5" (Allied) aboard ship:1: 0 ready, mission Search, arc 290-090 to 200 nm
-air_group:4 "VT-3" (Allied) aboard ship:1: 0 ready, mission NavalStrike, no arc
-air_group:5 "VF-5" (Allied) aboard ship:11: 48 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:1 "VF-6" (Allied) aboard ship:1: 25 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:2 "VB-6" (Allied) aboard ship:1: 17 ready, mission Rest, no arc
+air_group:3 "VS-5" (Allied) aboard ship:1: 16 ready, mission Search, arc 290-090 to 250 nm
+air_group:4 "VT-3" (Allied) aboard ship:1: 7 ready, mission Search, arc 290-090 to 250 nm
+air_group:5 "VF-5" (Allied) aboard ship:11: 27 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:6 "VB-3" (Allied) aboard ship:11: 14 ready, mission NavalStrike, no arc
 air_group:7 "VS-3" (Allied) aboard ship:11: 15 ready, mission NavalStrike, no arc
-air_group:8 "VT-8" (Allied) aboard ship:11: 13 ready, mission NavalStrike, no arc
+air_group:8 "VT-8" (Allied) aboard ship:11: 8 ready, mission NavalStrike, no arc
 air_group:9 "VMF-223" (Allied) at base:1: 11 ready, mission CombatAirPatrol, patrol share 1, no arc
-air_group:10 "VMSB-232" (Allied) at base:1: 42 ready, mission NavalStrike, no arc
-air_group:11 "Shokaku fighter unit" (Japanese) aboard ship:19: 23 ready, mission CombatAirPatrol, patrol share 0.8, no arc
-air_group:12 "Shokaku bomber unit" (Japanese) aboard ship:19: 12 ready, mission NavalStrike, no arc
+air_group:10 "VMSB-232" (Allied) at base:1: 11 ready, mission Rest, no arc
+air_group:11 "Shokaku fighter unit" (Japanese) aboard ship:19: 21 ready, mission CombatAirPatrol, patrol share 0.83, no arc
+air_group:12 "Shokaku bomber unit" (Japanese) aboard ship:19: 2 ready, mission NavalStrike, no arc
 air_group:13 "Shokaku attack unit" (Japanese) aboard ship:19: 18 ready, mission NavalStrike, no arc
-air_group:14 "Zuikaku fighter unit" (Japanese) aboard ship:20: 24 ready, mission CombatAirPatrol, patrol share 0.8, no arc
-air_group:15 "Zuikaku bomber unit" (Japanese) aboard ship:20: 15 ready, mission NavalStrike, no arc
+air_group:14 "Zuikaku fighter unit" (Japanese) aboard ship:20: 18 ready, mission CombatAirPatrol, patrol share 0.7, no arc
+air_group:15 "Zuikaku bomber unit" (Japanese) aboard ship:20: 0 ready, mission NavalStrike, no arc
 air_group:16 "Zuikaku attack unit" (Japanese) aboard ship:20: 18 ready, mission NavalStrike, no arc
 air_group:17 "Chikuma floatplanes" (Japanese) aboard ship:21: 5 ready, mission Search, arc 120-180 to 330 nm
 air_group:18 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.35, no arc
 air_group:19 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission BaseStrike on base:1, extended reach, no arc
 air_group:20 "Tone floatplanes" (Japanese) aboard ship:34: 5 ready, mission Rest, no arc
-air_group:21 "VT-3 landed at base:1" (Allied) at base:1: 14 ready, mission Rest, no arc
-ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 21.043768, fire 10.521884; flight deck out; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+air_group:21 "Shokaku bomber unit, second wave" (Japanese) aboard ship:19: 9 ready, mission Rest, no arc
+air_group:22 "Zuikaku bomber unit, second wave" (Japanese) aboard ship:20: 18 ready, mission Rest, no arc
+air_group:23 "Shokaku fighter unit, second wave escort" (Japanese) aboard ship:19: 3 ready, mission Rest, no arc
+air_group:24 "Zuikaku fighter unit, second wave escort" (Japanese) aboard ship:20: 6 ready, mission Rest, no arc
+air_group:25 "VT-3, attack group" (Allied) aboard ship:1: 7 ready, mission Rest, no arc
+air_group:26 "VT-8, second group" (Allied) aboard ship:11: 5 ready, mission Rest, no arc
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
 ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
 ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
 ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
@@ -61,27 +66,23 @@ ship:29 "Makigumo": afloat in task_force:3; damage flotation 0, fire 0; all syst
 ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
 ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1035.30788 t of fuel, 0 t of supply
 ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
-ship:33 "Ryujo": SUNK; damage flotation 100, fire 71.320752; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
+ship:33 "Ryujo": afloat in task_force:4; damage flotation 70.188676, fire 35.660376; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2307.061344 t of fuel, 0 t of supply
 ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2540.555666 t of fuel, 0 t of supply
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
-Allied contact:1 at (7,-9): 4 ships, cruiser, age 0 pulses
-Allied claim at (7,-9): 9 hits on a carrier, 1 sunk, day 1 afternoon
-Allied claim at (7,-9): 10 hits on a carrier, 0 sunk, day 1 afternoon
-Allied claim at (7,-9): 5 hits on a carrier, 0 sunk, day 1 afternoon
-Allied claim over (7,-5): 30 aircraft shot down, day 1 afternoon
-Allied claim over (7,-5): 21 aircraft shot down, day 1 afternoon
+Allied contact:1 at (6,-8): 3 ships, carrier, age 0 pulses
+Allied claim at (7,-9): 8 hits on a carrier, 1 sunk, day 1 afternoon
+Allied claim over (7,-5): 31 aircraft shot down, day 1 afternoon
+Allied claim over (7,-5): 17 aircraft shot down, day 1 afternoon
 Allied claim over (2,-4): 3 aircraft shot down, day 1 afternoon
-Japanese contact:1 at (7,-5): 10 ships, transport, age 0 pulses
+Japanese contact:1 at (7,-5): 9 ships, cruiser, age 0 pulses
 Japanese claim over (7,-9): 2 aircraft shot down, day 1 afternoon
-Japanese claim over (7,-9): 1 aircraft shot down, day 1 afternoon
-Japanese claim over (7,-9): 3 aircraft shot down, day 1 afternoon
-Japanese claim at (7,-5): 6 hits on a transport, 0 sunk, 2 aircraft shot down, day 1 afternoon
-Japanese claim at (7,-5): 3 hits on a transport, 0 sunk, 1 aircraft shot down, day 1 afternoon
+Japanese claim at (7,-5): 0 hits on a transport, 0 sunk, 1 aircraft shot down, day 1 afternoon
+Japanese claim at (7,-5): 0 hits on a transport, 0 sunk, 1 aircraft shot down, day 1 afternoon
 Japanese claim at (2,-4): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
-Allied: 13 points (ships_sunk 1 = 10; ships_crippled 0 = 0; aircraft_destroyed 60 = 3), margin 7.45, minor victory
-Japanese: 5.55 points (ships_sunk 0 = 0; ships_crippled 1 = 5; aircraft_destroyed 11 = 0.55), margin -7.45, minor defeat
+Allied: 7.85 points (ships_sunk 0 = 0; ships_crippled 1 = 5; aircraft_destroyed 57 = 2.85), margin 7.6, minor victory
+Japanese: 0.25 points (ships_sunk 0 = 0; ships_crippled 0 = 0; aircraft_destroyed 5 = 0.25), margin -7.6, minor defeat
 History: Ryujo was sunk and Enterprise was damaged and withdrew for repair; Japanese aircraft losses were several times the American. Usually judged a limited American victory. (The architect's reading; not yet scored from the order-of-battle facts.)

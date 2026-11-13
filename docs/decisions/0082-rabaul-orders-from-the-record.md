@@ -110,7 +110,7 @@ Their strikes on ships are in rows 1763, 1765, 1777, 1817 and 1867. No row gives
 
 ## Rule card
 
-No rule. These are scenario inputs. The batch file's `air_losses` now omits a group whose values are all zero, as decision 0062 always said. The SBDs' searches made such a row (wear with nothing written off), and the batch test caught it.
+No rule. These are scenario inputs. The batch file's `air_losses` now omits a group whose values are all zero, as decision 0062 always said. The SBDs' searches made such a row (wear with nothing written off), and the batch test caught it. Decision 0081's pull request made the same fix independently, for a fuel roll that ditched nothing; the merge keeps one copy of it.
 
 ## Frozen figures go with frozen scenarios
 
