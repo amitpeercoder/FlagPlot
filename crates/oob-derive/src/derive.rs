@@ -139,6 +139,8 @@ pub struct ShipOpts {
 #[derive(Clone, Debug)]
 pub struct ShipResult {
     pub ship: String,
+    /// The ship's name in ships.csv.
+    pub ship_name: String,
     pub class_id: u64,
     pub class_name: String,
     pub figures: Vec<Figure>,
@@ -162,6 +164,7 @@ pub struct ShipResult {
 
 pub(crate) struct ShipInfo {
     pub(crate) row_id: String,
+    pub(crate) name: String,
     pub(crate) class: String,
 }
 
@@ -315,6 +318,7 @@ impl<'a> Env<'a> {
                 rec.get("key").to_string(),
                 ShipInfo {
                     row_id: rec.get("id").to_string(),
+                    name: rec.get("name").to_string(),
                     class: rec.get("class").to_string(),
                 },
             );
@@ -984,6 +988,7 @@ impl<'a> Env<'a> {
             .collect();
         Ok(ShipResult {
             ship: ship.to_string(),
+            ship_name: ship_info.name.clone(),
             class_id: class.row_id.parse().unwrap_or(0),
             class_name: class.name.clone(),
             figures,

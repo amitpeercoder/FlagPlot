@@ -120,34 +120,96 @@ fn csv_text(header: &[&str], rows: &[Vec<String>]) -> String {
     String::from_utf8(bytes).expect("the text written was UTF-8")
 }
 
-/// Groups ships into class rows, names and numbers them.
-fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Problem> {
-    let mut groups: BTreeMap<(u64, Vec<Value>), Vec<usize>> = BTreeMap::new();
-    for (i, result) in results.iter().enumerate() {
-        let figures = result.figures.iter().map(|f| f.value.clone()).collect();
-        groups
-            .entry((result.class_id, figures))
-            .or_default()
-            .push(i);
+/// A ship's name without the prefix of its navy (USS, HMAS), as it is
+/// written in brackets in the name of a class row.
+fn short_name(name: &str) -> &str {
+    match name.split_once(' ') {
+        Some((prefix, rest))
+            if (2..=5).contains(&prefix.len())
+                && prefix.chars().all(|c| c.is_ascii_uppercase()) =>
+        {
+            rest
+        }
+        _ => name,
     }
-    let mut rows = Vec::new();
-    for (n, ((class_id, figures), members)) in groups.into_iter().enumerate() {
-        let id = u32::try_from(n)
-            .ok()
-            .and_then(|n| list.first_class_id.checked_add(n))
-            .ok_or_else(|| {
-                Problem::new(
-                    "list",
+}
+
+/// The problems of the list's pinned class rows against the derived ships
+/// (decision 0077): ships pinned to one id must have one facts class and
+/// the same derived figures.
+pub fn check_pins(list: &List, results: &[ShipResult]) -> Vec<Problem> {
+    let mut problems = Vec::new();
+    let Some(pins) = &list.class_ids else {
+        return problems;
+    };
+    for (id, ships) in pins {
+        let members: Vec<&ShipResult> =
+            results.iter().filter(|r| ships.contains(&r.ship)).collect();
+        let Some(first) = members.first() else {
+            continue;
+        };
+        for other in &members[1..] {
+            if other.class_id != first.class_id {
+                problems.push(Problem::new(
+                    &other.ship,
                     Kind::List,
-                    "first_class_id",
-                    "class ids run past the largest whole number",
-                )
-            })?;
+                    "class_ids",
+                    format!(
+                        "class id {id}: {} is of class {} and {} of class {}; one id is one class",
+                        first.ship, first.class_name, other.ship, other.class_name
+                    ),
+                ));
+                continue;
+            }
+            for (f, (a, b)) in first.figures.iter().zip(&other.figures).enumerate() {
+                if a.value != b.value {
+                    problems.push(Problem::new(
+                        &other.ship,
+                        Kind::List,
+                        figure_name(f),
+                        format!(
+                            "class id {id}: {} has {} {} and {} has {}; ships pinned to one id must have the same figures",
+                            first.ship,
+                            figure_name(f),
+                            shown(&a.value),
+                            other.ship,
+                            shown(&b.value)
+                        ),
+                    ));
+                }
+            }
+        }
+    }
+    problems
+}
+
+/// One class row for each pinned id, in id order, holding the ships pinned
+/// to it (decision 0077); rows are never merged. Names them.
+fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Problem> {
+    let pins = list
+        .class_ids
+        .as_ref()
+        .ok_or_else(|| Problem::new("list", Kind::List, "class_ids", "required (decision 0077)"))?;
+    let mut rows = Vec::new();
+    for (&id, ships) in pins {
+        let members: Vec<usize> = results
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| ships.contains(&r.ship))
+            .map(|(i, _)| i)
+            .collect();
+        let Some(&first) = members.first() else {
+            continue;
+        };
         rows.push(ClassRow {
             id,
             name: String::new(),
-            class_id,
-            figures,
+            class_id: results[first].class_id,
+            figures: results[first]
+                .figures
+                .iter()
+                .map(|f| f.value.clone())
+                .collect(),
             members,
         });
     }
@@ -195,6 +257,17 @@ fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Prob
                         }
                     }
                 }
+            }
+            let equal: bool = indexes
+                .iter()
+                .any(|&j| j != i && rows[j].figures == rows[i].figures);
+            if equal {
+                let names: Vec<&str> = rows[i]
+                    .members
+                    .iter()
+                    .map(|&m| short_name(&results[m].ship_name))
+                    .collect();
+                name.push_str(&format!(" ({})", names.join(", ")));
             }
             rows[i].name = name;
         }

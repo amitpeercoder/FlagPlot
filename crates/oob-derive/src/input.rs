@@ -1,6 +1,6 @@
 //! The two input files: the list of ships and the rules.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 
@@ -19,6 +19,8 @@ struct RawList {
     output: Option<String>,
     #[serde(default)]
     first_class_id: Option<u32>,
+    #[serde(default)]
+    class_ids: Option<BTreeMap<String, Vec<String>>>,
     ships: Vec<String>,
     #[serde(default)]
     radar_unknown_means_none: Vec<String>,
@@ -90,7 +92,11 @@ pub struct List {
     /// Path of the class CSV, relative to the list file; empty when the list
     /// has no ships.
     pub output: String,
+    #[allow(dead_code)] // checked against the pins when the list is parsed
     pub first_class_id: u32,
+    /// The class rows, pinned (decision 0077): each class id and the ships
+    /// that have it. Required when the list generates class files.
+    pub class_ids: Option<BTreeMap<u32, Vec<String>>>,
     /// Ship keys in list order, each once.
     pub ships: Vec<String>,
     pub radar_unknown_means_none: BTreeSet<String>,
@@ -107,6 +113,88 @@ pub struct List {
     pub first_aircraft_type_id: u32,
     /// Ships' experience values to derive (decision 0064).
     pub experience: Option<crate::experience::Experience>,
+}
+
+/// Checks the `[class_ids]` table against the list (decision 0077): it is
+/// required when the list has ships, and pins every ship once, to an id at
+/// or above `first_class_id`, each id once.
+fn pinned_ids(
+    raw: &RawList,
+    ships: &[String],
+    problems: &mut Vec<Problem>,
+) -> Option<BTreeMap<u32, Vec<String>>> {
+    let Some(table) = &raw.class_ids else {
+        if !raw.ships.is_empty() {
+            problems.push(list_problem(
+                "class_ids",
+                "required when the list has ships: a [class_ids] table giving each class id and the ships that have it, so that ids never drift (decision 0077)",
+            ));
+        }
+        return None;
+    };
+    if raw.ships.is_empty() {
+        problems.push(list_problem("class_ids", "the list has no ships"));
+        return None;
+    }
+    let mut pins: BTreeMap<u32, Vec<String>> = BTreeMap::new();
+    let mut pinned_to: BTreeMap<&str, u32> = BTreeMap::new();
+    for (key, members) in table {
+        let Ok(id) = key.trim().parse::<u32>() else {
+            problems.push(list_problem(
+                "class_ids",
+                format!("`{key}` is not a class id (a whole number)"),
+            ));
+            continue;
+        };
+        if id < raw.first_class_id.unwrap_or(0) {
+            problems.push(list_problem(
+                "class_ids",
+                format!(
+                    "class id {id} is below first_class_id {}",
+                    raw.first_class_id.unwrap_or(0)
+                ),
+            ));
+        }
+        if pins.contains_key(&id) {
+            problems.push(list_problem(
+                "class_ids",
+                format!("class id {id} is pinned twice"),
+            ));
+            for ship in members {
+                pinned_to.entry(ship.as_str()).or_insert(id);
+            }
+            continue;
+        }
+        if members.is_empty() {
+            problems.push(list_problem(
+                "class_ids",
+                format!("class id {id} has no ships"),
+            ));
+        }
+        for ship in members {
+            if !ships.contains(ship) {
+                problems.push(list_problem(
+                    "class_ids",
+                    format!("`{ship}`, pinned to class id {id}, is not in ships"),
+                ));
+            } else if let Some(first) = pinned_to.insert(ship.as_str(), id) {
+                problems.push(list_problem(
+                    "class_ids",
+                    format!("ship `{ship}` is pinned twice: to class ids {first} and {id}"),
+                ));
+            }
+        }
+        pins.insert(id, members.clone());
+    }
+    for ship in ships {
+        if !pinned_to.contains_key(ship.as_str()) {
+            problems.push(list_problem(
+                "class_ids",
+                format!("ship `{ship}` has no class id pinned"),
+            ));
+        }
+    }
+    Some(pins)
 }
 
 fn list_problem(figure: &str, message: impl Into<String>) -> Problem {
@@ -189,6 +277,7 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             ships.push(ship.clone());
         }
     }
+    let class_ids = pinned_ids(&raw, &ships, &mut problems);
     for ship in &raw.radar_unknown_means_none {
         if !ships.contains(ship) {
             problems.push(list_problem(
@@ -326,6 +415,7 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         rules: raw.rules,
         output: raw.output.unwrap_or_default(),
         first_class_id: raw.first_class_id.unwrap_or(0),
+        class_ids,
         ships,
         radar_unknown_means_none: raw.radar_unknown_means_none.into_iter().collect(),
         main_gun_ammunition_not_limiting: raw

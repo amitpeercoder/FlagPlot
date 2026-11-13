@@ -49,6 +49,54 @@ const RULES: &str = "constants_are_placeholders = true\n\
 const BASE_ROW: &str =
     "1000,Test class,cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1";
 
+/// The class of each ship key the made data uses, for pinning class rows
+/// (decision 0077): ships of one class share an id, as the tool's old
+/// numbering gave them when their figures were equal. A test of ships of
+/// one class with different figures writes its own `class_ids`.
+fn class_of(ship: &str) -> &str {
+    match ship {
+        "shp" | "shp2" => "a-us-test-class",
+        "boat" => "b-jp-boat-class",
+        other => other,
+    }
+}
+
+thread_local! {
+    /// A test of ships of one class with different figures sets this, so
+    /// that each ship has an id of its own (decision 0077).
+    static OWN_IDS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+fn each_ship_has_its_own_id() {
+    OWN_IDS.with(|own| own.set(true));
+}
+
+/// An inline `class_ids` table: one id for each class, in class order from
+/// 1000.
+fn pins(ships: &[&str]) -> String {
+    if OWN_IDS.with(std::cell::Cell::get) {
+        let rows: Vec<String> = ships
+            .iter()
+            .enumerate()
+            .map(|(n, ship)| format!("\"{}\" = [\"{ship}\"]", 1000 + n))
+            .collect();
+        return format!("class_ids = {{ {} }}\n", rows.join(", "));
+    }
+    let mut groups: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for ship in ships {
+        groups.entry(class_of(ship)).or_default().push(ship);
+    }
+    let rows: Vec<String> = groups
+        .values()
+        .enumerate()
+        .map(|(n, members)| {
+            let names: Vec<String> = members.iter().map(|m| format!("\"{m}\"")).collect();
+            format!("\"{}\" = [{}]", 1000 + n, names.join(", "))
+        })
+        .collect();
+    format!("class_ids = {{ {} }}\n", rows.join(", "))
+}
+
 fn list(ships: &[&str], assumed: &[&str]) -> String {
     let quoted = |names: &[&str]| {
         names
@@ -60,9 +108,10 @@ fn list(ships: &[&str], assumed: &[&str]) -> String {
     format!(
         "name = \"Test list\"\ndate = \"{DATE}\"\nrules = \"rules.toml\"\n\
          output = \"../reference/test_out.csv\"\nfirst_class_id = 1000\n\
-         ships = [{}]\nradar_unknown_means_none = [{}]\n",
+         ships = [{}]\nradar_unknown_means_none = [{}]\n{}",
         quoted(ships),
-        quoted(assumed)
+        quoted(assumed),
+        pins(ships)
     )
 }
 
@@ -1028,7 +1077,8 @@ fn an_assumption_is_not_used_when_the_radar_is_known() {
 fn list_problems_are_reported() {
     let text = "name = \"x\"\ndate = \"1942-08\"\nrules = \"rules.toml\"\n\
                 output = \"../out.csv\"\nfirst_class_id = 1000\n\
-                ships = [\"shp\", \"shp\"]\nradar_unknown_means_none = [\"zzz\"]\n";
+                ships = [\"shp\", \"shp\"]\nradar_unknown_means_none = [\"zzz\"]\n\
+                class_ids = { \"1000\" = [\"shp\"] }\n";
     let problems: Vec<String> = derive("list.toml", text, RULES, &base())
         .unwrap_err()
         .iter()
@@ -1087,6 +1137,7 @@ fn facts_that_fail_the_checker_are_reported_and_nothing_is_derived() {
 
 #[test]
 fn a_ship_fit_replaces_the_class_fit_for_that_slot_only() {
+    each_ship_has_its_own_id();
     let mut files = base();
     add_row(
         &mut files,
@@ -1393,6 +1444,7 @@ fn a_count_zero_torpedo_row_gives_no_tubes_and_no_damage() {
 
 #[test]
 fn two_ships_of_one_class_with_different_radar_get_two_named_rows() {
+    each_ship_has_its_own_id();
     let mut files = base();
     add_row(
         &mut files,
@@ -1407,19 +1459,19 @@ fn two_ships_of_one_class_with_different_radar_get_two_named_rows() {
         ),
     );
     let outputs = derives(&["shp", "shp2"], &files);
-    // Ids by figures, ascending: radar 0 sorts before radar 1.
+    // The ids are the list's pins: shp 1000, shp2 1001.
     assert_eq!(
         class_lines(&outputs),
         [
-            "1000,\"Test class, no radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,0",
-            "1001,\"Test class, radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1",
+            "1000,\"Test class, radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,1",
+            "1001,\"Test class, no radar\",cruiser,15,32.5,1600,8000,0,8,3.5,150,19.666666,6,196,400,0",
         ]
     );
     assert_eq!(
         records(&outputs.ships_csv),
         [
-            ["shp", "1001", "Test class, radar"],
-            ["shp2", "1000", "Test class, no radar"],
+            ["shp", "1000", "Test class, radar"],
+            ["shp2", "1001", "Test class, no radar"],
         ]
     );
 }
@@ -1952,6 +2004,7 @@ fn a_disputed_ammunition_row_is_still_a_problem_for_a_ship_on_the_list() {
 
 #[test]
 fn an_assumed_ship_gets_its_own_class_row_beside_one_that_reads_the_fact() {
+    each_ship_has_its_own_id();
     let mut files = base();
     add_row(
         &mut files,
@@ -2715,6 +2768,7 @@ fn all_ships_not_modelled_get_zero_surface_weapons_without_reading_any_fact() {
 
 #[test]
 fn ships_not_modelled_by_name_get_a_separate_class_row() {
+    each_ship_has_its_own_id();
     let outputs = not_modelled_ok(
         &["shp", "shp2"],
         "surface_weapons_not_modelled = [\"shp2\"]\n",
@@ -4808,4 +4862,218 @@ fn savo_island_every_class_has_radar_0_and_two_sets_are_named() {
             "not counted: no row gives the display of us-radar-type-unstated (fits.csv:291) (decision 0077)",
         ]
     );
+}
+
+// Decision 0077 (as built): class rows are pinned by id in the list file.
+
+/// The made list with `class_ids` as given (an inline table, or nothing).
+fn pinned_list(ships: &[&str], class_ids: &str) -> String {
+    list(ships, &[]).replace(&pins(ships), class_ids)
+}
+
+fn pinned(ships: &[&str], class_ids: &str, files: &Files) -> Result<Outputs, Vec<String>> {
+    derive_text(&pinned_list(ships, class_ids), RULES, files)
+}
+
+#[test]
+fn a_list_that_generates_class_files_without_a_class_ids_table_is_refused() {
+    let problems = pinned(&["shp"], "", &base()).expect_err("refused");
+    assert_one(&problems, &["list: list: class_ids:", "required"]);
+}
+
+#[test]
+fn ships_pinned_to_one_id_with_different_figures_are_refused_naming_the_figure() {
+    let mut files = base();
+    add_row(
+        &mut files,
+        "fits.csv",
+        ship_fit(10, "shp2", "main_battery", "weapon", "gun", "9"),
+    );
+    let problems = pinned(
+        &["shp", "shp2"],
+        "class_ids = { \"1000\" = [\"shp\", \"shp2\"] }\n",
+        &files,
+    )
+    .expect_err("refused");
+    assert_one(
+        &problems,
+        &[
+            "shp2: list: main_guns:",
+            "class id 1000",
+            "shp has main_guns 8",
+            "shp2 has 9",
+        ],
+    );
+}
+
+#[test]
+fn a_ship_of_the_list_with_no_pinned_id_is_refused() {
+    let problems = pinned(
+        &["shp", "shp2"],
+        "class_ids = { \"1000\" = [\"shp\"] }\n",
+        &base(),
+    )
+    .expect_err("refused");
+    assert_one(
+        &problems,
+        &["class_ids:", "ship `shp2` has no class id pinned"],
+    );
+}
+
+#[test]
+fn a_pinned_ship_that_is_not_in_the_list_is_refused() {
+    let problems = pinned(
+        &["shp"],
+        "class_ids = { \"1000\" = [\"shp\", \"shp2\"] }\n",
+        &base(),
+    )
+    .expect_err("refused");
+    assert_one(&problems, &["class_ids:", "`shp2`", "is not in ships"]);
+}
+
+#[test]
+fn an_id_pinned_twice_is_refused() {
+    let problems = pinned(
+        &["shp", "shp2"],
+        "class_ids = { \"1000\" = [\"shp\"], \"01000\" = [\"shp2\"] }\n",
+        &base(),
+    )
+    .expect_err("refused");
+    assert_one(&problems, &["class_ids:", "class id 1000 is pinned twice"]);
+}
+
+#[test]
+fn a_ship_pinned_twice_is_refused() {
+    let problems = pinned(
+        &["shp"],
+        "class_ids = { \"1000\" = [\"shp\"], \"1001\" = [\"shp\"] }\n",
+        &base(),
+    )
+    .expect_err("refused");
+    assert_one(&problems, &["class_ids:", "ship `shp` is pinned twice"]);
+}
+
+#[test]
+fn a_pinned_id_below_first_class_id_is_refused() {
+    let problems =
+        pinned(&["shp"], "class_ids = { \"999\" = [\"shp\"] }\n", &base()).expect_err("refused");
+    assert_one(&problems, &["class_ids:", "below first_class_id 1000"]);
+}
+
+#[test]
+fn two_rows_of_one_class_with_equal_figures_stay_two_rows_named_by_their_ships() {
+    let ids = "class_ids = { \"1000\" = [\"shp\"], \"1005\" = [\"shp2\"] }\n";
+    let outputs = pinned(&["shp", "shp2"], ids, &base()).expect("derives");
+    let lines = class_lines(&outputs);
+    assert_eq!(
+        lines,
+        [
+            BASE_ROW.replace("Test class", "Test class (Shp)"),
+            BASE_ROW
+                .replace("Test class", "Test class (Shp 2)")
+                .replace("1000,", "1005,"),
+        ]
+    );
+    assert_eq!(
+        records(&outputs.ships_csv),
+        [
+            ["shp", "1000", "Test class (Shp)"],
+            ["shp2", "1005", "Test class (Shp 2)"],
+        ]
+    );
+}
+
+/// Decision 0077: every ship of the two lists keeps the class id it had on
+/// main before the lists pinned them. The ids are written here, from
+/// `origin/main:data/reference/ship_classes_*.ships.csv`, not read from a
+/// generated file.
+#[test]
+fn every_ship_of_the_savo_island_and_eastern_solomons_lists_keeps_its_id() {
+    let savo: &[(&str, u32)] = &[
+        ("chokai", 1003),
+        ("aoba", 1000),
+        ("kako", 1001),
+        ("kinugasa", 1000),
+        ("furutaka", 1001),
+        ("tenryu", 1004),
+        ("yubari", 1005),
+        ("yunagi", 1002),
+        ("hmas-canberra", 1006),
+        ("ca-29-chicago", 1012),
+        ("dd-386-bagley", 1007),
+        ("dd-392-patterson", 1007),
+        ("ca-44-vincennes", 1010),
+        ("ca-39-quincy", 1011),
+        ("ca-34-astoria", 1011),
+        ("dd-388-helm", 1007),
+        ("dd-408-wilson", 1009),
+        ("dd-387-blue", 1008),
+        ("dd-390-ralph-talbot", 1008),
+        ("dd-393-jarvis", 1007),
+    ];
+    let eastern: &[(&str, u32)] = &[
+        ("cv-3-saratoga", 2015),
+        ("ca-32-new-orleans", 2016),
+        ("ca-36-minneapolis", 2016),
+        ("dd-348-farragut", 2012),
+        ("dd-351-macdonough", 2012),
+        ("dd-352-worden", 2012),
+        ("dd-353-dale", 2012),
+        ("dd-360-phelps", 2018),
+        ("cv-6-enterprise", 2020),
+        ("bb-55-north-carolina", 2017),
+        ("ca-33-portland", 2019),
+        ("cl-51-atlanta", 2010),
+        ("dd-363-balch", 2018),
+        ("dd-397-benham", 2011),
+        ("dd-398-ellet", 2011),
+        ("dd-401-maury", 2014),
+        ("dd-435-grayson", 2013),
+        ("dd-436-monssen", 2013),
+        ("shokaku", 2007),
+        ("zuikaku", 2006),
+        ("chikuma", 2008),
+        ("hiei", 2002),
+        ("kirishima", 2002),
+        ("kumano", 2003),
+        ("suzuya", 2003),
+        ("nagara", 2004),
+        ("akigumo", 2001),
+        ("kazagumo", 2009),
+        ("makigumo", 2009),
+        ("yugumo", 2009),
+        ("akizuki", 2000),
+        ("hatsukaze", 2001),
+        ("ryujo", 2005),
+        ("tone", 2008),
+        ("amatsukaze", 2001),
+        ("tokitsukaze", 2001),
+    ];
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    for (list, expected) in [("savo_island", savo), ("eastern_solomons", eastern)] {
+        let outputs = derive(
+            &format!("{list}.toml"),
+            &read(&format!("data/derivation/{list}.toml")),
+            &read("data/derivation/rules.toml"),
+            &facts,
+        )
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+        let got: BTreeMap<String, String> = records(&outputs.ships_csv)
+            .into_iter()
+            .map(|r| (r[0].clone(), r[1].clone()))
+            .collect();
+        assert_eq!(got.len(), expected.len(), "{list}");
+        for (ship, id) in expected {
+            assert_eq!(got[*ship], id.to_string(), "{list}: {ship}");
+        }
+        // No two rows share a name.
+        let names: std::collections::BTreeSet<String> = records(&outputs.class_csv)
+            .into_iter()
+            .map(|r| r[1].clone())
+            .collect();
+        assert_eq!(names.len(), records(&outputs.class_csv).len(), "{list}");
+    }
 }

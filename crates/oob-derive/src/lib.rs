@@ -178,6 +178,9 @@ pub fn derive_with(
             Err(type_problems) => problems.extend(type_problems),
         }
     }
+    if problems.is_empty() {
+        problems.extend(output::check_pins(&list, &results));
+    }
     if !problems.is_empty() {
         return Err(problems);
     }

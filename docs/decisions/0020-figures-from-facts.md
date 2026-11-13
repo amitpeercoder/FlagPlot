@@ -16,7 +16,7 @@ Decision 0015 says no real ship gets an invented rating: a game figure is derive
    A ship's own row replaces its class's row only when the ship's row can itself be read. A ship row that is in doubt does not block the class row. It is listed beside the figure in the sources file, so the doubt stays in view.
 3. **An exception has to be written down.** The rules file may say "for this class and this fact, read the unconfirmed row", with a reason and the date the designer agreed. The tool lists every exception it used in the output.
 4. **One class row per distinct fit.** The simulation gives every ship of a class the same figures. Ships of one class that differ on the date, in radar or in torpedo type, get separate rows, named for the difference, such as "Bagley class, SC radar".
-5. **Generated IDs start at 1000,** so they cannot collide with placeholder classes.
+5. **Generated IDs start at 1000,** so they cannot collide with placeholder classes. (Nov 13, 2026: a list pins each class id to its ships in a `[class_ids]` table and the tool no longer numbers rows by counting groups of equal figures; see decision 0077, "As built".)
 
 ### The rules
 
