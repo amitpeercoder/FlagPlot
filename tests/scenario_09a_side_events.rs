@@ -1252,3 +1252,254 @@ fn an_enemy_force_that_is_merely_there_changes_nothing_the_side_is_given() {
     println!("{found:?}");
     assert!(found.changed.is_empty(), "{:?}", found.changed);
 }
+
+// ---------------------------------------------------------------------
+// Findings of the outside review of Nov 13, 2026 (prompt 11), each shown by
+// two runs that differ only in something the side cannot see. Kept switched
+// off, as the known leak above is, until the architect rules on each.
+// ---------------------------------------------------------------------
+
+/// Scenario 4a with every order taken out and the Japanese force moved into
+/// the Allied force's hex (5,0), so the two meet where they lie; and the
+/// same with one Japanese order added that restates its rules of engagement
+/// as they already are (`RulesOfEngagement::DEFAULT`).
+fn met_where_they_lie_with_and_without_a_restated_enemy_order() -> (String, String) {
+    let doc = parse_doc(&scenario_text("04a_night_action.toml"));
+    let is_japanese_force = |t: &str| {
+        table_kind(t) == "task_force" && table_value(t, "side").as_deref() == Some("japanese")
+    };
+    let tables: Vec<String> = doc
+        .tables
+        .iter()
+        .filter(|t| table_kind(t) != "order")
+        .map(|t| {
+            if is_japanese_force(t) {
+                t.replace("q = 0\n", "q = 5\n")
+            } else {
+                t.clone()
+            }
+        })
+        .collect();
+    let plain = Doc {
+        head: doc.head.clone(),
+        tables,
+    }
+    .text();
+    let japanese_force = doc
+        .tables
+        .iter()
+        .find(|t| is_japanese_force(t))
+        .and_then(|t| table_value(t, "id"))
+        .expect("a Japanese force");
+    let ordered = format!(
+        "{plain}\n[[order]]\nday = 1\nside = \"japanese\"\ntask_force = {japanese_force}\nkind = \"set_rules_of_engagement\"\nstance = \"engage\"\nbreak_off = \"0.5\"\n"
+    );
+    (plain, ordered)
+}
+
+#[test]
+#[ignore = "outside review finding 7: an enemy order that changes nothing sets hidden_causes on the side's view of the fight"]
+fn an_enemy_order_that_changes_nothing_changes_nothing_the_side_is_given() {
+    let (plain, ordered) = met_where_they_lie_with_and_without_a_restated_enemy_order();
+    let name = "04a_night_action.toml";
+    for seed in 1..=3 {
+        let one = run_text(&plain, name, seed);
+        let two = run_text(&ordered, name, seed);
+        // The order changed nothing in the world: the same events but for
+        // the order's own.
+        let what_happened = |w: &World| {
+            w.events()
+                .iter()
+                .filter(|e| !matches!(e.kind, EventKind::OrderAccepted { .. }))
+                .map(|e| format!("{:?}", e.kind))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            what_happened(&one),
+            what_happened(&two),
+            "seed {seed}: the order changed the run"
+        );
+        assert!(
+            one.side_view(Side::Allied)
+                .events()
+                .iter()
+                .any(|e| matches!(e.kind, SideEventKind::EngagementBegun { .. })),
+            "seed {seed}: the Allied side knows of no fight, so nothing was compared"
+        );
+        let (before, after) = (
+            normalised(&one, Side::Allied),
+            normalised(&two, Side::Allied),
+        );
+        let first = before.iter().zip(&after).find(|(a, b)| a != b);
+        assert!(
+            first.is_none() && before.len() == after.len(),
+            "seed {seed}: the Allied side's events changed with an enemy order that did nothing: {first:?}"
+        );
+    }
+}
+
+#[test]
+#[ignore = "outside review finding 8: SideView::events() and orders() carry the full log's and the order book's numbers, which an unseen enemy order moves"]
+fn the_numbers_a_side_view_carries_do_not_move_with_what_the_enemy_does() {
+    // `rejected_order`: the enemy gives an order on the last day that is
+    // refused. The side sees nothing of it once the full log's numbers are
+    // taken out (`what_a_side_cannot_know_changes_nothing_it_is_given`), but
+    // a Rust caller of the view reads those numbers: its events' numbers in
+    // the full log, and its own orders' numbers, counted across both sides.
+    let mut moved = Vec::new();
+    for name in LEAK_SCENARIOS {
+        let text = scenario_text(name);
+        let doc = parse_doc(&text);
+        let world0 = common::from_text(&text, &scenario_path(name))
+            .expect("loads")
+            .world;
+        for side in SIDES {
+            let enemy = if side == Side::Allied {
+                Side::Japanese
+            } else {
+                Side::Allied
+            };
+            let Some((first, second)) = rejected_order(&doc, side, enemy, &world0) else {
+                continue;
+            };
+            let one = run_text(&first, name, 1);
+            let two = run_text(&second, name, 1);
+            let numbers = |w: &World| {
+                let view = w.side_view(side);
+                let events: Vec<u32> = view.events().iter().map(|e| e.id.raw()).collect();
+                let orders: Vec<u32> = view.orders().map(|o| o.id.raw()).collect();
+                (events, orders)
+            };
+            let (a, b) = (numbers(&one), numbers(&two));
+            if a != b {
+                moved.push(format!(
+                    "{name} {side:?} (events moved: {}, own orders moved: {})",
+                    a.0 != b.0,
+                    a.1 != b.1
+                ));
+            }
+        }
+    }
+    assert!(
+        moved.is_empty(),
+        "the numbers a side view carries moved with a refused enemy order in: {moved:?}"
+    );
+}
+
+#[test]
+#[ignore = "outside review finding 1: SideView::strike_choice takes a caller's AirGroup and measures from the true position of any ship it names, an enemy's included"]
+fn a_side_view_measures_nothing_from_an_enemy_ships_true_place() {
+    // A Rust caller holding only a side's view builds an air group of its
+    // own side on naval strike, of the type with the longest strike radius,
+    // at extended reach, aboard an enemy ship, and asks the view where it
+    // would strike. The view should answer only for the side's own groups.
+    use sim_core::orders::{AirMission, Reach};
+    use sim_core::refdata::ShipKind;
+    use sim_core::state::{AirGroupLocation, ShipLocation};
+    let mut leaks: Vec<String> = Vec::new();
+    let mut fresh_contacts = 0;
+    for name in [
+        "05_eastern_solomons.toml",
+        "07_full_slice.toml",
+        "05b_strike.toml",
+        "05d_carrier_duel.toml",
+        "13a_target_priority.toml",
+    ] {
+        let mut scenario =
+            common::from_text(&scenario_text(name), &scenario_path(name)).expect("loads");
+        loop {
+            let world = &scenario.world;
+            let longest = world
+                .ref_data()
+                .aircraft_types
+                .values()
+                .max_by_key(|t| t.strike_range_nm)
+                .expect("an aircraft type");
+            for side in SIDES {
+                let view = world.side_view(side);
+                fresh_contacts += view.contacts().filter(|c| c.age_pulses == 0).count();
+                let Some(own) = view.air_groups().next() else {
+                    continue;
+                };
+                for enemy_ship in world.umpire().ships.values().filter(|s| s.side != side) {
+                    let ShipLocation::TaskForce(force) = enemy_ship.location else {
+                        continue;
+                    };
+                    let mut probe = own.clone();
+                    probe.side = side;
+                    probe.mission = AirMission::NavalStrike;
+                    probe.aircraft_type = longest.id;
+                    probe.reach = Reach::Extended;
+                    probe.target_priority = ShipKind::ALL.to_vec();
+                    probe.location = AirGroupLocation::Ship(enemy_ship.id);
+                    if let Some(choice) = view.strike_choice(&probe) {
+                        let truly_at = world.umpire().task_forces[&force].position();
+                        leaks.push(format!(
+                            "{name} day {} {side:?}: aboard enemy {} the view measured {} nm to the contact at {:?}; the ship's true place {truly_at:?} is {} nm from it",
+                            world.day(),
+                            enemy_ship.id,
+                            choice.distance_nm,
+                            choice.hex,
+                            truly_at.air_distance_nm(choice.hex),
+                        ));
+                    }
+                }
+            }
+            if scenario.next_day().expect("the day resolves").is_none() {
+                break;
+            }
+        }
+    }
+    assert!(
+        fresh_contacts > 0,
+        "no side held a fresh contact at a day's end, so nothing was asked"
+    );
+    assert!(
+        leaks.is_empty(),
+        "{} answers measured from an enemy ship's true place, first: {}",
+        leaks.len(),
+        leaks[0]
+    );
+}
+
+#[test]
+#[ignore = "outside review finding 3:the number of an air group formed in the game counts the enemy's air groups"]
+fn an_enemy_air_group_that_is_merely_there_changes_nothing_the_side_is_given() {
+    // Scenario 12c with Japanese carrier B's flight deck degraded: its scouts
+    // come back to a deck they cannot land on and land aboard carrier B2,
+    // which holds no scouts, so a new group is formed for them
+    // (`landing.rs`). The second world adds an empty, resting Allied group
+    // aboard the Allied carrier, which flies nothing and is never reported.
+    let name = "12c_no_deck.toml";
+    let carrier_b = "name = \"Placeholder carrier B\"\nclass = 4\nside = \"japanese\"\nfuel_t = 3000\ntask_force = 2\n";
+    let text = common::replace_once(
+        &scenario_text(name),
+        carrier_b,
+        &format!("{carrier_b}flight_deck = \"degraded\"\n"),
+    );
+    let with_group = format!(
+        "{text}\n[[air_group]]\nid = 900\nname = \"Placeholder unseen empty Allied group\"\nside = \"allied\"\nship = 1\naircraft_type = 4\nready = 0\npilots = 0\n"
+    );
+    let one = run_text(&text, name, 1942);
+    let two = run_text(&with_group, name, 1942);
+    let groups = |w: &World| -> Vec<u32> {
+        w.side_view(Side::Japanese)
+            .air_groups()
+            .map(|g| g.id.raw())
+            .collect()
+    };
+    assert!(
+        groups(&one).iter().any(|id| *id > 5),
+        "no Japanese group was formed in the control, so nothing was compared: {:?}",
+        groups(&one)
+    );
+    assert_eq!(
+        groups(&one),
+        groups(&two),
+        "the Japanese side's own air groups are numbered by the Allied groups"
+    );
+    assert_eq!(
+        normalised(&one, Side::Japanese),
+        normalised(&two, Side::Japanese)
+    );
+}

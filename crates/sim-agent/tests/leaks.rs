@@ -979,3 +979,49 @@ fn the_library_code_names_nothing_of_the_truth() {
         Hex::new(0, 0),
     );
 }
+
+// ---------------------------------------------------------------------
+// Findings of the outside review of Nov 13, 2026 (prompt 11). Kept switched
+// off until the architect rules on each; run with `--ignored` to see them.
+// ---------------------------------------------------------------------
+
+#[test]
+#[ignore = "outside review finding 4: a day that cannot be resolved answers end_day with the engine's own words, which name an enemy ship"]
+fn a_day_that_cannot_be_resolved_names_no_enemy_unit() {
+    // Scenario 12c with no orders, and an arrival the loader accepts that
+    // puts 100 more aircraft into Japanese group 3 aboard carrier B (ship 3),
+    // which has room for 36. Nothing of it is ever reported to the Allied
+    // side, which plays and ends the day.
+    let name = "12c_no_deck.toml";
+    let text = scenario_text(name);
+    let (head, _orders) = text
+        .split_once("\n[[order]]")
+        .expect("12c's orders come last");
+    let text = format!("{head}\n[[arrival]]\nday = 1\nair_group = 3\naircraft = 100\n");
+    let scenario = load_text(&text, name, 1942);
+    let japanese: Vec<String> = scenario
+        .world
+        .umpire()
+        .ships
+        .values()
+        .filter(|s| s.side == Side::Japanese)
+        .map(|s| s.id.to_string())
+        .collect();
+    let (mut session, _) = support::play::session_of(scenario, &[Side::Allied]);
+    let answer = session.call(Side::Allied, "end_day", &serde_json::json!({}));
+    let said = match answer {
+        Ok(value) => value.to_string(),
+        Err(error) => error.message,
+    };
+    let named: Vec<&String> = japanese
+        .iter()
+        .filter(|handle| {
+            said.match_indices(handle.as_str())
+                .any(|(at, _)| !said[at + handle.len()..].starts_with(|c: char| c.is_ascii_digit()))
+        })
+        .collect();
+    assert!(
+        named.is_empty(),
+        "the Allied player's end_day names enemy ships {named:?}: {said}"
+    );
+}
