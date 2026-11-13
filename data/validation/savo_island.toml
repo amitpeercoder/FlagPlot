@@ -96,7 +96,7 @@ take = "hits_on"
 ships = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 weapons = ["gun"]
 rows = [19, 20, 37, 50, 58, 59, 60, 69, 70, 71, 82, 83, 49, 93, 96]
-reason = "Low end: Canberra 24 (19, 20), Chicago 1 (37), Patterson 1 (50), Vincennes 57 (58, 59), Quincy 36 (69, 70), Astoria 34 by the count of larger calibres only (83). High end: Vincennes 74 (60), Quincy 54 (71) and Astoria 65 by the count of all calibres (82). Bagley, Helm and Wilson took none (49, 93, 96)."
+reason = "Low end: Canberra 24 (19, 20), Chicago 1 (37), Patterson 1 (50), Vincennes 57 (58, 59), Quincy 36 (69, 70), Astoria 34 by the count of larger calibres only (83). High end: Vincennes 74 (60), Quincy 54 (71) and Astoria 65 by the count of all calibres (82). Bagley, Helm and Wilson took none (49, 93, 96). The record counts hits of every calibre and cannot be split; a ship in the rules fires its main battery only, so a run will be low by what the Japanese secondary guns scored (step 2 spec, 'Where the model stands today')."
 
 [[measure]]
 id = "gun_hits_on_japanese_ships"
@@ -122,6 +122,18 @@ weapons = ["torpedo"]
 rows = [25, 23, 24, 163, 38, 39, 61, 62, 63, 72, 73, 85]
 reason = "Canberra 0, 1 or 2: the 1950 analysis rejects any hit (25), the 1943 narrative says one or two (23, 24) and the Australian navy's history two (163). Chicago 1 (38, 39). Vincennes 1, 2 or 3 (61, 62, 63). Quincy 2 or 3 (72, 73). Astoria 0 (85). Low end 0 + 1 + 1 + 2, high end 2 + 1 + 3 + 3."
 
+[[measure]]
+id = "torpedo_hits_on_japanese_ships"
+counts = "Torpedo hits on the eight Japanese ships"
+record_low = 0
+record_high = 0
+judged = true
+take = "hits_on"
+ships = [1, 2, 3, 4, 5, 6, 7, 8]
+weapons = ["torpedo"]
+rows = [779, 780, 781, 782, 783, 784, 785, 786, 787, 132]
+reason = "No row has a torpedo hit on any of them. The 1950 analysis's summary of Japanese damage has Chokai, Aoba and Kinugasa slightly damaged (779, 780, 781) and Yubari and Tenryu slightly damaged (782, 783), Yubari with only scratches from a destroyer's light fire (784); Furutaka and Yunagi are not among the damaged (785, 786, 787) and Kako took no hit (132). None is a statement about torpedoes: the architect reads slight damage and none as no torpedo hit, since a torpedo does not leave a cruiser slightly damaged. At the baseline Allied torpedoes hit about three times a run, and the ships they stopped were caught by day in fights the record does not have."
+
 # ---------------------------------------------------------- hits a round
 #
 # Hits for each thousand shells fired, by side. A count of hits follows how
@@ -140,7 +152,7 @@ take = "hits_per_thousand_shots"
 side = "japanese"
 weapon = "gun"
 rows = [7, 19, 37, 50, 58, 69, 83, 60, 71, 82, 9]
-reason = "Shells fired: 1,867 (7). Hits: 153 to 219 on the nine Allied ships, as in gun_hits_on_allied_ships (low end 19, 37, 50, 58, 69, 83; high end 60, 71, 82). 153 in 1,867 is 81 a thousand and 219 is 117. The 1950 analysis's own estimate is about 12 in 100 (9). The shells counted include the few fired at Ralph Talbot, who is outside the scenario."
+reason = "Shells fired: 1,867 (7). Hits: 153 to 219 on the nine Allied ships, as in gun_hits_on_allied_ships (low end 19, 37, 50, 58, 69, 83; high end 60, 71, 82). 153 in 1,867 is 81 a thousand and 219 is 117. The 1950 analysis's own estimate is about 12 in 100 (9). The shells counted include the few fired at Ralph Talbot, who is outside the scenario. The record is hits of every calibre over shells of every calibre; a run is main battery hits over main battery shots. The two are set side by side on the assumption that the secondary guns shot about as well as the main, which no row tests."
 
 [[measure]]
 id = "allied_gun_hits_per_thousand_shells"
@@ -152,69 +164,82 @@ take = "hits_per_thousand_shots"
 side = "allied"
 weapon = "gun"
 rows = [10, 11, 115, 125, 141, 156, 151]
-reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as in gun_hits_on_japanese_ships (low end 11; high end 115, 125, 141, 156, 151). 10 in 471 is 21 a thousand and 17 is 36. The shells counted include Ralph Talbot's 12, outside the scenario."
+reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as in gun_hits_on_japanese_ships (low end 11; high end 115, 125, 141, 156, 151). 10 in 471 is 21 a thousand and 17 is 36. The shells counted include Ralph Talbot's 12, outside the scenario. As with the Japanese rate, the record is of every calibre and a run is of the main battery only."
 
 # ---------------------------------------------------------- shells fired
+#
+# Main battery only. A ship in the rules fires its main guns and nothing
+# else (chapter 4: shots are the rate times the main guns), so the record
+# set beside it is the main battery's: eight-inch for a heavy cruiser,
+# 5.5-inch for Tenryu and Yubari, five-inch for a destroyer. A cruiser's
+# five-inch and 4.7-inch secondary guns, about a third of the Japanese
+# shells that night, have no counterpart in the rules; that gap is named in
+# the step 2 spec and is not hidden in these measures.
+#
+# Until decision 0070 these five measures counted every calibre, under ids
+# that said "gun_shells" where these say "main_battery_shells". Those ids
+# are retired: japanese_, allied_, southern_group_, northern_group_ and
+# tenryu_and_yubari_ followed by gun_shells_fired_in_hundreds.
 
 [[measure]]
-id = "japanese_gun_shells_fired_in_hundreds"
-counts = "Gun shots the Japanese force fires in the run, all calibres, in hundreds, rounded down"
-record_low = 18
-record_high = 18
+id = "japanese_main_battery_shells_fired_in_hundreds"
+counts = "Main battery shots the Japanese force fires in the run, in hundreds, rounded down"
+record_low = 10
+record_high = 11
 judged = true
 take = "shots_in_hundreds"
 side = "japanese"
 weapon = "gun"
-rows = [7]
-reason = "1,867 shells (7), which is 18 hundreds. The count includes the few fired at Ralph Talbot, who is outside the scenario; no row says how many, so nothing is taken off. The count is of every calibre, secondary guns too (about 654 of the 1,867 were 4.7 and 5 inch), and the rules give a ship one battery. At the baseline the total came near the record by two errors that offset: the heavy cruisers' main batteries fired about what they did, and the three light ships about six times what they did. So an agreement here is not yet proof; a measure by ship is to follow when the batch file records shots by the ship that fired."
+rows = [1, 2, 3]
+reason = "Eight-inch: 1,014 as the 1950 analysis states the total (1) or 914 as its five ship figures add up (2); the two rows dispute each other and give the two ends. 5.5-inch, the main battery of Tenryu and Yubari: 176 (3). So 1,090 to 1,190, which is 10 or 11 hundreds. Yunagi's main battery has no row and adds nothing here. The figures include the few shells fired at Ralph Talbot, outside the scenario. The derivation of rates of fire (decision 0070) reads Chokai's and Kako's figures as two of its cases, so for the heavy cruisers this is not an independent check; the measure of Tenryu and Yubari is."
 
 [[measure]]
-id = "allied_gun_shells_fired_in_hundreds"
-counts = "Gun shots the two Allied groups fire in the run, all calibres, in hundreds, rounded down"
-record_low = 4
-record_high = 4
+id = "allied_main_battery_shells_fired_in_hundreds"
+counts = "Main battery shots the two Allied groups fire in the run, in hundreds, rounded down"
+record_low = 3
+record_high = 3
 judged = true
 take = "shots_in_hundreds"
 side = "allied"
 weapon = "gun"
-rows = [10]
-reason = "471 shells (10); 459 without Ralph Talbot's 12, who is outside the scenario. Either is 4 hundreds. At the baseline the Allied groups fired about 2,800 a run. Hits for each thousand shells agreed all the same, and hid it: a force that fires six times too much and hits at the right rate scores six times the hits. This measure is here so that cannot hide again. In the record most of the Allied cruisers never got their guns into effective action. The measure counts the whole run, and so counts the shells of any fight by day with Japanese ships that fell behind, about 550 a run at the baseline. The record has no such fight, so those shells are part of the miss and are not taken out: decision 0068, on a force not at battle readiness, is not meant to remove them."
+rows = [12, 53, 54, 94, 97]
+reason = "Eight-inch from the five cruisers: 107 (12). Five-inch from the destroyers of the two groups, whose main battery it is: Wilson 212 (97), Patterson 33 or 50 (53, 54, which dispute each other), Helm one salvo of four at no visible target (94), Bagley none. So 352 to 373, which is 3 hundreds at either end. Ralph Talbot's 12 are outside the scenario. At the first baseline the Allied groups fired about 2,800 a run; hits for each thousand shells agreed all the same, and hid it. This measure is here so that cannot hide again."
 
 [[measure]]
-id = "southern_group_gun_shells_fired_in_hundreds"
-counts = "Gun shots the four ships of the southern group fire in the run, all calibres, in hundreds, rounded down"
+id = "southern_group_main_battery_shells_fired_in_hundreds"
+counts = "Main battery shots the four ships of the southern group fire in the run, in hundreds, rounded down"
 record_low = 0
 record_high = 0
 judged = true
 take = "shots_in_hundreds"
 ships = [9, 10, 11, 12]
 weapon = "gun"
-rows = [27, 29, 41, 42, 48, 53, 54]
-reason = "Canberra fired no eight-inch shell and about three four-inch (27, 29). Chicago fired no eight-inch and 25 five-inch (41, 42). Bagley fired no gun at the enemy (48). Patterson fired 33 by the 1950 analysis or 50 by the 1943 narrative (53, 54). That is 61 to 78 shells, less than one hundred either way. Rows 27, 53 and 54 are disputed and are read because no end of any of the disputes reaches a hundred: the other reading of Canberra is that one gun may have fired one salvo. Chicago's 44 star shells are not counted: they lit and did not hit. This is the measure decision 0068 is checked on: a group that was not at battle readiness and barely fired."
+rows = [27, 41, 48, 53, 54]
+reason = "Canberra fired no eight-inch shell (27, disputed: the other reading is that one gun may have fired one salvo) and Chicago none (41). Bagley fired no gun at the enemy (48). Patterson fired 33 or 50 five-inch (53, 54). That is 33 to 50 shells, or a few more by the other reading of Canberra: under a hundred by any of them. It is the measure decision 0068 is checked on: a group that was not at battle readiness and barely fired."
 
 [[measure]]
-id = "northern_group_gun_shells_fired_in_hundreds"
-counts = "Gun shots the five ships of the northern group fire in the run, all calibres, in hundreds, rounded down"
+id = "northern_group_main_battery_shells_fired_in_hundreds"
+counts = "Main battery shots the five ships of the northern group fire in the run, in hundreds, rounded down"
 record_low = 3
-record_high = 4
+record_high = 3
 judged = true
 take = "shots_in_hundreds"
 ships = [13, 14, 15, 16, 17]
 weapon = "gun"
-rows = [64, 65, 74, 75, 86, 87, 95, 97]
-reason = "Vincennes about 33 eight-inch and about 20 five-inch (64, 65). Quincy 21 eight-inch and no five-inch (74, 75; the second is disputed, and the other reading is a few star shells, which are not counted). Astoria about 53 and 59 (86, 87). Wilson 212 five-inch (97). That is 398, which is 3 hundreds. Helm's one salvo of four (95) makes 402, which is 4. More than half of it is one destroyer, Wilson, who was not a target; the three cruisers together fired 186."
+rows = [64, 74, 86, 94, 97]
+reason = "Eight-inch: Vincennes about 33 (64), Quincy 21 (74), Astoria about 53 (86), 107 together. Five-inch from the two destroyers: Wilson 212 (97) and Helm's one salvo of four (94). That is 319 to 323, which is 3 hundreds. Two shells in three are one destroyer's, Wilson, who was not a target."
 
 [[measure]]
-id = "tenryu_and_yubari_gun_shells_fired_in_hundreds"
-counts = "Gun shots Tenryu and Yubari fire in the run, all calibres, in hundreds, rounded down"
+id = "tenryu_and_yubari_main_battery_shells_fired_in_hundreds"
+counts = "Main battery shots Tenryu and Yubari fire in the run, in hundreds, rounded down"
 record_low = 1
-record_high = 2
+record_high = 1
 judged = true
 take = "shots_in_hundreds"
 ships = [6, 7]
 weapon = "gun"
-rows = [148, 149, 154]
-reason = "Tenryu 80 of 5.5 inch and 23 of 3 inch (148, 149); Yubari 96 of 5.5 inch (154). That is 199, one shell short of two hundreds, so the record is taken as 1 or 2: the count is not good to a shell. Yunagi is left out because no row gives what she fired. At the baseline the heavy cruisers fired about what they did and the light ships about six times what they did, which the measure of all Japanese shells could not show."
+rows = [3, 148, 154]
+reason = "Tenryu 80 and Yubari 96 of 5.5 inch (148, 154; 176 together, as row 3 has it), which is 1 hundred. Tenryu's 23 three-inch are not main battery. Yunagi is left out: no row gives what she fired. These two were at battle readiness, so no rule of readiness reads their count, and no case in the derivation of rates of fire is theirs: this is the independent check of the rates (step 2 spec, 'Tuning', 6)."
 
 # ------------------------------------------------------- how long it ran
 

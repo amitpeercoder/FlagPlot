@@ -10,3 +10,6 @@ id,key,name,date_from,date_to,zone
 1005,santa-cruz,Battle of the Santa Cruz Islands,1942-10-26,1942-10-26,
 1006,lae-salamaua-raid,Lae and Salamaua raid,1942-03-10,1942-03-10,
 1007,cape-esperance,Battle of Cape Esperance,1942-10-11,1942-10-12,-11
+1008,guadalcanal-13-nov,"Naval Battle of Guadalcanal, night action of 12 to 13 November 1942",1942-11-12,1942-11-13,-11
+1009,guadalcanal-15-nov,"Naval Battle of Guadalcanal, night action of 14 to 15 November 1942",1942-11-14,1942-11-15,-11
+1010,tassafaronga,Battle of Tassafaronga,1942-11-30,1942-12-01,-11
