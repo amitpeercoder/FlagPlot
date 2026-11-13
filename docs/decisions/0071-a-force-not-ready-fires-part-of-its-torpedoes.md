@@ -224,39 +224,44 @@ Built on Nov 13, 2026. The architect wrote the hand calculation before any code 
 
   Night torpedo salvos at a lit target never occur (a target is lit only by fire from an earlier round, and a ship fires its torpedoes in its first firing round), so that cell is not asserted.
 - **Goldens remade.**
-  - The run baselines of 04, 07, 08 and 16 changed in their hashes and logs. Savo Island's day 1 hash went from 3da9d09ff98bb1f6 to 872f04b05ba8798e. Scenario 16's went from 0be882cc31372323 (145 events) to 89fa08fb5e2193b4 (146 events), and its test proper, on altered frozen figures, held.
+  - The run baselines of 04, 07, 08 and 16 changed in their hashes and logs. Savo Island's day 1 hash, on decision 0070's rates of fire, went from 14d2cad7e9647819 (249 events) to 0d5d6d45f49430a2 (250 events). Scenario 16's went from 0be882cc31372323 (145 events) to 89fa08fb5e2193b4 (146 events), and its test proper, on altered frozen figures, held.
   - The logs of 04a, 04c_in_and_out, 04c_three_forces, 14a and 15a changed only in the torpedo salvos of a force not ready; their hashes are unchanged.
   - The saves of the three recorded games, and the version 1 batch capture of scenario 6, take only the new hash of `surface_combat.toml`. The recorded games' transcripts and daily hashes are byte for byte as before.
-- **What Savo Island shows.** 1,000 runs, seeds 1 to 1000, measures as on `main` with this change's two new measures. Before is the engine with the share at 1; it gives the same runs as `main`. After is the share at 0.5. Nothing is tuned.
+- **What Savo Island shows.** 1,000 runs, seeds 1 to 1000, on `main` with decision 0070's rates of fire, and the measures as on `main` with this change's two new measures. Before is the engine with the torpedo share at 1, at which the rule does nothing. After is the share at 0.5. So the two differ by this decision alone. Nothing is tuned.
 
   | Measure | Record | Before: median (5th to 95th), runs holding | After | Verdict before / after |
   | --- | --- | --- | --- | --- |
-  | allied_cruisers_sunk | 4 | 0 (0 to 2), 2 | 0 (0 to 2), 0 | miss / miss |
-  | southern_group_cruisers_sunk | 1 | 0 (0 to 2), 342 | 0 (0 to 2), 347 | agrees / agrees |
-  | northern_group_cruisers_sunk | 3 | 0 (0 to 1), 0 | 0 (0 to 1), 0 | miss / miss |
-  | allied_destroyers_sunk | 0 | 3 (1 to 4), 15 | 3 (1 to 4), 10 | miss / miss |
-  | japanese_ships_sunk | 0 | 1 (0 to 3), 479 | 0 (0 to 2), 643 | agrees / agrees |
-  | japanese_ships_with_propulsion_out | 0 | 0 (0 to 1), 923 | 0 (0 to 1), 948 | agrees / agrees |
-  | japanese_ships_sunk_or_stopped | 0 | 1 (0 to 3), 428 | 0 (0 to 2), 599 | agrees / agrees |
-  | gun_hits_on_allied_ships | 153 to 219 | 121 (37 to 175), 176 | 125 (41 to 177), 182 | edge / edge |
-  | gun_hits_on_japanese_ships | 10 to 17 | 53 (2 to 159), 32 | 49 (1 to 164), 38 | miss / miss |
-  | torpedo_hits_on_allied_ships | 4 to 9 | 3 (1 to 7), 411 | 3 (1 to 7), 408 | agrees / agrees |
-  | torpedo_hits_on_japanese_ships | 0 | 2 (0 to 7), 176 | 1 (0 to 4), 345 | edge / agrees |
-  | allied_torpedoes_fired (reported) | 4 to 6 | 56 (0 to 72), 0 | 28 (0 to 36), 25 | reported |
-  | japanese_gun_hits_per_thousand_shells | 81 to 117 | 50 (33 to 64), 0 | 50 (33 to 64), 0 | miss / miss |
-  | allied_gun_hits_per_thousand_shells | 21 to 36 | 38 (11 to 57), 326 of 980 | 38 (11 to 57), 324 of 980 | agrees / agrees |
-  | japanese_main_battery_shells_fired_in_hundreds | 10 to 11 | 24 (10 to 32), 39 | 24 (11 to 32), 24 | miss / miss |
-  | allied_main_battery_shells_fired_in_hundreds | 3 | 13 (1 to 32), 29 | 12 (1 to 33), 29 | miss / miss |
-  | southern_group_main_battery_shells_fired_in_hundreds | 0 | 4 (0 to 13), 373 | 4 (0 to 12), 401 | agrees / agrees |
-  | northern_group_main_battery_shells_fired_in_hundreds | 3 | 8 (1 to 24), 45 | 8 (1 to 22), 58 | miss / agrees |
-  | tenryu_and_yubari_main_battery_shells_fired_in_hundreds | 1 | 9 (4 to 15), 0 | 9 (4 to 15), 0 | miss / miss |
-  | minutes_of_action | 20 to 30 | 25 (15 to 50), 458 | 25 (15 to 50), 458 | agrees / agrees |
-  | surface_fights_by_day | 0 | 0 (0 to 4), 518 | 0 (0 to 4), 654 | agrees / agrees |
-  | japanese_ships_claimed_sunk_per_hundred_sunk (reported) | 350 | 120 (100 to 250), 2 of 988 | 125 (100 to 250), 1 of 992 | reported |
-  | allied_ships_claimed_sunk | 0 | 1 (0 to 4), 455 | 0 (0 to 4), 603 | agrees / agrees |
+  | allied_cruisers_sunk | 4 | 0 (0 to 1), 0 | 0 (0 to 1), 0 | miss / miss |
+  | southern_group_cruisers_sunk | 1 | 0 (0 to 1), 264 | 0 (0 to 1), 257 | agrees / agrees |
+  | northern_group_cruisers_sunk | 3 | 0 (0 to 0), 0 | 0 (0 to 0), 0 | miss / miss |
+  | allied_destroyers_sunk | 0 | 2 (1 to 4), 49 | 3 (1 to 4), 24 | miss / miss |
+  | japanese_ships_sunk | 0 | 0 (0 to 2), 647 | 0 (0 to 1), 857 | agrees / agrees |
+  | japanese_ships_with_propulsion_out | 0 | 0 (0 to 1), 826 | 0 (0 to 1), 872 | agrees / agrees |
+  | japanese_ships_sunk_or_stopped | 0 | 0 (0 to 2), 523 | 0 (0 to 1), 748 | agrees / agrees |
+  | gun_hits_on_allied_ships | 153 to 219 | 72 (21 to 101), 0 | 74 (32 to 100), 0 | miss / miss |
+  | gun_hits_on_japanese_ships | 10 to 17 | 19 (2 to 55), 210 | 16 (2 to 51), 246 | agrees / agrees |
+  | torpedo_hits_on_allied_ships | 4 to 9 | 3 (1 to 7), 426 | 3 (1 to 7), 428 | agrees / agrees |
+  | torpedo_hits_on_japanese_ships | 0 | 3 (0 to 7), 122 | 1 (0 to 4), 293 | edge / agrees |
+  | allied_torpedoes_fired (reported) | 4 to 6 | 72 (24 to 72), 0 | 32 (12 to 36), 11 | reported |
+  | japanese_gun_hits_per_thousand_shells | 81 to 117 | 52 (33 to 67), 1 | 53 (35 to 67), 1 | miss / miss |
+  | allied_gun_hits_per_thousand_shells | 21 to 36 | 33 (12 to 53), 464 | 32 (12 to 52), 478 | agrees / agrees |
+  | japanese_main_battery_shells_fired_in_hundreds | 10 to 11 | 13 (5 to 18), 207 | 13 (8 to 18), 244 | agrees / agrees |
+  | allied_main_battery_shells_fired_in_hundreds | 3 | 5 (1 to 12), 119 | 5 (1 to 11), 144 | agrees / agrees |
+  | southern_group_main_battery_shells_fired_in_hundreds | 0 | 0 (0 to 4), 527 | 0 (0 to 3), 614 | agrees / agrees |
+  | northern_group_main_battery_shells_fired_in_hundreds | 3 | 4 (1 to 9), 150 | 4 (1 to 8), 170 | agrees / agrees |
+  | tenryu_and_yubari_main_battery_shells_fired_in_hundreds | 1 | 2 (1 to 4), 80 | 2 (2 to 3), 37 | edge / miss |
+  | minutes_of_action | 20 to 30 | 35 (20 to 65), 360 | 35 (20 to 60), 433 | agrees / agrees |
+  | surface_fights_by_day | 0 | 0 (0 to 4), 599 | 0 (0 to 4), 772 | agrees / agrees |
+  | japanese_ships_claimed_sunk_per_hundred_sunk (reported) | 350 | 120 (100 to 400), 3 of 968 | 125 (100 to 300), 3 of 981 | reported |
+  | allied_ships_claimed_sunk | 0 | 0 (0 to 2), 626 | 0 (0 to 1), 831 | agrees / agrees |
 
-  - **The head line:** judged 21. Before, 10 agree, 2 are at the edge and 9 miss. After, 12 agree, 1 is at the edge and 8 miss.
-  - **Fights by day:** runs with one fall from 482 to 346, and the fights themselves from 1,249 to 938.
-  - **Allied torpedoes fired:** a mean of 48.9 a run before and 24.5 after.
-  - **The result on the scale:** an Allied defeat of some kind in 696 runs, where it was 563, and a victory in 115, where it was 216. The median margin goes from -4 to -5.5.
-- **Still open.** `surface_fights_by_day` agrees, and 346 runs still have a fight by day. It is read again after the rates of fire (decision 0070) and the shares are set; if it still misses once the night's hits on Japanese ships are near the record, option 3 is next. The night's gun hits on Japanese ships (median 49 against 10 to 17) are for tuning.
+  - **The head line:** judged 21. Before, 14 agree, 2 are at the edge and 5 miss. After, 15 agree, none is at the edge and 6 miss.
+  - **Fights by day:** runs with one fall from 401 to 228, and the fights themselves from 1,380 to 820.
+  - **Allied torpedoes fired:** a mean of 54.2 a run before and 27.0 after.
+  - **The result on the scale:** an Allied defeat of some kind in 713 runs, where it was 541, and a victory in 31, where it was 124. The median margin goes from -3 to -4.
+  - **Two measures went the wrong way.**
+    - Tenryu and Yubari's shells went from at the edge to a miss: 37 runs hold the record of one hundred, where 80 did.
+    - Allied destroyers sunk hold the record of none in 24 runs, where 49 did.
+
+    Both fit fewer Japanese cripples: a column that loses fewer ships breaks off later, and its light cruisers fire more rounds at the destroyers. The rule does not touch the Japanese guns. The light cruisers' rate is decision 0070's, and how long the column fights is for tuning.
+- **Still open.** `surface_fights_by_day` agrees, and 228 runs still have a fight by day. It is read again when the shares are tuned. If it still misses once the night's hits on Japanese ships are near the record, option 3 is next.
