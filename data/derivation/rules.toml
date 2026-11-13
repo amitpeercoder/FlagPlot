@@ -646,3 +646,100 @@ second_source_entity = "ijn-surface-fleet"
 [experience.force]
 statement = ["ship_facts.csv:night_practice_note", "training_facts.csv:night_training_note"]
 named_by = ["ship_facts.csv:time_in_theatre_note", "ship_facts.csv:night_practice_note"]
+
+# Rates of fire as achieved (decision 0070). A class's `gun_rounds_per_min` is
+# the lesser of its sourced rate and the achieved rate of its kind of battery;
+# the achieved rate of a kind is the median of the cases below. Each case is
+# a ship for which rows state the shells one battery fired and a span of
+# firing of `min_span_minutes` or more; the case is the written exception
+# (decision 0020, item 3) that lets the tool read its rows, whatever their
+# standing. Kinds: "salvo" (main battery of cruisers and larger, the default
+# for a cruiser or battleship class), "destroyer", and "continuous" (only a
+# class named in a `continuous` entry, with the rows that say it fired so).
+# Everything about decision 0070 is in this one block.
+[fire_rate]
+min_span_minutes = 5
+
+[[fire_rate.case]]
+kind = "salvo"
+ship = "chokai"
+class = "jp-takao-class"
+engagement = "savo-island"
+shells_row = 3131
+span_row = 3132
+reason = "Her own report: 302 shells of the main battery, over 20 minutes from opening gunfire to the end, fire held between targets."
+agreed = "2026-11-13"
+
+[[fire_rate.case]]
+kind = "salvo"
+ship = "kako"
+class = "jp-furutaka-class"
+engagement = "savo-island"
+shells_row = 3138
+span_row = 3140
+reason = "Her own report: 192 armour-piercing 20 cm shells, fired over thirty minutes; 30 minutes is a lower bound of the span, so the rate is an upper bound."
+agreed = "2026-11-13"
+
+[[fire_rate.case]]
+kind = "salvo"
+ship = "ca-25-salt-lake-city"
+class = "us-pensacola-class"
+engagement = "cape-esperance"
+shells_row = 1704
+span_row = 1638
+reason = "296 eight-inch shells in 30 salvos, from the opening of fire at 2347 to the end at 0016, 29 minutes with pauses."
+agreed = "2026-11-13"
+
+[[fire_rate.case]]
+kind = "salvo"
+ship = "washington"
+class = "us-north-carolina-class"
+engagement = "guadalcanal-15-nov"
+shells_row = 2645
+span_from_event = 860
+span_to_event = 863
+reason = "75 sixteen-inch shells from 0100 to 0107, with a check of 0102.30 to 0104 inside it; not in ships.csv, her class is given here and her nine guns come from that class's fit; her other window, 0016 to 0019, is under five minutes and is not a case."
+agreed = "2026-11-13"
+
+[[fire_rate.case]]
+kind = "destroyer"
+ship = "asagumo"
+class = "jp-asashio-class"
+engagement = "guadalcanal-13-nov"
+shells_row = 3146
+span_row = 3147
+reason = "Her own report: 88 shells in about six minutes of gunfire."
+agreed = "2026-11-13"
+
+[[fire_rate.case]]
+kind = "continuous"
+ship = "cl-50-helena"
+class = "us-st-louis-class"
+engagement = "cape-esperance"
+shells_row = 2980
+span_from_event = 1031
+span_to_event = 1034
+reason = "Her own report: 580 six-inch shells from 2346 to about 0012; her own report is read, not the veterans' pamphlet's 560 (row 3001, low), which would give 1.435897."
+agreed = "2026-11-13"
+
+# The classes that fire in continuous rapid fire, named by the rows that say
+# so. The rows of Admiral Scott's memorandum on continuous fire for the heavy
+# cruisers (2291, 2514) do not move them: an order for one situation.
+[[fire_rate.continuous]]
+class = "us-st-louis-class"
+rows = [2541, 2974]
+reason = "The Battle Experience bulletin on the light cruisers that used rapid continuous fire at Cape Esperance (row 2541) and Helena's own report (row 2974)."
+agreed = "2026-11-13"
+
+[[fire_rate.continuous]]
+class = "us-brooklyn-class"
+rows = [2541, 2906, 2523]
+reason = "The same bulletin (row 2541), Honolulu's own report (row 2906) and Boise's (row 2523) say the Brooklyn class's light cruisers fired in rapid continuous fire."
+agreed = "2026-11-13"
+
+# A class whose sourced rate row is not read.
+[[fire_rate.no_sourced_rate]]
+class = "jp-tenryu-class"
+row = 432
+reason = "The row's own note says it is the rate of the twin mount, Yubari's; Tenryu's four guns are in single mounts, so it is not her rate. Yubari still reads it, by the exception of 2026-11-10."
+agreed = "2026-11-13"

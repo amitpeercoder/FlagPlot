@@ -140,25 +140,30 @@ pub struct ShipResult {
 }
 
 pub(crate) struct ShipInfo {
-    row_id: String,
-    class: String,
+    pub(crate) row_id: String,
+    pub(crate) class: String,
 }
 
 pub(crate) struct ClassInfo {
-    row_id: String,
-    name: String,
-    kind_type: String,
+    pub(crate) row_id: String,
+    pub(crate) name: String,
+    pub(crate) kind_type: String,
 }
 
 pub struct Env<'a> {
     pub(crate) index: Index,
-    ships: BTreeMap<String, ShipInfo>,
-    classes: BTreeMap<String, ClassInfo>,
+    pub(crate) ships: BTreeMap<String, ShipInfo>,
+    pub(crate) classes: BTreeMap<String, ClassInfo>,
     pub(crate) aircraft: BTreeMap<String, AircraftInfo>,
     /// Weapon key to its `kind` in weapons.csv.
     pub(crate) weapons: BTreeMap<String, String>,
     pub(crate) date: Day,
     pub(crate) rules: &'a Rules,
+    /// The achieved rates of fire, when the rules have a `[fire_rate]`
+    /// block and every case in it is sound (decision 0070).
+    pub(crate) fire_rate: Option<crate::fire_rate::Achieved>,
+    /// Problems with that block's cases, read against the facts.
+    pub fire_rate_problems: Vec<Problem>,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -223,7 +228,7 @@ pub(crate) fn number(read: &Read, fact: &str) -> Result<Dec, Failure> {
     Ok(dec)
 }
 
-fn count(read: &Read, slot: &str) -> Result<u32, Failure> {
+pub(crate) fn count(read: &Read, slot: &str) -> Result<u32, Failure> {
     let row = &read.rows[0];
     row.count.parse::<u32>().map_err(|_| Failure {
         kind: Kind::BadValue,
@@ -247,6 +252,16 @@ fn put(figs: &mut [Option<Figure>], i: usize, value: Value, got: Got<()>) {
 }
 
 impl<T> Got<T> {
+    /// The same sources with another value.
+    pub(crate) fn map_value<U>(&self, value: U) -> Got<U> {
+        Got {
+            value,
+            cites: self.cites.clone(),
+            excepted: self.excepted,
+            doubts: self.doubts.clone(),
+        }
+    }
+
     /// The sources of this value, for a figure derived from it.
     pub(crate) fn bare(&self) -> Got<()> {
         Got {
@@ -310,7 +325,7 @@ impl<'a> Env<'a> {
             .into_iter()
             .map(|rec| (rec.get("key").to_string(), rec.get("kind").to_string()))
             .collect();
-        Env {
+        let mut env = Env {
             index: Index::build(data),
             ships,
             classes,
@@ -318,7 +333,15 @@ impl<'a> Env<'a> {
             weapons,
             date,
             rules,
+            fire_rate: None,
+            fire_rate_problems: Vec::new(),
+        };
+        if let Some(fire_rate) = &rules.fire_rate {
+            let (achieved, problems) = crate::fire_rate::compute(&env, data, fire_rate);
+            env.fire_rate = achieved;
+            env.fire_rate_problems = problems;
         }
+        env
     }
 
     /// Problems for exceptions that name no row of the facts.
@@ -382,13 +405,24 @@ impl<'a> Env<'a> {
     }
 
     fn fit_read(&self, keys: (&str, &str), slot: &str) -> Result<Read, Failure> {
+        self.fit_read_on(keys, slot, self.date)
+    }
+
+    /// A fit as it stood on a date (a case of decision 0070 reads the guns
+    /// on the date of its engagement).
+    pub(crate) fn fit_read_on(
+        &self,
+        keys: (&str, &str),
+        slot: &str,
+        date: Day,
+    ) -> Result<Read, Failure> {
         let (ship, class) = keys;
         resolve_over(
             self.index.rows(Table::ShipFits, ship, slot),
             &format!("{slot} fit of ship {ship}"),
             self.index.rows(Table::ClassFits, class, slot),
             &format!("{slot} fit of class {class}"),
-            self.date,
+            date,
             &self.rules.exceptions,
         )
     }
@@ -547,6 +581,136 @@ impl<'a> Env<'a> {
             .map(|got| (got, false))
     }
 
+    /// The rate of fire in action (decision 0070): the lesser of the sourced
+    /// rate and the achieved rate of the class's kind of battery. Without a
+    /// `[fire_rate]` block, or for a class whose kind has no achieved rate,
+    /// the sourced rate alone. Returns the figure, whether the sourced rate
+    /// was a designed one, and the note for the sources file.
+    fn rate_in_action(
+        &self,
+        w: &mut Work,
+        main: &Got<Fit>,
+        class_key: &str,
+        kind_type: &str,
+    ) -> Option<(Got<Dec>, bool, Option<String>)> {
+        let weapon = &main.value.item;
+        let block = self.rules.fire_rate.as_ref();
+        let no_sourced = block.and_then(|b| b.no_sourced_rate(class_key));
+        if let Some(n) = no_sourced {
+            let id = n.row.to_string();
+            let named = self
+                .index
+                .rows_of_entity(Table::WeaponFacts, weapon)
+                .any(|r| r.id == id);
+            if !named {
+                w.fail(
+                    Kind::Exception,
+                    FIGURES[7],
+                    format!(
+                        "fire_rate no_sourced_rate for {class_key} names weapon_facts.csv row {}, which is not a row of weapon {weapon}",
+                        n.row
+                    ),
+                );
+                return None;
+            }
+        }
+        let simulation_kind = KIND_FOR_TYPE
+            .iter()
+            .find(|(t, _)| *t == kind_type)
+            .map(|(_, k)| *k);
+        let achieved = match (block, &self.fire_rate, simulation_kind) {
+            (Some(b), Some(a), Some(sim)) => b.kind_of(class_key, sim).and_then(|kind| {
+                a.medians
+                    .get(&kind)
+                    .map(|(median, n)| (b, a, kind, *median, *n))
+            }),
+            _ => None,
+        };
+        let designed_named = self
+            .rules
+            .exceptions
+            .iter()
+            .any(|e| e.entity == *weapon && e.fact == DESIGNED_RATE);
+        let practical_absent = self
+            .index
+            .rows(Table::WeaponFacts, weapon, RATE_OF_FIRE)
+            .is_empty();
+        let sourced_skipped =
+            no_sourced.is_some() || (achieved.is_some() && !designed_named && practical_absent);
+        let sourced = if sourced_skipped {
+            None
+        } else {
+            Some(self.rate_of_fire(w, main)?)
+        };
+        let Some((block, achieved_set, kind, median, n)) = achieved else {
+            return match sourced {
+                Some((got, designed)) => Some((got, designed, None)),
+                None => {
+                    w.fail(
+                        Kind::Missing,
+                        FIGURES[7],
+                        format!(
+                            "no sourced rate (weapon_facts.csv row {} is not read for class {class_key}) and no achieved rate of its kind",
+                            no_sourced.map_or(0, |n| n.row)
+                        ),
+                    );
+                    None
+                }
+            };
+        };
+        let mut cites: BTreeSet<Cite> = BTreeSet::new();
+        for case in achieved_set.cases_of(block, kind) {
+            cites.extend(case.cites.iter().cloned());
+            for (index, row) in &case.used {
+                if !w
+                    .used
+                    .iter()
+                    .any(|(i, r)| i == index && r.file == row.file && r.id == row.id)
+                {
+                    w.used.push((*index, row.clone()));
+                }
+            }
+        }
+        if let Some(c) = block.continuous_class(class_key) {
+            cites.extend(c.rows.iter().map(|r| {
+                (
+                    "engagement_outcomes.csv".to_string(),
+                    u64::try_from(*r).unwrap_or(0),
+                )
+            }));
+        }
+        let cases = format!(
+            "the median of {n} {}",
+            if n == 1 { "case" } else { "cases" }
+        );
+        let (value, base, designed, note) = match sourced {
+            Some((got, designed)) => {
+                let value = got.value.min(median);
+                let note = format!(
+                    "rate in action (decision 0070): the lesser of the sourced rate {} and the achieved rate {median} of kind {}, {cases}",
+                    got.value,
+                    kind.name()
+                );
+                (value, got, designed, note)
+            }
+            None => {
+                let why = match no_sourced {
+                    Some(n) => format!("weapon_facts.csv row {} not read for this class", n.row),
+                    None => format!("no {RATE_OF_FIRE} row of weapon {weapon}"),
+                };
+                let note = format!(
+                    "no sourced rate ({why}); the achieved rate {median} of kind {}, {cases}",
+                    kind.name()
+                );
+                (median, main.map_value(Dec::ZERO), false, note)
+            }
+        };
+        let mut got = base;
+        got.value = value;
+        got.cites.extend(cites);
+        Some((got, designed, Some(note)))
+    }
+
     /// Rounds per gun. A ship the list names, with no `main_rounds_per_gun`
     /// row of its own or its class at all, gets
     /// [`AMMUNITION_NOT_LIMITING_ROUNDS`]; rows that exist but cannot be
@@ -698,10 +862,15 @@ impl<'a> Env<'a> {
                     Value::Num(Dec::from_int(i64::from(main.value.count)).unwrap_or(Dec::ZERO)),
                     main.bare(),
                 );
-                if let Some((got, designed)) = self.rate_of_fire(&mut w, main) {
+                if let Some((got, designed, note)) =
+                    self.rate_in_action(&mut w, main, class_key, &class.kind_type)
+                {
                     designed_rate = designed;
                     let (v, sources) = num(got);
                     put(&mut figs, 7, v, sources);
+                    if let (Some(note), Some(figure)) = (note, figs[7].as_mut()) {
+                        figure.notes.insert(note);
+                    }
                 }
             }
             if let Some((got, assumed)) =
