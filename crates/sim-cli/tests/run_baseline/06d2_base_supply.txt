@@ -3,19 +3,19 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 85bc75ca2fd75ead  29 events
-day   2  hash 99f387329565a8f0  23 events
-day   3  hash 96a65a6cab206209  23 events
-day   4  hash 97415f25d56b698c  21 events
-day   5  hash 74ac38da7b6a4a65  7 events
-day   6  hash 7bced358dfe40833  7 events
+day   2  hash 9bbd94da4de9896d  22 events
+day   3  hash 29c3dfaec3abc899  23 events
+day   4  hash d60fadc2da51af10  22 events
+day   5  hash cb9b80ab12d93a35  7 events
+day   6  hash 759a67db8680d6d3  7 events
 
-air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, mission BaseStrike on base:2, no arc
-air_group:2 "Placeholder escort group" (Japanese) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:1 "Placeholder bomber group" (Japanese) at base:1: 9 ready, mission BaseStrike on base:2, no arc
+air_group:2 "Placeholder escort group" (Japanese) at base:1: 9 ready, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:3 "Placeholder defending fighters" (Allied) at base:2: 4 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:4 "Placeholder resting bombers" (Allied) at base:2: 8 ready, mission Rest, no arc
 air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, arc 040-130 to 300 nm
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock
-base:2 "Placeholder airfield B" (Allied) at (5,0): 690.8 t of supply in stock, 20 anti-aircraft shots
+base:2 "Placeholder airfield B" (Allied) at (5,0): 640.8 t of supply in stock, 20 anti-aircraft shots
 Allied: no contacts
 Allied claim over (5,0): 5 aircraft shot down, day 1 morning
 Allied claim over (5,0): 3 aircraft shot down, day 2 morning

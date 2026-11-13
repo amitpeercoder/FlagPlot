@@ -2,34 +2,34 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 50004b764e5dbbd1  51 events
-day   2  hash 007ea6bc51900c72  37 events
-day   3  hash 36e9716f755f9b7f  33 events
-day   4  hash 6f06b5ed68bf2c12  23 events
-day   5  hash 56c6b1f549bf5c64  17 events
-day   6  hash 2916ff6c48ab79d0  37 events
-day   7  hash d3b9abc2e4a0229e  22 events
-day   8  hash 0e03866f4f03231e  13 events
-day   9  hash e346da10584c0383  31 events
-day  10  hash 6b19c51795cbf52c  24 events
-day  11  hash db64891843c543f6  22 events
-day  12  hash fe827fcc477bbabe  37 events
-day  13  hash b542ca1a928a5e91  27 events
-day  14  hash 260a2c20217a1844  25 events
-day  15  hash 4256fa3f11e438e9  46 events
-day  16  hash e8fe116d8c1e76be  23 events
-day  17  hash ae872ea6899ba935  17 events
-day  18  hash 467d931dc80be911  35 events
-day  19  hash b745c1e64511b614  21 events
-day  20  hash 09f7182828affd22  15 events
-day  21  hash 4a17967d406d0c65  40 events
-day  22  hash 1a3bd0c6d944a8a3  28 events
-day  23  hash 6f43ef49a183c03a  25 events
-day  24  hash 91c9ddf4468107e4  52 events
-day  25  hash 5c57982af180a4cc  31 events
-day  26  hash d9fdf71ac1ccf25a  29 events
-day  27  hash e8b4d981935b074a  47 events
-day  28  hash eaea24025fcf4ce0  30 events
+day   1  hash 0fff11b36052afde  52 events
+day   2  hash e628f368a9e779ca  38 events
+day   3  hash c23e7353442a5d0e  36 events
+day   4  hash 23ae2d28cbad3518  23 events
+day   5  hash 578787a1b73f7530  18 events
+day   6  hash 930c7e45c502ad3a  38 events
+day   7  hash d845a769f3cf3ade  21 events
+day   8  hash 0be977f323c67aa9  14 events
+day   9  hash c78964160dba02ef  28 events
+day  10  hash 759fff3029b3b337  24 events
+day  11  hash 09ee739153458004  22 events
+day  12  hash a879cebd6ab815d4  40 events
+day  13  hash 4d36be2b8a139583  27 events
+day  14  hash 83112b2613546972  25 events
+day  15  hash 9348cd88b40e2e8c  48 events
+day  16  hash 6fd9470a02502a34  25 events
+day  17  hash 1576d1bdae675d34  16 events
+day  18  hash 0d6f2da4a57a9c4b  34 events
+day  19  hash 3fb09e948041d2f5  21 events
+day  20  hash 2e5e4f7756e05589  15 events
+day  21  hash 25194e4375efaa70  41 events
+day  22  hash 342f3902ef0bbc44  28 events
+day  23  hash 4b9880f5e32a5e08  25 events
+day  24  hash bbe124a08050cf41  52 events
+day  25  hash e9adce3120f122eb  31 events
+day  26  hash c054261ee8ef3d19  29 events
+day  27  hash 0880be2680be316c  49 events
+day  28  hash 9b66a2190aa8f228  30 events
 
 #1 D1 -         order:1 accepted for air_group:10  <- order:1
 #2 D1 -         order:2 accepted for air_group:10  <- order:2
@@ -56,833 +56,845 @@ day  28  hash eaea24025fcf4ce0  30 events
 #23 D1 morning   air_group:1 launched 41 aircraft at base:1 at (2,-4), 556 nm  <- order:13
 #24 D1 morning   air_group:2 sent 24 escorts with air_group:1  <- order:15, order:16, #23
 #25 D1 morning   air_group:2 escorts at the patrol of air_group:10: 24 shots x 0.16875 = 4.05 expected, 4 hits  <- #23, #24
-#26 D1 morning   air_group:10 patrol at the escorts of air_group:2: 19 shots x 0.3 = 5.7 expected, 2 hits  <- #23, #24
-#27 D1 morning   air_group:10 lost 4 aircraft, 15 left  <- #25
-#28 D1 morning   air_group:10 lost 1 pilot, 18 left  <- #27
-#29 D1 morning   air_group:2 lost 2 aircraft, 22 left  <- #26
-#30 D1 morning   air_group:2 lost 2 pilots, 22 left  <- #29
-#31 D1 morning   air_group:1 bombs at base:1: 41 shots x 0.2 = 8.2 expected, 6 hits: 1 on aircraft, 3 on supply, 2 on nothing  <- #23
-#32 D1 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #23, #31
-#33 D1 morning   air_group:11 lost 1 aircraft on the ground at base:1, 11 left  <- #31
-#34 D1 morning   base:1 lost 150 t of supply, 3843.8 t left  <- #31
-#35 D1 morning   Japanese claim at (2,-4): 6 aircraft shot down, 5 aircraft destroyed on the ground  <- #25, #31
-#36 D1 morning   Allied claim over (2,-4): 2 aircraft shot down  <- #26, #32
-#37 D1 morning   air_group:1 base strike sortie of 1112 nm: 41 aircraft x 0.2724 = 11.1684 expected worn, 8 worn, 1 written off, 33 ready and 7 damaged left  <- #23
-#38 D1 morning   air_group:2 escort sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 7 worn, 1 written off, 15 ready and 6 damaged left  <- #24
-#39 D1 morning   air_group:10 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 1 worn, 0 written off, 14 ready and 1 damaged left  <- order:1
-#40 D1 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 25.24  <- #23
-#41 D1 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.24  <- #24
-#42 D1 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
-#43 D1 morning   base:1 spent 9.5 t of supply on 19 aircraft sent on sorties, 3834.3 t left  <- order:1
-#44 D1 morning   base:2 spent 213.2 t of supply on 65 aircraft sent on sorties, 9773.8 t left  <- #23, #24
-#45 D1 afternoon air_group:10 patrol sortie of 0 nm: 13 aircraft x 0.05 = 0.65 expected worn, 0 worn, 0 written off, 14 ready and 1 damaged left  <- order:1
-#46 D1 afternoon air_group:1 rested 5 fatigue, now 20.24  <- order:13
-#47 D1 afternoon air_group:2 rested 5 fatigue, now 20.24  <- order:15
-#48 D1 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:1
-#49 D1 afternoon base:1 spent 6.5 t of supply on 13 aircraft sent on sorties, 3827.8 t left  <- order:1
-#50 D1 -         base:1 at the end of the day: 3827.8 t of supply, 25 aircraft ready: open
-#51 D1 -         base:2 at the end of the day: 9773.8 t of supply, 48 aircraft ready: open
-#52 D2 night     air_group:10 had 1 aircraft repaired at base:1, 15 ready and 0 damaged  <- #39
-#53 D2 night     base:1 spent 1 t of supply on 1 repairs, 3826.8 t left  <- #52
-#54 D2 night     air_group:1 had 4 aircraft repaired at base:2, 37 ready and 3 damaged  <- #37
-#55 D2 night     base:2 spent 4 t of supply on 4 repairs, 9769.8 t left  <- #54
-#56 D2 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 17 ready and 24 pilots
-#57 D2 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 38 ready and 41 pilots
-#58 D2 night     base:1 spent 5.2 t of supply on 26 aircraft at the base for the day, 3821.6 t left
-#59 D2 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9757 t left
-#60 D2 morning   air_group:1 launched 30 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#61 D2 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #60
-#62 D2 morning   air_group:2 escorts at the patrol of air_group:10: 13 shots x 0.16875 = 2.19375 expected, 3 hits  <- #60, #61
-#63 D2 morning   air_group:10 patrol at the escorts of air_group:2: 13 shots x 0.3 = 3.9 expected, 3 hits  <- #60, #61
-#64 D2 morning   air_group:10 patrol at the bombers of air_group:1: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #60
-#65 D2 morning   air_group:10 lost 3 aircraft, 12 left  <- #62
-#66 D2 morning   air_group:10 lost 2 pilots, 16 left  <- #65
-#67 D2 morning   air_group:2 lost 3 aircraft, 14 left  <- #63
-#68 D2 morning   air_group:2 lost 3 pilots, 21 left  <- #67
-#69 D2 morning   air_group:1 bombs at base:1: 30 shots x 0.2 = 6 expected, 7 hits: 1 on aircraft, 0 on supply, 6 on nothing  <- #60
-#70 D2 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #60, #69
-#71 D2 morning   air_group:10 lost 1 aircraft on the ground at base:1, 11 left  <- #69
-#72 D2 morning   Japanese claim at (2,-4): 3 aircraft shot down, 7 aircraft destroyed on the ground  <- #62, #69
-#73 D2 morning   Allied claim over (2,-4): 5 aircraft shot down  <- #63, #64, #70
-#74 D2 morning   air_group:1 base strike sortie of 1112 nm: 30 aircraft x 0.2724 = 8.172 expected worn, 6 worn, 1 written off, 32 ready and 8 damaged left  <- #60
-#75 D2 morning   air_group:2 escort sortie of 1112 nm: 10 aircraft x 0.2724 = 2.724 expected worn, 4 worn, 1 written off, 10 ready and 9 damaged left  <- #61
-#76 D2 morning   air_group:10 patrol sortie of 0 nm: 11 aircraft x 0.05 = 0.55 expected worn, 0 worn, 0 written off, 11 ready and 0 damaged left  <- order:1
-#77 D2 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 45.48  <- #60
-#78 D2 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 45.48  <- #61
-#79 D2 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:1
-#80 D2 morning   base:1 spent 7 t of supply on 14 aircraft sent on sorties, 3814.6 t left  <- order:1
-#81 D2 morning   base:2 spent 141.04 t of supply on 43 aircraft sent on sorties, 9615.96 t left  <- #60, #61
-#82 D2 afternoon air_group:10 patrol sortie of 0 nm: 10 aircraft x 0.05 = 0.5 expected worn, 0 worn, 0 written off, 11 ready and 0 damaged left  <- order:1
-#83 D2 afternoon air_group:1 rested 5 fatigue, now 40.48  <- order:13
-#84 D2 afternoon air_group:2 rested 5 fatigue, now 40.48  <- order:15
-#85 D2 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:1
-#86 D2 afternoon base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3809.6 t left  <- order:1
-#87 D2 -         base:1 at the end of the day: 3809.6 t of supply, 22 aircraft ready: open
-#88 D2 -         base:2 at the end of the day: 9615.96 t of supply, 42 aircraft ready: open
-#89 D3 night     air_group:1 had 4 aircraft repaired at base:2, 36 ready and 4 damaged  <- #74
-#90 D3 night     base:2 spent 4 t of supply on 4 repairs, 9611.96 t left  <- #89
-#91 D3 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 12 ready and 23 pilots
-#92 D3 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 37 ready and 41 pilots
-#93 D3 night     base:1 spent 4.4 t of supply on 22 aircraft at the base for the day, 3805.2 t left
-#94 D3 night     base:2 spent 12.4 t of supply on 62 aircraft at the base for the day, 9599.56 t left
-#95 D3 morning   air_group:1 launched 22 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#96 D3 morning   air_group:2 sent 7 escorts with air_group:1  <- order:15, order:16, #95
-#97 D3 morning   air_group:2 escorts at the patrol of air_group:10: 7 shots x 0.16875 = 1.18125 expected, 3 hits  <- #95, #96
-#98 D3 morning   air_group:10 patrol at the escorts of air_group:2: 7 shots x 0.3 = 2.1 expected, 2 hits  <- #95, #96
-#99 D3 morning   air_group:10 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 0 hits  <- #95
-#100 D3 morning   air_group:10 lost 3 aircraft, 8 left  <- #97
-#101 D3 morning   air_group:2 lost 2 aircraft, 10 left  <- #98
-#102 D3 morning   air_group:2 lost 2 pilots, 21 left  <- #101
-#103 D3 morning   air_group:1 bombs at base:1: 22 shots x 0.2 = 4.4 expected, 3 hits: 0 on aircraft, 0 on supply, 3 on nothing  <- #95
-#104 D3 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #95, #103
-#105 D3 morning   Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground  <- #97, #103
-#106 D3 morning   Allied claim over (2,-4): 3 aircraft shot down  <- #98, #99, #104
-#107 D3 morning   air_group:1 base strike sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 5 worn, 1 written off, 32 ready and 8 damaged left  <- #95
-#108 D3 morning   air_group:2 escort sortie of 1112 nm: 5 aircraft x 0.2724 = 1.362 expected worn, 1 worn, 0 written off, 9 ready and 10 damaged left  <- #96
-#109 D3 morning   air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 1 worn, 0 written off, 7 ready and 1 damaged left  <- order:1
-#110 D3 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 65.72  <- #95
-#111 D3 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 65.72  <- #96
-#112 D3 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:1
-#113 D3 morning   base:1 spent 4.5 t of supply on 9 aircraft sent on sorties, 3800.7 t left  <- order:1
-#114 D3 morning   base:2 spent 95.12 t of supply on 29 aircraft sent on sorties, 9504.44 t left  <- #95, #96
-#115 D3 afternoon air_group:10 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 0 worn, 0 written off, 7 ready and 1 damaged left  <- order:1
-#116 D3 afternoon air_group:1 rested 5 fatigue, now 60.72  <- order:13
-#117 D3 afternoon air_group:2 rested 5 fatigue, now 60.72  <- order:15
-#118 D3 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:1
-#119 D3 afternoon base:1 spent 2.5 t of supply on 5 aircraft sent on sorties, 3798.2 t left  <- order:1
-#120 D3 -         base:1 at the end of the day: 3798.2 t of supply, 18 aircraft ready: open
-#121 D3 -         base:2 at the end of the day: 9504.44 t of supply, 41 aircraft ready: open
-#122 D4 night     air_group:10 had 1 aircraft repaired at base:1, 8 ready and 0 damaged  <- #109
-#123 D4 night     base:1 spent 1 t of supply on 1 repairs, 3797.2 t left  <- #122
-#124 D4 night     air_group:1 had 4 aircraft repaired at base:2, 36 ready and 4 damaged  <- #107
-#125 D4 night     base:2 spent 4 t of supply on 4 repairs, 9500.44 t left  <- #124
-#126 D4 night     air_group:12 received 11 aircraft and 11 pilots by arrival, 11 ready, 11 pilots and strength 11
-#127 D4 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 11 ready and 23 pilots
-#128 D4 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 37 ready and 41 pilots
-#129 D4 night     base:1 spent 6 t of supply on 30 aircraft at the base for the day, 3791.2 t left
-#130 D4 night     base:2 spent 12.4 t of supply on 62 aircraft at the base for the day, 9488.04 t left
-#131 D4 night     air_group:1 stood down: fatigue 60.72 is above its threshold of 45  <- order:14
-#132 D4 night     air_group:2 stood down: fatigue 60.72 is above its threshold of 45  <- order:17
-#133 D4 morning   air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
-#134 D4 morning   air_group:1 rested 5 fatigue, now 55.72  <- #131
-#135 D4 morning   air_group:2 rested 5 fatigue, now 55.72  <- #132
-#136 D4 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:1
-#137 D4 morning   base:1 spent 3 t of supply on 6 aircraft sent on sorties, 3788.2 t left  <- order:1
-#138 D4 afternoon air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
-#139 D4 afternoon air_group:1 rested 5 fatigue, now 50.72  <- #131
-#140 D4 afternoon air_group:2 rested 5 fatigue, now 50.72  <- #132
-#141 D4 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:1
-#142 D4 afternoon base:1 spent 3 t of supply on 6 aircraft sent on sorties, 3785.2 t left  <- order:1
-#143 D4 -         base:1 at the end of the day: 3785.2 t of supply, 30 aircraft ready: open
-#144 D4 -         base:2 at the end of the day: 9488.04 t of supply, 48 aircraft ready: open
-#145 D5 night     air_group:1 had 4 aircraft repaired at base:2, 41 ready and 0 damaged  <- #107
-#146 D5 night     base:2 spent 4 t of supply on 4 repairs, 9484.04 t left  <- #145
-#147 D5 night     air_group:2 received 2 aircraft and 1 pilots at base:2, 13 ready and 24 pilots
-#148 D5 night     base:1 spent 6 t of supply on 30 aircraft at the base for the day, 3779.2 t left
-#149 D5 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9471.24 t left
-#150 D5 morning   air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
-#151 D5 morning   air_group:1 rested 5 fatigue, now 45.72  <- #131
-#152 D5 morning   air_group:2 rested 5 fatigue, now 45.72  <- #132
-#153 D5 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:1
-#154 D5 morning   base:1 spent 3 t of supply on 6 aircraft sent on sorties, 3776.2 t left  <- order:1
-#155 D5 afternoon air_group:10 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
-#156 D5 afternoon air_group:1 rested 5 fatigue, now 40.72  <- #131
-#157 D5 afternoon air_group:2 rested 5 fatigue, now 40.72  <- #132
-#158 D5 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:1
-#159 D5 afternoon base:1 spent 2.5 t of supply on 5 aircraft sent on sorties, 3773.7 t left  <- order:1
-#160 D5 -         base:1 at the end of the day: 3773.7 t of supply, 30 aircraft ready: open
-#161 D5 -         base:2 at the end of the day: 9471.24 t of supply, 54 aircraft ready: open
-#162 D6 night     air_group:2 had 4 aircraft repaired at base:2, 17 ready and 6 damaged  <- #108
-#163 D6 night     base:2 spent 4 t of supply on 4 repairs, 9467.24 t left  <- #162
-#164 D6 night     air_group:2 received 1 aircraft and 0 pilots at base:2, 18 ready and 24 pilots
-#165 D6 night     base:1 spent 6 t of supply on 30 aircraft at the base for the day, 3767.7 t left
-#166 D6 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9454.24 t left
-#167 D6 night     air_group:1 returned to flying: fatigue 40.72 is not above its threshold of 45  <- order:14
-#168 D6 night     air_group:2 returned to flying: fatigue 40.72 is not above its threshold of 45  <- order:17
-#169 D6 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#170 D6 morning   air_group:2 sent 10 escorts with air_group:1  <- order:15, order:16, #169
-#171 D6 morning   air_group:2 escorts at the patrol of air_group:10: 10 shots x 0.16875 = 1.6875 expected, 1 hit  <- #169, #170
-#172 D6 morning   air_group:10 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #169, #170
-#173 D6 morning   air_group:10 lost 1 aircraft, 7 left  <- #171
-#174 D6 morning   air_group:10 lost 1 pilot, 15 left  <- #173
-#175 D6 morning   air_group:2 lost 1 aircraft, 17 left  <- #172
-#176 D6 morning   air_group:2 lost 1 pilot, 23 left  <- #175
-#177 D6 morning   air_group:1 bombs at base:1: 24 shots x 0.2 = 4.8 expected, 2 hits: 2 on aircraft, 0 on supply, 0 on nothing  <- #169
-#178 D6 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 1 hit after the attack  <- #169, #177
-#179 D6 morning   air_group:1 lost 1 aircraft, 40 left  <- #178
-#180 D6 morning   air_group:1 lost 1 pilot, 40 left  <- #179
-#181 D6 morning   air_group:10 lost 2 aircraft on the ground at base:1, 5 left  <- #177
-#182 D6 morning   Japanese claim at (2,-4): 1 aircraft shot down, 4 aircraft destroyed on the ground  <- #171, #177
-#183 D6 morning   Allied claim over (2,-4): 3 aircraft shot down  <- #172, #178
-#184 D6 morning   air_group:1 base strike sortie of 1112 nm: 23 aircraft x 0.2724 = 6.2652 expected worn, 5 worn, 1 written off, 35 ready and 4 damaged left  <- #169
-#185 D6 morning   air_group:2 escort sortie of 1112 nm: 9 aircraft x 0.2724 = 2.4516 expected worn, 1 worn, 0 written off, 16 ready and 7 damaged left  <- #170
-#186 D6 morning   air_group:10 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:1
-#187 D6 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 65.96  <- #169
-#188 D6 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 65.96  <- #170
-#189 D6 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1
-#190 D6 morning   base:1 spent 2.5 t of supply on 5 aircraft sent on sorties, 3765.2 t left  <- order:1
-#191 D6 morning   base:2 spent 111.52 t of supply on 34 aircraft sent on sorties, 9342.72 t left  <- #169, #170
-#192 D6 afternoon air_group:10 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 1 worn, 0 written off, 4 ready and 1 damaged left  <- order:1
-#193 D6 afternoon air_group:1 rested 5 fatigue, now 60.96  <- order:13
-#194 D6 afternoon air_group:2 rested 5 fatigue, now 60.96  <- order:15
-#195 D6 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:1
-#196 D6 afternoon base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3763.7 t left  <- order:1
-#197 D6 -         base:1 at the end of the day: 3763.7 t of supply, 26 aircraft ready: open
-#198 D6 -         base:2 at the end of the day: 9342.72 t of supply, 51 aircraft ready: open
-#199 D7 night     air_group:10 had 1 aircraft repaired at base:1, 5 ready and 0 damaged  <- #192
-#200 D7 night     base:1 spent 1 t of supply on 1 repairs, 3762.7 t left  <- #199
-#201 D7 night     air_group:1 had 4 aircraft repaired at base:2, 39 ready and 0 damaged  <- #184
-#202 D7 night     base:2 spent 4 t of supply on 4 repairs, 9338.72 t left  <- #201
-#203 D7 night     air_group:2 received 1 aircraft and 1 pilots at base:2, 17 ready and 24 pilots
-#204 D7 night     air_group:1 received 2 aircraft and 1 pilots at base:2, 41 ready and 41 pilots
-#205 D7 night     base:1 spent 5.4 t of supply on 27 aircraft at the base for the day, 3757.3 t left
-#206 D7 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9325.72 t left
-#207 D7 night     air_group:1 stood down: fatigue 60.96 is above its threshold of 45  <- order:14
-#208 D7 night     air_group:2 stood down: fatigue 60.96 is above its threshold of 45  <- order:17
-#209 D7 morning   air_group:10 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:1
-#210 D7 morning   air_group:1 rested 5 fatigue, now 55.96  <- #207
-#211 D7 morning   air_group:2 rested 5 fatigue, now 55.96  <- #208
-#212 D7 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:1
-#213 D7 morning   base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3755.8 t left  <- order:1
-#214 D7 afternoon air_group:10 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:1
-#215 D7 afternoon air_group:1 rested 5 fatigue, now 50.96  <- #207
-#216 D7 afternoon air_group:2 rested 5 fatigue, now 50.96  <- #208
-#217 D7 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:1
-#218 D7 afternoon base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3754.3 t left  <- order:1
-#219 D7 -         base:1 at the end of the day: 3754.3 t of supply, 27 aircraft ready: open
-#220 D7 -         base:2 at the end of the day: 9325.72 t of supply, 58 aircraft ready: open
-#221 D8 night     air_group:2 had 4 aircraft repaired at base:2, 21 ready and 3 damaged  <- #185
-#222 D8 night     base:2 spent 4 t of supply on 4 repairs, 9321.72 t left  <- #221
-#223 D8 night     base:1 spent 5.4 t of supply on 27 aircraft at the base for the day, 3748.9 t left
-#224 D8 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9308.72 t left
-#225 D8 night     air_group:10 stood down: fatigue 42 is above its threshold of 40  <- order:2
-#226 D8 morning   air_group:1 rested 5 fatigue, now 45.96  <- #207
-#227 D8 morning   air_group:2 rested 5 fatigue, now 45.96  <- #208
-#228 D8 morning   air_group:10 rested 5 fatigue, now 37  <- #225
-#229 D8 afternoon air_group:1 rested 5 fatigue, now 40.96  <- #207
-#230 D8 afternoon air_group:2 rested 5 fatigue, now 40.96  <- #208
-#231 D8 afternoon air_group:10 rested 5 fatigue, now 32  <- #225
-#232 D8 -         base:1 at the end of the day: 3748.9 t of supply, 27 aircraft ready: open
-#233 D8 -         base:2 at the end of the day: 9308.72 t of supply, 62 aircraft ready: open
-#234 D9 night     air_group:2 had 3 aircraft repaired at base:2, 24 ready and 0 damaged  <- #185
-#235 D9 night     base:2 spent 3 t of supply on 3 repairs, 9305.72 t left  <- #234
-#236 D9 night     base:1 spent 5.4 t of supply on 27 aircraft at the base for the day, 3743.5 t left
-#237 D9 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9292.72 t left
-#238 D9 night     air_group:1 returned to flying: fatigue 40.96 is not above its threshold of 45  <- order:14
-#239 D9 night     air_group:2 returned to flying: fatigue 40.96 is not above its threshold of 45  <- order:17
-#240 D9 night     air_group:10 returned to flying: fatigue 32 is not above its threshold of 40  <- order:2
-#241 D9 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#242 D9 morning   air_group:2 sent 14 escorts with air_group:1  <- order:15, order:16, #241
-#243 D9 morning   air_group:2 escorts at the patrol of air_group:10: 14 shots x 0.16875 = 2.3625 expected, 4 hits  <- #241, #242
-#244 D9 morning   air_group:10 patrol at the escorts of air_group:2: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #241, #242
-#245 D9 morning   air_group:10 lost 3 aircraft, 2 left  <- #243
-#246 D9 morning   air_group:10 lost 1 pilot, 14 left  <- #245
-#247 D9 morning   air_group:1 bombs at base:1: 24 shots x 0.2 = 4.8 expected, 4 hits: 1 on aircraft, 3 on supply, 0 on nothing  <- #241
-#248 D9 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #241, #247
-#249 D9 morning   air_group:10 lost 1 aircraft on the ground at base:1, 1 left  <- #247
-#250 D9 morning   base:1 lost 150 t of supply, 3593.5 t left  <- #247
-#251 D9 morning   Japanese claim at (2,-4): 3 aircraft shot down, 4 aircraft destroyed on the ground  <- #243, #247
-#252 D9 morning   Allied claim over (2,-4): 0 aircraft shot down  <- #244, #248
-#253 D9 morning   air_group:1 base strike sortie of 1112 nm: 24 aircraft x 0.2724 = 6.5376 expected worn, 6 worn, 3 written off, 35 ready and 3 damaged left  <- #241
-#254 D9 morning   air_group:2 escort sortie of 1112 nm: 14 aircraft x 0.2724 = 3.8136 expected worn, 5 worn, 0 written off, 19 ready and 5 damaged left  <- #242
-#255 D9 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.2  <- #241
-#256 D9 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.2  <- #242
-#257 D9 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 35  <- order:1
-#258 D9 morning   base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3592 t left  <- order:1
-#259 D9 morning   base:2 spent 124.64 t of supply on 38 aircraft sent on sorties, 9168.08 t left  <- #241, #242
-#260 D9 afternoon air_group:1 rested 5 fatigue, now 61.2  <- order:13
-#261 D9 afternoon air_group:2 rested 5 fatigue, now 61.2  <- order:15
-#262 D9 afternoon air_group:10 rested 5 fatigue, now 30  <- order:1
-#263 D9 -         base:1 at the end of the day: 3592 t of supply, 23 aircraft ready: open
-#264 D9 -         base:2 at the end of the day: 9168.08 t of supply, 54 aircraft ready: open
-#265 D10 night     air_group:1 had 3 aircraft repaired at base:2, 38 ready and 0 damaged  <- #253
-#266 D10 night     air_group:2 had 1 aircraft repaired at base:2, 20 ready and 4 damaged  <- #254
-#267 D10 night     base:2 spent 4 t of supply on 4 repairs, 9164.08 t left  <- #265, #266
-#268 D10 night     air_group:13 received 19 aircraft and 19 pilots by arrival, 19 ready, 19 pilots and strength 19
-#269 D10 night     air_group:14 received 12 aircraft and 12 pilots by arrival, 12 ready, 12 pilots and strength 12
-#270 D10 night     air_group:1 received 2 aircraft and 0 pilots at base:2, 40 ready and 41 pilots
-#271 D10 night     base:1 spent 10.8 t of supply on 54 aircraft at the base for the day, 3581.2 t left
-#272 D10 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9151.28 t left
-#273 D10 night     air_group:1 stood down: fatigue 61.2 is above its threshold of 45  <- order:14
-#274 D10 night     air_group:2 stood down: fatigue 61.2 is above its threshold of 45  <- order:17
-#275 D10 morning   air_group:13 patrol sortie of 0 nm: 19 aircraft x 0.05 = 0.95 expected worn, 2 worn, 0 written off, 17 ready and 2 damaged left  <- order:5
-#276 D10 morning   air_group:1 rested 5 fatigue, now 56.2  <- #273
-#277 D10 morning   air_group:2 rested 5 fatigue, now 56.2  <- #274
-#278 D10 morning   air_group:10 rested 5 fatigue, now 25  <- order:1
-#279 D10 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:5
-#280 D10 morning   base:1 spent 9.5 t of supply on 19 aircraft sent on sorties, 3571.7 t left  <- order:5
-#281 D10 afternoon air_group:13 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 0 worn, 0 written off, 17 ready and 2 damaged left  <- order:5
-#282 D10 afternoon air_group:1 rested 5 fatigue, now 51.2  <- #273
-#283 D10 afternoon air_group:2 rested 5 fatigue, now 51.2  <- #274
-#284 D10 afternoon air_group:10 rested 5 fatigue, now 20  <- order:1
-#285 D10 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:5
-#286 D10 afternoon base:1 spent 8 t of supply on 16 aircraft sent on sorties, 3563.7 t left  <- order:5
-#287 D10 -         base:1 at the end of the day: 3563.7 t of supply, 52 aircraft ready: open
-#288 D10 -         base:2 at the end of the day: 9151.28 t of supply, 60 aircraft ready: open
-#289 D11 night     air_group:13 had 2 aircraft repaired at base:1, 19 ready and 0 damaged  <- #275
-#290 D11 night     base:1 spent 2 t of supply on 2 repairs, 3561.7 t left  <- #289
-#291 D11 night     air_group:2 had 4 aircraft repaired at base:2, 24 ready and 0 damaged  <- #254
-#292 D11 night     base:2 spent 4 t of supply on 4 repairs, 9147.28 t left  <- #291
-#293 D11 night     air_group:3 received 13 aircraft and 13 pilots by arrival, 13 ready, 13 pilots and strength 13
-#294 D11 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
-#295 D11 night     base:1 spent 10.8 t of supply on 54 aircraft at the base for the day, 3550.9 t left
-#296 D11 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 9131.68 t left
-#297 D11 morning   air_group:13 patrol sortie of 0 nm: 17 aircraft x 0.05 = 0.85 expected worn, 0 worn, 0 written off, 19 ready and 0 damaged left  <- order:5
-#298 D11 morning   air_group:1 rested 5 fatigue, now 46.2  <- #273
-#299 D11 morning   air_group:2 rested 5 fatigue, now 46.2  <- #274
-#300 D11 morning   air_group:10 rested 5 fatigue, now 15  <- order:1
-#301 D11 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:5
-#302 D11 morning   base:1 spent 8.5 t of supply on 17 aircraft sent on sorties, 3542.4 t left  <- order:5
-#303 D11 afternoon air_group:13 patrol sortie of 0 nm: 17 aircraft x 0.05 = 0.85 expected worn, 1 worn, 1 written off, 18 ready and 0 damaged left  <- order:5
-#304 D11 afternoon air_group:1 rested 5 fatigue, now 41.2  <- #273
-#305 D11 afternoon air_group:2 rested 5 fatigue, now 41.2  <- #274
-#306 D11 afternoon air_group:10 rested 5 fatigue, now 10  <- order:1
-#307 D11 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:5
-#308 D11 afternoon base:1 spent 8.5 t of supply on 17 aircraft sent on sorties, 3533.9 t left  <- order:5
-#309 D11 -         base:1 at the end of the day: 3533.9 t of supply, 53 aircraft ready: open
-#310 D11 -         base:2 at the end of the day: 9131.68 t of supply, 78 aircraft ready: open
-#311 D12 night     base:1 spent 10.6 t of supply on 53 aircraft at the base for the day, 3523.3 t left
-#312 D12 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 9116.08 t left
-#313 D12 night     air_group:1 returned to flying: fatigue 41.2 is not above its threshold of 45  <- order:14
-#314 D12 night     air_group:2 returned to flying: fatigue 41.2 is not above its threshold of 45  <- order:17
-#315 D12 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#316 D12 morning   air_group:2 sent 14 escorts with air_group:1  <- order:15, order:16, #315
-#317 D12 morning   air_group:3 sent 13 escorts with air_group:1  <- order:18, order:19, #315
-#318 D12 morning   air_group:2 escorts at the patrol of air_group:13: 27 shots x 0.16875 = 4.55625 expected, 6 hits  <- #315, #316, #317
-#319 D12 morning   air_group:13 patrol at the escorts of air_group:2: 15 shots x 0.3 = 4.5 expected, 3 hits  <- #315, #316, #317
-#320 D12 morning   air_group:13 lost 6 aircraft, 12 left  <- #318
-#321 D12 morning   air_group:13 lost 5 pilots, 14 left  <- #320
-#322 D12 morning   air_group:2 lost 3 aircraft, 21 left  <- #319
-#323 D12 morning   air_group:2 lost 3 pilots, 21 left  <- #322
-#324 D12 morning   air_group:1 bombs at base:1: 24 shots x 0.2 = 4.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #315
-#325 D12 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #315, #324
-#326 D12 morning   Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground  <- #318, #324
-#327 D12 morning   Allied claim over (2,-4): 4 aircraft shot down  <- #319, #325
-#328 D12 morning   air_group:1 base strike sortie of 1112 nm: 24 aircraft x 0.2724 = 6.5376 expected worn, 8 worn, 1 written off, 33 ready and 7 damaged left  <- #315
-#329 D12 morning   air_group:2 escort sortie of 1112 nm: 11 aircraft x 0.2724 = 2.9964 expected worn, 3 worn, 1 written off, 18 ready and 2 damaged left  <- #316
-#330 D12 morning   air_group:3 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 2 worn, 1 written off, 11 ready and 1 damaged left  <- #317
-#331 D12 morning   air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 0 worn, 0 written off, 12 ready and 0 damaged left  <- order:5
-#332 D12 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.44  <- #315
-#333 D12 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.44  <- #316
-#334 D12 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.24  <- #317
-#335 D12 morning   air_group:10 rested 5 fatigue, now 5  <- order:1
-#336 D12 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:5
-#337 D12 morning   base:1 spent 7.5 t of supply on 15 aircraft sent on sorties, 3515.8 t left  <- order:5
-#338 D12 morning   base:2 spent 167.28 t of supply on 51 aircraft sent on sorties, 8948.8 t left  <- #315, #316, #317
-#339 D12 afternoon air_group:13 patrol sortie of 0 nm: 10 aircraft x 0.05 = 0.5 expected worn, 1 worn, 0 written off, 11 ready and 1 damaged left  <- order:5
-#340 D12 afternoon air_group:1 rested 5 fatigue, now 61.44  <- order:13
-#341 D12 afternoon air_group:2 rested 5 fatigue, now 61.44  <- order:15
-#342 D12 afternoon air_group:3 rested 5 fatigue, now 20.24  <- order:18
-#343 D12 afternoon air_group:10 rested 5 fatigue, now 0  <- order:1
-#344 D12 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:5
-#345 D12 afternoon base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3510.8 t left  <- order:5
-#346 D12 -         base:1 at the end of the day: 3510.8 t of supply, 46 aircraft ready: open
-#347 D12 -         base:2 at the end of the day: 8948.8 t of supply, 62 aircraft ready: open
-#348 D13 night     air_group:13 had 1 aircraft repaired at base:1, 12 ready and 0 damaged  <- #339
-#349 D13 night     base:1 spent 1 t of supply on 1 repairs, 3509.8 t left  <- #348
-#350 D13 night     air_group:1 had 4 aircraft repaired at base:2, 37 ready and 3 damaged  <- #328
-#351 D13 night     base:2 spent 4 t of supply on 4 repairs, 8944.8 t left  <- #350
-#352 D13 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 20 ready and 23 pilots
-#353 D13 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 38 ready and 41 pilots
-#354 D13 night     base:1 spent 9.4 t of supply on 47 aircraft at the base for the day, 3500.4 t left
-#355 D13 night     base:2 spent 15 t of supply on 75 aircraft at the base for the day, 8929.8 t left
-#356 D13 night     air_group:1 stood down: fatigue 61.44 is above its threshold of 45  <- order:14
-#357 D13 night     air_group:2 stood down: fatigue 61.44 is above its threshold of 45  <- order:17
-#358 D13 morning   air_group:10 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- order:1
-#359 D13 morning   air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 0 worn, 0 written off, 12 ready and 0 damaged left  <- order:5
-#360 D13 morning   air_group:1 rested 5 fatigue, now 56.44  <- #356
-#361 D13 morning   air_group:2 rested 5 fatigue, now 56.44  <- #357
-#362 D13 morning   air_group:3 rested 5 fatigue, now 15.24  <- order:18
-#363 D13 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
-#364 D13 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:5
-#365 D13 morning   base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3495.4 t left  <- order:1, order:5
-#366 D13 afternoon air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 1 worn, 0 written off, 11 ready and 1 damaged left  <- order:5
-#367 D13 afternoon air_group:1 rested 5 fatigue, now 51.44  <- #356
-#368 D13 afternoon air_group:2 rested 5 fatigue, now 51.44  <- #357
-#369 D13 afternoon air_group:3 rested 5 fatigue, now 10.24  <- order:18
-#370 D13 afternoon air_group:10 rested 3 fatigue, now 0  <- order:1
-#371 D13 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:5
-#372 D13 afternoon base:1 spent 4.5 t of supply on 9 aircraft sent on sorties, 3490.9 t left  <- order:5
-#373 D13 -         base:1 at the end of the day: 3490.9 t of supply, 46 aircraft ready: open
-#374 D13 -         base:2 at the end of the day: 8929.8 t of supply, 69 aircraft ready: open
-#375 D14 night     air_group:13 had 1 aircraft repaired at base:1, 12 ready and 0 damaged  <- #366
-#376 D14 night     base:1 spent 1 t of supply on 1 repairs, 3489.9 t left  <- #375
-#377 D14 night     air_group:1 had 3 aircraft repaired at base:2, 41 ready and 0 damaged  <- #328
-#378 D14 night     air_group:2 had 1 aircraft repaired at base:2, 21 ready and 1 damaged  <- #329
-#379 D14 night     base:2 spent 4 t of supply on 4 repairs, 8925.8 t left  <- #377, #378
-#380 D14 night     air_group:2 received 2 aircraft and 1 pilots at base:2, 23 ready and 24 pilots
-#381 D14 night     base:1 spent 9.4 t of supply on 47 aircraft at the base for the day, 3480.5 t left
-#382 D14 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8910.4 t left
-#383 D14 morning   air_group:10 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- order:1
-#384 D14 morning   air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 1 worn, 0 written off, 11 ready and 1 damaged left  <- order:5
-#385 D14 morning   air_group:1 rested 5 fatigue, now 46.44  <- #356
-#386 D14 morning   air_group:2 rested 5 fatigue, now 46.44  <- #357
-#387 D14 morning   air_group:3 rested 5 fatigue, now 5.24  <- order:18
-#388 D14 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
-#389 D14 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:5
-#390 D14 morning   base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3475.5 t left  <- order:1, order:5
-#391 D14 afternoon air_group:13 patrol sortie of 0 nm: 8 aircraft x 0.05 = 0.4 expected worn, 1 worn, 0 written off, 10 ready and 2 damaged left  <- order:5
-#392 D14 afternoon air_group:1 rested 5 fatigue, now 41.44  <- #356
-#393 D14 afternoon air_group:2 rested 5 fatigue, now 41.44  <- #357
-#394 D14 afternoon air_group:3 rested 5 fatigue, now 0.24  <- order:18
-#395 D14 afternoon air_group:10 rested 3 fatigue, now 0  <- order:1
-#396 D14 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:5
-#397 D14 afternoon base:1 spent 4 t of supply on 8 aircraft sent on sorties, 3471.5 t left  <- order:5
-#398 D14 -         base:1 at the end of the day: 3471.5 t of supply, 45 aircraft ready: open
-#399 D14 -         base:2 at the end of the day: 8910.4 t of supply, 75 aircraft ready: open
-#400 D15 night     air_group:13 had 2 aircraft repaired at base:1, 12 ready and 0 damaged  <- #391
-#401 D15 night     base:1 spent 2 t of supply on 2 repairs, 3469.5 t left  <- #400
-#402 D15 night     air_group:2 had 1 aircraft repaired at base:2, 24 ready and 0 damaged  <- #329
-#403 D15 night     air_group:3 had 1 aircraft repaired at base:2, 12 ready and 0 damaged  <- #330
-#404 D15 night     base:2 spent 2 t of supply on 2 repairs, 8908.4 t left  <- #402, #403
-#405 D15 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 13 ready and 13 pilots
-#406 D15 night     base:1 spent 9.4 t of supply on 47 aircraft at the base for the day, 3460.1 t left
-#407 D15 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8892.8 t left
-#408 D15 night     air_group:1 returned to flying: fatigue 41.44 is not above its threshold of 45  <- order:14
-#409 D15 night     air_group:2 returned to flying: fatigue 41.44 is not above its threshold of 45  <- order:17
-#410 D15 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#411 D15 morning   air_group:2 sent 14 escorts with air_group:1  <- order:15, order:16, #410
-#412 D15 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #410
-#413 D15 morning   air_group:2 escorts at the patrol of air_group:10: 26 shots x 0.16875 = 4.3875 expected, 5 hits  <- #410, #411, #412
-#414 D15 morning   air_group:10 patrol at the escorts of air_group:2: 9 shots x 0.3 = 2.7 expected, 2 hits  <- #410, #411, #412
-#415 D15 morning   air_group:10 lost 1 aircraft, 0 left  <- #413
-#416 D15 morning   air_group:10 lost 1 pilot, 13 left  <- #415
-#417 D15 morning   air_group:13 lost 4 aircraft, 8 left  <- #413
-#418 D15 morning   air_group:13 lost 2 pilots, 12 left  <- #417
-#419 D15 morning   air_group:2 lost 2 aircraft, 22 left  <- #414
-#420 D15 morning   air_group:2 lost 2 pilots, 22 left  <- #419
-#421 D15 morning   air_group:1 bombs at base:1: 24 shots x 0.2 = 4.8 expected, 5 hits: 0 on aircraft, 2 on supply, 3 on nothing  <- #410
-#422 D15 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #410, #421
-#423 D15 morning   base:1 lost 100 t of supply, 3360.1 t left  <- #421
-#424 D15 morning   Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground  <- #413, #421
-#425 D15 morning   Allied claim over (2,-4): 4 aircraft shot down  <- #414, #422
-#426 D15 morning   air_group:1 base strike sortie of 1112 nm: 24 aircraft x 0.2724 = 6.5376 expected worn, 4 worn, 1 written off, 37 ready and 3 damaged left  <- #410
-#427 D15 morning   air_group:2 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 0 written off, 20 ready and 2 damaged left  <- #411
-#428 D15 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 5 worn, 1 written off, 8 ready and 4 damaged left  <- #412
-#429 D15 morning   air_group:13 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 1 worn, 1 written off, 7 ready and 0 damaged left  <- order:5
-#430 D15 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.68  <- #410
-#431 D15 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.68  <- #411
-#432 D15 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.48  <- #412
-#433 D15 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
-#434 D15 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:5
-#435 D15 morning   base:1 spent 4.5 t of supply on 9 aircraft sent on sorties, 3355.6 t left  <- order:1, order:5
-#436 D15 morning   base:2 spent 164 t of supply on 50 aircraft sent on sorties, 8728.8 t left  <- #410, #411, #412
-#437 D15 afternoon air_group:13 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 2 worn, 2 written off, 5 ready and 0 damaged left  <- order:5
-#438 D15 afternoon air_group:1 rested 5 fatigue, now 61.68  <- order:13
-#439 D15 afternoon air_group:2 rested 5 fatigue, now 61.68  <- order:15
-#440 D15 afternoon air_group:3 rested 5 fatigue, now 20.48  <- order:18
-#441 D15 afternoon air_group:10 rested 3 fatigue, now 0  <- order:1
-#442 D15 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:5
-#443 D15 afternoon base:1 spent 2 t of supply on 4 aircraft sent on sorties, 3353.6 t left  <- order:5
-#444 D15 -         base:1 at the end of the day: 3353.6 t of supply, 39 aircraft ready: open
-#445 D15 -         base:2 at the end of the day: 8728.8 t of supply, 65 aircraft ready: open
-#446 D16 night     air_group:1 had 3 aircraft repaired at base:2, 40 ready and 0 damaged  <- #426
-#447 D16 night     air_group:2 had 1 aircraft repaired at base:2, 21 ready and 1 damaged  <- #427
-#448 D16 night     base:2 spent 4 t of supply on 4 repairs, 8724.8 t left  <- #446, #447
-#449 D16 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 23 ready and 24 pilots
-#450 D16 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
-#451 D16 night     base:1 spent 7.8 t of supply on 39 aircraft at the base for the day, 3345.8 t left
-#452 D16 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8709.4 t left
-#453 D16 night     air_group:1 stood down: fatigue 61.68 is above its threshold of 45  <- order:14
-#454 D16 night     air_group:2 stood down: fatigue 61.68 is above its threshold of 45  <- order:17
-#455 D16 morning   air_group:13 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:5
-#456 D16 morning   air_group:1 rested 5 fatigue, now 56.68  <- #453
-#457 D16 morning   air_group:2 rested 5 fatigue, now 56.68  <- #454
-#458 D16 morning   air_group:3 rested 5 fatigue, now 15.48  <- order:18
-#459 D16 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:5
-#460 D16 morning   base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3344.3 t left  <- order:5
-#461 D16 afternoon air_group:13 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:5
-#462 D16 afternoon air_group:1 rested 5 fatigue, now 51.68  <- #453
-#463 D16 afternoon air_group:2 rested 5 fatigue, now 51.68  <- #454
-#464 D16 afternoon air_group:3 rested 5 fatigue, now 10.48  <- order:18
-#465 D16 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:5
-#466 D16 afternoon base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3342.8 t left  <- order:5
-#467 D16 -         base:1 at the end of the day: 3342.8 t of supply, 39 aircraft ready: open
-#468 D16 -         base:2 at the end of the day: 8709.4 t of supply, 72 aircraft ready: open
-#469 D17 night     air_group:2 had 1 aircraft repaired at base:2, 24 ready and 0 damaged  <- #427
-#470 D17 night     air_group:3 had 3 aircraft repaired at base:2, 11 ready and 1 damaged  <- #428
-#471 D17 night     base:2 spent 4 t of supply on 4 repairs, 8705.4 t left  <- #469, #470
-#472 D17 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 12 ready and 13 pilots
-#473 D17 night     base:1 spent 7.8 t of supply on 39 aircraft at the base for the day, 3335 t left
-#474 D17 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8689.8 t left
-#475 D17 night     air_group:13 stood down: fatigue 42 is above its threshold of 40  <- order:6
-#476 D17 morning   air_group:1 rested 5 fatigue, now 46.68  <- #453
-#477 D17 morning   air_group:2 rested 5 fatigue, now 46.68  <- #454
-#478 D17 morning   air_group:3 rested 5 fatigue, now 5.48  <- order:18
-#479 D17 morning   air_group:13 rested 5 fatigue, now 37  <- #475
-#480 D17 afternoon air_group:1 rested 5 fatigue, now 41.68  <- #453
-#481 D17 afternoon air_group:2 rested 5 fatigue, now 41.68  <- #454
-#482 D17 afternoon air_group:3 rested 5 fatigue, now 0.48  <- order:18
-#483 D17 afternoon air_group:13 rested 5 fatigue, now 32  <- #475
-#484 D17 -         base:1 at the end of the day: 3335 t of supply, 39 aircraft ready: open
-#485 D17 -         base:2 at the end of the day: 8689.8 t of supply, 77 aircraft ready: open
-#486 D18 night     air_group:3 had 1 aircraft repaired at base:2, 13 ready and 0 damaged  <- #428
-#487 D18 night     base:2 spent 1 t of supply on 1 repairs, 8688.8 t left  <- #486
-#488 D18 night     base:1 spent 7.8 t of supply on 39 aircraft at the base for the day, 3327.2 t left
-#489 D18 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8673.2 t left
-#490 D18 night     air_group:1 returned to flying: fatigue 41.68 is not above its threshold of 45  <- order:14
-#491 D18 night     air_group:2 returned to flying: fatigue 41.68 is not above its threshold of 45  <- order:17
-#492 D18 night     air_group:13 returned to flying: fatigue 32 is not above its threshold of 40  <- order:6
-#493 D18 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#494 D18 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #493
-#495 D18 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #493
-#496 D18 morning   air_group:2 escorts at the patrol of air_group:13: 25 shots x 0.16875 = 4.21875 expected, 1 hit  <- #493, #494, #495
-#497 D18 morning   air_group:13 patrol at the escorts of air_group:2: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #493, #494, #495
-#498 D18 morning   air_group:13 lost 1 aircraft, 4 left  <- #496
-#499 D18 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #493
-#500 D18 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #493, #499
-#501 D18 morning   Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground  <- #496, #499
-#502 D18 morning   Allied claim over (2,-4): 2 aircraft shot down  <- #497, #500
-#503 D18 morning   air_group:1 base strike sortie of 1112 nm: 23 aircraft x 0.2724 = 6.2652 expected worn, 2 worn, 0 written off, 39 ready and 2 damaged left  <- #493
-#504 D18 morning   air_group:2 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 2 worn, 0 written off, 22 ready and 2 damaged left  <- #494
-#505 D18 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 5 worn, 0 written off, 8 ready and 5 damaged left  <- #495
-#506 D18 morning   air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
-#507 D18 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.92  <- #493
-#508 D18 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.92  <- #494
-#509 D18 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.72  <- #495
-#510 D18 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 35  <- order:5
-#511 D18 morning   base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3325.7 t left  <- order:5
-#512 D18 morning   base:2 spent 157.44 t of supply on 48 aircraft sent on sorties, 8515.76 t left  <- #493, #494, #495
-#513 D18 afternoon air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
-#514 D18 afternoon air_group:1 rested 5 fatigue, now 61.92  <- order:13
-#515 D18 afternoon air_group:2 rested 5 fatigue, now 61.92  <- order:15
-#516 D18 afternoon air_group:3 rested 5 fatigue, now 20.72  <- order:18
-#517 D18 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 38  <- order:5
-#518 D18 afternoon base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3324.7 t left  <- order:5
-#519 D18 -         base:1 at the end of the day: 3324.7 t of supply, 38 aircraft ready: open
-#520 D18 -         base:2 at the end of the day: 8515.76 t of supply, 69 aircraft ready: open
-#521 D19 night     air_group:1 had 2 aircraft repaired at base:2, 41 ready and 0 damaged  <- #503
-#522 D19 night     air_group:2 had 2 aircraft repaired at base:2, 24 ready and 0 damaged  <- #504
-#523 D19 night     base:2 spent 4 t of supply on 4 repairs, 8511.76 t left  <- #521, #522
-#524 D19 night     base:1 spent 7.6 t of supply on 38 aircraft at the base for the day, 3317.1 t left
-#525 D19 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8496.16 t left
-#526 D19 night     air_group:1 stood down: fatigue 61.92 is above its threshold of 45  <- order:14
-#527 D19 night     air_group:2 stood down: fatigue 61.92 is above its threshold of 45  <- order:17
-#528 D19 morning   air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
-#529 D19 morning   air_group:1 rested 5 fatigue, now 56.92  <- #526
-#530 D19 morning   air_group:2 rested 5 fatigue, now 56.92  <- #527
-#531 D19 morning   air_group:3 rested 5 fatigue, now 15.72  <- order:18
-#532 D19 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 41  <- order:5
-#533 D19 morning   base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3316.1 t left  <- order:5
-#534 D19 afternoon air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
-#535 D19 afternoon air_group:1 rested 5 fatigue, now 51.92  <- #526
-#536 D19 afternoon air_group:2 rested 5 fatigue, now 51.92  <- #527
-#537 D19 afternoon air_group:3 rested 5 fatigue, now 10.72  <- order:18
-#538 D19 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 44  <- order:5
-#539 D19 afternoon base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3315.1 t left  <- order:5
-#540 D19 -         base:1 at the end of the day: 3315.1 t of supply, 38 aircraft ready: open
-#541 D19 -         base:2 at the end of the day: 8496.16 t of supply, 73 aircraft ready: open
-#542 D20 night     air_group:3 had 4 aircraft repaired at base:2, 12 ready and 1 damaged  <- #505
-#543 D20 night     base:2 spent 4 t of supply on 4 repairs, 8492.16 t left  <- #542
-#544 D20 night     base:1 spent 7.6 t of supply on 38 aircraft at the base for the day, 3307.5 t left
-#545 D20 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8476.56 t left
-#546 D20 night     air_group:13 stood down: fatigue 44 is above its threshold of 40  <- order:6
-#547 D20 morning   air_group:1 rested 5 fatigue, now 46.92  <- #526
-#548 D20 morning   air_group:2 rested 5 fatigue, now 46.92  <- #527
-#549 D20 morning   air_group:3 rested 5 fatigue, now 5.72  <- order:18
-#550 D20 morning   air_group:13 rested 5 fatigue, now 39  <- #546
-#551 D20 afternoon air_group:1 rested 5 fatigue, now 41.92  <- #526
-#552 D20 afternoon air_group:2 rested 5 fatigue, now 41.92  <- #527
-#553 D20 afternoon air_group:3 rested 5 fatigue, now 0.72  <- order:18
-#554 D20 afternoon air_group:13 rested 5 fatigue, now 34  <- #546
-#555 D20 -         base:1 at the end of the day: 3307.5 t of supply, 38 aircraft ready: open
-#556 D20 -         base:2 at the end of the day: 8476.56 t of supply, 77 aircraft ready: open
-#557 D21 night     air_group:3 had 1 aircraft repaired at base:2, 13 ready and 0 damaged  <- #505
-#558 D21 night     base:2 spent 1 t of supply on 1 repairs, 8475.56 t left  <- #557
-#559 D21 night     base:1 spent 7.6 t of supply on 38 aircraft at the base for the day, 3299.9 t left
-#560 D21 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8459.96 t left
-#561 D21 night     air_group:1 returned to flying: fatigue 41.92 is not above its threshold of 45  <- order:14
-#562 D21 night     air_group:2 returned to flying: fatigue 41.92 is not above its threshold of 45  <- order:17
-#563 D21 night     air_group:13 returned to flying: fatigue 34 is not above its threshold of 40  <- order:6
-#564 D21 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#565 D21 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #564
-#566 D21 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #564
-#567 D21 morning   air_group:2 escorts at the patrol of air_group:13: 25 shots x 0.16875 = 4.21875 expected, 2 hits  <- #564, #565, #566
-#568 D21 morning   air_group:13 patrol at the escorts of air_group:2: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #564, #565, #566
-#569 D21 morning   air_group:13 lost 2 aircraft, 2 left  <- #567
-#570 D21 morning   air_group:13 lost 1 pilot, 11 left  <- #569
-#571 D21 morning   air_group:2 lost 1 aircraft, 23 left  <- #568
-#572 D21 morning   air_group:2 lost 1 pilot, 23 left  <- #571
-#573 D21 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 4 hits: 0 on aircraft, 1 on supply, 3 on nothing  <- #564
-#574 D21 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 1 hit after the attack  <- #564, #573
-#575 D21 morning   air_group:1 lost 1 aircraft, 40 left  <- #574
-#576 D21 morning   air_group:1 lost 1 pilot, 40 left  <- #575
-#577 D21 morning   base:1 lost 50 t of supply, 3249.9 t left  <- #573
-#578 D21 morning   Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground  <- #567, #573
-#579 D21 morning   Allied claim over (2,-4): 2 aircraft shot down  <- #568, #574
-#580 D21 morning   air_group:1 base strike sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 6 worn, 2 written off, 34 ready and 4 damaged left  <- #564
-#581 D21 morning   air_group:2 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 0 written off, 21 ready and 2 damaged left  <- #565
-#582 D21 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 1 written off, 11 ready and 1 damaged left  <- #566
-#583 D21 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 67.16  <- #564
-#584 D21 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 67.16  <- #565
-#585 D21 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.96  <- #566
-#586 D21 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 37  <- order:5
-#587 D21 morning   base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3248.9 t left  <- order:5
-#588 D21 morning   base:2 spent 157.44 t of supply on 48 aircraft sent on sorties, 8302.52 t left  <- #564, #565, #566
-#589 D21 afternoon air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 2 ready and 0 damaged left  <- order:5
-#590 D21 afternoon air_group:1 rested 5 fatigue, now 62.16  <- order:13
-#591 D21 afternoon air_group:2 rested 5 fatigue, now 62.16  <- order:15
-#592 D21 afternoon air_group:3 rested 5 fatigue, now 20.96  <- order:18
-#593 D21 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 40  <- order:5
-#594 D21 afternoon base:1 spent 0.5 t of supply on 1 aircraft sent on sorties, 3248.4 t left  <- order:5
-#595 D21 -         base:1 at the end of the day: 3248.4 t of supply, 36 aircraft ready: open
-#596 D21 -         base:2 at the end of the day: 8302.52 t of supply, 66 aircraft ready: open
-#597 D22 night     air_group:1 had 4 aircraft repaired at base:2, 38 ready and 0 damaged  <- #580
-#598 D22 night     base:2 spent 4 t of supply on 4 repairs, 8298.52 t left  <- #597
-#599 D22 night     air_group:15 received 24 aircraft and 24 pilots by arrival, 24 ready, 24 pilots and strength 24
-#600 D22 night     air_group:2 received 1 aircraft and 1 pilots at base:2, 22 ready and 24 pilots
-#601 D22 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 12 ready and 13 pilots
-#602 D22 night     air_group:1 received 2 aircraft and 1 pilots at base:2, 40 ready and 41 pilots
-#603 D22 night     base:1 spent 12 t of supply on 60 aircraft at the base for the day, 3236.4 t left
-#604 D22 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8283.12 t left
-#605 D22 night     air_group:1 stood down: fatigue 62.16 is above its threshold of 45  <- order:14
-#606 D22 night     air_group:2 stood down: fatigue 62.16 is above its threshold of 45  <- order:17
-#607 D22 morning   air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 2 ready and 0 damaged left  <- order:5
-#608 D22 morning   air_group:15 patrol sortie of 0 nm: 24 aircraft x 0.05 = 1.2 expected worn, 0 worn, 0 written off, 24 ready and 0 damaged left  <- order:8
-#609 D22 morning   air_group:1 rested 5 fatigue, now 57.16  <- #605
-#610 D22 morning   air_group:2 rested 5 fatigue, now 57.16  <- #606
-#611 D22 morning   air_group:3 rested 5 fatigue, now 15.96  <- order:18
-#612 D22 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 43  <- order:5
-#613 D22 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:8
-#614 D22 morning   base:1 spent 12.5 t of supply on 25 aircraft sent on sorties, 3223.9 t left  <- order:5, order:8
-#615 D22 afternoon air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 2 ready and 0 damaged left  <- order:5
-#616 D22 afternoon air_group:15 patrol sortie of 0 nm: 23 aircraft x 0.05 = 1.15 expected worn, 1 worn, 0 written off, 23 ready and 1 damaged left  <- order:8
-#617 D22 afternoon air_group:1 rested 5 fatigue, now 52.16  <- #605
-#618 D22 afternoon air_group:2 rested 5 fatigue, now 52.16  <- #606
-#619 D22 afternoon air_group:3 rested 5 fatigue, now 10.96  <- order:18
-#620 D22 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 46  <- order:5
-#621 D22 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:8
-#622 D22 afternoon base:1 spent 12 t of supply on 24 aircraft sent on sorties, 3211.9 t left  <- order:5, order:8
-#623 D22 -         base:1 at the end of the day: 3211.9 t of supply, 59 aircraft ready: open
-#624 D22 -         base:2 at the end of the day: 8283.12 t of supply, 74 aircraft ready: open
-#625 D23 night     air_group:15 had 1 aircraft repaired at base:1, 24 ready and 0 damaged  <- #616
-#626 D23 night     base:1 spent 1 t of supply on 1 repairs, 3210.9 t left  <- #625
-#627 D23 night     air_group:2 had 2 aircraft repaired at base:2, 24 ready and 0 damaged  <- #581
-#628 D23 night     air_group:3 had 1 aircraft repaired at base:2, 13 ready and 0 damaged  <- #582
-#629 D23 night     base:2 spent 3 t of supply on 3 repairs, 8280.12 t left  <- #627, #628
-#630 D23 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
-#631 D23 night     base:1 spent 12 t of supply on 60 aircraft at the base for the day, 3198.9 t left
-#632 D23 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8264.52 t left
-#633 D23 night     air_group:13 stood down: fatigue 46 is above its threshold of 40  <- order:6
-#634 D23 morning   air_group:15 patrol sortie of 0 nm: 22 aircraft x 0.05 = 1.1 expected worn, 2 worn, 1 written off, 22 ready and 1 damaged left  <- order:8
-#635 D23 morning   air_group:1 rested 5 fatigue, now 47.16  <- #605
-#636 D23 morning   air_group:2 rested 5 fatigue, now 47.16  <- #606
-#637 D23 morning   air_group:3 rested 5 fatigue, now 5.96  <- order:18
-#638 D23 morning   air_group:13 rested 5 fatigue, now 41  <- #633
-#639 D23 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:8
-#640 D23 morning   base:1 spent 11 t of supply on 22 aircraft sent on sorties, 3187.9 t left  <- order:8
-#641 D23 afternoon air_group:15 patrol sortie of 0 nm: 20 aircraft x 0.05 = 1 expected worn, 1 worn, 0 written off, 21 ready and 2 damaged left  <- order:8
-#642 D23 afternoon air_group:1 rested 5 fatigue, now 42.16  <- #605
-#643 D23 afternoon air_group:2 rested 5 fatigue, now 42.16  <- #606
-#644 D23 afternoon air_group:3 rested 5 fatigue, now 0.96  <- order:18
-#645 D23 afternoon air_group:13 rested 5 fatigue, now 36  <- #633
-#646 D23 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:8
-#647 D23 afternoon base:1 spent 10 t of supply on 20 aircraft sent on sorties, 3177.9 t left  <- order:8
-#648 D23 -         base:1 at the end of the day: 3177.9 t of supply, 57 aircraft ready: open
-#649 D23 -         base:2 at the end of the day: 8264.52 t of supply, 78 aircraft ready: open
-#650 D24 night     air_group:15 had 2 aircraft repaired at base:1, 23 ready and 0 damaged  <- #641
-#651 D24 night     base:1 spent 2 t of supply on 2 repairs, 3175.9 t left  <- #650
-#652 D24 night     air_group:16 received 18 aircraft and 18 pilots by arrival, 18 ready, 18 pilots and strength 18
-#653 D24 night     air_group:17 received 12 aircraft and 12 pilots by arrival, 12 ready, 12 pilots and strength 12
-#654 D24 night     base:1 spent 17.8 t of supply on 89 aircraft at the base for the day, 3158.1 t left
-#655 D24 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8248.92 t left
-#656 D24 night     air_group:1 returned to flying: fatigue 42.16 is not above its threshold of 45  <- order:14
-#657 D24 night     air_group:2 returned to flying: fatigue 42.16 is not above its threshold of 45  <- order:17
-#658 D24 night     air_group:13 returned to flying: fatigue 36 is not above its threshold of 40  <- order:6
-#659 D24 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#660 D24 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #659
-#661 D24 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #659
-#662 D24 morning   air_group:2 escorts at the patrol of air_group:13: 25 shots x 0.16875 = 4.21875 expected, 3 hits  <- #659, #660, #661
-#663 D24 morning   air_group:13 patrol at the escorts of air_group:2: 25 shots x 0.3 = 7.5 expected, 6 hits  <- #659, #660, #661
-#664 D24 morning   air_group:13 patrol at the bombers of air_group:1: 14 shots x 0.3 = 4.2 expected, 4 hits  <- #659
-#665 D24 morning   air_group:13 lost 1 aircraft, 1 left  <- #662
-#666 D24 morning   air_group:15 lost 2 aircraft, 21 left  <- #662
-#667 D24 morning   air_group:15 lost 1 pilot, 23 left  <- #666
-#668 D24 morning   air_group:2 lost 6 aircraft, 18 left  <- #663
-#669 D24 morning   air_group:2 lost 6 pilots, 18 left  <- #668
-#670 D24 morning   air_group:1 lost 4 aircraft, 37 left  <- #664
-#671 D24 morning   air_group:1 lost 4 pilots, 37 left  <- #670
-#672 D24 morning   air_group:1 bombs at base:1: 19 shots x 0.2 = 3.8 expected, 4 hits: 1 on aircraft, 2 on supply, 1 on nothing  <- #659, #670
-#673 D24 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #659, #672
-#674 D24 morning   air_group:11 lost 1 aircraft on the ground at base:1, 10 left  <- #672
-#675 D24 morning   base:1 lost 100 t of supply, 3058.1 t left  <- #672
-#676 D24 morning   Japanese claim at (2,-4): 4 aircraft shot down, 3 aircraft destroyed on the ground  <- #662, #672
-#677 D24 morning   Allied claim over (2,-4): 12 aircraft shot down  <- #663, #664, #673
-#678 D24 morning   air_group:1 base strike sortie of 1112 nm: 19 aircraft x 0.2724 = 5.1756 expected worn, 7 worn, 1 written off, 30 ready and 6 damaged left  <- #659
-#679 D24 morning   air_group:2 escort sortie of 1112 nm: 7 aircraft x 0.2724 = 1.9068 expected worn, 0 worn, 0 written off, 18 ready and 0 damaged left  <- #660
-#680 D24 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 2 written off, 11 ready and 0 damaged left  <- #661
-#681 D24 morning   air_group:15 patrol sortie of 0 nm: 18 aircraft x 0.05 = 0.9 expected worn, 2 worn, 1 written off, 19 ready and 1 damaged left  <- order:8
-#682 D24 morning   air_group:16 patrol sortie of 0 nm: 18 aircraft x 0.05 = 0.9 expected worn, 0 worn, 0 written off, 18 ready and 0 damaged left  <- order:10
-#683 D24 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 67.4  <- #659
-#684 D24 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 67.4  <- #660
-#685 D24 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 26.2  <- #661
-#686 D24 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:5
-#687 D24 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:8
-#688 D24 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:10
-#689 D24 morning   base:1 spent 19.5 t of supply on 39 aircraft sent on sorties, 3038.6 t left  <- order:5, order:8, order:10
-#690 D24 morning   base:2 spent 157.44 t of supply on 48 aircraft sent on sorties, 8091.48 t left  <- #659, #660, #661
-#691 D24 afternoon air_group:15 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 1 worn, 0 written off, 18 ready and 2 damaged left  <- order:8
-#692 D24 afternoon air_group:16 patrol sortie of 0 nm: 17 aircraft x 0.05 = 0.85 expected worn, 1 worn, 0 written off, 17 ready and 1 damaged left  <- order:10
-#693 D24 afternoon air_group:1 rested 5 fatigue, now 62.4  <- order:13
-#694 D24 afternoon air_group:2 rested 5 fatigue, now 62.4  <- order:15
-#695 D24 afternoon air_group:3 rested 5 fatigue, now 21.2  <- order:18
-#696 D24 afternoon air_group:13 rested 5 fatigue, now 34  <- order:5
-#697 D24 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:8
-#698 D24 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:10
-#699 D24 afternoon base:1 spent 16.5 t of supply on 33 aircraft sent on sorties, 3022.1 t left  <- order:8, order:10
-#700 D24 -         base:1 at the end of the day: 3022.1 t of supply, 81 aircraft ready: open
-#701 D24 -         base:2 at the end of the day: 8091.48 t of supply, 59 aircraft ready: open
-#702 D25 night     air_group:15 had 2 aircraft repaired at base:1, 20 ready and 0 damaged  <- #691
-#703 D25 night     air_group:16 had 1 aircraft repaired at base:1, 18 ready and 0 damaged  <- #692
-#704 D25 night     base:1 spent 3 t of supply on 3 repairs, 3019.1 t left  <- #702, #703
-#705 D25 night     air_group:1 had 4 aircraft repaired at base:2, 34 ready and 2 damaged  <- #678
-#706 D25 night     base:2 spent 4 t of supply on 4 repairs, 8087.48 t left  <- #705
-#707 D25 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 20 ready and 20 pilots
-#708 D25 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 36 ready and 39 pilots
-#709 D25 night     base:1 spent 16.8 t of supply on 84 aircraft at the base for the day, 3002.3 t left
-#710 D25 night     base:2 spent 13.8 t of supply on 69 aircraft at the base for the day, 8073.68 t left
-#711 D25 night     air_group:1 stood down: fatigue 62.4 is above its threshold of 45  <- order:14
-#712 D25 night     air_group:2 stood down: fatigue 62.4 is above its threshold of 45  <- order:17
-#713 D25 morning   air_group:15 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 1 worn, 0 written off, 19 ready and 1 damaged left  <- order:8
-#714 D25 morning   air_group:16 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 2 worn, 0 written off, 16 ready and 2 damaged left  <- order:10
-#715 D25 morning   air_group:1 rested 5 fatigue, now 57.4  <- #711
-#716 D25 morning   air_group:2 rested 5 fatigue, now 57.4  <- #712
-#717 D25 morning   air_group:3 rested 5 fatigue, now 16.2  <- order:18
-#718 D25 morning   air_group:13 rested 5 fatigue, now 29  <- order:5
-#719 D25 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:8
-#720 D25 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:10
-#721 D25 morning   base:1 spent 16 t of supply on 32 aircraft sent on sorties, 2986.3 t left  <- order:8, order:10
-#722 D25 afternoon air_group:15 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 0 worn, 0 written off, 19 ready and 1 damaged left  <- order:8
-#723 D25 afternoon air_group:16 patrol sortie of 0 nm: 14 aircraft x 0.05 = 0.7 expected worn, 0 worn, 0 written off, 16 ready and 2 damaged left  <- order:10
-#724 D25 afternoon air_group:1 rested 5 fatigue, now 52.4  <- #711
-#725 D25 afternoon air_group:2 rested 5 fatigue, now 52.4  <- #712
-#726 D25 afternoon air_group:3 rested 5 fatigue, now 11.2  <- order:18
-#727 D25 afternoon air_group:13 rested 5 fatigue, now 24  <- order:5
-#728 D25 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:8
-#729 D25 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:10
-#730 D25 afternoon base:1 spent 14.5 t of supply on 29 aircraft sent on sorties, 2971.8 t left  <- order:8, order:10
-#731 D25 -         base:1 at the end of the day: 2971.8 t of supply, 81 aircraft ready: open
-#732 D25 -         base:2 at the end of the day: 8073.68 t of supply, 67 aircraft ready: open
-#733 D26 night     air_group:15 had 1 aircraft repaired at base:1, 20 ready and 0 damaged  <- #713
-#734 D26 night     air_group:16 had 2 aircraft repaired at base:1, 18 ready and 0 damaged  <- #714
-#735 D26 night     base:1 spent 3 t of supply on 3 repairs, 2968.8 t left  <- #733, #734
-#736 D26 night     air_group:1 had 2 aircraft repaired at base:2, 38 ready and 0 damaged  <- #678
-#737 D26 night     base:2 spent 2 t of supply on 2 repairs, 8071.68 t left  <- #736
-#738 D26 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 22 ready and 22 pilots
-#739 D26 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 40 ready and 41 pilots
-#740 D26 night     base:1 spent 16.8 t of supply on 84 aircraft at the base for the day, 2952 t left
-#741 D26 night     base:2 spent 14.6 t of supply on 73 aircraft at the base for the day, 8057.08 t left
-#742 D26 morning   air_group:15 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 0 worn, 0 written off, 20 ready and 0 damaged left  <- order:8
-#743 D26 morning   air_group:16 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 0 worn, 0 written off, 18 ready and 0 damaged left  <- order:10
-#744 D26 morning   air_group:1 rested 5 fatigue, now 47.4  <- #711
-#745 D26 morning   air_group:2 rested 5 fatigue, now 47.4  <- #712
-#746 D26 morning   air_group:3 rested 5 fatigue, now 6.2  <- order:18
-#747 D26 morning   air_group:13 rested 5 fatigue, now 19  <- order:5
-#748 D26 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:8
-#749 D26 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:10
-#750 D26 morning   base:1 spent 15 t of supply on 30 aircraft sent on sorties, 2937 t left  <- order:8, order:10
-#751 D26 afternoon air_group:15 patrol sortie of 0 nm: 14 aircraft x 0.05 = 0.7 expected worn, 0 worn, 0 written off, 20 ready and 0 damaged left  <- order:8
-#752 D26 afternoon air_group:16 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 1 worn, 1 written off, 17 ready and 0 damaged left  <- order:10
-#753 D26 afternoon air_group:1 rested 5 fatigue, now 42.4  <- #711
-#754 D26 afternoon air_group:2 rested 5 fatigue, now 42.4  <- #712
-#755 D26 afternoon air_group:3 rested 5 fatigue, now 1.2  <- order:18
-#756 D26 afternoon air_group:13 rested 5 fatigue, now 14  <- order:5
-#757 D26 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:8
-#758 D26 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:10
-#759 D26 afternoon base:1 spent 14.5 t of supply on 29 aircraft sent on sorties, 2922.5 t left  <- order:8, order:10
-#760 D26 -         base:1 at the end of the day: 2922.5 t of supply, 83 aircraft ready: open
-#761 D26 -         base:2 at the end of the day: 8057.08 t of supply, 73 aircraft ready: open
-#762 D27 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 24 ready and 24 pilots
-#763 D27 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
-#764 D27 night     base:1 spent 16.6 t of supply on 83 aircraft at the base for the day, 2905.9 t left
-#765 D27 night     base:2 spent 15.2 t of supply on 76 aircraft at the base for the day, 8041.88 t left
-#766 D27 night     air_group:1 returned to flying: fatigue 42.4 is not above its threshold of 45  <- order:14
-#767 D27 night     air_group:2 returned to flying: fatigue 42.4 is not above its threshold of 45  <- order:17
-#768 D27 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
-#769 D27 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #768
-#770 D27 morning   air_group:3 sent 10 escorts with air_group:1  <- order:18, order:19, #768
-#771 D27 morning   air_group:2 escorts at the patrol of air_group:15: 23 shots x 0.16875 = 3.88125 expected, 6 hits  <- #768, #769, #770
-#772 D27 morning   air_group:15 patrol at the escorts of air_group:2: 23 shots x 0.3 = 6.9 expected, 8 hits  <- #768, #769, #770
-#773 D27 morning   air_group:15 patrol at the bombers of air_group:1: 4 shots x 0.3 = 1.2 expected, 2 hits  <- #768
-#774 D27 morning   air_group:15 lost 6 aircraft, 14 left  <- #771
-#775 D27 morning   air_group:15 lost 1 pilot, 22 left  <- #774
-#776 D27 morning   air_group:2 lost 8 aircraft, 16 left  <- #772
-#777 D27 morning   air_group:2 lost 8 pilots, 16 left  <- #776
-#778 D27 morning   air_group:1 lost 2 aircraft, 39 left  <- #773
-#779 D27 morning   air_group:1 lost 2 pilots, 39 left  <- #778
-#780 D27 morning   air_group:1 bombs at base:1: 21 shots x 0.2 = 4.2 expected, 4 hits: 0 on aircraft, 2 on supply, 2 on nothing  <- #768, #778
-#781 D27 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #768, #780
-#782 D27 morning   base:1 lost 100 t of supply, 2805.9 t left  <- #780
-#783 D27 morning   Japanese claim at (2,-4): 8 aircraft shot down, 1 aircraft destroyed on the ground  <- #771, #780
-#784 D27 morning   Allied claim over (2,-4): 12 aircraft shot down  <- #772, #773, #781
-#785 D27 morning   air_group:1 base strike sortie of 1112 nm: 21 aircraft x 0.2724 = 5.7204 expected worn, 4 worn, 2 written off, 35 ready and 2 damaged left  <- #768
-#786 D27 morning   air_group:2 escort sortie of 1112 nm: 5 aircraft x 0.2724 = 1.362 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- #769
-#787 D27 morning   air_group:3 escort sortie of 1112 nm: 10 aircraft x 0.2724 = 2.724 expected worn, 4 worn, 2 written off, 7 ready and 2 damaged left  <- #770
-#788 D27 morning   air_group:15 patrol sortie of 0 nm: 8 aircraft x 0.05 = 0.4 expected worn, 0 worn, 0 written off, 14 ready and 0 damaged left  <- order:8
-#789 D27 morning   air_group:16 patrol sortie of 0 nm: 13 aircraft x 0.05 = 0.65 expected worn, 1 worn, 1 written off, 16 ready and 0 damaged left  <- order:10
-#790 D27 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 67.64  <- #768
-#791 D27 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 67.64  <- #769
-#792 D27 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 26.44  <- #770
-#793 D27 morning   air_group:13 rested 5 fatigue, now 9  <- order:5
-#794 D27 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:8
-#795 D27 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:10
-#796 D27 morning   base:1 spent 13.5 t of supply on 27 aircraft sent on sorties, 2792.4 t left  <- order:8, order:10
-#797 D27 morning   base:2 spent 150.88 t of supply on 46 aircraft sent on sorties, 7891 t left  <- #768, #769, #770
-#798 D27 afternoon air_group:15 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 0 worn, 0 written off, 14 ready and 0 damaged left  <- order:8
-#799 D27 afternoon air_group:16 patrol sortie of 0 nm: 12 aircraft x 0.05 = 0.6 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- order:10
-#800 D27 afternoon air_group:1 rested 5 fatigue, now 62.64  <- order:13
-#801 D27 afternoon air_group:2 rested 5 fatigue, now 62.64  <- order:15
-#802 D27 afternoon air_group:3 rested 5 fatigue, now 21.44  <- order:18
-#803 D27 afternoon air_group:13 rested 5 fatigue, now 4  <- order:5
-#804 D27 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:8
-#805 D27 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:10
-#806 D27 afternoon base:1 spent 10.5 t of supply on 21 aircraft sent on sorties, 2781.9 t left  <- order:8, order:10
-#807 D27 -         base:1 at the end of the day: 2781.9 t of supply, 76 aircraft ready: open
-#808 D27 -         base:2 at the end of the day: 7891 t of supply, 58 aircraft ready: open
-#809 D28 night     air_group:1 had 2 aircraft repaired at base:2, 37 ready and 0 damaged  <- #785
-#810 D28 night     air_group:3 had 2 aircraft repaired at base:2, 9 ready and 0 damaged  <- #787
-#811 D28 night     base:2 spent 4 t of supply on 4 repairs, 7887 t left  <- #809, #810
-#812 D28 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 18 ready and 18 pilots
-#813 D28 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 39 ready and 41 pilots
-#814 D28 night     base:1 spent 15.2 t of supply on 76 aircraft at the base for the day, 2766.7 t left
-#815 D28 night     base:2 spent 13.2 t of supply on 66 aircraft at the base for the day, 7873.8 t left
-#816 D28 night     air_group:1 stood down: fatigue 62.64 is above its threshold of 45  <- order:14
-#817 D28 night     air_group:2 stood down: fatigue 62.64 is above its threshold of 45  <- order:17
-#818 D28 morning   air_group:15 patrol sortie of 0 nm: 8 aircraft x 0.05 = 0.4 expected worn, 1 worn, 0 written off, 13 ready and 1 damaged left  <- order:8
-#819 D28 morning   air_group:16 patrol sortie of 0 nm: 12 aircraft x 0.05 = 0.6 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- order:10
-#820 D28 morning   air_group:1 rested 5 fatigue, now 57.64  <- #816
-#821 D28 morning   air_group:2 rested 5 fatigue, now 57.64  <- #817
-#822 D28 morning   air_group:3 rested 5 fatigue, now 16.44  <- order:18
-#823 D28 morning   air_group:13 rested 4 fatigue, now 0  <- order:5
-#824 D28 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:8
-#825 D28 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:10
-#826 D28 morning   base:1 spent 10 t of supply on 20 aircraft sent on sorties, 2756.7 t left  <- order:8, order:10
-#827 D28 afternoon air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- order:5
-#828 D28 afternoon air_group:15 patrol sortie of 0 nm: 7 aircraft x 0.05 = 0.35 expected worn, 0 worn, 0 written off, 13 ready and 1 damaged left  <- order:8
-#829 D28 afternoon air_group:16 patrol sortie of 0 nm: 11 aircraft x 0.05 = 0.55 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- order:10
-#830 D28 afternoon air_group:1 rested 5 fatigue, now 52.64  <- #816
-#831 D28 afternoon air_group:2 rested 5 fatigue, now 52.64  <- #817
-#832 D28 afternoon air_group:3 rested 5 fatigue, now 11.44  <- order:18
-#833 D28 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:5
-#834 D28 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:8
-#835 D28 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:10
-#836 D28 afternoon base:1 spent 9.5 t of supply on 19 aircraft sent on sorties, 2747.2 t left  <- order:5, order:8, order:10
-#837 D28 -         base:1 at the end of the day: 2747.2 t of supply, 75 aircraft ready: open
-#838 D28 -         base:2 at the end of the day: 7873.8 t of supply, 66 aircraft ready: open
+#26 D1 morning   air_group:10 patrol at the escorts of air_group:2: 7 shots x 0.3 = 2.1 expected, 2 hits  <- #23, #24
+#27 D1 morning   air_group:10 patrol at the bombers of air_group:1: 12 shots x 0.3 = 3.6 expected, 0 hits  <- #23
+#28 D1 morning   air_group:10 lost 4 aircraft, 15 left  <- #25
+#29 D1 morning   air_group:10 lost 1 pilot, 18 left  <- #28
+#30 D1 morning   air_group:2 lost 2 aircraft, 22 left  <- #26
+#31 D1 morning   air_group:2 lost 2 pilots, 22 left  <- #30
+#32 D1 morning   air_group:1 bombs at base:1: 41 shots x 0.2 = 8.2 expected, 6 hits: 1 on aircraft, 3 on supply, 2 on nothing  <- #23
+#33 D1 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #23, #32
+#34 D1 morning   air_group:11 lost 1 aircraft on the ground at base:1, 11 left  <- #32
+#35 D1 morning   base:1 lost 150 t of supply, 3843.8 t left  <- #32
+#36 D1 morning   Japanese claim at (2,-4): 6 aircraft shot down, 5 aircraft destroyed on the ground  <- #25, #32
+#37 D1 morning   Allied claim over (2,-4): 2 aircraft shot down  <- #26, #27, #33
+#38 D1 morning   air_group:1 base strike sortie of 1112 nm: 41 aircraft x 0.2724 = 11.1684 expected worn, 8 worn, 1 written off, 33 ready and 7 damaged left  <- #23
+#39 D1 morning   air_group:2 escort sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 7 worn, 1 written off, 15 ready and 6 damaged left  <- #24
+#40 D1 morning   air_group:10 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 1 worn, 0 written off, 14 ready and 1 damaged left  <- order:1
+#41 D1 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 25.24  <- #23
+#42 D1 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.24  <- #24
+#43 D1 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
+#44 D1 morning   base:1 spent 9.5 t of supply on 19 aircraft sent on sorties, 3834.3 t left  <- order:1
+#45 D1 morning   base:2 spent 213.2 t of supply on 65 aircraft sent on sorties, 9773.8 t left  <- #23, #24
+#46 D1 afternoon air_group:10 patrol sortie of 0 nm: 13 aircraft x 0.05 = 0.65 expected worn, 0 worn, 0 written off, 14 ready and 1 damaged left  <- order:1
+#47 D1 afternoon air_group:1 rested 5 fatigue, now 20.24  <- order:13
+#48 D1 afternoon air_group:2 rested 5 fatigue, now 20.24  <- order:15
+#49 D1 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:1
+#50 D1 afternoon base:1 spent 6.5 t of supply on 13 aircraft sent on sorties, 3827.8 t left  <- order:1
+#51 D1 -         base:1 at the end of the day: 3827.8 t of supply, 25 aircraft ready: open
+#52 D1 -         base:2 at the end of the day: 9773.8 t of supply, 48 aircraft ready: open
+#53 D2 night     air_group:10 had 1 aircraft repaired at base:1, 15 ready and 0 damaged  <- #40
+#54 D2 night     base:1 spent 1 t of supply on 1 repairs, 3826.8 t left  <- #53
+#55 D2 night     air_group:1 had 4 aircraft repaired at base:2, 37 ready and 3 damaged  <- #38
+#56 D2 night     base:2 spent 4 t of supply on 4 repairs, 9769.8 t left  <- #55
+#57 D2 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 17 ready and 24 pilots
+#58 D2 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 38 ready and 41 pilots
+#59 D2 night     base:1 spent 5.2 t of supply on 26 aircraft at the base for the day, 3821.6 t left
+#60 D2 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9757 t left
+#61 D2 morning   air_group:1 launched 30 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#62 D2 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #61
+#63 D2 morning   air_group:2 escorts at the patrol of air_group:10: 13 shots x 0.16875 = 2.19375 expected, 3 hits  <- #61, #62
+#64 D2 morning   air_group:10 patrol at the escorts of air_group:2: 4 shots x 0.3 = 1.2 expected, 0 hits  <- #61, #62
+#65 D2 morning   air_group:10 patrol at the bombers of air_group:1: 10 shots x 0.3 = 3 expected, 3 hits  <- #61
+#66 D2 morning   air_group:10 lost 3 aircraft, 12 left  <- #63
+#67 D2 morning   air_group:10 lost 2 pilots, 16 left  <- #66
+#68 D2 morning   air_group:1 lost 3 aircraft, 35 left  <- #65
+#69 D2 morning   air_group:1 lost 3 pilots, 38 left  <- #68
+#70 D2 morning   air_group:1 bombs at base:1: 27 shots x 0.2 = 5.4 expected, 6 hits: 3 on aircraft, 0 on supply, 3 on nothing  <- #61, #68
+#71 D2 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #61, #70
+#72 D2 morning   air_group:10 lost 1 aircraft on the ground at base:1, 11 left  <- #70
+#73 D2 morning   air_group:11 lost 2 aircraft on the ground at base:1, 9 left  <- #70
+#74 D2 morning   Japanese claim at (2,-4): 3 aircraft shot down, 8 aircraft destroyed on the ground  <- #63, #70
+#75 D2 morning   Allied claim over (2,-4): 5 aircraft shot down  <- #64, #65, #71
+#76 D2 morning   air_group:1 base strike sortie of 1112 nm: 27 aircraft x 0.2724 = 7.3548 expected worn, 5 worn, 1 written off, 30 ready and 7 damaged left  <- #61
+#77 D2 morning   air_group:2 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 4 worn, 2 written off, 13 ready and 8 damaged left  <- #62
+#78 D2 morning   air_group:10 patrol sortie of 0 nm: 11 aircraft x 0.05 = 0.55 expected worn, 0 worn, 0 written off, 11 ready and 0 damaged left  <- order:1
+#79 D2 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 45.48  <- #61
+#80 D2 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 45.48  <- #62
+#81 D2 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:1
+#82 D2 morning   base:1 spent 7 t of supply on 14 aircraft sent on sorties, 3814.6 t left  <- order:1
+#83 D2 morning   base:2 spent 141.04 t of supply on 43 aircraft sent on sorties, 9615.96 t left  <- #61, #62
+#84 D2 afternoon air_group:10 patrol sortie of 0 nm: 10 aircraft x 0.05 = 0.5 expected worn, 0 worn, 0 written off, 11 ready and 0 damaged left  <- order:1
+#85 D2 afternoon air_group:1 rested 5 fatigue, now 40.48  <- order:13
+#86 D2 afternoon air_group:2 rested 5 fatigue, now 40.48  <- order:15
+#87 D2 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:1
+#88 D2 afternoon base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3809.6 t left  <- order:1
+#89 D2 -         base:1 at the end of the day: 3809.6 t of supply, 20 aircraft ready: open
+#90 D2 -         base:2 at the end of the day: 9615.96 t of supply, 43 aircraft ready: open
+#91 D3 night     air_group:1 had 4 aircraft repaired at base:2, 34 ready and 3 damaged  <- #76
+#92 D3 night     base:2 spent 4 t of supply on 4 repairs, 9611.96 t left  <- #91
+#93 D3 night     air_group:2 received 2 aircraft and 0 pilots at base:2, 15 ready and 24 pilots
+#94 D3 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 36 ready and 40 pilots
+#95 D3 night     base:1 spent 4 t of supply on 20 aircraft at the base for the day, 3805.6 t left
+#96 D3 night     base:2 spent 12.4 t of supply on 62 aircraft at the base for the day, 9599.56 t left
+#97 D3 morning   air_group:1 launched 21 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#98 D3 morning   air_group:2 sent 8 escorts with air_group:1  <- order:15, order:16, #97
+#99 D3 morning   air_group:2 escorts at the patrol of air_group:10: 8 shots x 0.16875 = 1.35 expected, 3 hits  <- #97, #98
+#100 D3 morning   air_group:10 patrol at the escorts of air_group:2: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #97, #98
+#101 D3 morning   air_group:10 patrol at the bombers of air_group:1: 7 shots x 0.3 = 2.1 expected, 1 hit  <- #97
+#102 D3 morning   air_group:10 lost 3 aircraft, 8 left  <- #99
+#103 D3 morning   air_group:2 lost 1 aircraft, 14 left  <- #100
+#104 D3 morning   air_group:2 lost 1 pilot, 23 left  <- #103
+#105 D3 morning   air_group:1 lost 1 aircraft, 35 left  <- #101
+#106 D3 morning   air_group:1 lost 1 pilot, 39 left  <- #105
+#107 D3 morning   air_group:1 bombs at base:1: 20 shots x 0.2 = 4 expected, 3 hits: 0 on aircraft, 2 on supply, 1 on nothing  <- #97, #105
+#108 D3 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #97, #107
+#109 D3 morning   base:1 lost 100 t of supply, 3705.6 t left  <- #107
+#110 D3 morning   Japanese claim at (2,-4): 3 aircraft shot down, 2 aircraft destroyed on the ground  <- #99, #107
+#111 D3 morning   Allied claim over (2,-4): 3 aircraft shot down  <- #100, #101, #108
+#112 D3 morning   air_group:1 base strike sortie of 1112 nm: 20 aircraft x 0.2724 = 5.448 expected worn, 4 worn, 2 written off, 31 ready and 5 damaged left  <- #97
+#113 D3 morning   air_group:2 escort sortie of 1112 nm: 7 aircraft x 0.2724 = 1.9068 expected worn, 1 worn, 0 written off, 13 ready and 9 damaged left  <- #98
+#114 D3 morning   air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 1 worn, 0 written off, 7 ready and 1 damaged left  <- order:1
+#115 D3 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 65.72  <- #97
+#116 D3 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 65.72  <- #98
+#117 D3 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:1
+#118 D3 morning   base:1 spent 4.5 t of supply on 9 aircraft sent on sorties, 3701.1 t left  <- order:1
+#119 D3 morning   base:2 spent 95.12 t of supply on 29 aircraft sent on sorties, 9504.44 t left  <- #97, #98
+#120 D3 afternoon air_group:10 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 0 worn, 0 written off, 7 ready and 1 damaged left  <- order:1
+#121 D3 afternoon air_group:1 rested 5 fatigue, now 60.72  <- order:13
+#122 D3 afternoon air_group:2 rested 5 fatigue, now 60.72  <- order:15
+#123 D3 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:1
+#124 D3 afternoon base:1 spent 2.5 t of supply on 5 aircraft sent on sorties, 3698.6 t left  <- order:1
+#125 D3 -         base:1 at the end of the day: 3698.6 t of supply, 16 aircraft ready: open
+#126 D3 -         base:2 at the end of the day: 9504.44 t of supply, 44 aircraft ready: open
+#127 D4 night     air_group:10 had 1 aircraft repaired at base:1, 8 ready and 0 damaged  <- #114
+#128 D4 night     base:1 spent 1 t of supply on 1 repairs, 3697.6 t left  <- #127
+#129 D4 night     air_group:1 had 4 aircraft repaired at base:2, 35 ready and 1 damaged  <- #112
+#130 D4 night     base:2 spent 4 t of supply on 4 repairs, 9500.44 t left  <- #129
+#131 D4 night     air_group:12 received 11 aircraft and 11 pilots by arrival, 11 ready, 11 pilots and strength 11
+#132 D4 night     air_group:2 received 2 aircraft and 1 pilots at base:2, 15 ready and 24 pilots
+#133 D4 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 37 ready and 41 pilots
+#134 D4 night     base:1 spent 5.6 t of supply on 28 aircraft at the base for the day, 3692 t left
+#135 D4 night     base:2 spent 12.4 t of supply on 62 aircraft at the base for the day, 9488.04 t left
+#136 D4 night     air_group:1 stood down: fatigue 60.72 is above its threshold of 45  <- order:14
+#137 D4 night     air_group:2 stood down: fatigue 60.72 is above its threshold of 45  <- order:17
+#138 D4 morning   air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
+#139 D4 morning   air_group:1 rested 5 fatigue, now 55.72  <- #136
+#140 D4 morning   air_group:2 rested 5 fatigue, now 55.72  <- #137
+#141 D4 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:1
+#142 D4 morning   base:1 spent 3 t of supply on 6 aircraft sent on sorties, 3689 t left  <- order:1
+#143 D4 afternoon air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
+#144 D4 afternoon air_group:1 rested 5 fatigue, now 50.72  <- #136
+#145 D4 afternoon air_group:2 rested 5 fatigue, now 50.72  <- #137
+#146 D4 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:1
+#147 D4 afternoon base:1 spent 3 t of supply on 6 aircraft sent on sorties, 3686 t left  <- order:1
+#148 D4 -         base:1 at the end of the day: 3686 t of supply, 28 aircraft ready: open
+#149 D4 -         base:2 at the end of the day: 9488.04 t of supply, 52 aircraft ready: open
+#150 D5 night     air_group:1 had 1 aircraft repaired at base:2, 38 ready and 0 damaged  <- #112
+#151 D5 night     air_group:2 had 3 aircraft repaired at base:2, 18 ready and 6 damaged  <- #113
+#152 D5 night     base:2 spent 4 t of supply on 4 repairs, 9484.04 t left  <- #150, #151
+#153 D5 night     air_group:1 received 2 aircraft and 0 pilots at base:2, 40 ready and 41 pilots
+#154 D5 night     base:1 spent 5.6 t of supply on 28 aircraft at the base for the day, 3680.4 t left
+#155 D5 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9471.24 t left
+#156 D5 morning   air_group:10 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
+#157 D5 morning   air_group:1 rested 5 fatigue, now 45.72  <- #136
+#158 D5 morning   air_group:2 rested 5 fatigue, now 45.72  <- #137
+#159 D5 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:1
+#160 D5 morning   base:1 spent 3 t of supply on 6 aircraft sent on sorties, 3677.4 t left  <- order:1
+#161 D5 afternoon air_group:10 patrol sortie of 0 nm: 5 aircraft x 0.05 = 0.25 expected worn, 0 worn, 0 written off, 8 ready and 0 damaged left  <- order:1
+#162 D5 afternoon air_group:1 rested 5 fatigue, now 40.72  <- #136
+#163 D5 afternoon air_group:2 rested 5 fatigue, now 40.72  <- #137
+#164 D5 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:1
+#165 D5 afternoon base:1 spent 2.5 t of supply on 5 aircraft sent on sorties, 3674.9 t left  <- order:1
+#166 D5 -         base:1 at the end of the day: 3674.9 t of supply, 28 aircraft ready: open
+#167 D5 -         base:2 at the end of the day: 9471.24 t of supply, 58 aircraft ready: open
+#168 D6 night     air_group:2 had 4 aircraft repaired at base:2, 22 ready and 2 damaged  <- #113
+#169 D6 night     base:2 spent 4 t of supply on 4 repairs, 9467.24 t left  <- #168
+#170 D6 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
+#171 D6 night     base:1 spent 5.6 t of supply on 28 aircraft at the base for the day, 3669.3 t left
+#172 D6 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9454.24 t left
+#173 D6 night     air_group:1 returned to flying: fatigue 40.72 is not above its threshold of 45  <- order:14
+#174 D6 night     air_group:2 returned to flying: fatigue 40.72 is not above its threshold of 45  <- order:17
+#175 D6 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#176 D6 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #175
+#177 D6 morning   air_group:2 escorts at the patrol of air_group:10: 13 shots x 0.16875 = 2.19375 expected, 3 hits  <- #175, #176
+#178 D6 morning   air_group:10 patrol at the escorts of air_group:2: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #175, #176
+#179 D6 morning   air_group:10 patrol at the bombers of air_group:1: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #175
+#180 D6 morning   air_group:10 lost 3 aircraft, 5 left  <- #177
+#181 D6 morning   air_group:10 lost 2 pilots, 14 left  <- #180
+#182 D6 morning   air_group:1 lost 1 aircraft, 40 left  <- #179
+#183 D6 morning   air_group:1 lost 1 pilot, 40 left  <- #182
+#184 D6 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 2 hits: 1 on aircraft, 0 on supply, 1 on nothing  <- #175, #182
+#185 D6 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 1 hit after the attack  <- #175, #184
+#186 D6 morning   air_group:1 lost 1 aircraft, 39 left  <- #185
+#187 D6 morning   air_group:1 lost 1 pilot, 39 left  <- #186
+#188 D6 morning   air_group:10 lost 1 aircraft on the ground at base:1, 4 left  <- #184
+#189 D6 morning   Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground  <- #177, #184
+#190 D6 morning   Allied claim over (2,-4): 3 aircraft shot down  <- #178, #179, #185
+#191 D6 morning   air_group:1 base strike sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 5 worn, 1 written off, 34 ready and 4 damaged left  <- #175
+#192 D6 morning   air_group:2 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 2 worn, 0 written off, 20 ready and 4 damaged left  <- #176
+#193 D6 morning   air_group:10 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:1
+#194 D6 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 65.96  <- #175
+#195 D6 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 65.96  <- #176
+#196 D6 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1
+#197 D6 morning   base:1 spent 2.5 t of supply on 5 aircraft sent on sorties, 3666.8 t left  <- order:1
+#198 D6 morning   base:2 spent 121.36 t of supply on 37 aircraft sent on sorties, 9332.88 t left  <- #175, #176
+#199 D6 afternoon air_group:10 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 1 worn, 0 written off, 3 ready and 1 damaged left  <- order:1
+#200 D6 afternoon air_group:1 rested 5 fatigue, now 60.96  <- order:13
+#201 D6 afternoon air_group:2 rested 5 fatigue, now 60.96  <- order:15
+#202 D6 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:1
+#203 D6 afternoon base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3665.8 t left  <- order:1
+#204 D6 -         base:1 at the end of the day: 3665.8 t of supply, 23 aircraft ready: open
+#205 D6 -         base:2 at the end of the day: 9332.88 t of supply, 54 aircraft ready: open
+#206 D7 night     air_group:10 had 1 aircraft repaired at base:1, 4 ready and 0 damaged  <- #199
+#207 D7 night     base:1 spent 1 t of supply on 1 repairs, 3664.8 t left  <- #206
+#208 D7 night     air_group:1 had 4 aircraft repaired at base:2, 38 ready and 0 damaged  <- #191
+#209 D7 night     base:2 spent 4 t of supply on 4 repairs, 9328.88 t left  <- #208
+#210 D7 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 40 ready and 41 pilots
+#211 D7 night     base:1 spent 4.8 t of supply on 24 aircraft at the base for the day, 3660 t left
+#212 D7 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9316.08 t left
+#213 D7 night     air_group:1 stood down: fatigue 60.96 is above its threshold of 45  <- order:14
+#214 D7 night     air_group:2 stood down: fatigue 60.96 is above its threshold of 45  <- order:17
+#215 D7 morning   air_group:10 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:1
+#216 D7 morning   air_group:1 rested 5 fatigue, now 55.96  <- #213
+#217 D7 morning   air_group:2 rested 5 fatigue, now 55.96  <- #214
+#218 D7 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:1
+#219 D7 morning   base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3659 t left  <- order:1
+#220 D7 afternoon air_group:10 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:1
+#221 D7 afternoon air_group:1 rested 5 fatigue, now 50.96  <- #213
+#222 D7 afternoon air_group:2 rested 5 fatigue, now 50.96  <- #214
+#223 D7 afternoon air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:1
+#224 D7 afternoon base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3658 t left  <- order:1
+#225 D7 -         base:1 at the end of the day: 3658 t of supply, 24 aircraft ready: open
+#226 D7 -         base:2 at the end of the day: 9316.08 t of supply, 60 aircraft ready: open
+#227 D8 night     air_group:2 had 4 aircraft repaired at base:2, 24 ready and 0 damaged  <- #192
+#228 D8 night     base:2 spent 4 t of supply on 4 repairs, 9312.08 t left  <- #227
+#229 D8 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
+#230 D8 night     base:1 spent 4.8 t of supply on 24 aircraft at the base for the day, 3653.2 t left
+#231 D8 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9299.08 t left
+#232 D8 night     air_group:10 stood down: fatigue 42 is above its threshold of 40  <- order:2
+#233 D8 morning   air_group:1 rested 5 fatigue, now 45.96  <- #213
+#234 D8 morning   air_group:2 rested 5 fatigue, now 45.96  <- #214
+#235 D8 morning   air_group:10 rested 5 fatigue, now 37  <- #232
+#236 D8 afternoon air_group:1 rested 5 fatigue, now 40.96  <- #213
+#237 D8 afternoon air_group:2 rested 5 fatigue, now 40.96  <- #214
+#238 D8 afternoon air_group:10 rested 5 fatigue, now 32  <- #232
+#239 D8 -         base:1 at the end of the day: 3653.2 t of supply, 24 aircraft ready: open
+#240 D8 -         base:2 at the end of the day: 9299.08 t of supply, 65 aircraft ready: open
+#241 D9 night     base:1 spent 4.8 t of supply on 24 aircraft at the base for the day, 3648.4 t left
+#242 D9 night     base:2 spent 13 t of supply on 65 aircraft at the base for the day, 9286.08 t left
+#243 D9 night     air_group:1 returned to flying: fatigue 40.96 is not above its threshold of 45  <- order:14
+#244 D9 night     air_group:2 returned to flying: fatigue 40.96 is not above its threshold of 45  <- order:17
+#245 D9 night     air_group:10 returned to flying: fatigue 32 is not above its threshold of 40  <- order:2
+#246 D9 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#247 D9 morning   air_group:2 sent 14 escorts with air_group:1  <- order:15, order:16, #246
+#248 D9 morning   air_group:2 escorts at the patrol of air_group:10: 14 shots x 0.16875 = 2.3625 expected, 4 hits  <- #246, #247
+#249 D9 morning   air_group:10 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 0 hits  <- #246
+#250 D9 morning   air_group:10 lost 2 aircraft, 2 left  <- #248
+#251 D9 morning   air_group:1 bombs at base:1: 24 shots x 0.2 = 4.8 expected, 4 hits: 1 on aircraft, 3 on supply, 0 on nothing  <- #246
+#252 D9 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #246, #251
+#253 D9 morning   air_group:10 lost 1 aircraft on the ground at base:1, 1 left  <- #251
+#254 D9 morning   base:1 lost 150 t of supply, 3498.4 t left  <- #251
+#255 D9 morning   Japanese claim at (2,-4): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #248, #251
+#256 D9 morning   Allied claim over (2,-4): 0 aircraft shot down  <- #249, #252
+#257 D9 morning   air_group:1 base strike sortie of 1112 nm: 24 aircraft x 0.2724 = 6.5376 expected worn, 6 worn, 3 written off, 35 ready and 3 damaged left  <- #246
+#258 D9 morning   air_group:2 escort sortie of 1112 nm: 14 aircraft x 0.2724 = 3.8136 expected worn, 5 worn, 0 written off, 19 ready and 5 damaged left  <- #247
+#259 D9 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.2  <- #246
+#260 D9 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.2  <- #247
+#261 D9 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 35  <- order:1
+#262 D9 morning   base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3497.4 t left  <- order:1
+#263 D9 morning   base:2 spent 124.64 t of supply on 38 aircraft sent on sorties, 9161.44 t left  <- #246, #247
+#264 D9 afternoon air_group:1 rested 5 fatigue, now 61.2  <- order:13
+#265 D9 afternoon air_group:2 rested 5 fatigue, now 61.2  <- order:15
+#266 D9 afternoon air_group:10 rested 5 fatigue, now 30  <- order:1
+#267 D9 -         base:1 at the end of the day: 3497.4 t of supply, 21 aircraft ready: open
+#268 D9 -         base:2 at the end of the day: 9161.44 t of supply, 54 aircraft ready: open
+#269 D10 night     air_group:1 had 3 aircraft repaired at base:2, 38 ready and 0 damaged  <- #257
+#270 D10 night     air_group:2 had 1 aircraft repaired at base:2, 20 ready and 4 damaged  <- #258
+#271 D10 night     base:2 spent 4 t of supply on 4 repairs, 9157.44 t left  <- #269, #270
+#272 D10 night     air_group:13 received 19 aircraft and 19 pilots by arrival, 19 ready, 19 pilots and strength 19
+#273 D10 night     air_group:14 received 12 aircraft and 12 pilots by arrival, 12 ready, 12 pilots and strength 12
+#274 D10 night     air_group:1 received 2 aircraft and 0 pilots at base:2, 40 ready and 41 pilots
+#275 D10 night     base:1 spent 10.4 t of supply on 52 aircraft at the base for the day, 3487 t left
+#276 D10 night     base:2 spent 12.8 t of supply on 64 aircraft at the base for the day, 9144.64 t left
+#277 D10 night     air_group:1 stood down: fatigue 61.2 is above its threshold of 45  <- order:14
+#278 D10 night     air_group:2 stood down: fatigue 61.2 is above its threshold of 45  <- order:17
+#279 D10 morning   air_group:13 patrol sortie of 0 nm: 19 aircraft x 0.05 = 0.95 expected worn, 2 worn, 0 written off, 17 ready and 2 damaged left  <- order:5
+#280 D10 morning   air_group:1 rested 5 fatigue, now 56.2  <- #277
+#281 D10 morning   air_group:2 rested 5 fatigue, now 56.2  <- #278
+#282 D10 morning   air_group:10 rested 5 fatigue, now 25  <- order:1
+#283 D10 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:5
+#284 D10 morning   base:1 spent 9.5 t of supply on 19 aircraft sent on sorties, 3477.5 t left  <- order:5
+#285 D10 afternoon air_group:13 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 0 worn, 0 written off, 17 ready and 2 damaged left  <- order:5
+#286 D10 afternoon air_group:1 rested 5 fatigue, now 51.2  <- #277
+#287 D10 afternoon air_group:2 rested 5 fatigue, now 51.2  <- #278
+#288 D10 afternoon air_group:10 rested 5 fatigue, now 20  <- order:1
+#289 D10 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:5
+#290 D10 afternoon base:1 spent 8 t of supply on 16 aircraft sent on sorties, 3469.5 t left  <- order:5
+#291 D10 -         base:1 at the end of the day: 3469.5 t of supply, 50 aircraft ready: open
+#292 D10 -         base:2 at the end of the day: 9144.64 t of supply, 60 aircraft ready: open
+#293 D11 night     air_group:13 had 2 aircraft repaired at base:1, 19 ready and 0 damaged  <- #279
+#294 D11 night     base:1 spent 2 t of supply on 2 repairs, 3467.5 t left  <- #293
+#295 D11 night     air_group:2 had 4 aircraft repaired at base:2, 24 ready and 0 damaged  <- #258
+#296 D11 night     base:2 spent 4 t of supply on 4 repairs, 9140.64 t left  <- #295
+#297 D11 night     air_group:3 received 13 aircraft and 13 pilots by arrival, 13 ready, 13 pilots and strength 13
+#298 D11 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
+#299 D11 night     base:1 spent 10.4 t of supply on 52 aircraft at the base for the day, 3457.1 t left
+#300 D11 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 9125.04 t left
+#301 D11 morning   air_group:13 patrol sortie of 0 nm: 17 aircraft x 0.05 = 0.85 expected worn, 0 worn, 0 written off, 19 ready and 0 damaged left  <- order:5
+#302 D11 morning   air_group:1 rested 5 fatigue, now 46.2  <- #277
+#303 D11 morning   air_group:2 rested 5 fatigue, now 46.2  <- #278
+#304 D11 morning   air_group:10 rested 5 fatigue, now 15  <- order:1
+#305 D11 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:5
+#306 D11 morning   base:1 spent 8.5 t of supply on 17 aircraft sent on sorties, 3448.6 t left  <- order:5
+#307 D11 afternoon air_group:13 patrol sortie of 0 nm: 17 aircraft x 0.05 = 0.85 expected worn, 1 worn, 1 written off, 18 ready and 0 damaged left  <- order:5
+#308 D11 afternoon air_group:1 rested 5 fatigue, now 41.2  <- #277
+#309 D11 afternoon air_group:2 rested 5 fatigue, now 41.2  <- #278
+#310 D11 afternoon air_group:10 rested 5 fatigue, now 10  <- order:1
+#311 D11 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:5
+#312 D11 afternoon base:1 spent 8.5 t of supply on 17 aircraft sent on sorties, 3440.1 t left  <- order:5
+#313 D11 -         base:1 at the end of the day: 3440.1 t of supply, 51 aircraft ready: open
+#314 D11 -         base:2 at the end of the day: 9125.04 t of supply, 78 aircraft ready: open
+#315 D12 night     base:1 spent 10.2 t of supply on 51 aircraft at the base for the day, 3429.9 t left
+#316 D12 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 9109.44 t left
+#317 D12 night     air_group:1 returned to flying: fatigue 41.2 is not above its threshold of 45  <- order:14
+#318 D12 night     air_group:2 returned to flying: fatigue 41.2 is not above its threshold of 45  <- order:17
+#319 D12 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#320 D12 morning   air_group:2 sent 14 escorts with air_group:1  <- order:15, order:16, #319
+#321 D12 morning   air_group:3 sent 13 escorts with air_group:1  <- order:18, order:19, #319
+#322 D12 morning   air_group:2 escorts at the patrol of air_group:13: 27 shots x 0.16875 = 4.55625 expected, 6 hits  <- #319, #320, #321
+#323 D12 morning   air_group:13 patrol at the escorts of air_group:2: 7 shots x 0.3 = 2.1 expected, 1 hit  <- #319, #320, #321
+#324 D12 morning   air_group:13 patrol at the bombers of air_group:1: 8 shots x 0.3 = 2.4 expected, 2 hits  <- #319
+#325 D12 morning   air_group:13 lost 6 aircraft, 12 left  <- #322
+#326 D12 morning   air_group:13 lost 5 pilots, 14 left  <- #325
+#327 D12 morning   air_group:2 lost 1 aircraft, 23 left  <- #323
+#328 D12 morning   air_group:2 lost 1 pilot, 23 left  <- #327
+#329 D12 morning   air_group:1 lost 2 aircraft, 39 left  <- #324
+#330 D12 morning   air_group:1 lost 2 pilots, 39 left  <- #329
+#331 D12 morning   air_group:1 bombs at base:1: 22 shots x 0.2 = 4.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #319, #329
+#332 D12 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #319, #331
+#333 D12 morning   Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground  <- #322, #331
+#334 D12 morning   Allied claim over (2,-4): 4 aircraft shot down  <- #323, #324, #332
+#335 D12 morning   air_group:1 base strike sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 7 worn, 0 written off, 32 ready and 7 damaged left  <- #319
+#336 D12 morning   air_group:2 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 4 worn, 1 written off, 19 ready and 3 damaged left  <- #320
+#337 D12 morning   air_group:3 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 2 worn, 1 written off, 11 ready and 1 damaged left  <- #321
+#338 D12 morning   air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 0 worn, 0 written off, 12 ready and 0 damaged left  <- order:5
+#339 D12 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.44  <- #319
+#340 D12 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.44  <- #320
+#341 D12 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.24  <- #321
+#342 D12 morning   air_group:10 rested 5 fatigue, now 5  <- order:1
+#343 D12 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:5
+#344 D12 morning   base:1 spent 7.5 t of supply on 15 aircraft sent on sorties, 3422.4 t left  <- order:5
+#345 D12 morning   base:2 spent 167.28 t of supply on 51 aircraft sent on sorties, 8942.16 t left  <- #319, #320, #321
+#346 D12 afternoon air_group:13 patrol sortie of 0 nm: 10 aircraft x 0.05 = 0.5 expected worn, 1 worn, 0 written off, 11 ready and 1 damaged left  <- order:5
+#347 D12 afternoon air_group:1 rested 5 fatigue, now 61.44  <- order:13
+#348 D12 afternoon air_group:2 rested 5 fatigue, now 61.44  <- order:15
+#349 D12 afternoon air_group:3 rested 5 fatigue, now 20.24  <- order:18
+#350 D12 afternoon air_group:10 rested 5 fatigue, now 0  <- order:1
+#351 D12 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:5
+#352 D12 afternoon base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3417.4 t left  <- order:5
+#353 D12 -         base:1 at the end of the day: 3417.4 t of supply, 44 aircraft ready: open
+#354 D12 -         base:2 at the end of the day: 8942.16 t of supply, 62 aircraft ready: open
+#355 D13 night     air_group:13 had 1 aircraft repaired at base:1, 12 ready and 0 damaged  <- #346
+#356 D13 night     base:1 spent 1 t of supply on 1 repairs, 3416.4 t left  <- #355
+#357 D13 night     air_group:1 had 4 aircraft repaired at base:2, 36 ready and 3 damaged  <- #335
+#358 D13 night     base:2 spent 4 t of supply on 4 repairs, 8938.16 t left  <- #357
+#359 D13 night     air_group:2 received 2 aircraft and 1 pilots at base:2, 21 ready and 24 pilots
+#360 D13 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 38 ready and 41 pilots
+#361 D13 night     base:1 spent 9 t of supply on 45 aircraft at the base for the day, 3407.4 t left
+#362 D13 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8922.76 t left
+#363 D13 night     air_group:1 stood down: fatigue 61.44 is above its threshold of 45  <- order:14
+#364 D13 night     air_group:2 stood down: fatigue 61.44 is above its threshold of 45  <- order:17
+#365 D13 morning   air_group:10 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- order:1
+#366 D13 morning   air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 0 worn, 0 written off, 12 ready and 0 damaged left  <- order:5
+#367 D13 morning   air_group:1 rested 5 fatigue, now 56.44  <- #363
+#368 D13 morning   air_group:2 rested 5 fatigue, now 56.44  <- #364
+#369 D13 morning   air_group:3 rested 5 fatigue, now 15.24  <- order:18
+#370 D13 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
+#371 D13 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:5
+#372 D13 morning   base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3402.4 t left  <- order:1, order:5
+#373 D13 afternoon air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 1 worn, 0 written off, 11 ready and 1 damaged left  <- order:5
+#374 D13 afternoon air_group:1 rested 5 fatigue, now 51.44  <- #363
+#375 D13 afternoon air_group:2 rested 5 fatigue, now 51.44  <- #364
+#376 D13 afternoon air_group:3 rested 5 fatigue, now 10.24  <- order:18
+#377 D13 afternoon air_group:10 rested 3 fatigue, now 0  <- order:1
+#378 D13 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:5
+#379 D13 afternoon base:1 spent 4.5 t of supply on 9 aircraft sent on sorties, 3397.9 t left  <- order:5
+#380 D13 -         base:1 at the end of the day: 3397.9 t of supply, 44 aircraft ready: open
+#381 D13 -         base:2 at the end of the day: 8922.76 t of supply, 70 aircraft ready: open
+#382 D14 night     air_group:13 had 1 aircraft repaired at base:1, 12 ready and 0 damaged  <- #373
+#383 D14 night     base:1 spent 1 t of supply on 1 repairs, 3396.9 t left  <- #382
+#384 D14 night     air_group:1 had 3 aircraft repaired at base:2, 41 ready and 0 damaged  <- #335
+#385 D14 night     air_group:2 had 1 aircraft repaired at base:2, 22 ready and 2 damaged  <- #336
+#386 D14 night     base:2 spent 4 t of supply on 4 repairs, 8918.76 t left  <- #384, #385
+#387 D14 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 12 ready and 13 pilots
+#388 D14 night     base:1 spent 9 t of supply on 45 aircraft at the base for the day, 3387.9 t left
+#389 D14 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8903.16 t left
+#390 D14 morning   air_group:10 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- order:1
+#391 D14 morning   air_group:13 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 1 worn, 0 written off, 11 ready and 1 damaged left  <- order:5
+#392 D14 morning   air_group:1 rested 5 fatigue, now 46.44  <- #363
+#393 D14 morning   air_group:2 rested 5 fatigue, now 46.44  <- #364
+#394 D14 morning   air_group:3 rested 5 fatigue, now 5.24  <- order:18
+#395 D14 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
+#396 D14 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:5
+#397 D14 morning   base:1 spent 5 t of supply on 10 aircraft sent on sorties, 3382.9 t left  <- order:1, order:5
+#398 D14 afternoon air_group:13 patrol sortie of 0 nm: 8 aircraft x 0.05 = 0.4 expected worn, 1 worn, 0 written off, 10 ready and 2 damaged left  <- order:5
+#399 D14 afternoon air_group:1 rested 5 fatigue, now 41.44  <- #363
+#400 D14 afternoon air_group:2 rested 5 fatigue, now 41.44  <- #364
+#401 D14 afternoon air_group:3 rested 5 fatigue, now 0.24  <- order:18
+#402 D14 afternoon air_group:10 rested 3 fatigue, now 0  <- order:1
+#403 D14 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:5
+#404 D14 afternoon base:1 spent 4 t of supply on 8 aircraft sent on sorties, 3378.9 t left  <- order:5
+#405 D14 -         base:1 at the end of the day: 3378.9 t of supply, 43 aircraft ready: open
+#406 D14 -         base:2 at the end of the day: 8903.16 t of supply, 75 aircraft ready: open
+#407 D15 night     air_group:13 had 2 aircraft repaired at base:1, 12 ready and 0 damaged  <- #398
+#408 D15 night     base:1 spent 2 t of supply on 2 repairs, 3376.9 t left  <- #407
+#409 D15 night     air_group:2 had 2 aircraft repaired at base:2, 24 ready and 0 damaged  <- #336
+#410 D15 night     air_group:3 had 1 aircraft repaired at base:2, 13 ready and 0 damaged  <- #337
+#411 D15 night     base:2 spent 3 t of supply on 3 repairs, 8900.16 t left  <- #409, #410
+#412 D15 night     base:1 spent 9 t of supply on 45 aircraft at the base for the day, 3367.9 t left
+#413 D15 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8884.56 t left
+#414 D15 night     air_group:1 returned to flying: fatigue 41.44 is not above its threshold of 45  <- order:14
+#415 D15 night     air_group:2 returned to flying: fatigue 41.44 is not above its threshold of 45  <- order:17
+#416 D15 morning   air_group:1 launched 24 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#417 D15 morning   air_group:2 sent 14 escorts with air_group:1  <- order:15, order:16, #416
+#418 D15 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #416
+#419 D15 morning   air_group:2 escorts at the patrol of air_group:10: 26 shots x 0.16875 = 4.3875 expected, 5 hits  <- #416, #417, #418
+#420 D15 morning   air_group:10 patrol at the escorts of air_group:2: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #416, #417, #418
+#421 D15 morning   air_group:10 patrol at the bombers of air_group:1: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #416
+#422 D15 morning   air_group:10 lost 1 aircraft, 0 left  <- #419
+#423 D15 morning   air_group:10 lost 1 pilot, 13 left  <- #422
+#424 D15 morning   air_group:13 lost 4 aircraft, 8 left  <- #419
+#425 D15 morning   air_group:13 lost 2 pilots, 12 left  <- #424
+#426 D15 morning   air_group:2 lost 1 aircraft, 23 left  <- #420
+#427 D15 morning   air_group:2 lost 1 pilot, 23 left  <- #426
+#428 D15 morning   air_group:1 lost 1 aircraft, 40 left  <- #421
+#429 D15 morning   air_group:1 lost 1 pilot, 40 left  <- #428
+#430 D15 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 5 hits: 0 on aircraft, 2 on supply, 3 on nothing  <- #416, #428
+#431 D15 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #416, #430
+#432 D15 morning   base:1 lost 100 t of supply, 3267.9 t left  <- #430
+#433 D15 morning   Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground  <- #419, #430
+#434 D15 morning   Allied claim over (2,-4): 4 aircraft shot down  <- #420, #421, #431
+#435 D15 morning   air_group:1 base strike sortie of 1112 nm: 23 aircraft x 0.2724 = 6.2652 expected worn, 3 worn, 2 written off, 37 ready and 1 damaged left  <- #416
+#436 D15 morning   air_group:2 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 2 worn, 0 written off, 21 ready and 2 damaged left  <- #417
+#437 D15 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 5 worn, 1 written off, 8 ready and 4 damaged left  <- #418
+#438 D15 morning   air_group:13 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 1 worn, 1 written off, 7 ready and 0 damaged left  <- order:5
+#439 D15 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.68  <- #416
+#440 D15 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.68  <- #417
+#441 D15 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.48  <- #418
+#442 D15 morning   air_group:10 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:1
+#443 D15 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:5
+#444 D15 morning   base:1 spent 4.5 t of supply on 9 aircraft sent on sorties, 3263.4 t left  <- order:1, order:5
+#445 D15 morning   base:2 spent 164 t of supply on 50 aircraft sent on sorties, 8720.56 t left  <- #416, #417, #418
+#446 D15 afternoon air_group:13 patrol sortie of 0 nm: 4 aircraft x 0.05 = 0.2 expected worn, 2 worn, 2 written off, 5 ready and 0 damaged left  <- order:5
+#447 D15 afternoon air_group:1 rested 5 fatigue, now 61.68  <- order:13
+#448 D15 afternoon air_group:2 rested 5 fatigue, now 61.68  <- order:15
+#449 D15 afternoon air_group:3 rested 5 fatigue, now 20.48  <- order:18
+#450 D15 afternoon air_group:10 rested 3 fatigue, now 0  <- order:1
+#451 D15 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:5
+#452 D15 afternoon base:1 spent 2 t of supply on 4 aircraft sent on sorties, 3261.4 t left  <- order:5
+#453 D15 -         base:1 at the end of the day: 3261.4 t of supply, 37 aircraft ready: open
+#454 D15 -         base:2 at the end of the day: 8720.56 t of supply, 66 aircraft ready: open
+#455 D16 night     air_group:1 had 1 aircraft repaired at base:2, 38 ready and 0 damaged  <- #435
+#456 D16 night     air_group:2 had 2 aircraft repaired at base:2, 23 ready and 0 damaged  <- #436
+#457 D16 night     air_group:3 had 1 aircraft repaired at base:2, 9 ready and 3 damaged  <- #437
+#458 D16 night     base:2 spent 4 t of supply on 4 repairs, 8716.56 t left  <- #455, #456, #457
+#459 D16 night     air_group:2 received 1 aircraft and 1 pilots at base:2, 24 ready and 24 pilots
+#460 D16 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 10 ready and 13 pilots
+#461 D16 night     air_group:1 received 2 aircraft and 1 pilots at base:2, 40 ready and 41 pilots
+#462 D16 night     base:1 spent 7.4 t of supply on 37 aircraft at the base for the day, 3254 t left
+#463 D16 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8701.16 t left
+#464 D16 night     air_group:1 stood down: fatigue 61.68 is above its threshold of 45  <- order:14
+#465 D16 night     air_group:2 stood down: fatigue 61.68 is above its threshold of 45  <- order:17
+#466 D16 morning   air_group:13 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:5
+#467 D16 morning   air_group:1 rested 5 fatigue, now 56.68  <- #464
+#468 D16 morning   air_group:2 rested 5 fatigue, now 56.68  <- #465
+#469 D16 morning   air_group:3 rested 5 fatigue, now 15.48  <- order:18
+#470 D16 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:5
+#471 D16 morning   base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3252.5 t left  <- order:5
+#472 D16 afternoon air_group:13 patrol sortie of 0 nm: 3 aircraft x 0.05 = 0.15 expected worn, 0 worn, 0 written off, 5 ready and 0 damaged left  <- order:5
+#473 D16 afternoon air_group:1 rested 5 fatigue, now 51.68  <- #464
+#474 D16 afternoon air_group:2 rested 5 fatigue, now 51.68  <- #465
+#475 D16 afternoon air_group:3 rested 5 fatigue, now 10.48  <- order:18
+#476 D16 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:5
+#477 D16 afternoon base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3251 t left  <- order:5
+#478 D16 -         base:1 at the end of the day: 3251 t of supply, 37 aircraft ready: open
+#479 D16 -         base:2 at the end of the day: 8701.16 t of supply, 74 aircraft ready: open
+#480 D17 night     air_group:3 had 3 aircraft repaired at base:2, 13 ready and 0 damaged  <- #437
+#481 D17 night     base:2 spent 3 t of supply on 3 repairs, 8698.16 t left  <- #480
+#482 D17 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
+#483 D17 night     base:1 spent 7.4 t of supply on 37 aircraft at the base for the day, 3243.6 t left
+#484 D17 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8682.56 t left
+#485 D17 night     air_group:13 stood down: fatigue 42 is above its threshold of 40  <- order:6
+#486 D17 morning   air_group:1 rested 5 fatigue, now 46.68  <- #464
+#487 D17 morning   air_group:2 rested 5 fatigue, now 46.68  <- #465
+#488 D17 morning   air_group:3 rested 5 fatigue, now 5.48  <- order:18
+#489 D17 morning   air_group:13 rested 5 fatigue, now 37  <- #485
+#490 D17 afternoon air_group:1 rested 5 fatigue, now 41.68  <- #464
+#491 D17 afternoon air_group:2 rested 5 fatigue, now 41.68  <- #465
+#492 D17 afternoon air_group:3 rested 5 fatigue, now 0.48  <- order:18
+#493 D17 afternoon air_group:13 rested 5 fatigue, now 32  <- #485
+#494 D17 -         base:1 at the end of the day: 3243.6 t of supply, 37 aircraft ready: open
+#495 D17 -         base:2 at the end of the day: 8682.56 t of supply, 78 aircraft ready: open
+#496 D18 night     base:1 spent 7.4 t of supply on 37 aircraft at the base for the day, 3236.2 t left
+#497 D18 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8666.96 t left
+#498 D18 night     air_group:1 returned to flying: fatigue 41.68 is not above its threshold of 45  <- order:14
+#499 D18 night     air_group:2 returned to flying: fatigue 41.68 is not above its threshold of 45  <- order:17
+#500 D18 night     air_group:13 returned to flying: fatigue 32 is not above its threshold of 40  <- order:6
+#501 D18 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#502 D18 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #501
+#503 D18 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #501
+#504 D18 morning   air_group:2 escorts at the patrol of air_group:13: 25 shots x 0.16875 = 4.21875 expected, 1 hit  <- #501, #502, #503
+#505 D18 morning   air_group:13 patrol at the escorts of air_group:2: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #501, #502, #503
+#506 D18 morning   air_group:13 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 0 hits  <- #501
+#507 D18 morning   air_group:13 lost 1 aircraft, 4 left  <- #504
+#508 D18 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #501
+#509 D18 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #501, #508
+#510 D18 morning   Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground  <- #504, #508
+#511 D18 morning   Allied claim over (2,-4): 2 aircraft shot down  <- #505, #506, #509
+#512 D18 morning   air_group:1 base strike sortie of 1112 nm: 23 aircraft x 0.2724 = 6.2652 expected worn, 2 worn, 0 written off, 39 ready and 2 damaged left  <- #501
+#513 D18 morning   air_group:2 escort sortie of 1112 nm: 13 aircraft x 0.2724 = 3.5412 expected worn, 2 worn, 0 written off, 22 ready and 2 damaged left  <- #502
+#514 D18 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 5 worn, 0 written off, 8 ready and 5 damaged left  <- #503
+#515 D18 morning   air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
+#516 D18 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 66.92  <- #501
+#517 D18 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 66.92  <- #502
+#518 D18 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.72  <- #503
+#519 D18 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 35  <- order:5
+#520 D18 morning   base:1 spent 1.5 t of supply on 3 aircraft sent on sorties, 3234.7 t left  <- order:5
+#521 D18 morning   base:2 spent 157.44 t of supply on 48 aircraft sent on sorties, 8509.52 t left  <- #501, #502, #503
+#522 D18 afternoon air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
+#523 D18 afternoon air_group:1 rested 5 fatigue, now 61.92  <- order:13
+#524 D18 afternoon air_group:2 rested 5 fatigue, now 61.92  <- order:15
+#525 D18 afternoon air_group:3 rested 5 fatigue, now 20.72  <- order:18
+#526 D18 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 38  <- order:5
+#527 D18 afternoon base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3233.7 t left  <- order:5
+#528 D18 -         base:1 at the end of the day: 3233.7 t of supply, 36 aircraft ready: open
+#529 D18 -         base:2 at the end of the day: 8509.52 t of supply, 69 aircraft ready: open
+#530 D19 night     air_group:1 had 2 aircraft repaired at base:2, 41 ready and 0 damaged  <- #512
+#531 D19 night     air_group:2 had 2 aircraft repaired at base:2, 24 ready and 0 damaged  <- #513
+#532 D19 night     base:2 spent 4 t of supply on 4 repairs, 8505.52 t left  <- #530, #531
+#533 D19 night     base:1 spent 7.2 t of supply on 36 aircraft at the base for the day, 3226.5 t left
+#534 D19 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8489.92 t left
+#535 D19 night     air_group:1 stood down: fatigue 61.92 is above its threshold of 45  <- order:14
+#536 D19 night     air_group:2 stood down: fatigue 61.92 is above its threshold of 45  <- order:17
+#537 D19 morning   air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
+#538 D19 morning   air_group:1 rested 5 fatigue, now 56.92  <- #535
+#539 D19 morning   air_group:2 rested 5 fatigue, now 56.92  <- #536
+#540 D19 morning   air_group:3 rested 5 fatigue, now 15.72  <- order:18
+#541 D19 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 41  <- order:5
+#542 D19 morning   base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3225.5 t left  <- order:5
+#543 D19 afternoon air_group:13 patrol sortie of 0 nm: 2 aircraft x 0.05 = 0.1 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- order:5
+#544 D19 afternoon air_group:1 rested 5 fatigue, now 51.92  <- #535
+#545 D19 afternoon air_group:2 rested 5 fatigue, now 51.92  <- #536
+#546 D19 afternoon air_group:3 rested 5 fatigue, now 10.72  <- order:18
+#547 D19 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 44  <- order:5
+#548 D19 afternoon base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3224.5 t left  <- order:5
+#549 D19 -         base:1 at the end of the day: 3224.5 t of supply, 36 aircraft ready: open
+#550 D19 -         base:2 at the end of the day: 8489.92 t of supply, 73 aircraft ready: open
+#551 D20 night     air_group:3 had 4 aircraft repaired at base:2, 12 ready and 1 damaged  <- #514
+#552 D20 night     base:2 spent 4 t of supply on 4 repairs, 8485.92 t left  <- #551
+#553 D20 night     base:1 spent 7.2 t of supply on 36 aircraft at the base for the day, 3217.3 t left
+#554 D20 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8470.32 t left
+#555 D20 night     air_group:13 stood down: fatigue 44 is above its threshold of 40  <- order:6
+#556 D20 morning   air_group:1 rested 5 fatigue, now 46.92  <- #535
+#557 D20 morning   air_group:2 rested 5 fatigue, now 46.92  <- #536
+#558 D20 morning   air_group:3 rested 5 fatigue, now 5.72  <- order:18
+#559 D20 morning   air_group:13 rested 5 fatigue, now 39  <- #555
+#560 D20 afternoon air_group:1 rested 5 fatigue, now 41.92  <- #535
+#561 D20 afternoon air_group:2 rested 5 fatigue, now 41.92  <- #536
+#562 D20 afternoon air_group:3 rested 5 fatigue, now 0.72  <- order:18
+#563 D20 afternoon air_group:13 rested 5 fatigue, now 34  <- #555
+#564 D20 -         base:1 at the end of the day: 3217.3 t of supply, 36 aircraft ready: open
+#565 D20 -         base:2 at the end of the day: 8470.32 t of supply, 77 aircraft ready: open
+#566 D21 night     air_group:3 had 1 aircraft repaired at base:2, 13 ready and 0 damaged  <- #514
+#567 D21 night     base:2 spent 1 t of supply on 1 repairs, 8469.32 t left  <- #566
+#568 D21 night     base:1 spent 7.2 t of supply on 36 aircraft at the base for the day, 3210.1 t left
+#569 D21 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8453.72 t left
+#570 D21 night     air_group:1 returned to flying: fatigue 41.92 is not above its threshold of 45  <- order:14
+#571 D21 night     air_group:2 returned to flying: fatigue 41.92 is not above its threshold of 45  <- order:17
+#572 D21 night     air_group:13 returned to flying: fatigue 34 is not above its threshold of 40  <- order:6
+#573 D21 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#574 D21 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #573
+#575 D21 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #573
+#576 D21 morning   air_group:2 escorts at the patrol of air_group:13: 25 shots x 0.16875 = 4.21875 expected, 2 hits  <- #573, #574, #575
+#577 D21 morning   air_group:13 patrol at the escorts of air_group:2: 1 shots x 0.3 = 0.3 expected, 1 hit  <- #573, #574, #575
+#578 D21 morning   air_group:13 patrol at the bombers of air_group:1: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #573
+#579 D21 morning   air_group:13 lost 2 aircraft, 2 left  <- #576
+#580 D21 morning   air_group:13 lost 1 pilot, 11 left  <- #579
+#581 D21 morning   air_group:2 lost 1 aircraft, 23 left  <- #577
+#582 D21 morning   air_group:2 lost 1 pilot, 23 left  <- #581
+#583 D21 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 4 hits: 0 on aircraft, 1 on supply, 3 on nothing  <- #573
+#584 D21 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 1 hit after the attack  <- #573, #583
+#585 D21 morning   air_group:1 lost 1 aircraft, 40 left  <- #584
+#586 D21 morning   air_group:1 lost 1 pilot, 40 left  <- #585
+#587 D21 morning   base:1 lost 50 t of supply, 3160.1 t left  <- #583
+#588 D21 morning   Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground  <- #576, #583
+#589 D21 morning   Allied claim over (2,-4): 2 aircraft shot down  <- #577, #578, #584
+#590 D21 morning   air_group:1 base strike sortie of 1112 nm: 22 aircraft x 0.2724 = 5.9928 expected worn, 6 worn, 2 written off, 34 ready and 4 damaged left  <- #573
+#591 D21 morning   air_group:2 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 0 written off, 21 ready and 2 damaged left  <- #574
+#592 D21 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 1 written off, 11 ready and 1 damaged left  <- #575
+#593 D21 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 67.16  <- #573
+#594 D21 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 67.16  <- #574
+#595 D21 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 25.96  <- #575
+#596 D21 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 37  <- order:5
+#597 D21 morning   base:1 spent 1 t of supply on 2 aircraft sent on sorties, 3159.1 t left  <- order:5
+#598 D21 morning   base:2 spent 157.44 t of supply on 48 aircraft sent on sorties, 8296.28 t left  <- #573, #574, #575
+#599 D21 afternoon air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 2 ready and 0 damaged left  <- order:5
+#600 D21 afternoon air_group:1 rested 5 fatigue, now 62.16  <- order:13
+#601 D21 afternoon air_group:2 rested 5 fatigue, now 62.16  <- order:15
+#602 D21 afternoon air_group:3 rested 5 fatigue, now 20.96  <- order:18
+#603 D21 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 40  <- order:5
+#604 D21 afternoon base:1 spent 0.5 t of supply on 1 aircraft sent on sorties, 3158.6 t left  <- order:5
+#605 D21 -         base:1 at the end of the day: 3158.6 t of supply, 34 aircraft ready: open
+#606 D21 -         base:2 at the end of the day: 8296.28 t of supply, 66 aircraft ready: open
+#607 D22 night     air_group:1 had 4 aircraft repaired at base:2, 38 ready and 0 damaged  <- #590
+#608 D22 night     base:2 spent 4 t of supply on 4 repairs, 8292.28 t left  <- #607
+#609 D22 night     air_group:15 received 24 aircraft and 24 pilots by arrival, 24 ready, 24 pilots and strength 24
+#610 D22 night     air_group:2 received 1 aircraft and 1 pilots at base:2, 22 ready and 24 pilots
+#611 D22 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 12 ready and 13 pilots
+#612 D22 night     air_group:1 received 2 aircraft and 1 pilots at base:2, 40 ready and 41 pilots
+#613 D22 night     base:1 spent 11.6 t of supply on 58 aircraft at the base for the day, 3147 t left
+#614 D22 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8276.88 t left
+#615 D22 night     air_group:1 stood down: fatigue 62.16 is above its threshold of 45  <- order:14
+#616 D22 night     air_group:2 stood down: fatigue 62.16 is above its threshold of 45  <- order:17
+#617 D22 morning   air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 2 ready and 0 damaged left  <- order:5
+#618 D22 morning   air_group:15 patrol sortie of 0 nm: 24 aircraft x 0.05 = 1.2 expected worn, 0 worn, 0 written off, 24 ready and 0 damaged left  <- order:8
+#619 D22 morning   air_group:1 rested 5 fatigue, now 57.16  <- #615
+#620 D22 morning   air_group:2 rested 5 fatigue, now 57.16  <- #616
+#621 D22 morning   air_group:3 rested 5 fatigue, now 15.96  <- order:18
+#622 D22 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 43  <- order:5
+#623 D22 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:8
+#624 D22 morning   base:1 spent 12.5 t of supply on 25 aircraft sent on sorties, 3134.5 t left  <- order:5, order:8
+#625 D22 afternoon air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 2 ready and 0 damaged left  <- order:5
+#626 D22 afternoon air_group:15 patrol sortie of 0 nm: 23 aircraft x 0.05 = 1.15 expected worn, 1 worn, 0 written off, 23 ready and 1 damaged left  <- order:8
+#627 D22 afternoon air_group:1 rested 5 fatigue, now 52.16  <- #615
+#628 D22 afternoon air_group:2 rested 5 fatigue, now 52.16  <- #616
+#629 D22 afternoon air_group:3 rested 5 fatigue, now 10.96  <- order:18
+#630 D22 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 46  <- order:5
+#631 D22 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:8
+#632 D22 afternoon base:1 spent 12 t of supply on 24 aircraft sent on sorties, 3122.5 t left  <- order:5, order:8
+#633 D22 -         base:1 at the end of the day: 3122.5 t of supply, 57 aircraft ready: open
+#634 D22 -         base:2 at the end of the day: 8276.88 t of supply, 74 aircraft ready: open
+#635 D23 night     air_group:15 had 1 aircraft repaired at base:1, 24 ready and 0 damaged  <- #626
+#636 D23 night     base:1 spent 1 t of supply on 1 repairs, 3121.5 t left  <- #635
+#637 D23 night     air_group:2 had 2 aircraft repaired at base:2, 24 ready and 0 damaged  <- #591
+#638 D23 night     air_group:3 had 1 aircraft repaired at base:2, 13 ready and 0 damaged  <- #592
+#639 D23 night     base:2 spent 3 t of supply on 3 repairs, 8273.88 t left  <- #637, #638
+#640 D23 night     air_group:1 received 1 aircraft and 0 pilots at base:2, 41 ready and 41 pilots
+#641 D23 night     base:1 spent 11.6 t of supply on 58 aircraft at the base for the day, 3109.9 t left
+#642 D23 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8258.28 t left
+#643 D23 night     air_group:13 stood down: fatigue 46 is above its threshold of 40  <- order:6
+#644 D23 morning   air_group:15 patrol sortie of 0 nm: 22 aircraft x 0.05 = 1.1 expected worn, 2 worn, 1 written off, 22 ready and 1 damaged left  <- order:8
+#645 D23 morning   air_group:1 rested 5 fatigue, now 47.16  <- #615
+#646 D23 morning   air_group:2 rested 5 fatigue, now 47.16  <- #616
+#647 D23 morning   air_group:3 rested 5 fatigue, now 5.96  <- order:18
+#648 D23 morning   air_group:13 rested 5 fatigue, now 41  <- #643
+#649 D23 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:8
+#650 D23 morning   base:1 spent 11 t of supply on 22 aircraft sent on sorties, 3098.9 t left  <- order:8
+#651 D23 afternoon air_group:15 patrol sortie of 0 nm: 20 aircraft x 0.05 = 1 expected worn, 1 worn, 0 written off, 21 ready and 2 damaged left  <- order:8
+#652 D23 afternoon air_group:1 rested 5 fatigue, now 42.16  <- #615
+#653 D23 afternoon air_group:2 rested 5 fatigue, now 42.16  <- #616
+#654 D23 afternoon air_group:3 rested 5 fatigue, now 0.96  <- order:18
+#655 D23 afternoon air_group:13 rested 5 fatigue, now 36  <- #643
+#656 D23 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:8
+#657 D23 afternoon base:1 spent 10 t of supply on 20 aircraft sent on sorties, 3088.9 t left  <- order:8
+#658 D23 -         base:1 at the end of the day: 3088.9 t of supply, 55 aircraft ready: open
+#659 D23 -         base:2 at the end of the day: 8258.28 t of supply, 78 aircraft ready: open
+#660 D24 night     air_group:15 had 2 aircraft repaired at base:1, 23 ready and 0 damaged  <- #651
+#661 D24 night     base:1 spent 2 t of supply on 2 repairs, 3086.9 t left  <- #660
+#662 D24 night     air_group:16 received 18 aircraft and 18 pilots by arrival, 18 ready, 18 pilots and strength 18
+#663 D24 night     air_group:17 received 12 aircraft and 12 pilots by arrival, 12 ready, 12 pilots and strength 12
+#664 D24 night     base:1 spent 17.4 t of supply on 87 aircraft at the base for the day, 3069.5 t left
+#665 D24 night     base:2 spent 15.6 t of supply on 78 aircraft at the base for the day, 8242.68 t left
+#666 D24 night     air_group:1 returned to flying: fatigue 42.16 is not above its threshold of 45  <- order:14
+#667 D24 night     air_group:2 returned to flying: fatigue 42.16 is not above its threshold of 45  <- order:17
+#668 D24 night     air_group:13 returned to flying: fatigue 36 is not above its threshold of 40  <- order:6
+#669 D24 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#670 D24 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #669
+#671 D24 morning   air_group:3 sent 12 escorts with air_group:1  <- order:18, order:19, #669
+#672 D24 morning   air_group:2 escorts at the patrol of air_group:13: 25 shots x 0.16875 = 4.21875 expected, 3 hits  <- #669, #670, #671
+#673 D24 morning   air_group:13 patrol at the escorts of air_group:2: 20 shots x 0.3 = 6 expected, 5 hits  <- #669, #670, #671
+#674 D24 morning   air_group:13 patrol at the bombers of air_group:1: 19 shots x 0.3 = 5.7 expected, 5 hits  <- #669
+#675 D24 morning   air_group:13 lost 1 aircraft, 1 left  <- #672
+#676 D24 morning   air_group:15 lost 2 aircraft, 21 left  <- #672
+#677 D24 morning   air_group:15 lost 1 pilot, 23 left  <- #676
+#678 D24 morning   air_group:2 lost 5 aircraft, 19 left  <- #673
+#679 D24 morning   air_group:2 lost 5 pilots, 19 left  <- #678
+#680 D24 morning   air_group:1 lost 5 aircraft, 36 left  <- #674
+#681 D24 morning   air_group:1 lost 5 pilots, 36 left  <- #680
+#682 D24 morning   air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 4 hits: 1 on aircraft, 2 on supply, 1 on nothing  <- #669, #680
+#683 D24 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #669, #682
+#684 D24 morning   air_group:11 lost 1 aircraft on the ground at base:1, 8 left  <- #682
+#685 D24 morning   base:1 lost 100 t of supply, 2969.5 t left  <- #682
+#686 D24 morning   Japanese claim at (2,-4): 4 aircraft shot down, 3 aircraft destroyed on the ground  <- #672, #682
+#687 D24 morning   Allied claim over (2,-4): 12 aircraft shot down  <- #673, #674, #683
+#688 D24 morning   air_group:1 base strike sortie of 1112 nm: 18 aircraft x 0.2724 = 4.9032 expected worn, 7 worn, 1 written off, 29 ready and 6 damaged left  <- #669
+#689 D24 morning   air_group:2 escort sortie of 1112 nm: 8 aircraft x 0.2724 = 2.1792 expected worn, 0 worn, 0 written off, 19 ready and 0 damaged left  <- #670
+#690 D24 morning   air_group:3 escort sortie of 1112 nm: 12 aircraft x 0.2724 = 3.2688 expected worn, 2 worn, 2 written off, 11 ready and 0 damaged left  <- #671
+#691 D24 morning   air_group:15 patrol sortie of 0 nm: 18 aircraft x 0.05 = 0.9 expected worn, 2 worn, 1 written off, 19 ready and 1 damaged left  <- order:8
+#692 D24 morning   air_group:16 patrol sortie of 0 nm: 18 aircraft x 0.05 = 0.9 expected worn, 0 worn, 0 written off, 18 ready and 0 damaged left  <- order:10
+#693 D24 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 67.4  <- #669
+#694 D24 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 67.4  <- #670
+#695 D24 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 26.2  <- #671
+#696 D24 morning   air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:5
+#697 D24 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:8
+#698 D24 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:10
+#699 D24 morning   base:1 spent 19.5 t of supply on 39 aircraft sent on sorties, 2950 t left  <- order:5, order:8, order:10
+#700 D24 morning   base:2 spent 157.44 t of supply on 48 aircraft sent on sorties, 8085.24 t left  <- #669, #670, #671
+#701 D24 afternoon air_group:15 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 1 worn, 0 written off, 18 ready and 2 damaged left  <- order:8
+#702 D24 afternoon air_group:16 patrol sortie of 0 nm: 17 aircraft x 0.05 = 0.85 expected worn, 1 worn, 0 written off, 17 ready and 1 damaged left  <- order:10
+#703 D24 afternoon air_group:1 rested 5 fatigue, now 62.4  <- order:13
+#704 D24 afternoon air_group:2 rested 5 fatigue, now 62.4  <- order:15
+#705 D24 afternoon air_group:3 rested 5 fatigue, now 21.2  <- order:18
+#706 D24 afternoon air_group:13 rested 5 fatigue, now 34  <- order:5
+#707 D24 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:8
+#708 D24 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 6  <- order:10
+#709 D24 afternoon base:1 spent 16.5 t of supply on 33 aircraft sent on sorties, 2933.5 t left  <- order:8, order:10
+#710 D24 -         base:1 at the end of the day: 2933.5 t of supply, 79 aircraft ready: open
+#711 D24 -         base:2 at the end of the day: 8085.24 t of supply, 59 aircraft ready: open
+#712 D25 night     air_group:15 had 2 aircraft repaired at base:1, 20 ready and 0 damaged  <- #701
+#713 D25 night     air_group:16 had 1 aircraft repaired at base:1, 18 ready and 0 damaged  <- #702
+#714 D25 night     base:1 spent 3 t of supply on 3 repairs, 2930.5 t left  <- #712, #713
+#715 D25 night     air_group:1 had 4 aircraft repaired at base:2, 33 ready and 2 damaged  <- #688
+#716 D25 night     base:2 spent 4 t of supply on 4 repairs, 8081.24 t left  <- #715
+#717 D25 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 21 ready and 21 pilots
+#718 D25 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 35 ready and 38 pilots
+#719 D25 night     base:1 spent 16.4 t of supply on 82 aircraft at the base for the day, 2914.1 t left
+#720 D25 night     base:2 spent 13.8 t of supply on 69 aircraft at the base for the day, 8067.44 t left
+#721 D25 night     air_group:1 stood down: fatigue 62.4 is above its threshold of 45  <- order:14
+#722 D25 night     air_group:2 stood down: fatigue 62.4 is above its threshold of 45  <- order:17
+#723 D25 morning   air_group:15 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 1 worn, 0 written off, 19 ready and 1 damaged left  <- order:8
+#724 D25 morning   air_group:16 patrol sortie of 0 nm: 16 aircraft x 0.05 = 0.8 expected worn, 2 worn, 0 written off, 16 ready and 2 damaged left  <- order:10
+#725 D25 morning   air_group:1 rested 5 fatigue, now 57.4  <- #721
+#726 D25 morning   air_group:2 rested 5 fatigue, now 57.4  <- #722
+#727 D25 morning   air_group:3 rested 5 fatigue, now 16.2  <- order:18
+#728 D25 morning   air_group:13 rested 5 fatigue, now 29  <- order:5
+#729 D25 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:8
+#730 D25 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 9  <- order:10
+#731 D25 morning   base:1 spent 16 t of supply on 32 aircraft sent on sorties, 2898.1 t left  <- order:8, order:10
+#732 D25 afternoon air_group:15 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 0 worn, 0 written off, 19 ready and 1 damaged left  <- order:8
+#733 D25 afternoon air_group:16 patrol sortie of 0 nm: 14 aircraft x 0.05 = 0.7 expected worn, 0 worn, 0 written off, 16 ready and 2 damaged left  <- order:10
+#734 D25 afternoon air_group:1 rested 5 fatigue, now 52.4  <- #721
+#735 D25 afternoon air_group:2 rested 5 fatigue, now 52.4  <- #722
+#736 D25 afternoon air_group:3 rested 5 fatigue, now 11.2  <- order:18
+#737 D25 afternoon air_group:13 rested 5 fatigue, now 24  <- order:5
+#738 D25 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:8
+#739 D25 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 12  <- order:10
+#740 D25 afternoon base:1 spent 14.5 t of supply on 29 aircraft sent on sorties, 2883.6 t left  <- order:8, order:10
+#741 D25 -         base:1 at the end of the day: 2883.6 t of supply, 79 aircraft ready: open
+#742 D25 -         base:2 at the end of the day: 8067.44 t of supply, 67 aircraft ready: open
+#743 D26 night     air_group:15 had 1 aircraft repaired at base:1, 20 ready and 0 damaged  <- #723
+#744 D26 night     air_group:16 had 2 aircraft repaired at base:1, 18 ready and 0 damaged  <- #724
+#745 D26 night     base:1 spent 3 t of supply on 3 repairs, 2880.6 t left  <- #743, #744
+#746 D26 night     air_group:1 had 2 aircraft repaired at base:2, 37 ready and 0 damaged  <- #688
+#747 D26 night     base:2 spent 2 t of supply on 2 repairs, 8065.44 t left  <- #746
+#748 D26 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 23 ready and 23 pilots
+#749 D26 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 39 ready and 40 pilots
+#750 D26 night     base:1 spent 16.4 t of supply on 82 aircraft at the base for the day, 2864.2 t left
+#751 D26 night     base:2 spent 14.6 t of supply on 73 aircraft at the base for the day, 8050.84 t left
+#752 D26 morning   air_group:15 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 0 worn, 0 written off, 20 ready and 0 damaged left  <- order:8
+#753 D26 morning   air_group:16 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 0 worn, 0 written off, 18 ready and 0 damaged left  <- order:10
+#754 D26 morning   air_group:1 rested 5 fatigue, now 47.4  <- #721
+#755 D26 morning   air_group:2 rested 5 fatigue, now 47.4  <- #722
+#756 D26 morning   air_group:3 rested 5 fatigue, now 6.2  <- order:18
+#757 D26 morning   air_group:13 rested 5 fatigue, now 19  <- order:5
+#758 D26 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:8
+#759 D26 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 15  <- order:10
+#760 D26 morning   base:1 spent 15 t of supply on 30 aircraft sent on sorties, 2849.2 t left  <- order:8, order:10
+#761 D26 afternoon air_group:15 patrol sortie of 0 nm: 14 aircraft x 0.05 = 0.7 expected worn, 0 worn, 0 written off, 20 ready and 0 damaged left  <- order:8
+#762 D26 afternoon air_group:16 patrol sortie of 0 nm: 15 aircraft x 0.05 = 0.75 expected worn, 1 worn, 1 written off, 17 ready and 0 damaged left  <- order:10
+#763 D26 afternoon air_group:1 rested 5 fatigue, now 42.4  <- #721
+#764 D26 afternoon air_group:2 rested 5 fatigue, now 42.4  <- #722
+#765 D26 afternoon air_group:3 rested 5 fatigue, now 1.2  <- order:18
+#766 D26 afternoon air_group:13 rested 5 fatigue, now 14  <- order:5
+#767 D26 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:8
+#768 D26 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 18  <- order:10
+#769 D26 afternoon base:1 spent 14.5 t of supply on 29 aircraft sent on sorties, 2834.7 t left  <- order:8, order:10
+#770 D26 -         base:1 at the end of the day: 2834.7 t of supply, 81 aircraft ready: open
+#771 D26 -         base:2 at the end of the day: 8050.84 t of supply, 73 aircraft ready: open
+#772 D27 night     air_group:2 received 1 aircraft and 1 pilots at base:2, 24 ready and 24 pilots
+#773 D27 night     air_group:3 received 1 aircraft and 0 pilots at base:2, 12 ready and 13 pilots
+#774 D27 night     air_group:1 received 2 aircraft and 1 pilots at base:2, 41 ready and 41 pilots
+#775 D27 night     base:1 spent 16.2 t of supply on 81 aircraft at the base for the day, 2818.5 t left
+#776 D27 night     base:2 spent 15.4 t of supply on 77 aircraft at the base for the day, 8035.44 t left
+#777 D27 night     air_group:1 returned to flying: fatigue 42.4 is not above its threshold of 45  <- order:14
+#778 D27 night     air_group:2 returned to flying: fatigue 42.4 is not above its threshold of 45  <- order:17
+#779 D27 morning   air_group:1 launched 23 aircraft at base:1 at (2,-4), 556 nm  <- order:13
+#780 D27 morning   air_group:2 sent 13 escorts with air_group:1  <- order:15, order:16, #779
+#781 D27 morning   air_group:3 sent 11 escorts with air_group:1  <- order:18, order:19, #779
+#782 D27 morning   air_group:2 escorts at the patrol of air_group:15: 24 shots x 0.16875 = 4.05 expected, 6 hits  <- #779, #780, #781
+#783 D27 morning   air_group:15 patrol at the escorts of air_group:2: 13 shots x 0.3 = 3.9 expected, 4 hits  <- #779, #780, #781
+#784 D27 morning   air_group:15 patrol at the bombers of air_group:1: 14 shots x 0.3 = 4.2 expected, 6 hits  <- #779
+#785 D27 morning   air_group:15 lost 6 aircraft, 14 left  <- #782
+#786 D27 morning   air_group:15 lost 1 pilot, 22 left  <- #785
+#787 D27 morning   air_group:2 lost 4 aircraft, 20 left  <- #783
+#788 D27 morning   air_group:2 lost 4 pilots, 20 left  <- #787
+#789 D27 morning   air_group:1 lost 6 aircraft, 35 left  <- #784
+#790 D27 morning   air_group:1 lost 6 pilots, 35 left  <- #789
+#791 D27 morning   air_group:1 bombs at base:1: 17 shots x 0.2 = 3.4 expected, 3 hits: 1 on aircraft, 1 on supply, 1 on nothing  <- #779, #789
+#792 D27 morning   base:1 guns at the raid of air_group:1: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #779, #791
+#793 D27 morning   air_group:11 lost 1 aircraft on the ground at base:1, 7 left  <- #791
+#794 D27 morning   base:1 lost 50 t of supply, 2768.5 t left  <- #791
+#795 D27 morning   Japanese claim at (2,-4): 8 aircraft shot down, 2 aircraft destroyed on the ground  <- #782, #791
+#796 D27 morning   Allied claim over (2,-4): 12 aircraft shot down  <- #783, #784, #792
+#797 D27 morning   air_group:1 base strike sortie of 1112 nm: 17 aircraft x 0.2724 = 4.6308 expected worn, 3 worn, 0 written off, 32 ready and 3 damaged left  <- #779
+#798 D27 morning   air_group:2 escort sortie of 1112 nm: 9 aircraft x 0.2724 = 2.4516 expected worn, 1 worn, 0 written off, 19 ready and 1 damaged left  <- #780
+#799 D27 morning   air_group:3 escort sortie of 1112 nm: 11 aircraft x 0.2724 = 2.9964 expected worn, 4 worn, 2 written off, 8 ready and 2 damaged left  <- #781
+#800 D27 morning   air_group:15 patrol sortie of 0 nm: 8 aircraft x 0.05 = 0.4 expected worn, 0 worn, 0 written off, 14 ready and 0 damaged left  <- order:8
+#801 D27 morning   air_group:16 patrol sortie of 0 nm: 13 aircraft x 0.05 = 0.65 expected worn, 1 worn, 1 written off, 16 ready and 0 damaged left  <- order:10
+#802 D27 morning   air_group:1 gained 25.24 fatigue from its base strike sortie of 1112 nm, now 67.64  <- #779
+#803 D27 morning   air_group:2 gained 25.24 fatigue from its escort sortie of 1112 nm, now 67.64  <- #780
+#804 D27 morning   air_group:3 gained 25.24 fatigue from its escort sortie of 1112 nm, now 26.44  <- #781
+#805 D27 morning   air_group:13 rested 5 fatigue, now 9  <- order:5
+#806 D27 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:8
+#807 D27 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 21  <- order:10
+#808 D27 morning   base:1 spent 13.5 t of supply on 27 aircraft sent on sorties, 2755 t left  <- order:8, order:10
+#809 D27 morning   base:2 spent 154.16 t of supply on 47 aircraft sent on sorties, 7881.28 t left  <- #779, #780, #781
+#810 D27 afternoon air_group:15 patrol sortie of 0 nm: 9 aircraft x 0.05 = 0.45 expected worn, 0 worn, 0 written off, 14 ready and 0 damaged left  <- order:8
+#811 D27 afternoon air_group:16 patrol sortie of 0 nm: 12 aircraft x 0.05 = 0.6 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- order:10
+#812 D27 afternoon air_group:1 rested 5 fatigue, now 62.64  <- order:13
+#813 D27 afternoon air_group:2 rested 5 fatigue, now 62.64  <- order:15
+#814 D27 afternoon air_group:3 rested 5 fatigue, now 21.44  <- order:18
+#815 D27 afternoon air_group:13 rested 5 fatigue, now 4  <- order:5
+#816 D27 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:8
+#817 D27 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 24  <- order:10
+#818 D27 afternoon base:1 spent 10.5 t of supply on 21 aircraft sent on sorties, 2744.5 t left  <- order:8, order:10
+#819 D27 -         base:1 at the end of the day: 2744.5 t of supply, 73 aircraft ready: open
+#820 D27 -         base:2 at the end of the day: 7881.28 t of supply, 59 aircraft ready: open
+#821 D28 night     air_group:1 had 3 aircraft repaired at base:2, 35 ready and 0 damaged  <- #797
+#822 D28 night     air_group:2 had 1 aircraft repaired at base:2, 20 ready and 0 damaged  <- #798
+#823 D28 night     base:2 spent 4 t of supply on 4 repairs, 7877.28 t left  <- #821, #822
+#824 D28 night     air_group:2 received 2 aircraft and 2 pilots at base:2, 22 ready and 22 pilots
+#825 D28 night     air_group:1 received 2 aircraft and 2 pilots at base:2, 37 ready and 37 pilots
+#826 D28 night     base:1 spent 14.6 t of supply on 73 aircraft at the base for the day, 2729.9 t left
+#827 D28 night     base:2 spent 13.8 t of supply on 69 aircraft at the base for the day, 7863.48 t left
+#828 D28 night     air_group:1 stood down: fatigue 62.64 is above its threshold of 45  <- order:14
+#829 D28 night     air_group:2 stood down: fatigue 62.64 is above its threshold of 45  <- order:17
+#830 D28 morning   air_group:15 patrol sortie of 0 nm: 8 aircraft x 0.05 = 0.4 expected worn, 1 worn, 0 written off, 13 ready and 1 damaged left  <- order:8
+#831 D28 morning   air_group:16 patrol sortie of 0 nm: 12 aircraft x 0.05 = 0.6 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- order:10
+#832 D28 morning   air_group:1 rested 5 fatigue, now 57.64  <- #828
+#833 D28 morning   air_group:2 rested 5 fatigue, now 57.64  <- #829
+#834 D28 morning   air_group:3 rested 5 fatigue, now 16.44  <- order:18
+#835 D28 morning   air_group:13 rested 4 fatigue, now 0  <- order:5
+#836 D28 morning   air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:8
+#837 D28 morning   air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:10
+#838 D28 morning   base:1 spent 10 t of supply on 20 aircraft sent on sorties, 2719.9 t left  <- order:8, order:10
+#839 D28 afternoon air_group:13 patrol sortie of 0 nm: 1 aircraft x 0.05 = 0.05 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- order:5
+#840 D28 afternoon air_group:15 patrol sortie of 0 nm: 7 aircraft x 0.05 = 0.35 expected worn, 0 worn, 0 written off, 13 ready and 1 damaged left  <- order:8
+#841 D28 afternoon air_group:16 patrol sortie of 0 nm: 11 aircraft x 0.05 = 0.55 expected worn, 0 worn, 0 written off, 16 ready and 0 damaged left  <- order:10
+#842 D28 afternoon air_group:1 rested 5 fatigue, now 52.64  <- #828
+#843 D28 afternoon air_group:2 rested 5 fatigue, now 52.64  <- #829
+#844 D28 afternoon air_group:3 rested 5 fatigue, now 11.44  <- order:18
+#845 D28 afternoon air_group:13 gained 3 fatigue from its patrol sortie of 0 nm, now 3  <- order:5
+#846 D28 afternoon air_group:15 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:8
+#847 D28 afternoon air_group:16 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:10
+#848 D28 afternoon base:1 spent 9.5 t of supply on 19 aircraft sent on sorties, 2710.4 t left  <- order:5, order:8, order:10
+#849 D28 -         base:1 at the end of the day: 2710.4 t of supply, 72 aircraft ready: open
+#850 D28 -         base:2 at the end of the day: 7863.48 t of supply, 67 aircraft ready: open
 
-air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 39 ready, 41 pilots, mission BaseStrike on base:1, fatigue 52.64, rests above 45, stood down, no arc
-air_group:2 "Tainan Air Group" (Japanese) at base:2: 18 ready, 18 pilots, mission CombatAirPatrol, patrol share 0, fatigue 52.64, rests above 45, stood down, no arc
-air_group:3 "6th Air Group" (Japanese) at base:2: 9 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 11.44, rests above 45, no arc
+air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 37 ready, 37 pilots, mission BaseStrike on base:1, fatigue 52.64, rests above 45, stood down, no arc
+air_group:2 "Tainan Air Group" (Japanese) at base:2: 22 ready, 22 pilots, mission CombatAirPatrol, patrol share 0, fatigue 52.64, rests above 45, stood down, no arc
+air_group:3 "6th Air Group" (Japanese) at base:2: 8 ready, 2 damaged, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 11.44, rests above 45, no arc
 air_group:10 "VMF-223" (Allied) at base:1: 0 ready, 13 pilots, mission CombatAirPatrol, patrol share 1, rests above 40, no arc
-air_group:11 "VMSB-232" (Allied) at base:1: 10 ready, 12 pilots, mission NavalStrike, no arc
+air_group:11 "VMSB-232" (Allied) at base:1: 7 ready, 12 pilots, mission NavalStrike, no arc
 air_group:12 "Flight 300" (Allied) at base:1: 11 ready, 11 pilots, mission NavalStrike, no arc
 air_group:13 "VMF-224" (Allied) at base:1: 1 ready, 11 pilots, mission CombatAirPatrol, patrol share 1, fatigue 3, rests above 40, no arc
 air_group:14 "VMSB-231" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
 air_group:15 "VF-5" (Allied) at base:1: 13 ready, 1 damaged, 22 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
 air_group:16 "Fighters from Hornet and Wasp" (Allied) at base:1: 16 ready, 18 pilots, mission CombatAirPatrol, patrol share 1, fatigue 30, rests above 40, no arc
 air_group:17 "VS-3" (Allied) at base:1: 12 ready, 12 pilots, mission NavalStrike, no arc
-base:1 "Henderson Field" (Allied) at (2,-4): 2747.2 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
-base:2 "Rabaul" (Japanese) at (-5,-13): 7873.8 t of supply in stock, repairs 4 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 2710.4 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:2 "Rabaul" (Japanese) at (-5,-13): 7863.48 t of supply in stock, repairs 4 aircraft a day
 Allied: no contacts
 Allied claim over (2,-4): 2 aircraft shot down, day 1 morning
 Allied claim over (2,-4): 5 aircraft shot down, day 2 morning
@@ -897,18 +909,18 @@ Allied claim over (2,-4): 12 aircraft shot down, day 24 morning
 Allied claim over (2,-4): 12 aircraft shot down, day 27 morning
 Japanese: no contacts
 Japanese claim at (2,-4): 6 aircraft shot down, 5 aircraft destroyed on the ground, day 1 morning
-Japanese claim at (2,-4): 3 aircraft shot down, 7 aircraft destroyed on the ground, day 2 morning
-Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground, day 3 morning
-Japanese claim at (2,-4): 1 aircraft shot down, 4 aircraft destroyed on the ground, day 6 morning
-Japanese claim at (2,-4): 3 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 8 aircraft destroyed on the ground, day 2 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 2 aircraft destroyed on the ground, day 3 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
+Japanese claim at (2,-4): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
 Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 12 morning
 Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 15 morning
 Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 18 morning
 Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 21 morning
 Japanese claim at (2,-4): 4 aircraft shot down, 3 aircraft destroyed on the ground, day 24 morning
-Japanese claim at (2,-4): 8 aircraft shot down, 1 aircraft destroyed on the ground, day 27 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 2 aircraft destroyed on the ground, day 27 morning
 
 Result (the placeholder scale of decision 0054):
-Allied: 13 points (aircraft_destroyed 60 = 3; base_open at base:1 28 of 28 days = 10), margin 10.45, major victory
-Japanese: 2.55 points (aircraft_destroyed 51 = 2.55; base_open at base:1 0 of 28 days = 0), margin -10.45, major defeat
+Allied: 13 points (aircraft_destroyed 60 = 3; base_open at base:1 28 of 28 days = 10), margin 10.3, major victory
+Japanese: 2.7 points (aircraft_destroyed 54 = 2.7; base_open at base:1 0 of 28 days = 0), margin -10.3, major defeat
 History: Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)

@@ -515,8 +515,9 @@ fn objectives_change_no_hash_and_no_event() {
     // damage (rulebook differences, row 7): Ryujo sinks on this seed, and the
     // later reports of her detachment count the ships left afloat. And it was
     // 0703fe7c146fc0f8 until decision 0079 had the live guns fire after the
-    // attack.
-    assert!(baseline.contains("hash b418991aaf7e4cce"));
+    // attack. And it was b418991aaf7e4cce until decision 0080 had the live
+    // patrol fire at the escorts and the bombers in proportion.
+    assert!(baseline.contains("hash 28017861c2170a4d"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

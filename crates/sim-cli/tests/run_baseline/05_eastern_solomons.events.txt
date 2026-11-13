@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b418991aaf7e4cce  193 events
+day   1  hash 28017861c2170a4d  194 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:2  <- order:2
@@ -104,99 +104,100 @@ day   1  hash b418991aaf7e4cce  193 events
 #98 D1 afternoon air_group:18 patrol at the bombers of air_group:10: 1 shots x 0.16875 = 0.16875 expected, 0 hits  <- #90
 #99 D1 afternoon air_group:11 sent 6 escorts with air_group:12  <- order:16, order:17, #91
 #100 D1 afternoon air_group:11 escorts at the patrol of air_group:1: 6 shots x 0.16875 = 1.0125 expected, 2 hits  <- #91, #99
-#101 D1 afternoon air_group:1 patrol at the escorts of air_group:11: 6 shots x 0.3 = 1.8 expected, 3 hits  <- #91, #99
-#102 D1 afternoon air_group:1 patrol at the bombers of air_group:12: 22 shots x 0.3 = 6.6 expected, 10 hits  <- #91
+#101 D1 afternoon air_group:1 patrol at the escorts of air_group:11: 5 shots x 0.3 = 1.5 expected, 3 hits  <- #91, #99
+#102 D1 afternoon air_group:1 patrol at the bombers of air_group:12: 23 shots x 0.3 = 6.9 expected, 10 hits  <- #91
 #103 D1 afternoon air_group:1 lost 2 aircraft, 25 left  <- #100
 #104 D1 afternoon air_group:11 lost 3 aircraft, 23 left  <- #101
 #105 D1 afternoon air_group:12 lost 10 aircraft, 17 left  <- #102
 #106 D1 afternoon air_group:14 sent 5 escorts with air_group:15  <- order:21, order:22, #92
 #107 D1 afternoon air_group:14 escorts at the patrol of air_group:1: 5 shots x 0.16875 = 0.84375 expected, 1 hit  <- #92, #106
-#108 D1 afternoon air_group:1 patrol at the escorts of air_group:14: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #92, #106
-#109 D1 afternoon air_group:1 patrol at the bombers of air_group:15: 21 shots x 0.3 = 6.3 expected, 8 hits  <- #92
+#108 D1 afternoon air_group:1 patrol at the escorts of air_group:14: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #92, #106
+#109 D1 afternoon air_group:1 patrol at the bombers of air_group:15: 22 shots x 0.3 = 6.6 expected, 8 hits  <- #92
 #110 D1 afternoon air_group:1 lost 1 aircraft, 24 left  <- #107
 #111 D1 afternoon air_group:14 lost 1 aircraft, 24 left  <- #108
 #112 D1 afternoon air_group:15 lost 8 aircraft, 19 left  <- #109
 #113 D1 afternoon air_group:18 sent 15 escorts with air_group:19  <- order:28, order:29, #93
 #114 D1 afternoon air_group:18 escorts at the patrol of air_group:9: 15 shots x 0.16875 = 2.53125 expected, 2 hits  <- #93, #113
-#115 D1 afternoon air_group:9 patrol at the escorts of air_group:18: 13 shots x 0.3 = 3.9 expected, 2 hits  <- #93, #113
-#116 D1 afternoon air_group:9 lost 2 aircraft, 11 left  <- #114
-#117 D1 afternoon air_group:18 lost 2 aircraft, 21 left  <- #115
-#118 D1 afternoon air_group:2 bombs at ship:33: 16 shots x 0.2 = 3.2 expected, 5 hits  <- #85, #95
-#119 D1 afternoon air_group:4 torpedoes at ship:33: 14 shots x 0.15 = 2.1 expected, 2 hits  <- #86
-#120 D1 afternoon air_group:6 bombs at ship:33: 14 shots x 0.2 = 2.8 expected, 2 hits  <- #87, #97
-#121 D1 afternoon air_group:7 bombs at ship:33: 15 shots x 0.2 = 3 expected, 2 hits  <- #88
-#122 D1 afternoon air_group:8 torpedoes at ship:33: 13 shots x 0.15 = 1.95 expected, 4 hits  <- #89
-#123 D1 afternoon air_group:10 bombs at ship:33: 11 shots x 0.2 = 2.2 expected, 2 hits  <- #90
-#124 D1 afternoon air_group:12 bombs at ship:1: 17 shots x 0.2 = 3.4 expected, 5 hits  <- #91, #105
-#125 D1 afternoon air_group:15 bombs at ship:1: 19 shots x 0.2 = 3.8 expected, 1 hit  <- #92, #112
-#126 D1 afternoon air_group:19 bombs at base:1: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #93
-#127 D1 afternoon task_force:4 guns at the raid of air_group:2: 26 shots x 0.028125 = 0.73125 expected, 0 hits after the attack  <- #85, #118, #119
-#128 D1 afternoon task_force:4 guns at the raid of air_group:6: 26 shots x 0.028125 = 0.73125 expected, 0 hits after the attack  <- #87, #120, #121, #122
-#129 D1 afternoon task_force:4 guns at the raid of air_group:10: 26 shots x 0.028125 = 0.73125 expected, 1 hit after the attack  <- #90, #123
-#130 D1 afternoon air_group:10 lost 1 aircraft, 10 left  <- #129
-#131 D1 afternoon task_force:1 guns at the raid of air_group:12: 123 shots x 0.05 = 6.15 expected, 5 hits after the attack  <- #91, #124
-#132 D1 afternoon air_group:12 lost 5 aircraft, 12 left  <- #131
-#133 D1 afternoon task_force:1 guns at the raid of air_group:15: 123 shots x 0.05 = 6.15 expected, 4 hits after the attack  <- #92, #125
-#134 D1 afternoon air_group:15 lost 4 aircraft, 15 left  <- #133
-#135 D1 afternoon ship:33 took 4 hits on flotation, 71.320752 points, now 71.320752  <- #118
-#136 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #118
-#137 D1 afternoon ship:33 propulsion hit, working -> degraded  <- #118
-#138 D1 afternoon ship:33 flight deck hit, working -> degraded  <- #118
-#139 D1 afternoon ship:33 flight deck hit, degraded -> out  <- #118
-#140 D1 afternoon ship:33 flight deck hit, no change, still out  <- #118
-#141 D1 afternoon ship:33 propulsion hit, degraded -> out  <- #118
-#142 D1 afternoon Allied report: 5 ships, carrier, at (7,-9): refreshed contact:1  <- #118
-#143 D1 afternoon ship:33 took 2 hits on flotation, 34.5283 points, now 100  <- #119
-#144 D1 afternoon ship:33 of task_force:4 sank  <- #143
-#145 D1 afternoon air_group:18 lost with ship:33: 0 aircraft  <- #144
-#146 D1 afternoon air_group:19 lost with ship:33: 0 aircraft  <- #144
-#147 D1 afternoon ship:33 fire control hit, no change, still working  <- #119
-#148 D1 afternoon ship:33 fire control hit, no change, still working  <- #119
-#149 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #119
-#150 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #120
-#151 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #120
-#152 D1 afternoon ship:33 flight deck hit, no change, still out  <- #120
-#153 D1 afternoon ship:33 flight deck hit, no change, still out  <- #120
-#154 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #120
-#155 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #121
-#156 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 53.490564  <- #121
-#157 D1 afternoon ship:33 flight deck hit, no change, still out  <- #121
-#158 D1 afternoon ship:33 propulsion hit, no change, still out  <- #121
-#159 D1 afternoon Allied report: 2 ships, cruiser, at (7,-9): refreshed contact:1  <- #121
-#160 D1 afternoon ship:33 took 4 hits on flotation, 69.0566 points, now 100  <- #122
-#161 D1 afternoon ship:33 propulsion hit, no change, still out  <- #122
-#162 D1 afternoon ship:33 propulsion hit, no change, still out  <- #122
-#163 D1 afternoon ship:33 propulsion hit, no change, still out  <- #122
-#164 D1 afternoon ship:33 propulsion hit, no change, still out  <- #122
-#165 D1 afternoon Allied report: 3 ships, battleship, at (7,-9): refreshed contact:1  <- #122
-#166 D1 afternoon ship:33 took 2 hits on fire, 35.660376 points, now 89.15094  <- #123
-#167 D1 afternoon ship:33 flight deck hit, no change, still out  <- #123
-#168 D1 afternoon ship:33 flight deck hit, no change, still out  <- #123
-#169 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #123
-#170 D1 afternoon ship:1 took 3 hits on flotation, 15.782826 points, now 15.782826  <- #124
-#171 D1 afternoon ship:1 took 2 hits on fire, 10.521884 points, now 10.521884  <- #124
-#172 D1 afternoon ship:1 fire control hit, no change, still working  <- #124
-#173 D1 afternoon ship:1 propulsion hit, working -> degraded  <- #124
-#174 D1 afternoon Japanese report: 11 ships, carrier, at (7,-5): refreshed contact:1  <- #124
-#175 D1 afternoon ship:1 took 1 hit on fire, 5.260942 points, now 15.782826  <- #125
-#176 D1 afternoon ship:1 flight deck hit, working -> degraded  <- #125
-#177 D1 afternoon Japanese report: 10 ships, carrier, at (7,-4): refreshed contact:1  <- #125
-#178 D1 afternoon Allied claim at (7,-9): 9 hits on a carrier, 1 sunk  <- #118, #119
-#179 D1 afternoon Japanese claim over (7,-9): 2 aircraft shot down  <- #94, #127
-#180 D1 afternoon Allied claim at (7,-9): 10 hits on a carrier, 0 sunk  <- #120, #121, #122
-#181 D1 afternoon Japanese claim over (7,-9): 1 aircraft shot down  <- #96, #128
-#182 D1 afternoon Allied claim at (7,-9): 5 hits on a carrier, 0 sunk  <- #123
-#183 D1 afternoon Japanese claim over (7,-9): 3 aircraft shot down  <- #98, #129
-#184 D1 afternoon Japanese claim at (7,-5): 7 hits on a transport, 0 sunk, 2 aircraft shot down  <- #100, #124
-#185 D1 afternoon Allied claim over (7,-5): 30 aircraft shot down  <- #101, #102, #131
-#186 D1 afternoon Japanese claim at (7,-5): 3 hits on a transport, 0 sunk, 1 aircraft shot down  <- #107, #125
-#187 D1 afternoon Allied claim over (7,-5): 21 aircraft shot down  <- #108, #109, #133
-#188 D1 afternoon Japanese claim at (2,-4): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #114, #126
-#189 D1 afternoon Allied claim over (2,-4): 3 aircraft shot down  <- #115
-#190 D1 afternoon air_group:19 base strike sortie of 200 nm, 25 beyond its radius of 175: 6 aircraft x 0.285714 = 1.714284 expected out of fuel, 3 ditched, 3 ready left  <- #93
-#191 D1 afternoon air_group:18 had no deck: 21 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #144, order:28, order:29, #113
-#192 D1 afternoon air_group:19 had no deck: 3 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #144, #93
-#193 D1 -         base:1 at the end of the day: 0 t of supply, 21 aircraft ready: not open
+#115 D1 afternoon air_group:9 patrol at the escorts of air_group:18: 9 shots x 0.3 = 2.7 expected, 2 hits  <- #93, #113
+#116 D1 afternoon air_group:9 patrol at the bombers of air_group:19: 4 shots x 0.3 = 1.2 expected, 0 hits  <- #93
+#117 D1 afternoon air_group:9 lost 2 aircraft, 11 left  <- #114
+#118 D1 afternoon air_group:18 lost 2 aircraft, 21 left  <- #115
+#119 D1 afternoon air_group:2 bombs at ship:33: 16 shots x 0.2 = 3.2 expected, 5 hits  <- #85, #95
+#120 D1 afternoon air_group:4 torpedoes at ship:33: 14 shots x 0.15 = 2.1 expected, 2 hits  <- #86
+#121 D1 afternoon air_group:6 bombs at ship:33: 14 shots x 0.2 = 2.8 expected, 2 hits  <- #87, #97
+#122 D1 afternoon air_group:7 bombs at ship:33: 15 shots x 0.2 = 3 expected, 2 hits  <- #88
+#123 D1 afternoon air_group:8 torpedoes at ship:33: 13 shots x 0.15 = 1.95 expected, 4 hits  <- #89
+#124 D1 afternoon air_group:10 bombs at ship:33: 11 shots x 0.2 = 2.2 expected, 2 hits  <- #90
+#125 D1 afternoon air_group:12 bombs at ship:1: 17 shots x 0.2 = 3.4 expected, 5 hits  <- #91, #105
+#126 D1 afternoon air_group:15 bombs at ship:1: 19 shots x 0.2 = 3.8 expected, 1 hit  <- #92, #112
+#127 D1 afternoon air_group:19 bombs at base:1: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #93
+#128 D1 afternoon task_force:4 guns at the raid of air_group:2: 26 shots x 0.028125 = 0.73125 expected, 0 hits after the attack  <- #85, #119, #120
+#129 D1 afternoon task_force:4 guns at the raid of air_group:6: 26 shots x 0.028125 = 0.73125 expected, 0 hits after the attack  <- #87, #121, #122, #123
+#130 D1 afternoon task_force:4 guns at the raid of air_group:10: 26 shots x 0.028125 = 0.73125 expected, 1 hit after the attack  <- #90, #124
+#131 D1 afternoon air_group:10 lost 1 aircraft, 10 left  <- #130
+#132 D1 afternoon task_force:1 guns at the raid of air_group:12: 123 shots x 0.05 = 6.15 expected, 5 hits after the attack  <- #91, #125
+#133 D1 afternoon air_group:12 lost 5 aircraft, 12 left  <- #132
+#134 D1 afternoon task_force:1 guns at the raid of air_group:15: 123 shots x 0.05 = 6.15 expected, 4 hits after the attack  <- #92, #126
+#135 D1 afternoon air_group:15 lost 4 aircraft, 15 left  <- #134
+#136 D1 afternoon ship:33 took 4 hits on flotation, 71.320752 points, now 71.320752  <- #119
+#137 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #119
+#138 D1 afternoon ship:33 propulsion hit, working -> degraded  <- #119
+#139 D1 afternoon ship:33 flight deck hit, working -> degraded  <- #119
+#140 D1 afternoon ship:33 flight deck hit, degraded -> out  <- #119
+#141 D1 afternoon ship:33 flight deck hit, no change, still out  <- #119
+#142 D1 afternoon ship:33 propulsion hit, degraded -> out  <- #119
+#143 D1 afternoon Allied report: 5 ships, carrier, at (7,-9): refreshed contact:1  <- #119
+#144 D1 afternoon ship:33 took 2 hits on flotation, 34.5283 points, now 100  <- #120
+#145 D1 afternoon ship:33 of task_force:4 sank  <- #144
+#146 D1 afternoon air_group:18 lost with ship:33: 0 aircraft  <- #145
+#147 D1 afternoon air_group:19 lost with ship:33: 0 aircraft  <- #145
+#148 D1 afternoon ship:33 fire control hit, no change, still working  <- #120
+#149 D1 afternoon ship:33 fire control hit, no change, still working  <- #120
+#150 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #120
+#151 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #121
+#152 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #121
+#153 D1 afternoon ship:33 flight deck hit, no change, still out  <- #121
+#154 D1 afternoon ship:33 flight deck hit, no change, still out  <- #121
+#155 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #121
+#156 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #122
+#157 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 53.490564  <- #122
+#158 D1 afternoon ship:33 flight deck hit, no change, still out  <- #122
+#159 D1 afternoon ship:33 propulsion hit, no change, still out  <- #122
+#160 D1 afternoon Allied report: 2 ships, cruiser, at (7,-9): refreshed contact:1  <- #122
+#161 D1 afternoon ship:33 took 4 hits on flotation, 69.0566 points, now 100  <- #123
+#162 D1 afternoon ship:33 propulsion hit, no change, still out  <- #123
+#163 D1 afternoon ship:33 propulsion hit, no change, still out  <- #123
+#164 D1 afternoon ship:33 propulsion hit, no change, still out  <- #123
+#165 D1 afternoon ship:33 propulsion hit, no change, still out  <- #123
+#166 D1 afternoon Allied report: 3 ships, battleship, at (7,-9): refreshed contact:1  <- #123
+#167 D1 afternoon ship:33 took 2 hits on fire, 35.660376 points, now 89.15094  <- #124
+#168 D1 afternoon ship:33 flight deck hit, no change, still out  <- #124
+#169 D1 afternoon ship:33 flight deck hit, no change, still out  <- #124
+#170 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #124
+#171 D1 afternoon ship:1 took 3 hits on flotation, 15.782826 points, now 15.782826  <- #125
+#172 D1 afternoon ship:1 took 2 hits on fire, 10.521884 points, now 10.521884  <- #125
+#173 D1 afternoon ship:1 fire control hit, no change, still working  <- #125
+#174 D1 afternoon ship:1 propulsion hit, working -> degraded  <- #125
+#175 D1 afternoon Japanese report: 11 ships, carrier, at (7,-5): refreshed contact:1  <- #125
+#176 D1 afternoon ship:1 took 1 hit on fire, 5.260942 points, now 15.782826  <- #126
+#177 D1 afternoon ship:1 flight deck hit, working -> degraded  <- #126
+#178 D1 afternoon Japanese report: 10 ships, carrier, at (7,-4): refreshed contact:1  <- #126
+#179 D1 afternoon Allied claim at (7,-9): 9 hits on a carrier, 1 sunk  <- #119, #120
+#180 D1 afternoon Japanese claim over (7,-9): 2 aircraft shot down  <- #94, #128
+#181 D1 afternoon Allied claim at (7,-9): 10 hits on a carrier, 0 sunk  <- #121, #122, #123
+#182 D1 afternoon Japanese claim over (7,-9): 1 aircraft shot down  <- #96, #129
+#183 D1 afternoon Allied claim at (7,-9): 5 hits on a carrier, 0 sunk  <- #124
+#184 D1 afternoon Japanese claim over (7,-9): 3 aircraft shot down  <- #98, #130
+#185 D1 afternoon Japanese claim at (7,-5): 7 hits on a transport, 0 sunk, 2 aircraft shot down  <- #100, #125
+#186 D1 afternoon Allied claim over (7,-5): 30 aircraft shot down  <- #101, #102, #132
+#187 D1 afternoon Japanese claim at (7,-5): 3 hits on a transport, 0 sunk, 1 aircraft shot down  <- #107, #126
+#188 D1 afternoon Allied claim over (7,-5): 21 aircraft shot down  <- #108, #109, #134
+#189 D1 afternoon Japanese claim at (2,-4): 4 aircraft shot down, 1 aircraft destroyed on the ground  <- #114, #127
+#190 D1 afternoon Allied claim over (2,-4): 3 aircraft shot down  <- #115, #116
+#191 D1 afternoon air_group:19 base strike sortie of 200 nm, 25 beyond its radius of 175: 6 aircraft x 0.285714 = 1.714284 expected out of fuel, 3 ditched, 3 ready left  <- #93
+#192 D1 afternoon air_group:18 had no deck: 21 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #145, order:28, order:29, #113
+#193 D1 afternoon air_group:19 had no deck: 3 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #145, #93
+#194 D1 -         base:1 at the end of the day: 0 t of supply, 21 aircraft ready: not open
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8f3ebeba2b1d1860  150 events
+day   1  hash 892b66d0a23236f9  151 events
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Arrived at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -12,10 +12,10 @@ air_group:1 "Placeholder Allied scouts" (Allied) aboard ship:1: 3 ready, 2 damag
 air_group:2 "Placeholder Allied dive bombers" (Allied) aboard ship:1: 1 ready, 1 pilots, mission NavalStrike, extended reach, no arc
 air_group:3 "Placeholder Allied fighters" (Allied) aboard ship:1: 6 ready, 1 damaged, 12 pilots, mission CombatAirPatrol, patrol share 1, no arc
 air_group:4 "Placeholder Japanese scouts" (Japanese) aboard ship:2: 3 ready, 2 damaged, 5 pilots, mission Search, arc 260-280 to 300 nm
-air_group:5 "Placeholder Japanese dive bombers" (Japanese) aboard ship:2: 2 ready, 1 damaged, 5 pilots, mission NavalStrike, extended reach, no arc
+air_group:5 "Placeholder Japanese dive bombers" (Japanese) aboard ship:2: 1 ready, 1 damaged, 5 pilots, mission NavalStrike, extended reach, no arc
 air_group:6 "Placeholder Japanese attack unit" (Japanese) aboard ship:2: 4 ready, 4 pilots, mission BaseStrike on base:1, no arc
-air_group:7 "Placeholder Japanese fighters" (Japanese) aboard ship:2: 3 ready, 1 damaged, 9 pilots, mission CombatAirPatrol, patrol share 0, extended reach, no arc
-ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 10, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+air_group:7 "Placeholder Japanese fighters" (Japanese) aboard ship:2: 4 ready, 9 pilots, mission CombatAirPatrol, patrol share 0, extended reach, no arc
+ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder carrier J": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2906.666667 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 5; propulsion out, fire control out, torpedo mounts degraded; 740 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B2": afloat in task_force:3; damage flotation 85, fire 65; propulsion out, fire control out, main battery out, torpedo mounts out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
@@ -30,12 +30,12 @@ Allied claims 0 enemy ships sunk at (2,-4), day 1 night
 Allied claim at (9,0): 1 hit on a carrier, 0 sunk, day 1 afternoon
 Allied claim over (2,0): 4 aircraft shot down, day 1 afternoon
 Japanese contact:1 at (1,-4): 2 ships, cruiser, age 2 pulses
-Japanese contact:2 at (2,0): 1 ships, carrier, age 0 pulses
+Japanese contact:2 at (3,0): 1 ships, carrier, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-4), day 1 night
-Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
+Japanese claim at (2,0): 1 hit on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
 Japanese claim over (9,-6): 0 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
-Allied: 5.5 points (aircraft_destroyed 11 = 5.5; ships_sunk 0 = 0; ships_crippled 0 = 0; base_open at base:1 0 of 1 days = 0), margin -7, minor defeat
-Japanese: 12.5 points (aircraft_destroyed 5 = 2.5; ships_sunk 1 = 5; ships_crippled 1 = 0; base_open at base:1 1 of 1 days = 5), margin 7, minor victory
+Allied: 6 points (aircraft_destroyed 12 = 6; ships_sunk 0 = 0; ships_crippled 0 = 0; base_open at base:1 0 of 1 days = 0), margin -6.5, minor defeat
+Japanese: 12.5 points (aircraft_destroyed 5 = 2.5; ships_sunk 1 = 5; ships_crippled 1 = 0; base_open at base:1 1 of 1 days = 5), margin 6.5, minor victory
 History: Invented: a night action of cruisers, a carrier duel beyond the dive bombers' radius, and a raid on the field where the broken carrier's aircraft came down.

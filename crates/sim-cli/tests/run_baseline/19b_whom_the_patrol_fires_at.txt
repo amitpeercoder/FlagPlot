@@ -1,0 +1,17 @@
+Scenario 19b: Whom the patrol fires at
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 9d0fd0455ab52b7d  7 events
+
+task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder fighting squadron A" (Allied) aboard ship:1: 4 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:2 "Placeholder bombing squadron" (Japanese) aboard ship:2: 10 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder fighting squadron B" (Japanese) aboard ship:2: 6 ready, mission CombatAirPatrol, patrol share 0, no arc
+ship:1 "Placeholder carrier": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder carrier": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+Allied: no contacts
+Allied: no battle claims
+Japanese contact:1 at (4,0): 1 ships, carrier, age 3 pulses
+Japanese: no battle claims
