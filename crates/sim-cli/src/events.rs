@@ -4,16 +4,13 @@
 //! `run`, it reads the truth. Nothing that plays the game may use it.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
-use std::path::Path;
 
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId, TaskForceId};
 use sim_core::state::Side;
 use sim_core::World;
-use sim_data::Scenario;
 
-use crate::{event_line, execute, parse_seed, save, Executed};
+use crate::{event_line, execute_source, parse_seed, Executed};
 
 const EVENTS_USAGE: &str = "\
 Usage: sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N]
@@ -84,7 +81,7 @@ pub fn command(args: &[String], options: &sim_data::LoadOptions) -> Result<(), S
         }
     };
 
-    let executed = run_source(source, seed, options)?;
+    let (executed, _) = execute_source(source, seed, options)?;
     let world = &executed.scenario.world;
     let asked = match &subject {
         Subject::Unit { unit, side } => format!(
@@ -100,43 +97,6 @@ pub fn command(args: &[String], options: &sim_data::LoadOptions) -> Result<(), S
         Subject::Unit { unit, side } => list_unit(&executed, unit, side, day, &header),
         Subject::Why(n) => why_tree(world, n, &header),
     }
-}
-
-/// Runs the scenario file, or replays the saved game, to its end.
-fn run_source(
-    source: &str,
-    seed: Option<u64>,
-    options: &sim_data::LoadOptions,
-) -> Result<Executed, String> {
-    let text = fs::read_to_string(source).map_err(|e| format!("{source}: {e}"))?;
-    if !text.trim_start().starts_with('{') {
-        return execute(source, seed, options, |_| {});
-    }
-    // A saved game, read as `replay` reads it.
-    if seed.is_some() {
-        return Err("--seed does not go with a saved game: it holds its own seed".to_string());
-    }
-    let saved = save::read(source)?;
-    let scenario =
-        Scenario::load_with(Path::new(&saved.scenario_file), options).map_err(|e| e.to_string())?;
-    saved.check_files(&scenario)?;
-    let mut scenario = scenario.with_seed(saved.seed).map_err(|e| e.to_string())?;
-    scenario.replace_script(saved.script.clone());
-    let initial = scenario.world.umpire().clone();
-    let summaries = scenario.run_to_end().map_err(|e| e.to_string())?;
-    for ((day, hash), summary) in saved.hashes.iter().zip(&summaries) {
-        let now = format!("{:016x}", summary.state_hash);
-        if summary.day != *day || &now != hash {
-            return Err(format!(
-                "replay differs on day {day}: saved hash {hash}, replayed hash {now}"
-            ));
-        }
-    }
-    Ok(Executed {
-        scenario,
-        summaries,
-        initial,
-    })
 }
 
 fn parse_number(text: &str) -> Option<u32> {
