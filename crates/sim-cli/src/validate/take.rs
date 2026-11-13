@@ -144,6 +144,9 @@ pub enum Take {
     Ready(BTreeSet<u32>, usize),
     Attacking(Who, Target, bool),
     AttackDays(Who, Target),
+    /// Aircraft launched in raids that met a force of these task forces, and
+    /// with `escorts` the fighters sent with them.
+    TakingPart(Who, BTreeSet<u32>, bool),
     AttackAtLeast(Side, BTreeSet<u32>, u64),
     Claims(Side, Claim),
     ClaimsPerHundred(Side, Claim, Real),
@@ -387,6 +390,32 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
         "aircraft_attacking" => {
             let (who, target) = who_and_target(measure)?;
             Take::Attacking(who, target, need(measure, "escorts", measure.escorts)?)
+        }
+        "aircraft_taking_part" => {
+            if measure.target_base.is_some() {
+                return Err(format!(
+                    "measure {}: take aircraft_taking_part does not take the key target_base",
+                    measure.id
+                ));
+            }
+            let who = match (&measure.side, &measure.air_groups) {
+                (Some(_), None) => Who::Side(side(measure)?),
+                (None, Some(_)) => Who::Groups(groups(measure)?),
+                _ => {
+                    return Err(format!(
+                        "measure {}: take aircraft_taking_part needs side or air_groups, not both",
+                        measure.id
+                    ))
+                }
+            };
+            let forces = ids(
+                measure,
+                "target_task_forces",
+                &measure.target_task_forces,
+                &known.forces,
+                "task force",
+            )?;
+            Take::TakingPart(who, forces, need(measure, "escorts", measure.escorts)?)
         }
         "attack_days" => {
             let (who, target) = who_and_target(measure)?;
@@ -726,6 +755,37 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
                 let keys: BTreeSet<(u32, &str, u32)> = attacks
                     .iter()
                     .map(|a| (a.day, a.pulse.as_str(), a.air_group))
+                    .collect();
+                sum += run
+                    .escorts
+                    .iter()
+                    .filter(|e| keys.contains(&(e.day, e.pulse.as_str(), e.with_air_group)))
+                    .map(|e| e.aircraft)
+                    .sum::<u64>();
+            }
+            n(sum)?
+        }
+        Take::TakingPart(who, forces, escorts) => {
+            let counted: Vec<&super::input::Launch> = run
+                .launches
+                .iter()
+                .filter(|l| {
+                    l.target_kind == "ship"
+                        && !l.found_nothing
+                        && l.task_force.is_some_and(|f| forces.contains(&f))
+                        && match who {
+                            Who::Side(side) => side_of_group(ctx, run, l.air_group) == Some(*side),
+                            Who::Groups(set) => in_set(run, set, l.air_group),
+                        }
+                })
+                .collect();
+            let mut sum: u64 = counted.iter().map(|l| l.aircraft).sum();
+            if *escorts {
+                // An escort entry names the raid's first strike group; each
+                // entry is counted once, whatever launch it matches.
+                let keys: BTreeSet<(u32, &str, u32)> = counted
+                    .iter()
+                    .map(|l| (l.day, l.pulse.as_str(), l.air_group))
                     .collect();
                 sum += run
                     .escorts

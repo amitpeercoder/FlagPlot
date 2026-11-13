@@ -1,6 +1,6 @@
 //! What `batch` counts from one run's event log and end state (decision
 //! 0062; `shots_by` was added at version 3, and who sighted first in each
-//! fight at version 4). It only reads: the log, the truth after each day and at the end.
+//! fight at version 4, and the strike launches at version 5). It only reads: the log, the truth after each day and at the end.
 //! Every quantity is a whole number or, for a `Fixed`, a decimal string. A
 //! list is empty when there is nothing, and every key is always written, so
 //! a reader can tell an old file (key missing) from a run with none.
@@ -15,7 +15,7 @@ use serde::Serialize;
 use sim_core::events::{Cause, EventKind, SupplyUse, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AirGroupId, BaseId, EventId, ShipId, TaskForceId};
-use sim_core::state::{ShipLocation, ShipSystem, Side, SystemState, TruthState};
+use sim_core::state::{AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState, TruthState};
 use sim_core::time::Pulse;
 use sim_core::World;
 
@@ -229,6 +229,42 @@ pub struct EscortOut {
     aircraft: u32,
 }
 
+/// One strike launch (version 5): the wave that set out, with the force its
+/// raid met where the log names it.
+#[derive(Serialize)]
+pub struct LaunchOut {
+    day: u32,
+    pulse: &'static str,
+    air_group: u32,
+    aircraft: u32,
+    hex: [i32; 2],
+    /// `ship` or `base`.
+    target_kind: &'static str,
+    /// The raid found no enemy force at the hex (a ship strike only).
+    found_nothing: bool,
+    /// For a ship strike that did not find nothing: the enemy task force the
+    /// raid met, from the `AntiAircraftFire` of the raid's first group or an
+    /// `AirAttack` by a group of the raid; null where neither names it (every
+    /// bomber of the raid was shot down before the guns fired).
+    task_force: Option<u32>,
+    /// For a base strike: the base.
+    base: Option<u32>,
+}
+
+/// A place an air group launches from: a ship or a base.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum Place {
+    Ship(ShipId),
+    Base(BaseId),
+}
+
+fn place_of(location: AirGroupLocation) -> Place {
+    match location {
+        AirGroupLocation::Ship(ship) => Place::Ship(ship),
+        AirGroupLocation::Base(base) => Place::Base(base),
+    }
+}
+
 #[derive(Serialize)]
 pub struct BrokeOff {
     day: u32,
@@ -375,6 +411,7 @@ pub struct RunCounts {
     pub claims: Claims,
     pub attacks: Vec<AttackOut>,
     pub escorts: Vec<EscortOut>,
+    pub launches: Vec<LaunchOut>,
     pub broke_off: Vec<BrokeOff>,
     pub fights: Vec<FightOut>,
     pub supply: Vec<SupplyOut>,
@@ -408,6 +445,20 @@ pub fn count(
     let mut claims = [[0u64; 4]; 2];
     let mut attacks = Vec::new();
     let mut escorts = Vec::new();
+    // The strike launches, each with its place (a ship or a base) for the
+    // grouping into raids, and what the log later says of the raid.
+    let mut launches: Vec<(LaunchOut, Place)> = Vec::new();
+    let mut found_nothing: BTreeSet<(u32, &'static str, u32)> = BTreeSet::new();
+    // The force named by an `AntiAircraftFire`, by (day, pulse, raid's first group).
+    let mut fire_on: BTreeMap<(u32, &'static str, u32), u32> = BTreeMap::new();
+    // The force named by an `AirAttack`, by (day, pulse, attacking group).
+    let mut attacked: BTreeMap<(u32, &'static str, u32), u32> = BTreeMap::new();
+    // Where each group is: where it started, or where it formed.
+    let mut place_of_group: BTreeMap<AirGroupId, Place> = initial
+        .air_groups
+        .values()
+        .map(|group| (group.id, place_of(group.location)))
+        .collect();
     let mut broke_off = Vec::new();
     let mut fights = Vec::new();
     let mut supply: BTreeMap<BaseId, SupplyTotals> = BTreeMap::new();
@@ -507,14 +558,77 @@ pub fn count(
                     cell.1 += hits;
                 }
             }
+            EventKind::StrikeLaunched {
+                air_group,
+                hex,
+                aircraft,
+                ..
+            } => launches.push((
+                LaunchOut {
+                    day: event.day,
+                    pulse: pulse_name(event.pulse),
+                    air_group: air_group.raw(),
+                    aircraft: *aircraft,
+                    hex: [hex.q, hex.r],
+                    target_kind: "ship",
+                    found_nothing: false,
+                    task_force: None,
+                    base: None,
+                },
+                place_of_group
+                    .get(air_group)
+                    .copied()
+                    .expect("a group that launches has a place"),
+            )),
+            EventKind::BaseStrikeLaunched {
+                air_group,
+                base,
+                hex,
+                aircraft,
+                ..
+            } => launches.push((
+                LaunchOut {
+                    day: event.day,
+                    pulse: pulse_name(event.pulse),
+                    air_group: air_group.raw(),
+                    aircraft: *aircraft,
+                    hex: [hex.q, hex.r],
+                    target_kind: "base",
+                    found_nothing: false,
+                    task_force: None,
+                    base: Some(base.raw()),
+                },
+                place_of_group
+                    .get(air_group)
+                    .copied()
+                    .expect("a group that launches has a place"),
+            )),
+            EventKind::StrikeFoundNothing { air_group, .. } => {
+                found_nothing.insert((event.day, pulse_name(event.pulse), air_group.raw()));
+            }
+            EventKind::AntiAircraftFire {
+                task_force,
+                air_group,
+                ..
+            } => {
+                fire_on.insert(
+                    (event.day, pulse_name(event.pulse), air_group.raw()),
+                    task_force.raw(),
+                );
+            }
             EventKind::AirAttack {
                 air_group,
+                task_force,
                 ship,
                 weapon,
                 shots,
                 hits,
                 ..
             } => {
+                attacked.insert(
+                    (event.day, pulse_name(event.pulse), air_group.raw()),
+                    task_force.raw(),
+                );
                 let hits = u64::from(*hits);
                 let (column, name) = match weapon {
                     Weapon::Gun => (0, "gun"),
@@ -596,9 +710,14 @@ pub fn count(
                 air_group, lost, ..
             } => loss(&mut losses, *air_group).pilots_lost += u64::from(*lost),
             EventKind::AircraftLandedElsewhere {
-                from, to, formed, ..
+                from,
+                to,
+                at,
+                formed,
+                ..
             } if *formed => {
                 formed_from.insert(*to, *from);
+                place_of_group.insert(*to, place_of(*at));
             }
             EventKind::ClaimReceived {
                 side,
@@ -683,6 +802,63 @@ pub fn count(
             _ => {}
         }
     }
+
+    // The raids: the ship strikes launched in one pulse from one place at one
+    // hex (docs/rules/05, Raids). A raid that found nothing meets no force. A
+    // raid that did is named by the guns that fired at its first (lowest)
+    // group, or else by an attack of any group in it; if every bomber was
+    // shot down before the guns fired, no event names it and it stays null.
+    let mut raid_first: BTreeMap<(u32, &'static str, Place, [i32; 2]), u32> = BTreeMap::new();
+    for (launch, place) in &launches {
+        if launch.target_kind == "ship" {
+            let first = raid_first
+                .entry((launch.day, launch.pulse, *place, launch.hex))
+                .or_insert(launch.air_group);
+            *first = (*first).min(launch.air_group);
+        }
+    }
+    let mut raid_force: BTreeMap<(u32, &'static str, Place, [i32; 2]), u32> = BTreeMap::new();
+    for (launch, place) in &launches {
+        let key = (launch.day, launch.pulse, *place, launch.hex);
+        if launch.target_kind != "ship" || raid_force.contains_key(&key) {
+            continue;
+        }
+        let first = raid_first[&key];
+        let named = fire_on
+            .get(&(launch.day, launch.pulse, first))
+            .copied()
+            .or_else(|| {
+                launches
+                    .iter()
+                    .filter(|(other, other_place)| {
+                        other.target_kind == "ship"
+                            && (other.day, other.pulse, *other_place, other.hex) == key
+                    })
+                    .find_map(|(other, _)| {
+                        attacked
+                            .get(&(other.day, other.pulse, other.air_group))
+                            .copied()
+                    })
+            });
+        if let Some(force) = named {
+            raid_force.insert(key, force);
+        }
+    }
+    let launches: Vec<LaunchOut> = launches
+        .into_iter()
+        .map(|(mut launch, place)| {
+            if launch.target_kind == "ship" {
+                launch.found_nothing =
+                    found_nothing.contains(&(launch.day, launch.pulse, launch.air_group));
+                if !launch.found_nothing {
+                    launch.task_force = raid_force
+                        .get(&(launch.day, launch.pulse, place, launch.hex))
+                        .copied();
+                }
+            }
+            launch
+        })
+        .collect();
 
     // Systems out, for ships afloat or in port at the end.
     let mut systems_out = Vec::new();
@@ -773,6 +949,7 @@ pub fn count(
         },
         attacks,
         escorts,
+        launches,
         broke_off,
         fights,
         supply: supply
