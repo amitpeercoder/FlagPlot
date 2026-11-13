@@ -180,6 +180,42 @@ weapon = "gun"
 rows = [10]
 reason = "471 shells (10); 459 without Ralph Talbot's 12, who is outside the scenario. Either is 4 hundreds. At the baseline the Allied groups fired about 2,800 a run. Hits for each thousand shells agreed all the same, and hid it: a force that fires six times too much and hits at the right rate scores six times the hits. This measure is here so that cannot hide again. In the record most of the Allied cruisers never got their guns into effective action. The measure counts the whole run, and so counts the shells of any fight by day with Japanese ships that fell behind, about 550 a run at the baseline. The record has no such fight, so those shells are part of the miss and are not taken out: decision 0068, on a force not at battle readiness, is not meant to remove them."
 
+[[measure]]
+id = "southern_group_gun_shells_fired_in_hundreds"
+counts = "Gun shots the four ships of the southern group fire in the run, all calibres, in hundreds, rounded down"
+record_low = 0
+record_high = 0
+judged = true
+take = "shots_in_hundreds"
+ships = [9, 10, 11, 12]
+weapon = "gun"
+rows = [27, 29, 41, 42, 48, 53, 54]
+reason = "Canberra fired no eight-inch shell and about three four-inch (27, 29). Chicago fired no eight-inch and 25 five-inch (41, 42). Bagley fired no gun at the enemy (48). Patterson fired 33 by the 1950 analysis or 50 by the 1943 narrative (53, 54). That is 61 to 78 shells, less than one hundred either way. Rows 27, 53 and 54 are disputed and are read because no end of any of the disputes reaches a hundred: the other reading of Canberra is that one gun may have fired one salvo. Chicago's 44 star shells are not counted: they lit and did not hit. This is the measure decision 0068 is checked on: a group that was not at battle readiness and barely fired."
+
+[[measure]]
+id = "northern_group_gun_shells_fired_in_hundreds"
+counts = "Gun shots the five ships of the northern group fire in the run, all calibres, in hundreds, rounded down"
+record_low = 3
+record_high = 4
+judged = true
+take = "shots_in_hundreds"
+ships = [13, 14, 15, 16, 17]
+weapon = "gun"
+rows = [64, 65, 74, 75, 86, 87, 95, 97]
+reason = "Vincennes about 33 eight-inch and about 20 five-inch (64, 65). Quincy 21 eight-inch and no five-inch (74, 75; the second is disputed, and the other reading is a few star shells, which are not counted). Astoria about 53 and 59 (86, 87). Wilson 212 five-inch (97). That is 398, which is 3 hundreds. Helm's one salvo of four (95) makes 402, which is 4. More than half of it is one destroyer, Wilson, who was not a target; the three cruisers together fired 186."
+
+[[measure]]
+id = "tenryu_and_yubari_gun_shells_fired_in_hundreds"
+counts = "Gun shots Tenryu and Yubari fire in the run, all calibres, in hundreds, rounded down"
+record_low = 1
+record_high = 2
+judged = true
+take = "shots_in_hundreds"
+ships = [6, 7]
+weapon = "gun"
+rows = [148, 149, 154]
+reason = "Tenryu 80 of 5.5 inch and 23 of 3 inch (148, 149); Yubari 96 of 5.5 inch (154). That is 199, one shell short of two hundreds, so the record is taken as 1 or 2: the count is not good to a shell. Yunagi is left out because no row gives what she fired. At the baseline the heavy cruisers fired about what they did and the light ships about six times what they did, which the measure of all Japanese shells could not show."
+
 # ------------------------------------------------------- how long it ran
 
 [[measure]]
