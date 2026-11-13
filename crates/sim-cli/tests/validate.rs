@@ -994,3 +994,127 @@ fn nothing_that_plays_the_game_depends_on_validate() {
         fs::read_to_string(Path::new(ROOT).join("crates/sim-core/Cargo.toml")).expect("manifest");
     assert!(!core.contains("sim-cli"));
 }
+
+// ---- the kinds `shots` and `ships_sunk_or_system_out` ----
+
+/// The architect's hand calculation for the two kinds. The batch is the
+/// fixture's header with its 20 runs all made alike (so each measure's band
+/// and median are its one value and 20 of 20 hold it):
+///
+/// - `sunk` is ships 1 and 3. `systems_out` is ship 2 with propulsion (afloat),
+///   ship 3 with propulsion (sunk too), and ship 4 with fire control (afloat).
+/// - Allied torpedo fire: `shots` "4.75". Japanese torpedo fire: "9.5".
+///   `shots_by`: ship 3 torpedo "1.5", ship 4 torpedo "2.5", ship 1 torpedo
+///   "0.75".
+///
+/// `shots` (whole shots, floored once):
+/// - side allied, torpedo: floor(4.75) = 4. Side japanese, torpedo: 9.
+/// - ships [3, 4], torpedo: 1.5 + 2.5 = 4.0, floored once: 4 (flooring each
+///   would give 3). Ships [1, 3], torpedo: 0.75 + 1.5 = 2.25: 2.
+/// - `side` with `ships`, or neither: refused.
+///
+/// `ships_sunk_or_system_out`, system propulsion:
+/// - ships [1]: ship 1 is sunk, no system out: 1.
+/// - ships [2]: afloat with propulsion out: 1.
+/// - ships [3]: sunk and with propulsion out too, counted once: 1.
+/// - ships [4]: afloat with fire control out, not propulsion: 0.
+/// - ships [1, 2, 3, 4]: 1 + 1 + 1 + 0 = 3.
+#[test]
+fn the_kinds_shots_and_ships_sunk_or_system_out_are_the_hand_calculated_ones() {
+    let mut batch = fixture(&dir("two-kinds-h"), 20);
+    for run in batch["per_run"].as_array_mut().expect("runs") {
+        run["sunk"] = json!([1, 3]);
+        run["systems_out"] = json!([
+            {"ship": 2, "system": "propulsion"},
+            {"ship": 3, "system": "propulsion"},
+            {"ship": 4, "system": "fire_control"}]);
+        run["fire"]["allied"]["torpedo"] = json!({"shots": "4.75", "hits": 0});
+        run["fire"]["japanese"]["torpedo"] = json!({"shots": "9.5", "hits": 0});
+        let by = |ship: u32, torpedo: &str| json!({"ship": ship, "gun": "0", "torpedo": torpedo});
+        run["shots_by"] = json!([by(1, "0.75"), by(3, "1.5"), by(4, "2.5")]);
+    }
+    let measure = |id: &str, body: &str| {
+        format!(
+            "\n[[measure]]\nid = \"{id}\"\ncounts = \"X\"\nrecord_low = 0\nrecord_high = 9\n\
+             judged = false\n{body}\nrows = [1]\nreason = \"r\"\n"
+        )
+    };
+    let head = "battle = \"hand-made\"\nscenario = \"data/scenarios/04a_night_action.toml\"\nfacts = \"x\"\n";
+    let cases = [
+        (
+            "s1",
+            "take = \"shots\"\nside = \"allied\"\nweapon = \"torpedo\"",
+            "4",
+        ),
+        (
+            "s2",
+            "take = \"shots\"\nside = \"japanese\"\nweapon = \"torpedo\"",
+            "9",
+        ),
+        (
+            "s3",
+            "take = \"shots\"\nships = [3, 4]\nweapon = \"torpedo\"",
+            "4",
+        ),
+        (
+            "s4",
+            "take = \"shots\"\nships = [1, 3]\nweapon = \"torpedo\"",
+            "2",
+        ),
+        (
+            "u1",
+            "take = \"ships_sunk_or_system_out\"\nships = [1]\nsystem = \"propulsion\"",
+            "1",
+        ),
+        (
+            "u2",
+            "take = \"ships_sunk_or_system_out\"\nships = [2]\nsystem = \"propulsion\"",
+            "1",
+        ),
+        (
+            "u3",
+            "take = \"ships_sunk_or_system_out\"\nships = [3]\nsystem = \"propulsion\"",
+            "1",
+        ),
+        (
+            "u4",
+            "take = \"ships_sunk_or_system_out\"\nships = [4]\nsystem = \"propulsion\"",
+            "0",
+        ),
+        (
+            "u5",
+            "take = \"ships_sunk_or_system_out\"\nships = [1, 2, 3, 4]\nsystem = \"propulsion\"",
+            "3",
+        ),
+    ];
+    let mut measures = head.to_string();
+    for (id, body, _) in &cases {
+        measures.push_str(&measure(id, body));
+    }
+    let s = setup("two-kinds", &batch, &measures);
+    let result = validate(&s, "report.md");
+    assert!(result.status.success(), "{}", stderr(&result));
+    let report = fs::read_to_string(s.dir.join("report.md")).expect("report");
+    for (id, _, value) in &cases {
+        let c = cells(&report, id);
+        assert_eq!(c[2], format!("{value} to {value}"), "{id} band");
+        assert_eq!(c[3], *value, "{id} median");
+        assert_eq!(c[4], "20 of 20", "{id} holding");
+    }
+    // Both `side` and `ships`, and neither, are refused.
+    for (name, body) in [
+        (
+            "both",
+            "take = \"shots\"\nside = \"allied\"\nships = [3]\nweapon = \"torpedo\"",
+        ),
+        ("neither", "take = \"shots\"\nweapon = \"torpedo\""),
+    ] {
+        let s = setup(
+            &format!("two-kinds-{name}"),
+            &batch,
+            &format!("{head}{}", measure("x", body)),
+        );
+        let result = validate(&s, "r.md");
+        assert!(!result.status.success(), "{name} should be refused");
+    }
+}
