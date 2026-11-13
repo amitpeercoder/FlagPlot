@@ -10,7 +10,7 @@
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
-      "hash": "da12e2b751976274"
+      "hash": "53811d71d5b18b81"
     },
     {
       "file": "data/scenarios/../reference/aircraft_types_eastern_solomons.csv",
@@ -18,15 +18,15 @@
     },
     {
       "file": "data/scenarios/../reference/search.toml",
-      "hash": "9d9cd2961a30d99a"
+      "hash": "8d5c49f5f0d4a40c"
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "1a9a0ae06d7282b1"
+      "hash": "04b0692bf2fbeb0c"
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "c0cd9c5313d38b5b"
+      "hash": "346ced2bb6cc0c7e"
     }
   ],
   "format": "flagplot-saved-game",

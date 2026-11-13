@@ -1,91 +1,155 @@
-# PLACEHOLDER DATA. These figures are invented so the engine has something to
-# run. They are not historical and must not be used for validation.
-# See docs/decisions/0014-surface-combat.md.
+# The figures of the surface fight, at the close of step 2. Most are still
+# placeholders: invented so the engine has something to run, not historical.
+# Two were fitted at Savo Island and two rest on fact rows. The note above each
+# figure says what it rests on, as one of: sized from rows; fitted on a battle
+# and not checked; looked at and not moved; a placeholder that no row sizes;
+# read by no battle of the slice. Every figure, with its record, is listed in
+# docs/validation/tuning/surface-and-search-figures-closed.md. The round
+# records named below are in docs/validation/tuning/. The frozen step 1
+# figures are in data/reference/step1. See docs/decisions/0014-surface-combat.md.
 
+# Required by the loader and ignored once read: the scenario carries the flag.
 placeholder = true
 
+# Placeholder: the length of the rules' round (decision 0014). No row sizes it,
+# and no round looked at it. Decision 0070's rates of fire count cases of at
+# least one round.
 round_minutes = 5
+# Looked at and not moved: six rounds to four took the northern group's
+# sinkings away from the record (savo-island-closed.md). No row sizes it.
 max_rounds = 6
 
 # Chance a force sights the enemy in a round.
+# Looked at and not moved in round 0 (r0-finding-and-surprise.md): no source
+# gives a size; the rows give the Japanese sighting first, a direction only.
 sighting_chance_night = "0.5"
+# Placeholder: no row sizes it. At Savo Island it is read only in the runs that
+# have a fight by day, and the measure of fights by day asks for none.
 sighting_chance_day = "1"
+# Looked at and not moved in round 0: the radar was mended in the derivation
+# instead (decision 0077), and no row sizes the bonus. No ship at Savo Island
+# has a set that counts, so it never acts there; Cape Esperance tests it.
 radar_sighting_bonus = "0.2"
+# Looked at and not moved in round 0, at 0.4 to 0.2: no row gives a size
+# (engagement_events 23 and 24 give the direction), and every force not alert
+# in every battle reads it.
 not_alert_sighting_factor = "0.5"
 
 # Chance one shot hits.
+# Looked at and not moved in rounds 1 and 2: 0.04 was tried. Both sides share
+# it, and it took the Allied rate past its record. No row sizes it.
 gun_hit_chance_night = "0.03"
+# Placeholder: no row sizes it. Read at Savo Island only in fights by day.
 gun_hit_chance_day = "0.05"
+# Placeholder: no row sizes it, and no round moved a torpedo figure. The
+# record's torpedo hits at Savo Island are measures, not a source for it.
 torpedo_hit_chance_night = "0.04"
+# Placeholder: no row sizes it. Read at Savo Island only in fights by day.
 torpedo_hit_chance_day = "0.02"
 
 # Multipliers on the chance to hit.
-# Tuning round 2 (docs/validation/tuning/r2-surprised-target-factor.md, Nov 13,
-# 2026): the factor against a surprised target is 2. Its size rests on one
-# ship, Canberra at Savo Island, hit 24 times of every calibre while surprised,
-# of which the main batteries' share is about three fifths. It carries one
-# round of surprise (decision 0076) and acts on torpedoes too. Still a
-# PLACEHOLDER as to size until Cape Esperance tests it on the other navy.
+# Fitted at Savo Island and not checked: round 2 moved it from 1.5 to 2
+# (r2-surprised-target-factor.md). In decision 0084's words (finding 2), "a
+# figure fitted at Savo Island inside a direction the sources support, a
+# placeholder, and not sized from a source"; the Canberra count cannot size it
+# for torpedoes, which it also multiplies. 2.5 was looked at and not moved
+# (savo-island-closed.md). It carries one round of surprise (decision 0076).
+# Cape Esperance checks it, on the other navy.
 surprised_target_factor = "2"
+# Looked at and not moved in rounds 1 and 2: 3 and 4 were tried. Both sides
+# share it, and it took the Allied rate past its record. The sources give a
+# direction only.
 lit_target_factor = "2"
 
 # The chance a gun or bomb hit lands on flotation. The rest land on fire. A
 # torpedo hit lands on flotation.
+# Looked at and not moved: 0.5 took the northern group's sinkings away from the
+# record (savo-island-closed.md). No source gives a share. Bomb hits at the
+# Eastern Solomons read it too.
 gun_hit_flotation = "0.75"
 
 # A hit also knocks a system down one level with this chance for each point
 # of damage it does, 1 at most (decision 0033): guns, torpedoes and bombs
 # alike. Then the factor a degraded system applies. Fire control that is out
 # still gives the last figure.
+# Placeholder: decision 0033 chose it so the placeholder cruiser's hit on its
+# like keeps the 0.3 it had. No row sizes it, and the round on what a hit does
+# found no source for a size (savo-island-closed.md). Bombs and aircraft
+# torpedoes at the Eastern Solomons read it too.
 system_hit_chance_per_point = "0.06"
+# Placeholder: decision 0016's half. No row sizes it. It also sets a degraded
+# ship's speed and a degraded deck's launches, so both battles with ships read
+# it.
 degraded_factor = "0.5"
+# Placeholder (decision 0016). No row sizes it. Read in surface fights only.
 fire_control_out_factor = "0.25"
 
 # Alertness (decision 0021). A force at normal readiness is alerted by a
 # contact this close and fresh (fresh_contact_max_age_pulses in search.toml),
 # and by a fight in its hex with this chance.
+# Looked at and not moved in round 0: no source gives a size. At 7 or more the
+# contact the Allied side holds at the start of Savo Island would alert both
+# groups.
 alert_contact_distance_hexes = 3
+# Placeholder (decision 0021). No row sizes it.
 alarm_chance = "0.5"
 
 # Flotation damage at which a ship counts as crippled, and fire damage at
 # which the enemy believes it is sinking.
+# Placeholder (decision 0014). No row sizes it. It decides only when a force
+# breaks off, and the round on breaking off moved nothing
+# (savo-island-closed.md).
 crippled_flotation = 50
+# Looked at and not moved in air round 4 (r4-claims.md): no row gives the fire
+# at which a crew believed an enemy ship lost, and Savo Island's Allied claim
+# of none sunk agrees. A raid's claim at the Eastern Solomons reads it too.
 claimed_sunk_fire = 30
 
 # Experience (decision 0064). In a dark fight a chance is multiplied by
 # 1 + strength x (experience - 2): a ship's own value for her gun and torpedo
 # chances, the mean of the force's ships for its chance to sight. Each strength
-# is from 0 to 0.5; 0 switches the rule off. PLACEHOLDER: the middle of the
-# allowed range, for tuning to set. Nothing reads experience by day.
-# Tuning round 1 (docs/validation/tuning/r1-experience-gun-strength.md, Nov 13,
-# 2026): the gun strength stands at 0.5, the cap of decision 0064. Still a
-# PLACEHOLDER: the sources give its sign and no size. At the cap, any gap left
-# between the sides' gunnery is not experience's to carry.
+# is from 0 to 0.5; 0 switches the rule off. Nothing reads experience by day.
+# Fitted at Savo Island and not checked: round 1 moved it from 0.25 to 0.5, the
+# cap of decision 0064 (r1-experience-gun-strength.md). In decision 0084's
+# words (finding 6), "an effect size fitted at Savo Island, at the cap decision
+# 0064 allows, with a sign from the sources and no size". 0.35 was looked at
+# and was worse (savo-island-closed.md). Cape Esperance checks it.
 experience_gun_strength = "0.5"
+# Placeholder: the middle of the range decision 0064 allows. No row sizes it,
+# and no round looked at it.
 experience_torpedo_strength = "0.25"
+# Looked at and not moved in round 0: no source gives a size.
 experience_sighting_strength = "0.25"
 
 # A force not ready when a fight begins (not at battle readiness by order, and
 # not alert since before the pulse began) fires its guns, in every round of
 # that fight, at this share of their full rate (decision 0068). From 0.1 to 1;
-# 1 switches the rule off. Torpedoes have a share of their own, below. PLACEHOLDER: 0.5 is
-# Condition II as engagement_events row 23 states it, half the armament
-# manned. Tuning may move it, toward the record and never for one battle; if
-# it goes below 0.5 it also carries what the rule does not model (captains
-# asleep, ships taken for friends, orders to cease fire), and the tuning
-# record says so (decisions 7 and 8).
+# 1 switches the rule off. Torpedoes have a share of their own, below.
+# Sized from a row: Condition II as engagement_events 23 states it, half the
+# armament manned. Not tuned. The record's shares are lower, 3 to 21 in 100;
+# below 0.5 it would carry what the rule does not model (captains asleep, ships
+# taken for friends, orders to cease fire), and only that (decision 0068, 8).
+# Cape Esperance tests it on the other navy.
 unready_gun_share = "0.5"
 
 # A force not ready when a fight begins (as above) fires its torpedoes, in the
-# one round in which they are fired, at this share of its tubes (decision
-# 0071). From 0.1 to 1; 1 switches the rule off. PLACEHOLDER: the first value
-# mirrors the gun share's Condition II and has no row of its own; Bagley's four
-# of sixteen tubes is the one stated count. It does not carry how many tubes
-# bear on a broadside, how many ships fire, the range or the chance to hit,
-# and tuning must not take it down to cover them.
+# round in which each side of them is fired, at this share of that salvo's
+# tubes (decisions 0071 and 0083). From 0.1 to 1; 1 switches the rule off.
+# Sized from a row and looked at, not moved: Bagley fired four of the eight
+# tubes that bear on her port side, her starboard primers not yet in
+# (engagement_outcomes 46, 47, 3206, 3228). 0.25 and 1 were tried and missed
+# as 0.5 does, because two ships fire that the rows have not firing
+# (savo-island-closed.md). It does not carry how many ships fire, the range or
+# the chance to hit (decision 0071).
 unready_torpedo_share = "0.5"
 
 # Which system a system hit lands on. Each table adds to 1.
+# [gun_system_hit]: placeholders (decision 0016). No row sizes any of the four
+# shares. Read in surface fights only.
+# [torpedo_system_hit]: placeholders (decision 0016). No row sizes any of the
+# three; the damage-control note gives only a direction, a torpedo hit stopping
+# Saratoga's engines. An aircraft torpedo's hit at the Eastern Solomons reads
+# it too.
 [gun_system_hit]
 propulsion = "0.2"
 fire_control = "0.3"
@@ -98,6 +162,10 @@ fire_control = "0.1"
 main_battery = "0.1"
 
 # Escorts given to a straggler that is sent home, by its kind.
+# Placeholders (decision 0016). No row sizes any of them. The cruiser and
+# destroyer entries are read at Savo Island, where the Japanese column detaches
+# its stragglers. The carrier, battleship, transport and auxiliary entries are
+# read by no battle of the slice: no other force in it detaches stragglers.
 [straggler_escorts]
 carrier = 2
 battleship = 2

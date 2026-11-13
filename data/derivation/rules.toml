@@ -2,19 +2,33 @@
 # See docs/decisions/0020-figures-from-facts.md.
 #
 # The three constants below are MODEL PARAMETERS and PLACEHOLDERS. They are
-# not historical figures. They are the same for every ship, and step 2 tunes
-# them against recorded outcomes. Everything else a real ship's figures rest
-# on is a sourced fact.
+# not historical figures. They are the same for every ship. At the close of
+# step 2 none has moved: the round on what a hit does looked at two of them at
+# Savo Island and found no source that sizes any
+# (docs/validation/tuning/savo-island-closed.md). Each reaches the Savo Island
+# and Eastern Solomons class files, and bomb and aircraft torpedo damage too.
+# The note above each model parameter in this file says what it rests on;
+# docs/validation/tuning/surface-and-search-figures-closed.md lists them all.
+# Everything else a real ship's figures rest on is a sourced fact.
 
 constants_are_placeholders = true
 
 # Gun damage = shell weight in kg / this.
+# Placeholder: set so real ships land near the placeholder cruiser (decision
+# 0020). No row sizes it, and no round looked at it.
 gun_shell_kg_per_damage = 6
 
 # Torpedo damage = warhead weight in kg x this.
+# Looked at and not moved: 0.25 was tried at Savo Island and took the northern
+# group's sinkings further from the record (savo-island-closed.md). No row
+# sizes it.
 torpedo_damage_per_warhead_kg = "0.4"
 
 # Toughness = standard displacement in long tons / this.
+# Looked at and not moved: 35 tons a point was tried at Savo Island and took
+# the northern group's sinkings further from the record
+# (savo-island-closed.md). The rows support displacement as the measure, not
+# the divisor.
 displacement_lt_per_toughness = 25
 
 # Constants of decision 0029, also MODEL PARAMETERS and PLACEHOLDERS, not
@@ -23,15 +37,26 @@ displacement_lt_per_toughness = 25
 
 # Anti-aircraft shots = heavy guns x this + light barrels x the next one,
 # rounded down.
+# Both placeholders (decision 0029, 1). No row sizes either, and no round
+# looked at them; air round 5 looked at the guns' chance to hit instead. They
+# reach the ships of the Eastern Solomons.
 anti_aircraft_heavy_weight = "1"
 anti_aircraft_light_weight = "0.25"
 
 # Strike and search radius, where no sourced combat radius can be read =
 # range with a normal load x this, rounded down.
+# Placeholder (decision 0029, 6). No row sizes it; the Bureau of Aeronautics'
+# third, which decision 0075 takes for the search radius, is of the range in
+# the scouting condition, not with a normal load. It gives the strike radius
+# of the D3A1, B5N2 and E13A1 at the Eastern Solomons and of the G4M1 at
+# Rabaul against Guadalcanal.
 strike_radius_fraction_of_range = "0.333333"
 
 # Width of the strip an aircraft searches, in nautical miles. No source
 # gives one.
+# Placeholder (decision 0029, 10), and no round looked at it. Every derived
+# type has it, so every air search at the Eastern Solomons and at Rabaul
+# reads it.
 search_sweep_width_nm = 20
 
 # Exceptions to "read only preferred rows" (decision 0020, 3). Each names a
@@ -641,6 +666,9 @@ agreed = "2026-11-13"
 #
 # Rows that are not preferred never move a value; the output lists them as
 # not read.
+# The three windows below (recent_months, lookback_months, new_ship_months)
+# are model parameters that no row sizes, fixed with the questions before any
+# batch (decision 0064). They read the Savo Island and Cape Esperance ships.
 [experience]
 recent_months = 3
 lookback_months = 12
@@ -711,6 +739,11 @@ named_by = ["ship_facts.csv:time_in_theatre_note", "ship_facts.csv:night_practic
 # for a cruiser or battleship class), "destroyer", and "continuous" (only a
 # class named in a `continuous` entry, with the rows that say it fired so).
 # Everything about decision 0070 is in this one block.
+# min_span_minutes: a model parameter, no row sizes it. It is five minutes
+# because a round is five minutes (decision 0070): a rate kept for a shorter
+# burst is not one a ship keeps up through a round. The cases are rows; the
+# salvo kind's median rests on four cases, the destroyer and continuous
+# kinds' on one each.
 [fire_rate]
 min_span_minutes = 5
 
@@ -806,6 +839,10 @@ agreed = "2026-11-13"
 # search radius and the run lists it as not settled. The exceptions below are
 # read only for this; they do not widen any other reading. No exception is
 # written for the PBY-5: no list derives it yet (decision 0075, "Disputes").
+# divisor_of_scouting_range: sized from a source, the method of the Bureau of
+# Aeronautics' sheets, which call the scouting radius a third of the range in
+# that condition (decision 0075, "The source of the method"; the note on
+# aircraft_type_facts 555).
 [search_radius]
 divisor_of_scouting_range = 3
 

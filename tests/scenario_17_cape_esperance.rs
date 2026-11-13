@@ -2,9 +2,9 @@
 //! nothing more.
 //!
 //! Decision 0072 (`docs/decisions/0072-cape-esperance-scenario.md`). The file
-//! is `data/scenarios/not-run/17_cape_esperance.toml`, outside the folder the
-//! scenario loops walk, because no batch of this scenario is run or looked at
-//! before Savo Island is tuned, and it is never tuned on.
+//! is `data/scenarios/17_cape_esperance.toml`. It stood in
+//! `data/scenarios/not-run/` until Savo Island was tuned, and moved on Nov 13,
+//! 2026, for the one check (decision 0084); it is never tuned on.
 //!
 //! **This test reads nothing of how the battle comes out.** It runs the one day
 //! on the frozen figures (`tests/common`, `data/reference/step1`), because the
@@ -111,8 +111,8 @@ fn millionths(value: i64) -> Fixed {
 }
 
 fn load() -> Scenario {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../data/scenarios/not-run/17_cape_esperance.toml");
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/17_cape_esperance.toml");
     common::load(&path).expect("the scenario loads")
 }
 

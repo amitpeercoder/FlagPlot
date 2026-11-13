@@ -10,11 +10,11 @@
     },
     {
       "file": "data/scenarios/../reference/ship_classes.csv",
-      "hash": "366fefba209ee1bc"
+      "hash": "0701cb1c6c75b124"
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
-      "hash": "da12e2b751976274"
+      "hash": "53811d71d5b18b81"
     },
     {
       "file": "data/scenarios/../reference/aircraft_types_eastern_solomons.csv",
@@ -26,27 +26,27 @@
     },
     {
       "file": "data/scenarios/../reference/search.toml",
-      "hash": "9d9cd2961a30d99a"
+      "hash": "8d5c49f5f0d4a40c"
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "1a9a0ae06d7282b1"
+      "hash": "04b0692bf2fbeb0c"
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "c0cd9c5313d38b5b"
+      "hash": "346ced2bb6cc0c7e"
     },
     {
       "file": "data/scenarios/../reference/air_upkeep.toml",
-      "hash": "b2db73fbc8e30d0e"
+      "hash": "24457754c1eeecc8"
     },
     {
       "file": "data/scenarios/../reference/fatigue.toml",
-      "hash": "32b26b3bef8a1089"
+      "hash": "5aac70e8a41f6579"
     },
     {
       "file": "data/scenarios/../reference/air_supply.toml",
-      "hash": "4269ae7b442c3edc"
+      "hash": "3915fcb7aab986b4"
     }
   ],
   "format": "flagplot-saved-game",

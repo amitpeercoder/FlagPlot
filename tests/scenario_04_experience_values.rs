@@ -113,7 +113,9 @@ fn no_other_scenario_gives_experience() {
     // Placeholder ships are 2. Scenario 14a is the one that sets values on
     // placeholder ships, to prove the rule; scenario 16 does too, so that
     // experience acts beside the other rules of step 2 (authorised by the
-    // architect, Nov 13, 2026).
+    // architect, Nov 13, 2026). Scenario 17, Cape Esperance, gives its real
+    // ships their derived values (decision 0072, 13); it moved into this
+    // folder for its check on Nov 13, 2026.
     let dir = data("scenarios");
     for entry in std::fs::read_dir(dir).expect("the folder reads") {
         let path = entry.expect("an entry").path();
@@ -126,6 +128,7 @@ fn no_other_scenario_gives_experience() {
             || name == "04_savo_island.toml"
             || name == "14a_experience.toml"
             || name == "16_all_together.toml"
+            || name == "17_cape_esperance.toml"
         {
             continue;
         }

@@ -1,6 +1,10 @@
 # PLACEHOLDER DATA. These classes are invented so the engine has something to
 # run. They are not historical and must not be used for validation. Real
 # classes replace them when the order of battle is researched from sources.
+# At the close of step 2 no battle of the slice reads these figures: Savo
+# Island and the Eastern Solomons read derived classes, and scenario 6 loads
+# this file and has no ships
+# (docs/validation/tuning/surface-and-search-figures-closed.md).
 #
 # cruise_speed_kn: economical speed. endurance_nm is quoted at this speed.
 # fuel_capacity_t / endurance_nm gives the burn per nautical mile at cruise.

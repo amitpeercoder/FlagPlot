@@ -1,6 +1,11 @@
 # PLACEHOLDER DATA. These figures are invented so the engine has something to
-# run. They are not historical and must not be used for validation. Sourced
-# handling rates replace them in step 2.
+# run. They are not historical and must not be used for validation. Step 2 did
+# not replace them: no battle of the slice reads them, since no force at Savo
+# Island or the Eastern Solomons has an order to load or unload and scenario 6
+# has no ships (docs/validation/tuning/surface-and-search-figures-closed.md).
+# No derivation reads ports yet: place_facts.csv has port rows (Noumea's one
+# large berth and 5,000 tons a day in December 1942, rows 96 and 116; no
+# wharves at Henderson Field or Milne Bay, rows 58 and 85).
 #
 # berths: ships that can work cargo alongside at once.
 # berth_rate_t_per_h: tons per hour moved by one ship on a berth.
