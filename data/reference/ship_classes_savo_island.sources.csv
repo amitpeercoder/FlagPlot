@@ -16,7 +16,7 @@ class_id,figure,value,rule,facts,note
 1000,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:144 fits.csv:145 fits.csv:304 fits.csv:305 fits.csv:306,ship rows holding on the date but not read: fits.csv:381 (unconfirmed)
 1000,torpedo_damage,196,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:144 fits.csv:145 fits.csv:304 fits.csv:305 fits.csv:306 weapon_facts.csv:201 weapon_facts.csv:202 weapon_facts.csv:203,ship rows holding on the date but not read: fits.csv:381 (unconfirmed)
 1000,toughness,354.32,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:16,
-1000,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:281 fits.csv:283 fits.csv:358 fits.csv:360,
+1000,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:281 fits.csv:283 fits.csv:358 fits.csv:360,
 1001,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1005 ships.csv:1064 ships.csv:1076,
 1001,cruise_speed_kn,14,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:54 ship_class_facts.csv:689 ship_class_facts.csv:691,
 1001,max_speed_kn,33,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:57 ship_class_facts.csv:584,
@@ -30,7 +30,7 @@ class_id,figure,value,rule,facts,note
 1001,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:298 fits.csv:299 fits.csv:300,"ship rows holding on the date but not read: fits.csv:113 (unconfirmed), fits.csv:92 (unconfirmed)"
 1001,torpedo_damage,196,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:298 fits.csv:299 fits.csv:300 weapon_facts.csv:201 weapon_facts.csv:202 weapon_facts.csv:203,"ship rows holding on the date but not read: fits.csv:113 (unconfirmed), fits.csv:92 (unconfirmed)"
 1001,toughness,342.52,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:51,
-1001,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:282 fits.csv:284 fits.csv:359 fits.csv:361 fits.csv:365,
+1001,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:282 fits.csv:284 fits.csv:359 fits.csv:361 fits.csv:365,
 1002,kind,destroyer,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1007 ships.csv:1119,
 1002,cruise_speed_kn,14,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:75,
 1002,max_speed_kn,37.2,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:78 ship_class_facts.csv:598,
@@ -44,7 +44,7 @@ class_id,figure,value,rule,facts,note
 1002,torpedo_tubes,6,count of the torpedo_tubes fit,fits.csv:154 fits.csv:317 fits.csv:318,"ship rows holding on the date but not read: fits.csv:375 (unconfirmed), fits.csv:376 (unconfirmed)"
 1002,torpedo_damage,80,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:154 fits.csv:317 fits.csv:318 weapon_facts.csv:137,"ship rows holding on the date but not read: fits.csv:375 (unconfirmed), fits.csv:376 (unconfirmed)"
 1002,toughness,50.8,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:596,rests on an exception
-1002,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:287 fits.csv:363 fits.csv:366,
+1002,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:287 fits.csv:363 fits.csv:366,
 1003,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1018 ships.csv:1023,
 1003,cruise_speed_kn,14,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:203 ship_class_facts.csv:670 ship_class_facts.csv:672 ship_class_facts.csv:674,
 1003,max_speed_kn,35.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:206 ship_class_facts.csv:577,
@@ -58,7 +58,7 @@ class_id,figure,value,rule,facts,note
 1003,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:189 fits.csv:309,ship rows holding on the date but not read: fits.csv:73 (unconfirmed)
 1003,torpedo_damage,150,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:189 fits.csv:309 weapon_facts.csv:174 weapon_facts.csv:175,ship rows holding on the date but not read: fits.csv:73 (unconfirmed)
 1003,toughness,454,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:200 ship_class_facts.csv:575,
-1003,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:280 fits.csv:357 fits.csv:364,
+1003,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:280 fits.csv:357 fits.csv:364,
 1004,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1019 ships.csv:1108,
 1004,cruise_speed_kn,14,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:218,
 1004,max_speed_kn,33,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:221 ship_class_facts.csv:593,
@@ -72,7 +72,7 @@ class_id,figure,value,rule,facts,note
 1004,torpedo_tubes,6,count of the torpedo_tubes fit,fits.csv:310 fits.csv:311,ship rows holding on the date but not read: fits.csv:377 (unconfirmed)
 1004,torpedo_damage,80,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:310 fits.csv:311 weapon_facts.csv:137,ship rows holding on the date but not read: fits.csv:377 (unconfirmed)
 1004,toughness,157.92,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:216 ship_class_facts.csv:591,
-1004,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:285,
+1004,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:285,
 1005,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1021 ships.csv:1116,
 1005,cruise_speed_kn,14,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:241,rests on an exception
 1005,max_speed_kn,35.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:246 ship_class_facts.csv:572,
@@ -86,7 +86,7 @@ class_id,figure,value,rule,facts,note
 1005,torpedo_tubes,4,count of the torpedo_tubes fit,fits.csv:378 fits.csv:379,
 1005,torpedo_damage,138,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:378 fits.csv:379 weapon_facts.csv:156,
 1005,toughness,113.76,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:239 ship_class_facts.csv:632,
-1005,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:286 fits.csv:362,
+1005,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:286 fits.csv:362,
 1006,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1023 ships.csv:1071,
 1006,cruise_speed_kn,12,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:703 ship_class_facts.csv:705,
 1006,max_speed_kn,31.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:272 ship_class_facts.csv:273 ship_class_facts.csv:617 ship_class_facts.csv:633,
@@ -100,7 +100,7 @@ class_id,figure,value,rule,facts,note
 1006,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:388,rests on an exception
 1006,torpedo_damage,134.28,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:388 weapon_facts.csv:411,rests on an exception
 1006,toughness,390,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:263 ship_class_facts.csv:615,
-1006,radar,1,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:98 fits.csv:102 fits.csv:103 fits.csv:352 fits.csv:353 fits.csv:355 fits.csv:390,
+1006,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:98 fits.csv:102 fits.csv:103 fits.csv:352 fits.csv:353 fits.csv:355 fits.csv:390,not counted: no row gives the display of uk-type271-radar (fits.csv:102) (decision 0077)
 1007,kind,destroyer,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1026 ships.csv:1039 ships.csv:1041 ships.csv:1045 ships.csv:1046,
 1007,cruise_speed_kn,15,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:863,
 1007,max_speed_kn,38.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:323 ship_class_facts.csv:611 ship_class_facts.csv:722,
@@ -114,7 +114,7 @@ class_id,figure,value,rule,facts,note
 1007,torpedo_tubes,16,count of the torpedo_tubes fit,fits.csv:332 fits.csv:333 fits.csv:334,
 1007,torpedo_damage,89.64,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:332 fits.csv:333 fits.csv:334 weapon_facts.csv:304,
 1007,toughness,64.96,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:625,rests on an exception
-1007,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,,"radar assumed none for dd-386-bagley, dd-392-patterson, dd-388-helm, dd-393-jarvis"
+1007,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,,"radar assumed none for dd-386-bagley, dd-392-patterson, dd-388-helm, dd-393-jarvis"
 1008,kind,destroyer,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1026 ships.csv:1040 ships.csv:1043,
 1008,cruise_speed_kn,15,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:863,
 1008,max_speed_kn,38.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:323 ship_class_facts.csv:611 ship_class_facts.csv:722,
@@ -128,7 +128,7 @@ class_id,figure,value,rule,facts,note
 1008,torpedo_tubes,16,count of the torpedo_tubes fit,fits.csv:332 fits.csv:333 fits.csv:334,
 1008,torpedo_damage,89.64,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:332 fits.csv:333 fits.csv:334 weapon_facts.csv:304,
 1008,toughness,64.96,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:625,rests on an exception
-1008,radar,1,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:82 fits.csv:83 fits.csv:84 fits.csv:85 fits.csv:350,
+1008,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:82 fits.csv:83 fits.csv:84 fits.csv:85 fits.csv:350,
 1009,kind,destroyer,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1027 ships.csv:1053,
 1009,cruise_speed_kn,15,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:870,
 1009,max_speed_kn,38.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:614 ship_class_facts.csv:730 ship_class_facts.csv:971,
@@ -142,7 +142,7 @@ class_id,figure,value,rule,facts,note
 1009,torpedo_tubes,16,count of the torpedo_tubes fit,fits.csv:336 fits.csv:337,
 1009,torpedo_damage,89.64,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:336 fits.csv:337 weapon_facts.csv:304,
 1009,toughness,66.28,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:612,rests on an exception
-1009,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,,radar assumed none for dd-408-wilson
+1009,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,,radar assumed none for dd-408-wilson
 1010,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1034 ships.csv:1020,
 1010,cruise_speed_kn,15,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:709 ship_class_facts.csv:711 ship_class_facts.csv:835,
 1010,max_speed_kn,32.7,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:445 ship_class_facts.csv:601 ship_class_facts.csv:622,
@@ -156,7 +156,7 @@ class_id,figure,value,rule,facts,note
 1010,torpedo_tubes,0,count of the torpedo_tubes fit,fits.csv:319 fits.csv:320,
 1010,torpedo_damage,0,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:319 fits.csv:320,
 1010,toughness,398,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:436 ship_class_facts.csv:437 ship_class_facts.csv:925,
-1010,radar,0,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,,radar assumed none for ca-44-vincennes
+1010,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,,radar assumed none for ca-44-vincennes
 1011,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1034 ships.csv:1016 ships.csv:1019,
 1011,cruise_speed_kn,15,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:709 ship_class_facts.csv:711 ship_class_facts.csv:835,
 1011,max_speed_kn,32.7,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:445 ship_class_facts.csv:601 ship_class_facts.csv:622,
@@ -170,7 +170,7 @@ class_id,figure,value,rule,facts,note
 1011,torpedo_tubes,0,count of the torpedo_tubes fit,fits.csv:319 fits.csv:320,
 1011,torpedo_damage,0,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:319 fits.csv:320,
 1011,toughness,398,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:436 ship_class_facts.csv:437 ship_class_facts.csv:925,
-1011,radar,1,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:63 fits.csv:347,
+1011,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:63 fits.csv:347,
 1012,kind,cruiser,"type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",ship_classes.csv:1036 ships.csv:1013,
 1012,cruise_speed_kn,20,"endurance_speed_kn of the ship, else of its class",ship_class_facts.csv:470,
 1012,max_speed_kn,32.5,"max_speed_kn of the ship, else of its class",ship_class_facts.csv:474 ship_class_facts.csv:475 ship_class_facts.csv:606,
@@ -184,4 +184,4 @@ class_id,figure,value,rule,facts,note
 1012,torpedo_tubes,0,count of the torpedo_tubes fit,fits.csv:329,
 1012,torpedo_damage,0,warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted,fits.csv:329,
 1012,toughness,362,"displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",ship_class_facts.csv:468,rests on an exception
-1012,radar,1,1 if a read air_search_radar or surface_search_radar fit has count above 0; 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:291 fits.csv:372,
+1012,radar,0,1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0,fits.csv:291 fits.csv:372,not counted: no row gives the display of us-radar-type-unstated (fits.csv:291) (decision 0077)

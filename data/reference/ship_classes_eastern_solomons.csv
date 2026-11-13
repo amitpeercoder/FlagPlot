@@ -73,6 +73,7 @@
 #   ryujo: radar unknown in the facts, treated as not fitted
 #   amatsukaze: radar unknown in the facts, treated as not fitted
 #   tokitsukaze: radar unknown in the facts, treated as not fitted
+# Radar sets not counted, no row gives their display (decision 0077, 3): none
 # Ammunition assumptions used (decision 0023): none
 # Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:
 #   cv-3-saratoga
@@ -118,8 +119,8 @@ id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_cap
 2003,Mogami class,cruiser,18,35,2310,7673,0,0,0,0,0,0,0,488.16,0,3,10
 2004,Nagara class,cruiser,15,36,1260,6000,0,0,0,0,0,0,0,222.8,0,1,1
 2005,Ryujo class,carrier,14,29,2490,10000,0,0,0,0,0,0,0,424,0,48,13
-2006,"Shokaku class, no radar",carrier,18,34.2,4100,9700,0,0,0,0,0,0,0,1027,0,84,28
-2007,"Shokaku class, radar",carrier,18,34.2,4100,9700,0,0,0,0,0,0,0,1027,1,84,28
+2006,Shokaku class (Zuikaku),carrier,18,34.2,4100,9700,0,0,0,0,0,0,0,1027,0,84,28
+2007,Shokaku class (Shokaku),carrier,18,34.2,4100,9700,0,0,0,0,0,0,0,1027,0,84,28
 2008,Tone class,cruiser,18,35,2690,8000,0,0,0,0,0,0,0,448.6,0,6,11
 2009,Yugumo class,destroyer,18,35,500,5000,0,0,0,0,0,0,0,83.08,0,0,1
 2010,Atlanta class,cruiser,15,32.5,1481,7690,0,0,0,0,0,0,0,263.6,1,0,20
@@ -127,9 +128,9 @@ id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_cap
 2012,Farragut class,destroyer,15,36.5,607,5240,0,0,0,0,0,0,0,54.6,0,0,7
 2013,Gleaves class,destroyer,15,35,467,4730,0,0,0,0,0,0,0,64.8,0,0,4
 2014,Gridley class,destroyer,15,38.5,525,4910,0,0,0,0,0,0,0,63.6,0,0,4
-2015,Lexington class,carrier,15,33.25,8400,8210,0,0,0,0,0,0,0,1600,1,90,28
+2015,Lexington class,carrier,15,33.25,8400,8210,0,0,0,0,0,0,0,1600,0,90,28
 2016,New Orleans class,cruiser,15,32.7,1900,6500,0,0,0,0,0,0,0,398,0,4,12
-2017,North Carolina class,battleship,15,28,5550,13530,0,0,0,0,0,0,0,1499.36,1,0,34
+2017,North Carolina class,battleship,15,28,5550,13530,0,0,0,0,0,0,0,1499.36,0,0,34
 2018,Porter class,destroyer,15,37,651,5620,0,0,0,0,0,0,0,73,0,0,10
-2019,Portland class,cruiser,15,32.5,2614,8640,0,0,0,0,0,0,0,398,1,4,15
-2020,Yorktown class,carrier,15,32.5,4360,12000,0,0,0,0,0,0,0,792,1,96,22
+2019,Portland class,cruiser,15,32.5,2614,8640,0,0,0,0,0,0,0,398,0,4,15
+2020,Yorktown class,carrier,15,32.5,4360,12000,0,0,0,0,0,0,0,792,0,96,22

@@ -11,13 +11,13 @@ yubari,1005,Yubari class
 yunagi,1002,Kamikaze class (1922)
 hmas-canberra,1006,County class (Kent subclass)
 ca-29-chicago,1012,Northampton class
-dd-386-bagley,1007,"Bagley class, no radar"
-dd-392-patterson,1007,"Bagley class, no radar"
-ca-44-vincennes,1010,"New Orleans class, no radar"
-ca-39-quincy,1011,"New Orleans class, radar"
-ca-34-astoria,1011,"New Orleans class, radar"
-dd-388-helm,1007,"Bagley class, no radar"
+dd-386-bagley,1007,"Bagley class (Bagley, Patterson, Helm, Jarvis)"
+dd-392-patterson,1007,"Bagley class (Bagley, Patterson, Helm, Jarvis)"
+ca-44-vincennes,1010,New Orleans class (Vincennes)
+ca-39-quincy,1011,"New Orleans class (Quincy, Astoria)"
+ca-34-astoria,1011,"New Orleans class (Quincy, Astoria)"
+dd-388-helm,1007,"Bagley class (Bagley, Patterson, Helm, Jarvis)"
 dd-408-wilson,1009,Benham class
-dd-387-blue,1008,"Bagley class, radar"
-dd-390-ralph-talbot,1008,"Bagley class, radar"
-dd-393-jarvis,1007,"Bagley class, no radar"
+dd-387-blue,1008,"Bagley class (Blue, Ralph Talbot)"
+dd-390-ralph-talbot,1008,"Bagley class (Blue, Ralph Talbot)"
+dd-393-jarvis,1007,"Bagley class (Bagley, Patterson, Helm, Jarvis)"
