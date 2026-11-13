@@ -392,7 +392,7 @@ fn seed_28_day_4_afternoon_the_fighters_land_on_saratoga_and_the_scouts_form_a_g
         homing[0].causes,
         vec![
             Cause::Event(closer.id),
-            Cause::Order(sim_core::ids::OrderId::new(25))
+            Cause::Order(sim_core::ids::OrderId::for_umpire(25, common::umpire_key()))
         ]
     );
     assert_eq!(

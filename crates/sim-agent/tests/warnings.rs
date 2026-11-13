@@ -17,7 +17,7 @@ use sim_core::orders::Mission;
 use sim_core::refdata::{PortSize, RefData, ShipClass, ShipKind};
 use sim_core::state::{Base, Ship, ShipLocation, Side, TaskForce, TruthState};
 use sim_core::World;
-use support::{load, play};
+use support::{group_handle, load, play, ship_handle};
 
 fn class() -> ShipClass {
     ShipClass {
@@ -263,7 +263,7 @@ fn recomputed(world: &World, side: Side) {
     let short: BTreeSet<String> = view
         .air_groups()
         .filter(|g| g.pilots.is_some_and(|p| p < g.ready))
-        .map(|g| g.id.to_string())
+        .map(|g| group_handle(&view, g.id))
         .collect();
     let got: BTreeSet<String> = b
         .warnings
@@ -279,7 +279,7 @@ fn recomputed(world: &World, side: Side) {
             view.rules_in_play().fatigue
                 && (g.stood_down || g.rest_above.is_some_and(|t| g.fatigue > t))
         })
-        .map(|g| g.id.to_string())
+        .map(|g| group_handle(&view, g.id))
         .collect();
     let got: BTreeSet<String> = b
         .warnings
@@ -303,7 +303,7 @@ fn recomputed(world: &World, side: Side) {
         }
     }
     for s in view.ships().filter(|s| s.location != ShipLocation::Sunk) {
-        if warned.contains(&s.id.to_string()) {
+        if warned.contains(&ship_handle(&view, s.id)) {
             continue;
         }
         let class = view.ship_class(s.class).unwrap();

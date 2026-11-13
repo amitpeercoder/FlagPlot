@@ -699,7 +699,7 @@ fn orders_of(group: u32) -> Vec<Cause> {
         .expect("a group")
         .1
         .iter()
-        .map(|order| Cause::Order(OrderId::new(*order)))
+        .map(|order| Cause::Order(OrderId::for_umpire(*order, common::umpire_key())))
         .collect()
 }
 
@@ -1498,7 +1498,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 report.kind,
                 EventKind::ReportReceived {
                     side,
-                    contact: ContactId::new(contact),
+                    contact: ContactId::for_umpire(contact, common::umpire_key()),
                     hex,
                     ship_count,
                     kind,
@@ -1614,7 +1614,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             event.kind,
             EventKind::StrikeLaunched {
                 air_group: AirGroupId::new(spec.id),
-                contact: ContactId::new(contact),
+                contact: ContactId::for_umpire(contact, common::umpire_key()),
                 hex,
                 aircraft: spec.ready,
                 distance_nm: Fixed::from_int(distance),
@@ -2530,7 +2530,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                         event.kind,
                         EventKind::ContactNotThere {
                             side,
-                            contact: ContactId::new(contact),
+                            contact: ContactId::for_umpire(contact, common::umpire_key()),
                             hex: launch.hex,
                         },
                         "seed {seed}"
@@ -2700,7 +2700,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     received.kind,
                     EventKind::ReportReceived {
                         side,
-                        contact: ContactId::new(contact),
+                        contact: ContactId::for_umpire(contact, common::umpire_key()),
                         hex: report.0,
                         ship_count: report.1,
                         kind: report.2,
@@ -3177,7 +3177,9 @@ fn the_orders_are_the_ones_the_raids_cite() {
         for event in &run.events {
             if let EventKind::OrderAccepted { order, target } = event.kind {
                 assert_eq!(event.causes, vec![Cause::Order(order)]);
-                seen.entry(target).or_default().push(order.raw());
+                seen.entry(target)
+                    .or_default()
+                    .push(order.umpire_raw(common::umpire_key()));
             }
         }
         for (group, orders) in ORDERS {

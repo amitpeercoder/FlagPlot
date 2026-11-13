@@ -592,7 +592,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             println!(
                 "{} {} at {}: {} ships, {}, age {} pulses",
                 side.name(),
-                contact.id,
+                format_args!("contact:{}", contact.id.umpire_raw(&world.umpire_key())),
                 contact.estimated_hex,
                 contact.estimated_ship_count,
                 contact.estimated_kind.name(),

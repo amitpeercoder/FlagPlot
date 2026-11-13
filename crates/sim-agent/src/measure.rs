@@ -19,7 +19,7 @@ use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, ContactId, EntityRef, TaskForceId};
+use sim_core::ids::EntityRef;
 use sim_core::orders::SpeedSetting;
 use sim_core::refdata::{AircraftRole, AttackWeapon};
 use sim_core::time::{pulse_start, ClockTime, Pulse};
@@ -369,15 +369,15 @@ fn resolve(ctx: &Ctx<'_>, arg: &PlaceArg) -> Option<(Hex, Resolved)> {
             let id: u32 = number.parse().ok()?;
             match kind {
                 "ship" => {
-                    let ship = *ctx.ships.get(&sim_core::ids::ShipId::new(id))?;
+                    let ship = ctx.own_ship(id)?;
                     (ctx.ship_hex(ship)?, Some(ctx.ship(ship.id)))
                 }
                 "task_force" => {
-                    let force = *ctx.forces.get(&TaskForceId::new(id))?;
+                    let force = ctx.own_force(id)?;
                     (force.position(), Some(ctx.force(force.id)))
                 }
                 "air_group" => {
-                    let group = *ctx.groups.get(&AirGroupId::new(id))?;
+                    let group = ctx.own_group(id)?;
                     (ctx.group_hex(group)?, Some(ctx.group(group.id)))
                 }
                 "base" => {
@@ -392,7 +392,7 @@ fn resolve(ctx: &Ctx<'_>, arg: &PlaceArg) -> Option<(Hex, Resolved)> {
                     }
                 }
                 "contact" => {
-                    let contact = ctx.view.contacts().find(|c| c.id == ContactId::new(id))?;
+                    let contact = ctx.view.contact_by_number(id)?;
                     (
                         contact.estimated_hex,
                         Some(ctx.entity(EntityRef::Contact(contact.id))),
@@ -465,7 +465,7 @@ fn own_force<'a>(ctx: &Ctx<'a>, handle: &str) -> Option<&'a sim_core::state::Tas
         return None;
     }
     let id: u32 = number.parse().ok()?;
-    ctx.forces.get(&TaskForceId::new(id)).copied()
+    ctx.own_force(id)
 }
 
 fn passage(ctx: &Ctx<'_>, handle: &str, to: &PlaceArg, speed: Option<SpeedArg>) -> Option<Passage> {
@@ -574,7 +574,7 @@ fn air_reach(ctx: &Ctx<'_>, handle: &str, to: &[PlaceArg]) -> Option<MeasureAnsw
         return None;
     }
     let id: u32 = number.parse().ok()?;
-    let group = *ctx.groups.get(&AirGroupId::new(id))?;
+    let group = ctx.own_group(id)?;
     let origin = ctx.group_hex(group)?;
     let aircraft = ctx.view.aircraft_type(group.aircraft_type)?;
     let places: Vec<(Hex, Resolved)> = to

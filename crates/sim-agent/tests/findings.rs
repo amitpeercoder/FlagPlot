@@ -133,7 +133,9 @@ fn a_force_that_can_move_has_no_propulsion_warning() {
 /// and says when it arrives; the group has its aircraft in the briefing for
 /// day N + 1.
 ///
-/// The arrival is VMF-224, air group 13, due day 10 (19 aircraft, 19 pilots).
+/// The arrival is VMF-224, air group 13 in the scenario and `air_group:3` to the
+/// Allied side that is shown it (decision 0086), due day 10 (19 aircraft, 19
+/// pilots).
 /// It was Flight 300, air group 12, due day 4, until decision 11 of 0059 took
 /// that arrival out of the full slice: the rule produces those aircraft now,
 /// and on this seed no Allied deck is lost, so none arrive.
@@ -145,19 +147,19 @@ fn an_arrival_due_on_a_day_is_listed_that_day_and_has_arrived_the_day_after() {
     end_days(&mut s, 7);
     let text = text_of(&mut s);
     assert!(
-        text.contains("- Due day 10: air_group:13 \"VMF-224\", 19 aircraft, 19 pilots, arriving in the night pulse that begins that day, before its morning"),
+        text.contains("- Due day 10: air_group:3 \"VMF-224\", 19 aircraft, 19 pilots, arriving in the night pulse that begins that day, before its morning"),
         "{text}"
     );
     let ready = |text: &str| {
         text.lines()
-            .find(|l| l.starts_with("- air_group:13 "))
+            .find(|l| l.starts_with("- air_group:3 "))
             .expect("the group")
             .contains(": 19 ready")
     };
     end_days(&mut s, 2);
     let day10 = text_of(&mut s);
     assert!(day10.contains("\n- Day: 10 of"), "{day10}");
-    assert!(day10.contains("- Due day 10: air_group:13"), "{day10}");
+    assert!(day10.contains("- Due day 10: air_group:3"), "{day10}");
     assert!(!ready(&day10), "not yet arrived in the briefing for day 10");
     end_days(&mut s, 1);
     let day11 = text_of(&mut s);
@@ -166,14 +168,16 @@ fn an_arrival_due_on_a_day_is_listed_that_day_and_has_arrived_the_day_after() {
     assert!(!day11.contains("Due day 10"), "{day11}");
 }
 
-/// Item 8: a group whose pilots are not counted says so in words.
+/// Item 8: a group whose pilots are not counted says so in words. The carrier
+/// group 101 and the base group 10 of the scenario are `air_group:8` and
+/// `air_group:1` to the side (decision 0086).
 #[test]
 fn a_group_whose_pilots_are_not_counted_says_so() {
     let mut s = allied("07_full_slice.toml", 1942);
     let text = text_of(&mut s);
     let carrier = text
         .lines()
-        .find(|l| l.starts_with("- air_group:101 "))
+        .find(|l| l.starts_with("- air_group:8 "))
         .expect("a carrier group");
     assert!(
         carrier.contains("pilots not counted (no pilot limit)"),
@@ -181,7 +185,7 @@ fn a_group_whose_pilots_are_not_counted_says_so() {
     );
     let base = text
         .lines()
-        .find(|l| l.starts_with("- air_group:10 "))
+        .find(|l| l.starts_with("- air_group:1 "))
         .expect("a base group");
     assert!(base.contains(", 19 pilots,"), "{base}");
     // The data keeps its null.
@@ -190,7 +194,7 @@ fn a_group_whose_pilots_are_not_counted_says_so() {
         .as_array()
         .unwrap()
         .iter()
-        .find(|g| g["air_group"]["handle"] == "air_group:101")
+        .find(|g| g["air_group"]["handle"] == "air_group:8")
         .unwrap();
     assert_eq!(group["pilots"], Value::Null);
 }
@@ -254,12 +258,18 @@ fn an_enemy_in_a_raid_is_called_one_and_is_not_known() {
             .any(|l| l.starts_with("- Raid on base:2 ") && !l.contains("air_group")),
         "{text}"
     );
-    // The enemy's groups are 1 and 2: the briefing names neither.
-    assert!(
-        !text.contains("air_group:1 ") && !text.contains("air_group:2 "),
-        "{text}"
-    );
-    let known = call(&mut s, "get_entity", json!({"handle": "air_group:1"}));
+    // The side has three groups, `air_group:1` to `air_group:3` (the scenario's
+    // 3 to 5; decision 0086): the briefing names no other, and has no number
+    // for the enemy's two, which a side asking after the next number is told
+    // nothing about.
+    for line in text.lines() {
+        for word in line.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == ':')) {
+            if let Some(number) = word.strip_prefix("air_group:") {
+                assert!(matches!(number, "1" | "2" | "3"), "{word} in {line}");
+            }
+        }
+    }
+    let known = call(&mut s, "get_entity", json!({"handle": "air_group:4"}));
     let nothing = call(&mut s, "get_entity", json!({"handle": "air_group:9999"}));
     assert_eq!(known, nothing, "not distinguishable from one that is not");
     assert_eq!(known["kind"], "not_known");
