@@ -15,27 +15,27 @@ Ruled by the coordinating architect on the designer's delegation, before the fir
 
 The research session has been asked for the text of paragraphs 3(b) and 6 of the special instructions and for Chicago's track from 01:50 to 02:20. Rows that arrive before the first tuning round are read once more by the same reading; none after it moves a level.
 
-**How the ruling was made.** It followed a scratch run, and it rests on the rows and not on the run: the 0.5 was never a row, and "never left by choice" is the record's statement of what the northern group did. It was not chosen for the length of the action, which it makes worse. The table is the effect of the northern group's level alone, over 1,000 seeds each, on the figures of main on Nov 13, 2026 with decision 0070 in. Each cell is the 5th to the 95th percentile, then the median; shells are the main battery's, in hundreds.
+**How the ruling was made.** It followed a scratch run, and it rests on the rows and not on the run: the 0.5 was never a row, and "never left by choice" is the record's statement of what the northern group did. It was not chosen for the length of the action, which it makes worse. The table is the effect of the northern group's level alone, over 1,000 seeds each, on the figures of main on Nov 13, 2026 with decisions 0070 and 0071 in. Each cell is the 5th to the 95th percentile, then the median; shells are the main battery's, in hundreds.
 
 | Measure | The record | Northern group at 0.5 | Northern group at 1 |
 | --- | --- | --- | --- |
-| Minutes of action | 20 to 30 | 20 to 65, 35 | 25 to 65, 40 |
+| Minutes of action | 20 to 30 | 20 to 60, 35 | 30 to 60, 40 |
 | Surface fights by day | 0 | 0 to 4, 0 | 0 to 4, 0 |
-| Allied cruisers sunk | 4 | 0 to 1, 0 | 0 to 2, 0 |
+| Allied cruisers sunk | 4 | 0 to 1, 0 | 0 to 2, 1 |
 | Southern group cruisers sunk | 1 | 0 to 1, 0 | 0 to 1, 0 |
-| Northern group cruisers sunk | 3 | 0 to 0, 0 | 0 to 1, 0 |
-| Allied destroyers sunk | 0 | 1 to 4, 2 | 1 to 4, 3 |
-| Japanese ships sunk | 0 | 0 to 2, 0 | 0 to 2, 0 |
-| Gun hits on Allied ships | 153 to 219 | 21 to 101, 72 | 21 to 133, 88 |
-| Gun hits on Japanese ships | 10 to 17 | 2 to 55, 19 | 4 to 55, 19 |
+| Northern group cruisers sunk | 3 | 0 to 0, 0 | 0 to 2, 0 |
+| Allied destroyers sunk | 0 | 1 to 4, 3 | 1 to 4, 3 |
+| Japanese ships sunk | 0 | 0 to 1, 0 | 0 to 1, 0 |
+| Gun hits on Allied ships | 153 to 219 | 32 to 100, 74 | 32 to 137, 95 |
+| Gun hits on Japanese ships | 10 to 17 | 2 to 51, 16 | 4 to 52, 17 |
 | Torpedo hits on Allied ships | 4 to 9 | 1 to 7, 3 | 1 to 7, 3 |
-| Torpedo hits on Japanese ships | 0 | 0 to 7, 3 | 0 to 7, 3 |
-| Japanese shells | 10 to 11 | 5 to 18, 13 | 5 to 21, 16 |
-| Allied shells | 3 | 1 to 12, 5 | 2 to 13, 5 |
-| Southern group shells | 0 | 0 to 4, 0 | 0 to 4, 0 |
-| Northern group shells | 3 | 1 to 9, 4 | 1 to 9, 4 |
-| Tenryu and Yubari shells | 1 | 1 to 4, 2 | 1 to 4, 3 |
+| Torpedo hits on Japanese ships | 0 | 0 to 4, 1 | 0 to 4, 1 |
+| Japanese shells | 10 to 11 | 8 to 18, 13 | 8 to 21, 17 |
+| Allied shells | 3 | 1 to 11, 5 | 2 to 11, 5 |
+| Southern group shells | 0 | 0 to 3, 0 | 0 to 3, 0 |
+| Northern group shells | 3 | 1 to 8, 4 | 1 to 8, 4 |
+| Tenryu and Yubari shells | 1 | 2 to 3, 2 | 2 to 4, 3 |
 
-What got worse: the minutes of action (the median leaves the record by ten more), Allied destroyers sunk, and Japanese shells. What got better: gun hits on Allied ships, and a northern cruiser can now be sunk, which it could not in 19 runs of 20. What the worse rows show is named and left: the Japanese ended each fight by passing on, and no rule has a force that has done what it came for retire. That would be a rule, planned for the designer, if the tuning rounds show it is needed.
+What got worse: the minutes of action (the median is five more from the record, and the shortest runs are now at its top), Japanese shells, and Tenryu and Yubari's. What got better: gun hits on Allied ships, and the northern group's cruisers can now be sunk, which they could not be in 19 runs of 20. Allied destroyers and the torpedo hits did not move. What the worse rows show is named and left: the Japanese ended each fight by passing on, and no rule has a force that has done what it came for retire. That would be a rule, planned for the designer, if the tuning rounds show it is needed.
 
 **The hand calculation.** The scoring of Savo Island in `tests/scenario_10b_objectives.rs` was worked on the scenario as it stood. It now runs on a frozen copy, `data/scenarios/step2-frozen/04_savo_island.toml`, and no number of it changes ("Tests while figures move", 9). The scenario's own hand calculation (`tests/scenario_04_savo_island.rs`) reads no break-off level and runs on the live file as before.
