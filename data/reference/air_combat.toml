@@ -64,6 +64,15 @@ crew_recovered_open_sea = "0.5"
 # had met the strike (events 222 and 223); no source sizes it.
 anti_aircraft_before_attack_share = "0"
 
+# The share of a raid's patrol that the escorts draw off one for one; the rest
+# is split between the escorts not drawn off and the bombers in proportion to
+# their numbers (decision 0080). 1 is step 1's rule: the escorts draw the
+# patrol off the bombers one for one. PLACEHOLDER: decision 0080 sets it to 0.
+# Support for the direction: decision 0042's sentence, the forms' losses (12
+# bombers against 6 to 10 fighters) and row 271 (4 attack planes and 3
+# fighters lost at Henderson Field); no source sizes it.
+patrol_drawn_off_share = "0"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

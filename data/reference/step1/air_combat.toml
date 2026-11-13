@@ -69,6 +69,12 @@ crew_recovered_open_sea = "1"
 # live file has 0, a placeholder).
 anti_aircraft_before_attack_share = "1"
 
+# The share of a raid's patrol that the escorts draw off one for one, the rest
+# split between the escorts not drawn off and the bombers (decision 0080). 1 is
+# step 1's rule. Frozen at 1, which leaves step 1 as it was (the live file has
+# 0, a placeholder).
+patrol_drawn_off_share = "1"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

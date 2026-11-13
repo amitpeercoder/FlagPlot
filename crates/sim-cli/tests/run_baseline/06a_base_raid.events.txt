@@ -3,8 +3,8 @@ PLACEHOLDER DATA: some or all of the units, figures and geography are invented, 
 seed 1942
 
 day   1  hash 37cca443674913f5  23 events
-day   2  hash 978d191625134cb4  17 events
-day   3  hash 7d165071bbaffc76  17 events
+day   2  hash be1060f234787bf5  16 events
+day   3  hash fedca4649eed15e3  17 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -16,8 +16,8 @@ day   3  hash 7d165071bbaffc76  17 events
 #8 D1 morning   air_group:1 launched 18 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #9 D1 morning   air_group:2 sent 6 escorts with air_group:1  <- order:5, order:6, #8
 #10 D1 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 3 hits  <- #8, #9
-#11 D1 morning   air_group:3 patrol at the escorts of air_group:2: 6 shots x 0.3 = 1.8 expected, 1 hit  <- #8, #9
-#12 D1 morning   air_group:3 patrol at the bombers of air_group:1: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #8
+#11 D1 morning   air_group:3 patrol at the escorts of air_group:2: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #8, #9
+#12 D1 morning   air_group:3 patrol at the bombers of air_group:1: 9 shots x 0.3 = 2.7 expected, 2 hits  <- #8
 #13 D1 morning   air_group:3 lost 3 aircraft, 9 left  <- #10
 #14 D1 morning   air_group:2 lost 1 aircraft, 11 left  <- #11
 #15 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #12
@@ -33,39 +33,38 @@ day   3  hash 7d165071bbaffc76  17 events
 #25 D2 morning   air_group:1 launched 16 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #26 D2 morning   air_group:2 sent 6 escorts with air_group:1  <- order:5, order:6, #25
 #27 D2 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #25, #26
-#28 D2 morning   air_group:3 patrol at the escorts of air_group:2: 6 shots x 0.3 = 1.8 expected, 1 hit  <- #25, #26
-#29 D2 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #25
+#28 D2 morning   air_group:3 patrol at the escorts of air_group:2: 2 shots x 0.3 = 0.6 expected, 0 hits  <- #25, #26
+#29 D2 morning   air_group:3 patrol at the bombers of air_group:1: 7 shots x 0.3 = 2.1 expected, 2 hits  <- #25
 #30 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #27
-#31 D2 morning   air_group:2 lost 1 aircraft, 10 left  <- #28
-#32 D2 morning   air_group:1 lost 1 aircraft, 15 left  <- #29
-#33 D2 morning   air_group:1 bombs at base:2: 15 shots x 0.2 = 3 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #25, #32
-#34 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #25, #33
-#35 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #33
-#36 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #27, #33
-#37 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #28, #29, #34
-#38 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#39 D2 -         base:1 at the end of the day: 0 t of supply, 25 aircraft ready: not open
-#40 D2 -         base:2 at the end of the day: 950 t of supply, 21 aircraft ready: open
-#41 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#42 D3 morning   air_group:1 launched 15 aircraft at base:2 at (5,0), 200 nm  <- order:4
-#43 D3 morning   air_group:2 sent 5 escorts with air_group:1  <- order:5, order:6, #42
-#44 D3 morning   air_group:2 escorts at the patrol of air_group:3: 5 shots x 0.3 = 1.5 expected, 0 hits  <- #42, #43
-#45 D3 morning   air_group:3 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #42, #43
-#46 D3 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #42
-#47 D3 morning   air_group:2 lost 1 aircraft, 9 left  <- #45
-#48 D3 morning   air_group:1 lost 1 aircraft, 14 left  <- #46
-#49 D3 morning   air_group:1 bombs at base:2: 14 shots x 0.2 = 2.8 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #42, #48
-#50 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #42, #49
-#51 D3 morning   air_group:1 lost 3 aircraft, 11 left  <- #50
-#52 D3 morning   base:2 lost 50 t of supply, 900 t left  <- #49
-#53 D3 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #44, #49
-#54 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #45, #46, #50
-#55 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
-#56 D3 -         base:1 at the end of the day: 0 t of supply, 20 aircraft ready: not open
-#57 D3 -         base:2 at the end of the day: 900 t of supply, 21 aircraft ready: open
+#31 D2 morning   air_group:1 lost 2 aircraft, 14 left  <- #29
+#32 D2 morning   air_group:1 bombs at base:2: 14 shots x 0.2 = 2.8 expected, 4 hits: 2 on aircraft, 0 on supply, 2 on nothing  <- #25, #31
+#33 D2 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #25, #32
+#34 D2 morning   air_group:4 lost 2 aircraft on the ground at base:2, 8 left  <- #32
+#35 D2 morning   Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground  <- #27, #32
+#36 D2 morning   Allied claim over (5,0): 3 aircraft shot down  <- #28, #29, #33
+#37 D2 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#38 D2 -         base:1 at the end of the day: 0 t of supply, 25 aircraft ready: not open
+#39 D2 -         base:2 at the end of the day: 950 t of supply, 21 aircraft ready: open
+#40 D3 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#41 D3 morning   air_group:1 launched 14 aircraft at base:2 at (5,0), 200 nm  <- order:4
+#42 D3 morning   air_group:2 sent 6 escorts with air_group:1  <- order:5, order:6, #41
+#43 D3 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 0 hits  <- #41, #42
+#44 D3 morning   air_group:3 patrol at the escorts of air_group:2: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #41, #42
+#45 D3 morning   air_group:3 patrol at the bombers of air_group:1: 5 shots x 0.3 = 1.5 expected, 1 hit  <- #41
+#46 D3 morning   air_group:2 lost 1 aircraft, 10 left  <- #44
+#47 D3 morning   air_group:1 lost 1 aircraft, 13 left  <- #45
+#48 D3 morning   air_group:1 bombs at base:2: 13 shots x 0.2 = 2.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #41, #47
+#49 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #41, #48
+#50 D3 morning   air_group:1 lost 3 aircraft, 10 left  <- #49
+#51 D3 morning   base:2 lost 50 t of supply, 900 t left  <- #48
+#52 D3 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #43, #48
+#53 D3 morning   Allied claim over (5,0): 6 aircraft shot down  <- #44, #45, #49
+#54 D3 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 6 aircraft  <- order:2, order:3
+#55 D3 -         base:1 at the end of the day: 0 t of supply, 20 aircraft ready: not open
+#56 D3 -         base:2 at the end of the day: 900 t of supply, 21 aircraft ready: open
 
-air_group:1 "Placeholder bomber group" (Japanese) at base:1: 11 ready, mission BaseStrike on base:2, no arc
-air_group:2 "Placeholder escort group" (Japanese) at base:1: 9 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, mission BaseStrike on base:2, no arc
+air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:3 "Placeholder defending fighters" (Allied) at base:2: 7 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:4 "Placeholder resting bombers" (Allied) at base:2: 8 ready, mission Rest, no arc
 air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, arc 040-130 to 300 nm

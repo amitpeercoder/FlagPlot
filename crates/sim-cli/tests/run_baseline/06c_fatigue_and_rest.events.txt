@@ -6,10 +6,10 @@ day   1  hash 94b462a4b89f4528  34 events
 day   2  hash 8f7f88101135a834  25 events
 day   3  hash 16f63e6ffd172aca  22 events
 day   4  hash c1fb29c82f4ed933  23 events
-day   5  hash d8eb65c2aae93442  22 events
-day   6  hash 8c43cab0b309cb3d  18 events
-day   7  hash 59581a297c355ee2  12 events
-day   8  hash d7b31b2032311005  25 events
+day   5  hash 4cc1cb8b3b7a1447  23 events
+day   6  hash 06cf26e7b24c6dc8  18 events
+day   7  hash 0dbd7901edf33bff  12 events
+day   8  hash 65dcccbd56df046e  25 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
@@ -24,8 +24,8 @@ day   8  hash d7b31b2032311005  25 events
 #11 D1 morning   air_group:1 launched 18 aircraft at base:2 at (5,0), 200 nm  <- order:5
 #12 D1 morning   air_group:2 sent 6 escorts with air_group:1  <- order:7, order:8, #11
 #13 D1 morning   air_group:2 escorts at the patrol of air_group:3: 6 shots x 0.3 = 1.8 expected, 3 hits  <- #11, #12
-#14 D1 morning   air_group:3 patrol at the escorts of air_group:2: 6 shots x 0.3 = 1.8 expected, 1 hit  <- #11, #12
-#15 D1 morning   air_group:3 patrol at the bombers of air_group:1: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #11
+#14 D1 morning   air_group:3 patrol at the escorts of air_group:2: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #11, #12
+#15 D1 morning   air_group:3 patrol at the bombers of air_group:1: 9 shots x 0.3 = 2.7 expected, 2 hits  <- #11
 #16 D1 morning   air_group:3 lost 3 aircraft, 9 left  <- #13
 #17 D1 morning   air_group:2 lost 1 aircraft, 11 left  <- #14
 #18 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #15
@@ -49,8 +49,8 @@ day   8  hash d7b31b2032311005  25 events
 #36 D2 morning   air_group:1 launched 15 aircraft at base:2 at (5,0), 200 nm  <- order:5
 #37 D2 morning   air_group:2 sent 5 escorts with air_group:1  <- order:7, order:8, #36
 #38 D2 morning   air_group:2 escorts at the patrol of air_group:3: 5 shots x 0.3 = 1.5 expected, 2 hits  <- #36, #37
-#39 D2 morning   air_group:3 patrol at the escorts of air_group:2: 5 shots x 0.3 = 1.5 expected, 0 hits  <- #36, #37
-#40 D2 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 2 hits  <- #36
+#39 D2 morning   air_group:3 patrol at the escorts of air_group:2: 2 shots x 0.3 = 0.6 expected, 0 hits  <- #36, #37
+#40 D2 morning   air_group:3 patrol at the bombers of air_group:1: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #36
 #41 D2 morning   air_group:3 lost 2 aircraft, 7 left  <- #38
 #42 D2 morning   air_group:1 lost 2 aircraft, 14 left  <- #40
 #43 D2 morning   air_group:1 bombs at base:2: 13 shots x 0.2 = 2.6 expected, 4 hits: 1 on aircraft, 1 on supply, 2 on nothing  <- #36, #42
@@ -74,8 +74,8 @@ day   8  hash d7b31b2032311005  25 events
 #61 D3 morning   air_group:1 launched 12 aircraft at base:2 at (5,0), 200 nm  <- order:5
 #62 D3 morning   air_group:2 sent 4 escorts with air_group:1  <- order:7, order:8, #61
 #63 D3 morning   air_group:2 escorts at the patrol of air_group:3: 4 shots x 0.3 = 1.2 expected, 0 hits  <- #61, #62
-#64 D3 morning   air_group:3 patrol at the escorts of air_group:2: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #61, #62
-#65 D3 morning   air_group:3 patrol at the bombers of air_group:1: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #61
+#64 D3 morning   air_group:3 patrol at the escorts of air_group:2: 1 shots x 0.3 = 0.3 expected, 1 hit  <- #61, #62
+#65 D3 morning   air_group:3 patrol at the bombers of air_group:1: 4 shots x 0.3 = 1.2 expected, 0 hits  <- #61
 #66 D3 morning   air_group:2 lost 1 aircraft, 10 left  <- #64
 #67 D3 morning   air_group:1 bombs at base:2: 12 shots x 0.2 = 2.4 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #61
 #68 D3 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #61, #67
@@ -120,78 +120,79 @@ day   8  hash d7b31b2032311005  25 events
 #107 D5 morning   air_group:1 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:5
 #108 D5 morning   air_group:2 sent 3 escorts with air_group:1  <- order:7, order:8, #107
 #109 D5 morning   air_group:2 escorts at the patrol of air_group:3: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #107, #108
-#110 D5 morning   air_group:3 patrol at the escorts of air_group:2: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #107, #108
-#111 D5 morning   air_group:3 lost 1 aircraft, 4 left  <- #109
-#112 D5 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #107
-#113 D5 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #107, #112
-#114 D5 morning   air_group:1 lost 3 aircraft, 6 left  <- #113
-#115 D5 morning   Japanese claim over (5,0): 2 aircraft shot down  <- #109, #112
-#116 D5 morning   Allied claim over (5,0): 4 aircraft shot down  <- #110, #113
-#117 D5 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #107
-#118 D5 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 43  <- order:7, order:8, #108
-#119 D5 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:1
-#120 D5 morning   air_group:5 rested 5 fatigue, now 75  <- #106
-#121 D5 afternoon air_group:1 rested 5 fatigue, now 30  <- order:5
-#122 D5 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 46  <- order:7, order:8
-#123 D5 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:1
-#124 D5 afternoon air_group:5 rested 5 fatigue, now 70  <- #106
-#125 D5 -         base:1 at the end of the day: 0 t of supply, 16 aircraft ready: not open
-#126 D5 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
-#127 D6 night     air_group:2 stood down: fatigue 46 is above its threshold of 40  <- order:9
-#128 D6 morning   air_group:1 launched 4 aircraft at base:2 at (5,0), 200 nm  <- order:5
-#129 D6 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #128
-#130 D6 morning   air_group:1 lost 1 aircraft, 5 left  <- #129
-#131 D6 morning   air_group:1 bombs at base:2: 3 shots x 0.2 = 0.6 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #128, #130
-#132 D6 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #128, #131
-#133 D6 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #131
-#134 D6 morning   Allied claim over (5,0): 3 aircraft shot down  <- #129, #132
-#135 D6 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #128
-#136 D6 morning   air_group:2 rested 5 fatigue, now 41  <- #127
-#137 D6 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1
-#138 D6 morning   air_group:5 rested 5 fatigue, now 65  <- #106
-#139 D6 afternoon air_group:1 rested 5 fatigue, now 36  <- order:5
-#140 D6 afternoon air_group:2 rested 5 fatigue, now 36  <- #127
-#141 D6 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:1
-#142 D6 afternoon air_group:5 rested 5 fatigue, now 60  <- #106
-#143 D6 -         base:1 at the end of the day: 0 t of supply, 15 aircraft ready: not open
-#144 D6 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
-#145 D7 night     air_group:1 stood down: fatigue 36 is above its threshold of 30  <- order:6
-#146 D7 night     air_group:2 returned to flying: fatigue 36 is not above its threshold of 40  <- order:9
-#147 D7 morning   air_group:1 rested 5 fatigue, now 31  <- #145
-#148 D7 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:7, order:8
-#149 D7 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:1
-#150 D7 morning   air_group:5 rested 5 fatigue, now 55  <- #106
-#151 D7 afternoon air_group:1 rested 5 fatigue, now 26  <- #145
-#152 D7 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:7, order:8
-#153 D7 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:1
-#154 D7 afternoon air_group:5 rested 5 fatigue, now 50  <- #106
-#155 D7 -         base:1 at the end of the day: 0 t of supply, 15 aircraft ready: not open
-#156 D7 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
-#157 D8 night     air_group:1 returned to flying: fatigue 26 is not above its threshold of 30  <- order:6
-#158 D8 night     air_group:2 stood down: fatigue 42 is above its threshold of 40  <- order:9
-#159 D8 night     air_group:5 returned to flying: fatigue 50 is not above its threshold of 50  <- order:4
-#160 D8 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 3 aircraft  <- order:2, order:3
-#161 D8 morning   air_group:1 launched 3 aircraft at base:2 at (5,0), 200 nm  <- order:5
-#162 D8 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #161
-#163 D8 morning   air_group:1 lost 1 aircraft, 4 left  <- #162
-#164 D8 morning   air_group:1 bombs at base:2: 2 shots x 0.2 = 0.4 expected, 2 hits: 1 on aircraft, 1 on supply, 0 on nothing  <- #161, #163
-#165 D8 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 2 hits after the attack  <- #161, #164
-#166 D8 morning   air_group:1 lost 2 aircraft, 2 left  <- #165
-#167 D8 morning   air_group:3 lost 1 aircraft on the ground at base:2, 3 left  <- #164
-#168 D8 morning   base:2 lost 50 t of supply, 850 t left  <- #164
-#169 D8 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #164
-#170 D8 morning   Allied claim over (5,0): 4 aircraft shot down  <- #162, #165
-#171 D8 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 37  <- #161
-#172 D8 morning   air_group:2 rested 5 fatigue, now 37  <- #158
-#173 D8 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 45  <- order:1
-#174 D8 morning   air_group:5 gained 15 fatigue from its search sortie of 600 nm, now 65  <- #160
-#175 D8 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 2 aircraft  <- order:2, order:3
-#176 D8 afternoon air_group:1 rested 5 fatigue, now 32  <- order:5
-#177 D8 afternoon air_group:2 rested 5 fatigue, now 32  <- #158
-#178 D8 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 48  <- order:1
-#179 D8 afternoon air_group:5 gained 15 fatigue from its search sortie of 600 nm, now 80  <- #175
-#180 D8 -         base:1 at the end of the day: 0 t of supply, 12 aircraft ready: not open
-#181 D8 -         base:2 at the end of the day: 850 t of supply, 19 aircraft ready: open
+#110 D5 morning   air_group:3 patrol at the escorts of air_group:2: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #107, #108
+#111 D5 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 0 hits  <- #107
+#112 D5 morning   air_group:3 lost 1 aircraft, 4 left  <- #109
+#113 D5 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #107
+#114 D5 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #107, #113
+#115 D5 morning   air_group:1 lost 3 aircraft, 6 left  <- #114
+#116 D5 morning   Japanese claim over (5,0): 2 aircraft shot down  <- #109, #113
+#117 D5 morning   Allied claim over (5,0): 4 aircraft shot down  <- #110, #111, #114
+#118 D5 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #107
+#119 D5 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 43  <- order:7, order:8, #108
+#120 D5 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 27  <- order:1
+#121 D5 morning   air_group:5 rested 5 fatigue, now 75  <- #106
+#122 D5 afternoon air_group:1 rested 5 fatigue, now 30  <- order:5
+#123 D5 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 46  <- order:7, order:8
+#124 D5 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 30  <- order:1
+#125 D5 afternoon air_group:5 rested 5 fatigue, now 70  <- #106
+#126 D5 -         base:1 at the end of the day: 0 t of supply, 16 aircraft ready: not open
+#127 D5 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
+#128 D6 night     air_group:2 stood down: fatigue 46 is above its threshold of 40  <- order:9
+#129 D6 morning   air_group:1 launched 4 aircraft at base:2 at (5,0), 200 nm  <- order:5
+#130 D6 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #129
+#131 D6 morning   air_group:1 lost 1 aircraft, 5 left  <- #130
+#132 D6 morning   air_group:1 bombs at base:2: 3 shots x 0.2 = 0.6 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #129, #131
+#133 D6 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #129, #132
+#134 D6 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #132
+#135 D6 morning   Allied claim over (5,0): 3 aircraft shot down  <- #130, #133
+#136 D6 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 41  <- #129
+#137 D6 morning   air_group:2 rested 5 fatigue, now 41  <- #128
+#138 D6 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 33  <- order:1
+#139 D6 morning   air_group:5 rested 5 fatigue, now 65  <- #106
+#140 D6 afternoon air_group:1 rested 5 fatigue, now 36  <- order:5
+#141 D6 afternoon air_group:2 rested 5 fatigue, now 36  <- #128
+#142 D6 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 36  <- order:1
+#143 D6 afternoon air_group:5 rested 5 fatigue, now 60  <- #106
+#144 D6 -         base:1 at the end of the day: 0 t of supply, 15 aircraft ready: not open
+#145 D6 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
+#146 D7 night     air_group:1 stood down: fatigue 36 is above its threshold of 30  <- order:6
+#147 D7 night     air_group:2 returned to flying: fatigue 36 is not above its threshold of 40  <- order:9
+#148 D7 morning   air_group:1 rested 5 fatigue, now 31  <- #146
+#149 D7 morning   air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:7, order:8
+#150 D7 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 39  <- order:1
+#151 D7 morning   air_group:5 rested 5 fatigue, now 55  <- #106
+#152 D7 afternoon air_group:1 rested 5 fatigue, now 26  <- #146
+#153 D7 afternoon air_group:2 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:7, order:8
+#154 D7 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 42  <- order:1
+#155 D7 afternoon air_group:5 rested 5 fatigue, now 50  <- #106
+#156 D7 -         base:1 at the end of the day: 0 t of supply, 15 aircraft ready: not open
+#157 D7 -         base:2 at the end of the day: 900 t of supply, 20 aircraft ready: open
+#158 D8 night     air_group:1 returned to flying: fatigue 26 is not above its threshold of 30  <- order:6
+#159 D8 night     air_group:2 stood down: fatigue 42 is above its threshold of 40  <- order:9
+#160 D8 night     air_group:5 returned to flying: fatigue 50 is not above its threshold of 50  <- order:4
+#161 D8 morning   air_group:5 searched 040-130 out to 300 nm from base:2 with 3 aircraft  <- order:2, order:3
+#162 D8 morning   air_group:1 launched 3 aircraft at base:2 at (5,0), 200 nm  <- order:5
+#163 D8 morning   air_group:3 patrol at the bombers of air_group:1: 2 shots x 0.3 = 0.6 expected, 1 hit  <- #162
+#164 D8 morning   air_group:1 lost 1 aircraft, 4 left  <- #163
+#165 D8 morning   air_group:1 bombs at base:2: 2 shots x 0.2 = 0.4 expected, 2 hits: 1 on aircraft, 1 on supply, 0 on nothing  <- #162, #164
+#166 D8 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 2 hits after the attack  <- #162, #165
+#167 D8 morning   air_group:1 lost 2 aircraft, 2 left  <- #166
+#168 D8 morning   air_group:3 lost 1 aircraft on the ground at base:2, 3 left  <- #165
+#169 D8 morning   base:2 lost 50 t of supply, 850 t left  <- #165
+#170 D8 morning   Japanese claim at (5,0): 1 aircraft destroyed on the ground  <- #165
+#171 D8 morning   Allied claim over (5,0): 4 aircraft shot down  <- #163, #166
+#172 D8 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 37  <- #162
+#173 D8 morning   air_group:2 rested 5 fatigue, now 37  <- #159
+#174 D8 morning   air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 45  <- order:1
+#175 D8 morning   air_group:5 gained 15 fatigue from its search sortie of 600 nm, now 65  <- #161
+#176 D8 afternoon air_group:5 searched 040-130 out to 300 nm from base:2 with 2 aircraft  <- order:2, order:3
+#177 D8 afternoon air_group:1 rested 5 fatigue, now 32  <- order:5
+#178 D8 afternoon air_group:2 rested 5 fatigue, now 32  <- #159
+#179 D8 afternoon air_group:3 gained 3 fatigue from its patrol sortie of 0 nm, now 48  <- order:1
+#180 D8 afternoon air_group:5 gained 15 fatigue from its search sortie of 600 nm, now 80  <- #176
+#181 D8 -         base:1 at the end of the day: 0 t of supply, 12 aircraft ready: not open
+#182 D8 -         base:2 at the end of the day: 850 t of supply, 19 aircraft ready: open
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 2 ready, mission BaseStrike on base:2, fatigue 32, rests above 30, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, fatigue 32, rests above 40, stood down, no arc

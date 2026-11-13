@@ -519,7 +519,9 @@ fn objectives_change_no_hash_and_no_event() {
     // That was its hash until the state went to version 7 (decision 0083,
     // the side of a ship's torpedo tubes fired). And it was 02e1306e58d84811
     // until decision 0079 had the live guns fire after the attack.
-    assert!(baseline.contains("hash 0fa763bf9d9b55d7"));
+    // And it was 0fa763bf9d9b55d7 until decision 0080 had the live patrol
+    // fire at the escorts and the bombers in proportion.
+    assert!(baseline.contains("hash 6de9a643409a90ac"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

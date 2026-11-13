@@ -330,6 +330,47 @@ pub(crate) fn divide_patrol(patrol: u32, raids: &[(u32, AirGroupId)]) -> Vec<u32
     shares
 }
 
+/// How a raid's share of the patrol is split between its escorts and its
+/// bombers (decision 0080). `share` is `patrol_drawn_off_share`, `patrol`
+/// the raid's share of the patrol (P), `escorts` its escorts (E) and
+/// `bombers` its bombers at the start of the step (B, at least 1). Gives
+/// the shots at the escorts, D + X, and at the bombers, R - X, with
+/// D = share times the smaller of P and E, cut to a whole number toward
+/// zero, R = P - D, and X = R (E - D) / (E - D + B) in whole numbers, never
+/// more than E - D. At a share of 1 this is step 1's rule: the smaller of P
+/// and E at the escorts, the rest at the bombers.
+pub(crate) fn patrol_split(share: Fixed, patrol: u32, escorts: u32, bombers: u32) -> PatrolSplit {
+    let drawn_off =
+        u32::try_from((share * Fixed::from_int(i64::from(patrol.min(escorts)))).trunc())
+            .expect("a share from 0 to 1 of the patrol is not negative");
+    let rest = patrol - drawn_off;
+    let escorts_left = escorts - drawn_off;
+    let denominator = u64::from(escorts_left) + u64::from(bombers);
+    assert!(denominator > 0, "a raid has at least one bomber");
+    let rest_at_escorts = u32::try_from(u64::from(rest) * u64::from(escorts_left) / denominator)
+        .expect("the rest's shots at the escorts are no more than the rest")
+        .min(escorts_left);
+    PatrolSplit {
+        drawn_off,
+        rest_at_escorts,
+        at_escorts: drawn_off + rest_at_escorts,
+        at_bombers: rest - rest_at_escorts,
+    }
+}
+
+/// The result of [`patrol_split`].
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct PatrolSplit {
+    /// D: the patrol drawn off by the escorts, one for one.
+    drawn_off: u32,
+    /// X: the rest's shots at the escorts not drawn off.
+    rest_at_escorts: u32,
+    /// D + X.
+    at_escorts: u32,
+    /// R - X.
+    at_bombers: u32,
+}
+
 /// Who fired a roll.
 #[derive(Clone)]
 enum Fire {
@@ -2079,6 +2120,15 @@ impl World {
         // The raid meets its share of the patrol and no more (decision 0033).
         let patrol_count = meets.share;
         let patrol: Vec<(AirGroupId, u32)> = if patrol_count > 0 { patrol } else { Vec::new() };
+        // Decision 0080: whom the share fires at, on the start-of-step counts.
+        let bomber_count: u32 = bombers.iter().map(|(_, aircraft)| aircraft).sum();
+        let patrol_drawn_off_share = air.patrol_drawn_off_share;
+        let split = patrol_split(
+            patrol_drawn_off_share,
+            patrol_count,
+            escort_count,
+            bomber_count,
+        );
 
         let mut rolls = Vec::new();
         let breakdown = |shots: Fixed, chance: ShotChance, expected: Fixed| {
@@ -2134,6 +2184,21 @@ impl World {
                         value: Fixed::from_int(i64::from(meets.share)),
                     },
                 ];
+                // Decision 0080: below a share of 1, the split's own factors.
+                if patrol_drawn_off_share < Fixed::ONE {
+                    factors.push(Factor {
+                        name: "patrol_drawn_off_share",
+                        value: patrol_drawn_off_share,
+                    });
+                    factors.push(Factor {
+                        name: "drawn_off",
+                        value: Fixed::from_int(i64::from(split.drawn_off)),
+                    });
+                    factors.push(Factor {
+                        name: "rest_at_escorts",
+                        value: Fixed::from_int(i64::from(split.rest_at_escorts)),
+                    });
+                }
                 factors.append(&mut breakdown.factors);
                 breakdown.factors = factors;
                 breakdown
@@ -2180,8 +2245,9 @@ impl World {
                 EntityRef::AirGroup(first_patrol),
                 EntityRef::AirGroup(first.air_group),
             );
-            let at_escorts = patrol_count.min(escort_count);
-            if let Some((first_escort, _)) = escorts.first().copied() {
+            let at_escorts = split.at_escorts;
+            // A roll with no shots records nothing (decision 0080).
+            if let Some((first_escort, _)) = escorts.first().copied().filter(|_| at_escorts > 0) {
                 let shot = self.shot_chance(air.fighter_hit_chance, first_escort, air);
                 let (shots, expected, hits) = roll_hits(&mut stream, at_escorts, shot.chance);
                 rolls.push(FireRoll {
@@ -2200,7 +2266,7 @@ impl World {
                     breakdown: patrol_breakdown(breakdown(shots, shot, expected)),
                 });
             }
-            let at_bombers = patrol_count - at_escorts;
+            let at_bombers = split.at_bombers;
             if at_bombers > 0 {
                 let shot = self.shot_chance(air.fighter_hit_chance, first.air_group, air);
                 let (shots, expected, hits) = roll_hits(&mut stream, at_bombers, shot.chance);
@@ -10969,6 +11035,89 @@ mod tests {
             }
             want.push((after, true));
             assert_eq!(parts, want, "share {share}");
+        }
+    }
+
+    // ---- the patrol's split (decision 0080) ----
+    //
+    // The cases of the hand calculation in tests/scenario_19b: shots at the
+    // escorts and at the bombers for P, E and B at a share of 1, 0.5 and 0.
+
+    fn split(share: Fixed, patrol: u32, escorts: u32, bombers: u32) -> (u32, u32) {
+        let split = patrol_split(share, patrol, escorts, bombers);
+        (split.at_escorts, split.at_bombers)
+    }
+
+    #[test]
+    fn the_patrol_split_works_each_case_of_the_hand_calculation() {
+        let one = Fixed::ONE;
+        let half = fixed(1, 2);
+        let zero = Fixed::ZERO;
+        // (a) more escorts than patrol: P 4, E 6, B 10.
+        assert_eq!(split(one, 4, 6, 10), (4, 0));
+        assert_eq!(split(half, 4, 6, 10), (2, 2));
+        assert_eq!(split(zero, 4, 6, 10), (1, 3));
+        // (b) fewer escorts than patrol: P 10, E 4, B 12.
+        assert_eq!(split(one, 10, 4, 12), (4, 6));
+        assert_eq!(split(half, 10, 4, 12), (3, 7));
+        assert_eq!(split(zero, 10, 4, 12), (2, 8));
+        // (c) no escort: P 6, E 0, B 8, at every share.
+        for share in [one, half, zero] {
+            assert_eq!(split(share, 6, 0, 8), (0, 6), "share {share}");
+        }
+        // (d) two raids: P 5 each; E 2, B 8 and E 4, B 6.
+        assert_eq!(split(one, 5, 2, 8), (2, 3));
+        assert_eq!(split(half, 5, 2, 8), (1, 4));
+        assert_eq!(split(zero, 5, 2, 8), (1, 4));
+        assert_eq!(split(one, 5, 4, 6), (4, 1));
+        assert_eq!(split(half, 5, 4, 6), (2, 3));
+        assert_eq!(split(zero, 5, 4, 6), (2, 3));
+        // (e) Henderson Field in small: P 13, E 15, B 6.
+        assert_eq!(split(one, 13, 15, 6), (13, 0));
+        assert_eq!(split(half, 13, 15, 6), (10, 3));
+        assert_eq!(split(zero, 13, 15, 6), (9, 4));
+        // (f) a share larger than the raid: P 20, E 2, B 3; the cap binds.
+        assert_eq!(split(one, 20, 2, 3), (2, 18));
+        assert_eq!(split(zero, 20, 2, 3), (2, 18));
+        // The steps of (e) at 0.5: D 6, R 7, X 4.
+        let detail = patrol_split(half, 13, 15, 6);
+        assert_eq!((detail.drawn_off, detail.rest_at_escorts), (6, 4));
+    }
+
+    #[test]
+    fn a_patrol_split_at_a_share_of_one_is_step_ones_rule() {
+        for patrol in 0..=30u32 {
+            for escorts in 0..=30u32 {
+                for bombers in 1..=30u32 {
+                    let drawn = patrol.min(escorts);
+                    assert_eq!(
+                        split(Fixed::ONE, patrol, escorts, bombers),
+                        (drawn, patrol - drawn),
+                        "P {patrol} E {escorts} B {bombers}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_patrol_split_keeps_every_shot_and_aims_none_at_escorts_that_are_not_there() {
+        for share in [
+            Fixed::ZERO,
+            fixed(1, 4),
+            fixed(1, 2),
+            fixed(3, 4),
+            Fixed::ONE,
+        ] {
+            for patrol in 0..=30u32 {
+                for escorts in 0..=30u32 {
+                    for bombers in 1..=30u32 {
+                        let (at_escorts, at_bombers) = split(share, patrol, escorts, bombers);
+                        assert_eq!(at_escorts + at_bombers, patrol);
+                        assert!(escorts > 0 || at_escorts == 0);
+                    }
+                }
+            }
         }
     }
 }
