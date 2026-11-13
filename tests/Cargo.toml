@@ -166,6 +166,10 @@ name = "scenario_15a_unready_fire"
 path = "scenario_15a_unready_fire.rs"
 
 [[test]]
+name = "scenario_15b_unready_torpedoes"
+path = "scenario_15b_unready_torpedoes.rs"
+
+[[test]]
 name = "scenario_16_all_together"
 path = "scenario_16_all_together.rs"
 

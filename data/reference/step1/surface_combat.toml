@@ -63,6 +63,11 @@ experience_sighting_strength = "0"
 # placeholder figure.
 unready_gun_share = "1"
 
+# The share of its torpedoes a force fires when it was not ready as a fight
+# began (decision 0071). 1 here, as for the guns: step 1 had no such rule and
+# no step 1 result moves. The live file has the placeholder figure.
+unready_torpedo_share = "1"
+
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]
 propulsion = "0.2"

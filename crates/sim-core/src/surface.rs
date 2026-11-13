@@ -65,7 +65,8 @@ struct ForceFight {
     /// Ready for action when the fight began, decided once and kept for the
     /// whole fight (decision 0068, 2): at battle readiness by order, or alert
     /// since before the pulse began. A force that is not ready fires its guns
-    /// at `unready_gun_share`.
+    /// at `unready_gun_share` and its torpedoes at `unready_torpedo_share`
+    /// (decision 0071).
     ready: bool,
     /// Ships of this force that sank in this fight.
     sunk_in_fight: BTreeSet<ShipId>,
@@ -111,6 +112,17 @@ impl Fight {
             Fixed::ONE
         } else {
             self.figures.unready_gun_share
+        }
+    }
+
+    /// What multiplies the torpedo shots of the force at `index`: the figure
+    /// `unready_torpedo_share` if it was not ready when the fight began, else 1
+    /// (decision 0071).
+    fn torpedo_share(&self, index: usize) -> Fixed {
+        if self.forces[index].ready {
+            Fixed::ONE
+        } else {
+            self.figures.unready_torpedo_share
         }
     }
 }
@@ -182,11 +194,14 @@ struct Shot {
     /// The factors behind `shots`: guns or tubes, rate, minutes and the
     /// firer's main battery or torpedo mount factor.
     shot_factors: [Fixed; 4],
-    /// The share of its guns a force not ready fires (decision 0068): `Some`
-    /// only for a gun salvo of a force that was not ready when the fight began,
-    /// with the share below 1. Multiplied into `shots` after the main battery
-    /// factor and before the ammunition cap; named in the breakdown after
-    /// `main_battery_factor`.
+    /// The share of its guns or torpedoes a force not ready fires (decisions
+    /// 0068 and 0071): `Some` only for a salvo of a force that was not ready
+    /// when the fight began, with the share below 1. For a gun salvo it is
+    /// multiplied into `shots` after the main battery factor and before the
+    /// ammunition cap and named in the breakdown (`unready_gun_share`) after
+    /// `main_battery_factor`; for a torpedo salvo it is multiplied in after the
+    /// torpedo mount factor and named `unready_torpedo_share` after
+    /// `torpedo_mount_factor`.
     unready_share: Option<Fixed>,
     /// The firer's fire control factor. One for torpedoes.
     fire_control_factor: Fixed,
@@ -217,13 +232,20 @@ fn gun_shots(
 }
 
 /// The torpedo shots a ship fires in its first firing round: tubes x the
-/// torpedo mount factor. Zero if it has no torpedoes left to fire.
-fn torpedo_shots(ship: &Ship, class: &ShipClass, figures: &SurfaceCombatFigures) -> Fixed {
+/// torpedo mount factor x `share` (the share of its torpedoes a force not
+/// ready fires, 1 for a force that is ready: decision 0071). Zero if it has no
+/// torpedoes left to fire.
+fn torpedo_shots(
+    ship: &Ship,
+    class: &ShipClass,
+    figures: &SurfaceCombatFigures,
+    share: Fixed,
+) -> Fixed {
     if !(ship.torpedoes_ready && class.torpedo_tubes > 0) {
         return Fixed::ZERO;
     }
     let factor = figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts);
-    Fixed::from_int(i64::from(class.torpedo_tubes)) * factor
+    Fixed::from_int(i64::from(class.torpedo_tubes)) * factor * share
 }
 
 impl World {
@@ -906,6 +928,7 @@ impl World {
         let state = &self.truth.ships[&ship];
         let class = self.class_of(ship);
         let share = fight.gun_share(force);
+        let torpedo_share = fight.torpedo_share(force);
         gun_shots(
             state,
             class,
@@ -913,7 +936,7 @@ impl World {
             &fight.figures,
             share,
         ) > Fixed::ZERO
-            || torpedo_shots(state, class, &fight.figures) > Fixed::ZERO
+            || torpedo_shots(state, class, &fight.figures, torpedo_share) > Fixed::ZERO
     }
 
     /// One ship's fire for the round: a gun salvo if it has shots, then a
@@ -935,7 +958,8 @@ impl World {
         let figures = &fight.figures;
         let share = fight.gun_share(force);
         let shots = gun_shots(ship, class, figures.round_minutes, figures, share);
-        let torpedo_shot_count = torpedo_shots(ship, class, figures);
+        let torpedo_share = fight.torpedo_share(force);
+        let torpedo_shot_count = torpedo_shots(ship, class, figures, torpedo_share);
         let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
         let fire_control =
             figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
@@ -988,7 +1012,9 @@ impl World {
                 Fixed::ONE,
                 figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts),
             ],
-            unready_share: None,
+            // As for the guns: named only for a force that is not ready and
+            // only when the share is below 1 (decision 0071).
+            unready_share: (torpedo_share < Fixed::ONE).then_some(torpedo_share),
             fire_control_factor: Fixed::ONE,
             experience_factor: experience_for(figures.experience_torpedo_strength),
             damage_per_hit: per_hit(class.torpedo_damage),
@@ -1103,12 +1129,18 @@ impl World {
                     }
                     factors
                 }
-                Weapon::Torpedo => vec![
-                    factor("tubes", count),
-                    factor("rate", rate),
-                    factor("minutes", minutes),
-                    factor("torpedo_mount_factor", system_factor),
-                ],
+                Weapon::Torpedo => {
+                    let mut factors = vec![
+                        factor("tubes", count),
+                        factor("rate", rate),
+                        factor("minutes", minutes),
+                        factor("torpedo_mount_factor", system_factor),
+                    ];
+                    if let Some(share) = shot.unready_share {
+                        factors.push(factor("unready_torpedo_share", share));
+                    }
+                    factors
+                }
                 Weapon::Bomb => unreachable!("a surface fight fires no bombs"),
             };
             factors.push(factor("base_chance", shot.base_chance));
@@ -5971,6 +6003,146 @@ mod tests {
                 "{kind_of_cause:?}"
             );
         }
+    }
+
+    // ---- a force not ready fires part of its torpedoes (decision 0071) ----
+
+    /// Both forces sight in round 1 for sure, and the torpedo share is 0.5.
+    fn unready_torpedo_duel(world: &mut World) {
+        both_sight(world);
+        figures_mut(world).unready_torpedo_share = fx("0.5");
+    }
+
+    #[test]
+    fn a_force_not_ready_fires_the_share_of_its_tubes_in_its_one_torpedo_round() {
+        // Share 0.5: 8 tubes x 1 x 0.5 = 4 shots, in a salvo that is the
+        // force's only one. Force 1 is ready and fires 8. The guns are
+        // untouched by this share (120 for each force in each round).
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_torpedo_duel(w);
+        });
+        let theirs = torpedo_salvos_of(&world, 2);
+        assert_eq!(theirs.len(), 1);
+        assert_eq!(theirs[0].shots, Fixed::from_int(4));
+        assert_eq!(theirs[0].expected, theirs[0].shots * theirs[0].chance);
+        let ours = torpedo_salvos_of(&world, 1);
+        assert_eq!(ours.len(), 1);
+        assert_eq!(ours[0].shots, Fixed::from_int(8));
+        for ship in [1, 2] {
+            assert!(gun_salvos_of(&world, ship)
+                .iter()
+                .all(|s| s.shots == Fixed::from_int(120)));
+        }
+    }
+
+    #[test]
+    fn the_torpedo_share_multiplies_with_the_mount_factor() {
+        // A degraded mount halves the shots: 8 x 0.5 x 0.5 = 2. With it out
+        // there is no torpedo salvo at all.
+        let shots_with = |state: SystemState| {
+            let world = run(&unready_scene(), |w| {
+                harmless(w);
+                unready_torpedo_duel(w);
+                ship_mut(w, 2).systems.torpedo_mounts = state;
+            });
+            torpedo_salvos_of(&world, 2).first().map(|s| s.shots)
+        };
+        assert_eq!(shots_with(SystemState::Degraded), Some(Fixed::from_int(2)));
+        assert_eq!(shots_with(SystemState::Out), None);
+    }
+
+    #[test]
+    fn the_unready_torpedo_share_is_in_a_not_ready_forces_torpedo_breakdowns_after_the_mount_factor(
+    ) {
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_torpedo_duel(w);
+        });
+        let share_of = |event: &Event| {
+            event
+                .breakdown
+                .as_ref()
+                .expect("a breakdown")
+                .factors
+                .iter()
+                .find(|f| f.name == "unready_torpedo_share")
+                .map(|f| f.value)
+        };
+        for salvo in torpedo_salvos_of(&world, 2) {
+            let event = event_with_id(&world, salvo.id);
+            let names = factor_names(event);
+            assert_eq!(
+                &names[..6],
+                &[
+                    "tubes",
+                    "rate",
+                    "minutes",
+                    "torpedo_mount_factor",
+                    "unready_torpedo_share",
+                    "base_chance"
+                ]
+            );
+            assert_eq!(share_of(event), Some(fx("0.5")));
+        }
+        // None in a ready force's torpedo salvo, and none in a gun salvo.
+        for salvo in torpedo_salvos_of(&world, 1) {
+            assert_eq!(share_of(event_with_id(&world, salvo.id)), None);
+        }
+        for ship in [1, 2] {
+            for salvo in gun_salvos_of(&world, ship) {
+                assert_eq!(share_of(event_with_id(&world, salvo.id)), None);
+            }
+        }
+    }
+
+    #[test]
+    fn at_a_torpedo_share_of_1_nothing_changes_and_no_breakdown_names_the_factor() {
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            both_sight(w);
+            figures_mut(w).unready_gun_share = fx("0.5");
+        });
+        for ship in [1, 2] {
+            let torpedoes = torpedo_salvos_of(&world, ship);
+            assert_eq!(torpedoes.len(), 1);
+            assert_eq!(torpedoes[0].shots, Fixed::from_int(8));
+        }
+        for salvo in salvos(&world) {
+            let event = event_with_id(&world, salvo.id);
+            assert!(!factor_names(event).contains(&"unready_torpedo_share"));
+        }
+    }
+
+    #[test]
+    fn torpedoes_are_spent_after_a_round_fired_at_a_share() {
+        // The four tubes that did not fire are not kept for a later round: the
+        // ship has fired its torpedoes, and fires no further torpedo salvo.
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_torpedo_duel(w);
+        });
+        assert_eq!(torpedo_salvos_of(&world, 2).len(), 1);
+        assert!(
+            gun_salvos_of(&world, 2).len() > 1,
+            "later rounds were fought"
+        );
+        assert!(!ship(&world, 2).torpedoes_ready);
+        assert!(!ship(&world, 1).torpedoes_ready);
+    }
+
+    #[test]
+    fn a_force_with_only_torpedoes_left_still_has_a_salvo_at_a_share() {
+        // `has_any_salvo` reads the share too: with no guns to fire, the
+        // torpedoes at 8 x 0.5 = 4 shots make the salvo.
+        let world = run(&unready_scene(), |w| {
+            harmless(w);
+            unready_torpedo_duel(w);
+            ship_mut(w, 2).gun_rounds = Fixed::ZERO;
+        });
+        let theirs = torpedo_salvos_of(&world, 2);
+        assert_eq!(theirs.len(), 1);
+        assert_eq!(theirs[0].shots, Fixed::from_int(4));
     }
 
     #[test]

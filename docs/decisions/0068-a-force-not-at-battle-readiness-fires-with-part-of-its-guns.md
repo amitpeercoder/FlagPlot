@@ -45,6 +45,8 @@ Experience (decision 0064) does not reach this. It changes how well a ship hits.
 3. **The share does not rise during the fight.** A fight is at most thirty minutes. Astoria's twelve salvos over twenty-four minutes show no rise to full fire, and no row gives a rate at which guns came into action.
 4. **It is the force's condition, not a ship's.** Every ship of the force fires at the share. There is no new state for a ship.
 5. **Guns only.** Torpedoes are fired as now. Bagley, who fired no gun, fired four torpedoes five minutes after she sighted.
+
+   *Nov 13, 2026:* reversed by decision 0071. A force that is not ready now fires its torpedoes at a share of their own, `unready_torpedo_share`. Bagley's four were a quarter of her sixteen tubes, and the Allied torpedoes made most of the Japanese cripples that the record does not have.
 6. **Nothing else changes.** The one round of surprise, the chance to hit and to be hit, sighting, the alarm and breaking off are as they are.
 
 ### The figure

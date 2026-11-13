@@ -208,7 +208,7 @@ A side sees: its own orders. [0047]
 
 A force is alert if it is at battle readiness or if its alerted flag is set. A force at battle readiness is alert whatever its flag says. A force at normal readiness is alert only while the flag is set. [0021]
 
-Alert is not the same as ready. Alert is what a sighting roll reads. Whether a force fires its guns at full rate is decided once, as a fight begins, by whether the force was alert before the present pulse began (chapter 4, Ready, and the share of the guns): a force alerted in this pulse sees at full effect and is not ready. When the flag was set is read from the event named by `alerted_by`; the flag is not stored with a day or a pulse. [0068]
+Alert is not the same as ready. Alert is what a sighting roll reads. Whether a force fires its guns and torpedoes at full rate is decided once, as a fight begins, by whether the force was alert before the present pulse began (chapter 4, Ready, and the shares of the guns and the torpedoes): a force alerted in this pulse sees at full effect and is not ready. When the flag was set is read from the event named by `alerted_by`; the flag is not stored with a day or a pulse. [0068, 0071]
 
 The flag is stored with the event that set it (`alerted_by`). It is set in three places:
 
