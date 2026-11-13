@@ -120,3 +120,6 @@ pilot_experience_note,air_unit,text,,many,What a source says of the experience o
 veteran_share_percent,air_unit,integer,percent,many,Share of the unit's pilots a source counts as veterans at a date; the note shows the numbers
 pilot_flying_hours,air_unit,integer,hours,many,A stated average or typical flying hours figure for the unit's pilots at a date
 losses_before_scenario_note,air_unit,text,,many,"Pilots or aircraft the unit lost in earlier fighting, as a source states"
+torpedo_tubes,ship_class,integer,tubes,one,Torpedo tubes fitted in all; 0 where a source says none were carried or all had been removed
+torpedo_tubes_per_broadside,ship_class,integer,tubes,one,"Torpedo tubes that can fire on one side: all of a centreline mount, and the wing or beam mounts of that side only"
+torpedo_mount_position,ship_class,text,,one,"Where the torpedo mounts stand: centreline, wing (beam mounts firing to their own side), mixed or fixed"
