@@ -253,7 +253,7 @@ pub struct Passage {
     pub to: Resolved,
     /// `accepted`, or `refused` if the engine would refuse the route order.
     pub order: &'static str,
-    /// `no_route`, `already_there` or `no_ship_afloat` when refused.
+    /// `no_route`, `already_there`, `no_ship_afloat` or `out_of_fuel` when refused.
     pub refusal: Option<&'static str>,
     /// The force is between two hex centres.
     pub between_hexes: bool,
@@ -509,6 +509,7 @@ fn passage(ctx: &Ctx<'_>, handle: &str, to: &PlaceArg, speed: Option<SpeedArg>) 
         match reason {
             R::EmptyRoute => "already_there",
             R::NoShipAfloat => "no_ship_afloat",
+            R::OutOfFuel => "out_of_fuel",
             _ => "no_route",
         }
     });

@@ -8,14 +8,14 @@ day   3  hash 9918389dfe0598ab  25 events
 day   4  hash 67e82e7c0f6f6a51  270 events
 day   5  hash 83a5f94fca44ed5d  114 events
 day   6  hash b3761babef4f90f5  88 events
-day   7  hash 4aa98033a9c77730  177 events
-day   8  hash f9c06baac93f2c43  112 events
-day   9  hash 65cda386648995a2  165 events
-day  10  hash fcbf1606e8d9c925  138 events
-day  11  hash 6d2111b0aa934d3b  127 events
-day  12  hash f74023aeb9c66e1d  99 events
-day  13  hash de08cef1f66d10cd  131 events
-day  14  hash acd4e2ddb4735c41  115 events
+day   7  hash 4b8b0ebd3f93108b  175 events
+day   8  hash fafb8631280cc8d4  110 events
+day   9  hash efded6615045f06a  163 events
+day  10  hash c5cf162d90e41c78  136 events
+day  11  hash 2c48403f92dd6639  127 events
+day  12  hash 7402aec43f529201  99 events
+day  13  hash af0aa6c8d924e0b5  131 events
+day  14  hash 93297e641b917e91  115 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
