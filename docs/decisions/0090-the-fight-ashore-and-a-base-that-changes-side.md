@@ -51,6 +51,10 @@ This record adds the posture of a unit, one fight a day in a hex, fatigue for a 
 23. **What needs nothing.** A replacement stream for the beaten side stops (it is the rule already, chapter 5). A standing cargo order of the beaten side works no cargo there, as at any hex with no base of its side. A force of the beaten side away at the yard from that port returns to its hex and finds no base. From the next day the base refuels, repairs and works cargo for its new side, and aircraft of the new side that cannot get home may land there.
 24. **Events of a base are seen by the side that held it when they were recorded.** Today the holder is read from the present state, which would hand a base's whole past to its taker and renumber what both sides had been shown (decision 0086). The holder at the time is worked out from the log.
 
+### Feeding where a side has more than one base
+
+24a. **Men are fed from every base of their side in the hex, in base order.** Each base with stock pays what it can of what is still owed, and the men fed are counted from all that was paid. Stage 1 asked only the lowest-numbered base (decision 0066, 16, and what it left out). With bases changing side that would starve a side that took an empty base with a lower number than its own. A hex with one base of the side is fed as before. *Added by the architect on Nov 14, 2026, when the hand calculation was written.*
+
 ### Objectives
 
 25. **`base_held`:** a named base and its points. A side scores the points if the base is its side's at the end. A side can always see whose a base on its map is, so its progress is known.
@@ -83,7 +87,7 @@ None rests on a source. With them, 1,000 fresh, fed men who attack 1,000 who def
 
 ## The test
 
-Scenario 23, of made-up units and bases marked placeholder, in two parts: an attack that fails against a fed defender and stops by fatigue, and one that takes the base from an unfed defender. The hand calculation gives, for each day, each unit's firing men, shots and chance, the fatigue, and what follows from each count of hits; what the dice give is read from the run and checked against the breakdowns. Beside it, property tests:
+Scenario 23, of made-up units and bases marked placeholder, in two parts: an attack that fails against a fed defender and stops by fatigue, and one that takes the base from an unfed defender. The hand calculation is in `tests/scenario_23_fight_ashore.rs`. It gives, for each day, each unit's firing men, shots and chance, the fatigue, and what follows from each count of hits; what the dice give is read from the run and checked against the breakdowns. Beside it, property tests:
 
 - **A fight never creates men.** After every fight each side has no more men in the hex than before.
 - **More attackers never do worse.** Over a batch, with more attacking men the defender is beaten no later on average.
