@@ -266,7 +266,7 @@ fn read(event: &Event) -> Ditching {
             ready,
             ..
         } => Ditching {
-            id: event.id.raw(),
+            id: event.id.umpire_raw(common::umpire_key()),
             sortie: *sortie,
             distance: distance_nm.trunc(),
             radius: radius_nm.trunc(),
@@ -508,7 +508,10 @@ fn with_every_aircraft_ditched_and_every_crew_lost_the_squadron_and_its_pilots_a
             assert_eq!(lost.len(), 1);
             assert_eq!(
                 lost[0].causes,
-                vec![Cause::Event(sim_core::ids::EventId::new(d.id))]
+                vec![Cause::Event(sim_core::ids::EventId::for_umpire(
+                    d.id,
+                    common::umpire_key()
+                ))]
             );
             assert!(matches!(
                 lost[0].kind,

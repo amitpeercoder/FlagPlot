@@ -148,6 +148,7 @@ fn build(
 ) -> Replay {
     let scenario = &executed.scenario;
     let world = &scenario.world;
+    let key = world.umpire_key();
     Replay {
         format: "flagplot-replay",
         version: 3,
@@ -165,8 +166,15 @@ fn build(
         bases: state::bases(&executed.initial),
         aircraft_types: state::aircraft_types(world.ref_data()),
         initial: state::snapshot(&executed.initial, world.ref_data()),
-        orders: world.orders().map(orders::order).collect(),
-        events: world.events().iter().map(events::event).collect(),
+        orders: world
+            .orders()
+            .map(|order| orders::order(order, &key))
+            .collect(),
+        events: world
+            .events()
+            .iter()
+            .map(|event| events::event(event, &key))
+            .collect(),
         side_views: sides::sides(world),
         days: executed
             .summaries

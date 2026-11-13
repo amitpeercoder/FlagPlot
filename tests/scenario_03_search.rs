@@ -498,7 +498,7 @@ fn summarize(seed: u64, scenario: &Scenario) -> RunSummary {
                 summary.reports.push(ReportRecord {
                     day: event.day,
                     pulse: pulse_of(event),
-                    contact: contact.raw(),
+                    contact: contact.umpire_raw(common::umpire_key()),
                     hex: *hex,
                     count: *ship_count,
                     kind: *kind,
@@ -512,7 +512,7 @@ fn summarize(seed: u64, scenario: &Scenario) -> RunSummary {
         .side_view(Side::Allied)
         .contacts()
         .map(|contact| ContactRecord {
-            id: contact.id.raw(),
+            id: contact.id.umpire_raw(common::umpire_key()),
             hex: contact.estimated_hex,
             count: contact.estimated_ship_count,
             kind: contact.estimated_kind,

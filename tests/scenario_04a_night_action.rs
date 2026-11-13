@@ -480,12 +480,12 @@ fn snapshot(seed: u64, scenario: &Scenario) -> RunData {
             side,
             view.contacts()
                 .map(|contact| ContactEnd {
-                    id: contact.id.raw(),
+                    id: contact.id.umpire_raw(common::umpire_key()),
                     hex: contact.estimated_hex,
                     count: contact.estimated_ship_count,
                     kind: contact.estimated_kind,
                     age: contact.age_pulses,
-                    last_event: contact.last_report_event.raw(),
+                    last_event: contact.last_report_event.umpire_raw(common::umpire_key()),
                 })
                 .collect::<Vec<_>>(),
         );
@@ -498,7 +498,7 @@ fn snapshot(seed: u64, scenario: &Scenario) -> RunData {
                     day: claim.day,
                     pulse: claim.pulse,
                     claimed_sunk: claim.claimed_sunk,
-                    event: claim.received_event.raw(),
+                    event: claim.received_event.umpire_raw(common::umpire_key()),
                 })
                 .collect::<Vec<_>>(),
         );
@@ -765,17 +765,22 @@ fn cause_event(event: &Event) -> u32 {
         .causes
         .iter()
         .filter_map(|cause| match cause {
-            Cause::Event(id) => Some(id.raw()),
+            Cause::Event(id) => Some(id.umpire_raw(common::umpire_key())),
             Cause::Order(_) => None,
         })
         .collect();
-    assert_eq!(ids.len(), 1, "#{} has one event cause", event.id.raw());
+    assert_eq!(
+        ids.len(),
+        1,
+        "#{} has one event cause",
+        event.id.umpire_raw(common::umpire_key())
+    );
     ids[0]
 }
 
 /// The fight in progress, for an event that belongs inside it.
 fn open_fight<'a>(parsed: &'a mut Parsed, open: bool, event: &Event) -> &'a mut FightRec {
-    let (seed, id) = (parsed.seed, event.id.raw());
+    let (seed, id) = (parsed.seed, event.id.umpire_raw(common::umpire_key()));
     assert!(open, "seed {seed}: fight event #{id} outside a fight");
     let fight = parsed.fights.last_mut().expect("a fight is open");
     assert_eq!(
@@ -788,7 +793,7 @@ fn open_fight<'a>(parsed: &'a mut Parsed, open: bool, event: &Event) -> &'a mut 
 
 /// The fight that has just ended, for a report or claim that follows it.
 fn closed_fight<'a>(parsed: &'a mut Parsed, open: bool, event: &Event) -> &'a mut FightRec {
-    let (seed, id) = (parsed.seed, event.id.raw());
+    let (seed, id) = (parsed.seed, event.id.umpire_raw(common::umpire_key()));
     assert!(!open, "seed {seed}: #{id} inside a fight");
     let fight = parsed
         .fights
@@ -816,7 +821,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
     };
     let mut open = false;
     for (index, event) in events.iter().enumerate() {
-        let id = event.id.raw();
+        let id = event.id.umpire_raw(common::umpire_key());
         assert_eq!(usize::try_from(id).expect("small"), index + 1);
         match &event.kind {
             EventKind::EngagementBegun {
@@ -1016,7 +1021,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 fight.reports.push(ReportRec {
                     event: id,
                     side: *side,
-                    contact: contact.raw(),
+                    contact: contact.umpire_raw(common::umpire_key()),
                     hex: *hex,
                     count: *ship_count,
                     kind: *kind,

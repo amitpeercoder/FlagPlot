@@ -544,11 +544,21 @@ fn factor(event: &Event, name: &str) -> Fixed {
     event
         .breakdown
         .as_ref()
-        .unwrap_or_else(|| panic!("event {} has a breakdown", event.id.raw()))
+        .unwrap_or_else(|| {
+            panic!(
+                "event {} has a breakdown",
+                event.id.umpire_raw(common::umpire_key())
+            )
+        })
         .factors
         .iter()
         .find(|f| f.name == name)
-        .unwrap_or_else(|| panic!("event {} names {name}", event.id.raw()))
+        .unwrap_or_else(|| {
+            panic!(
+                "event {} names {name}",
+                event.id.umpire_raw(common::umpire_key())
+            )
+        })
         .value
 }
 
@@ -765,7 +775,7 @@ fn check_night(world: &World, run: &mut Run) {
                     kind,
                     created,
                 } => {
-                    assert_eq!(contact.raw(), 1);
+                    assert_eq!(contact.umpire_raw(common::umpire_key()), 1);
                     assert_eq!(hex, FIGHT);
                     assert!(created);
                     assert_eq!(kind, sim_core::refdata::ShipKind::Cruiser);
@@ -795,7 +805,7 @@ fn check_morning(world: &World, run: &mut Run) {
                     | EventKind::SearchAttempt { .. }
             ),
             "the morning has no strike and no sighting: event {}",
-            event.id.raw()
+            event.id.umpire_raw(common::umpire_key())
         );
         if let EventKind::ReportReceived {
             contact, created, ..
@@ -803,7 +813,7 @@ fn check_morning(world: &World, run: &mut Run) {
         {
             // Only a fight can report in the morning, and it refreshes the
             // night's contact.
-            assert!(!created && contact.raw() == 1);
+            assert!(!created && contact.umpire_raw(common::umpire_key()) == 1);
         }
         if matches!(event.kind, EventKind::EngagementBegun { .. }) {
             run.day_fight = true;
@@ -885,7 +895,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
                 kind,
                 ..
             } => {
-                assert_eq!(contact.raw(), 2);
+                assert_eq!(contact.umpire_raw(common::umpire_key()), 2);
                 assert_eq!(ship_count, 1);
                 assert_eq!(kind, sim_core::refdata::ShipKind::Carrier);
                 assert_eq!(
@@ -918,7 +928,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
             distance_nm,
             ..
         } => {
-            assert_eq!(contact.raw(), 2);
+            assert_eq!(contact.umpire_raw(common::umpire_key()), 2);
             assert_eq!(hex, Hex::new(9, 0));
             assert_eq!(aircraft, 1);
             assert_eq!(distance_nm, n(280));
@@ -934,7 +944,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
             distance_nm,
             ..
         } => {
-            assert_eq!(contact.raw(), 2);
+            assert_eq!(contact.umpire_raw(common::umpire_key()), 2);
             assert_eq!(hex, AT_A);
             assert_eq!(aircraft, 6);
             assert_eq!(distance_nm, n(280));
@@ -1392,7 +1402,10 @@ fn check_afternoon(world: &World, run: &mut Run) {
 
     // The order of the afternoon, by event number.
     let first = |keep: &dyn Fn(&EventKind) -> bool| -> Option<u32> {
-        afternoon.iter().find(|e| keep(&e.kind)).map(|e| e.id.raw())
+        afternoon
+            .iter()
+            .find(|e| keep(&e.kind))
+            .map(|e| e.id.umpire_raw(common::umpire_key()))
     };
     let classes: Vec<(&str, Option<u32>)> = vec![
         (
@@ -1444,7 +1457,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
     for pair in present.windows(2) {
         assert!(pair[0].1 < pair[1].1, "{} before {}", pair[0].0, pair[1].0);
     }
-    assert!(present.last().expect("some").1 < end.id.raw());
+    assert!(present.last().expect("some").1 < end.id.umpire_raw(common::umpire_key()));
     // The deck goes out before the aircraft come home, and the fuel roll
     // takes its aircraft off before the homecoming counts who is left.
     assert!(deck_out.id < landed.id);
@@ -1535,10 +1548,10 @@ fn causes_precede(world: &World) {
         for cause in &event.causes {
             if let Cause::Event(id) = cause {
                 assert!(
-                    id.raw() < event.id.raw(),
+                    id.umpire_raw(common::umpire_key()) < event.id.umpire_raw(common::umpire_key()),
                     "event {} cites a later event {}",
-                    event.id.raw(),
-                    id.raw()
+                    event.id.umpire_raw(common::umpire_key()),
+                    id.umpire_raw(common::umpire_key())
                 );
             }
         }
@@ -1849,7 +1862,14 @@ fn with_the_target_list_taken_out_group_2_launches_at_the_cruisers_in_the_mornin
                 aircraft,
                 distance_nm,
             } => {
-                assert_eq!((air_group.raw(), contact.raw(), hex), (2, 1, FIGHT));
+                assert_eq!(
+                    (
+                        air_group.raw(),
+                        contact.umpire_raw(common::umpire_key()),
+                        hex
+                    ),
+                    (2, 1, FIGHT)
+                );
                 assert_eq!((aircraft, distance_nm), (1, n(160)));
             }
             _ => unreachable!(),
@@ -1876,7 +1896,7 @@ fn on_normal_reach_group_2_never_launches_and_nothing_of_its_rolls() {
             assert!(
                 !of_group(&event.kind, 2) || matches!(event.kind, EventKind::AircraftLost { .. }),
                 "group 2 does nothing on normal reach: event {}",
-                event.id.raw()
+                event.id.umpire_raw(common::umpire_key())
             );
         }
         // Group 5 is unchanged: its strike is launched and rolled.
@@ -2160,7 +2180,7 @@ fn over_two_days_the_raid_on_day_2_falls_on_the_scouts_that_landed() {
                         if air_group.raw() <= 3
                 ),
                 "seed {seed}: event {} flies from carrier A",
-                event.id.raw()
+                event.id.umpire_raw(common::umpire_key())
             );
         }
         // The field's count at the end of day 2 is what the state holds.

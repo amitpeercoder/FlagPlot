@@ -708,8 +708,14 @@ fn work_the_run(run: &Run) -> Worked {
             assert_eq!(
                 flown[0].causes,
                 vec![
-                    Cause::Order(OrderId::new(camp.scout_orders[0])),
-                    Cause::Order(OrderId::new(camp.scout_orders[1]))
+                    Cause::Order(OrderId::for_umpire(
+                        camp.scout_orders[0],
+                        common::umpire_key()
+                    )),
+                    Cause::Order(OrderId::for_umpire(
+                        camp.scout_orders[1],
+                        common::umpire_key()
+                    ))
                 ]
             );
             assert_eq!(attempts.len(), 1, "seed {seed}");
@@ -818,7 +824,7 @@ fn work_the_run(run: &Run) -> Worked {
             assert_eq!(launch.causes.len(), 2, "seed {seed}");
             assert_eq!(
                 launch.causes[0],
-                Cause::Order(OrderId::new(camp.bomber_order))
+                Cause::Order(OrderId::for_umpire(camp.bomber_order, common::umpire_key()))
             );
             let Cause::Event(report_id) = launch.causes[1] else {
                 panic!("seed {seed}: a launch cites a report");
@@ -921,8 +927,14 @@ fn work_the_run(run: &Run) -> Worked {
                 assert_eq!(
                     sent.causes,
                     vec![
-                        Cause::Order(OrderId::new(camp.escort_orders[0])),
-                        Cause::Order(OrderId::new(camp.escort_orders[1])),
+                        Cause::Order(OrderId::for_umpire(
+                            camp.escort_orders[0],
+                            common::umpire_key()
+                        )),
+                        Cause::Order(OrderId::for_umpire(
+                            camp.escort_orders[1],
+                            common::umpire_key()
+                        )),
                         Cause::Event(launch.id)
                     ],
                     "seed {seed}"
@@ -1496,8 +1508,14 @@ fn work_the_run(run: &Run) -> Worked {
                 } else {
                     let mut flew = Vec::new();
                     if split(camp).0 > 0 {
-                        flew.push(Cause::Order(OrderId::new(CAMPS[camp].escort_orders[0])));
-                        flew.push(Cause::Order(OrderId::new(CAMPS[camp].escort_orders[1])));
+                        flew.push(Cause::Order(OrderId::for_umpire(
+                            CAMPS[camp].escort_orders[0],
+                            common::umpire_key(),
+                        )));
+                        flew.push(Cause::Order(OrderId::for_umpire(
+                            CAMPS[camp].escort_orders[1],
+                            common::umpire_key(),
+                        )));
                     }
                     flew.extend(sent_events[camp].map(Cause::Event));
                     flew
