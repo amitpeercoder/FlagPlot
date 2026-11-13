@@ -1,8 +1,8 @@
-# Rabaul round 3: wear
+# Rabaul round 3: wear. Nothing moved
 
 **These figures have no check battle.** They are tuned on Rabaul against Guadalcanal and no other battle can read them: the Eastern Solomons does not load the air upkeep figures. An agreement here is a fit, not a check (`docs/step2-spec.md`, "Tuning": the figures that take weeks to show).
 
-Rabaul against Guadalcanal, Nov 13, 2026. This is the third of the slow figures, in the order of the plan the architect approved. **Written before any run of the round;** the sections from "What was run" on are added after it. The proposed move goes to the coordinating architect with its evidence before it becomes live.
+Rabaul against Guadalcanal, Nov 13, 2026. This is the third of the slow figures, in the order of the plan the architect approved. **Written before any run of the round;** the sections from "What was run" on were added after it. **Ruled by the coordinating architect, Nov 13, 2026: no move.** The proposed move went to the coordinating architect with its evidence before anything became live.
 
 ## The figures
 
@@ -55,7 +55,7 @@ All rows are `data/oob/engagement_outcomes.csv`, the Naval Aviation Combat Stati
 | September, Marine | 4 | 4 | 125 | 1281, 1282 |
 | September, Navy | 0 | 4 | 122 | 1297, 1298 |
 
-For the window that is 1 + 12 × 17/30 = **about 7.8 written off.** The brief listed 1295 for the Navy: that row is 1 lost to anti-aircraft fire, a combat loss, which wear does not carry. The Navy's operational row for September is 1297, 0.
+For the window that is 1 + 12 × 17/30 = **about 7.8 written off.** **A correction to the brief.** The brief gave the Navy's bombers as "1 to guns and 4 on other flights (1295, 1298)". Row 1295 is the loss to guns: 1 to anti-aircraft fire on action sorties, a combat loss that wear does not carry. The Navy's operational row for September is 1297, which is 0. So the Navy's share of the wear rows is 1297 and 1298, 0 and 4.
 
 **Fighters.**
 
@@ -139,7 +139,7 @@ The SBDs ready on day 21 is expected to stay a miss after the round. That is a f
 | Japanese bombers forced down, 5 to 6 (reported) | 10 | 12 | 13 | 14 | 15 | 18 | 20 |
 | Bomber sorties reaching the island, 211 to 213 (reported) | 212 | 205 | 196 | 186 | 177 | 145 | 117 |
 | Destroyed on the ground, 2 to 3 | 2: agrees | 2 | 2 | 2 | 2 | 2 | 2 |
-| Claims per hundred shot down, 250 to 382 | 312: agrees | 317 | 320 | 325 | agrees | agrees | agrees |
+| Claims per hundred shot down, 250 to 382 | 312: agrees | 317 | 320 | 325 | 329 | 348 | 373 |
 | Written off, SBDs (rows about 7.8) | 5.7 | 6.4 | 7.1 | 7.7 | 8.2 | 10.0 | 13.1 |
 | Written off, SBDs by day 21 (groups 11, 12, 14) | 4.3 | 4.8 | 5.3 | 5.7 | 6.1 | 7.5 | 9.8 |
 | Written off, F4Fs (rows about 6.1) | 8.2 | 8.4 | 8.7 | 8.9 | 9.0 | 9.5 | 9.8 |
@@ -152,3 +152,28 @@ The SBDs ready on day 21 is expected to stay a miss after the round. That is a f
 - The SBDs' write-offs reach their rows, about 7.8, at about 0.035. There SBDs ready on day 21 is 29, still a miss. So the rows carry about one aircraft of the eight, as the record expected.
 - Every judged measure that moves for the better does so through the Japanese side: Rabaul's bombers and escorts wear more, fewer reach Henderson Field, and fewer American fighters are shot down. The Japanese bombers' write-offs go from 10 to 14 against their forms' 5 to 6, away from that source, and the bomber sorties reaching the island go from 212 to 186 against the forms' 211 to 213.
 - From 0.04 two judged measures go from agreeing to at the edge, and at 0.06 one is a miss. Only at 0.1 does the SBD count agree, with three other judged measures missing and the SBDs' write-offs at 13, beyond their rows: a stand-in for other causes.
+
+A value with no verdict beside it agrees, as in the first column. Judged measures not in the table agree, in the middle, at every value.
+
+## The ruling
+
+No move. `wear_chance_per_100_nm` stays 0.02, and so do the other wear figures. **0.035 was declined for two reasons:**
+- **It helps the judged measures only by wearing the Japanese raids down,** away from their own forms. The Japanese bombers written off go from 10 to 14 against the forms' 5 to 6, and the bomber sorties reaching the island from 212 to 186 against 211 to 213. The second stop rule of this record, a stand-in for another cause, holds: the cause it stands in for is the raid sizes named in round 2.
+- **The rows pull the one figure opposite ways by side.** The SBDs' rows want about 0.035, and the Japanese forms about 0.007 (a write-off of 5 to 6 in about 212 sorties of 1,112 nm, at a share of 0.2). That is the rule's shape, not its size: a chance that rises in a straight line with distance cannot give both a 400 nm search and a 1,112 nm raid their record. Tuning rule 1 says the same of two battles: the rule is wrong, not the figure.
+
+**Said plainly:** the wear figures are already in the record's size for both American types: the SBDs are at about three quarters of their rows and the F4Fs about a third over. No single wear figure can be moved toward the rows of one type without moving another away from its own.
+
+## Named misses
+
+- **SBDs ready on day 21: 30 against 22,** a named miss. It rests on three causes, none of them a wear figure:
+  1. **Aircraft under repair for days.** On 25 August 5 of 31 were under repair (455); the rules hold about 1.3, because Henderson repairs 3 a night, a placeholder no row sizes, against about 2 worn a day.
+  2. **The SBDs' strikes at ships,** which scenario 6 cannot fly because it holds no ships (decision 0082). The record has dive bombers lost to guns and fighters on them (1274, 1280, 1295) and one on the ground (1330).
+  3. **Losses on other flights that do not go with distance:** take-off, landing and ferrying, 8 of the 12 in September (1282, 1298). The small-airfield rule that decision 0035 left unbuilt would carry them. It goes on the open list for step 3.
+- **The F4Fs' write-offs over their rows,** 8.2 a run against about 6.1, through `wear_base_chance`: looked at and not moved. Lowering it would also lower the wear of every other sortie, and the SBDs are already under their rows.
+- **Japanese bombers forced down, 10 against the forms' 5 to 6** (reported): the rule's shape, as above.
+
+## What is not remade
+
+No figure moved, so no report, run baseline, recorded game or batch file changes. The live report of this battle is still `docs/validation/rabaul-guadalcanal-air-rabaul-r1.md`; the grid's batch at 0.02 reproduces it.
+
+The wear figures (`wear_base_chance`, `wear_chance_per_100_nm`, `write_off_share`) close as placeholders that the rows size only roughly: in the record's size for the American types and not fitted. `carrier_repairs_per_day` closes as a placeholder that no battle of the slice reads. `docs/validation/tuning/air-figures-closed.md` lists them with every other air figure.
