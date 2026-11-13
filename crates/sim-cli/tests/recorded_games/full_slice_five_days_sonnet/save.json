@@ -6,11 +6,11 @@
     },
     {
       "file": "data/scenarios/../reference/ship_classes_eastern_solomons.csv",
-      "hash": "95e5a244ff64eada"
+      "hash": "2716ae28c805274f"
     },
     {
       "file": "data/scenarios/../reference/ship_classes.csv",
-      "hash": "9d8ba7a2e5948b4b"
+      "hash": "366fefba209ee1bc"
     },
     {
       "file": "data/scenarios/../reference/port_sizes.csv",
@@ -53,23 +53,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "9f35b32b22902e29"
+      "hash": "f0b04ce7ed4f3afc"
     },
     {
       "day": 2,
-      "hash": "afef63e38478037c"
+      "hash": "30251fa7b00a157d"
     },
     {
       "day": 3,
-      "hash": "17f9ee0e08b1588c"
+      "hash": "90bf7e3c713c62af"
     },
     {
       "day": 4,
-      "hash": "d2b013b2b7c71232"
+      "hash": "28e4b3d52ad2ed7b"
     },
     {
       "day": 5,
-      "hash": "6ec4f0526a33bca0"
+      "hash": "9a6959e764faac57"
     }
   ],
   "orders": [
