@@ -4,9 +4,7 @@ Nov 13, 2026. Assembled from the records by the architect's team; it adds no fin
 
 ## Where step 2 ends, and the one decision asked of you
 
-Step 2 built the harness, measured the slice's battles against the record, tuned what the sources allowed, and checked the surface figures once on a battle they were not tuned on. No battle passes outright. Across the four battles 62 measures are judged: 43 agree, 8 agree only at the edge, and 11 miss. Every miss and every edge agreement is listed below with its cause and with what in step 3 would answer it. **The one decision asked of you: accept the named misses, or say which one is not acceptable.** With it come three smaller decisions the spec left for the close (below), each with the architect's recommendation.
-
-<!-- GAP: the closing tests (hundred-seed soak, legibility test, rulebook-only test) are not yet run. Their results are filled in when the `closing-tests` pull request lands. -->
+Step 2 built the harness, measured the slice's battles against the record, tuned what the sources allowed, and checked the surface figures once on a battle they were not tuned on. No battle passes outright. Across the four battles 62 measures are judged: 43 agree, 8 agree only at the edge, and 11 miss. Every miss and every edge agreement is listed below with its cause and with what in step 3 would answer it. **The one decision asked of you: accept the named misses, or say which one is not acceptable.** The same goes for the one closing test that did not pass its own rule, the legibility test, which missed by one prediction (below). With it come three smaller decisions the spec left for the close, each with the architect's recommendation.
 
 ## "Done means", line by line
 
@@ -14,10 +12,10 @@ Step 2 built the harness, measured the slice's battles against the record, tuned
 | --- | --- | --- |
 | All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not yet.** No battle passes. Every miss is written down with its cause; your acceptance is the decision asked above. One agreement at the edge, Rabaul's Japanese fighters lost, has no cause named in any record | This page; the four reports in the table below |
 | No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met when pull requests 226 and 227 land.** Each puts a note above every figure in its file, and two summary pages list them. Not covered by the line, and still placeholders without a step 2 note: scenario 6's own figures (listed on the air page), and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
-| The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **In part.** The frozen-figure tests, the invariants (checked at the end of every day of every run) and the determinism scenario (`tests/scenario_07_determinism.rs`) run in `cargo test` on every pull request. The hundred-seed soak is ignored in CI and is run by hand at the close: **result pending** (closing tests) | CI; `tests/scenario_08_soak.rs` |
+| The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **Met.** The frozen-figure tests, the invariants and the determinism scenario run in `cargo test` on every pull request. The hundred-seed soak, which CI does not run, was run by hand on Nov 13, 2026: 100 seeds of 180 days, 1,978,115 events, every check holding; the determinism scenario 9 of 9 and the invariants' tests 24 of 24 beside it | `docs/validation/closing-tests.md`, test 1 |
 | The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/step2-opening-list.md`, "Done" |
-| The legibility test is run again on the tuned Eastern Solomons | **Pending** (closing tests). Run as predict, then run, then explain, as ruled | To be filled |
-| A cheap model given only the rulebook, the glossary, the data files and two scenarios reproduces a set of hand calculations exactly | **Pending** (closing tests). Defined afresh, with its record committed | To be filled |
+| The legibility test is run again on the tuned Eastern Solomons | **Not met by the test's own rule, by one item.** The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again. For you to accept or not (below) | `docs/validation/closing-tests.md`, test 2 |
+| A cheap model given only the rulebook, the glossary, the data files and two scenarios reproduces a set of hand calculations exactly | **Not yet.** First sitting: every number of the step 2 rules exact, but two derived chances cut where the hand calculations round; one number of the step 1 control wrong, on a term the rulebook does not define ("free round"). The term is being defined and that one sitting run again. **The rerun's result: pending, not yet recorded** | `docs/validation/closing-tests.md`, test 3 |
 
 ## The four battles
 
@@ -174,6 +172,20 @@ Fitted, not checked:
 
 The two pages do not use the same words for `air_combat.toml`. See "Where the records disagree" at the end.
 
+## The closing tests
+
+Run on Nov 13, 2026 on `main` after the batch of small fixes (pull request 228). The record, with every prompt and answer word for word, is `docs/validation/closing-tests.md` and its folder `closing-tests/` (pull request 230).
+
+| Test | Result |
+| --- | --- |
+| The hundred-seed soak | **Pass.** 100 seeds of 180 days, 1,978,115 events; the invariants checked at the end of each of the 18,000 days |
+| Legibility, on the tuned Eastern Solomons | **Fails its rule by one item.** A cheap model (Claude Haiku) predicted the day from the opening briefing, the day was run, and a fresh one explained it. The rule asks the explanation, claims and truth-and-belief items to pass and three of four predictions. The three pass, and two predictions. It said the American search would find the Japanese carriers in the morning (it was the afternoon), and would not say whether a Japanese strike would come (one came) |
+| The rulebook-only hand calculations | **First sitting not a pass under its rule.** Every number of a step 2 rule exact, except two derived chances of scenario 19a that differ in the sixth decimal (cut where the hand calculation rounds). In the step 1 control (scenario 04a), one number wrong: "both fire from the start", a term from the test that the rulebook does not define, and two more chances cut. **Rerun of that sitting, with "free round" defined: pending** |
+
+**The legibility test, for you to accept or not.** *The architect's reading:* both misses are about where the enemy would be. The opening briefing holds no contact and no enemy force, only that the enemy is "expected to come down from the north". So the misses are the fog the game is meant to have, not a misreading of a rule. The explanation, the part the spec names in its own words ("explains an outcome"), passed. The test was not run again.
+
+**What follows from the tests.** Twelve findings of the legibility test and eleven of the rulebook test, each with a proposed wording fix, are listed in the record. Wording fixes to the glossary and the rulebook go with pull request 230. Five fixes to the briefing's wording follow in a second pull request. Two findings go to step 3 (listed below): an enemy strike shown with its causes hidden and nothing saying it rested on a contact, and a task force's mission shown in the briefing while no rule reads it.
+
 ## The three decisions the spec left for the close
 
 ### (a) Do agreements at the edge count against a battle?
@@ -252,6 +264,10 @@ Gathered from `docs/step2-opening-list.md` and the round records, with duplicate
 - A search flown in one pulse only.
 - Experience for air groups, waiting on research (decision 0064, stage 2).
 - A friendly field beyond the target; daylight as a limit on a launch.
+
+**What a side is shown (from the legibility test):**
+- An enemy strike's hidden causes: say that an enemy strike always rests on a contact the enemy held.
+- A task force's mission is shown in the briefing and no rule reads it (also `docs/rules/differences.md`, row 12).
 
 **Research asked for:** a B5N2 radius with a bomb load (decision 0081, C5); Rabaul's replacements by date (decision 0082); bounds on Aoba's and Furutaka's hits (decision 0084, 14).
 
