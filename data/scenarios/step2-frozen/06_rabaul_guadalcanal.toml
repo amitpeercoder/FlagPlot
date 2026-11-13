@@ -1,0 +1,411 @@
+# FROZEN COPY. Do not edit. Scenario 6 as it stood on main before decision
+# 0082 set its raid days and the dive bombers' searches from the record.
+# Every test that runs scenario 6 on the frozen figures of step 1 reads it.
+# The paths to the map and the reference files are one folder deeper than
+# in the live file; nothing else differs. See README.md beside it.
+#
+# Scenario 6: Rabaul against Guadalcanal in the air, 21 August to 17
+# September 1942.
+#
+# Stage 6e, which closes scenario 6. The air groups, their aircraft, the
+# days squadrons arrived and the two airfields are historical, settled by
+# the architect from data/oob (docs/decisions/0042-rabaul-against-guadalcanal.md).
+# It is the first scenario in which wear, fatigue, pilots, replacements,
+# arrivals and base supply all run together. The hand calculation is in
+# tests/scenario_06_rabaul_guadalcanal.rs. The test runs this file with
+# seeds 1 to 1000.
+#
+# PLACEHOLDER DATA in part. The combat, wear, fatigue and supply figures are
+# placeholders, as in every scenario. So are each base's supply and repairs
+# a day, and the replacement rates are a reading of weak totals. Each is
+# marked below.
+
+name = "Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942"
+placeholder = true
+seed = 1942
+days = 28
+map = "../../map/south_pacific.csv"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types_rabaul_guadalcanal.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+air_upkeep = "../../reference/air_upkeep.toml"
+fatigue = "../../reference/fatigue.toml"
+air_supply = "../../reference/air_supply.toml"
+
+# Henderson Field, in the hex of Lunga Point. Eight anti-aircraft shots: two
+# batteries of four 90 mm guns of the 3rd Defense Battalion (decision 0042).
+# Supply and repairs a day are placeholders.
+[[base]]
+id = 1
+name = "Henderson Field"
+side = "allied"
+q = 2
+r = -4
+supply_t = 4000
+anti_aircraft = 8
+aircraft_repairs_per_day = 3
+
+# The Rabaul airfields, Lakunai and Vunakanau, in one hex. Nothing attacks
+# them in this scenario, so they are given no guns. Supply and repairs a day
+# are placeholders.
+[[base]]
+id = 2
+name = "Rabaul"
+side = "japanese"
+q = -5
+r = -13
+supply_t = 10000
+aircraft_repairs_per_day = 4
+
+[[air_group]]
+id = 1
+name = "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)"
+side = "japanese"
+base = 2
+aircraft_type = 2103
+ready = 41
+pilots = 41
+
+[[air_group]]
+id = 2
+name = "Tainan Air Group"
+side = "japanese"
+base = 2
+aircraft_type = 2102
+ready = 24
+pilots = 24
+
+[[air_group]]
+id = 3
+name = "6th Air Group"
+side = "japanese"
+base = 2
+aircraft_type = 2102
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 10
+name = "VMF-223"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 19
+pilots = 19
+
+[[air_group]]
+id = 11
+name = "VMSB-232"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 12
+pilots = 12
+
+[[air_group]]
+id = 12
+name = "Flight 300"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 13
+name = "VMF-224"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 14
+name = "VMSB-231"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 15
+name = "VF-5"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 16
+name = "Fighters from Hornet and Wasp"
+side = "allied"
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 17
+name = "VS-3"
+side = "allied"
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+# Squadrons that arrive during the four weeks (decision 0041). Day 1 is 21
+# August. Each arrives with a pilot for each aircraft, which is an
+# assumption: the sources count aircraft.
+# 24 August: eleven dive bombers of Enterprise, Flight 300. This arrival stays
+# scripted here: the scenario has no carriers, so the rule of decision 11 of
+# 0059 cannot deliver them. (The full slice and the soak leave it to the rule.)
+[[arrival]]
+day = 4
+air_group = 12
+aircraft = 11
+pilots = 11
+
+# 30 August: VMF-224.
+[[arrival]]
+day = 10
+air_group = 13
+aircraft = 19
+pilots = 19
+
+# 30 August: VMSB-231.
+[[arrival]]
+day = 10
+air_group = 14
+aircraft = 12
+pilots = 12
+
+# 31 August: the 6th Air Group's Zeros reach Rabaul.
+[[arrival]]
+day = 11
+air_group = 3
+aircraft = 13
+pilots = 13
+
+# 11 September: VF-5, from Saratoga.
+[[arrival]]
+day = 22
+air_group = 15
+aircraft = 24
+pilots = 24
+
+# 13 September: eighteen fighters from Hornet and Wasp.
+[[arrival]]
+day = 24
+air_group = 16
+aircraft = 18
+pilots = 18
+
+# 13 September: VS-3.
+[[arrival]]
+day = 24
+air_group = 17
+aircraft = 12
+pilots = 12
+
+# Replacements at Rabaul: two bombers and two fighters a day, each with a
+# pilot. A reading of weak totals, see decision 0042. The Allies receive
+# nothing but the squadrons above.
+[[replacement]]
+side = "japanese"
+base = 2
+aircraft_type = 2103
+aircraft_per_day = 2
+pilots_per_day = 2
+
+[[replacement]]
+side = "japanese"
+base = 2
+aircraft_type = 2102
+aircraft_per_day = 2
+pilots_per_day = 2
+
+# Rabaul: the bombers raid Henderson Field. Both fighter groups keep nothing
+# over Rabaul and send every fighter that can fly as escort. The staff rests
+# each group above a fatigue of 45.
+[[order]]
+day = 1
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 1
+kind = "set_rest_threshold"
+fatigue = 45
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_rest_threshold"
+fatigue = 45
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_rest_threshold"
+fatigue = 45
+
+# Henderson Field: every fighter group patrols over the field with all it
+# can fly, and the staff rests each above a fatigue of 40. The dive bombers
+# are held for ships, and there are none: they stay on the ground.
+[[order]]
+day = 1
+side = "allied"
+air_group = 10
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 10
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 13
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 13
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 15
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 15
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 16
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 16
+kind = "set_rest_threshold"
+fatigue = 40
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 11
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 12
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 14
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 17
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record in step 2.
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+history = "Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)"
+
+[objectives.allied]
+mission = "Keep Henderson Field flying and wear down the air groups at Rabaul."
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 1
+points = 10
+
+[objectives.japanese]
+mission = "Put Henderson Field out of use and destroy its aircraft."
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.japanese.objective]]
+kind = "base_open"
+base = 1
+closed = true
+points = 10

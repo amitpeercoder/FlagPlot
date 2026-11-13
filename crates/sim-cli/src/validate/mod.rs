@@ -142,19 +142,19 @@ pub fn command(
     let batch_hash = crate::save::hash_hex(&batch_bytes);
     let header: BatchHeader = serde_json::from_slice(&batch_bytes)
         .map_err(|e| format!("{batch_path}: not a batch file (decision 0062): {e}"))?;
-    if header.format != "flag-plot-batch" || header.version != 4 {
-        let made_again = if header.version < 4 {
-            "; make it again with the engine's `batch` (version 4 adds who sighted first in each fight)"
+    if header.format != "flag-plot-batch" || header.version != 5 {
+        let made_again = if header.version < 5 {
+            "; make it again with the engine's `batch` (version 5 adds the strike launches of each run)"
         } else {
             ""
         };
         return Err(format!(
-            "{batch_path}: the batch is {} version {}; validate reads flag-plot-batch version 4 only{made_again}",
+            "{batch_path}: the batch is {} version {}; validate reads flag-plot-batch version 5 only{made_again}",
             header.format, header.version
         ));
     }
     let batch: Batch = serde_json::from_slice(&batch_bytes)
-        .map_err(|e| format!("{batch_path}: not a batch file of version 4 (decision 0062): {e}"))?;
+        .map_err(|e| format!("{batch_path}: not a batch file of version 5 (decision 0062): {e}"))?;
     // 2. The label is the tuning round.
     let label = match batch.label.as_deref() {
         None => {

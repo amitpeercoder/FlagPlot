@@ -229,7 +229,7 @@ fn empty_run(seed: u64) -> Value {
         "claims": {
             "japanese": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0},
             "allied": {"sunk": 0, "hits": 0, "shot_down": 0, "on_ground": 0}},
-        "attacks": [], "escorts": [], "broke_off": [], "fights": [],
+        "attacks": [], "escorts": [], "launches": [], "broke_off": [], "fights": [],
         "supply": [], "formed_groups": [], "shots_by": []
     })
 }
@@ -1006,7 +1006,7 @@ fn what_validate_refuses() {
         .as_object_mut()
         .expect("run")
         .remove("fights");
-    refuse("old-shape", &b, MEASURES, "not a batch file of version 4");
+    refuse("old-shape", &b, MEASURES, "not a batch file of version 5");
     // `ships` and `side` together are an error, and so is neither.
     refuse(
         "ships-and-side",
@@ -1264,4 +1264,170 @@ fn the_kinds_shots_and_ships_sunk_or_system_out_are_the_hand_calculated_ones() {
         let result = validate(&s, "r.md");
         assert!(!result.status.success(), "{name} should be refused");
     }
+}
+
+/// `aircraft_taking_part` (batch version 5, decision 0081).
+///
+/// # The architect's hand calculation
+///
+/// A batch of 3 runs, seeds 1 to 3, made by hand on the header of scenario
+/// 4a (so its inputs match the disk). Air groups 11, 12, 14 and 15 are
+/// Japanese; task forces 1, 2, 3 and 4. A measure that names task forces 1
+/// and 2 counts the aircraft launched, as `launches` records them, in ship
+/// strikes that did not find nothing and whose raid met task force 1 or 2,
+/// and with `escorts = true` adds the aircraft of each `escorts` entry of the
+/// same day and pulse whose `with_air_group` is the first strike group of a
+/// counted launch, each entry once. All launches are in day 1, afternoon.
+///
+/// - Run 1: group 12 launches 18, met task force 1; group 15 launches 9, met
+///   task force 1 (two raids, from different ships). Escorts: group 11 sent 4
+///   with group 12 and group 14 sent 6 with group 15. A base strike by group
+///   12 of 7 aircraft is not counted (it is not a ship strike). With escorts
+///   18 + 9 + 4 + 6 = 37; without 18 + 9 = 27.
+/// - Run 2: group 12 launches 18 and finds nothing (not counted); group 15
+///   launches 9, met task force 2. Escorts: group 11 sent 4 with group 12
+///   (not counted: its raid found nothing), group 14 sent 6 with group 15.
+///   With escorts 9 + 6 = 15; without 9.
+/// - Run 3: group 12 launches 18, met task force 3, which is not in the list:
+///   not counted. Escorts: group 11 sent 4 with group 12, not counted. 0 and
+///   0.
+///
+/// Measure X (judged, side japanese, task forces [1, 2], escorts true,
+/// record 37): values 37, 15, 0. With 3 runs the ranks are 5th: ceil(0.15) =
+/// 1, 25th: ceil(0.75) = 1, median: ceil(1.5) = 2, 75th: ceil(2.25) = 3, 95th:
+/// ceil(2.85) = 3. Sorted 0, 15, 37: 5th 0, median 15, 95th 37; 25th 0, 75th
+/// 37. Record 37 is inside 0 to 37 and inside 0 to 37; held by 1 of 3, and 1
+/// x 20 = 20 >= 3. Plain AGREES.
+///
+/// Measure Y (judged, the same without escorts, record 27): values 27, 9, 0.
+/// Sorted 0, 9, 27: band 0 to 27, median 9, 25th 0, 75th 27. Record 27 is
+/// held by 1 of 3. Plain AGREES.
+///
+/// Measure Z (judged, air_groups [15], task forces [1, 2], escorts true,
+/// record 15): run 1: 9 + 6 = 15; run 2: 9 + 6 = 15; run 3: 0. Sorted 0, 15,
+/// 15: band 0 to 15, median 15, 25th 0, 75th 15. Record 15 held by 2 of 3.
+/// Plain AGREES.
+///
+/// The head reads: 3 agree, 0 at the edge, 0 miss, of 3 judged.
+#[test]
+fn aircraft_taking_part_counts_the_wave_that_met_the_named_forces() {
+    let launch = |group: u32, aircraft: u32, nothing: bool, force: Option<u32>| {
+        json!({"day": 1, "pulse": "afternoon", "air_group": group, "aircraft": aircraft,
+            "hex": [5, 5], "target_kind": "ship", "found_nothing": nothing,
+            "task_force": force, "base": null})
+    };
+    let escort = |group: u32, aircraft: u32, with: u32| {
+        json!({"day": 1, "pulse": "afternoon", "air_group": group,
+            "with_air_group": with, "aircraft": aircraft})
+    };
+    let mut batch = real_header(&dir("part-h"));
+    batch["scenario"]["days"] = json!(2);
+    batch["label"] = json!("hand");
+    batch["runs"] = json!(3);
+    batch["first_seed"] = json!(1);
+    batch["ships"] = json!([]);
+    batch["task_forces"] = json!([{"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]);
+    batch["air_groups"] = json!([
+        {"id": 11, "side": "japanese"}, {"id": 12, "side": "japanese"},
+        {"id": 14, "side": "japanese"}, {"id": 15, "side": "japanese"}]);
+    batch["bases"] = json!([{"id": 1}]);
+    let mut runs = vec![empty_run(1), empty_run(2), empty_run(3)];
+    runs[0]["launches"] = json!([
+        launch(12, 18, false, Some(1)),
+        launch(15, 9, false, Some(1)),
+        {"day": 1, "pulse": "afternoon", "air_group": 12, "aircraft": 7, "hex": [8, 2],
+            "target_kind": "base", "found_nothing": false, "task_force": null, "base": 1}]);
+    runs[0]["escorts"] = json!([escort(11, 4, 12), escort(14, 6, 15)]);
+    runs[1]["launches"] = json!([launch(12, 18, true, None), launch(15, 9, false, Some(2))]);
+    runs[1]["escorts"] = json!([escort(11, 4, 12), escort(14, 6, 15)]);
+    runs[2]["launches"] = json!([launch(12, 18, false, Some(3))]);
+    runs[2]["escorts"] = json!([escort(11, 4, 12)]);
+    batch["per_run"] = json!(runs);
+    batch["results"] = Value::Null;
+
+    let head = "battle = \"hand-made\"\nscenario = \"data/scenarios/04a_night_action.toml\"\nfacts = \"x\"\n";
+    let measure = |id: &str, who: &str, escorts: bool, record: u32| {
+        format!(
+            "\n[[measure]]\nid = \"{id}\"\ncounts = \"{id}\"\nrecord_low = {record}\nrecord_high = {record}\n\
+             judged = true\ntake = \"aircraft_taking_part\"\n{who}\ntarget_task_forces = [1, 2]\n\
+             escorts = {escorts}\nrows = [1]\nreason = \"r\"\n"
+        )
+    };
+    let measures = format!(
+        "{head}{}{}{}",
+        measure("x", "side = \"japanese\"", true, 37),
+        measure("y", "side = \"japanese\"", false, 27),
+        measure("z", "air_groups = [15]", true, 15)
+    );
+    let s = setup("part", &batch, &measures);
+    let result = validate(&s, "report.md");
+    assert!(result.status.success(), "{}", stderr(&result));
+    let report = fs::read_to_string(s.dir.join("report.md")).expect("report");
+    expect(&report, "x", "0 to 37", "15", "1 of 3", "0", "agrees");
+    expect(&report, "y", "0 to 27", "9", "1 of 3", "0", "agrees");
+    expect(&report, "z", "0 to 15", "15", "2 of 3", "0", "agrees");
+    assert!(report.contains("Judged measures: 3 agree, 0 agree at the edge, 0 miss, of 3."));
+
+    // The keys it takes: a target base, no side or groups, both, an unknown
+    // task force and a missing escorts are refused.
+    let refused = |name: &str, body: &str, want: &str| {
+        let s = setup(&format!("part-{name}"), &batch, &format!("{head}{}", body));
+        let result = validate(&s, "r.md");
+        assert!(!result.status.success(), "{name} should be refused");
+        assert!(
+            stderr(&result).contains(want),
+            "{name}: {}",
+            stderr(&result)
+        );
+    };
+    let good = measure("x", "side = \"japanese\"", true, 37);
+    refused(
+        "base",
+        &good.replace("target_task_forces = [1, 2]", "target_base = 1"),
+        "does not take the key target_base",
+    );
+    refused(
+        "both",
+        &good.replace(
+            "side = \"japanese\"",
+            "side = \"japanese\"\nair_groups = [15]",
+        ),
+        "side or air_groups, not both",
+    );
+    refused(
+        "neither",
+        &good.replace("side = \"japanese\"\n", ""),
+        "side or air_groups",
+    );
+    refused(
+        "force-9",
+        &good.replace("[1, 2]", "[1, 9]"),
+        "task force 9, which the batch does not have",
+    );
+    refused(
+        "group-9",
+        &good.replace("side = \"japanese\"", "air_groups = [9]"),
+        "air group 9",
+    );
+    refused(
+        "no-escorts",
+        &good.replace("escorts = true\n", ""),
+        "needs the key escorts",
+    );
+}
+
+#[test]
+fn a_version_4_batch_is_refused_and_told_to_be_made_again() {
+    let mut b = fixture(&dir("v4-h"), 20);
+    b["version"] = json!(4);
+    for run in b["per_run"].as_array_mut().expect("runs") {
+        run.as_object_mut().expect("run").remove("launches");
+    }
+    let s = setup("v4", &b, MEASURES);
+    let result = validate(&s, "r.md");
+    assert!(!result.status.success());
+    let err = stderr(&result);
+    assert!(err.contains("version 4; validate reads"), "{err}");
+    assert!(err.contains("make it again"), "{err}");
+    assert!(!s.dir.join("r.md").exists());
 }

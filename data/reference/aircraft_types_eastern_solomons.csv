@@ -13,7 +13,7 @@
 #   sbd-3 combat_radius_nm: aircraft_type_facts.csv row 280 (preferred); reason: 200 miles, the distance of the morning search and about that of Saratoga's strike. The afternoon search went to 250 with a lighter bomb.; agreed 2026-11-11
 #   tbf-1 combat_radius_nm: aircraft_type_facts.csv row 310 (unconfirmed); reason: 190 miles, flown with a torpedo by Saratoga's strike. No official radius was found.; agreed 2026-11-11
 #   d3a1-11 range_normal_nm: aircraft_type_facts.csv row 98 (unconfirmed); reason: Chosen on the Eastern Solomons sheet: 759 miles, the middle of three weak sources. A third of it is 252; the first wave flew about 200.; agreed 2026-11-11
-#   b5n2 range_normal_nm: aircraft_type_facts.csv row 79 (unconfirmed); reason: Chosen on the Eastern Solomons sheet: 528 miles with a torpedo, two weak sources that agree.; agreed 2026-11-11
+#   b5n2 range_normal_nm: aircraft_type_facts.csv row 79 (unconfirmed); reason: Chosen on the Eastern Solomons sheet: 528 miles, the normal range, with no load stated; two weak sources that agree (rows 79 and 412).; agreed 2026-11-11
 #   sbd-3 pilot_armour: aircraft_type_facts.csv row 443 (preferred); reason: Dated from 1942: the other two rows say the same without a date.; agreed 2026-11-11
 #   sbd-3 self_sealing_tanks: aircraft_type_facts.csv row 446 (preferred); reason: Dated from 1942: the other two rows say the same without a date.; agreed 2026-11-11
 #   tbf-1 pilot_armour: aircraft_type_facts.csv row 449 (unconfirmed); reason: Yes: one source, by inference. Nothing read says otherwise.; agreed 2026-11-11

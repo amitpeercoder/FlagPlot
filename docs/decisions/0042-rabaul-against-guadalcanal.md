@@ -2,6 +2,8 @@
 
 Status: confirmed by the architect. The designer approved the plan for scenario 6 on Nov 11, 2026 and left data and rule details to the architect. Every figure here is either derived from `data/oob`, settled by the architect with its reason, or marked a placeholder.
 
+Note of Nov 13, 2026: items 16 and 17 no longer hold for the live scenario. Decision 0082 sets the raid days from the units' forms by dated orders, removes the Japanese rest thresholds, and has the dive bombers search. Fatigue no longer stands in for weather in choosing the days. The standing patrol, the Allied threshold of 40 and the replacements of item 13 stay, marked invented. The scenario as this record built it is kept as `data/scenarios/step2-frozen/06_rabaul_guadalcanal.toml` for the hand calculation. The text below is as it was.
+
 ## What the scenario is
 
 Twenty-eight days of raids on Henderson Field from Rabaul, 21 August to 17 September 1942. It closes scenario 6. It is the first scenario in which wear, repair, fatigue, rest, pilots, replacements, arrivals and base supply run together, over the real map and with real air groups.

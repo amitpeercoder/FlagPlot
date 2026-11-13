@@ -17,7 +17,9 @@
 # figure is a range whose high end is a ceiling.
 #
 # The ranges were settled by the architect of the spec session on
-# 2026-11-12. No row's standing was changed.
+# 2026-11-12. No row's standing was changed. On 2026-11-13 the architect,
+# who now owns these files, changed reasons only (decision 0082): no record,
+# no range and no judged flag moved.
 
 battle = "rabaul-guadalcanal-air"
 scenario = "data/scenarios/06_rabaul_guadalcanal.toml"
@@ -73,7 +75,7 @@ take = "air_losses"
 air_groups = [10, 13, 15, 16]
 causes = ["shot_down"]
 rows = [1263, 1269, 1285]
-reason = "The Navy's statistics by month: Marine fighters 7 in August (1263) and 12 in September (1269), Navy fighters ashore 4 in September (1285). Low end is August alone; high end counts all of September, which runs thirteen days past the scenario. The high end is a ceiling."
+reason = "The Navy's statistics by month: Marine fighters 7 in August (1263) and 12 in September (1269), Navy fighters ashore 4 in September (1285). Low end is August alone; high end counts all of September, which runs thirteen days past the scenario. The high end is a ceiling. The record counts fighters lost to enemy aircraft, the bombers' gunners among them; the rules have no return fire from bombers (decision 0027), so every F4F shot down in a run is shot down by an escort, and a figure tuned on this measure would carry the gunners' share too (decision 0082, M7)."
 
 [[measure]]
 id = "us_aircraft_destroyed_on_the_ground"
@@ -99,7 +101,7 @@ take = "attack_days"
 air_groups = [1]
 target_base = 1
 rows = [954, 1108, 1037]
-reason = "Ten to 12 September: 14 missions launched and 4 aborted (954). The forms add the raid of 13 September (1108, 1037) and show the bombers of the 16th turning back. Not judged: weather turned back about half the bomber sorties of the period and the rules have no weather. The scenario flies about as many raids today, for another reason: fatigue."
+reason = "Ten to 12 September: 14 missions launched and 4 aborted (954). The forms add the raid of 13 September (1108, 1037) and show the bombers of the 16th turning back. Not judged. Since decision 0082 the scenario orders the bombers to raid on exactly these eleven days, from the forms, so the measure no longer tests the choice of days: it tests whether a raid that is ordered still reaches the field, which only fatigue, wear, repair and replacements decide (a group cut to no aircraft launches nothing). The raids that weather turned back are not flown at all, since the rules have no weather. Before decision 0082 the days came from fatigue thresholds no row sets."
 
 [[measure]]
 id = "bomber_sorties_that_reach_guadalcanal"
@@ -112,7 +114,7 @@ air_groups = [1]
 target_base = 1
 escorts = false
 rows = [1115, 1044, 982, 1047, 987, 1059, 1005, 1118, 1065, 1008, 1075, 1011, 1080, 1015, 1085, 1019, 1089, 1023, 1094, 1028, 1100, 1033, 1108, 1037]
-reason = "By day, from the forms: 23 on 25 August (1115, 1044, 982), 16 on the 26th (1047, 987), 18 on the 29th (1059, 1005), 18 or 20 on the 30th (1065, 1008; 1118 is two more of the 4th Air Group, which the research note does not count in the raid), 18 on 2 September (1075, 1011), 18 on the 5th (1080, 1015), 18 on the 9th (1085, 1019), 22 on the 10th (1089, 1023), 24 on the 11th (1094, 1028), 20 on the 12th (1100, 1033) and 16 on the 13th (1108, 1037). Not judged, for the reason raid days are not."
+reason = "By day, from the forms: 23 on 25 August (1115, 1044, 982), 16 on the 26th (1047, 987), 18 on the 29th (1059, 1005), 18 or 20 on the 30th (1065, 1008; 1118 is two more of the 4th Air Group, which the research note does not count in the raid), 18 on 2 September (1075, 1011), 18 on the 5th (1080, 1015), 18 on the 9th (1085, 1019), 22 on the 10th (1089, 1023), 24 on the 11th (1094, 1028), 20 on the 12th (1100, 1033) and 16 on the 13th (1108, 1037). Not judged. Since decision 0082 the raid days are the record's, so the measure tests the size of each raid, which the rules decide from what the group has ready and its fatigue: it is the check of the slow figures (fatigue, wear, repair, replacements) on the bombers, and decision 0082 gives it day by day beside the forms."
 
 # --------------------------------------------------------------- claims
 #
@@ -170,7 +172,7 @@ take = "ready"
 air_groups = [10]
 day = 5
 rows = [455]
-reason = "The commanding general's count on 25 August: of the 19 fighters that came on the 20th, one had crashed on the field, 4 were lost in action and 3 were under repair (455). That leaves 11."
+reason = "The commanding general's count on 25 August: of the 19 fighters that came on the 20th, one had crashed on the field, 4 were lost in action and 3 were under repair (455). That leaves 11. On day 5 VMF-223 is the only F4F group at Henderson Field with aircraft (VMF-224 and the Navy squadrons arrive from day 10), so this is all the F4Fs ready and the bookkeeping rule that takes losses off the lowest group first (decision 0027) does not enter it (decision 0082, M3)."
 
 [[measure]]
 id = "vmsb_232_ready_on_day_5"
@@ -182,7 +184,7 @@ take = "ready"
 air_groups = [11]
 day = 5
 rows = [455]
-reason = "The same count: of the 12 dive bombers, one had crashed and 2 were under repair (455). That leaves 9. The two figures add to the 20 of 31 the source gives as serviceable."
+reason = "The same count: of the 12 dive bombers, one had crashed and 2 were under repair (455). That leaves 9. The two figures add to the 20 of 31 the source gives as serviceable. Before decision 0082 the dive bombers never flew in the scenario (they were held for ships it does not hold), so the measure was held near the record only by bombs on the ground. Since decision 0082 they search, and the measure rests on the search distance, 200 miles, which is a reading, not a row (the distance the type's rows record as flown elsewhere); at 150 miles the median moves by less than one aircraft (decision 0082)."
 
 [[measure]]
 id = "vmf_223_ready_on_day_10"
@@ -194,7 +196,7 @@ take = "ready"
 air_groups = [10]
 day = 10
 rows = [893, 569, 568]
-reason = "On 30 August, when the second echelon flew in, four fighters of the first were operable by the Marine monograph (893, 569); five that evening by a later Marine history (568)."
+reason = "On 30 August, when the second echelon flew in, four fighters of the first were operable by the Marine monograph (893, 569); five that evening by a later Marine history (568). It reads the bookkeeping rule of decision 0027: VMF-224 arrives on day 10, and every loss of the day falls on group 10 first, so the measure tests which squadron loses, not only how many F4Fs are lost. No row gives all the F4Fs ready on 30 August: 893 and 568 count the first echelon, a low row gives eight Grummans in commission before VMF-224 landed (556), and 895 is strength at the end of the month, not aircraft ready (decision 0082, M3)."
 
 [[measure]]
 id = "f4fs_ready_on_day_21"
@@ -218,7 +220,7 @@ take = "ready"
 air_groups = [11, 12, 14]
 day = 21
 rows = [1343]
-reason = "Twenty-two SBDs flyable on 10 September by the same dispatch (1343)."
+reason = "Twenty-two SBDs flyable on 10 September by the same dispatch (1343). Before decision 0082 the dive bombers never flew in the scenario, so the measure tested only bombs on the ground and arrivals. Since decision 0082 they search, and the measure rests on the search distance, 200 miles, which is a reading, not a row (the distance the type's rows record as flown elsewhere); at 150 miles the median is one aircraft higher (decision 0082)."
 
 # ---------------------------------------------------------------- pilots
 
