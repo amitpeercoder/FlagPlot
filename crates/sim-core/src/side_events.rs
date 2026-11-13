@@ -2792,4 +2792,94 @@ mod tests {
         assert!(project(Side::Allied, &events, &owners).is_empty());
         assert!(project(Side::Japanese, &events, &owners).is_empty());
     }
+
+    // ---- findings of the outside review of Nov 13, 2026 (prompt 11) ----
+    //
+    // Each is kept switched off: it records a leak the review found and the
+    // architect has not yet ruled on. Run with `--ignored` to see it.
+
+    #[test]
+    #[ignore = "outside review finding 5: a fight's ending says force_sunk to the side whose force survived, so it knows the enemy force is gone"]
+    fn a_side_whose_force_survived_is_not_told_the_enemy_force_was_sunk() {
+        // Allied force 1 sights and fires in round 1 and sinks the one ship
+        // of Japanese force 2; its own ship is never hit. The Allied side
+        // knows of the fight from round 1.
+        //  1 begun   2 R1 A sights   3 R1 A fires   4 R1 J ship sunk   5 ended
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            salvo(1, 1, 2),
+            EventKind::ShipSunk {
+                round: 1,
+                ship: ship(2),
+                task_force: force(2),
+            },
+            ended(1, EngagementEndReason::ForceSunk),
+        ]);
+        let allied = project(Side::Allied, &events, &owners(false));
+        // The side does not see the sinking (event 4): its claim is what it
+        // learns of it. The ending must not say it either.
+        assert!(!ids(&allied).contains(&4));
+        let ending = allied
+            .iter()
+            .find_map(|e| match e.kind {
+                SideEventKind::EngagementEnded { reason, .. } => Some(reason),
+                _ => None,
+            })
+            .expect("the side knows the fight ended");
+        assert_ne!(
+            ending,
+            EngagementEndReason::ForceSunk,
+            "the Allied side, its own ship afloat, is told a force was sunk: the enemy's"
+        );
+    }
+
+    #[test]
+    #[ignore = "outside review finding 6: a side that first knows of a fight in round 3 is given the fight's beginning, with the hour the forces met"]
+    fn a_side_that_learns_of_a_fight_late_is_not_given_the_hour_it_began() {
+        // The log of the test above: the Japanese side first knows of the
+        // fight in round 3, by its own sighting. Decision 0047, 5: before
+        // that it does not know there is a fight.
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            roll(1, 2, false),
+            roll(2, 2, false),
+            roll(3, 2, true),
+            salvo(3, 2, 1),
+            damaged(3, 1),
+            ended(3, EngagementEndReason::MaxRounds),
+        ]);
+        let japanese = project(Side::Japanese, &events, &owners(false));
+        let met_at = japanese.iter().find_map(|e| match e.kind {
+            SideEventKind::EngagementBegun { elapsed_hours, .. } => Some(elapsed_hours),
+            _ => None,
+        });
+        assert_ne!(
+            met_at,
+            Some(fx(1)),
+            "the Japanese side is given the hour the forces met, two rounds before it knew of them"
+        );
+    }
+
+    #[test]
+    #[ignore = "outside review finding 7: hidden_causes is set by an enemy order that changed nothing, so it says the enemy gave one"]
+    fn the_flag_of_hidden_causes_does_not_say_whether_the_enemy_gave_an_order() {
+        // The fight begins in both logs; in the second the Japanese order 2
+        // (its rules of engagement, restated) is among the beginning's
+        // causes, as `surface.rs` records it. Nothing else differs.
+        let plain = log(vec![
+            begun(),
+            roll(1, 1, true),
+            ended(1, EngagementEndReason::MaxRounds),
+        ]);
+        let ordered = caused(plain.clone(), 0, vec![Cause::Order(order(2))]);
+        let owners = owners(false);
+        let one = project(Side::Allied, &plain, &owners);
+        let two = project(Side::Allied, &ordered, &owners);
+        assert_eq!(
+            one, two,
+            "the Allied side's events differ only by an order of the enemy's it may not see"
+        );
+    }
 }

@@ -171,6 +171,21 @@ Remade after decision 0081 set the scenario's remaining orders from the rows: ea
 - **Too many bombers reach the island** (252 to 272 against 211 to 213, reported and not judged): the model has no weather and no raid that turns back.
 - **The result is the same in every run:** a major Allied victory, margin 10 to 11.9. The points do not yet tell one run of this scenario from another.
 
+### The Rabaul report as remade with the orders from the record, Nov 13, 2026
+
+Decision 0082 changed the scenario's orders before any air figure is tuned on Rabaul or checked there:
+- the bombers raid on the eleven days of the units' forms, and the Japanese rest thresholds are gone;
+- Henderson's dive bombers search 300 to 030 to 200 miles, a reading.
+
+The report, `rabaul-guadalcanal-air-baseline.md`, is remade from that scenario: judged 10, 3 agree, 4 at the edge, 3 miss (before: 3, 1, 6).
+
+- **American fighters lost now agree** (16 to 29, median 23, against 7 to 23). Japanese fighters lost still miss (16 to 30 against 6 to 10), at a little over half what they were.
+- **F4Fs on day 21 and SBDs on day 21 agree, at the edge.** The SBDs now wear on their searches; until this decision they never flew. Their measures rest on the 200-mile reading; at 150 miles the medians move by one aircraft or none.
+- **Japanese bombers lost go from agreeing to agreeing at the edge** (median 16 against 12). The patrol now meets raids it outnumbers (days 10 and 22 to 24) and reaches the bombers with 87 shots a run, against 25.
+- **Aircraft destroyed on the ground still miss** (7 to 19 against 2 to 3). The dive bombers lose half as many on the ground as before.
+- **The fatigue figures cannot fly the record's five raid days running** (days 20 to 24). The bombers launch 28, 18, 10, 2 and 1 in the median run, against the forms' 18, 22, 24, 20 and 16. So 8 or 9 of the 11 ordered raids reach the field. The early raids are too big: 41 on the first against 23 sent. Bomber sorties that reach the field total 212 against 211 to 213, right by a wrong path. Decision 0082 tables the bombers by raid day beside the forms; the fatigue round will be judged on that table.
+- **Claims** are unchanged in kind (about 1.4 for each shot down).
+
 ## What this says about the order of work
 
 1. The surface gap at Savo Island is one-sided and large. It waits for the experience rule.
