@@ -37,7 +37,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Tuning round 0, finding and surprise: nothing moved (`docs/validation/tuning/r0-finding-and-surprise.md`).
 - Tuning round 1: `experience_gun_strength` from 0.25 to 0.5, kept (`docs/validation/tuning/r1-experience-gun-strength.md`).
 - `export` takes a saved game as well as a scenario (`docs/commands.md`).
-- Tuning round 2: `surprised_target_factor` from 1.5 to 2; the chance to hit is closed (`docs/validation/tuning/r2-surprised-target-factor.md`, report `docs/validation/savo-island-r2.md`).
+- Tuning round 2: `surprised_target_factor` from 1.5 to 2, kept; the chance to hit is closed (`docs/validation/tuning/r2-surprised-target-factor.md`, report `docs/validation/savo-island-r2.md`).
 
 ## Open, named by the work of Nov 13, 2026
 

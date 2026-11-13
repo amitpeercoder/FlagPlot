@@ -78,7 +78,7 @@ No passage is judged today. Research found no long run at one held speed, and a 
 
 ## Who settles them
 
-The ranges are settled by the architect of the session that owns the step 2 spec, and each file says so with the date. Rows that feed derivation and scenarios are settled by the build session's architect.
+The ranges, and the rows the measures read, are settled by the coordinating architect (the main session), who keeps these files and the step 2 spec since Nov 13, 2026; each file says who settled it, with the date. Files settled before then name the spec session's architect, whose session is archived.
 
 ## Files
 
