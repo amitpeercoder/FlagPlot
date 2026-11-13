@@ -1,6 +1,6 @@
 # 0088: Ships out of action, counted by the time they are away
 
-Status: a plan, written by the architect on Nov 13, 2026, for the designer's approval. Nothing is built. It reads the yard function of decision 0069, which is being built; the figures here are placeholders for the example only.
+Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers at the end. Nothing is built: it is built straight after ship repair (decision 0069), whose yard function it reads, and the hand calculation is written by the architect before any code is delegated. The figures here are placeholders for the example only.
 
 Rewritten the same day. The first version drew one line at about thirty days and called a ship past it "out of the campaign". The designer asked what that means in a game that runs from Pearl Harbor to 1945, where a month away takes no ship out of anything. The line was wrong at that length, and so was the name. This version counts the time a ship is away against the length of what is being fought over. The file keeps its first name so that references to it hold.
 
@@ -18,7 +18,7 @@ Decision 0069 works out a ship's **days of repair** from her damage, with no ran
 
 ## Decisions proposed
 
-1. **A scenario's objectives may state a horizon:** `horizon_days`, the number of days its result is judged over. For a battle it is the length of the operation the battle belongs to. For a long game it is what the scenario's author says it is, most simply the length of the game.
+1. **Every result has a horizon,** the number of days it is judged over. It is the length of the game, unless the scenario's objectives state a longer one with `horizon_days`. A campaign needs nothing extra. A tutorial of three days, or a one-day battle kept for validation, states the operation it stands inside (say 60 days), or every damaged ship in it would count as lost for the whole game. The loader refuses a stated horizon shorter than the game.
 2. **A sixth kind of objective, `ships_out_of_action`,** with points for each kind of ship. The points are what a ship of that kind is worth if she is away for the whole horizon.
 3. **A ship's days out** are:
    - her days of repair at the end of the game, if she is afloat and damaged;
@@ -63,7 +63,7 @@ The first table is the designer's question answered: the same damage is half a c
 
 **Why a ship that came back still counts.** Without the second part of item 3, a ship knocked out for 45 days of a 60-day game scores nothing if she returns before the end, and a side would be paid for repairing early. With it, repairing a ship neither gives nor takes points. The player decides about repair on what the ship is worth to him, which is the decision the game wants him to make.
 
-**Why the horizon is the scenario's.** A battle scenario lasts a day, and the ships it damages are missed for the two months that follow. Only the scenario knows what operation it stands in. A long game knows its own length. One figure for every scenario could not serve both.
+**Why the horizon is the game's length unless stated.** The game that is to be released is campaigns of weeks or more, and a campaign's horizon is its own length: nobody should have to state it. The one-day battles of the slice are fixtures for validation, and a short tutorial is a few days cut from something longer. Those say what they stand inside. One figure for every scenario could not serve both. (The designer, Nov 13, 2026: even a tutorial may need to be a campaign of about three days, and the game is unlikely to ship with many small battles.)
 
 **Why it takes the place of crippled.** A ship with a system out is already about a month from service, so she is counted here. Two kinds in one scenario would be two names for nearly the same ships. It also removes a small unfairness in the scale today, where a cruiser with propulsion out and one a hit short of sinking score the same.
 
@@ -101,13 +101,15 @@ Two things to read from it. The rule counts three to fifteen times as many damag
 | Reads | Each ship's flotation damage and systems at the end; the yard-departure events and the days of repair they carry; the yard function's figures; the scenario's objectives and horizon |
 | Writes | Nothing. The count is worked out when the result is asked for |
 
-## Questions for the designer
+## Answered by the designer
 
-Each with the architect's recommendation.
+On Nov 13, 2026, each as the architect recommended; the second after the designer's own point about tutorials and campaigns, which changed the recommendation.
 
-1. **Is a damaged ship counted by the share of a horizon she is away, and not by a line she is past?** Recommended: yes (items 1 to 4).
-2. **Whose is the horizon?** Recommended: the scenario's, stated in its objectives. The alternatives are one figure for every scenario, which cannot serve a battle and a long war alike, or always the days left in the game, which gives a one-day battle a horizon of nothing.
-3. **Is she counted from her damage, by the yard function, and not from whether her side sent her away?** Recommended: yes (item 3).
-4. **Does a ship that left for a yard and came back before the end still count?** Recommended: yes (item 3, second part).
-5. **Does it take the place of "crippled" in a scenario that uses it?** Recommended: yes; crippled stays in the engine.
-6. **Is it built straight after ship repair, before the scale is set from the record?** Recommended: yes. It is small and has no state of its own.
+1. **A damaged ship is counted by the share of a horizon she is away,** not by a line she is past ("Share of a horizon"). Items 1 to 4.
+2. **The horizon is the game's length unless the scenario states a longer one** ("Game length, unless stated longer"). Item 1.
+3. **She is counted from her damage,** by the yard function, not from whether her side sent her away ("From her damage"). Item 3.
+4. **A ship that left for a yard and came back before the end still counts,** for the days of repair she left with ("Yes, she still counts"). Item 3, second part.
+5. **It takes the place of "crippled" in a scenario that uses it;** crippled stays in the engine ("Yes, it replaces it"). Item 5.
+6. **It is built right after ship repair,** in a pull request of its own, before the scale is set from the record ("Right after ship repair").
+
+Noted by the architect with the plan, and not decided: in a long campaign the fuller measure is the days each ship was in fact missing, counted as the game goes, with objectives that name a flow. This rule is the approximation that needs no state; it is looked at again when long campaigns exist.
