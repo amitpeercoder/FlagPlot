@@ -544,3 +544,16 @@ None of these is settled. The fuller list is in `rabaul-guadalcanal-air.md`.
 - **Shaw's 22 and 29 August entries** match no other source.
 - **14 September floatplane raid.** 3 or 8 Japanese aircraft lost.
 - **A6M3 Model 32 range reduction.** 20 percent (Lundstrom as quoted) or 620 miles (Nohara via Wikipedia). **Zero drop tank:** 330 L or 320 L.
+
+## Cape Esperance class figures, settled for decision 0072 (2026-11-13)
+
+Settled by the architect's team lead for decision 0072 and to be reviewed by the architect. Each row says why in its note. Rows that agree with the chosen value became `preferred`, the others `alternative`.
+
+- **Speed.** Brooklyn (Boise), St. Louis (Helena) and Pensacola (Salt Lake City): 32.5 knots, from three sources each, over DANFS headers of 33.5, 33 and 32.7. Benson (Laffey): NavSource's designed 35 knots over Wikipedia's trial 37.5.
+- **Standard displacement.** Brooklyn 9,700 tons (NavSource and DANFS) over 9,767; St. Louis 10,000 (three sources) over Navypedia's 10,560, which may be the true figure as completed and is a known weakness.
+- **Pensacola torpedo tubes.** None from the mid-1930s.
+- **Gleaves and Benson rounds a gun.** The design figure, 360, which Navweaps says outfits were raised to after 1940, over the pre-war 150.
+- **Fubuki class.** The figures after the rebuild of 1935 to 1937: 2,090 tons, 34 knots, 475 tons of fuel; 4,700 miles at 15 knots as a pair; 150 rounds a gun, the wartime outfit.
+- **Buchanan's torpedo tubes.** Ten (NavSource, as for her three sisters in the force) over DANFS's undated five; a known weakness.
+
+Left disputed: Laffey's main battery (four or five guns, fits 713 and 724), the Fubuki class's torpedo model in 1942 (fits 726 to 729) and the 12.7 cm/50's practical rate (weapon facts 480 and 481), which waits for decision 0070.
