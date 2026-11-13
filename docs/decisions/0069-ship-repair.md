@@ -64,6 +64,7 @@ A is of the order of South Dakota's 16 days in October. B is near Shokaku's 125.
 - **A ship sent alone from a force.** Forming and merging forces by order is not built (decision 0052, item 7), so a force goes and returns as it is.
 - **Attacks on a repair ship,** and a repair ship that moves between bases. The figure belongs to the base.
 - **Refits that improve a ship.** She returns as her class has her.
+- **A carrier's air group flying ashore when she leaves.** In the record a carrier's group often did: Enterprise's went to Henderson Field. That needs air groups that can change base, which is not built; until then a group goes and returns with its ship (as planned for the build, below).
 
 ## What it does for "out of the campaign"
 
@@ -238,6 +239,14 @@ Then `ForceReturnedFromYard` is recorded. A force whose day of return is after t
 
 Proposed, the least: an air group aboard a ship at the yard goes and returns with her, aircraft, damaged aircraft and pilots as they were. While away it flies nothing, wears nothing, is not repaired, gets no replacements or arrivals, and tires and rests not at all. `air_group_hex` returns `None` for a ship at the yard; the builder checks that no site reads `None` as "lost" (today a group aboard a sunk ship is lost by its own event, `AirGroupLost`, and must stay so). An arrival or replacement due to a group while it is away is not delivered and not kept (as decision 0041, 6, for a group lost with its ship). A choice, below.
 
+### A force with no ships that is not sunk
+
+Decision 0085's side projection (`side_events.rs`, `Owners::emptied_forces`) takes a force with no ships to be one that was emptied, and so tells a side, in a later look at an old fight that ended `ForceSunk`, that its own force was sunk. A force away at the yard has no ships and is not sunk: `emptied_forces` leaves out a force with `yard_trip` set, and its comment ("never given a ship again") is corrected, since a force back from the yard is given its ships again. Tested: a force that lost a ship in a fight that ended force-sunk by the enemy's loss, and then leaves for the yard, is still told its own true reason, not "force sunk".
+
+### The objectives tally
+
+A ship at the yard is afloat. `objectives::tallies` counts her for `ships_sunk` and `ships_crippled` as any ship not sunk, read from the damage she left with, which is unchanged until she returns: a ship at the yard at the end with propulsion or flight deck out counts as crippled, one back from it counts as whole. Nothing else in the tally changes; no objective kind is added (decision 0088 is separate). Tested in scenario 20a: ship 5 is at the yard at the end with propulsion out.
+
 ### What the enemy knows
 
 Nothing is shown to the enemy. Its contact of the force is not refreshed, since nothing can sight a force with no ships, and it ages and is dropped by the existing rule (`contact_drop_age_pulses`, 5 in the frozen and live search figures), as for any force that steams out of sight. No new belief code: `BeliefState::apply_report` is not called by any part of this rule. The enemy's events for a game in which a force goes to the yard are those of the same game with the force left stopped in port, as long as nothing of the enemy's would have sighted it there (the hand calculation asserts this).
@@ -279,13 +288,16 @@ There is no random draw. No `rng::Draw` value is added, and no existing stream i
 
 ### Invariants
 
-Added to `invariants::check`: a ship whose location is `Yard(f)` has `f` with `yard_trip` set, and is in no force's `ships`; a force with `yard_trip` set has no ships; `system_repair_points` is from 0 to below `forward_repair_system_points`, and is 0 on a ship with no degraded system; a base's `ship_repair_points_per_day` is not negative and its `yard_passage_days` is not 0.
+Added to `invariants::check`: a ship whose location is `Yard(f)` has `f` with `yard_trip` set, and is in no force's `ships`; a force with `yard_trip` set has no ships; `system_repair_points` is from 0 to below `forward_repair_system_points` (and no more: the hit code is not touched, so a ship whose only degraded system is hit to out keeps her bank until forward repair next reaches step 3, finds no degraded system and sets it to 0, spending nothing); a base's `ship_repair_points_per_day` is not negative and its `yard_passage_days` is not 0.
 
 ### The rulebook and glossary, in the same pull request
 
 `docs/rules/04-surface-combat-and-damage.md`, "No repair", becomes "Repair" (forward and yard, the two quantities, the figures); chapter 1 gets the order, the reasons, the day's start (returns, refuelling, orders, forward repair), the three events and who sees them; chapter 2 gets the base keys and the force away; chapter 5 a line on air groups aboard a ship at the yard; `docs/rules/differences.md` row 11 if it names the start of the day; the glossary gets "days of repair", "days away", "day of return", "forward repair", "port for the yard", "away at the yard". `docs/commands.md` names the new question of `measure`.
 
 ### Choices for the architect
+
+Ruled by the coordinating architect on Nov 13, 2026: all sixteen as recommended. On 10 a sentence is added to "What it leaves out"; 13 is said in the rulebook. The hand calculation of scenario 20a was checked number by number and adopted as the architect's.
+
 
 Each is something the decided text did not settle, with the recommendation in one line.
 
@@ -364,7 +376,7 @@ On those assumptions eleven of the nineteen can be read in part: both Enterprise
 | San Juan | 11.855082 | none read | 24 | 10 | 44 | 29 |
 | Chester | 22.552486 to 54.143646 | propulsion degraded | 51 to 114 | not dated | 71 to 134 | about 330, an upper bound |
 
-The forward cases, with `forward_repair_max_flotation` 10, `forward_repair_system_points` 10 and a base mending 2 points a day: Enterprise on 26 October has 2 x 5.260942 = 10.521884 points, 7.891413 on flotation and 2.630471 on fire, and her flight deck degraded. Flotation is below 10, so a forward base can mend all of it: 10.521884 + 10 = 20.521884 points, 11 days at 2 a day; the rows have 12 days in port and her sailing with the work unfinished, 16 days in all. South Dakota's 2-point hit is two days' work; the rows have five. Enterprise on 24 August, at 11.837119, is above 10 and needs the yard, as she went to one.
+The forward cases, with `forward_repair_max_flotation` 10, `forward_repair_system_points` 10 and a base mending 2 points a day: Enterprise on 26 October has 2 x 5.260942 = 10.521884 points in all; by A1's expected share 0.75 x 10.521884 = 7.891413 of them are flotation and 2.630471 fire, and her flight deck is degraded. Flotation, 7.891413, is below 10, so a forward base can mend all of it: 10.521884 + 10 = 20.521884 points, 11 days at 2 a day; the rows have 12 days in port and her sailing with the work unfinished, 16 days in all. South Dakota's 2-point hit is two days' work; the rows have five. Enterprise on 24 August, at 11.837119, is above 10 and needs the yard, as she went to one. A caution: in a run each hit's track is drawn, so two bombs on Enterprise give 10.521884 flotation when both land on it (a chance of 0.75 x 0.75 = 0.5625), which is above 10 and would need the yard; the figure separates the two cases only on the expected share. It is kept at 10 as a placeholder.
 
 ### What the rows size and what they cannot
 
