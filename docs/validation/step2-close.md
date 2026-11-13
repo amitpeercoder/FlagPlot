@@ -35,6 +35,8 @@ The closing reports of the three tuned battles were remade on the final engine (
 
 **The designer decided on Nov 13, 2026: "Accept all 11"** named misses below.
 
+*Note, Nov 13, 2026:* the page the designer read counted 5 figures sized from rows and 4 fitted. Decision 0089 corrected that to 3 and 6 (two air figures are fits, not sizes). No miss, no edge and no verdict changed, and he is told of the correction.
+
 Figures are the 5th to the 95th percentile, then the median, then (in brackets) the runs of 1,000 that hold the record. Misses that share one cause are grouped.
 
 ### Savo Island (`savo-island-close.md`; causes from `tuning/savo-island-closed.md`)
@@ -144,6 +146,7 @@ From decision 0084, and the Cape Esperance check read under it:
 7. The hits did not transfer. The Japanese guns score a median of 6 hits; Duncan's loss and Aoba's hits miss.
 8. Part of the outcome agreement rests on fights by day the record does not have. In the 229 runs with no fight by day the median is 1 Japanese ship sunk, not the record's 2.
 9. The check shows none of the three figures fitted at Savo Island (`experience_gun_strength`, `surprised_target_factor`, the unready shares) right, and none wrong.
+10. Rabaul checks one figure held still at a time; it is not an independent test of the air model as a whole. Rabaul round 1 changed how many fighters survive on the ground, and so the fights that the check of the fighter and claim chances reads (decision 0089).
 
 ## The figures by status
 
@@ -153,22 +156,24 @@ From the two "figures closed" pages, which sort the figures alike (the figure no
 
 | Sized from rows | Fitted, not checked | Looked at, not moved | Placeholder | No battle reads it |
 | --- | --- | --- | --- | --- |
-| 5 | 4 | 19 | 61 | 12 |
+| 3 | 6 | 19 | 61 | 12 |
+
+*Corrected Nov 13, 2026 (decision 0089):* the counts were 5 sized and 4 fitted; `fighter_false_claim_chance` and `[base_hit] aircraft` are fitted, not sized.
 
 Three hand-made files are also read by no battle: `port_sizes.csv`, `ship_classes.csv`, `aircraft_types.csv`.
 
 Sized from rows:
 - `unready_gun_share` 0.5: Condition II, half the armament manned (decision 0068).
-- `unready_torpedo_share` 0.5: Bagley fired four of eight tubes (decisions 0071, 0074).
-- `fighter_false_claim_chance` 0.7: 43 claimed by VF-5 and VF-6 (air round 4).
-- `[base_hit] aircraft` 0.06: about 2.5 aircraft destroyed on the ground for about 212 bomber sorties (Rabaul round 1).
+- `unready_torpedo_share` 0.5: Bagley fired four of eight tubes, one ship's case (decisions 0071, 0074).
 - `[search_radius] divisor_of_scouting_range` 3: the Bureau of Aeronautics' method (decision 0075).
 
 Fitted, not checked:
 - `surprised_target_factor` 2 (Savo Island round 2).
 - `experience_gun_strength` 0.5, the cap (Savo Island round 1).
 - `anti_aircraft_before_attack_share` 0 (decision 0079).
-- `patrol_drawn_off_share` 0 (decision 0080).
+- `patrol_drawn_off_share` 0 (decision 0080; no row behind either end, decision 0089).
+- `[base_hit] aircraft` 0.06: about 2.5 aircraft destroyed on the ground for about 212 bomber sorties, through an assumed bomb a bomber and the placeholder bomb chance (Rabaul round 1; decision 0089).
+- `fighter_false_claim_chance` 0.7: 43 claimed by VF-5 and VF-6, fitted to the model's own kills (air round 4; decision 0089).
 
 **The slow air files** (`air-figures-closed.md`): `air_upkeep.toml` 3 placeholders and 1 read by no battle; `fatigue.toml` 3 placeholders and 2 read by no battle; `air_supply.toml` 4 placeholders. They are tuned on Rabaul and have no battle to check them; rounds 2 and 3 looked at fatigue and wear and moved nothing. Scenario 6's own 7 figures (repairs a day, supply, replacements, the rest threshold, the dive bombers' search) are placeholders or readings.
 

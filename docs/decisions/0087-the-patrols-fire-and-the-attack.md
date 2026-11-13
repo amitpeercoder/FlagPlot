@@ -55,11 +55,13 @@ At Santa Cruz the same fighter director found the same, in words: "most enemy ai
     - The first wave was 10 escorts and 27 bombers (290). The proportional split, `patrol_drawn_off_share` 0, sends 10/37 = 0.27 of the patrol at the escorts. One for one, at 1, sends 10/53 = 0.19.
     - The rows sit at or above the proportional end. So 0 is now supported by rows as an end of the figure's range, though it is not sized by them.
     - No rule is made for escorts that draw off more than one defender each.
+    - *Note, Nov 13, 2026 (decision 0089, ruling 1):* the comparison above leaves out the cap of decision 0080, the shots at the escorts no more than the escorts. With 53 fighters, 10 escorts and 27 bombers, a share of 0 gives 53 x 10 / 37 = 14, capped to 10, and a share of 1 gives 10: both ends send 10 of 53 at the escorts. The rows do not tell the two ends apart here, and 0 is not supported by them as an end. `patrol_drawn_off_share` is fitted, not checked, as decision 0084 had it.
 12. **The figure.**
     - In the frozen step 1 figures it is 1, which leaves step 1 as it was.
     - In the live figures it is 0.4. The supported range is 0.22 (before the push-over only, 4 of 18) to 0.61 (the whole dive, 11 of 18). No row divides the seven who engaged at the push-over or in the dive, so 0.4 is a placeholder inside the range, chosen now before any result is read.
     - A later round may move it only inside 0.22 to 0.61.
     - It is one figure for ships and bases alike.
+    - *Note, Nov 13, 2026 (decision 0089, ruling 2):* the range 0.22 to 0.61 is the architect's reading of pilot counts as shares of shots, not a bound from a source. The rows count when each pilot first engaged; the rule splits shots, and the study covers the fighters of one carrier. The figure stays 0.4, a placeholder, and the range stays the limit a later round may move within, named as an interpretation. The rows support the direction only.
 13. **One rule for both sides.**
 
 ### The words for the rulebook

@@ -31,6 +31,8 @@ In the rules each bomber drops one bomb at `bomb_hit_chance`, 0.2, and each hit 
 
 That is the size the rows point to. It rests on the rules' one bomb for each bomber and their bomb chance. Both are assumptions here: no row gives the bombs that hit Henderson Field.
 
+*Note, Nov 13, 2026 (decision 0089, ruling 4):* the figure is fitted through an assumed bomb count and an assumed hit chance, not sized from rows. The rows size the product of the exposure, the hit chance and the share that falls on aircraft; this figure is the last of the three. `[base_hit] aircraft` is fitted, not checked.
+
 ## What is read beside it
 
 The ground losses fall on the lowest-numbered groups with aircraft on the ground (decision 0034): VMF-223, then VMSB-232. Those are 7.0 and 5.6 a run before the round.
