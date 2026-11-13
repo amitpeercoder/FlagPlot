@@ -32,9 +32,11 @@ Then one `[[measure]]` table for each measure:
 | --- | --- | --- |
 | `ships_sunk` | `ships` | How many of the ships are sunk at the end |
 | `ships_with_system_out` | `ships`, `system` | How many of the ships are afloat at the end with that system out: `propulsion`, `fire_control`, `main_battery`, `torpedo_mounts` or `flight_deck` |
+| `ships_sunk_or_system_out` | `ships`, `system` | How many of the ships are sunk at the end, or afloat with that system out |
 | `hits_on` | `ships`, `weapons` | Hits of those weapons on those ships, as rolled. A salvo is rolled at the ships afloat when its round starts, so a hit on a ship that another salvo sinks in the same round is counted. The record counts hits on a ship already sinking too |
 | `hits_per_thousand_shots` | `side`, `weapon` | The side's hits with that weapon over the run, times 1,000, divided by its shots, rounded down. The shots are the exact figure the rules fired, fractions and all. A run in which the side fires no shot is left out |
 | `shots_in_hundreds` | `side` or `ships`, not both; `weapon` | The side's shots with that weapon over the run, or those ships' shots in surface fights, summed and then divided by 100 and rounded down, once. Shells are counted in hundreds because a record of shells is one figure, and no run would hold a figure of thousands to the shell |
+| `shots` | `side` or `ships`, not both; `weapon` | The shots with that weapon over the run, summed and rounded down to a whole shot |
 | `air_losses` | `air_groups`, `causes` | Aircraft of those groups lost to those causes. The causes are the batch file's: `shot_down`, `destroyed_on_ground`, `damaged_destroyed_on_ground`, `lost_with_ship`, `worn_out`, `ditched_fuel`, `ditched_no_deck`. No aircraft is counted under two |
 | `pilots_lost` | `air_groups` | Pilots of those groups lost |
 | `ready` | `air_groups`, `day` | Aircraft of those groups ready at the end of that day, the first day being 1 |
@@ -80,7 +82,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | File | Battle | State |
 | --- | --- | --- |
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 16 measures, 14 judged |
-| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 21 measures, 20 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 23 measures, 21 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
 | `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
 | `passages.toml` | Ship passages | 6 passages, none judged |

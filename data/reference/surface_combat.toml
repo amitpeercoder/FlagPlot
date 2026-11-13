@@ -58,13 +58,22 @@ experience_sighting_strength = "0.25"
 # A force not ready when a fight begins (not at battle readiness by order, and
 # not alert since before the pulse began) fires its guns, in every round of
 # that fight, at this share of their full rate (decision 0068). From 0.1 to 1;
-# 1 switches the rule off. Torpedoes are not touched. PLACEHOLDER: 0.5 is
+# 1 switches the rule off. Torpedoes have a share of their own, below. PLACEHOLDER: 0.5 is
 # Condition II as engagement_events row 23 states it, half the armament
 # manned. Tuning may move it, toward the record and never for one battle; if
 # it goes below 0.5 it also carries what the rule does not model (captains
 # asleep, ships taken for friends, orders to cease fire), and the tuning
 # record says so (decisions 7 and 8).
 unready_gun_share = "0.5"
+
+# A force not ready when a fight begins (as above) fires its torpedoes, in the
+# one round in which they are fired, at this share of its tubes (decision
+# 0071). From 0.1 to 1; 1 switches the rule off. PLACEHOLDER: the first value
+# mirrors the gun share's Condition II and has no row of its own; Bagley's four
+# of sixteen tubes is the one stated count. It does not carry how many tubes
+# bear on a broadside, how many ships fire, the range or the chance to hit,
+# and tuning must not take it down to cover them.
+unready_torpedo_share = "0.5"
 
 # Which system a system hit lands on. Each table adds to 1.
 [gun_system_hit]

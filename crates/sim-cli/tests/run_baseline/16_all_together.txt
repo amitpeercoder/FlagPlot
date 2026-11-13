@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0be882cc31372323  145 events
+day   1  hash 89fa08fb5e2193b4  146 events
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Arrived at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -18,10 +18,10 @@ air_group:7 "Placeholder Japanese fighters" (Japanese) aboard ship:2: 3 ready, 1
 ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 10, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder carrier J": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2906.666667 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser B1": afloat in task_force:3; damage flotation 95, fire 10; propulsion out, fire control degraded, main battery degraded, torpedo mounts degraded; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:4 "Placeholder cruiser B2": afloat in task_force:3; damage flotation 10, fire 5; main battery degraded; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B2": afloat in task_force:3; damage flotation 25, fire 10; main battery out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B3": afloat in task_force:3; damage flotation 50, fire 35; propulsion degraded, fire control out, main battery out, torpedo mounts out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:6 "Placeholder cruiser A1": afloat in task_force:4; damage flotation 15, fire 5; fire control degraded, main battery degraded; 560 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
-ship:7 "Placeholder cruiser A2": afloat in task_force:4; damage flotation 60, fire 0; main battery out; 680 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
+ship:6 "Placeholder cruiser A1": afloat in task_force:4; damage flotation 20, fire 0; fire control degraded; 560 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
+ship:7 "Placeholder cruiser A2": afloat in task_force:4; damage flotation 15, fire 0; main battery degraded; 620 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
 ship:8 "Placeholder cruiser A3": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
 base:1 "Placeholder Allied field" (Allied) at (9,-6): 500 t of supply in stock
 Allied contact:1 at (2,-4): 3 ships, cruiser, age 2 pulses
