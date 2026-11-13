@@ -75,6 +75,12 @@ anti_aircraft_before_attack_share = "1"
 # 0, a placeholder).
 patrol_drawn_off_share = "1"
 
+# The share of the patrol's shots at a raid's bombers that are worked before the
+# attack, the rest after it (decision 0087). 1 is step 1's rule: every shot
+# before. Frozen at 1, which leaves step 1 as it was (the live file has 0.4, a
+# placeholder).
+patrol_before_attack_share = "1"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

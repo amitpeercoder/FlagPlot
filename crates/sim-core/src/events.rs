@@ -621,6 +621,8 @@ pub enum EventKind {
     /// Fighters fired at fighters or bombers over the hex a raid attacked
     /// (decision 6 of 0027). `firer` is the first group of the firing
     /// fighters and `target` the first group of those fired at.
+    /// `after_attack` is true for the part of the patrol's fire at the
+    /// bombers worked after the raid's attack (decision 0087).
     AirFight {
         firer: AirGroupId,
         target: AirGroupId,
@@ -630,6 +632,7 @@ pub enum EventKind {
         chance: Fixed,
         expected: Fixed,
         hits: u32,
+        after_attack: bool,
     },
     /// The ships of a task force fired their anti-aircraft guns at the
     /// bombers of a raid (decision 7 of 0027). `air_group` is the raid's
@@ -1562,12 +1565,14 @@ impl fmt::Display for EventKind {
                 chance,
                 expected,
                 hits,
+                after_attack,
             } => write!(
                 f,
-                "{firer} {} at the {} of {target}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                "{firer} {} at the {} of {target}: {shots} shots x {chance} = {expected} expected, {hits} {}{}",
                 firing.name(),
                 at.name(),
-                if *hits == 1 { "hit" } else { "hits" }
+                if *hits == 1 { "hit" } else { "hits" },
+                if *after_attack { " after the attack" } else { "" }
             ),
             EventKind::AntiAircraftFire {
                 task_force,

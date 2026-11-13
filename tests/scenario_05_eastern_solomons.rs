@@ -1983,6 +1983,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     chance,
                     expected,
                     hits,
+                    after_attack: false,
                 },
                 text: format!(
                     "air_group:{firer} {who} at the {what} of air_group:{target}: {}",

@@ -238,12 +238,14 @@ fn describe_side(kind: &SideEventKind) -> (&'static str, Data, bool) {
             firing,
             at,
             shots,
+            after_attack,
         } => (
             "air_fight",
             d.id("firer", *firer)
                 .text("firing", firing.name())
                 .text("at", at.name())
-                .num("shots", *shots),
+                .num("shots", *shots)
+                .flag_when_true("after_attack", *after_attack),
             true,
         ),
         SideEventKind::AntiAircraftFire {

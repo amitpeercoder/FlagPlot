@@ -194,6 +194,10 @@ name = "scenario_19b_whom_the_patrol_fires_at"
 path = "scenario_19b_whom_the_patrol_fires_at.rs"
 
 [[test]]
+name = "scenario_19c_patrol_after_the_attack"
+path = "scenario_19c_patrol_after_the_attack.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 
