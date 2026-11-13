@@ -65,11 +65,11 @@
     },
     {
       "day": 4,
-      "hash": "5119acea82c634ce"
+      "hash": "9c3989dbdc74fc3b"
     },
     {
       "day": 5,
-      "hash": "9695c974a293c5c5"
+      "hash": "48149671c284d1be"
     }
   ],
   "orders": [
@@ -630,10 +630,10 @@
     {
       "day": 4,
       "order": {
-        "from_deg": 120,
+        "from_deg": 110,
         "kind": "set_search_arc",
         "range_nm": "253",
-        "to_deg": 180
+        "to_deg": 200
       },
       "origin": {
         "intent": null,
@@ -653,50 +653,22 @@
         "issuer": "player"
       },
       "side": "japanese",
-      "unit": "air_group:113"
+      "unit": "air_group:120"
     },
     {
       "day": 4,
       "order": {
-        "from_deg": 120,
+        "from_deg": 110,
         "kind": "set_search_arc",
-        "range_nm": "175",
-        "to_deg": 180
+        "range_nm": "253",
+        "to_deg": 200
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "japanese",
-      "unit": "air_group:113"
-    },
-    {
-      "day": 4,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "search"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:116"
-    },
-    {
-      "day": 4,
-      "order": {
-        "from_deg": 0,
-        "kind": "set_search_arc",
-        "range_nm": "175",
-        "to_deg": 110
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:116"
+      "unit": "air_group:120"
     },
     {
       "day": 4,
@@ -740,6 +712,19 @@
         "issuer": "player"
       },
       "side": "japanese",
+      "unit": "air_group:113"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
       "unit": "air_group:115"
     },
     {
@@ -759,6 +744,19 @@
       },
       "side": "japanese",
       "unit": "air_group:115"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:116"
     },
     {
       "day": 4,
@@ -922,7 +920,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "ccccf42d7d55250b"
+    "hash": "7cce2880758889ab"
   },
   "seats": {
     "allied": "player",
