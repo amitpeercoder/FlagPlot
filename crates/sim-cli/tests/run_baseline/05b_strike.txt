@@ -2,7 +2,7 @@ Scenario 5b: Unopposed strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0113e612baaf933f  15 events
+day   1  hash 4e9df7b79d1e0cf6  15 events
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

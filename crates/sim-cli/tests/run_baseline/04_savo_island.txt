@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a82a981fc1bc27a2  283 events
+day   1  hash 2886a16225615937  283 events
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

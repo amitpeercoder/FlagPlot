@@ -637,9 +637,12 @@ fn case_7_an_unarmed_ship_counting_for_its_place() {
 /// made in play); the log was unchanged. Remade Nov 13, 2026: battle
 /// readiness is no longer alerted by a contact (differences.md row 2), so the
 /// two alert events are gone from the log, the events after them are
-/// numbered two lower, and the hash is 0xc1809065942fe453 no longer.
+/// numbered two lower, and the hash is 0xc1809065942fe453 no longer. The hash
+/// was 0x69d03b89e5b56452 until the state went to version 9 (decision 0069,
+/// ship repair) and five figures were added to surface_combat.toml; the log
+/// was unchanged.
 const CASE_8_LOG: &str = include_str!("golden/17a_case_8_events.txt");
-const CASE_8_HASH: u64 = 0x69d03b89e5b56452;
+const CASE_8_HASH: u64 = 0x8b7cd91a2f608ed5;
 
 fn log_text(events: &[Event]) -> String {
     let mut text = String::new();

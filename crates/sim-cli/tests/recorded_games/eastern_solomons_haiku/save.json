@@ -22,7 +22,7 @@
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "04b0692bf2fbeb0c"
+      "hash": "9f5a179ed349e925"
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "e7e5985087deb8d6"
+      "hash": "38b6b64074538639"
     }
   ],
   "orders": [
