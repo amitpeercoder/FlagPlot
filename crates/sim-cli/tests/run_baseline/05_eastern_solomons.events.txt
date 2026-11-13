@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 50417f899c809d1e  198 events
+day   1  hash 4645cd1a1ccdf2f7  198 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:2  <- order:2
@@ -152,28 +152,28 @@ day   1  hash 50417f899c809d1e  198 events
 #146 D1 afternoon air_group:19 lost with ship:33: 0 aircraft  <- #144
 #147 D1 afternoon ship:33 fire control hit, no change, still working  <- #127
 #148 D1 afternoon ship:33 fire control hit, no change, still working  <- #127
-#149 D1 afternoon Allied report: 4 ships, carrier, at (7,-9): refreshed contact:1  <- #127
+#149 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #127
 #150 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #128
 #151 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 35.660376  <- #128
 #152 D1 afternoon ship:33 flight deck hit, no change, still out  <- #128
 #153 D1 afternoon ship:33 flight deck hit, no change, still out  <- #128
-#154 D1 afternoon Allied report: 4 ships, cruiser, at (7,-9): refreshed contact:1  <- #128
+#154 D1 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #128
 #155 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #129
 #156 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 53.490564  <- #129
 #157 D1 afternoon ship:33 flight deck hit, no change, still out  <- #129
 #158 D1 afternoon ship:33 propulsion hit, no change, still out  <- #129
-#159 D1 afternoon Allied report: 3 ships, carrier, at (7,-9): refreshed contact:1  <- #129
+#159 D1 afternoon Allied report: 2 ships, cruiser, at (7,-9): refreshed contact:1  <- #129
 #160 D1 afternoon ship:33 took 4 hits on flotation, 69.0566 points, now 100  <- #130
 #161 D1 afternoon ship:33 propulsion hit, no change, still out  <- #130
 #162 D1 afternoon ship:33 propulsion hit, no change, still out  <- #130
 #163 D1 afternoon ship:33 propulsion hit, no change, still out  <- #130
 #164 D1 afternoon ship:33 propulsion hit, no change, still out  <- #130
-#165 D1 afternoon Allied report: 4 ships, carrier, at (7,-9): refreshed contact:1  <- #130
+#165 D1 afternoon Allied report: 3 ships, battleship, at (7,-9): refreshed contact:1  <- #130
 #166 D1 afternoon ship:33 took 1 hit on flotation, 17.830188 points, now 100  <- #131
 #167 D1 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 71.320752  <- #131
 #168 D1 afternoon ship:33 flight deck hit, no change, still out  <- #131
 #169 D1 afternoon ship:33 flight deck hit, no change, still out  <- #131
-#170 D1 afternoon Allied report: 5 ships, carrier, at (7,-9): refreshed contact:1  <- #131
+#170 D1 afternoon Allied report: 4 ships, cruiser, at (7,-9): refreshed contact:1  <- #131
 #171 D1 afternoon ship:1 took 3 hits on flotation, 15.782826 points, now 15.782826  <- #132
 #172 D1 afternoon ship:1 took 2 hits on fire, 10.521884 points, now 10.521884  <- #132
 #173 D1 afternoon ship:1 flight deck hit, working -> degraded  <- #132
@@ -265,7 +265,7 @@ ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems 
 ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 455.555588 t of fuel, 0 t of supply
 base:1 "Henderson Field" (Allied) at (2,-4): 0 t of supply in stock
-Allied contact:1 at (7,-9): 5 ships, carrier, age 0 pulses
+Allied contact:1 at (7,-9): 4 ships, cruiser, age 0 pulses
 Allied claim at (7,-9): 9 hits on a carrier, 1 sunk, day 1 afternoon
 Allied claim at (7,-9): 10 hits on a carrier, 0 sunk, day 1 afternoon
 Allied claim at (7,-9): 5 hits on a carrier, 0 sunk, day 1 afternoon

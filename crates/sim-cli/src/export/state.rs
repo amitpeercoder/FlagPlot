@@ -111,6 +111,9 @@ pub struct AirGroupOut {
     #[serde(skip_serializing_if = "Option::is_none")]
     ship: Option<u32>,
     aircraft_type: String,
+    /// The type's number in `aircraft_types` (version 3): names need not be
+    /// unique.
+    aircraft_type_id: u32,
     ready: u32,
     /// Damaged aircraft (decision 0035). Left out when 0.
     #[serde(skip_serializing_if = "is_zero")]
@@ -153,6 +156,32 @@ struct ArcOut {
     from_deg: u32,
     to_deg: u32,
     range_nm: Num,
+}
+
+/// An aircraft type's reach figures, as every rule reads them: the strike
+/// radius, the reach on extended reach (`RefData::reach_nm`, which is the
+/// radius when the air combat figures are not loaded) and the search range.
+#[derive(Serialize)]
+pub struct AircraftTypeOut {
+    id: u32,
+    name: String,
+    strike_radius_nm: Num,
+    extended_reach_nm: Num,
+    search_range_nm: Num,
+}
+
+pub fn aircraft_types(ref_data: &RefData) -> Vec<AircraftTypeOut> {
+    ref_data
+        .aircraft_types
+        .iter()
+        .map(|(id, aircraft)| AircraftTypeOut {
+            id: id.raw(),
+            name: aircraft.name.clone(),
+            strike_radius_nm: Num(ref_data.reach_nm(*id, Reach::Normal)),
+            extended_reach_nm: Num(ref_data.reach_nm(*id, Reach::Extended)),
+            search_range_nm: Num(aircraft.search_range_nm),
+        })
+        .collect()
 }
 
 #[derive(Serialize)]
@@ -295,6 +324,7 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
             AirGroupLocation::Ship(ship) => Some(ship.raw()),
         },
         aircraft_type: ref_data.aircraft_types[&group.aircraft_type].name.clone(),
+        aircraft_type_id: group.aircraft_type.raw(),
         ready: group.ready,
         damaged: group.damaged,
         mission: names::air_mission(group.mission),

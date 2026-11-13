@@ -2,7 +2,7 @@ Scenario 12c: No deck
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d5cc0ccbbd0f7ae7  47 events
+day   1  hash da4942184b13bac2  47 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -48,7 +48,7 @@ day   1  hash d5cc0ccbbd0f7ae7  47 events
 #42 D1 afternoon ship:7 took 1 hit on flotation, 20 points, now 100  <- #37
 #43 D1 afternoon ship:7 of task_force:3 sank  <- #42
 #44 D1 afternoon ship:7 propulsion hit, working -> degraded  <- #37
-#45 D1 afternoon Japanese report: 2 ships, transport, at (9,5): refreshed contact:1  <- #37
+#45 D1 afternoon Japanese report: 1 ship, transport, at (9,5): refreshed contact:1  <- #37
 #46 D1 afternoon Allied claim at (9,0): 6 hits on a carrier, 0 sunk  <- #36
 #47 D1 afternoon Japanese claim at (9,5): 3 hits on a transport, 1 sunk  <- #37
 
@@ -70,6 +70,6 @@ ship:8 "Placeholder transport 2": afloat in task_force:3; damage flotation 0, fi
 Allied contact:1 at (9,0): 4 ships, cruiser, age 0 pulses
 Allied claim at (9,0): 4 hits on a carrier, 0 sunk, day 1 morning
 Allied claim at (9,0): 6 hits on a carrier, 0 sunk, day 1 afternoon
-Japanese contact:1 at (9,5): 2 ships, transport, age 0 pulses
+Japanese contact:1 at (9,5): 1 ships, transport, age 0 pulses
 Japanese claim at (9,5): 5 hits on a transport, 0 sunk, day 1 morning
 Japanese claim at (9,5): 3 hits on a transport, 1 sunk, day 1 afternoon
