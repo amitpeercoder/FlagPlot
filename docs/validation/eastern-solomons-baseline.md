@@ -2,10 +2,10 @@
 
 Battle: eastern-solomons
 Scenario: data/scenarios/05_eastern_solomons.toml
-Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash 9c8d2959cc8ef434
-Inputs: state hash layout flagplot-state-v6, scenario file hash a9443b066a393e0b
+Batch: label `baseline`, 1000 runs, seeds 1 to 1000, file hash f08d367346d0427f
+Inputs: state hash layout flagplot-state-v7, scenario file hash a9443b066a393e0b
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
-- data/scenarios/../reference/ship_classes_eastern_solomons.csv 95e5a244ff64eada
+- data/scenarios/../reference/ship_classes_eastern_solomons.csv 2716ae28c805274f
 - data/scenarios/../reference/port_sizes.csv da12e2b751976274
 - data/scenarios/../reference/aircraft_types_eastern_solomons.csv 8a7741632e7e7ec6
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
