@@ -1,8 +1,8 @@
 # Outside answers of 13 November 2026, checked against their sources
 
-On 13 November 2026 the designer put nine research prompts to an outside model (ChatGPT, through Codex). Its answers are tables of claims, each with a source, a page and a quoted sentence. An outside model's answer is a lead, not a source. A row was keyed here only where one of our readers opened the cited document, found the statement in it, and keyed the row from the document's own words. The answer files stay outside the repository.
+On 13 November 2026 the designer put eleven research prompts to an outside model (ChatGPT, through Codex). Its answers are tables of claims, each with a source, a page and a quoted sentence. An outside model's answer is a lead, not a source. A row was keyed here only where one of our readers opened the cited document, found the statement in it, and keyed the row from the document's own words. The answer files stay outside the repository.
 
-The reading was done by Sonnet agents, one for each answer file. Each fetched the cited document as raw text (HTML, or PDF through pdftotext; two scanned USSBS interrogations were read by OCR and the key pages by eye), searched it for the quoted words, and read the passage around them. Every staged row's quote was checked by program as a span of the saved text: 93 of 93 passed. 92 were keyed; one was withdrawn, as the Q1.8 section says. The lead re-read the disputed cases (the Cape Esperance table quote, the misdated Saratoga strike, the Gunnery Bulletin figures) in the saved text. This page says what the rows hold, what the answers got wrong and what is still missing. It settles nothing.
+The reading was done by Sonnet agents, one for each answer file. Each fetched the cited document as raw text (HTML, or PDF through pdftotext; two scanned USSBS interrogations were read by OCR and the key pages by eye), searched it for the quoted words, and read the passage around them. Every staged row's quote was checked by program as a span of the saved text: 177 of 177 passed. 176 were keyed; one was withdrawn, as the Q1.8 section says. The lead re-read the disputed cases (the Cape Esperance table quote, the misdated Saratoga strike, the Gunnery Bulletin figures) in the saved text. This page says what the rows hold, what the answers got wrong and what is still missing. It settles nothing.
 
 ## How far the answers can be trusted
 
@@ -19,7 +19,11 @@ A claim is one row of an answer's table. An "absence" claim says a source does n
 | 07 Cape Esperance | 22 | 19 | 12 | 1 | 2 | 0 | 3, and 2 that could not be traced |
 | 08 Air effectiveness | 12 | 12 | 0 | 0 | 0 | 0 | 0 |
 | 09 Air upkeep | 8 | 7 | 2 | 0 | 0 | 0 | 1 |
-| **All** | **156** | **136** | **46** | **9** | **9** | **1** | **16 (10%)** |
+| 12 Night action duration | 73 | 73 | 51 | 0 | 0 | 0 | 0 (page numbers one out) |
+| 13 Fighter defence | 59 | 59 | 14 | 0 | 0 | 0 | 0 (page numbers one out) |
+| **All** | **288** | **268** | **111** | **9** | **9** | **1** | **16 (6%)** |
+
+Files 12 and 13 came later than the first nine and are much cleaner. Each opened official narratives directly and quoted them closely, and every claim held. Their one weakness is page numbers, which are sometimes a page out. Of their 132 claims, 65 were already rows, so the new matter is mostly what the readers found next to the quotes.
 
 What this says about the channel:
 
@@ -34,7 +38,7 @@ What this says about the channel:
   - the standard practice of sending the P-400s and SBDs off on warning;
   - Yorktown's rounds per gun at Coral Sea.
 - **Its searches were shallow.** File 02 opened one document; the other four timed out. File 04 never opened Enterprise's own reports, which answer Q4.3.
-- **What it adds is small.** 46 of the 136 verified claims were already in the database from the same source. The new rows below come mostly from passages our readers found next to the cited quote, not from the answers themselves.
+- **What it adds is small.** Of the first nine files, 46 of the 136 verified claims were already in the database from the same source. The new rows below come mostly from passages our readers found next to the cited quote, not from the answers themselves.
 
 Used this way, as a list of documents worth opening, the channel is useful. Used as a source, it would have entered about one wrong attribution in ten.
 
@@ -49,7 +53,10 @@ Used this way, as a list of documents worth opening, the channel is useful. Used
 | `fits.csv` | 758 | 1 | Benham's 16 tubes |
 | `training_facts.csv` | 98 to 105 | 8 | Japanese carrier pilots' hours and who flew in August 1942, from two USSBS interrogations |
 | `sources.csv`, `engagement_outcomes.csv` | source 1232; outcomes 3972 to 3978 | 8 | Air upkeep at Guadalcanal and Rabaul (file 09) |
-| `gaps.csv` | last line | 1 | Warning minutes and fighters in contact, by raid over Henderson Field |
+| `sources.csv`, `engagement_events.csv`, `engagement_outcomes.csv`, `aircraft_type_facts.csv` | source 1233; events 1280 to 1297; outcomes 3979 to 4013; aircraft type facts 556 | 55 | Fighter defence (file 13) |
+| `engagement_events.csv`, `engagement_outcomes.csv`, `engagement_positions.csv` | events 1298 to 1300; outcomes 4014 to 4033; positions 542 to 548 | 30 | Night action duration (file 12) |
+| `gaps.csv` | last three lines | 3 | The patrol that made contact; torpedo reload times; Mikawa's own contemporary reason |
+| `gaps.csv` | the line before them | 1 | Warning minutes and fighters in contact, by raid over Henderson Field |
 
 Every row's note ends with the words "Lead from an outside model's answer (Nov 13, 2026), checked against the source", so the rows of this pass can be found.
 
@@ -301,6 +308,133 @@ This file feeds the slow figures of the Rabaul against Guadalcanal scenario. All
 | Fatigue | None |
 | Pilots | None that sizes replacement |
 | Supply | US fuel only: fighter-hours per transport load (3975), the 4,000 gallons (3978, low), and the 26 October counts held back by fuel. No figure for bombs, and nothing for Japanese supply beyond "lack of supply" |
+
+## Fighter defence (file 13)
+
+The file's sources were the ONI narratives of the Eastern Solomons and Santa Cruz, Zimmerman, Mersky, Miller, Tactical and Technical Trends, and the Navy's communiqués of August and September 1942. All eleven pages were read.
+
+Its quotes are often one word ("1420", "88"), which proves little. Each was checked against the passage around it.
+
+### Eastern Solomons
+
+**Warning.**
+
+- Radar had the raid at 88 miles at 1632, lost it for 17 minutes, and had it again at 44 miles at 1649. These were already rows: events 206 to 208, 213, 214.
+- The fighters had 22 minutes to intercept (outcomes 3985).
+
+**Fighters airborne.** 38 at 1649 and 53 at 1655. Already held: 215, 216, 218, 219.
+
+**Fighters in contact.**
+
+- No count for the whole patrol exists; this is a gap.
+- The nearest is the ONI study of 38 VF-5 and VF-6 pilots (outcomes 3979 to 3984). Their counts do not sum to 38, so each is its own row:
+  - 4 first engaged before the push-over;
+  - 7 at the push-over or in the dive;
+  - 7 in the retirement;
+  - 8 never engaged;
+  - 12 were engaged by fighters before they could reach the bombers.
+
+**Heights.**
+
+- Attackers at 12,000 feet by radar.
+- Defenders at 10,000 to 15,000 feet.
+- Both were already held.
+
+**The narrative's judgement** (outcomes 3986, 3987).
+
+- The patrol's mixed result is put down to radio discipline and the interposed Zeros.
+- Dow ordered the fighters to concentrate on the bombers.
+
+### Henderson Field
+
+**The ground rules.**
+
+- Daily four-plane patrols were flown at 0545 to 0830 and 1400 to 1830 (event 1295, Zimmerman). The wording is garbled and the note says so.
+- The interception of 24 August was at 1420 (1294). This agrees with row 275.
+- Japanese bombers customarily flew at 25,000 to 30,000 feet. The P-400's absolute ceiling was 14,000 (outcomes 3989, low; aircraft type facts 556, from Zimmerman's footnote).
+- Japanese formations of 1942 bombed from 22,000 to 24,000 feet, in flights of 27, with Zeros weaving above, below and to port (outcomes 3990 to 3992, Tactical and Technical Trends no. 8, low).
+
+**30 August (Mersky).**
+
+- 8 F4F and 7 P-400 at 15,000 feet orbited for 40 minutes after the coastwatchers lost the bombers in cloud (event 1296). The height is disputed against Wings at War's 14,000 (outcomes 556).
+- Zeros came out of the cloud, the bombers turned back, and 14 fighters were claimed (1297).
+
+**The communiqués** (new source `navy-communiques-1942`, outcomes 3993 to 4013).
+
+- The rows give raid sizes, claims and own losses for 26 and 29 August and for 2, 5, 9, 13 and 14 September. Enemy numbers and claims are low and unconfirmed.
+- Communiqué 112's raid of "August 25 (Washington date)" of 16 two-engined bombers is keyed to the raid of 26 August, inferred. It is not the raid of 24 August.
+
+### Santa Cruz
+
+Events 1280 to 1293 and outcomes 3988, from ONI.
+
+**Hornet group.**
+
+- 8 CAP at 10,000 feet over the carrier at 0800.
+- Outgoing strike planes reported two groups about 60 miles out at 0930, and 24 dive bombers at 60 miles on 280 at 0940.
+- Hornet's radar had the raid at 20 to 30 miles at 1005. The narrative says "a few minutes before 1000".
+- The patrol was seen attacking about 15 miles out.
+- ONI judges that most enemy aircraft were "intercepted too late, often after they had completed their attack", because fighter direction was overloaded.
+
+**Enterprise group.**
+
+- 12 fighters on station, and 11 more launched at 0940.
+- Radar contacts: 45 miles at 0957; 23 miles at 1100; South Dakota at 55 miles, tracked to 25; 45 miles at 1201, before the attack of about 1220.
+- The radar plot reported the screen clear a minute or less before that attack.
+- Attackers were at about 17,000 feet by radar, with nine fighters above.
+- Vejtasa's flight was at 12,000 feet with bombers above it and was directed down to 7,000. It intercepted eleven torpedo planes at 13,000 feet.
+
+**Not found:** how many of the whole patrol made contact, at the Eastern Solomons or at Santa Cruz (gap).
+
+## Night action duration (file 12)
+
+The file quotes Bates, the ONI narratives, the USSBS naval interrogations and Lundgren (NavWeaps) closely. 51 of its 73 claims were already rows. What is new:
+
+**Why Mikawa withdrew from Savo Island** (outcomes 4014 to 4017, Bates chapter XVII, printed p. 220, OCR).
+
+- **Bates's judgement:** "the real reason for the decision of Commander Cruiser Force to withdraw was his apprehension of Allied carrier-based aircraft".
+- **His staff's argument:** re-forming the scattered force would take considerable delay, which would leave it within reach of Allied aircraft at dawn.
+- **Mikawa's own account,** given in 1949, is that he wished to go back but let his staff prevail.
+- **Bates's reconstruction:** 0330 as the earliest planned retirement (low, inferred).
+- **Matsuyama** (USSBS interrogation, 18th Cruiser Division; outcomes 4020 to 4023): his orders were to pass round Savo, attack and go home. He did not know why the force retired.
+- **Patterson** could no longer reach a torpedo position once Kinugasa turned north at 0205 (outcomes 4018).
+
+All of this is a later judgement or postwar testimony. No contemporary Japanese statement of the reason was found (gap).
+
+**The Japanese column's speed at Savo** (positions 542 to 545, Bates).
+
+- 26 knots from the order for independent fire at 0136.
+- Chokai at 26 knots on 069 at 0150. Row 209 reads 068.
+- Furutaka at 26 knots on 000 at 0156.
+- The eastern group retiring on 328 at 26 knots after 0216.
+- The earlier rows had 26 knots up to 0140.
+- Japanese fire ceased at 0216 (outcomes 4019).
+
+**Torpedo reloads.** No source gives the time to reload a tube for any ship or class. Bates's times for Kako (0146, 0201, 0205) do not say which torpedoes were reloads. This stays a gap, now with the sources read.
+
+**Tassafaronga, from the Japanese side** (USSBS interrogation of Toyama; outcomes 4024 to 4028, positions 546 to 548). None of this was held before.
+
+- Orders: land supplies and a few troops.
+- No gunfire unless necessary; a mass torpedo attack.
+- Takanami fired about 70 rounds; the calibre is not stated.
+- The force retired to the north-west for fear of interception.
+- Speeds: 15, 12 and 24 knots.
+
+**15 November** (outcomes 4029 to 4031, event 1298).
+
+- Gatch took South Dakota out as "more of a liability".
+- At 0133 Lee reversed course "to avoid a possible torpedo trap".
+- COMSOPAC's order: engage "unless profitably engaged" otherwise.
+- Kondo's instruction suspended the bombardment until the American surface force was destroyed (Lundgren).
+
+**Also held now:**
+
+- the "last episode of the action proper" on 13 November (outcomes 4033);
+- Helena's order to assemble at 0226 (event 1299);
+- Wright's instruction at Tassafaronga to close and sink cripples once action is broken off (outcomes 4032);
+- the time Tisdale received command (event 1300).
+
+**For the architect.** Bates's text and footnote call Mikawa's order "8th Fleet Signal Order No. 25". Positions row 193 calls it No. 26. The page image was not read.
 
 ## Not found, and leads for the next pass
 
