@@ -145,10 +145,10 @@ fn variant(name: &str, chances: [&str; 3], seed: Option<u64>, edits: &[(&str, &s
             lines.join("\n")
         });
     });
-    // On the frozen figures, so on the frozen copy of scenario 5 in
-    // `data/scenarios/step2-frozen` (decision 0073 and the folder's README:
-    // frozen figures go with frozen scenarios).
-    let folder = if name == "05_eastern_solomons.toml" {
+    // On the frozen figures, so on the frozen copies of scenarios 5 and 6 in
+    // `data/scenarios/step2-frozen` (decisions 0073 and 0082 and the folder's
+    // README: frozen figures go with frozen scenarios).
+    let folder = if name == "05_eastern_solomons.toml" || name == "06_rabaul_guadalcanal.toml" {
         "data/scenarios/step2-frozen"
     } else {
         "data/scenarios"
@@ -802,9 +802,15 @@ fn the_log_without_the_claims_is_the_log_from_before_decision_0056() {
             .filter(|line| line.starts_with('#'))
             .map(|line| line.trim_end_matches("  [issued by the staff]").to_string())
             .collect();
-        let mut scenario =
-            common::load(&PathBuf::from(ROOT).join(format!("data/scenarios/{name}.toml")))
-                .expect("the scenario loads");
+        // On the frozen figures, so scenario 6 on its frozen copy (decision
+        // 0082; `data/scenarios/step2-frozen/README.md`).
+        let folder = if name == "06_rabaul_guadalcanal" {
+            "data/scenarios/step2-frozen"
+        } else {
+            "data/scenarios"
+        };
+        let mut scenario = common::load(&PathBuf::from(ROOT).join(format!("{folder}/{name}.toml")))
+            .expect("the scenario loads");
         scenario.run_to_end().expect("the run resolves");
         let after: Vec<String> = lines_without_claims(&scenario.world)
             .into_iter()

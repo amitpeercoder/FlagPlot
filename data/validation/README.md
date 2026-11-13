@@ -79,6 +79,10 @@ No passage is judged today. Research found no long run at one held speed, and a 
 - **Each measure is judged alone.** Agreement on several measures does not show that one run holds them together; where a total can agree with its parts wrong, the parts get measures of their own (decision 0084).
 - **Whole numbers only,** as in every data file.
 
+## Figures a battle cannot reach
+
+- **The attack on a field (`air_combat.toml`, `[base_hit]`) cannot be tuned on the Eastern Solomons.** That battle has one raid on a field, six bombers from Ryujo on Henderson Field: about 0.4 hits on aircraft are expected in a run, which no measure can read. The spec puts "the attack on a ship or a field" among the figures tuned on the Eastern Solomons and checked on Rabaul. For the field, this cannot be done. The `[base_hit]` figures are tuned on Rabaul against Guadalcanal (`us_aircraft_destroyed_on_the_ground`) and are not checked on any battle, like the slow figures. Ruled by the architect on Nov 13, 2026 (decision 0082, M5), and put to the spec session for `docs/step2-spec.md`.
+
 ## Who settles them
 
 The ranges, and the rows the measures read, are settled by the coordinating architect (the main session), who keeps these files and the step 2 spec since Nov 13, 2026; each file says who settled it, with the date. Files settled before then name the spec session's architect, whose session is archived.
