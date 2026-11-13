@@ -1,6 +1,6 @@
 # 0071: A force not ready fires part of its torpedoes
 
-Status: decided by the architect on Nov 13, 2026, under the designer's mandate of that day. It reverses the designer's answer 4 to decision 0068 ("torpedoes left as they are"), so it is marked needs review. Every figure in it is a placeholder.
+Status: decided. The designer was told on Nov 13, 2026 that this reverses his answer 4 to decision 0068 and delegated the decision to the coordinating architect in these words: 'Go ahead and decide all matters that need decisions'. The architect decided it the same day. Every figure in it is a placeholder.
 
 ## The gap
 
@@ -187,4 +187,76 @@ Three things were noticed and left with no change:
 
 ## As built
 
-To be written with the build.
+Built on Nov 13, 2026. The architect wrote the hand calculation before any code was delegated.
+
+- **No new state.**
+  - Readiness is read from `ForceFight.ready`, which decision 0068 already keeps.
+  - `hash::STATE_VERSION` is unchanged. There is no new draw and no new event.
+- **The figure.**
+  - `unready_torpedo_share` in `surface_combat.toml`, from 0.1 to 1. The loader refuses a value outside that range, a float, or a missing key.
+  - The live file holds "0.5", a placeholder, with the comment of "What the share carries".
+  - The frozen file `data/reference/step1/surface_combat.toml` gains the key at "1", where the rule does nothing, as decision 0068 did for the guns. No hand calculation of step 1 moved, and no expected number in any existing test changed.
+- **The rule.**
+  - `Fight::torpedo_share(force)` is the figure if the force was not ready, else 1.
+  - `torpedo_shots` is tubes x the torpedo mount factor x that share, both where the shots are fired and in `has_any_salvo`, the test for who is surprised.
+  - `torpedoes_ready` is cleared after the salvo as before, however few tubes fired.
+- **The breakdown.**
+  - A torpedo salvo's factors are, in order: `tubes`, `rate`, `minutes`, `torpedo_mount_factor`, `unready_torpedo_share`, `base_chance`, `surprised_factor`, `lit_factor`, then `experience_factor` only in a dark fight.
+  - The factor is named only when the force was not ready and the figure is below 1.
+- **What a side sees.** `side_events.rs` keeps the factor among the firer's own factors of `Salvo`. `SalvoAgainst` has no breakdown, so the enemy never sees it.
+- **Scenario 15b** (`data/scenarios/15b_unready_torpedoes.toml`, `tests/scenario_15b_unready_torpedoes.rs`) asserts the hand calculation:
+
+  | Case | Shots | Expected hits |
+  | --- | --- | --- |
+  | Not ready, mounts sound, night | 4 | 0.16 |
+  | Not ready, mounts degraded, night | 2 | 0.08 |
+  | At battle readiness by order, night | 8 | 0.32 |
+  | 15a's case (c), alerted in the pulse before, fight by day | 8 | 0.16 |
+  | Case (c)'s control, not ready, by day | 4 | 0.08 |
+
+  It also asserts:
+  - no enemy view carries the factor;
+  - with the key at 1 the log is 15a's and 4a's, event for event;
+  - torpedo hits are within four sigma of what the chances expect;
+  - over 300 seeds, lowering the share never raises the firing force's torpedo hits (B's total: 101 hits at 0.5, 219 at 1).
+
+  A pinned outcome on the live figures, seed 1942, completes the three parts the spec asks for.
+
+  Night torpedo salvos at a lit target never occur (a target is lit only by fire from an earlier round, and a ship fires its torpedoes in its first firing round), so that cell is not asserted.
+- **Goldens remade.**
+  - The run baselines of 04, 07, 08 and 16 changed in their hashes and logs. Savo Island's day 1 hash went from 3da9d09ff98bb1f6 to 872f04b05ba8798e. Scenario 16's went from 0be882cc31372323 (145 events) to 89fa08fb5e2193b4 (146 events), and its test proper, on altered frozen figures, held.
+  - The logs of 04a, 04c_in_and_out, 04c_three_forces, 14a and 15a changed only in the torpedo salvos of a force not ready; their hashes are unchanged.
+  - The saves of the three recorded games, and the version 1 batch capture of scenario 6, take only the new hash of `surface_combat.toml`. The recorded games' transcripts and daily hashes are byte for byte as before.
+- **What Savo Island shows.** 1,000 runs, seeds 1 to 1000, measures as on `main` with this change's two new measures. Before is the engine with the share at 1; it gives the same runs as `main`. After is the share at 0.5. Nothing is tuned.
+
+  | Measure | Record | Before: median (5th to 95th), runs holding | After | Verdict before / after |
+  | --- | --- | --- | --- | --- |
+  | allied_cruisers_sunk | 4 | 0 (0 to 2), 2 | 0 (0 to 2), 0 | miss / miss |
+  | southern_group_cruisers_sunk | 1 | 0 (0 to 2), 342 | 0 (0 to 2), 347 | agrees / agrees |
+  | northern_group_cruisers_sunk | 3 | 0 (0 to 1), 0 | 0 (0 to 1), 0 | miss / miss |
+  | allied_destroyers_sunk | 0 | 3 (1 to 4), 15 | 3 (1 to 4), 10 | miss / miss |
+  | japanese_ships_sunk | 0 | 1 (0 to 3), 479 | 0 (0 to 2), 643 | agrees / agrees |
+  | japanese_ships_with_propulsion_out | 0 | 0 (0 to 1), 923 | 0 (0 to 1), 948 | agrees / agrees |
+  | japanese_ships_sunk_or_stopped | 0 | 1 (0 to 3), 428 | 0 (0 to 2), 599 | agrees / agrees |
+  | gun_hits_on_allied_ships | 153 to 219 | 121 (37 to 175), 176 | 125 (41 to 177), 182 | edge / edge |
+  | gun_hits_on_japanese_ships | 10 to 17 | 53 (2 to 159), 32 | 49 (1 to 164), 38 | miss / miss |
+  | torpedo_hits_on_allied_ships | 4 to 9 | 3 (1 to 7), 411 | 3 (1 to 7), 408 | agrees / agrees |
+  | torpedo_hits_on_japanese_ships | 0 | 2 (0 to 7), 176 | 1 (0 to 4), 345 | edge / agrees |
+  | allied_torpedoes_fired (reported) | 4 to 6 | 56 (0 to 72), 0 | 28 (0 to 36), 25 | reported |
+  | japanese_gun_hits_per_thousand_shells | 81 to 117 | 50 (33 to 64), 0 | 50 (33 to 64), 0 | miss / miss |
+  | allied_gun_hits_per_thousand_shells | 21 to 36 | 38 (11 to 57), 326 of 980 | 38 (11 to 57), 324 of 980 | agrees / agrees |
+  | japanese_main_battery_shells_fired_in_hundreds | 10 to 11 | 24 (10 to 32), 39 | 24 (11 to 32), 24 | miss / miss |
+  | allied_main_battery_shells_fired_in_hundreds | 3 | 13 (1 to 32), 29 | 12 (1 to 33), 29 | miss / miss |
+  | southern_group_main_battery_shells_fired_in_hundreds | 0 | 4 (0 to 13), 373 | 4 (0 to 12), 401 | agrees / agrees |
+  | northern_group_main_battery_shells_fired_in_hundreds | 3 | 8 (1 to 24), 45 | 8 (1 to 22), 58 | miss / agrees |
+  | tenryu_and_yubari_main_battery_shells_fired_in_hundreds | 1 | 9 (4 to 15), 0 | 9 (4 to 15), 0 | miss / miss |
+  | minutes_of_action | 20 to 30 | 25 (15 to 50), 458 | 25 (15 to 50), 458 | agrees / agrees |
+  | surface_fights_by_day | 0 | 0 (0 to 4), 518 | 0 (0 to 4), 654 | agrees / agrees |
+  | japanese_ships_claimed_sunk_per_hundred_sunk (reported) | 350 | 120 (100 to 250), 2 of 988 | 125 (100 to 250), 1 of 992 | reported |
+  | allied_ships_claimed_sunk | 0 | 1 (0 to 4), 455 | 0 (0 to 4), 603 | agrees / agrees |
+
+  - **The head line:** judged 21. Before, 10 agree, 2 are at the edge and 9 miss. After, 12 agree, 1 is at the edge and 8 miss.
+  - **Fights by day:** runs with one fall from 482 to 346, and the fights themselves from 1,249 to 938.
+  - **Allied torpedoes fired:** a mean of 48.9 a run before and 24.5 after.
+  - **The result on the scale:** an Allied defeat of some kind in 696 runs, where it was 563, and a victory in 115, where it was 216. The median margin goes from -4 to -5.5.
+- **Still open.** `surface_fights_by_day` agrees, and 346 runs still have a fight by day. It is read again after the rates of fire (decision 0070) and the shares are set; if it still misses once the night's hits on Japanese ships are near the record, option 3 is next. The night's gun hits on Japanese ships (median 49 against 10 to 17) are for tuning.
