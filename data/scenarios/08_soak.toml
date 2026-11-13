@@ -977,12 +977,28 @@ aircraft_type = 2102
 aircraft_per_day = 2
 pilots_per_day = 2
 
-# Rabaul: the bombers raid Henderson Field. Both fighter groups keep nothing
-# over Rabaul and send every fighter that can fly as escort. The staff rests
-# each group above a fatigue of 45.
+# Rabaul: the raid days are the record's, as in scenario 6 (decision 0082,
+# where the rows are named). The bombers fly the base strike on the days a
+# raid reached Henderson Field by the units' own forms (25 and 26 August, 29
+# and 30 August, 2 and 5 September, 9 to 13 September: days 5, 6, 9, 10, 13,
+# 16 and 20 to 24) and rest on the others. No row sets a rest threshold, so
+# none is given. Both fighter groups keep nothing over Rabaul and send every
+# fighter that can fly as escort, which they do only on a raid day.
+# The record's schedule ends with scenario 6's window, on day 28. From day 29
+# the soak goes back to the standing orders scenario 6 had before decision
+# 0082 (decision 0042, 16): the bombers raid whenever they are fit and the
+# staff rests each Japanese group above a fatigue of 45. THE SOAK'S, NOT THE
+# RECORD'S: it exists to run the campaign long (decision 0044).
 
 [[order]]
 day = 1
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 5
 side = "japanese"
 air_group = 1
 kind = "set_air_mission"
@@ -990,57 +1006,136 @@ mission = "base_strike"
 target_base = 1
 
 [[order]]
+day = 7
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 9
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 11
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 13
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 14
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 16
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 17
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 20
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 25
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
 day = 1
+side = "japanese"
+air_group = 2
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 2
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_air_mission"
+mission = "combat_air_patrol"
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 3
+kind = "set_patrol_share"
+share = "0"
+
+[[order]]
+day = 29
+side = "japanese"
+air_group = 1
+kind = "set_air_mission"
+mission = "base_strike"
+target_base = 1
+
+[[order]]
+day = 29
 side = "japanese"
 air_group = 1
 kind = "set_rest_threshold"
 fatigue = 45
 
 [[order]]
-day = 1
-side = "japanese"
-air_group = 2
-kind = "set_air_mission"
-mission = "combat_air_patrol"
-
-[[order]]
-day = 1
-side = "japanese"
-air_group = 2
-kind = "set_patrol_share"
-share = "0"
-
-[[order]]
-day = 1
+day = 29
 side = "japanese"
 air_group = 2
 kind = "set_rest_threshold"
 fatigue = 45
 
 [[order]]
-day = 1
-side = "japanese"
-air_group = 3
-kind = "set_air_mission"
-mission = "combat_air_patrol"
-
-[[order]]
-day = 1
-side = "japanese"
-air_group = 3
-kind = "set_patrol_share"
-share = "0"
-
-[[order]]
-day = 1
+day = 29
 side = "japanese"
 air_group = 3
 kind = "set_rest_threshold"
 fatigue = 45
 
 # Henderson Field: every fighter group patrols over the field with all it
-# can fly, and the staff rests each above a fatigue of 40. The dive bombers
-# are held for ships, and there are none: they stay on the ground.
+# can fly, and the staff rests each above a fatigue of 40. That patrol and
+# that threshold are invented, not from a row (decision 0082, 3). The dive
+# bombers are held for ships. Unlike scenario 6, this scenario holds ships,
+# and the rows have these dive bombers striking the convoy (engagement
+# outcomes 1763, 1765, 314, 418, 419), so they stay on naval strike here and
+# do not search (decision 0082).
 
 [[order]]
 day = 1
