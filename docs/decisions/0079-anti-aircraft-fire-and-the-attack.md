@@ -1,6 +1,6 @@
 # 0079: Anti-aircraft fire and the attack
 
-Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code.
+Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code. Built on Nov 13, 2026; see "As built".
 
 ## The gap
 
@@ -108,3 +108,46 @@ Nothing of this rule was run: it was written from the air tuning plan's counts (
 - The run baselines, pins and recorded games of every scenario with a raid that meets guns. These are all live air scenarios.
 - No hand calculation on the frozen figures moves.
 - `docs/rules/05` and the glossary in the same pull request.
+
+## As built
+
+**The code.**
+- `crates/sim-core/src/airstrike.rs` builds the rule in two places.
+  - `work_out_raid` rolls the guns' first k shots and then the other n − k from the one stream. The second part's hits are taken from the bombers only after the attack outcomes are fixed.
+  - `resolve_strikes` records the fire after the attack in step 4a, with its losses and its note in the raid's claim tally.
+- `events.rs` and `side_events.rs` carry `after_attack`.
+- `sim-core` has no serde, so "written only when true" is done where files are written: the export layer writes the field only when it is true (`sim-cli` export, umpire and side events alike).
+- The briefing (`sim-agent`) lists a fire after the attack as a guns line of its own, unmarked. Whether it should say so is left for a wording change.
+- The figure is required in `air_combat.toml`, checked to lie from 0 to 1. It is 0 live and 1 in the frozen copy.
+- No state, no hash layout, no stream and no `Draw` value changed.
+
+**The proof that a share of 1 is step 1.**
+- The event logs of 05c, 06a, 13a, 13b and 16 on the frozen figures are byte for byte those of the binary before the rule. So are those of 05 and 06, run on a frozen copy with the new key taken out for the old binary.
+- Every hand calculation on the frozen figures passes untouched.
+
+**Its scenario.**
+- `18a_guns_and_the_attack`, with the hand calculation of the cases above. Every number matched with no difference.
+- Properties over seeds 1 to 1,000 at shares 1, 0.5, 0.33 and 0. The guns' hits, each group's losses, the defender's claims and the raider's aircraft claimed are equal at every share, and the attack-shot totals are inside their ranges.
+- Pinned outcomes. The scenario's own seed, 1942, has the guns miss all 20 shots, so seed 10 is pinned beside it as the first seed on which the share moves hits across the attack.
+- The defender's claims are equal at every share, and so is the raider's claim of aircraft shot down. The raider's claim of hits rests on the bombs it dropped, which differ by share; decision 10 was corrected to say so when the build found it.
+
+**Before and after, 1,000 runs each, label `d0079`.** The reports are `docs/validation/eastern-solomons-d0079.md` and `rabaul-guadalcanal-air-d0079.md`. "Before" is main with the strike report after the damage (differences row 7), which changed no measure.
+
+| Eastern Solomons | Record | Before: 5th to 95th, median | After | Verdict after |
+| --- | --- | --- | --- | --- |
+| Japanese aircraft attacking TF16 and TF11 | 37 | 0 to 46, 35 | 0 to 56, 49 | miss |
+| Bomb hits on Enterprise | 3 | 0 to 9, 4 | 0 to 12, 6 | miss |
+| Japanese carrier aircraft lost to enemy action | 29 to 32 | 2 to 40, 28 | 2 to 40, 28 | agrees |
+| US aircraft lost to enemy action | 13 to 14 | 1 to 11, 5 | 1 to 11, 5 | miss |
+| US aircraft attacking the Ryujo detachment | 36 | 0 to 84, 0 | 0 to 85, 0 | miss |
+
+- Judged 14: agree 10 and miss 4 before; agree 8 and miss 6 after.
+- The guns' hits are the same, a run, before and after: 7.53 on Japanese raids and 1.03 on American ones. Their bombers now drop first: Japanese bombs dropped at ships rise from 17.6 to 25.1 a run, and their hits from 3.5 to 5.1.
+- The two new misses are the doubled Japanese strike of the scenario (both waves at once, 54 dive bombers where the first wave was 27). With the defence's work done before the dive, half of them used to die before they bombed and the two measures agreed by that accident. They are left to decision 0081, which sets the waves from the record, and are not to be mended by a figure.
+
+At Rabaul nothing moves beyond a run or two:
+- bombers lost 12 (6 to 19);
+- aircraft destroyed on the ground 16 against 15;
+- bomber sorties that reach the island 268 against 263, where the 4.4 bombers a run the guns kill now bomb first.
+
+Judged 10: agree 3, at the edge 1, miss 6, as before.
