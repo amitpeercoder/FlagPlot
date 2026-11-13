@@ -1,9 +1,8 @@
 # FROZEN COPY. Do not edit. Scenario 5 as it stood on main with decision
-# 0063's orders (Nov 12, 2026), before decision 0073 set the Japanese search
-# from the record. Only the hand-calculation tests read it
-# (tests/scenario_05_eastern_solomons.rs). The paths to the map and the
-# reference files are one folder deeper than in the live file; nothing else
-# differs. See README.md beside it.
+# 0063's orders, before decision 0073 set the Japanese search from the
+# record. Every test that runs scenario 5 on the frozen figures of step 1
+# reads it. The paths to the map and the reference files are one folder
+# deeper than in the live file; nothing else differs. See README.md beside it.
 #
 # Scenario 5: Eastern Solomons, 24 August 1942.
 #

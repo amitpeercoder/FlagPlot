@@ -95,6 +95,8 @@ fn assert_same(name: &str, a: &Outcome, b: &Outcome) {
 }
 
 const FULL: &str = "07_full_slice.toml";
+/// The frozen copy of the full slice, for the run on the frozen figures.
+const FULL_FROZEN: &str = "step2-frozen/07_full_slice.toml";
 
 #[test]
 fn the_full_slice_runs_fourteen_days_with_the_invariants_holding() {
@@ -411,8 +413,10 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     let all = event_kinds();
     assert!(all.len() >= 50, "read {} kinds", all.len());
     // On the frozen figures: which kinds of event the log holds depends on
-    // what the figures make happen.
-    let outcome = run(common::load(&scenario_path(FULL)).expect("the scenario loads"));
+    // what the figures make happen. It runs on the frozen copy of the scenario,
+    // `data/scenarios/step2-frozen/07_full_slice.toml`, as decision 0073 and
+    // the folder's README say: frozen figures go with frozen scenarios.
+    let outcome = run(common::load(&scenario_path(FULL_FROZEN)).expect("the scenario loads"));
     let seen: BTreeSet<String> = outcome
         .events
         .iter()
