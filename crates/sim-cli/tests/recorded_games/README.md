@@ -57,3 +57,5 @@ Regenerated after decision 0067, which records every base at the end of each day
 Regenerated after decision 0064 stage 1, which adds a ship's experience to the state (the hash is at version 6). The requests and accounts are as played; every answer of every game is as before, and the saves differ in hashes only (the state layout string and the data-file hash of `surface_combat.toml`, which gained three figures; the games' scenarios are not scenario 4, so no result moved).
 
 Regenerated after decision 0068 (a force not ready fires part of its guns). The transcripts are byte for byte as before; each `save.json` differs only in the hash of `surface_combat.toml` among its data files, which gained the key `unready_gun_share`.  Every answer and every daily hash is as before.
+
+Regenerated after decision 0071 (a force not ready fires part of its torpedoes, Nov 13, 2026). The transcripts are byte for byte as before; each `save.json` differs only in the hash of `surface_combat.toml` among its data files, which gained the key `unready_torpedo_share`. Every answer and every daily hash is as before.

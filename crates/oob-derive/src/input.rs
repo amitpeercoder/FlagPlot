@@ -361,6 +361,8 @@ struct RawRules {
     exception: Vec<RawException>,
     #[serde(default)]
     experience: Option<crate::experience::RawRulesExperience>,
+    #[serde(default)]
+    fire_rate: Option<crate::fire_rate::RawFireRate>,
 }
 
 #[derive(Deserialize)]
@@ -405,6 +407,8 @@ pub struct Rules {
     pub exceptions: Vec<Exception>,
     /// The questions' thresholds and the navies' rows (decision 0064).
     pub experience: Option<crate::experience::ExperienceRules>,
+    /// The cases of achieved rates of fire (decision 0070).
+    pub fire_rate: Option<crate::fire_rate::FireRateRules>,
 }
 
 fn constant(name: &str, value: &toml::Value, problems: &mut Vec<Problem>) -> Option<Dec> {
@@ -527,6 +531,14 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
         }
         None => None,
     };
+    let fire_rate = match raw.fire_rate {
+        Some(raw) => {
+            let (fire_rate, fire_rate_problems) = crate::fire_rate::parse(raw);
+            problems.extend(fire_rate_problems);
+            fire_rate
+        }
+        None => None,
+    };
     let rules = match (gun, torpedo, toughness) {
         (Some(gun), Some(torpedo), Some(toughness)) => Some(Rules {
             gun_shell_kg_per_damage: gun,
@@ -538,6 +550,7 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
             search_sweep_width_nm: sweep,
             exceptions,
             experience,
+            fire_rate,
         }),
         _ => None,
     };

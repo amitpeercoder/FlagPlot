@@ -3850,3 +3850,414 @@ fn a_weapon_of_another_kind_or_unknown_in_an_aa_slot_is_a_problem() {
         ],
     );
 }
+
+// Achieved rates of fire (decision 0070).
+//
+// The class is `us-test-class`: eight guns, a sourced practical rate of 3.5.
+// Cases, each worked by hand (shells / (guns x minutes), truncated at the
+// sixth place):
+//
+// | Ship | Shells | Span | Working | Rate |
+// | --- | --- | --- | --- | --- |
+// | shp | 200 | 10 min, a duration row | 200 / 80 | 2.5 |
+// | shp2 | 90 | 2350 to 0010 across midnight, 20 min, two event rows | 90 / 160 | 0.5625 |
+// | shp (second battle) | 120 | 10 min | 120 / 80 | 1.5 |
+//
+// Medians: one case, 2.5. Two cases (even), (0.5625 + 2.5) / 2 = 1.53125.
+// Three cases (odd), the middle of 0.5625, 1.5, 2.5 = 1.5.
+
+const OUTCOME_HEADER: &str = "id,engagement,ship,measure,value,as_stated,source,locator,accessed,\
+    confidence,basis,standing,note\n";
+const EVENT_HEADER: &str = "id,engagement,time,kind,actor,target,means,range_m,bearing_deg,\
+    position,value,as_stated,source,locator,accessed,confidence,basis,standing,note\n";
+
+fn outcome(id: u32, engagement: &str, ship: &str, measure: &str, value: &str) -> String {
+    format!(
+        "{id},{engagement},{ship},{measure},{value},stated,a,{SOURCE_TAIL},low,stated,unconfirmed,a note"
+    )
+}
+
+fn event(id: u32, time: &str, kind: &str, actor: &str) -> String {
+    format!(
+        "{id},eng,{time},{kind},{actor},,,,,,,said,a,{SOURCE_TAIL},low,stated,unconfirmed,a note"
+    )
+}
+
+/// The base set with two engagements, outcome rows 1 to 6 and event rows
+/// 10 to 13.
+fn fire_base() -> Files {
+    let mut files = base();
+    files.insert(
+        "engagements.csv".to_string(),
+        table(
+            "id,key,name,date_from,date_to,zone\n",
+            &[
+                "1000,eng,Eng,1942-08-08,1942-08-09,".to_string(),
+                "1001,eng2,Eng 2,1942-08-08,1942-08-09,".to_string(),
+            ],
+        ),
+    );
+    files.insert(
+        "engagement_outcomes.csv".to_string(),
+        table(
+            OUTCOME_HEADER,
+            &[
+                outcome(1, "eng", "shp", "main_rounds_fired", "200"),
+                outcome(2, "eng", "shp", "firing_duration_min", "10"),
+                outcome(3, "eng", "shp2", "main_rounds_fired", "90"),
+                outcome(4, "eng2", "shp", "rounds_fired_in_window", "120"),
+                outcome(5, "eng2", "shp", "duration_min", "10"),
+                outcome(6, "eng", "shp", "firing_duration_min", "4"),
+                outcome(7, "eng", "shp", "main_rounds_fired", "800"),
+                outcome(8, "eng", "boat", "main_rounds_fired", "100"),
+                outcome(9, "eng", "shp", "hits", "5"),
+            ],
+        ),
+    );
+    files.insert(
+        "engagement_events.csv".to_string(),
+        table(
+            EVENT_HEADER,
+            &[
+                event(10, "1942-08-08T23:50", "open_fire", "shp2"),
+                event(11, "1942-08-09T00:10", "cease_fire", "shp2"),
+                event(12, "1942-08-08T23:50", "open_fire", "shp2"),
+                event(13, "1942-08-08T23:52", "check_fire", "shp2"),
+            ],
+        ),
+    );
+    files
+}
+
+const BLOCK: &str = "[fire_rate]\nmin_span_minutes = 5\n";
+
+fn case(kind: &str, ship: &str, class: &str, engagement: &str, rows: &str) -> String {
+    format!(
+        "[[fire_rate.case]]\nkind = \"{kind}\"\nship = \"{ship}\"\nclass = \"{class}\"\n\
+         engagement = \"{engagement}\"\n{rows}\nreason = \"a reason\"\nagreed = \"2026-11-13\"\n"
+    )
+}
+
+fn case_one() -> String {
+    case(
+        "salvo",
+        "shp",
+        "us-test-class",
+        "eng",
+        "shells_row = 1\nspan_row = 2",
+    )
+}
+
+fn case_two() -> String {
+    case(
+        "salvo",
+        "shp2",
+        "us-test-class",
+        "eng",
+        "shells_row = 3\nspan_from_event = 10\nspan_to_event = 11",
+    )
+}
+
+fn case_three() -> String {
+    case(
+        "salvo",
+        "shp",
+        "us-test-class",
+        "eng2",
+        "shells_row = 4\nspan_row = 5",
+    )
+}
+
+fn with_block(parts: &[String]) -> String {
+    format!("{RULES}{BLOCK}{}", parts.join("\n"))
+}
+
+fn rate_of(ships: &[&str], rules: &str, files: &Files) -> String {
+    let outputs = derive_with_rules(ships, &[], rules, files)
+        .unwrap_or_else(|problems| panic!("{problems:#?}"));
+    // gun_rounds_per_min is column 9 of the class row.
+    records(&outputs.class_csv)[0][9].clone()
+}
+
+#[track_caller]
+fn rule_fails(rules: &str, files: &Files) -> Vec<String> {
+    derive_with_rules(&["shp"], &[], rules, files).expect_err("problems expected")
+}
+
+#[test]
+fn without_a_fire_rate_block_the_sourced_rate_stands() {
+    let files = fire_base();
+    assert_eq!(rate_of(&["shp"], RULES, &files), "3.5");
+    let outputs = derive_with_rules(&["shp"], &[], RULES, &files).expect("derives");
+    assert!(!outputs.class_csv.contains("Achieved rates"));
+}
+
+#[test]
+fn the_lesser_of_the_sourced_and_the_achieved_rate_is_the_figure() {
+    // One case, odd: 2.5 against a sourced 3.5.
+    let files = fire_base();
+    let rules = with_block(&[case_one()]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "2.5");
+    let outputs = derive_with_rules(&["shp"], &[], &rules, &files).expect("derives");
+    let row = source_of(&outputs, "1000", "gun_rounds_per_min");
+    assert!(
+        row[5].contains(
+            "rate in action (decision 0070): the lesser of the sourced rate 3.5 and the achieved rate 2.5 of kind salvo, the median of 1 case"
+        ),
+        "{row:?}"
+    );
+    for cite in [
+        "engagement_outcomes.csv:1",
+        "engagement_outcomes.csv:2",
+        "fits.csv:1",
+    ] {
+        assert!(row[4].contains(cite), "{cite} in {row:?}");
+    }
+    // The class CSV's header states the cases.
+    let header = comments(&outputs.class_csv);
+    assert!(header.contains("# Achieved rates of fire (decision 0070):"));
+    assert!(header.contains("#   salvo: median 2.5 of 1 case"));
+    assert!(header.contains("#   destroyer: no case: the sourced rate is kept"));
+    assert!(header.contains("shp (eng), salvo: 200 / (8 x 10) = 2.5"));
+}
+
+#[test]
+fn a_sourced_rate_below_the_achieved_rate_is_kept() {
+    // 800 / 80 = 10 against a sourced 3.5.
+    let files = fire_base();
+    let rules = with_block(&[case(
+        "salvo",
+        "shp",
+        "us-test-class",
+        "eng",
+        "shells_row = 7\nspan_row = 2",
+    )]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "3.5");
+}
+
+#[test]
+fn an_even_number_of_cases_gives_the_mean_of_the_middle_two() {
+    // 2.5 and 0.5625: (0.5625 + 2.5) / 2 = 1.53125. The second case's span
+    // is two event rows, 2350 to 0010 across midnight: 20 minutes.
+    let files = fire_base();
+    let rules = with_block(&[case_one(), case_two()]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "1.53125");
+    let outputs = derive_with_rules(&["shp"], &[], &rules, &files).expect("derives");
+    assert!(comments(&outputs.class_csv).contains("shp2 (eng), salvo: 90 / (8 x 20) = 0.5625"));
+}
+
+#[test]
+fn an_odd_number_of_cases_gives_the_middle_one() {
+    let files = fire_base();
+    let rules = with_block(&[case_one(), case_two(), case_three()]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "1.5");
+}
+
+#[test]
+fn a_span_under_the_minimum_is_a_problem() {
+    let files = fire_base();
+    let rules = with_block(&[case(
+        "salvo",
+        "shp",
+        "us-test-class",
+        "eng",
+        "shells_row = 1\nspan_row = 6",
+    )]);
+    let problems = rule_fails(&rules, &files);
+    assert_one(
+        &problems,
+        &[
+            "rules: rules: fire_rate case shp (eng)",
+            "4 minutes, under min_span_minutes 5",
+        ],
+    );
+    // Events two minutes apart.
+    let rules = with_block(&[case(
+        "salvo",
+        "shp2",
+        "us-test-class",
+        "eng",
+        "shells_row = 3\nspan_from_event = 12\nspan_to_event = 13",
+    )]);
+    assert_one(
+        &rule_fails(&rules, &files),
+        &["2 minutes, under min_span_minutes 5"],
+    );
+}
+
+#[test]
+fn a_ship_whose_class_differs_from_the_case_is_a_problem() {
+    let files = fire_base();
+    // `boat` is of jp-boat-class in ships.csv.
+    let rules = with_block(&[case(
+        "salvo",
+        "boat",
+        "us-test-class",
+        "eng",
+        "shells_row = 8\nspan_row = 2",
+    )]);
+    let problems = rule_fails(&rules, &files);
+    assert!(
+        problems.iter().any(|p| p
+            .contains("ship `boat` is of class `jp-boat-class` in ships.csv, not `us-test-class`")),
+        "{problems:#?}"
+    );
+}
+
+#[test]
+fn a_case_that_does_not_match_its_rows_is_a_problem() {
+    let files = fire_base();
+    // Shells row of another ship; a measure that is not a count of shells;
+    // a span row of another engagement; two spans at once; none.
+    for (rows, want) in [
+        (
+            "shells_row = 3\nspan_row = 2",
+            "shells row 3 is about `shp2`",
+        ),
+        ("shells_row = 9\nspan_row = 2", "has measure `hits`"),
+        (
+            "shells_row = 1\nspan_row = 5",
+            "span row 5 is about `shp` in `eng2`",
+        ),
+        (
+            "shells_row = 1\nspan_row = 1",
+            "span row 1 has measure `main_rounds_fired`",
+        ),
+        (
+            "shells_row = 99\nspan_row = 2",
+            "shells row 99 is not a row",
+        ),
+        (
+            "shells_row = 1\nspan_row = 2\nspan_from_event = 10\nspan_to_event = 11",
+            "exactly one span",
+        ),
+        ("shells_row = 1", "exactly one span"),
+        (
+            "shells_row = 1\nspan_from_event = 11\nspan_to_event = 10",
+            "has actor `shp2`, not `shp`",
+        ),
+    ] {
+        let rules = with_block(&[case("salvo", "shp", "us-test-class", "eng", rows)]);
+        let problems = rule_fails(&rules, &files);
+        assert!(
+            problems.iter().any(|p| p.contains(want)),
+            "`{want}` in {problems:#?}"
+        );
+    }
+}
+
+#[test]
+fn a_class_with_no_kind_or_no_case_keeps_its_sourced_rate() {
+    // The only case is a destroyer's: the cruiser class has a salvo kind
+    // with no case, so its sourced rate stands.
+    let files = fire_base();
+    let rules = with_block(&[case(
+        "destroyer",
+        "shp",
+        "us-test-class",
+        "eng",
+        "shells_row = 1\nspan_row = 2",
+    )]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "3.5");
+}
+
+#[test]
+fn a_continuous_class_takes_the_continuous_median() {
+    let files = fire_base();
+    let rules = with_block(&[
+        case(
+            "continuous",
+            "shp",
+            "us-test-class",
+            "eng",
+            "shells_row = 1\nspan_row = 2",
+        ),
+        case(
+            "salvo",
+            "shp2",
+            "us-test-class",
+            "eng",
+            "shells_row = 3\nspan_from_event = 10\nspan_to_event = 11",
+        ),
+        "[[fire_rate.continuous]]\nclass = \"us-test-class\"\nrows = [1]\n\
+         reason = \"a reason\"\nagreed = \"2026-11-13\"\n"
+            .to_string(),
+    ]);
+    // Continuous 2.5, not the salvo 0.5625.
+    assert_eq!(rate_of(&["shp"], &rules, &files), "2.5");
+    let outputs = derive_with_rules(&["shp"], &[], &rules, &files).expect("derives");
+    assert!(comments(&outputs.class_csv)
+        .contains("#   continuous class us-test-class: rows engagement_outcomes.csv:1"));
+}
+
+#[test]
+fn a_continuous_row_that_is_not_an_outcome_row_is_a_problem() {
+    let files = fire_base();
+    let rules = with_block(&[
+        case_one(),
+        "[[fire_rate.continuous]]\nclass = \"us-test-class\"\nrows = [99]\n\
+         reason = \"a reason\"\nagreed = \"2026-11-13\"\n"
+            .to_string(),
+    ]);
+    assert_one(
+        &rule_fails(&rules, &files),
+        &["row 99 is not a row of engagement_outcomes.csv"],
+    );
+}
+
+fn no_sourced(row: u32) -> String {
+    format!(
+        "[[fire_rate.no_sourced_rate]]\nclass = \"us-test-class\"\nrow = {row}\n\
+         reason = \"a reason\"\nagreed = \"2026-11-13\"\n"
+    )
+}
+
+#[test]
+fn a_class_with_no_sourced_rate_takes_the_achieved_rate_even_above_it() {
+    // 800 / 80 = 10, above the sourced 3.5, which is not read: weapon_facts
+    // row 2 is the gun's practical rate.
+    let files = fire_base();
+    let rules = with_block(&[
+        case(
+            "salvo",
+            "shp",
+            "us-test-class",
+            "eng",
+            "shells_row = 7\nspan_row = 2",
+        ),
+        no_sourced(2),
+    ]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "10");
+    let outputs = derive_with_rules(&["shp"], &[], &rules, &files).expect("derives");
+    let row = source_of(&outputs, "1000", "gun_rounds_per_min");
+    assert!(
+        row[5].contains("no sourced rate (weapon_facts.csv row 2 not read for this class); the achieved rate 10 of kind salvo, the median of 1 case"),
+        "{row:?}"
+    );
+}
+
+#[test]
+fn a_no_sourced_rate_row_that_is_not_the_weapons_is_a_problem() {
+    // Row 3 is the torpedo's warhead.
+    let files = fire_base();
+    let rules = with_block(&[case_one(), no_sourced(3)]);
+    assert_one(
+        &rule_fails(&rules, &files),
+        &[
+            "shp: exception:",
+            "names weapon_facts.csv row 3",
+            "not a row of weapon gun",
+        ],
+    );
+}
+
+#[test]
+fn a_weapon_with_no_practical_rate_takes_the_achieved_rate() {
+    let mut files = fire_base();
+    remove_row(&mut files, "weapon_facts.csv", 2);
+    remove_row(&mut files, "weapon_facts.csv", 6);
+    let rules = with_block(&[case_one()]);
+    assert_eq!(rate_of(&["shp"], &rules, &files), "2.5");
+    // Without the block it is still a missing rate.
+    assert_one(&fails(&["shp"], &files), &["missing"]);
+}
