@@ -128,6 +128,23 @@ pub enum Fired {
     Ships(BTreeSet<u32>),
 }
 
+/// What a `shots` take counts in: whole shots, or tens of shots, so that a
+/// record of a few dozen shells is not floored to nothing (decision 0084).
+#[derive(Clone, Copy)]
+pub enum ShotUnit {
+    Shells,
+    Tens,
+}
+
+impl ShotUnit {
+    fn divisor(self) -> i128 {
+        match self {
+            ShotUnit::Shells => 1,
+            ShotUnit::Tens => 10,
+        }
+    }
+}
+
 pub enum Take {
     ShipsSunk(BTreeSet<u32>),
     SystemOut(BTreeSet<u32>, String),
@@ -135,8 +152,8 @@ pub enum Take {
     HitsPerThousand(Side, Weapon),
     /// A side's shots with a weapon, or those of named ships.
     ShotsInHundreds(Fired, Weapon),
-    /// The same, in whole shots.
-    Shots(Fired, Weapon),
+    /// The same, in whole shots or in tens of shots.
+    Shots(Fired, Weapon, ShotUnit),
     /// Ships sunk, or afloat with a system out, counted once each.
     SunkOrSystemOut(BTreeSet<u32>, String),
     AirLosses(BTreeSet<u32>, Vec<Cause>),
@@ -271,6 +288,7 @@ fn no_other_keys(measure: &Measure, allowed: &[&str]) -> Result<(), String> {
         ("claim", measure.claim.is_some()),
         ("by", measure.by.is_some()),
         ("task_forces", measure.task_forces.is_some()),
+        ("unit", measure.unit.is_some()),
     ];
     let take = measure.take.as_deref().unwrap_or("");
     for (key, present) in given {
@@ -297,6 +315,12 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
         bases: batch.bases.iter().map(|b| b.id).collect(),
     };
     let take = need(measure, "take", measure.take.as_ref())?;
+    if measure.unit.is_some() && take != "shots" {
+        return Err(format!(
+            "measure {}: take {take} does not take the key unit",
+            measure.id
+        ));
+    }
     let ships = |m: &Measure| ids(m, "ships", &m.ships, &known.ships, "ship");
     let groups = |m: &Measure| ids(m, "air_groups", &m.air_groups, &known.groups, "air group");
     let who_and_target = |m: &Measure| -> Result<(Who, Target), String> {
@@ -370,7 +394,17 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
                 (None, _) => Fired::Side(side(measure)?),
             };
             if take == "shots" {
-                Take::Shots(whose, fired_weapon(measure)?)
+                let unit = match measure.unit.as_deref() {
+                    None | Some("shells") => ShotUnit::Shells,
+                    Some("tens") => ShotUnit::Tens,
+                    Some(other) => {
+                        return Err(format!(
+                            "measure {}: unit \"{other}\" is not shells or tens",
+                            measure.id
+                        ))
+                    }
+                };
+                Take::Shots(whose, fired_weapon(measure)?, unit)
             } else {
                 Take::ShotsInHundreds(whose, fired_weapon(measure)?)
             }
@@ -718,11 +752,11 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
         Take::ShotsInHundreds(Fired::Ships(ships), weapon) => {
             ships_in_hundreds(run, ships, *weapon)?
         }
-        Take::Shots(Fired::Side(side), weapon) => {
-            floored_sum(&[fired(run, *side, *weapon).shots.as_str()], 1)?
+        Take::Shots(Fired::Side(side), weapon, unit) => {
+            floored_sum(&[fired(run, *side, *weapon).shots.as_str()], unit.divisor())?
         }
-        Take::Shots(Fired::Ships(ships), weapon) => {
-            floored_sum(&ships_shots(run, ships, *weapon), 1)?
+        Take::Shots(Fired::Ships(ships), weapon, unit) => {
+            floored_sum(&ships_shots(run, ships, *weapon), unit.divisor())?
         }
         Take::AirLosses(groups, causes) => n(air_losses(run, groups, causes))?,
         Take::PilotsLost(groups) => n(run
@@ -857,7 +891,18 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
 
 #[cfg(test)]
 mod tests {
-    use super::{hundreds_of, in_hundreds};
+    use super::{floored_sum, hundreds_of, in_hundreds, ShotUnit};
+
+    #[test]
+    fn shots_in_tens_are_added_exactly_and_floored_once() {
+        let tens = ShotUnit::Tens.divisor();
+        assert_eq!(floored_sum(&["33"], tens), Ok(3));
+        assert_eq!(floored_sum(&["50", "1"], tens), Ok(5));
+        assert_eq!(floored_sum(&["29.9", "3.2"], tens), Ok(3));
+        assert_eq!(floored_sum(&["9.999999"], tens), Ok(0));
+        assert_eq!(floored_sum(&["5", "5"], tens), Ok(1));
+        assert_eq!(floored_sum(&["33.5"], ShotUnit::Shells.divisor()), Ok(33));
+    }
 
     #[test]
     fn shots_in_hundreds_rounds_down() {
