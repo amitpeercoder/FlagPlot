@@ -4,13 +4,13 @@ Nov 13, 2026. Assembled from the records by the architect's team; it adds no fin
 
 ## Where step 2 ends, and the one decision asked of you
 
-Step 2 built the harness, measured the slice's battles against the record, tuned what the sources allowed, and checked the surface figures once on a battle they were not tuned on. No battle passes outright. Across the four battles 62 measures are judged: 43 agree, 8 agree only at the edge, and 11 miss. Every miss and every edge agreement is listed below with its cause and with what in step 3 would answer it. **The one decision asked of you: accept the named misses, or say which one is not acceptable.** The same goes for the one closing test that did not pass its own rule, the legibility test, which missed by one prediction (below). With it come three smaller decisions the spec left for the close, each with the architect's recommendation.
+Step 2 built the harness, measured the slice's battles against the record, tuned what the sources allowed, and checked the surface figures once on a battle they were not tuned on. No battle passes outright. Across the four battles 62 measures are judged: 43 agree, 8 agree only at the edge, and 11 miss. The closing reports of the three tuned battles were remade on the final engine, and no verdict changed. Every miss and every edge agreement is listed below with its cause and with what in step 3 would answer it. **The one decision asked of you: accept the named misses, or say which one is not acceptable.** The same goes for the one closing test that did not pass its own rule, the legibility test, which missed by one prediction (below). With it come three smaller decisions the spec left for the close, each with the architect's recommendation.
 
 ## "Done means", line by line
 
 | Line of the spec | Met? | Shown by |
 | --- | --- | --- |
-| All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not met until you decide.** No battle passes. Every miss is written down with its cause; your acceptance is the decision asked above. <!-- GAP: the cause of Rabaul's edge agreement on Japanese fighters lost, from `final-reports`. --> | This page; the four reports in the table below |
+| All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not met until you decide.** No battle passes. Every miss and every agreement at the edge is written down with its cause; your acceptance is the decision asked above | This page; the four reports in the table below |
 | No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met.** A note above every figure in its file (pull requests 226 and 227), and two summary pages list them. Outside `data/reference` and so outside the line: scenario 6's own figures, placeholders with notes in the scenario file and on the air page; and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" (left so by the architect's ruling, `docs/step2-opening-list.md`) | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
 | The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **Met.** The frozen-figure tests, the invariants and the determinism scenario run in `cargo test` on every pull request. The hundred-seed soak, which CI does not run, was run by hand on Nov 13, 2026: 100 seeds of 180 days, 1,978,115 events, every check holding; the determinism scenario 9 of 9 and the invariants' tests 24 of 24 beside it | `docs/validation/closing-tests.md`, test 1 |
 | The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/step2-opening-list.md`, "Done" |
@@ -23,31 +23,31 @@ Each report is 1,000 runs, seeds 1 to 1000. "At the edge" is an agreement whose 
 
 | Battle | Judged | Agree | At the edge | Miss | Report | What it is |
 | --- | --- | --- | --- | --- | --- | --- |
-| Savo Island | 29 | 21 | 4 | 4 | `savo-island-after-0083.md` | The closing report after decision 0083. Tuned on |
-| Eastern Solomons | 15 | 11 | 2 | 2 | `eastern-solomons-r4.md` | The last remade report, air round 4 (claims). Rounds 3 and 5 and the Rabaul rounds made no new one for this battle. Tuned on |
-| Rabaul against Guadalcanal | 10 | 7 | 1 | 2 | `rabaul-guadalcanal-air-rabaul-r1.md` | The last remade report, Rabaul round 1. Rounds 2 and 3 moved nothing and made none (`rabaul-r3-wear.md` says so). Air figures checked on it; slow figures tuned on it |
+| Savo Island | 29 | 21 | 4 | 4 | `savo-island-close.md` | The closing report after decision 0083 (`savo-island-after-0083.md`), remade on the final engine. Tuned on |
+| Eastern Solomons | 15 | 11 | 2 | 2 | `eastern-solomons-close.md` | The last remade report, air round 4 (`eastern-solomons-r4.md`), remade on the final engine. Tuned on |
+| Rabaul against Guadalcanal | 10 | 7 | 1 | 2 | `rabaul-guadalcanal-air-close.md` | The last remade report, Rabaul round 1 (`rabaul-guadalcanal-air-rabaul-r1.md`), remade on the final engine. Air figures checked on it; slow figures tuned on it |
 | Cape Esperance | 8 | 4 | 1 | 3 | `cape-esperance-check.md` | Checked once, never tuned on |
 | **All four** | **62** | **43** | **8** | **11** | | |
 
-The three tuning reports were made on state version 7; the Cape Esperance check on version 8. The engine moved to version 8 with decision 0086 after the three were made, and they were not remade.
+The closing reports of the three tuned battles were remade on the final engine (state version 8, label `close`), and no judged measure changed verdict (`baseline-reading.md`, "The reports on the final engine"). Figures below are from the `close` reports.
 
 ## Every named miss and every agreement at the edge
 
 Figures are the 5th to the 95th percentile, then the median, then (in brackets) the runs of 1,000 that hold the record. Misses that share one cause are grouped.
 
-### Savo Island (`savo-island-after-0083.md`; causes from `tuning/savo-island-closed.md`)
+### Savo Island (`savo-island-close.md`; causes from `tuning/savo-island-closed.md`)
 
 **The two fights overlapped in the record, and the rules fight them one after the other.** In the record the Japanese column was on the northern group before it had done with the southern one.
 
 | Measure | Verdict | Record | Runs | Cause in one line | Recorded in |
 | --- | --- | --- | --- | --- | --- |
 | `gun_hits_on_vincennes` | miss | 57 to 74 | 4 to 44, 27 (1) | Overlap, and the record counts every calibre while the rules fire main batteries only | Decisions 0083 ("Fights that overlap"), 0084 (3) |
-| `gun_hits_on_quincy` | edge | 36 to 54 | 1 to 41, 24 (156) | As for Vincennes | The same |
+| `gun_hits_on_quincy` | edge | 36 to 54 | 1 to 41, 24 (157) | As for Vincennes | The same |
 | `torpedo_hits_on_the_northern_group` | edge | 3 to 6 | 0 to 3, 0 (93) | The second side of the tubes goes to whatever a ship fights next, mostly the southern fight; in the record the second sides went north | Decision 0083, "As built", "Fights that overlap" |
-| `japanese_main_battery_shells_fired_in_hundreds` | edge | 10 to 11 | 7 to 19, 14 (101) | The Japanese fire through every round of both fights | Decision 0083 |
+| `japanese_main_battery_shells_fired_in_hundreds` | edge | 10 to 11 | 7 to 19, 14 (98) | The Japanese fire through every round of both fights | Decision 0083 |
 | `tenryu_and_yubari_main_battery_shells_fired_in_hundreds` | miss | 1 | 2 to 4, 3 (35) | The pair fire about 6.6 rounds each against about 3: they fired for part of the night, and the rules have them fire in every round. The rate-of-fire check failed and certified no rate | Decision 0084 (11); `savo-island-closed.md`, "The watch" |
 
-Also resting on it, though it agrees: `chicago_sunk` agrees only as a yes-or-no figure; Chicago sinks in 565 runs of 1,000.
+Also resting on it, though it agrees: `chicago_sunk` agrees only as a yes-or-no figure; Chicago sinks in 562 runs of 1,000.
 
 **Step 3:** one fight for three forces, so that fights can overlap. Decision 0083 records it as a plan for you at the close, not built.
 
@@ -55,7 +55,7 @@ Also resting on it, though it agrees: `chicago_sunk` agrees only as a yes-or-no 
 
 | Measure | Verdict | Record | Runs | Cause | Recorded in |
 | --- | --- | --- | --- | --- | --- |
-| `gun_hits_on_allied_ships` | edge | 153 to 219 | 43 to 160, 109 (86) | Every calibre in the record against main batteries in the rules | The measure's reason; decision 0084 (3) |
+| `gun_hits_on_allied_ships` | edge | 153 to 219 | 43 to 160, 109 (83) | Every calibre in the record against main batteries in the rules | The measure's reason; decision 0084 (3) |
 
 Vincennes's and Quincy's hits above rest on it too. **Step 3:** secondary guns.
 
@@ -68,14 +68,14 @@ Vincennes's and Quincy's hits above rest on it too. **Step 3:** secondary guns.
 
 **Step 3:** which ships of a force fire at all, and for how long. Cape Esperance shows the same pattern (below).
 
-### Eastern Solomons (`eastern-solomons-r4.md`)
+### Eastern Solomons (`eastern-solomons-close.md`)
 
 **Bombers' return fire, and three other missing air rules.** Ruled named misses on Nov 13, 2026.
 
 | Measure | Verdict | Record | Runs | Cause | Recorded in |
 | --- | --- | --- | --- | --- | --- |
 | `us_aircraft_lost_to_enemy_action` | miss | 13 to 14 | 1 to 9, 4 (2) | No return fire from bombers; a search never meets fighters; no aircraft written off for combat damage | `tuning/r3-us-losses-named-misses.md` |
-| `us_aircraft_lost_all_causes` | miss | 20 to 21 | 1 to 11, 5 (0) | The same, and a carrier's deck closed for a time (65 minutes on the day), with its aircraft aloft running out of fuel | The same |
+| `us_aircraft_lost_all_causes` | miss | 20 to 21 | 1 to 10, 5 (0) | The same, and a carrier's deck closed for a time (65 minutes on the day), with its aircraft aloft running out of fuel | The same |
 | `japanese_aircraft_claimed_per_hundred_shot_down` | edge | 171 to 261 | 250 to 1,100, 440 (67 of 980) | It divides by the American losses above, which are too few. The Japanese claims themselves fit their rows | `tuning/r4-claims.md` |
 
 **Step 3:** bombers' return fire; a search that meets enemy fighters; an aircraft written off for combat damage; a deck closed for a time.
@@ -86,14 +86,14 @@ Vincennes's and Quincy's hits above rest on it too. **Step 3:** secondary guns.
 | --- | --- | --- | --- | --- | --- |
 | `japanese_carriers_sunk` | edge | 1 | 0 to 1, 0 (249) | Ryujo is sunk in about a quarter of the runs; the strike on her flies whole or not at all. A yes-or-no agreement says only that the record is not surprising | `baseline-reading.md` (Eastern Solomons, Nov 13); decision 0084, "The limits of the checks" |
 
-### Rabaul against Guadalcanal (`rabaul-guadalcanal-air-rabaul-r1.md`)
+### Rabaul against Guadalcanal (`rabaul-guadalcanal-air-close.md`)
 
 **No height-and-warning rule at Henderson Field.**
 
 | Measure | Verdict | Record | Runs | Cause | Recorded in |
 | --- | --- | --- | --- | --- | --- |
 | `japanese_bombers_lost_to_enemy_action` | miss | 12 | 21 to 37, 29 (0) | The patrol fought high-level bombers after the coastwatchers' warning; no rule has height or warning, and no row counts the fighters that made contact (the air plan's C3) | `tuning/r3-fighter-hit-chance.md` |
-| `japanese_fighters_lost_to_enemy_action` | edge | 6 to 10 | 8 to 19, 13 (187) | **No record names a cause.** It went from agreeing (median 12, `rabaul-guadalcanal-air-r4.md`) to the edge (13) in Rabaul round 1, which cut the aircraft destroyed on the ground so that more American fighters fly; that round's record does not say this measure moved for it | None |
+| `japanese_fighters_lost_to_enemy_action` | edge | 6 to 10 | 8 to 19, 13 (187) | A larger patrol over the field, not an air combat figure. Rabaul round 1 cut the American fighters destroyed on the ground from 7.0 a run to 2.2. The survivors fly on the patrols that meet the raids, so the fights grow on both sides: Japanese fighters shot down rise from 12.0 a run to 13.5 | `tuning/rabaul-r1-base-hit-aircraft.md`, its dated note |
 
 **Step 3:** height and warning for a field's patrol.
 
@@ -136,7 +136,7 @@ From decision 0084, and the Cape Esperance check read under it:
 1. Each measure is judged alone. No report shows one run holding several agreements together.
 2. A figure fitted inside a direction the sources support is still a fit, not a size from a source.
 3. Orders, levels and radii were in places chosen with the outcome known, and the check is narrower for it.
-4. A yes-or-no agreement says only that the record is not surprising: Chicago "agrees" while she sinks in 565 runs of 1,000.
+4. A yes-or-no agreement says only that the record is not surprising: Chicago "agrees" while she sinks in 562 runs of 1,000.
 5. The rate-of-fire check failed and certified no rate.
 6. **Cape Esperance, plainly:** the outcome transferred. The side with the radar and the surprise wins the night: two Japanese ships sunk in the middle run, and no US cruiser sunk in 960 runs.
 7. The hits did not transfer. The Japanese guns score a median of 6 hits; Duncan's loss and Aoba's hits miss.
@@ -188,9 +188,9 @@ Run on Nov 13, 2026 on `main` after the batch of small fixes (pull request 228).
 
 ### (a) Do agreements at the edge count against a battle?
 
-You decided on Nov 12, 2026 that they do not count for now, and that the close would decide ("Decided by the designer", 9). Eight are left: four at Savo Island, two at the Eastern Solomons, one at Rabaul, one at Cape Esperance. Each is in the lists above with what it rests on: overlapping fights, secondary guns, a divisor that is itself a named miss, a yes-or-no measure, and the rule of targets. One has no recorded cause (Rabaul's Japanese fighters lost).
+You decided on Nov 12, 2026 that they do not count for now, and that the close would decide ("Decided by the designer", 9). Eight are left: four at Savo Island, two at the Eastern Solomons, one at Rabaul, one at Cape Esperance. Each is in the lists above with what it rests on: overlapping fights, secondary guns, a divisor that is itself a named miss, a yes-or-no measure, and the rule of targets. The one at Rabaul, Japanese fighters lost, rests on a larger patrol over the field.
 
-**The architect recommends:** they do not count against a battle, since each is listed with its cause. The cause of the Rabaul fighters' edge should be named before you accept.
+**The architect recommends:** they do not count against a battle, since each is listed with its cause.
 
 ### (b) Are the hand calculations worked again on the tuned figures?
 
@@ -283,4 +283,4 @@ Found while this page was assembled, and corrected in the same pull request on t
 4. **The Ryujo "left to attack" record** is 38. The decisions index and `baseline-reading.md` said 36; both now say 38, with a note that it was 36 for some hours on Nov 13, 2026.
 5. **Decision 0074's status line** said "not built"; it now says built with decision 0083.
 6. **The spec's quote of `savo-island-r2.md`** (19, 1, 3 of 23) now says that was the file when written, and that it was remade with decision 0084's measures and reads 21, 2, 6 of 29.
-7. **The state version of the closing reports.** Savo Island, the Eastern Solomons and Rabaul were reported on state version 7, before decision 0086 moved the engine to version 8, and no record compared the two. One batch of each on the final engine (label `close`) is being run and compared measure by measure with the closing reports. <!-- GAP: when `final-reports` lands, the four-battle table takes the `close` reports for the three tuned battles, the totals are recounted, and any verdict that changed is said here. -->
+7. **The state version of the closing reports.** Savo Island, the Eastern Solomons and Rabaul were reported on state version 7, before decision 0086 moved the engine to version 8, and no record compared the two. Each was run again on the final engine (label `close`) and set against its closing report measure by measure. No judged measure changed verdict and every median is the same; at Savo Island the runs holding a record differ by at most 8 in 1,000 (`baseline-reading.md`, "The reports on the final engine"). This page uses the `close` reports.
