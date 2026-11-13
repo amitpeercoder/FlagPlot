@@ -5,7 +5,7 @@ seed 1942
 day   1  hash 788bbb898584711b  61 events
 day   2  hash e8b4e98a0448c596  57 events
 day   3  hash 8aba8d4d8f109a6a  51 events
-day   4  hash f123ad8906f6f34f  258 events
+day   4  hash 1de8732a5fdabedc  258 events
 day   5  hash 31f5cf594d7b83be  136 events
 day   6  hash a76c77dcea987a82  110 events
 day   7  hash 38369266352bdc9a  201 events
@@ -387,11 +387,11 @@ day  14  hash 57f56b523fe6271f  121 events
 #368 D4 afternoon ship:33 flight deck hit, no change, still out  <- #349
 #369 D4 afternoon ship:33 propulsion hit, degraded -> out  <- #349
 #370 D4 afternoon ship:33 propulsion hit, no change, still out  <- #349
-#371 D4 afternoon Allied report: 4 ships, carrier, at (8,-10): refreshed contact:1  <- #349
+#371 D4 afternoon Allied report: 3 ships, cruiser, at (8,-10): refreshed contact:1  <- #349
 #372 D4 afternoon ship:33 took 2 hits on flotation, 34.5283 points, now 100  <- #350
 #373 D4 afternoon ship:33 propulsion hit, no change, still out  <- #350
 #374 D4 afternoon ship:33 propulsion hit, no change, still out  <- #350
-#375 D4 afternoon Allied report: 4 ships, carrier, at (7,-9): refreshed contact:1  <- #350
+#375 D4 afternoon Allied report: 3 ships, cruiser, at (7,-9): refreshed contact:1  <- #350
 #376 D4 afternoon ship:1 took 1 hit on flotation, 5.260942 points, now 5.260942  <- #351
 #377 D4 afternoon Japanese report: 10 ships, cruiser, at (8,-6): refreshed contact:1  <- #351
 #378 D4 afternoon Allied claim at (7,-9): 3 hits on a carrier, 0 sunk  <- #347

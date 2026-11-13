@@ -510,9 +510,12 @@ fn objectives_change_no_hash_and_no_event() {
     // count at the end of the day: the hash counts the events of the log. And
     // it was 798ce5b9ab626198 until the hash went to version 6 (decision
     // 0064, a ship's experience). And it was 1710b81aa6539e01 until
-    // decisions 0073 and 0075 set the Japanese search from the record, and
-    // 2ca5a5dd9f150a5d until the live scenario's air groups and orders of
-    // decision 0081 (remade for 0081 as it was for 0073).
+    // decisions 0073 and 0075 set the Japanese search from the record. And it
+    // was 2ca5a5dd9f150a5d until the live scenario took the air groups and
+    // orders of decision 0081 (remade for 0081 as it was for 0073). The strike
+    // report reading the force after the damage (rulebook differences, row 7)
+    // made it 0703fe7c146fc0f8 on the scenario before 0081, and leaves the
+    // scenario of 0081 at this hash: Ryujo is not sunk on its day 1.
     assert!(baseline.contains("hash 08c55b5f26162af0"));
 }
 

@@ -2,7 +2,7 @@ Scenario 12c: No deck
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e281020833e909d0  47 events
+day   1  hash bf445896c5de2ea1  47 events
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -22,6 +22,6 @@ ship:8 "Placeholder transport 2": afloat in task_force:3; damage flotation 0, fi
 Allied contact:1 at (9,0): 4 ships, cruiser, age 0 pulses
 Allied claim at (9,0): 4 hits on a carrier, 0 sunk, day 1 morning
 Allied claim at (9,0): 6 hits on a carrier, 0 sunk, day 1 afternoon
-Japanese contact:1 at (9,5): 2 ships, transport, age 0 pulses
+Japanese contact:1 at (9,5): 1 ships, transport, age 0 pulses
 Japanese claim at (9,5): 5 hits on a transport, 0 sunk, day 1 morning
 Japanese claim at (9,5): 3 hits on a transport, 1 sunk, day 1 afternoon
