@@ -549,7 +549,7 @@ fn the_bombers_launch_if_and_only_if_the_allied_side_holds_a_contact_and_all_18_
                     assert_eq!(side, Side::Allied);
                     assert_eq!(
                         contact,
-                        ContactId::new(if dropped { 2 } else { 1 }),
+                        ContactId::for_umpire(if dropped { 2 } else { 1 }, common::umpire_key()),
                         "seed {seed}"
                     );
                     assert_eq!(created, !held, "seed {seed}");
@@ -588,7 +588,8 @@ fn a_strike_is_launched_only_at_a_contact_held_no_more_than_one_pulse_old_within
             assert_eq!(air_group, BOMBERS);
             // Contact 1, or contact 2 if a strike dropped contact 1 first.
             assert!(
-                contact == ContactId::new(1) || contact == ContactId::new(2),
+                contact == ContactId::for_umpire(1, common::umpire_key())
+                    || contact == ContactId::for_umpire(2, common::umpire_key()),
                 "seed {}",
                 run.seed
             );
@@ -611,7 +612,7 @@ fn a_strike_is_launched_only_at_a_contact_held_no_more_than_one_pulse_old_within
             let [Cause::Order(order), Cause::Event(report)] = event.causes[..] else {
                 panic!("a launch cites an order and a report: {:?}", event.causes);
             };
-            assert_eq!(order, OrderId::new(3));
+            assert_eq!(order, OrderId::for_umpire(3, common::umpire_key()));
             let report_event = run.event(report);
             let EventKind::ReportReceived {
                 contact: reported,
@@ -1006,7 +1007,10 @@ fn a_strike_that_attacks_reports_the_force_and_one_that_finds_nothing_drops_its_
             assert_eq!(pulse_of(caused[0]), pulse_of(nothing));
             assert_eq!(
                 caused[0].kind.to_string(),
-                format!("Allied {contact} not there at {hex}: dropped")
+                format!(
+                    "Allied contact:{} not there at {hex}: dropped",
+                    contact.umpire_raw(common::umpire_key())
+                )
             );
             // It comes straight after the finding.
             assert!(nothing.id < caused[0].id);

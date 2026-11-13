@@ -21,7 +21,8 @@ use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, ContactId, EventId, OrderId, ShipClassId, ShipId,
+    TaskForceId,
 };
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
@@ -202,18 +203,18 @@ impl<'a> SideView<'a> {
     }
 
     /// The side's own orders, accepted or not, in the order they were taken
-    /// in. This includes the orders a rule gave for the side's units. The
-    /// numbers are the log's, which both sides share: what plays the game is
-    /// shown the side's own count of them instead (decision 0055).
+    /// in. This includes the orders a rule gave for the side's units. An
+    /// order's `id` is opaque; the side's own count of its orders is
+    /// [`SideView::order_number`] (decisions 0055 and 0086).
     pub fn orders(&self) -> impl Iterator<Item = &'a Order> + '_ {
         let side = self.side;
         self.orders.values().filter(move |order| order.side == side)
     }
 
     /// The events the side may see, each cut down to what it may know, in
-    /// log order (decision 0047). Each keeps its number in the full log, so
-    /// a gap in the numbers is something that happened that the side may not
-    /// see. This is the only way events leave for anything that plays the
+    /// log order (decision 0047). Each carries the side's own `number`, 1, 2,
+    /// 3 and so on, so a gap in the numbers is not something the side can
+    /// see (decision 0086); its `id` is opaque. This is the only way events leave for anything that plays the
     /// game; the full log stays with the umpire.
     pub fn events(&self) -> Vec<SideEvent> {
         let owners = Owners::from_state(
@@ -234,11 +235,56 @@ impl<'a> SideView<'a> {
         events
     }
 
-    /// One event the side may see, by its number in the full log. `None` if
-    /// there is no such event or the side may not see it. Its causes are the
+    /// One event the side may see, by its (opaque) id. `None` if there is no
+    /// such event or the side may not see it. Its causes are the
     /// ones the side may see, and `hidden_causes` says if there are more.
     pub fn event(&self, id: EventId) -> Option<SideEvent> {
         self.events().into_iter().find(|event| event.id == id)
+    }
+
+    /// The side's number of an event the side may see: the `number` its
+    /// [`SideEvent`] carries (decision 0086). `None` if there is no such
+    /// event or the side may not see it.
+    pub fn event_number(&self, id: EventId) -> Option<u32> {
+        self.event(id).map(|event| event.number)
+    }
+
+    /// One event the side may see, by the side's own number of it (1 for the
+    /// first [`SideView::events`] gives). `None` if there is no such event.
+    pub fn event_by_number(&self, number: u32) -> Option<SideEvent> {
+        self.events()
+            .into_iter()
+            .find(|event| event.number == number)
+    }
+
+    /// The side's number of one of its own orders: its place among the
+    /// side's own orders, 1 for the first [`SideView::orders`] gives
+    /// (decision 0086). `None` if the order is not the side's own.
+    pub fn order_number(&self, id: OrderId) -> Option<u32> {
+        let own = self.orders().position(|order| order.id == id)?;
+        u32::try_from(own + 1).ok()
+    }
+
+    /// One of the side's own orders by the side's number of it. `None` if
+    /// the side has no such order.
+    pub fn order_by_number(&self, number: u32) -> Option<&'a Order> {
+        let place = usize::try_from(number.checked_sub(1)?).ok()?;
+        self.orders().nth(place)
+    }
+
+    /// The side's number of a contact: the count of contacts the side has
+    /// made, which is already the side's own (each side numbers its own
+    /// contacts from 1).
+    pub fn contact_number(&self, id: ContactId) -> u32 {
+        id.raw()
+    }
+
+    /// One contact the side holds, by the side's number of it. `None` if the
+    /// side holds no such contact.
+    pub fn contact_by_number(&self, number: u32) -> Option<&'a Contact> {
+        self.belief
+            .contacts()
+            .find(|contact| contact.id.raw() == number)
     }
 
     fn own_objectives(&self) -> Option<&'a SideObjectives> {

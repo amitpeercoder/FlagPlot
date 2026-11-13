@@ -832,7 +832,7 @@ fn fatigue_events_cite_the_readiness_order_for_a_force_ordered_to_battle() {
             );
         };
         // The third order of the scenario is the readiness order.
-        assert_eq!(order.raw(), 3);
+        assert_eq!(order.umpire_raw(common::umpire_key()), 3);
     }
     // Force B started at battle readiness: no order, no cause.
     for event in run
@@ -1209,7 +1209,12 @@ fn with_the_file_the_run_differs_from_the_run_without_it_only_as_the_rolls_make_
         let renumbered: BTreeMap<u32, u32> = kept
             .iter()
             .zip(&plain.events)
-            .map(|(e, p)| (e.id.raw(), p.id.raw()))
+            .map(|(e, p)| {
+                (
+                    e.id.umpire_raw(common::umpire_key()),
+                    p.id.umpire_raw(common::umpire_key()),
+                )
+            })
             .collect();
         for (e, p) in kept.iter().zip(&plain.events) {
             assert_eq!((e.day, e.pulse), (p.day, p.pulse), "seed {}", with.seed);
@@ -1230,9 +1235,10 @@ fn with_the_file_the_run_differs_from_the_run_without_it_only_as_the_rolls_make_
                 .causes
                 .iter()
                 .map(|cause| match cause {
-                    Cause::Event(id) => {
-                        Cause::Event(sim_core::ids::EventId::new(renumbered[&id.raw()]))
-                    }
+                    Cause::Event(id) => Cause::Event(sim_core::ids::EventId::for_umpire(
+                        renumbered[&id.umpire_raw(common::umpire_key())],
+                        common::umpire_key(),
+                    )),
                     order => *order,
                 })
                 .collect();
@@ -1324,7 +1330,7 @@ fn fatigue_changes_no_gun_or_torpedo_chance() {
                         expected,
                         "seed {} salvo #{}",
                         run.seed,
-                        event.id.raw()
+                        event.id.umpire_raw(common::umpire_key())
                     );
                 }
                 _ => {}

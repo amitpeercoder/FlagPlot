@@ -362,7 +362,13 @@ fn launch_of(event: &Event) -> (u32, u32, Hex, u32, Fixed) {
             hex,
             aircraft,
             distance_nm,
-        } => (air_group.raw(), contact.raw(), hex, aircraft, distance_nm),
+        } => (
+            air_group.raw(),
+            contact.umpire_raw(common::umpire_key()),
+            hex,
+            aircraft,
+            distance_nm,
+        ),
         ref other => panic!("not a launch: {other:?}"),
     }
 }
@@ -421,7 +427,7 @@ fn target_order(world: &World, group: u32) -> Option<sim_core::ids::OrderId> {
 fn starting_report(world: &World, contact: u32) -> EventId {
     events_of(world, |e| {
         e.day == 0
-            && matches!(e.kind, EventKind::ReportReceived { contact: c, side: Side::Allied, .. } if c.raw() == contact)
+            && matches!(e.kind, EventKind::ReportReceived { contact: c, side: Side::Allied, .. } if c.umpire_raw(common::umpire_key()) == contact)
     })
     .first()
     .expect("a report that made the contact")
@@ -503,7 +509,7 @@ fn the_allied_side_starts_with_the_three_contacts_of_the_table_and_the_orders_gi
         .contacts()
         .map(|c| {
             (
-                c.id.raw(),
+                c.id.umpire_raw(common::umpire_key()),
                 c.estimated_hex,
                 c.estimated_kind,
                 c.estimated_ship_count,
@@ -874,7 +880,7 @@ fn a_group_is_never_launched_at_a_kind_off_its_list_and_attacks_by_its_list_in_b
                     Some(EventKind::ReportReceived {
                         contact: c, kind, ..
                     }) => {
-                        assert_eq!(c.raw(), contact);
+                        assert_eq!(c.umpire_raw(common::umpire_key()), contact);
                         *kind
                     }
                     other => panic!("the cause is not a report: {other:?}"),
@@ -917,9 +923,11 @@ fn a_group_is_never_launched_at_a_kind_off_its_list_and_attacks_by_its_list_in_b
                         .iter()
                         .copied()
                         .filter(|ship| {
-                            !sunk
-                                .iter()
-                                .any(|(id, s)| s == ship && id.raw() < found[0].id.raw())
+                            !sunk.iter().any(|(id, s)| {
+                                s == ship
+                                    && id.umpire_raw(common::umpire_key())
+                                        < found[0].id.umpire_raw(common::umpire_key())
+                            })
                         })
                         .collect()
                 };

@@ -366,6 +366,13 @@ impl World {
         &self.events
     }
 
+    /// The umpire's key to the numbers of event, order and contact IDs.
+    /// Whoever holds a `World` is the umpire; a side holds a `SideView`, and
+    /// a `SideView` has no way to this key (decision 0086).
+    pub fn umpire_key(&self) -> crate::ids::UmpireKey {
+        crate::ids::UmpireKey::new()
+    }
+
     /// Every order received so far, accepted or not, in ID order.
     pub fn orders(&self) -> impl Iterator<Item = &Order> {
         self.orders.values()

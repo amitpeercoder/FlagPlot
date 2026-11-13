@@ -56,14 +56,26 @@ use crate::time::{ClockTime, Pulse};
 /// An event as one side may know it.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SideEvent {
-    /// The event's number in the full log, so that two sides and the umpire
-    /// can talk about the same event.
+    /// The event's place in the full log. The number is the umpire's and is
+    /// hidden ([`EventId`] is opaque outside this crate): the side can
+    /// compare it, and look the event up with [`crate::SideView::event`], but
+    /// cannot read how many events the full log holds or which of them it
+    /// does not see. What the side counts by is `number`.
     pub id: EventId,
+    /// The side's own count of the events it may see: 1 for the first the
+    /// view gives, 2 for the next, and so on (decision 0086). It does not
+    /// move with what the other side does.
+    pub number: u32,
     pub day: u32,
     pub pulse: Option<Pulse>,
     pub kind: SideEventKind,
-    /// The causes the side may see: its own orders, and events it may see.
-    pub causes: Vec<Cause>,
+    /// The side's number of the order this event is about, for an order
+    /// accepted or rejected. It is the order's place among the side's own
+    /// orders (see [`SideCause`]), so the text of the event can name it.
+    pub order_number: Option<u32>,
+    /// The causes the side may see: its own orders, and events it may see,
+    /// each by the side's own number.
+    pub causes: Vec<SideCause>,
     /// True if the event may have causes the side cannot see: an order of the
     /// enemy's or an event of the enemy's. The flag is set by the kind of
     /// the event, as this side is given it, and never by what a particular
@@ -75,6 +87,26 @@ pub struct SideEvent {
     /// Present when the log has one. For a whole event it is the log's. For a
     /// cut event it is cut too (see [`SideBreakdown`]).
     pub breakdown: Option<SideBreakdown>,
+}
+
+/// A cause of an event as the side counts it (decision 0086): an event by the
+/// side's number of it, an order by its place among the side's own orders, 1
+/// for the first the side gave, in the order [`crate::SideView::orders`]
+/// gives them. Neither is a number of the full log or the order book, which
+/// count both sides' events and orders.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SideCause {
+    Event(u32),
+    Order(u32),
+}
+
+impl fmt::Display for SideCause {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SideCause::Event(number) => write!(f, "#{number}"),
+            SideCause::Order(number) => write!(f, "order:{number}"),
+        }
+    }
 }
 
 /// A breakdown as a side may see it. For a whole event, every factor and the
@@ -411,15 +443,21 @@ impl fmt::Display for SideEventKind {
 impl fmt::Display for SideEvent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let pulse = self.pulse.map_or("-", Pulse::name);
-        write!(
-            f,
-            "#{} D{} {pulse:<9} {}",
-            self.id.raw(),
-            self.day,
-            self.kind
-        )?;
+        write!(f, "#{} D{} {pulse:<9} ", self.number, self.day)?;
+        // An order is named by the side's own number of it, never the order
+        // book's.
+        match (&self.kind, self.order_number) {
+            (SideEventKind::Whole(EventKind::OrderAccepted { target, .. }), Some(number)) => {
+                write!(f, "order:{number} accepted for {target}")?;
+            }
+            (
+                SideEventKind::Whole(EventKind::OrderRejected { target, reason, .. }),
+                Some(number),
+            ) => write!(f, "order:{number} rejected for {target}: {reason}")?,
+            (kind, _) => write!(f, "{kind}")?,
+        }
         if !self.causes.is_empty() {
-            let causes: Vec<String> = self.causes.iter().map(Cause::to_string).collect();
+            let causes: Vec<String> = self.causes.iter().map(SideCause::to_string).collect();
             write!(f, "  <- {}", causes.join(", "))?;
         }
         if self.hidden_causes {
@@ -1382,6 +1420,18 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
     }
 }
 
+/// The side's number of each of its own orders: its place among the side's
+/// orders in the order book's order, from 1 (decision 0086).
+pub(crate) fn order_numbers(side: Side, owners: &Owners) -> BTreeMap<OrderId, u32> {
+    owners
+        .orders
+        .iter()
+        .filter(|(_, owner)| **owner == side)
+        .zip(1u32..)
+        .map(|((order, _), number)| (*order, number))
+        .collect()
+}
+
 /// The events of `log` a side may see, each cut down to what it may know, in
 /// log order.
 pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEvent> {
@@ -1404,12 +1454,18 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
             }
         })
         .collect();
-    let visible: BTreeSet<EventId> = log
+    // The side's own numbers: its events counted from 1 in log order, and its
+    // orders counted from 1 in the order book's order (decision 0086).
+    let mut event_numbers: BTreeMap<EventId, u32> = BTreeMap::new();
+    for (event, _) in log
         .iter()
         .zip(&seen)
         .filter(|(_, seen)| **seen != Seen::Nothing)
-        .map(|(event, _)| event.id)
-        .collect();
+    {
+        let number = u32::try_from(event_numbers.len() + 1).expect("ran out of event numbers");
+        event_numbers.insert(event.id, number);
+    }
+    let order_numbers = order_numbers(side, owners);
     log.iter()
         .zip(seen)
         .zip(&gates)
@@ -1428,22 +1484,31 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
             if let Gate::Inside(Some(known)) = gate {
                 kind = count_from_known_round(kind, *known, owners.round_minutes);
             }
-            let causes: Vec<Cause> = event
+            let causes: Vec<SideCause> = event
                 .causes
                 .iter()
-                .filter(|cause| match cause {
-                    Cause::Order(order) => owners.orders.get(order) == Some(&side),
-                    Cause::Event(earlier) => visible.contains(earlier),
+                .filter_map(|cause| match cause {
+                    Cause::Order(order) => order_numbers.get(order).copied().map(SideCause::Order),
+                    Cause::Event(earlier) => {
+                        event_numbers.get(earlier).copied().map(SideCause::Event)
+                    }
                 })
-                .copied()
                 .collect();
+            let order_number = match &kind {
+                SideEventKind::Whole(
+                    EventKind::OrderAccepted { order, .. } | EventKind::OrderRejected { order, .. },
+                ) => order_numbers.get(order).copied(),
+                _ => None,
+            };
             let hidden_causes = may_have_hidden_causes(&kind);
             let breakdown = side_breakdown(&kind, &event.breakdown);
             Some(SideEvent {
                 id: event.id,
+                number: event_numbers[&event.id],
                 day: event.day,
                 pulse: event.pulse,
                 kind,
+                order_number,
                 causes,
                 hidden_causes,
                 breakdown,
@@ -2686,7 +2751,9 @@ mod tests {
             .expect("seen");
         assert_eq!(
             burned.causes,
-            vec![Cause::Order(order(1)), Cause::Event(EventId::new(1))]
+            // The side's own numbers: its first order, and the first event
+            // it sees (decision 0086).
+            vec![SideCause::Order(1), SideCause::Event(1)]
         );
         assert!(
             burned.hidden_causes,
@@ -3134,7 +3201,8 @@ mod tests {
             japanese[1].kind,
             SideEventKind::SalvoAgainst { round: 1, .. }
         ));
-        assert_eq!(japanese[2].causes, vec![Cause::Event(EventId::new(4))]);
+        // Log event 4 is the second event the Japanese side sees.
+        assert_eq!(japanese[2].causes, vec![SideCause::Event(2)]);
         assert!(!japanese[2].hidden_causes);
         // The Allied side: its own roll, its own salvoes cut, the hit it took
         // in round 3.
@@ -3246,10 +3314,12 @@ mod tests {
         events[0].causes = vec![Cause::Order(order(1)), Cause::Order(order(2))];
         let owners = owners(false);
         let allied = project(Side::Allied, &events, &owners);
-        assert_eq!(allied[0].causes, vec![Cause::Order(order(1))]);
+        assert_eq!(allied[0].causes, vec![SideCause::Order(1)]);
         assert!(allied[0].hidden_causes);
         let japanese = project(Side::Japanese, &events, &owners);
-        assert_eq!(japanese[0].causes, vec![Cause::Order(order(2))]);
+        // The Japanese side's only order is its first, whatever its place
+        // in the order book.
+        assert_eq!(japanese[0].causes, vec![SideCause::Order(1)]);
     }
 
     use std::collections::BTreeSet;
@@ -3404,7 +3474,7 @@ mod tests {
         assert!(!ids(&allied).contains(&4));
         assert_eq!(
             allied.last().expect("the end").to_string(),
-            "#5 D1 night     engagement of task_force:1 at (3,-2) ended in round 1: contact lost  (and causes you cannot see)"
+            "#4 D1 night     engagement of task_force:1 at (3,-2) ended in round 1: contact lost  (and causes you cannot see)"
         );
     }
 

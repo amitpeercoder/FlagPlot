@@ -58,6 +58,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Whole, cut, absent** | How a side is given an event: as the log has it, cut down to what the side may know, or not at all (decision 0047). A cut event never names an enemy ship, task force or air group (decision 0065) | |
 | **Contact lost** | How a side is told a fight ended when its own force did not end it: the enemy's force sank, or broke off. The enemy's losses reach the side as its claim (decision 0085) | That the enemy got away |
 | **Hidden causes** | The flag on a side's event that says it may have causes the side cannot see. It is set for every event of a kind that can have them, so it says nothing of what the enemy did (decision 0085) | That this event had a cause that was dropped |
+| **Handle** | How a side names a unit to the game and is shown it: its kind and a number, `task_force:3`. A side's own ships, task forces and air groups are numbered 1, 2, 3 among its own; a base and a contact keep their numbers (decision 0086) | The unit's number in the scenario file, which the umpire's tools show |
 | **Hex kind** | One of deep sea, shallow sea, coast and land | |
 | **Navigable** | Describes a hex a ship may enter: deep sea, shallow sea or coast that is on the map | Land |
 | **Closed side** | A side of a hex a ship cannot cross. A mark on either hex closes it | |

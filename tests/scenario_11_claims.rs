@@ -211,7 +211,7 @@ fn air_claims(world: &World) -> Vec<Claim> {
                 from_air: true,
                 ..
             } => Some(Claim {
-                id: event.id.raw(),
+                id: event.id.umpire_raw(common::umpire_key()),
                 day: event.day,
                 pulse: event.pulse.expect("a claim has a pulse"),
                 side: *side,
@@ -423,10 +423,10 @@ fn check_claims(world: &World, label: &str, chances_are_zero: bool) {
             let Cause::Event(id) = cause else {
                 panic!("{label}: a claim cites only events");
             };
-            assert!(id.raw() < claim.id, "{label}");
+            assert!(id.umpire_raw(common::umpire_key()) < claim.id, "{label}");
             assert!(!seen.contains(id), "{label}: cited twice");
             seen.push(*id);
-            let cited = &events[id.raw() as usize - 1];
+            let cited = &events[id.umpire_raw(common::umpire_key()) as usize - 1];
             assert_eq!((cited.day, cited.pulse), (claim.day, Some(claim.pulse)));
             assert!(
                 matches!(
@@ -756,7 +756,7 @@ fn lines_without_claims(world: &World) -> Vec<String> {
     let mut map = BTreeMap::new();
     for event in world.events().iter().filter(kept) {
         let next = u32::try_from(map.len() + 1).expect("few events");
-        map.insert(event.id.raw(), next);
+        map.insert(event.id.umpire_raw(common::umpire_key()), next);
     }
     world
         .events()
@@ -917,7 +917,9 @@ fn ships_a_claim_should_count(world: &World, claim: &Claim) -> u32 {
     let mut attacks = Vec::new();
     for cause in &claim.causes {
         let Cause::Event(id) = cause else { continue };
-        if let EventKind::AirAttack { task_force, .. } = events[id.raw() as usize - 1].kind {
+        if let EventKind::AirAttack { task_force, .. } =
+            events[id.umpire_raw(common::umpire_key()) as usize - 1].kind
+        {
             force = Some(task_force);
             attacks.push(*id);
         }
@@ -960,7 +962,7 @@ fn ships_a_claim_should_count(world: &World, claim: &Claim) -> u32 {
             ship, task_force, ..
         } = event.kind
         {
-            if task_force == force && event.id.raw() > claim.id {
+            if task_force == force && event.id.umpire_raw(common::umpire_key()) > claim.id {
                 members.push(ship);
             }
         }
@@ -970,7 +972,7 @@ fn ships_a_claim_should_count(world: &World, claim: &Claim) -> u32 {
         .filter(|ship| {
             let fire = events
                 .iter()
-                .take_while(|e| e.id.raw() < claim.id)
+                .take_while(|e| e.id.umpire_raw(common::umpire_key()) < claim.id)
                 .filter_map(|e| match e.kind {
                     EventKind::ShipDamaged {
                         ship: s,
@@ -1028,11 +1030,11 @@ fn a_strike_claims_the_kind_it_was_sent_at_whatever_was_there() {
                     .find_map(|cause| match cause {
                         Cause::Event(id)
                             if matches!(
-                                events[id.raw() as usize - 1].kind,
+                                events[id.umpire_raw(common::umpire_key()) as usize - 1].kind,
                                 EventKind::AirAttack { .. }
                             ) =>
                         {
-                            Some(&events[id.raw() as usize - 1])
+                            Some(&events[id.umpire_raw(common::umpire_key()) as usize - 1])
                         }
                         _ => None,
                     })
@@ -1045,11 +1047,11 @@ fn a_strike_claims_the_kind_it_was_sent_at_whatever_was_there() {
                     .find_map(|cause| match cause {
                         Cause::Event(id)
                             if matches!(
-                                events[id.raw() as usize - 1].kind,
+                                events[id.umpire_raw(common::umpire_key()) as usize - 1].kind,
                                 EventKind::StrikeLaunched { .. }
                             ) =>
                         {
-                            Some(&events[id.raw() as usize - 1])
+                            Some(&events[id.umpire_raw(common::umpire_key()) as usize - 1])
                         }
                         _ => None,
                     })
@@ -1058,10 +1060,12 @@ fn a_strike_claims_the_kind_it_was_sent_at_whatever_was_there() {
                     .causes
                     .iter()
                     .find_map(|cause| match cause {
-                        Cause::Event(id) => match events[id.raw() as usize - 1].kind {
-                            EventKind::ReportReceived { kind, .. } => Some(kind),
-                            _ => None,
-                        },
+                        Cause::Event(id) => {
+                            match events[id.umpire_raw(common::umpire_key()) as usize - 1].kind {
+                                EventKind::ReportReceived { kind, .. } => Some(kind),
+                                _ => None,
+                            }
+                        }
                         Cause::Order(_) => None,
                     })
                     .expect("the launch cites the report it was sent on");

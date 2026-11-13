@@ -626,13 +626,16 @@ fn the_first_pass_makes_three_forces_in_order() {
     // before the force moves, and nothing retires.
     for event in [&first.event, &second.event] {
         assert_eq!((event.day, event.pulse), (1, Some(Pulse::Night)));
-        assert_eq!(event.causes, vec![Cause::Order(OrderId::new(3))]);
+        assert_eq!(
+            event.causes,
+            vec![Cause::Order(OrderId::for_umpire(3, common::umpire_key()))]
+        );
     }
     assert!(run.retirements().is_empty());
     let first_steam = run.all_steams()[0].id;
     assert!(second.event.id < first_steam);
     // Staff order 4 is accepted between the two detachments.
-    let accepted = run.accepted_event(OrderId::new(4));
+    let accepted = run.accepted_event(OrderId::for_umpire(4, common::umpire_key()));
     assert_eq!(accepted.len(), 1);
     assert!(first.event.id < accepted[0].id && accepted[0].id < second.event.id);
 
@@ -684,7 +687,7 @@ fn the_staff_order_sends_task_force_2_home() {
     let staff = run.staff_orders();
     assert_eq!(staff.len(), 1);
     let order = staff[0];
-    assert_eq!(order.id, OrderId::new(4));
+    assert_eq!(order.id, OrderId::for_umpire(4, common::umpire_key()));
     assert_eq!(order.side, Side::Allied);
     assert_eq!(order.day_issued, 1);
     assert_eq!(order.origin.issuer, Issuer::LocalCommander);
@@ -728,7 +731,10 @@ fn task_force_1_steams_east_at_16_knots() {
     for steam in &steams {
         assert_eq!(
             steam.causes,
-            vec![Cause::Order(OrderId::new(1)), Cause::Order(OrderId::new(2))]
+            vec![
+                Cause::Order(OrderId::for_umpire(1, common::umpire_key())),
+                Cause::Order(OrderId::for_umpire(2, common::umpire_key()))
+            ]
         );
     }
     // Arrived 15 hours after the start, 09:00 on day 1.
@@ -763,7 +769,10 @@ fn task_force_2_steams_home_at_8_knots() {
     for steam in &steams {
         assert_eq!(
             steam.causes,
-            vec![Cause::Order(OrderId::new(4)), Cause::Order(OrderId::new(2))]
+            vec![
+                Cause::Order(OrderId::for_umpire(4, common::umpire_key())),
+                Cause::Order(OrderId::for_umpire(2, common::umpire_key()))
+            ]
         );
     }
     // Arrived 30 hours after the start, 00:00 on day 2.
@@ -858,14 +867,17 @@ fn assert_force_retires(run: &Run) {
     let retired = run.retirements();
     assert_eq!(retired.len(), 1);
     assert_eq!(retired[0].1, TF1);
-    assert_eq!(retired[0].0.causes, vec![Cause::Order(OrderId::new(3))]);
+    assert_eq!(
+        retired[0].0.causes,
+        vec![Cause::Order(OrderId::for_umpire(3, common::umpire_key()))]
+    );
     assert!(detached[0].event.id < retired[0].0.id);
 
     // The staff order is for task force 1 and cites the retirement.
     assert_eq!(run.world().orders().count(), 4);
     let staff = run.staff_orders();
     assert_eq!(staff.len(), 1);
-    assert_eq!(staff[0].id, OrderId::new(4));
+    assert_eq!(staff[0].id, OrderId::for_umpire(4, common::umpire_key()));
     assert_eq!(
         staff[0].kind,
         OrderKind::TaskForce {
@@ -1056,7 +1068,7 @@ fn with_destroyer_6_undamaged_nothing_is_left_behind() {
     // Cruiser 2 goes home with destroyer 4 on a staff order, as before.
     let staff = run.staff_orders();
     assert_eq!(staff.len(), 1);
-    assert_eq!(staff[0].id, OrderId::new(4));
+    assert_eq!(staff[0].id, OrderId::for_umpire(4, common::umpire_key()));
     let steams = run.steams(TF2);
     assert_movement(&steams, &home_rows(), hex(6, 0), -1, 8);
     for steam in &steams {

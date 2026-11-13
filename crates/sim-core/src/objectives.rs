@@ -1238,6 +1238,8 @@ mod tests {
         };
         let claim = SideEvent {
             id: crate::ids::EventId::new(1),
+            number: 1,
+            order_number: None,
             day: 1,
             pulse: None,
             kind: SideEventKind::Whole(EventKind::ClaimReceived {
@@ -1273,6 +1275,8 @@ mod tests {
     ) -> SideEvent {
         SideEvent {
             id: crate::ids::EventId::new(id),
+            number: id,
+            order_number: None,
             day: 1,
             pulse: None,
             kind: SideEventKind::Whole(EventKind::ClaimReceived {

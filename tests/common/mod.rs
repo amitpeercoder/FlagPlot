@@ -115,6 +115,20 @@ pub fn edit_file(dir: &Path, name: &str, change: impl FnOnce(String) -> String) 
 }
 
 /// As [`edit_file`], making each exact, asserted-unique replacement in turn.
+/// The umpire's key to the numbers of event, order and contact IDs
+/// (decision 0086). A test reads the log and the order book, which are the
+/// umpire's, so it may read their numbers; it takes the key from a world, as
+/// the umpire's tools do. The key is the same for every world.
+pub fn umpire_key() -> &'static sim_core::ids::UmpireKey {
+    static KEY: std::sync::OnceLock<sim_core::ids::UmpireKey> = std::sync::OnceLock::new();
+    KEY.get_or_init(|| {
+        load(&data_dir().join("scenarios/01_transit.toml"))
+            .expect("scenario 1 loads")
+            .world
+            .umpire_key()
+    })
+}
+
 pub fn edit_file_by(dir: &Path, name: &str, edits: &[(&str, &str)]) {
     edit_file(dir, name, |text| {
         edits.iter().fold(text, |text, (original, changed)| {

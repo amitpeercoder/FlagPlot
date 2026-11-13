@@ -858,7 +858,7 @@ impl Day {
                     } => orders.refused.push(RefusedOrder {
                         order: ctx.order_number(*order),
                         target: ctx.entity(*target),
-                        reason: words::refusal(reason),
+                        reason: ctx.map_text(&words::refusal(reason)),
                         event: id,
                     }),
                     EventKind::ReportReceived {
@@ -1331,12 +1331,10 @@ fn reports_of(
     all: &[SideEvent],
     strike: sim_core::ids::EventId,
 ) -> Vec<StrikeReport> {
-    use sim_core::events::Cause;
+    use sim_core::side_events::SideCause;
+    let strike_number = SideCause::Event(ctx.number(strike));
     let mut out = Vec::new();
-    for e in all
-        .iter()
-        .filter(|e| e.causes.contains(&Cause::Event(strike)))
-    {
+    for e in all.iter().filter(|e| e.causes.contains(&strike_number)) {
         let number = ctx.number(e.id);
         let report = match &e.kind {
             SideEventKind::Whole(EventKind::ReportReceived {

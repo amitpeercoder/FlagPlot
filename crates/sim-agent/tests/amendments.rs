@@ -95,7 +95,7 @@ fn own_fire_lists_the_fighters_and_the_guns() {
         .action
         .air_fire
         .iter()
-        .all(|f| f.firer.handle == "air_group:3"));
+        .all(|f| f.firer.handle == "air_group:1"));
     assert_eq!(b.action.guns.len(), 1);
     assert_eq!(b.action.guns[0].by.handle, "base:2");
     // The raid's air group is the enemy's and is not named (decision 0065).
@@ -108,7 +108,7 @@ fn own_fire_lists_the_fighters_and_the_guns() {
     );
     let text = b.to_text();
     assert!(
-        text.contains("Patrol fire: air_group:3 \"Placeholder defending fighters\" at the"),
+        text.contains("Patrol fire: air_group:1 \"Placeholder defending fighters\" at the"),
         "{text}"
     );
     assert!(

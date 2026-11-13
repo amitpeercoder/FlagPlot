@@ -6,7 +6,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::events::{Cause, Event, EventKind};
-use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId, TaskForceId, UmpireKey};
 use sim_core::state::Side;
 use sim_core::World;
 
@@ -23,11 +23,35 @@ Usage: sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--see
 /// What the user asked about.
 enum Subject {
     Unit {
-        unit: EntityRef,
+        unit: Handle,
         /// Only for a contact: the side whose contact it is.
         side: Option<Side>,
     },
     Why(u32),
+}
+
+/// A unit as the user wrote it. A contact's number is read through the
+/// umpire's key, which only a world gives, so the handle becomes an
+/// `EntityRef` once the run is done.
+#[derive(Clone, Copy)]
+enum Handle {
+    Ship(u32),
+    TaskForce(u32),
+    AirGroup(u32),
+    Base(u32),
+    Contact(u32),
+}
+
+impl Handle {
+    fn entity(self, key: &UmpireKey) -> EntityRef {
+        match self {
+            Handle::Ship(n) => EntityRef::Ship(ShipId::new(n)),
+            Handle::TaskForce(n) => EntityRef::TaskForce(TaskForceId::new(n)),
+            Handle::AirGroup(n) => EntityRef::AirGroup(AirGroupId::new(n)),
+            Handle::Base(n) => EntityRef::Base(BaseId::new(n)),
+            Handle::Contact(n) => EntityRef::Contact(ContactId::for_umpire(n, key)),
+        }
+    }
 }
 
 pub fn command(args: &[String], options: &sim_data::LoadOptions) -> Result<(), String> {
@@ -83,18 +107,19 @@ pub fn command(args: &[String], options: &sim_data::LoadOptions) -> Result<(), S
 
     let (executed, _) = execute_source(source, seed, options)?;
     let world = &executed.scenario.world;
+    let key = world.umpire_key();
     let asked = match &subject {
         Subject::Unit { unit, side } => format!(
             "events of {}{}{}",
             side.map_or(String::new(), |s| format!("{} ", s.name())),
-            unit,
+            unit.entity(&key),
             day.map_or(String::new(), |d| format!(" on day {d}"))
         ),
         Subject::Why(n) => format!("why event #{n}"),
     };
     let header = format!("{}, seed {}: {asked}", executed.scenario.name, world.seed());
     match subject {
-        Subject::Unit { unit, side } => list_unit(&executed, unit, side, day, &header),
+        Subject::Unit { unit, side } => list_unit(&executed, unit.entity(&key), side, day, &header),
         Subject::Why(n) => why_tree(world, n, &header),
     }
 }
@@ -104,7 +129,7 @@ fn parse_number(text: &str) -> Option<u32> {
 }
 
 /// `ship:33`, `allied:contact:3`.
-fn parse_handle(text: &str) -> Result<(EntityRef, Option<Side>), String> {
+fn parse_handle(text: &str) -> Result<(Handle, Option<Side>), String> {
     let lower = text.to_ascii_lowercase();
     let (side, rest) = if let Some(rest) = lower.strip_prefix("allied:") {
         (Some(Side::Allied), rest)
@@ -121,14 +146,14 @@ fn parse_handle(text: &str) -> Result<(EntityRef, Option<Side>), String> {
     let (kind, number) = rest.split_once(':').ok_or_else(bad)?;
     let n = parse_number(number).ok_or_else(bad)?;
     let unit = match kind {
-        "ship" => EntityRef::Ship(ShipId::new(n)),
-        "task_force" => EntityRef::TaskForce(TaskForceId::new(n)),
-        "air_group" => EntityRef::AirGroup(AirGroupId::new(n)),
-        "base" => EntityRef::Base(BaseId::new(n)),
-        "contact" => EntityRef::Contact(ContactId::new(n)),
+        "ship" => Handle::Ship(n),
+        "task_force" => Handle::TaskForce(n),
+        "air_group" => Handle::AirGroup(n),
+        "base" => Handle::Base(n),
+        "contact" => Handle::Contact(n),
         _ => return Err(bad()),
     };
-    if side.is_some() && !matches!(unit, EntityRef::Contact(_)) {
+    if side.is_some() && !matches!(unit, Handle::Contact(_)) {
         return Err(format!(
             "\"{text}\": a side goes only before a contact (allied:contact:N)"
         ));
@@ -310,12 +335,16 @@ fn print_event<'a>(
             breakdown.result
         );
     }
+    let key = world.umpire_key();
     for cause in &event.causes {
         match cause {
-            Cause::Event(id) => print_event(world, find, id.raw(), depth + 1, "<- ", shown),
+            Cause::Event(id) => {
+                print_event(world, find, id.umpire_raw(&key), depth + 1, "<- ", shown)
+            }
             Cause::Order(id) => match world.order(*id) {
                 Some(order) => println!(
-                    "{indent}    <- {id} ({}, day {}, issued by {:?}{}): {:?}",
+                    "{indent}    <- order:{} ({}, day {}, issued by {:?}{}): {:?}",
+                    id.umpire_raw(&key),
                     order.side.name(),
                     order.day_issued,
                     order.origin.issuer,
@@ -325,7 +354,10 @@ fn print_event<'a>(
                         .map_or(String::new(), |i| format!(" for {i}")),
                     order.kind
                 ),
-                None => println!("{indent}    <- {id} (not in the log)"),
+                None => println!(
+                    "{indent}    <- order:{} (not in the log)",
+                    id.umpire_raw(&key)
+                ),
             },
         }
     }
