@@ -9,8 +9,8 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 | A friendly field beyond the target | A strike that cannot get back to its carrier may land at a base of its own side within reach of the target, and fly from there or return later. Noted, not to be built with the first version of the reach rule | It eased long launches in the record: landing ashore was used twice at Eastern Solomons. It needs air groups that can be away from their carrier, which the game does not have (rebasing is deferred by decision 0050) | The strike-range research; added at the designer's request on Nov 12, 2026 |
 | Daylight as a limit on a launch | A strike launched late must be recovered in the dark or not launched. Noted, not to be built with the first version | Dusk limited a launch as much as fuel did, and the longest reaches at Midway ended in a night recovery. Today a strike flies in the morning or afternoon pulse with no regard to the hour within it | The same |
 | Experience for air groups | One number for an air group, read by a fighter's and a bomber's chance to hit and the chance of running out of fuel, diluted by replacements (decision 0064, stage 2). **It waits:** worked by hand from the rows, the facts are too thin to rest the values on, and no air group carries a value until research closes the gaps listed | The air figures are tuned meanwhile with every air group alike in experience, a named gap | Decision 0064, "Nov 13, 2026: stage 2 waits"; `docs/research/oob/air-group-experience-proposal.md` |
-| Ship repair | Damage is patched forward in weeks or mended in a yard in months. **Decided (decision 0069, confirmed); built after the three battles are tuned** | Without it a long campaign only wears fleets down. The research gives three bands of time away | Decision 0052, item 11; the step 2 research |
-| "Out of the campaign" on the objectives scale | Points for a ship that must leave for repair, not only for one with propulsion or flight deck out at the end | Enterprise had her deck back within the hour and was away 53 days; the scale gives nothing for that | The step 2 research |
+| Ship repair | Damage is patched forward in weeks or mended in a yard in months. **Decided (decision 0069, confirmed). Not part of step 2's close: it follows step 2, with land units and ground combat, before step 3** (ruled by the coordinating architect on the designer's delegation, Nov 13, 2026) | Without it a long campaign only wears fleets down. The research gives three bands of time away | Decision 0052, item 11; the step 2 research |
+| "Out of the campaign" on the objectives scale | Points for a ship that must leave for repair, not only for one with propulsion or flight deck out at the end. **Not part of step 2's close: it follows step 2 with ship repair** (the same ruling); the result on the scale stays reported and not judged | Enterprise had her deck back within the hour and was away 53 days; the scale gives nothing for that | The step 2 research |
 
 ## Done
 
@@ -20,7 +20,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Ryujo's raid on Henderson Field and the Japanese carriers' target lists: given as scenario orders on Nov 12, 2026 (decision 0063, "As built (the scenario orders)"). Ryujo is in (7,-9) at noon, her raid flies in every run, and none of her aircraft goes down aboard her; the Eastern Solomons baseline report is remade by the second session.
 - The scenario with every rule of step 2 acting together (`data/scenarios/16_all_together.toml`, `tests/scenario_16_all_together.rs`; `docs/step2-spec.md`, "Tests while figures move", 8): built on Nov 13, 2026, before any figure is tuned. One night (a night action of unequal crews, one force not ready) and one day (a hold, a strike beyond the radius, a deck lost with aircraft away, a landing at a field and a ditching, the afternoon raid on that field, the day's end count), on an altered copy of the frozen figures. It is step 2's complexity review of the rule cards.
 - `batch` records what the measures count for each run (decision 0062), and `sim-cli validate` judges a batch against a battle's measures by the spec's rule of agreement. Ship passages are worked by `validate --passages` and reported, not judged.
-- The reports tuning starts from, on batch version 4 after every rule put before tuning, are in `docs/validation/`, with the architect's reading in `baseline-reading.md`: Savo Island misses 5 of 23 judged measures (4 after round 1), the Eastern Solomons 4 of 14, Rabaul against Guadalcanal 6 of 10.
+- The reports tuning starts from, on batch version 4 after every rule put before tuning, are in `docs/validation/`, with the architect's reading in `baseline-reading.md`: Savo Island misses 5 of 23 judged measures (3 after round 2), the Eastern Solomons 4 of 14, Rabaul against Guadalcanal 6 of 10.
 - Strike target priority as an order: built with scenarios 13a and 13b (decision 0063, stage 1).
 - Experience for ships: built (decision 0064, stage 1); the values derived from rows and fixed.
 - A force not ready fires part of its guns: built (decision 0068).
@@ -34,9 +34,14 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Frozen figures go with frozen scenarios: every test on the frozen figures reads a frozen copy of scenarios 4, 5, 7 and 8 in `data/scenarios/step2-frozen/` (decisions 0073 and 0075; `docs/step2-spec.md`, "Tests while figures move", 9).
 - `batch` at version 4, with who sighted first in each surface fight and the rounds each force was surprised (decision 0062).
 - Cape Esperance planned (decision 0072): who is there, where and when they meet, readiness, break-off levels and class disputes. Its class figures are not derived and the scenario is not built.
-- Tuning round 0, finding and surprise: nothing moved (`docs/validation/tuning/r0-finding-and-surprise.md`). Round 1: `experience_gun_strength` from 0.25 to 0.5 (`docs/validation/tuning/r1-experience-gun-strength.md`, report `docs/validation/savo-island-r1.md`).
+- Tuning round 0, finding and surprise: nothing moved (`docs/validation/tuning/r0-finding-and-surprise.md`).
+- Tuning round 1: `experience_gun_strength` from 0.25 to 0.5, kept (`docs/validation/tuning/r1-experience-gun-strength.md`).
+- `export` takes a saved game as well as a scenario (`docs/commands.md`).
+- Tuning round 2: `surprised_target_factor` from 1.5 to 2; the chance to hit is closed (`docs/validation/tuning/r2-surprised-target-factor.md`, report `docs/validation/savo-island-r2.md`).
 
 ## Open, named by the work of Nov 13, 2026
+
+Where an item says when it is done, that is the coordinating architect's ruling of Nov 13, 2026, on the designer's delegation.
 
 - The other side's torpedo tubes fired in a later round of a fight: a rule for the designer, held with decision 0074.
 - A raiding force that fights and passes on: no rule has a force retire when it has done what it came for, so `minutes_of_action` misses at Savo Island (decision 0024, the note on break-off levels).
@@ -46,7 +51,10 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - A search flown in one pulse only (decision 0073, "What the rules cannot express").
 - One kind for every cruiser, so Tenryu and Yubari fire their guns at cruisers (decision 0078, "What it cannot give").
 - Experience for air groups (decision 0064, stage 2; the table above).
-- `export` taking a saved game: named by the coordinating architect on Nov 13, 2026; not on `main` and in no record yet.
+- The ignored test `scenario_09a_side_events::an_enemy_force_that_is_merely_there_changes_nothing_the_side_is_given`: a known truth-and-belief leak, the number of a force made in the game counts the enemy's forces. To be mended before step 3.
+- The nine small code fixes of `docs/rules/differences.md` ("in the batch of small fixes"): to be made in one batch at the close of tuning.
+- `docs/rules/differences.md`, row 7: the report after a strike reads the force after the damage. To be made before the air figures are tuned.
+- In progress, numbers reserved: decisions 0079 to 0082, the air work (anti-aircraft fire after the attack; whom the patrol fires at; the Eastern Solomons orders; the Rabaul orders).
 
 ## What the architect settles from the research
 
@@ -59,7 +67,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 
 The reports in `docs/validation/` give the numbers; `docs/step2-spec.md`, "Where the model stands today", sums them up.
 
-- Savo Island (`savo-island-r1.md`): gun hits on Allied ships, Allied torpedoes fired, Tenryu and Yubari's shells and the minutes of action miss; the Japanese hit rate agrees only at the edge.
+- Savo Island (`savo-island-r2.md`): Allied torpedoes fired, Tenryu and Yubari's shells and the minutes of action miss; gun hits on Allied ships agree only at the edge, the rest being the secondary guns.
 - The Eastern Solomons: the American aircraft lost, the all-or-nothing strike on Ryujo and the American claims miss.
 - The losses of the four weeks over Guadalcanal do not have the shape of the record (decision 0042): fighters die far too fast on both sides, too many aircraft are destroyed on the ground, and Henderson's fighters run down.
 - American claims overstate less than the record does, in both air battles.

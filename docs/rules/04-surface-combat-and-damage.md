@@ -279,7 +279,7 @@ A side sees: its own `ReportReceived` and `ClaimReceived`, whole. It never sees 
 
 No rule ever lowers a ship's flotation damage, fire damage or the state of a system, in port or at sea. A damaged ship stays damaged for the rest of the game. A system once out stays out. Aircraft repair is a separate rule for aircraft and is not this. [0014, 0016, 0052]
 
-Known limit: ship repair is deferred to early in step 2. Flooding that slows a ship, magazine explosions and damage to radar are not built. Shore bombardment and ships at anchor as targets are not built. Real hit chances and damage come from sources in step 2. [0014, 0016, 0052]
+Known limit: ship repair is not built; decision 0069 plans it, for after step 2. Flooding that slows a ship, magazine explosions and damage to radar are not built. Shore bombardment and ships at anchor as targets are not built. Real hit chances and damage come from sources in step 2. [0014, 0016, 0052]
 
 ## Random draws
 
