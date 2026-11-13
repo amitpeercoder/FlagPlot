@@ -11032,7 +11032,7 @@ mod tests {
 
     // ---- the patrol's split (decision 0080) ----
     //
-    // The cases of the hand calculation in tests/scenario_18b: shots at the
+    // The cases of the hand calculation in tests/scenario_19b: shots at the
     // escorts and at the bombers for P, E and B at a share of 1, 0.5 and 0.
 
     fn split(share: Fixed, patrol: u32, escorts: u32, bombers: u32) -> (u32, u32) {

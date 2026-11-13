@@ -27,9 +27,9 @@
 //!
 //! ## The scenario
 //!
-//! `data/scenarios/18b_whom_the_patrol_fires_at.toml`, one day, on the
+//! `data/scenarios/19b_whom_the_patrol_fires_at.toml`, one day, on the
 //! frozen figures with `strike_contact_max_age_pulses` at 1 (as in 13a and
-//! 18a), so the Japanese strike is launched in the morning at a contact the
+//! 19a), so the Japanese strike is launched in the morning at a contact the
 //! side starts holding, with no search. Everything asserted by hand is of
 //! the morning pulse of day 1.
 //!
@@ -186,7 +186,7 @@ use sim_core::World;
 use sim_data::{LoadOptions, Scenario};
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-const SCENARIO: &str = "18b_whom_the_patrol_fires_at.toml";
+const SCENARIO: &str = "19b_whom_the_patrol_fires_at.toml";
 const SEEDS: u64 = 1000;
 /// The shares of the cases, as written in the figures file.
 const SHARES: [&str; 3] = ["1", "0.5", "0"];
@@ -301,7 +301,7 @@ share = "0"
 /// Case (e): 6 dive bombers and 15 escorts of a Japanese base raid an
 /// Allied base with 13 fighters on patrol and no guns.
 fn case_e_text() -> String {
-    r#"name = "Scenario 18b, case (e): Henderson Field in small"
+    r#"name = "Scenario 19b, case (e): Henderson Field in small"
 placeholder = true
 seed = 1942
 days = 1

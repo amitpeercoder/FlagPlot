@@ -317,12 +317,12 @@ A side sees: `AirFight` for its own escorts as the firer, cut to the shots and w
 
 ### The patrol against the escorts and the bombers
 
-If the raid meets a patrol, the patrol fires from one stream keyed on (the first patrol group over the hex, the raid's first strike group). It fires first at the escorts and then at the bombers, each roll a shot per fighter:
+If the raid meets a patrol, the patrol fires from one stream keyed on (the first patrol group over the hex, the raid's first strike group). Its shots are split between the escorts and the bombers. With P the raid's share, E its escorts and B its bombers at the start of the step, the escorts draw off D = the smaller of P and E, times `air_combat.toml: patrol_drawn_off_share`, cut to a whole number. The rest, R = P − D, is split in proportion between the escorts not drawn off and the bombers: X = R × (E − D) / (E − D + B), cut to a whole number, and never more than E − D, so no more shots go at the escorts than there are escorts left. It fires first at the escorts and then at the bombers, each roll a shot per fighter:
 
-1. At the escorts: shots = the smaller of the raid's share and the escort count. Chance: `fighter_hit_chance` times the protection factors of the first escort group's type. Hits come off the escorts, lowest group first, no more than they have. Skipped if the raid has no escorts.
-2. At the bombers: shots = the share less the shots at the escorts. Skipped if 0. Chance: `fighter_hit_chance` times the protection factors of the first strike group's type. Hits come off the raid's strike groups, lowest group first, no more than they have.
+1. At the escorts: shots = D + X. Chance: `fighter_hit_chance` times the protection factors of the first escort group's type. Hits come off the escorts, lowest group first, no more than they have. Skipped if the raid has no escorts or the shots are 0.
+2. At the bombers: shots = R − X. Skipped if 0. Chance: `fighter_hit_chance` times the protection factors of the first strike group's type. Hits come off the raid's strike groups, lowest group first, no more than they have.
 
-So escorts draw the patrol off the bombers one for one, and a raid with no escorts takes its whole share. Records `AirFight` for each roll (firer: first patrol group, target: first escort or first strike group, firing patrol, at escorts or bombers). The breakdown of a patrol roll lists, first, the whole patrol, the raid's aircraft, the aircraft of all the raids, and the raid's share, then the shots and chance. [0027, 0029, 0033]
+At a share of 1 the escorts draw the patrol off the bombers one for one, and a raid with no escorts takes its whole share: the rule as it was before decision 0080. Records `AirFight` for each roll (firer: first patrol group, target: first escort or first strike group, firing patrol, at escorts or bombers). The breakdown of a patrol roll lists, first, the whole patrol, the raid's aircraft, the aircraft of all the raids, and the raid's share; when the share drawn off is below 1, also that share, the fighters drawn off (D) and the rest's shots at the escorts (X); then the shots and chance. [0027, 0029, 0033, 0080]
 
 A side sees: `AirFight` for its own patrol, cut to the shots and without the group fired at (decision 0065). The attacker sees only its own `AircraftLost`.
 
