@@ -2,7 +2,7 @@ Scenario 17: Cape Esperance, 11 to 12 October 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 734d1bcd803b1f5b  224 events
+day   1  hash ae803a794f9c22b6  223 events
 
 task_force:1 "Bombardment group" (Japanese): Arrived at (-2,-8); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Task Force 64" (Allied): Arrived at (2,-5); readiness battle, alert, rules of engagement: engage, break off at 1, stragglers: keep, keep 0; no home port
