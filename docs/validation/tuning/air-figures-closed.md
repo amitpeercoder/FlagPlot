@@ -5,8 +5,8 @@ Nov 13, 2026, after Rabaul round 3 and air round 5. This page lists every air fi
 **What each status means:**
 - **Sized from rows.** A round set the value from fact rows, with the rows and the assumptions named.
 - **Fitted, not checked.** Chosen with the battles' results known, with no size from a source (decision 0084).
+- **Looked at, not moved.** A round tried it, or named it and gave the reason it stays, and it did not move. No row sizes it. Used for `air_combat.toml`, sorted as its figure notes are; in the slow files below such a figure is listed as a placeholder, with the round that looked at it.
 - **Placeholder.** No row sizes it. It is not fitted to any measure, and its file says so.
-- **Placeholder, bounded.** No row sizes it, but rows give a range and the value lies inside it.
 - **No battle reads it.** No tuned battle of the slice can move it (`docs/step2-spec.md`, "Tuning").
 
 **Which battle reads which file.**
@@ -22,18 +22,18 @@ The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked o
 | --- | --- | --- | --- |
 | `fighter_false_claim_chance` | 0.7 | Sized from rows: 43 claimed by VF-5 and VF-6 (257, 238, 239) over the runs' own 16 real kills and 38 missed shots. The runs' kills are an assumption: no row gives the fighters' kills apart from the guns'. Checked on Rabaul's American claims, which agree | `r4-claims.md` |
 | `[base_hit] aircraft` | 0.06 | Sized from rows: about 2.5 aircraft destroyed on the ground (1266, 1272, 1283, 1299, 1330) for about 212 bomber sorties. It assumes one bomb a bomber at `bomb_hit_chance`; no row gives the bombs that hit Henderson Field. No check battle | `rabaul-r1-base-hit-aircraft.md` |
-| `fighter_hit_chance` | 0.3 | Placeholder. Looked at, not moved: no row sizes it | `r3-fighter-hit-chance.md` |
-| `pilot_armour_factor` | 0.75 | Placeholder. Not moved: no source | `r3-fighter-hit-chance.md`, `r3-us-losses-named-misses.md` |
-| `self_sealing_tanks_factor` | 0.75 | Placeholder. Not moved: no source | the same |
-| `anti_aircraft_hit_chance` | 0.05 | Placeholder. Looked at, not moved, in a round written from numbers already in hand, with no grid. The guns' share of the kills over the Enterprise force, about 43%, is consistent with the one weak row (3953, about half, Coral Sea, low); no row sizes the chance | `r5-anti-aircraft-hit-chance.md` |
-| `anti_aircraft_false_claim_chance` | 0.05 | Placeholder, bounded: left at the low end of what the rows give for the Eastern Solomons' ships' guns (255; 215 and others) | `r4-claims.md` |
-| `bomb_false_claim_chance` | 0.1 | Placeholder. One figure carries two kinds of claim that the record prices differently: about 1 per hit on ships, 20 or more per aircraft on the ground. No judged measure reads it | `r4-claims.md` |
-| `patrol_before_attack_share` | 0.4 | Placeholder, bounded: 0.22 to 0.61 (3979 to 3981). It was set inside that range before any result was read, and may move only inside it | Decision 0087 |
-| `patrol_drawn_off_share` | 0 | Fitted, not checked: an endpoint placeholder "chosen with both air battles' results known" (decision 0084, finding 5). Since then 0 is an end the rows support, not a size: 12 of the 30 of Simpler's study who engaged met the escort first, at or above the proportional split (decision 0087, 11) | Decisions 0080, 0084, 0087 |
+| `fighter_hit_chance` | 0.3 | Looked at, not moved: no row sizes it | `r3-fighter-hit-chance.md` |
+| `pilot_armour_factor` | 0.75 | Looked at, not moved: no source | `r3-fighter-hit-chance.md`, `r3-us-losses-named-misses.md` |
+| `self_sealing_tanks_factor` | 0.75 | Looked at, not moved: no source | the same |
+| `anti_aircraft_hit_chance` | 0.05 | Looked at, not moved, in a round written from numbers already in hand, with no grid. The guns' share of the kills over the Enterprise force, about 43%, is consistent with the one weak row (3953, about half, Coral Sea, low); no row sizes the chance | `r5-anti-aircraft-hit-chance.md` |
+| `anti_aircraft_false_claim_chance` | 0.05 | Looked at, not moved: left at the low end of what the rows give for the Eastern Solomons' ships' guns (255; 215 and others) | `r4-claims.md` |
+| `bomb_false_claim_chance` | 0.1 | Looked at, not moved: one figure carries two kinds of claim that the record prices differently: about 1 per hit on ships, 20 or more per aircraft on the ground. No judged measure reads it | `r4-claims.md` |
+| `patrol_before_attack_share` | 0.4 | Placeholder, inside the range the rows give, 0.22 to 0.61 (3979 to 3981). It was set inside that range before any result was read, and may move only inside it | Decision 0087 |
+| `patrol_drawn_off_share` | 0 | Fitted, not checked: an endpoint placeholder "chosen with both air battles' results known" (decision 0084, finding 5). Since then 0 is "an end the rows support, not sized" (round 3): 12 of the 30 of Simpler's study who engaged met the escort first, at or above the proportional split (decision 0087, 11) | Decisions 0080, 0084, 0087 |
 | `anti_aircraft_before_attack_share` | 0 | Fitted, not checked: an endpoint placeholder "chosen with both air battles' results known" (decision 0084, finding 5). Events 222 and 223 support guns that fire during the dive; no source sizes it | Decisions 0079, 0084 |
-| `bomb_hit_chance` | 0.2 | Placeholder. Read by every raid on ships and on fields; not moved | `rabaul-r1-base-hit-aircraft.md` |
+| `bomb_hit_chance` | 0.2 | Looked at, not moved: named in Rabaul round 1, no value tried. Read by every raid on ships and on fields | `rabaul-r1-base-hit-aircraft.md` |
 | `torpedo_hit_chance` | 0.15 | Placeholder. No round has looked at it | The file |
-| `[bomb_system_hit]` | flight deck 0.5, propulsion 0.2, fire control 0.1, main battery 0.2 | Placeholder. No round has looked at it | The file |
+| `[bomb_system_hit]` | flight deck 0.5, propulsion 0.2, fire control 0.1, main battery 0.2 | Placeholders, four entries. No round has looked at them | The file |
 | `strike_contact_max_age_pulses` | 0 | Placeholder (decision 0026) | The file |
 | `extended_reach_share` | 0.25 | Placeholder (decision 0059) | The file |
 | `ditch_chance_per_radius_beyond` | 2 | Placeholder. Under decision 0084 the ditchings of Ryujo's raid are not evidence for it. A fuel round waits on research into a radius with a bomb load | Decision 0084; `docs/step2-opening-list.md` |
@@ -43,6 +43,8 @@ The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked o
 | `crew_recovered_open_sea` | 0.5 | No battle reads it: the Eastern Solomons counts no pilots, and in scenario 6 every group is at a base, which never lacks a deck. The record has 6 to 9 crews recovered and 4 to 7 lost (`docs/research/oob/ditching-and-rescue.md`, section 2) | The file |
 | `base_supply_destroyed_per_hit_t` | 50 | Placeholder (decision 0034). No row, no measure | The file |
 | `[base_hit] supply` | 0.3 | Placeholder. No row, no measure | `rabaul-r1-base-hit-aircraft.md` |
+
+**Counts** (a table entry counts as one figure, so `[bomb_system_hit]` is four), the same sorting as `surface-and-search-figures-closed.md`: sized from rows 2, fitted and not checked 2, looked at and not moved 7, placeholders 12, read by no battle 3; 26 in all. *Corrected Nov 13, 2026, on the coordinating architect's ruling that the figure notes' sorting is the one: this page had called `anti_aircraft_false_claim_chance` and `patrol_before_attack_share` "placeholder, bounded" and counted `[bomb_system_hit]` as one.*
 
 ## `air_upkeep.toml`: wear and carrier repair
 
