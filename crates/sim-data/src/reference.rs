@@ -1567,8 +1567,9 @@ mod tests {
         assert_eq!(figures.crippled_flotation, Fixed::from_int(50));
         assert_eq!(figures.claimed_sunk_fire, Fixed::from_int(30));
         // The strengths of experience (decision 0064): the placeholder
-        // 0.25 in the live file.
-        assert_eq!(figures.experience_gun_strength, Fixed::from_ratio(1, 4));
+        // 0.25 in the live file, and 0.5 for guns since tuning round 1
+        // (docs/validation/tuning/r1-experience-gun-strength.md).
+        assert_eq!(figures.experience_gun_strength, Fixed::from_ratio(1, 2));
         assert_eq!(figures.experience_torpedo_strength, Fixed::from_ratio(1, 4));
         assert_eq!(
             figures.experience_sighting_strength,
@@ -1655,7 +1656,14 @@ mod tests {
             "experience_torpedo_strength",
             "experience_sighting_strength",
         ] {
-            let from = format!("{key} = \"0.25\"");
+            // The value the live file holds: 0.5 for guns since tuning
+            // round 1, 0.25 for the other two.
+            let held = if key == "experience_gun_strength" {
+                "0.5"
+            } else {
+                "0.25"
+            };
+            let from = format!("{key} = \"{held}\"");
             for (to, ok) in [
                 ("\"0\"", true),
                 ("\"0.5\"", true),
@@ -1665,7 +1673,7 @@ mod tests {
                 ("0.25", false),
             ] {
                 let text = combat_text().replace(&from, &format!("{key} = {to}"));
-                assert_ne!(text, combat_text(), "{from} is in the file");
+                assert!(combat_text().contains(&from), "{from} is in the file");
                 let result = parse_surface_combat_figures(&text, here());
                 assert_eq!(result.is_ok(), ok, "{key} = {to}");
             }
