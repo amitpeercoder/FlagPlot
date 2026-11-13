@@ -186,6 +186,10 @@ name = "scenario_18_torpedo_sides"
 path = "scenario_18_torpedo_sides.rs"
 
 [[test]]
+name = "scenario_19a_guns_and_the_attack"
+path = "scenario_19a_guns_and_the_attack.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 
