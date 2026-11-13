@@ -416,7 +416,10 @@ impl World {
     /// is alerted by a contact when its side's belief holds one no older than
     /// `fresh_contact_max_age_pulses` within `alert_contact_distance_hexes`
     /// of the force. The contact cited is the nearest, the lowest ID on a
-    /// tie. Reads belief only, never the truth of enemy units.
+    /// tie. A task force at battle readiness is neither alerted nor stood
+    /// down by a contact: the rule skips it, records nothing for it and
+    /// leaves its `alerted` and `alerted_by` alone. Reads belief only, never
+    /// the truth of enemy units.
     pub(crate) fn alert_from_belief(&mut self, day: u32, pulse: Pulse) {
         let Some(figures) = self.ref_data.surface_combat.clone() else {
             return;
@@ -432,7 +435,7 @@ impl World {
             .truth
             .task_forces
             .values()
-            .filter(|force| !force.ships.is_empty())
+            .filter(|force| !force.ships.is_empty() && force.readiness != Readiness::Battle)
             .map(|force| {
                 let position = force.position();
                 // Contacts come in ID order and min_by_key keeps the first
@@ -4523,6 +4526,39 @@ mod tests {
         world.alert_from_belief(1, Pulse::Morning);
         assert_eq!(world.events().len(), 3);
         assert_eq!(force(&world, 1).alerted_by, Some(alerts[0].id));
+    }
+
+    #[test]
+    fn a_force_at_battle_readiness_is_neither_alerted_nor_stood_down_by_a_contact() {
+        // Force 1 is at battle readiness (the default of a spec), with a
+        // fresh contact in range: no alert event, flag stays clear.
+        let mut world = Scene::new(
+            1,
+            Pulse::Night,
+            vec![ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1])],
+        )
+        .world();
+        assert_eq!(force(&world, 1).readiness, Readiness::Battle);
+        force_mut(&mut world, 1).alerted = false;
+        give_contact(&mut world, Side::Allied, Hex::new(1, 0));
+        world.alert_from_belief(1, Pulse::Night);
+        assert!(alerts_by_contact(&world).is_empty());
+        assert!(!force(&world, 1).alerted);
+        assert_eq!(force(&world, 1).alerted_by, None);
+
+        // With the flag already set and no contact left, it is not stood
+        // down and the flag is untouched.
+        let mut world = Scene::new(
+            1,
+            Pulse::Night,
+            vec![ForceSpec::new(1, Side::Allied, Hex::new(0, 0), &[1])],
+        )
+        .world();
+        force_mut(&mut world, 1).alerted = true;
+        world.alert_from_belief(1, Pulse::Night);
+        let stood = events_of(&world, |k| matches!(k, EventKind::ForceStoodDown { .. }));
+        assert!(stood.is_empty());
+        assert!(force(&world, 1).alerted);
     }
 
     #[test]

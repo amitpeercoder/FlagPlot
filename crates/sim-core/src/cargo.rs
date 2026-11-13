@@ -49,11 +49,17 @@ impl World {
             ) {
                 continue;
             }
+            // Cargo asks what refuelling asks: the force is exactly at the
+            // centre of the base's hex. One idle part-way along a leg works
+            // no cargo, whatever hex it is nearest to.
+            if task_force.toward_hex.is_some() {
+                continue;
+            }
             let Some(base) = self
                 .truth
                 .bases
                 .values()
-                .find(|base| base.side == task_force.side && base.hex == task_force.position())
+                .find(|base| base.side == task_force.side && base.hex == task_force.from_hex)
             else {
                 continue;
             };
@@ -603,6 +609,30 @@ mod tests {
             .events()
             .iter()
             .any(|event| matches!(event.kind, EventKind::CargoUnloaded { .. })));
+    }
+
+    #[test]
+    fn an_idle_force_part_way_along_a_leg_works_no_cargo() {
+        // Idle, 4 nm out of (0,0) toward (1,0): nearest base 1's hex, but not
+        // at its centre, as refuelling asks. The load is not worked.
+        let mut world = world(1, 1, 5000, &[(1, Hex::new(0, 0), &[(1, 0)])]);
+        {
+            let force = world.truth.task_forces.get_mut(&tf(1)).expect("force");
+            force.toward_hex = Some(Hex::new(1, 0));
+            force.progress_nm = Fixed::from_int(4);
+            force.leg_nm = Fixed::from_int(crate::hex::HEX_NM);
+            force.cargo_order = Some(crate::state::CargoOrder {
+                action: crate::orders::CargoAction::Load,
+                order: crate::ids::OrderId::new(1),
+            });
+        }
+        assert_eq!(world.truth.task_forces[&tf(1)].position(), Hex::new(0, 0));
+        world.run_pulse_phase(1, Pulse::Night, crate::resolve::PulsePhase::Loading);
+        assert!(!world
+            .events()
+            .iter()
+            .any(|event| matches!(event.kind, EventKind::CargoLoaded { .. })));
+        assert_eq!(world.umpire().ships[&ship(1)].supply_t, Fixed::ZERO);
     }
 
     /// Unloaded tons by ship and whether it was on a berth, in the night pulse.

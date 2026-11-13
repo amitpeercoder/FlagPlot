@@ -77,8 +77,10 @@
 //! group that rested, its latest stand-down if it is stood down and else its
 //! mission order. No random number.
 //!
-//! [`World::stand_down_and_return_air_groups`] runs in the night pulse right
-//! after the repair, the start of the day: each group with a rest threshold,
+//! [`World::stand_down_and_return_air_groups`] runs in the night pulse after
+//! the repair, the arrivals, the replacements and the supply upkeep (the order
+//! is aircraft repair, air arrival, air replacement, air supply upkeep, air
+//! group rest, then movement), the start of the day: each group with a rest threshold,
 //! in order of group number, is stood down if its fatigue is above the
 //! threshold and returned if it was stood down and its fatigue is not,
 //! recording `AirGroupStoodDown` or `AirGroupReturned`, caused by the
@@ -93,8 +95,9 @@
 //!
 //! # Replacements (0038)
 //!
-//! [`World::receive_replacements`] runs in the night pulse right after the
-//! repair and before the stand-down decisions, from day 2 on (day 1 has
+//! [`World::receive_replacements`] runs in the night pulse after the repair
+//! and the arrivals, and before the supply upkeep and the stand-down
+//! decisions, from day 2 on (day 1 has
 //! nothing to replace). For each of the scenario's streams, in the order
 //! given, if the base is still held by the stream's side: its aircraft go to
 //! the side's groups located at the base that fly the stream's type, lowest
@@ -727,8 +730,9 @@ impl World {
         }
     }
 
-    /// The staff's rest step, in the night pulse right after the repair (the
-    /// start of the day, decision 8 of 0036): each air group with a rest
+    /// The staff's rest step, in the night pulse after the repair, the
+    /// arrivals, the replacements and the supply upkeep (the start of the
+    /// day, decision 8 of 0036): each air group with a rest
     /// threshold, in order of group number, is stood down if its fatigue is
     /// above the threshold and returned to flying if it was stood down and
     /// its fatigue is not. An event only on a change, caused by the
