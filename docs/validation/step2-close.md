@@ -2,19 +2,19 @@
 
 Nov 13, 2026. Assembled from the records by the architect's team; it adds no finding of its own. Each number here is copied from the report or round record named beside it, and that file is the source.
 
-## Where step 2 ends, and the one decision asked of you
+## Where step 2 ends, and what the designer decided
 
-Step 2 built the harness, measured the slice's battles against the record, tuned what the sources allowed, and checked the surface figures once on a battle they were not tuned on. No battle passes outright. Across the four battles 62 measures are judged: 43 agree, 8 agree only at the edge, and 11 miss. The closing reports of the three tuned battles were remade on the final engine, and no verdict changed. Every miss and every edge agreement is listed below with its cause and with what in step 3 would answer it. **The one decision asked of you: accept the named misses, or say which one is not acceptable.** The same goes for the one closing test that did not pass its own rule, the legibility test, which missed by one prediction (below). With it come three smaller decisions the spec left for the close, each with the architect's recommendation.
+Step 2 built the harness, measured the slice's battles against the record, tuned what the sources allowed, and checked the surface figures once on a battle they were not tuned on. No battle passes outright. Across the four battles 62 measures are judged: 43 agree, 8 agree only at the edge, and 11 miss. The closing reports of the three tuned battles were remade on the final engine, and no verdict changed. Every miss and every edge agreement is listed below with its cause and with what in step 3 would answer it. **Step 2 closed on Nov 13, 2026, when the designer decided, on the architect's recommendation in each case:** to accept all 11 named misses; to accept the legibility test as it stands, though it failed its rule by one prediction; that agreements at the edge do not count against a battle; to keep the hand calculations frozen; and to keep the objectives scale reported only, with ship repair first. His words for each are below.
 
 ## "Done means", line by line
 
 | Line of the spec | Met? | Shown by |
 | --- | --- | --- |
-| All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not met until you decide.** No battle passes. Every miss and every agreement at the edge is written down with its cause; your acceptance is the decision asked above | This page; the four reports in the table below |
+| All three battles pass, or each miss is written down with its cause and accepted by the designer | **Met:** no battle passes; each miss is written down with its cause and was accepted by the designer on Nov 13, 2026 ("Accept all 11") | This page; the four reports in the table below |
 | No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met.** A note above every figure in its file (pull requests 226 and 227), and two summary pages list them. Outside `data/reference` and so outside the line: scenario 6's own figures, placeholders with notes in the scenario file and on the air page; and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" (left so by the architect's ruling, `docs/step2-opening-list.md`) | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
 | The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **Met.** The frozen-figure tests, the invariants and the determinism scenario run in `cargo test` on every pull request. The hundred-seed soak, which CI does not run, was run by hand on Nov 13, 2026: 100 seeds of 180 days, 1,978,115 events, every check holding; the determinism scenario 9 of 9 and the invariants' tests 24 of 24 beside it | `docs/validation/closing-tests.md`, test 1 |
 | The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/step2-opening-list.md`, "Done" |
-| The legibility test is run again on the tuned Eastern Solomons | **Not met by its own rule.** The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again, and the rule not changed after the result. For you to accept or not (below) | `docs/validation/closing-tests.md`, test 2 |
+| The legibility test is run again on the tuned Eastern Solomons | **Run, failed its rule by one item, and accepted as it stands by the designer** (Nov 13, 2026). The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again, and the rule not changed after the result | `docs/validation/closing-tests.md`, test 2 |
 | A cheap model given only the rulebook, the glossary, the data files and two scenarios reproduces a set of hand calculations exactly | **Met after a rerun, not at the first sitting.** First run: every number of the step 2 rules exact, but two derived chances cut where the hand calculations round; in the step 1 control one number wrong, on a term the rulebook did not define ("free round", "both fire from the start"), and two chances cut. The architect then ruled that such chances are written cut (R6), and the rulebook and glossary were fixed. The control sitting, run again on the fixed book, got every number exact. One new finding (R12, how a starting contact ages) was closed by a sentence in chapter 3 | `docs/validation/closing-tests.md`, test 3 |
 
 ## The four battles
@@ -32,6 +32,8 @@ Each report is 1,000 runs, seeds 1 to 1000. "At the edge" is an agreement whose 
 The closing reports of the three tuned battles were remade on the final engine (state version 8, label `close`), and no judged measure changed verdict (`baseline-reading.md`, "The reports on the final engine"). Figures below are from the `close` reports.
 
 ## Every named miss and every agreement at the edge
+
+**The designer decided on Nov 13, 2026: "Accept all 11"** named misses below.
 
 Figures are the 5th to the 95th percentile, then the median, then (in brackets) the runs of 1,000 that hold the record. Misses that share one cause are grouped.
 
@@ -180,17 +182,17 @@ Run on Nov 13, 2026 on `main` after the batch of small fixes (pull request 228).
 | Legibility, on the tuned Eastern Solomons | **Fails its rule by one item.** A cheap model (Claude Haiku) predicted the day from the opening briefing, the day was run, and a fresh one explained it. The rule asks the explanation, claims and truth-and-belief items to pass and three of four predictions. The three pass, and two predictions. It said the American search would find the Japanese carriers in the morning (it was the afternoon), and would not say whether a Japanese strike would come (one came) |
 | The rulebook-only hand calculations | **First run not a pass under its rule; the control rerun exact.** First run: every number of a step 2 rule exact, except two derived chances of scenario 19a that differ in the sixth decimal (cut where the hand calculation rounds). In the step 1 control (scenario 04a) one number wrong, "both fire from the start", a term the rulebook did not define, and two more chances cut. After the architect's ruling that such chances are written cut, and the rulebook's fixes, the control sitting was run again: every number exact |
 
-**The legibility test, for you to accept or not.** *The architect's reading:* both misses are about where the enemy would be. The opening briefing holds no contact and no enemy force, only that the enemy is "expected to come down from the north". So the misses are the fog the game is meant to have, not a misreading of a rule. The explanation, the part the spec names in its own words ("explains an outcome"), passed. The test was not run again.
+**The legibility test: accepted as it stands.** *The architect's reading,* put to the designer: both misses are about where the enemy would be. The opening briefing holds no contact and no enemy force, only that the enemy is "expected to come down from the north". So the misses are the fog the game is meant to have, not a misreading of a rule. The explanation, the part the spec names in its own words ("explains an outcome"), passed. The test was not run again. **The designer decided on Nov 13, 2026: "Accept as it stands"; no rerun.** For step 3 the test's rule is revised, before it is next run, so that it does not score predictions that depend on hidden enemy positions (the architect's proposal, which his choice included).
 
 **What followed from the tests** (the architect's rulings, recorded with the tests). Of the legibility test's twelve findings, four are fixed in the glossary and the rulebook, among them one meaning of "crippled": a ship afloat with propulsion or flight deck out; flotation damage of 50 or more is now "heavily damaged". Five change the briefing's wording; they were made in a second pull request, with the agent's goldens and the recorded games' transcripts remade and every save unchanged. Two go to step 3 (listed below), and one needs nothing. Of the rulebook test's eleven findings, seven are fixed in the rulebook and glossary, one is a rule of the hand calculations, and three need nothing. The rerun found one more, R12 (how a starting contact ages), closed by a sentence in chapter 3 in the pull request of the briefing's wording fixes.
 
-## The three decisions the spec left for the close
+## The three decisions the spec left for the close, and the designer's answers
 
 ### (a) Do agreements at the edge count against a battle?
 
 You decided on Nov 12, 2026 that they do not count for now, and that the close would decide ("Decided by the designer", 9). Eight are left: four at Savo Island, two at the Eastern Solomons, one at Rabaul, one at Cape Esperance. Each is in the lists above with what it rests on: overlapping fights, secondary guns, a divisor that is itself a named miss, a yes-or-no measure, and the rule of targets. The one at Rabaul, Japanese fighters lost, rests on a larger patrol over the field.
 
-**The architect recommends:** they do not count against a battle, since each is listed with its cause.
+**The architect recommended:** they do not count against a battle, since each is listed with its cause. **The designer decided on Nov 13, 2026: "They do not count" against a battle;** each stays listed with its cause.
 
 ### (b) Are the hand calculations worked again on the tuned figures?
 
@@ -199,13 +201,13 @@ The hand-calculation tests run on the step 1 figures, frozen for step 2 ("Decide
 - the determinism scenario;
 - the soak.
 
-**The architect recommends:** no. The frozen-figure tests stay as the proof of the rules' arithmetic. The live figures are covered by the pinned outcomes, the determinism scenario and the soak. The same answer is recommended for the frozen scenarios, which the spec ties to this decision ("Tests while figures move", 9).
+**The architect recommended:** no. The frozen-figure tests stay as the proof of the rules' arithmetic. The live figures are covered by the pinned outcomes, the determinism scenario and the soak. The same answer is recommended for the frozen scenarios, which the spec ties to this decision ("Tests while figures move", 9). **The designer decided on Nov 13, 2026: "No, keep them frozen";** the frozen scenario copies stay frozen too.
 
 ### (c) The objectives scale
 
 The result on the scale is reported and not judged until the scale counts a ship that is out of the campaign ("Decided by the designer", 4). Every point and level of decision 0054 is still a placeholder. At Rabaul the result is the same in every run (a major Allied victory in 1,000 of 1,000), so the scale does not yet tell one run from another.
 
-**The architect recommends:** the scale stays reported and not judged. Ship repair (decision 0069, which you confirmed) and "out of the campaign" follow step 2, with land units and ground combat, before step 3. This was already ruled on your delegation on Nov 13, 2026.
+**The architect recommended:** the scale stays reported and not judged. Ship repair (decision 0069, which the designer confirmed) and "out of the campaign" follow step 2, with land units and ground combat, before step 3. **The designer decided on Nov 13, 2026: "Reported only; repair first".** The scale stays reported and not judged. Ship repair (decision 0069) and "out of the campaign" are built next and the scale set from the record, before step 3 begins; land units and basic ground combat follow those, also before step 3.
 
 ## Decided on your delegation, Nov 13, 2026
 
@@ -232,7 +234,7 @@ You gave the coordinating architect your decisions on Nov 13 ("Go ahead and deci
 | 0086 | The numbers a side is given | None changed |
 | 0087 | The patrol's fire split before and after the attack | Amends 0079 |
 
-Also for you to look at: decision 0066 (land units) has three choices marked "needs review" (its items 7, 12 and 14), and decision 0083 records one fight for three forces as a plan for you.
+Also for the designer to look at: decision 0066 (land units) has three choices marked "needs review" (its items 7, 12 and 14), and decision 0083 records one fight for three forces as a plan for you.
 
 ## Handed to step 3
 
@@ -284,3 +286,7 @@ Found while this page was assembled, and corrected in the same pull request on t
 5. **Decision 0074's status line** said "not built"; it now says built with decision 0083.
 6. **The spec's quote of `savo-island-r2.md`** (19, 1, 3 of 23) now says that was the file when written, and that it was remade with decision 0084's measures and reads 21, 2, 6 of 29.
 7. **The state version of the closing reports.** Savo Island, the Eastern Solomons and Rabaul were reported on state version 7, before decision 0086 moved the engine to version 8, and no record compared the two. Each was run again on the final engine (label `close`) and set against its closing report measure by measure. No judged measure changed verdict and every median is the same; at Savo Island the runs holding a record differ by at most 8 in 1,000 (`baseline-reading.md`, "The reports on the final engine"). This page uses the `close` reports.
+
+## Also worth knowing
+
+- Pull request 229 merged while its CI run was in progress, and CI then passed on the same commit. Main's protection requires the check; the cause was not established. It was raised with the designer as his setting.
