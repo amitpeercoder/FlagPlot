@@ -158,7 +158,7 @@ Remade after decision 0081 set the scenario's remaining orders from the rows: ea
 - **Bomb hits on Enterprise now miss:** 0 in the middle run, 0 to 2, against 3 (29 runs hold it; 0.50 a run, against 3.52 before). Of the 27 dive bombers, the patrol of 54 and the guns, all firing before the bombs fall, leave few. That is the finding that the rule changes of decisions 0079 and 0080 answer; nothing here was adjusted for it.
 - **The strike on Ryujo agrees:** 38 aircraft in 488 runs (the record is 36 to 38), none in the others. Ryujo is sunk in 228 runs, against 464, now that Enterprise's groups and VMSB-232 no longer strike her, so Japanese carriers sunk agrees at the edge.
 - **The American losses are as far off as before** (4 and 5 in the middle run against 13 to 14 and 20 to 21), and the claims measures are unchanged in verdict. They are read after the fight's rounds.
-- **Two of Ryujo's six attack planes still run out of fuel** coming home (1.72 a run): her raid flies 200 miles on a derived radius of 175. Decision 0081 lays out the options by the derivation's rule.
+- **Two of Ryujo's six attack planes still run out of fuel** coming home (1.72 a run): her raid flies 200 miles on a derived radius of 175. Decision 0081 keeps the radius (C5) and leaves this as evidence for the round of the fuel figure.
 - **The result:** a stalemate in 547 runs, an Allied victory in 450, a defeat in 3 (before: 436, 468 and 96).
 
 ## Rabaul against Guadalcanal
