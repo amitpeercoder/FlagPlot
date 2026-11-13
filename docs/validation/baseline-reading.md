@@ -94,6 +94,8 @@ What it shows:
 - **Allied torpedoes fired** is judged for the first time and misses by about four times, with the share of decision 0071 at its first value. Half of what is left is tubes that do not bear on one side (decision 0074, held).
 - **Minutes of action and Japanese shells** are at the edge for a cause that is named and left: the Japanese ended each fight by passing on, and the rules have no force that retires when it has done what it came for (decision 0024, the note).
 
+No figure of finding and surprise is moved: `docs/validation/tuning/r0-finding-and-surprise.md` says what was looked at and why.
+
 The Eastern Solomons and Rabaul reports keep the misses they had: American aircraft lost, the all-or-nothing strike on Ryujo and claims at the Eastern Solomons; fighter losses, aircraft destroyed on the ground, claims and the aircraft ready after three weeks at Rabaul. Nothing in this remake was aimed at them.
 
 ## Eastern Solomons
