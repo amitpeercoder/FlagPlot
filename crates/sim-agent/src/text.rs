@@ -74,6 +74,13 @@ impl Out {
         self.0.push('\n');
     }
 
+    /// A line under a `sub` line.
+    fn sub_sub(&mut self, text: String) {
+        self.0.push_str("    - ");
+        self.0.push_str(&text);
+        self.0.push('\n');
+    }
+
     fn line(&mut self, text: String) {
         self.0.push_str("- ");
         self.0.push_str(&text);
@@ -905,6 +912,11 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
             "Objective: enemy ships left afloat with propulsion or flight deck out, points for each: {}",
             ship_points_text(&line.ship_points)
         ),
+        "ships_out_of_action" => format!(
+            "Objective: enemy ships out of action, counted by the share of the {}-day horizon each is away for repair (her days of repair at the end plus those she left for a yard with), points for a ship away for the whole horizon: {}",
+            line.horizon_days.unwrap_or(0),
+            ship_points_text(&line.ship_points)
+        ),
         "aircraft_destroyed" => {
             format!("Objective: enemy aircraft destroyed, points for each: {points}")
         }
@@ -979,16 +991,23 @@ fn result_text(o: &mut Out, result: &ResultPart) {
             } else {
                 format!(" ({})", ships.join(", "))
             };
-            let of_days = score
-                .days
-                .map(|days| format!(" of {days} days"))
-                .unwrap_or_default();
+            let of_days = match (score.days, score.horizon_days) {
+                (Some(days), _) => format!(" of {days} days"),
+                (None, Some(horizon)) => format!(" over {horizon} days"),
+                (None, None) => String::new(),
+            };
             o.sub(format!(
                 "{}{base}: count {}{of_days}{by_kind}, points {}",
                 plain(score.kind),
                 score.count.0,
                 score.points.0
             ));
+            for s in &score.ships_out {
+                o.sub_sub(format!(
+                    "{} {}: {} days at the end + {} left with = {} days out, share {}, points {}",
+                    s.ship, s.kind, s.at_end, s.left_with, s.days_out, s.share.0, s.points.0
+                ));
+            }
         }
     }
     if let Some(history) = &result.history {

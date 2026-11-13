@@ -67,11 +67,11 @@
       "required": ["kind", "base", "closed", "ship_points", "points", "known"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "enum": ["ships_sunk", "ships_crippled", "aircraft_destroyed", "cargo_landed", "base_open"] },
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open"] },
         "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
         "closed": { "type": ["boolean", "null"] },
         "ship_points": {
-          "description": "For ships_sunk and ships_crippled: the points for each kind of ship. Empty for the others.",
+          "description": "For ships_sunk, ships_crippled and ships_out_of_action: the points for each kind of ship (for ships_out_of_action, for a ship away for the whole horizon). Empty for the others.",
           "type": "array",
           "items": {
             "type": "object",
@@ -82,6 +82,10 @@
               "points": { "$ref": "defs.schema.json#/$defs/dec" }
             }
           }
+        },
+        "horizon_days": {
+          "description": "For ships_out_of_action only (left out for every other kind): the days of the horizon its shares are of (decision 0088), at least 1.",
+          "type": "integer"
         },
         "points": {
           "description": "Points for one aircraft, one ton or the base being as wanted; null for the ship objectives.",
@@ -130,7 +134,7 @@
             "required": ["kind", "base", "closed", "count", "days", "ships", "points"],
             "additionalProperties": false,
             "properties": {
-              "kind": { "enum": ["ships_sunk", "ships_crippled", "aircraft_destroyed", "cargo_landed", "base_open"] },
+              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open"] },
               "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
               "closed": { "type": ["boolean", "null"] },
               "count": { "$ref": "defs.schema.json#/$defs/dec" },
@@ -150,7 +154,29 @@
                   }
                 }
               },
-              "points": { "$ref": "defs.schema.json#/$defs/dec" }
+              "points": { "$ref": "defs.schema.json#/$defs/dec" },
+              "horizon_days": {
+                "description": "For ships_out_of_action only (left out for every other kind): the days of the horizon the shares are of, at least 1.",
+                "type": "integer"
+              },
+              "ships_out": {
+                "description": "For ships_out_of_action only (left out when empty): each ship counted, in ship number order, with the days it was away and the points they earned.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["ship", "kind", "at_end", "left_with", "days_out", "share", "points"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "ship": { "description": "The side's own handle for a ship of its own (ship:7), with no name; for an enemy ship, which a side has no handle for, enemy_ship:3, her place in this list from 1.", "type": "string" },
+                    "kind": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] },
+                    "at_end": { "description": "Her days of repair still to run at the end of the game.", "type": "integer" },
+                    "left_with": { "description": "The days of repair she left for a yard with.", "type": "integer" },
+                    "days_out": { "description": "at_end plus left_with.", "type": "integer" },
+                    "share": { "description": "min(days_out, horizon) / horizon.", "$ref": "defs.schema.json#/$defs/dec" },
+                    "points": { "description": "The kind's points times the share.", "$ref": "defs.schema.json#/$defs/dec" }
+                  }
+                }
+              }
             }
           }
         },

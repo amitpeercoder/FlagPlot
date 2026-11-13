@@ -41,15 +41,22 @@ pub struct LevelsPart {
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ObjectiveLine {
-    /// `ships_sunk`, `ships_crippled`, `aircraft_destroyed`, `cargo_landed`
-    /// or `base_open`.
+    /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
+    /// `aircraft_destroyed`, `cargo_landed` or `base_open`.
     pub kind: &'static str,
     /// The base of `cargo_landed` and `base_open`.
     pub base: Option<Handle>,
     /// For `base_open`: true if the side wants the base shut.
     pub closed: Option<bool>,
-    /// For the two ship objectives: the points for each kind of ship.
+    /// For the ship objectives: the points for each kind of ship (for
+    /// `ships_out_of_action`, the points for a ship away for the whole
+    /// horizon).
     pub ship_points: Vec<ShipKindPoints>,
+    /// For `ships_out_of_action`: the days of the horizon its shares are of
+    /// (decision 0088). Left out of the answer for every other kind, so that
+    /// no earlier answer changes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub horizon_days: Option<u32>,
     /// Points for one aircraft (`aircraft_destroyed`), one ton
     /// (`cargo_landed`) or the base being as wanted on every day
     /// (`base_open`, which earns the share of the days it was).
@@ -120,8 +127,37 @@ pub struct ScoreLine {
     pub count: Dec,
     /// For `base_open`: the days counted, which `count` is out of.
     pub days: Option<u32>,
-    /// For the two ship objectives: the ships counted, by kind.
+    /// For the ship objectives: the ships counted, by kind.
     pub ships: Vec<ShipsOfKind>,
+    pub points: Dec,
+    /// For `ships_out_of_action`: the days of the horizon the shares are of.
+    /// Left out of the answer for every other kind.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub horizon_days: Option<u32>,
+    /// For `ships_out_of_action`: each ship counted, in ship number order,
+    /// with the days it was out and the points they earned. Left out of the
+    /// answer when empty.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub ships_out: Vec<ShipOutLine>,
+}
+
+/// One ship's line of a `ships_out_of_action` score (decision 0088).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ShipOutLine {
+    /// The side's own handle for a ship of its own, `ship:7`, with no name;
+    /// for an enemy ship, which a side has no handle for (decision 0086),
+    /// `enemy_ship:3`, the place of the ship in this list, from 1.
+    pub ship: String,
+    pub kind: &'static str,
+    /// Her days of repair still to run at the end of the game.
+    pub at_end: u32,
+    /// The days of repair she left for a yard with.
+    pub left_with: u32,
+    /// `at_end` plus `left_with`.
+    pub days_out: u32,
+    /// `min(days_out, horizon) / horizon`.
+    pub share: Dec,
+    /// The kind's points times the share.
     pub points: Dec,
 }
 
@@ -143,12 +179,18 @@ fn ship_points(points: &sim_core::objectives::ShipPoints) -> Vec<ShipKindPoints>
         .collect()
 }
 
-fn line(ctx: &Ctx<'_>, objective: &Objective, known: &KnownProgress) -> ObjectiveLine {
+fn line(
+    ctx: &Ctx<'_>,
+    objective: &Objective,
+    known: &KnownProgress,
+    horizon_days: Option<u32>,
+) -> ObjectiveLine {
     let mut line = ObjectiveLine {
         kind: objective.name(),
         base: objective.base().map(|b| ctx.base(b)),
         closed: None,
         ship_points: Vec::new(),
+        horizon_days: None,
         points: None,
         known: KnownLine {
             basis: known.basis.name(),
@@ -158,10 +200,12 @@ fn line(ctx: &Ctx<'_>, objective: &Objective, known: &KnownProgress) -> Objectiv
         },
     };
     match objective {
-        Objective::ShipsSunk(points)
-        | Objective::ShipsCrippled(points)
-        | Objective::ShipsOutOfAction(points) => {
+        Objective::ShipsSunk(points) | Objective::ShipsCrippled(points) => {
             line.ship_points = ship_points(points);
+        }
+        Objective::ShipsOutOfAction(points) => {
+            line.ship_points = ship_points(points);
+            line.horizon_days = horizon_days;
         }
         Objective::AircraftDestroyed { points } => line.points = Some(Dec(*points)),
         Objective::CargoLanded { points_per_t, .. } => line.points = Some(Dec(*points_per_t)),
@@ -182,7 +226,7 @@ pub(crate) fn objectives_part(ctx: &Ctx<'_>, view: &SideView<'_>) -> ObjectivesP
             .objectives()
             .iter()
             .zip(&known)
-            .map(|(objective, known)| line(ctx, objective, known))
+            .map(|(objective, known)| line(ctx, objective, known, view.horizon_days()))
             .collect(),
         levels: view.levels().map(|l| LevelsPart {
             minor: Dec(l.minor),
@@ -190,6 +234,16 @@ pub(crate) fn objectives_part(ctx: &Ctx<'_>, view: &SideView<'_>) -> ObjectivesP
             decisive: Dec(l.decisive),
         }),
         result: None,
+    }
+}
+
+/// What a side calls a ship in the result: its own number for a ship of its
+/// own, and for an enemy ship her place in the list of ships counted, which
+/// tells it no more than the count does.
+fn ship_label(ctx: &Ctx<'_>, ship: sim_core::ids::ShipId, place: usize) -> String {
+    match ctx.ship_number(ship) {
+        Some(number) => format!("ship:{number}"),
+        None => format!("enemy_ship:{}", place + 1),
     }
 }
 
@@ -218,6 +272,21 @@ fn side_result(ctx: &Ctx<'_>, result: &SideResult) -> SideResultPart {
                     })
                     .collect(),
                 points: Dec(o.points),
+                horizon_days: o.horizon_days,
+                ships_out: o
+                    .ships_out
+                    .iter()
+                    .enumerate()
+                    .map(|(place, s)| ShipOutLine {
+                        ship: ship_label(ctx, s.ship, place),
+                        kind: s.kind.name(),
+                        at_end: s.at_end,
+                        left_with: s.left_with,
+                        days_out: s.days_out,
+                        share: Dec(s.share),
+                        points: Dec(s.points),
+                    })
+                    .collect(),
             })
             .collect(),
         total: Dec(result.total),
