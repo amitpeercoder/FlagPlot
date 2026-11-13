@@ -451,6 +451,7 @@ mod tests {
                     radar: false,
                     aircraft_capacity: 0,
                     anti_aircraft: 0,
+                    troop_capacity_men: 0,
                 },
             );
         }
@@ -1327,6 +1328,7 @@ mod tests {
             force.cargo_order = Some(crate::state::CargoOrder {
                 action: crate::orders::CargoAction::Load,
                 order: OrderId::new(5),
+                unit: None,
             });
         }
         world.handle_stragglers(1, Pulse::Night);

@@ -115,6 +115,10 @@ pub struct ShipClass {
     /// (decision 7 of `docs/decisions/0027-fighters-and-anti-aircraft-fire.md`).
     /// 0 for a ship that has none.
     pub anti_aircraft: u32,
+    /// Men the ship can carry, apart from its cargo (decision 0066, 4): men
+    /// take no cargo room and cargo takes no berths. 0 for a ship that
+    /// carries none, and wherever a class file does not give the column.
+    pub troop_capacity_men: u32,
 }
 
 impl ShipClass {
@@ -914,6 +918,10 @@ pub struct RefData {
     /// names no file: nothing is spent, no base is out of supply and nothing
     /// is recorded.
     pub air_supply: Option<AirSupplyFigures>,
+    /// The ground figures of decision 0066. `None` if the scenario names no
+    /// file: no man eats and the men's supply phase does nothing. A scenario
+    /// with a land unit must name one.
+    pub ground: Option<GroundFigures>,
 }
 
 impl RefData {
@@ -977,6 +985,42 @@ impl AirSupplyFigures {
             if value.is_negative() {
                 return Some(format!("air {label} {value} is negative"));
             }
+        }
+        None
+    }
+}
+
+/// The figures of land units carried by sea and fed from a base. See
+/// `docs/decisions/0066-land-units-carried-and-fed.md`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct GroundFigures {
+    /// The tons of a ship's work in a pulse that moving one man takes
+    /// (decision 7).
+    pub handling_t_per_man: Fixed,
+    /// Supply a man ashore costs his base a day, in tons (decision 16).
+    pub daily_supply_t_per_man: Fixed,
+    /// The share of unfed men lost in a day (decision 19).
+    pub unfed_loss_share_per_day: Fixed,
+}
+
+impl GroundFigures {
+    /// Describes what is wrong with the figures, if anything. The weight of
+    /// a man and his daily charge divide, so they must be above 0; the share
+    /// lost is from 0 to 1.
+    pub fn problem(&self) -> Option<String> {
+        for (label, value) in [
+            ("handling_t_per_man", self.handling_t_per_man),
+            ("daily_supply_t_per_man", self.daily_supply_t_per_man),
+        ] {
+            if value <= Fixed::ZERO {
+                return Some(format!("ground {label} {value} is not above 0"));
+            }
+        }
+        let share = self.unfed_loss_share_per_day;
+        if share.is_negative() || share > Fixed::ONE {
+            return Some(format!(
+                "ground unfed_loss_share_per_day {share} is not between 0 and 1"
+            ));
         }
         None
     }
@@ -1663,6 +1707,7 @@ mod tests {
             radar: false,
             aircraft_capacity: 0,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         }
     }
 

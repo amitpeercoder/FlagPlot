@@ -979,6 +979,7 @@ impl Scenario {
                     ),
                     None => None,
                 },
+                on_map: true,
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1200,6 +1201,7 @@ impl Scenario {
                 systems,
                 experience,
                 system_repair_points: Fixed::ZERO,
+                troops: None,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));

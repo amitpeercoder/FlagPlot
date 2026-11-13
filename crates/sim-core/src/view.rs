@@ -21,16 +21,20 @@ use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, AircraftTypeId, BaseId, ContactId, EventId, OrderId, ShipClassId, ShipId,
-    TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, ContactId, EventId, LandUnitId, OrderId, ShipClassId,
+    ShipId, TaskForceId,
 };
 use crate::map::{HexData, Map};
 use crate::movement::{self, PassageForecast};
 use crate::objectives::{self, KnownProgress, Objective, SideObjectives};
 use crate::orders::{AirMission, Order, SpeedSetting};
-use crate::refdata::{AircraftType, PortSize, RefData, SearchFigures, ShipClass};
+use crate::refdata::{
+    AirSupplyFigures, AircraftType, GroundFigures, PortSize, RefData, SearchFigures, ShipClass,
+};
 use crate::side_events::{self, Owners, SideEvent};
-use crate::state::{AirGroup, Arrival, Base, Replacement, Ship, Side, TaskForce, TruthState};
+use crate::state::{
+    AirGroup, Arrival, Base, LandUnit, Replacement, Ship, Side, TaskForce, TruthState,
+};
 
 /// Which optional rules have their figures loaded: air wear and repair
 /// (decision 0035), fatigue and rest (0036), and base supply use (0039).
@@ -143,20 +147,46 @@ impl<'a> SideView<'a> {
             .filter(move |base| base.side == side)
     }
 
-    /// The public facts of every base the side does not own, in number order
-    /// (see [`PublicBase`]). Nothing else of an enemy base is visible.
+    /// The public facts of every base on the map the side does not own, in
+    /// number order (see [`PublicBase`]). Nothing else of an enemy base is
+    /// visible, and a base the enemy formed by a landing is not on the map
+    /// (decision 0066, 12): it is not here at all.
     pub fn enemy_bases(&self) -> impl Iterator<Item = PublicBase> + '_ {
         let side = self.side;
         self.truth
             .bases
             .values()
-            .filter(move |base| base.side != side)
+            .filter(move |base| base.side != side && base.on_map)
             .map(|base| PublicBase {
                 id: base.id,
                 name: base.name.clone(),
                 hex: base.hex,
                 side: base.side,
             })
+    }
+
+    /// The side's own land units, known exactly: men ashore and where
+    /// (decision 0066, 21). Their men aboard are in [`SideView::ships`], each
+    /// ship's `troops`. The enemy's land units are not here, nor anywhere
+    /// else in the view (decision 0066, 22). A destroyed unit is listed with
+    /// no men.
+    pub fn land_units(&self) -> impl Iterator<Item = &'a LandUnit> + '_ {
+        let side = self.side;
+        self.truth
+            .land_units
+            .values()
+            .filter(move |unit| unit.side == side)
+    }
+
+    /// The men of one of the side's own land units aboard its ships. `None`
+    /// for a unit that is not the side's.
+    pub fn men_aboard(&self, unit: LandUnitId) -> Option<u32> {
+        let own = self
+            .truth
+            .land_units
+            .get(&unit)
+            .is_some_and(|land_unit| land_unit.side == self.side);
+        own.then(|| self.truth.men_aboard(unit))
     }
 
     /// The side's own air groups, known exactly.
@@ -480,6 +510,16 @@ impl<'a> SideView<'a> {
     /// Which of the optional rules have their figures loaded for this game
     /// (decisions 0035, 0036 and 0039). The figures are rules, not enemy
     /// truth, so they are common knowledge, as the search figures are.
+    /// The ground figures (decision 0066), if the scenario names them.
+    pub fn ground_figures(&self) -> Option<&'a GroundFigures> {
+        self.ref_data.ground.as_ref()
+    }
+
+    /// The base supply figures (decision 0039), if the scenario names them.
+    pub fn air_supply_figures(&self) -> Option<&'a AirSupplyFigures> {
+        self.ref_data.air_supply.as_ref()
+    }
+
     pub fn rules_in_play(&self) -> RulesInPlay {
         RulesInPlay {
             wear: self.ref_data.air_upkeep.is_some(),
@@ -638,6 +678,7 @@ mod tests {
                 radar: false,
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
+                troop_capacity_men: 0,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());
@@ -684,6 +725,7 @@ mod tests {
                         systems: ShipSystems::ALL_WORKING,
                         experience: Ship::DEFAULT_EXPERIENCE,
                         system_repair_points: Fixed::ZERO,
+                        troops: None,
                     },
                 );
             }

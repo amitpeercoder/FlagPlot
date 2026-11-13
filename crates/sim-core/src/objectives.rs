@@ -1603,6 +1603,7 @@ mod tests {
             radar: false,
             aircraft_capacity: 0,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -1653,6 +1654,7 @@ mod tests {
             radar: false,
             aircraft_capacity: 0,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);

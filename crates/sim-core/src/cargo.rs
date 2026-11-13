@@ -3,22 +3,40 @@
 //! The rule is `docs/decisions/0011-cargo-handling.md`. A task force that is
 //! stopped at a base of its own side moves supply between its ships and the
 //! base's stock, at the rates of the port. There is no randomness.
+//!
+//! Men are worked as cargo (decision 0066): each man moved takes
+//! `handling_t_per_man` of a ship's tons of work in the pulse, men first and
+//! in whole men, and what is left moves supply and then fuel by the rule as
+//! it is. A load order with a land unit takes the unit's men ashore aboard
+//! first, and may be worked off a shore where the side has no base (men
+//! only). An unload lands men first, on a coast hex only; the first man
+//! landed where the side has no base forms one, and a unit whose men would be
+//! ashore in two hexes is divided first.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
-use crate::ids::{BaseId, EventId, ShipId, TaskForceId};
-use crate::orders::{Cargo, CargoAction};
+use crate::hex::Hex;
+use crate::ids::{BaseId, EventId, LandUnitId, ShipId, TaskForceId};
+use crate::map::HexKind;
+use crate::orders::Cargo;
 use crate::refdata::PortSize;
-use crate::state::{CargoOrder, TaskForceStatus};
+use crate::state::{Base, CargoOrder, LandUnit, Side, TaskForceStatus, Troops};
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
 
 /// A task force that works cargo in this pulse.
 struct Participant {
     task_force: TaskForceId,
-    base: BaseId,
+    side: Side,
+    hex: Hex,
+    /// The lowest-numbered base of the force's side in its hex, if any. A
+    /// load with a land unit and an unload with men aboard on a coast hex
+    /// are worked with none (decision 0066, 6 and 11).
+    base: Option<BaseId>,
+    /// Whether men can be landed here: a coast hex (decision 0066, 10).
+    coast: bool,
     cargo: CargoOrder,
     /// The hour the task force starts working: the later of the pulse start
     /// and its arrival.
@@ -30,10 +48,49 @@ struct Participant {
 }
 
 impl World {
-    /// Moves cargo for every task force stopped at a base of its own side.
+    /// The tons of work one man takes, if the ground figures are loaded.
+    fn handling_t_per_man(&self) -> Option<Fixed> {
+        self.ref_data
+            .ground
+            .as_ref()
+            .map(|figures| figures.handling_t_per_man)
+    }
+
+    /// Whole men that `tons` of work can move: the tons over the weight of a
+    /// man, cut (decision 0066, "Whole-number arithmetic").
+    fn men_by_time(tons: Fixed, per_man: Fixed) -> u32 {
+        u32::try_from((tons / per_man).trunc().max(0)).unwrap_or(u32::MAX)
+    }
+
+    /// Room for men of `unit` aboard a ship: its troop capacity less the men
+    /// aboard, or none if men of another unit are aboard (decision 0066, 8).
+    fn berths_for(&self, ship: ShipId, unit: LandUnitId) -> u32 {
+        let ship = &self.truth.ships[&ship];
+        let capacity = self.ref_data.ship_classes[&ship.class].troop_capacity_men;
+        match ship.troops {
+            Some(troops) if troops.unit != unit => 0,
+            Some(troops) => capacity.saturating_sub(troops.men),
+            None => capacity,
+        }
+    }
+
+    /// The men of `unit` ashore in `hex`: 0 if they are elsewhere or it
+    /// has none.
+    fn men_ashore_in(&self, unit: LandUnitId, hex: Hex) -> u32 {
+        self.truth
+            .land_units
+            .get(&unit)
+            .filter(|land_unit| land_unit.hex == Some(hex))
+            .map_or(0, |land_unit| land_unit.men_ashore)
+    }
+
+    /// Moves cargo for every task force stopped at a base of its own side,
+    /// and men for every force with a land unit to load or men to land
+    /// (decision 0066).
     pub(crate) fn handle_cargo(&mut self, day: u32, pulse: Pulse) {
         let start = pulse_start(day, pulse);
         let end = start + Fixed::from_int(pulse.hours());
+        let men_rules = self.ref_data.ground.is_some();
 
         let mut participants: Vec<Participant> = Vec::new();
         for task_force in self.truth.task_forces.values() {
@@ -55,14 +112,33 @@ impl World {
             if task_force.toward_hex.is_some() {
                 continue;
             }
-            let Some(base) = self
+            let hex = task_force.from_hex;
+            let base = self
                 .truth
                 .bases
                 .values()
-                .find(|base| base.side == task_force.side && base.hex == task_force.from_hex)
-            else {
+                .find(|base| base.side == task_force.side && base.hex == hex)
+                .map(|base| base.id);
+            let coast = self
+                .map
+                .get(hex)
+                .is_some_and(|data| data.kind == HexKind::Coast);
+            let works_without_base = men_rules
+                && if cargo.action.is_load() {
+                    // A load with a unit loads men off a bare shore.
+                    cargo.unit.is_some()
+                } else {
+                    // An unload with men aboard lands them on a coast hex
+                    // and forms a base there.
+                    coast
+                        && task_force
+                            .ships
+                            .iter()
+                            .any(|ship| self.truth.ships[ship].troops.is_some())
+                };
+            if base.is_none() && !works_without_base {
                 continue;
-            };
+            }
             let work_start = match task_force.arrived_at_hours {
                 Some(arrived) => start.max(arrived),
                 None => start,
@@ -71,13 +147,13 @@ impl World {
             if hours <= Fixed::ZERO {
                 continue;
             }
-            let size = self
-                .map
-                .get(task_force.position())
-                .map_or(0, |hex| hex.port_size);
+            let size = self.map.get(hex).map_or(0, |data| data.port_size);
             participants.push(Participant {
                 task_force: task_force.id,
-                base: base.id,
+                side: task_force.side,
+                hex,
+                base,
+                coast,
                 cargo,
                 work_start,
                 hours,
@@ -87,31 +163,48 @@ impl World {
             });
         }
 
-        // Berths are given out before any cargo moves.
-        let mut berths_used: BTreeMap<BaseId, u32> = BTreeMap::new();
+        // Berths are given out before any cargo moves, for each side's
+        // landing place in a hex: the lowest-numbered base of the side
+        // there, or the one a landing will form.
+        let mut berths_used: BTreeMap<(Side, Hex), u32> = BTreeMap::new();
         let mut berthed: Vec<ShipId> = Vec::new();
         for participant in &participants {
-            let base = &self.truth.bases[&participant.base];
             // The stock a load draws on: supply or fuel (decision 0046).
-            let stock = match participant.cargo.action.loads() {
-                Some(Cargo::Fuel) => base.fuel_t,
-                _ => base.supply_t,
+            let stock = participant.base.map_or(Fixed::ZERO, |id| {
+                let base = &self.truth.bases[&id];
+                match participant.cargo.action.loads() {
+                    Some(Cargo::Fuel) => base.fuel_t,
+                    _ => base.supply_t,
+                }
+            });
+            let unit_ashore = match participant.cargo.unit {
+                Some(unit) if men_rules => self.men_ashore_in(unit, participant.hex),
+                _ => 0,
             };
             for ship_id in &participant.ships {
-                let used = berths_used.entry(participant.base).or_insert(0);
+                let used = berths_used
+                    .entry((participant.side, participant.hex))
+                    .or_insert(0);
                 if *used >= participant.port.berths {
                     break;
                 }
                 let ship = &self.truth.ships[ship_id];
                 let capacity = self.ref_data.ship_classes[&ship.class].cargo_capacity_t;
-                let has_cargo_to_move = match participant.cargo.action {
-                    CargoAction::Load | CargoAction::LoadFuel => {
-                        capacity - ship.supply_t - ship.cargo_fuel_t > Fixed::ZERO
-                            && stock > Fixed::ZERO
-                    }
-                    CargoAction::Unload => {
-                        ship.supply_t > Fixed::ZERO || ship.cargo_fuel_t > Fixed::ZERO
-                    }
+                let has_cargo_to_move = if participant.cargo.action.is_load() {
+                    // A ship has cargo to move if it has men to move
+                    // (decision 0066, 7).
+                    let men = participant
+                        .cargo
+                        .unit
+                        .is_some_and(|unit| unit_ashore > 0 && self.berths_for(*ship_id, unit) > 0);
+                    let cargo = participant.cargo.action.loads().is_some()
+                        && participant.base.is_some()
+                        && capacity - ship.supply_t - ship.cargo_fuel_t > Fixed::ZERO
+                        && stock > Fixed::ZERO;
+                    men || cargo
+                } else {
+                    let men = men_rules && participant.coast && ship.troops.is_some();
+                    men || ship.supply_t > Fixed::ZERO || ship.cargo_fuel_t > Fixed::ZERO
                 };
                 if has_cargo_to_move {
                     *used += 1;
@@ -125,6 +218,103 @@ impl World {
         }
     }
 
+    /// Before a force lands men, in unit order for each unit with men to
+    /// land this pulse: a unit with men ashore in another hex is divided
+    /// (decision 0066, 14), and its men aboard the force's ships become a new
+    /// unit. Then, if the side has no base in the hex, the first man landed
+    /// forms one (decision 11). Returns the events, each unit's division
+    /// event by its new number, and the base to land into.
+    #[allow(clippy::too_many_arguments)]
+    fn prepare_landing(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        landing: &BTreeSet<LandUnitId>,
+        causes: &[Cause],
+    ) -> (BTreeMap<LandUnitId, EventId>, Option<EventId>, BaseId) {
+        let mut divided: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
+        for unit in landing {
+            let land_unit = &self.truth.land_units[unit];
+            if land_unit.men_ashore == 0 || land_unit.hex == Some(p.hex) {
+                continue;
+            }
+            let new_id = LandUnitId::new(
+                self.truth
+                    .land_units
+                    .keys()
+                    .next_back()
+                    .map_or(1, |id| id.raw() + 1),
+            );
+            let name = format!("{}, detachment {}", land_unit.name, new_id.raw());
+            let side = land_unit.side;
+            let mut men = 0;
+            for ship_id in &p.ships {
+                let ship = self.truth.ships.get_mut(ship_id).expect("ship exists");
+                if let Some(troops) = ship.troops.as_mut() {
+                    if troops.unit == *unit {
+                        troops.unit = new_id;
+                        men += troops.men;
+                    }
+                }
+            }
+            self.truth.land_units.insert(
+                new_id,
+                LandUnit {
+                    id: new_id,
+                    name,
+                    side,
+                    men_ashore: 0,
+                    hex: None,
+                },
+            );
+            let event = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::UnitDivided {
+                    from: *unit,
+                    unit: new_id,
+                    task_force: p.task_force,
+                    men,
+                },
+                causes.to_vec(),
+                None,
+            );
+            divided.insert(new_id, event);
+        }
+
+        if let Some(base) = p.base {
+            return (divided, None, base);
+        }
+        let id = BaseId::new(
+            self.truth
+                .bases
+                .keys()
+                .next_back()
+                .map_or(1, |id| id.raw() + 1),
+        );
+        self.truth.bases.insert(
+            id,
+            Base {
+                on_map: false,
+                ..Base::new(id, format!("Landing at {}", p.hex), p.side, p.hex)
+            },
+        );
+        let formed = self.events.record(
+            day,
+            Some(pulse),
+            EventKind::BaseFormed {
+                base: id,
+                side: p.side,
+                hex: p.hex,
+                task_force: p.task_force,
+            },
+            causes.to_vec(),
+            None,
+        );
+        (divided, Some(formed), id)
+    }
+
     fn work_cargo(&mut self, day: u32, pulse: Pulse, p: &Participant, berthed: &[ShipId]) {
         let mut causes = vec![Cause::Order(p.cargo.order)];
         if let Some(arrival) = p.arrival_event {
@@ -133,16 +323,72 @@ impl World {
         let mut cargo_events: Vec<Cause> = Vec::new();
         let mut longest = Fixed::ZERO;
         let mut moved_any = false;
-        let loading = p.cargo.action.loads();
-
-        for ship_id in &p.ships {
-            let on_berth = berthed.contains(ship_id);
-            let rate = if on_berth {
+        let loading = p.cargo.action.is_load();
+        let per_man = self.handling_t_per_man();
+        let rate_of = |ship_id: &ShipId| {
+            if berthed.contains(ship_id) {
                 p.port.berth_rate_t_per_h
             } else {
                 p.port.lighter_rate_t_per_h
-            };
+            }
+        };
+
+        // An unload lands men first, on a coast hex only (decision 0066, 9
+        // and 10). Before the first man lands, units are divided and a base
+        // is formed where needed.
+        let mut base = p.base;
+        let mut divided: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
+        let landing_here = !loading && p.coast && per_man.is_some();
+        if let (true, Some(per_man)) = (landing_here, per_man) {
+            let landing: BTreeSet<LandUnitId> = p
+                .ships
+                .iter()
+                .filter_map(|ship_id| {
+                    let troops = self.truth.ships[ship_id].troops?;
+                    let by_time = Self::men_by_time(rate_of(ship_id) * p.hours, per_man);
+                    (by_time.min(troops.men) > 0).then_some(troops.unit)
+                })
+                .collect();
+            if !landing.is_empty() {
+                let (units, formed, landing_base) =
+                    self.prepare_landing(day, pulse, p, &landing, &causes);
+                divided = units;
+                base = Some(landing_base);
+                if let Some(formed) = formed {
+                    causes.push(Cause::Event(formed));
+                }
+            }
+        }
+
+        for ship_id in &p.ships {
+            let on_berth = berthed.contains(ship_id);
+            let rate = rate_of(ship_id);
             let capacity_by_time = rate * p.hours;
+            let mut work_t = capacity_by_time;
+            let mut ship_total = Fixed::ZERO;
+
+            // Men first (decision 0066, 7 to 9).
+            if let Some(per_man) = per_man {
+                if let Some(moved) = self.move_men(
+                    day, pulse, p, *ship_id, on_berth, rate, per_man, &causes, &divided,
+                ) {
+                    let (men_t, event) = moved;
+                    work_t -= men_t;
+                    ship_total += men_t;
+                    cargo_events.push(Cause::Event(event));
+                    moved_any = true;
+                }
+            }
+            let men_t = capacity_by_time - work_t;
+
+            // Then cargo, by the rule as it is, with the tons left. With no
+            // base there is no stock to load from or land into.
+            let Some(base_id) = base else {
+                if ship_total > Fixed::ZERO {
+                    longest = longest.max(ship_total / rate);
+                }
+                continue;
+            };
             let ship = &self.truth.ships[ship_id];
             let capacity_t = self.ref_data.ship_classes[&ship.class].cargo_capacity_t;
             let supply_before = ship.supply_t;
@@ -150,40 +396,41 @@ impl World {
             let room = capacity_t - supply_before - fuel_before;
 
             // What moves this pulse for this ship, in order: one entry per
-            // cargo. A load moves one cargo. An unload moves supply and then
-            // fuel, within the tons the berth or lighter allows (decisions 3
-            // and 4 of 0046).
+            // cargo. A load moves one cargo, or none. An unload moves supply
+            // and then fuel, within the tons the berth or lighter allows
+            // (decisions 3 and 4 of 0046).
             let mut moves: Vec<(Cargo, Fixed)> = Vec::new();
-            match loading {
-                Some(Cargo::Supply) => {
-                    let stock = self.truth.bases[&p.base].supply_t;
-                    moves.push((Cargo::Supply, capacity_by_time.min(room).min(stock)));
+            if loading {
+                match p.cargo.action.loads() {
+                    Some(Cargo::Supply) => {
+                        let stock = self.truth.bases[&base_id].supply_t;
+                        moves.push((Cargo::Supply, work_t.min(room).min(stock)));
+                    }
+                    Some(Cargo::Fuel) => {
+                        let stock = self.truth.bases[&base_id].fuel_t;
+                        moves.push((Cargo::Fuel, work_t.min(room).min(stock)));
+                    }
+                    None => {}
                 }
-                Some(Cargo::Fuel) => {
-                    let stock = self.truth.bases[&p.base].fuel_t;
-                    moves.push((Cargo::Fuel, capacity_by_time.min(room).min(stock)));
-                }
-                None => {
-                    let supply_moved = capacity_by_time.min(supply_before);
-                    let fuel_moved = (capacity_by_time - supply_moved).min(fuel_before);
-                    moves.push((Cargo::Supply, supply_moved));
-                    moves.push((Cargo::Fuel, fuel_moved));
-                }
+            } else {
+                let supply_moved = work_t.min(supply_before);
+                let fuel_moved = (work_t - supply_moved).min(fuel_before);
+                moves.push((Cargo::Supply, supply_moved));
+                moves.push((Cargo::Fuel, fuel_moved));
             }
 
-            let mut ship_total = Fixed::ZERO;
             let mut supply_moved = Fixed::ZERO;
             for (cargo, moved) in moves {
                 if moved <= Fixed::ZERO {
                     continue;
                 }
                 let ship_record = self.truth.ships.get_mut(ship_id).expect("ship exists");
-                let base_record = self.truth.bases.get_mut(&p.base).expect("base exists");
+                let base_record = self.truth.bases.get_mut(&base_id).expect("base exists");
                 let (aboard_before, stock_before) = match cargo {
                     Cargo::Supply => (supply_before, base_record.supply_t),
                     Cargo::Fuel => (fuel_before, base_record.fuel_t),
                 };
-                let (aboard_after, stock_after) = if loading.is_some() {
+                let (aboard_after, stock_after) = if loading {
                     (aboard_before + moved, stock_before - moved)
                 } else {
                     (aboard_before - moved, stock_before + moved)
@@ -219,7 +466,16 @@ impl World {
                             value: capacity_by_time,
                         },
                     ];
-                    if loading.is_some() {
+                    // The tons the ship's men took first (decision 0066, 7).
+                    // Only where men moved, so a breakdown with none is as
+                    // it was.
+                    if men_t > Fixed::ZERO {
+                        factors.push(Factor {
+                            name: "men_t",
+                            value: men_t,
+                        });
+                    }
+                    if loading {
                         factors.push(Factor {
                             name: "room_t",
                             value: room,
@@ -248,11 +504,11 @@ impl World {
                         result: moved,
                     }
                 });
-                let kind = if loading.is_some() {
+                let kind = if loading {
                     EventKind::CargoLoaded {
                         ship: *ship_id,
                         task_force: p.task_force,
-                        base: p.base,
+                        base: base_id,
                         cargo,
                         loaded_t: moved,
                         aboard_t: aboard_after,
@@ -262,7 +518,7 @@ impl World {
                     EventKind::CargoUnloaded {
                         ship: *ship_id,
                         task_force: p.task_force,
-                        base: p.base,
+                        base: base_id,
                         cargo,
                         unloaded_t: moved,
                         aboard_t: aboard_after,
@@ -284,41 +540,35 @@ impl World {
         if !moved_any {
             return;
         }
-        let nothing_remains = match loading {
-            None => p.ships.iter().all(|id| {
-                let ship = &self.truth.ships[id];
-                ship.supply_t.is_zero() && ship.cargo_fuel_t.is_zero()
-            }),
-            Some(cargo) => {
-                let base = &self.truth.bases[&p.base];
-                let stock = match cargo {
-                    Cargo::Supply => base.supply_t,
-                    Cargo::Fuel => base.fuel_t,
-                };
-                stock.is_zero()
-                    || p.ships.iter().all(|id| {
-                        let ship = &self.truth.ships[id];
-                        ship.supply_t + ship.cargo_fuel_t
-                            == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
-                    })
-            }
-        };
-        if !nothing_remains {
+        if !self.nothing_remains(p, base, landing_here) {
             return;
         }
         let elapsed_hours = p.work_start + longest;
-        let kind = match loading {
-            None => EventKind::UnloadingComplete {
+        let kind = match (loading, p.cargo.unit, base) {
+            (true, Some(unit), _) => EventKind::UnitLoadingComplete {
                 task_force: p.task_force,
-                base: p.base,
+                unit,
+                base,
+                cargo: p.cargo.action.loads(),
                 elapsed_hours,
             },
-            Some(cargo) => EventKind::LoadingComplete {
+            (true, None, Some(base)) => EventKind::LoadingComplete {
                 task_force: p.task_force,
-                base: p.base,
-                cargo,
+                base,
+                cargo: p
+                    .cargo
+                    .action
+                    .loads()
+                    .expect("a load with no unit names a cargo"),
                 elapsed_hours,
             },
+            (false, _, Some(base)) => EventKind::UnloadingComplete {
+                task_force: p.task_force,
+                base,
+                elapsed_hours,
+            },
+            // Nothing moves where there is no base and no unit.
+            (_, _, None) => return,
         };
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: vec![
@@ -335,6 +585,170 @@ impl World {
         });
         self.events
             .record(day, Some(pulse), kind, cargo_events, breakdown);
+    }
+
+    /// Whether the order is done. An unload: nothing aboard any ship, men
+    /// counted only where they can be landed. A load: nothing remains of the
+    /// named cargo by the rule as it is, and, with a unit, no man of it is
+    /// ashore in the hex or no ship has a berth for one ("Settled before the
+    /// build").
+    fn nothing_remains(&self, p: &Participant, base: Option<BaseId>, landing_here: bool) -> bool {
+        if !p.cargo.action.is_load() {
+            return p.ships.iter().all(|id| {
+                let ship = &self.truth.ships[id];
+                ship.supply_t.is_zero()
+                    && ship.cargo_fuel_t.is_zero()
+                    && (ship.troops.is_none() || !landing_here)
+            });
+        }
+        let men_done = match p.cargo.unit {
+            Some(unit) => {
+                self.men_ashore_in(unit, p.hex) == 0
+                    || p.ships.iter().all(|id| self.berths_for(*id, unit) == 0)
+            }
+            None => true,
+        };
+        let cargo_done = match (p.cargo.action.loads(), base) {
+            (Some(cargo), Some(base)) => {
+                let base = &self.truth.bases[&base];
+                let stock = match cargo {
+                    Cargo::Supply => base.supply_t,
+                    Cargo::Fuel => base.fuel_t,
+                };
+                stock.is_zero()
+                    || p.ships.iter().all(|id| {
+                        let ship = &self.truth.ships[id];
+                        ship.supply_t + ship.cargo_fuel_t
+                            == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
+                    })
+            }
+            // No cargo named, or none to load where the side has no base.
+            _ => true,
+        };
+        men_done && cargo_done
+    }
+
+    /// Takes men aboard one ship from the shore, or lands them from it, as
+    /// the force's order says. Returns the tons of work they took and the
+    /// event, or `None` if no man moved.
+    #[allow(clippy::too_many_arguments)]
+    fn move_men(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        ship_id: ShipId,
+        on_berth: bool,
+        rate: Fixed,
+        per_man: Fixed,
+        causes: &[Cause],
+        divided: &BTreeMap<LandUnitId, EventId>,
+    ) -> Option<(Fixed, EventId)> {
+        let capacity_by_time = rate * p.hours;
+        let by_time = Self::men_by_time(capacity_by_time, per_man);
+        let loading = p.cargo.action.is_load();
+        let (unit, men, limit_name, limit) = if loading {
+            let unit = p.cargo.unit?;
+            let ashore = self.men_ashore_in(unit, p.hex);
+            let berths = self.berths_for(ship_id, unit);
+            let men = by_time.min(ashore).min(berths);
+            (unit, men, "berths", berths.min(ashore))
+        } else {
+            if !p.coast {
+                return None;
+            }
+            let troops = self.truth.ships[&ship_id].troops?;
+            (troops.unit, by_time.min(troops.men), "aboard", troops.men)
+        };
+        if men == 0 {
+            return None;
+        }
+        let men_t = per_man * i64::from(men);
+
+        let land_unit = self
+            .truth
+            .land_units
+            .get_mut(&unit)
+            .expect("the land unit exists");
+        let ship = self.truth.ships.get_mut(&ship_id).expect("ship exists");
+        let (aboard, ashore) = if loading {
+            land_unit.men_ashore -= men;
+            if land_unit.men_ashore == 0 {
+                land_unit.hex = None;
+            }
+            let aboard = ship.troops.map_or(0, |troops| troops.men) + men;
+            ship.troops = Some(Troops { unit, men: aboard });
+            (aboard, land_unit.men_ashore)
+        } else {
+            land_unit.men_ashore += men;
+            land_unit.hex = Some(p.hex);
+            let aboard = ship.troops.map_or(0, |troops| troops.men) - men;
+            ship.troops = (aboard > 0).then_some(Troops { unit, men: aboard });
+            (aboard, land_unit.men_ashore)
+        };
+
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "hours_worked",
+                    value: p.hours,
+                },
+                Factor {
+                    name: "on_berth",
+                    value: if on_berth { Fixed::ONE } else { Fixed::ZERO },
+                },
+                Factor {
+                    name: "rate_t_per_h",
+                    value: rate,
+                },
+                Factor {
+                    name: "capacity_by_time_t",
+                    value: capacity_by_time,
+                },
+                Factor {
+                    name: "handling_t_per_man",
+                    value: per_man,
+                },
+                Factor {
+                    name: "men_by_time",
+                    value: Fixed::from_int(i64::from(by_time)),
+                },
+                Factor {
+                    name: limit_name,
+                    value: Fixed::from_int(i64::from(limit)),
+                },
+            ],
+            result: Fixed::from_int(i64::from(men)),
+        });
+        let mut causes = causes.to_vec();
+        if let Some(division) = divided.get(&unit) {
+            causes.push(Cause::Event(*division));
+        }
+        let kind = if loading {
+            EventKind::MenEmbarked {
+                unit,
+                ship: ship_id,
+                task_force: p.task_force,
+                hex: p.hex,
+                men,
+                aboard,
+                ashore,
+            }
+        } else {
+            EventKind::MenLanded {
+                unit,
+                ship: ship_id,
+                task_force: p.task_force,
+                hex: p.hex,
+                men,
+                aboard,
+                ashore,
+            }
+        };
+        let event = self
+            .events
+            .record(day, Some(pulse), kind, causes, breakdown);
+        Some((men_t, event))
     }
 }
 
@@ -406,6 +820,7 @@ mod tests {
             radar: false,
             aircraft_capacity: 0,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -624,6 +1039,7 @@ mod tests {
             force.cargo_order = Some(crate::state::CargoOrder {
                 action: crate::orders::CargoAction::Load,
                 order: crate::ids::OrderId::new(1),
+                unit: None,
             });
         }
         assert_eq!(world.truth.task_forces[&tf(1)].position(), Hex::new(0, 0));

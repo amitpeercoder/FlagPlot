@@ -8,7 +8,9 @@ use core::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, BaseId, ContactId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
+};
 use crate::orders::{Cargo, RejectReason};
 use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, ShipSystem, Side, SystemState};
@@ -143,6 +145,9 @@ pub enum SupplyUse {
     Upkeep,
     /// Repairs made at the base.
     Repairs,
+    /// The men of the side ashore in the base's hex, for the day (decision
+    /// 0066, 16). Added at the end.
+    Men,
 }
 
 impl SupplyUse {
@@ -152,6 +157,7 @@ impl SupplyUse {
             SupplyUse::Sorties => "sorties",
             SupplyUse::Upkeep => "upkeep",
             SupplyUse::Repairs => "repairs",
+            SupplyUse::Men => "men",
         }
     }
 }
@@ -746,13 +752,15 @@ pub enum EventKind {
     },
     /// A base spent supply (decisions 1 to 6 of 0039). `aircraft` is the
     /// aircraft sent on sorties, the aircraft at the base for the day, or
-    /// the repairs paid for, by `reason`. `asked_t` is what the rule asked
-    /// for, `paid_t` what the stock covered, and `left_t` what the base has
-    /// afterwards.
+    /// the repairs paid for, by `reason`; `men` the men of its side ashore
+    /// in its hex for the reason `Men` (decision 0066, 16), and 0 for every
+    /// other reason. `asked_t` is what the rule asked for, `paid_t` what the
+    /// stock covered, and `left_t` what the base has afterwards.
     BaseSupplySpent {
         base: BaseId,
         reason: SupplyUse,
         aircraft: u32,
+        men: u32,
         asked_t: Fixed,
         paid_t: Fixed,
         left_t: Fixed,
@@ -919,6 +927,92 @@ pub enum EventKind {
         task_force: TaskForceId,
         base: BaseId,
         ships: Vec<ShipId>,
+    },
+    /// Men of a land unit went aboard a ship from the shore (decision 0066,
+    /// 8). `aboard` is the men of the unit in the ship afterwards and
+    /// `ashore` the unit's men left ashore in `hex`.
+    MenEmbarked {
+        unit: LandUnitId,
+        ship: ShipId,
+        task_force: TaskForceId,
+        hex: Hex,
+        men: u32,
+        aboard: u32,
+        ashore: u32,
+    },
+    /// Men of a land unit were landed from a ship (decisions 9 and 10 of
+    /// 0066). `aboard` is what is left in the ship and `ashore` the unit's
+    /// men ashore in `hex` afterwards.
+    MenLanded {
+        unit: LandUnitId,
+        ship: ShipId,
+        task_force: TaskForceId,
+        hex: Hex,
+        men: u32,
+        aboard: u32,
+        ashore: u32,
+    },
+    /// The first man landed in a hex with no base of his side formed one
+    /// (decision 0066, 11): `base`, of `side`, in `hex`, with the port of
+    /// the hex and nothing else. It is on its own side's map only.
+    BaseFormed {
+        base: BaseId,
+        side: Side,
+        hex: Hex,
+        task_force: TaskForceId,
+    },
+    /// A unit was divided when its men would be ashore in two hexes
+    /// (decision 0066, 14): the `men` of `from` aboard `task_force`'s ships
+    /// became the new unit `unit`, and `from` keeps its men ashore elsewhere.
+    UnitDivided {
+        from: LandUnitId,
+        unit: LandUnitId,
+        task_force: TaskForceId,
+        men: u32,
+    },
+    /// The men aboard a ship that sank were lost with her (decision 0066,
+    /// 15).
+    MenLostWithShip {
+        unit: LandUnitId,
+        ship: ShipId,
+        men: u32,
+    },
+    /// The men of `side` ashore in `hex` were fed for the day, or not
+    /// (decisions 16 and 17 of 0066). `base` is the base that was asked,
+    /// `None` where the side has none in the hex. `fed` and `unfed` add up to
+    /// `men`.
+    MenFed {
+        side: Side,
+        hex: Hex,
+        base: Option<BaseId>,
+        men: u32,
+        fed: u32,
+        unfed: u32,
+    },
+    /// A unit lost men unfed (decisions 19 and 20 of 0066): `lost`, its part
+    /// of the loss in `hex`, and `ashore` what it has left there.
+    MenLostUnfed {
+        unit: LandUnitId,
+        hex: Hex,
+        lost: u32,
+        ashore: u32,
+    },
+    /// A land unit has no men left ashore or aboard (decision 0066, 1).
+    LandUnitDestroyed {
+        unit: LandUnitId,
+    },
+    /// A load order with a land unit is done (decision 0066, "Settled before
+    /// the build"): no man of the unit is left ashore in the hex or no ship
+    /// has a berth for one, and nothing remains of the named cargo. `base`
+    /// is the base loaded from, `None` off a bare shore, and `cargo` the
+    /// cargo named, `None` for none.
+    UnitLoadingComplete {
+        task_force: TaskForceId,
+        unit: LandUnitId,
+        base: Option<BaseId>,
+        cargo: Option<Cargo>,
+        /// Elapsed hours since the scenario began.
+        elapsed_hours: Fixed,
     },
 }
 
@@ -1181,6 +1275,55 @@ impl EventKind {
             } => {
                 let mut entities = vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)];
                 entities.extend(ships.iter().map(|ship| EntityRef::Ship(*ship)));
+                entities
+            }
+            EventKind::MenEmbarked {
+                unit,
+                ship,
+                task_force,
+                ..
+            }
+            | EventKind::MenLanded {
+                unit,
+                ship,
+                task_force,
+                ..
+            } => vec![
+                EntityRef::LandUnit(*unit),
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::BaseFormed {
+                base, task_force, ..
+            } => vec![EntityRef::Base(*base), EntityRef::TaskForce(*task_force)],
+            EventKind::UnitDivided {
+                from,
+                unit,
+                task_force,
+                ..
+            } => vec![
+                EntityRef::LandUnit(*from),
+                EntityRef::LandUnit(*unit),
+                EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::MenLostWithShip { unit, ship, .. } => {
+                vec![EntityRef::LandUnit(*unit), EntityRef::Ship(*ship)]
+            }
+            EventKind::MenFed { base, .. } => base.iter().map(|b| EntityRef::Base(*b)).collect(),
+            EventKind::MenLostUnfed { unit, .. } | EventKind::LandUnitDestroyed { unit } => {
+                vec![EntityRef::LandUnit(*unit)]
+            }
+            EventKind::UnitLoadingComplete {
+                task_force,
+                unit,
+                base,
+                ..
+            } => {
+                let mut entities = vec![
+                    EntityRef::TaskForce(*task_force),
+                    EntityRef::LandUnit(*unit),
+                ];
+                entities.extend(base.iter().map(|b| EntityRef::Base(*b)));
                 entities
             }
         }
@@ -1584,6 +1727,7 @@ impl fmt::Display for EventKind {
                 base,
                 reason,
                 aircraft,
+                men,
                 asked_t,
                 paid_t,
                 left_t,
@@ -1592,6 +1736,7 @@ impl fmt::Display for EventKind {
                     SupplyUse::Sorties => format!("{aircraft} aircraft sent on sorties"),
                     SupplyUse::Upkeep => format!("{aircraft} aircraft at the base for the day"),
                     SupplyUse::Repairs => format!("{aircraft} repairs"),
+                    SupplyUse::Men => format!("{men} men ashore for the day"),
                 };
                 if paid_t < asked_t {
                     write!(
@@ -2010,6 +2155,93 @@ impl fmt::Display for EventKind {
                     write!(f, "{ship}")?;
                 }
                 f.write_str(" repaired, refuelled and rearmed")
+            }
+            EventKind::MenEmbarked {
+                unit,
+                ship,
+                hex,
+                men,
+                aboard,
+                ashore,
+                ..
+            } => write!(
+                f,
+                "{men} men of {unit} went aboard {ship} at {hex}: {aboard} aboard, {ashore} left ashore"
+            ),
+            EventKind::MenLanded {
+                unit,
+                ship,
+                hex,
+                men,
+                aboard,
+                ashore,
+                ..
+            } => write!(
+                f,
+                "{ship} landed {men} men of {unit} at {hex}: {ashore} ashore, {aboard} left aboard"
+            ),
+            EventKind::BaseFormed {
+                base,
+                side,
+                hex,
+                task_force,
+            } => write!(
+                f,
+                "{base} formed at {hex} for the {} side by the landing of {task_force}",
+                side.name()
+            ),
+            EventKind::UnitDivided {
+                from,
+                unit,
+                task_force,
+                men,
+            } => write!(
+                f,
+                "the {men} men of {from} aboard {task_force} became {unit}, since {from} has men ashore elsewhere"
+            ),
+            EventKind::MenLostWithShip { unit, ship, men } => {
+                write!(f, "{men} men of {unit} were lost with {ship}")
+            }
+            EventKind::MenFed {
+                side,
+                hex,
+                base,
+                men,
+                fed,
+                unfed,
+            } => {
+                write!(f, "{} men ashore at {hex}: ", side.name())?;
+                match base {
+                    Some(base) => write!(f, "{fed} of {men} fed from {base}")?,
+                    None => write!(f, "no base of the side, none of {men} fed")?,
+                }
+                write!(f, ", {unfed} unfed")
+            }
+            EventKind::MenLostUnfed {
+                unit,
+                hex,
+                lost,
+                ashore,
+            } => write!(f, "{unit} lost {lost} men unfed at {hex}, {ashore} left ashore"),
+            EventKind::LandUnitDestroyed { unit } => {
+                write!(f, "{unit} has no men left and is destroyed")
+            }
+            EventKind::UnitLoadingComplete {
+                task_force,
+                unit,
+                base,
+                cargo,
+                elapsed_hours,
+            } => {
+                write!(f, "{task_force} finished loading {unit}")?;
+                if let Some(cargo) = cargo {
+                    write!(f, " and {}", cargo.name())?;
+                }
+                match base {
+                    Some(base) => write!(f, " at {base}")?,
+                    None => f.write_str(" off the shore")?,
+                }
+                write!(f, " at {}", ClockTime::from_elapsed(*elapsed_hours))
             }
         }
     }

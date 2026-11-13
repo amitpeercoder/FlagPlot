@@ -3029,6 +3029,7 @@ mod tests {
             radar: false,
             aircraft_capacity: capacity,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         }
     }
 
@@ -9332,6 +9333,7 @@ mod tests {
                     asked_t,
                     paid_t,
                     left_t,
+                    ..
                 } => (base.raw(), reason, aircraft, asked_t, paid_t, left_t),
                 _ => unreachable!(),
             })

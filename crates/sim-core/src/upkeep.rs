@@ -199,7 +199,7 @@ impl World {
 
     /// Takes `asked` off the stock of `base`, as much as it can cover, and
     /// returns what it paid and what is left (decision 6 of 0039).
-    fn take_supply(&mut self, base: BaseId, asked: Fixed) -> (Fixed, Fixed) {
+    pub(crate) fn take_supply(&mut self, base: BaseId, asked: Fixed) -> (Fixed, Fixed) {
         let base = self.truth.bases.get_mut(&base).expect("the base exists");
         let paid = asked.min(base.supply_t);
         base.supply_t -= paid;
@@ -277,6 +277,7 @@ impl World {
                     base,
                     reason: SupplyUse::Sorties,
                     aircraft,
+                    men: 0,
                     asked_t: asked,
                     paid_t: paid,
                     left_t: left,
@@ -329,6 +330,7 @@ impl World {
                     base,
                     reason: SupplyUse::Upkeep,
                     aircraft,
+                    men: 0,
                     asked_t: asked,
                     paid_t: paid,
                     left_t: left,
@@ -939,6 +941,7 @@ impl World {
                             base,
                             reason: SupplyUse::Repairs,
                             aircraft: paid_for,
+                            men: 0,
                             asked_t: asked,
                             paid_t: asked,
                             left_t,

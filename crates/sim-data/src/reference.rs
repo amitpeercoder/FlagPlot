@@ -121,6 +121,7 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
             aircraft_capacity: row.aircraft_capacity,
             anti_aircraft: row.anti_aircraft,
             name: row.name,
+            troop_capacity_men: 0,
         };
         if let Some(problem) = class.problem() {
             return Err(DataError::in_file(path, problem));

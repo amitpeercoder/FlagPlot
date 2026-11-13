@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
 use crate::state::{AirGroupLocation, ShipLocation, ShipSystem, SystemState, TruthState};
@@ -112,6 +112,17 @@ pub enum InvariantViolation {
     /// A base's daily repair points are negative or its yard passage is 0
     /// (decision 0069).
     BaseRepairFigureOutOfRange(BaseId),
+    /// The ship carries more men than its class's troop capacity, or `Some`
+    /// troops of no men (decision 0066, 2). Added at the end of the enum.
+    ShipOverTroopCapacity(ShipId),
+    /// The ship carries men of a land unit that does not exist or is of the
+    /// other side (decision 0066).
+    ShipCarriesUnknownUnit(ShipId, LandUnitId),
+    /// A sunk ship still has men aboard (decision 0066, 15).
+    SunkShipHasMen(ShipId),
+    /// A land unit's hex is set with no men ashore, or men ashore with no
+    /// hex, or the hex is off the map (decision 0066, 2).
+    LandUnitAshoreInconsistent(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -283,6 +294,19 @@ impl fmt::Display for InvariantViolation {
                     f,
                     "{base} has a negative repair figure or a yard passage of 0"
                 )
+            }
+            InvariantViolation::ShipOverTroopCapacity(ship) => {
+                write!(
+                    f,
+                    "{ship} carries more men than its troop capacity, or none"
+                )
+            }
+            InvariantViolation::ShipCarriesUnknownUnit(ship, unit) => {
+                write!(f, "{ship} carries men of {unit}, which is not of its side")
+            }
+            InvariantViolation::SunkShipHasMen(ship) => write!(f, "{ship} is sunk with men aboard"),
+            InvariantViolation::LandUnitAshoreInconsistent(unit) => {
+                write!(f, "{unit} has men ashore and no hex, or a hex and none")
             }
             InvariantViolation::TaskForceHomePortOfOtherSide(task_force, base) => {
                 write!(
@@ -545,6 +569,41 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         }
         if base.ship_repair_points_per_day.is_negative() || base.yard_passage_days == Some(0) {
             violations.push(InvariantViolation::BaseRepairFigureOutOfRange(base.id));
+        }
+    }
+
+    for ship in truth.ships.values() {
+        let Some(troops) = ship.troops else {
+            continue;
+        };
+        let capacity = ref_data
+            .ship_classes
+            .get(&ship.class)
+            .map_or(0, |class| class.troop_capacity_men);
+        if troops.men == 0 || troops.men > capacity {
+            violations.push(InvariantViolation::ShipOverTroopCapacity(ship.id));
+        }
+        if truth
+            .land_units
+            .get(&troops.unit)
+            .is_none_or(|unit| unit.side != ship.side)
+        {
+            violations.push(InvariantViolation::ShipCarriesUnknownUnit(
+                ship.id,
+                troops.unit,
+            ));
+        }
+        if ship.location == ShipLocation::Sunk {
+            violations.push(InvariantViolation::SunkShipHasMen(ship.id));
+        }
+    }
+    for unit in truth.land_units.values() {
+        let consistent = match unit.hex {
+            Some(hex) => unit.men_ashore > 0 && map.contains(hex),
+            None => unit.men_ashore == 0,
+        };
+        if !consistent {
+            violations.push(InvariantViolation::LandUnitAshoreInconsistent(unit.id));
         }
     }
 
@@ -890,6 +949,7 @@ mod tests {
                 radar: false,
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
+                troop_capacity_men: 0,
             },
         );
         // Propulsion may be damaged.
@@ -930,6 +990,7 @@ mod tests {
             radar: false,
             aircraft_capacity: 0,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         };
         // A class with a second side: the flag on a ship with torpedoes ready
         // is sound; with none ready it is caught.
@@ -983,6 +1044,7 @@ mod tests {
                 radar: false,
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
+                troop_capacity_men: 0,
             },
         );
         // A full tank is fine.
@@ -1028,6 +1090,7 @@ mod tests {
                 radar: false,
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
+                troop_capacity_men: 0,
             },
         );
         ship_mut(&mut truth).supply_t = Fixed::from_int(60);
@@ -1203,6 +1266,7 @@ mod tests {
                 radar: false,
                 aircraft_capacity: 10,
                 anti_aircraft: 0,
+                troop_capacity_men: 0,
             },
         );
         truth
