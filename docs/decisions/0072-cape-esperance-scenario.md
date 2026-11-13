@@ -144,7 +144,7 @@ The night turned on several things no rule covers. None is designed here.
 - The class figures of decision "What is left", above; the new rows in `gaps.csv`.
 - Positions of either force in latitude and longitude near the contact, and column intervals (the research report).
 - Rounds fired and hits by ship; the American ships' action reports are not online (the research report). The measures already allow for it.
-- Torpedoes fired by the American ships: no count for any (Buchanan and Duncan attacked; Farenholt's mount jammed at 23:50). The Japanese counts are Aoba's 2 and Kinugasa's 4 (engagement_outcomes 2277, 2282). Research pull request 174, not merged when this was written, adds the tubes that bear on one side for each class (ship_class_facts 1176 to 1353 there); no rule reads them yet.
+- Torpedoes fired by the American ships: no count for any (Buchanan and Duncan attacked; Farenholt's mount jammed at 23:50). The Japanese counts are Aoba's 2 and Kinugasa's 4 (engagement_outcomes 2277, 2282). Research pull request 174 added the tubes that bear on one side for each class (ship_class_facts 1176 to 1353, `docs/research/oob/torpedoes-fired.md`); no rule reads them yet (decision 0074).
 - The Japanese group's state at contact beyond what decision 9 cites: what its guns were loaded with, where they were trained, and whether a recognition signal was made (the flagship's signal log was lost). These stay gaps; decision 9 does not rest on them.
 
 ## For the next stage
