@@ -4,7 +4,7 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 
 | Battle | Report | Judged | Agree | Agree at the edge | Miss |
 | --- | --- | --- | --- | --- | --- |
-| Savo Island | `savo-island-baseline.md` | 16 | 8 | 1 | 7 |
+| Savo Island | `savo-island-baseline.md` | 19 | 10 | 1 | 8 |
 | Eastern Solomons | `eastern-solomons-baseline.md` | 14 | 10 | 0 | 4 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
 | Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
@@ -51,6 +51,14 @@ The report in the file now is on the engine with decision 0068 as well: a force 
 - **Fights by day are rarer:** 518 runs of 1,000 have none, where 438 had.
 - **Neither rule has moved the two things at the heart of the night.** The Japanese guns hit 50 times for each thousand shells against 81 to 117, and no Allied cruiser is sunk in the middle run where four were. These are for tuning: the strength of experience, the share, and the chance to hit itself.
 - **The result has turned further toward the record:** an Allied defeat of some kind in 563 runs and a victory in 216. Ten runs in 1,000 are the decisive Japanese victory the night was.
+
+### Shells by group, Nov 13, 2026
+
+Three more judged measures count the shells of the southern group, the northern group, and Tenryu and Yubari, from the shots each ship fired. The report was remade for them on the same engine and figures.
+
+- **Tenryu and Yubari miss, and this is the one to read first:** 4 to 15 hundreds, 9 in the middle run, against a record of 1 to 2. Both are at battle readiness, so neither the readiness rule nor experience touches what they fire. What is wrong is under them: a round is five minutes at a class's designed rate of fire, and no ship fired like that. The spec now puts the rates of fire before any tuning of the surface figures, as a matter for the derivation.
+- **The two Allied groups agree, and neither agreement is strong.** The southern group's record is under a hundred shells; 373 runs of 1,000 hold it, most of them runs in which the group never fired at all, and the middle run fires 4 hundreds. The northern group's record is 3 to 4 hundreds; 79 runs hold it and the middle run fires 8. One round at half manning is 67 shells for a cruiser and 150 for a destroyer, which is already more than any ship of the southern group fired all night.
+- **The order of work that follows,** as the spec has it: the rates of fire in the derivation, from rows on rates achieved; then the fights by day; then the share, which stays at one half until then and goes lower only for the confusion decision 0068 names.
 
 ## Eastern Solomons
 
