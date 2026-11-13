@@ -144,12 +144,15 @@ const SEED: u64 = 1942;
 
 /// Every run here is on the frozen figures, and frozen figures go with frozen
 /// scenarios (decision 0073, `data/scenarios/step2-frozen/README.md`): scenarios
-/// 5, 7 and 8 (here scenario 7, the full slice) run on their frozen copies in
+/// 5, 6, 7 and 8 (here scenarios 6 and 7) run on their frozen copies in
 /// `data/scenarios/step2-frozen`; every other scenario on `data/scenarios`.
 fn path(name: &str) -> PathBuf {
     let frozen_copy = matches!(
         name,
-        "05_eastern_solomons.toml" | "07_full_slice.toml" | "08_soak.toml"
+        "05_eastern_solomons.toml"
+            | "06_rabaul_guadalcanal.toml"
+            | "07_full_slice.toml"
+            | "08_soak.toml"
     );
     let folder = if frozen_copy {
         "data/scenarios/step2-frozen"

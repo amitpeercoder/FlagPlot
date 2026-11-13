@@ -392,7 +392,7 @@ agreed = "2026-11-11"
 entity = "b5n2"
 fact = "range_normal_nm"
 row = 79
-reason = "Chosen on the Eastern Solomons sheet: 528 miles with a torpedo, two weak sources that agree."
+reason = "Chosen on the Eastern Solomons sheet: 528 miles, the normal range, with no load stated; two weak sources that agree (rows 79 and 412)."
 agreed = "2026-11-11"
 
 [[exception]]
@@ -558,6 +558,60 @@ fact = "bomb_load"
 row = 28
 reason = "Four 250 kg bombs: one weak source, with a second that gives the same total of 1,000 kg. The 250 kg bomb is also one of the two sizes a source names as dropped on Henderson Field. A raid on an airfield takes no account of the bomb's size (decision 0034, 10), so the choice changes no result here. Settled by the architect."
 agreed = "2026-11-11"
+
+# Exceptions for decision 0074 (built with decision 0083): the tubes of a class
+# that bear on one side. Most of the rows of the split rest on one weak source
+# and are unconfirmed, so each is read by an exception, for the reason given.
+# Bagley (row 1177) is preferred at medium confidence and needs none.
+
+[[exception]]
+entity = "jp-takao-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1341
+reason = "Takao class, for Chokai. 4 tubes on a side. Her own action report has her fire 4 to port and 4 to starboard as separate salvos, and says four firing lines are too few. The row is for Chokai and Maya alone, who kept twin mounts; Chokai is the only ship of the class in a list. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "jp-aoba-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1343
+reason = "Aoba class. 4 tubes on a side: one quadruple mount each side of the catapult after the rebuild. At Savo Island Aoba and Kinugasa fired salvos of four or fewer to one side at a time. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "jp-furutaka-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1346
+reason = "Furutaka class. 4 tubes on a side: the same fit as Aoba. Furutaka fired 4 to port, then 1 and 3 to starboard; Kako 4, 4 and 2. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "jp-tenryu-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1323
+reason = "Tenryu class. 6 tubes on a side: two centreline triple mounts bear on either side. She fired 6. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "jp-yubari-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1327
+reason = "Yubari class. 4 tubes on a side: two centreline twin mounts. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "uk-county-kent-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1265
+reason = "Kent subclass of the County class (Canberra). 4 tubes on a side: one quadruple mount each side. She fired none, or two, that night. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "us-benham-class"
+fact = "torpedo_tubes_per_broadside"
+row = 1182
+reason = "Benham class (Wilson). 8 tubes on a side: four quadruple wing mounts as built. Whether the fit of 1942 was still that is a gap; no source read says it had changed by August 1942. Read for decision 0074 (built with 0083)."
+agreed = "2026-11-13"
 
 # Experience values for ships (decision 0064). A value is a whole number 0
 # to 4 that starts at 2; each of four yes or no questions a fact row answers

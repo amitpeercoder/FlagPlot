@@ -131,23 +131,25 @@ Nothing of this rule was run: it was written from the air tuning plan's counts (
 - Pinned outcomes. The scenario's own seed, 1942, has the guns miss all 20 shots, so seed 10 is pinned beside it as the first seed on which the share moves hits across the attack.
 - The defender's claims are equal at every share, and so is the raider's claim of aircraft shot down. The raider's claim of hits rests on the bombs it dropped, which differ by share; decision 10 was corrected to say so when the build found it.
 
-**Before and after, 1,000 runs each, label `d0079`.** The reports are `docs/validation/eastern-solomons-d0079.md` and `rabaul-guadalcanal-air-d0079.md`. "Before" is main with the strike report after the damage (differences row 7), which changed no measure.
+**Before and after, 1,000 runs each, label `d0079`.**
+- The reports are `docs/validation/eastern-solomons-d0079.md` and `rabaul-guadalcanal-air-d0079.md`. They were made on the code merged with main after decisions 0081 (the Eastern Solomons orders from the record: the first wave of 27 dive bombers and 10 fighters, the second wave on its own), 0082 (the Rabaul raid days from the forms) and 0083 (torpedo tubes by side, state version 7), against the measures as they stood then.
+- "Before" is main at that merge (b82d31b), run with the same seeds.
+- An earlier pair of reports, made on the scenario before 0081, was replaced by these. On the doubled strike it turned two agreements into misses, which was the scenario's fault, not this rule's.
 
-| Eastern Solomons | Record | Before: 5th to 95th, median | After | Verdict after |
+| Eastern Solomons | Record | Before: 5th to 95th, median | After | Verdict before / after |
 | --- | --- | --- | --- | --- |
-| Japanese aircraft attacking TF16 and TF11 | 37 | 0 to 46, 35 | 0 to 56, 49 | miss |
-| Bomb hits on Enterprise | 3 | 0 to 9, 4 | 0 to 12, 6 | miss |
-| Japanese carrier aircraft lost to enemy action | 29 to 32 | 2 to 40, 28 | 2 to 40, 28 | agrees |
-| US aircraft lost to enemy action | 13 to 14 | 1 to 11, 5 | 1 to 11, 5 | miss |
-| US aircraft attacking the Ryujo detachment | 36 | 0 to 84, 0 | 0 to 85, 0 | miss |
+| Bomb hits on Enterprise | 3 | 0 to 2, 0 (29 runs hold 3) | 0 to 5, 1 (123 runs hold 3) | miss / agrees |
+| Japanese aircraft attacking TF16 and TF11 | 37 | 0 to 37, 37 | 0 to 37, 37 | agrees / agrees |
+| Japanese carrier aircraft lost to enemy action | 29 to 32 | 2 to 35, 26 | 2 to 35, 26 | agrees / agrees |
+| Japanese carrier aircraft lost to all causes | 35 to 54 | 4 to 58, 30 | 4 to 58, 29 | agrees / agrees |
+| US aircraft lost to enemy action | 13 to 14 | 1 to 9, 4 | 1 to 9, 4 | miss / miss |
 
-- Judged 14: agree 10 and miss 4 before; agree 8 and miss 6 after.
-- The guns' hits are the same, a run, before and after: 7.53 on Japanese raids and 1.03 on American ones. Their bombers now drop first: Japanese bombs dropped at ships rise from 17.6 to 25.1 a run, and their hits from 3.5 to 5.1.
-- The two new misses are the doubled Japanese strike of the scenario (both waves at once, 54 dive bombers where the first wave was 27). With the defence's work done before the dive, half of them used to die before they bombed and the two measures agreed by that accident. They are left to decision 0081, which sets the waves from the record, and are not to be mended by a figure.
+- Judged 14: before, agree 9, at the edge 1, miss 4; after, agree 10, at the edge 1, miss 3.
+- The guns' hits a run are the same before and after: 7.51 on Japanese raids and 0.36 on American ones.
+- The Japanese bombers that reach the ships now bomb before the guns' hits come off them. Bombs dropped at ships rise from 2.6 to 8.5 a run, and hits from 0.5 to 1.7. This is what the rule is for: the record's single wave lost two thirds of itself and still hit Enterprise three times.
+- The measure of aircraft attacking counts, since decision 0081, the aircraft that take part as launched, before the patrol and the guns fire, so the rule cannot move it.
 
-At Rabaul nothing moves beyond a run or two:
-- bombers lost 12 (6 to 19);
-- aircraft destroyed on the ground 16 against 15;
-- bomber sorties that reach the island 268 against 263, where the 4.4 bombers a run the guns kill now bomb first.
-
-Judged 10: agree 3, at the edge 1, miss 6, as before.
+At Rabaul against Guadalcanal:
+- Judged 10: before, agree 3, at the edge 4, miss 3; after, agree 3, at the edge 3, miss 4.
+- The guns' hits are the same (3.64 a run), and the bombers they hit now bomb first. Bombs dropped rise from 212 to 216 a run, and aircraft destroyed on the ground from a median of 12 to 13.
+- The one verdict that moves: F4Fs ready on day 21 keeps its spread and median (2 to 12, 6). Runs holding the record of 11 go from 51 to 44 of 1,000, so it goes from agreeing at the edge to a miss on the test of one run in twenty. That is the margin of the test and a few more aircraft hit on the ground, not a new cause.

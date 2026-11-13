@@ -2,7 +2,7 @@ Scenario 19b: Whom the patrol fires at
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9d0fd0455ab52b7d  7 events
+day   1  hash 826a8f983c955174  7 events
 
 #1 D0 -         Japanese report: 1 ship, carrier, at (4,0), held at the start: new contact:1
 #2 D1 -         order:1 accepted for air_group:1  <- order:1

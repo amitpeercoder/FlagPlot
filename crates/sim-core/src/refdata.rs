@@ -94,6 +94,11 @@ pub struct ShipClass {
     pub gun_damage: Fixed,
     /// Torpedo tubes. May be zero.
     pub torpedo_tubes: u32,
+    /// Torpedo tubes that bear on one side (decisions 0074 and 0083): from 0
+    /// to `torpedo_tubes`, and above 0 when `torpedo_tubes` is. Equal to
+    /// `torpedo_tubes` for a centreline fit and for every placeholder and
+    /// frozen class.
+    pub torpedo_tubes_one_side: u32,
     /// Damage one torpedo hit does, before the target's toughness. May be a
     /// decimal.
     pub torpedo_damage: Fixed,
@@ -156,6 +161,18 @@ impl ShipClass {
         }
         if self.toughness <= Fixed::ZERO {
             return Some(format!("{} has no toughness", self.id));
+        }
+        if self.torpedo_tubes_one_side > self.torpedo_tubes {
+            return Some(format!(
+                "{} has more torpedo tubes on one side than tubes",
+                self.id
+            ));
+        }
+        if self.torpedo_tubes > 0 && self.torpedo_tubes_one_side == 0 {
+            return Some(format!(
+                "{} has torpedo tubes but none that bear on one side",
+                self.id
+            ));
         }
         None
     }
@@ -1435,6 +1452,7 @@ mod tests {
         assert!(!armed.has_system(ShipSystem::FlightDeck));
         let mut guns_only = test_class();
         guns_only.torpedo_tubes = 0;
+        guns_only.torpedo_tubes_one_side = 0;
         assert!(guns_only.has_system(ShipSystem::MainBattery));
         assert!(guns_only.has_system(ShipSystem::FireControl));
         assert!(!guns_only.has_system(ShipSystem::TorpedoMounts));
@@ -1444,6 +1462,7 @@ mod tests {
         assert!(!tubes_only.has_system(ShipSystem::FireControl));
         assert!(tubes_only.has_system(ShipSystem::TorpedoMounts));
         tubes_only.torpedo_tubes = 0;
+        tubes_only.torpedo_tubes_one_side = 0;
         assert!(tubes_only.has_system(ShipSystem::Propulsion));
         assert!(!tubes_only.has_system(ShipSystem::TorpedoMounts));
     }
@@ -1481,6 +1500,7 @@ mod tests {
             gun_rounds_per_gun: 100,
             gun_damage: Fixed::from_int(20),
             torpedo_tubes: 8,
+            torpedo_tubes_one_side: 8,
             torpedo_damage: Fixed::from_int(200),
             toughness: Fixed::from_int(400),
             radar: false,
@@ -1501,8 +1521,28 @@ mod tests {
         unarmed.gun_rounds_per_gun = 0;
         unarmed.gun_damage = Fixed::ZERO;
         unarmed.torpedo_tubes = 0;
+        unarmed.torpedo_tubes_one_side = 0;
         unarmed.torpedo_damage = Fixed::ZERO;
         assert_eq!(unarmed.problem(), None);
+    }
+
+    #[test]
+    fn the_tubes_on_one_side_are_some_of_the_tubes_and_at_least_one() {
+        let mut wing = test_class();
+        wing.torpedo_tubes_one_side = 4;
+        assert_eq!(wing.problem(), None);
+        let mut too_many = test_class();
+        too_many.torpedo_tubes_one_side = 9;
+        assert!(too_many
+            .problem()
+            .expect("problem")
+            .contains("on one side than tubes"));
+        let mut none_bear = test_class();
+        none_bear.torpedo_tubes_one_side = 0;
+        assert!(none_bear
+            .problem()
+            .expect("problem")
+            .contains("none that bear on one side"));
     }
 
     #[test]

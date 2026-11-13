@@ -46,13 +46,13 @@
 # Radar sets not counted, no row gives their display (decision 0077, 3):
 #   dd-491-farenholt: us-radar-type-unstated (fits.csv:661)
 # Ammunition assumptions used (decision 0023): none
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar
-3000,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,196,354.32,0
-3001,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,196,342.52,0
-3002,Fubuki class,destroyer,15,34,475,4700,0,6,2.444444,150,3.833333,9,150,83.6,0
-3003,Gleaves class,destroyer,15,35,467,4730,0,4,2.444444,360,4.166666,10,89.64,64.8,0
-3004,Benson class (including the Bristol sub-group),destroyer,15,35,466,5100,0,4,2.444444,360,4.166666,10,89.64,64.8,0
-3005,New Orleans class,cruiser,15,32.7,1900,6500,0,9,1.128571,125,19.65,0,0,398,0
-3006,Brooklyn class,cruiser,15,32.5,1981,7990,0,15,1.487179,200,7.933333,0,0,388,1
-3007,Pensacola class,cruiser,15,32.5,2116,7020,0,10,1.128571,150,19.65,0,0,364,0
-3008,"St. Louis class (Brooklyn-class sub-group, CL-49 and CL-50)",cruiser,15,32.5,1892,7690,0,15,1.487179,200,7.933333,0,0,400,1
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar
+3000,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,8,196,354.32,0
+3001,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,8,196,342.52,0
+3002,Fubuki class,destroyer,15,34,475,4700,0,6,2.444444,150,3.833333,9,9,150,83.6,0
+3003,Gleaves class,destroyer,15,35,467,4730,0,4,2.444444,360,4.166666,10,10,89.64,64.8,0
+3004,Benson class (including the Bristol sub-group),destroyer,15,35,466,5100,0,4,2.444444,360,4.166666,10,10,89.64,64.8,0
+3005,New Orleans class,cruiser,15,32.7,1900,6500,0,9,1.128571,125,19.65,0,0,0,398,0
+3006,Brooklyn class,cruiser,15,32.5,1981,7990,0,15,1.487179,200,7.933333,0,0,0,388,1
+3007,Pensacola class,cruiser,15,32.5,2116,7020,0,10,1.128571,150,19.65,0,0,0,364,0
+3008,"St. Louis class (Brooklyn-class sub-group, CL-49 and CL-50)",cruiser,15,32.5,1892,7690,0,15,1.487179,200,7.933333,0,0,0,400,1

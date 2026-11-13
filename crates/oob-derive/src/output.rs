@@ -13,7 +13,7 @@ use crate::problem::{Kind, Problem};
 use crate::reading::Row;
 
 /// The rule behind each figure, in words, in the order of `FIGURES`.
-const RULES: [&str; 16] = [
+const RULES: [&str; 17] = [
     "type of the class in ship_classes.csv, mapped to a simulation kind (heavy_cruiser, light_cruiser: cruiser; destroyer; battleship; carrier, light_carrier: carrier)",
     "endurance_speed_kn of the ship, else of its class",
     "max_speed_kn of the ship, else of its class",
@@ -25,6 +25,7 @@ const RULES: [&str; 16] = [
     "main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",
     "shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage",
     "count of the torpedo_tubes fit",
+    "tubes that bear on one side (decisions 0074 and 0083): torpedo_tubes_per_broadside of the ship, else of its class, if a read row gives it; else torpedo_mount_position (centreline: all the tubes; wing: half of them); else all the tubes, and the class is named as not split; 0 when no tubes are fitted",
     "warhead_kg of the torpedo_tubes weapon x torpedo_damage_per_warhead_kg; 0 when no tubes are fitted",
     "displacement_standard_lt of the ship, else of its class / displacement_lt_per_toughness",
     "1 if a read surface_search_radar fit has count above 0 and the set it names has a read display row (sensor_facts.csv) with a plan position indicator (PPI) in it; an air_search_radar fit does not give it; a surface-search set with no read display row gives 0 and is named as not counted (decision 0077); 0 if a read fit of a no-radar stand-in item has count 0 or both slots read count 0",
@@ -60,6 +61,10 @@ pub struct Outputs {
     /// Aircraft types whose search radius was not settled, one line a type
     /// (decision 0075); they are also in the aircraft file's header.
     pub search_not_settled: Vec<String>,
+    /// Ships with tubes of which no readable row says how they bear, so the
+    /// tubes on one side are all of them (decision 0074, 3), one line a
+    /// ship; they are also in the class file's header.
+    pub torpedo_not_split: Vec<String>,
 }
 
 /// `<stem>.sources.csv`, the sources file beside an aircraft CSV.
@@ -316,6 +321,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             experience_csv: None,
             experience_unread: Vec::new(),
             search_not_settled: Vec::new(),
+            torpedo_not_split: Vec::new(),
         });
     }
     let names: Vec<&str> = (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 })
@@ -455,8 +461,21 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         }
     }
     if !not_modelled.is_empty() {
-        line("Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:".to_string());
+        line("Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes, torpedo_tubes_one_side and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:".to_string());
         for ship in &not_modelled {
+            line(format!("  {ship}"));
+        }
+    }
+    let torpedo_not_split: Vec<String> = results
+        .iter()
+        .filter(|r| r.tubes_not_split)
+        .map(|r| format!("{} ({})", r.ship, r.class_name))
+        .collect();
+    if torpedo_not_split.is_empty() {
+        line("Torpedo tubes not split (decision 0074, 3): none".to_string());
+    } else {
+        line("Torpedo tubes not split (decision 0074, 3): not split: no row says how its tubes bear, so torpedo_tubes_one_side is torpedo_tubes, for:".to_string());
+        for ship in &torpedo_not_split {
             line(format!("  {ship}"));
         }
     }
@@ -598,6 +617,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         experience_csv: None,
         experience_unread: Vec::new(),
         search_not_settled: Vec::new(),
+        torpedo_not_split,
     })
 }
 

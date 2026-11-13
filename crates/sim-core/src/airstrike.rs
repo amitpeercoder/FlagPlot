@@ -2916,6 +2916,7 @@ mod tests {
                 Fixed::ZERO
             },
             torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
             torpedo_damage: Fixed::ZERO,
             toughness: Fixed::from_int(toughness),
             radar: false,

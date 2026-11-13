@@ -10,6 +10,8 @@
 # Exceptions used (decision 0020, 3):
 #   jp-20cm-50-3ns-no2 rate_of_fire_practical_rpm: weapon_facts.csv row 431 (unconfirmed); reason: Settlement sheet e1: 2.4 rounds a minute, from a US technical mission table that does not say whether it is a design or an achieved rate. A lone row.; agreed 2026-11-10
 #   us-8in-55-mk9 rate_of_fire_rpm: weapon_facts.csv row 358 (preferred); reason: Settlement sheet e5: 3 rounds a minute, a designed rate, as for the Mark 12. The one practical figure (5, row 422) is one ship's best quarter-hour in another battle.; agreed 2026-11-10
+#   jp-aoba-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1343 (unconfirmed); reason: Aoba class. 4 tubes on a side: one quadruple mount each side of the catapult after the rebuild. At Savo Island Aoba and Kinugasa fired salvos of four or fewer to one side at a time. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   jp-furutaka-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1346 (unconfirmed); reason: Furutaka class. 4 tubes on a side: the same fit as Aoba. Furutaka fired 4 to port, then 1 and 3 to starboard; Kako 4, 4 and 2. Read for decision 0074 (built with 0083).; agreed 2026-11-13
 #   dd-459-laffey main_battery: fits.csv row 749 (disputed); reason: Four 5-inch guns. The two rows dated at or near the action say four: DANFS (749) and the Cominch bulletin's ship table of 13 November 1942, a primary source of the time (748, dated after this list's day, so not itself read). The two that say five are a press caption at her launch, which speaks of the design (750), and an undated compilation (713). A statement of the ship as she fought outranks one of her as launched, and two readings agree. Low confidence: OCR and a header with other doubtful figures. The architect's ruling of 2026-11-13.; agreed 2026-11-13
 #   us-benson-class displacement_standard_lt: ship_class_facts.csv row 1093 (unconfirmed); reason: 1,620 tons, a lone low-grade row; no second source that says standard was found, and DANFS, the Destroyer History Foundation and FTP 218 all call the class 1,620-ton. Read for Laffey. The architect's ruling of 2026-11-13.; agreed 2026-11-13
 #   us-brooklyn-class torpedo_tubes: fits.csv row 701 (unconfirmed); reason: No torpedo tubes: no armament line read for Boise or her class lists any (Navypedia, NavSource, DANFS, Wikipedia), and none of the class carried them. The row reads the absence as none.; agreed 2026-11-13
@@ -42,13 +44,21 @@
 # Radar sets not counted, no row gives their display (decision 0077, 3):
 #   dd-491-farenholt: us-radar-type-unstated (fits.csv:661)
 # Ammunition assumptions used (decision 0023): none
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar
-3000,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,196,354.32,0
-3001,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,196,342.52,0
-3002,Fubuki class,destroyer,15,34,475,4700,0,6,2.444444,150,3.833333,9,150,83.6,0
-3003,Gleaves class,destroyer,15,35,467,4730,0,4,2.444444,360,4.166666,10,89.64,64.8,0
-3004,Benson class (including the Bristol sub-group),destroyer,15,35,466,5100,0,4,2.444444,360,4.166666,10,89.64,64.8,0
-3005,New Orleans class,cruiser,15,32.7,1900,6500,0,9,1.128571,125,19.65,0,0,398,0
-3006,Brooklyn class,cruiser,15,32.5,1981,7990,0,15,1.487179,200,7.933333,0,0,388,1
-3007,Pensacola class,cruiser,15,32.5,2116,7020,0,10,1.128571,150,19.65,0,0,364,0
-3008,"St. Louis class (Brooklyn-class sub-group, CL-49 and CL-50)",cruiser,15,32.5,1892,7690,0,15,1.487179,200,7.933333,0,0,400,1
+# Torpedo tubes not split (decision 0074, 3): not split: no row says how its tubes bear, so torpedo_tubes_one_side is torpedo_tubes, for:
+#   dd-491-farenholt (Gleaves class)
+#   dd-485-duncan (Gleaves class)
+#   dd-459-laffey (Benson class (including the Bristol sub-group))
+#   dd-484-buchanan (Gleaves class)
+#   dd-488-mccalla (Gleaves class)
+#   fubuki (Fubuki class)
+#   hatsuyuki (Fubuki class)
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar
+3000,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,4,196,354.32,0
+3001,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,4,196,342.52,0
+3002,Fubuki class,destroyer,15,34,475,4700,0,6,2.444444,150,3.833333,9,9,150,83.6,0
+3003,Gleaves class,destroyer,15,35,467,4730,0,4,2.444444,360,4.166666,10,10,89.64,64.8,0
+3004,Benson class (including the Bristol sub-group),destroyer,15,35,466,5100,0,4,2.444444,360,4.166666,10,10,89.64,64.8,0
+3005,New Orleans class,cruiser,15,32.7,1900,6500,0,9,1.128571,125,19.65,0,0,0,398,0
+3006,Brooklyn class,cruiser,15,32.5,1981,7990,0,15,1.487179,200,7.933333,0,0,0,388,1
+3007,Pensacola class,cruiser,15,32.5,2116,7020,0,10,1.128571,150,19.65,0,0,0,364,0
+3008,"St. Louis class (Brooklyn-class sub-group, CL-49 and CL-50)",cruiser,15,32.5,1892,7690,0,15,1.487179,200,7.933333,0,0,0,400,1
