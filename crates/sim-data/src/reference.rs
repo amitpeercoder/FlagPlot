@@ -551,6 +551,8 @@ struct AirCombatFile {
     crew_recovered_beside_own_force: Quantity,
     /// Decision 9 of 0059.
     crew_recovered_open_sea: Quantity,
+    /// Decision 0079.
+    anti_aircraft_before_attack_share: Quantity,
 }
 
 /// What a bomb hit on a base lands on (decision 7 of 0034). The rest of the
@@ -626,6 +628,10 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             &file.crew_recovered_beside_own_force,
         )?,
         crew_recovered_open_sea: number("crew_recovered_open_sea", &file.crew_recovered_open_sea)?,
+        anti_aircraft_before_attack_share: number(
+            "anti_aircraft_before_attack_share",
+            &file.anti_aircraft_before_attack_share,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -962,6 +968,8 @@ mod tests {
             Fixed::from_ratio(5, 100)
         );
         assert_eq!(figures.bomb_false_claim_chance, Fixed::from_ratio(1, 10));
+        // Decision 0079: the live figure is a placeholder, 0.
+        assert_eq!(figures.anti_aircraft_before_attack_share, Fixed::ZERO);
     }
 
     #[test]
@@ -1069,6 +1077,8 @@ mod tests {
                 "0.95",
             ),
             ("crew_recovered_open_sea", "0.5", "1", "1.5", "0.5"),
+            // Decision 0079; the live value is 0.
+            ("anti_aircraft_before_attack_share", "0", "1", "1.5", "0.5"),
         ] {
             let line = format!("{key} = \"{value}\"");
             assert!(

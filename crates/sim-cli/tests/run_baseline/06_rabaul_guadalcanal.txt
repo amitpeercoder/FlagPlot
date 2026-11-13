@@ -7,42 +7,42 @@ day   2  hash 247e9e1e3b0cea98  19 events
 day   3  hash d61a928b090d7211  18 events
 day   4  hash b43e373306ce4fc7  26 events
 day   5  hash e4eeede3958c48c2  45 events
-day   6  hash 5bac20db8d5d80c2  46 events
-day   7  hash c7f7c54dee9ae342  31 events
-day   8  hash d86d7e147a7a490a  26 events
-day   9  hash 154d4b0aa367f023  42 events
-day  10  hash a04ab7c1489b5e07  54 events
-day  11  hash b26da2d668c6d841  40 events
-day  12  hash 7d44ac97587e80b9  38 events
-day  13  hash 507c7b266b53ff36  57 events
-day  14  hash a4455523352e5f8e  34 events
-day  15  hash 2aa9f02222b60a03  37 events
-day  16  hash 99e393efa58d54ab  50 events
-day  17  hash b597d53f061c5a71  33 events
-day  18  hash 4c547a9b23aee05a  33 events
-day  19  hash 666dcbcbe407a435  25 events
-day  20  hash dd16ba6dfb747385  40 events
-day  21  hash e494493045b31317  48 events
-day  22  hash 4370c90fe9df9a79  51 events
-day  23  hash 854eb8abb88457a9  51 events
-day  24  hash 6d09fd7f9662c51d  62 events
-day  25  hash c5bfe76f93f96587  46 events
-day  26  hash f06ed517d0f953ec  49 events
-day  27  hash fd10bb78058b5279  45 events
-day  28  hash 5859693b9fc78256  39 events
+day   6  hash 80a404f9f938c0d2  46 events
+day   7  hash eb37213429779419  31 events
+day   8  hash 985bf4276e989fe5  26 events
+day   9  hash c0c4da8f5eea19bb  42 events
+day  10  hash 06493e32671eda66  54 events
+day  11  hash 5b6f3ad77f783f53  40 events
+day  12  hash c982f2a11e005352  38 events
+day  13  hash 18d38367bf9ad90d  57 events
+day  14  hash d783d59517edffe2  34 events
+day  15  hash 1785fb07c8c09adf  37 events
+day  16  hash 2b5273a6dd3990d8  50 events
+day  17  hash 511f7a6957dc14b6  33 events
+day  18  hash 6611426c402d4105  33 events
+day  19  hash 5a7722b2d4940d36  25 events
+day  20  hash fef6d13d16ec25ce  40 events
+day  21  hash d3b0fcea290160c3  49 events
+day  22  hash 2b6d1696cafd47b5  51 events
+day  23  hash a93081b3f7e5ede0  53 events
+day  24  hash 71eebde758497f18  62 events
+day  25  hash 5f56595c87f6d2bb  46 events
+day  26  hash 843fc7ae786c31c1  49 events
+day  27  hash 8a65da7eb856a479  45 events
+day  28  hash a17fccea567380b4  39 events
 
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 41 ready, 41 pilots, mission Rest, fatigue 55, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 24 ready, 24 pilots, mission CombatAirPatrol, patrol share 0, fatigue 55, no arc
 air_group:3 "6th Air Group" (Japanese) at base:2: 13 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 30.96, no arc
 air_group:10 "VMF-223" (Allied) at base:1: 0 ready, 12 pilots, mission CombatAirPatrol, patrol share 1, rests above 40, no arc
-air_group:11 "VMSB-232" (Allied) at base:1: 1 ready, 12 pilots, mission Search, fatigue 56, arc 300-030 to 200 nm
+air_group:11 "VMSB-232" (Allied) at base:1: 2 ready, 12 pilots, mission Search, fatigue 72, arc 300-030 to 200 nm
 air_group:12 "Flight 300" (Allied) at base:1: 10 ready, 11 pilots, mission Search, fatigue 90, arc 300-030 to 200 nm
 air_group:13 "VMF-224" (Allied) at base:1: 6 ready, 16 pilots, mission CombatAirPatrol, patrol share 1, fatigue 34, rests above 40, stood down, no arc
 air_group:14 "VMSB-231" (Allied) at base:1: 10 ready, 12 pilots, mission Search, fatigue 90, arc 300-030 to 200 nm
 air_group:15 "VF-5" (Allied) at base:1: 19 ready, 1 damaged, 23 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
 air_group:16 "Fighters from Hornet and Wasp" (Allied) at base:1: 18 ready, 18 pilots, mission CombatAirPatrol, patrol share 1, fatigue 30, rests above 40, no arc
 air_group:17 "VS-3" (Allied) at base:1: 7 ready, 5 damaged, 12 pilots, mission Search, fatigue 94, arc 300-030 to 200 nm
-base:1 "Henderson Field" (Allied) at (2,-4): 2377.5 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 2324.6 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 8221.72 t of supply in stock, repairs 4 aircraft a day
 Allied: no contacts
 Allied claim over (2,-4): 1 aircraft shot down, day 5 morning
@@ -58,18 +58,18 @@ Allied claim over (2,-4): 5 aircraft shot down, day 23 morning
 Allied claim over (2,-4): 3 aircraft shot down, day 24 morning
 Japanese: no contacts
 Japanese claim at (2,-4): 4 aircraft shot down, 8 aircraft destroyed on the ground, day 5 morning
-Japanese claim at (2,-4): 3 aircraft shot down, 2 aircraft destroyed on the ground, day 6 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
 Japanese claim at (2,-4): 4 aircraft shot down, 5 aircraft destroyed on the ground, day 9 morning
 Japanese claim at (2,-4): 1 aircraft shot down, 2 aircraft destroyed on the ground, day 10 morning
 Japanese claim at (2,-4): 8 aircraft shot down, 3 aircraft destroyed on the ground, day 13 morning
 Japanese claim at (2,-4): 5 aircraft shot down, 4 aircraft destroyed on the ground, day 16 morning
 Japanese claim at (2,-4): 4 aircraft destroyed on the ground, day 20 morning
 Japanese claim at (2,-4): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 21 morning
-Japanese claim at (2,-4): 1 aircraft destroyed on the ground, day 22 morning
+Japanese claim at (2,-4): 2 aircraft destroyed on the ground, day 22 morning
 Japanese claim over (2,-4): 1 aircraft shot down, day 23 morning
 Japanese claim over (2,-4): 0 aircraft shot down, day 24 morning
 
 Result (the placeholder scale of decision 0054):
-Allied: 12.55 points (aircraft_destroyed 51 = 2.55; base_open at base:1 28 of 28 days = 10), margin 10.05, major victory
-Japanese: 2.5 points (aircraft_destroyed 50 = 2.5; base_open at base:1 0 of 28 days = 0), margin -10.05, major defeat
+Allied: 12.55 points (aircraft_destroyed 51 = 2.55; base_open at base:1 28 of 28 days = 10), margin 10.1, major victory
+Japanese: 2.45 points (aircraft_destroyed 49 = 2.45; base_open at base:1 0 of 28 days = 0), margin -10.1, major defeat
 History: Henderson Field never stopped flying in these four weeks, and Rabaul's raids cost it more than it could replace. (The architect's reading; not yet scored from the order-of-battle facts.)

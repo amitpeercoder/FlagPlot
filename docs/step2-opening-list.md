@@ -56,6 +56,7 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - The ignored test `scenario_09a_side_events::an_enemy_force_that_is_merely_there_changes_nothing_the_side_is_given`: a known truth-and-belief leak, the number of a force made in the game counts the enemy's forces. To be mended before step 3.
 - The nine small code fixes of `docs/rules/differences.md` ("in the batch of small fixes"): to be made in one batch at the close of tuning.
 - `docs/rules/differences.md`, row 7: the report after a strike reads the force after the damage. To be made before the air figures are tuned.
+- The briefing's guns line after the attack (decision 0079): the briefing lists the guns' fire after the attack as a guns line of its own, not marked as after the attack. A wording item.
 - In progress, numbers reserved: decisions 0079 to 0082, the air work (anti-aircraft fire after the attack; whom the patrol fires at; the Eastern Solomons orders; the Rabaul orders).
 
 ## What the architect settles from the research

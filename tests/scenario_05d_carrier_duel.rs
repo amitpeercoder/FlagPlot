@@ -1054,7 +1054,8 @@ fn work_the_run(run: &Run) -> Worked {
                         shots: int(gun_shots),
                         chance: hundredths(5),
                         expected,
-                        hits
+                        hits,
+                        after_attack: false,
                     },
                     "seed {seed} pulse {index}"
                 );
