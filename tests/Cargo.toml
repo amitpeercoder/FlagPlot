@@ -166,6 +166,10 @@ name = "scenario_15a_unready_fire"
 path = "scenario_15a_unready_fire.rs"
 
 [[test]]
+name = "scenario_16_all_together"
+path = "scenario_16_all_together.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 
