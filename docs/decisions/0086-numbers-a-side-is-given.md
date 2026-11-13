@@ -56,7 +56,17 @@ Every number the game uses is counted for both sides together, and a side saw so
 
 Part 1, Nov 13, 2026. No run, state or hash changed: the run baselines, goldens of the engine and every recorded game's `save.json` are unchanged. The sim-agent goldens and the transcripts changed only in handles. The umpire's output was compared byte for byte between a binary built from main (0c5c01f) and one built from this change, for scenarios 4, 5, 6 and 7: `export`, `run --events`, `events --unit` (a ship and a task force) and `events --why`. All twenty files are identical. In the scenario tests that moved to the key, no expected number changed: only how an id is read. The test for finding 8 is switched on. Finding 3's served form is tested in `crates/sim-agent/tests/numbering.rs`. Its core test, and the test of the force leak, wait for part 2.
 
-Part 2: not yet built.
+Part 2, Nov 13, 2026. `MadeIds` in the world holds the four counters; the hash writes them Allied then Japanese, task forces then air groups, and the state version is 8. Two places make units in play: `split_task_force` (a detach and a straggler) and the group formed when aircraft land away from home. Every scenario file still loads. The test of the force leak of decision 0047 and the core test of finding 3 now pass unchanged.
+
+What moved:
+
+- **The numbers of units made in play,** wherever a test or a baseline pins one: a detached Allied force 2 is now 1,000,001; the Japanese made force of scenarios 4 and 4a2, 5, is now 2,000,001; groups formed by landing (21 in scenario 5's seed 10, 5 to 7 in scenario 12c, 121 in 12d, 8 in 16) are now 1,000,001 or 2,000,001 and on. Labels only; no expected value worked by hand changed.
+- **Results that one seed drew,** where a made unit's draws are keyed on its new number:
+  - Scenario 7 on its own seed (`scenario_10b`): Japanese ship 40 now ends with propulsion out (it was degraded), so it counts as crippled. Allied crippled 0 to 1 (0 to 2 points), Allied total 30.85 to 32.85, margin 19.4 to 21.4: still a decisive Allied victory. Every other figure the test pins is as before.
+  - Scenario 12d, seed 28, the group formed at Henderson ends day 4 with 9 ready and 1 damaged, not 11 and 0: the day's wear draw is keyed on the group's number.
+  - The run baselines of scenarios 7 and 8 moved in their results; those of 4 and 4a2 only in the made force's number; every other in its hashes only.
+- **Pinned hashes:** scenario 17a's case 8 and scenario 5's day 1 (scenario 10's test), and the state version and final hashes of `batch_before/06` (its margins are unchanged).
+- **Recorded games:** each `save.json` in its daily hashes only; every transcript is unchanged.
 
 ## Rule card
 
