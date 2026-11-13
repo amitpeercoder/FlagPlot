@@ -799,3 +799,50 @@ agreed = "2026-11-13"
 # gives 0, and the list's radar_unknown_means_none works as before (decision
 # 0019, 5). No exception is written for this rule: the display rows are read
 # as they stand.
+
+# The ships of Cape Esperance (decision 0072). Each exception reads a row
+# the preference rules cannot make preferred, and each stays open in
+# gaps.csv for a better source. Laffey's three are the architect's ruling of
+# 2026-11-13: leaving out a ship that fought changes the battle more than a
+# marked settlement does.
+[[exception]]
+entity = "dd-459-laffey"
+fact = "main_battery"
+row = 749
+reason = "Four 5-inch guns. The two rows dated at or near the action say four: DANFS (749) and the Cominch bulletin's ship table of 13 November 1942, a primary source of the time (748, dated after this list's day, so not itself read). The two that say five are a press caption at her launch, which speaks of the design (750), and an undated compilation (713). A statement of the ship as she fought outranks one of her as launched, and two readings agree. Low confidence: OCR and a header with other doubtful figures. The architect's ruling of 2026-11-13."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "us-benson-class"
+fact = "displacement_standard_lt"
+row = 1093
+reason = "1,620 tons, a lone low-grade row; no second source that says standard was found, and DANFS, the Destroyer History Foundation and FTP 218 all call the class 1,620-ton. Read for Laffey. The architect's ruling of 2026-11-13."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "us-brooklyn-class"
+fact = "torpedo_tubes"
+row = 701
+reason = "No torpedo tubes: no armament line read for Boise or her class lists any (Navypedia, NavSource, DANFS, Wikipedia), and none of the class carried them. The row reads the absence as none."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "us-st-louis-class"
+fact = "torpedo_tubes"
+row = 712
+reason = "No torpedo tubes: no armament line read for Helena or her class lists any, as for the Brooklyn class (row 701)."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "us-pensacola-class"
+fact = "main_rounds_per_gun"
+row = 1016
+reason = "150 rounds a gun, Navweaps's figure for the treaty cruisers' 8-inch/55, not specific to the class. Read so that Salt Lake City has a figure: she fired 296 rounds from ten guns that night (rows 1704, 1636), a fifth of 1,500, so it does not limit her, the effect the list's main_gun_ammunition_not_limiting gives ships with no row (decision 0023), which the tool does not apply over a row. Open in gaps.csv."
+agreed = "2026-11-13"
+
+[[exception]]
+entity = "jp-fubuki-class"
+fact = "torpedo_tubes"
+row = 726
+reason = "Nine 61 cm tubes with the Type 90 torpedo, for Fubuki and Hatsuyuki. Every source read agrees on the type in 1942 (ship_class_facts 1359 to 1362, torpedo_model: a US technical mission report, NavWeaps and both Wikipedias), and none disputes the count of nine (fits 727 to 729). Row 726 is the one fit row that has both; it stays disputed only because the other fit rows carry the as-built Type 8 as a stand-in. The architect's ruling of 2026-11-13."
+agreed = "2026-11-13"

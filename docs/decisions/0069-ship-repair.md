@@ -2,6 +2,8 @@
 
 Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing is built. The hand calculation is written before any code is delegated.
 
+Nov 13, 2026: not part of step 2's close, ruled by the coordinating architect on the designer's delegation. It adds an order and a briefing line, which the step 2 spec's scope leaves out, and it is in none of the lines of "Done means". It follows step 2, with land units and ground combat, before step 3; so does "out of the campaign" on the objectives scale, which reads it.
+
 ## The gap
 
 No rule ever lowers a ship's damage. A system once out stays out, in port or at sea, for the rest of the game (decision 0052, item 11). In one battle that does not matter. Over a campaign it does: fleets only wear down, a damaged ship has nowhere to go, and a commander has no reason to pull one out of the line.

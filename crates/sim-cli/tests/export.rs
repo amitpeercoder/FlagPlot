@@ -465,3 +465,122 @@ fn each_sides_exported_events_are_what_its_side_view_gives() {
         assert!(seen_any, "{scenario}: no side saw anything");
     }
 }
+
+// ---- a saved game as the source ----
+
+const TRANSIT: &str = "data/scenarios/01_transit.toml";
+
+/// Runs `scenario` with `run --save` and returns the saved game's path.
+fn make_save(label: &str, scenario: &str, extra: &[&str]) -> String {
+    let path = temp_file(label).to_string_lossy().into_owned();
+    let mut args = vec!["run", scenario, "--save", path.as_str()];
+    args.extend_from_slice(extra);
+    let result = binary(&args);
+    assert!(
+        result.status.success(),
+        "run --save failed: {}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    path
+}
+
+/// Exports `source` to a file and returns the process output.
+fn try_export(label: &str, source: &str, extra: &[&str]) -> std::process::Output {
+    let out = temp_file(label).to_string_lossy().into_owned();
+    let mut args = vec!["export", source, "--out", out.as_str()];
+    args.extend_from_slice(extra);
+    binary(&args)
+}
+
+fn refused_with(result: &std::process::Output, words: &str) {
+    assert_eq!(result.status.code(), Some(1));
+    let stderr = String::from_utf8_lossy(&result.stderr);
+    assert!(stderr.contains(words), "expected \"{words}\" in: {stderr}");
+}
+
+#[test]
+fn a_saved_game_exports_as_its_scenario_does() {
+    let save = make_save("transit-save", TRANSIT, &[]);
+    let from_save = parse(&export("from-save", &save, &[]));
+    let mut from_scenario = parse(&export("from-scenario", TRANSIT, &[]));
+    // The replay is titled with the saved game and its scenario...
+    let title = from_save["scenario"]["name"].as_str().expect("a title");
+    let name = from_scenario["scenario"]["name"].as_str().expect("a name");
+    assert_eq!(title, format!("{name} (saved game {save})"));
+    // ...and names the scenario's own file, as the scenario's export does.
+    assert_eq!(from_save["scenario"]["path"], TRANSIT);
+    // Otherwise it is the same file.
+    from_scenario["scenario"]["name"] = from_save["scenario"]["name"].clone();
+    assert_eq!(from_save, from_scenario);
+    let _ = fs::remove_file(&save);
+}
+
+#[test]
+fn a_saved_game_is_refused_as_replay_refuses_it() {
+    // A scenario file that changed since the game was saved.
+    let save = make_save("tamper-save", TRANSIT, &[]);
+    let text = fs::read_to_string(&save).expect("the save exists");
+    let hash = text
+        .split("\"hash\": \"")
+        .nth(1)
+        .and_then(|rest| rest.split('"').next())
+        .expect("the scenario's hash")
+        .to_string();
+    let tampered = temp_file("tampered-save");
+    fs::write(&tampered, text.replacen(&hash, "0000000000000000", 1)).expect("writes");
+    let tampered = tampered.to_string_lossy().into_owned();
+    let result = try_export("tampered", &tampered, &[]);
+    refused_with(&result, "has changed since the game was saved");
+    let replay = binary(&["replay", &tampered]);
+    assert_eq!(replay.stderr, result.stderr, "replay says the same");
+
+    // A game made with --reference needs it again.
+    let framed = make_save(
+        "reference-save",
+        TRANSIT,
+        &["--reference", sim_data::FROZEN_REFERENCE_DIR],
+    );
+    let result = try_export("no-reference", &framed, &[]);
+    refused_with(&result, "now names different data files");
+    let replay = binary(&["replay", &framed]);
+    assert_eq!(replay.stderr, result.stderr, "replay says the same");
+    let given = try_export(
+        "with-reference",
+        &framed,
+        &["--reference", sim_data::FROZEN_REFERENCE_DIR],
+    );
+    assert!(given.status.success(), "{given:?}");
+
+    // A saved game holds its own seed.
+    let result = try_export("seeded", &save, &["--seed", "3"]);
+    refused_with(
+        &result,
+        "--seed does not go with a saved game: it holds its own seed",
+    );
+    for file in [save, tampered, framed] {
+        let _ = fs::remove_file(file);
+    }
+}
+
+#[test]
+fn a_recorded_game_exports_with_the_hashes_it_saved() {
+    let save = "crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json";
+    let bytes = export("recorded", save, &[]);
+    let replay = parse(&bytes);
+    assert_eq!(replay["format"], "flagplot-replay");
+    assert_eq!(replay["version"], 2);
+    let title = replay["scenario"]["name"].as_str().expect("a title");
+    assert!(title.ends_with(&format!("(saved game {save})")), "{title}");
+    // The hashes are those the game saved.
+    let saved: Value =
+        serde_json::from_slice(&fs::read(Path::new(ROOT).join(save)).expect("reads"))
+            .expect("JSON");
+    let saved_hashes: Vec<&str> = saved["hashes"]
+        .as_array()
+        .expect("hashes")
+        .iter()
+        .map(|h| h["hash"].as_str().expect("a hash"))
+        .collect();
+    assert_eq!(hashes(&replay), saved_hashes);
+    // `node viewer/check.js` is run on such a file by hand: no test runs node.
+}
