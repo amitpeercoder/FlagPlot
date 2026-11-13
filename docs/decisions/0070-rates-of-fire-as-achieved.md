@@ -1,6 +1,6 @@
 # 0070: Rates of fire as achieved, not as designed
 
-Status: settled by the architect, to be reviewed. Nov 13, 2026. A change to the derivation (`oob-derive` and `data/derivation/rules.toml`), by its written rule and from rows. No rule of the simulation changes, no figure of `surface_combat.toml` moves, and the frozen step 1 figures are untouched. The hand derivation below was written before any code was delegated.
+Status: settled by the architect, to be reviewed. Nov 13, 2026. Built; see "As built". A change to the derivation (`oob-derive` and `data/derivation/rules.toml`), by its written rule and from rows. No rule of the simulation changes, no figure of `surface_combat.toml` moves, and the frozen step 1 figures are untouched. The hand derivation below was written before any code was delegated.
 
 ## The gap
 
@@ -131,4 +131,74 @@ No simulation rule. The tool reads `data/oob` (now including `engagement_outcome
 
 ## As built
 
-To be filled in when the change is built.
+Built on Nov 13, 2026.
+
+**The tool.**
+- `crates/oob-derive/src/fire_rate.rs` reads the `[fire_rate]` block of `rules.toml`. The block has the cases, the continuous classes, and the one class that does not read its sourced rate.
+- It checks each case against `engagement_outcomes.csv`, `engagement_events.csv`, `engagements.csv` and the fits, and works the medians.
+- A case's guns are read on its engagement's first date. A span from events is the difference of the two events' times.
+- `rate_in_action` in `derive.rs` takes the lesser of the sourced and the achieved rate.
+- The generated file's header lists the kinds, their medians and every case. The sources file gives the case rows beside the rate, with a note naming the two rates compared.
+- With no `[fire_rate]` block the tool does exactly what it did before. Its earlier fixture tests pass unchanged.
+- A problem in the block stops every list that reads the rules file, the Eastern Solomons and Rabaul included.
+- The case rates and medians match the hand derivation above to the last place. `crates/oob-derive/tests/fire_rate.rs` asserts them on the real facts, with fixture tests in `tests/derive.rs`.
+
+**What changed in the data.**
+- `ship_classes_savo_island.csv` was re-derived. Only `gun_rounds_per_min` moved: 1.128571 for the nine cruiser rows and 2.444444 for the four destroyer rows.
+- The Eastern Solomons and Rabaul derivations are byte-identical. `cape_esperance.toml` derives only experience, so it is unchanged.
+- `data/reference/step1` is untouched. No hand-calculation test moved.
+- The run baselines of scenario 4 (`crates/sim-cli/tests/run_baseline/04_savo_island.*`) were remade. No other scenario reads the Savo Island classes. No recorded game moved.
+
+**Savo Island, 1,000 runs, before and after.** Both batches were run on the same engine, the before on the reference files of `origin/main` (`--reference`). They were validated against `data/validation/savo_island.toml` as pull request 169 left it: the shells measures count the main battery only. No report was committed; `docs/validation` belongs to the spec session.
+
+| Measure | Record | Before: median, 5th to 95th, verdict | After: median, 5th to 95th, verdict |
+| --- | --- | --- | --- |
+| Allied cruisers sunk | 4 | 0, 0 to 2, miss | 0, 0 to 1, miss |
+| Southern group cruisers sunk | 1 | 0, 0 to 2, agrees | 0, 0 to 1, agrees |
+| Northern group cruisers sunk | 3 | 0, 0 to 1, miss | 0, 0 to 0, miss |
+| Allied destroyers sunk | 0 | 3, 1 to 4, miss | 2, 1 to 4, miss |
+| Japanese ships sunk | 0 | 1, 0 to 3, agrees | 0, 0 to 2, agrees |
+| Japanese ships with propulsion out | 0 | 0, agrees | 0, agrees |
+| Gun hits on Allied ships | 153 to 219 | 121, 37 to 175, at the edge | 72, 21 to 101, miss |
+| Gun hits on Japanese ships | 10 to 17 | 53, 2 to 159, miss | 19, 2 to 55, agrees |
+| Torpedo hits on Allied ships | 4 to 9 | 3, agrees | 3, agrees |
+| Torpedo hits on Japanese ships | 0 | 2, at the edge | 3, at the edge |
+| Japanese gun hits a thousand shells | 81 to 117 | 50, miss | 52, miss |
+| Allied gun hits a thousand shells | 21 to 36 | 38, agrees | 33, agrees |
+| Japanese main battery shells, hundreds | 10 to 11 | 24, 10 to 32, miss | 13, 5 to 18, agrees (207 runs) |
+| Allied main battery shells, hundreds | 3 | 13, 1 to 32, miss | 5, 1 to 12, agrees (119 runs) |
+| Southern group shells, hundreds | 0 | 4, 0 to 13, agrees | 0, 0 to 4, agrees (527 runs) |
+| Northern group shells, hundreds | 3 | 8, 1 to 24, miss | 4, 1 to 9, agrees (150 runs) |
+| **Tenryu and Yubari shells, hundreds** | **1** | **9, 4 to 15, miss (0 runs)** | **2, 1 to 4, agrees at the edge (80 runs)** |
+| Minutes of action | 20 to 30 | 25, 15 to 50, agrees | 35, 20 to 65, agrees |
+| Surface fights by day | 0 | 0, agrees | 0, agrees |
+| Allied ships claimed sunk | 0 | 1, agrees | 0, agrees |
+| Japanese claims for each hundred sunk (reported) | 350 | 120 | 120 |
+
+Judged measures, before: 9 agree, 2 at the edge, 9 miss. After: 13 agree, 2 at the edge, 5 miss.
+
+**The check of spec "Tuning" item 6: Tenryu and Yubari agree, at the edge.**
+- **The runs, in hundreds:**
+
+  | Hundreds | 0 | 1 (the record) | 2 | 3 | 4 | 5 |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | Runs of 1,000 | 20 | 80 | 513 | 336 | 41 | 10 |
+
+  The mean is 288 shells against a record of 176. Before, the middle run was 900 and no run held the record.
+- **Why it stays about one and a half times the record,** read from the batch:
+  - A round of full fire is now 56.4 shells for the two ships, and they fire about five rounds a run.
+  - That is because fights last longer as fewer hits land: night rounds rise from 4.2 to 6.4 a run, and the minutes of action from a median of 25 to 35.
+  - In the record they fired about three rounds' worth. They were at the tail of the column, and Tenryu was on Wilson for about a minute.
+  - Five minutes is the smallest unit of fire. Every ship that sights fires for the whole round, so a ship that fired for one minute of a round is charged five.
+- **Not the cause:** the median of kind (a). With the cruiser rate at 0.8 instead of 1.128571 (scratch batches) the middle run is still 2 hundreds.
+- **Nothing was moved in response.** The rule, the kinds and the cases are as settled.
+
+**Against the scratch variant C of the study.**
+- Variant C used 1.05 for cruisers and 2.5 for destroyers, round numbers set from the rows before the study's batch. The built rule gives 1.128571 and 2.444444.
+- The built batch is within a few per cent of C on every measure. Tenryu and Yubari average 288 against 278. The Japanese heavy cruisers average 832 against 800. The northern group averages 476 against 480, and the southern group 149 against 151.
+- The differences are the rates and nothing else.
+
+**What the batch shows for what comes next:**
+- **Gun hits on Allied ships now miss low:** 72 against 153 to 219. Japanese hits for each thousand shells, 52 against 81 to 117, missed before and still do. With the shells right, that is the chance to hit, the next mechanism in the order of tuning.
+- **The minutes of action** stay inside the record, but the middle run is now at its top. That is the breaking-off mechanism.
+- **The Japanese main battery shells measure agrees,** but it is not an independent check of the heavy cruisers' rate: two of the four salvo cases are Chokai and Kako, whose shells it counts.
