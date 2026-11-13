@@ -10,7 +10,7 @@ class_id,figure,value,rule,facts,note
 1000,endurance_nm,8000,"endurance_nm of the ship, else of its class",ship_class_facts.csv:679,
 1000,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1000,main_guns,6,count of the main_battery fit,fits.csv:142 fits.csv:143,
-1000,gun_rounds_per_min,2.4,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:142 fits.csv:143 weapon_facts.csv:431,rests on an exception
+1000,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:142 fits.csv:143 fits.csv:251 fits.csv:301 fits.csv:669 fits.csv:670 weapon_facts.csv:431,"rate in action (decision 0070): the lesser of the sourced rate 2.4 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; rests on an exception"
 1000,gun_rounds_per_gun,120,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:642,
 1000,gun_damage,20.975,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:142 fits.csv:143 weapon_facts.csv:86,
 1000,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:144 fits.csv:145 fits.csv:304 fits.csv:305 fits.csv:306,ship rows holding on the date but not read: fits.csv:381 (unconfirmed)
@@ -24,7 +24,7 @@ class_id,figure,value,rule,facts,note
 1001,endurance_nm,7900,"endurance_nm of the ship, else of its class",ship_class_facts.csv:688,
 1001,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1001,main_guns,6,count of the main_battery fit,fits.csv:292 fits.csv:293 fits.csv:294 fits.csv:301,"ship rows holding on the date but not read: fits.csv:382 (disputed), fits.csv:384 (disputed), fits.csv:386 (disputed), fits.csv:90 (disputed), fits.csv:91 (disputed)"
-1001,gun_rounds_per_min,2.4,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:292 fits.csv:293 fits.csv:294 fits.csv:301 weapon_facts.csv:431,"ship rows holding on the date but not read: fits.csv:382 (disputed), fits.csv:384 (disputed), fits.csv:386 (disputed), fits.csv:90 (disputed), fits.csv:91 (disputed); rests on an exception"
+1001,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:292 fits.csv:293 fits.csv:294 fits.csv:301 fits.csv:669 fits.csv:670 weapon_facts.csv:431,"ship rows holding on the date but not read: fits.csv:382 (disputed), fits.csv:384 (disputed), fits.csv:386 (disputed), fits.csv:90 (disputed), fits.csv:91 (disputed); rate in action (decision 0070): the lesser of the sourced rate 2.4 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; rests on an exception"
 1001,gun_rounds_per_gun,120,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:647,
 1001,gun_damage,20.975,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:292 fits.csv:293 fits.csv:294 fits.csv:301 weapon_facts.csv:86,"ship rows holding on the date but not read: fits.csv:382 (disputed), fits.csv:384 (disputed), fits.csv:386 (disputed), fits.csv:90 (disputed), fits.csv:91 (disputed)"
 1001,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:298 fits.csv:299 fits.csv:300,"ship rows holding on the date but not read: fits.csv:113 (unconfirmed), fits.csv:92 (unconfirmed)"
@@ -38,7 +38,7 @@ class_id,figure,value,rule,facts,note
 1002,endurance_nm,3600,"endurance_nm of the ship, else of its class",ship_class_facts.csv:74,
 1002,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1002,main_guns,4,count of the main_battery fit,fits.csv:152 fits.csv:153 fits.csv:316,ship rows holding on the date but not read: fits.csv:134 (unconfirmed)
-1002,gun_rounds_per_min,5.5,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:152 fits.csv:153 fits.csv:316 weapon_facts.csv:44,"ship rows holding on the date but not read: fits.csv:134 (unconfirmed); designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
+1002,gun_rounds_per_min,2.444444,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_outcomes.csv:3146 engagement_outcomes.csv:3147 fits.csv:147 fits.csv:152 fits.csv:153 fits.csv:316 weapon_facts.csv:44,"ship rows holding on the date but not read: fits.csv:134 (unconfirmed); rate in action (decision 0070): the lesser of the sourced rate 5.5 and the achieved rate 2.444444 of kind destroyer, the median of 1 case; designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
 1002,gun_rounds_per_gun,9999,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",,"assumption, not a fact: main-gun ammunition is treated as not limiting (decision 0023); 9999 is a marker, not an outfit"
 1002,gun_damage,3.383333,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:152 fits.csv:153 fits.csv:316 weapon_facts.csv:45,ship rows holding on the date but not read: fits.csv:134 (unconfirmed)
 1002,torpedo_tubes,6,count of the torpedo_tubes fit,fits.csv:154 fits.csv:317 fits.csv:318,"ship rows holding on the date but not read: fits.csv:375 (unconfirmed), fits.csv:376 (unconfirmed)"
@@ -52,7 +52,7 @@ class_id,figure,value,rule,facts,note
 1003,endurance_nm,8000,"endurance_nm of the ship, else of its class",ship_class_facts.csv:671 ship_class_facts.csv:673,
 1003,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1003,main_guns,10,count of the main_battery fit,fits.csv:71,
-1003,gun_rounds_per_min,2.4,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:71 weapon_facts.csv:431,rests on an exception
+1003,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:301 fits.csv:669 fits.csv:670 weapon_facts.csv:431,"rate in action (decision 0070): the lesser of the sourced rate 2.4 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; rests on an exception"
 1003,gun_rounds_per_gun,120,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:636,
 1003,gun_damage,20.975,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:71 weapon_facts.csv:86,
 1003,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:189 fits.csv:309,ship rows holding on the date but not read: fits.csv:73 (unconfirmed)
@@ -66,7 +66,7 @@ class_id,figure,value,rule,facts,note
 1004,endurance_nm,5000,"endurance_nm of the ship, else of its class",ship_class_facts.csv:217,
 1004,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1004,main_guns,4,count of the main_battery fit,fits.csv:190 fits.csv:191,
-1004,gun_rounds_per_min,6,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:190 fits.csv:191 weapon_facts.csv:432,rests on an exception
+1004,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:190 fits.csv:191 fits.csv:251 fits.csv:301 fits.csv:669 fits.csv:670,"no sourced rate (weapon_facts.csv row 432 not read for this class); the achieved rate 1.128571 of kind salvo, the median of 4 cases"
 1004,gun_rounds_per_gun,9999,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",,"assumption, not a fact: main-gun ammunition is treated as not limiting (decision 0023); 9999 is a marker, not an outfit"
 1004,gun_damage,6.333333,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:190 fits.csv:191 weapon_facts.csv:62,
 1004,torpedo_tubes,6,count of the torpedo_tubes fit,fits.csv:310 fits.csv:311,ship rows holding on the date but not read: fits.csv:377 (unconfirmed)
@@ -80,7 +80,7 @@ class_id,figure,value,rule,facts,note
 1005,endurance_nm,3310,"endurance_nm of the ship, else of its class",ship_class_facts.csv:240,rests on an exception
 1005,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1005,main_guns,6,count of the main_battery fit,fits.csv:314 fits.csv:315,ship rows holding on the date but not read: fits.csv:131 (unconfirmed)
-1005,gun_rounds_per_min,6,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:314 fits.csv:315 weapon_facts.csv:432,ship rows holding on the date but not read: fits.csv:131 (unconfirmed); rests on an exception
+1005,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:301 fits.csv:314 fits.csv:315 fits.csv:669 fits.csv:670 weapon_facts.csv:432,"ship rows holding on the date but not read: fits.csv:131 (unconfirmed); rate in action (decision 0070): the lesser of the sourced rate 6 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; rests on an exception"
 1005,gun_rounds_per_gun,9999,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",,"assumption, not a fact: main-gun ammunition is treated as not limiting (decision 0023); 9999 is a marker, not an outfit"
 1005,gun_damage,6.333333,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:314 fits.csv:315 weapon_facts.csv:62,ship rows holding on the date but not read: fits.csv:131 (unconfirmed)
 1005,torpedo_tubes,4,count of the torpedo_tubes fit,fits.csv:378 fits.csv:379,
@@ -94,7 +94,7 @@ class_id,figure,value,rule,facts,note
 1006,endurance_nm,13300,"endurance_nm of the ship, else of its class",ship_class_facts.csv:702,
 1006,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1006,main_guns,8,count of the main_battery fit,fits.csv:370,
-1006,gun_rounds_per_min,3.5,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:370 weapon_facts.csv:426,
+1006,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:301 fits.csv:370 fits.csv:669 fits.csv:670 weapon_facts.csv:426,"rate in action (decision 0070): the lesser of the sourced rate 3.5 and the achieved rate 1.128571 of kind salvo, the median of 4 cases"
 1006,gun_rounds_per_gun,130,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:655,
 1006,gun_damage,19.35,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:370 weapon_facts.csv:263,
 1006,torpedo_tubes,8,count of the torpedo_tubes fit,fits.csv:388,rests on an exception
@@ -108,7 +108,7 @@ class_id,figure,value,rule,facts,note
 1007,endurance_nm,6080,"endurance_nm of the ship, else of its class",ship_class_facts.csv:862,
 1007,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1007,main_guns,4,count of the main_battery fit,fits.csv:217 fits.csv:330 fits.csv:331,
-1007,gun_rounds_per_min,15,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:217 fits.csv:330 fits.csv:331 weapon_facts.csv:424,
+1007,gun_rounds_per_min,2.444444,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_outcomes.csv:3146 engagement_outcomes.csv:3147 fits.csv:147 fits.csv:217 fits.csv:330 fits.csv:331 weapon_facts.csv:424,"rate in action (decision 0070): the lesser of the sourced rate 15 and the achieved rate 2.444444 of kind destroyer, the median of 1 case"
 1007,gun_rounds_per_gun,300,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:665,
 1007,gun_damage,4.166666,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:217 fits.csv:330 fits.csv:331 weapon_facts.csv:344,
 1007,torpedo_tubes,16,count of the torpedo_tubes fit,fits.csv:332 fits.csv:333 fits.csv:334,
@@ -122,7 +122,7 @@ class_id,figure,value,rule,facts,note
 1008,endurance_nm,6080,"endurance_nm of the ship, else of its class",ship_class_facts.csv:862,
 1008,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1008,main_guns,4,count of the main_battery fit,fits.csv:217 fits.csv:330 fits.csv:331,
-1008,gun_rounds_per_min,15,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:217 fits.csv:330 fits.csv:331 weapon_facts.csv:424,
+1008,gun_rounds_per_min,2.444444,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_outcomes.csv:3146 engagement_outcomes.csv:3147 fits.csv:147 fits.csv:217 fits.csv:330 fits.csv:331 weapon_facts.csv:424,"rate in action (decision 0070): the lesser of the sourced rate 15 and the achieved rate 2.444444 of kind destroyer, the median of 1 case"
 1008,gun_rounds_per_gun,300,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:665,
 1008,gun_damage,4.166666,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:217 fits.csv:330 fits.csv:331 weapon_facts.csv:344,
 1008,torpedo_tubes,16,count of the torpedo_tubes fit,fits.csv:332 fits.csv:333 fits.csv:334,
@@ -136,7 +136,7 @@ class_id,figure,value,rule,facts,note
 1009,endurance_nm,4860,"endurance_nm of the ship, else of its class",ship_class_facts.csv:869,
 1009,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1009,main_guns,4,count of the main_battery fit,fits.csv:221 fits.csv:335,
-1009,gun_rounds_per_min,15,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:221 fits.csv:335 weapon_facts.csv:424,
+1009,gun_rounds_per_min,2.444444,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_outcomes.csv:3146 engagement_outcomes.csv:3147 fits.csv:147 fits.csv:221 fits.csv:335 weapon_facts.csv:424,"rate in action (decision 0070): the lesser of the sourced rate 15 and the achieved rate 2.444444 of kind destroyer, the median of 1 case"
 1009,gun_rounds_per_gun,300,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:667,
 1009,gun_damage,4.166666,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:221 fits.csv:335 weapon_facts.csv:344,
 1009,torpedo_tubes,16,count of the torpedo_tubes fit,fits.csv:336 fits.csv:337,
@@ -150,7 +150,7 @@ class_id,figure,value,rule,facts,note
 1010,endurance_nm,6500,"endurance_nm of the ship, else of its class",ship_class_facts.csv:834,
 1010,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1010,main_guns,9,count of the main_battery fit,fits.csv:325 fits.csv:326,
-1010,gun_rounds_per_min,3,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:325 fits.csv:326 weapon_facts.csv:349,"designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
+1010,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:301 fits.csv:325 fits.csv:326 fits.csv:669 fits.csv:670 weapon_facts.csv:349,"rate in action (decision 0070): the lesser of the sourced rate 3 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
 1010,gun_rounds_per_gun,150,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:661,
 1010,gun_damage,19.65,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:325 fits.csv:326 weapon_facts.csv:350,
 1010,torpedo_tubes,0,count of the torpedo_tubes fit,fits.csv:319 fits.csv:320,
@@ -164,7 +164,7 @@ class_id,figure,value,rule,facts,note
 1011,endurance_nm,6500,"endurance_nm of the ship, else of its class",ship_class_facts.csv:834,
 1011,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1011,main_guns,9,count of the main_battery fit,fits.csv:322 fits.csv:323 fits.csv:324,
-1011,gun_rounds_per_min,3,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:322 fits.csv:323 fits.csv:324 weapon_facts.csv:349 weapon_facts.csv:358,"designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
+1011,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:301 fits.csv:322 fits.csv:323 fits.csv:324 fits.csv:669 fits.csv:670 weapon_facts.csv:349 weapon_facts.csv:358,"rate in action (decision 0070): the lesser of the sourced rate 3 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
 1011,gun_rounds_per_gun,150,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:661,
 1011,gun_damage,19.65,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:322 fits.csv:323 fits.csv:324 weapon_facts.csv:350 weapon_facts.csv:359,
 1011,torpedo_tubes,0,count of the torpedo_tubes fit,fits.csv:319 fits.csv:320,
@@ -178,7 +178,7 @@ class_id,figure,value,rule,facts,note
 1012,endurance_nm,7330,"endurance_nm of the ship, else of its class",ship_class_facts.csv:469,
 1012,cargo_capacity_t,0,fixed at 0: warships carry no cargo,,
 1012,main_guns,9,count of the main_battery fit,fits.csv:254,rests on an exception
-1012,gun_rounds_per_min,3,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",fits.csv:254 weapon_facts.csv:358,"designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
+1012,gun_rounds_per_min,1.128571,"rate_of_fire_practical_rpm of the main_battery weapon (rate_of_fire_rpm, a designed rate, is read only where the rules file names a row of it by exception)",engagement_events.csv:860 engagement_events.csv:863 engagement_outcomes.csv:1638 engagement_outcomes.csv:1704 engagement_outcomes.csv:2645 engagement_outcomes.csv:3131 engagement_outcomes.csv:3132 engagement_outcomes.csv:3138 engagement_outcomes.csv:3140 fits.csv:71 fits.csv:251 fits.csv:254 fits.csv:301 fits.csv:669 fits.csv:670 weapon_facts.csv:358,"rate in action (decision 0070): the lesser of the sourced rate 3 and the achieved rate 1.128571 of kind salvo, the median of 4 cases; designed rate, read by exception (rate_of_fire_rpm, not a practical rate)"
 1012,gun_rounds_per_gun,167,"main_rounds_per_gun of the ship, else of its class (9999 for a ship the list names as not limited by ammunition, when no row exists)",ship_class_facts.csv:657,
 1012,gun_damage,19.65,shell_weight_kg of the main_battery weapon / gun_shell_kg_per_damage,fits.csv:254 weapon_facts.csv:359,rests on an exception
 1012,torpedo_tubes,0,count of the torpedo_tubes fit,fits.csv:329,

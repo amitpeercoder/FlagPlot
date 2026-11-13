@@ -18,6 +18,7 @@ mod date;
 mod decimal;
 mod derive;
 mod experience;
+mod fire_rate;
 mod input;
 mod output;
 mod problem;
@@ -114,6 +115,7 @@ pub fn derive_with(
 
     let env = derive::Env::build(&data, list.date, &rules);
     problems.extend(env.exception_problems());
+    problems.extend(env.fire_rate_problems.iter().cloned());
     let needs = |name: &str, given: bool, wanted: bool| {
         (wanted && !given).then(|| {
             Problem::new(
@@ -199,6 +201,7 @@ pub fn derive_with(
         used: &used,
         aircraft: &aircraft_results,
         aircraft_used: &aircraft_used,
+        fire_rate: env.fire_rate.as_ref(),
     };
     let mut outputs = output::render(&context).map_err(|problem| vec![problem])?;
     if let Some(exp) = &list.experience {
