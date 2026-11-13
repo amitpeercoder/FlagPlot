@@ -6,7 +6,7 @@ A list kept by the architect of what is decided and not built, what is open, and
 
 Decided by the designer at the close, Nov 13, 2026 ("Reported only; repair first"; `docs/step2-spec.md`, "Decided by the designer", 16), in this order:
 
-1. Ship repair (decision 0069), being built, then ships out of action on the objectives scale (decision 0088, confirmed Nov 13, 2026: counted by the time a ship is away against a horizon; the name "out of the campaign" is dropped).
+1. Ship repair (decision 0069), built (scenario 20a), then ships out of action on the objectives scale (decision 0088, confirmed Nov 13, 2026: counted by the time a ship is away against a horizon; the name "out of the campaign" is dropped).
 2. The objectives scale set from the record: the points and levels of decision 0054.
 3. Land units and basic ground combat (decision 0066).
 
