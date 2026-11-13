@@ -90,7 +90,7 @@ fn every_scenario_exports_what_the_world_logged() {
         assert!(bytes.ends_with(b"\n"), "{scenario}: no trailing newline");
         let replay = parse(&bytes);
         assert_eq!(replay["format"], "flagplot-replay");
-        assert_eq!(replay["version"], 2);
+        assert_eq!(replay["version"], 3);
         assert_eq!(replay["scenario"]["path"], scenario.as_str());
 
         let mut loaded = Scenario::load(&Path::new(ROOT).join(&scenario)).expect("loads");
@@ -171,6 +171,7 @@ fn the_top_level_keys_come_in_the_documented_order() {
         "directions",
         "labels",
         "bases",
+        "aircraft_types",
         "initial",
         "orders",
         "events",
@@ -568,7 +569,7 @@ fn a_recorded_game_exports_with_the_hashes_it_saved() {
     let bytes = export("recorded", save, &[]);
     let replay = parse(&bytes);
     assert_eq!(replay["format"], "flagplot-replay");
-    assert_eq!(replay["version"], 2);
+    assert_eq!(replay["version"], 3);
     let title = replay["scenario"]["name"].as_str().expect("a title");
     assert!(title.ends_with(&format!("(saved game {save})")), "{title}");
     // The hashes are those the game saved.
@@ -583,4 +584,45 @@ fn a_recorded_game_exports_with_the_hashes_it_saved() {
         .collect();
     assert_eq!(hashes(&replay), saved_hashes);
     // `node viewer/check.js` is run on such a file by hand: no test runs node.
+}
+
+#[test]
+fn aircraft_types_carry_the_reach_every_rule_reads() {
+    use sim_core::orders::Reach;
+    for scenario in scenarios() {
+        let replay = parse(&export(
+            &format!("types-{}", stem(&scenario)),
+            &scenario,
+            &[],
+        ));
+        let loaded = Scenario::load(&Path::new(ROOT).join(&scenario)).expect("loads");
+        let ref_data = loaded.world.ref_data();
+        let types = replay["aircraft_types"].as_array().expect("a list");
+        assert_eq!(types.len(), ref_data.aircraft_types.len(), "{scenario}");
+        for (out, (id, aircraft)) in types.iter().zip(ref_data.aircraft_types.iter()) {
+            assert_eq!(out["id"], id.raw(), "{scenario}");
+            assert_eq!(out["name"], aircraft.name.as_str(), "{scenario}");
+            let figure = |key: &str| out[key].to_string();
+            let normal = ref_data.reach_nm(*id, Reach::Normal).to_string();
+            let extended = ref_data.reach_nm(*id, Reach::Extended).to_string();
+            assert_eq!(figure("strike_radius_nm"), normal, "{scenario}");
+            assert_eq!(figure("extended_reach_nm"), extended, "{scenario}");
+            let search = aircraft.search_range_nm.to_string();
+            assert_eq!(figure("search_range_nm"), search, "{scenario}");
+        }
+        // Every group names its type by number, and the number is listed.
+        for group in replay["initial"]["air_groups"]
+            .as_array()
+            .expect("a list")
+            .iter()
+            .chain(replay["final"]["air_groups"].as_array().expect("a list"))
+        {
+            let id = group["aircraft_type_id"].as_u64().expect("a type number");
+            assert!(
+                types.iter().any(|t| t["id"].as_u64() == Some(id)),
+                "{scenario}: group {} names type {id}, not listed",
+                group["id"]
+            );
+        }
+    }
 }
