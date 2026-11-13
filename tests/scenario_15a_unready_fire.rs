@@ -1268,13 +1268,15 @@ struct Pinned {
     events: usize,
 }
 
+// Remade on Nov 13, 2026 with tuning round 2 (surprised_target_factor 1.5 to
+// 2): A's hits in its free round rose; nothing else of the pin moved.
 const PINNED: Pinned = Pinned {
     way: Opening::AFreeRound,
     first_round: Some(1),
     rolls: 2,
     salvos: 15,
     b_gun_shots: 120,
-    hits_a: 38,
+    hits_a: 42,
     hits_b: 4,
     events: 74,
 };

@@ -1519,7 +1519,8 @@ mod tests {
         assert_eq!(figures.gun_hit_chance_day, Fixed::from_ratio(5, 100));
         assert_eq!(figures.torpedo_hit_chance_night, Fixed::from_ratio(4, 100));
         assert_eq!(figures.torpedo_hit_chance_day, Fixed::from_ratio(2, 100));
-        assert_eq!(figures.surprised_target_factor, Fixed::from_ratio(3, 2));
+        // 2 since tuning round 2 (docs/validation/tuning/r2-surprised-target-factor.md).
+        assert_eq!(figures.surprised_target_factor, Fixed::from_int(2));
         assert_eq!(figures.lit_target_factor, Fixed::from_int(2));
         assert_eq!(figures.gun_hit_flotation, Fixed::from_ratio(3, 4));
         assert_eq!(

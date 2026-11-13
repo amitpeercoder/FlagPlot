@@ -2,37 +2,37 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c4515e14fb3e3580  274 events
+day   1  hash fa960727bd1a7a58  282 events
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Northern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 1, stragglers: keep, keep 0; no home port
 task_force:4 "Yunagi" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Chokai": afloat in task_force:1; damage flotation 10.095437, fire 4.588835; all systems working; 805.00015 gun rounds, torpedoes gone; 2109.650711 t of fuel, 0 t of supply
-ship:2 "Aoba": afloat in task_force:1; damage flotation 2.351922, fire 0; all systems working; 483.00009 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
-ship:3 "Kako": afloat in task_force:1; damage flotation 5.736891, fire 0; all systems working; 483.00009 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
+ship:2 "Aoba": afloat in task_force:1; damage flotation 2.351922, fire 6.721795; torpedo mounts degraded; 483.00009 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
+ship:3 "Kako": afloat in task_force:1; damage flotation 5.736891, fire 0; main battery degraded; 533.785785 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
 ship:4 "Kinugasa": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 483.00009 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
 ship:5 "Furutaka": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 483.00009 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
 ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39838.00006 gun rounds, torpedoes gone; 664.898075 t of fuel, 0 t of supply
 ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59757.00009 gun rounds, torpedoes gone; 540.510569 t of fuel, 0 t of supply
 ship:8 "Yunagi": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 39996 gun rounds, torpedoes ready; 285.693518 t of fuel, 0 t of supply
 ship:9 "HMAS Canberra": SUNK; damage flotation 100, fire 23.136751; propulsion out, fire control degraded, main battery degraded, torpedo mounts degraded; 1040 gun rounds, torpedoes ready; 3400 t of fuel, 0 t of supply
-ship:10 "USS Chicago": afloat in task_force:2; damage flotation 59.937844, fire 17.382594; propulsion degraded, fire control degraded, main battery degraded; 1503 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
+ship:10 "USS Chicago": SUNK; damage flotation 100, fire 17.382594; propulsion degraded, fire control out, main battery degraded; 1503 gun rounds, torpedoes gone; 2987 t of fuel, 0 t of supply
 ship:11 "USS Patterson": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
 ship:12 "USS Bagley": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 1200 gun rounds, torpedoes ready; 506 t of fuel, 0 t of supply
-ship:13 "USS Vincennes": SUNK; damage flotation 100, fire 100; propulsion degraded, fire control out, main battery out; 1299.214308 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:14 "USS Quincy": SUNK; damage flotation 100, fire 31.6206; propulsion out, fire control degraded, main battery out; 1311.91073 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
-ship:15 "USS Astoria": SUNK; damage flotation 100, fire 27.445556; propulsion out, fire control out, main battery out; 1299.214306 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:13 "USS Vincennes": SUNK; damage flotation 100, fire 67.518834; propulsion out, main battery out; 1337.303577 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:14 "USS Quincy": SUNK; damage flotation 100, fire 36.8907; propulsion out, fire control out, main battery degraded; 1273.82146 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
+ship:15 "USS Astoria": SUNK; damage flotation 100, fire 59.066156; propulsion out, fire control out, main battery out; 1311.91073 gun rounds, torpedoes gone; 1900 t of fuel, 0 t of supply
 ship:16 "USS Helm": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 1077.7778 gun rounds, torpedoes gone; 506 t of fuel, 0 t of supply
 ship:17 "USS Wilson": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 1077.7778 gun rounds, torpedoes gone; 491 t of fuel, 0 t of supply
 base:1 "Rabaul" (Japanese) at (-5,-13): 0 t of supply in stock
 Allied contact:2 at (2,-5): 7 ships, cruiser, age 2 pulses
 Allied claims 0 enemy ships sunk at (2,-5), day 1 night
 Japanese contact:1 at (2,-5): 2 ships, destroyer, age 2 pulses
-Japanese claims 1 enemy ship sunk at (2,-5), day 1 night
+Japanese claims 2 enemy ships sunk at (2,-5), day 1 night
 Japanese claims 3 enemy ships sunk at (2,-5), day 1 night
 
 Result (the placeholder scale of decision 0054):
-Allied: 0 points (ships_sunk 0 = 0; ships_crippled 0 = 0), margin -16, decisive defeat
-Japanese: 16 points (ships_sunk 4 = 16; ships_crippled 0 = 0), margin 16, decisive victory
+Allied: 0 points (ships_sunk 0 = 0; ships_crippled 0 = 0), margin -20, decisive defeat
+Japanese: 20 points (ships_sunk 5 = 20; ships_crippled 0 = 0), margin 20, decisive victory
 History: Four Allied heavy cruisers were sunk for no Japanese ship lost that night: a decisive Japanese victory, though the transports the screen guarded were left untouched. (The architect's reading; not yet scored from the order-of-battle facts.)

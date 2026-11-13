@@ -808,12 +808,14 @@ struct Pinned {
     events: usize,
 }
 
+// Remade on Nov 13, 2026 with tuning round 2 (surprised_target_factor 1.5 to
+// 2): A's hits in its free round rose; nothing else of the pin moved.
 const PINNED: Pinned = Pinned {
     salvos: 15,
     b_torpedo_shots: 10,
     torpedo_hits_a: 1,
     torpedo_hits_b: 0,
-    hits_a: 38,
+    hits_a: 42,
     hits_b: 4,
     events: 74,
 };
