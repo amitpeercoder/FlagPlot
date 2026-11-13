@@ -1,0 +1,66 @@
+Scenario 20a: Ship repair, forward and at the yard
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 892d1f9c996ad91a  16 events
+day   2  hash 2e64873896fd85b0  9 events
+day   3  hash b0c3a8ad4c78bdd6  7 events
+day   4  hash 35ec1c35c68f0fb5  8 events
+day   5  hash 2e67e40b511126d7  5 events
+day   6  hash cf941b6ddec8201f  5 events
+day   7  hash 2681bf0838b53864  5 events
+day   8  hash aebbc7800c3a86be  5 events
+day   9  hash 19c26df316760dca  5 events
+day  10  hash 291cfc22dd92bed7  4 events
+day  11  hash a444d3734b801430  4 events
+day  12  hash 7d6514eacae4ec65  4 events
+day  13  hash a2d037171a68fd5e  4 events
+day  14  hash 406a9dcd228af963  4 events
+day  15  hash 585df0dd709d0184  4 events
+day  16  hash 17b6b15687397e61  4 events
+day  17  hash 8f5a092aa2dbb0c2  4 events
+day  18  hash 8bdf95f93938a96f  4 events
+day  19  hash 5c168d964b8b6cb8  4 events
+day  20  hash 18efc12fad8de80d  4 events
+day  21  hash da165b852f154bd6  4 events
+day  22  hash 59e918dda28f8f5b  4 events
+day  23  hash 7fd8980c5aa3bc8c  4 events
+day  24  hash ac6684bc08088de9  4 events
+day  25  hash ecebc349373a159a  4 events
+day  26  hash 3f7f755d9a29ac67  4 events
+day  27  hash 9f5eaea0a6c2cc00  4 events
+day  28  hash cee66025d1d608f5  4 events
+day  29  hash 15ba0a2c5081248e  4 events
+day  30  hash 22a04016d5420213  4 events
+day  31  hash bced013b084e92b4  4 events
+day  32  hash ff533d3b9f72a451  4 events
+day  33  hash 4e881dade5fb6f52  4 events
+day  34  hash d3f63b37c4a2b47f  4 events
+day  35  hash bafe25cbd5ef46c8  4 events
+day  36  hash f6ea04a60903aa8d  5 events
+day  37  hash 6764f4eb81f6a36e  4 events
+
+task_force:1 "Placeholder repair force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder repair force 2" (Allied): Idle at (4,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder repair force 3" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Placeholder repair force 4" (Allied): Arrived at (2,2); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:5 "Placeholder repair force 5" (Allied): Idle at (0,4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:6 "Placeholder repair force 6" (Allied): Idle at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:7 "Placeholder repair force 7" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; main battery out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder destroyer 4": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser 5": afloat in task_force:3, away at the yard; damage flotation 0, fire 0; propulsion out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder destroyer 6": afloat in task_force:4; damage flotation 0, fire 3; all systems working; 600 gun rounds, torpedoes ready; 490 t of fuel, 0 t of supply
+ship:7 "Placeholder destroyer 7": afloat in task_force:5; damage flotation 2, fire 3; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:8 "Placeholder destroyer 8": afloat in task_force:6; damage flotation 2, fire 3; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:9 "Placeholder cruiser 9": afloat in task_force:7; damage flotation 10, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder repair anchorage" (Allied) at (0,0): 0 t of supply in stock
+base:2 "Placeholder yard port" (Allied) at (4,0): 0 t of supply in stock
+base:3 "Placeholder bare anchorage" (Allied) at (0,4): 0 t of supply in stock
+base:4 "Placeholder enemy anchorage" (Japanese) at (8,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

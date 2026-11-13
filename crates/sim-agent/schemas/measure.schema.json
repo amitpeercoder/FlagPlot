@@ -1,11 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/measure",
-  "title": "measure: air distance, sea route, passage of a task force, air reach of an air group",
+  "title": "measure: air distance, sea route, passage of a task force, days at the yard of a task force, air reach of an air group",
   "oneOf": [
     { "$ref": "#/$defs/air_distance" },
     { "$ref": "#/$defs/sea_route" },
     { "$ref": "#/$defs/passage" },
+    { "$ref": "#/$defs/yard" },
     { "$ref": "#/$defs/air_reach" },
     { "$ref": "defs.schema.json#/$defs/not_known" }
   ],
@@ -151,6 +152,53 @@
             "fuel": { "type": "string" }
           }
         }
+      }
+    },
+    "yard": {
+      "description": "What a send_to_yard order given now would do (decision 0069), or, for a force already away, its port and the day it is back. order and refusal are the engine's own check of the order; null when the question was not asked of a game's engine. leaves is the coming day, the day an order given now is taken in; return_day is leaves plus days_away; returns_before_end is null when the last day is not known.",
+      "type": "object",
+      "required": [
+        "format", "version", "kind", "question", "task_force", "away", "order", "refusal",
+        "port", "passage_days", "ships", "days_away", "leaves", "return_day",
+        "returns_before_end", "last_day", "assumptions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 3 },
+        "kind": { "const": "measure" },
+        "question": { "const": "yard" },
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "away": { "type": "boolean" },
+        "order": { "oneOf": [{ "enum": ["accepted", "refused"] }, { "type": "null" }] },
+        "refusal": { "$ref": "defs.schema.json#/$defs/string_or_null" },
+        "port": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+        "passage_days": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "ships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "ship", "class", "flotation_damage", "systems_degraded", "systems_out",
+              "days_of_repair"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "class": { "type": "string" },
+              "flotation_damage": { "$ref": "defs.schema.json#/$defs/dec" },
+              "systems_degraded": { "type": "integer" },
+              "systems_out": { "type": "integer" },
+              "days_of_repair": { "$ref": "defs.schema.json#/$defs/count_or_null" }
+            }
+          }
+        },
+        "days_away": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "leaves": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "return_day": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "returns_before_end": { "type": ["boolean", "null"] },
+        "last_day": { "$ref": "defs.schema.json#/$defs/count_or_null" },
+        "assumptions": { "type": "string" }
       }
     },
     "air_reach": {

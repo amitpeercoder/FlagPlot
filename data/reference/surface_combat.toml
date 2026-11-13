@@ -143,6 +143,22 @@ unready_gun_share = "0.5"
 # the chance to hit (decision 0071).
 unready_torpedo_share = "0.5"
 
+# Repair (decision 0069). Placeholders: each rests on the section "The yard
+# function's figures from the record" of docs/decisions/0069-ship-repair.md,
+# which says that no row sizes the flotation points and that these were matched
+# to one pair of cases, Enterprise on 26 October (forward) and 24 August (yard).
+# Forward repair mends flotation damage only below this many points.
+forward_repair_max_flotation = "10"
+# The points a forward base must put into one degraded system to make it work.
+forward_repair_system_points = "10"
+# Days of yard repair for each point of flotation damage: not sized by any row.
+yard_days_per_flotation_point = "2"
+# Days for each system degraded: not sized by any row.
+yard_days_per_system_degraded = "5"
+# Days for each system out, not below the degraded figure: borne on by one case,
+# Saratoga's 50 days in the yard, and still a placeholder.
+yard_days_per_system_out = "30"
+
 # Which system a system hit lands on. Each table adds to 1.
 # [gun_system_hit]: placeholders (decision 0016). No row sizes any of the four
 # shares. Read in surface fights only.

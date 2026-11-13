@@ -258,7 +258,9 @@ pub fn initial(world: &sim_core::World) -> (Vec<ModelShip>, Vec<ModelGroup>, Vec
             let hex = match ship.location {
                 ShipLocation::TaskForce(force) => truth.task_forces[&force].position(),
                 ShipLocation::Port(base) => truth.bases[&base].hex,
-                ShipLocation::Sunk => Hex::new(0, 0),
+                // Off the map either way: the model only places ships afloat
+                // in a hex, and a ship at the yard flies nothing.
+                ShipLocation::Sunk | ShipLocation::Yard(_) => Hex::new(0, 0),
             };
             ModelShip {
                 id: ship.id.raw(),

@@ -87,7 +87,7 @@ It found two things hard:
 - **Target choice.** Ships are matched in order. Burning or nearer ships do not draw fire yet.
 - **Stage 4a2, agreed with the designer on Nov 10, 2026.** The single system track is replaced by named systems, each working, degraded or out, and each with one effect: propulsion (half speed, then dead in the water), fire control (hit chance and night sighting), main battery (guns out) and torpedo mounts (tubes out). Flotation and fire stay as tracks. Where a hit lands depends on the weapon, from a data table. A ship with propulsion damage slows its task force through the existing slowest-ship rule. A standing instruction, set with the rules of engagement, says what a force does with a cripple: keep it, detach it with an escort to its home port, or leave it. That needs the detach and home port orders the spec lists. It gets its own decision record.
 - **Towing and scuttling** a ship that is dead in the water, and a force moving away when it breaks off.
-- **Fire and flooding that grow or are fought,** repair, and ammunition resupply.
+- **Fire and flooding that grow or are fought,** repair *(built: decision 0069, Nov 13, 2026)*, and ammunition resupply.
 - **Armour, shell types and torpedo reliability.**
 - **Shore bombardment,** ships at anchor, and transports as targets.
 - **Real figures.** Hit chances and damage come from sources in step 2.

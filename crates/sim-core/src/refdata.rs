@@ -438,6 +438,20 @@ pub struct SurfaceCombatFigures {
     /// which its torpedoes are fired, when it was not ready as the fight
     /// began (decision 0071). From 0.1 to 1; at 1 the rule does nothing.
     pub unready_torpedo_share: Fixed,
+    /// Forward repair mends flotation damage only below this (decision 0069).
+    /// From 0 to 100.
+    pub forward_repair_max_flotation: Fixed,
+    /// The points a forward base must put into one degraded system to make it
+    /// work (decision 0069). Above 0.
+    pub forward_repair_system_points: Fixed,
+    /// Days of yard repair for each point of flotation damage (decision 0069).
+    /// Not negative.
+    pub yard_days_per_flotation_point: Fixed,
+    /// Days of yard repair for each system degraded. Not negative.
+    pub yard_days_per_system_degraded: Fixed,
+    /// Days of yard repair for each system out. Not negative and not below
+    /// `yard_days_per_system_degraded`.
+    pub yard_days_per_system_out: Fixed,
 }
 
 /// The least `unready_gun_share` and `unready_torpedo_share` may be (decisions
@@ -570,6 +584,42 @@ impl SurfaceCombatFigures {
             return Some(format!(
                 "surface combat unready torpedo share {} is not between 0.1 and 1",
                 self.unready_torpedo_share
+            ));
+        }
+        if self.forward_repair_max_flotation < Fixed::ZERO
+            || self.forward_repair_max_flotation > hundred
+        {
+            return Some(format!(
+                "surface combat forward repair max flotation {} is not between 0 and 100",
+                self.forward_repair_max_flotation
+            ));
+        }
+        if self.forward_repair_system_points <= Fixed::ZERO {
+            return Some(format!(
+                "surface combat forward repair system points {} is not above 0",
+                self.forward_repair_system_points
+            ));
+        }
+        let yard_days = [
+            (
+                "yard days per flotation point",
+                self.yard_days_per_flotation_point,
+            ),
+            (
+                "yard days per system degraded",
+                self.yard_days_per_system_degraded,
+            ),
+            ("yard days per system out", self.yard_days_per_system_out),
+        ];
+        for (label, value) in yard_days {
+            if value.is_negative() {
+                return Some(format!("surface combat {label} {value} is negative"));
+            }
+        }
+        if self.yard_days_per_system_out < self.yard_days_per_system_degraded {
+            return Some(format!(
+                "surface combat yard days per system out {} is below yard days per system degraded {}",
+                self.yard_days_per_system_out, self.yard_days_per_system_degraded
             ));
         }
         let levels = [
@@ -1124,6 +1174,11 @@ impl SurfaceCombatFigures {
             experience_sighting_strength: Fixed::ZERO,
             unready_gun_share: Fixed::ONE,
             unready_torpedo_share: Fixed::ONE,
+            forward_repair_max_flotation: Fixed::from_int(10),
+            forward_repair_system_points: Fixed::from_int(10),
+            yard_days_per_flotation_point: Fixed::from_int(2),
+            yard_days_per_system_degraded: Fixed::from_int(5),
+            yard_days_per_system_out: Fixed::from_int(30),
         }
     }
 }
@@ -1251,6 +1306,98 @@ mod tests {
             assert_eq!(edge.problem(), None);
             set(&mut edge, Fixed::ZERO);
             assert_eq!(edge.problem(), None);
+        }
+    }
+
+    #[test]
+    fn the_repair_figures_are_checked() {
+        let f = |n: i64| Fixed::from_int(n);
+        type Setter = fn(&mut SurfaceCombatFigures, Fixed);
+        let cases: [(&str, Setter, Fixed, bool); 12] = [
+            (
+                "max flotation",
+                |x, v| x.forward_repair_max_flotation = v,
+                f(0),
+                true,
+            ),
+            (
+                "max flotation",
+                |x, v| x.forward_repair_max_flotation = v,
+                f(100),
+                true,
+            ),
+            (
+                "max flotation",
+                |x, v| x.forward_repair_max_flotation = v,
+                f(-1),
+                false,
+            ),
+            (
+                "max flotation",
+                |x, v| x.forward_repair_max_flotation = v,
+                f(101),
+                false,
+            ),
+            (
+                "system points",
+                |x, v| x.forward_repair_system_points = v,
+                f(1),
+                true,
+            ),
+            (
+                "system points",
+                |x, v| x.forward_repair_system_points = v,
+                f(0),
+                false,
+            ),
+            (
+                "per flotation point",
+                |x, v| x.yard_days_per_flotation_point = v,
+                f(0),
+                true,
+            ),
+            (
+                "per flotation point",
+                |x, v| x.yard_days_per_flotation_point = v,
+                f(-1),
+                false,
+            ),
+            (
+                "per system degraded",
+                |x, v| x.yard_days_per_system_degraded = v,
+                f(-1),
+                false,
+            ),
+            (
+                "per system degraded",
+                |x, v| x.yard_days_per_system_degraded = v,
+                f(30),
+                true,
+            ),
+            (
+                "per system degraded",
+                |x, v| x.yard_days_per_system_degraded = v,
+                f(31),
+                false,
+            ),
+            (
+                "per system out",
+                |x, v| x.yard_days_per_system_out = v,
+                f(4),
+                false,
+            ),
+        ];
+        for (label, set, value, ok) in cases {
+            let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+            set(&mut figures, value);
+            let problem = figures.problem();
+            assert_eq!(problem.is_none(), ok, "{label} {value}: {problem:?}");
+            if let Some(problem) = problem {
+                assert!(
+                    problem.contains(label) || problem.contains("yard days per system"),
+                    "{problem}"
+                );
+            }
         }
     }
 

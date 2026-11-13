@@ -1,0 +1,278 @@
+# Scenario 20a: ship repair, forward at a base and in a yard off the map.
+#
+# Four anchorages, seven Allied task forces and nine damaged ships. Base 1
+# mends 6 points of damage a day; base 2 is a port for the yard (a passage of
+# 4 days); base 3 does neither; base 4 is the Japanese side's own. It proves
+# forward repair and the yard (decision 0069), and that the other side sees
+# nothing of either. No fatigue figures are named, no base has fuel or supply,
+# and there is no random draw. The hand calculation is in
+# tests/scenario_20a_ship_repair.rs.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Scenario 20a: Ship repair, forward and at the yard"
+placeholder = true
+seed = 1942
+days = 37
+map = "../map/placeholder_repair.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder repair anchorage"
+side = "allied"
+q = 0
+r = 0
+ship_repair_points_per_day = 6
+
+[[base]]
+id = 2
+name = "Placeholder yard port"
+side = "allied"
+q = 4
+r = 0
+yard_passage_days = 4
+
+[[base]]
+id = 3
+name = "Placeholder bare anchorage"
+side = "allied"
+q = 0
+r = 4
+
+[[base]]
+id = 4
+name = "Placeholder enemy anchorage"
+side = "japanese"
+q = 8
+r = 0
+ship_repair_points_per_day = 6
+yard_passage_days = 4
+
+[[task_force]]
+id = 1
+name = "Placeholder repair force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 2
+name = "Placeholder repair force 2"
+side = "allied"
+at_base = 2
+mission = "transport"
+readiness = "battle"
+fatigue = 40
+
+[[task_force]]
+id = 3
+name = "Placeholder repair force 3"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[task_force]]
+id = 4
+name = "Placeholder repair force 4"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[task_force]]
+id = 5
+name = "Placeholder repair force 5"
+side = "allied"
+at_base = 3
+mission = "transport"
+
+[[task_force]]
+id = 6
+name = "Placeholder repair force 6"
+side = "allied"
+at_base = 4
+mission = "transport"
+
+[[task_force]]
+id = 7
+name = "Placeholder repair force 7"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "4"
+flotation_damage = "6"
+task_force = 1
+fire_control = "degraded"
+main_battery = "out"
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 2"
+class = 2
+side = "allied"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "2.5"
+flotation_damage = "9.5"
+task_force = 1
+torpedo_mounts = "degraded"
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser 3"
+class = 1
+side = "allied"
+fuel_t = 1500
+gun_rounds = 500
+fire_damage = "7"
+flotation_damage = "12.5"
+task_force = 2
+fire_control = "degraded"
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 2
+side = "allied"
+fuel_t = 300
+gun_rounds = 200
+fire_damage = "6"
+flotation_damage = "3.25"
+task_force = 2
+torpedo_mounts = "degraded"
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser 5"
+class = 1
+side = "allied"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "0"
+flotation_damage = "0"
+task_force = 3
+propulsion = "out"
+
+[[ship]]
+id = 6
+name = "Placeholder destroyer 6"
+class = 2
+side = "allied"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "3"
+flotation_damage = "0"
+task_force = 4
+
+[[ship]]
+id = 7
+name = "Placeholder destroyer 7"
+class = 2
+side = "allied"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "3"
+flotation_damage = "2"
+task_force = 5
+
+[[ship]]
+id = 8
+name = "Placeholder destroyer 8"
+class = 2
+side = "allied"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "3"
+flotation_damage = "2"
+task_force = 6
+
+[[ship]]
+id = 9
+name = "Placeholder cruiser 9"
+class = 1
+side = "allied"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "1"
+flotation_damage = "10"
+task_force = 7
+propulsion = "degraded"
+
+# The Japanese side has no task force. It holds one contact at base 2's hex,
+# which nothing refreshes: it ages and is dropped (case F).
+[[contact]]
+side = "japanese"
+q = 4
+r = 0
+ship_count = 2
+kind = "cruiser"
+
+# Orders (case A).
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "send_to_yard"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 4
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 4
+kind = "set_route"
+waypoints = [[2, 2]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 4
+kind = "send_to_yard"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 6
+kind = "send_to_yard"
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 2
+kind = "send_to_yard"
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 2
+kind = "send_to_yard"
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 4
+kind = "send_to_yard"
+
+[[order]]
+day = 4
+side = "allied"
+task_force = 3
+kind = "send_to_yard"

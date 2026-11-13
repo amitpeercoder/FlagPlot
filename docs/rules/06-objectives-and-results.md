@@ -23,7 +23,7 @@ Each objective is a count of something the engine already records, taken for the
 | Kind | What it counts | Points |
 | --- | --- | --- |
 | `ships_sunk` | Enemy ships whose location is sunk, by kind of ship | For each kind of ship |
-| `ships_crippled` | Enemy ships not sunk (afloat or in port) with propulsion out or the flight deck out, by kind | For each kind of ship |
+| `ships_crippled` | Enemy ships not sunk (afloat, in port or at the yard) with propulsion out or the flight deck out, by kind | For each kind of ship |
 | `aircraft_destroyed` | Enemy aircraft lost for good, by any cause | For one aircraft |
 | `cargo_landed` | Tons of supply and fuel the side's own ships unloaded at a named base, less the tons they loaded there, never below 0 | For one ton |
 | `base_open` | The days on which a named base ended the day with supply above zero and at least one ready aircraft at it; with `closed = true`, the days on which it did not | For the base being so on every day. The points earned are these times the days counted over the days resolved |
@@ -31,6 +31,7 @@ Each objective is a count of something the engine already records, taken for the
 [0054]
 
 - **Enemy** means the other side from the ship's, or the air group's, side, whoever did the damage. A ship counts for the other side if it sank, whatever sank it. [0054]
+- **A ship at the yard is afloat.** A ship away at the yard (chapter 4, Repair) is not sunk and is counted as any ship not sunk, from the damage she left with, which does not change until she returns: at the end of the game one away with propulsion or the flight deck out counts as crippled, and one back from the yard counts as whole. Repair adds no objective. [0069]
 - **A ship sunk is not also crippled.** A ship that is degraded in propulsion or flight deck does not count as crippled. Only out counts. This is the glossary's crippled. Flotation damage of 50 or more, which counts toward break-off in a fight, is called heavily damaged and does not enter the objective. [0054]
 - **Aircraft destroyed** counts, through the side of the air group that lost them: aircraft shot down (`AircraftLost`), aircraft lost with a sunk ship, ready and damaged (`AirGroupLost`), ready and damaged aircraft destroyed on the ground (`AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`), aircraft written off by wear (`AircraftWorn`, the written off part only), aircraft that ran out of fuel on the way home (`AircraftDitched`, though no one claims them), and aircraft that came down in the sea for want of a deck (`AircraftDitchedNoDeck`). Aircraft that land elsewhere are not counted. It does not count the worn aircraft that are repaired later, pilots lost, or any event that adds aircraft. [0054, 0059]
 - **Cargo landed** is the tons in the `CargoUnloaded` events of ships of the side at the named base, less the tons in their `CargoLoaded` events at that base, supply and fuel together. Cargo put ashore and taken off again was not landed. A side that loads more there than it unloads has landed nothing: the count is never below 0. Loading at another base takes nothing from this one. Cargo destroyed ashore after it was landed still counts, and so does fuel landed and then taken as bunker fuel, which records `ShipRefuelled` and cannot be unloaded again. [0054, 0067]

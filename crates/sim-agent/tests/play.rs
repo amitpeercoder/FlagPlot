@@ -151,9 +151,10 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::DetachShips(_) => 7,
         TaskForceOrder::SetReadiness(_) => 8,
         TaskForceOrder::LoadFuel => 9,
+        TaskForceOrder::SendToYard => 10,
     }
 }
-const TF_KINDS: usize = 10;
+const TF_KINDS: usize = 11;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -212,6 +213,7 @@ fn examples() -> Vec<OrderKind> {
         ])),
         tf(TaskForceOrder::SetReadiness(Readiness::Battle)),
         tf(TaskForceOrder::SetReadiness(Readiness::Normal)),
+        tf(TaskForceOrder::SendToYard),
         ag(AirGroupOrder::SetSearchArc {
             from_deg: 90,
             to_deg: 180,

@@ -17,8 +17,8 @@
 //!   optionally within an area.
 //! * [`get_entity`]: everything the side knows of one unit or contact.
 //! * [`explain`]: an event as the side may see it and its visible causes.
-//! * [`measure`]: air distance, sea route, the passage of a task force and the
-//!   air reach of an air group, with the functions the rules use (decision
+//! * [`measure`]: air distance, sea route, the passage of a task force, its
+//!   days at the yard and the air reach of an air group, with the functions the rules use (decision
 //!   0049).
 //!
 //! Every answer serialises to JSON with `"format": "flagplot-agent"`,
@@ -43,11 +43,12 @@ mod words;
 pub use answer::{NotKnown, FORMAT, VERSION};
 pub use briefing::{briefing, briefing_for_game, Briefing};
 pub use briefing::{
-    ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, BriefingBase, Claim, ContactsPart,
-    DamagedShip, DroppedContact, DueArrival, Fight, Fired, FuelChange, FuelWarning, Heading,
-    LossesPart, NotThere, OrdersPart, OutOfReachWarning, PilotWarning, PropulsionWarning, Raid,
-    RefusedOrder, ReplacementStream, ReportedContact, ShipRangeWarning, StocksYesterday, Strike,
-    SunkShip, SupplyChange, SupplyWarning, SystemChange, TiredWarning, Warnings,
+    ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, AwayForce, BriefingBase, Claim,
+    ContactsPart, DamagedShip, DroppedContact, DueArrival, Fight, Fired, FuelChange, FuelWarning,
+    Heading, LossesPart, NotThere, OrdersPart, OutOfReachWarning, PilotWarning, PropulsionWarning,
+    Raid, RefusedOrder, RepairedShip, ReplacementStream, ReportedContact, ReturnedForce,
+    ShipRangeWarning, StocksYesterday, Strike, SunkShip, SupplyChange, SupplyWarning, SystemChange,
+    TiredWarning, Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{
@@ -55,8 +56,9 @@ pub use explain::{
 };
 pub use lines::{AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, PropulsionLine};
 pub use measure::{
-    measure, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer, Moment, Passage,
-    PassageSpeed, PlaceArg, Question, ReachLine, Resolved, SeaRoute, ShipFuel, SpeedArg,
+    measure, measure_in, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer,
+    MeasureContext, Moment, Passage, PassageSpeed, PlaceArg, Question, ReachLine, Resolved,
+    SeaRoute, ShipFuel, SpeedArg, Yard, YardCheck, YardShip,
 };
 pub use objectives::{
     result_part, KnownLine, LevelsPart, ObjectiveLine, ObjectivesPart, ResultPart, ScoreLine,

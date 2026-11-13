@@ -119,9 +119,16 @@ impl World {
         let day = self.truth.day + 1;
         let first_event = self.events.len();
 
-        // Fuel comes before the day's orders (decision 2 of 0045).
+        // Forces back from the yard are home first, so that they are at their
+        // base for the day's refuelling and orders (decision 0069). Fuel comes
+        // before the day's orders (decision 2 of 0045). Forward repair comes
+        // after them: a force sent to the yard leaves with the damage its
+        // order stated, and one ordered to sail that morning is not patched
+        // (decision 0069, 2).
+        self.return_from_yard(day);
         self.refuel_in_port(day);
         self.intake_orders(day);
+        self.repair_in_port(day);
 
         for pulse in Pulse::ALL {
             // Alert from belief comes before the pulse's first phase
@@ -340,8 +347,26 @@ impl World {
         // force round between two hexes changed its leg and maybe its
         // position, and an ordered detach names the new force.
         if let Some(follow_up) = follow_up {
-            self.events
-                .record(day, pulse, follow_up, vec![Cause::Order(id)], None);
+            // The yard order's follow-up carries a breakdown of the days away
+            // (decision 0069); no other follow-up has one.
+            let breakdown = self.yard_breakdown(&follow_up);
+            let departed = match &follow_up {
+                EventKind::ForceLeftForYard { task_force, .. } => Some(*task_force),
+                _ => None,
+            };
+            let follow_up_event =
+                self.events
+                    .record(day, pulse, follow_up, vec![Cause::Order(id)], breakdown);
+            if let Some(force) = departed {
+                if let Some(trip) = self
+                    .truth
+                    .task_forces
+                    .get_mut(&force)
+                    .and_then(|force| force.yard_trip.as_mut())
+                {
+                    trip.departure = follow_up_event;
+                }
+            }
         }
         self.orders.insert(id, order);
         (id, event, accepted)
@@ -436,8 +461,33 @@ impl World {
                 if task_force.side != order.side {
                     return Err(RejectReason::NotYourUnit);
                 }
+                // A force away at the yard takes no order, unless it is back
+                // by the order's day (decision 0069): the evening before its
+                // return `check_order` asks for the day after, and intake for
+                // the day itself, so one test serves both.
+                if task_force
+                    .yard_trip
+                    .is_some_and(|trip| trip.return_day > order.day_issued)
+                {
+                    return Err(RejectReason::AwayAtYard);
+                }
+                // A force back by then is checked as it will be: with the
+                // ships it has at the yard.
+                let ships_back;
+                let afloat = if task_force.yard_trip.is_some() {
+                    ships_back = self
+                        .truth
+                        .ships
+                        .values()
+                        .filter(|ship| ship.location == ShipLocation::Yard(*target))
+                        .map(|ship| ship.id)
+                        .collect::<BTreeSet<ShipId>>();
+                    &ships_back
+                } else {
+                    &task_force.ships
+                };
                 // A force whose every ship is sunk has nothing to order.
-                if task_force.ships.is_empty() {
+                if afloat.is_empty() {
                     return Err(RejectReason::NoShipAfloat);
                 }
                 match task_force_order {
@@ -485,13 +535,33 @@ impl World {
                             return Err(RejectReason::NoShipsToDetach);
                         }
                         for ship in ships {
-                            if !task_force.ships.contains(ship) {
+                            if !afloat.contains(ship) {
                                 return Err(RejectReason::ShipNotInTaskForce(*ship));
                             }
                         }
                         let listed: BTreeSet<ShipId> = ships.iter().copied().collect();
-                        if listed.len() == task_force.ships.len() {
+                        if listed.len() == afloat.len() {
                             return Err(RejectReason::WouldLeaveTaskForceEmpty);
+                        }
+                        Ok(())
+                    }
+                    TaskForceOrder::SendToYard => {
+                        // Decision 0069, in this order. A force stopped is
+                        // not under way and has no `toward_hex` (the
+                        // refuelling test, decision 0045).
+                        if task_force.status == TaskForceStatus::Underway
+                            || task_force.toward_hex.is_some()
+                        {
+                            return Err(RejectReason::UnderWay);
+                        }
+                        let own_base_here = self.truth.bases.values().any(|base| {
+                            base.side == order.side && base.hex == task_force.position()
+                        });
+                        if !own_base_here {
+                            return Err(RejectReason::NoOwnBaseHere);
+                        }
+                        if self.yard_port(task_force).is_none() {
+                            return Err(RejectReason::NotAYardPort);
                         }
                         Ok(())
                     }
@@ -684,6 +754,11 @@ impl World {
                         reason: DetachReason::Ordered,
                     });
                 }
+                if let TaskForceOrder::SendToYard = task_force_order {
+                    // The ships leave the force and the map; the caller
+                    // records the event and notes its number in the trip.
+                    return Some(self.send_force_to_yard(*target, order.day_issued));
+                }
                 let task_force = self
                     .truth
                     .task_forces
@@ -766,6 +841,9 @@ impl World {
                     }
                     TaskForceOrder::DetachShips(_) => {
                         unreachable!("detach orders are applied above")
+                    }
+                    TaskForceOrder::SendToYard => {
+                        unreachable!("yard orders are applied above")
                     }
                 }
                 follow_up

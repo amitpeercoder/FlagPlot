@@ -464,6 +464,17 @@ impl Briefing {
             if rules.fatigue {
                 s.push_str(&format!(", fatigue {}", f.fatigue.0));
             }
+            if f.status == "away_at_yard" {
+                // A force away has nothing of route, fuel or movement to
+                // say (decision 0069); its own part gives the day it is back.
+                o.line(format!(
+                    "{} at {}: away at the yard, {}",
+                    f.task_force.text(),
+                    at(&f.place),
+                    ships(f.ships_afloat)
+                ));
+                continue;
+            }
             s.push_str(&format!(", {} afloat", ships(f.ships_afloat)));
             match f.movement {
                 "cannot_move" => s.push_str(", CANNOT MOVE (propulsion out)"),
@@ -487,6 +498,25 @@ impl Briefing {
                     fuel.ship.text(),
                     fuel.fuel_t.0,
                     range
+                ));
+            }
+        }
+
+        if !self.away_at_yard.is_empty() {
+            o.heading("AWAY AT THE YARD");
+            for a in &self.away_at_yard {
+                let back = match (a.returns_before_end, a.last_day) {
+                    (Some(false), Some(last)) => {
+                        format!("does not return before the game ends (day {last} is the last)")
+                    }
+                    _ => format!("back on day {}", a.return_day),
+                };
+                o.line(format!(
+                    "{} at {}: {}, {}",
+                    a.task_force.text(),
+                    a.port.text(),
+                    names(&a.ships),
+                    back
                 ));
             }
         }
@@ -627,6 +657,39 @@ impl Briefing {
                 ));
             }
             stocks(&mut o);
+            for r in &b.returned_yesterday {
+                o.sub(format!(
+                    "Returned yesterday from the yard: {} with {}{}",
+                    r.task_force.text(),
+                    names(&r.ships),
+                    ev(r.event)
+                ));
+            }
+            if !b.repaired_yesterday.is_empty() {
+                o.sub("Ships repaired yesterday:".to_string());
+                for r in &b.repaired_yesterday {
+                    let left = |label: &str, list: &[&'static str]| -> String {
+                        if list.is_empty() {
+                            String::new()
+                        } else {
+                            let words: Vec<String> = list.iter().map(|w| plain(w)).collect();
+                            format!(", {label} {}", words.join(", "))
+                        }
+                    };
+                    o.0.push_str("    - ");
+                    o.0.push_str(&format!(
+                        "{}: {} points, fire damage {}, flotation damage {}{}{}{}{}\n",
+                        r.ship.text(),
+                        r.points.0,
+                        r.fire_damage.0,
+                        r.flotation_damage.0,
+                        left("restored:", &r.restored),
+                        left("still degraded:", &r.systems_degraded),
+                        left("still out:", &r.systems_out),
+                        ev(r.event)
+                    ));
+                }
+            }
         }
 
         o.heading("ARRIVALS");

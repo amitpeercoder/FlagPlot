@@ -32,7 +32,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Landed elsewhere** | Describes aircraft that were in the air when their own deck was lost and landed at another carrier or a base, joining or forming a group there (decision 0059) | Rebased |
 | **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius, or that found no deck to land on, and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
 | **Range** | How far an aircraft flies one way, as a sourced fact. Only the derivation tool reads it. The engine reads the radius columns, whose names say range (corrected against the code, which reads `search_range_nm`) | |
-| **Crippled** | A ship afloat, at sea or in port, whose propulsion or flight deck is out. The objective `ships_crippled` counts them; degraded does not count (decision 0054) | Heavily damaged; slowed |
+| **Crippled** | A ship afloat, at sea, in port or at the yard, whose propulsion or flight deck is out. The objective `ships_crippled` counts them; degraded does not count (decision 0054) | Heavily damaged; slowed |
 | **Heavily damaged** | A ship with flotation damage of `surface_combat.toml: crippled_flotation` (50) or more. It counts toward its force's break-off level and has no other effect. The figure, the break-off event's text and its breakdown factor still say crippled | Crippled |
 | **Straggler** | A ship whose propulsion is degraded or out. The straggler instruction acts on it | Heavily damaged |
 | **Degraded, out** | The two damaged states of a named system. Degraded halves what the system does; out stops it | |
@@ -100,6 +100,13 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Damage points** | What one hit adds to a ship's track: 100 times the weapon's damage over the target class's toughness | |
 | **Damage track** | One of a ship's two damage numbers, flotation and fire, each from 0 to 100 | |
 | **System hit** | A hit that also steps one of a ship's named systems down a level (decisions 0016 and 0033) | |
+| **Forward repair** | The staff's mending of ship damage at a base that has `ship_repair_points_per_day`, at the start of each day after the orders, for the forces of its side stopped there, with no order. It mends fire, then flotation below `forward_repair_max_flotation`, then degraded systems, and never a system that is out (decision 0069) | The yard; repair of aircraft; repair of a ship lying in port, which is not built |
+| **Bank** | A ship's `system_repair_points`: the points forward repair has put into her first degraded system and not finished, from 0 to below `forward_repair_system_points` (decision 0069) | The base's allowance for the day |
+| **Port for the yard** | A base with a `yard_passage_days`. A force stopped at one can be sent to the yard (decision 0069) | Any base |
+| **Days of repair** | One ship's days at the yard from her damage alone, no passage: the days for her flotation damage, her degraded systems and her systems out, rounded up to a whole day. Fire adds nothing (decision 0069) | The days away |
+| **Days away** | A force's days at the yard: the port's `yard_passage_days` plus the largest days of repair among its ships afloat (decision 0069) | One ship's days of repair |
+| **Day of return** | The day a force sent to the yard is back: the day the order is taken in plus the days away. It is back at the start of that day (decision 0069) | The last day away |
+| **Away at the yard** | Describes a force sent to the yard that has not yet returned. Its ships are afloat, off the map, with the damage they left with; it takes no order until its day of return (decision 0069) | Sunk; lying in port |
 | **Toughness** | A ship class's figure that divides a weapon's damage into damage points | |
 | **Lit** | Describes a ship with fire damage above 0 in a dark fight. It is easier to hit | |
 | **Surprised** | Describes a force that has not sighted the enemy in a round when the enemy has, and the enemy has shots to fire. It does not fire | |

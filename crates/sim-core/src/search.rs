@@ -1418,4 +1418,107 @@ mod tests {
             Some(BASE_HEX)
         );
     }
+
+    #[test]
+    fn a_group_aboard_a_ship_at_the_yard_flies_nothing_and_returns_as_it_was() {
+        use crate::orders::{OrderKind, TaskForceOrder};
+        use crate::state::Base;
+        let mut world = carrier_world(1);
+        world.ref_data.surface_combat =
+            Some(crate::refdata::SurfaceCombatFigures::from_surface_combat_toml());
+        // A port for the yard under the carrier, a passage of 1 day: the
+        // carrier is undamaged, so she is away for 1 day, sent on day 1 and
+        // back on day 2.
+        world.truth.bases.insert(
+            BaseId::new(2),
+            Base {
+                yard_passage_days: Some(1),
+                ..Base::new(
+                    BaseId::new(2),
+                    "Yard port".to_string(),
+                    Side::Allied,
+                    Hex::new(3, 0),
+                )
+            },
+        );
+        // An arrival due on day 1 is not delivered to a group away.
+        world.truth.arrivals.push(crate::state::Arrival {
+            day: 1,
+            air_group: GROUP,
+            aircraft: 2,
+            pilots: 0,
+        });
+        world
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .damaged = 1;
+        world.submit_orders(
+            Side::Allied,
+            vec![OrderRequest {
+                kind: OrderKind::TaskForce {
+                    target: TaskForceId::new(5),
+                    order: TaskForceOrder::SendToYard,
+                },
+                origin: Origin::PLAYER,
+            }],
+        );
+        resolve_days(&mut world, 1);
+        assert_eq!(
+            world.truth.ships[&ShipId::new(1)].location,
+            ShipLocation::Yard(TaskForceId::new(5))
+        );
+        // The group is somewhere with no hex, which is not "lost".
+        let group = &world.truth.air_groups[&GROUP];
+        assert_eq!(world.truth.air_group_hex(group), None);
+        assert!(world.truth.air_group_at_yard(group));
+        // It flew nothing, was not repaired, got no arrival, and the
+        // order checks do not call it lost.
+        assert!(flown(&world).is_empty());
+        assert_eq!((group.ready, group.damaged, group.strength), (4, 1, 4));
+        assert!(!world
+            .events()
+            .iter()
+            .any(|e| matches!(e.kind, EventKind::AircraftArrived { .. })));
+        assert!(!world
+            .events()
+            .iter()
+            .any(|e| matches!(e.kind, EventKind::AirGroupLost { .. })));
+        assert_eq!(
+            world.check_order(
+                Side::Allied,
+                &OrderRequest {
+                    kind: OrderKind::AirGroup {
+                        target: GROUP,
+                        order: AirGroupOrder::SetAirMission(AirMission::Search),
+                    },
+                    origin: Origin::PLAYER,
+                }
+            ),
+            Ok(())
+        );
+        // Back on day 2: the carrier is on the map again and the group flies
+        // from where she lies, with the aircraft it had.
+        resolve_days(&mut world, 1);
+        assert_eq!(
+            world.truth.ships[&ShipId::new(1)].location,
+            ShipLocation::TaskForce(TaskForceId::new(5))
+        );
+        let flights = flown(&world);
+        assert_eq!(flights.len(), 2);
+        assert!(flights.iter().all(|e| e.day == 2));
+        for flight in &flights {
+            assert!(matches!(
+                flight.kind,
+                EventKind::SearchFlown {
+                    hex,
+                    aircraft: 4,
+                    ..
+                } if hex == Hex::new(3, 0)
+            ));
+        }
+        let group = &world.truth.air_groups[&GROUP];
+        assert_eq!((group.ready, group.damaged, group.strength), (4, 1, 4));
+    }
 }

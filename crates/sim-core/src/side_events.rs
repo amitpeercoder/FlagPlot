@@ -476,11 +476,13 @@ pub(crate) struct Owners {
     pub(crate) air_groups: BTreeMap<AirGroupId, Side>,
     pub(crate) bases: BTreeMap<BaseId, Side>,
     pub(crate) orders: BTreeMap<OrderId, Side>,
-    /// The task forces with no ship. A force emptied is never removed and
-    /// never given a ship again, so a force here was emptied once, and for a
-    /// fight that ended in a force with no ship afloat, whether the side's
-    /// own force was the one is read from this and the log (decision 0085,
-    /// F5).
+    /// The task forces with no ship that are not away at the yard. A force
+    /// emptied by sinking is never removed and never given a ship again, so a
+    /// force here was emptied once, and for a fight that ended in a force
+    /// with no ship afloat, whether the side's own force was the one is read
+    /// from this and the log (decision 0085, F5). A force away at the yard
+    /// has no ship either but is not sunk, and is given its ships again on
+    /// its day of return (decision 0069), so it is left out.
     pub(crate) emptied_forces: BTreeSet<TaskForceId>,
     /// Minutes in a round of a surface fight, from the reference data's
     /// surface combat figures (0 without them, when there are no fights).
@@ -499,7 +501,7 @@ impl Owners {
             emptied_forces: truth
                 .task_forces
                 .iter()
-                .filter(|(_, f)| f.ships.is_empty())
+                .filter(|(_, f)| f.ships.is_empty() && f.yard_trip.is_none())
                 .map(|(id, _)| *id)
                 .collect(),
             round_minutes,
@@ -582,7 +584,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::ForceStoodDown { task_force }
         | EventKind::ForceAlertedByContact { task_force, .. }
         | EventKind::ForceBecameAlert { task_force, .. }
-        | EventKind::ForceBrokeOff { task_force, .. } => whole_if(own_force(task_force)),
+        | EventKind::ForceBrokeOff { task_force, .. }
+        // Away at the yard and back: the side's own, never shown to the enemy
+        // (decision 0069, 9).
+        | EventKind::ForceLeftForYard { task_force, .. }
+        | EventKind::ForceReturnedFromYard { task_force, .. } => whole_if(own_force(task_force)),
         // The force surprised, without the one that surprised it.
         EventKind::ForceSurprised {
             round, task_force, ..
@@ -622,6 +628,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // Ships.
         EventKind::FuelBurned { ship, .. }
         | EventKind::ShipRefuelled { ship, .. }
+        | EventKind::ShipRepaired { ship, .. }
         | EventKind::CargoLoaded { ship, .. }
         | EventKind::CargoUnloaded { ship, .. }
         | EventKind::ShipDamaged { ship, .. }
@@ -1395,6 +1402,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::TaskForceFatigue { .. }
         | EventKind::TaskForceTurnedBack { .. }
         | EventKind::ShipRefuelled { .. }
+        | EventKind::ShipRepaired { .. }
+        | EventKind::ForceLeftForYard { .. }
+        | EventKind::ForceReturnedFromYard { .. }
         | EventKind::AircraftDitched { .. }
         | EventKind::AircraftLandedElsewhere { .. }
         | EventKind::AircraftDitchedNoDeck { .. }
@@ -1591,7 +1601,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 64 kinds ----
+    // ---- the table of the 67 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -2418,6 +2428,41 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            row(
+                EventKind::ShipRepaired {
+                    ship: ship(1),
+                    task_force: force(1),
+                    base: base(1),
+                    points: fx(6),
+                    fire_damage: fx(0),
+                    flotation_damage: fx(4),
+                    restored: vec![crate::state::ShipSystem::FireControl],
+                    system_repair_points: fx(2),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::ForceLeftForYard {
+                    task_force: force(1),
+                    base: base(1),
+                    passage_days: 4,
+                    ships: vec![(ship(1), 30)],
+                    days_away: 34,
+                    return_day: 36,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::ForceReturnedFromYard {
+                    task_force: force(1),
+                    base: base(1),
+                    ships: vec![ship(1)],
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -2458,7 +2503,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 64, "the log has 64 kinds of event");
+        assert_eq!(all.len(), 67, "the log has 67 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -3494,6 +3539,82 @@ mod tests {
         // The enemy is told the other way: its force broke nothing off.
         let japanese = project(Side::Japanese, &events, &owners(false));
         assert_eq!(ending_of(&japanese), SideEndReason::ContactLost);
+    }
+
+    #[test]
+    fn a_force_that_lost_a_ship_and_is_away_at_the_yard_is_not_told_its_force_was_sunk() {
+        use crate::state::{TaskForce, TruthState, YardTrip};
+        // Allied force 1 loses its ship 1 in round 1 of the fight; Japanese
+        // force 2 loses its only ship 2 and the fight ends force-sunk by that
+        // loss. Allied force 1 was left with ships and has since left for the
+        // yard, so it has none now, but it is not sunk.
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            salvo(1, 2, 1),
+            sunk(1, 1, 1),
+            salvo(1, 1, 2),
+            sunk(1, 2, 2),
+            ended(1, EngagementEndReason::ForceSunk),
+        ]);
+        let mut truth = TruthState::default();
+        for (n, side) in [(1, Side::Allied), (2, Side::Japanese)] {
+            truth.task_forces.insert(
+                force(n),
+                TaskForce::at(
+                    force(n),
+                    format!("Force {n}"),
+                    side,
+                    hex(),
+                    crate::orders::Mission::SurfaceCombat,
+                ),
+            );
+        }
+        for (n, side) in [(1, Side::Allied), (2, Side::Japanese)] {
+            truth.ships.insert(
+                ship(n),
+                crate::state::Ship::new(
+                    ship(n),
+                    format!("Ship {n}"),
+                    crate::ids::ShipClassId::new(1),
+                    side,
+                    crate::state::ShipLocation::Sunk,
+                ),
+            );
+        }
+        let orders = BTreeMap::new();
+        // Before it leaves, with no ship, the Allied force would be read as
+        // emptied and told its force was sunk.
+        let emptied = Owners::from_state(&truth, &orders, 5);
+        assert!(emptied.emptied_forces.contains(&force(1)));
+        assert_eq!(
+            ending_of(&project(Side::Allied, &events, &emptied)),
+            SideEndReason::ForceSunk
+        );
+        // Away at the yard, it is not emptied: its own true reason is the one
+        // a side that lost nothing of that force is told.
+        truth
+            .task_forces
+            .get_mut(&force(1))
+            .expect("force")
+            .yard_trip = Some(YardTrip {
+            base: base(1),
+            return_day: 30,
+            departure: EventId::new(1),
+        });
+        let away = Owners::from_state(&truth, &orders, 5);
+        assert!(!away.emptied_forces.contains(&force(1)));
+        assert!(away.emptied_forces.contains(&force(2)));
+        assert_eq!(
+            ending_of(&project(Side::Allied, &events, &away)),
+            SideEndReason::ContactLost
+        );
+        // The Japanese side, whose force was emptied for good, is still told
+        // its force was sunk.
+        assert_eq!(
+            ending_of(&project(Side::Japanese, &events, &away)),
+            SideEndReason::ForceSunk
+        );
     }
 
     #[test]

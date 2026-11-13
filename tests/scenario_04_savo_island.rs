@@ -1355,6 +1355,7 @@ fn every_ship_is_in_exactly_one_task_force_or_sunk() {
                 }
                 ShipLocation::Sunk => assert!(holders.is_empty(), "seed {seed}: ship {id}"),
                 ShipLocation::Port(_) => panic!("seed {seed}: ship {id} in port"),
+                ShipLocation::Yard(_) => panic!("seed {seed}: ship {id} at the yard"),
             }
         }
     }

@@ -128,6 +128,8 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::AirGroupLost => base("air_group_lost"),
         RejectReason::TargetListEmpty => base("target_list_empty"),
         RejectReason::OutOfFuel => base("out_of_fuel"),
+        RejectReason::AwayAtYard => base("away_at_yard"),
+        RejectReason::NotAYardPort => base("not_a_yard_port"),
         RejectReason::TargetKindRepeated(kind) => {
             base("target_kind_repeated").text("kind", kind.name())
         }
@@ -1002,6 +1004,68 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .hex("toward", *toward)
                 .num("progress_nm", *progress_nm)
                 .hex("position", *position),
+        ),
+        EventKind::ShipRepaired {
+            ship,
+            task_force,
+            base,
+            points,
+            fire_damage,
+            flotation_damage,
+            restored,
+            system_repair_points,
+        } => (
+            "ship_repaired",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .id("base", *base)
+                .num("points", *points)
+                .num("fire_damage", *fire_damage)
+                .num("flotation_damage", *flotation_damage)
+                .with(
+                    "restored",
+                    Field::Texts(
+                        restored
+                            .iter()
+                            .map(|system| names::system(*system))
+                            .collect(),
+                    ),
+                )
+                .num("system_repair_points", *system_repair_points),
+        ),
+        EventKind::ForceLeftForYard {
+            task_force,
+            base,
+            passage_days,
+            ships,
+            days_away,
+            return_day,
+        } => (
+            "force_left_for_yard",
+            d.id("task_force", *task_force)
+                .id("base", *base)
+                .int("passage_days", *passage_days)
+                // The ships and, in the same order, each one's days of repair.
+                .with(
+                    "ships",
+                    Field::Ids(ships.iter().map(|(ship, _)| ship.raw()).collect()),
+                )
+                .with(
+                    "days_of_repair",
+                    Field::Ids(ships.iter().map(|(_, days)| *days).collect()),
+                )
+                .int("days_away", *days_away)
+                .int("return_day", *return_day),
+        ),
+        EventKind::ForceReturnedFromYard {
+            task_force,
+            base,
+            ships,
+        } => (
+            "force_returned_from_yard",
+            d.id("task_force", *task_force)
+                .id("base", *base)
+                .ids("ships", ships),
         ),
         EventKind::BaseAtDayEnd {
             base,

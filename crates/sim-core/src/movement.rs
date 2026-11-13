@@ -1103,7 +1103,15 @@ pub(crate) fn forecast_passage(
 
     // Intake, as `validate_order` and `apply_order` make it.
     let waypoints = [destination];
-    let refusal = if task_force.ships.is_empty() {
+    let refusal = if task_force
+        .yard_trip
+        .is_some_and(|trip| trip.return_day > first_day)
+    {
+        // A force away at the yard takes no order (decision 0069); one back
+        // by `first_day` has no ships in the state yet and is refused as a
+        // force with none.
+        Some(RejectReason::AwayAtYard)
+    } else if task_force.ships.is_empty() {
         Some(RejectReason::NoShipAfloat)
     } else if task_force.status == TaskForceStatus::OutOfFuel {
         Some(RejectReason::OutOfFuel)

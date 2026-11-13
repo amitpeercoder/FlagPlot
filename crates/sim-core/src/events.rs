@@ -885,6 +885,41 @@ pub enum EventKind {
         supply_t: Fixed,
         aircraft_ready: u32,
     },
+    /// A forward repair base mended a ship that day (decision 0069): `points`
+    /// were spent on her, in the order fire, flotation, then the first
+    /// degraded system. `fire_damage` and `flotation_damage` are what she has
+    /// afterwards, `restored` the systems put back to working that day (in
+    /// system order) and `system_repair_points` the points banked in the
+    /// system still being mended.
+    ShipRepaired {
+        ship: ShipId,
+        task_force: TaskForceId,
+        base: BaseId,
+        points: Fixed,
+        fire_damage: Fixed,
+        flotation_damage: Fixed,
+        restored: Vec<ShipSystem>,
+        system_repair_points: Fixed,
+    },
+    /// A task force left for the yard by order (decision 0069): `ships` are
+    /// the ships afloat in number order, each with her days of repair,
+    /// `passage_days` the base's passage, `days_away` the passage plus the
+    /// largest days of repair and `return_day` the day it is back.
+    ForceLeftForYard {
+        task_force: TaskForceId,
+        base: BaseId,
+        passage_days: u32,
+        ships: Vec<(ShipId, u32)>,
+        days_away: u32,
+        return_day: u32,
+    },
+    /// A task force came back from the yard at the start of its day of
+    /// return, its ships repaired, refuelled and rearmed (decision 0069).
+    ForceReturnedFromYard {
+        task_force: TaskForceId,
+        base: BaseId,
+        ships: Vec<ShipId>,
+    },
 }
 
 impl EventKind {
@@ -1119,6 +1154,35 @@ impl EventKind {
                 EntityRef::TaskForce(*by_a),
                 EntityRef::TaskForce(*by_b),
             ],
+            EventKind::ShipRepaired {
+                ship,
+                task_force,
+                base,
+                ..
+            } => vec![
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Base(*base),
+            ],
+            EventKind::ForceLeftForYard {
+                task_force,
+                base,
+                ships,
+                ..
+            } => {
+                let mut entities = vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)];
+                entities.extend(ships.iter().map(|(ship, _)| EntityRef::Ship(*ship)));
+                entities
+            }
+            EventKind::ForceReturnedFromYard {
+                task_force,
+                base,
+                ships,
+            } => {
+                let mut entities = vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)];
+                entities.extend(ships.iter().map(|ship| EntityRef::Ship(*ship)));
+                entities
+            }
         }
     }
 }
@@ -1897,6 +1961,56 @@ impl fmt::Display for EventKind {
                     "not open"
                 }
             ),
+            EventKind::ShipRepaired {
+                ship,
+                base,
+                points,
+                fire_damage,
+                flotation_damage,
+                restored,
+                ..
+            } => {
+                write!(
+                    f,
+                    "{ship} repaired {points} points at {base}: fire {fire_damage}, flotation {flotation_damage}"
+                )?;
+                if !restored.is_empty() {
+                    let names: Vec<&str> = restored.iter().map(|system| system.name()).collect();
+                    write!(f, ", {} working", names.join(" and "))?;
+                }
+                Ok(())
+            }
+            EventKind::ForceLeftForYard {
+                task_force,
+                base,
+                passage_days,
+                ships,
+                return_day,
+                ..
+            } => {
+                write!(f, "{task_force} left {base} for the yard: ")?;
+                for (index, (ship, days)) in ships.iter().enumerate() {
+                    if index > 0 {
+                        f.write_str(", ")?;
+                    }
+                    write!(f, "{ship} {days} days")?;
+                }
+                write!(f, ", passage {passage_days}, back on day {return_day}")
+            }
+            EventKind::ForceReturnedFromYard {
+                task_force,
+                base,
+                ships,
+            } => {
+                write!(f, "{task_force} back at {base} from the yard, ")?;
+                for (index, ship) in ships.iter().enumerate() {
+                    if index > 0 {
+                        f.write_str(if index + 1 == ships.len() { " and " } else { ", " })?;
+                    }
+                    write!(f, "{ship}")?;
+                }
+                f.write_str(" repaired, refuelled and rearmed")
+            }
         }
     }
 }
