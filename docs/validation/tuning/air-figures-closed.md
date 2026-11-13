@@ -1,6 +1,6 @@
 # The air figures: where each stands
 
-Nov 13, 2026, after Rabaul round 3. This page lists every air figure with its value and what it rests on, and every named miss of the air battles with where it is recorded. It is a summary: the round records it names are the source, and a figure that moves changes its row here.
+Nov 13, 2026, after Rabaul round 3 and air round 5. This page lists every air figure with its value and what it rests on, and every named miss of the air battles with where it is recorded. It is a summary: the round records it names are the source, and a figure that moves changes its row here.
 
 **What each status means:**
 - **Sized from rows.** A round set the value from fact rows, with the rows and the assumptions named.
@@ -24,7 +24,7 @@ The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked o
 | `fighter_hit_chance` | 0.3 | Placeholder. Looked at, not moved: no row sizes it | `r3-fighter-hit-chance.md` |
 | `pilot_armour_factor` | 0.75 | Placeholder. Not moved: no source | `r3-fighter-hit-chance.md`, `r3-us-losses-named-misses.md` |
 | `self_sealing_tanks_factor` | 0.75 | Placeholder. Not moved: no source | the same |
-| `anti_aircraft_hit_chance` | 0.05 | Placeholder. Round 3 left it to "the next round", and no round has looked at it since | `r3-fighter-hit-chance.md` |
+| `anti_aircraft_hit_chance` | 0.05 | Placeholder. Looked at, not moved, in a round written from numbers already in hand, with no grid. The guns' share of the kills over the Enterprise force, about 43%, is consistent with the one weak row (3953, about half, Coral Sea, low); no row sizes the chance | `r5-anti-aircraft-hit-chance.md` |
 | `anti_aircraft_false_claim_chance` | 0.05 | Placeholder, bounded: left at the low end of what the rows give for the Eastern Solomons' ships' guns (255; 215 and others) | `r4-claims.md` |
 | `bomb_false_claim_chance` | 0.1 | Placeholder. One figure carries two kinds of claim that the record prices differently: about 1 per hit on ships, 20 or more per aircraft on the ground. No judged measure reads it | `r4-claims.md` |
 | `patrol_before_attack_share` | 0.4 | Placeholder, bounded: 0.22 to 0.61 (3979 to 3981). It was set inside that range before any result was read, and may move only inside it | Decision 0087 |
@@ -97,7 +97,12 @@ These are scenario figures, set in `data/scenarios/06_rabaul_guadalcanal.toml` a
 
 For repair, replacement and supply, `docs/research/oob/outside-research-nov-13.md` ("What each slow figure now has") records what was looked for: repair time, none, only that major repair went to Australia; pilots, nothing that sizes replacement; supply, US fuel only.
 
-`search.toml` is read by the surface battles and the air battles alike. None of its figures is air-only, and no air round has touched it.
+`search.toml` is read by the surface battles and the air battles alike. None of its figures is air-only, and **none of them had a tuning round.** Finding and searching were set otherwise:
+- the Japanese search at the Eastern Solomons, from the record (decision 0073);
+- each aircraft type's own search radius (decision 0075);
+- finding and surprise in the surface fight, by round 0 (`r0-finding-and-surprise.md`), on the figures of `surface_combat.toml`.
+
+The figures of reports and contacts in `search.toml` stay placeholders.
 
 ## Named misses of the air battles
 
