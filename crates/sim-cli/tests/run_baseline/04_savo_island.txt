@@ -2,7 +2,7 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 14d2cad7e9647819  249 events
+day   1  hash 0d5d6d45f49430a2  250 events
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -11,7 +11,7 @@ task_force:4 "Eighth Fleet striking force, sent home" (Japanese): Underway at (0
 ship:1 "Chokai": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 917.85725 gun rounds, torpedoes gone; 2109.650711 t of fuel, 0 t of supply
 ship:2 "Aoba": afloat in task_force:4; damage flotation 5.545834, fire 0; propulsion degraded; 550.71435 gun rounds, torpedoes gone; 1790.81546 t of fuel, 0 t of supply
 ship:3 "Kako": afloat in task_force:1; damage flotation 5.736891, fire 0; all systems working; 550.71435 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
-ship:4 "Kinugasa": afloat in task_force:1; damage flotation 3.527883, fire 1.175961; all systems working; 550.71435 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
+ship:4 "Kinugasa": afloat in task_force:1; damage flotation 2.351922, fire 3.527883; all systems working; 550.71435 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
 ship:5 "Furutaka": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 550.71435 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
 ship:6 "Tenryu": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 39883.1429 gun rounds, torpedoes gone; 664.898075 t of fuel, 0 t of supply
 ship:7 "Yubari": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 59824.71435 gun rounds, torpedoes gone; 540.510569 t of fuel, 0 t of supply
