@@ -404,14 +404,15 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["by", "against", "weapon", "attacks", "aircraft"],
+            "required": ["by", "against", "weapon", "attacks", "aircraft", "events"],
             "additionalProperties": false,
             "properties": {
               "by": { "enum": ["ship", "aircraft"] },
               "against": { "$ref": "defs.schema.json#/$defs/handle" },
               "weapon": { "$ref": "#/$defs/weapon_or_null" },
               "attacks": { "type": "integer" },
-              "aircraft": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+              "aircraft": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "events": { "$ref": "defs.schema.json#/$defs/event_numbers" }
             }
           }
         }

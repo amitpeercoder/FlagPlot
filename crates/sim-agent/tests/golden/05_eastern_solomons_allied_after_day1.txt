@@ -61,7 +61,7 @@ ACTION YESTERDAY
 - Air attack: air_group:10 "VMSB-232", 10 aircraft, bombs [event 40]
   - Report: refreshed contact contact:1, 4 ships estimated, taken for cruiser, at (7,-9) [event 49]
 - Raid on base:1 "Henderson Field": 6 aircraft attacked, 0 hits, 0 on aircraft, 0 on supply, 0 on nothing [event 43]
-- Attack on ship:1 "USS Enterprise" from the air: 27 aircraft, 2 attacks
+- Attack on ship:1 "USS Enterprise" from the air: 27 aircraft, 2 attacks [events 41, 42]
 
 LOSSES YESTERDAY
 - Ships sunk: none
@@ -102,7 +102,7 @@ AIR GROUPS
 - air_group:11 "VT-3 landed at base:1" (Grumman TBF-1 Avenger) at base:1 "Henderson Field" (2,-4): 14 ready, radius 190 miles, search range 190 miles, mission rest
 
 BASES
-- base:1 "Henderson Field" at (2,-4): fuel 0 t
+- base:1 "Henderson Field" at (2,-4): fuel 0 t (for ships; aircraft do not use it)
 
 ARRIVALS
 - Arrivals due on the coming day and the next two days: none
@@ -114,5 +114,6 @@ WARNINGS
 - Bases without fuel and a force stopped there: none
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
+- Aircraft wear: not in play
 - Task forces that cannot move or are slowed: none
 - Strike groups with nothing in reach: none

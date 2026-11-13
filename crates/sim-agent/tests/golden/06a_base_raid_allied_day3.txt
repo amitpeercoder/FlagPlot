@@ -47,7 +47,7 @@ AIR GROUPS
 - air_group:3 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, radius 0 miles, search range 300 miles, mission search
 
 BASES
-- base:2 "Placeholder airfield B" at (5,0): fuel 0 t
+- base:2 "Placeholder airfield B" at (5,0): fuel 0 t (for ships; aircraft do not use it)
 
 ARRIVALS
 - Arrivals due on the coming day and the next two days: none
@@ -59,5 +59,6 @@ WARNINGS
 - Bases without fuel and a force stopped there: none
 - Air groups short of pilots: none
 - Air groups tired: fatigue is not in play
+- Aircraft wear: not in play
 - Task forces that cannot move or are slowed: none
 - Strike groups with nothing in reach: none
