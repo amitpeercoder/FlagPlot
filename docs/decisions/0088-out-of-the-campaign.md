@@ -1,6 +1,6 @@
 # 0088: Ships out of action, counted by the time they are away
 
-Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers at the end. Nothing is built: it is built straight after ship repair (decision 0069), whose yard function it reads, and the hand calculation is written by the architect before any code is delegated. The figures here are placeholders for the example only.
+Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers at the end. Built on Nov 13, 2026, straight after ship repair (decision 0069), whose yard function it reads, to the architect's specification and hand calculation; see "As built". The figures here are placeholders for the example only.
 
 Rewritten the same day. The first version drew one line at about thirty days and called a ship past it "out of the campaign". The designer asked what that means in a game that runs from Pearl Harbor to 1945, where a month away takes no ship out of anything. The line was wrong at that length, and so was the name. This version counts the time a ship is away against the length of what is being fought over. The file keeps its first name so that references to it hold.
 
@@ -113,3 +113,93 @@ On Nov 13, 2026, each as the architect recommended; the second after the designe
 6. **It is built right after ship repair,** in a pull request of its own, before the scale is set from the record ("Right after ship repair").
 
 Noted by the architect with the plan, and not decided: in a long campaign the fuller measure is the days each ship was in fact missing, counted as the game goes, with objectives that name a flow. This rule is the approximation that needs no state; it is looked at again when long campaigns exist.
+
+## As planned for the build
+
+Written by the architect on Nov 13, 2026, after the designer's answers. It is built on top of ship repair (decision 0069), from which it takes one function and one event. The hand calculation is in `tests/scenario_20b_out_of_action.rs`.
+
+### What it takes from decision 0069
+
+- `repair::days_of_repair(ship, figures) -> u32`: a ship's days of repair from her damage, without the passage.
+- The event `ForceLeftForYard`, which lists each ship that left with her days of repair.
+
+Nothing else of ship repair is read, and nothing of it is changed.
+
+### The horizon
+
+`Objectives` gains `horizon_days: u32`, at least 1. The loader sets it: the scenario's `days`, or `horizon_days` from the `[objectives]` table if that is given. The loader refuses a stated horizon that is 0, not a whole number, or less than the scenario's `days`. The engine does not need to know the length of the game: it is handed the horizon with the objectives. Objectives are not state and are not in the hash, so nothing is remade for this.
+
+A scenario may state a horizon and use no `ships_out_of_action` objective. The horizon is then unused, and that is allowed.
+
+### The objective
+
+`Objective::ShipsOutOfAction(ShipPoints)`, added at the end of the enum; its name is `ships_out_of_action`. In a scenario file it is written like the two ship objectives that exist:
+
+```toml
+[objectives]
+horizon_days = 60          # optional; the scenario's days if left out
+
+[[objectives.allied.objective]]
+kind = "ships_out_of_action"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5" }
+```
+
+The loader refuses a scenario in which any side has `ships_out_of_action` and any side has `ships_crippled`: a scenario counts damaged ships one way.
+
+### The tally
+
+`Tally` gains `out_of_action`: for each enemy ship with days out above zero, in ship number order, her number, her kind, her days at the end and the days she left with.
+
+For each ship of the enemy, read from the final truth and the log:
+
+- **Sunk:** not counted here, whatever came before. She is in `sunk`.
+- **Days at the end:** `days_of_repair` of her damage as it stands, if her location is a task force or a port. If her location is the yard, 0: the damage she carries there is the damage she left with, which the departure event already holds, and it must not be counted twice.
+- **Days she left with:** the sum, over every `ForceLeftForYard` event in the log that lists her, of the days of repair it gives for her.
+- **Days out:** the two added.
+
+`tallies` already takes the reference data, which holds the yard figures. `crippled` is still counted as it is today, for the scenarios that use it.
+
+### The score
+
+For each ship in the tally, in ship number order:
+
+- her **share** is `min(days out, horizon) / horizon`, one fixed-point division, cut to six places;
+- her **points** are her kind's points times her share, one fixed-point multiplication, cut to six places.
+
+The objective's points are the sum of the ships' points. Its `count` is the number of ships listed and `by_kind` counts them by kind. `ObjectiveScore` gains `horizon_days: Option<u32>` and `ships_out`: for each ship her number, kind, days at the end, days she left with, days out, share and points, so that a result can be checked line by line.
+
+### What a side sees
+
+- **During the game:** `known_progress` gives nothing for it, on the basis it gives for `ships_crippled` today (not observable: the enemy's damage is not something a side knows). The briefing's objectives part names the objective, the points for each kind "for a ship away for the whole horizon", and the horizon in days.
+- **At the end:** the umpire's result lists each ship with her days out, her share and her points, for both sides, as the rest of the result is shown (decision 0054, item 8). The game is over.
+
+Nothing is added to `SideView` that reads the enemy's truth before the game is over.
+
+### Where else it shows
+
+The result in `sim-cli run`, the export's result object and the viewer's check, the agent's final briefing and `end_day` answer, and the briefing's schema each gain the horizon and the list of ships. The batch file records each run's result as it does today; no version change unless a recorded key changes its meaning, and none does.
+
+### No state, no draw
+
+No field of the state is added and the hash is not touched. No random draw is made. With no scenario using the objective, every scenario's result, event log and hash are as before.
+
+### The rulebook and glossary, in the same pull request
+
+Chapter 6 (objectives and results): the sixth kind, the horizon, the order sunk then out of action, the refusal of the pair with crippled, and what a side sees. The glossary: "Out of action", "Days out", "Horizon". `docs/commands.md` where it describes a result.
+
+## As built
+
+Built on Nov 13, 2026, by a team lead with Sonnet developers, to the section above and the architect's hand calculation in `tests/scenario_20b_out_of_action.rs`, whose numbers all came out as written. Nothing above this section was changed, so its status line still reads as planned.
+
+What was built:
+
+- **sim-core** (`objectives.rs`): `Objectives.horizon_days`; `Objective::ShipsOutOfAction(ShipPoints)` at the end of the enum; `Tally.out_of_action`, one `OutOfAction` (kind, days at the end, days left with) for each enemy ship not sunk with days out above 0, keyed by ship number; `ObjectiveScore.horizon_days` and `ObjectiveScore.ships_out`, one `ShipOut` for each ship with her share and points. The departures are read in one pass over the log. `known_progress` gives `not_observable` for it. `World::set_objectives` refuses a horizon of 0. `SideView::horizon_days` gives the scenario's horizon, which is configuration common to both sides like the levels; nothing added to `SideView` reads the enemy's truth.
+- **The loader** sets the horizon and refuses what the section above says. It also refuses `ships_out_of_action` in a scenario without surface combat figures, which hold the yard figures; since `surface_combat` is a required key of every scenario this cannot happen from a file, and is a second line only.
+- **Where it shows.** `sim-cli run` prints the count "over N days" and one line for each ship. The agent's briefing gives the objective with `horizon_days` and the points for a ship away for the whole horizon; the result in the final briefing and in `end_day` gives `horizon_days` and `ships_out`. All three new fields are left out of an answer when they do not apply, so no earlier answer changed and the agent interface stays at version 3; the briefing schema has them. A side's own ships are named in `ships_out` by its own handles (decision 0086); an enemy ship, for which a side has no handle, is named `enemy_ship:K`, K being her place in that list, from 1, which tells the side nothing beyond the count. The export has no result object and the viewer reads none, so neither changed.
+- **Scenario 20b** (`data/scenarios/20b_out_of_action.toml`) on the map of scenario 20a. The frozen ship classes have no battleship, so a new placeholder class file, `ship_classes_placeholder_battleship.csv` (class 9, class 1's figures with the kind battleship), was added to `data/reference` and its frozen copy to `data/reference/step1`, read by scenario 20b alone. A new file, rather than a row in `ship_classes.csv`, leaves the data-file hashes of every saved game and batch as they were.
+- **A leak test** in `crates/sim-agent/tests/objectives.rs`: two worlds that differ only in an enemy ship's damage give the side the same briefing, as JSON and as text, and the same known progress on every day of the game; only the result at the end differs.
+- **A wording fix** that ship repair left: the hint shown with the refusal "the task force is under way" now names every order that needs a stopped force, `load` (of supply or fuel) and `send_to_yard`. The recorded games were remade: one line of the full slice game's transcript changed, in the hint only; every save is byte for byte as it was.
+
+No state, no hash change, no random draw. Every other scenario's run baseline, event log and hash are as before; only scenario 20b's baselines are new.
+
+Differences from the section above: none in the rule. The names the section leaves open were chosen as described (the enemy ship's name in the result, the class file).

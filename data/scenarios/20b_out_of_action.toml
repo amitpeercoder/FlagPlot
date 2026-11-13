@@ -1,0 +1,245 @@
+# Scenario 20b: ships out of action on the objectives scale (decision 0088).
+#
+# Four anchorages, nine ships and two yard trips, and no fight: the two sides
+# never meet and nothing searches. Base 1 is a port for the yard (a passage of
+# 1 day); base 2 mends 1 point a day; base 3 does neither; base 4 is the
+# Allied side's own. Both sides hold `ships_sunk` and `ships_out_of_action`,
+# with a horizon of 60 days stated for a game of 6. It proves that a ship's
+# days out are her days of repair at the end plus the days she left a yard
+# with, that her share of the horizon is capped at 1, and that a ship at the
+# yard at the end is not counted twice. No fatigue figures are named, no base
+# has fuel or supply, and there is no random draw. The hand calculation is in
+# tests/scenario_20b_out_of_action.rs.
+#
+# Class 9, a placeholder battleship, is in a file of its own so that no other
+# scenario's data moves.
+#
+# PLACEHOLDER DATA. The ships, figures and map are invented.
+
+name = "Scenario 20b: Ships out of action"
+placeholder = true
+seed = 1942
+days = 6
+map = "../map/placeholder_repair.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_battleship.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder yard port"
+side = "japanese"
+q = 0
+r = 0
+yard_passage_days = 1
+
+[[base]]
+id = 2
+name = "Placeholder repair anchorage"
+side = "japanese"
+q = 4
+r = 0
+ship_repair_points_per_day = 1
+
+[[base]]
+id = 3
+name = "Placeholder bare anchorage"
+side = "japanese"
+q = 0
+r = 4
+
+[[base]]
+id = 4
+name = "Placeholder Allied anchorage"
+side = "allied"
+q = 8
+r = 0
+
+[[task_force]]
+id = 1
+name = "Placeholder force 1"
+side = "japanese"
+at_base = 3
+mission = "transport"
+
+[[task_force]]
+id = 2
+name = "Placeholder force 2"
+side = "japanese"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 3
+name = "Placeholder force 3"
+side = "japanese"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 4
+name = "Placeholder force 4"
+side = "japanese"
+at_base = 2
+mission = "transport"
+
+[[task_force]]
+id = 5
+name = "Placeholder force 5"
+side = "allied"
+at_base = 4
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 4
+side = "japanese"
+fuel_t = 3000
+gun_rounds = 0
+fire_damage = "0"
+flotation_damage = "12"
+task_force = 1
+flight_deck = "degraded"
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "0"
+flotation_damage = "0"
+task_force = 1
+propulsion = "out"
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser 3"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "0"
+flotation_damage = "40"
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser 4"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "0"
+flotation_damage = "6"
+task_force = 1
+fire_control = "degraded"
+
+[[ship]]
+id = 5
+name = "Placeholder destroyer 5"
+class = 2
+side = "japanese"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "0"
+flotation_damage = "1"
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder destroyer 6"
+class = 2
+side = "japanese"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "0"
+flotation_damage = "3.25"
+task_force = 3
+torpedo_mounts = "degraded"
+
+[[ship]]
+id = 7
+name = "Placeholder destroyer 7"
+class = 2
+side = "japanese"
+fuel_t = 500
+gun_rounds = 600
+fire_damage = "0"
+flotation_damage = "0"
+task_force = 1
+
+[[ship]]
+id = 8
+name = "Placeholder cruiser 8"
+class = 1
+side = "japanese"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "0"
+flotation_damage = "8"
+task_force = 4
+
+[[ship]]
+id = 9
+name = "Placeholder battleship 9"
+class = 9
+side = "allied"
+fuel_t = 2000
+gun_rounds = 800
+fire_damage = "0"
+flotation_damage = "20"
+task_force = 5
+main_battery = "out"
+
+# Orders: force 2 goes to the yard on day 2, force 3 on day 4.
+
+[[order]]
+day = 2
+side = "japanese"
+task_force = 2
+kind = "send_to_yard"
+
+[[order]]
+day = 4
+side = "japanese"
+task_force = 3
+kind = "send_to_yard"
+
+# Objectives: a horizon of 60 days stated for a game of 6.
+
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+horizon_days = 60
+history = "No battle: a placeholder case of the scale, not a day of the war."
+
+[objectives.allied]
+mission = "Placeholder mission: put as many Japanese ships out of action as can be."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_out_of_action"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5" }
+
+[objectives.japanese]
+mission = "Placeholder mission: put as many Allied ships out of action as can be."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_out_of_action"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5" }

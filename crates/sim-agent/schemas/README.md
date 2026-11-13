@@ -230,7 +230,8 @@ or a hash.
   the version stays 1): `mission` (text, or `null` without objectives),
   `objectives` (one line for each, in the scenario's order) and `result`
   (`null` until the game is over). A line gives the `kind` (`ships_sunk`,
-  `ships_crippled`, `aircraft_destroyed`, `cargo_landed`, `base_open`), the
+  `ships_crippled`, `ships_out_of_action`, `aircraft_destroyed`, `cargo_landed`,
+  `base_open`), the
   `base` where there is one, `closed` for `base_open`, the points (`ship_points`
   for each kind of ship, or `points` for one aircraft, one ton or the base), and
   `known`: what the side knows of its progress. `known.basis` is `exact` (the
@@ -241,6 +242,9 @@ or a hash.
   no event it may see shows it; `count` is 0 and says nothing). For `base_open`
   at a base of the side's own, `count` is the days the base ended as wanted and
   `known.days` the days counted (decision 0067); `days` is `null` otherwise.
+  For `ships_out_of_action` (decision 0088) the line also gives `horizon_days`, and
+  the result's score line gives `horizon_days` and `ships_out`, one entry for each
+  ship counted (both left out for every other kind).
   The text says `none` for a scenario without objectives. A side is never given the enemy's
   mission or objectives.
 - At the end of the game the final briefing's `objectives.result` and the

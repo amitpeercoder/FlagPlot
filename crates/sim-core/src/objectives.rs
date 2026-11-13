@@ -28,6 +28,12 @@
 //! - `ships_crippled`: enemy ships not sunk (afloat, or in port) with
 //!   propulsion out or the flight deck out, by ship kind. A degraded system
 //!   does not count.
+//! - `ships_out_of_action`: enemy ships not sunk, counted by the share of the
+//!   scenario's horizon they are away (decision 0088). A ship's days out are
+//!   her days of repair at the end (0 if she is at the yard, where the damage
+//!   is what she left with) plus the days of repair she left with each time
+//!   she left for a yard. Her share is the days out, at most the horizon,
+//!   over the horizon; her points are her kind's points times her share.
 //! - `aircraft_destroyed`: the aircraft of the enemy's air groups lost for
 //!   good, from six events: `AircraftLost` (shot down, in the air),
 //!   `AirGroupLost` (lost with a sunk ship, ready and damaged),
@@ -55,7 +61,7 @@ use std::collections::BTreeMap;
 
 use crate::events::{base_is_open, EventKind, EventLog};
 use crate::fixed::Fixed;
-use crate::ids::BaseId;
+use crate::ids::{BaseId, ShipId};
 use crate::refdata::{RefData, ShipKind};
 use crate::side_events::SideEvent;
 use crate::state::{Ship, ShipLocation, ShipSystem, Side, SystemState, TruthState};
@@ -90,6 +96,10 @@ pub enum Objective {
         closed: bool,
         points: Fixed,
     },
+    /// Enemy ships not sunk, points for each kind of ship for one away for
+    /// the whole horizon, times the share of the horizon she is away
+    /// (decision 0088). Added at the end of the enum.
+    ShipsOutOfAction(ShipPoints),
 }
 
 impl Objective {
@@ -101,6 +111,7 @@ impl Objective {
             Objective::AircraftDestroyed { .. } => "aircraft_destroyed",
             Objective::CargoLanded { .. } => "cargo_landed",
             Objective::BaseOpen { .. } => "base_open",
+            Objective::ShipsOutOfAction(_) => "ships_out_of_action",
         }
     }
 
@@ -147,6 +158,9 @@ pub struct Objectives {
     pub allied: SideObjectives,
     pub japanese: SideObjectives,
     pub levels: Levels,
+    /// The days a result is judged over, at least 1: the scenario's days
+    /// unless the scenario states a longer horizon (decision 0088).
+    pub horizon_days: u32,
     /// Words, not a computed score (decision 9). Shown with the result.
     pub history: Option<String>,
 }
@@ -265,6 +279,26 @@ pub struct Tally {
     pub cargo_t: BTreeMap<BaseId, Fixed>,
     /// For each base, the days counted and the days it ended open.
     pub base_days: BTreeMap<BaseId, BaseDays>,
+    /// Enemy ships not sunk with days out above zero (decision 0088), in
+    /// ship number order.
+    pub out_of_action: BTreeMap<ShipId, OutOfAction>,
+}
+
+/// One enemy ship's time away (decision 0088).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct OutOfAction {
+    pub kind: ShipKind,
+    /// Her days of repair at the end; 0 if she is at the yard.
+    pub at_end: u32,
+    /// The days of repair she left for a yard with, summed over every time.
+    pub left_with: u32,
+}
+
+impl OutOfAction {
+    /// The days out: at the end and left with.
+    pub const fn days_out(&self) -> u32 {
+        self.at_end + self.left_with
+    }
 }
 
 /// The days a base was counted at their end, and on how many it was open:
@@ -320,6 +354,10 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
         .map(|side| (side, Tally::default()))
         .collect();
 
+    // The days of repair each ship left for a yard with, over every
+    // departure in the log (decision 0088).
+    let left_for_yard = left_for_yard_with(log);
+
     // Ships: a side's tally holds the enemy's losses.
     for ship in truth.ships.values() {
         let Some(kind) = ref_data.ship_classes.get(&ship.class).map(|c| c.kind) else {
@@ -329,8 +367,28 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
         let tally = out.get_mut(&taker).expect("both sides");
         if ship.location == ShipLocation::Sunk {
             *tally.sunk.entry(kind).or_insert(0) += 1;
-        } else if is_crippled(ship) {
-            *tally.crippled.entry(kind).or_insert(0) += 1;
+        } else {
+            if is_crippled(ship) {
+                *tally.crippled.entry(kind).or_insert(0) += 1;
+            }
+            // Out of action (decision 0088). At the yard her damage is what
+            // she left with, which the departure event holds: not twice.
+            // Without the figures the loader refuses the objective, so 0.
+            let at_end = match (ship.location, ref_data.surface_combat.as_ref()) {
+                (ShipLocation::TaskForce(_) | ShipLocation::Port(_), Some(figures)) => {
+                    crate::repair::days_of_repair(ship, figures)
+                }
+                _ => 0,
+            };
+            let left_with = left_for_yard.get(&ship.id).copied().unwrap_or(0);
+            let line = OutOfAction {
+                kind,
+                at_end,
+                left_with,
+            };
+            if line.days_out() > 0 {
+                tally.out_of_action.insert(ship.id, line);
+            }
         }
     }
 
@@ -432,6 +490,20 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
     out
 }
 
+/// The days of repair each ship left for a yard with, summed over every
+/// departure in the log.
+fn left_for_yard_with(log: &EventLog) -> BTreeMap<ShipId, u32> {
+    let mut out: BTreeMap<ShipId, u32> = BTreeMap::new();
+    for event in log.iter() {
+        if let EventKind::ForceLeftForYard { ships, .. } = &event.kind {
+            for (ship, days) in ships {
+                *out.entry(*ship).or_insert(0) += *days;
+            }
+        }
+    }
+    out
+}
+
 fn other(side: Side) -> Side {
     match side {
         Side::Allied => Side::Japanese,
@@ -447,8 +519,8 @@ fn is_crippled(ship: &Ship) -> bool {
 /// One objective's count and points.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ObjectiveScore {
-    /// `ships_sunk`, `ships_crippled`, `aircraft_destroyed`, `cargo_landed`
-    /// or `base_open`.
+    /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
+    /// `aircraft_destroyed`, `cargo_landed` or `base_open`.
     pub kind: &'static str,
     pub base: Option<BaseId>,
     /// For `base_open`: whether the side wanted the base shut.
@@ -459,6 +531,26 @@ pub struct ObjectiveScore {
     pub days: Option<u32>,
     /// For the two ship objectives: ships by kind.
     pub by_kind: BTreeMap<ShipKind, u32>,
+    pub points: Fixed,
+    /// For `ships_out_of_action`: the horizon the shares are of.
+    pub horizon_days: Option<u32>,
+    /// For `ships_out_of_action`: each ship listed, in ship number order,
+    /// so that the result can be checked line by line. Empty for the other
+    /// kinds.
+    pub ships_out: Vec<ShipOut>,
+}
+
+/// One ship's line of a `ships_out_of_action` score (decision 0088).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ShipOut {
+    pub ship: ShipId,
+    pub kind: ShipKind,
+    pub at_end: u32,
+    pub left_with: u32,
+    pub days_out: u32,
+    /// `min(days_out, horizon) / horizon`.
+    pub share: Fixed,
+    /// The kind's points times the share.
     pub points: Fixed,
 }
 
@@ -501,7 +593,7 @@ fn ship_count(by_kind: &BTreeMap<ShipKind, u32>, points: &ShipPoints) -> (Fixed,
 }
 
 /// One side's points by objective for one tally.
-fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
+fn score_side(side: &SideObjectives, tally: &Tally, horizon_days: u32) -> Vec<ObjectiveScore> {
     side.objectives
         .iter()
         .map(|objective| {
@@ -513,6 +605,8 @@ fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
                 days: None,
                 by_kind: BTreeMap::new(),
                 points: Fixed::ZERO,
+                horizon_days: None,
+                ships_out: Vec::new(),
             };
             match objective {
                 Objective::ShipsSunk(points) => {
@@ -522,6 +616,30 @@ fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
                 Objective::ShipsCrippled(points) => {
                     (score.count, score.points) = ship_count(&tally.crippled, points);
                     score.by_kind = tally.crippled.clone();
+                }
+                Objective::ShipsOutOfAction(points) => {
+                    let horizon = horizon_days.max(1);
+                    score.horizon_days = Some(horizon);
+                    for (ship, line) in &tally.out_of_action {
+                        let days_out = line.days_out();
+                        let share = Fixed::from_int(i64::from(days_out.min(horizon)))
+                            / Fixed::from_int(i64::from(horizon));
+                        let ship_points = points.of(line.kind) * share;
+                        score.points += ship_points;
+                        *score.by_kind.entry(line.kind).or_insert(0) += 1;
+                        score.ships_out.push(ShipOut {
+                            ship: *ship,
+                            kind: line.kind,
+                            at_end: line.at_end,
+                            left_with: line.left_with,
+                            days_out,
+                            share,
+                            points: ship_points,
+                        });
+                    }
+                    score.count = Fixed::from_int(
+                        i64::try_from(score.ships_out.len()).expect("a count of ships"),
+                    );
                 }
                 Objective::AircraftDestroyed { points } => {
                     score.count = Fixed::from_int(i64::from(tally.aircraft));
@@ -553,8 +671,9 @@ fn score_side(side: &SideObjectives, tally: &Tally) -> Vec<ObjectiveScore> {
 pub fn score(objectives: &Objectives, tallies: &BTreeMap<Side, Tally>) -> GameResult {
     let empty = Tally::default();
     let tally = |side: Side| tallies.get(&side).unwrap_or(&empty);
-    let allied = score_side(&objectives.allied, tally(Side::Allied));
-    let japanese = score_side(&objectives.japanese, tally(Side::Japanese));
+    let horizon = objectives.horizon_days;
+    let allied = score_side(&objectives.allied, tally(Side::Allied), horizon);
+    let japanese = score_side(&objectives.japanese, tally(Side::Japanese), horizon);
     let sum =
         |scores: &[ObjectiveScore]| scores.iter().fold(Fixed::ZERO, |total, s| total + s.points);
     let (allied_total, japanese_total) = (sum(&allied), sum(&japanese));
@@ -749,7 +868,8 @@ pub fn known_progress(
                         }
                     }
                 }
-                Objective::ShipsCrippled(_) => {}
+                // The enemy's damage is not something a side knows.
+                Objective::ShipsCrippled(_) | Objective::ShipsOutOfAction(_) => {}
                 Objective::AircraftDestroyed { points } => {
                     // Any claim from the air tells the side something of
                     // aircraft, if only that it claims none.
@@ -922,6 +1042,7 @@ mod tests {
             allied,
             japanese: empty(),
             levels: levels(),
+            horizon_days: 1,
             history: None,
         }
     }
@@ -1089,6 +1210,7 @@ mod tests {
                 }],
             },
             levels: levels(),
+            horizon_days: 1,
             history: None,
         }
     }
@@ -1394,6 +1516,7 @@ mod tests {
             allied: side(),
             japanese: side(),
             levels: levels(),
+            horizon_days: 1,
             history: None,
         }
     }
@@ -1500,5 +1623,199 @@ mod tests {
         let taken = &tallies[&Side::Allied];
         assert_eq!(taken.sunk.get(&ShipKind::Cruiser), Some(&1));
         assert_eq!(taken.crippled.get(&ShipKind::Cruiser), Some(&1));
+    }
+
+    // -----------------------------------------------------------------
+    // Decision 0088: ships out of action. The scenario's hand calculation
+    // is in `tests/scenario_20b_out_of_action.rs`; these are the cases it
+    // cannot reach. The yard figures are 2, 5 and 30 days.
+    // -----------------------------------------------------------------
+
+    fn yard_ref_data() -> RefData {
+        use crate::refdata::{ShipClass, SurfaceCombatFigures};
+        let class = ShipClass {
+            id: ShipClassId::new(1),
+            name: "Cruiser".to_string(),
+            kind: ShipKind::Cruiser,
+            cruise_speed_kn: n(16),
+            max_speed_kn: n(20),
+            fuel_capacity_t: n(2000),
+            endurance_nm: n(8000),
+            cargo_capacity_t: Fixed::ZERO,
+            main_guns: 0,
+            gun_rounds_per_min: Fixed::ZERO,
+            gun_rounds_per_gun: 0,
+            gun_damage: Fixed::ZERO,
+            torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
+            torpedo_damage: Fixed::ZERO,
+            toughness: n(100),
+            radar: false,
+            aircraft_capacity: 0,
+            anti_aircraft: 0,
+        };
+        let mut ref_data = RefData::default();
+        ref_data.ship_classes.insert(class.id, class);
+        let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
+        figures.yard_days_per_flotation_point = n(2);
+        figures.yard_days_per_system_degraded = n(5);
+        figures.yard_days_per_system_out = n(30);
+        ref_data.surface_combat = Some(figures);
+        ref_data
+    }
+
+    fn left_for_yard(log: &mut EventLog, day: u32, ship: u32, days: u32) {
+        log.record(
+            day,
+            None,
+            EventKind::ForceLeftForYard {
+                task_force: TaskForceId::new(1),
+                base: BaseId::new(1),
+                passage_days: 1,
+                ships: vec![(ShipId::new(ship), days)],
+                days_away: 1 + days,
+                return_day: day + 1 + days,
+            },
+            Vec::new(),
+            None,
+        );
+    }
+
+    fn out_of_action_objectives(horizon_days: u32) -> Objectives {
+        let mut objectives = one_side(Objective::ShipsOutOfAction(ShipPoints(BTreeMap::from([(
+            ShipKind::Cruiser,
+            n(2),
+        )]))));
+        objectives.horizon_days = horizon_days;
+        objectives
+    }
+
+    #[test]
+    fn a_ship_sunk_after_a_yard_trip_is_counted_as_sunk_and_not_out_of_action() {
+        let ref_data = yard_ref_data();
+        let mut truth = TruthState::default();
+        let mut lost = ship(1, Side::Japanese);
+        lost.location = ShipLocation::Sunk;
+        truth.ships.insert(lost.id, lost);
+        let mut log = EventLog::default();
+        left_for_yard(&mut log, 2, 1, 45);
+        let tallies = tallies(&truth, &log, &ref_data);
+        let taken = &tallies[&Side::Allied];
+        assert_eq!(taken.sunk.get(&ShipKind::Cruiser), Some(&1));
+        assert!(taken.out_of_action.is_empty());
+        let result = score(&out_of_action_objectives(60), &tallies);
+        let line = &result.allied.objectives[0];
+        assert_eq!((line.count, line.points), (Fixed::ZERO, Fixed::ZERO));
+        assert!(line.ships_out.is_empty());
+    }
+
+    #[test]
+    fn a_ship_that_left_with_45_days_and_came_back_damaged_has_51_days_out() {
+        let ref_data = yard_ref_data();
+        let mut truth = TruthState::default();
+        let mut back = ship(1, Side::Japanese);
+        back.flotation_damage = n(3);
+        truth.ships.insert(back.id, back);
+        let mut log = EventLog::default();
+        left_for_yard(&mut log, 3, 1, 45);
+        let tallies = tallies(&truth, &log, &ref_data);
+        let line = tallies[&Side::Allied].out_of_action[&ShipId::new(1)];
+        assert_eq!((line.at_end, line.left_with, line.days_out()), (6, 45, 51));
+        let result = score(&out_of_action_objectives(60), &tallies);
+        let score = &result.allied.objectives[0];
+        assert_eq!(score.horizon_days, Some(60));
+        assert_eq!(score.ships_out.len(), 1);
+        let out = score.ships_out[0];
+        assert_eq!(
+            (out.ship, out.kind, out.days_out, out.share, out.points),
+            (ShipId::new(1), ShipKind::Cruiser, 51, fx("0.85"), fx("1.7"))
+        );
+        assert_eq!(
+            (
+                score.count,
+                score.points,
+                score.by_kind.get(&ShipKind::Cruiser)
+            ),
+            (n(1), fx("1.7"), Some(&1))
+        );
+    }
+
+    #[test]
+    fn a_ship_that_left_twice_has_both_trips_counted_and_a_share_of_at_most_1() {
+        let ref_data = yard_ref_data();
+        let mut truth = TruthState::default();
+        let twice = ship(1, Side::Japanese);
+        truth.ships.insert(twice.id, twice);
+        let mut log = EventLog::default();
+        left_for_yard(&mut log, 2, 1, 20);
+        left_for_yard(&mut log, 30, 1, 50);
+        let tallies = tallies(&truth, &log, &ref_data);
+        let line = tallies[&Side::Allied].out_of_action[&ShipId::new(1)];
+        assert_eq!((line.at_end, line.left_with, line.days_out()), (0, 70, 70));
+        let result = score(&out_of_action_objectives(60), &tallies);
+        let out = result.allied.objectives[0].ships_out[0];
+        assert_eq!((out.share, out.points), (Fixed::ONE, n(2)));
+    }
+
+    #[test]
+    fn a_ship_at_the_yard_at_the_end_counts_nothing_at_the_end_and_what_she_left_with() {
+        let ref_data = yard_ref_data();
+        let mut truth = TruthState::default();
+        let mut at_yard = ship(1, Side::Japanese);
+        at_yard.location = ShipLocation::Yard(TaskForceId::new(1));
+        at_yard.flotation_damage = n(12);
+        truth.ships.insert(at_yard.id, at_yard);
+        let mut log = EventLog::default();
+        left_for_yard(&mut log, 2, 1, 24);
+        let tallies = tallies(&truth, &log, &ref_data);
+        let line = tallies[&Side::Allied].out_of_action[&ShipId::new(1)];
+        assert_eq!((line.at_end, line.left_with, line.days_out()), (0, 24, 24));
+    }
+
+    #[test]
+    fn a_whole_ship_that_never_left_is_not_listed_and_a_kind_without_points_scores_nothing() {
+        let ref_data = yard_ref_data();
+        let mut truth = TruthState::default();
+        truth.ships.insert(ShipId::new(1), ship(1, Side::Japanese));
+        let mut hurt = ship(2, Side::Japanese);
+        hurt.flotation_damage = n(5);
+        truth.ships.insert(hurt.id, hurt);
+        let tallies = tallies(&truth, &EventLog::default(), &ref_data);
+        assert_eq!(
+            tallies[&Side::Allied]
+                .out_of_action
+                .keys()
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![ShipId::new(2)]
+        );
+        let mut objectives = out_of_action_objectives(60);
+        objectives.allied.objectives = vec![Objective::ShipsOutOfAction(ShipPoints::default())];
+        let result = score(&objectives, &tallies);
+        let line = &result.allied.objectives[0];
+        assert_eq!((line.count, line.points), (n(1), Fixed::ZERO));
+        assert_eq!(line.ships_out[0].days_out, 10);
+        assert_eq!(line.ships_out[0].points, Fixed::ZERO);
+    }
+
+    #[test]
+    fn known_progress_gives_nothing_for_ships_out_of_action() {
+        let objectives = out_of_action_objectives(60);
+        let known = known_progress(&objectives.allied, &[], &[]);
+        assert_eq!(known.len(), 1);
+        assert_eq!(
+            (
+                known[0].kind,
+                known[0].basis,
+                known[0].count,
+                known[0].points
+            ),
+            (
+                "ships_out_of_action",
+                KnownBasis::NotObservable,
+                Fixed::ZERO,
+                None
+            )
+        );
     }
 }

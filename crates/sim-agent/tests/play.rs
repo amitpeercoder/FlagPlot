@@ -898,7 +898,7 @@ fn an_order_acceptable_now_can_be_refused_when_the_day_begins() {
         "{reason}"
     );
     assert!(
-        reason.contains("load needs the task force stopped at a base of your own side"),
+        reason.contains("load (of supply or fuel) and send_to_yard need the task force stopped at a base of your own side"),
         "{reason}"
     );
     assert_eq!(briefing["orders"]["accepted"], 1);
@@ -912,7 +912,7 @@ fn an_order_acceptable_now_can_be_refused_when_the_day_begins() {
     );
     let text = explained["nodes"][0]["text"].as_str().expect("text");
     assert!(
-        text.contains(": the task force is under way (load needs the task force stopped at a base of your own side"),
+        text.contains(": the task force is under way (load (of supply or fuel) and send_to_yard need the task force stopped at a base of your own side"),
         "{text}"
     );
 }

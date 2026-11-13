@@ -12,11 +12,11 @@ A side's mission is one or two sentences of words. It is not empty. No rule read
 
 ### The scenario file
 
-An optional `[objectives]` table holds the three levels, an optional `history` note, and one table for each side. Each side has a `mission` and any number of `objective` entries, including none. Both sides are required once the table is given. Point values and levels are in the scenario file and are not stated here. Levels, points and points per ton are whole numbers or decimal strings. [0054]
+An optional `[objectives]` table holds the three levels, an optional `history` note, an optional `horizon_days`, and one table for each side. Each side has a `mission` and any number of `objective` entries, including none. Both sides are required once the table is given. Point values and levels are in the scenario file and are not stated here. Levels, points and points per ton are whole numbers or decimal strings. [0054]
 
-The loader refuses levels that are not above zero and rising, negative points, an unknown kind of objective or ship or field, an objective naming a base the scenario does not have, an empty mission and a missing side. In a ship table a kind that is left out is worth nothing. The same kind may be given more than once, and each entry is scored on its own. Objectives are kept in the file's order. [0054]
+The loader refuses levels that are not above zero and rising, negative points, an unknown kind of objective or ship or field, an objective naming a base the scenario does not have, an empty mission, a missing side, a `horizon_days` that is not a whole number of at least 1 or is shorter than the scenario's days, and a scenario in which any side has `ships_out_of_action` and any side has `ships_crippled`: a scenario counts damaged ships one way. In a ship table a kind that is left out is worth nothing. The same kind may be given more than once, and each entry is scored on its own. Objectives are kept in the file's order. [0054]
 
-### The five kinds
+### The six kinds
 
 Each objective is a count of something the engine already records, taken for the side that holds the objective. A side's own losses are not a separate objective: a ship lost gives the enemy its points. [0054]
 
@@ -24,6 +24,7 @@ Each objective is a count of something the engine already records, taken for the
 | --- | --- | --- |
 | `ships_sunk` | Enemy ships whose location is sunk, by kind of ship | For each kind of ship |
 | `ships_crippled` | Enemy ships not sunk (afloat, in port or at the yard) with propulsion out or the flight deck out, by kind | For each kind of ship |
+| `ships_out_of_action` | Enemy ships not sunk, each by her days out, the share of the horizon she is away | For each kind of ship, for a ship away for the whole horizon. The points earned are these times her share |
 | `aircraft_destroyed` | Enemy aircraft lost for good, by any cause | For one aircraft |
 | `cargo_landed` | Tons of supply and fuel the side's own ships unloaded at a named base, less the tons they loaded there, never below 0 | For one ton |
 | `base_open` | The days on which a named base ended the day with supply above zero and at least one ready aircraft at it; with `closed = true`, the days on which it did not | For the base being so on every day. The points earned are these times the days counted over the days resolved |
@@ -31,7 +32,9 @@ Each objective is a count of something the engine already records, taken for the
 [0054]
 
 - **Enemy** means the other side from the ship's, or the air group's, side, whoever did the damage. A ship counts for the other side if it sank, whatever sank it. [0054]
-- **A ship at the yard is afloat.** A ship away at the yard (chapter 4, Repair) is not sunk and is counted as any ship not sunk, from the damage she left with, which does not change until she returns: at the end of the game one away with propulsion or the flight deck out counts as crippled, and one back from the yard counts as whole. Repair adds no objective. [0069]
+- **A ship at the yard is afloat.** A ship away at the yard (chapter 4, Repair) is not sunk and is counted as any ship not sunk, from the damage she left with, which does not change until she returns: at the end of the game one away with propulsion or the flight deck out counts as crippled, and one back from the yard counts as whole. Repair adds no objective of its own; `ships_out_of_action` reads its days of repair (below). [0069, 0088]
+- **The horizon** is the number of days a result is judged over: the scenario's `days`, or `horizon_days` from the `[objectives]` table if it states a longer one. A short scenario that stands inside a longer operation states it, or every damaged ship in it would count as away for the whole game. A horizon stated with no `ships_out_of_action` objective is allowed and unused. [0088]
+- **Ships out of action.** For each enemy ship not sunk, her **days out** are her days of repair at the end of the game (chapter 4, Repair, without the passage), plus, for each time she left for a yard during the game, the days of repair her `ForceLeftForYard` event gave her. A ship away at the yard at the end has 0 days at the end: the damage she carries there is what she left with, which her departure already counts. A ship that went to the yard and came back still counts for the days she left with, so repairing early neither gives nor takes points. A ship with no days out is not listed. Her **share** is her days out, never more than the horizon, over the horizon: one fixed-point division, cut to six places. Her points are her kind's points times her share: one fixed-point multiplication, cut to six places. The objective's points are the sum over the ships, taken in ship number order, and its count is the number of ships listed. A ship sunk is counted as sunk and not here, whatever came before. Crippled is still counted as before for the scenarios that use it. [0088]
 - **A ship sunk is not also crippled.** A ship that is degraded in propulsion or flight deck does not count as crippled. Only out counts. This is the glossary's crippled. Flotation damage of 50 or more, which counts toward break-off in a fight, is called heavily damaged and does not enter the objective. [0054]
 - **Aircraft destroyed** counts, through the side of the air group that lost them: aircraft shot down (`AircraftLost`), aircraft lost with a sunk ship, ready and damaged (`AirGroupLost`), ready and damaged aircraft destroyed on the ground (`AircraftDestroyedOnGround`, `DamagedAircraftDestroyedOnGround`), aircraft written off by wear (`AircraftWorn`, the written off part only), aircraft that ran out of fuel on the way home (`AircraftDitched`, though no one claims them), and aircraft that came down in the sea for want of a deck (`AircraftDitchedNoDeck`). Aircraft that land elsewhere are not counted. It does not count the worn aircraft that are repaired later, pilots lost, or any event that adds aircraft. [0054, 0059]
 - **Cargo landed** is the tons in the `CargoUnloaded` events of ships of the side at the named base, less the tons in their `CargoLoaded` events at that base, supply and fuel together. Cargo put ashore and taken off again was not landed. A side that loads more there than it unloads has landed nothing: the count is never below 0. Loading at another base takes nothing from this one. Cargo destroyed ashore after it was landed still counts, and so does fuel landed and then taken as bunker fuel, which records `ShipRefuelled` and cannot be unloaded again. [0054, 0067]
@@ -46,7 +49,7 @@ A side sees: its own mission and objectives from day 1. It never sees the enemy'
 
 ### A side's points
 
-The points of an objective are its count times its points: for the two ship kinds, the sum over the kinds of ships of the number of ships times the points for that kind. A side's total is the sum of the points of its objectives. [0054]
+The points of an objective are its count times its points: for `ships_sunk` and `ships_crippled`, the sum over the kinds of ships of the number of ships times the points for that kind; for `ships_out_of_action`, the sum of each ship's points, so a result is a sum with fractions. A side's total is the sum of the points of its objectives. [0054]
 
 ### The margin
 
@@ -95,16 +98,17 @@ During the game a side sees the progress of each of its objectives as far as it 
 | `ships_sunk` | Basis `claims` if the side has a claim that sank a ship or names a kind of ship, else `not_observable`. The count is the sum of the ships its claims say sank. Points are given only for the claims that name a kind, each kind's count times that kind's points. A claim from a surface fight names no kind, so it gives a count and no points |
 | `aircraft_destroyed` | Basis `claims` once the side has any claim from the air, even one claiming none. The count is the aircraft claimed shot down plus those claimed destroyed on the ground. Points are the count times the points for one. Otherwise `not_observable` |
 | `ships_crippled` | Always `not_observable`: no claim says crippled |
+| `ships_out_of_action` | Always `not_observable`: the enemy's damage is not something a side knows [0088] |
 
-[0054, 0056]
+[0054, 0056, 0088]
 
 Claims come from a surface fight (chapter 4, The report and the claim) and from a raid (chapter 5, The report and the claim). Chapter 3, Claims, says what a claim counts. A side learns of its own attacks only as claims. A claim is never below what really happened, which bounds the truth from above. [0056]
 
-A side sees: all of the above for its own objectives only. The briefing carries the mission, each objective with its points, and the known progress. The text says none for a scenario without objectives. [0054]
+A side sees: all of the above for its own objectives only. The briefing carries the mission, each objective with its points, and the known progress; for `ships_out_of_action` the points for each kind are for a ship away for the whole horizon, and the horizon in days is given with them. [0088] The text says none for a scenario without objectives. [0054]
 
 ## The result at the end
 
-When the game is over, both sides are told the umpire's result, from the truth. A result built on belief would not be a result. It gives each side's points by objective, with the count and for the ship objectives the count by kind, each side's total, the margin and the outcome. With it comes the scenario's `history` note, where the scenario gives one. The result is in the final briefing and in the answer that reports the game over. The result of a game asked for before it ends is the score so far, and it is handed out only at the end. [0054]
+When the game is over, both sides are told the umpire's result, from the truth. A result built on belief would not be a result. It gives each side's points by objective, with the count and for the ship objectives the count by kind, each side's total, the margin and the outcome. For `ships_out_of_action` it gives the horizon and lists each ship counted with her kind, her days at the end, the days she left with, her days out, her share and her points, so that the sum can be checked by eye; a side's own ships are named by its own handles and the enemy's by their place in that list [0088]. With it comes the scenario's `history` note, where the scenario gives one. The result is in the final briefing and in the answer that reports the game over. The result of a game asked for before it ends is the score so far, and it is handed out only at the end. [0054]
 
 The result is also printed by the command-line runner after the final state, and a batch adds the Allied margin and outcome of each run, with a tally of the seven outcomes, seen from the Allied side, to its summary file. [0054]
 
@@ -119,6 +123,7 @@ Known limit: the point values and levels are placeholders set by the architect, 
 ## Not in this chapter
 
 - How a battle's ships are sunk, crippled and claimed: chapter 4, and chapter 3, Claims.
+- How a ship's days of repair are worked out and how a force leaves for the yard: chapter 4, Repair.
 - How aircraft are lost, destroyed on the ground and written off: chapter 5.
 - How cargo is unloaded and how a base's supply and aircraft change: chapter 2, Cargo, and chapter 5.
 - What events a side may see, and how a claim reaches it: chapter 1, What a side sees of an event, and chapter 3, Belief.

@@ -112,6 +112,9 @@ struct ObjectivesSpec {
     minor: Quantity,
     major: Quantity,
     decisive: Quantity,
+    /// The days the result is judged over (decision 0088): a whole number,
+    /// at least the scenario's days. Defaults to the scenario's days.
+    horizon_days: Option<i64>,
     history: Option<String>,
     allied: SideObjectivesSpec,
     japanese: SideObjectivesSpec,
@@ -135,6 +138,11 @@ enum ObjectiveSpec {
         points: BTreeMap<String, Quantity>,
     },
     ShipsCrippled {
+        points: BTreeMap<String, Quantity>,
+    },
+    /// Decision 0088: points for a ship of each kind away for the whole
+    /// horizon.
+    ShipsOutOfAction {
         points: BTreeMap<String, Quantity>,
     },
     AircraftDestroyed {
@@ -588,7 +596,62 @@ fn ship_points(table: &BTreeMap<String, Quantity>, what: &str) -> Result<ShipPoi
 
 /// Builds the objectives from their table. Named bases are checked against
 /// the game by `World::set_objectives`.
-fn build_objectives(spec: &ObjectivesSpec) -> Result<Objectives, String> {
+///
+/// `days` is the scenario's length, which is the horizon unless the table
+/// states a longer one. `has_surface_combat` says whether the days of repair
+/// can be worked out: `ships_out_of_action` reads the yard figures in the
+/// surface combat file (decision 0088, "As built": the loader refuses the
+/// objective without them).
+fn build_objectives(
+    spec: &ObjectivesSpec,
+    days: u32,
+    has_surface_combat: bool,
+) -> Result<Objectives, String> {
+    let horizon_days = match spec.horizon_days {
+        None => days,
+        Some(stated) => {
+            let stated = u32::try_from(stated)
+                .ok()
+                .filter(|stated| *stated >= 1)
+                .ok_or_else(|| {
+                    format!("objectives horizon_days {stated} is not a whole number of at least 1")
+                })?;
+            if stated < days {
+                return Err(format!(
+                    "objectives horizon_days {stated} is shorter than the scenario's {days} days"
+                ));
+            }
+            stated
+        }
+    };
+    let uses = |wanted: &str| {
+        [&spec.allied, &spec.japanese]
+            .into_iter()
+            .flat_map(|side| side.objective.iter())
+            .any(|objective| {
+                matches!(
+                    (wanted, objective),
+                    (
+                        "ships_out_of_action",
+                        ObjectiveSpec::ShipsOutOfAction { .. }
+                    ) | ("ships_crippled", ObjectiveSpec::ShipsCrippled { .. })
+                )
+            })
+    };
+    if uses("ships_out_of_action") {
+        if uses("ships_crippled") {
+            return Err(
+                "a scenario counts damaged ships one way: it may not have both ships_out_of_action and ships_crippled (decision 0088)"
+                    .to_string(),
+            );
+        }
+        if !has_surface_combat {
+            return Err(
+                "ships_out_of_action needs the surface combat figures, which hold the yard figures (decision 0088)"
+                    .to_string(),
+            );
+        }
+    }
     let level = |quantity: &Quantity, name: &str| {
         quantity
             .to_fixed()
@@ -618,6 +681,9 @@ fn build_objectives(spec: &ObjectivesSpec) -> Result<Objectives, String> {
                 ObjectiveSpec::ShipsCrippled { points } => {
                     Objective::ShipsCrippled(ship_points(points, &what)?)
                 }
+                ObjectiveSpec::ShipsOutOfAction { points } => {
+                    Objective::ShipsOutOfAction(ship_points(points, &what)?)
+                }
                 ObjectiveSpec::AircraftDestroyed { points } => Objective::AircraftDestroyed {
                     points: points_of(points, &format!("{what} points"))?,
                 },
@@ -645,6 +711,7 @@ fn build_objectives(spec: &ObjectivesSpec) -> Result<Objectives, String> {
         allied: side("allied", &spec.allied)?,
         japanese: side("japanese", &spec.japanese)?,
         levels,
+        horizon_days,
         history: spec.history.clone(),
     })
 }
@@ -1562,7 +1629,9 @@ impl Scenario {
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
         if let Some(spec) = &file.objectives {
-            let objectives = build_objectives(spec).map_err(&fail)?;
+            let objectives =
+                build_objectives(spec, file.days, world.ref_data().surface_combat.is_some())
+                    .map_err(&fail)?;
             world
                 .set_objectives(objectives)
                 .map_err(|e| fail(e.to_string()))?;
@@ -3471,6 +3540,139 @@ points = 4
         let with = parse_with(&objectives(LEVELS, ALL_KINDS)).expect("loads");
         let other = with.with_seed(9).expect("copies");
         assert_eq!(other.world.objectives(), with.world.objectives());
+    }
+
+    // -----------------------------------------------------------------
+    // Decision 0088: the horizon and ships out of action.
+    // -----------------------------------------------------------------
+
+    const OUT_OF_ACTION: &str = r#"
+[[objectives.allied.objective]]
+kind = "ships_out_of_action"
+points = { carrier = 5, destroyer = "0.5" }
+"#;
+
+    fn horizon_of(levels: &str, allied: &str) -> Result<u32, String> {
+        parse_with(&objectives(levels, allied))
+            .map(|scenario| {
+                scenario
+                    .world
+                    .objectives()
+                    .expect("objectives")
+                    .horizon_days
+            })
+            .map_err(|e| e.to_string())
+    }
+
+    #[test]
+    fn the_horizon_is_the_scenarios_days_unless_a_longer_one_is_stated() {
+        // HEAD has two days.
+        assert_eq!(horizon_of(LEVELS, OUT_OF_ACTION), Ok(2));
+        assert_eq!(horizon_of(LEVELS, ""), Ok(2));
+        let stated = |value: &str| format!("{LEVELS}\nhorizon_days = {value}");
+        assert_eq!(horizon_of(&stated("2"), OUT_OF_ACTION), Ok(2));
+        assert_eq!(horizon_of(&stated("60"), OUT_OF_ACTION), Ok(60));
+        // A horizon may be stated where nothing uses it.
+        assert_eq!(horizon_of(&stated("60"), ""), Ok(60));
+        let scenario = parse_with(&objectives(&stated("60"), OUT_OF_ACTION)).expect("loads");
+        match &scenario
+            .world
+            .objectives()
+            .expect("objectives")
+            .allied
+            .objectives[0]
+        {
+            Objective::ShipsOutOfAction(points) => {
+                assert_eq!(points.of(ShipKind::Carrier), Fixed::from_int(5));
+                assert_eq!(points.of(ShipKind::Destroyer), Fixed::from_ratio(1, 2));
+                assert_eq!(points.of(ShipKind::Cruiser), Fixed::ZERO);
+            }
+            other => panic!("{other:?}"),
+        }
+        // A copy for another seed keeps the horizon.
+        let other = scenario.with_seed(9).expect("copies");
+        assert_eq!(
+            other.world.objectives().expect("objectives").horizon_days,
+            60
+        );
+    }
+
+    #[test]
+    fn a_horizon_that_is_zero_short_or_not_a_whole_number_is_refused() {
+        let stated = |value: &str| format!("{LEVELS}\nhorizon_days = {value}");
+        for (value, wanted) in [
+            ("0", "horizon_days 0 is not a whole number of at least 1"),
+            ("-4", "horizon_days -4 is not a whole number of at least 1"),
+            ("1", "horizon_days 1 is shorter than the scenario's 2 days"),
+        ] {
+            let message = error_of(&objectives(&stated(value), OUT_OF_ACTION));
+            assert!(message.contains(wanted), "{value}: {message}");
+        }
+        for value in ["2.5", "\"60\""] {
+            let message = error_of(&objectives(&stated(value), OUT_OF_ACTION));
+            assert!(message.contains("horizon_days"), "{value}: {message}");
+        }
+    }
+
+    #[test]
+    fn a_scenario_counts_damaged_ships_one_way_out_of_action_or_crippled() {
+        let crippled = "\n[[objectives.allied.objective]]\nkind = \"ships_crippled\"\npoints = { carrier = 5 }\n";
+        // On the same side, in either order.
+        for both in [
+            format!("{OUT_OF_ACTION}{crippled}"),
+            format!("{crippled}{OUT_OF_ACTION}"),
+        ] {
+            let message = error_of(&objectives(LEVELS, &both));
+            assert!(
+                message.contains("counts damaged ships one way"),
+                "{message}"
+            );
+        }
+        // On different sides, in either order.
+        let split = |allied: &str, japanese_kind: &str| {
+            format!(
+                "\n[objectives]\n{LEVELS}\n\n[objectives.allied]\nmission = \"A.\"\n{allied}\n[objectives.japanese]\nmission = \"B.\"\n\n[[objectives.japanese.objective]]\nkind = \"{japanese_kind}\"\npoints = {{ carrier = 5 }}\n"
+            )
+        };
+        for text in [
+            split(OUT_OF_ACTION, "ships_crippled"),
+            split(crippled, "ships_out_of_action"),
+        ] {
+            let message = error_of(&text);
+            assert!(
+                message.contains("counts damaged ships one way"),
+                "{message}"
+            );
+        }
+        // Crippled alone, and out of action on both sides, are fine.
+        assert!(parse_with(&objectives(LEVELS, crippled)).is_ok());
+        assert!(parse_with(&split(OUT_OF_ACTION, "ships_out_of_action")).is_ok());
+    }
+
+    #[test]
+    fn ships_out_of_action_needs_the_surface_combat_figures() {
+        // The surface combat file is a required key, so a scenario without
+        // it is refused whatever its objectives; the check in
+        // `build_objectives` is the second line of that.
+        let text = format!("{HEAD}{}", objectives(LEVELS, OUT_OF_ACTION)).replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            "",
+        );
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let message = Scenario::parse(&text, &path)
+            .expect_err("refused")
+            .to_string();
+        assert!(message.contains("surface_combat"), "{message}");
+        let spec: ObjectivesSpec = toml::from_str(
+            "minor = 3\nmajor = 8\ndecisive = 16\n[allied]\nmission = \"A.\"\n[[allied.objective]]\nkind = \"ships_out_of_action\"\npoints = { carrier = 5 }\n[japanese]\nmission = \"B.\"\n",
+        )
+        .expect("parses");
+        let message = build_objectives(&spec, 2, false).expect_err("refused");
+        assert!(
+            message.contains("needs the surface combat figures"),
+            "{message}"
+        );
+        assert!(build_objectives(&spec, 2, true).is_ok());
     }
 
     #[test]

@@ -322,3 +322,185 @@ fn a_game_without_objectives_ends_with_a_null_result() {
         .expect("a briefing");
     assert_eq!(after["objectives"]["result"], Value::Null);
 }
+
+// ---------------------------------------------------------------------
+// Ships out of action (decision 0088): scenario 20b.
+// ---------------------------------------------------------------------
+
+const OUT: &str = "20b_out_of_action.toml";
+
+#[test]
+fn a_game_of_ships_out_of_action_is_briefed_and_told_with_the_horizon_and_each_ship() {
+    // Hand calculation: scenario 20b's own (tests/scenario_20b_out_of_action.rs):
+    // a horizon of 60 days, and for the Allied side seven Japanese ships out,
+    // 6.233329 points; the Japanese side one Allied ship, 4 points.
+    let scenario = support::load(OUT, 1);
+    let days = scenario.days;
+    let (mut session, _scripts) = session_of(scenario, &[Side::Allied]);
+    let schemas = schemas();
+
+    // Day 1: the objective with its points and the horizon; the progress is
+    // not observable.
+    let first = session
+        .call(Side::Allied, "get_briefing", &json!({"text": false}))
+        .expect("a briefing");
+    valid(&schemas, "briefing.schema.json", &first, "day 1 briefing");
+    let lines = first["objectives"]["objectives"].as_array().expect("lines");
+    assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0]["kind"], "ships_sunk");
+    assert!(lines[0].get("horizon_days").is_none(), "{}", lines[0]);
+    let out = &lines[1];
+    assert_eq!(out["kind"], "ships_out_of_action");
+    assert_eq!(out["horizon_days"], 60);
+    assert_eq!(
+        out["ship_points"],
+        json!([
+            { "kind": "carrier", "points": "5" },
+            { "kind": "battleship", "points": "4" },
+            { "kind": "cruiser", "points": "2" },
+            { "kind": "destroyer", "points": "0.5" },
+        ])
+    );
+    assert_eq!(out["known"]["basis"], "not_observable");
+    assert_eq!(out["known"]["count"], "0");
+    assert_eq!(out["known"]["points"], Value::Null);
+    let text = session
+        .call(Side::Allied, "get_briefing", &json!({"text": true}))
+        .expect("a briefing");
+    let text = text["text"].as_str().expect("text");
+    assert!(
+        text.contains("Objective: enemy ships out of action, counted by the share of the 60-day horizon each is away for repair (her days of repair at the end plus those she left for a yard with), points for a ship away for the whole horizon: carrier 5, battleship 4, cruiser 2, destroyer 0.5"),
+        "{text}"
+    );
+
+    // Play the game; every answer is checked against its schema.
+    let mut ended = Value::Null;
+    for day in 1..=days {
+        let (refused, answer) = play_day(&mut session, Side::Allied, &[]);
+        assert!(refused.is_empty(), "{refused:?}");
+        valid(&schemas, "end_day.schema.json", &answer, "end_day");
+        if day < days {
+            assert_eq!(answer["result"], Value::Null);
+            let b = session
+                .call(Side::Allied, "get_briefing", &json!({"text": false}))
+                .expect("a briefing");
+            valid(&schemas, "briefing.schema.json", &b, "briefing");
+            assert_eq!(
+                b["objectives"]["objectives"][1]["known"]["basis"],
+                "not_observable"
+            );
+            assert_eq!(b["objectives"]["result"], Value::Null);
+        }
+        ended = answer;
+    }
+    assert_eq!(ended["game_over"], true);
+
+    // The Allied side's score: the seven Japanese ships, which it has no
+    // handle for, listed by their place; case 1 of the scenario's test.
+    let result = &ended["result"];
+    let score = &result["allied"]["objectives"][1];
+    assert_eq!(score["kind"], "ships_out_of_action");
+    assert_eq!(score["horizon_days"], 60);
+    assert_eq!(score["count"], "7");
+    assert_eq!(score["points"], "6.233329");
+    assert_eq!(result["allied"]["total"], "6.233329");
+    assert_eq!(result["japanese"]["total"], "4");
+    let expected = json!([
+        { "ship": "enemy_ship:1", "kind": "carrier", "at_end": 29, "left_with": 0, "days_out": 29, "share": "0.483333", "points": "2.416665" },
+        { "ship": "enemy_ship:2", "kind": "cruiser", "at_end": 30, "left_with": 0, "days_out": 30, "share": "0.5", "points": "1" },
+        { "ship": "enemy_ship:3", "kind": "cruiser", "at_end": 80, "left_with": 0, "days_out": 80, "share": "1", "points": "2" },
+        { "ship": "enemy_ship:4", "kind": "cruiser", "at_end": 17, "left_with": 0, "days_out": 17, "share": "0.283333", "points": "0.566666" },
+        { "ship": "enemy_ship:5", "kind": "destroyer", "at_end": 0, "left_with": 2, "days_out": 2, "share": "0.033333", "points": "0.016666" },
+        { "ship": "enemy_ship:6", "kind": "destroyer", "at_end": 0, "left_with": 12, "days_out": 12, "share": "0.2", "points": "0.1" },
+        { "ship": "enemy_ship:7", "kind": "cruiser", "at_end": 4, "left_with": 0, "days_out": 4, "share": "0.066666", "points": "0.133332" },
+    ]);
+    assert_eq!(score["ships_out"], expected);
+
+    // The Japanese side's score: one ship, which is the Allied side's own
+    // (ship:1 to it), away for the whole horizon and more.
+    let japanese = &result["japanese"]["objectives"][1];
+    assert_eq!(japanese["points"], "4");
+    assert_eq!(
+        japanese["ships_out"],
+        json!([{
+            "ship": "ship:1", "kind": "battleship", "at_end": 70, "left_with": 0,
+            "days_out": 70, "share": "1", "points": "4"
+        }])
+    );
+    // The other kinds' score lines have neither field.
+    let sunk = &result["allied"]["objectives"][0];
+    assert!(sunk.get("horizon_days").is_none() && sunk.get("ships_out").is_none());
+
+    // The final briefing says the same, and the text gives each ship.
+    let after = session
+        .call(Side::Allied, "get_briefing", &json!({"text": false}))
+        .expect("a briefing");
+    valid(&schemas, "briefing.schema.json", &after, "final briefing");
+    assert_eq!(&after["objectives"]["result"], result);
+    let text = session
+        .call(Side::Allied, "get_briefing", &json!({"text": true}))
+        .expect("a briefing");
+    let text = text["text"].as_str().expect("text");
+    assert!(
+        text.contains("ships out of action: count 7 over 60 days"),
+        "{text}"
+    );
+    assert!(
+        text.contains("enemy_ship:1 carrier: 29 days at the end + 0 left with = 29 days out, share 0.483333, points 2.416665"),
+        "{text}"
+    );
+    assert!(
+        text.contains(
+            "ship:1 battleship: 70 days at the end + 0 left with = 70 days out, share 1, points 4"
+        ),
+        "{text}"
+    );
+}
+
+#[test]
+fn two_worlds_that_differ_in_an_enemy_ships_damage_give_a_side_the_same_ships_out_of_action_briefing(
+) {
+    // Japanese ship 1 (a carrier) has 12 points of flotation damage in one
+    // world and 30 in the other. The Allied side cannot see an enemy ship's
+    // damage or her days in repair.
+    let base = scenario_text(OUT);
+    let worse = base.replacen("flotation_damage = \"12\"", "flotation_damage = \"30\"", 1);
+    assert_ne!(base, worse);
+
+    let record = |text: &str| {
+        let mut scenario = load_text(text, OUT, 1);
+        let mut days = Vec::new();
+        play(&mut scenario, |s| {
+            let view = s.world.side_view(Side::Allied);
+            let b = briefing(&view, "20b");
+            days.push((
+                serde_json::to_value(&b).expect("serialises"),
+                b.to_text(),
+                view.known_progress(),
+            ));
+        });
+        let result = scenario.world.result().expect("a result");
+        (
+            days,
+            result.allied.total,
+            result.allied.objectives[1].ships_out[0].days_out,
+        )
+    };
+    let (one, total_one, out_one) = record(&base);
+    let (two, total_two, out_two) = record(&worse);
+
+    assert!(one.len() > 1);
+    assert_eq!(one.len(), two.len());
+    for (day, (a, b)) in one.iter().zip(&two).enumerate() {
+        let at = day + 1;
+        assert_eq!(a.0, b.0, "the briefing as data, at the start of day {at}");
+        assert_eq!(a.1, b.1, "the briefing as text, at the start of day {at}");
+        assert_eq!(a.2, b.2, "the known progress, at the start of day {at}");
+        assert_eq!(a.2[1].basis, KnownBasis::NotObservable);
+    }
+    // The umpire's result differs, which is allowed: the carrier is away
+    // 29 days in one world and more in the other.
+    assert_eq!(out_one, 29);
+    assert!(out_two > out_one, "{out_two}");
+    assert_ne!(total_one, total_two);
+}

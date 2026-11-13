@@ -202,6 +202,10 @@ name = "scenario_20a_ship_repair"
 path = "scenario_20a_ship_repair.rs"
 
 [[test]]
+name = "scenario_20b_out_of_action"
+path = "scenario_20b_out_of_action.rs"
+
+[[test]]
 name = "frozen_figures_mechanism"
 path = "frozen_figures_mechanism.rs"
 
