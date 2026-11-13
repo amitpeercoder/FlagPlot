@@ -1,4 +1,4 @@
-# Scenario 18a: the guns' fire before and after the attack.
+# Scenario 19a: the guns' fire before and after the attack.
 #
 # Decision 0079. A Japanese carrier force sends a raid of twelve dive bombers
 # with four escorts at an Allied carrier that has twenty anti-aircraft shots
@@ -6,7 +6,7 @@
 # contact of the Allied force, so the raid goes in the morning with no search.
 # The raid's guns are split by anti_aircraft_before_attack_share: all before
 # the attack (step 1's rule), half and half, a third before, or all after.
-# The hand calculation is in tests/scenario_18a_guns_and_the_attack.rs. The
+# The hand calculation is in tests/scenario_19a_guns_and_the_attack.rs. The
 # test runs this file with seeds 1 to 1000, with strike_contact_max_age_pulses
 # at 1 (a changed figure: with the live 0 a contact the side starts with is
 # too old to strike in the morning) and the share at each value the cases
@@ -15,7 +15,7 @@
 #
 # PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
 
-name = "Scenario 18a: The guns and the attack"
+name = "Scenario 19a: The guns and the attack"
 placeholder = true
 seed = 1942
 days = 1
