@@ -34,6 +34,7 @@ fn class() -> ShipClass {
         gun_rounds_per_gun: 100,
         gun_damage: Fixed::from_int(20),
         torpedo_tubes: 0,
+        torpedo_tubes_one_side: 0,
         torpedo_damage: Fixed::ZERO,
         toughness: Fixed::from_int(400),
         radar: false,

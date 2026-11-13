@@ -589,7 +589,7 @@ fn case_6_a_target_sunk_in_the_round_and_the_places_counted_again() {
                 text.push('\n');
             }
             text.push_str(
-                "7,Placeholder tough cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,4000,0,0,0\n",
+                "7,Placeholder tough cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,4000,0,0,0\n",
             );
             text
         });

@@ -582,6 +582,7 @@ mod tests {
                     gun_rounds_per_gun: 0,
                     gun_damage: Fixed::ZERO,
                     torpedo_tubes: 0,
+                    torpedo_tubes_one_side: 0,
                     torpedo_damage: Fixed::ZERO,
                     toughness: Fixed::from_int(100),
                     radar: false,

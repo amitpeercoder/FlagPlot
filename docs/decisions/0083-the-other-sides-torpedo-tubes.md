@@ -137,7 +137,7 @@ Randomness: one new stream, `Draw::TorpedoOtherSide`, for the second side's salv
 
 ## Hand calculation
 
-On the frozen step 1 figures (`data/reference/step1`), with one new placeholder class added to both placeholder class files: class 7, "Placeholder cruiser with wing tubes". It is class 1 in every figure (8 guns at 3 rounds a minute, `gun_damage` 20, toughness 400, 8 tubes, `torpedo_damage` 200), except that `torpedo_tubes_one_side` is 4. Every other class has B equal to T.
+On the frozen step 1 figures (`data/reference/step1`), with one new placeholder class added to both placeholder class files: class 8, "Placeholder cruiser with wing tubes". It is class 1 in every figure (8 guns at 3 rounds a minute, `gun_damage` 20, toughness 400, 8 tubes, `torpedo_damage` 200), except that `torpedo_tubes_one_side` is 4. Every other class has B equal to T.
 
 Figures read:
 
@@ -151,44 +151,44 @@ Figures read:
 | `unready_torpedo_share` | 1 (0.5 where a case says so, by an altered copy of the frozen figures, as scenario 15b does) |
 | Experience strengths | 0 |
 
-A torpedo hit from class 7 or class 1 on class 1 or 7 does 100 x 200 / 400 = 50 points. Its system chance is min(1, 50 x 0.06) = 1.
+A torpedo hit from class 8 or class 1 on class 1 or 7 does 100 x 200 / 400 = 50 points. Its system chance is min(1, 50 x 0.06) = 1.
 
 | Case | Salvo | Tubes | Shots | Chance | Expected hits | After it |
 | --- | --- | --- | --- | --- | --- | --- |
-| A. Class 7, ready, a night fight of two rounds or more, target not surprised | round 1, first side | 4 | 4 x 1 x 1 = 4 | 0.04 | 0.16 | ready, flag set |
+| A. Class 8, ready, a night fight of two rounds or more, target not surprised | round 1, first side | 4 | 4 x 1 x 1 = 4 | 0.04 | 0.16 | ready, flag set |
 | | round 2, second side, target by 0078 at the start of round 2 | 8 − 4 = 4 | 4 | 0.04 | 0.16 | spent, flag clear |
 | A'. As A, the target's force surprised in round 1 | round 1 | 4 | 4 | 0.04 x 1.5 = 0.06 | 0.24 | ready, flag set |
-| B. Class 7, first fight ends after round 1; in the same pulse she meets a second enemy force | first fight, round 1 | 4 | 4 | 0.04 | 0.16 | ready, flag set |
+| B. Class 8, first fight ends after round 1; in the same pulse she meets a second enemy force | first fight, round 1 | 4 | 4 | 0.04 | 0.16 | ready, flag set |
 | | second fight, her first firing round, at the most important kind afloat in place (i modulo their number) | 4 | 4 | 0.04 | 0.16, drawn from the new stream keyed on her and the second force | spent |
 | B'. As B, the second meeting by day in the next pulse | second side | 4 | 4 | 0.02 | 0.08 | spent |
-| C. Class 7, force not ready, share 0.5, a night fight of two rounds | round 1 | 4 | 4 x 1 x 0.5 = 2 | 0.04 | 0.08 | ready, flag set: the 2 unfired tubes of that side are not kept |
+| C. Class 8, force not ready, share 0.5, a night fight of two rounds | round 1 | 4 | 4 x 1 x 0.5 = 2 | 0.04 | 0.08 | ready, flag set: the 2 unfired tubes of that side are not kept |
 | | round 2 | 4 | 2 | 0.04 | 0.08 | spent. Together 4, today's 8 x 0.5 |
-| D. Class 7, mounts degraded before round 1 | round 1 | 4 | 4 x 0.5 = 2 | 0.04 | 0.08 | ready, flag set |
+| D. Class 8, mounts degraded before round 1 | round 1 | 4 | 4 x 0.5 = 2 | 0.04 | 0.08 | ready, flag set |
 | | round 2, still degraded | 4 | 2 | 0.04 | 0.08 | spent |
-| D'. Class 7, mounts out after her first salvo | round 2 | 4 | 0 | | no salvo, no event, no draw | ready, flag set: the side waits |
-| E. Class 7 sunk in round 1 by fire of that round | round 1 | 4 | 4 (a ship sunk in a round still fires in it) | 0.04 | 0.16 | sunk; no second salvo; the flag stays as it was on a sunk ship |
+| D'. Class 8, mounts out after her first salvo | round 2 | 4 | 0 | | no salvo, no event, no draw | ready, flag set: the side waits |
+| E. Class 8 sunk in round 1 by fire of that round | round 1 | 4 | 4 (a ship sunk in a round still fires in it) | 0.04 | 0.16 | sunk; no second salvo; the flag stays as it was on a sunk ship |
 | F. Class 1 (B equal to T) | round 1 | 8 | 8 | 0.04 | 0.32 | spent, flag never set; round 2 has no torpedo salvo and the new stream is never opened |
-| G. Class 7, a round 2 with no gun shots (ammunition gone) | round 2 | 4 | 4 | 0.04 | 0.16 | spent. She counts as having shots for the surprise test |
+| G. Class 8, a round 2 with no gun shots (ammunition gone) | round 2 | 4 | 4 | 0.04 | 0.16 | spent. She counts as having shots for the surprise test |
 
-**The order of a round's draws, for class 7 in round 2 of case A:**
+**The order of a round's draws, for class 8 in round 2 of case A:**
 
 1. On her fire stream (`Draw::Legacy`, keyed on her and the enemy force): her gun salvo's 8 x 3 x 5 = 120 shot draws, then a track and a system draw for each gun hit.
 2. On `Draw::TorpedoOtherSide`, keyed on the day, the pulse, her and the enemy force: 4 shot draws, then one system draw for each torpedo hit.
 
 Damage lands at the end of the round in the order the salvos were fired, gun salvo first, as now.
 
-**What must not move.** With class 7 in no scenario but the rule's own, every scenario on the frozen figures and every placeholder scenario gives its event log byte for byte as before; only its state hashes move, by the new field. No expected number of any existing hand calculation changes.
+**What must not move.** With class 8 in no scenario but the rule's own, every scenario on the frozen figures and every placeholder scenario gives its event log byte for byte as before; only its state hashes move, by the new field. No expected number of any existing hand calculation changes.
 
 ## The rule's own scenario
 
-`data/scenarios/18_torpedo_sides.toml`, named for the next free number at the time of building. It is scenario 15b's set-up with the attacking force's three cruisers of class 7. Its test has the three parts of `docs/step2-spec.md`, "Tests while figures move", 7:
+`data/scenarios/18_torpedo_sides.toml`, named for the next free number at the time of building. It is scenario 15b's set-up with the attacking force's three cruisers of class 8. Its test has the three parts of `docs/step2-spec.md`, "Tests while figures move", 7:
 
 1. **The cases above, read from the salvos' breakdowns.** A, A', C and D are in its fight. B, B', D', E, F and G come from small variants of it, or from unit tests in `surface.rs` where a scenario cannot reach the case.
 2. **Properties over many seeds.**
-   - Every class 7 ship that fires twice fires B and then T − B, in different rounds.
+   - Every class 8 ship that fires twice fires B and then T − B, in different rounds.
    - No class 1 ship ever fires two torpedo salvos.
    - Torpedo hits stay within four sigma of the expected hits.
-   - The sum of a class 7 ship's torpedo shots never exceeds 8 x the share.
+   - The sum of a class 8 ship's torpedo shots never exceeds 8 x the share.
 3. **A pinned outcome for one seed,** labelled as pinned.
 
 ## As built

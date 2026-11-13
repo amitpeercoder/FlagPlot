@@ -1780,6 +1780,7 @@ mod tests {
                         gun_rounds_per_gun: rounds,
                         gun_damage: Fixed::from_int(i64::from(gun_damage)),
                         torpedo_tubes: tubes,
+                        torpedo_tubes_one_side: tubes,
                         torpedo_damage: Fixed::from_int(i64::from(torpedo_damage)),
                         toughness: Fixed::from_int(i64::from(tough)),
                         radar,
