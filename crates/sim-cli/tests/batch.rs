@@ -809,21 +809,36 @@ fn check_sighting(
 
 /// Who sighted first (batch version 4)
 ///
-/// Scenario 4a (data/scenarios/04a_night_action.toml), its own seed. Task
-/// force 1 is Japanese, task force 2 Allied. One fight, by night, two
-/// rounds. Round 1: task force 1 rolls and sights; task force 2 rolls and
-/// does not; task force 1 fires on it. Round 2: task force 2 has sighted,
-/// having been fired on in round 1, with no roll. So: sighted_first
-/// "japanese"; forces [{1, japanese, first 1, surprised 0}, {2, allied, first
-/// 2, surprised 1}].
+/// Both scenarios are run on the frozen step 1 figures (`--reference
+/// data/reference/step1`), on seed 1942, so that no tuning round moves these
+/// numbers. Scenario 4's orders are fixed from the record (decision 0024, the
+/// note of Nov 13, 2026) and do not move either. A fight by day has both
+/// forces sight in round 1, at chance 1.
 ///
-/// Scenario 4 (data/scenarios/04_savo_island.toml), its own seed 1942. Two
-/// night fights, in log order. First, task force 1 (Japanese) and 2
-/// (Allied), one round: 1 sights in round 1, 2 does not, and the fight ends
-/// in round 1. So "japanese"; [{1, japanese, 1, 0}, {2, allied, null, 1}].
-/// Second, task force 1 and 3 (Allied), two rounds: 1 sights in round 1, 3
-/// does not and is fired on, so 3 has sighted in round 2. So "japanese";
-/// [{1, japanese, 1, 0}, {3, allied, 2, 1}].
+/// Scenario 4a (data/scenarios/04a_night_action.toml). Task force 1 is
+/// Japanese, task force 2 Allied. Three fights. By night, two rounds. Round 1:
+/// task force 1 rolls and sights; task force 2 rolls and does not; task force
+/// 1 fires on it. Round 2: task force 2 has sighted, having been fired on in
+/// round 1, with no roll. So: sighted_first "japanese"; forces [{1, japanese,
+/// first 1, surprised 0}, {2, allied, first 2, surprised 1}]. Then in the
+/// morning and in the afternoon, one round each: "both"; [{1, japanese, 1,
+/// 0}, {2, allied, 1, 0}].
+///
+/// Scenario 4 (data/scenarios/04_savo_island.toml). Five fights, in log
+/// order.
+/// 1. Night, task force 1 (Japanese) and 2 (Allied), one round: 1 sights in
+///    round 1, 2 does not, and the fight ends in round 1. "japanese"; [{1,
+///    japanese, 1, 0}, {2, allied, null, 1}].
+/// 2. Night, task force 1 and 3 (Allied), five rounds: neither sights in
+///    rounds 1 and 2; in round 3 task force 3 rolls and sights, 1 does not,
+///    and 3 fires on it; so 1 has sighted in round 4. "allied"; [{1,
+///    japanese, 4, 1}, {3, allied, 3, 0}].
+/// 3. Morning, task force 2 and task force 5 (the Japanese ships left
+///    behind), one round: "both"; [{2, allied, 1, 0}, {5, japanese, 1, 0}].
+/// 4. Morning, task force 3 and 5, one round: "both"; [{3, allied, 1, 0},
+///    {5, japanese, 1, 0}].
+/// 5. Afternoon, task force 2 and 5, one round: "both"; [{2, allied, 1, 0},
+///    {5, japanese, 1, 0}].
 ///
 /// Five made cases (six: A to F), for the function that works the record out
 /// from a fight's facts, are in `batch_record.rs`, as a unit test of the
@@ -831,22 +846,45 @@ fn check_sighting(
 #[test]
 fn the_fights_of_scenarios_4a_and_4_record_who_sighted_first() {
     use serde_json::json;
-    let own_seed = ["--runs", "1", "--first-seed", "1942"];
-    let summary = parse(&batch("sighted-4a", FIGHT, &own_seed));
+    let frozen = [
+        "--runs",
+        "1",
+        "--first-seed",
+        "1942",
+        "--reference",
+        "data/reference/step1",
+    ];
+    let summary = parse(&batch("sighted-4a", FIGHT, &frozen));
     assert_eq!(
         summary["per_run"][0]["fights"],
-        json!([{
-            "day": 1, "pulse": "night", "rounds": 2, "sighted_first": "japanese",
-            "forces": [
-                {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
-                {"task_force": 2, "side": "allied", "first_sighted_round": 2, "rounds_surprised": 1},
-            ]
-        }])
+        json!([
+            {
+                "day": 1, "pulse": "night", "rounds": 2, "sighted_first": "japanese",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 2, "rounds_surprised": 1},
+                ]
+            },
+            {
+                "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "afternoon", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+        ])
     );
     let summary = parse(&batch(
         "sighted-4",
         "data/scenarios/04_savo_island.toml",
-        &own_seed,
+        &frozen,
     ));
     assert_eq!(
         summary["per_run"][0]["fights"],
@@ -859,10 +897,31 @@ fn the_fights_of_scenarios_4a_and_4_record_who_sighted_first() {
                 ]
             },
             {
-                "day": 1, "pulse": "night", "rounds": 2, "sighted_first": "japanese",
+                "day": 1, "pulse": "night", "rounds": 5, "sighted_first": "allied",
                 "forces": [
-                    {"task_force": 1, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
-                    {"task_force": 3, "side": "allied", "first_sighted_round": 2, "rounds_surprised": 1},
+                    {"task_force": 1, "side": "japanese", "first_sighted_round": 4, "rounds_surprised": 1},
+                    {"task_force": 3, "side": "allied", "first_sighted_round": 3, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 3, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                ]
+            },
+            {
+                "day": 1, "pulse": "afternoon", "rounds": 1, "sighted_first": "both",
+                "forces": [
+                    {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
                 ]
             },
         ])
