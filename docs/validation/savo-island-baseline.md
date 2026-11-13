@@ -10,11 +10,11 @@ Inputs: state hash layout flagplot-state-v6, scenario file hash 153cc0008adfdf4a
 - data/scenarios/../reference/aircraft_types.csv 92830cbacc0a4328
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 014bdbf0888f4925
-Measures: data/validation/savo_island.toml (hash b28cd60bec957ec3), 20 measures, 19 judged
+Measures: data/validation/savo_island.toml (hash 644433951be1c0f6), 20 measures, 19 judged
 
-Judged measures: 10 agree, 1 agree at the edge, 8 miss, of 19.
+Judged measures: 9 agree, 1 agree at the edge, 9 miss, of 19.
 
-**The battle does not pass:** 8 of 19 judged measures miss.
+**The battle does not pass:** 9 of 19 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,11 +29,11 @@ Judged measures: 10 agree, 1 agree at the edge, 8 miss, of 19.
 | torpedo_hits_on_allied_ships | 4 to 9 | 1 to 7 | 3 | 411 of 1000 | 0 | agrees |
 | japanese_gun_hits_per_thousand_shells | 81 to 117 | 33 to 64 | 50 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | allied_gun_hits_per_thousand_shells | 21 to 36 | 11 to 57 | 38 | 326 of 980 | 20 | agrees |
-| japanese_gun_shells_fired_in_hundreds | 18 | 10 to 32 | 24 | 26 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
-| allied_gun_shells_fired_in_hundreds | 4 | 1 to 32 | 13 | 6 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
-| southern_group_gun_shells_fired_in_hundreds | 0 | 0 to 13 | 4 | 373 of 1000 | 0 | agrees |
-| northern_group_gun_shells_fired_in_hundreds | 3 to 4 | 1 to 24 | 8 | 79 of 1000 | 0 | agrees |
-| tenryu_and_yubari_gun_shells_fired_in_hundreds | 1 to 2 | 4 to 15 | 9 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
+| japanese_main_battery_shells_fired_in_hundreds | 10 to 11 | 10 to 32 | 24 | 39 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| allied_main_battery_shells_fired_in_hundreds | 3 | 1 to 32 | 13 | 29 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| southern_group_main_battery_shells_fired_in_hundreds | 0 | 0 to 13 | 4 | 373 of 1000 | 0 | agrees |
+| northern_group_main_battery_shells_fired_in_hundreds | 3 | 1 to 24 | 8 | 45 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| tenryu_and_yubari_main_battery_shells_fired_in_hundreds | 1 | 4 to 15 | 9 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | minutes_of_action | 20 to 30 | 15 to 50 | 25 | 458 of 1000 | 0 | agrees |
 | surface_fights_by_day | 0 | 0 to 4 | 0 | 518 of 1000 | 0 | agrees |
 | japanese_ships_claimed_sunk_per_hundred_sunk | 350 | 100 to 250 | 120 | 2 of 988 | 12 | reported |
@@ -79,24 +79,31 @@ Judged measures: 10 agree, 1 agree at the edge, 8 miss, of 19.
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 22, 5th 33, 25th 43, median 50, 75th 56, 95th 64, greatest 76
 
-### japanese_gun_shells_fired_in_hundreds
+### japanese_main_battery_shells_fired_in_hundreds
 
-- Counts: Gun shots the Japanese force fires in the run, all calibres, in hundreds, rounded down
-- Record: 18 (rows 7)
+- Counts: Main battery shots the Japanese force fires in the run, in hundreds, rounded down
+- Record: 10 to 11 (rows 1, 2, 3)
 - Verdict: **MISS**: fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 5, 5th 10, 25th 19, median 24, 75th 25, 95th 32, greatest 44
 
-### allied_gun_shells_fired_in_hundreds
+### allied_main_battery_shells_fired_in_hundreds
 
-- Counts: Gun shots the two Allied groups fire in the run, all calibres, in hundreds, rounded down
-- Record: 4 (rows 10)
+- Counts: Main battery shots the two Allied groups fire in the run, in hundreds, rounded down
+- Record: 3 (rows 12, 53, 54, 94, 97)
 - Verdict: **MISS**: fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 7, median 13, 75th 20, 95th 32, greatest 52
 
-### tenryu_and_yubari_gun_shells_fired_in_hundreds
+### northern_group_main_battery_shells_fired_in_hundreds
 
-- Counts: Gun shots Tenryu and Yubari fire in the run, all calibres, in hundreds, rounded down
-- Record: 1 to 2 (rows 148, 149, 154)
+- Counts: Main battery shots the five ships of the northern group fire in the run, in hundreds, rounded down
+- Record: 3 (rows 64, 74, 86, 94, 97)
+- Verdict: **MISS**: fewer than 1 run in 20 holds the record
+- Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 4, median 8, 75th 15, 95th 24, greatest 38
+
+### tenryu_and_yubari_main_battery_shells_fired_in_hundreds
+
+- Counts: Main battery shots Tenryu and Yubari fire in the run, in hundreds, rounded down
+- Record: 1 (rows 3, 148, 154)
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 3, 5th 4, 25th 9, median 9, 75th 12, 95th 15, greatest 21
 - Each value and its runs: 3: 49, 4: 20, 5: 8, 6: 87, 7: 24, 8: 17, 9: 487, 10: 31, 11: 18, 12: 173, 13: 18, 14: 7, 15: 42, 16: 9, 17: 2, 18: 6, 20: 1, 21: 1
