@@ -80,6 +80,16 @@ impl Data {
         self.with(key, Field::Bool(b))
     }
 
+    /// A flag written only when it is true, so that a file made where it is
+    /// always false is unchanged (decision 0079).
+    pub fn flag_when_true(self, key: &'static str, b: bool) -> Data {
+        if b {
+            self.flag(key, true)
+        } else {
+            self
+        }
+    }
+
     pub fn text(self, key: &'static str, t: &'static str) -> Data {
         self.with(key, Field::Text(t))
     }
