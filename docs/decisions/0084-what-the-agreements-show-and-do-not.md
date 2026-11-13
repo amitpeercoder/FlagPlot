@@ -60,11 +60,11 @@ The wave sizes from the carriers' forms stand: they are independent of any run. 
 | Measure | Record | Judged | Rows | First result (baseline batch) |
 | --- | --- | --- | --- | --- |
 | `japanese_bombers_left_to_attack_enterprise_force` | 20 to 27 | no | 390, 389, 290, 1159, 1164 | reported: 0 to 9, median 1, held by none |
-| `us_aircraft_left_to_attack_ryujo` | 36 to 38 | yes | 333, 334, 335, 234, 235, 351, 1238 | agrees: 0 to 37, median 0, held by 320 |
+| `us_aircraft_left_to_attack_ryujo` | 36 | yes | 333, 1238, 334, 335, 234, 235, 351 | agrees: 0 to 37, median 0, held by 135 |
 
 The Japanese measure is not judged: no row counts the bombers that reached release. The rows that try (390, Enterprise's report, "20 to 40, probably about 30"; 389, the 1943 narrative, about 30 left after about 6 destroyed before release) are the target's estimates of a wave they put at 36 dive bombers where the forms launched 27; the record's high end is the 27 launched. The American measure is judged: the narrative counts the bombs released by each squadron and the torpedo planes at Ryujo and her cruiser, and none was lost.
 
-**The record of the strike on Ryujo, 36 to 38, is kept.** Its reason now says outright that 38 arriving is not what happened: 36 did. The architect asked whether the measures file's rule supports the range; see "What goes back to the architect", below. The new American measure takes the same range for the same reason.
+**Each strike measure on Ryujo takes the count it counts** (ruled by the architect, Nov 13, 2026). `us_aircraft_attacking_ryujo`, the aircraft that took part as launched, now has the record 38 (row 231), and still agrees (held by the 488 runs in which the strike reaches her). `us_aircraft_left_to_attack_ryujo` has the 36 that reached and released (333, 1238, 334, 335). The earlier range of 36 to 38 was wrong by the measures file's own rule: a part of the record out of the rules' reach is taken out of the record, which leaves a point, and a range spans only a dispute, which the rows do not have. The two that turned back for mechanical trouble are outside the rules, which launch them, so a run's count left to attack can fall short of 38 only by what the patrol and the guns take; a run in which they take none attacks with 38 and does not hold 36. That limit is named in the measure's reason. Decision 0081 has a dated note.
 
 The review's further point, that the second wave and Enterprise's attack group are put at rest because their recorded outcome was no attack, is a limit of decision 0081 that it states itself ("What the rules cannot express"): those groups cannot fail a measure of attacks by attacking.
 
@@ -114,18 +114,25 @@ The check of what is derived before what is tuned ("Tuning", 6) was Tenryu and Y
 
 Ruled: the ditchings of Ryujo's raid (B5N2s flown 200 miles on a derived radius of 175, from rows 79 and 412 of `aircraft_type_facts`, neither of which states a load; 412's block is headed B5N1) are not evidence for `ditch_chance_per_radius_beyond` and are left out of any round that tunes it. Fitting the shared figure to them would bend every type's ditching to one type's unsourced radius. Decision 0081 had called them evidence for that round; a dated note there points here, and its index entry and `docs/validation/baseline-reading.md` are corrected. A line is in `docs/step2-opening-list.md`.
 
-### 14. Aoba's hits at Cape Esperance. Not changed: goes back to the architect
+### 14. Aoba's hits at Cape Esperance. Accepted in part: the record kept, called weak
 
-Checked: row 1598 says "up to forty" and row 1599 "over 40". They do not overlap: one is at most 40, the other more than 40. A range that holds both runs from whatever bounds the low end of "up to" to whatever bounds the high end of "over", and no row bounds either. Row 1695 (Japanese Wikipedia, a lead only) says many of her hits were duds; 1510 and 1694 name places hit and no count. So the review is right that 40 is not a statement of any row, and the rows do not give the ends of a range. The record of `gun_hits_on_japanese_cruisers` (130 to 134) is left as it is until the architect rules; the open item is in `docs/step2-opening-list.md`, to be settled before Cape Esperance is run. Furutaka's 90 is in the same form ("about 90", 1600; "over 90", 1601; "more than 90 above the waterline", 1602) and goes back with it.
+Checked: row 1598 says "up to forty" and row 1599 "over 40". They do not overlap: one is at most 40, the other more than 40. A range that holds both runs from whatever bounds the low end of "up to" to whatever bounds the high end of "over", and no row bounds either. Row 1695 (Japanese Wikipedia, a lead only) says many of her hits were duds; 1510 and 1694 name places hit and no count. So the review is right that 40 is not a statement of any row, and the rows do not give the ends of a range. Furutaka's 90 is in the same form ("about 90", 1600; "over 90", 1601; "more than 90 above the waterline", 1602).
+
+Ruled by the architect, Nov 13, 2026: the record of `gun_hits_on_japanese_cruisers` stays 130 to 134, judged. Its reason now says outright that 40 is where "up to forty" and "over 40" meet, that neither bounds its far end, and that Furutaka's 90 is the same, so the record is weak. Outside research is asked for bounded sources. If a row arrives before the check is run, the record changes; it does not change after the run. It is a limit of the check (below).
 
 ### 15. Decision 0081's count. Accepted
 
 The headline read "after 9 agree (one at the edge) and 4 miss" of 14 judged; its table has 9 plain agreements, 1 at the edge and 4 misses. Corrected in 0081 to 10 agree (one at the edge), with a dated note.
 
-## What goes back to the architect
+## The limits of the checks, in one place
 
-- **The strike on Ryujo, 36 to 38** (finding 4). The measures file's rule for a part of the record out of the rules' reach says that the part "is taken out of the record". Taken out, the two aborts leave a record of what the rules can produce, 38 taking part, a point, not a range from 36 to 38; and the rule that a range spans a dispute does not apply, since the rows agree. So in this record's reading the README's rule does not give the range. The range is kept, as ruled, and is the same in the new measure; whether it should be 38, or the rule worded to allow a range, is the architect's.
-- **Aoba's and Furutaka's hits** (finding 14), above.
+- **Cape Esperance** checks the surface figures on inputs partly set with the outcome known, with the US 6-inch rate of fire derived from that battle, and with no measure of how well either side shot for its shells (finding 1). Its record of hits on the Japanese cruisers is weak: Aoba's 40 and Furutaka's 90 are where an "up to" or "about" meets an "over", and no row bounds the far ends (finding 14).
+- **A yes-or-no agreement says only that the record is not surprising.** The plainest case: `chicago_sunk` agrees by the rule while Chicago sinks in 560 runs of 1,000 and the median run sinks her. Japanese carriers sunk at the Eastern Solomons, and fights by day at Savo Island, are the same kind (`docs/validation/baseline-reading.md`).
+- **Each measure is judged alone** (finding 3). No report shows one run holding several agreements together.
+- **The fitted figures** (`surprised_target_factor`, `experience_gun_strength`, the two zero shares of 0079 and 0080) are fits inside a supported direction, not sizes from a source (findings 2, 5 and 6).
+- **The rate-of-fire gate failed** and certified nothing (finding 11).
+- **Measures held by a run in which the event had no chance to happen** (finding 9, the list).
+- **Orders and readings chosen with the outcome known**: the search orders, Rabaul's raid days and searches, the radar flag (findings 7, 10 and 12).
 
 ## The reports
 

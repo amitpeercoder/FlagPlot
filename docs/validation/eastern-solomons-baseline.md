@@ -11,7 +11,7 @@ Inputs: state hash layout flagplot-state-v6, scenario file hash a9443b066a393e0b
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 1a9a0ae06d7282b1
 - data/scenarios/../reference/air_combat.toml 7019eca7f6998d5c
-Measures: data/validation/eastern_solomons.toml (hash 10b1097b60e83099), 18 measures, 15 judged
+Measures: data/validation/eastern_solomons.toml (hash c52f629dc38335b8), 18 measures, 15 judged
 
 Judged measures: 10 agree, 1 agree at the edge, 4 miss, of 15.
 
@@ -30,9 +30,9 @@ Judged measures: 10 agree, 1 agree at the edge, 4 miss, of 15.
 | us_aircraft_lost_to_enemy_action | 13 to 14 | 1 to 9 | 4 | 2 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | us_aircraft_lost_all_causes | 20 to 21 | 1 to 9 | 5 | 0 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | japanese_aircraft_attacking_enterprise_force | 37 | 0 to 37 | 37 | 607 of 1000 | 0 | agrees |
-| us_aircraft_attacking_ryujo | 36 to 38 | 0 to 38 | 0 | 488 of 1000 | 0 | agrees |
+| us_aircraft_attacking_ryujo | 38 | 0 to 38 | 0 | 488 of 1000 | 0 | agrees |
 | japanese_bombers_left_to_attack_enterprise_force | 20 to 27 | 0 to 9 | 1 | 0 of 1000 | 0 | reported |
-| us_aircraft_left_to_attack_ryujo | 36 to 38 | 0 to 37 | 0 | 320 of 1000 | 0 | agrees |
+| us_aircraft_left_to_attack_ryujo | 36 | 0 to 37 | 0 | 135 of 1000 | 0 | agrees |
 | us_strike_on_the_japanese_fleet_carriers | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
 | us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200 | 148 | 9 of 997 | 3 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 300 | 150 | 298 of 980 | 20 | agrees |

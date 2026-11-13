@@ -19,7 +19,8 @@
 #
 # Changed on 2026-11-13 by the architect, who now owns this file, with
 # decision 0081: the two strike measures take the aircraft that took part
-# (aircraft_taking_part), the record of the strike on Ryujo is 36 to 38, the
+# (aircraft_taking_part), the record of the strike on Ryujo is 36 to 38 (38
+# since decision 0084), the
 # air group lists hold the groups that decision added (21 to 26), and the
 # claims measures say they are read after the fight's rounds.
 #
@@ -171,7 +172,7 @@ reason = "The first wave as it took part: 27 dive bombers and 10 fighters (290; 
 [[measure]]
 id = "us_aircraft_attacking_ryujo"
 counts = "US aircraft that take part in a raid on a ship of the Ryujo detachment, as launched and before the patrol and the guns fire, with the fighters that escort them, summed over the run"
-record_low = 36
+record_low = 38
 record_high = 38
 judged = true
 take = "aircraft_taking_part"
@@ -179,7 +180,7 @@ side = "allied"
 target_task_forces = [4]
 escorts = true
 rows = [231, 333, 1238, 334, 335]
-reason = "Saratoga's strike: 30 dive bombers and 8 torpedo planes launched (231), of which one of each turned back with mechanical trouble, so 29 and 7, 36, reached the target (333, 1238; 334, 335 by type); the rows count no fighters with them. 38 reaching the target is not what happened: 36 did, and the record says so. The range is not a dispute, the rows agree: the two that turned back for mechanical trouble are a part of the record outside the rules, which have no such abort and launch the 38 whole, so by this file's rule the record runs from the 36 that reached to the 38 launched. The measure takes the aircraft as launched in a raid that met the force (aircraft_taking_part, decision 0081), as japanese_aircraft_attacking_enterprise_force does. Row 232 (37, 31 and 6) is the strike of 23 August and is not read here. Judged since strike target priority (decision 0063) and reach beyond the radius (decision 0059) are built: they decide what flies."
+reason = "Saratoga's strike as launched: 30 dive bombers and 8 torpedo planes (231). The measure counts what took part as launched, so its record is the 38 launched. One of each turned back with mechanical trouble, so 36 reached the target (333, 1238; 334, 335 by type): those two are a part of the record outside the rules, which have no such abort and launch the 38 whole, and by this file's rule that part is taken out of the record, which leaves 38. The rows count no fighters with the strike. What reached and attacked is us_aircraft_left_to_attack_ryujo (decision 0084). Until decision 0084 the record was 36 to 38, a range the file's rule does not give, since the rows do not dispute each other. The measure takes the aircraft as launched in a raid that met the force (aircraft_taking_part, decision 0081), as japanese_aircraft_attacking_enterprise_force does. Row 232 (37, 31 and 6) is the strike of 23 August and is not read here. Judged since strike target priority (decision 0063) and reach beyond the radius (decision 0059) are built: they decide what flies."
 
 [[measure]]
 id = "japanese_bombers_left_to_attack_enterprise_force"
@@ -198,14 +199,14 @@ reason = "What the old take of japanese_aircraft_attacking_enterprise_force coun
 id = "us_aircraft_left_to_attack_ryujo"
 counts = "US aircraft that attack a ship of the Ryujo detachment after the patrol and the guns have fired at their raid, escorts not counted, summed over the run"
 record_low = 36
-record_high = 38
+record_high = 36
 judged = true
 take = "aircraft_attacking"
 side = "allied"
 target_task_forces = [4]
 escorts = false
-rows = [333, 334, 335, 234, 235, 351, 1238]
-reason = "What the old take of us_aircraft_attacking_ryujo counted, kept beside it by decision 0084: the aircraft that came through to the attack. All 36 that reached the target attacked (333): 29 dive bombers, whose bombs the 1943 narrative counts as 15 of VS-3, 13 of VB-3 and the leader's (234, 235, 334), and 7 torpedo planes, 5 at Ryujo and 2 at her escorting cruiser (335, 351), every one of them in the detachment. None was lost (1238). Judged: the rows count the aircraft that released. The high end is 38 for the reason us_aircraft_attacking_ryujo's is: the rules launch the two that turned back for mechanical trouble, and a run that loses none attacks with 38. 38 attacking is not what happened; 36 did."
+rows = [333, 1238, 334, 335, 234, 235, 351]
+reason = "What the old take of us_aircraft_attacking_ryujo counted, kept beside it by decision 0084: the aircraft that came through to the attack. All 36 that reached the target attacked (333): 29 dive bombers, whose bombs the 1943 narrative counts as 15 of VS-3, 13 of VB-3 and the leader's (234, 235, 334), and 7 torpedo planes, 5 at Ryujo and 2 at her escorting cruiser (335, 351), every one of them in the detachment. None was lost (1238). Judged: the rows count the aircraft that released. The record is the 36 that reached and released. The two that turned back for mechanical trouble are outside the rules, which launch them: so a run's count can only fall short of the 38 it launches by what the patrol and the guns take, and a run in which they take none attacks with 38 and does not hold the record. That limit is named here; the record is not widened for it."
 
 [[measure]]
 id = "us_strike_on_the_japanese_fleet_carriers"

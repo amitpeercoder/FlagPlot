@@ -55,7 +55,7 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - The nine small code fixes of `docs/rules/differences.md` ("in the batch of small fixes"): to be made in one batch at the close of tuning.
 - `docs/rules/differences.md`, row 7: the report after a strike reads the force after the damage. To be made before the air figures are tuned.
 - The fuel round leaves out the ditchings of Ryujo's raid on Henderson Field (decision 0084, finding 13): her B5N2s fly 200 miles on a derived radius of 175 whose rows state no load, so their ditchings are not evidence for `ditch_chance_per_radius_beyond`. A radius with a bomb load is asked of research (decision 0081, C5, option 2).
-- Aoba's hits at Cape Esperance: one row says up to 40 and the other over 40, and no row bounds either the low end or the high end; `cape_esperance.toml` still takes 40, pending the architect's ruling (decision 0084, finding 14). To be settled before Cape Esperance is run.
+- Aoba's and Furutaka's hits at Cape Esperance: 40 and 90 are where an "up to" or "about" meets an "over", and no row bounds the far ends. Kept, judged, as a weak record (decision 0084, finding 14); outside research is asked for bounded sources. A row that arrives before the check is run changes the record; none changes it after.
 - In progress, numbers reserved: decisions 0079 to 0082, the air work (anti-aircraft fire after the attack; whom the patrol fires at; the Eastern Solomons orders; the Rabaul orders).
 
 ## What the architect settles from the research

@@ -69,7 +69,7 @@ record_low = 130
 record_high = 134
 judged = true
 rows = [1598, 1599, 1600, 1601, 1605, 1686, 1687, 1688]
-reason = "Aoba 40 (1598, 1599) and Furutaka 90 (1600, 1601). Kinugasa none by her own signal and her division's report, read twice (1686, 1687, 1688), or 4 by the tabular record (1605): low end without them, high end with. Aoba's 40 is 'up to' in one source and 'over' in the other, so it is taken as 40. No row counts the hits on Fubuki, which sank, or on Hatsuyuki, so the measure is of the cruisers alone."
+reason = "Aoba 40 (1598, 1599) and Furutaka 90 (1600, 1601). Kinugasa none by her own signal and her division's report, read twice (1686, 1687, 1688), or 4 by the tabular record (1605): low end without them, high end with. Aoba's 40 is where 'up to forty' (1598) and 'over 40' (1599) meet, and neither statement bounds its far end; Furutaka's 90 is 'about' in one source and 'over' in the other (1600, 1601), likewise unbounded. So this is a weak record, kept and judged for now by the architect's ruling of Nov 13, 2026 (decision 0084), which lists it among the limits of the check. Outside research is asked for bounded sources: if a row arrives before the check is run the record changes, and it does not change after the run. No row counts the hits on Fubuki, which sank, or on Hatsuyuki, so the measure is of the cruisers alone."
 
 [[measure]]
 id = "gun_hits_on_us_ships"
