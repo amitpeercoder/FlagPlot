@@ -57,10 +57,10 @@ The review is right that the closure of the chance to hit in round 2 multiplied 
 
 The wave sizes from the carriers' forms stand: they are independent of any run. What the old measures checked, the aircraft left to attack after the patrol and the guns, is kept beside them under new ids with the old take, `aircraft_attacking`, escorts not counted:
 
-| Measure | Record | Judged | Rows | First result (baseline batch) |
+| Measure | Record | Judged | Rows | Result (baseline batch, remade after decision 0079) |
 | --- | --- | --- | --- | --- |
-| `japanese_bombers_left_to_attack_enterprise_force` | 20 to 27 | no | 390, 389, 290, 1159, 1164 | reported: 0 to 9, median 1, held by none |
-| `us_aircraft_left_to_attack_ryujo` | 36 | yes | 333, 1238, 334, 335, 234, 235, 351 | agrees: 0 to 37, median 0, held by 135 |
+| `japanese_bombers_left_to_attack_enterprise_force` | 20 to 27 | no | 390, 389, 290, 1159, 1164 | reported: 0 to 18, median 11, held by 16 (before 0079: 0 to 9, median 1, by none) |
+| `us_aircraft_left_to_attack_ryujo` | 36 | yes | 333, 1238, 334, 335, 234, 235, 351 | agrees: 0 to 38, median 0, held by 130 |
 
 The Japanese measure is not judged: no row counts the bombers that reached release. The rows that try (390, Enterprise's report, "20 to 40, probably about 30"; 389, the 1943 narrative, about 30 left after about 6 destroyed before release) are the target's estimates of a wave they put at 36 dive bombers where the forms launched 27; the record's high end is the 27 launched. The American measure is judged: the narrative counts the bombs released by each squadron and the torpedo planes at Ryujo and her cruiser, and none was lost.
 
@@ -136,7 +136,7 @@ The headline read "after 9 agree (one at the edge) and 4 miss" of 14 judged; its
 
 ## The reports
 
-The round 2 batch of Savo Island and the baseline batch of the Eastern Solomons were made again on `main` with their labels, `r2` and `baseline`; validated against the measures as they were, they gave the committed reports' figures for every measure. Validated against the measures as changed, their reports replace `savo-island-r2.md` (judged 29: 21 agree, 2 at the edge, 6 miss) and `eastern-solomons-baseline.md` (judged 15: 10 agree, 1 at the edge, 4 miss). The figures of round 2's tuning record are those of the round as it was run, on the measures of the time.
+The round 2 batch of Savo Island and the baseline batch of the Eastern Solomons were made again on `main` with their labels, `r2` and `baseline`; validated against the measures as they were, they gave the committed reports' figures for every measure. Validated against the measures as changed, their reports replace `savo-island-r2.md` (judged 29: 21 agree, 2 at the edge, 6 miss) and `eastern-solomons-baseline.md` (judged 15: 10 agree, 1 at the edge, 4 miss). The Eastern Solomons report was remade again on `main` after decision 0079 landed, which moves its results: judged 15, 11 agree, 1 at the edge, 3 miss, bomb hits on Enterprise now agreeing. With 0079's live share at 0 every gun fires after the attack, so the measures of aircraft left to attack now count what the patrol leaves: the Japanese bombers left go from a median of 1 to 11. The figures of round 2's tuning record are those of the round as it was run, on the measures of the time.
 
 ## Rule card
 
