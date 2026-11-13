@@ -1,6 +1,6 @@
 # 0078: Which enemy ship a ship fires at
 
-Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). Not built. The hand calculations are written by the architect before any code is delegated.
+Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). Built on Nov 13, 2026; see "As built".
 
 ## The gap
 
@@ -102,3 +102,12 @@ Three rules, prototyped in a throwaway copy, 1,000 seeds each on the figures of 
 - Scenario 4's hand calculation (`tests/scenario_04_savo_island.rs`) has two tables of who fires at whom in the free round; they are worked again under this rule, and the test says which rule it was worked under. The hand-worked scoring of Savo Island in `tests/scenario_10b_objectives.rs` is worked again for the same reason. No other expected number moves.
 - The run baselines of every scenario with a night fight between forces of mixed kinds (4, 7 and 8), and the recorded games that hold one, are remade. The three reports are remade and are the baseline tuning starts from.
 - `docs/rules/04` and the glossary; a dated note in decision 0014 pointing here.
+
+## As built
+
+- **The rule** is in `crates/sim-core/src/surface.rs` alone: a ship's two targets are chosen at the start of the round, and its gun salvo and torpedo salvo each carry their own target and their own points a hit. The order of kinds is the one `ShipKind` already has. No state, no draw, no event kind and no part of the state hash changed. `side_events.rs` needed no change: a side still sees its own ship's salvo and that its ship was fired on.
+- **No draw moved.** Scenarios 4a, 15a, 15b and 16, where both forces are of one kind, pass untouched, and their run baselines are byte for byte what they were. Case 8 of the hand calculation asserts the whole event log of a fight of mixed kinds against the log captured on main before the change.
+- **The hand calculation** of eight cases is `tests/scenario_17a_target_choice.rs`, checked by the coordinating architect before any code; the code matched it with no difference.
+- **Worked again under this rule, by the architect:** the two tables of the free round in `tests/scenario_04_savo_island.rs`, and the scoring of Savo Island in `tests/scenario_10b_objectives.rs` (on its seed the result is now a minor Japanese victory by 3, where it was a minor Allied victory by 3). Both run on the frozen copy of scenario 4 and the frozen figures. The pinned fights of scenario 4 in `crates/sim-cli/tests/batch.rs` were worked again too.
+- **Only scenario 4's run changed.** Every other scenario's run baseline, 7 and 8 among them, is byte for byte as before: their night fights are between forces of one kind.
+- **Yunagi** is in a task force of her own in scenario 4 and meets neither Allied group (decision 0024, the note of Nov 13, 2026), so at Savo Island the column is seven cruisers and the Allied destroyers' guns go at cruisers, there being no destroyer to fire at.
