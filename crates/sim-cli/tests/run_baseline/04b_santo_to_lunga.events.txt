@@ -2,8 +2,8 @@ Scenario 4b: Espiritu Santo to Lunga Point on the real map
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 90a526c934621389  11 events
-day   2  hash 66b2022c51ee7281  7 events
+day   1  hash bdb4e998221c9d92  11 events
+day   2  hash adeb31fe26e15b44  7 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

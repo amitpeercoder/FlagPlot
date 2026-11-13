@@ -2879,12 +2879,13 @@ fn variant(tag: &str, edits: &[(&str, &str, &str)]) -> Scenario {
 
 const CLASSES: &str = "reference/ship_classes.csv";
 const SCENARIO: &str = "scenarios/04a_night_action.toml";
-const CRUISER_ROW: &str = "1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,200,400,0";
+const CRUISER_ROW: &str =
+    "1,Placeholder cruiser,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0";
 
 /// The cruiser row with another gun count, gun damage and radar flag.
 fn cruiser_row(guns: u32, gun_damage: u32, radar: u32) -> String {
     format!(
-        "1,Placeholder cruiser,cruiser,16,32,2000,8000,0,{guns},3,100,{gun_damage},8,200,400,{radar}"
+        "1,Placeholder cruiser,cruiser,16,32,2000,8000,0,{guns},3,100,{gun_damage},8,8,200,400,{radar}"
     )
 }
 

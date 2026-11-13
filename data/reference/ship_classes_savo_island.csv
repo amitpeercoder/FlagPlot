@@ -22,6 +22,13 @@
 #   jp-12cm-45-3ns rate_of_fire_rpm: weapon_facts.csv row 44 (preferred); reason: Settlement sheet e3: 5.5 rounds a minute, a designed rate. No practical rate exists for this gun.; agreed 2026-11-10
 #   us-8in-55-mk12 rate_of_fire_rpm: weapon_facts.csv row 349 (preferred); reason: Settlement sheet e4: 3 rounds a minute, a designed rate. No practical rate exists for this gun.; agreed 2026-11-10
 #   us-8in-55-mk9 rate_of_fire_rpm: weapon_facts.csv row 358 (preferred); reason: Settlement sheet e5: 3 rounds a minute, a designed rate, as for the Mark 12. The one practical figure (5, row 422) is one ship's best quarter-hour in another battle.; agreed 2026-11-10
+#   jp-takao-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1341 (unconfirmed); reason: Takao class, for Chokai. 4 tubes on a side. Her own action report has her fire 4 to port and 4 to starboard as separate salvos, and says four firing lines are too few. The row is for Chokai and Maya alone, who kept twin mounts; Chokai is the only ship of the class in a list. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   jp-aoba-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1343 (unconfirmed); reason: Aoba class. 4 tubes on a side: one quadruple mount each side of the catapult after the rebuild. At Savo Island Aoba and Kinugasa fired salvos of four or fewer to one side at a time. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   jp-furutaka-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1346 (unconfirmed); reason: Furutaka class. 4 tubes on a side: the same fit as Aoba. Furutaka fired 4 to port, then 1 and 3 to starboard; Kako 4, 4 and 2. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   jp-tenryu-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1323 (unconfirmed); reason: Tenryu class. 6 tubes on a side: two centreline triple mounts bear on either side. She fired 6. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   jp-yubari-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1327 (unconfirmed); reason: Yubari class. 4 tubes on a side: two centreline twin mounts. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   uk-county-kent-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1265 (unconfirmed); reason: Kent subclass of the County class (Canberra). 4 tubes on a side: one quadruple mount each side. She fired none, or two, that night. Read for decision 0074 (built with 0083).; agreed 2026-11-13
+#   us-benham-class torpedo_tubes_per_broadside: ship_class_facts.csv row 1182 (unconfirmed); reason: Benham class (Wilson). 8 tubes on a side: four quadruple wing mounts as built. Whether the fit of 1942 was still that is a gap; no source read says it had changed by August 1942. Read for decision 0074 (built with 0083).; agreed 2026-11-13
 # Achieved rates of fire (decision 0070):
 #   salvo: median 1.128571 of 4 cases
 #   destroyer: median 2.444444 of 1 case
@@ -49,17 +56,19 @@
 #   tenryu: no main_rounds_per_gun row in the facts, main-gun ammunition treated as not limiting (9999 is a marker, not an outfit)
 #   yubari: no main_rounds_per_gun row in the facts, main-gun ammunition treated as not limiting (9999 is a marker, not an outfit)
 #   yunagi: no main_rounds_per_gun row in the facts, main-gun ammunition treated as not limiting (9999 is a marker, not an outfit)
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_damage,toughness,radar
-1000,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,196,354.32,0
-1001,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,196,342.52,0
-1002,Kamikaze class (1922),destroyer,14,37.2,413,3600,0,4,2.444444,9999,3.383333,6,80,50.8,0
-1003,Takao class,cruiser,14,35.5,2529,8000,0,10,1.128571,120,20.975,8,150,454,0
-1004,Tenryu class,cruiser,14,33,905,5000,0,4,1.128571,9999,6.333333,6,80,157.92,0
-1005,Yubari class,cruiser,14,35.5,902,3310,0,6,1.128571,9999,6.333333,4,138,113.76,0
-1006,County class (Kent subclass),cruiser,12,31.5,3400,13300,0,8,1.128571,130,19.35,8,134.28,390,0
-1007,"Bagley class (Bagley, Patterson, Helm, Jarvis)",destroyer,15,38.5,506,6080,0,4,2.444444,300,4.166666,16,89.64,64.96,0
-1008,"Bagley class (Blue, Ralph Talbot)",destroyer,15,38.5,506,6080,0,4,2.444444,300,4.166666,16,89.64,64.96,0
-1009,Benham class,destroyer,15,38.5,491,4860,0,4,2.444444,300,4.166666,16,89.64,66.28,0
-1010,New Orleans class (Vincennes),cruiser,15,32.7,1900,6500,0,9,1.128571,150,19.65,0,0,398,0
-1011,"New Orleans class (Quincy, Astoria)",cruiser,15,32.7,1900,6500,0,9,1.128571,150,19.65,0,0,398,0
-1012,Northampton class,cruiser,20,32.5,2987,7330,0,9,1.128571,167,19.65,0,0,362,0
+# Torpedo tubes not split (decision 0074, 3): not split: no row says how its tubes bear, so torpedo_tubes_one_side is torpedo_tubes, for:
+#   yunagi (Kamikaze class (1922))
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar
+1000,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,4,196,354.32,0
+1001,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,4,196,342.52,0
+1002,Kamikaze class (1922),destroyer,14,37.2,413,3600,0,4,2.444444,9999,3.383333,6,6,80,50.8,0
+1003,Takao class,cruiser,14,35.5,2529,8000,0,10,1.128571,120,20.975,8,4,150,454,0
+1004,Tenryu class,cruiser,14,33,905,5000,0,4,1.128571,9999,6.333333,6,6,80,157.92,0
+1005,Yubari class,cruiser,14,35.5,902,3310,0,6,1.128571,9999,6.333333,4,4,138,113.76,0
+1006,County class (Kent subclass),cruiser,12,31.5,3400,13300,0,8,1.128571,130,19.35,8,4,134.28,390,0
+1007,"Bagley class (Bagley, Patterson, Helm, Jarvis)",destroyer,15,38.5,506,6080,0,4,2.444444,300,4.166666,16,8,89.64,64.96,0
+1008,"Bagley class (Blue, Ralph Talbot)",destroyer,15,38.5,506,6080,0,4,2.444444,300,4.166666,16,8,89.64,64.96,0
+1009,Benham class,destroyer,15,38.5,491,4860,0,4,2.444444,300,4.166666,16,8,89.64,66.28,0
+1010,New Orleans class (Vincennes),cruiser,15,32.7,1900,6500,0,9,1.128571,150,19.65,0,0,0,398,0
+1011,"New Orleans class (Quincy, Astoria)",cruiser,15,32.7,1900,6500,0,9,1.128571,150,19.65,0,0,0,398,0
+1012,Northampton class,cruiser,20,32.5,2987,7330,0,9,1.128571,167,19.65,0,0,0,362,0
