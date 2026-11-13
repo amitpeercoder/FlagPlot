@@ -24,15 +24,16 @@ An air group is one unit of aircraft of one aircraft type. It holds:
 - `rest_above`: the rest threshold, or none, and the order that set it.
 - `reach`: normal or extended, default normal, and the order that set it (see "Radius and reach").
 - `stood_down`: whether the staff stood the group down today.
+- `rebased_day`: the day it last moved to another base by order, or none (see "Rebasing an air group").
 - Its place: exactly one base or exactly one ship.
 
-[0025, 0035, 0036, 0038, 0041, 0059]
+[0025, 0035, 0036, 0038, 0041, 0059, 0091]
 
 A side sees: its own groups whole. The enemy sees nothing of a group except through a sighting report, a claim, or the fight events listed with each rule below.
 
 ### Where a group is
 
-A group at a base is at the base's hex. A group aboard a ship is at the position of the ship's task force, and moves with it with no order. A group aboard a ship that is in a port is at the port's hex, and is still aboard the ship. A group aboard a ship that has sunk has no position. A group cannot change between a ship and a base, or between bases: there is no rebase order. Aircraft can come to be at another place only by landing there when their own deck is lost (see "Coming home to no deck"), and they then belong to a group of that place. A group with no aircraft is at its place all along and can be given orders. [0025, 0041, 0052, 0059]
+A group at a base is at the base's hex. A group aboard a ship is at the position of the ship's task force, and moves with it with no order. A group aboard a ship that is in a port is at the port's hex, and is still aboard the ship. A group aboard a ship that has sunk has no position. A group cannot change between a ship and a base. A group at a base changes base only by a rebase order (see "Rebasing an air group"). Aircraft can come to be at another place also by landing there when their own deck is lost (see "Coming home to no deck"), and they then belong to a group of that place. A group with no aircraft is at its place all along and can be given orders. [0025, 0041, 0052, 0059, 0091]
 
 A side sees: its own group's place. The enemy sees only what a report says of a force.
 
@@ -76,26 +77,52 @@ The orders that act on an air group, and every reason one is refused, are in cha
 - A rest threshold order sets `rest_above`, which only Stand-down and return reads. It does nothing when the fatigue figures are not loaded.
 - A reach order sets `reach` to normal or extended, which the strike decision, the base strike and the escorts read (see "Radius and reach"), and which a sortie beyond the radius pays for (see "Running out of fuel"). It does nothing for a group that does not strike or escort.
 - A target priority order sets `target_priority`, a list of kinds of ship, and `target_order`. The strike decision reads it to choose a contact, and the raid reads it to choose what to attack (see "Naval strike: the contact" and "The attack on a ship"). It does nothing for a group that does not strike, and it is accepted for any group.
+- A rebase order is not a standing order. It is applied when it is taken in and is then spent (see "Rebasing an air group").
 
-The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063]
+The checks are made against the truth, and a refusal cites only what the side can see (chapter 1). [0026, 0027, 0034, 0036, 0050, 0059, 0063, 0091]
 
 A side sees: `OrderAccepted` or `OrderRejected` for its own orders, whole.
 
-Not built: orders to rebase and to change the repair order (0052).
+Not built: an order to change the repair order (0052).
+
+### Rebasing an air group
+
+A rebase order (`rebase`, with `air_group` and `base`) moves a group at a base to another base of its side. It is given in a scenario file as `kind = "rebase"` with `air_group` and `base`. It is checked and applied at orders intake, at the start of the day, in the same step as a yard order (chapter 1, Orders). It is for one day's move and is spent when it is done. [0091]
+
+**Refusals.** Chapter 1, Every reason an order is refused, lists them in the order they are tried. In short, the order is refused if the group is not the side's own or is lost with its ship; if it is aboard a ship (away at the yard or not); if it has already moved to another base that day; if the base is not one of the side's own; if the group is already at that base; or if the base is beyond the type's transfer range. A base a landing formed (chapter 7) is a base of the side and may be named. [0091]
+
+**The transfer range** is twice the longer of the type's search range (`aircraft_types*.csv: search_range_nm`) and strike radius (`strike_range_nm`), read through `RefData::transfer_range_nm`. The group's reach does not change it. The distance is the air distance between the two bases' hexes (Air distance, above): along an axis it is 40 miles a hex. A distance is within the range if it is less than or equal to it. [0040, 0091]
+
+**What the move does.** In this order:
+
+1. The group's damaged aircraft cannot fly and are written off at the base it leaves. `AircraftWrittenOff` (group, base, aircraft) is recorded, only if there were any, and the group's `damaged` falls to 0.
+2. The group's place becomes the new base, and its `rebased_day` is set to the day. Its ready aircraft and all its pilots go with it.
+3. `AirGroupRebased` (group, from, to, distance, transfer range, ready aircraft, pilots) is recorded. When breakdowns are on it carries the type's search range and strike radius, the transfer range and the distance.
+
+Both events come straight after the order's `OrderAccepted` and cite the order. Nothing is rolled: no wear, no ditching, no supply for the flight and no fatigue. Written-off aircraft are aircraft lost for good, as aircraft written off by wear are (chapter 6, Aircraft destroyed). [0091]
+
+**The day of the move.** The group flies nothing that day: no search, strike, escort or patrol. This is limit 2 of "The order of the limits". Its aircraft are on the ground at the new base for any raid on it that day. Its mission, search arc, target list, rest threshold, reach, patrol share, stood-down state and fatigue are not changed, and it flies them from the new base from the next day. A group that did not fly gains and loses fatigue as any group that did not fly does. A second rebase order to the group on the day it moved is refused, so a move by way of an intermediate base takes two days. [0091]
+
+**What follows the group.** The move is made before the first pulse, so the night pulse of that day already works on the new base. Arrivals named for the group are delivered to it where it now is (Aircraft that arrive on a day). It leaves its old base's replacement stream and comes under the new base's, if that base has one (Replacements). The new base pays its daily supply for the group's aircraft from that night (Daily supply). Nothing of this needs a rule of its own: each reads the group's place. [0038, 0039, 0041, 0091]
+
+A side sees: its own `AirGroupRebased` and `AircraftWrittenOff`, whole. The enemy sees nothing of them. Both cite only the side's own order. [0091]
+
+Data: no figure of its own. It reads `aircraft_types*.csv: search_range_nm` and `strike_range_nm`.
 
 ## What a group can fly in a pulse
 
 ### The order of the limits
 
-Search, strike launch and the split of fighters into patrol and escorts all use one number, the aircraft the group is able to fly. It is worked out, for a group, in this order. [0026, 0036, 0038, 0039]
+Search, strike launch and the split of fighters into patrol and escorts all use one number, the aircraft the group is able to fly. It is worked out, for a group, in this order. [0026, 0036, 0038, 0039, 0091]
 
 1. A group at a base that is out of supply at the start of the pulse flies none. A group aboard a ship is never limited this way.
-2. Start from the smaller of the group's ready aircraft and its pilots. A group whose pilots are not tracked starts from its ready aircraft.
-3. If the group is aboard a ship, multiply by the ship's flight deck factor: 1 if the deck is working, `surface_combat.toml: degraded_factor` if degraded, 0 if out. A group at a base is not multiplied. Without the surface combat figures this step does nothing.
-4. Fatigue. If `fatigue.toml` is loaded, a group that is stood down flies none, and any other group is multiplied by (100 minus its fatigue) over 100, so loaded fatigue figures do cut the aircraft. If `fatigue.toml` is not loaded, nothing is multiplied, no group is ever stood down, and fatigue cuts nothing.
-5. Cut the result to a whole number once, toward zero. The multiplications of steps 3 and 4 are fixed-point, so no rounding happens before this cut.
+2. A group that moved to another base by order that day flies none (see "Rebasing an air group").
+3. Start from the smaller of the group's ready aircraft and its pilots. A group whose pilots are not tracked starts from its ready aircraft.
+4. If the group is aboard a ship, multiply by the ship's flight deck factor: 1 if the deck is working, `surface_combat.toml: degraded_factor` if degraded, 0 if out. A group at a base is not multiplied. Without the surface combat figures this step does nothing.
+5. Fatigue. If `fatigue.toml` is loaded, a group that is stood down flies none, and any other group is multiplied by (100 minus its fatigue) over 100, so loaded fatigue figures do cut the aircraft. If `fatigue.toml` is not loaded, nothing is multiplied, no group is ever stood down, and fatigue cuts nothing.
+6. Cut the result to a whole number once, toward zero. The multiplications of steps 4 and 5 are fixed-point, so no rounding happens before this cut.
 
-The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039]
+The cut is applied once, to the product. Chapter 1, Where figures come from and when a rule is loaded, says what "loaded" means. A group of 6 aircraft with fatigue 1 and a working deck flies 5. A group aboard a carrier with a degraded deck and fatigue 20, 10 ready and 10 pilots, flies 10 times the degraded factor times 0.8: with a degraded factor of 0.5 (an example, not the figure) that is 4. A group's flight deck is worked group by group, not for the ship. [0026, 0036, 0038, 0039, 0091]
 
 A side sees: the number it flew in its own events (`SearchFlown`, `StrikeLaunched`, `EscortsSent`). It is not told the limits that produced it.
 
@@ -165,7 +192,7 @@ Not built: an order to change which group is repaired first (0052), repair by ty
 
 A side sees: `AircraftRepaired` and `BaseSupplySpent` for its own groups and bases, whole. The enemy sees nothing.
 
-**A group aboard a ship at the yard.** An air group aboard a ship that is away at the yard (chapter 4, Repair) goes and returns with her, with its aircraft, damaged aircraft and pilots as they were. While she is away it flies nothing, is not repaired (a ship at the yard is not a place of the list above), gets no replacement, and its wear and fatigue do not change: it is neither stood down nor returned. An arrival due to it while it is away is not delivered and not kept (below). Its aircraft are not at a base, and a group cannot change base, so it does not fly ashore. The group is not lost: it is lost only with a sunk ship (`AirGroupLost`). Shipyard repair is for the ship and does not repair the group's damaged aircraft. [0069]
+**A group aboard a ship at the yard.** An air group aboard a ship that is away at the yard (chapter 4, Repair) goes and returns with her, with its aircraft, damaged aircraft and pilots as they were. While she is away it flies nothing, is not repaired (a ship at the yard is not a place of the list above), gets no replacement, and its wear and fatigue do not change: it is neither stood down nor returned. An arrival due to it while it is away is not delivered and not kept (below). Its aircraft are not at a base, and a group aboard a ship cannot be rebased (a rebase order to it is refused as away at the yard), so it does not fly ashore. The group is not lost: it is lost only with a sunk ship (`AirGroupLost`). Shipyard repair is for the ship and does not repair the group's damaged aircraft. [0069]
 
 ### Aircraft that arrive on a day
 
@@ -176,7 +203,7 @@ A scenario may list arrivals (`[[arrival]]` entries in the scenario file): a day
 3. If the group's pilots are tracked, its pilots rise by the arrival's pilots. If not, the arrival's pilots are dropped.
 4. `AircraftArrived` is recorded, with no cause (nothing orders it), giving the arrival, the group's ready aircraft, pilots and strength after it.
 
-Arriving aircraft are ready. The flight in costs nothing: no wear, fatigue or supply, and nothing can intercept it. An arrival on day 1 is the same as starting with the aircraft. No random number. [0041]
+An arrival is delivered to the group wherever it now is, including a base it was rebased to (see "Rebasing an air group"). Arriving aircraft are ready. The flight in costs nothing: no wear, fatigue or supply, and nothing can intercept it. An arrival on day 1 is the same as starting with the aircraft. No random number. [0041, 0091]
 
 A side sees: `AircraftArrived` for its own groups, whole.
 
@@ -185,7 +212,7 @@ A side sees: `AircraftArrived` for its own groups, whole.
 A scenario may give a side replacements at a base (`[[replacement]]` entries in the scenario file): for one aircraft type, a number of aircraft a day and a number of pilots a day. From day 2 on, after arrivals, each stream is worked in the order given:
 
 1. If the base is not still held by the stream's side, nothing happens.
-2. The groups located at that base, of that side, that fly that type are taken lowest group number first.
+2. The groups located at that base, of that side, that fly that type are taken lowest group number first. A group rebased to the base is one of them, and one rebased away from it is not (see "Rebasing an air group").
 3. For each, the aircraft it receives are the smaller of the aircraft left in the stream and its `strength` less its ready and damaged aircraft (zero if that is negative). The pilots it receives, if its pilots are tracked, are the smaller of the pilots left in the stream and its strength less its pilots. A group whose pilots are not tracked takes aircraft and no pilots, and the day's pilots pass to the next group.
 4. A group that receives anything gets the aircraft as ready and the pilots added. `ReplacementsReceived` is recorded for it, with no cause.
 5. What no group can take is lost. Nothing is held over to the next day.
@@ -196,7 +223,7 @@ A side sees: `ReplacementsReceived` for its own groups, whole.
 
 ### Daily supply
 
-After replacements, each base, in base order, pays `air_supply.toml: daily_supply_t_per_aircraft` for each aircraft located at it, ready and damaged together, as much as its stock covers. The aircraft are counted after the night's repairs and replacements. A base with no stock, or with nothing to pay, pays nothing and records nothing. Otherwise `BaseSupplySpent` (reason upkeep) records the aircraft, the amount asked, the amount paid and the stock left, with no cause. A payment the stock cannot cover takes what is left, and nothing is owed. No random number. [0039]
+After replacements, each base, in base order, pays `air_supply.toml: daily_supply_t_per_aircraft` for each aircraft located at it, ready and damaged together (a rebased group's aircraft are at the new base, see "Rebasing an air group"), as much as its stock covers. The aircraft are counted after the night's repairs and replacements. A base with no stock, or with nothing to pay, pays nothing and records nothing. Otherwise `BaseSupplySpent` (reason upkeep) records the aircraft, the amount asked, the amount paid and the stock left, with no cause. A payment the stock cannot cover takes what is left, and nothing is owed. No random number. [0039]
 
 The men ashore in the base's hex are charged after this, in the men's supply phase of the same night, on the same stock: `ground.toml: daily_supply_t_per_man` for each man. It is recorded as `BaseSupplySpent` with the reason men and a count of men, and the aircraft count 0. A stock too short for both feeds the aircraft: their charge is paid first. Every other `BaseSupplySpent` has 0 men. Chapter 7, The men's supply, gives the rule. [0039, 0066]
 
@@ -502,7 +529,7 @@ A side sees: `AirGroupFatigue` for its own groups, whole.
 
 ### What fatigue cuts
 
-Fatigue cuts the aircraft a group is able to fly, as limit 4 of "The order of the limits" says, and does nothing else. It changes no chance to hit and no chance of wear. It cuts search, strike, escort and patrol alike. Fatigue gained in the morning cuts what flies in the afternoon. [0036]
+Fatigue cuts the aircraft a group is able to fly, as limit 5 of "The order of the limits" says, and does nothing else. It changes no chance to hit and no chance of wear. It cuts search, strike, escort and patrol alike. Fatigue gained in the morning cuts what flies in the afternoon. [0036]
 
 Not built: crew experience, morale, rest better at a well-found base, weather (0036, 0052).
 
@@ -516,11 +543,12 @@ A side sees: `BaseSupplySpent` for its own bases, whole. The patrol itself has n
 
 Chapter 1, The night pulse and The morning and afternoon pulses, hold the sequence. The air rules in that order:
 
-1. At the start of every pulse: the grounded bases are fixed (A base out of supply).
-2. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, the men's supply (chapter 7), stand-down and return.
-3. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
+1. Before the pulses, at orders intake: a rebase order is applied (Rebasing an air group; chapter 1, Orders).
+2. At the start of every pulse: the grounded bases are fixed (A base out of supply).
+3. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, the men's supply (chapter 7), stand-down and return.
+4. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
 
-Contacts age at the end of every pulse (chapter 3). The end-of-day phases do nothing for aircraft. [0035, 0036, 0039, 0041, 0059]
+Contacts age at the end of every pulse (chapter 3). The end-of-day phases do nothing for aircraft. [0035, 0036, 0039, 0041, 0059, 0091]
 
 ## Known limits
 
@@ -530,8 +558,8 @@ Contacts age at the end of every pulse (chapter 3). The end-of-day phases do not
 - **Target lists are standing.** An order given after a contact is seen does not send a strike at it that day: search, decision and strike all happen inside the day. A list cannot hold back a share of a group, split a strike among several ships, name a contact, or hold by the size of a force. [0063]
 - **No night strikes.** [0026, 0034]
 - **Bases.** A base strike launches once a day, in the first daylight pulse in which the base is in reach. A bomb's size does not matter. No runway or port damage. No damage assessment for the raider except a claim. [0034, 0052, 0063]
-- **No rebase.** A group cannot move between bases or between a ship and a base. [0025, 0041, 0052]
-- **Landing elsewhere is by deck loss only.** Aircraft in the air when their own deck is lost land at another carrier or a base, or come down in the sea; no group is ever ordered to move, and a landing plans no field beyond the target. Aircraft aboard a ship that sinks are lost with her, with their pilots, though most of those men were really saved: a saved pilot with no aircraft has nowhere to go, and there is no roster of pilots. [0025, 0059]
+- **Rebasing is whole and by order.** A group at a base moves by a rebase order, the whole group at once, to a base within its transfer range, and a group aboard a ship cannot be rebased or go aboard. A base takes any number of aircraft. There is no loss on the flight and no enemy patrol meets it. A base beyond the range is reached by two orders on two days. [0052, 0091]
+- **Landing elsewhere is by deck loss only.** Aircraft in the air when their own deck is lost land at another carrier or a base, or come down in the sea; no group is ordered to move by this rule, and a landing plans no field beyond the target. Aircraft aboard a ship that sinks are lost with her, with their pilots, though most of those men were really saved: a saved pilot with no aircraft has nowhere to go, and there is no roster of pilots. [0025, 0059]
 - **Pilots are a count.** No experience, no skills, no pilot wounded. A pilot shot down away from home is not rescued. The crew of an aircraft that ran out of fuel on the way home may be, at one chance whatever the place it came down, and the pilot of a patrol aircraft shot down over its own hex may be, at a chance for a base and one for ships. [0038, 0052, 0059]
 - **Arrivals and capacity.** An arrival to a group aboard a ship is not tested against the ship's aircraft capacity. An over-capacity ship is found by the end-of-day check, which stops the run. To change: differences.md row 27, a scenario whose arrival would overfill a ship is to be refused when it loads.
 - **Aircraft in reserve, morale, a base's aviation support, ground support, weather** are not built. [0052]

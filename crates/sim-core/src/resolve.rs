@@ -2876,6 +2876,127 @@ mod tests {
         );
     }
 
+    // ---- Rebasing (decision 0091) ----
+
+    fn rebase(base: u32) -> OrderRequest {
+        air_order(
+            GROUP,
+            AirGroupOrder::Rebase {
+                base: BaseId::new(base),
+            },
+        )
+    }
+
+    /// The test world with a second Allied base 5 hexes east, 200 nm.
+    fn world_with_two_bases() -> World {
+        let mut world = world_with_air_group();
+        world.truth.bases.insert(
+            BaseId::new(2),
+            Base::new(
+                BaseId::new(2),
+                "Second base".to_string(),
+                Side::Allied,
+                Hex::new(5, 0),
+            ),
+        );
+        world
+    }
+
+    #[test]
+    fn a_rebase_to_a_group_lost_with_its_ship_is_refused_as_lost() {
+        let mut world = world_with_two_bases();
+        world
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .location = AirGroupLocation::Ship(SHIP);
+        sink(&mut world, SHIP);
+        take_in(&mut world, vec![rebase(2)]);
+        assert_eq!(rejection(&world), Some(RejectReason::AirGroupLost));
+    }
+
+    #[test]
+    fn a_rebase_to_a_group_aboard_a_ship_at_the_yard_is_refused_as_away_at_the_yard() {
+        let mut world = world_with_two_bases();
+        world
+            .truth
+            .air_groups
+            .get_mut(&GROUP)
+            .expect("group")
+            .location = AirGroupLocation::Ship(SHIP);
+        // Aboard a ship afloat in a force: aboard a ship.
+        assert_eq!(
+            world.check_order(Side::Allied, &rebase(2)),
+            Err(RejectReason::AirGroupAboardShip)
+        );
+        // The same ship away at the yard: away at the yard.
+        world.truth.ships.get_mut(&SHIP).expect("ship").location = ShipLocation::Yard(TF);
+        assert_eq!(
+            world.check_order(Side::Allied, &rebase(2)),
+            Err(RejectReason::AirGroupAwayAtYard)
+        );
+        assert_eq!(
+            RejectReason::AirGroupAwayAtYard.to_string(),
+            "the air group is aboard a ship that is away at a yard"
+        );
+    }
+
+    #[test]
+    fn a_group_that_moved_today_is_able_to_fly_none_and_flies_again_the_next_day() {
+        let mut world = world_with_two_bases();
+        let fly = |world: &World| world.aircraft_able_to_fly(&world.truth.air_groups[&GROUP]);
+        assert_eq!(fly(&world), 3);
+        take_in(&mut world, vec![rebase(2)]);
+        assert_eq!(rejection(&world), None);
+        // Intake was for day 1, which is being resolved.
+        assert_eq!(world.truth.air_groups[&GROUP].rebased_day, Some(1));
+        assert_eq!(fly(&world), 0);
+        // Day 1 resolved: the next day it flies.
+        world.truth.day = 1;
+        assert_eq!(fly(&world), 3);
+    }
+
+    #[test]
+    fn a_rebase_keeps_the_standing_orders_fatigue_and_stand_down() {
+        let mut world = world_with_two_bases();
+        let order_id = OrderId::new(77);
+        {
+            let group = world.truth.air_groups.get_mut(&GROUP).expect("group");
+            group.mission = AirMission::Search;
+            group.mission_order = Some(order_id);
+            group.fatigue = nm(40);
+            group.rest_above = Some(nm(30));
+            group.stood_down = true;
+            group.damaged = 1;
+        }
+        let before = world.truth.air_groups[&GROUP].clone();
+        take_in(&mut world, vec![rebase(2)]);
+        let after = &world.truth.air_groups[&GROUP];
+        assert_eq!(after.location, AirGroupLocation::Base(BaseId::new(2)));
+        assert_eq!(after.damaged, 0);
+        assert_eq!(after.ready, before.ready);
+        assert_eq!(
+            AirGroup {
+                location: before.location,
+                damaged: before.damaged,
+                rebased_day: before.rebased_day,
+                ..after.clone()
+            },
+            before,
+            "nothing else changes"
+        );
+    }
+
+    #[test]
+    fn a_rebase_is_not_a_standing_order_and_names_no_order_on_the_group() {
+        let mut world = world_with_two_bases();
+        take_in(&mut world, vec![rebase(2)]);
+        let group = &world.truth.air_groups[&GROUP];
+        assert_eq!(group.mission_order, None);
+        assert_eq!(group.arc_order, None);
+    }
+
     #[test]
     fn a_route_rejected_at_intake_leaves_the_leg_unchanged() {
         // Off the map: rejected before any choice is made.

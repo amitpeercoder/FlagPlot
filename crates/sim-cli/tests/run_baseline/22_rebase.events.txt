@@ -1,0 +1,38 @@
+Scenario 22: Rebasing an air group
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 63cc1cc4030e8b8e  7 events
+day   2  hash a948fc167d8487dd  8 events
+day   3  hash df98ca2d38e4d691  5 events
+
+#1 D1 -         order:1 accepted for air_group:1  <- order:1
+#2 D1 -         order:2 accepted for air_group:1  <- order:2
+#3 D1 morning   air_group:1 searched 060-120 out to 400 nm from base:1 with 6 aircraft  <- order:1, order:2
+#4 D1 afternoon air_group:1 searched 060-120 out to 400 nm from base:1 with 6 aircraft  <- order:1, order:2
+#5 D1 -         base:1 at the end of the day: 0 t of supply, 18 aircraft ready: not open
+#6 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#7 D1 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#8 D2 -         order:3 accepted for air_group:1  <- order:3
+#9 D2 -         air_group:1 wrote off 2 damaged aircraft at base:1, which could not fly  <- order:3
+#10 D2 -         air_group:1 moved from base:1 to base:2, 200 nm within its transfer range of 1200 nm, with 6 ready; it flies nothing today  <- order:3
+#11 D2 -         order:4 rejected for air_group:2: the base is 520 nm away, beyond the air group's transfer range of 500 nm  <- order:4
+#12 D2 -         order:5 rejected for air_group:2: the air group is already at that base  <- order:5
+#13 D2 -         base:1 at the end of the day: 0 t of supply, 12 aircraft ready: not open
+#14 D2 -         base:2 at the end of the day: 0 t of supply, 6 aircraft ready: not open
+#15 D2 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#16 D3 morning   air_group:1 searched 060-120 out to 400 nm from base:2 with 6 aircraft  <- order:1, order:2
+#17 D3 afternoon air_group:1 searched 060-120 out to 400 nm from base:2 with 6 aircraft  <- order:1, order:2
+#18 D3 -         base:1 at the end of the day: 0 t of supply, 12 aircraft ready: not open
+#19 D3 -         base:2 at the end of the day: 0 t of supply, 6 aircraft ready: not open
+#20 D3 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+air_group:1 "Placeholder patrol squadron" (Allied) at base:2: 6 ready, mission Search, arc 060-120 to 400 nm
+air_group:2 "Placeholder fighter squadron" (Allied) at base:1: 12 ready, mission Rest, no arc
+base:1 "Placeholder airfield 1" (Allied) at (0,0): 0 t of supply in stock
+base:2 "Placeholder airfield 2" (Allied) at (5,0): 0 t of supply in stock
+base:3 "Placeholder airfield 3" (Allied) at (13,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

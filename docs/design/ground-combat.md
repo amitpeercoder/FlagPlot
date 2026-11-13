@@ -86,7 +86,7 @@ Rule complexity asks for one mechanism over several. This plan adds one new kind
 - A share of its supply and fuel is captured and the rest is lost.
 - Air groups at it are lost with their aircraft, by the event that records a group lost with its ship.
 - The beaten side's men in the hex stay ashore with no base to feed them, unless they hold another base there. They can be taken off by sea.
-- An arrival of aircraft set for a base (decision 0041) happens only if the base is then its side's. Rebasing by order stays deferred (decision 0052, item 7).
+- An arrival of aircraft set for a base (decision 0041) happens only if the base is then its side's. Rebasing by order is built (decision 0091), so a side may fly a group out of a base before it falls.
 
 ### Shells and bombs
 

@@ -240,6 +240,13 @@ function checkReplay(file) {
   const model = Core.buildModel(replay);
   const g = checkGeometry(replay, path.basename(file)) || { edges: 0, oneSided: 0 };
 
+  // Each air group at a base ends at the base the final state gives: a rebase (decision 0091) is followed.
+  const lastState = model.states[model.states.length - 1];
+  for (const fg of (replay.final && replay.final.air_groups) || []) {
+    if (fg.base == null || !lastState.groupBase || !lastState.groupBase.has(fg.id)) continue;
+    assert(lastState.groupBase.get(fg.id) === fg.base, 'air_group:' + fg.id + ' is rebuilt at base:' + lastState.groupBase.get(fg.id) + ' but ends at base:' + fg.base);
+  }
+
   // Steps: Start first; every event in exactly one step; steps ordered
   // Day-0 events (contacts a scenario starts a side with) are the Start step's; every other step has days >= 1.
   const day0 = replay.events.map((e, i) => e.day === 0 ? i : -1).filter(i => i >= 0);

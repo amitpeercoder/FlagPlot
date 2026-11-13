@@ -1,6 +1,6 @@
 # 0091: Rebasing an air group by order
 
-Status: confirmed as to the need. The designer asked on Nov 13, 2026 for rebasing to be built before the fight ashore (decision 0090), so that a player can fly aircraft out of a base that is about to fall. The rule's details are the architect's, of the same date. Not built. It has no figure of its own.
+Status: confirmed as to the need. The designer asked on Nov 13, 2026 for rebasing to be built before the fight ashore (decision 0090), so that a player can fly aircraft out of a base that is about to fall. The rule's details are the architect's, of the same date. Built on Nov 14, 2026 (scenario 22). It has no figure of its own.
 
 ## The gap
 
@@ -58,3 +58,18 @@ The hand calculation is in `tests/scenario_22_rebase.rs`.
 | --- | --- |
 | Reads | The air group's side, place, aircraft and type; the type's search and strike range; the base's side and hex; the day |
 | Writes | The air group's place, its damaged aircraft and the day it moved; the two events |
+
+## As built
+
+Built on Nov 14, 2026, to the sections above and the architect's hand calculation in `tests/scenario_22_rebase.rs`. Nothing above this section was changed except the status line. Every choice the build made that the record did not is listed here.
+
+- **The distance** is the air distance between the two bases' hexes, `Hex::air_distance_nm` (decision 0040): along an axis, 40 nm a hex. A distance is within the transfer range if it is less than or equal to it. The range is `RefData::transfer_range_nm`.
+- **The refusals** reuse three existing reasons (not your unit, air group lost, not your base) and add five (aboard a ship, away at the yard, already moved today, already at the base, beyond the transfer range). They are tried in this order: not your unit, air group lost, away at the yard, aboard a ship, already moved today, not your base, already at the base, beyond the transfer range. A group aboard a ship that is at the yard is told it is away at the yard. The beyond-range reason carries the distance and the range.
+- **A second rebase order on the day of a move is refused** (already moved today). Staging through a base therefore takes two days, as "What it leaves out" says.
+- **The events.** `AircraftWrittenOff` (group, base left, aircraft) comes first, only if the group had damaged aircraft; `AirGroupRebased` (group, from, to, distance, transfer range, ready aircraft, pilots) follows. Both cite the order and come right after its `OrderAccepted`. `AirGroupRebased` carries a breakdown of the search range, strike range, transfer range and distance when breakdowns are on.
+- **The day of the move** is a limit in `aircraft_able_to_fly`, right after the base out of supply: a group that moved to another base by order that day flies none. It is limit 2 of "The order of the limits" in chapter 5. The normal fatigue rules for a group that did not fly apply that day.
+- **Aircraft written off** count for `aircraft_destroyed` as aircraft lost for good, as aircraft written off by wear do, and `sim-cli batch` counts them in `worn_out` of `air_losses`.
+- **The agent interface.** The briefing's air group line and `get_entity` gain `moved_yesterday` (true the day after a move, when the group flew nothing). The briefing's losses gain `air_groups_rebased`, and `AircraftWrittenOff` is counted in the briefing's `written_off`. `measure`'s `air_reach` answer gains `transfer_range_nm`. The order is `rebase` with `air_group` and `base`, in a scenario file as `kind = "rebase"`.
+- **The new state** is an air group's `rebased_day`, the day it last moved, written in the hash after `last_base_strike_day`. The state version is 11 and the golden files are remade.
+- **A base formed by a landing** is a base of the side (decision 0066) and may be named by a rebase order.
+- **The rulebook.** Chapter 5 has the section "Rebasing an air group" and the new limit; chapter 1 has the order, its refusals and the events' visibility; chapter 6 counts the written-off aircraft; the glossary has "rebase" and "transfer range".

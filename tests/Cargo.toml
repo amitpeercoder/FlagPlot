@@ -215,3 +215,7 @@ workspace = true
 [[test]]
 name = "scenario_21_landing"
 path = "scenario_21_landing.rs"
+
+[[test]]
+name = "scenario_22_rebase"
+path = "scenario_22_rebase.rs"

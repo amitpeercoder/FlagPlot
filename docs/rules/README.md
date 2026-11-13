@@ -27,7 +27,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | Step | When | What runs | Where |
 | --- | --- | --- | --- |
 | 1 | Day start | Refuelling in port | Chapter 2, Refuelling in port |
-| 2 | Day start | Orders intake: numbering, checks, refusals | Chapter 1, Orders |
+| 2 | Day start | Orders intake: numbering, checks, refusals; a yard order and a rebase order are applied at their acceptance | Chapter 1, Orders; chapter 4, Repair; chapter 5, Rebasing an air group |
 | 3 | Start of each pulse | Alert from belief | Chapter 3, Alert from belief |
 | 4 | Start of each pulse | Fatigue of task forces | Chapter 3, Fatigue of a force |
 | 5 | Start of each pulse | Bases out of supply fixed | Chapter 5, A base out of supply |
@@ -59,7 +59,7 @@ The result of a game is worked out from the final state and the log. It is not a
 2. **Movement, fuel and cargo.** The map as the rules read it, task forces and speed, the budget of a pulse, legs and position, the order of movement, arriving, turning back, fuel burn, refuelling in port, cargo, berths and lighters, and stragglers.
 3. **Search, contacts and claims.** Air search, the sighting report and its errors, belief, contacts and their ageing, a strike that finds nothing, who is alert, the alarm, fatigue of a force, and claims.
 4. **Surface combat and damage.** When a fight begins, its rounds, the hit mechanism shared with air attack, damage tracks and named systems, breaking off, and what a fight leaves behind.
-5. **Air operations.** Air groups, missions, what a group can fly, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step, wear, fatigue and the supply that flying costs.
+5. **Air operations.** Air groups, missions, rebasing a group to another base, what a group can fly, air distance, the night's upkeep, the strike decision, escorts and patrol, the raid step by step, wear, fatigue and the supply that flying costs.
 6. **Objectives and results.** A scenario's mission and objectives, points, the margin and the seven outcomes, what a side knows of its progress, and the result at the end.
 7. **Land units.** The land unit and troop capacity, the load order with a unit, men worked as cargo, a landing, a base formed by it, a unit divided, men lost with a ship, the men's supply and the loss of the unfed, and what a side knows of its own men.
 
