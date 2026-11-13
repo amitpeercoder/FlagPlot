@@ -19,7 +19,7 @@ use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, ContactId, EntityRef, TaskForceId};
+use sim_core::ids::{AirGroupId, EntityRef, TaskForceId};
 use sim_core::orders::SpeedSetting;
 use sim_core::refdata::{AircraftRole, AttackWeapon};
 use sim_core::time::{pulse_start, ClockTime, Pulse};
@@ -392,7 +392,7 @@ fn resolve(ctx: &Ctx<'_>, arg: &PlaceArg) -> Option<(Hex, Resolved)> {
                     }
                 }
                 "contact" => {
-                    let contact = ctx.view.contacts().find(|c| c.id == ContactId::new(id))?;
+                    let contact = ctx.view.contact_by_number(id)?;
                     (
                         contact.estimated_hex,
                         Some(ctx.entity(EntityRef::Contact(contact.id))),

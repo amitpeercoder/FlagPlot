@@ -395,12 +395,13 @@ pub fn final_state(world: &World) -> FinalOut {
         air_groups,
         bases,
     } = snapshot(world.umpire(), world.ref_data());
+    let key = world.umpire_key();
     let contacts = |side: Side| -> Vec<ContactOut> {
         world
             .side_view(side)
             .contacts()
             .map(|contact| ContactOut {
-                id: contact.id.raw(),
+                id: contact.id.umpire_raw(&key),
                 hex: (contact.estimated_hex.q, contact.estimated_hex.r),
                 ship_count: contact.estimated_ship_count,
                 kind: contact.estimated_kind.name(),
@@ -418,7 +419,7 @@ pub fn final_state(world: &World) -> FinalOut {
                 day: claim.day,
                 pulse: claim.pulse.name(),
                 claimed_sunk: claim.claimed_sunk,
-                received_event: claim.received_event.raw(),
+                received_event: claim.received_event.umpire_raw(&key),
             })
             .collect()
     };

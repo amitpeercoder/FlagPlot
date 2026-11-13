@@ -642,7 +642,10 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
         .chain(view.task_forces().map(|s| s.id.to_string()))
         .chain(view.air_groups().map(|s| s.id.to_string()))
         .chain(view.bases().map(|s| s.id.to_string()))
-        .chain(view.contacts().map(|s| s.id.to_string()))
+        .chain(
+            view.contacts()
+                .map(|s| format!("contact:{}", view.contact_number(s.id))),
+        )
         .collect();
     for handle in handles {
         out.insert(format!("entity:{handle}"), json(&get_entity(view, &handle)));
@@ -712,7 +715,7 @@ fn run(text: &str, name: &str, seed: u64, side: Side) -> Run {
                 support::play::probe_answer(&s.world, side, &title),
             );
         }
-        plain.push(normalised_answers(&view, &a));
+        plain.push(normalised_answers(&view, &a, &s.world.umpire_key()));
         raw.push(a);
         enemy_briefings.push(briefing(&s.world.side_view(other(side)), &title).to_text());
     });

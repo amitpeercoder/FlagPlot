@@ -83,9 +83,9 @@ pub(crate) struct Ctx<'a> {
     pub enemy_bases: BTreeMap<BaseId, PublicBase>,
     place_names: BTreeMap<Hex, String>,
     /// The side's own number for each event it sees, by the log's number.
-    numbers: BTreeMap<u32, u32>,
+    numbers: BTreeMap<EventId, u32>,
     /// The side's own number for each of its orders, by the log's number.
-    order_numbers: BTreeMap<u32, u32>,
+    order_numbers: BTreeMap<OrderId, u32>,
 }
 
 impl<'a> Ctx<'a> {
@@ -106,7 +106,7 @@ impl<'a> Ctx<'a> {
         let order_numbers = view
             .orders()
             .enumerate()
-            .map(|(i, o)| (o.id.raw(), u32::try_from(i + 1).expect("few orders")))
+            .map(|(i, o)| (o.id, u32::try_from(i + 1).expect("few orders")))
             .collect();
         Ctx {
             view,
@@ -129,7 +129,7 @@ impl<'a> Ctx<'a> {
         self.numbers = events
             .iter()
             .enumerate()
-            .map(|(i, e)| (e.id.raw(), u32::try_from(i + 1).expect("few events")))
+            .map(|(i, e)| (e.id, u32::try_from(i + 1).expect("few events")))
             .collect();
     }
 
@@ -137,7 +137,7 @@ impl<'a> Ctx<'a> {
     pub fn number(&self, id: EventId) -> u32 {
         *self
             .numbers
-            .get(&id.raw())
+            .get(&id)
             .expect("an event the side sees has a number")
     }
 
@@ -148,7 +148,7 @@ impl<'a> Ctx<'a> {
     pub fn order_number(&self, id: OrderId) -> u32 {
         *self
             .order_numbers
-            .get(&id.raw())
+            .get(&id)
             .expect("an order the side is shown is its own")
     }
 
@@ -223,7 +223,7 @@ impl<'a> Ctx<'a> {
             EntityRef::Base(id) => self.base(id),
             EntityRef::Pilot(id) => bare(id.to_string()),
             EntityRef::LandUnit(id) => bare(id.to_string()),
-            EntityRef::Contact(id) => bare(id.to_string()),
+            EntityRef::Contact(id) => bare(format!("contact:{}", self.view.contact_number(id))),
         }
     }
 

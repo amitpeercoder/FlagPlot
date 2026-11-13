@@ -1772,7 +1772,10 @@ fn with_no_replacements_nothing_is_received_and_the_first_three_days_are_scenari
                 skipped += 1;
                 continue;
             }
-            mapped.insert(event.id.raw(), event.id.raw() - skipped);
+            mapped.insert(
+                event.id.umpire_raw(common::umpire_key()),
+                event.id.umpire_raw(common::umpire_key()) - skipped,
+            );
             ours.push(event);
         }
         assert_eq!(ours.len(), reference.events.len(), "seed {seed}");
@@ -1793,12 +1796,19 @@ fn with_no_replacements_nothing_is_received_and_the_first_three_days_are_scenari
                 .causes
                 .iter()
                 .map(|cause| match cause {
-                    Cause::Event(id) => Cause::Event(EventId::new(mapped[&id.raw()])),
+                    Cause::Event(id) => Cause::Event(EventId::for_umpire(
+                        mapped[&id.umpire_raw(common::umpire_key())],
+                        common::umpire_key(),
+                    )),
                     other => *other,
                 })
                 .collect();
             assert_eq!(causes, b.causes, "seed {seed}: {:?}", a.kind);
-            assert_eq!(mapped[&a.id.raw()], b.id.raw(), "seed {seed}");
+            assert_eq!(
+                mapped[&a.id.umpire_raw(common::umpire_key())],
+                b.id.umpire_raw(common::umpire_key()),
+                "seed {seed}"
+            );
         }
     }
 }

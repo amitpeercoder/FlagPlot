@@ -14,12 +14,10 @@
 //! The wording is the engine's: `text` is the `Display` of the side's event
 //! kind, as `explain` words it for a player.
 
-use std::collections::BTreeMap;
-
 use serde::Serialize;
-use sim_core::events::Cause;
 use sim_core::fixed::Fixed;
-use sim_core::side_events::{SideBreakdown, SideEvent, SideEventKind};
+use sim_core::ids::UmpireKey;
+use sim_core::side_events::{SideBreakdown, SideCause, SideEventKind};
 use sim_core::state::Side;
 use sim_core::time::Pulse;
 use sim_core::World;
@@ -88,40 +86,35 @@ pub fn sides(world: &World) -> SidesOut {
 
 fn side(world: &World, side: Side) -> SideOut {
     SideOut {
-        events: events(&world.side_view(side).events()),
+        events: events(world, side),
     }
 }
 
-/// A side's events in its own numbers.
-pub fn events(events: &[SideEvent]) -> Vec<SideEventOut> {
-    let number: BTreeMap<u32, u32> = events
-        .iter()
-        .enumerate()
-        .map(|(i, e)| {
-            (
-                e.id.raw(),
-                u32::try_from(i + 1).expect("a side has few events"),
-            )
-        })
-        .collect();
+/// A side's events in its own numbers. The file is the umpire's, so an order
+/// cause names the order by its place in the order book, as the full log's
+/// export does; the viewer's text says it the same way.
+pub fn events(world: &World, side: Side) -> Vec<SideEventOut> {
+    let key = world.umpire_key();
+    let view = world.side_view(side);
+    let events = view.events();
     events
         .iter()
         .map(|event| {
-            let n = number[&event.id.raw()];
+            let n = event.number;
             let mut causes = Vec::new();
-            let mut hidden_causes = event.hidden_causes;
             for cause in &event.causes {
                 match cause {
-                    Cause::Order(id) => causes.push(CauseOut::Order(id.raw())),
-                    // A cause the engine lets the side see is an event it sees.
-                    // If one were not, say so and drop it: never show the log's number.
-                    Cause::Event(id) => match number.get(&id.raw()) {
-                        Some(earlier) => causes.push(CauseOut::Event(*earlier)),
-                        None => hidden_causes = true,
-                    },
+                    SideCause::Order(own) => causes.push(CauseOut::Order(
+                        view.order_by_number(*own)
+                            .expect("a cause the side sees is one of its own orders")
+                            .id
+                            .umpire_raw(&key),
+                    )),
+                    SideCause::Event(earlier) => causes.push(CauseOut::Event(*earlier)),
                 }
             }
-            let (kind, data, cut) = describe_side(&event.kind);
+            let hidden_causes = event.hidden_causes;
+            let (kind, data, cut) = describe_side(&event.kind, &key);
             let pulse = event.pulse.map(Pulse::name);
             let cause_text: Vec<String> = causes
                 .iter()
@@ -142,7 +135,7 @@ pub fn events(events: &[SideEvent]) -> Vec<SideEventOut> {
             }
             SideEventOut {
                 n,
-                log_id: event.id.raw(),
+                log_id: event.id.umpire_raw(&key),
                 day: event.day,
                 pulse,
                 kind,
@@ -180,11 +173,11 @@ fn breakdown(breakdown: &SideBreakdown) -> BreakdownOut {
 /// The kind's code, its data, and whether it was cut. A whole event is
 /// described as the full log describes it; a cut one has only the fields the
 /// engine left it.
-fn describe_side(kind: &SideEventKind) -> (&'static str, Data, bool) {
+fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, bool) {
     let d = Data::new();
     match kind {
         SideEventKind::Whole(kind) => {
-            let (code, data) = describe(kind);
+            let (code, data) = describe(kind, key);
             (code, data, false)
         }
         SideEventKind::Salvo {

@@ -1087,9 +1087,9 @@ fn every_kind_of_place_resolves_to_its_hex() {
             Some(base.id.to_string()),
         ),
         (
-            PlaceArg::unit(&contact.id.to_string()),
+            PlaceArg::unit(&format!("contact:{}", view.contact_number(contact.id))),
             (contact.estimated_hex.q, contact.estimated_hex.r),
-            Some(contact.id.to_string()),
+            Some(format!("contact:{}", view.contact_number(contact.id))),
         ),
     ];
     for (arg, hex, unit) in cases {
@@ -1136,7 +1136,10 @@ fn a_contact_is_the_hex_the_side_believes_not_the_truth() {
                         let (answer, _) = asked(
                             &view,
                             &Question::AirDistance {
-                                from: PlaceArg::unit(&contact.id.to_string()),
+                                from: PlaceArg::unit(&format!(
+                                    "contact:{}",
+                                    view.contact_number(contact.id)
+                                )),
                                 to: PlaceArg::hex(contact.estimated_hex.q, contact.estimated_hex.r),
                             },
                         );
@@ -1205,7 +1208,7 @@ fn a_contact_off_by_a_hex_is_measured_at_the_estimate() {
             let (answer, data) = asked(
                 &view,
                 &Question::AirDistance {
-                    from: PlaceArg::unit(&contact.id.to_string()),
+                    from: PlaceArg::unit(&format!("contact:{}", view.contact_number(contact.id))),
                     to: PlaceArg::hex(real.q, real.r),
                 },
             );

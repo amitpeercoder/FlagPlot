@@ -304,7 +304,12 @@ fn every_event_with_entities_is_in_the_listing_of_each_unit_it_names() {
             .world
             .events()
             .iter()
-            .map(|e| (e.id.raw(), e.kind.entities()))
+            .map(|e| {
+                (
+                    e.id.umpire_raw(&scenario.world.umpire_key()),
+                    e.kind.entities(),
+                )
+            })
             .collect();
         let all = run_event_lines(path);
         let units: BTreeSet<EntityRef> = log.values().flatten().copied().collect();

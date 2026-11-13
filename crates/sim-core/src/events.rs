@@ -24,7 +24,7 @@ pub enum Cause {
 impl fmt::Display for Cause {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Cause::Order(id) => write!(f, "{id}"),
+            Cause::Order(id) => write!(f, "{}", id.shown()),
             Cause::Event(id) => write!(f, "#{}", id.raw()),
         }
     }
@@ -1135,13 +1135,13 @@ impl fmt::Display for EventKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EventKind::OrderAccepted { order, target } => {
-                write!(f, "{order} accepted for {target}")
+                write!(f, "{} accepted for {target}", order.shown())
             }
             EventKind::OrderRejected {
                 order,
                 target,
                 reason,
-            } => write!(f, "{order} rejected for {target}: {reason}"),
+            } => write!(f, "{} rejected for {target}: {reason}", order.shown()),
             EventKind::TaskForceSteamed {
                 task_force,
                 from,
@@ -1288,13 +1288,19 @@ impl fmt::Display for EventKind {
                 distance_nm,
             } => write!(
                 f,
-                "{air_group} launched {aircraft} aircraft at {contact} at {hex}, {distance_nm} nm"
+                "{air_group} launched {aircraft} aircraft at {contact} at {hex}, {distance_nm} nm",
+                contact = contact.shown()
             ),
             EventKind::StrikeFoundNothing { air_group, hex } => {
                 write!(f, "{air_group} found nothing at {hex}")
             }
             EventKind::ContactNotThere { side, contact, hex } => {
-                write!(f, "{} {contact} not there at {hex}: dropped", side.name())
+                write!(
+                    f,
+                    "{} {} not there at {hex}: dropped",
+                    side.name(),
+                    contact.shown()
+                )
             }
             EventKind::BaseStrikeLaunched {
                 air_group,
@@ -1643,8 +1649,9 @@ impl fmt::Display for EventKind {
                 age_pulses,
             } => write!(
                 f,
-                "{} {contact} aged to {age_pulses} pulses",
-                side.name()
+                "{} {} aged to {age_pulses} pulses",
+                side.name(),
+                contact.shown()
             ),
             EventKind::ContactDropped {
                 side,
@@ -1652,8 +1659,9 @@ impl fmt::Display for EventKind {
                 age_pulses,
             } => write!(
                 f,
-                "{} {contact} dropped at {age_pulses} pulses",
-                side.name()
+                "{} {} dropped at {age_pulses} pulses",
+                side.name(),
+                contact.shown()
             ),
             EventKind::EngagementBegun {
                 a,
@@ -1825,7 +1833,7 @@ impl fmt::Display for EventKind {
             EventKind::ForceAlertedByContact {
                 task_force,
                 contact,
-            } => write!(f, "{task_force} alerted by {contact}"),
+            } => write!(f, "{task_force} alerted by {}", contact.shown()),
             EventKind::ForceStoodDown { task_force } => write!(f, "{task_force} stood down"),
             EventKind::TaskForceFatigue {
                 task_force,
@@ -1918,7 +1926,7 @@ fn write_report(
 ) -> fmt::Result {
     write!(
         f,
-        "{} report: {ship_count} {}, {}, at {hex}{}: {} {contact}",
+        "{} report: {ship_count} {}, {}, at {hex}{}: {} {}",
         side.name(),
         if ship_count == 1 { "ship" } else { "ships" },
         kind.name(),
@@ -1927,7 +1935,8 @@ fn write_report(
         } else {
             ""
         },
-        if created { "new" } else { "refreshed" }
+        if created { "new" } else { "refreshed" },
+        contact.shown()
     )
 }
 

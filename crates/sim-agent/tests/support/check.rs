@@ -9,6 +9,7 @@ use sim_agent::{
     MeasureAnswer, PlaceArg, Question, DEPTH_LIMIT,
 };
 use sim_core::hex::Hex;
+use sim_core::ids::UmpireKey;
 use sim_core::view::SideView;
 
 use super::validator::Schemas;
@@ -119,7 +120,10 @@ pub fn allowed_handles(view: &SideView<'_>) -> BTreeSet<String> {
     // The bases of the other side are on the map (decision 0034, 2): their
     // numbers, names, places and holders are public, and nothing else of them.
     allowed.extend(view.enemy_bases().map(|b| b.id.to_string()));
-    allowed.extend(view.contacts().map(|c| c.id.to_string()));
+    allowed.extend(
+        view.contacts()
+            .map(|c| format!("contact:{}", view.contact_number(c.id))),
+    );
     for event in view.events() {
         allowed.extend(event.kind.entities().iter().map(ToString::to_string));
     }
@@ -138,11 +142,11 @@ pub fn assert_only_allowed(value: &Value, allowed: &BTreeSet<String>, label: &st
 }
 
 /// The ranks of the events a side sees, to take the log's numbers out.
-fn ranks(view: &SideView<'_>) -> BTreeMap<u64, u64> {
+fn ranks(view: &SideView<'_>, key: &UmpireKey) -> BTreeMap<u64, u64> {
     view.events()
         .iter()
         .enumerate()
-        .map(|(i, e)| (u64::from(e.id.raw()), i as u64))
+        .map(|(i, e)| (u64::from(e.id.umpire_raw(key)), i as u64))
         .collect()
 }
 
@@ -174,8 +178,9 @@ pub fn without_event_numbers(value: &Value, rank: &BTreeMap<u64, u64>) -> Value 
 pub fn normalised_answers(
     view: &SideView<'_>,
     answers: &BTreeMap<String, String>,
+    key: &UmpireKey,
 ) -> BTreeMap<String, Value> {
-    let rank = ranks(view);
+    let rank = ranks(view, key);
     answers
         .iter()
         .map(|(k, v)| {
@@ -197,7 +202,10 @@ pub fn sample_questions(
     let targets: Vec<String> = view
         .bases()
         .map(|b| b.id.to_string())
-        .chain(view.contacts().map(|c| c.id.to_string()))
+        .chain(
+            view.contacts()
+                .map(|c| format!("contact:{}", view.contact_number(c.id))),
+        )
         .take(max_targets)
         .collect();
     let mut out = Vec::new();
@@ -338,7 +346,10 @@ pub fn check_view(
         .chain(view.task_forces().map(|s| s.id.to_string()))
         .chain(view.air_groups().map(|s| s.id.to_string()))
         .chain(view.bases().map(|s| s.id.to_string()))
-        .chain(view.contacts().map(|s| s.id.to_string()))
+        .chain(
+            view.contacts()
+                .map(|s| format!("contact:{}", view.contact_number(s.id))),
+        )
         .collect();
     for handle in &handles {
         let answer = json(&get_entity(view, handle));

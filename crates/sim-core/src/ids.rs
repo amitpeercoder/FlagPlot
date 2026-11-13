@@ -8,13 +8,28 @@
 use core::fmt;
 use core::marker::PhantomData;
 
-/// Implemented by every ID type.
+/// Implemented by the ID types that name an entity in the data files and the
+/// world: ships, task forces, air groups and the like. Their number is
+/// public. The three ID types a side must not be able to count with
+/// ([`EventId`], [`OrderId`], [`ContactId`]) are opaque and do not
+/// implement it.
 pub trait EntityId: Copy + Ord + fmt::Debug {
     /// Short name used in logs, such as `ship`.
     const KIND: &'static str;
     fn from_raw(raw: u32) -> Self;
     fn raw(self) -> u32;
 }
+
+mod sealed {
+    /// How [`super::IdAllocator`] makes and reads an ID. It lives in a
+    /// private module, so no code outside this crate can name it, and so no
+    /// code outside can use it to read the number of an opaque ID.
+    pub trait Alloc: Copy + Ord + core::fmt::Debug {
+        fn from_raw(raw: u32) -> Self;
+        fn raw(self) -> u32;
+    }
+}
+use sealed::Alloc;
 
 macro_rules! define_id {
     ($(#[$meta:meta])* $name:ident, $kind:literal) => {
@@ -44,12 +59,118 @@ macro_rules! define_id {
             }
         }
 
+        impl Alloc for $name {
+            fn from_raw(raw: u32) -> Self {
+                Self(raw)
+            }
+
+            fn raw(self) -> u32 {
+                self.0
+            }
+        }
+
         impl fmt::Display for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(f, "{}:{}", $kind, self.0)
             }
         }
     };
+}
+
+/// The umpire's text for an opaque ID: its kind and number.
+pub(crate) struct Shown {
+    kind: &'static str,
+    raw: u32,
+}
+
+impl fmt::Display for Shown {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}", self.kind, self.raw)
+    }
+}
+
+/// An ID whose number only this crate can read. A side that holds one can
+/// compare it and look things up with it, but cannot learn how many of its
+/// kind there are, or which number it has in the umpire's log. The umpire's
+/// tools read the number through an [`UmpireKey`].
+macro_rules! define_opaque_id {
+    ($(#[$meta:meta])* $name:ident, $kind:literal) => {
+        $(#[$meta])*
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub struct $name(u32);
+
+        impl $name {
+            #[allow(dead_code)]
+            pub(crate) const fn new(raw: u32) -> Self {
+                Self(raw)
+            }
+
+            pub(crate) const fn raw(self) -> u32 {
+                self.0
+            }
+
+            /// The umpire's text for this ID, such as `order:3`. Only this
+            /// crate may print a number.
+            #[allow(dead_code)]
+            pub(crate) const fn shown(self) -> Shown {
+                Shown {
+                    kind: $kind,
+                    raw: self.0,
+                }
+            }
+
+            /// Makes the ID with this number in the umpire's numbering.
+            /// Needs the umpire's key, which only a world gives.
+            pub const fn for_umpire(raw: u32, _key: &UmpireKey) -> Self {
+                Self(raw)
+            }
+
+            /// The number this ID has in the umpire's numbering.
+            pub const fn umpire_raw(self, _key: &UmpireKey) -> u32 {
+                self.0
+            }
+        }
+
+        impl Alloc for $name {
+            fn from_raw(raw: u32) -> Self {
+                Self(raw)
+            }
+
+            fn raw(self) -> u32 {
+                self.0
+            }
+        }
+
+        /// Shows the kind alone, never the number.
+        impl fmt::Display for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str($kind)
+            }
+        }
+
+        /// Shows the kind alone, never the number.
+        impl fmt::Debug for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{}(_)", stringify!($name))
+            }
+        }
+    };
+}
+
+/// The umpire's key to the numbers of [`EventId`], [`OrderId`] and
+/// [`ContactId`]. It can be had only from `World::umpire_key`, which a side
+/// never holds: a side gets a `SideView`. Everything that shows the truth
+/// (the replay viewer, the exporters, saved games, the validation harness)
+/// goes through it.
+#[derive(Debug)]
+pub struct UmpireKey {
+    _private: (),
+}
+
+impl UmpireKey {
+    pub(crate) const fn new() -> Self {
+        Self { _private: () }
+    }
 }
 
 define_id!(
@@ -92,17 +213,17 @@ define_id!(
     LandUnitId,
     "land_unit"
 );
-define_id!(
+define_opaque_id!(
     /// A contact in one side's belief state.
     ContactId,
     "contact"
 );
-define_id!(
+define_opaque_id!(
     /// An order.
     OrderId,
     "order"
 );
-define_id!(
+define_opaque_id!(
     /// An entry in the event log.
     EventId,
     "event"
@@ -115,12 +236,12 @@ define_id!(
 
 /// Hands out IDs of one kind, counting upward from 1.
 #[derive(Clone, Debug)]
-pub struct IdAllocator<T: EntityId> {
+pub struct IdAllocator<T: Alloc> {
     next: u32,
     kind: PhantomData<T>,
 }
 
-impl<T: EntityId> IdAllocator<T> {
+impl<T: Alloc> IdAllocator<T> {
     pub const fn new() -> Self {
         Self {
             next: 1,
@@ -130,7 +251,7 @@ impl<T: EntityId> IdAllocator<T> {
 
     /// Returns a fresh ID.
     pub fn alloc(&mut self) -> T {
-        let id = T::from_raw(self.next);
+        let id = <T as Alloc>::from_raw(self.next);
         self.next = self.next.checked_add(1).expect("ran out of entity IDs");
         id
     }
@@ -138,7 +259,9 @@ impl<T: EntityId> IdAllocator<T> {
     /// Marks an ID that came from a data file as taken, so it is never
     /// handed out again.
     pub fn reserve(&mut self, id: T) {
-        let after = id.raw().checked_add(1).expect("ran out of entity IDs");
+        let after = Alloc::raw(id)
+            .checked_add(1)
+            .expect("ran out of entity IDs");
         if after > self.next {
             self.next = after;
         }
@@ -150,7 +273,7 @@ impl<T: EntityId> IdAllocator<T> {
     }
 }
 
-impl<T: EntityId> Default for IdAllocator<T> {
+impl<T: Alloc> Default for IdAllocator<T> {
     fn default() -> Self {
         Self::new()
     }
@@ -210,7 +333,7 @@ impl fmt::Display for EntityRef {
             EntityRef::Pilot(id) => id.fmt(f),
             EntityRef::Base(id) => id.fmt(f),
             EntityRef::LandUnit(id) => id.fmt(f),
-            EntityRef::Contact(id) => id.fmt(f),
+            EntityRef::Contact(id) => id.shown().fmt(f),
         }
     }
 }

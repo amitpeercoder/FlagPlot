@@ -2158,17 +2158,23 @@ fn a_scenario_with_no_fatigue_file_has_no_fatigue_no_stand_down_and_is_scenario_
         // kinds and, once the nine orders' numbers and the events they
         // number are mapped to 6a's six, the same causes.
         let order_map = |order: OrderId| -> OrderId {
-            OrderId::new(match order.raw() {
-                1..=3 => order.raw(),
-                5 => 4,
-                7 => 5,
-                8 => 6,
-                other => panic!("an order of 6a: {other}"),
-            })
+            OrderId::for_umpire(
+                match order.umpire_raw(common::umpire_key()) {
+                    1..=3 => order.umpire_raw(common::umpire_key()),
+                    5 => 4,
+                    7 => 5,
+                    8 => 6,
+                    other => panic!("an order of 6a: {other}"),
+                },
+                common::umpire_key(),
+            )
         };
         let map_cause = |cause: &Cause| match cause {
             Cause::Order(order) => Cause::Order(order_map(*order)),
-            Cause::Event(event) => Cause::Event(EventId::new(event.raw() - 3)),
+            Cause::Event(event) => Cause::Event(EventId::for_umpire(
+                event.umpire_raw(common::umpire_key()) - 3,
+                common::umpire_key(),
+            )),
         };
         let first_three: Vec<&Event> = run
             .events
@@ -2193,7 +2199,11 @@ fn a_scenario_with_no_fatigue_file_has_no_fatigue_no_stand_down_and_is_scenario_
                 "seed {seed}: {:?}",
                 a.kind
             );
-            assert_eq!(a.id.raw() - 3, b.id.raw(), "seed {seed}");
+            assert_eq!(
+                a.id.umpire_raw(common::umpire_key()) - 3,
+                b.id.umpire_raw(common::umpire_key()),
+                "seed {seed}"
+            );
         }
         // The hashes differ on purpose: the thresholds are in the state.
         assert_ne!(run.hashes[..3], reference.hashes[..], "seed {seed}");

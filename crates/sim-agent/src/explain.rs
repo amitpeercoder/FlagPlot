@@ -10,8 +10,8 @@
 use std::collections::{BTreeMap, VecDeque};
 
 use serde::Serialize;
-use sim_core::events::{Cause, EventKind};
-use sim_core::side_events::{SideEvent, SideEventKind};
+use sim_core::events::EventKind;
+use sim_core::side_events::{SideCause, SideEvent, SideEventKind};
 use sim_core::view::SideView;
 
 use crate::answer::{NotKnown, FORMAT, VERSION};
@@ -149,8 +149,8 @@ impl<'a> Explainer<'a> {
             let mut links = Vec::new();
             for cause in &e.causes {
                 let next = match cause {
-                    Cause::Event(c) => Key::Event(self.ctx.number(*c)),
-                    Cause::Order(o) => Key::Order(self.ctx.order_number(*o)),
+                    SideCause::Event(c) => Key::Event(*c),
+                    SideCause::Order(o) => Key::Order(*o),
                 };
                 let at = match seen.get(&next) {
                     Some(at) => *at,

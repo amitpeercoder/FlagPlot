@@ -579,8 +579,8 @@ fn work_the_run(run: &Run, config: Config) -> Vec<Worked> {
             assert_eq!(
                 sent[0].causes,
                 vec![
-                    Cause::Order(OrderId::new(4)),
-                    Cause::Order(OrderId::new(5)),
+                    Cause::Order(OrderId::for_umpire(4, common::umpire_key())),
+                    Cause::Order(OrderId::for_umpire(5, common::umpire_key())),
                     Cause::Event(launch.id)
                 ],
                 "seed {seed}"
@@ -1308,7 +1308,8 @@ fn the_search_and_the_launches_are_as_in_scenario_5b() {
             // Contact 1, or contact 2 if a strike dropped contact 1 first.
             assert_eq!(air_group, BOMBERS);
             assert!(
-                contact == ContactId::new(1) || contact == ContactId::new(2),
+                contact == ContactId::for_umpire(1, common::umpire_key())
+                    || contact == ContactId::for_umpire(2, common::umpire_key()),
                 "seed {}",
                 run.seed
             );
@@ -1355,7 +1356,10 @@ fn the_search_and_the_launches_are_as_in_scenario_5b() {
                 );
             }
             // The launch cites the order that set the mission.
-            assert_eq!(launch.causes[0], Cause::Order(OrderId::new(3)));
+            assert_eq!(
+                launch.causes[0],
+                Cause::Order(OrderId::for_umpire(3, common::umpire_key()))
+            );
         }
     }
     assert!(within_four_sigma(morning, 1000, 509_295), "{morning}");

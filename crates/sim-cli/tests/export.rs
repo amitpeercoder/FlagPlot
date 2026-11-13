@@ -106,7 +106,11 @@ fn every_scenario_exports_what_the_world_logged() {
         );
         for (exported, event) in events.iter().zip(world.events().iter()) {
             assert_eq!(exported["text"], event.to_string(), "{scenario}");
-            assert_eq!(exported["id"], event.id.raw(), "{scenario}");
+            assert_eq!(
+                exported["id"],
+                event.id.umpire_raw(&world.umpire_key()),
+                "{scenario}"
+            );
             assert_eq!(
                 exported["causes"].as_array().expect("causes").len(),
                 event.causes.len(),
@@ -414,7 +418,11 @@ fn each_sides_exported_events_are_what_its_side_view_gives() {
             for (i, (out, event)) in exported.iter().zip(&view).enumerate() {
                 let label = format!("{scenario} {name} #{}", i + 1);
                 assert_eq!(out["n"], i + 1, "{label}: the side's own number");
-                assert_eq!(out["log_id"], event.id.raw(), "{label}: place in the log");
+                assert_eq!(
+                    out["log_id"],
+                    event.id.umpire_raw(&world.umpire_key()),
+                    "{label}: place in the log"
+                );
                 assert_eq!(out["day"], event.day, "{label}: day");
                 assert_eq!(
                     out["pulse"].as_str(),

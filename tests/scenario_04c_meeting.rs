@@ -194,7 +194,10 @@ fn run_scenario(scenario: &Scenario, seed: u64) -> Run {
     let truth = world.umpire();
     let events: Vec<Event> = world.events().iter().cloned().collect();
     for (index, event) in events.iter().enumerate() {
-        assert_eq!(usize::try_from(event.id.raw()).expect("small"), index + 1);
+        assert_eq!(
+            usize::try_from(event.id.umpire_raw(common::umpire_key())).expect("small"),
+            index + 1
+        );
     }
     Run {
         seed,
@@ -319,7 +322,7 @@ impl Run {
                     hex,
                     elapsed_hours,
                 } => fights.push(Fight {
-                    event: event.id.raw(),
+                    event: event.id.umpire_raw(common::umpire_key()),
                     day: event.day,
                     pulse: event.pulse.expect("a fight has a pulse"),
                     a: a.raw(),
@@ -327,7 +330,7 @@ impl Run {
                     hex: *hex,
                     elapsed: *elapsed_hours,
                     first_cause: event.causes.first().and_then(|cause| match cause {
-                        Cause::Event(id) => Some(id.raw()),
+                        Cause::Event(id) => Some(id.umpire_raw(common::umpire_key())),
                         Cause::Order(_) => None,
                     }),
                     rolls: Vec::new(),
@@ -368,7 +371,7 @@ impl Run {
                     speed_kn,
                     ..
                 } if task_force.raw() == force => Some(Step {
-                    event: event.id.raw(),
+                    event: event.id.umpire_raw(common::umpire_key()),
                     pulse: event.pulse.expect("a step has a pulse"),
                     from: *from,
                     to: *to,
@@ -384,7 +387,9 @@ impl Run {
     fn night_burn_before(&self, ship: u32, before: u32) -> Fixed {
         self.events
             .iter()
-            .filter(|e| e.id.raw() < before && e.pulse == Some(Pulse::Night))
+            .filter(|e| {
+                e.id.umpire_raw(common::umpire_key()) < before && e.pulse == Some(Pulse::Night)
+            })
             .filter_map(|e| match &e.kind {
                 EventKind::FuelBurned {
                     ship: s, burned_t, ..
@@ -426,7 +431,7 @@ impl Run {
     /// event numbered `until` (exclusive).
     fn afloat_before(&self, ship: u32, until: u32) -> bool {
         !self.events.iter().any(|e| {
-            e.id.raw() < until
+            e.id.umpire_raw(common::umpire_key()) < until
                 && matches!(&e.kind, EventKind::ShipSunk { ship: s, .. } if s.raw() == ship)
         })
     }
@@ -442,7 +447,7 @@ impl Run {
                 self.events
                     .iter()
                     .rfind(|e| {
-                        e.id.raw() < until
+                        e.id.umpire_raw(common::umpire_key()) < until
                             && matches!(&e.kind, EventKind::SystemHit { ship: s, system, .. }
                                 if s.raw() == ship && *system == ShipSystem::Propulsion)
                     })
@@ -460,7 +465,7 @@ impl Run {
             .events
             .iter()
             .find(|e| e.pulse.is_some_and(|p| pulse_index(p) > pulse_index(pulse)))
-            .map_or(u32::MAX, |e| e.id.raw());
+            .map_or(u32::MAX, |e| e.id.umpire_raw(common::umpire_key()));
         self.slowest_before(ships, until)
     }
 
@@ -473,7 +478,7 @@ impl Run {
                 e.pulse
                     .is_some_and(|p| pulse_index(p) >= pulse_index(pulse))
             })
-            .map_or(u32::MAX, |e| e.id.raw());
+            .map_or(u32::MAX, |e| e.id.umpire_raw(common::umpire_key()));
         self.slowest_before(ships, until)
     }
 

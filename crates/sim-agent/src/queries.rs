@@ -434,9 +434,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             }))
         }
         "contact" => {
-            let contact = view
-                .contacts()
-                .find(|c| c.id == sim_core::ids::ContactId::new(id))?;
+            let contact = view.contact_by_number(id)?;
             let events = view.events();
             let number = events
                 .iter()
