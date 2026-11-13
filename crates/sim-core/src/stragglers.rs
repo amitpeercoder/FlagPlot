@@ -1264,7 +1264,6 @@ mod tests {
             force.readiness = Readiness::Normal;
         }
         let enemy = TaskForceId::new(2);
-        world.task_force_ids.alloc();
         let mut force = TaskForce::at(
             enemy,
             "Enemy".to_string(),

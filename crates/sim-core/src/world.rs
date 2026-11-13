@@ -7,7 +7,7 @@ use crate::airstrike::StrikeInFlight;
 use crate::belief::BeliefState;
 use crate::events::EventLog;
 use crate::hash;
-use crate::ids::{BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, EntityRef, IdAllocator, OrderId, TaskForceId};
 use crate::invariants::{self, InvariantViolation};
 use crate::map::Map;
 use crate::objectives::{self, GameResult, Objectives};
@@ -18,6 +18,73 @@ use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
 use crate::view::SideView;
+
+/// The first number of a side's task forces and air groups made during play
+/// (decision 0086): the Allied side's series starts at 1,000,001 and the
+/// Japanese side's at 2,000,001. A scenario's own numbers are below
+/// [`MADE_IDS_FLOOR`], so the series never meet them.
+pub const MADE_IDS_FLOOR: u32 = 1_000_000;
+
+/// One counter for each side and each kind of unit made during play
+/// (decision 0086). A unit's number, and so its random draws, depend on its
+/// own side's history only.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MadeIds {
+    task_forces: BTreeMap<Side, u32>,
+    air_groups: BTreeMap<Side, u32>,
+}
+
+impl MadeIds {
+    pub fn new() -> Self {
+        let start = |side: Side| match side {
+            Side::Allied => MADE_IDS_FLOOR + 1,
+            Side::Japanese => 2 * MADE_IDS_FLOOR + 1,
+        };
+        let series = || {
+            Side::ALL
+                .into_iter()
+                .map(|side| (side, start(side)))
+                .collect()
+        };
+        Self {
+            task_forces: series(),
+            air_groups: series(),
+        }
+    }
+
+    /// The next task force number of `side`'s series.
+    pub fn alloc_task_force(&mut self, side: Side) -> TaskForceId {
+        TaskForceId::new(Self::take(&mut self.task_forces, side))
+    }
+
+    /// The next air group number of `side`'s series.
+    pub fn alloc_air_group(&mut self, side: Side) -> AirGroupId {
+        AirGroupId::new(Self::take(&mut self.air_groups, side))
+    }
+
+    fn take(counters: &mut BTreeMap<Side, u32>, side: Side) -> u32 {
+        let next = counters.get_mut(&side).expect("a counter for each side");
+        let id = *next;
+        *next = next.checked_add(1).expect("ran out of entity IDs");
+        id
+    }
+
+    /// The number the next task force of `side` will have. Part of the hash.
+    pub fn next_task_force(&self, side: Side) -> u32 {
+        self.task_forces[&side]
+    }
+
+    /// The number the next air group of `side` will have. Part of the hash.
+    pub fn next_air_group(&self, side: Side) -> u32 {
+        self.air_groups[&side]
+    }
+}
+
+impl Default for MadeIds {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Switches that change what is recorded, never what happens.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -87,9 +154,9 @@ pub struct World {
     /// Every order received, accepted or not, by ID.
     pub(crate) orders: BTreeMap<OrderId, Order>,
     pub(crate) order_ids: IdAllocator<OrderId>,
-    /// Hands out IDs to task forces made during a day (decision 0016). Every
-    /// starting task force's ID is reserved.
-    pub(crate) task_force_ids: IdAllocator<TaskForceId>,
+    /// Hands out the numbers of task forces and air groups made during play,
+    /// from each side's own series (decisions 0016 and 0086).
+    pub(crate) made_ids: MadeIds,
     /// Orders submitted for the coming day, not yet taken in.
     pub(crate) pending: BTreeMap<Side, Vec<OrderRequest>>,
     pub(crate) events: EventLog,
@@ -247,11 +314,6 @@ impl World {
             .map(|side| (side, BeliefState::new(side)))
             .collect();
 
-        let mut task_force_ids = IdAllocator::new();
-        for id in truth.task_forces.keys() {
-            task_force_ids.reserve(*id);
-        }
-
         Ok(World {
             seed,
             config: SimConfig::default(),
@@ -261,7 +323,7 @@ impl World {
             beliefs,
             orders: BTreeMap::new(),
             order_ids: IdAllocator::new(),
-            task_force_ids,
+            made_ids: MadeIds::new(),
             pending: BTreeMap::new(),
             events: EventLog::default(),
             day_hashes: Vec::new(),

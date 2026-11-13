@@ -247,7 +247,7 @@ fn a_batch_says_what_it_was_run_on_and_carries_the_callers_label() {
     // file and of every data file it names, and the label as given.
     let plain = parse(&batch("inputs-plain", FIGHT, &["--runs", "2"]));
     let inputs = &plain["inputs"];
-    assert_eq!(inputs["state_version"], "flagplot-state-v7");
+    assert_eq!(inputs["state_version"], "flagplot-state-v8");
     let scenario = fs::read(PathBuf::from(ROOT).join(FIGHT)).expect("the scenario reads");
     let mut hasher = sim_core::hash::StateHasher::new();
     hasher.bytes(&scenario);
