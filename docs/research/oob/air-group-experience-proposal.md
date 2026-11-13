@@ -1,3 +1,5 @@
+**Ruled by the architect on Nov 13, 2026: the values wait.** By the spec's condition 4 (`docs/step2-spec.md`, "Experience"), the facts are too thin to rest them on: the Japanese lift rests on one service-wide statement of hours, the US Navy sits at 2 only because no row exists, and the Marine squadrons' two questions are one fact. Air-group experience waits until research closes the gaps in section 4. No value goes into any data file.
+
 # Air-group experience values: a proposal
 
 **Proposal. Nothing reads it.**

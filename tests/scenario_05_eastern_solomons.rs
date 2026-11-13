@@ -32,6 +32,14 @@
 //! list. Each section below says what changed. The figures are the frozen
 //! figures of step 1.
 //!
+//! The scenario is the frozen copy, `data/scenarios/step2-frozen/
+//! 05_eastern_solomons.toml`: the scenario as it stood with decision 0063's
+//! orders, before decision 0073 set the Japanese search from the record. This
+//! test proves that the rules compute what the hand calculation says on known
+//! orders and known figures; the live scenario is covered by the run
+//! baselines and `validate`. The copy changes only with a rule change's new
+//! hand calculation.
+//!
 //! ## The forces
 //!
 //! | Task force | Ships, by ID | Air groups, by ID |
@@ -706,8 +714,10 @@ fn air(from: Hex, to: Hex) -> i64 {
 // Helpers.
 // ---------------------------------------------------------------------
 
+/// The frozen copy of the scenario (decision 0073), not the live file.
 fn scenario_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/05_eastern_solomons.toml")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../data/scenarios/step2-frozen/05_eastern_solomons.toml")
 }
 
 fn load() -> Scenario {
