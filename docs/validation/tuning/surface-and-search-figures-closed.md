@@ -120,11 +120,14 @@ Two more are close to it. `radar_sighting_bonus` never acts at Savo Island, wher
 | --- | --- | --- | --- | --- | --- | --- |
 | `surface_combat.toml` | 2 | 2 | 10 | 20 | 4 | 38 |
 | `search.toml` | 0 | 0 | 0 | 20 | 5 | 25 |
-| `air_combat.toml` | 2 | 2 | 7 | 12 | 3 | 26 |
+| `air_combat.toml` | 0 | 4 | 7 | 12 | 3 | 26 |
 | `rules.toml` parameters | 1 | 0 | 2 | 9 | 0 | 12 |
+| All 101 | 3 | 6 | 19 | 61 | 12 | 101 |
 | Other hand-made files | 0 | 0 | 0 | 0 | 3 files | 3 files |
 
 A table entry counts as one figure; `placeholder = true` and `constants_are_placeholders` are flags, not figures.
+
+*Corrected Nov 13, 2026 (decision 0089):* `fighter_false_claim_chance` and `[base_hit] aircraft` had been counted as sized from rows; both are fitted, not checked, so the totals went from 5 sized and 4 fitted to 3 and 6.
 
 ## Outside `data/reference`
 

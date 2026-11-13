@@ -1,7 +1,8 @@
 # The figures of air combat, at the close of step 2. Most are still
 # placeholders: invented so the engine has something to run, not historical.
-# Two were set from fact rows in the air rounds, and two endpoint shares were
-# chosen with the battles' results known. The note above each figure says what
+# Four are fitted and not checked: two set in the air rounds through the
+# model's own counts, and two endpoint shares chosen with the battles' results
+# known (decision 0089). None is sized from rows. The note above each figure says what
 # it rests on. Every figure, with its record, is listed in
 # docs/validation/tuning/air-figures-closed.md. The round records named below
 # are in docs/validation/tuning/. The figures are tuned on the Eastern
@@ -33,7 +34,9 @@ torpedo_hit_chance = "0.15"
 # (r3-fighter-hit-chance.md). No row sizes it.
 fighter_hit_chance = "0.3"
 # Looked at and not moved in air round 5, from numbers in hand with no grid
-# (r5-anti-aircraft-hit-chance.md). No row sizes it.
+# (r5-anti-aircraft-hit-chance.md). No row bears on it: the one row on the
+# guns' share is of the aircraft attacking, not of the kills, so the two cannot
+# be compared (decision 0089, ruling 3).
 anti_aircraft_hit_chance = "0.05"
 
 # What either chance is multiplied by when the target type has pilot armour,
@@ -49,11 +52,14 @@ self_sealing_tanks_factor = "0.75"
 # aircraft shot down with the chance given; each whole bomb or torpedo that
 # missed is claimed as a hit on a ship, or as an aircraft destroyed on the
 # ground, with the last.
-# Sized from rows in air round 4 (r4-claims.md): 0.7, from 43 claimed by VF-5
-# and VF-6 at the Eastern Solomons (engagement_outcomes 257) against the runs'
-# own 16 real kills and 38 missed shots by those fighters (an assumption: no
-# row splits the fighters' real kills from the guns'). Checked, not tuned, on
-# Rabaul's American claims.
+# Fitted, not checked (decision 0089, ruling 4): air round 4 (r4-claims.md)
+# set 0.7 from 43 claimed by VF-5 and VF-6 at the Eastern Solomons
+# (engagement_outcomes 257), a row, against the runs' own 16 real kills and 38
+# missed shots by those fighters; no source divides the day's kills between
+# fighters and guns, so it is fitted to the model's own kills. It also carries
+# what the rules lack: a fighter that never engaged claims nothing in the
+# record. Rabaul's agreement on the American claims is a check of that fit on
+# a second battle, and does not make it sized.
 fighter_false_claim_chance = "0.7"
 # Looked at and not moved in air round 4: at the low end of the 0.05 to 0.12
 # the Eastern Solomons' rows allow for the ships' guns (r4-claims.md).
@@ -123,10 +129,10 @@ anti_aircraft_before_attack_share = "0"
 # fighters lost at Henderson Field); no source sizes it.
 # Fitted and not checked: in decision 0084's words (finding 5), an endpoint
 # placeholder "chosen with both air battles' results known"; Rabaul against
-# Guadalcanal is a tuning battle for it, not a check. Since then 0 is an end
-# the rows support, not a size: of the 38 fighters of Simpler's study, 12 of
-# the 30 who engaged met the escort first, at or above the proportional split
-# (decision 0087, 11).
+# Guadalcanal is a tuning battle for it, not a check. No row is behind either
+# end (decision 0089, ruling 1): under decision 0080's cap both ends send the
+# same 10 of 53 fighters at the escorts on the day, so Simpler's study (12 of
+# 38 met the escort first) does not tell them apart.
 patrol_drawn_off_share = "0"
 
 # The share of the patrol's shots at a raid's bombers that are worked before the
@@ -134,10 +140,13 @@ patrol_drawn_off_share = "0"
 # before. PLACEHOLDER: decision 0087 sets it to 0.4. Simpler's study of 38
 # fighters at the Eastern Solomons (engagement_outcomes 3979 to 3981): of the 18
 # who first engaged the bombers, 4 did so before the push-over, 7 at it or in
-# the dive and 7 in retirement. The supported range is 0.22 (before the
-# push-over only) to 0.61 (the whole dive); no row divides the seven in the
-# dive, so 0.4 is a placeholder inside the range, chosen before any result was
-# read. A later round may move it only inside 0.22 to 0.61.
+# the dive and 7 in retirement. The rows support the direction only: much of
+# the patrol's fire fell during and after the attack. The range 0.22 (before
+# the push-over only) to 0.61 (the whole dive) is the architect's reading of
+# when pilots first engaged as shares of shots, an interpretation and not a
+# bound from a source (decision 0089, ruling 2). 0.4 is a placeholder inside
+# it, chosen before any result was read, and a later round may move it only
+# inside 0.22 to 0.61.
 patrol_before_attack_share = "0.4"
 
 # Whether a bomb or torpedo hit also knocks a system down one level follows
@@ -161,12 +170,13 @@ main_battery = "0.2"
 
 # Where a bomb hit on a base lands (decision 7 of 0034): one draw for each hit.
 # The two chances add to 1 at most; the rest of the hits land on nothing.
-# aircraft: sized from rows in Rabaul round 1 (Nov 13, 2026), 0.3 to 0.06, from
-# about 2.5 aircraft destroyed on the ground at Henderson Field
-# (engagement_outcomes 1266, 1272, 1283, 1299, 1330) for about 212 bomber
-# sorties at a bomb chance of 0.2 (one bomb a bomber, an assumption of the
-# rules). Tuned on Rabaul with no check battle
-# (rabaul-r1-base-hit-aircraft.md).
+# aircraft: fitted, not checked (decision 0089, ruling 4). Rabaul round 1
+# (rabaul-r1-base-hit-aircraft.md) moved it 0.3 to 0.06 from about 2.5
+# aircraft destroyed on the ground at Henderson Field (engagement_outcomes
+# 1266, 1272, 1283, 1299, 1330) for about 212 bomber sorties, through an
+# assumed bomb a bomber and the placeholder bomb chance of 0.2; no row gives
+# the bombs that hit the field. The rows size the product, not this figure.
+# Tuned on Rabaul with no check battle.
 # supply: placeholder (decision 0034). No row sizes it and no measure reads it.
 [base_hit]
 aircraft = "0.06"
