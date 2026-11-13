@@ -531,7 +531,9 @@ fn objectives_change_no_hash_and_no_event() {
     // And it was 0d70319bcaa38438 until the state went to version 9 (decision
     // 0069, ship repair) and five figures were added to surface_combat.toml;
     // the event log did not change.
-    assert!(baseline.contains("hash a730ebb0db042017"));
+    // And it was a730ebb0db042017 until the state went to version 10
+    // (decision 0066, land units); the event log did not change.
+    assert!(baseline.contains("hash cb2355ea4133883a"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

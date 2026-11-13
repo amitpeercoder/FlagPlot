@@ -6,17 +6,18 @@ use serde::Deserialize;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
-    AirGroupId, AircraftTypeId, BaseId, IntentId, ShipClassId, ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, IntentId, LandUnitId, ShipClassId, ShipId, TaskForceId,
 };
+use sim_core::map::HexKind;
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Issuer, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
-    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, Cargo, Issuer, Mission, OrderKind, OrderRequest, Origin, Reach,
+    Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, Replacement, Ship, ShipLocation, ShipSystem,
-    ShipSystems, Side, SystemState, TaskForce, TruthState,
+    AirGroup, AirGroupLocation, Arrival, Base, LandUnit, Replacement, Ship, ShipLocation,
+    ShipSystem, ShipSystems, Side, SystemState, TaskForce, TruthState,
 };
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::{DaySummary, StartingContact, World};
@@ -26,8 +27,8 @@ use crate::map::load_map;
 use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
-    load_fatigue_figures, load_port_sizes, load_search_figures, load_ship_classes,
-    load_surface_combat_figures, parse_kind,
+    load_fatigue_figures, load_ground_figures, load_port_sizes, load_search_figures,
+    load_ship_classes, load_surface_combat_figures, parse_kind,
 };
 
 /// One file name or a list of them (decision 0043).
@@ -83,8 +84,13 @@ struct ScenarioFile {
     /// Optional: without it nothing is spent and no base is out of supply
     /// (decision 0039).
     air_supply: Option<String>,
+    /// Path to the ground figures, relative to the scenario file. Optional,
+    /// but a scenario with a land unit must name it (decision 0066, 3).
+    ground: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
+    #[serde(default)]
+    land_unit: Vec<LandUnitSpec>,
     #[serde(default)]
     air_group: Vec<AirGroupSpec>,
     #[serde(default)]
@@ -202,6 +208,20 @@ struct BaseSpec {
     /// this many days (decision 0069). A whole number, at least 1. Defaults
     /// to none.
     yard_passage_days: Option<i64>,
+}
+
+/// A land unit at the start (decision 0066, 3): exactly one of a hex, where
+/// its men are ashore, and a task force, where they are aboard.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LandUnitSpec {
+    id: u32,
+    name: String,
+    side: SideSpec,
+    men: u32,
+    q: Option<i32>,
+    r: Option<i32>,
+    task_force: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -352,6 +372,9 @@ struct OrderSpec {
 enum CargoSpec {
     Supply,
     Fuel,
+    /// Only with a unit (decision 0066): the men alone.
+    #[serde(rename = "none")]
+    NoCargo,
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -370,8 +393,10 @@ enum ActionSpec {
         mission: MissionSpec,
     },
     /// `cargo` is "supply" or "fuel" and defaults to supply (decision 0046).
+    /// With a `unit` (decision 0066) it may also be "none".
     Load {
         cargo: Option<CargoSpec>,
+        unit: Option<u32>,
     },
     Unload {},
     /// `target_base` is required for `base_strike` and given for no other
@@ -900,6 +925,9 @@ impl Scenario {
         if let Some(air_supply) = &file.air_supply {
             ref_data.air_supply = Some(load_air_supply_figures(&reference(air_supply)?)?);
         }
+        if let Some(ground) = &file.ground {
+            ref_data.ground = Some(load_ground_figures(&reference(ground)?)?);
+        }
 
         let mut data_files: Vec<PathBuf> = vec![folder.join(&file.map)];
         for name in &class_files {
@@ -916,6 +944,7 @@ impl Scenario {
             &file.air_upkeep,
             &file.fatigue,
             &file.air_supply,
+            &file.ground,
         ]
         .into_iter()
         .flatten()
@@ -979,6 +1008,7 @@ impl Scenario {
                     ),
                     None => None,
                 },
+                on_map: true,
             };
             if truth.bases.insert(id, base).is_some() {
                 return Err(fail(format!("{id} appears twice")));
@@ -1200,10 +1230,93 @@ impl Scenario {
                 systems,
                 experience,
                 system_repair_points: Fixed::ZERO,
+                troops: None,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));
             }
+        }
+
+        // Land units come after ships, since a unit may be aboard some
+        // (decision 0066, 3).
+        if !file.land_unit.is_empty() && file.ground.is_none() {
+            return Err(fail(
+                "the scenario has a land unit but names no ground file (decision 0066, 3)"
+                    .to_string(),
+            ));
+        }
+        let mut unit_specs: Vec<&LandUnitSpec> = file.land_unit.iter().collect();
+        unit_specs.sort_by_key(|spec| spec.id);
+        // Units are put aboard in unit order, each over the force's ships in
+        // ship order.
+        let mut to_put_aboard: Vec<(LandUnitId, TaskForceId, u32)> = Vec::new();
+        for spec in unit_specs {
+            let id = LandUnitId::new(spec.id);
+            if spec.id == 0 || spec.id >= MADE_IDS_FLOOR {
+                return Err(fail(format!(
+                    "{id} is numbered 0 or {MADE_IDS_FLOOR} or above: 0 is no unit and those numbers are kept for units made in play (decision 0066)"
+                )));
+            }
+            if truth.land_units.contains_key(&id) {
+                return Err(fail(format!("{id} appears twice")));
+            }
+            if spec.men == 0 {
+                return Err(fail(format!("{id} has no men")));
+            }
+            let side: Side = spec.side.into();
+            let mut unit = LandUnit {
+                id,
+                name: spec.name.clone(),
+                side,
+                men_ashore: 0,
+                hex: None,
+            };
+            match (spec.q, spec.r, spec.task_force) {
+                (Some(q), Some(r), None) => {
+                    let hex = Hex::new(q, r);
+                    let data = map
+                        .get(hex)
+                        .ok_or_else(|| fail(format!("{id} is ashore at {q},{r}, off the map")))?;
+                    if !matches!(data.kind, HexKind::Coast | HexKind::Land) {
+                        return Err(fail(format!(
+                            "{id} is ashore at {q},{r}, which is not coast or land"
+                        )));
+                    }
+                    unit.men_ashore = spec.men;
+                    unit.hex = Some(hex);
+                }
+                (None, None, Some(raw)) => {
+                    let force_id = TaskForceId::new(raw);
+                    let force = truth
+                        .task_forces
+                        .get(&force_id)
+                        .ok_or_else(|| fail(format!("{id} is aboard unknown task force {raw}")))?;
+                    if force.side != side {
+                        return Err(fail(format!(
+                            "{id} is {} but its task force {force_id} is {}",
+                            side.name(),
+                            force.side.name()
+                        )));
+                    }
+                    to_put_aboard.push((id, force_id, spec.men));
+                }
+                _ => {
+                    return Err(fail(format!(
+                        "{id} needs exactly one of a hex (both q and r) and a task_force"
+                    )))
+                }
+            }
+            truth.land_units.insert(id, unit);
+        }
+        for (id, force_id, men) in to_put_aboard {
+            truth
+                .put_aboard_at_start(id, force_id, men, |class| {
+                    ref_data
+                        .ship_classes
+                        .get(&class)
+                        .map_or(0, |class| class.troop_capacity_men)
+                })
+                .map_err(&fail)?;
         }
 
         // Air groups come after ships, since a group may be aboard one.
@@ -1447,9 +1560,22 @@ impl Scenario {
                         ActionSpec::SetMission { mission } => {
                             TaskForceOrder::SetMission((*mission).into())
                         }
-                        ActionSpec::Load { cargo } => match cargo {
-                            None | Some(CargoSpec::Supply) => TaskForceOrder::Load,
-                            Some(CargoSpec::Fuel) => TaskForceOrder::LoadFuel,
+                        ActionSpec::Load { cargo, unit } => match (unit, cargo) {
+                            (None, None | Some(CargoSpec::Supply)) => TaskForceOrder::Load,
+                            (None, Some(CargoSpec::Fuel)) => TaskForceOrder::LoadFuel,
+                            (None, Some(CargoSpec::NoCargo)) => {
+                                return Err(fail(format!(
+                                    "the load order on day {day}: a load with no unit must name supply or fuel"
+                                )))
+                            }
+                            (Some(unit), cargo) => TaskForceOrder::LoadUnit {
+                                unit: LandUnitId::new(*unit),
+                                cargo: match cargo {
+                                    None | Some(CargoSpec::Supply) => Some(Cargo::Supply),
+                                    Some(CargoSpec::Fuel) => Some(Cargo::Fuel),
+                                    Some(CargoSpec::NoCargo) => None,
+                                },
+                            },
                         },
                         ActionSpec::Unload {} => TaskForceOrder::Unload,
                         ActionSpec::SetRulesOfEngagement {
@@ -3760,5 +3886,364 @@ points = { carrier = 5, destroyer = "0.5" }
             "\n[objectives]\nminor = 3\nmajor = 8\ndecisive = 16\n\n[objectives.allied]\nmission = \"A.\"\n",
         );
         assert!(message.contains("japanese"), "{message}");
+    }
+
+    // Land units (decision 0066).
+
+    /// A small scenario on the landing map: base 1 at (0,0), a force of two
+    /// troop transports (600 men each) at it, a force of one fast transport
+    /// (200 men) at sea at (10,0), a Japanese force, and `extra` after them.
+    /// `ground` says whether the ground figures are named.
+    fn landing(ground: bool, extra: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let ground_key = if ground {
+            "ground = \"../reference/ground.toml\"\n"
+        } else {
+            ""
+        };
+        let text = format!(
+            r#"
+name = "Test"
+placeholder = true
+seed = 5
+days = 4
+map = "../map/placeholder_landing.toml"
+ship_classes = ["../reference/ship_classes.csv", "../reference/ship_classes_placeholder_transports.csv"]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+{ground_key}
+[[base]]
+id = 1
+name = "Port"
+side = "allied"
+q = 0
+r = 0
+
+[[task_force]]
+id = 1
+name = "Convoy"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 2
+name = "Fast group"
+side = "allied"
+q = 10
+r = 0
+mission = "transport"
+
+[[task_force]]
+id = 3
+name = "Japanese group"
+side = "japanese"
+q = 5
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Troop ship 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Troop ship 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Fast ship"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Japanese cargo ship"
+class = 3
+side = "japanese"
+fuel_t = 1000
+task_force = 3
+{extra}"#
+        );
+        Scenario::parse(&text, &path)
+    }
+
+    fn landing_error(ground: bool, extra: &str) -> String {
+        match landing(ground, extra) {
+            Ok(_) => panic!("the scenario loads"),
+            Err(error) => error.to_string(),
+        }
+    }
+
+    fn unit_aboard(id: u32, men: u32, task_force: u32) -> String {
+        format!(
+            "\n[[land_unit]]\nid = {id}\nname = \"Unit {id}\"\nside = \"allied\"\nmen = {men}\ntask_force = {task_force}\n"
+        )
+    }
+
+    fn unit_ashore(id: u32, men: u32, q: i32, r: i32) -> String {
+        format!(
+            "\n[[land_unit]]\nid = {id}\nname = \"Unit {id}\"\nside = \"allied\"\nmen = {men}\nq = {q}\nr = {r}\n"
+        )
+    }
+
+    #[test]
+    fn land_units_are_built_ashore_or_put_aboard_in_unit_order() {
+        // Listed out of order: unit 2 is put aboard after unit 1 all the same.
+        let extra = format!(
+            "{}{}{}",
+            unit_aboard(2, 400, 1),
+            unit_ashore(3, 500, 10, 0),
+            unit_aboard(1, 600, 1)
+        );
+        let scenario = landing(true, &extra).expect("loads");
+        let truth = scenario.world.umpire();
+        let ground = scenario.world.ref_data().ground.expect("the figures load");
+        assert_eq!(ground.handling_t_per_man, Fixed::from_ratio(1, 4));
+        assert_eq!(truth.land_units.len(), 3);
+        let first = &truth.land_units[&LandUnitId::new(1)];
+        assert_eq!((first.men_ashore, first.hex), (0, None));
+        assert_eq!(first.side, Side::Allied);
+        assert_eq!(first.name, "Unit 1");
+        let third = &truth.land_units[&LandUnitId::new(3)];
+        assert_eq!((third.men_ashore, third.hex), (500, Some(Hex::new(10, 0))));
+        let troops = |ship: u32| truth.ships[&ShipId::new(ship)].troops;
+        let aboard = |unit: u32, men: u32| {
+            Some(sim_core::state::Troops {
+                unit: LandUnitId::new(unit),
+                men,
+            })
+        };
+        assert_eq!(troops(1), aboard(1, 600));
+        assert_eq!(troops(2), aboard(2, 400));
+        assert_eq!(troops(3), None);
+        assert_eq!(troops(4), None);
+        assert!(truth.bases.values().all(|base| base.on_map));
+    }
+
+    #[test]
+    fn a_unit_larger_than_a_ship_is_spread_over_the_ships_in_ship_order() {
+        let scenario = landing(true, &unit_aboard(1, 900, 1)).expect("loads");
+        let truth = scenario.world.umpire();
+        assert_eq!(
+            truth.ships[&ShipId::new(1)].troops.map(|t| t.men),
+            Some(600)
+        );
+        assert_eq!(
+            truth.ships[&ShipId::new(2)].troops.map(|t| t.men),
+            Some(300)
+        );
+    }
+
+    #[test]
+    fn a_land_unit_without_a_ground_file_is_refused() {
+        let message = landing_error(false, &unit_ashore(1, 100, 10, 0));
+        assert!(message.contains("land unit"), "{message}");
+        assert!(message.contains("ground"), "{message}");
+        // A scenario with no land unit needs no ground file, and has none.
+        let scenario = landing(false, "").expect("loads");
+        assert!(scenario.world.ref_data().ground.is_none());
+        assert!(scenario.world.umpire().land_units.is_empty());
+        // The key names a file that must be there.
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let text = "name = \"T\"\nground = \"../reference/nothing.toml\"\n";
+        assert!(Scenario::parse(text, &path).is_err());
+    }
+
+    #[test]
+    fn a_land_unit_that_does_not_fit_aboard_is_refused() {
+        // Two transports hold 1,200 men.
+        let message = landing_error(true, &unit_aboard(1, 1300, 1));
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("berths for 1200"), "{message}");
+        // Unit 1 takes ship 1, unit 2 takes ship 2, and unit 3 has no room.
+        let extra = format!(
+            "{}{}{}",
+            unit_aboard(1, 600, 1),
+            unit_aboard(2, 600, 1),
+            unit_aboard(3, 1, 1)
+        );
+        let message = landing_error(true, &extra);
+        assert!(message.contains("land_unit:3"), "{message}");
+        // A force whose ships have no troop capacity holds no man.
+        let message = landing_error(true, &unit_aboard(1, 1, 3));
+        assert!(message.contains("land_unit:1"), "{message}");
+    }
+
+    #[test]
+    fn a_land_unit_needs_exactly_one_place() {
+        let both = "\n[[land_unit]]\nid = 1\nname = \"U\"\nside = \"allied\"\nmen = 5\nq = 10\nr = 0\ntask_force = 1\n";
+        let neither = "\n[[land_unit]]\nid = 1\nname = \"U\"\nside = \"allied\"\nmen = 5\n";
+        let half = "\n[[land_unit]]\nid = 1\nname = \"U\"\nside = \"allied\"\nmen = 5\nq = 10\n";
+        for extra in [both, neither, half] {
+            let message = landing_error(true, extra);
+            assert!(message.contains("land_unit:1"), "{message}");
+            assert!(message.contains("exactly one of"), "{message}");
+        }
+    }
+
+    #[test]
+    fn a_land_unit_with_no_men_a_bad_number_or_a_duplicate_is_refused() {
+        let message = landing_error(true, &unit_ashore(1, 0, 10, 0));
+        assert!(message.contains("land_unit:1 has no men"), "{message}");
+        let message = landing_error(true, &unit_ashore(0, 5, 10, 0));
+        assert!(message.contains("land_unit:0"), "{message}");
+        let message = landing_error(true, &unit_ashore(MADE_IDS_FLOOR, 5, 10, 0));
+        assert!(message.contains(&MADE_IDS_FLOOR.to_string()), "{message}");
+        let extra = format!("{}{}", unit_ashore(1, 5, 10, 0), unit_ashore(1, 6, 8, 0));
+        let message = landing_error(true, &extra);
+        assert!(message.contains("land_unit:1 appears twice"), "{message}");
+    }
+
+    #[test]
+    fn a_land_unit_ashore_must_be_on_the_map_on_coast_or_land() {
+        let message = landing_error(true, &unit_ashore(1, 5, 50, 50));
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("off the map"), "{message}");
+        // (5,0) is deep sea.
+        let message = landing_error(true, &unit_ashore(1, 5, 5, 0));
+        assert!(message.contains("not coast or land"), "{message}");
+        assert!(landing(true, &unit_ashore(1, 5, 8, 0)).is_ok());
+    }
+
+    #[test]
+    fn a_land_unit_aboard_needs_a_force_of_its_own_side() {
+        let message = landing_error(true, &unit_aboard(1, 5, 9));
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("unknown task force 9"), "{message}");
+        // Task force 3 is Japanese.
+        let message = landing_error(true, &unit_aboard(1, 5, 3));
+        assert!(message.contains("land_unit:1"), "{message}");
+        assert!(message.contains("Allied but its task force"), "{message}");
+    }
+
+    #[test]
+    fn a_land_unit_has_no_unknown_keys() {
+        let extra = format!("{}rank = 3\n", unit_ashore(1, 5, 10, 0));
+        assert!(landing_error(true, &extra).contains("rank"));
+    }
+
+    fn load_orders(extra: &str) -> Result<Vec<TaskForceOrder>, DataError> {
+        let orders: String = extra
+            .split('|')
+            .map(|body| {
+                format!("\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 2\nkind = \"load\"\n{body}\n")
+            })
+            .collect();
+        let scenario = landing(true, &orders)?;
+        Ok(scenario.scripted_orders()[&1]
+            .iter()
+            .map(|(_, request)| match &request.kind {
+                OrderKind::TaskForce { order, .. } => order.clone(),
+                other => panic!("not a task force order: {other:?}"),
+            })
+            .collect())
+    }
+
+    #[test]
+    fn a_load_order_may_name_a_unit_and_a_cargo_or_none() {
+        let orders = load_orders(
+            "|cargo = \"supply\"|cargo = \"fuel\"|unit = 3|unit = 3\ncargo = \"supply\"|unit = 3\ncargo = \"fuel\"|unit = 3\ncargo = \"none\"",
+        )
+        .expect("loads");
+        let unit = LandUnitId::new(3);
+        assert_eq!(
+            orders,
+            vec![
+                TaskForceOrder::Load,
+                TaskForceOrder::Load,
+                TaskForceOrder::LoadFuel,
+                TaskForceOrder::LoadUnit {
+                    unit,
+                    cargo: Some(Cargo::Supply)
+                },
+                TaskForceOrder::LoadUnit {
+                    unit,
+                    cargo: Some(Cargo::Supply)
+                },
+                TaskForceOrder::LoadUnit {
+                    unit,
+                    cargo: Some(Cargo::Fuel)
+                },
+                TaskForceOrder::LoadUnit { unit, cargo: None },
+            ]
+        );
+    }
+
+    #[test]
+    fn a_load_order_with_no_unit_cannot_name_no_cargo() {
+        let error = load_orders("cargo = \"none\"").expect_err("refused");
+        let message = error.to_string();
+        assert!(
+            message.contains("a load with no unit must name supply or fuel"),
+            "{message}"
+        );
+        assert!(load_orders("cargo = \"gold\"").is_err());
+    }
+
+    #[test]
+    fn the_shipped_landing_scenario_loads_on_the_live_and_the_frozen_figures() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let path = root.join("data/scenarios/21_landing.toml");
+        let live = Scenario::load(&path).expect("loads on the live figures");
+        let frozen = Scenario::load_with(&path, &LoadOptions::frozen_step1(&root))
+            .expect("loads on the frozen figures");
+        for scenario in [&live, &frozen] {
+            let truth = scenario.world.umpire();
+            assert_eq!(scenario.days, 7);
+            assert_eq!(truth.land_units.len(), 3);
+            let aboard = |ship: u32| truth.ships[&ShipId::new(ship)].troops;
+            assert_eq!(
+                aboard(1),
+                Some(sim_core::state::Troops {
+                    unit: LandUnitId::new(1),
+                    men: 600
+                })
+            );
+            assert_eq!(
+                aboard(2),
+                Some(sim_core::state::Troops {
+                    unit: LandUnitId::new(2),
+                    men: 400
+                })
+            );
+            assert_eq!(aboard(3), None);
+            let third = &truth.land_units[&LandUnitId::new(3)];
+            assert_eq!((third.men_ashore, third.hex), (500, Some(Hex::new(10, 0))));
+            for unit in [1, 2] {
+                let unit = &truth.land_units[&LandUnitId::new(unit)];
+                assert_eq!((unit.men_ashore, unit.hex), (0, None));
+            }
+            let ground = scenario.world.ref_data().ground.expect("the figures load");
+            assert_eq!(ground.daily_supply_t_per_man, Fixed::from_ratio(1, 200));
+            let load = &scenario.scripted_orders()[&1];
+            assert!(load.iter().any(|(_, request)| matches!(
+                &request.kind,
+                OrderKind::TaskForce {
+                    order: TaskForceOrder::LoadUnit { cargo: None, .. },
+                    ..
+                }
+            )));
+        }
+        assert!(live
+            .data_files()
+            .iter()
+            .any(|file| file.ends_with("ground.toml")));
+        assert!(frozen
+            .data_files()
+            .iter()
+            .any(|file| file.to_string_lossy().contains("step1/ground.toml")));
     }
 }

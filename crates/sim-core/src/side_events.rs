@@ -49,7 +49,9 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId,
+};
 use crate::state::{Side, TruthState};
 use crate::time::{ClockTime, Pulse};
 
@@ -475,6 +477,7 @@ pub(crate) struct Owners {
     pub(crate) forces: BTreeMap<TaskForceId, Side>,
     pub(crate) air_groups: BTreeMap<AirGroupId, Side>,
     pub(crate) bases: BTreeMap<BaseId, Side>,
+    pub(crate) land_units: BTreeMap<LandUnitId, Side>,
     pub(crate) orders: BTreeMap<OrderId, Side>,
     /// The task forces with no ship that are not away at the yard. A force
     /// emptied by sinking is never removed and never given a ship again, so a
@@ -517,6 +520,11 @@ impl Owners {
                 .map(|(id, g)| (*id, g.side))
                 .collect(),
             bases: truth.bases.iter().map(|(id, b)| (*id, b.side)).collect(),
+            land_units: truth
+                .land_units
+                .iter()
+                .map(|(id, u)| (*id, u.side))
+                .collect(),
             orders: orders.iter().map(|(id, o)| (*id, o.side)).collect(),
         }
     }
@@ -527,7 +535,8 @@ impl Owners {
             EntityRef::TaskForce(id) => self.forces.get(&id).copied(),
             EntityRef::AirGroup(id) => self.air_groups.get(&id).copied(),
             EntityRef::Base(id) => self.bases.get(&id).copied(),
-            EntityRef::Pilot(_) | EntityRef::LandUnit(_) | EntityRef::Contact(_) => None,
+            EntityRef::LandUnit(id) => self.land_units.get(&id).copied(),
+            EntityRef::Pilot(_) | EntityRef::Contact(_) => None,
         }
     }
 }
@@ -550,6 +559,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
     let own_force = |id: &TaskForceId| owners.forces.get(id) == Some(&side);
     let own_group = |id: &AirGroupId| owners.air_groups.get(id) == Some(&side);
     let own_base = |id: &BaseId| owners.bases.get(id) == Some(&side);
+    let own_unit = |id: &LandUnitId| owners.land_units.get(id) == Some(&side);
     let whole_if = |own: bool| if own { Seen::Whole } else { Seen::Nothing };
     let cut_if = |own: bool, cut: SideEventKind| {
         if own {
@@ -667,6 +677,20 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::BaseAtDayEnd { base, .. } => {
             whole_if(own_base(base))
         }
+
+        // Land units (decision 0066, 23): seen whole by their own side and
+        // not at all by the enemy. The side that sank a ship carrying men is
+        // not told she carried them, and a base formed by a landing is
+        // known to its own side only (decision 12).
+        EventKind::MenEmbarked { unit, .. }
+        | EventKind::MenLanded { unit, .. }
+        | EventKind::UnitDivided { from: unit, .. }
+        | EventKind::MenLostWithShip { unit, .. }
+        | EventKind::MenLostUnfed { unit, .. }
+        | EventKind::LandUnitDestroyed { unit } => whole_if(own_unit(unit)),
+        EventKind::UnitLoadingComplete { task_force, .. } => whole_if(own_force(task_force)),
+        EventKind::BaseFormed { base, .. } => whole_if(own_base(base)),
+        EventKind::MenFed { side: owner, .. } => whole_if(*owner == side),
 
         // A side's own: the report, the claim, what became of its contacts.
         EventKind::ReportReceived { side: owner, .. }
@@ -1408,7 +1432,19 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::AircraftDitched { .. }
         | EventKind::AircraftLandedElsewhere { .. }
         | EventKind::AircraftDitchedNoDeck { .. }
-        | EventKind::BaseAtDayEnd { .. } => false,
+        | EventKind::BaseAtDayEnd { .. }
+        // Land units cite their own orders, the arrival of their own force,
+        // the sinking of their own ship and their own feeding (decision
+        // 0066).
+        | EventKind::MenEmbarked { .. }
+        | EventKind::MenLanded { .. }
+        | EventKind::BaseFormed { .. }
+        | EventKind::UnitDivided { .. }
+        | EventKind::MenLostWithShip { .. }
+        | EventKind::MenFed { .. }
+        | EventKind::MenLostUnfed { .. }
+        | EventKind::LandUnitDestroyed { .. }
+        | EventKind::UnitLoadingComplete { .. } => false,
 
         // Never given whole: each of these is cut (and decided in
         // `may_have_hidden_causes`) or hidden from every side. If one were
@@ -1581,9 +1617,14 @@ mod tests {
             owners.forces.insert(force(n), side);
             owners.air_groups.insert(group(n), side);
             owners.bases.insert(base(n), side);
+            owners.land_units.insert(unit(n), side);
             owners.orders.insert(order(n), side);
         }
         owners
+    }
+
+    fn unit(n: u32) -> LandUnitId {
+        LandUnitId::new(n)
     }
 
     fn log(kinds: Vec<EventKind>) -> Vec<Event> {
@@ -1601,7 +1642,7 @@ mod tests {
             .collect()
     }
 
-    // ---- the table of the 67 kinds ----
+    // ---- the table of the 76 kinds ----
 
     /// What a side sees of an event.
     #[derive(Clone, Copy, Debug)]
@@ -2353,6 +2394,7 @@ mod tests {
                     asked_t: fx(3),
                     paid_t: fx(3),
                     left_t: fx(97),
+                    men: 0,
                 },
                 Whole,
                 Nothing,
@@ -2463,6 +2505,101 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // Land units (decision 0066, 23): their own side's whole, the
+            // enemy's nothing.
+            row(
+                EventKind::MenEmbarked {
+                    unit: unit(1),
+                    ship: ship(1),
+                    task_force: force(1),
+                    hex: hex(),
+                    men: 200,
+                    aboard: 200,
+                    ashore: 275,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::MenLanded {
+                    unit: unit(1),
+                    ship: ship(1),
+                    task_force: force(1),
+                    hex: hex(),
+                    men: 320,
+                    aboard: 280,
+                    ashore: 320,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::BaseFormed {
+                    base: base(1),
+                    side: Side::Allied,
+                    hex: hex(),
+                    task_force: force(1),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::UnitDivided {
+                    from: unit(1),
+                    unit: LandUnitId::new(4),
+                    task_force: force(1),
+                    men: 200,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::MenLostWithShip {
+                    unit: unit(1),
+                    ship: ship(1),
+                    men: 200,
+                },
+                Whole,
+                Nothing,
+            ),
+            sided(row(
+                EventKind::MenFed {
+                    side: Side::Allied,
+                    hex: hex(),
+                    base: Some(base(1)),
+                    men: 1200,
+                    fed: 600,
+                    unfed: 600,
+                },
+                Whole,
+                Nothing,
+            )),
+            row(
+                EventKind::MenLostUnfed {
+                    unit: unit(1),
+                    hex: hex(),
+                    lost: 15,
+                    ashore: 585,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::LandUnitDestroyed { unit: unit(1) },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::UnitLoadingComplete {
+                    task_force: force(1),
+                    unit: unit(1),
+                    base: None,
+                    cargo: None,
+                    elapsed_hours: Fixed::from_raw(2_500_000),
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -2503,7 +2640,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 67, "the log has 67 kinds of event");
+        assert_eq!(all.len(), 76, "the log has 76 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

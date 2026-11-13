@@ -362,6 +362,12 @@ impl From<BaseId> for EntityRef {
     }
 }
 
+impl From<LandUnitId> for EntityRef {
+    fn from(id: LandUnitId) -> Self {
+        EntityRef::LandUnit(id)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

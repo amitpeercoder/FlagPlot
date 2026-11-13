@@ -130,6 +130,35 @@
         }
       }
     },
+    "land_unit_line": {
+      "description": "A land unit of the side (decision 0066, 21): its men ashore and where, its men aboard by ship, and whether its men were fed in the last night pulse. Only the side's own units have one.",
+      "type": "object",
+      "required": ["land_unit", "men_ashore", "place", "men_aboard", "aboard", "destroyed", "fed_last_night"],
+      "additionalProperties": false,
+      "properties": {
+        "land_unit": { "$ref": "#/$defs/handle" },
+        "men_ashore": { "type": "integer" },
+        "place": { "$ref": "#/$defs/place_or_null" },
+        "men_aboard": { "type": "integer" },
+        "aboard": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "men"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "#/$defs/handle" },
+              "men": { "type": "integer" }
+            }
+          }
+        },
+        "destroyed": { "description": "No man left, ashore or aboard. The unit keeps its number.", "type": "boolean" },
+        "fed_last_night": {
+          "description": "How the side's men ashore in the unit's hex were fed in the last night pulse, from the side's own MenFed event: fed, partly_fed or unfed. not_ashore for a unit with no man ashore; not_known when the side holds no such event for the hex.",
+          "enum": ["fed", "partly_fed", "unfed", "not_ashore", "not_known"]
+        }
+      }
+    },
     "force_line": {
       "type": "object",
       "required": [

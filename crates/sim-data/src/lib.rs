@@ -35,6 +35,9 @@
 //! - Base supply figures: TOML, named by the scenario's optional `air_supply`
 //!   key (`docs/decisions/0039-base-supply-consumption.md`). Without it
 //!   nothing is spent and no base is out of supply.
+//! - Ground figures: TOML, named by the scenario's optional `ground` key
+//!   (`docs/decisions/0066-land-units-carried-and-fed.md`). A scenario with a
+//!   land unit must name it.
 //! - Maps: TOML, as rectangular regions plus single-hex overrides, or a
 //!   generated CSV with the columns `q,r,kind,land_percent,lat,lon` (decision
 //!   0017). The extension decides which.
@@ -78,7 +81,7 @@ pub use error::DataError;
 pub use map::load_map;
 pub use reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
-    load_fatigue_figures, load_port_sizes, load_search_figures, load_ship_classes,
-    load_surface_combat_figures,
+    load_fatigue_figures, load_ground_figures, load_port_sizes, load_search_figures,
+    load_ship_classes, load_surface_combat_figures,
 };
 pub use scenario::{LoadOptions, Scenario, FROZEN_REFERENCE_DIR};

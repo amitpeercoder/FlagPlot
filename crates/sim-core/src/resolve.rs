@@ -59,6 +59,10 @@ pub(crate) enum PulsePhase {
     /// start of the day, after the repair, the arrivals, the replacements and
     /// the supply upkeep and before movement (decision 8 of 0036).
     AirGroupRest,
+    /// The men ashore are fed from their side's base in their hex, after the
+    /// daily supply for aircraft and before air group rest (decisions 16 and
+    /// 18 of 0066).
+    MenSupply,
 }
 
 /// A step after the last pulse.
@@ -73,11 +77,12 @@ enum EndOfDayPhase {
     BaseCount,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 10] = [
+const NIGHT_SEQUENCE: [PulsePhase; 11] = [
     PulsePhase::AircraftRepair,
     PulsePhase::AirArrival,
     PulsePhase::AirReplacement,
     PulsePhase::AirSupplyUpkeep,
+    PulsePhase::MenSupply,
     PulsePhase::AirGroupRest,
     PulsePhase::Movement,
     PulsePhase::NightSearch,
@@ -181,6 +186,7 @@ impl World {
             PulsePhase::AirArrival => self.receive_arrivals(day, pulse),
             PulsePhase::AirReplacement => self.receive_replacements(day, pulse),
             PulsePhase::AirSupplyUpkeep => self.pay_daily_supply(day, pulse),
+            PulsePhase::MenSupply => self.feed_men_ashore(day, pulse),
             PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,
@@ -513,6 +519,36 @@ impl World {
                             Err(RejectReason::NoOwnBaseHere)
                         }
                     }
+                    TaskForceOrder::LoadUnit { unit, .. } => {
+                        // Decision 0066, 6, in this order: stopped and with
+                        // fuel, as every load; the unit the side's own; men
+                        // of it ashore where the force is; a ship that can
+                        // carry men. No base is needed.
+                        if task_force.status == TaskForceStatus::Underway {
+                            return Err(RejectReason::UnderWay);
+                        }
+                        if task_force.status == TaskForceStatus::OutOfFuel {
+                            return Err(RejectReason::OutOfFuel);
+                        }
+                        let land_unit = match self.truth.land_units.get(unit) {
+                            Some(land_unit) if land_unit.side == order.side => land_unit,
+                            _ => return Err(RejectReason::NotYourLandUnit),
+                        };
+                        if land_unit.men_ashore == 0 || land_unit.hex != Some(task_force.position())
+                        {
+                            return Err(RejectReason::NoMenAshoreHere);
+                        }
+                        let carries_men = afloat.iter().any(|ship| {
+                            self.ref_data.ship_classes[&self.truth.ships[ship].class]
+                                .troop_capacity_men
+                                > 0
+                        });
+                        if carries_men {
+                            Ok(())
+                        } else {
+                            Err(RejectReason::NoTroopCapacity)
+                        }
+                    }
                     TaskForceOrder::SetRulesOfEngagement {
                         break_off,
                         keep_share,
@@ -635,8 +671,11 @@ impl World {
                         if weapon == AttackWeapon::None {
                             return Err(RejectReason::AircraftAttackWithNothing);
                         }
+                        // A base the enemy formed by a landing is not on this
+                        // side's map, and is refused as one that does not
+                        // exist (decision 0066, 12).
                         match self.truth.bases.get(base) {
-                            Some(base) if base.side != group.side => Ok(()),
+                            Some(base) if base.side != group.side && base.on_map => Ok(()),
                             _ => Err(RejectReason::NotAnEnemyBase),
                         }
                     }
@@ -804,18 +843,28 @@ impl World {
                         task_force.cargo_order = Some(CargoOrder {
                             action: CargoAction::Load,
                             order: order.id,
+                            unit: None,
                         });
                     }
                     TaskForceOrder::LoadFuel => {
                         task_force.cargo_order = Some(CargoOrder {
                             action: CargoAction::LoadFuel,
                             order: order.id,
+                            unit: None,
                         });
                     }
                     TaskForceOrder::Unload => {
                         task_force.cargo_order = Some(CargoOrder {
                             action: CargoAction::Unload,
                             order: order.id,
+                            unit: None,
+                        });
+                    }
+                    TaskForceOrder::LoadUnit { unit, cargo } => {
+                        task_force.cargo_order = Some(CargoOrder {
+                            action: CargoAction::load_of(*cargo),
+                            order: order.id,
+                            unit: Some(*unit),
                         });
                     }
                     TaskForceOrder::SetRulesOfEngagement {
@@ -971,6 +1020,7 @@ mod tests {
             radar: false,
             aircraft_capacity: 0,
             anti_aircraft: 0,
+            troop_capacity_men: 0,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);
@@ -3420,6 +3470,7 @@ mod tests {
             force.cargo_order = Some(CargoOrder {
                 action: CargoAction::Load,
                 order: crate::ids::OrderId::new(43),
+                unit: None,
             });
             force.arrived_at_hours = Some(nm(5));
             force.arrival_event = Some(EventId::new(3));

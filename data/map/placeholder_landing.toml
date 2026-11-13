@@ -1,0 +1,35 @@
+# PLACEHOLDER MAP. A strip of open sea with three coast hexes, used by scenario
+# 21 (docs/decisions/0066-land-units-carried-and-fed.md). The geography is
+# invented: it is the strip of scenario 2, and the hexes lie 8 and 10 hexes
+# from the first so the arithmetic comes out exact. A port of size 0 has no
+# berth, so ships there work by lighter. The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-1, 10]
+r = [-1, 1]
+
+# The embarkation port.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 5
+anchorage = true
+
+# An empty shore where a convoy lands.
+[[hex]]
+q = 8
+r = 0
+kind = "coast"
+port_size = 0
+
+# A second empty shore, where men are ashore from the start.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+port_size = 0

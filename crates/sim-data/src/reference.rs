@@ -7,7 +7,8 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    FatigueFigures, PortSize, RefData, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
+    FatigueFigures, GroundFigures, PortSize, RefData, SearchFigures, ShipClass, ShipKind,
+    SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -45,6 +46,11 @@ struct ShipClassRow {
     /// without it gives every class no anti-aircraft shots.
     #[serde(default)]
     anti_aircraft: u32,
+    /// Optional column (decision 0066), after `anti_aircraft`: the men a
+    /// ship of the class carries. A file without it gives every class 0. If
+    /// the column is there, every row needs a whole number.
+    #[serde(default)]
+    troop_capacity_men: u32,
 }
 
 #[derive(Deserialize)]
@@ -121,6 +127,7 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
             aircraft_capacity: row.aircraft_capacity,
             anti_aircraft: row.anti_aircraft,
             name: row.name,
+            troop_capacity_men: row.troop_capacity_men,
         };
         if let Some(problem) = class.problem() {
             return Err(DataError::in_file(path, problem));
@@ -707,6 +714,46 @@ fn parse_air_upkeep_figures(text: &str, path: &Path) -> Result<AirUpkeepFigures,
         wear_chance_per_100_nm: number("wear_chance_per_100_nm", &file.wear_chance_per_100_nm)?,
         write_off_share: number("write_off_share", &file.write_off_share)?,
         carrier_repairs_per_day: file.carrier_repairs_per_day,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GroundFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    handling_t_per_man: Quantity,
+    daily_supply_t_per_man: Quantity,
+    unfed_loss_share_per_day: Quantity,
+}
+
+/// Loads the ground figures from a TOML file (decision 0066).
+pub fn load_ground_figures(path: &Path) -> Result<GroundFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_ground_figures(&text, path)
+}
+
+/// Parses ground figures from TOML text. `path` is only used in messages.
+fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: GroundFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = GroundFigures {
+        handling_t_per_man: number("handling_t_per_man", &file.handling_t_per_man)?,
+        daily_supply_t_per_man: number("daily_supply_t_per_man", &file.daily_supply_t_per_man)?,
+        unfed_loss_share_per_day: number(
+            "unfed_loss_share_per_day",
+            &file.unfed_loss_share_per_day,
+        )?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -2039,6 +2086,84 @@ mod tests {
                 .repair_supply_t,
             Fixed::from_int(2)
         );
+    }
+
+    fn ground_text() -> String {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ground.toml");
+        fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    #[test]
+    fn ground_figures_parse_with_the_files_values() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.handling_t_per_man, Fixed::from_ratio(1, 4));
+        assert_eq!(figures.daily_supply_t_per_man, Fixed::from_ratio(1, 200));
+        assert_eq!(figures.unfed_loss_share_per_day, Fixed::from_ratio(1, 20));
+    }
+
+    #[test]
+    fn ground_figures_reject_floats_unknown_keys_and_bad_values() {
+        let bad = |from: &str, to: &str| {
+            let text = ground_text().replace(from, to);
+            assert_ne!(text, ground_text(), "{from} is in the file");
+            parse_ground_figures(&text, here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(
+            bad("handling_t_per_man = \"0.25\"", "handling_t_per_man = 0.25")
+                .contains("handling_t_per_man")
+        );
+        assert!(bad("placeholder = true", "placeholder = true\nextra = 1").contains("extra"));
+        assert!(bad("daily_supply_t_per_man = \"0.005\"", "").contains("daily_supply_t_per_man"));
+        assert!(bad(
+            "unfed_loss_share_per_day = \"0.05\"",
+            "unfed_loss_share_per_day = \"1.5\""
+        )
+        .contains("unfed_loss_share_per_day"));
+        assert!(
+            bad("handling_t_per_man = \"0.25\"", "handling_t_per_man = 0")
+                .contains("handling_t_per_man")
+        );
+        // Whole numbers are accepted.
+        let text = ground_text().replace(
+            "unfed_loss_share_per_day = \"0.05\"",
+            "unfed_loss_share_per_day = 1",
+        );
+        assert_eq!(
+            parse_ground_figures(&text, here())
+                .expect("parses")
+                .unfed_loss_share_per_day,
+            Fixed::ONE
+        );
+    }
+
+    #[test]
+    fn the_troop_capacity_column_defaults_to_0_and_is_read_when_present() {
+        let without = classes("1,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0\n")
+            .expect("parses");
+        assert_eq!(
+            without.ship_classes[&ShipClassId::new(1)].troop_capacity_men,
+            0
+        );
+        let header = CLASS_HEADER.trim_end().to_string()
+            + ",aircraft_capacity,anti_aircraft,troop_capacity_men\n";
+        let with = parse_ship_classes(
+            &format!("# c\n{header}1,Troop ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,600\n"),
+            here(),
+        )
+        .expect("parses");
+        assert_eq!(
+            with.ship_classes[&ShipClassId::new(1)].troop_capacity_men,
+            600
+        );
+        for bad in ["-1", "1.5", "many"] {
+            let text = format!("# c\n{header}1,Troop ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,{bad}\n");
+            assert!(
+                parse_ship_classes(&text, here()).is_err(),
+                "{bad} is refused"
+            );
+        }
     }
 
     fn fatigue_text() -> String {

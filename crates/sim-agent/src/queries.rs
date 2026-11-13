@@ -8,8 +8,8 @@ use sim_core::view::SideView;
 use crate::answer::{NotKnown, FORMAT, VERSION};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::lines::{
-    air_group_line, base_line, force_line, is_listed, AirGroupLine, BaseLine, ContactLine,
-    ForceLine,
+    air_group_line, base_line, fed_last_night, force_line, is_listed, land_unit_hex,
+    land_unit_line, AirGroupLine, BaseLine, ContactLine, ForceLine, LandUnitLine,
 };
 use crate::words;
 
@@ -41,6 +41,12 @@ pub struct ListForces {
     pub kind: &'static str,
     pub area: Option<Area>,
     pub task_forces: Vec<ForceLine>,
+    /// The side's own land units (decision 0066, 21), in `area` if one is
+    /// given: a unit with men ashore is where they are, one wholly aboard
+    /// where its first ship is. Left out when the side has none. A destroyed
+    /// unit is listed (it keeps its number) and is in no area.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub land_units: Vec<LandUnitLine>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -96,6 +102,16 @@ pub fn list_forces(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListForces 
             .filter(|f| is_listed(&ctx, f) && within(area, f.position()))
             .map(|f| force_line(&ctx, f))
             .collect(),
+        land_units: {
+            let fed = fed_last_night(&ctx);
+            ctx.land_units
+                .values()
+                .filter(|u| {
+                    area.is_none() || land_unit_hex(&ctx, u).is_some_and(|hex| within(area, hex))
+                })
+                .map(|u| land_unit_line(&ctx, u, &fed))
+                .collect()
+        },
     }
 }
 
@@ -173,6 +189,7 @@ pub enum Detail {
     Ship(ShipDetail),
     TaskForce(ForceDetail),
     AirGroup(AirGroupDetail),
+    LandUnit(LandUnitDetail),
     Base(BaseDetail),
     EnemyBase(EnemyBaseDetail),
     Contact(ContactDetail),
@@ -212,6 +229,31 @@ pub struct ShipDetail {
     /// Whole miles at cruising speed on the fuel aboard.
     pub range_nm: Option<u32>,
     pub air_groups: Vec<Handle>,
+    /// The men of a land unit the ship carries (decision 0066, 21). Left out
+    /// when she carries none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub troops: Option<TroopsAboard>,
+}
+
+/// The men a ship carries and whose they are.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct TroopsAboard {
+    pub land_unit: Handle,
+    pub men: u32,
+}
+
+fn troops_aboard(ctx: &Ctx<'_>, ship: &Ship) -> Option<TroopsAboard> {
+    ship.troops.map(|t| TroopsAboard {
+        land_unit: ctx.land_unit(t.unit),
+        men: t.men,
+    })
+}
+
+/// A land unit of the side in detail (decision 0066, 21).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LandUnitDetail {
+    pub entity_kind: &'static str,
+    pub summary: LandUnitLine,
 }
 
 /// A ship in a task force's detail.
@@ -226,6 +268,9 @@ pub struct ShipLine {
     /// As in [`ShipDetail`]: shown only when it is not 2.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experience: Option<u8>,
+    /// As in [`ShipDetail`]: left out when she carries no men.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub troops: Option<TroopsAboard>,
 }
 
 /// A ship's experience as the side's own view shows it: nothing when it is
@@ -306,7 +351,7 @@ fn class_name(ctx: &Ctx<'_>, ship: &Ship) -> String {
 }
 
 /// Everything the side knows of one of its own task forces, ships, air
-/// groups or bases, or of one contact it holds, named `kind:number` as the log
+/// groups, land units or bases, or of one contact it holds, named `kind:number` as the log
 /// names it. For anything else the answer is [`NotKnown`], the same document
 /// whether the number is an enemy unit, does not exist or is not a handle.
 pub fn get_entity(view: &SideView<'_>, handle: &str) -> EntityAnswer {
@@ -359,6 +404,14 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                     .filter(|g| g.location == sim_core::state::AirGroupLocation::Ship(ship.id))
                     .map(|g| ctx.group(g.id))
                     .collect(),
+                troops: troops_aboard(&ctx, ship),
+            }))
+        }
+        "land_unit" => {
+            let unit = ctx.own_land_unit(id)?;
+            Some(Detail::LandUnit(LandUnitDetail {
+                entity_kind: "land_unit",
+                summary: land_unit_line(&ctx, unit, &fed_last_night(&ctx)),
             }))
         }
         "task_force" => {
@@ -389,6 +442,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                         flotation_damage: Dec(s.flotation_damage),
                         fire_damage: Dec(s.fire_damage),
                         experience: shown_experience(s),
+                        troops: troops_aboard(&ctx, s),
                     })
                     .collect(),
             }))

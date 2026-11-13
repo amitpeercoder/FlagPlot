@@ -9,7 +9,9 @@ use core::fmt;
 
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, BaseId, EntityRef, IntentId, OrderId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, OrderId, ShipId, TaskForceId,
+};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 
@@ -250,6 +252,10 @@ pub enum CargoAction {
     Unload,
     /// Load fuel as cargo (decision 0046). Added at the end.
     LoadFuel,
+    /// Load no cargo: the load order with a land unit that names none takes
+    /// the unit's men aboard and nothing else (decision 0066). Added at the
+    /// end.
+    LoadNoCargo,
 }
 
 impl CargoAction {
@@ -260,15 +266,31 @@ impl CargoAction {
             CargoAction::Load => 1,
             CargoAction::Unload => 2,
             CargoAction::LoadFuel => 3,
+            CargoAction::LoadNoCargo => 4,
         }
     }
 
-    /// The cargo a load action takes aboard, or `None` for an unload.
+    /// The cargo a load action takes aboard, or `None` for an unload and for
+    /// a load that names no cargo.
     pub const fn loads(self) -> Option<Cargo> {
         match self {
             CargoAction::Load => Some(Cargo::Supply),
             CargoAction::LoadFuel => Some(Cargo::Fuel),
-            CargoAction::Unload => None,
+            CargoAction::Unload | CargoAction::LoadNoCargo => None,
+        }
+    }
+
+    /// Whether the action is a load of any kind.
+    pub const fn is_load(self) -> bool {
+        !matches!(self, CargoAction::Unload)
+    }
+
+    /// The load action for a cargo, or for none.
+    pub const fn load_of(cargo: Option<Cargo>) -> CargoAction {
+        match cargo {
+            Some(Cargo::Supply) => CargoAction::Load,
+            Some(Cargo::Fuel) => CargoAction::LoadFuel,
+            None => CargoAction::LoadNoCargo,
         }
     }
 }
@@ -320,6 +342,15 @@ pub enum TaskForceOrder {
     /// (decision 0069). It goes with all its ships, is repaired and returns
     /// on its day of return. Added at the end.
     SendToYard,
+    /// The load order with a land unit (decision 0066, 5 and 6): take the
+    /// unit's men ashore in the force's hex aboard first, then the named
+    /// cargo, supply or fuel, or none. A standing order of the "cargo" kind,
+    /// like `Load`. Accepted where the side has no base, and then it loads
+    /// men only. Added at the end.
+    LoadUnit {
+        unit: LandUnitId,
+        cargo: Option<Cargo>,
+    },
 }
 
 /// An order to an air group. Each is a standing order of its own kind: a new
@@ -489,6 +520,16 @@ pub enum RejectReason {
     /// No base of the side in the task force's hex is a port for the yard
     /// (decision 0069). Added at the end of the enum.
     NotAYardPort,
+    /// A load order names a land unit that does not exist or is not the
+    /// issuing side's. One reason for both (decision 0066, 6). Added at the
+    /// end of the enum.
+    NotYourLandUnit,
+    /// A load order names a land unit with no men ashore at the task force's
+    /// position (decision 0066, 6). Added at the end of the enum.
+    NoMenAshoreHere,
+    /// A load order names a land unit, and no ship of the task force can
+    /// carry men (decision 0066, 6). Added at the end of the enum.
+    NoTroopCapacity,
 }
 
 impl fmt::Display for RejectReason {
@@ -554,6 +595,11 @@ impl fmt::Display for RejectReason {
             RejectReason::NotAYardPort => {
                 f.write_str("no base of your side in the task force's hex is a port for the yard")
             }
+            RejectReason::NotYourLandUnit => f.write_str("the land unit is not one of your units"),
+            RejectReason::NoMenAshoreHere => {
+                f.write_str("the land unit has no men ashore where the task force is")
+            }
+            RejectReason::NoTroopCapacity => f.write_str("no ship of the task force can carry men"),
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())
             }

@@ -36,6 +36,19 @@ pub struct SidesOut {
 #[derive(Serialize)]
 pub struct SideOut {
     events: Vec<SideEventOut>,
+    /// The side's own land units, known exactly (decision 0066, 21). Left
+    /// out when the side has none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    land_units: Vec<LandUnitOut>,
+}
+
+/// One of the side's own land units, known exactly (decision 0066, 21).
+#[derive(Serialize)]
+pub struct LandUnitOut {
+    id: u32,
+    name: String,
+    men_ashore: u32,
+    hex: Option<(i32, i32)>,
 }
 
 #[derive(Serialize)]
@@ -87,6 +100,16 @@ pub fn sides(world: &World) -> SidesOut {
 fn side(world: &World, side: Side) -> SideOut {
     SideOut {
         events: events(world, side),
+        land_units: world
+            .side_view(side)
+            .land_units()
+            .map(|unit| LandUnitOut {
+                id: unit.id.raw(),
+                name: unit.name.clone(),
+                men_ashore: unit.men_ashore,
+                hex: unit.hex.map(|hex| (hex.q, hex.r)),
+            })
+            .collect(),
     }
 }
 

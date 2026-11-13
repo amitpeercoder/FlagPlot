@@ -67,6 +67,10 @@ fn unknown_handles(world: &World, view: &sim_core::view::SideView<'_>, side: Sid
     let enemy_groups = truth.air_groups.values().filter(|u| u.side != side).count();
     let own_groups = view.air_groups().count();
     handles.extend((1..=enemy_groups).map(|i| format!("air_group:{}", own_groups + i)));
+    // The enemy's land units (decision 0066, 22): no handle names one.
+    let enemy_units = truth.land_units.values().filter(|u| u.side != side).count();
+    let own_units = view.land_units().count();
+    handles.extend((1..=enemy_units).map(|i| format!("land_unit:{}", own_units + i)));
     // An enemy base is not here: its number, name, place and holder are on
     // the map and the side may ask for them (decision 0050, as amended).
     for kind in [

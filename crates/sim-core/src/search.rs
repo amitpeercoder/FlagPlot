@@ -623,6 +623,7 @@ mod tests {
                     radar: false,
                     aircraft_capacity: 0,
                     anti_aircraft: 0,
+                    troop_capacity_men: 0,
                 },
             );
         }

@@ -14,8 +14,9 @@ use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Replacement, Route, RulesOfEngagement,
-    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, LandUnit, Replacement, Route,
+    RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, Troops,
+    TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -123,8 +124,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 9 adds a base's `ship_repair_points_per_day` and `yard_passage_days`
 /// after its `fuel_t`, a ship's `system_repair_points` after its `experience`,
 /// the ship location `Yard` (code 4), and a task force's `yard_trip` after its
-/// `fatigue` (decision 0069).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v9";
+/// `fatigue` (decision 0069);
+/// version 10 adds a ship's `troops` after its `system_repair_points`, a
+/// base's `on_map` after its `yard_passage_days`, a cargo order's `unit` after
+/// its order and the cargo action `LoadNoCargo` (code 4), and the land units
+/// after the arrivals (decision 0066).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v10";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -171,6 +176,7 @@ fn name_every_field(world: &World) {
         air_groups,
         replacements,
         arrivals,
+        land_units,
     } = truth;
     if let Some(ship) = ships.values().next() {
         let Ship {
@@ -191,7 +197,9 @@ fn name_every_field(world: &World) {
             systems,
             experience: _,
             system_repair_points: _,
+            troops,
         } = ship;
+        if let Some(Troops { unit: _, men: _ }) = troops {}
         let ShipSystems {
             propulsion: _,
             fire_control: _,
@@ -242,6 +250,7 @@ fn name_every_field(world: &World) {
         if let Some(CargoOrder {
             action: _,
             order: _,
+            unit: _,
         }) = cargo_order
         {}
         if let Some(YardTrip {
@@ -263,6 +272,7 @@ fn name_every_field(world: &World) {
             fuel_t: _,
             ship_repair_points_per_day: _,
             yard_passage_days: _,
+            on_map: _,
         } = base;
     }
     if let Some(group) = air_groups.values().next() {
@@ -313,6 +323,15 @@ fn name_every_field(world: &World) {
         aircraft: _,
         pilots: _,
     }) = arrivals.first()
+    {}
+    if let Some(LandUnit {
+        id: _,
+        // Not hashed: a name changes nothing that happens.
+        name: _,
+        side: _,
+        men_ashore: _,
+        hex: _,
+    }) = land_units.values().next()
     {}
     for belief in beliefs.values() {
         if let Some(Contact {
@@ -392,8 +411,17 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         // After the location (decision 0064).
         h.u8(ship.experience);
-        // Last in the ship (decision 0069).
+        // After the repair points (decision 0069).
         h.i64(ship.system_repair_points.raw());
+        // Last in the ship (decision 0066).
+        match ship.troops {
+            Some(troops) => {
+                h.u8(1);
+                h.u32(troops.unit.raw());
+                h.u32(troops.men);
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(truth.task_forces.len());
@@ -435,6 +463,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.u8(1);
                 h.u8(cargo.action.code());
                 h.u32(cargo.order.raw());
+                // After the order (decision 0066).
+                h.optional_u32(cargo.unit.map(|unit| unit.raw()));
             }
             None => h.u8(0),
         }
@@ -479,7 +509,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(base.anti_aircraft);
         h.u32(base.aircraft_repairs_per_day);
         h.i64(base.fuel_t.raw());
-        // Last in the base (decision 0069).
+        // After the fuel (decision 0069).
         h.i64(base.ship_repair_points_per_day.raw());
         match base.yard_passage_days {
             Some(days) => {
@@ -488,6 +518,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             }
             None => h.u8(0),
         }
+        // Last in the base (decision 0066).
+        h.u8(u8::from(base.on_map));
     }
 
     h.count(truth.air_groups.len());
@@ -562,6 +594,22 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(arrival.air_group.raw());
         h.u32(arrival.aircraft);
         h.u32(arrival.pilots);
+    }
+
+    // After the arrivals (decision 0066).
+    h.count(truth.land_units.len());
+    for unit in truth.land_units.values() {
+        h.u32(unit.id.raw());
+        h.u8(unit.side.code());
+        h.u32(unit.men_ashore);
+        match unit.hex {
+            Some(hex) => {
+                h.u8(1);
+                h.i32(hex.q);
+                h.i32(hex.r);
+            }
+            None => h.u8(0),
+        }
     }
 
     h.count(world.beliefs.len());

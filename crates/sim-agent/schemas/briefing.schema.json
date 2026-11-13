@@ -26,6 +26,10 @@
     },
     "air_groups": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/air_group_line" } },
     "bases": { "type": "array", "items": { "$ref": "#/$defs/base" } },
+    "land_units": {
+      "description": "The side's land units and what yesterday's events say happened to their men (decision 0066, 21). Left out when the side has no land unit.",
+      "$ref": "#/$defs/land_units"
+    },
     "arrivals": { "$ref": "#/$defs/arrivals" },
     "warnings": { "$ref": "#/$defs/warnings" }
   },
@@ -602,6 +606,142 @@
         "event": { "type": "integer" }
       }
     },
+    "land_units": {
+      "type": "object",
+      "required": [
+        "units", "landed_yesterday", "embarked_yesterday", "bases_formed_yesterday",
+        "divided_yesterday", "loading_complete_yesterday", "fed_last_night", "lost_yesterday",
+        "destroyed_yesterday", "supply_by_hex"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "units": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/land_unit_line" } },
+        "landed_yesterday": { "type": "array", "items": { "$ref": "#/$defs/men_moved" } },
+        "embarked_yesterday": { "type": "array", "items": { "$ref": "#/$defs/men_moved" } },
+        "bases_formed_yesterday": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "place", "task_force", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "divided_yesterday": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "land_unit", "task_force", "men", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "description": "The unit that kept its men ashore elsewhere.", "$ref": "defs.schema.json#/$defs/handle" },
+              "land_unit": { "description": "The new unit made of the men aboard.", "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "men": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "loading_complete_yesterday": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "land_unit", "base", "cargo", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "description": "The base loaded from; null off a bare shore.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "cargo": { "description": "supply or fuel; null for a load of men only.", "enum": ["supply", "fuel", null] },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fed_last_night": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "base", "men", "fed", "unfed", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "base": { "description": "The base asked; null where the side has none in the hex.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "men": { "type": "integer" },
+              "fed": { "type": "integer" },
+              "unfed": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "lost_yesterday": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "cause", "men", "ship", "place", "ashore", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "cause": { "enum": ["unfed", "lost_with_ship"] },
+              "men": { "type": "integer" },
+              "ship": { "description": "The ship lost with, for lost_with_ship.", "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "place": { "description": "The hex of an unfed loss.", "$ref": "defs.schema.json#/$defs/place_or_null" },
+              "ashore": { "description": "What the unit has left ashore there, for unfed.", "$ref": "defs.schema.json#/$defs/count_or_null" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "destroyed_yesterday": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "supply_by_hex": {
+          "description": "For each hex with men of the side ashore: the base that feeds them (the side's lowest-numbered there), the aircraft at it, its stock, what the aircraft and the men cost it a day, and the days it lasts at that charge (truncated to one decimal; null without a base or with no charge).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "men_ashore", "base", "aircraft", "supply_t", "daily_charge_t", "days_of_supply"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men_ashore": { "type": "integer" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "aircraft": { "type": "integer" },
+              "supply_t": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
+              "daily_charge_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" }
+            }
+          }
+        }
+      }
+    },
+    "men_moved": {
+      "type": "object",
+      "required": ["land_unit", "ship", "task_force", "place", "men", "aboard", "ashore", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+        "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+        "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+        "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "men": { "type": "integer" },
+        "aboard": { "description": "The unit's men in the ship afterwards.", "type": "integer" },
+        "ashore": { "description": "The unit's men ashore in the hex afterwards.", "type": "integer" },
+        "event": { "type": "integer" }
+      }
+    },
     "returned_force": {
       "type": "object",
       "required": ["task_force", "ships", "event"],
@@ -653,7 +793,8 @@
                         "loaded_onto_ships_t": { "description": "Taken aboard ships as cargo.", "$ref": "defs.schema.json#/$defs/dec" },
                         "sorties_and_upkeep_t": { "description": "Paid for sorties flown and aircraft kept at the base.", "$ref": "defs.schema.json#/$defs/dec" },
                         "repairs_t": { "$ref": "defs.schema.json#/$defs/dec" },
-                        "destroyed_by_raids_t": { "$ref": "defs.schema.json#/$defs/dec" }
+                        "destroyed_by_raids_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                        "men_fed_t": { "description": "Paid to feed men ashore (decision 0066, 16). Present only when something was paid for men.", "$ref": "defs.schema.json#/$defs/dec" }
                       }
                     },
                     { "type": "null" }

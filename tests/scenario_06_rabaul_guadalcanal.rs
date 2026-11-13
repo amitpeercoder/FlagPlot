@@ -1011,6 +1011,7 @@ fn assert_payment(
             base,
             reason,
             aircraft,
+            men: 0,
             asked_t: fx(asked),
             paid_t: fx(paid),
             left_t: fx(left),
@@ -1021,6 +1022,7 @@ fn assert_payment(
         SupplyUse::Sorties => format!("{aircraft} aircraft sent on sorties"),
         SupplyUse::Upkeep => format!("{aircraft} aircraft at the base for the day"),
         SupplyUse::Repairs => format!("{aircraft} repairs"),
+        SupplyUse::Men => "men fed".to_string(),
     };
     let mut text = if paid < asked {
         format!(

@@ -240,6 +240,18 @@ impl World {
         {
             return Err(SimError::InvalidSetup(problem));
         }
+        if let Some(problem) = ref_data
+            .ground
+            .as_ref()
+            .and_then(|figures| figures.problem())
+        {
+            return Err(SimError::InvalidSetup(problem));
+        }
+        if !truth.land_units.is_empty() && ref_data.ground.is_none() {
+            return Err(SimError::InvalidSetup(
+                "there are land units but no ground figures".to_string(),
+            ));
+        }
         for group in truth.air_groups.values() {
             if !ref_data.aircraft_types.contains_key(&group.aircraft_type) {
                 return Err(SimError::InvalidSetup(format!(

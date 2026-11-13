@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/list_forces",
-  "title": "list_forces: a line for each task force with a ship afloat",
+  "title": "list_forces: a line for each task force with a ship afloat, and for each land unit",
   "type": "object",
   "required": ["format", "version", "kind", "area", "task_forces"],
   "additionalProperties": false,
@@ -10,7 +10,12 @@
     "version": { "const": 3 },
     "kind": { "const": "list_forces" },
     "area": { "$ref": "#/$defs/area_or_null" },
-    "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } }
+    "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },
+    "land_units": {
+      "description": "The side's own land units (decision 0066, 21), in the area if one is given. Left out when the side has none.",
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/land_unit_line" }
+    }
   },
   "$defs": {
     "area_or_null": {

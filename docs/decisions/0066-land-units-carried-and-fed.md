@@ -1,6 +1,6 @@
 # 0066: Land units, carried by sea and fed from a base
 
-Status: confirmed as to the plan, which the designer approved on Nov 12, 2026 (`docs/design/ground-combat.md`, stage 1). Decisions 7, 12 and 14 are choices the plan did not make and need review. Nothing is built. The figures are placeholders set by the architect. Code waits for the experience rule (decision 0064) to land, so that two sessions do not edit the same files; the hand calculation is written before any code is delegated.
+Status: confirmed. The designer approved the plan on Nov 12, 2026 (`docs/design/ground-combat.md`, stage 1) and agreed decisions 7, 12 and 14 on Nov 13, 2026. The architect added the points under "Settled before the build" the same day. The hand calculation is in `tests/scenario_21_landing.rs`. The figures are placeholders set by the architect. Built on Nov 13, 2026 (stage 1, scenario 21; see "As built" at the end).
 
 ## The gap
 
@@ -38,17 +38,17 @@ So every figure here is a placeholder, and none is taken from a row. Stage 4 rea
 
 5. **A load order may name a land unit.** The order is the load order as it is, for supply or for fuel, with a unit beside the cargo. It takes the unit's men ashore in the force's hex first and the named cargo after. Cargo orders stay one kind, so a new one replaces the old.
 6. **It is refused at intake** if the unit is not the side's own, if the unit has no men ashore at the force's position, or if no ship of the force has troop capacity. A load order with a unit is accepted where the side has no base, which a plain load order is not: men can be taken off a shore that has nothing else. It then loads men only.
-7. **A man is worked as cargo at a fixed weight.** A ship's work in a pulse is its rate, by berth or by lighter, times its hours, in tons, as now. Each man moved takes `ground.toml: handling_t_per_man` of it. Men are moved first and in whole men; what is left of the ship's tons moves supply and then fuel, by the rule as it is. A ship has cargo to move, for the giving of berths, if it has men to move. *Needs review: one figure turns the rates of a port into rates for men. The other choice was two more columns in the port sizes file.*
+7. **A man is worked as cargo at a fixed weight.** A ship's work in a pulse is its rate, by berth or by lighter, times its hours, in tons, as now. Each man moved takes `ground.toml: handling_t_per_man` of it. Men are moved first and in whole men; what is left of the ship's tons moves supply and then fuel, by the rule as it is. A ship has cargo to move, for the giving of berths, if it has men to move. *Agreed by the designer, Nov 13, 2026. The other choice was two more columns in the port sizes file.*
 8. **Loading** takes ships in ship order. A ship takes men up to its troop capacity. A ship with men of another unit aboard takes none.
 9. **An unload order lands men first,** then supply, then fuel. Men landed join their unit's men ashore in the force's hex.
 10. **Men are landed only on a coast hex.** In any other hex they stay aboard and nothing is recorded, as cargo does today where there is no base.
 11. **A landing forms a base where the side has none.** When the first man of a force is landed in a hex that holds no base of its side, a base of that side is formed there, with the next free base number, the port of the hex, no stock, no guns and no repairs. Supply and fuel unloaded in the same phase go into it. A force with no men aboard forms no base, so nothing changes for a supply run to an empty hex.
-12. **A base formed in play is not on the enemy's map.** A side is told the number, name, hex and holding side of every base the scenario starts with: that is the map. A base formed by a landing is known to its own side only. An order against it by the other side is refused with the reason given for a base that does not exist, so the refusal tells nothing. The enemy learns of it by a report, which is stage 3. *Needs review: without this, a landing would be shown to the enemy the moment the first man was ashore.*
+12. **A base formed in play is not on the enemy's map.** A side is told the number, name, hex and holding side of every base the scenario starts with: that is the map. A base formed by a landing is known to its own side only. An order against it by the other side is refused with the reason given for a base that does not exist, so the refusal tells nothing. The enemy learns of it by a report, which is stage 3. *Agreed by the designer, Nov 13, 2026: without this, a landing would be shown to the enemy the moment the first man was ashore.*
 
 ### A unit in two places
 
 13. **A force may sail with part of a unit.** The men ashore stay where they are and the men aboard stay aboard.
-14. **A unit is divided when its men would be ashore in two hexes.** When a force begins to land men of a unit that has men ashore in another hex, all of that unit's men aboard the force's ships become a new unit first, with the next free number, and it is the new unit that lands. The men ashore elsewhere keep the unit. Units are never merged. *Needs review: the plan said no rule splits a unit. This one does, in the one case where the other choices are to strand men aboard or to keep a unit's men in several hexes. It costs nothing in the fight, where all of a side's units in a hex are to fight as one body (stage 2).*
+14. **A unit is divided when its men would be ashore in two hexes.** When a force begins to land men of a unit that has men ashore in another hex, all of that unit's men aboard the force's ships become a new unit first, with the next free number, and it is the new unit that lands. The men ashore elsewhere keep the unit. Units are never merged. *Agreed by the designer, Nov 13, 2026. The plan said no rule splits a unit. This one does, in the one case where the other choices are to strand men aboard or to keep a unit's men in several hexes. It costs nothing in the fight, where all of a side's units in a hex are to fight as one body (stage 2).*
 
 ### Lost at sea
 
@@ -68,9 +68,21 @@ So every figure here is a placeholder, and none is taken from a row. Stage 4 rea
 22. **A side knows nothing of the enemy's land units in this stage.** There is no report of them yet, so there is no belief. The ground report and the estimate are stage 3.
 23. **Every event of this stage is seen whole by its own side and not at all by the enemy:** men embarked, men landed, a base formed, a unit divided, men lost with a ship, men fed and unfed, men lost unfed, a unit destroyed. The side that sank a ship carrying men is not told she carried them.
 
+## Settled before the build
+
+Choices of detail made by the architect on Nov 13, 2026, when the hand calculation was written.
+
+- **A load order with a unit may name no cargo.** Its cargo is supply, fuel or none. With none it loads men only, at a base or off a bare shore. Without this, taking men off a beach would take their supply with them. A load order with no unit must name supply or fuel, as now. Where the side has no base the order loads men only whatever cargo it names (decision 6).
+- **Units go aboard at the start in unit order,** each over the force's ships in ship order, into ships that are empty of men or hold its own (decision 3).
+- **Loading is complete** when no man of the unit is ashore in the hex or no ship has a berth for one, and nothing remains of the named cargo by the rule as it is. The hour of a ship's finishing counts the tons its men took.
+- **The men's supply is its own phase of the night pulse,** after air supply upkeep and before air group rest. It runs only when the ground figures are loaded. Hexes are taken in hex order and, in a hex, sides in the order of their codes.
+- **Whole-number arithmetic.** Men are whole numbers. The men a ship can move are its tons of work over the weight of a man, cut. The men fed are the tons paid over the charge, cut. A unit's part of a loss is the loss times its men, divided by all the men, cut.
+- **A unit made by division** takes the name of the unit it left with ", detachment" and its own number after it.
+- **The scenario** is number 21, `21_landing.toml`, on a placeholder map of its own, with two placeholder transport classes in a file of their own.
+
 ## What a player sees
 
-- A load order with a unit: `load` with a cargo and a `unit`. The unload order is unchanged.
+- A load order with a unit: `load` with a `unit` and a cargo, which may be `none`. The unload order is unchanged.
 - A land unit in the list and detail queries: its men ashore and the hex, its men aboard by ship, and whether its men were fed last night.
 - A briefing part for land units: each unit's men and place, men landed and embarked yesterday, men lost and to what, and for each hex with men ashore the days of supply its base holds at the present charge, for aircraft and men together.
 - A base the side formed appears among its own bases.
@@ -164,6 +176,31 @@ Three rules now write a base's supply stock in the night: repairs, the aircraft'
 
 ## Questions for the designer
 
-1. **Decision 7:** is one figure for the weight of a man enough, or should a port have its own rates for men?
-2. **Decision 12:** a base formed by a landing is hidden from the enemy until a report shows it. Agreed?
-3. **Decision 14:** a unit is divided when its men would be ashore in two hexes. Agreed, against the plan's wording that no rule splits a unit?
+Answered on Nov 13, 2026.
+
+1. **Decision 7:** one figure for the weight of a man. Agreed.
+2. **Decision 12:** a base formed by a landing is hidden from the enemy until a report shows it. Agreed.
+3. **Decision 14:** a unit is divided when its men would be ashore in two hexes. Agreed.
+
+## As built
+
+Built on Nov 13, 2026, to the sections above and the architect's hand calculation in `tests/scenario_21_landing.rs`. Nothing above this section was changed except the status line. Every choice the build made that the record did not is listed here. The rulebook's chapter 7 states the rules as built.
+
+- **Ids.** The id type `LandUnitId` and the entity kind code 6 (`EntityRef::LandUnit`) already existed, reserved, so no code was added to them and nothing was renumbered.
+- **Numbers of units and bases made in play.** A unit made by division and a base formed by a landing take the next free number counted over all units or all bases of both sides (the highest plus one), as decision 14 and 11 say, and not a side's own series of decision 0086. sim-agent shows a side its land units numbered among its own (decision 0086, 3), so the player sees its own count; bases keep their numbers. The leak the record notes in "What it costs" stays.
+- **The name of a formed base** is "Landing at (q,r)", with the hex.
+- **The state.** `Ship::troops` (the unit and the men), `Base::on_map`, `CargoOrder::unit`, the cargo action `LoadNoCargo` (code 4, added at the end), and `TruthState::land_units`, each unit with its men ashore and hex. Hash version 10. The order is in `hash.rs`: a ship's `troops` after her `system_repair_points`; a base's `on_map` after its `yard_passage_days`; a cargo order's unit after its order; the land units after the arrivals, each as number, side, men ashore and hex (the name is not hashed).
+- **New events**, at the end of the enum: `MenEmbarked`, `MenLanded`, `BaseFormed`, `UnitDivided`, `MenLostWithShip`, `MenFed`, `MenLostUnfed`, `LandUnitDestroyed` and `UnitLoadingComplete`. The last is the completion of a load order with a unit, which may have no base and no cargo, so `LoadingComplete` was left as it was. `BaseSupplySpent` gains `men` and the reason `men`; every other reason has 0 men. A `MenFed` event is recorded for every side and hex with men ashore, also where nothing was paid; the charge itself is a `BaseSupplySpent` only where a base with stock paid.
+- **Causes.** A landing cites the unload order, the arrival and, in the pulse a base was formed, the `BaseFormed` event, and its unit's `UnitDivided` event. A loss unfed cites the `MenFed` event. Men lost with a ship cite the `ShipSunk`. A unit destroyed cites the loss that emptied it.
+- **Berths** are given out by side and hex (the side's landing place) and not by base number. With one lowest-numbered base for each side and hex this is the same as before.
+- **The order within a landing.** A landing happens before any ship of the force moves cargo in that pulse: units are divided and the base is formed first if any ship can land at least one man in the pulse, so supply unloaded in the same phase goes into the new base.
+- **A hex that is not coast.** Men stay aboard and an unload counts as complete without them.
+- **The intake order of the refusals** for a load with a unit: under way, out of fuel, not your land unit (one reason for a unit that does not exist and one of the enemy), no men ashore here, no troop capacity.
+- **The loader** refuses a land unit with no ground file, with no men, numbered 0 or 1,000,000 and above, given twice, with both or neither of a hex and a task force, ashore off the map or in a hex that is neither coast nor land, aboard an unknown force or one of the other side, or that does not fit aboard.
+- **The ground figures.** The weight of a man and his charge must be above 0, and the share lost from 0 to 1; `World::new` refuses them otherwise.
+- **sim-agent.** Land units are a `land_units` section of `list_forces` and `get_entity("land_unit:N")`; a ship's detail shows its `troops`; the briefing has a land units part (`crates/sim-agent/schemas/README.md`, "Land units", lists it); `fed_last_night` has its own words; `rules_in_play.supply` is true when the ground figures are loaded as well. The schema `version` stays 3 because only fields were added, by the crate's version rule. The record's "with their versions" was not applied; the architect to confirm.
+- **The viewer** rebuilds land units from the events and shows men ashore and formed bases in the hover readout. It has no map marker and no panel for them.
+- **The legibility test** of the record (a cheap model asked why a unit lost men) was not run: the repository's legibility tests are wording tests with no model, and a test that runs a model needs the network.
+- **The property "more supply never loses more men"** is tested for the half "more supply", over eight sizes of the load. The half "landed sooner" is not tested.
+
+Differences from the record's rules: none. The points above are the names and orders the record left open.

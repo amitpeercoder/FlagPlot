@@ -1,0 +1,107 @@
+Scenario 21: A landing, carried by sea and fed from a base
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 4ea872437d437cfa  18 events
+day   2  hash ddf68ebd48b44b73  15 events
+day   3  hash 267b87197665349a  15 events
+day   4  hash 38a790e2caadefab  6 events
+day   5  hash 2c752b7db5d1893f  9 events
+day   6  hash e077103955c5738b  8 events
+day   7  hash 0412950cfbdb0785  8 events
+
+#1 D1 -         order:1 accepted for task_force:1  <- order:1
+#2 D1 -         order:2 accepted for task_force:1  <- order:2
+#3 D1 -         order:3 accepted for task_force:1  <- order:3
+#4 D1 -         order:4 accepted for task_force:2  <- order:4
+#5 D1 night     Allied men ashore at (10,0): no base of the side, none of 500 fed, 500 unfed
+#6 D1 night     land_unit:3 lost 25 men unfed at (10,0), 475 left ashore  <- #5
+#7 D1 night     task_force:1 steamed 120 nm at 10 kn from (0,0) to (3,0)  <- order:1, order:2
+#8 D1 night     ship:1 burned 12 t, 988 t remaining  <- #7
+#9 D1 night     ship:2 burned 12 t, 988 t remaining  <- #7
+#10 D1 night     200 men of land_unit:3 went aboard ship:3 at (10,0): 200 aboard, 275 left ashore  <- order:4
+#11 D1 night     task_force:2 finished loading land_unit:3 off the shore at D1 20:30  <- #10
+#12 D1 morning   task_force:1 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:1, order:2
+#13 D1 morning   ship:1 burned 6 t, 982 t remaining  <- #12
+#14 D1 morning   ship:2 burned 6 t, 982 t remaining  <- #12
+#15 D1 afternoon task_force:1 steamed 60 nm at 10 kn from (5,0) to (6,0)  <- order:1, order:2
+#16 D1 afternoon ship:1 burned 6 t, 976 t remaining  <- #15
+#17 D1 afternoon ship:2 burned 6 t, 976 t remaining  <- #15
+#18 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#19 D2 night     Allied men ashore at (10,0): no base of the side, none of 275 fed, 275 unfed
+#20 D2 night     land_unit:3 lost 13 men unfed at (10,0), 262 left ashore  <- #19
+#21 D2 night     task_force:1 steamed 80 nm at 10 kn from (6,0) to (8,0)  <- order:1, order:2
+#22 D2 night     ship:1 burned 8 t, 968 t remaining  <- #21
+#23 D2 night     ship:2 burned 8 t, 968 t remaining  <- #21
+#24 D2 night     task_force:1 arrived at (8,0) at D2 02:00  <- #21
+#25 D2 night     base:2 formed at (8,0) for the Allied side by the landing of task_force:1  <- order:3, #24
+#26 D2 night     ship:1 landed 320 men of land_unit:1 at (8,0): 320 ashore, 280 left aboard  <- order:3, #24, #25
+#27 D2 night     ship:2 landed 320 men of land_unit:2 at (8,0): 320 ashore, 80 left aboard  <- order:3, #24, #25
+#28 D2 morning   ship:1 landed 280 men of land_unit:1 at (8,0): 600 ashore, 0 left aboard  <- order:3, #24
+#29 D2 morning   ship:1 unloaded 14 t at base:2, 0 t aboard, 14 t in stock  <- order:3, #24
+#30 D2 morning   ship:2 landed 80 men of land_unit:2 at (8,0): 400 ashore, 0 left aboard  <- order:3, #24
+#31 D2 morning   task_force:1 completed unloading at base:2 at D2 10:12  <- #28, #29, #30
+#32 D2 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#33 D2 -         base:2 at the end of the day: 14 t of supply, 0 aircraft ready: not open
+#34 D3 -         order:5 accepted for task_force:2  <- order:5
+#35 D3 -         order:6 accepted for task_force:2  <- order:6
+#36 D3 -         order:7 accepted for task_force:2  <- order:7
+#37 D3 night     base:2 spent 5 t of supply on 1000 men ashore for the day, 9 t left
+#38 D3 night     Allied men ashore at (8,0): 1000 of 1000 fed from base:2, 0 unfed  <- #37
+#39 D3 night     Allied men ashore at (10,0): no base of the side, none of 262 fed, 262 unfed
+#40 D3 night     land_unit:3 lost 13 men unfed at (10,0), 249 left ashore  <- #39
+#41 D3 night     task_force:2 steamed 80 nm at 16 kn from (10,0) to (8,0)  <- order:5, order:6
+#42 D3 night     ship:3 burned 10 t, 490 t remaining  <- #41
+#43 D3 night     task_force:2 arrived at (8,0) at D3 23:00  <- #41
+#44 D3 night     the 200 men of land_unit:3 aboard task_force:2 became land_unit:4, since land_unit:3 has men ashore elsewhere  <- order:7, #43
+#45 D3 night     ship:3 landed 200 men of land_unit:4 at (8,0): 200 ashore, 0 left aboard  <- order:7, #43, #44
+#46 D3 night     task_force:2 completed unloading at base:2 at D3 01:30  <- #45
+#47 D3 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#48 D3 -         base:2 at the end of the day: 9 t of supply, 0 aircraft ready: not open
+#49 D4 night     base:2 spent 6 t of supply on 1200 men ashore for the day, 3 t left
+#50 D4 night     Allied men ashore at (8,0): 1200 of 1200 fed from base:2, 0 unfed  <- #49
+#51 D4 night     Allied men ashore at (10,0): no base of the side, none of 249 fed, 249 unfed
+#52 D4 night     land_unit:3 lost 12 men unfed at (10,0), 237 left ashore  <- #51
+#53 D4 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#54 D4 -         base:2 at the end of the day: 3 t of supply, 0 aircraft ready: not open
+#55 D5 night     base:2 spent 3 t of supply on 1200 men ashore for the day: 6 t was asked and the stock could not cover it, 0 t left: base:2 is out of supply
+#56 D5 night     Allied men ashore at (8,0): 600 of 1200 fed from base:2, 600 unfed  <- #55
+#57 D5 night     land_unit:1 lost 15 men unfed at (8,0), 585 left ashore  <- #56
+#58 D5 night     land_unit:2 lost 10 men unfed at (8,0), 390 left ashore  <- #56
+#59 D5 night     land_unit:4 lost 5 men unfed at (8,0), 195 left ashore  <- #56
+#60 D5 night     Allied men ashore at (10,0): no base of the side, none of 237 fed, 237 unfed
+#61 D5 night     land_unit:3 lost 11 men unfed at (10,0), 226 left ashore  <- #60
+#62 D5 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#63 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#64 D6 night     Allied men ashore at (8,0): 0 of 1170 fed from base:2, 1170 unfed
+#65 D6 night     land_unit:1 lost 30 men unfed at (8,0), 555 left ashore  <- #64
+#66 D6 night     land_unit:2 lost 19 men unfed at (8,0), 371 left ashore  <- #64
+#67 D6 night     land_unit:4 lost 9 men unfed at (8,0), 186 left ashore  <- #64
+#68 D6 night     Allied men ashore at (10,0): no base of the side, none of 226 fed, 226 unfed
+#69 D6 night     land_unit:3 lost 11 men unfed at (10,0), 215 left ashore  <- #68
+#70 D6 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#71 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#72 D7 night     Allied men ashore at (8,0): 0 of 1112 fed from base:2, 1112 unfed
+#73 D7 night     land_unit:1 lost 28 men unfed at (8,0), 527 left ashore  <- #72
+#74 D7 night     land_unit:2 lost 18 men unfed at (8,0), 353 left ashore  <- #72
+#75 D7 night     land_unit:4 lost 9 men unfed at (8,0), 177 left ashore  <- #72
+#76 D7 night     Allied men ashore at (10,0): no base of the side, none of 215 fed, 215 unfed
+#77 D7 night     land_unit:3 lost 10 men unfed at (10,0), 205 left ashore  <- #76
+#78 D7 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#79 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder landing convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder fast transport group" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:3 "Placeholder fast transport 1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 490 t of fuel, 0 t of supply
+base:1 "Placeholder embarkation port" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Landing at (8,0)" (Allied) at (8,0): 0 t of supply in stock, formed in play, on its own side's map only
+land_unit:1 "Placeholder battalion 1" (Allied): 527 men ashore at (8,0)
+land_unit:2 "Placeholder battalion 2" (Allied): 353 men ashore at (8,0)
+land_unit:3 "Placeholder battalion 3" (Allied): 205 men ashore at (10,0)
+land_unit:4 "Placeholder battalion 3, detachment 4" (Allied): 177 men ashore at (8,0)
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

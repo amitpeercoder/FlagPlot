@@ -6,7 +6,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::events::{Cause, Event, EventKind};
-use sim_core::ids::{AirGroupId, BaseId, ContactId, EntityRef, ShipId, TaskForceId, UmpireKey};
+use sim_core::ids::{
+    AirGroupId, BaseId, ContactId, EntityRef, LandUnitId, ShipId, TaskForceId, UmpireKey,
+};
 use sim_core::state::Side;
 use sim_core::World;
 
@@ -15,7 +17,7 @@ use crate::{event_line, execute_source, parse_seed, Executed};
 const EVENTS_USAGE: &str = "\
 Usage: sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--seed N]
        sim-cli events <scenario.toml | game.json> --why EVENT [--seed N]
-  HANDLE is ship:N, task_force:N, air_group:N, base:N or contact:N. Contact
+  HANDLE is ship:N, task_force:N, air_group:N, base:N, land_unit:N or contact:N. Contact
   numbers are kept by each side, so a contact may be written allied:contact:N
   or japanese:contact:N; without a side it lists both sides' contact N.
   EVENT is an event number, 42 or #42.";
@@ -39,6 +41,7 @@ enum Handle {
     TaskForce(u32),
     AirGroup(u32),
     Base(u32),
+    LandUnit(u32),
     Contact(u32),
 }
 
@@ -49,6 +52,7 @@ impl Handle {
             Handle::TaskForce(n) => EntityRef::TaskForce(TaskForceId::new(n)),
             Handle::AirGroup(n) => EntityRef::AirGroup(AirGroupId::new(n)),
             Handle::Base(n) => EntityRef::Base(BaseId::new(n)),
+            Handle::LandUnit(n) => EntityRef::LandUnit(LandUnitId::new(n)),
             Handle::Contact(n) => EntityRef::Contact(ContactId::for_umpire(n, key)),
         }
     }
@@ -140,7 +144,7 @@ fn parse_handle(text: &str) -> Result<(Handle, Option<Side>), String> {
     };
     let bad = || {
         format!(
-            "\"{text}\" is not a unit handle: write ship:N, task_force:N, air_group:N, base:N or contact:N"
+            "\"{text}\" is not a unit handle: write ship:N, task_force:N, air_group:N, base:N, land_unit:N or contact:N"
         )
     };
     let (kind, number) = rest.split_once(':').ok_or_else(bad)?;
@@ -150,6 +154,7 @@ fn parse_handle(text: &str) -> Result<(Handle, Option<Side>), String> {
         "task_force" => Handle::TaskForce(n),
         "air_group" => Handle::AirGroup(n),
         "base" => Handle::Base(n),
+        "land_unit" => Handle::LandUnit(n),
         "contact" => Handle::Contact(n),
         _ => return Err(bad()),
     };
@@ -207,6 +212,7 @@ fn list_unit(
         EntityRef::TaskForce(id) => truth.task_forces.contains_key(&id),
         EntityRef::AirGroup(id) => truth.air_groups.contains_key(&id),
         EntityRef::Base(id) => truth.bases.contains_key(&id),
+        EntityRef::LandUnit(id) => truth.land_units.contains_key(&id),
         _ => false,
     } || world.events().iter().any(names_unit);
     if !known {

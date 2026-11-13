@@ -298,6 +298,8 @@ impl World {
                 );
             }
         }
+        // The men aboard go down with her (decision 0066, 15).
+        self.lose_men_with_ship(site.day, site.pulse, ship, sunk);
         sunk
     }
 

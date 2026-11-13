@@ -58,6 +58,15 @@ fn eastern_solomons_after_the_day_for_the_allied_side() {
 }
 
 #[test]
+fn the_landing_briefings_of_the_allied_side() {
+    // The land units part (decision 0066, 21): before the landing (day 1),
+    // after the first night ashore (day 3), and at the end of day 5.
+    for (day, text) in briefings("21_landing.toml", Side::Allied, &[1, 3, 6]) {
+        assert_golden(&format!("21_landing_allied_day{day}.txt"), &text);
+    }
+}
+
+#[test]
 fn a_briefing_is_the_same_text_every_time_it_is_made() {
     let once = briefings("06a_base_raid.toml", Side::Japanese, &[1, 2, 3]);
     let twice = briefings("06a_base_raid.toml", Side::Japanese, &[1, 2, 3]);

@@ -26,8 +26,8 @@ use sim_core::view::SideView;
 use crate::answer::{FORMAT, VERSION};
 use crate::common::{cruise_range_nm, Ctx, Dec, Handle, Place};
 use crate::lines::{
-    air_group_line, force_line, is_afloat, is_listed, AirGroupLine, ContactLine, ForceLine,
-    PropulsionLine,
+    air_group_line, fed_last_night, force_line, is_afloat, is_listed, land_unit_line, AirGroupLine,
+    ContactLine, ForceLine, LandUnitLine, PropulsionLine,
 };
 use crate::objectives::{objectives_part, result_part, ObjectivesPart};
 use crate::words;
@@ -65,6 +65,11 @@ pub struct Briefing {
     pub air_groups: Vec<AirGroupLine>,
     /// 8. Bases.
     pub bases: Vec<BriefingBase>,
+    /// 8b. The side's land units and what happened to their men yesterday
+    /// (decision 0066, 21). Left out of the data and the text when the side
+    /// has no land unit, so a scenario without any is briefed as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub land_units: Option<LandUnitsPart>,
     /// 9. Arrivals due and replacement streams.
     pub arrivals: ArrivalsPart,
     /// 10. The five warnings.
@@ -445,6 +450,136 @@ pub struct BriefingBase {
     pub returned_yesterday: Vec<ReturnedForce>,
 }
 
+/// The land units part (decision 0066, 21): every land unit of the side with
+/// its men ashore and aboard, then what yesterday's events of the side say
+/// happened to its men, then for each hex with men ashore the days of supply
+/// its base holds.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LandUnitsPart {
+    /// Every land unit of the side, in number order, destroyed ones too.
+    pub units: Vec<LandUnitLine>,
+    /// Men put ashore yesterday.
+    pub landed_yesterday: Vec<MenMoved>,
+    /// Men taken aboard from the shore yesterday.
+    pub embarked_yesterday: Vec<MenMoved>,
+    /// Bases formed yesterday by a landing.
+    pub bases_formed_yesterday: Vec<BaseFormedLine>,
+    /// Units divided yesterday.
+    pub divided_yesterday: Vec<UnitDividedLine>,
+    /// A load of a unit that finished yesterday.
+    pub loading_complete_yesterday: Vec<LoadingCompleteLine>,
+    /// How the men ashore were fed in the last night, a line for each hex.
+    pub fed_last_night: Vec<FedLine>,
+    /// Men lost yesterday, and to what.
+    pub lost_yesterday: Vec<MenLostLine>,
+    /// Units that lost their last man yesterday.
+    pub destroyed_yesterday: Vec<UnitDestroyedLine>,
+    /// For each hex with men of the side ashore, the days of supply its base
+    /// holds at the present charge.
+    pub supply_by_hex: Vec<HexSupply>,
+}
+
+/// Men of a unit put ashore from, or taken aboard, a ship.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MenMoved {
+    pub land_unit: Handle,
+    pub ship: Handle,
+    pub task_force: Handle,
+    pub place: Place,
+    pub men: u32,
+    /// The unit's men in the ship afterwards.
+    pub aboard: u32,
+    /// The unit's men ashore in the hex afterwards.
+    pub ashore: u32,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseFormedLine {
+    pub base: Handle,
+    pub place: Place,
+    pub task_force: Handle,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct UnitDividedLine {
+    /// The unit that kept its men ashore elsewhere.
+    pub from: Handle,
+    /// The new unit made of the men aboard.
+    pub land_unit: Handle,
+    pub task_force: Handle,
+    pub men: u32,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct LoadingCompleteLine {
+    pub task_force: Handle,
+    pub land_unit: Handle,
+    /// The base loaded from; `None` off a bare shore.
+    pub base: Option<Handle>,
+    /// `supply` or `fuel`; `None` for a load of men only.
+    pub cargo: Option<&'static str>,
+    pub event: u32,
+}
+
+/// The side's men ashore in one hex, fed or not, in the last night pulse.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FedLine {
+    pub place: Place,
+    /// The base that was asked; `None` where the side has none in the hex.
+    pub base: Option<Handle>,
+    pub men: u32,
+    pub fed: u32,
+    pub unfed: u32,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MenLostLine {
+    pub land_unit: Handle,
+    /// `unfed` or `lost_with_ship`.
+    pub cause: &'static str,
+    pub men: u32,
+    /// The ship lost with, for `lost_with_ship`.
+    pub ship: Option<Handle>,
+    /// The hex of the unfed loss.
+    pub place: Option<Place>,
+    /// What the unit has left ashore there, for `unfed`.
+    pub ashore: Option<u32>,
+    pub event: u32,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct UnitDestroyedLine {
+    pub land_unit: Handle,
+    pub event: u32,
+}
+
+/// What the base in a hex with men ashore holds, against what the aircraft
+/// and the men at it cost it a day.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HexSupply {
+    pub place: Place,
+    /// The side's men ashore in the hex, all units together.
+    pub men_ashore: u32,
+    /// The base the men are fed from, the side's lowest-numbered in the hex;
+    /// `None` where the side has no base there.
+    pub base: Option<Handle>,
+    /// Aircraft at that base, ready or damaged.
+    pub aircraft: u32,
+    /// The base's supply stock.
+    pub supply_t: Option<Dec>,
+    /// What the aircraft and the men cost a day: aircraft times the daily
+    /// charge for an aircraft, plus men times the daily charge for a man.
+    /// A charge whose figures are not loaded is 0.
+    pub daily_charge_t: Dec,
+    /// Stock over the daily charge, truncated to one decimal; `None` without
+    /// a base or with no charge.
+    pub days_of_supply: Option<Dec>,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ArrivalsPart {
     /// Arrivals due today and on the next two days.
@@ -605,13 +740,15 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         Some(day) => all.iter().filter(|e| e.day == day).cloned().collect(),
         None => Vec::new(),
     };
-    let day = Day::read(&ctx, &events, &all);
+    let mut day = Day::read(&ctx, &events, &all);
     let played = view.rules_in_play();
     let rules = Rules {
         wear: played.wear,
         fatigue: played.fatigue,
         pilots: ctx.groups.values().any(|g| g.pilots.is_some()),
-        supply: played.supply,
+        // Bases spend supply on aircraft (decision 0039) and, where the
+        // ground figures are loaded, on men ashore (decision 0066, 16).
+        supply: played.supply || view.ground_figures().is_some(),
     };
 
     let task_forces: Vec<ForceLine> = ctx
@@ -668,6 +805,8 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
             }
         })
         .collect();
+
+    let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground));
 
     let arrivals = ArrivalsPart {
         due: view
@@ -728,9 +867,77 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         away_at_yard,
         air_groups,
         bases,
+        land_units,
         arrivals,
         warnings,
     }
+}
+
+/// The land units part, or `None` when the side has no land unit (decision
+/// 0066, 21).
+fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Option<LandUnitsPart> {
+    if ctx.land_units.is_empty() {
+        return None;
+    }
+    let fed = fed_last_night(ctx);
+    let units: Vec<LandUnitLine> = ctx
+        .land_units
+        .values()
+        .map(|u| land_unit_line(ctx, u, &fed))
+        .collect();
+    // The hexes with men of the side ashore, in hex order.
+    let mut men_by_hex: BTreeMap<Hex, u32> = BTreeMap::new();
+    for unit in ctx.land_units.values() {
+        if let Some(hex) = unit.hex {
+            *men_by_hex.entry(hex).or_insert(0) += unit.men_ashore;
+        }
+    }
+    let per_aircraft = view
+        .air_supply_figures()
+        .map_or(Fixed::ZERO, |f| f.daily_supply_t_per_aircraft);
+    let per_man = view
+        .ground_figures()
+        .map_or(Fixed::ZERO, |f| f.daily_supply_t_per_man);
+    let supply_by_hex = men_by_hex
+        .into_iter()
+        .map(|(hex, men)| {
+            // The base that feeds the men: the side's lowest-numbered in the
+            // hex (decision 0066, 16).
+            let base = ctx.bases.values().find(|b| b.hex == hex);
+            let aircraft: u32 = base.map_or(0, |b| {
+                ctx.groups
+                    .values()
+                    .filter(|g| g.location == sim_core::state::AirGroupLocation::Base(b.id))
+                    .map(|g| g.ready + g.damaged)
+                    .sum()
+            });
+            let charge = per_aircraft * Fixed::from_int(i64::from(aircraft))
+                + per_man * Fixed::from_int(i64::from(men));
+            HexSupply {
+                place: ctx.place(hex),
+                men_ashore: men,
+                base: base.map(|b| ctx.base(b.id)),
+                aircraft,
+                supply_t: base.map(|b| Dec(b.supply_t)),
+                daily_charge_t: Dec(charge),
+                days_of_supply: base
+                    .and_then(|b| (!charge.is_zero()).then(|| b.supply_t / charge))
+                    .map(|days| Dec(Fixed::from_raw(days.raw() / 100_000 * 100_000))),
+            }
+        })
+        .collect();
+    Some(LandUnitsPart {
+        units,
+        landed_yesterday: ground.landed,
+        embarked_yesterday: ground.embarked,
+        bases_formed_yesterday: ground.bases_formed,
+        divided_yesterday: ground.divided,
+        loading_complete_yesterday: ground.loading_complete,
+        fed_last_night: ground.fed,
+        lost_yesterday: ground.lost,
+        destroyed_yesterday: ground.destroyed,
+        supply_by_hex,
+    })
 }
 
 impl Briefing {
@@ -768,6 +975,21 @@ struct Day {
     stocks: BTreeMap<BaseId, StockMoves>,
     repaired: BTreeMap<BaseId, Vec<RepairedShip>>,
     returned: BTreeMap<BaseId, Vec<ReturnedForce>>,
+    ground: GroundDay,
+}
+
+/// What yesterday's events of the side say of its land units (decision
+/// 0066, 23).
+#[derive(Default)]
+struct GroundDay {
+    landed: Vec<MenMoved>,
+    embarked: Vec<MenMoved>,
+    bases_formed: Vec<BaseFormedLine>,
+    divided: Vec<UnitDividedLine>,
+    loading_complete: Vec<LoadingCompleteLine>,
+    fed: Vec<FedLine>,
+    lost: Vec<MenLostLine>,
+    destroyed: Vec<UnitDestroyedLine>,
 }
 
 /// What moved in and out of a base's stocks yesterday, by cause, from the
@@ -778,6 +1000,7 @@ struct StockMoves {
     supply_loaded: Fixed,
     sorties_and_upkeep: Fixed,
     repairs: Fixed,
+    men: Fixed,
     destroyed: Fixed,
     fuel_landed: Fixed,
     fuel_loaded: Fixed,
@@ -790,6 +1013,7 @@ impl StockMoves {
             - self.supply_loaded
             - self.sorties_and_upkeep
             - self.repairs
+            - self.men
             - self.destroyed
     }
 
@@ -815,6 +1039,10 @@ pub struct SupplyChange {
     pub repairs_t: Dec,
     /// Destroyed by raids.
     pub destroyed_by_raids_t: Dec,
+    /// Paid to feed men ashore (decision 0066, 16). Left out when nothing
+    /// was paid for men.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub men_fed_t: Option<Dec>,
 }
 
 /// How a base's fuel stock moved yesterday.
@@ -848,6 +1076,7 @@ fn stocks_yesterday(
         moves.supply_loaded,
         moves.sorties_and_upkeep,
         moves.repairs,
+        moves.men,
         moves.destroyed,
     ]
     .iter()
@@ -867,6 +1096,7 @@ fn stocks_yesterday(
             sorties_and_upkeep_t: Dec(moves.sorties_and_upkeep),
             repairs_t: Dec(moves.repairs),
             destroyed_by_raids_t: Dec(moves.destroyed),
+            men_fed_t: (!moves.men.is_zero()).then_some(Dec(moves.men)),
         }),
         fuel: fuel_moved.then(|| FuelChange {
             start_t: Dec(base.fuel_t - moves.fuel_net()),
@@ -929,6 +1159,7 @@ impl Day {
         let mut stocks: BTreeMap<BaseId, StockMoves> = BTreeMap::new();
         let mut repaired: BTreeMap<BaseId, Vec<RepairedShip>> = BTreeMap::new();
         let mut returned: BTreeMap<BaseId, Vec<ReturnedForce>> = BTreeMap::new();
+        let mut ground = GroundDay::default();
 
         for e in events {
             let id = ctx.number(e.id);
@@ -1188,6 +1419,9 @@ impl Day {
                                 moves.sorties_and_upkeep += *paid_t;
                             }
                             SupplyUse::Repairs => moves.repairs += *paid_t,
+                            // The men's charge is its own line, not the
+                            // aircraft's (decision 0066, 16).
+                            SupplyUse::Men => moves.men += *paid_t,
                         }
                     }
                     EventKind::BaseSupplyDestroyed {
@@ -1271,6 +1505,124 @@ impl Day {
                         ships: ships.iter().map(|s| ctx.ship(*s)).collect(),
                         event: id,
                     }),
+                    EventKind::MenEmbarked {
+                        unit,
+                        ship,
+                        task_force,
+                        hex,
+                        men,
+                        aboard,
+                        ashore,
+                    } => ground.embarked.push(MenMoved {
+                        land_unit: ctx.land_unit(*unit),
+                        ship: ctx.ship(*ship),
+                        task_force: ctx.force(*task_force),
+                        place: ctx.place(*hex),
+                        men: *men,
+                        aboard: *aboard,
+                        ashore: *ashore,
+                        event: id,
+                    }),
+                    EventKind::MenLanded {
+                        unit,
+                        ship,
+                        task_force,
+                        hex,
+                        men,
+                        aboard,
+                        ashore,
+                    } => ground.landed.push(MenMoved {
+                        land_unit: ctx.land_unit(*unit),
+                        ship: ctx.ship(*ship),
+                        task_force: ctx.force(*task_force),
+                        place: ctx.place(*hex),
+                        men: *men,
+                        aboard: *aboard,
+                        ashore: *ashore,
+                        event: id,
+                    }),
+                    EventKind::BaseFormed {
+                        base,
+                        hex,
+                        task_force,
+                        ..
+                    } => ground.bases_formed.push(BaseFormedLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        task_force: ctx.force(*task_force),
+                        event: id,
+                    }),
+                    EventKind::UnitDivided {
+                        from,
+                        unit,
+                        task_force,
+                        men,
+                    } => ground.divided.push(UnitDividedLine {
+                        from: ctx.land_unit(*from),
+                        land_unit: ctx.land_unit(*unit),
+                        task_force: ctx.force(*task_force),
+                        men: *men,
+                        event: id,
+                    }),
+                    EventKind::UnitLoadingComplete {
+                        task_force,
+                        unit,
+                        base,
+                        cargo,
+                        ..
+                    } => ground.loading_complete.push(LoadingCompleteLine {
+                        task_force: ctx.force(*task_force),
+                        land_unit: ctx.land_unit(*unit),
+                        base: base.map(|b| ctx.base(b)),
+                        cargo: cargo.map(Cargo::name),
+                        event: id,
+                    }),
+                    EventKind::MenFed {
+                        hex,
+                        base,
+                        men,
+                        fed,
+                        unfed,
+                        ..
+                    } => ground.fed.push(FedLine {
+                        place: ctx.place(*hex),
+                        base: base.map(|b| ctx.base(b)),
+                        men: *men,
+                        fed: *fed,
+                        unfed: *unfed,
+                        event: id,
+                    }),
+                    EventKind::MenLostUnfed {
+                        unit,
+                        hex,
+                        lost,
+                        ashore,
+                    } => ground.lost.push(MenLostLine {
+                        land_unit: ctx.land_unit(*unit),
+                        cause: "unfed",
+                        men: *lost,
+                        ship: None,
+                        place: Some(ctx.place(*hex)),
+                        ashore: Some(*ashore),
+                        event: id,
+                    }),
+                    EventKind::MenLostWithShip { unit, ship, men } => {
+                        ground.lost.push(MenLostLine {
+                            land_unit: ctx.land_unit(*unit),
+                            cause: "lost_with_ship",
+                            men: *men,
+                            ship: Some(ctx.ship(*ship)),
+                            place: None,
+                            ashore: None,
+                            event: id,
+                        });
+                    }
+                    EventKind::LandUnitDestroyed { unit } => {
+                        ground.destroyed.push(UnitDestroyedLine {
+                            land_unit: ctx.land_unit(*unit),
+                            event: id,
+                        });
+                    }
                     _ => {}
                 },
                 SideEventKind::Salvo {
@@ -1456,6 +1808,7 @@ impl Day {
             stocks,
             repaired,
             returned,
+            ground,
         }
     }
 }

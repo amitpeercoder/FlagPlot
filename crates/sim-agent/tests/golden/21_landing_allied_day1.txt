@@ -1,0 +1,70 @@
+FLAG PLOT BRIEFING
+
+HEADING
+- Side: allied
+- Day: 1 of 7
+- Scenario: Scenario 21: A landing, carried by sea and fed from a base
+- Covers: the state only, no day has been resolved
+
+OBJECTIVES
+- none: this scenario gives no mission and no objectives
+
+ORDERS
+- Accepted yesterday: 0
+- Refused yesterday: none
+
+CONTACTS
+- New contacts: none
+- Refreshed contacts: none
+- Dropped contacts: none
+- Contacts found not there: none
+- Contacts held: none
+
+ACTION YESTERDAY
+- Fights at sea: none
+- Salvoes fired at sea: none
+- Own fighters' fire: none
+- Own anti-aircraft fire: none
+- Strikes and attacks flown: none
+- Raids on bases: none
+- Attacks on ships: none
+
+LOSSES YESTERDAY
+- Ships sunk: none
+- Ships damaged: none
+- Aircraft lost: none
+- Claims yesterday: none
+
+TASK FORCES
+- task_force:1 "Placeholder landing convoy" at (0,0) Placeholder embarkation port: idle, transport, speed cruise, readiness normal, not alert, 2 ships afloat, cargo aboard: 14 t supply, 0 t fuel
+  - Least fuelled: ship:1 "Placeholder troop transport 1" with 1000 t, range 10000 miles at cruising speed
+- task_force:2 "Placeholder fast transport group" at (10,0): idle, transport, speed cruise, readiness normal, not alert, 1 ship afloat, cargo aboard: 0 t supply, 0 t fuel
+  - Least fuelled: ship:3 "Placeholder fast transport 1" with 500 t, range 4000 miles at cruising speed
+
+AIR GROUPS
+- Air groups: none
+
+BASES
+- base:1 "Placeholder embarkation port" at (0,0): supply 1000 t, fuel 0 t (for ships; aircraft do not use it)
+  - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
+
+LAND UNITS
+- land_unit:1 "Placeholder battalion 1": 600 men aboard (ship:1 "Placeholder troop transport 1" 600)
+- land_unit:2 "Placeholder battalion 2": 400 men aboard (ship:2 "Placeholder troop transport 2" 400)
+- land_unit:3 "Placeholder battalion 3": 500 men ashore at (10,0); not known whether fed last night
+- Yesterday: no man was landed, embarked, fed, unfed or lost
+- Supply at (10,0): no base of the side here, so the 500 men ashore get none
+
+ARRIVALS
+- Arrivals due on the coming day and the next two days: none
+- Replacements: none
+
+WARNINGS
+- Ships that cannot reach a base: none
+- Bases short of supply: none
+- No fuel: base:1 "Placeholder embarkation port" has no fuel and task_force:1 "Placeholder landing convoy" stopped there
+- Air groups short of pilots: none
+- Air groups tired: fatigue is not in play
+- Aircraft wear: not in play
+- Task forces that cannot move or are slowed: none
+- Strike groups with nothing in reach: none

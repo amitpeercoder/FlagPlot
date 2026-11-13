@@ -50,6 +50,7 @@ fn class() -> ShipClass {
         radar: false,
         aircraft_capacity: 0,
         anti_aircraft: 0,
+        troop_capacity_men: 0,
     }
 }
 
@@ -638,6 +639,7 @@ fn a_force_leaves_for_the_yard_is_away_and_returns_repaired_refuelled_and_rearme
         force.cargo_order = Some(CargoOrder {
             action: crate::orders::CargoAction::Unload,
             order: OrderId::new(77),
+            unit: None,
         });
         force.rules_of_engagement.break_off = Fixed::from_ratio(1, 4);
     }

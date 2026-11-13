@@ -2,12 +2,12 @@ Scenario 20b: Ships out of action
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1b4d29ad7be23772  5 events
-day   2  hash 2d065e3a0125635c  7 events
-day   3  hash cfb733c236b37153  5 events
-day   4  hash 5fe7533091670a86  7 events
-day   5  hash 61a8805e96ebcea2  6 events
-day   6  hash 5544e2b98eb5512b  5 events
+day   1  hash c6e93d9685100666  5 events
+day   2  hash 278348aa0b13788c  7 events
+day   3  hash 9eb32ed1edc55411  5 events
+day   4  hash af0853e764d7538a  7 events
+day   5  hash 3db5883ec5b4b7fc  6 events
+day   6  hash 3f11affa5e332767  5 events
 
 #1 D1 -         ship:8 repaired 1 points at base:2: fire 0, flotation 7
 #2 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open

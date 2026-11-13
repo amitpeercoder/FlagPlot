@@ -16,7 +16,8 @@ use std::fmt;
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
-    AirGroupId, AircraftTypeId, BaseId, EventId, OrderId, ShipClassId, ShipId, TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, EventId, LandUnitId, OrderId, ShipClassId, ShipId,
+    TaskForceId,
 };
 use crate::map::Map;
 use crate::orders::{
@@ -105,6 +106,18 @@ pub struct Ship {
     /// that a forward repair base has not finished (decision 0069). From 0
     /// to below `forward_repair_system_points`.
     pub system_repair_points: Fixed,
+    /// The men aboard and the land unit they belong to (decision 0066). A
+    /// ship carries men of one unit only, never more than its class's troop
+    /// capacity, and `Some` always holds at least one man.
+    pub troops: Option<Troops>,
+}
+
+/// Men of one land unit aboard a ship (decision 0066, 2).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Troops {
+    pub unit: LandUnitId,
+    /// At least 1.
+    pub men: u32,
 }
 
 impl ShipLocation {
@@ -152,6 +165,7 @@ impl Ship {
             systems: ShipSystems::ALL_WORKING,
             experience: Ship::DEFAULT_EXPERIENCE,
             system_repair_points: Fixed::ZERO,
+            troops: None,
         }
     }
 }
@@ -312,6 +326,10 @@ pub struct Base {
     /// `Some(n)` makes the base a port for the yard, with a passage there and
     /// back of n days, n at least 1 (decision 0069). The default is `None`.
     pub yard_passage_days: Option<u32>,
+    /// Whether the base is on the map both sides are given (decision 0066,
+    /// 12): true for every base a scenario starts with, false for one formed
+    /// by a landing, which only its own side knows of.
+    pub on_map: bool,
 }
 
 impl Base {
@@ -328,6 +346,7 @@ impl Base {
             fuel_t: Fixed::ZERO,
             ship_repair_points_per_day: Fixed::ZERO,
             yard_passage_days: None,
+            on_map: true,
         }
     }
 }
@@ -373,6 +392,9 @@ pub struct Route {
 pub struct CargoOrder {
     pub action: CargoAction,
     pub order: OrderId,
+    /// The land unit a load order takes aboard with its cargo (decision
+    /// 0066, 5). `None` for a load with no unit and for an unload.
+    pub unit: Option<LandUnitId>,
 }
 
 /// How a task force behaves in a surface fight: whether it fights or tries
@@ -808,6 +830,22 @@ pub struct Arrival {
     pub pilots: u32,
 }
 
+/// A land unit: a count of men with a side and a name (decision 0066, 1).
+/// Its men are ashore in one hex, aboard ships ([`Ship::troops`]), or part
+/// each. It is never removed: a unit with no men anywhere is destroyed, and
+/// keeps its number.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct LandUnit {
+    pub id: LandUnitId,
+    pub name: String,
+    pub side: Side,
+    /// Men ashore, in `hex`.
+    pub men_ashore: u32,
+    /// The hex the men ashore are in. `Some` exactly when `men_ashore` is
+    /// above 0.
+    pub hex: Option<Hex>,
+}
+
 /// The real state of the world.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct TruthState {
@@ -823,9 +861,84 @@ pub struct TruthState {
     /// The scenario's arrivals, in the order they are delivered (decision
     /// 0041). Empty in a scenario without any.
     pub arrivals: Vec<Arrival>,
+    /// Land units (decision 0066). Empty in a scenario without any.
+    pub land_units: BTreeMap<LandUnitId, LandUnit>,
 }
 
 impl TruthState {
+    /// The men of a land unit aboard ships that are afloat (decision 0066).
+    pub fn men_aboard(&self, unit: LandUnitId) -> u32 {
+        self.ships
+            .values()
+            .filter_map(|ship| ship.troops)
+            .filter(|troops| troops.unit == unit)
+            .map(|troops| troops.men)
+            .sum()
+    }
+
+    /// Puts a land unit's men aboard a task force at the start of a game
+    /// (decision 0066, 3, and "Settled before the build"): over the force's
+    /// ships in ship order, each up to its troop capacity, into ships that
+    /// are empty of men or already hold this unit. For the loader. Fails,
+    /// and changes nothing, if the men do not all fit, the force does not
+    /// exist or is not the unit's side's, or the unit does not exist.
+    pub fn put_aboard_at_start(
+        &mut self,
+        unit: LandUnitId,
+        task_force: TaskForceId,
+        men: u32,
+        troop_capacity: impl Fn(ShipClassId) -> u32,
+    ) -> Result<(), String> {
+        let side = self
+            .land_units
+            .get(&unit)
+            .ok_or_else(|| format!("{unit} does not exist"))?
+            .side;
+        let force = self
+            .task_forces
+            .get(&task_force)
+            .ok_or_else(|| format!("{unit} is aboard {task_force}, which does not exist"))?;
+        if force.side != side {
+            return Err(format!(
+                "{unit} is aboard {task_force}, which is not its side's"
+            ));
+        }
+        let mut plan: Vec<(ShipId, u32)> = Vec::new();
+        let mut left = men;
+        for ship_id in &force.ships {
+            if left == 0 {
+                break;
+            }
+            let ship = &self.ships[ship_id];
+            let (aboard, other) = match ship.troops {
+                Some(troops) => (troops.men, troops.unit != unit),
+                None => (0, false),
+            };
+            if other {
+                continue;
+            }
+            let room = troop_capacity(ship.class).saturating_sub(aboard);
+            let take = room.min(left);
+            if take > 0 {
+                plan.push((*ship_id, aboard + take));
+                left -= take;
+            }
+        }
+        if left > 0 {
+            return Err(format!(
+                "{unit} has {men} men aboard {task_force}, but its ships have berths for {} of them",
+                men - left
+            ));
+        }
+        for (ship_id, total) in plan {
+            self.ships
+                .get_mut(&ship_id)
+                .expect("the ship exists")
+                .troops = Some(Troops { unit, men: total });
+        }
+        Ok(())
+    }
+
     /// Whether an air group is aboard a ship that is away at the yard
     /// (decision 0069). Such a group flies nothing, wears nothing, is not
     /// repaired, gets no replacement or arrival, and tires and rests not at

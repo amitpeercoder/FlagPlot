@@ -15,7 +15,8 @@
 //!   start of a day, as data and as text made from that data.
 //! * [`list_forces`], [`list_bases`], [`list_contacts`]: one line per item,
 //!   optionally within an area.
-//! * [`get_entity`]: everything the side knows of one unit or contact.
+//! * [`get_entity`]: everything the side knows of one unit or contact (a
+//!   ship, task force, air group, land unit or base of its own).
 //! * [`explain`]: an event as the side may see it and its visible causes.
 //! * [`measure`]: air distance, sea route, the passage of a task force, its
 //!   days at the yard and the air reach of an air group, with the functions the rules use (decision
@@ -43,18 +44,22 @@ mod words;
 pub use answer::{NotKnown, FORMAT, VERSION};
 pub use briefing::{briefing, briefing_for_game, Briefing};
 pub use briefing::{
-    ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, AwayForce, BriefingBase, Claim,
-    ContactsPart, DamagedShip, DroppedContact, DueArrival, Fight, Fired, FuelChange, FuelWarning,
-    Heading, LossesPart, NotThere, OrdersPart, OutOfReachWarning, PilotWarning, PropulsionWarning,
-    Raid, RefusedOrder, RepairedShip, ReplacementStream, ReportedContact, ReturnedForce,
-    ShipRangeWarning, StocksYesterday, Strike, SunkShip, SupplyChange, SupplyWarning, SystemChange,
-    TiredWarning, Warnings,
+    ActionPart, AircraftLoss, ArrivalsPart, AttackOnShip, AwayForce, BaseFormedLine, BriefingBase,
+    Claim, ContactsPart, DamagedShip, DroppedContact, DueArrival, FedLine, Fight, Fired,
+    FuelChange, FuelWarning, Heading, HexSupply, LandUnitsPart, LoadingCompleteLine, LossesPart,
+    MenLostLine, MenMoved, NotThere, OrdersPart, OutOfReachWarning, PilotWarning,
+    PropulsionWarning, Raid, RefusedOrder, RepairedShip, ReplacementStream, ReportedContact,
+    ReturnedForce, ShipRangeWarning, StocksYesterday, Strike, SunkShip, SupplyChange,
+    SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
-pub use lines::{AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, PropulsionLine};
+pub use lines::{
+    AboardLine, AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, LandUnitLine,
+    PropulsionLine,
+};
 pub use measure::{
     measure, measure_in, measure_json, AirDistance, AirReach, Assumptions, MeasureAnswer,
     MeasureContext, Moment, Passage, PassageSpeed, PlaceArg, Question, ReachLine, Resolved,
@@ -68,7 +73,8 @@ pub use orders::{is_orderable_unit, order_from_json, order_to_json, unit_text};
 pub use queries::{
     get_entity, list_bases, list_contacts, list_forces, AirGroupDetail, Area, BaseDetail,
     ContactDetail, Detail, EnemyBaseDetail, EnemyBaseLine, Entity, EntityAnswer, ForceDetail,
-    ListBases, ListContacts, ListForces, ShipDetail, ShipLine, SystemStates,
+    LandUnitDetail, ListBases, ListContacts, ListForces, ShipDetail, ShipLine, SystemStates,
+    TroopsAboard,
 };
 pub use record::{parse_seat, seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
 pub use session::{Session, NOT_KNOWN};

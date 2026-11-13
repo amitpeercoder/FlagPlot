@@ -432,6 +432,7 @@ function sideReplay(replay, side) {
       ships: (initial.ships || []).filter(own),
       air_groups: (initial.air_groups || []).filter(own),
       bases: (initial.bases || []).filter(own),
+      land_units: (initial.land_units || []).filter(own),
     },
     events: sv.events.map(e => ({
       id: e.n, log_id: e.log_id, day: e.day, pulse: e.pulse, kind: e.kind, text: e.text, causes: e.causes || [],
@@ -443,6 +444,7 @@ function sideReplay(replay, side) {
       ships: (final.ships || []).filter(s => ownShips.has(s.id)),
       air_groups: (final.air_groups || []).filter(own),
       bases: (final.bases || []).filter(own),
+      land_units: (final.land_units || []).filter(own),
       contacts: { [side]: (final.contacts && final.contacts[side]) || [] },
       claims: { [side]: (final.claims && final.claims[side]) || [] },
     } : null,
@@ -577,8 +579,11 @@ function snapshot(cur, aux) {
     for (const [id, c] of cur.contacts[side]) m.set(id, { id, side, hex: c.hex.slice(), ship_count: c.ship_count, kind: c.kind, age_pulses: c.age_pulses });
     contacts[side] = m;
   }
+  // Land units (decision 0066): the men of each ashore and where, rebuilt from the events; the formed bases by hex.
+  const landUnits = new Map();
+  for (const [id, u] of cur.landUnits) landUnits.set(id, { id, name: u.name, side: u.side, men_ashore: u.men_ashore, hex: u.hex ? u.hex.slice() : null });
   return {
-    forces, contacts,
+    forces, contacts, landUnits, formedBases: new Map(cur.formedBases),
     sunk: new Set(cur.sunk),
     shipForce: new Map(cur.shipForce),
     moves: aux.moves, fights: aux.fights, searches: aux.searches,
@@ -784,7 +789,8 @@ function buildModel(replay) {
   steps.forEach(s => s.events.forEach(ei => stepOfEvent.set(events[ei].id, s.index)));
 
   // Rebuild
-  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map() };
+  const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map() };
+  for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null) });
   for (const g of groupTable.values()) { cur.reach.set(g.id, g.reach0); cur.mission.set(g.id, g.mission); }
   // reach and mission are replaced, never changed in place, so each step's snapshot keeps its own.
   const setAirOrder = (map, id, v) => { const m = new Map(map); m.set(id, v); return m; };
@@ -898,6 +904,28 @@ function buildModel(replay) {
           if (f) f.alerted = ev.kind === 'alarm_roll' ? ((d.alarmed || ev.cut) ? true : f.alerted) : ev.kind !== 'force_stood_down';
           break;
         }
+        case 'men_embarked':
+        case 'men_landed':
+        case 'men_lost_unfed': {
+          let u = cur.landUnits.get(d.unit);
+          if (!u) { u = { id: d.unit, name: 'land unit ' + d.unit, side: d.side, men_ashore: 0, hex: null }; cur.landUnits.set(d.unit, u); }
+          u.men_ashore = d.ashore || 0;
+          if (Array.isArray(d.hex)) u.hex = u.men_ashore > 0 ? d.hex.slice() : null;
+          break;
+        }
+        case 'unit_divided': {
+          const from = cur.landUnits.get(d.from);
+          cur.landUnits.set(d.unit, { id: d.unit, name: (from ? from.name : 'land unit ' + d.from) + ' (part)', side: from ? from.side : undefined, men_ashore: 0, hex: null });
+          break;
+        }
+        case 'land_unit_destroyed': {
+          const u = cur.landUnits.get(d.unit);
+          if (u) { u.men_ashore = 0; u.hex = null; }
+          break;
+        }
+        case 'base_formed':
+          if (Array.isArray(d.hex)) cur.formedBases.set(d.hex[0] + ',' + d.hex[1], { id: d.base, side: d.side });
+          break;
         case 'ship_sunk': {
           cur.sunk.add(d.ship);
           for (const f of cur.forces.values()) f.ships = f.ships.filter(x => x !== d.ship);
@@ -1058,6 +1086,14 @@ function compareWithFinal(model) {
       for (const k of ['ship_count', 'kind', 'age_pulses']) if (!numEq(r[k], c[k])) problems.push(side + ' contact ' + c.id + ' ' + k + ' rebuilt ' + r[k] + ' but final ' + c[k]);
     }
     for (const id of have.keys()) if (!want.some(c => c.id === id)) problems.push(side + ' contact ' + id + ' is in the rebuild but not in final');
+  }
+  // Land units (decision 0066): the men ashore and where, rebuilt from the events.
+  for (const u of final.land_units || []) {
+    const r = end.landUnits && end.landUnits.get(u.id);
+    if (!r) { problems.push('land unit ' + u.id + ' is in final but not in the rebuild'); continue; }
+    if (r.men_ashore !== u.men_ashore) problems.push('land unit ' + u.id + ' men ashore rebuilt as ' + r.men_ashore + ' but final says ' + u.men_ashore);
+    const want = u.hex ? [u.hex.q, u.hex.r] : null;
+    if ((want === null) !== (r.hex === null) || (want && (want[0] !== r.hex[0] || want[1] !== r.hex[1]))) problems.push('land unit ' + u.id + ' hex rebuilt as ' + JSON.stringify(r.hex) + ' but final says ' + JSON.stringify(want));
   }
   return problems;
 }
@@ -1951,6 +1987,9 @@ function renderReadout() {
   if ((hx.closed || []).length) line('Closed sides: ' + hx.closed.join(', '));
   for (const p of m.placementsByHex.get(S.hoverKey) || []) line('Place: ' + p.label.place + (p.label.feature ? ' (' + p.label.feature + ')' : ''));
   for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + b.side + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
+  const formed = st.formedBases && st.formedBases.get(S.hoverKey);
+  if (formed) line('Base ' + formed.id + ' (' + formed.side + '): formed by a landing');
+  if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore');
   for (const f of st.forces.values()) if (f.q === q && f.r === r) line('Force: TF' + f.id + ' ' + f.name + ' (' + f.side + '), ' + f.ships.length + ' ship(s) afloat');
   if (S.belief !== 'truth' && st.contacts[S.belief]) {
     for (const c of st.contacts[S.belief].values()) if (c.hex[0] === q && c.hex[1] === r) line('Contact (' + S.belief + ' belief): ' + ghostText(c));

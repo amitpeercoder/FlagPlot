@@ -42,6 +42,9 @@
               "$ref": "#/$defs/air_group"
             },
             {
+              "$ref": "#/$defs/land_unit"
+            },
+            {
               "$ref": "#/$defs/base"
             },
             {
@@ -184,7 +187,29 @@
         },
         "air_groups": {
           "$ref": "defs.schema.json#/$defs/handles"
+        },
+        "troops": {
+          "$ref": "#/$defs/troops"
         }
+      }
+    },
+    "troops": {
+      "description": "The men of a land unit a ship carries (decision 0066, 21). Present only when she carries men.",
+      "type": "object",
+      "required": ["land_unit", "men"],
+      "additionalProperties": false,
+      "properties": {
+        "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+        "men": { "type": "integer" }
+      }
+    },
+    "land_unit": {
+      "type": "object",
+      "required": ["entity_kind", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_kind": { "const": "land_unit" },
+        "summary": { "$ref": "defs.schema.json#/$defs/land_unit_line" }
       }
     },
     "ship_line": {
@@ -222,6 +247,9 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 4
+        },
+        "troops": {
+          "$ref": "#/$defs/troops"
         }
       }
     },

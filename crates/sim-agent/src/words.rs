@@ -134,6 +134,15 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::NotAFighter => {
             " (combat_air_patrol and set_patrol_share are for fighter groups; the briefing's air group lines say which type each group is)"
         }
+        R::NotYourLandUnit => {
+            " (a load with a unit needs the handle of a land unit of your own side, written land_unit:N; list_forces shows them)"
+        }
+        R::NoMenAshoreHere => {
+            " (a load with a unit takes the unit's men that are ashore in the hex where the task force is stopped; the unit's line says where its men are)"
+        }
+        R::NoTroopCapacity => {
+            " (a load with a unit needs a ship in the task force that can carry men, such as a transport)"
+        }
         _ => "",
     };
     format!("{reason}{hint}")
