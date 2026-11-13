@@ -1,0 +1,13 @@
+# PLACEHOLDER DATA. These two classes are invented so that scenario 21 has ships
+# that carry men: the classes of ship_classes.csv carry none. They are not
+# historical and must not be used for validation. Class 10, Placeholder troop
+# transport, is class 3 (the placeholder cargo ship) with a troop capacity of
+# 600 men. Class 11, Placeholder fast transport, is a destroyer with no guns,
+# no torpedoes and no cargo room, and a troop capacity of 200 men
+# (docs/decisions/0066-land-units-carried-and-fed.md).
+# Only scenario 21 names this file, so that no other scenario's data hashes move.
+# The columns are those of ship_classes.csv, which says what each is, and
+# troop_capacity_men last: the men a ship of the class carries.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft,troop_capacity_men
+10,Placeholder troop transport,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,600
+11,Placeholder fast transport,destroyer,16,36,500,4000,0,0,0,0,0,0,0,0,100,0,0,0,200

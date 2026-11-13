@@ -1,0 +1,19 @@
+# Ground figures for land units carried by sea and fed from a base. PLACEHOLDER
+# DATA: every figure is invented so the engine has something to run. They are
+# not historical and must not be used for validation. They are the first
+# values, for scenario 21 (docs/decisions/0066-land-units-carried-and-fed.md,
+# "Placeholder figures"). The frozen step 1 figures are in data/reference/step1.
+
+placeholder = true
+
+# The tons of a ship's work in a pulse that moving one man takes. Placeholder:
+# rests on no source.
+handling_t_per_man = "0.25"
+
+# Supply a man ashore costs his base a day, in tons. Placeholder: rests on no
+# source. The record's one hint, 120 tons for about three and a half days, is
+# of rations alone for a force whose size on that day is disputed.
+daily_supply_t_per_man = "0.005"
+
+# The share of unfed men lost in a day. Placeholder: rests on no source.
+unfed_loss_share_per_day = "0.05"

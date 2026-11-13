@@ -1,0 +1,22 @@
+# FROZEN: a copy of data/reference/ground.toml
+# as it stood when scenario 21 was built, on Nov 13, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. Every figure is invented so the engine has something to
+# run. They are not historical and must not be used for validation. They are
+# the first values, for scenario 21
+# (docs/decisions/0066-land-units-carried-and-fed.md, "Placeholder figures").
+
+placeholder = true
+
+# The tons of a ship's work in a pulse that moving one man takes. Placeholder:
+# rests on no source.
+handling_t_per_man = "0.25"
+
+# Supply a man ashore costs his base a day, in tons. Placeholder: rests on no
+# source. The record's one hint, 120 tons for about three and a half days, is
+# of rations alone for a force whose size on that day is disputed.
+daily_supply_t_per_man = "0.005"
+
+# The share of unfed men lost in a day. Placeholder: rests on no source.
+unfed_loss_share_per_day = "0.05"

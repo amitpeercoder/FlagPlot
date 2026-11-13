@@ -1,0 +1,159 @@
+# Scenario 21: a convoy lands two land units and a little supply on an empty
+# shore, a third unit wastes on a shore with no base, and part of it is
+# carried across and lands as a new unit (decision 0066).
+#
+# Proves land units, carried by sea and fed from a base: men worked as cargo at
+# a fixed weight, troop capacity, a landing that forms a base, a unit divided,
+# the nightly charge for men, the unfed, and men lost taken from units in
+# proportion. Task force 1 sails with 1000 men and 14 t of supply from base 1
+# to an empty shore (8,0) and unloads. Task force 2 lies at (10,0), where unit
+# 3 is ashore and no base is held; it takes 200 of its men aboard, carries them
+# to (8,0) and lands them. There is no enemy, no fight, no search and no random
+# draw. The hand calculation is in tests/scenario_21_landing.rs.
+#
+# Classes 10 and 11 are in a file of their own so that no other scenario's data
+# moves, and the ground figures are named by the `ground` key.
+#
+# PLACEHOLDER DATA. The ships, units, figures and map are invented.
+
+name = "Scenario 21: A landing, carried by sea and fed from a base"
+placeholder = true
+seed = 1942
+days = 7
+map = "../map/placeholder_landing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder embarkation port"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+
+[[task_force]]
+id = 1
+name = "Placeholder landing convoy"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[task_force]]
+id = 2
+name = "Placeholder fast transport group"
+side = "allied"
+q = 10
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 14
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder fast transport 1"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 2
+
+# Aboard task force 1: unit 1 fills ship 1, unit 2 goes into ship 2.
+[[land_unit]]
+id = 1
+name = "Placeholder battalion 1"
+side = "allied"
+men = 600
+task_force = 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder battalion 2"
+side = "allied"
+men = 400
+task_force = 1
+
+# Ashore from the start where the side has no base.
+[[land_unit]]
+id = 3
+name = "Placeholder battalion 3"
+side = "allied"
+men = 500
+q = 10
+r = 0
+
+# Day 1: the convoy steams to the empty shore at cruise speed and unloads on
+# arrival.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_route"
+waypoints = [[8, 0]]
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "unload"
+
+# Day 1: the fast transports take men of unit 3 off the bare shore, and
+# nothing else.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "load"
+unit = 3
+cargo = "none"
+
+# Day 3: they carry the men to the shore the convoy landed on and unload.
+[[order]]
+day = 3
+side = "allied"
+task_force = 2
+kind = "set_route"
+waypoints = [[8, 0]]
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 2
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 3
+side = "allied"
+task_force = 2
+kind = "unload"
+
+# Days 4 to 7 have no new orders. The standing ones continue.
