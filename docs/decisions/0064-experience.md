@@ -58,6 +58,8 @@ So the ships can carry a value now, with one weak leg named below. The air group
 10. **If they stand, three rules read it:** a fighter's chance to hit, a bomber's chance to hit a ship, and the chance of running out of fuel on the way home (decision 0059), each with its own strength figure.
 11. **Replacements dilute it.** Replacement pilots arrive at their service's value for the period, and the group's value becomes the average of its pilots', weighted by number. This reuses the replacement step (decision 0038) and replaces its line "replacement pilots are as good as the pilots they replace". The group's value then carries a fraction.
 
+**Nov 13, 2026: stage 2 waits.** The values were worked by hand for every air group of scenarios 5 and 6 (`docs/research/oob/air-group-experience-proposal.md`) and the facts are too thin to rest them on, for the three reasons given there; by the step 2 spec's fourth condition on experience, air groups carry no value and no rule reads one until research closes the gaps listed. The designer was told and delegated the decision to the coordinating architect in these words: "Go ahead and decide all matters that need decisions".
+
 ### What a side knows
 
 12. A side sees its own units' experience exactly, in the briefing and in the factors of its own fire. It sees nothing of the enemy's: no method of the side's view returns it, and an event the enemy may see is cut of it.
