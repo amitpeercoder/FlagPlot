@@ -5,12 +5,13 @@
 # Island and never on this (step 2 spec, "Tuning"). Here the other side had
 # the radar and the surprise.
 #
-# THE SCENARIO IS NOT BUILT. There is no `scenario` key, and the scope
-# below is the one these measures assume. If the scenario is built with
-# another, the measures change with it.
+# Changed on 2026-11-13 by the coordinating architect: the `scenario` key and
+# each measure's `take` were added, before any batch of this scenario had been
+# made. No record, row, range, reason or judged flag changed.
 #
-# Scope assumed: the night action only. US Task Force 64, nine ships (San
-# Francisco, Boise, Salt Lake City, Helena; Farenholt, Duncan, Laffey,
+# Scope, the scenario's (decision 0072): the night action only. US Task
+# Force 64, nine ships (San Francisco, Boise, Salt Lake City, Helena;
+# Farenholt, Duncan, Laffey,
 # Buchanan, McCalla) against the Japanese bombardment force, five ships
 # (Aoba, Furutaka, Kinugasa; Fubuki, Hatsuyuki). Outside it: the
 # reinforcement group that was landing troops, and the two destroyers,
@@ -29,6 +30,7 @@
 # a total that holds her cannot be judged either.
 
 battle = "cape-esperance"
+scenario = "data/scenarios/17_cape_esperance.toml"
 facts = "data/oob/engagement_outcomes.csv"
 
 # ---------------------------------------------------------------- ships
@@ -39,6 +41,8 @@ counts = "Japanese ships sunk at the end of the run, of the five"
 record_low = 2
 record_high = 2
 judged = true
+take = "ships_sunk"
+ships = [1, 2, 3, 4, 5]
 rows = [1506, 1507, 1544, 1546, 1661, 1662]
 reason = "Furutaka and Fubuki, by the force's own report (1506, 1507), the tabular records (1544, 1546) and the US narrative as revised (1661, 1662)."
 
@@ -48,6 +52,9 @@ counts = "Japanese ships afloat at the end of the run with propulsion out"
 record_low = 0
 record_high = 0
 judged = true
+take = "ships_with_system_out"
+ships = [1, 2, 3, 4, 5]
+system = "propulsion"
 rows = [1508, 1547, 1514]
 reason = "Aoba was heavily damaged and steamed to the Shortlands under her own power (1508, 1547). Kinugasa reported no damage (1514)."
 
@@ -57,6 +64,8 @@ counts = "US cruisers sunk at the end of the run, of the four"
 record_low = 0
 record_high = 0
 judged = true
+take = "ships_sunk"
+ships = [9, 10, 11, 12]
 rows = [1526, 1529, 1536, 1538]
 reason = "Boise and Salt Lake City were damaged and stayed afloat (1526, 1529). San Francisco and Helena are in no list of ships damaged (1536, 1538)."
 
@@ -66,6 +75,8 @@ counts = "US destroyers sunk at the end of the run, of the five"
 record_low = 1
 record_high = 1
 judged = true
+take = "ships_sunk"
+ships = [6, 7, 8, 13, 14]
 rows = [1532, 1533, 1534, 1530]
 reason = "Duncan, abandoned on fire; she sank by two accounts (1532, 1534) and was sunk by her own side by a third (1533). Lost either way. Farenholt was damaged and reached port (1530)."
 
@@ -77,6 +88,9 @@ counts = "Gun hits on Aoba, all calibres"
 record_low = 40
 record_high = 40
 judged = true
+take = "hits_on"
+ships = [1]
+weapons = ["gun"]
 rows = [1598, 4034, 1599]
 reason = "Three statements that meet at 40: 'up to forty' (1598), a flat '40 hits' in the Australian official history (4034) and 'over 40' (1599). None is from a count: no counter is named in any, and no Japanese survey or crew count exists. 'Up to' bounds nothing below and 'over' nothing above, so this is a weak record, judged because three sources put the figure at one place. Outside research has looked for a bounded source; if a row arrives before the check is run the record changes, and it does not change after the run (decision 0084, finding 14). Many of her hits were duds by one lead (1695), so the count is not a measure of damage."
 
@@ -86,6 +100,9 @@ counts = "Gun hits on Furutaka, all calibres"
 record_low = 90
 record_high = 90
 judged = false
+take = "hits_on"
+ships = [2]
+weapons = ["gun"]
 rows = [1600, 1601, 1602, 4035]
 reason = "'About 90' (1600), 'over 90' (1601), 'more than 90 above the waterline alone' (1602) and 'over 90 times' (4035, likely repeating 1601): lower bounds only, perhaps one count repeated, with no counter named. No row bounds the figure above, so no range can be written; 90 is the floor they share. Not judged for that reason (decision 0084, finding 14). Reported, so the size of the run's figure stays in view."
 
@@ -95,6 +112,9 @@ counts = "Gun hits on Kinugasa, all calibres"
 record_low = 0
 record_high = 4
 judged = true
+take = "hits_on"
+ships = [3]
+weapons = ["gun"]
 rows = [1605, 4036, 1686, 1687, 1688]
 reason = "Four by a reference site's tabular record (1605) and a tertiary site with no references that gives the same 4 (4036). None by her division's report, which says twice that she received no enemy fire (1686, 1687), and by her own battle flash, 'no damage' (1688). The rows dispute each other, so by this file's rule the range spans them: 0 to 4."
 
@@ -104,6 +124,9 @@ counts = "Gun hits on the nine US ships, all calibres"
 record_low = 15
 record_high = 29
 judged = false
+take = "hits_on"
+ships = [6, 7, 8, 9, 10, 11, 12, 13, 14]
+weapons = ["gun"]
 rows = [1587, 1588, 1590, 1591, 1594, 1593, 1597, 1596]
 reason = "Low end: Boise 6 (1587), Salt Lake City 2 (1590), Farenholt 3 (1594), Duncan 4 (1597). High end: Boise 8 (1588), Salt Lake City 3 (1591), Farenholt 4 (1593), Duncan 14 (1596). Not judged: several of the hits on Duncan and Farenholt came from their own cruisers, and no row says how many. The rules have no fire on a friend, so this record is a ceiling for hits by Japanese guns."
 
@@ -113,6 +136,9 @@ counts = "Torpedo hits on the five Japanese ships"
 record_low = 0
 record_high = 1
 judged = true
+take = "hits_on"
+ships = [1, 2, 3, 4, 5]
+weapons = ["torpedo"]
 rows = [1603, 1604]
 reason = "One on Furutaka by the tabular record and an encyclopedia (1603, 1604), both disputed: the Japanese account of her damage has none."
 
@@ -124,6 +150,10 @@ counts = "Ships the Japanese side claims sunk, for each 100 US ships really sunk
 record_low = 200
 record_high = 300
 judged = true
+take = "claims_per_hundred"
+side = "japanese"
+claim = "sunk"
+ships = [6, 7, 8, 9, 10, 11, 12, 13, 14]
 rows = [1524, 1522, 1532]
 reason = "The force's first signal claimed 2 sunk (1524) and its action report 3 (1522). One was: Duncan (1532)."
 
@@ -133,6 +163,10 @@ counts = "Ships the US side claims sunk, for each 100 Japanese ships really sunk
 record_low = 400
 record_high = 750
 judged = false
+take = "claims_per_hundred"
+side = "allied"
+claim = "sunk"
+ships = [1, 2, 3, 4, 5]
 rows = [1656, 1655, 1657, 1506, 1507]
 reason = "The ships' own reports add to 15 (1655); a conference of their captains cut that to 8 (1656) and the fleet commander made it 9 (1657). Two were sunk (1506, 1507). Low end 8 in 2, high end 15 in 2. Not judged: more ships were claimed than the five the scenario would hold, as with the Japanese claim at Savo Island."
 
