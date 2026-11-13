@@ -1,6 +1,6 @@
 # 0090: The fight ashore, and a base that changes side
 
-Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). Decisions 9, 16 and 20 are choices the plan did not make and need review. Nothing is built. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) to merge; the hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer agreed decisions 9 and 16 on Nov 13, 2026, and on decision 20 asked for rebasing by order to be built first (decision 0091), so that a player can fly a group out; with that, decisions 20 and 21 stand. Nothing is built. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) and rebasing (decision 0091) to merge; the hand calculation is written before any code is delegated.
 
 ## The gap
 
@@ -23,7 +23,7 @@ This record adds the posture of a unit, one fight a day in a hex, fatigue for a 
 6. **A unit's firing men** are its men ashore, times its fed share (decision 8), times 100 less its fatigue over 100, cut to a whole man. Men aboard ships do not fight and are not hit.
 7. **Each unit fires.** Its shots are its firing men over `men_per_shot`, with the part of a shot rolled at that part of the chance, by the rule surface combat uses. Each shot hits at `hit_chance`, or at `defender_hit_chance` if its side defends. Each shot is rolled, on a stream keyed on the day, no pulse, the `GroundCombat` subsystem, a new draw `GroundFire`, and the firing unit. A breakdown records the firing men and the chance.
 8. **A unit's fed share** is the men of its side fed in its hex at the last night's charge over the men charged. It is 1 for a unit none of whose men were ashore at that charge, and 1 until the first charge. It is state of the unit, set by the men's supply phase of stage 1. So a side that was half fed fires with half its men.
-9. **Both sides fire on the strengths they had at the start,** so the order of firing does not matter. Each hit removes `men_per_hit` men of the other side in the hex, as many as are there, taken from its units in proportion by stage 1's rule (decision 0066, 20). *Needs review: a hit is a fixed number of men whoever fires and whoever is hit. The other choice was a loss that grows with the size of the body hit.*
+9. **Both sides fire on the strengths they had at the start,** so the order of firing does not matter. Each hit removes `men_per_hit` men of the other side in the hex, as many as are there, taken from its units in proportion by stage 1's rule (decision 0066, 20). *Agreed by the designer, Nov 13, 2026. A hit is a fixed number of men whoever fires and whoever is hit. The other choice was a loss that grows with the size of the body hit.*
 10. **A unit with no men anywhere is destroyed,** as in stage 1.
 
 ### Fatigue
@@ -36,14 +36,14 @@ This record adds the posture of a unit, one fight a day in a hex, fatigue for a 
 ### A side beaten
 
 15. **After the day's fight a side is beaten in a hex** if the other side attacked there that day, and it has no man ashore in the hex or fewer than `beaten_share` times the other side's men ashore. Men are counted after the day's losses. If both sides attacked, each is tested, and both cannot be beaten at once while `beaten_share` is below 1.
-16. **A base with no men falls without a fight.** In a hex that is not contested, where a side has a unit on attack and the other side has a base and no man ashore, the other side is beaten in the ground combat phase of that day. *Needs review: without this an undefended base could never be taken. With it, landing one man on attack takes an empty airfield.*
+16. **A base with no men falls without a fight.** In a hex that is not contested, where a side has a unit on attack and the other side has a base and no man ashore, the other side is beaten in the ground combat phase of that day. *Agreed by the designer, Nov 13, 2026: without this an undefended base could never be taken. With it, landing one man on attack takes an empty airfield.*
 17. **A beaten side loses every base it holds in the hex.** Its men who are left stay ashore, unfed while it has no base there. They can be taken off by sea, and they can attack on a later day.
 
 ### A base that changes side
 
 18. **The base keeps its number, name, hex, guns and repair figures. Its side changes,** and it is on both sides' maps from then on, whatever it was before (decision 0066, 12). One event records it, caused by the fight or, under decision 16, by the posture order. Both sides see it.
 19. **Its stocks.** `captured_stock_share` of its supply and of its fuel stays, and the rest is lost. The event carries both.
-20. **Air groups at it are lost,** with every aircraft they have, ready and damaged, and their pilots where pilots are counted. The ground combat phase is after the last pulse, so none is in the air. A new event records each, as a group lost with its ship is recorded, and counts in the `aircraft_destroyed` tally the same way. The group has no place from then on: it flies nothing, receives no arrival, and an order to it is refused as for a group lost with its ship. *Needs review, with the next point: they are lost whole, with no way to fly out, because rebasing by order is still deferred (decision 0052, item 7).*
+20. **Air groups at it are lost,** with every aircraft they have, ready and damaged, and their pilots where pilots are counted. The ground combat phase is after the last pulse, so none is in the air. A new event records each, as a group lost with its ship is recorded, and counts in the `aircraft_destroyed` tally the same way. The group has no place from then on: it flies nothing, receives no arrival, and an order to it is refused as for a group lost with its ship. *The designer's answer, Nov 13, 2026: build rebasing first. A group can be flown out by a rebase order on any day before the base falls (decision 0091); one still there is lost whole.*
 21. **A ship in port at it is lost too,** recorded as sunk and scored as sunk. This is a ship in no task force (decision 0025). A task force in the hex is not touched: it is at sea.
 22. **What pointed at the base is put right, each with an event** seen by its own side:
     - a force of the beaten side whose home port it was has no home port;
@@ -83,7 +83,7 @@ None rests on a source. With them, 1,000 fresh, fed men who attack 1,000 who def
 
 ## The test
 
-Scenario 22, of made-up units and bases marked placeholder, in two parts: an attack that fails against a fed defender and stops by fatigue, and one that takes the base from an unfed defender. The hand calculation gives, for each day, each unit's firing men, shots and chance, the fatigue, and what follows from each count of hits; what the dice give is read from the run and checked against the breakdowns. Beside it, property tests:
+Scenario 23, of made-up units and bases marked placeholder, in two parts: an attack that fails against a fed defender and stops by fatigue, and one that takes the base from an unfed defender. The hand calculation gives, for each day, each unit's firing men, shots and chance, the fatigue, and what follows from each count of hits; what the dice give is read from the run and checked against the breakdowns. Beside it, property tests:
 
 - **A fight never creates men.** After every fight each side has no more men in the hex than before.
 - **More attackers never do worse.** Over a batch, with more attacking men the defender is beaten no later on average.
@@ -102,7 +102,7 @@ Scenario 22, of made-up units and bases marked placeholder, in two parts: an att
 
 ## What it leaves out
 
-- **Rebasing aircraft and flying out of a base about to fall.**
+- **Flying out on the day a base falls.** The fight is after the last pulse and a rebase order is given at the start of a day, so the move must be ordered a day ahead.
 - **Retreat.** A beaten side's men stay in the hex; there is no movement overland.
 - **Guns ashore firing on ships, and artillery closing an airfield.**
 - **Terrain, dug-in defence that grows, and kinds of unit.**
@@ -129,6 +129,8 @@ A base's side is now written by one rule, in one phase, after the last pulse and
 
 ## Questions for the designer
 
-1. **Decision 9:** a hit removes a fixed number of men. Agreed?
-2. **Decision 16:** a base with no men ashore falls, without a fight, to a unit on attack in its hex. Agreed?
-3. **Decisions 20 and 21:** when a base falls, the air groups at it are lost whole and a ship in its port is lost. Agreed, until aircraft can be rebased by order?
+Answered on Nov 13, 2026.
+
+1. **Decision 9:** a hit removes a fixed number of men. Agreed.
+2. **Decision 16:** a base with no men ashore falls, without a fight, to a unit on attack in its hex. Agreed.
+3. **Decisions 20 and 21:** build rebasing by order first (decision 0091). With it built, the groups still at a base that falls, and a ship in its port, are lost.
