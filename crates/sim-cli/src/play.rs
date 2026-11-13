@@ -48,7 +48,8 @@ Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--s
   --tools            Print the tools, each with its description and input
                      schema, as the MCP server lists them. Needs no game.
   --export-save F    Replay the game and write the saved game (which
-                     `sim-cli replay` runs with no player).
+                     `sim-cli replay` runs with no player). Only once the
+                     game is over: a saved game holds both sides' orders.
   --export-transcript F  Replay the game and write the transcript: every call
                      with the whole answer it was given, one JSON line each.
   --seed N           (first call) Play with seed N instead of the scenario's.";
@@ -202,6 +203,9 @@ fn read_calls(text: &str, file: &str) -> Result<(Header, Vec<(String, Value)>), 
 
 impl Client {
     fn finish(&self, save: Option<&str>, transcript: Option<&str>) -> Result<(), String> {
+        if save.is_some() && !self.server.session.is_over() {
+            return Err("the game is not over: a saved game holds both sides' orders and is given only when the game has ended".to_string());
+        }
         self.kept.finish(&self.server.session, save, transcript)
     }
 }

@@ -1223,6 +1223,29 @@ impl Scenario {
                     "arrival {number} brings pilots to {group_id}, whose pilots are not tracked"
                 )));
             }
+            // An arrival to a group aboard a ship must not overfill the ship:
+            // the aircraft the ship's groups start with plus every arrival to
+            // them by this day. Losses in play are ignored, so the check is
+            // conservative (it mirrors `ShipOverAircraftCapacity`).
+            if let AirGroupLocation::Ship(ship_id) = group.location {
+                let mut total = aboard.get(&ship_id).copied().unwrap_or(0);
+                for other in &file.arrival {
+                    let other_on_ship = truth
+                        .air_groups
+                        .get(&AirGroupId::new(other.air_group))
+                        .is_some_and(|g| g.location == AirGroupLocation::Ship(ship_id));
+                    if other_on_ship && other.day <= spec.day {
+                        total = total.saturating_add(other.aircraft);
+                    }
+                }
+                let capacity =
+                    ref_data.ship_classes[&truth.ships[&ship_id].class].aircraft_capacity;
+                if total > capacity {
+                    return Err(fail(format!(
+                        "arrival {number} would put {total} aircraft aboard {ship_id}, whose class carries {capacity}"
+                    )));
+                }
+            }
             truth.arrivals.push(Arrival {
                 day: spec.day,
                 air_group: group_id,
@@ -1941,6 +1964,36 @@ r = 0
                 .replace("= 1\naircraft", "= 1.5\naircraft")
         )
         .is_err());
+    }
+
+    #[test]
+    fn an_arrival_that_would_overfill_a_ship_is_refused() {
+        // Class 4 carries 36: 30 aboard, then 6 on day 1 fits, 7 does not.
+        let base = format!(
+            "{}{}",
+            force_with_ship(4),
+            carried_group(1, "ship = 1", 30, "allied")
+        );
+        parse_with(&format!("{base}{}", arrival(1, 1, 6, ""))).expect("30 and 6 fit in 36");
+        let message = error_of(&format!("{base}{}", arrival(1, 1, 7, "")));
+        assert!(
+            message.contains("arrival 1 would put 37 aircraft aboard ship:1")
+                && message.contains("class carries 36"),
+            "{message}"
+        );
+        // Arrivals add up by day, across the ship's groups: the second, on
+        // day 2, is the one that overfills it (30 + 3 + 4 = 37).
+        let two = format!(
+            "{base}{}{}{}",
+            carried_group(2, "ship = 1", 0, "allied"),
+            arrival(1, 1, 3, ""),
+            arrival(2, 2, 4, "")
+        );
+        let message = error_of(&two);
+        assert!(message.contains("arrival 2 would put 37"), "{message}");
+        // An arrival to a group at a base is not a ship's concern.
+        parse_with(&format!("{}{}", air_group(1, 1), arrival(1, 1, 500, "")))
+            .expect("a base takes any number");
     }
 
     /// An Allied group aboard a ship, `extra` replacing the placement.

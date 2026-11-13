@@ -410,10 +410,14 @@ impl Session {
             }
             self.world.submit_orders(side, orders);
         }
-        self.world
-            .resolve_day()
-            .map(|_| ())
-            .map_err(|e| CallError::new(format!("the day could not be resolved: {e}")))
+        self.world.resolve_day().map(|_| ()).map_err(|e| {
+            // The engine's own words may name the other side's units: they go
+            // to the umpire's stderr, and the caller is told one fixed thing.
+            eprintln!("operator: the day could not be resolved: {e}");
+            CallError::new(
+                "the day could not be resolved: the game has stopped on an internal error; the operator has the details",
+            )
+        })
     }
 }
 

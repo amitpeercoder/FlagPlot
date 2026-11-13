@@ -663,8 +663,9 @@ fn play_and_the_held_open_server_agree_on_scenario_5() {
 }
 
 #[test]
-fn play_and_the_held_open_server_agree_over_five_days_of_the_full_slice() {
-    play_equals_mcp(S07, 5, "equal7");
+fn play_and_the_held_open_server_agree_over_the_fourteen_days_of_the_full_slice() {
+    // To the end: `play` gives a saved game only once the game is over.
+    play_equals_mcp(S07, 14, "equal7");
 }
 
 #[test]
@@ -1030,10 +1031,10 @@ fn the_recorded_game_harness_passes_a_good_game_and_fails_an_altered_one() {
     assert!(check_recorded_game(&dir).is_err());
 }
 
-/// Finding 2 of the outside review of Nov 13, 2026 (prompt 11). Kept switched
-/// off until the architect rules on it; run with `--ignored` to see it.
+/// Finding 2 of the outside review of Nov 13, 2026 (prompt 11), ruled in
+/// decision 0085: `play --export-save` refuses a game that is not over, so no
+/// enemy order leaves it; `--export-transcript` alone stays allowed.
 #[test]
-#[ignore = "outside review finding 2: play --export-save writes the enemy's orders from a game that is not over, through the command the player is given"]
 fn play_exports_no_enemy_order_from_a_game_that_is_not_over() {
     let dir = temp_dir("review11");
     let (game, save) = (dir.join("g.txt"), dir.join("save.json"));
@@ -1059,22 +1060,32 @@ fn play_exports_no_enemy_order_from_a_game_that_is_not_over() {
         "the game must still be on: {answer}"
     );
     let exported = run(&["play", "--game", s(&game), "--export-save", s(&save)]);
-    assert!(
-        exported.status.success(),
-        "{}",
-        String::from_utf8_lossy(&exported.stderr)
-    );
-    let saved: Value = serde_json::from_str(&fs::read_to_string(&save).unwrap()).unwrap();
-    let enemy: Vec<&Value> = saved["orders"]
-        .as_array()
-        .expect("orders")
-        .iter()
-        .filter(|o| o["side"] == "japanese")
-        .collect();
-    assert!(
-        enemy.is_empty(),
-        "the Allied player exported {} Japanese orders mid-game, the first: {}",
-        enemy.len(),
-        enemy[0]
-    );
+    assert_eq!(exported.status.code(), Some(1));
+    assert!(exported.stdout.is_empty());
+    let why = String::from_utf8_lossy(&exported.stderr).into_owned();
+    assert!(why.contains("the game is not over"), "{why}");
+    // Given with the transcript, the whole call is refused too.
+    let transcript = dir.join("t.jsonl");
+    let both = run(&[
+        "play",
+        "--game",
+        s(&game),
+        "--export-save",
+        s(&save),
+        "--export-transcript",
+        s(&transcript),
+    ]);
+    assert_eq!(both.status.code(), Some(1));
+    assert!(!transcript.exists(), "a refused call writes nothing");
+    // The transcript alone is allowed.
+    let alone = run(&[
+        "play",
+        "--game",
+        s(&game),
+        "--export-transcript",
+        s(&transcript),
+    ]);
+    assert!(alone.status.success());
+    assert!(!save.exists(), "no saved game is written mid-game");
+    // No saved game exists, so no Japanese order was exported (the finding).
 }
