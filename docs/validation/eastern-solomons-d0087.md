@@ -11,11 +11,11 @@ Inputs: state hash layout flagplot-state-v7, scenario file hash a9443b066a393e0b
 - data/scenarios/../reference/search.toml 9d9cd2961a30d99a
 - data/scenarios/../reference/surface_combat.toml 1a9a0ae06d7282b1
 - data/scenarios/../reference/air_combat.toml fe71bc60e64ccbe2
-Measures: data/validation/eastern_solomons.toml (hash c52f629dc38335b8), 18 measures, 15 judged
+Measures: data/validation/eastern_solomons.toml (hash 031ce008f59f6d40), 18 measures, 15 judged
 
-Judged measures: 10 agree, 1 agree at the edge, 4 miss, of 15.
+Judged measures: 11 agree, 1 agree at the edge, 3 miss, of 15.
 
-**The battle does not pass:** 4 of 15 judged measures miss.
+**The battle does not pass:** 3 of 15 judged measures miss.
 
 | Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -32,7 +32,7 @@ Judged measures: 10 agree, 1 agree at the edge, 4 miss, of 15.
 | japanese_aircraft_attacking_enterprise_force | 37 | 0 to 37 | 37 | 611 of 1000 | 0 | agrees |
 | us_aircraft_attacking_ryujo | 38 | 0 to 38 | 0 | 488 of 1000 | 0 | agrees |
 | japanese_bombers_left_to_attack_enterprise_force | 20 to 27 | 0 to 24 | 20 | 539 of 1000 | 0 | reported |
-| us_aircraft_left_to_attack_ryujo | 36 | 0 to 38 | 0 | 34 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| us_aircraft_left_to_attack_ryujo | 38 | 0 to 38 | 0 | 273 of 1000 | 0 | agrees |
 | us_strike_on_the_japanese_fleet_carriers | 0 | 0 to 0 | 0 | 1000 of 1000 | 0 | agrees |
 | us_aircraft_claimed_per_hundred_shot_down | 237 to 362 | 100 to 200 | 148 | 9 of 997 | 3 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
 | japanese_aircraft_claimed_per_hundred_shot_down | 171 to 261 | 100 to 300 | 150 | 298 of 980 | 20 | agrees |
@@ -55,14 +55,6 @@ Judged measures: 10 agree, 1 agree at the edge, 4 miss, of 15.
 - Verdict: **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record
 - Spread over 1000 runs kept (0 left out): least 0, 5th 1, 25th 3, median 5, 75th 7, 95th 11, greatest 15
 - Each value and its runs: 0: 15, 1: 51, 2: 89, 3: 138, 4: 148, 5: 120, 6: 106, 7: 102, 8: 68, 9: 62, 10: 47, 11: 22, 12: 20, 13: 9, 14: 2, 15: 1
-
-### us_aircraft_left_to_attack_ryujo
-
-- Counts: US aircraft that attack a ship of the Ryujo detachment after the patrol and the guns have fired at their raid, escorts not counted, summed over the run
-- Record: 36 (rows 333, 1238, 334, 335, 234, 235, 351)
-- Verdict: **MISS**: fewer than 1 run in 20 holds the record
-- Spread over 1000 runs kept (0 left out): least 0, 5th 0, 25th 0, median 0, 75th 38, 95th 38, greatest 38
-- Each value and its runs: 0: 512, 36: 34, 37: 181, 38: 273
 
 ### us_aircraft_claimed_per_hundred_shot_down
 

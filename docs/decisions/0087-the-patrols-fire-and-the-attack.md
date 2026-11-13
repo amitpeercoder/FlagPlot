@@ -135,6 +135,8 @@ At Santa Cruz the same fighter director found the same, in words: "most enemy ai
 - The middle run now puts three bombs into Enterprise, as the record has. The bombers left to attack come into the record's 20 to 27.
 - **The new miss is a question for the measure.** The record's 36 US aircraft left to attack the Ryujo detachment are the 38 Saratoga launched less 2 forced back by mechanical trouble (row 333). None was shot down before the attack (rows 237, 354 to 357). The rules have no abort. So a run held 36 only when Ryujo's patrol shot down two before the attack, and with less of that fire before the attack fewer runs do. The runs give 38 in 273, 37 in 181 and 36 in 34. The agreement before rested on that substitution, not on the record's cause.
 
+- *Nov 13, 2026, after this result:* the architect changed the measure's record from 36 to 38, taking the aborts, which are outside the rules, out of it (the measures file's head and decision 0084 have dated notes). Remade on that record, the Eastern Solomons report reads judged 15, agree 11, at the edge 1, miss 3, and the measure agrees, held by 273 runs; `eastern-solomons-baseline.md` was remade with it.
+
 At Rabaul against Guadalcanal:
 - Judged 10: before, agree 4, at the edge 3, miss 3; after, agree 4, at the edge 2, miss 4.
 - Bombers lost (26 against 27), fighters lost (12) and US fighters lost (23) do not move: the patrol's hits are the same.
