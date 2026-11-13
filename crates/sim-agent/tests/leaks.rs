@@ -911,6 +911,12 @@ fn the_library_code_names_nothing_of_the_truth() {
     let banned = [
         "umpire",
         "EventLog",
+        // Ways to make or read an event, order or contact number of its own
+        // to set against the view's (decision 0086): an allocator, a world of
+        // its own, or a hasher fed an id.
+        "IdAllocator",
+        "World::new",
+        "Hasher",
         "TruthState",
         "BeliefState",
         "std::fs",

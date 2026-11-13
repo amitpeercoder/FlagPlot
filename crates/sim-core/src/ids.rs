@@ -96,7 +96,7 @@ impl fmt::Display for Shown {
 macro_rules! define_opaque_id {
     ($(#[$meta:meta])* $name:ident, $kind:literal) => {
         $(#[$meta])*
-        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
         pub struct $name(u32);
 
         impl $name {
@@ -280,7 +280,7 @@ impl<T: Alloc> Default for IdAllocator<T> {
 }
 
 /// A reference to any entity that can take part in an event.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum EntityRef {
     Ship(ShipId),
     TaskForce(TaskForceId),

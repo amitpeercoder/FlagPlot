@@ -15,7 +15,7 @@ use crate::state::{AirGroupLocation, ShipSystem, Side, SystemState};
 use crate::time::{ClockTime, Pulse};
 
 /// Something that led to an event.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Cause {
     Order(OrderId),
     Event(EventId),
