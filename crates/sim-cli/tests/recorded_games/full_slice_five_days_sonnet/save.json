@@ -18,7 +18,7 @@
     },
     {
       "file": "data/scenarios/../reference/aircraft_types_eastern_solomons.csv",
-      "hash": "b7a5c0d9ce3928e0"
+      "hash": "8a7741632e7e7ec6"
     },
     {
       "file": "data/scenarios/../reference/aircraft_types_rabaul_guadalcanal.csv",
@@ -53,23 +53,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "9f35b32b22902e29"
+      "hash": "9f5105bdb77d063a"
     },
     {
       "day": 2,
-      "hash": "afef63e38478037c"
+      "hash": "481f0a1b712d5b57"
     },
     {
       "day": 3,
-      "hash": "17f9ee0e08b1588c"
+      "hash": "bffb5a51d90dece3"
     },
     {
       "day": 4,
-      "hash": "815c1a006da0f227"
+      "hash": "56e69ef90ab94b64"
     },
     {
       "day": 5,
-      "hash": "3934620ed250fd03"
+      "hash": "d3497d2e7e864f88"
     }
   ],
   "orders": [
@@ -568,7 +568,7 @@
       "day": 4,
       "order": {
         "kind": "set_patrol_share",
-        "share": "0.8"
+        "share": "0.83"
       },
       "origin": {
         "intent": null,
@@ -594,7 +594,7 @@
       "day": 4,
       "order": {
         "kind": "set_patrol_share",
-        "share": "0.8"
+        "share": "0.7"
       },
       "origin": {
         "intent": null,
@@ -744,6 +744,58 @@
       },
       "side": "japanese",
       "unit": "air_group:116"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:121"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:122"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:123"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:124"
     },
     {
       "day": 4,
@@ -907,7 +959,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "e82b865cd11802fa"
+    "hash": "17971e14bda08cdc"
   },
   "seats": {
     "allied": "player",

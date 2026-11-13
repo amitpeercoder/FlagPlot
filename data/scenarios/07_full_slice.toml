@@ -10,7 +10,7 @@
 # (tests/scenario_07_determinism.rs).
 #
 # What was changed to put the pieces together:
-#   - The Eastern Solomons air groups on carriers are numbered 101 to 120
+#   - The Eastern Solomons air groups on carriers are numbered 101 to 126
 #     (their numbers there, plus 100), since the Rabaul scenario uses 1 to 3
 #     and 10 to 17. Their ships, task forces and bases keep their numbers.
 #   - Eastern Solomons' own Henderson Field is the Rabaul scenario's base 1.
@@ -765,15 +765,16 @@ ship = 1
 aircraft_type = 2001
 ready = 16
 
-# aircraft_operational row 218.
-
+# aircraft_operational row 218 has 14; seven of them flew the afternoon
+# search (air_unit_facts 253, the war diary's flight 395) and are this group.
+# The other seven are group 125 (decision 0081).
 [[air_group]]
 id = 104
 name = "VT-3"
 side = "allied"
 ship = 1
 aircraft_type = 2002
-ready = 14
+ready = 7
 
 # aircraft_on_hand row 207.
 
@@ -805,35 +806,38 @@ ship = 11
 aircraft_type = 2001
 ready = 15
 
-# aircraft_on_hand rows 177, 211.
-
+# aircraft_on_hand rows 177, 211 have 13; eight of them launched in the strike
+# on Ryujo (engagement_outcomes 231) and are this group. The other five are
+# group 126 (decision 0081).
 [[air_group]]
 id = 108
 name = "VT-8"
 side = "allied"
 ship = 11
 aircraft_type = 2002
-ready = 13
+ready = 8
 
-# aircraft_on_hand row 223.
-
+# aircraft_operational row 227 has 26; three of them escorted the second wave
+# (engagement_outcomes 1163) and are group 123 (decision 0081). The 23 here are
+# the first wave's escort and the patrol.
 [[air_group]]
 id = 111
 name = "Shokaku fighter unit"
 side = "japanese"
 ship = 19
 aircraft_type = 2003
-ready = 26
+ready = 23
 
-# aircraft_on_hand row 228.
-
+# aircraft_on_hand row 228 has 27: the 18 of the first wave
+# (engagement_outcomes 1159, 290) are this group, the 9 of the second wave
+# (1163) are group 121 (decision 0081).
 [[air_group]]
 id = 112
 name = "Shokaku bomber unit"
 side = "japanese"
 ship = 19
 aircraft_type = 2004
-ready = 27
+ready = 18
 
 # aircraft_on_hand row 229.
 
@@ -845,25 +849,27 @@ ship = 19
 aircraft_type = 2005
 ready = 18
 
-# aircraft_operational row 231.
-
+# aircraft_operational row 231 has 25; six of them escorted the second wave
+# (engagement_outcomes 1169) and are group 124 (decision 0081). The 19 here are
+# the first wave's escort and the patrol.
 [[air_group]]
 id = 114
 name = "Zuikaku fighter unit"
 side = "japanese"
 ship = 20
 aircraft_type = 2003
-ready = 25
+ready = 19
 
-# aircraft_on_hand row 232.
-
+# aircraft_on_hand row 232 has 27: the 9 of the first wave
+# (engagement_outcomes 1164, 290) are this group, the 18 of the second wave
+# (1169) are group 122 (decision 0081).
 [[air_group]]
 id = 115
 name = "Zuikaku bomber unit"
 side = "japanese"
 ship = 20
 aircraft_type = 2004
-ready = 27
+ready = 9
 
 # aircraft_on_hand row 233.
 
@@ -913,6 +919,73 @@ name = "Tone floatplanes"
 side = "japanese"
 ship = 34
 aircraft_type = 2006
+ready = 5
+
+# Decision 0081: an air group in a scenario is a launch the record has, where
+# the forms or rows give launches apart. Groups 121 to 126 are the launches that
+# the record has apart from the first ones of their units. Their numbers come
+# after every number the scenario had, so no group number changed its meaning.
+
+# The second wave from Shokaku: 9 dive bombers (engagement_outcomes 1163,
+# Shokaku's own form; 409), of the unit's 27 (air_unit_facts 228).
+[[air_group]]
+id = 121
+name = "Shokaku bomber unit, second wave"
+side = "japanese"
+ship = 19
+aircraft_type = 2004
+ready = 9
+
+# The second wave from Zuikaku: 18 dive bombers (engagement_outcomes 1169,
+# Zuikaku's own form; 409), of the unit's 27 (air_unit_facts 232).
+[[air_group]]
+id = 122
+name = "Zuikaku bomber unit, second wave"
+side = "japanese"
+ship = 20
+aircraft_type = 2004
+ready = 18
+
+# Shokaku's escort of the second wave: 3 fighters (engagement_outcomes 1163),
+# of the unit's 26 (air_unit_facts 227).
+[[air_group]]
+id = 123
+name = "Shokaku fighter unit, second wave escort"
+side = "japanese"
+ship = 19
+aircraft_type = 2003
+ready = 3
+
+# Zuikaku's escort of the second wave: 6 fighters (engagement_outcomes 1169),
+# of the unit's 25 (air_unit_facts 231).
+[[air_group]]
+id = 124
+name = "Zuikaku fighter unit, second wave escort"
+side = "japanese"
+ship = 20
+aircraft_type = 2003
+ready = 6
+
+# VT-3's other seven (air_unit_facts 218 less the seven of group 104): the 7
+# torpedo planes of Enterprise's attack group of 17:08, which found nothing
+# (engagement_outcomes 226, 378).
+[[air_group]]
+id = 125
+name = "VT-3, attack group"
+side = "allied"
+ship = 1
+aircraft_type = 2002
+ready = 7
+
+# VT-8's other five (air_unit_facts 177, 211 less the eight of group 108): the
+# torpedo planes of Saratoga's second group of 17:08 (engagement_outcomes 233,
+# 359).
+[[air_group]]
+id = 126
+name = "VT-8, second group"
+side = "allied"
+ship = 11
+aircraft_type = 2002
 ready = 5
 
 # Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
@@ -1135,8 +1208,13 @@ kind = "set_speed"
 knots = "20"
 
 # Air orders. Fighters patrol; the American fighters keep everything
-# overhead, the Japanese carriers keep four fifths and Ryujo 0.35 (so that 15
-# of her 23 fighters escort her raid and 8 stay over her).
+# overhead (row 226: the seven fighters of Enterprise's 17:08 attack group did
+# not go, so no American fighter group is a launch apart). The Japanese
+# carriers' shares send the first wave's escort as the forms give it
+# (decision 0081): Shokaku 4 (engagement_outcomes 1159), 23 x 0.83 = 19.09,
+# so 19 patrol and 4 escort; Zuikaku 6 (1164), 19 x 0.7 = 13.3, so 13 patrol
+# and 6 escort. Ryujo keeps 0.35, so that 15 of her 23 fighters escort her
+# raid and 8 stay over her (1171).
 
 [[order]]
 day = 4
@@ -1164,7 +1242,7 @@ day = 4
 side = "japanese"
 air_group = 111
 kind = "set_patrol_share"
-share = "0.8"
+share = "0.83"
 
 [[order]]
 day = 4
@@ -1178,7 +1256,7 @@ day = 4
 side = "japanese"
 air_group = 114
 kind = "set_patrol_share"
-share = "0.8"
+share = "0.7"
 
 [[order]]
 day = 4
@@ -1194,11 +1272,22 @@ air_group = 118
 kind = "set_patrol_share"
 share = "0.35"
 
-# Searches. The American one is Enterprise's scouting squadron to the north,
-# 290 to 090 at 200 miles: the arc of her afternoon search (engagement_events
-# 158, her action report; 157, the Navy narrative, has 270 to 090) and the
-# range of her dawn search (144, 146), which is also the SBD-3's derived
-# search range. The Japanese ones are set from the record (decision 0073).
+# Searches. The American one is Enterprise's afternoon search (decision
+# 0081): 23 aircraft, 290 to 090 at 250 miles (engagement_events 158, her
+# action report; 157, the Navy narrative, has 270 to 090 and the same 250;
+# outcomes 222). It was 16 SBDs and 7 TBFs (air_unit_facts 252, 253, the war
+# diary's flight 395). VS-5 (group 103, 16) stands for the 16 SBDs, which were
+# of VB-6 and VS-5 together, the squadrons not split in any row (VB-6 crews
+# are named among them, outcomes 368); group 104 is the 7 TBFs of VT-3 (369).
+# The afternoon search is taken and not the dawn one (20 SBDs, 290 to 070 at
+# 200, 144, 146), because a standing order flies both pulses and the
+# afternoon's is the search that met the enemy; the dawn search found nothing.
+# 250 is within the SBD-3's search radius of 397 and the TBF-1's of 420
+# (decision 0075). The Japanese ones are set from the record (decision 0073).
+# A LIMIT OF THE RULES, not the record: a search group never attacks what it
+# finds. Two of VB-6's searchers bombed a carrier and two a cruiser, and two
+# of VT-3's bombed Ryujo (outcomes 368, 369), hitting nothing (372); the
+# scenario cannot say so.
 # Japanese times in the record are Tokyo time, two hours behind the
 # scenario's clock; a search flies in every daylight pulse, from the pulse's
 # start, with every aircraft its group can fly (docs/rules chapter 3).
@@ -1217,7 +1306,23 @@ air_group = 103
 kind = "set_search_arc"
 from_deg = 290
 to_deg = 90
-range_nm = 200
+range_nm = 250
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 104
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 104
+kind = "set_search_arc"
+from_deg = 290
+to_deg = 90
+range_nm = 250
 
 # The vanguard's floatplanes: Nagumo's signal 19 had the 11th Sentai search
 # from 09:00 Tokyo time (11:00 here) on a base line of 150 degrees, six
@@ -1261,21 +1366,11 @@ range_nm = 330
 # her own division's war diary has her detached with Ryujo from 02:00 (327),
 # and the search was ordered to the vanguard's commander (437).
 
-# Every bomber group is ordered to strike ships.
-
-[[order]]
-day = 4
-side = "allied"
-air_group = 102
-kind = "set_air_mission"
-mission = "naval_strike"
-
-[[order]]
-day = 4
-side = "allied"
-air_group = 104
-kind = "set_air_mission"
-mission = "naval_strike"
+# Saratoga's strike on Ryujo: VB-3 (15), VS-3 (15) and the eight of VT-8
+# (group 108) strike ships. The record has 30 SBDs and 8 TBFs launched at 14:35
+# (engagement_outcomes 231), 29 and 7 reaching the target (333, 1238). VB-3's
+# two SBDs that flew later with Saratoga's second group (233) stay in VB-3:
+# no row makes them a launch the rules could fly apart (decision 0081).
 
 [[order]]
 day = 4
@@ -1297,6 +1392,37 @@ side = "allied"
 air_group = 108
 kind = "set_air_mission"
 mission = "naval_strike"
+
+# A LIMIT OF THE RULES, not the record: a strike that launches and finds
+# nothing cannot be ordered. Enterprise's attack group of 17:08, 11 SBDs and
+# 7 TBFs (engagement_outcomes 226), found nothing and attacked nothing (378).
+# VB-6 (group 102, 17; its 11 SBDs were hers) and VT-3's attack group (group
+# 125, 7) rest, which over the day has the record's effect: they attack
+# nothing. Saratoga's second group of 17:08 (233, 359; group 126, VT-8's five)
+# went at Kondo's force and Chitose, which the scenario does not hold, and
+# rests for the same reason. Rest is the default mission; it is ordered so
+# that the reason stands beside it (decision 0081).
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 102
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 125
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 4
+side = "allied"
+air_group = 126
+kind = "set_air_mission"
+mission = "rest"
 
 # The fleet carriers' dive bomber groups (112 and 115) hold their strike for the
 # enemy's fleet: target list carrier, battleship, cruiser, transport. The
@@ -1352,6 +1478,48 @@ side = "japanese"
 air_group = 116
 kind = "set_air_mission"
 mission = "naval_strike"
+
+# A LIMIT OF THE RULES, not the record: the second wave (groups 121 and 122,
+# with their escorts, groups 123 and 124) rests. The record has it launch at
+# 14:00 Tokyo time, 16:00 here (engagement_outcomes 1163, 1169, 409; events
+# 202), 27 dive bombers and 9 fighters, find nothing and attack nothing (409,
+# 1163: bombs jettisoned). The rules cannot order a launch that finds
+# nothing, so the second wave gets the order whose effect over the day is the
+# record's: it attacks nothing. Its launch stays in the record as what the
+# scenario does not fly. Its losses after dark (293; 1170) are outside the
+# rules and the scenario's 18:00 end. What it costs: in the record these 36
+# aircraft were away from their carriers from 16:00; here they are aboard all
+# day, so if Shokaku or Zuikaku is sunk they go down with her, and a hit that
+# puts her flight deck out keeps them aboard, where in the record they would
+# have had to land elsewhere or ditch (decision 0081).
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 121
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 122
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 123
+kind = "set_air_mission"
+mission = "rest"
+
+[[order]]
+day = 4
+side = "japanese"
+air_group = 124
+kind = "set_air_mission"
+mission = "rest"
 
 # Ryujo's attack unit raids Henderson Field (decision 0063, "What it costs"):
 # the record has her launch 15 fighters and 6 attack planes at it
