@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 89fa08fb5e2193b4  146 events
+day   1  hash 8f3ebeba2b1d1860  150 events
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Arrived at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -17,11 +17,11 @@ air_group:6 "Placeholder Japanese attack unit" (Japanese) aboard ship:2: 4 ready
 air_group:7 "Placeholder Japanese fighters" (Japanese) aboard ship:2: 3 ready, 1 damaged, 9 pilots, mission CombatAirPatrol, patrol share 0, extended reach, no arc
 ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 10, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder carrier J": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2906.666667 t of fuel, 0 t of supply
-ship:3 "Placeholder cruiser B1": afloat in task_force:3; damage flotation 95, fire 10; propulsion out, fire control degraded, main battery degraded, torpedo mounts degraded; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:4 "Placeholder cruiser B2": afloat in task_force:3; damage flotation 25, fire 10; main battery out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:5 "Placeholder cruiser B3": afloat in task_force:3; damage flotation 50, fire 35; propulsion degraded, fire control out, main battery out, torpedo mounts out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:6 "Placeholder cruiser A1": afloat in task_force:4; damage flotation 20, fire 0; fire control degraded; 560 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
-ship:7 "Placeholder cruiser A2": afloat in task_force:4; damage flotation 15, fire 0; main battery degraded; 620 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 5; propulsion out, fire control out, torpedo mounts degraded; 740 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B2": afloat in task_force:3; damage flotation 85, fire 65; propulsion out, fire control out, main battery out, torpedo mounts out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B3": afloat in task_force:3; damage flotation 45, fire 15; propulsion degraded, main battery out, torpedo mounts out; 740 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder cruiser A1": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
+ship:7 "Placeholder cruiser A2": afloat in task_force:4; damage flotation 10, fire 0; main battery degraded; 620 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
 ship:8 "Placeholder cruiser A3": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 560 gun rounds, torpedoes gone; 1930 t of fuel, 0 t of supply
 base:1 "Placeholder Allied field" (Allied) at (9,-6): 500 t of supply in stock
 Allied contact:1 at (2,-4): 3 ships, cruiser, age 2 pulses
@@ -29,13 +29,13 @@ Allied contact:2 at (9,0): 1 ships, carrier, age 0 pulses
 Allied claims 0 enemy ships sunk at (2,-4), day 1 night
 Allied claim at (9,0): 1 hit on a carrier, 0 sunk, day 1 afternoon
 Allied claim over (2,0): 4 aircraft shot down, day 1 afternoon
-Japanese contact:1 at (1,-4): 3 ships, cruiser, age 2 pulses
+Japanese contact:1 at (1,-4): 2 ships, cruiser, age 2 pulses
 Japanese contact:2 at (2,0): 1 ships, carrier, age 0 pulses
-Japanese claims 1 enemy ship sunk at (2,-4), day 1 night
+Japanese claims 2 enemy ships sunk at (2,-4), day 1 night
 Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
 Japanese claim over (9,-6): 0 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
-Allied: 5.5 points (aircraft_destroyed 11 = 5.5; ships_sunk 0 = 0; ships_crippled 0 = 0; base_open at base:1 0 of 1 days = 0), margin -2, stalemate
-Japanese: 7.5 points (aircraft_destroyed 5 = 2.5; ships_sunk 0 = 0; ships_crippled 1 = 0; base_open at base:1 1 of 1 days = 5), margin 2, stalemate
+Allied: 5.5 points (aircraft_destroyed 11 = 5.5; ships_sunk 0 = 0; ships_crippled 0 = 0; base_open at base:1 0 of 1 days = 0), margin -7, minor defeat
+Japanese: 12.5 points (aircraft_destroyed 5 = 2.5; ships_sunk 1 = 5; ships_crippled 1 = 0; base_open at base:1 1 of 1 days = 5), margin 7, minor victory
 History: Invented: a night action of cruisers, a carrier duel beyond the dive bombers' radius, and a raid on the field where the broken carrier's aircraft came down.
