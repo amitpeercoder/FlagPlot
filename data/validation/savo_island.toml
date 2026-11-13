@@ -84,6 +84,18 @@ system = "propulsion"
 rows = [779, 780, 781, 782, 783]
 reason = "All the damaged ships steamed home (779, 780, 781); Yubari and Tenryu had splinters or scratches only (782, 783)."
 
+[[measure]]
+id = "japanese_ships_sunk_or_stopped"
+counts = "Japanese ships sunk at the end of the run, or afloat with propulsion out, of the eight"
+record_low = 0
+record_high = 0
+judged = true
+take = "ships_sunk_or_system_out"
+ships = [1, 2, 3, 4, 5, 6, 7, 8]
+system = "propulsion"
+rows = [779, 780, 781, 782, 783, 785, 787, 778]
+reason = "No Japanese ship was sunk and none was slowed: the rows of japanese_ships_sunk and of japanese_ships_with_propulsion_out together. The two are also judged apart, and at the baseline each agreed because a ship stopped in the night was sunk by day and so left the count of the stopped. Taken together they cannot hide each other."
+
 # ----------------------------------------------------------------- hits
 
 [[measure]]
@@ -133,6 +145,18 @@ ships = [1, 2, 3, 4, 5, 6, 7, 8]
 weapons = ["torpedo"]
 rows = [779, 780, 781, 782, 783, 784, 785, 786, 787, 132]
 reason = "No row has a torpedo hit on any of them. The 1950 analysis's summary of Japanese damage has Chokai, Aoba and Kinugasa slightly damaged (779, 780, 781) and Yubari and Tenryu slightly damaged (782, 783), Yubari with only scratches from a destroyer's light fire (784); Furutaka and Yunagi are not among the damaged (785, 786, 787) and Kako took no hit (132). None is a statement about torpedoes: the architect reads slight damage and none as no torpedo hit, since a torpedo does not leave a cruiser slightly damaged. At the baseline Allied torpedoes hit about three times a run, and the ships they stopped were caught by day in fights the record does not have."
+
+[[measure]]
+id = "allied_torpedoes_fired"
+counts = "Torpedoes the two Allied groups fire in the run"
+record_low = 4
+record_high = 6
+judged = false
+take = "shots"
+side = "allied"
+weapon = "torpedo"
+rows = [46, 47, 57, 30, 180]
+reason = "Bagley fired four (46, 47). Patterson fired none (57). Canberra none or two (30, 180). Helm and Wilson have no row. Not judged until rows for those two exist: the record is a floor. It is reported because at the baseline the Allied groups fired about 48 a run."
 
 # ---------------------------------------------------------- hits a round
 #

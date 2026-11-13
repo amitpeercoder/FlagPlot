@@ -121,7 +121,7 @@ pub enum Real {
     Aircraft(BTreeSet<u32>, Vec<Cause>),
 }
 
-/// Whose shots a `shots_in_hundreds` counts: a side's, from `fire`, or the
+/// Whose shots a `shots_in_hundreds` or `shots` counts: a side's, from `fire`, or the
 /// named ships', from `shots_by`.
 pub enum Fired {
     Side(Side),
@@ -135,6 +135,10 @@ pub enum Take {
     HitsPerThousand(Side, Weapon),
     /// A side's shots with a weapon, or those of named ships.
     ShotsInHundreds(Fired, Weapon),
+    /// The same, in whole shots.
+    Shots(Fired, Weapon),
+    /// Ships sunk, or afloat with a system out, counted once each.
+    SunkOrSystemOut(BTreeSet<u32>, String),
     AirLosses(BTreeSet<u32>, Vec<Cause>),
     PilotsLost(BTreeSet<u32>),
     Ready(BTreeSet<u32>, usize),
@@ -293,7 +297,7 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
     };
     Ok(match take.as_str() {
         "ships_sunk" => Take::ShipsSunk(ships(measure)?),
-        "ships_with_system_out" => {
+        "ships_with_system_out" | "ships_sunk_or_system_out" => {
             let system = need(measure, "system", measure.system.as_ref())?;
             if !SYSTEMS.contains(&system.as_str()) {
                 return Err(format!(
@@ -301,24 +305,32 @@ pub fn parse(measure: &Measure, batch: &Batch) -> Result<Take, String> {
                     measure.id
                 ));
             }
-            Take::SystemOut(ships(measure)?, system.clone())
+            if take == "ships_sunk_or_system_out" {
+                Take::SunkOrSystemOut(ships(measure)?, system.clone())
+            } else {
+                Take::SystemOut(ships(measure)?, system.clone())
+            }
         }
         "hits_on" => Take::HitsOn(ships(measure)?, weapons(measure)?),
         "hits_per_thousand_shots" => Take::HitsPerThousand(side(measure)?, fired_weapon(measure)?),
-        "shots_in_hundreds" => {
+        "shots_in_hundreds" | "shots" => {
             // `ships` or `side`, never both: with `ships` the named ships'
             // shots are summed, and without it the side's, as before.
             let whose = match (&measure.ships, &measure.side) {
                 (Some(_), Some(_)) => {
                     return Err(format!(
-                        "measure {}: take shots_in_hundreds takes ships or side, not both",
+                        "measure {}: take {take} takes ships or side, not both",
                         measure.id
                     ))
                 }
                 (Some(_), None) => Fired::Ships(ships(measure)?),
                 (None, _) => Fired::Side(side(measure)?),
             };
-            Take::ShotsInHundreds(whose, fired_weapon(measure)?)
+            if take == "shots" {
+                Take::Shots(whose, fired_weapon(measure)?)
+            } else {
+                Take::ShotsInHundreds(whose, fired_weapon(measure)?)
+            }
         }
         "air_losses" => Take::AirLosses(groups(measure)?, causes(measure)?),
         "pilots_lost" => Take::PilotsLost(groups(measure)?),
@@ -473,6 +485,14 @@ fn ships_sunk(run: &PerRun, ships: &BTreeSet<u32>) -> u64 {
     run.sunk.iter().filter(|s| ships.contains(s)).count() as u64
 }
 
+fn system_out(run: &PerRun, ships: &BTreeSet<u32>, system: &str) -> BTreeSet<u32> {
+    run.systems_out
+        .iter()
+        .filter(|s| s.system == system && ships.contains(&s.ship))
+        .map(|s| s.ship)
+        .collect()
+}
+
 fn side_claims(run: &PerRun, side: Side, claim: Claim) -> u64 {
     let c = match side {
         Side::Japanese => &run.claims.japanese,
@@ -554,6 +574,11 @@ fn in_hundreds(shots: &str) -> Result<i64, String> {
 /// `floor(sum of shots / 100)`: the strings are `Fixed` decimals, added
 /// exactly and floored once.
 fn hundreds_of(shots: &[&str]) -> Result<i64, String> {
+    floored_sum(shots, 100)
+}
+
+/// `floor(sum of shots / divisor)`, added exactly and floored once.
+fn floored_sum(shots: &[&str], divisor: i128) -> Result<i64, String> {
     let mut raw = 0i128;
     for text in shots {
         let shots: Fixed = text
@@ -561,22 +586,25 @@ fn hundreds_of(shots: &[&str]) -> Result<i64, String> {
             .map_err(|_| format!("the shots \"{text}\" are not a decimal number"))?;
         raw += i128::from(shots.raw());
     }
-    i64::try_from(raw.max(0) / (100 * i128::from(Fixed::SCALE)))
+    i64::try_from(raw.max(0) / (divisor * i128::from(Fixed::SCALE)))
         .map_err(|_| "a count is too large".to_string())
 }
 
 /// The shots with a weapon of the named ships in a run, in hundreds.
 fn ships_in_hundreds(run: &PerRun, ships: &BTreeSet<u32>, weapon: Weapon) -> Result<i64, String> {
-    let shots: Vec<&str> = run
-        .shots_by
+    floored_sum(&ships_shots(run, ships, weapon), 100)
+}
+
+/// The shots of the named ships' with a weapon, as the batch gives them.
+fn ships_shots<'a>(run: &'a PerRun, ships: &BTreeSet<u32>, weapon: Weapon) -> Vec<&'a str> {
+    run.shots_by
         .iter()
         .filter(|s| ships.contains(&s.ship))
         .map(|s| match weapon {
             Weapon::Torpedo => s.torpedo.as_str(),
             _ => s.gun.as_str(),
         })
-        .collect();
-    hundreds_of(&shots)
+        .collect()
 }
 
 /// The value of a measure in one run: `None` when the run is left out.
@@ -584,14 +612,15 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
     let n = |x: u64| i64::try_from(x).map_err(|_| "a count is too large".to_string());
     Ok(Some(match take {
         Take::ShipsSunk(ships) => n(ships_sunk(run, ships))?,
-        Take::SystemOut(ships, system) => {
-            let out: BTreeSet<u32> = run
-                .systems_out
+        Take::SystemOut(ships, system) => system_out(run, ships, system).len() as i64,
+        Take::SunkOrSystemOut(ships, system) => {
+            // A ship that is both is counted once: only afloat ships count
+            // as stopped.
+            let stopped = system_out(run, ships, system)
                 .iter()
-                .filter(|s| &s.system == system && ships.contains(&s.ship))
-                .map(|s| s.ship)
-                .collect();
-            out.len() as i64
+                .filter(|ship| !run.sunk.contains(ship))
+                .count() as u64;
+            n(ships_sunk(run, ships) + stopped)?
         }
         Take::HitsOn(ships, weapons) => n(hits_on(run, ships, weapons))?,
         Take::HitsPerThousand(side, weapon) => {
@@ -603,6 +632,12 @@ pub fn value(take: &Take, ctx: &Context, run: &PerRun) -> Result<Option<i64>, St
         }
         Take::ShotsInHundreds(Fired::Ships(ships), weapon) => {
             ships_in_hundreds(run, ships, *weapon)?
+        }
+        Take::Shots(Fired::Side(side), weapon) => {
+            floored_sum(&[fired(run, *side, *weapon).shots.as_str()], 1)?
+        }
+        Take::Shots(Fired::Ships(ships), weapon) => {
+            floored_sum(&ships_shots(run, ships, *weapon), 1)?
         }
         Take::AirLosses(groups, causes) => n(air_losses(run, groups, causes))?,
         Take::PilotsLost(groups) => n(run
