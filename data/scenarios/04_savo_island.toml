@@ -270,9 +270,11 @@ stragglers = "detach"
 # of Nov 13, 2026; docs/step2-spec.md, "Tuning", 8). It is not moved in tuning.
 #
 # Southern group, 0.5: INVENTED, the rule's default. No row gives a level.
-# Crutchley's special instructions as keyed (engagement_events 20) hold no
-# order to hold a station, and the group's one cruiser left able to fight was
-# out of the action by 02:20 with nothing on how (rows 81 and 114).
+# What is quoted of Crutchley's special instructions says how the groups act,
+# not that they hold a station (engagement_outcomes 3697, 3698, 3529), and the
+# group's one cruiser left able to fight stood away to the westward on her
+# captain's chosen course (engagement_outcomes 3639, 3711; engagement_events
+# 81, 114): neither an order to hold nor a force with no part leaving.
 [[order]]
 day = 1
 side = "allied"
