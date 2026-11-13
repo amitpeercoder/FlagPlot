@@ -237,3 +237,7 @@ The report, `rabaul-guadalcanal-air-baseline.md`, is remade from that scenario: 
 1. The surface gap at Savo Island is one-sided and large. It waits for the experience rule.
 2. The air gaps pull in opposite directions in the two air battles: too few American losses in the carrier battle, too many fighter losses over Guadalcanal. One set of figures serves both, so the cause is more likely in which fights happen and who is in them (escorts, patrols, which strikes fly) than in a single chance. The strike target priority rule comes before the air figures are touched, as the spec already says.
 3. Claims overstate too little in every battle that measures them. The three claim chances are placeholders and are the simplest thing here to set from the record.
+
+## At the close of step 2, Nov 13, 2026
+
+This page reads the reports as each was made. Where step 2 ends is `docs/validation/step2-close.md`: the four battles' last reports in one table, every named miss and every agreement at the edge with its cause, and the decisions asked of the designer.
