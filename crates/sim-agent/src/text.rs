@@ -326,6 +326,7 @@ impl Briefing {
                     if x.attacks > 1 {
                         s.push_str(&format!(", {}", plural(x.attacks, "attack", "attacks")));
                     }
+                    s.push_str(&evs(&x.events));
                     s
                 }
                 None => format!(
@@ -361,12 +362,16 @@ impl Briefing {
                 s.push_str(&format!(", fire damage {}", v.0));
             }
             for change in &x.systems {
-                s.push_str(&format!(
-                    ", {} {} to {}",
-                    plain(change.system),
-                    change.before,
-                    change.after
-                ));
+                if change.before == change.after {
+                    s.push_str(&format!(", {} hit, no change", plain(change.system)));
+                } else {
+                    s.push_str(&format!(
+                        ", {} {} to {}",
+                        plain(change.system),
+                        change.before,
+                        change.after
+                    ));
+                }
             }
             s.push_str(&evs(&x.events));
             s
@@ -487,13 +492,30 @@ impl Briefing {
         }
 
         o.heading("AIR GROUPS");
+        // Squadron name: the part before the first comma.
+        let squadron = |g: &crate::lines::AirGroupLine| -> Option<String> {
+            g.air_group
+                .name
+                .as_ref()
+                .map(|n| n.split(',').next().unwrap_or(n).trim().to_string())
+        };
         o.each("Air groups", &self.air_groups, |g| {
-            let mut s = format!(
-                "{} ({}) at {}",
-                g.air_group.text(),
-                g.aircraft_type,
-                g.location.text()
-            );
+            let mut s = format!("{} ({})", g.air_group.text(), g.aircraft_type);
+            // Two of the side's own groups under one squadron's name are
+            // two groups with their own aircraft, not one counted twice.
+            if let Some(mine) = squadron(g) {
+                let others: Vec<&str> = self
+                    .air_groups
+                    .iter()
+                    .filter(|o| o.air_group.handle != g.air_group.handle)
+                    .filter(|o| squadron(o).as_deref() == Some(mine.as_str()))
+                    .map(|o| o.air_group.handle.as_str())
+                    .collect();
+                if !others.is_empty() {
+                    s.push_str(&format!(", a separate group from {},", others.join(", ")));
+                }
+            }
+            s.push_str(&format!(" at {}", g.location.text()));
             if let Some(p) = &g.place {
                 // A base's name is already in the location.
                 let base = g.location.handle.starts_with("base:");
@@ -582,7 +604,7 @@ impl Briefing {
             };
             if rules.supply {
                 o.line(format!(
-                    "{} at {}: supply {} t, fuel {} t",
+                    "{} at {}: supply {} t, fuel {} t (for ships; aircraft do not use it)",
                     b.base.text(),
                     b.place.coords(),
                     b.supply_t.0,
@@ -598,7 +620,7 @@ impl Briefing {
                 ));
             } else {
                 o.line(format!(
-                    "{} at {}: fuel {} t",
+                    "{} at {}: fuel {} t (for ships; aircraft do not use it)",
                     b.base.text(),
                     b.place.coords(),
                     b.fuel_t.0
@@ -703,6 +725,9 @@ impl Briefing {
             });
         } else {
             o.line("Air groups tired: fatigue is not in play".to_string());
+        }
+        if !rules.wear {
+            o.line("Aircraft wear: not in play".to_string());
         }
         o.each(
             "Task forces that cannot move or are slowed",

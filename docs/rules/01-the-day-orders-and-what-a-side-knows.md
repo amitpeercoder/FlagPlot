@@ -297,7 +297,7 @@ Anything that plays the game is handed a side's view and never the truth. The tr
 
 | What | How it is known |
 | --- | --- |
-| Its own ships, task forces, bases and air groups | Exactly. There is no fog over a side's own units. Supply and fuel stocks of its own bases and ships are shown. |
+| Its own ships, task forces, bases and air groups | Exactly. There is no fog over a side's own units. Supply and fuel stocks of its own bases and ships are shown. A base's fuel is for ships: no air rule reads it. |
 | Its own replacement streams and arrivals | Exactly. |
 | The enemy's forces | Only as contacts: a hex, a count, a kind and an age, each made and refreshed by reports, each possibly wrong. |
 | What it believes came of its fights and raids | Its claims. The damage it does to the enemy is truth and is not shown to it. The damage done to its own ships and aircraft is shown to it whole. |

@@ -269,6 +269,9 @@ pub struct AttackOnShip {
     pub attacks: u32,
     /// The aircraft counted in the air attacks.
     pub aircraft: Option<Dec>,
+    /// The side's own numbers of the air attacks counted here; empty for
+    /// salvos fired at the ship.
+    pub events: Vec<u32>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -1161,6 +1164,7 @@ impl Day {
                             weapon: Some(words::weapon(*weapon)),
                             attacks: 0,
                             aircraft: None,
+                            events: Vec::new(),
                         })
                         .attacks += 1;
                 }
@@ -1171,8 +1175,10 @@ impl Day {
                         weapon: None,
                         attacks: 0,
                         aircraft: Some(Dec(Fixed::ZERO)),
+                        events: Vec::new(),
                     });
                     entry.attacks += 1;
+                    entry.events.push(id);
                     entry.aircraft = Some(Dec(entry.aircraft.map_or(*shots, |d| d.0 + *shots)));
                 }
                 SideEventKind::AirAttack {
