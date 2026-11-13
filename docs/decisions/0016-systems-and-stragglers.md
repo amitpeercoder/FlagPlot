@@ -83,7 +83,7 @@ Still open: the log does not print the share-to-keep check itself. It is in the 
 ## Deferred
 
 - Towing and scuttling a ship dead in the water.
-- Repair and damage control, and fire that spreads or is fought.
+- Repair *(built: decision 0069, Nov 13, 2026)* and damage control, and fire that spreads or is fought.
 - Flooding that slows a ship. Damage to radar and other sensors.
 - Magazine explosions and other single hits that destroy a ship.
 - Forming and merging task forces by order.

@@ -50,10 +50,12 @@ A side sees: nothing is hidden. It is common knowledge.
 
 ### Before the pulses
 
-1. **Refuelling in port.** A force stopped at its own side's base fills its ships from the base's fuel stock. Chapter 2, Refuelling in port. [0045]
-2. **Orders intake.** Every order submitted since the last day is numbered, checked and applied, or refused. Events carry no pulse. This chapter, Orders. [0008, 0043]
+1. **Returns from the yard.** Each force whose day of return is this day, in force number order, comes back to its base with its ships repaired, refuelled and rearmed. Chapter 4, Repair. [0069]
+2. **Refuelling in port.** A force stopped at its own side's base fills its ships from the base's fuel stock. Chapter 2, Refuelling in port. [0045]
+3. **Orders intake.** Every order submitted since the last day is numbered, checked and applied, or refused. Events carry no pulse. A yard order is applied here, at its acceptance. This chapter, Orders. [0008, 0043, 0069]
+4. **Forward repair.** Each base that mends points of ship damage a day spends them on the forces stopped in its hex. Chapter 4, Repair. [0069]
 
-Refuelling comes before intake, so the orders of the day are checked against a state in which refuelling has happened.
+Returns come first, so that a force back from the yard is at its base for the day's refuelling and for its orders. Refuelling comes before intake, so the orders of the day are checked against a state in which refuelling has happened. Forward repair comes after intake, so that the days a yard order states are the days the force leaves with, and a force ordered to sail that morning is not repaired that day. None of the four is a pulse phase: each runs once a day, outside the pulses. [0045, 0069]
 
 ### Each pulse
 
@@ -148,14 +150,17 @@ The orders that exist are the ones in the tables below. The spec lists more (for
 | Set home port (a base) | The base a force heads for when it retires or sends stragglers home. | Home port |
 | Set readiness (normal or battle) | The readiness and the order that set it. It does not touch whether the force is alerted. | Readiness |
 | Detach ships (a list of ships) | Not a standing order. Splits the listed ships into a new force at once. | None |
+| Send to yard (`send_to_yard`, no arguments) | Not a standing order. Sends the whole force, stopped at a base that is a port for the yard, away to the yard at once (below, and chapter 4, Repair). The port is the base it is stopped at. | None |
 
-[0008, 0011, 0014, 0016, 0017, 0021, 0046]
+[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0069]
 
 A route, load or load-fuel order to a force that is out of fuel is refused (Every reason an order is refused, below; differences.md rows 17 and 34).
 
 The stance is engage or avoid. The straggler instruction is keep, detach, leave or retire. Chapter 4, Breaking off, and chapter 2, Stragglers, give what they do. The readiness is read by chapter 3, Readiness, alertness and fatigue of a force. [0014, 0016, 0021]
 
 Detaching ships creates a new force with the next number of its side's series (the Allied side's from 1,000,001, the Japanese side's from 2,000,001). It starts at the parent's exact position and leg (the charge of the leg with it), idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event that accepts the order is recorded first, then `ShipsDetached`, with the same day and pulse, citing the order (differences.md row 24). [0016, 0037, 0086]
+
+A send to yard order, when it is taken in, is applied after its acceptance: the ships leave the force for the yard, the force is left idle at its base with no route, cargo order, leg or alert, and `ForceLeftForYard` is recorded, citing the order, with the day of return. What the force keeps and what it gets on return are in chapter 4, Repair. An answer to a queued yard order states the day of return, or says the force does not return if that day is after the last day of the game. [0069]
 
 ### Air group orders
 
@@ -174,6 +179,8 @@ Detaching ships creates a new force with the next number of its side's series (t
 
 An order is checked once, at the moment it is taken in, against the state as it then stands. For the scenario's script and for orders a side hands in, that is the start of the day, after refuelling. For an order a rule gives inside a day, it is the moment the rule gives it. [0008, 0050]
 
+An order is taken in after the day's returns from the yard and refuelling, so a force that is back from the yard that day is checked as back. [0069]
+
 A side may ask the engine's own check early, with `check_order`. It numbers nothing, records nothing and changes nothing. Its answer is a forecast. The state may change before the day begins, and an order that passed the forecast can be refused at intake. [0050]
 
 The check reads the truth, but a refusal may cite only facts the issuing side can see: its own units, the map, ownership and the reference data. A fact the side cannot see is never a reason. "Not your unit" is the single reason for a target that does not exist and for a target that belongs to the enemy, so a refusal never shows that an enemy unit exists. "Not your base" does the same for bases. The base strike reason "not an enemy base" is worded to cover a base that does not exist and a base the group's own side holds. [0008, 0034, 0050]
@@ -189,7 +196,8 @@ For a task force order:
 | # | Reason | When |
 | --- | --- | --- |
 | 1 | Not your unit | The force does not exist, or its side is not the issuer's. |
-| 2 | No ship afloat | The force lists no ships (every ship it had is sunk). |
+| 2 | Away at the yard | The force is away at the yard and its day of return is after the day the order is taken in for. A force that is back by that day is checked as back, with the ships it has at the yard, so a side may give orders the evening before the day of return (`check_order` asks for the next day). Every task force order is tried against this, so a force away takes no orders. [0069] |
+| 3 | No ship afloat | The force lists no ships (every ship it had is sunk). A force away at the yard is read by the ships it has there. |
 
 Then, by kind:
 
@@ -208,6 +216,9 @@ Then, by kind:
 | Detach ships | No ships to detach | The list is empty. |
 | Detach ships | Ship not in task force | A listed ship is not afloat in the force. The first such ship in list order is named. |
 | Detach ships | Would leave the task force empty | The listed ships, counted once each, are every ship of the force. |
+| Send to yard | Under way | The force's status is under way, or it has a hex ahead. Out of fuel at a hex centre counts as stopped. |
+| Send to yard | No own base here | No base of the issuer's side is in the force's position. |
+| Send to yard | Not a port for the yard | A base of the side is in the force's hex but none has a `yard_passage_days`. |
 | Set speed in knots | Speed not above zero | The speed is zero or below. |
 | Set speed (cruise, full), Set mission, Set readiness, Unload | None | Always accepted. |
 
@@ -256,6 +267,8 @@ A task force remembers which order set its route, speed, rules of engagement and
 A route order that finds a force between two hexes may turn it round. The event `TaskForceTurnedBack` follows the order's acceptance and cites the order. [0005, 0017]
 
 A side sees: its own turn-back and detach events whole, with the cause. The enemy sees nothing. [0047]
+
+A side sees the same of the yard events: its own `ForceLeftForYard`, with the order as cause, whole. [0069]
 
 ### How orders are numbered and sorted
 
@@ -343,7 +356,8 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | Force alerted by contact, force became alert | Own force |
 | Force broke off | Own force |
 | Ships detached | The parent force is own |
-| Fuel burned, ship refuelled | Own ship |
+| Force left for the yard, force returned from the yard | Own force |
+| Fuel burned, ship refuelled, ship repaired | Own ship |
 | Cargo loaded, cargo unloaded | Own ship |
 | Ship damaged, system hit, ship sunk | Own ship |
 | Search flown | Own air group |
@@ -444,6 +458,8 @@ A rule's figures are **loaded** when the scenario file names the file that holds
 
 A scenario with air groups must also name search figures, and a scenario with surface combat figures must also name them. [0021, 0026, 0035, 0036, 0037, 0039]
 
+The five repair figures of decision 0069 are keys of `surface_combat.toml`, so they are always loaded and every one is required: `forward_repair_max_flotation`, `forward_repair_system_points`, `yard_days_per_flotation_point`, `yard_days_per_system_degraded` and `yard_days_per_system_out`. Chapter 4, Repair, gives what each means and what the loader refuses. The frozen step 1 copy holds the same values. The rules do nothing until a base has `ship_repair_points_per_day` or `yard_passage_days` (chapter 2, Bases on hexes). [0069]
+
 ### How a chance is rolled
 
 A chance is a fixed-point value from 0 to 1. It is rolled as follows. One draw is taken from the stream of the entity involved. The draw is a uniform whole number from 0 to 999,999. The roll succeeds if the draw is below the chance in millionths. A chance below 0 is read as 0 and a chance above 1 as 1. A chance of 0 never succeeds and a chance of 1 always does. The draw uses rejection, so no value is favoured. [0003]
@@ -498,13 +514,13 @@ The checks:
 
 | Group | What must hold |
 | --- | --- |
-| Ships | Fuel, supply aboard and cargo fuel are not negative. Fuel does not exceed the class's capacity. Supply and cargo fuel together do not exceed the class's cargo capacity. Flotation and fire damage are from 0 to 100. Gun rounds are not negative. A ship at 100 flotation damage is sunk. A ship has no damaged system its class lacks. |
-| Where a ship is | A ship in a task force is listed by that force. A ship in a port is at a base that exists. A force lists only ships that are in it, that exist, that are not sunk and that are of its side. No ship is listed by more than one force. |
+| Ships | Fuel, supply aboard and cargo fuel are not negative. Fuel does not exceed the class's capacity. Supply and cargo fuel together do not exceed the class's cargo capacity. Flotation and fire damage are from 0 to 100. Gun rounds are not negative. A ship at 100 flotation damage is sunk. A ship has no damaged system its class lacks. A ship's bank of forward repair points is from 0 to below `forward_repair_system_points`. |
+| Where a ship is | A ship in a task force is listed by that force. A ship in a port is at a base that exists. A force lists only ships that are in it, that exist, that are not sunk and that are of its side. No ship is listed by more than one force. A ship away at the yard is in no force's list and its location names a force that is away; a force that is away lists no ship. |
 | Task forces | The force's hex is on the map and navigable. A hex ahead is set if and only if progress toward it is above 0; it is adjacent, on the map, navigable, and the step to it crosses no closed side. Progress is at least 0 and below the leg's charge, `leg_nm`; `leg_nm` is from 1 to 40 miles and is 40 for a force at a centre. The keep share is from 0 to 1. Fatigue is from 0 to 100. A home port exists and is of the force's side. |
-| Bases | The hex is on the map. Supply and fuel stocks are not negative. A replacement stream names a base that exists. |
+| Bases | The hex is on the map. Supply and fuel stocks are not negative. A replacement stream names a base that exists. A base's repair points a day are not negative and its yard passage is not 0. |
 | Air groups | Each is at a base that exists or aboard a ship that exists, of its own side. The ready and damaged aircraft of the groups aboard a ship do not exceed the class's aircraft capacity. Fatigue and the rest threshold are from 0 to 100. |
 
-[0004, 0016, 0017, 0025, 0035, 0036, 0037, 0038, 0045, 0046]
+[0004, 0016, 0017, 0025, 0035, 0036, 0037, 0038, 0045, 0046, 0069]
 
 Three invariants hold by construction and are not checked: an air group's ready aircraft cannot be negative; an air group has exactly one location; and a side's belief is written only from reports. [0052]
 
@@ -512,7 +528,7 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v8`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0083, 0086]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v9`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0069, 0083, 0086]
 
 The hash covers: the seed; the day; every ship, task force, base, air group, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases or air groups, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 

@@ -165,11 +165,13 @@ Not built: an order to change which group is repaired first (0052), repair by ty
 
 A side sees: `AircraftRepaired` and `BaseSupplySpent` for its own groups and bases, whole. The enemy sees nothing.
 
+**A group aboard a ship at the yard.** An air group aboard a ship that is away at the yard (chapter 4, Repair) goes and returns with her, with its aircraft, damaged aircraft and pilots as they were. While she is away it flies nothing, is not repaired (a ship at the yard is not a place of the list above), gets no replacement, and its wear and fatigue do not change: it is neither stood down nor returned. An arrival due to it while it is away is not delivered and not kept (below). Its aircraft are not at a base, and a group cannot change base, so it does not fly ashore. The group is not lost: it is lost only with a sunk ship (`AirGroupLost`). Shipyard repair is for the ship and does not repair the group's damaged aircraft. [0069]
+
 ### Aircraft that arrive on a day
 
 A scenario may list arrivals (`[[arrival]]` entries in the scenario file): a day, an air group, a number of aircraft and a number of pilots. After repair and before replacements, on every day including day 1, each arrival due that day, in the order listed, is delivered:
 
-1. If the group does not exist, or is aboard a ship that has sunk, nothing happens and nothing is recorded.
+1. If the group does not exist, or is aboard a ship that has sunk or is away at the yard, nothing happens and nothing is recorded. The aircraft are not kept for the ship's return.
 2. The group's `ready` and `strength` each rise by the arrival's aircraft.
 3. If the group's pilots are tracked, its pilots rise by the arrival's pilots. If not, the arrival's pilots are dropped.
 4. `AircraftArrived` is recorded, with no cause (nothing orders it), giving the arrival, the group's ready aircraft, pilots and strength after it.

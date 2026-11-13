@@ -36,9 +36,9 @@ A side sees: not an event.
 
 ### Bases on hexes
 
-A base is on one hex. A hex may hold several bases, of one side or of both. A base has a side, a supply stock and a fuel stock, both in tons (see Cargo and Refuelling). The scenario's base entry gives the stocks (`supply_t`, `fuel_t`), the base's anti-aircraft shots (`anti_aircraft`, chapter 5) and the damaged aircraft it repairs each day (`aircraft_repairs_per_day`, chapter 5), each 0 if not given. A base must be on the map. It need not be on a navigable hex, but a force can use a base only if it can be at the base's hex, so a base on land serves nobody. Where a rule looks for a base of a side at a hex, it takes the lowest-numbered base that matches. [0011, 0045]
+A base is on one hex. A hex may hold several bases, of one side or of both. A base has a side, a supply stock and a fuel stock, both in tons (see Cargo and Refuelling). The scenario's base entry gives the stocks (`supply_t`, `fuel_t`), the base's anti-aircraft shots (`anti_aircraft`, chapter 5) and the damaged aircraft it repairs each day (`aircraft_repairs_per_day`, chapter 5), each 0 if not given. It also gives two keys for ship repair (chapter 4, Repair): `ship_repair_points_per_day`, the points of ship damage the base mends each day for the forces of its side stopped there (a whole number or a decimal string; 0 if not given; the loader refuses a negative value), and `yard_passage_days`, which makes the base a port for the yard with a passage there and back of that many days (a whole number of at least 1; none if not given; the loader refuses 0, a negative or a fractional value). A TOML float is refused for either. A base must be on the map. It need not be on a navigable hex, but a force can use a base only if it can be at the base's hex, so a base on land serves nobody. Where a rule looks for a base of a side at a hex, it takes the lowest-numbered base that matches. [0011, 0045, 0069]
 
-A ship that is not in a task force may be in a port, which is a base. Such a ship does not move, refuel or work cargo: every rule here acts on task forces. Its position is the base's hex, and an air group aboard it uses that position. [0025]
+A ship that is not in a task force may be in a port, which is a base. Such a ship does not move, refuel, work cargo or take ship repair: every rule here acts on task forces. Its position is the base's hex, and an air group aboard it uses that position. [0025]
 
 A side sees: bases are known to their own side. Chapter 1, What a side may know, gives what a side is told of the enemy's.
 
@@ -60,7 +60,7 @@ A task force is a set of ships of one side, with one position, one route, one sp
 
 | Field | Meaning |
 | --- | --- |
-| `ships` | The ships in it. A ship afloat is in exactly one task force or one port. A sunk ship is in neither |
+| `ships` | The ships in it. A ship afloat is in exactly one task force, one port or away at the yard. A sunk ship is in none. A force away at the yard lists none |
 | `from_hex`, `toward_hex`, `progress_nm`, `leg_nm` | Where it is on a leg, and what the leg is charged (see What a step is charged and Legs and position) |
 | `route` | Waypoints and the index of the next one |
 | `status` | idle (no route), underway, arrived (reached the last waypoint), or out of fuel |
@@ -70,8 +70,15 @@ A task force is a set of ships of one side, with one position, one route, one sp
 | `home_port` | A base of its own side, set by order |
 | `cargo_order` | The standing cargo order, if any |
 | `mission` | Set by order. No rule reads it. [glossary] |
+| `yard_trip` | Set while the force is away at the yard: its port, its day of return and the event that sent it. None otherwise (chapter 4, Repair) |
 
 A task force with no ship afloat is never ordered, never moves and never fights. Every order for it is rejected with "no ship afloat". [0016 item 16, 0044]
+
+A force that is **away at the yard** (chapter 4, Repair) has no ship in its list, because its ships are away. It is not sunk. It stays at its base's hex, idle, but no rule moves it, fights it, sights it, searches for it, refuels it or tires it: every rule that walks the forces skips a force with no ship. It takes no order until its day of return (chapter 1, Every reason an order is refused). Its ships are afloat and are counted as such (chapter 6). [0069]
+
+What the enemy knows of a force away: nothing new. Nothing can sight a force with no ships, so the enemy's contact of it is not refreshed. The contact ages and is dropped by the existing rule (`search.toml: contact_drop_age_pulses`) as for any force that steams out of sight, and no report is made of the departure or the return. The enemy's events in a game in which a force goes to the yard are those of the same game with the force left stopped in port, as long as nothing of the enemy's would have sighted it there. [0069]
+
+A scenario's `[[ship]]` entry may also start a ship damaged: `flotation_damage` and `fire_damage` (chapter 4, Damage tracks), each 0 if not given. A ship's bank of forward repair points and a force's `yard_trip` cannot be given by a scenario: every game starts with no work in hand and no force away. [0069]
 
 A side sees: its own task forces exactly. The enemy's task forces reach a side only as contacts (chapter 3, Belief).
 
@@ -319,7 +326,7 @@ Each decision records `ShipsDetached` (the parent, the new force, the ships, the
 
 A side sees: its own `ShipsDetached`, `ForceRetired`, and the order events. The enemy sees none.
 
-Limits: towing and scuttling, damage control, repair of any ship, and forming and merging forces by order are not built. [0016 deferred, 0052 items 7 and 11]
+Limits: towing and scuttling, damage control, and forming and merging forces by order are not built. Ship repair is in chapter 4, Repair. [0016 deferred, 0052 items 7 and 11, 0069]
 
 ## Readiness and fatigue
 
@@ -337,4 +344,5 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - The briefing, `measure` (passage, route and reach forecasts) and `explain`: not rules.
 - Which events each side may see, in full: chapter 1, What a side sees of an event.
 - Objectives, missions and results: chapter 6. No rule here reads a task force's mission.
-- Ground combat, land units, shore bombardment, base orders, ship repair and port damage: not built (0052).
+- Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
+- Ground combat, land units, shore bombardment, base orders and port damage: not built (0052).
