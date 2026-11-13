@@ -198,6 +198,8 @@ A side sees: `ReplacementsReceived` for its own groups, whole.
 
 After replacements, each base, in base order, pays `air_supply.toml: daily_supply_t_per_aircraft` for each aircraft located at it, ready and damaged together, as much as its stock covers. The aircraft are counted after the night's repairs and replacements. A base with no stock, or with nothing to pay, pays nothing and records nothing. Otherwise `BaseSupplySpent` (reason upkeep) records the aircraft, the amount asked, the amount paid and the stock left, with no cause. A payment the stock cannot cover takes what is left, and nothing is owed. No random number. [0039]
 
+The men ashore in the base's hex are charged after this, in the men's supply phase of the same night, on the same stock: `ground.toml: daily_supply_t_per_man` for each man. It is recorded as `BaseSupplySpent` with the reason men and a count of men, and the aircraft count 0. A stock too short for both feeds the aircraft: their charge is paid first. Every other `BaseSupplySpent` has 0 men. Chapter 7, The men's supply, gives the rule. [0039, 0066]
+
 A side sees: `BaseSupplySpent` for its own bases, whole.
 
 ### Stand-down and return
@@ -515,7 +517,7 @@ A side sees: `BaseSupplySpent` for its own bases, whole. The patrol itself has n
 Chapter 1, The night pulse and The morning and afternoon pulses, hold the sequence. The air rules in that order:
 
 1. At the start of every pulse: the grounded bases are fixed (A base out of supply).
-2. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, stand-down and return.
+2. In the night pulse, first: repair, arrivals, replacements (from day 2), daily supply, the men's supply (chapter 7), stand-down and return.
 3. In each daylight pulse: air search (chapter 3), the strike decision, air combat, then the wear phase, which runs running out of fuel, then coming home to no deck, then wear, then fatigue, then supply for sorties, and then movement (chapter 2).
 
 Contacts age at the end of every pulse (chapter 3). The end-of-day phases do nothing for aircraft. [0035, 0036, 0039, 0041, 0059]

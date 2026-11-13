@@ -207,7 +207,7 @@ Damage lands at the end of the round, one salvo at a time in the order they were
 
 ### Sinking
 
-A ship that sinks has its location set to sunk and leaves its task force. It is in no task force and no port and takes no further part in anything. `ShipSunk` records it and cites the damage event. Every air group aboard is lost with it, with all its aircraft and pilots (chapter 5, A group lost with its ship). [0014, 0025]
+A ship that sinks has its location set to sunk and leaves its task force. It is in no task force and no port and takes no further part in anything. `ShipSunk` records it and cites the damage event. Every air group aboard is lost with it, with all its aircraft and pilots (chapter 5, A group lost with its ship), and so are all the men aboard (chapter 7, Lost at sea). [0014, 0025, 0066]
 
 ### Named systems
 

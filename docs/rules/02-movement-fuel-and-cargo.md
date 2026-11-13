@@ -36,7 +36,7 @@ A side sees: not an event.
 
 ### Bases on hexes
 
-A base is on one hex. A hex may hold several bases, of one side or of both. A base has a side, a supply stock and a fuel stock, both in tons (see Cargo and Refuelling). The scenario's base entry gives the stocks (`supply_t`, `fuel_t`), the base's anti-aircraft shots (`anti_aircraft`, chapter 5) and the damaged aircraft it repairs each day (`aircraft_repairs_per_day`, chapter 5), each 0 if not given. It also gives two keys for ship repair (chapter 4, Repair): `ship_repair_points_per_day`, the points of ship damage the base mends each day for the forces of its side stopped there (a whole number or a decimal string; 0 if not given; the loader refuses a negative value), and `yard_passage_days`, which makes the base a port for the yard with a passage there and back of that many days (a whole number of at least 1; none if not given; the loader refuses 0, a negative or a fractional value). A TOML float is refused for either. A base must be on the map. It need not be on a navigable hex, but a force can use a base only if it can be at the base's hex, so a base on land serves nobody. Where a rule looks for a base of a side at a hex, it takes the lowest-numbered base that matches. [0011, 0045, 0069]
+A base is on one hex. A hex may hold several bases, of one side or of both. A base has a side, a supply stock and a fuel stock, both in tons (see Cargo and Refuelling). The scenario's base entry gives the stocks (`supply_t`, `fuel_t`), the base's anti-aircraft shots (`anti_aircraft`, chapter 5) and the damaged aircraft it repairs each day (`aircraft_repairs_per_day`, chapter 5), each 0 if not given. It also gives two keys for ship repair (chapter 4, Repair): `ship_repair_points_per_day`, the points of ship damage the base mends each day for the forces of its side stopped there (a whole number or a decimal string; 0 if not given; the loader refuses a negative value), and `yard_passage_days`, which makes the base a port for the yard with a passage there and back of that many days (a whole number of at least 1; none if not given; the loader refuses 0, a negative or a fractional value). A TOML float is refused for either. A base must be on the map. It need not be on a navigable hex, but a force can use a base only if it can be at the base's hex, so a base on land serves nobody. Where a rule looks for a base of a side at a hex, it takes the lowest-numbered base that matches. A base can also be formed in play: the first man a force lands in a hex where its side has no base forms one, with the next free number, the port of the hex, no stock, no guns and no repairs. It is on its own side's map only (chapter 7, A base formed by a landing). [0011, 0045, 0066, 0069]
 
 A ship that is not in a task force may be in a port, which is a base. Such a ship does not move, refuel, work cargo or take ship repair: every rule here acts on task forces. Its position is the base's hex, and an air group aboard it uses that position. [0025]
 
@@ -263,29 +263,30 @@ Limits: there is no refuelling at sea, no rate by port size, no port damage and 
 
 ### Cargo and capacity
 
-A ship carries supply and fuel as cargo, in tons. The two together never exceed the class's `cargo_capacity_t`. A ship's cargo fuel is not the fuel it steams on: it cannot burn it. A base holds a supply stock and a fuel stock. A scenario may start a ship with either. [0011 item 1, 0046]
+A ship carries supply and fuel as cargo, in tons. The two together never exceed the class's `cargo_capacity_t`. A ship also carries men up to the class's `troop_capacity_men`, a limit of its own: men take no cargo room and cargo takes no berths (chapter 7). A ship's cargo fuel is not the fuel it steams on: it cannot burn it. A base holds a supply stock and a fuel stock. A scenario may start a ship with either. [0011 item 1, 0046]
 
 A side sees: its own cargo events (below).
 
 ### Cargo orders
 
-There are three standing cargo orders. They are one kind of order, so a new one replaces the old. A completed order stays standing until it is replaced, and a route order does not clear it.
+There are four standing cargo orders. They are one kind of order, so a new one replaces the old. A completed order stays standing until it is replaced, and a route order does not clear it.
 
 | Order | Takes effect |
 | --- | --- |
 | Load (supply) | Fills each ship's room, which is capacity less supply and fuel cargo aboard, from the base's supply stock |
 | Load fuel | The same, from the base's fuel stock |
-| Unload | Moves everything aboard into the base's two stocks, supply first and then fuel |
+| Load with a land unit | Takes the unit's men ashore in the force's hex aboard first, then the named cargo (supply, fuel or none) as the rows above do. It needs no base: off a shore where the side has none it loads men only (chapter 7) |
+| Unload | Lands the men aboard first, on a coast hex only, then moves everything aboard into the base's two stocks, supply first and then fuel. The first man landed where the side has no base forms one (chapter 7) |
 
-A load order is rejected at intake if the force is underway, or if no base of the side is at the force's position. An unload order is always accepted. A load order to a force that is out of fuel is refused (differences.md row 17). Both take effect in a loading phase in which the force is idle or arrived and is exactly at the centre of a hex that holds a base of its own side, as refuelling asks (differences.md row 32). A force that is underway, or that is out of fuel, works no cargo, and neither does a force idle part-way along a leg, whatever hex it is nearest to. A load order is still accepted at intake for a force idle part-way along a leg whose position, the nearest centre, holds a base of its side; it then works no cargo until the force is at that centre (differences.md row 41). Cargo moves automatically only through an order: an arrival with no unload order does nothing. A force made by a split has no cargo order. [0011 items 6, 7, 10 and 13, 0046 items 2 and 3]
+A load order is rejected at intake if the force is underway, or if no base of the side is at the force's position. A load order with a unit has its own reasons and needs no base (chapter 1, Every reason an order is refused). An unload order is always accepted. A load order to a force that is out of fuel is refused (differences.md row 17). Both take effect in a loading phase in which the force is idle or arrived and is exactly at the centre of a hex that holds a base of its own side, as refuelling asks (differences.md row 32). Two cases need no base there, if the ground figures are loaded: a load order with a unit, which takes men off the shore, and an unload order with men aboard in a coast hex, which lands them (chapter 7). A force that is underway, or that is out of fuel, works no cargo, and neither does a force idle part-way along a leg, whatever hex it is nearest to. A load order is still accepted at intake for a force idle part-way along a leg whose position, the nearest centre, holds a base of its side; it then works no cargo until the force is at that centre (differences.md row 41). Cargo moves automatically only through an order: an arrival with no unload order does nothing. A force made by a split has no cargo order. [0011 items 6, 7, 10 and 13, 0046 items 2 and 3, 0066]
 
 A side sees: its own `OrderAccepted` or `OrderRejected`.
 
 ### Berths and lighters
 
-Berths belong to a base. At the start of each loading phase, before any cargo moves, berths are given out. Forces that hold a cargo order and can work cargo are taken in order of number, and the ships of each in order of number. A ship is given a berth if the base has one free and the ship has cargo to move. A ship has cargo to move if, for a load, it has room and the base's stock of that cargo is above 0 at this moment, and if, for an unload, it has supply or fuel cargo aboard. A force's scan stops at the first ship that finds no berth free. The stock read is the stock at the start of the phase, so a ship that loads from stock which another force unloads in the same phase has no berth, and works by lighter.
+Berths belong to a base, or, for a force that lands men where its side has no base, to the base that landing will form. They are counted for each side's landing place in a hex, which is its lowest-numbered base there. At the start of each loading phase, before any cargo moves, berths are given out. Forces that hold a cargo order and can work cargo are taken in order of number, and the ships of each in order of number. A ship is given a berth if the base has one free and the ship has cargo to move. A ship has cargo to move if, for a load, it has room and the base's stock of that cargo is above 0 at this moment, or, for a load with a unit, men of the unit are ashore and it has room for them; and if, for an unload, it has supply or fuel cargo aboard, or men aboard in a coast hex. A force's scan stops at the first ship that finds no berth free. The stock read is the stock at the start of the phase, so a ship that loads from stock which another force unloads in the same phase has no berth, and works by lighter.
 
-A ship with a berth moves cargo at the berth rate of the port. A ship with no berth works by lighter at the lighter rate, at the same time. A size 0 port has no berths, so every ship there works by lighter. There is no other limit on a port's daily traffic, and no limit on the size of ship a port takes. The figures are the placeholders of `port_sizes.csv`. [0011 items 2 to 4]
+A ship with a berth moves cargo at the berth rate of the port. A ship with no berth works by lighter at the lighter rate, at the same time. A size 0 port has no berths, so every ship there works by lighter. There is no other limit on a port's daily traffic, and no limit on the size of ship a port takes. The figures are the placeholders of `port_sizes.csv`. [0011 items 2 to 4, 0066]
 
 A side sees: not an event of its own. The effect is in the cargo events.
 
@@ -295,13 +296,13 @@ Cargo moves in the loading phase, the last phase of every pulse, for the hours t
 
 Forces are worked in order of number, ships in order of number, and each change to a stock applies at once, so a force that unloads can supply a force with a higher number that loads at the same base in the same pulse. For each ship:
 
-- The most it can move in the pulse is its rate (berth or lighter) times the hours worked.
+- The most it can move in the pulse is its rate (berth or lighter) times the hours worked. Each man moved takes `ground.toml: handling_t_per_man` of it, and men move first, in whole men (chapter 7, Men worked as cargo). The rest of the bullets count the tons left.
 - A load moves the least of that, the ship's room, and the stock.
 - An unload moves supply first, the least of the most it can move and the supply aboard, and then fuel, the least of what the pulse allows after the supply and the fuel cargo aboard. A ship works one cargo at a time, in that order.
 
-Each move above 0 records `CargoLoaded` or `CargoUnloaded`, naming the cargo, the tons moved, the tons now aboard and the base's stock, citing the cargo order and the force's arrival event. When a force has moved something this pulse and nothing remains to move, one more event is recorded: `LoadingComplete` or `UnloadingComplete`, with the hour the slowest ship finished (the start of work plus the longest of each ship's tons over its rate). It cites the cargo events. Nothing remains for a load when the stock is 0 or every ship is full. For an unload nothing remains when no ship has supply or fuel cargo aboard. [0011 items 5 and 12, 0046 items 4 and 5]
+Before the cargo, a landing divides units and forms a base where chapter 7 says, and each ship moves its men. Each move above 0 records `CargoLoaded` or `CargoUnloaded`, naming the cargo, the tons moved, the tons now aboard and the base's stock, citing the cargo order and the force's arrival event. When a force has moved something this pulse and nothing remains to move, one more event is recorded: `LoadingComplete` or `UnloadingComplete`, with the hour the slowest ship finished (the start of work plus the longest of each ship's tons over its rate). It cites the cargo events. Nothing remains for a load when the stock is 0 or every ship is full. For an unload nothing remains when no ship has supply or fuel cargo aboard and, in a coast hex, no ship has men aboard. A load order with a unit records `UnitLoadingComplete` in place of `LoadingComplete` (chapter 7). [0011 items 5 and 12, 0046 items 4 and 5, 0066]
 
-A side sees: `CargoLoaded`, `CargoUnloaded`, `LoadingComplete` and `UnloadingComplete` for its own ships and forces. The enemy sees none.
+A side sees: `CargoLoaded`, `CargoUnloaded`, `LoadingComplete`, `UnitLoadingComplete`, `UnloadingComplete`, `MenEmbarked` and `MenLanded` for its own ships and forces. The enemy sees none.
 
 ### At sea
 
@@ -345,4 +346,5 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Which events each side may see, in full: chapter 1, What a side sees of an event.
 - Objectives, missions and results: chapter 6. No rule here reads a task force's mission.
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
-- Ground combat, land units, shore bombardment, base orders and port damage: not built (0052).
+- Land units, men worked as cargo, troop capacity and the men's supply: chapter 7.
+- Ground combat, shore bombardment, base orders and port damage: not built (0052, 0066).

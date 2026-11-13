@@ -59,7 +59,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Whole, cut, absent** | How a side is given an event: as the log has it, cut down to what the side may know, or not at all (decision 0047). A cut event never names an enemy ship, task force or air group (decision 0065) | |
 | **Contact lost** | How a side is told a fight ended when its own force did not end it: the enemy's force sank, or broke off. The enemy's losses reach the side as its claim (decision 0085) | That the enemy got away |
 | **Hidden causes** | The flag on a side's event that says it may have causes the side cannot see. It is set for every event of a kind that can have them, so it says nothing of what the enemy did (decision 0085) | That this event had a cause that was dropped |
-| **Handle** | How a side names a unit to the game and is shown it: its kind and a number, `task_force:3`. A side's own ships, task forces and air groups are numbered 1, 2, 3 among its own; a base and a contact keep their numbers (decision 0086) | The unit's number in the scenario file, which the umpire's tools show |
+| **Handle** | How a side names a unit to the game and is shown it: its kind and a number, `task_force:3`. A side's own ships, task forces, air groups and land units are numbered 1, 2, 3 among its own; a base and a contact keep their numbers (decisions 0086, 0066) | The unit's number in the scenario file, which the umpire's tools show |
 | **Hex kind** | One of deep sea, shallow sea, coast and land | |
 | **Navigable** | Describes a hex a ship may enter: deep sea, shallow sea or coast that is on the map | Land |
 | **Closed side** | A side of a hex a ship cannot cross. A mark on either hex closes it | |
@@ -76,10 +76,20 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Stopped** | Not under way: idle, arrived or out of fuel. Refuelling and cargo handling also ask that the force is exactly at a hex centre | |
 | **Dead in the water** | Describes a ship whose propulsion is out, or the force it slows. Its speed is 0. Such a ship is also crippled | Heavily damaged |
 | **Sound ship** | A ship whose propulsion is working | A ship with no damage |
-| **Cargo** | Supply or fuel carried in a ship's hold, in tons, up to the class's cargo capacity | The fuel a ship steams on |
+| **Cargo** | Supply or fuel carried in a ship's hold, in tons, up to the class's cargo capacity. Men are not cargo room, but they are worked as cargo, at a weight per man (decision 0066) | The fuel a ship steams on; the men aboard |
 | **Stock** | The tons of supply or of fuel a base holds | |
 | **Berth** | A place alongside at a base where a ship works cargo at the berth rate. A size 0 port has none (decision 0011) | |
 | **Lighter** | The boats that work cargo for a ship with no berth, at the lighter rate | |
+| **Land unit** | A count of men with a side and a name, a stable number and no other state. Its men are ashore in one hex, aboard ships, or part each. It is destroyed when it has no men ashore or aboard, and keeps its number (decision 0066) | A unit in the sense of an order's addressee, which is a task force or an air group; a ship |
+| **Troop capacity** | A ship class's `troop_capacity_men`: the men a ship can carry, apart from her cargo capacity. Men take no cargo room and cargo takes no berths (decision 0066) | Cargo capacity |
+| **Men ashore, men aboard** | A land unit's men in a hex, and its men in ships, each ship holding men of one unit only. Men aboard do not eat and are lost with a ship that sinks (decision 0066) | |
+| **Weight of a man** | `ground.toml: handling_t_per_man`: the tons of a ship's work in a pulse that moving one man takes. Men are worked as cargo at it, first, in whole men (decision 0066) | The tons a man weighs |
+| **Load order with a unit** | The load order with a land unit beside its cargo, which is supply, fuel or none. It takes the unit's men ashore in the force's hex aboard first, and needs no base (decision 0066) | The plain load order, which names supply or fuel and needs a base |
+| **Landing** | A force's unload of men on a coast hex: men first, then supply and fuel. The first man landed where the side has no base forms one (decision 0066) | The unloading of cargo at a base |
+| **Base formed by a landing** | A base made in play by the first man a force lands in a hex where its side has none. It has the next free base number, the port of the hex, no stock, no guns and no repairs, and is not on the enemy's map (decision 0066) | A base the scenario starts with |
+| **On the map** | Describes a base the scenario starts with: its number, name, hex and holding side are told to both sides. A base formed by a landing is not on the map of the enemy, who is refused a base strike against it as against a base that does not exist (decision 0066) | The map of hexes |
+| **Unit divided, detachment** | A land unit's men aboard a force, made a new unit when the force is about to land them in a hex while the unit has men ashore in another. The new unit is named for the unit it came from, ", detachment" and its number. Units are never merged (decision 0066) | A task force detached by order |
+| **Fed, unfed** | Of the men ashore in a hex on a night: the men fed are the tons their base paid over the charge for a man, cut; the rest are unfed, and a share of them is lost (decision 0066) | Men aboard, who are neither |
 | **Arc** | The sector an air group searches: a from bearing, a to bearing and a range in miles | |
 | **Bearing** | Degrees clockwise from north, in whole multiples of ten | |
 | **Sweep width** | The width of sea one aircraft of a type sees (`aircraft_types*.csv: sweep_width_nm`) | |

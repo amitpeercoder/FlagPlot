@@ -1,6 +1,6 @@
 # 0066: Land units, carried by sea and fed from a base
 
-Status: confirmed. The designer approved the plan on Nov 12, 2026 (`docs/design/ground-combat.md`, stage 1) and agreed decisions 7, 12 and 14 on Nov 13, 2026. The architect added the points under "Settled before the build" the same day. The hand calculation is in `tests/scenario_21_landing.rs`. The figures are placeholders set by the architect. Not built yet.
+Status: confirmed. The designer approved the plan on Nov 12, 2026 (`docs/design/ground-combat.md`, stage 1) and agreed decisions 7, 12 and 14 on Nov 13, 2026. The architect added the points under "Settled before the build" the same day. The hand calculation is in `tests/scenario_21_landing.rs`. The figures are placeholders set by the architect. Built on Nov 13, 2026 (stage 1, scenario 21; see "As built" at the end).
 
 ## The gap
 
@@ -181,3 +181,26 @@ Answered on Nov 13, 2026.
 1. **Decision 7:** one figure for the weight of a man. Agreed.
 2. **Decision 12:** a base formed by a landing is hidden from the enemy until a report shows it. Agreed.
 3. **Decision 14:** a unit is divided when its men would be ashore in two hexes. Agreed.
+
+## As built
+
+Built on Nov 13, 2026, to the sections above and the architect's hand calculation in `tests/scenario_21_landing.rs`. Nothing above this section was changed except the status line. Every choice the build made that the record did not is listed here. The rulebook's chapter 7 states the rules as built.
+
+- **Ids.** The id type `LandUnitId` and the entity kind code 6 (`EntityRef::LandUnit`) already existed, reserved, so no code was added to them and nothing was renumbered.
+- **Numbers of units and bases made in play.** A unit made by division and a base formed by a landing take the next free number counted over all units or all bases of both sides (the highest plus one), as decision 14 and 11 say, and not a side's own series of decision 0086. sim-agent shows a side its land units numbered among its own (decision 0086, 3), so the player sees its own count; bases keep their numbers. The leak the record notes in "What it costs" stays.
+- **The name of a formed base** is "Landing at (q,r)", with the hex.
+- **The state.** `Ship::troops` (the unit and the men), `Base::on_map`, `CargoOrder::unit`, the cargo action `LoadNoCargo` (code 4, added at the end), and `TruthState::land_units`, each unit with its men ashore and hex. Hash version 10. The order is in `hash.rs`: a ship's `troops` after her `system_repair_points`; a base's `on_map` after its `yard_passage_days`; a cargo order's unit after its order; the land units after the arrivals, each as number, side, men ashore and hex (the name is not hashed).
+- **New events**, at the end of the enum: `MenEmbarked`, `MenLanded`, `BaseFormed`, `UnitDivided`, `MenLostWithShip`, `MenFed`, `MenLostUnfed`, `LandUnitDestroyed` and `UnitLoadingComplete`. The last is the completion of a load order with a unit, which may have no base and no cargo, so `LoadingComplete` was left as it was. `BaseSupplySpent` gains `men` and the reason `men`; every other reason has 0 men. A `MenFed` event is recorded for every side and hex with men ashore, also where nothing was paid; the charge itself is a `BaseSupplySpent` only where a base with stock paid.
+- **Causes.** A landing cites the unload order, the arrival and, in the pulse a base was formed, the `BaseFormed` event, and its unit's `UnitDivided` event. A loss unfed cites the `MenFed` event. Men lost with a ship cite the `ShipSunk`. A unit destroyed cites the loss that emptied it.
+- **Berths** are given out by side and hex (the side's landing place) and not by base number. With one lowest-numbered base for each side and hex this is the same as before.
+- **The order within a landing.** A landing happens before any ship of the force moves cargo in that pulse: units are divided and the base is formed first if any ship can land at least one man in the pulse, so supply unloaded in the same phase goes into the new base.
+- **A hex that is not coast.** Men stay aboard and an unload counts as complete without them.
+- **The intake order of the refusals** for a load with a unit: under way, out of fuel, not your land unit (one reason for a unit that does not exist and one of the enemy), no men ashore here, no troop capacity.
+- **The loader** refuses a land unit with no ground file, with no men, numbered 0 or 1,000,000 and above, given twice, with both or neither of a hex and a task force, ashore off the map or in a hex that is neither coast nor land, aboard an unknown force or one of the other side, or that does not fit aboard.
+- **The ground figures.** The weight of a man and his charge must be above 0, and the share lost from 0 to 1; `World::new` refuses them otherwise.
+- **sim-agent.** Land units are a `land_units` section of `list_forces` and `get_entity("land_unit:N")`; a ship's detail shows its `troops`; the briefing has a land units part (`crates/sim-agent/schemas/README.md`, "Land units", lists it); `fed_last_night` has its own words; `rules_in_play.supply` is true when the ground figures are loaded as well. The schema `version` stays 3 because only fields were added, by the crate's version rule. The record's "with their versions" was not applied; the architect to confirm.
+- **The viewer** rebuilds land units from the events and shows men ashore and formed bases in the hover readout. It has no map marker and no panel for them.
+- **The legibility test** of the record (a cheap model asked why a unit lost men) was not run: the repository's legibility tests are wording tests with no model, and a test that runs a model needs the network.
+- **The property "more supply never loses more men"** is tested for the half "more supply", over eight sizes of the load. The half "landed sooner" is not tested.
+
+Differences from the record's rules: none. The points above are the names and orders the record left open.

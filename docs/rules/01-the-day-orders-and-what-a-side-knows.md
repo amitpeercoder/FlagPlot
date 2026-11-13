@@ -1,6 +1,6 @@
 # The day, orders, and what a side knows
 
-This chapter holds the rules that frame every other rule: how time is counted, the order in which a day resolves, the orders a side can give and how they are checked, what a side may know, how numbers and chance work, what is checked when a day closes, and what a saved game holds. Chapters 2 to 6 hold what happens inside the phases named here.
+This chapter holds the rules that frame every other rule: how time is counted, the order in which a day resolves, the orders a side can give and how they are checked, what a side may know, how numbers and chance work, what is checked when a day closes, and what a saved game holds. Chapters 2 to 7 hold what happens inside the phases named here.
 
 ## Time
 
@@ -77,14 +77,15 @@ Steps 1 to 3 run before the pulse's first phase. Each of them does nothing unles
 | 2 | Air arrival | Aircraft and pilots the scenario delivers on this day join their groups. | Chapter 5, Aircraft that arrive on a day |
 | 3 | Air replacement | Replacement aircraft and pilots arrive at the bases the scenario names, from day 2. | Chapter 5, Replacements |
 | 4 | Air supply upkeep | Each base pays the daily supply for the aircraft at it. | Chapter 5, Daily supply |
-| 5 | Air group rest | The staff stands tired groups down and returns rested ones. | Chapter 5, Stand-down and return |
-| 6 | Movement | The straggler pass, then forces move in order of clock time, and fight where they meet. | Chapter 2, Movement and Stragglers; chapter 4 |
-| 7 | Night search | Empty. No search flies where it is dark. | Chapter 3, Air search |
-| 8 | Surface engagements | Empty slot. The fights happen inside movement. | Chapter 4, Meeting |
-| 9 | Shore bombardment | Empty. Not built. | None |
-| 10 | Loading | Cargo is loaded and unloaded at bases. | Chapter 2, Cargo |
+| 5 | Men's supply | Each side's men ashore are fed from its base in their hex, the unfed are lost in part. Runs only if the ground figures are loaded. | Chapter 7, The men's supply |
+| 6 | Air group rest | The staff stands tired groups down and returns rested ones. | Chapter 5, Stand-down and return |
+| 7 | Movement | The straggler pass, then forces move in order of clock time, and fight where they meet. | Chapter 2, Movement and Stragglers; chapter 4 |
+| 8 | Night search | Empty. No search flies where it is dark. | Chapter 3, Air search |
+| 9 | Surface engagements | Empty slot. The fights happen inside movement. | Chapter 4, Meeting |
+| 10 | Shore bombardment | Empty. Not built. | None |
+| 11 | Loading | Cargo is loaded and unloaded at bases, and men are taken aboard and landed. | Chapter 2, Cargo; chapter 7 |
 
-[0001, 0022, 0035, 0036, 0038, 0039, 0041, 0052]
+The men's supply follows the daily supply for aircraft, so both charges fall on one stock with the aircraft's first. [0001, 0022, 0035, 0036, 0038, 0039, 0041, 0052, 0066]
 
 ### The morning and afternoon pulses
 
@@ -98,7 +99,7 @@ Both use the same list.
 | 4 | Aircraft wear | Aircraft that flew beyond their radius may run out of fuel, aircraft whose deck is lost land elsewhere or come down in the sea, the rest roll for wear, air groups gain fatigue, and bases pay for sorties. | Chapter 5, The end of a daylight pulse for aircraft |
 | 5 | Movement | The straggler pass, then forces move in order of clock time, and fight where they meet. | Chapter 2, Movement and Stragglers; chapter 4 |
 | 6 | Surface engagements | Empty slot. The fights happen inside movement. | Chapter 4, Meeting |
-| 7 | Loading | Cargo is loaded and unloaded at bases. | Chapter 2, Cargo |
+| 7 | Loading | Cargo is loaded and unloaded at bases, and men are taken aboard and landed. | Chapter 2, Cargo; chapter 7 |
 
 Air search runs before movement, so it sees the positions at the start of the pulse. No aircraft repair, arrival, replacement, upkeep or rest phase runs in a daylight pulse. Aircraft fly only in daylight pulses. [0012, 0026, 0035, 0036, 0039]
 
@@ -112,7 +113,7 @@ The five end-of-day phases run in this order. The first four are empty. [0052, 0
 
 | Phase | State |
 | --- | --- |
-| Ground combat | Not built. Land units and ground combat are deferred to the step whose scenario first needs them. [0052] |
+| Ground combat | Not built. Land units exist (chapter 7) and do not fight yet; the fight is stage 2 of the ground combat plan. [0052, 0066] |
 | Logistics | Empty. Refuelling is done before intake, and base supply is spent inside the air phases. [0045, 0039] |
 | Air group upkeep | Empty. Repair, arrival, replacement, supply and rest run at the start of the night pulse. [0035, 0036, 0038] |
 | Intelligence update | Empty. Contacts age at the end of every pulse, and reports merge when they arrive. [0012] |
@@ -145,16 +146,17 @@ The orders that exist are the ones in the tables below. The spec lists more (for
 | Set mission (transport, surface combat, carrier, bombardment, escort) | The task force's mission. No rule reads it. | Mission |
 | Load | A standing cargo order to fill every ship with supply from the base here. | Cargo |
 | Load fuel | A standing cargo order to fill every ship with fuel as cargo from the base here. | Cargo |
-| Unload | A standing cargo order to land all cargo, supply first, then fuel. | Cargo |
+| Load with a land unit (`load` with a `unit` and a cargo of supply, fuel or none) | A standing cargo order to take the unit's men ashore here aboard, then the named cargo. It needs no base (chapter 7, The load order with a unit). | Cargo |
+| Unload | A standing cargo order to land all cargo, men first, then supply, then fuel. | Cargo |
 | Set rules of engagement (stance, break-off level, straggler instruction, keep share) | All four figures together, and the order that set them. | Rules of engagement |
 | Set home port (a base) | The base a force heads for when it retires or sends stragglers home. | Home port |
 | Set readiness (normal or battle) | The readiness and the order that set it. It does not touch whether the force is alerted. | Readiness |
 | Detach ships (a list of ships) | Not a standing order. Splits the listed ships into a new force at once. | None |
 | Send to yard (`send_to_yard`, no arguments) | Not a standing order. Sends the whole force, stopped at a base that is a port for the yard, away to the yard at once (below, and chapter 4, Repair). The port is the base it is stopped at. | None |
 
-[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0069]
+[0008, 0011, 0014, 0016, 0017, 0021, 0046, 0066, 0069]
 
-A route, load or load-fuel order to a force that is out of fuel is refused (Every reason an order is refused, below; differences.md rows 17 and 34).
+A route, load, load-fuel or load-with-a-unit order to a force that is out of fuel is refused (Every reason an order is refused, below; differences.md rows 17 and 34).
 
 The stance is engage or avoid. The straggler instruction is keep, detach, leave or retire. Chapter 4, Breaking off, and chapter 2, Stragglers, give what they do. The readiness is read by chapter 3, Readiness, alertness and fatigue of a force. [0014, 0016, 0021]
 
@@ -183,7 +185,7 @@ An order is taken in after the day's returns from the yard and refuelling, so a 
 
 A side may ask the engine's own check early, with `check_order`. It numbers nothing, records nothing and changes nothing. Its answer is a forecast. The state may change before the day begins, and an order that passed the forecast can be refused at intake. [0050]
 
-The check reads the truth, but a refusal may cite only facts the issuing side can see: its own units, the map, ownership and the reference data. A fact the side cannot see is never a reason. "Not your unit" is the single reason for a target that does not exist and for a target that belongs to the enemy, so a refusal never shows that an enemy unit exists. "Not your base" does the same for bases. The base strike reason "not an enemy base" is worded to cover a base that does not exist and a base the group's own side holds. [0008, 0034, 0050]
+The check reads the truth, but a refusal may cite only facts the issuing side can see: its own units, the map, ownership and the reference data. A fact the side cannot see is never a reason. "Not your unit" is the single reason for a target that does not exist and for a target that belongs to the enemy, so a refusal never shows that an enemy unit exists. "Not your base" does the same for bases. "Not your land unit" does the same for land units. The base strike reason "not an enemy base" is worded to cover a base that does not exist, a base the group's own side holds and a base the enemy formed by a landing, which is not on the group's side's map. [0008, 0034, 0050, 0066]
 
 Limit: 0008 said an order that would fail on something the side does not know is accepted and fails in execution. No such failure exists, because every check today reads only what the side can see. The source comment on the check says orders are checked against the truth. [0008]
 
@@ -210,6 +212,11 @@ Then, by kind:
 | Load, Load fuel | Under way | The force's status is under way. |
 | Load, Load fuel | Out of fuel | The force's status is out of fuel. [differences.md row 17] |
 | Load, Load fuel | No own base here | No base of the issuer's side is in the force's position. |
+| Load with a unit | Under way | The force's status is under way. |
+| Load with a unit | Out of fuel | The force's status is out of fuel. |
+| Load with a unit | Not your land unit | The unit does not exist or is not the issuer's. One reason for both. |
+| Load with a unit | No men ashore here | The unit has no men ashore, or they are not in the force's position. |
+| Load with a unit | No troop capacity | No ship afloat in the force is of a class with a troop capacity above 0. No base is needed. [0066 item 6] |
 | Set rules of engagement | Break-off level out of range | The level is below 0 or above 1. |
 | Set rules of engagement | Keep share out of range | The share is below 0 or above 1. Tried after the break-off level. |
 | Set home port | Not your base | The base does not exist or is not the issuer's. |
@@ -236,7 +243,7 @@ Then, by kind:
 | Naval strike | No air combat figures | The scenario has none. |
 | Naval strike | Aircraft attack with nothing | The group's aircraft type has no attack weapon. |
 | Base strike | No air combat figures; aircraft attack with nothing | As for a naval strike, tried in that order. |
-| Base strike | Not an enemy base | The base does not exist or is the group's own side's. Tried after the two above. |
+| Base strike | Not an enemy base | The base does not exist, is the group's own side's, or is one the enemy formed by a landing and is not on the group's side's map (chapter 7). Tried after the two above. |
 | Combat air patrol | No air combat figures | The scenario has none. |
 | Set target priority | Target list empty | The list names no kind. |
 | Set target priority | Target kind repeated | The list names a kind twice. The first kind named twice, in list order, is named. Tried after the empty list. |
@@ -248,7 +255,7 @@ Then, by kind:
 | Set search arc | Invalid bearing | A bearing is not a multiple of 10 from 0 to 350. The from bearing is tried first. |
 | Set search arc | Invalid search range | The range is zero or below, or above the aircraft type's search range (`aircraft_types` file: `search_range_nm`). |
 
-[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059]
+[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059, 0066]
 
 A refused order changes nothing but the log and the order counter. It is kept in the order record. [0008]
 
@@ -258,7 +265,7 @@ A side sees: it sees its own acceptances and refusals whole, with the reason. Th
 
 ### What an accepted order does
 
-An accepted order replaces the standing order of its slot and nothing else. A new route does not cancel a speed order. A new mission does not cancel a search arc. Cargo orders share one slot: Load, Load fuel and Unload replace each other. The four figures of the rules of engagement are replaced together. [0008, 0027, 0036, 0046]
+An accepted order replaces the standing order of its slot and nothing else. A new route does not cancel a speed order. A new mission does not cancel a search arc. Cargo orders share one slot: Load, Load fuel, Load with a land unit and Unload replace each other, and a Load or Load fuel clears the unit a Load with a unit named. The four figures of the rules of engagement are replaced together. [0008, 0027, 0036, 0046]
 
 A standing order stays until another of its slot replaces it. Nothing clears a cargo, speed, mission, readiness, rules, home port, patrol share, rest threshold, reach or arc order when it has been carried out. Two rules do drop the route order of a force: a force that ran dry and takes fuel in port, and a force retiring because of its stragglers. Chapter 2, Refuelling in port and Stragglers, says when. [0008, 0016, 0045]
 
@@ -302,7 +309,7 @@ A rule's choice of a mission target, a break-off or a straggler's fate is not an
 
 There are two sides, Allied (code 1) and Japanese (code 2). Where sides are taken in turn, the Allied side comes first. [0008]
 
-The truth state is the real world: ships, task forces, bases, air groups, arrivals, replacements and the day. A belief state holds one side's contacts and claims. A side's belief is written only from reports (see chapter 3, Belief): a sighting report makes or refreshes a contact, a battle claim is stored, and a "nothing there" report drops a contact. Ageing only removes what reports once said and adds nothing. A contact or a claim never holds the true number of an enemy unit. [0007, 0012, 0028]
+The truth state is the real world: ships, task forces, bases, air groups, land units, arrivals, replacements and the day. A belief state holds one side's contacts and claims. A side's belief is written only from reports (see chapter 3, Belief): a sighting report makes or refreshes a contact, a battle claim is stored, and a "nothing there" report drops a contact. Ageing only removes what reports once said and adds nothing. A contact or a claim never holds the true number of an enemy unit. [0007, 0012, 0028]
 
 Anything that plays the game is handed a side's view and never the truth. The truth is read only by the runner, the tests, the replay viewer and the hash. [0007, 0053]
 
@@ -314,7 +321,9 @@ Anything that plays the game is handed a side's view and never the truth. The tr
 | Its own replacement streams and arrivals | Exactly. |
 | The enemy's forces | Only as contacts: a hex, a count, a kind and an age, each made and refreshed by reports, each possibly wrong. |
 | What it believes came of its fights and raids | Its claims. The damage it does to the enemy is truth and is not shown to it. The damage done to its own ships and aircraft is shown to it whole. |
-| The enemy's bases | Number, name, hex and the holding side, and nothing else. This is the map, not intelligence. |
+| Its own land units | Exactly: the men ashore and where, the men aboard and in which ships (chapter 7). |
+| The enemy's land units | Nothing. There is no report of them yet and so no belief. |
+| The enemy's bases | Number, name, hex and the holding side, and nothing else, of every base the scenario starts with. This is the map, not intelligence. A base formed in play by a landing is on its own side's map only: it is not among the enemy's bases, an order against it is refused as for a base that does not exist, and the enemy learns of it by a report, which is not built. |
 | The map | In full. |
 | Reference data (ship classes, aircraft types, figures) | In full. |
 | Its own orders | All of them, accepted or refused, with the causes it may see. |
@@ -325,9 +334,9 @@ A side learns of what its forces did when a day is over. [0007, 0034, 0047, 0050
 
 Limit: within a fight a side cannot tell one enemy ship or air group from another. It knows that its ship fired and that its ship was fired on, not at which ship or by which. [0065]
 
-A side's own ships, task forces and air groups are shown to it numbered 1, 2, 3 for each kind, in the order of their numbers in the scenario, counting every unit it has had. Every answer it is given and every handle it writes uses these numbers; the engine keeps the scenario's numbers. Bases keep theirs: they are on the map for both sides. [0086]
+A side's own ships, task forces, air groups and land units are shown to it numbered 1, 2, 3 for each kind, in the order of their numbers in the engine, counting every unit it has had (a destroyed land unit too, so a number never changes). Every answer it is given and every handle it writes uses these numbers; the engine keeps the scenario's numbers. Bases keep theirs: they are on the map for both sides, and a base formed by a landing keeps its number too. [0086, 0066]
 
-Units made in play are numbered by side. A task force made by a detach and an air group formed by a landing away from home take the next number of their own side's series, one counter for each side and kind, kept in the state: the Allied side's from 1,000,001 and the Japanese side's from 2,000,001. A scenario's own numbers are below 1,000,000, and the loader refuses any at or above it. A made unit's number, and so the draws keyed on it, depends on its own side's history only: an enemy unit that is merely there changes nothing. [0086]
+Units made in play are numbered by side. A task force made by a detach and an air group formed by a landing away from home take the next number of their own side's series, one counter for each side and kind, kept in the state: the Allied side's from 1,000,001 and the Japanese side's from 2,000,001. A scenario's own numbers are below 1,000,000, and the loader refuses any at or above it. A made unit's number, and so the draws keyed on it, depends on its own side's history only: an enemy unit that is merely there changes nothing. A land unit made by division and a base formed by a landing are not in these series: each takes the next free number counted over the units or the bases of both sides (the highest plus one), as chapter 7 says. [0086, 0066]
 
 Limit: there are no claims for aircraft shot down in an air fight except the raid claim of decision 0056. A side sees its own air fight losses and nothing of the enemy's. [0047, 0056]
 
@@ -351,7 +360,7 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | --- | --- |
 | Order accepted, order rejected | The side issued the order. (The order decides. Where the order is unknown, the target's side decides.) |
 | Task force steamed, arrived, out of fuel, turned back, fatigue | Own force |
-| Loading complete, unloading complete | Own force |
+| Loading complete, unit loading complete, unloading complete | Own force |
 | Force retired, force stood down | Own force |
 | Force alerted by contact, force became alert | Own force |
 | Force broke off | Own force |
@@ -366,7 +375,10 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | Air group lost, air group fatigue, air group stood down, air group returned | Own air group |
 | Strike launched, base strike launched, strike found nothing, escorts sent | Own air group |
 | Aircraft lost, pilots lost | Own air group |
-| Base supply destroyed, base supply spent, base at day end | Own base |
+| Base supply destroyed, base supply spent (aircraft or men), base at day end, base formed | Own base |
+| Men embarked, men landed, men lost with a ship, men lost unfed, land unit destroyed | Own land unit |
+| Unit divided | The unit it came from is own |
+| Men fed | The side whose men were fed |
 | Report received, claim received, contact aged, contact dropped, contact not there | The side that holds the contact or made the report |
 
 **Cut of the enemy's name and nothing else** [0065]
@@ -455,8 +467,9 @@ A rule's figures are **loaded** when the scenario file names the file that holds
 | `air_upkeep` | `air_upkeep.toml` | Wear and repair of aircraft. |
 | `fatigue` | `fatigue.toml` | Fatigue of task forces and of air groups, stand-down and return, and the fatigue factor of a sighting. |
 | `air_supply` | `air_supply.toml` | Supply for sorties and the daily supply, bases out of supply, and the supply a repair costs. |
+| `ground` | `ground.toml` | Men worked as cargo, the men's supply and the loss of the unfed (chapter 7). A scenario with a land unit must name it. |
 
-A scenario with air groups must also name search figures, and a scenario with surface combat figures must also name them. [0021, 0026, 0035, 0036, 0037, 0039]
+A scenario with air groups must also name search figures, and a scenario with surface combat figures must also name them. [0021, 0026, 0035, 0036, 0037, 0039, 0066]
 
 The five repair figures of decision 0069 are keys of `surface_combat.toml`, so they are always loaded and every one is required: `forward_repair_max_flotation`, `forward_repair_system_points`, `yard_days_per_flotation_point`, `yard_days_per_system_degraded` and `yard_days_per_system_out`. Chapter 4, Repair, gives what each means and what the loader refuses. The frozen step 1 copy holds the same values. The rules do nothing until a base has `ship_repair_points_per_day` or `yard_passage_days` (chapter 2, Bases on hexes). [0069]
 
@@ -514,13 +527,14 @@ The checks:
 
 | Group | What must hold |
 | --- | --- |
-| Ships | Fuel, supply aboard and cargo fuel are not negative. Fuel does not exceed the class's capacity. Supply and cargo fuel together do not exceed the class's cargo capacity. Flotation and fire damage are from 0 to 100. Gun rounds are not negative. A ship at 100 flotation damage is sunk. A ship has no damaged system its class lacks. A ship's bank of forward repair points is from 0 to below `forward_repair_system_points`. |
+| Ships | Fuel, supply aboard and cargo fuel are not negative. Fuel does not exceed the class's capacity. Supply and cargo fuel together do not exceed the class's cargo capacity. Flotation and fire damage are from 0 to 100. Gun rounds are not negative. A ship at 100 flotation damage is sunk. A ship has no damaged system its class lacks. A ship's bank of forward repair points is from 0 to below `forward_repair_system_points`. A ship's men aboard are at least 1 and not above its class's troop capacity, are of a unit that exists and is of the ship's side, and a sunk ship has none. |
 | Where a ship is | A ship in a task force is listed by that force. A ship in a port is at a base that exists. A force lists only ships that are in it, that exist, that are not sunk and that are of its side. No ship is listed by more than one force. A ship away at the yard is in no force's list and its location names a force that is away; a force that is away lists no ship. |
 | Task forces | The force's hex is on the map and navigable. A hex ahead is set if and only if progress toward it is above 0; it is adjacent, on the map, navigable, and the step to it crosses no closed side. Progress is at least 0 and below the leg's charge, `leg_nm`; `leg_nm` is from 1 to 40 miles and is 40 for a force at a centre. The keep share is from 0 to 1. Fatigue is from 0 to 100. A home port exists and is of the force's side. |
 | Bases | The hex is on the map. Supply and fuel stocks are not negative. A replacement stream names a base that exists. A base's repair points a day are not negative and its yard passage is not 0. |
+| Land units | A unit's hex is set if and only if it has men ashore, and is on the map. |
 | Air groups | Each is at a base that exists or aboard a ship that exists, of its own side. The ready and damaged aircraft of the groups aboard a ship do not exceed the class's aircraft capacity. Fatigue and the rest threshold are from 0 to 100. |
 
-[0004, 0016, 0017, 0025, 0035, 0036, 0037, 0038, 0045, 0046, 0069]
+[0004, 0016, 0017, 0025, 0035, 0036, 0037, 0038, 0045, 0046, 0066, 0069]
 
 Three invariants hold by construction and are not checked: an air group's ready aircraft cannot be negative; an air group has exactly one location; and a side's belief is written only from reports. [0052]
 
@@ -528,9 +542,9 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v9`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0069, 0083, 0086]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v10`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. Version 10 added a ship's `troops` (the unit and the men, or none) after her `system_repair_points`, a base's `on_map` after its `yard_passage_days`, a cargo order's land unit (an optional number) after its order, the cargo action `LoadNoCargo` (code 4), and the land units (number, side, men ashore and hex, not the name) after the arrivals. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0066, 0069, 0083, 0086]
 
-The hash covers: the seed; the day; every ship, task force, base, air group, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases or air groups, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
+The hash covers: the seed; the day; every ship, task force, base, air group, land unit, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases, air groups or land units, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 
 Two runs of the same scenario, orders and seed give the same hash on any machine. The same hash is given with or without breakdown recording, in two processes, and with the scenario's tables listed in a different order. [0043]
 
@@ -561,6 +575,7 @@ A side sees: none of this. A saved game, the hashes and the seed belong to the u
 - How forces move, burn fuel, refuel, and load and unload cargo, and what becomes of stragglers: chapter 2.
 - Air search, sighting reports, contacts, their ageing, readiness and alertness, the alarm, fatigue of forces, and claims: chapter 3.
 - Surface fights, the hit mechanism and damage to ships: chapter 4.
+- Land units, troop capacity, landings, bases formed by a landing and the men's supply: chapter 7.
 - Air groups, strikes, escorts, patrols, anti-aircraft fire, wear, repair, fatigue of groups, pilots, replacements and base supply: chapter 5.
 - Missions, objectives, points, margins and results: chapter 6.
 - The agent tools, the briefing, `explain`, `measure`, the serve command and the MCP server: not rules.
