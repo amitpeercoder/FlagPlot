@@ -301,6 +301,7 @@ impl World {
 #[cfg(test)]
 mod tests {
     use super::take_in_proportion;
+    use super::*;
 
     #[test]
     fn the_short_stock_of_the_record_takes_21_and_9() {
@@ -331,5 +332,269 @@ mod tests {
                 assert!(part <= m);
             }
         }
+    }
+
+    // ---- Men lost with a ship that sinks (decision 0066, 15)
+
+    use crate::damage::{DamageSite, HitSet};
+    use crate::events::DamageTrack;
+    use crate::ids::{ShipClassId, TaskForceId};
+    use crate::map::{HexData, Map};
+    use crate::refdata::{GroundFigures, RefData, ShipClass, ShipKind};
+    use crate::side_events::SideEventKind;
+    use crate::state::{LandUnit, Ship, ShipLocation, TaskForce, Troops, TruthState};
+
+    const AT: Hex = Hex::new(0, 0);
+
+    fn fx(n: i64) -> Fixed {
+        Fixed::from_int(n)
+    }
+
+    /// A transport with room for 600 men.
+    fn transport() -> ShipClass {
+        ShipClass {
+            id: ShipClassId::new(1),
+            name: "Transport".to_string(),
+            kind: ShipKind::Transport,
+            cruise_speed_kn: fx(10),
+            max_speed_kn: fx(12),
+            fuel_capacity_t: fx(1000),
+            endurance_nm: fx(10000),
+            cargo_capacity_t: fx(3000),
+            main_guns: 0,
+            gun_rounds_per_min: Fixed::ZERO,
+            gun_rounds_per_gun: 0,
+            gun_damage: Fixed::ZERO,
+            torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
+            torpedo_damage: Fixed::ZERO,
+            toughness: fx(100),
+            radar: false,
+            aircraft_capacity: 0,
+            anti_aircraft: 0,
+            troop_capacity_men: 600,
+        }
+    }
+
+    /// An Allied force 1 at (0,0) with ship 1 carrying `aboard` men of unit
+    /// 1, which has `ashore` men ashore at (0,0) besides. Ship 2 is a sister
+    /// with nobody aboard.
+    fn world_with_troops(aboard: u32, ashore: u32) -> World {
+        let mut map = Map::new();
+        for q in -1..=1 {
+            for r in -1..=1 {
+                map.insert(Hex::new(q, r), HexData::open_sea());
+            }
+        }
+        let mut ref_data = RefData::default();
+        ref_data.ship_classes.insert(transport().id, transport());
+        ref_data.ground = Some(GroundFigures {
+            handling_t_per_man: Fixed::ONE,
+            daily_supply_t_per_man: Fixed::ONE,
+            unfed_loss_share_per_day: Fixed::ONE,
+        });
+        let mut truth = TruthState::default();
+        let mut force = TaskForce::at(
+            TaskForceId::new(1),
+            "Force 1".to_string(),
+            Side::Allied,
+            AT,
+            crate::orders::Mission::Transport,
+        );
+        for id in 1..=2 {
+            let ship = Ship {
+                troops: (id == 1).then_some(Troops {
+                    unit: LandUnitId::new(1),
+                    men: aboard,
+                }),
+                ..Ship::new(
+                    ShipId::new(id),
+                    format!("Ship {id}"),
+                    ShipClassId::new(1),
+                    Side::Allied,
+                    ShipLocation::TaskForce(TaskForceId::new(1)),
+                )
+            };
+            force.ships.insert(ship.id);
+            truth.ships.insert(ship.id, ship);
+        }
+        truth.task_forces.insert(force.id, force);
+        truth.land_units.insert(
+            LandUnitId::new(1),
+            LandUnit {
+                id: LandUnitId::new(1),
+                name: "Battalion".to_string(),
+                side: Side::Allied,
+                men_ashore: ashore,
+                hex: (ashore > 0).then_some(AT),
+            },
+        );
+        World::new(7, ref_data, map, truth).expect("valid setup")
+    }
+
+    /// Sinks ship 1 by the real path: a hit set of enough flotation damage.
+    /// Returns the `ShipSunk` event.
+    fn sink_ship_1(world: &mut World) -> EventId {
+        let cause = world.events.record(
+            1,
+            Some(Pulse::Night),
+            EventKind::BaseAtDayEnd {
+                base: BaseId::new(1),
+                supply_t: Fixed::ZERO,
+                aircraft_ready: 0,
+            },
+            Vec::new(),
+            None,
+        );
+        let hits = HitSet {
+            cause,
+            target: ShipId::new(1),
+            target_force: TaskForceId::new(1),
+            damage_per_hit: fx(100),
+            track_hits: {
+                let mut hits = [0, 0];
+                hits[DamageTrack::Flotation as usize] = 1;
+                hits
+            },
+            system_hits: Vec::new(),
+        };
+        let applied = world.apply_hit_set(
+            DamageSite {
+                day: 1,
+                pulse: Pulse::Night,
+                round: 0,
+            },
+            &hits,
+        );
+        assert_eq!(applied.sunk.len(), 1);
+        applied.sunk[0].1
+    }
+
+    fn log_of(world: &World) -> Vec<crate::events::Event> {
+        world.events().iter().cloned().collect()
+    }
+
+    #[test]
+    fn all_the_men_aboard_a_ship_that_sinks_are_lost_with_her() {
+        let mut world = world_with_troops(450, 0);
+        let sunk = sink_ship_1(&mut world);
+
+        let events = log_of(&world);
+        let lost: Vec<_> = events
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::MenLostWithShip { .. }))
+            .collect();
+        assert_eq!(lost.len(), 1);
+        assert_eq!(
+            lost[0].kind,
+            EventKind::MenLostWithShip {
+                unit: LandUnitId::new(1),
+                ship: ShipId::new(1),
+                men: 450,
+            }
+        );
+        // The loss is caused by the sinking, and nothing else.
+        assert_eq!(lost[0].causes, vec![Cause::Event(sunk)]);
+        assert!(matches!(
+            world.events().get(sunk).expect("the sinking").kind,
+            EventKind::ShipSunk { .. }
+        ));
+
+        // The ship holds no men; the unit has none aboard anywhere.
+        assert_eq!(world.truth.ships[&ShipId::new(1)].troops, None);
+        assert_eq!(world.truth.men_aboard(LandUnitId::new(1)), 0);
+        assert_eq!(
+            world.truth.ships[&ShipId::new(1)].location,
+            ShipLocation::Sunk
+        );
+
+        // It had no men ashore: it is destroyed, by the loss.
+        let destroyed: Vec<_> = events
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::LandUnitDestroyed { .. }))
+            .collect();
+        assert_eq!(destroyed.len(), 1);
+        assert_eq!(
+            destroyed[0].kind,
+            EventKind::LandUnitDestroyed {
+                unit: LandUnitId::new(1)
+            }
+        );
+        assert_eq!(destroyed[0].causes, vec![Cause::Event(lost[0].id)]);
+        // A unit destroyed keeps its number and has no men.
+        assert_eq!(world.truth.land_units[&LandUnitId::new(1)].men_ashore, 0);
+
+        assert!(crate::invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+    }
+
+    #[test]
+    fn a_unit_with_men_ashore_is_not_destroyed_when_a_ship_of_it_sinks() {
+        let mut world = world_with_troops(450, 120);
+        let sunk = sink_ship_1(&mut world);
+        let events = log_of(&world);
+        let lost = events
+            .iter()
+            .find(|event| matches!(event.kind, EventKind::MenLostWithShip { .. }))
+            .expect("the loss");
+        assert_eq!(lost.causes, vec![Cause::Event(sunk)]);
+        assert!(!events
+            .iter()
+            .any(|event| matches!(event.kind, EventKind::LandUnitDestroyed { .. })));
+        let land_unit = &world.truth.land_units[&LandUnitId::new(1)];
+        assert_eq!(land_unit.men_ashore, 120);
+        assert_eq!(land_unit.hex, Some(AT));
+        assert_eq!(world.truth.men_aboard(LandUnitId::new(1)), 0);
+        assert!(crate::invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+    }
+
+    #[test]
+    fn a_ship_with_no_men_aboard_that_sinks_loses_none() {
+        let mut world = world_with_troops(450, 0);
+        // The ship carries nobody: take the men and the unit away first.
+        world
+            .truth
+            .ships
+            .get_mut(&ShipId::new(1))
+            .expect("ship")
+            .troops = None;
+        world.truth.land_units.clear();
+        sink_ship_1(&mut world);
+        assert!(!log_of(&world).iter().any(|event| matches!(
+            event.kind,
+            EventKind::MenLostWithShip { .. } | EventKind::LandUnitDestroyed { .. }
+        )));
+    }
+
+    #[test]
+    fn only_the_units_own_side_sees_the_men_lost_with_the_ship() {
+        let mut world = world_with_troops(450, 0);
+        sink_ship_1(&mut world);
+
+        let names_men = |side: Side| {
+            world
+                .side_view(side)
+                .events()
+                .into_iter()
+                .filter_map(|event| match event.kind {
+                    SideEventKind::Whole(kind) => Some(kind),
+                    _ => None,
+                })
+                .any(|kind| {
+                    matches!(
+                        kind,
+                        EventKind::MenLostWithShip { .. } | EventKind::LandUnitDestroyed { .. }
+                    )
+                })
+        };
+        assert!(names_men(Side::Allied));
+        assert!(!names_men(Side::Japanese));
+        // Nor does the other side hold the unit.
+        assert_eq!(world.side_view(Side::Japanese).land_units().count(), 0);
+        assert_eq!(
+            world
+                .side_view(Side::Japanese)
+                .men_aboard(LandUnitId::new(1)),
+            None
+        );
     }
 }

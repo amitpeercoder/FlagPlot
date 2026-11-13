@@ -2,34 +2,34 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a7fdb746dd2f7d80  37 events
-day   2  hash f9357ffa4a2be62b  19 events
-day   3  hash 1c327d92fe3ac568  18 events
-day   4  hash ee4f197e20a61eae  26 events
-day   5  hash 5e0f21db80e88d99  46 events
-day   6  hash 80960d8e97ddb01a  49 events
-day   7  hash 206122f4c6968e1b  31 events
-day   8  hash 8f60a0082b7fbaa7  26 events
-day   9  hash 75136d1e5996f3b7  45 events
-day  10  hash 618814ed4177d623  56 events
-day  11  hash 38cd6fee644dcb09  40 events
-day  12  hash 1d2e3fde3a1d5813  37 events
-day  13  hash 110543ea84bf031d  59 events
-day  14  hash e800b76792fb3316  37 events
-day  15  hash c3619e6286016f19  40 events
-day  16  hash ac1a064c757fb867  55 events
-day  17  hash f288fb5fd58edc6e  38 events
-day  18  hash 54527934053448a6  36 events
-day  19  hash 5e4f36ad1c791f60  29 events
-day  20  hash 2b6f6ae01fc592a2  45 events
-day  21  hash 951c3370708d2a19  56 events
-day  22  hash d2cf26bd782e6815  56 events
-day  23  hash 27cf1ba9b3473fe2  55 events
-day  24  hash 1fa2d3b8cfca19b1  69 events
-day  25  hash d023ca9f6595eef3  46 events
-day  26  hash 4cb529211b7e48cf  52 events
-day  27  hash e21c611c5de67911  51 events
-day  28  hash 1559c2df9b154852  41 events
+day   1  hash 902ff90512ceba7a  37 events
+day   2  hash c7d3c199576f84b1  19 events
+day   3  hash 20c74797bbabc74c  18 events
+day   4  hash 4a55fed052672572  26 events
+day   5  hash 465d1a675885ca3f  46 events
+day   6  hash cb455d2611f07f04  49 events
+day   7  hash 7dc0a74ed9da6f9b  31 events
+day   8  hash 408d76acf5a9f69b  26 events
+day   9  hash 34a8858093770735  45 events
+day  10  hash 3693b3e7f1889b29  56 events
+day  11  hash d9502ded7bc155c5  40 events
+day  12  hash 8221867aa3d3ab05  37 events
+day  13  hash d08ca6cfe7d672d3  59 events
+day  14  hash c64d4aeaa33167ba  37 events
+day  15  hash 2dcdb93512350d39  40 events
+day  16  hash ad39cbfde199e341  55 events
+day  17  hash 943dfa67abc470bc  38 events
+day  18  hash f9c17b98e580574e  36 events
+day  19  hash 2205638492301896  29 events
+day  20  hash a6d76bd55382aec8  45 events
+day  21  hash 8022265450cc2873  56 events
+day  22  hash 85d7fc61636faadb  56 events
+day  23  hash 6dc559b73a3b8b28  55 events
+day  24  hash 8e1a6d87abf8c029  69 events
+day  25  hash 1bdfc9e9c047fec1  46 events
+day  26  hash f58b6b3b14899d61  52 events
+day  27  hash e832cafb1fb7990b  51 events
+day  28  hash 11268401f6d005a8  41 events
 
 #1 D1 -         order:1 accepted for air_group:10  <- order:1
 #2 D1 -         order:2 accepted for air_group:10  <- order:2

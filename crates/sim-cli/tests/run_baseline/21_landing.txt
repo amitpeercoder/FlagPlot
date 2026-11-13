@@ -1,0 +1,27 @@
+Scenario 21: A landing, carried by sea and fed from a base
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 4ea872437d437cfa  18 events
+day   2  hash ddf68ebd48b44b73  15 events
+day   3  hash 267b87197665349a  15 events
+day   4  hash 38a790e2caadefab  6 events
+day   5  hash 2c752b7db5d1893f  9 events
+day   6  hash e077103955c5738b  8 events
+day   7  hash 0412950cfbdb0785  8 events
+
+task_force:1 "Placeholder landing convoy" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder fast transport group" (Allied): Arrived at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 968 t of fuel, 0 t of supply
+ship:3 "Placeholder fast transport 1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 490 t of fuel, 0 t of supply
+base:1 "Placeholder embarkation port" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Landing at (8,0)" (Allied) at (8,0): 0 t of supply in stock, formed in play, on its own side's map only
+land_unit:1 "Placeholder battalion 1" (Allied): 527 men ashore at (8,0)
+land_unit:2 "Placeholder battalion 2" (Allied): 353 men ashore at (8,0)
+land_unit:3 "Placeholder battalion 3" (Allied): 205 men ashore at (10,0)
+land_unit:4 "Placeholder battalion 3, detachment 4" (Allied): 177 men ashore at (8,0)
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

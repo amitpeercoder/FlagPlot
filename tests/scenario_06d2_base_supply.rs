@@ -350,6 +350,7 @@ impl Run {
                     base,
                     reason,
                     aircraft,
+                    men: _,
                     asked_t,
                     paid_t,
                     left_t,
@@ -601,6 +602,7 @@ fn assert_payment(event: &Event, payment: &Payment, seed: u64, day: u32) {
             base,
             reason,
             aircraft,
+            men: 0,
             asked_t: fx(asked),
             paid_t: fx(paid),
             left_t: fx(left),
@@ -611,6 +613,7 @@ fn assert_payment(event: &Event, payment: &Payment, seed: u64, day: u32) {
         SupplyUse::Sorties => format!("{aircraft} aircraft sent on sorties"),
         SupplyUse::Upkeep => format!("{aircraft} aircraft at the base for the day"),
         SupplyUse::Repairs => format!("{aircraft} repairs"),
+        SupplyUse::Men => "men fed".to_string(),
     };
     let mut text = if paid < asked {
         format!(
@@ -2462,6 +2465,7 @@ fn check_repairs(run: &Run, repair: Fixed, start: [i64; 2]) -> u32 {
                     base: AIRFIELD_B,
                     reason: SupplyUse::Repairs,
                     aircraft: total,
+                    men: 0,
                     asked_t: asked,
                     paid_t: asked,
                     left_t: before.stock[1] - asked,
@@ -2498,6 +2502,7 @@ fn check_repairs(run: &Run, repair: Fixed, start: [i64; 2]) -> u32 {
                     base,
                     reason: SupplyUse::Upkeep,
                     aircraft,
+                    men: 0,
                     asked_t: asked,
                     paid_t: paid,
                     left_t: expected_stock[i] - paid,

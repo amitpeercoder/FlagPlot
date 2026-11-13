@@ -797,6 +797,9 @@ pub fn count(
                     }
                     SupplyUse::Upkeep => totals.upkeep += *paid_t,
                     SupplyUse::Repairs => totals.repairs += *paid_t,
+                    // The men's supply is its own thing, not aircraft
+                    // upkeep, and no batch records it (decision 0066).
+                    SupplyUse::Men => {}
                 }
             }
             _ => {}

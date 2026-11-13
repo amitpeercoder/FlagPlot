@@ -444,12 +444,27 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // three of decision 0069: no base of the full slice mends a ship or is a
     // port for the yard. Scenario 20a records them, and its own test reads
     // them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 5] = [
+    //
+    // The nine kinds of land units (decision 0066), `MenEmbarked`,
+    // `MenLanded`, `BaseFormed`, `UnitDivided`, `MenLostWithShip`, `MenFed`,
+    // `MenLostUnfed`, `LandUnitDestroyed` and `UnitLoadingComplete`: the full
+    // slice has no land unit. Scenario 21 records them, and its own test
+    // reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 14] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
         "ForceLeftForYard",
         "ForceReturnedFromYard",
+        "MenEmbarked",
+        "MenLanded",
+        "BaseFormed",
+        "UnitDivided",
+        "MenLostWithShip",
+        "MenFed",
+        "MenLostUnfed",
+        "LandUnitDestroyed",
+        "UnitLoadingComplete",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

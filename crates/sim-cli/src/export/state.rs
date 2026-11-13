@@ -5,7 +5,8 @@ use sim_core::hex::Hex;
 use sim_core::orders::{AirMission, Reach};
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
-    AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, TaskForce, TruthState,
+    AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, ShipSystem, Side, TaskForce,
+    TruthState,
 };
 use sim_core::World;
 
@@ -32,6 +33,28 @@ pub struct Snapshot {
     pub ships: Vec<ShipOut>,
     pub air_groups: Vec<AirGroupOut>,
     pub bases: Vec<BaseOut>,
+    /// The land units (decision 0066). Left out when the scenario has none,
+    /// so a file made before land units is unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub land_units: Vec<LandUnitOut>,
+}
+
+/// A land unit: its men ashore and the hex they are in (null with none
+/// ashore). Men aboard ships are on the ship's `troops`.
+#[derive(Serialize)]
+pub struct LandUnitOut {
+    id: u32,
+    name: String,
+    side: &'static str,
+    men_ashore: u32,
+    hex: Option<Pos>,
+}
+
+/// The men of one land unit aboard a ship.
+#[derive(Serialize)]
+struct TroopsOut {
+    unit: u32,
+    men: u32,
 }
 
 #[derive(Serialize)]
@@ -88,6 +111,9 @@ pub struct ShipOut {
     systems: Data,
     gun_rounds: Num,
     torpedoes_ready: bool,
+    /// The men aboard (decision 0066). Left out when none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    troops: Option<TroopsOut>,
 }
 
 /// `{"task_force": n}`, `{"port": n}`, `"sunk"` or `{"yard": n}`, a ship
@@ -210,6 +236,14 @@ pub struct BaseOut {
     /// for it (decision 0069). Left out when the base is not.
     #[serde(skip_serializing_if = "Option::is_none")]
     yard_passage_days: Option<u32>,
+    /// False for a base a landing formed (decision 0066, 12): on its own
+    /// side's map only. Left out when true.
+    #[serde(skip_serializing_if = "is_true")]
+    on_map: bool,
+}
+
+fn is_true(b: &bool) -> bool {
+    *b
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -238,6 +272,17 @@ pub fn snapshot(truth: &TruthState, ref_data: &RefData) -> Snapshot {
             .map(|group| air_group(group, ref_data))
             .collect(),
         bases: bases(truth),
+        land_units: truth.land_units.values().map(land_unit).collect(),
+    }
+}
+
+fn land_unit(unit: &LandUnit) -> LandUnitOut {
+    LandUnitOut {
+        id: unit.id.raw(),
+        name: unit.name.clone(),
+        side: names::side(unit.side),
+        men_ashore: unit.men_ashore,
+        hex: unit.hex.map(Pos::from),
     }
 }
 
@@ -258,6 +303,7 @@ fn base(base: &Base) -> BaseOut {
         fuel: Num(base.fuel_t),
         ship_repair_points_per_day: Num(base.ship_repair_points_per_day),
         yard_passage_days: base.yard_passage_days,
+        on_map: base.on_map,
     }
 }
 
@@ -319,6 +365,10 @@ fn ship(ship: &Ship, ref_data: &RefData) -> ShipOut {
         systems,
         gun_rounds: Num(ship.gun_rounds),
         torpedoes_ready: ship.torpedoes_ready,
+        troops: ship.troops.map(|troops| TroopsOut {
+            unit: troops.unit.raw(),
+            men: troops.men,
+        }),
     }
 }
 
@@ -370,6 +420,8 @@ pub struct FinalOut {
     ships: Vec<ShipOut>,
     air_groups: Vec<AirGroupOut>,
     bases: Vec<BaseOut>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    land_units: Vec<LandUnitOut>,
     contacts: PerSide<ContactOut>,
     claims: PerSide<ClaimOut>,
 }
@@ -406,6 +458,7 @@ pub fn final_state(world: &World) -> FinalOut {
         ships,
         air_groups,
         bases,
+        land_units,
     } = snapshot(world.umpire(), world.ref_data());
     let key = world.umpire_key();
     let contacts = |side: Side| -> Vec<ContactOut> {
@@ -440,6 +493,7 @@ pub fn final_state(world: &World) -> FinalOut {
         ships,
         air_groups,
         bases,
+        land_units,
         contacts: PerSide {
             allied: contacts(Side::Allied),
             japanese: contacts(Side::Japanese),

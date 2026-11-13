@@ -1,7 +1,9 @@
 //! The event log as JSON.
 
 use serde::Serialize;
-use sim_core::events::{Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange};
+use sim_core::events::{
+    Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange, SupplyUse,
+};
 use sim_core::fixed::Fixed;
 use sim_core::ids::UmpireKey;
 use sim_core::orders::{Cargo, RejectReason};
@@ -133,6 +135,9 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::TargetKindRepeated(kind) => {
             base("target_kind_repeated").text("kind", kind.name())
         }
+        RejectReason::NotYourLandUnit => base("not_your_land_unit"),
+        RejectReason::NoMenAshoreHere => base("no_men_ashore_here"),
+        RejectReason::NoTroopCapacity => base("no_troop_capacity"),
     }
 }
 
@@ -576,18 +581,145 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             base,
             reason,
             aircraft,
+            men,
             asked_t,
             paid_t,
             left_t,
-        } => (
-            "base_supply_spent",
-            d.id("base", *base)
+        } => {
+            let d = d
+                .id("base", *base)
                 .text("reason", reason.name())
-                .int("aircraft", *aircraft)
-                .num("asked_t", *asked_t)
-                .num("paid_t", *paid_t)
-                .num("left_t", *left_t),
+                .int("aircraft", *aircraft);
+            // `men` is written only for the men's supply, so that every file
+            // made before land units is unchanged (decision 0066).
+            let d = if matches!(reason, SupplyUse::Men) {
+                d.int("men", *men)
+            } else {
+                d
+            };
+            (
+                "base_supply_spent",
+                d.num("asked_t", *asked_t)
+                    .num("paid_t", *paid_t)
+                    .num("left_t", *left_t),
+            )
+        }
+        EventKind::MenEmbarked {
+            unit,
+            ship,
+            task_force,
+            hex,
+            men,
+            aboard,
+            ashore,
+        } => (
+            "men_embarked",
+            d.id("unit", *unit)
+                .id("ship", *ship)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .int("men", *men)
+                .int("aboard", *aboard)
+                .int("ashore", *ashore),
         ),
+        EventKind::MenLanded {
+            unit,
+            ship,
+            task_force,
+            hex,
+            men,
+            aboard,
+            ashore,
+        } => (
+            "men_landed",
+            d.id("unit", *unit)
+                .id("ship", *ship)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .int("men", *men)
+                .int("aboard", *aboard)
+                .int("ashore", *ashore),
+        ),
+        EventKind::BaseFormed {
+            base,
+            side,
+            hex,
+            task_force,
+        } => (
+            "base_formed",
+            d.id("base", *base)
+                .text("side", names::side(*side))
+                .hex("hex", *hex)
+                .id("task_force", *task_force),
+        ),
+        EventKind::UnitDivided {
+            from,
+            unit,
+            task_force,
+            men,
+        } => (
+            "unit_divided",
+            d.id("from", *from)
+                .id("unit", *unit)
+                .id("task_force", *task_force)
+                .int("men", *men),
+        ),
+        EventKind::MenLostWithShip { unit, ship, men } => (
+            "men_lost_with_ship",
+            d.id("unit", *unit).id("ship", *ship).int("men", *men),
+        ),
+        EventKind::MenFed {
+            side,
+            hex,
+            base,
+            men,
+            fed,
+            unfed,
+        } => {
+            let d = d.text("side", names::side(*side)).hex("hex", *hex);
+            let d = match base {
+                Some(base) => d.id("base", *base),
+                None => d,
+            };
+            (
+                "men_fed",
+                d.int("men", *men).int("fed", *fed).int("unfed", *unfed),
+            )
+        }
+        EventKind::MenLostUnfed {
+            unit,
+            hex,
+            lost,
+            ashore,
+        } => (
+            "men_lost_unfed",
+            d.id("unit", *unit)
+                .hex("hex", *hex)
+                .int("lost", *lost)
+                .int("ashore", *ashore),
+        ),
+        EventKind::LandUnitDestroyed { unit } => ("land_unit_destroyed", d.id("unit", *unit)),
+        EventKind::UnitLoadingComplete {
+            task_force,
+            unit,
+            base,
+            cargo,
+            elapsed_hours,
+        } => {
+            let d = d.id("task_force", *task_force).id("unit", *unit);
+            let d = match base {
+                Some(base) => d.id("base", *base),
+                None => d,
+            };
+            let d = match cargo {
+                Some(cargo) => d.text("cargo", cargo.name()),
+                None => d.text("cargo", "none"),
+            };
+            (
+                "unit_loading_complete",
+                d.num("elapsed_hours", *elapsed_hours),
+            )
+        }
         EventKind::StrikeFoundNothing { air_group, hex } => (
             "strike_found_nothing",
             d.id("air_group", *air_group).hex("hex", *hex),

@@ -53,7 +53,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             as `day N <hash>`, and nothing else.
   events    The umpire's questions to a finished run (a scenario run to its
             end, or a saved game replayed). --unit HANDLE (ship:N,
-            task_force:N, air_group:N, base:N, contact:N or allied:contact:N)
+            task_force:N, air_group:N, base:N, land_unit:N, contact:N or allied:contact:N)
             prints every event that names the unit, as `run --events` prints
             it; for a ship it also prints the events of the task force it was
             in, marked `via task_force:N`. --day N keeps one day. --why EVENT
@@ -533,6 +533,18 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         } else {
             damaged.join(", ")
         };
+        let cargo = {
+            let fuel = if ship.cargo_fuel_t > Fixed::ZERO {
+                format!(", {} t of fuel cargo", ship.cargo_fuel_t)
+            } else {
+                String::new()
+            };
+            // The men aboard, only when there are some (decision 0066).
+            let men = ship.troops.map_or(String::new(), |troops| {
+                format!(", {} men of {} aboard", troops.men, troops.unit)
+            });
+            format!("{fuel}{men}")
+        };
         println!(
             "{} \"{}\": {state}; damage flotation {}, fire {}; {systems}; {} gun rounds, torpedoes {}; {} t of fuel, {} t of supply{}",
             ship.id,
@@ -543,11 +555,7 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             if ship.torpedoes_ready { "ready" } else { "gone" },
             ship.fuel_t,
             ship.supply_t,
-            if ship.cargo_fuel_t > Fixed::ZERO {
-                format!(", {} t of fuel cargo", ship.cargo_fuel_t)
-            } else {
-                String::new()
-            }
+            cargo
         );
     }
     for base in truth.bases.values() {
@@ -573,8 +581,14 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         } else {
             String::new()
         };
+        // A base a landing formed is marked (decision 0066, 12).
+        let formed = if base.on_map {
+            ""
+        } else {
+            ", formed in play, on its own side's map only"
+        };
         println!(
-            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}",
+            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}{}",
             base.id,
             base.name,
             base.side.name(),
@@ -582,7 +596,21 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             base.supply_t,
             fuel,
             guns,
-            repairs
+            repairs,
+            formed
+        );
+    }
+    // Land units are listed only where a scenario has any (decision 0066).
+    for unit in truth.land_units.values() {
+        let ashore = match unit.hex {
+            Some(hex) => format!("{} men ashore at {hex}", unit.men_ashore),
+            None => "no men ashore".to_string(),
+        };
+        println!(
+            "{} \"{}\" ({}): {ashore}",
+            unit.id,
+            unit.name,
+            unit.side.name()
         );
     }
     for side in [Side::Allied, Side::Japanese] {
