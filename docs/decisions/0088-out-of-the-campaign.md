@@ -186,3 +186,20 @@ No field of the state is added and the hash is not touched. No random draw is ma
 ### The rulebook and glossary, in the same pull request
 
 Chapter 6 (objectives and results): the sixth kind, the horizon, the order sunk then out of action, the refusal of the pair with crippled, and what a side sees. The glossary: "Out of action", "Days out", "Horizon". `docs/commands.md` where it describes a result.
+
+## As built
+
+Built on Nov 13, 2026, by a team lead with Sonnet developers, to the section above and the architect's hand calculation in `tests/scenario_20b_out_of_action.rs`, whose numbers all came out as written. Nothing above this section was changed, so its status line still reads as planned.
+
+What was built:
+
+- **sim-core** (`objectives.rs`): `Objectives.horizon_days`; `Objective::ShipsOutOfAction(ShipPoints)` at the end of the enum; `Tally.out_of_action`, one `OutOfAction` (kind, days at the end, days left with) for each enemy ship not sunk with days out above 0, keyed by ship number; `ObjectiveScore.horizon_days` and `ObjectiveScore.ships_out`, one `ShipOut` for each ship with her share and points. The departures are read in one pass over the log. `known_progress` gives `not_observable` for it. `World::set_objectives` refuses a horizon of 0. `SideView::horizon_days` gives the scenario's horizon, which is configuration common to both sides like the levels; nothing added to `SideView` reads the enemy's truth.
+- **The loader** sets the horizon and refuses what the section above says. It also refuses `ships_out_of_action` in a scenario without surface combat figures, which hold the yard figures; since `surface_combat` is a required key of every scenario this cannot happen from a file, and is a second line only.
+- **Where it shows.** `sim-cli run` prints the count "over N days" and one line for each ship. The agent's briefing gives the objective with `horizon_days` and the points for a ship away for the whole horizon; the result in the final briefing and in `end_day` gives `horizon_days` and `ships_out`. All three new fields are left out of an answer when they do not apply, so no earlier answer changed and the agent interface stays at version 3; the briefing schema has them. A side's own ships are named in `ships_out` by its own handles (decision 0086); an enemy ship, for which a side has no handle, is named `enemy_ship:K`, K being her place in that list, from 1, which tells the side nothing beyond the count. The export has no result object and the viewer reads none, so neither changed.
+- **Scenario 20b** (`data/scenarios/20b_out_of_action.toml`) on the map of scenario 20a. The frozen ship classes have no battleship, so a new placeholder class file, `ship_classes_placeholder_battleship.csv` (class 9, class 1's figures with the kind battleship), was added to `data/reference` and its frozen copy to `data/reference/step1`, read by scenario 20b alone. A new file, rather than a row in `ship_classes.csv`, leaves the data-file hashes of every saved game and batch as they were.
+- **A leak test** in `crates/sim-agent/tests/objectives.rs`: two worlds that differ only in an enemy ship's damage give the side the same briefing, as JSON and as text, and the same known progress on every day of the game; only the result at the end differs.
+- **A wording fix** that ship repair left: the hint shown with the refusal "the task force is under way" now names every order that needs a stopped force, `load` (of supply or fuel) and `send_to_yard`. The recorded games were remade: one line of the full slice game's transcript changed, in the hint only; every save is byte for byte as it was.
+
+No state, no hash change, no random draw. Every other scenario's run baseline, event log and hash are as before; only scenario 20b's baselines are new.
+
+Differences from the section above: none in the rule. The names the section leaves open were chosen as described (the enemy ship's name in the result, the class file).

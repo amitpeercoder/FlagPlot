@@ -118,6 +118,9 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Margin** | A side's points less the enemy's | |
 | **Level** | One of three sizes of margin, minor, major and decisive, that the scenario gives | A ship's level of damage |
 | **Outcome** | One of seven: a minor, major or decisive victory or defeat, or a stalemate | |
+| **Horizon** | The number of days a result is judged over: the scenario's days, unless its objectives state a longer `horizon_days` (decision 0088) | The game's last day; a ship's days of repair |
+| **Days out** | For the objective `ships_out_of_action`: a ship's days of repair at the end of the game (0 if she is away at the yard) plus the days of repair she left for a yard with each time she left (decision 0088) | The days away; days actually absent, which the game does not count |
+| **Out of action** | Describes a ship not sunk with days out above 0. The objective `ships_out_of_action` scores her kind's points times her days out, at most the horizon, over the horizon. In a scenario that uses it, it takes the place of crippled (decision 0088) | Crippled; out (of a system) |
 | **Result** | The umpire's points, margin and outcome for each side, worked from the final truth and the event log. It is given when the game ends | What a side knows of its progress |
 | **Cargo landed** | For the objective: the tons a side's ships unloaded at a base less the tons they loaded back there, never below 0 (decision 0067) | Tons unloaded |
 | **Base open** | A base that ends a day with supply above zero and at least one ready aircraft at it. The objective counts the days (decision 0067) | A base's state at the end of the game |
