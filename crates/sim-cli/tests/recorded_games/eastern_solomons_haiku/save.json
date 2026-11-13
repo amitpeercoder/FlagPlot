@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "cebfa2e1110d0fd0"
+      "hash": "ce825bb67a257f30"
     }
   ],
   "orders": [
@@ -254,7 +254,7 @@
       "day": 1,
       "order": {
         "kind": "set_patrol_share",
-        "share": "0.8"
+        "share": "0.83"
       },
       "origin": {
         "intent": null,
@@ -280,7 +280,7 @@
       "day": 1,
       "order": {
         "kind": "set_patrol_share",
-        "share": "0.8"
+        "share": "0.7"
       },
       "origin": {
         "intent": null,
@@ -435,6 +435,58 @@
       "day": 1,
       "order": {
         "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:21"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:22"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:23"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "rest"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:24"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
         "mission": "base_strike",
         "target_base": 1
       },
@@ -461,7 +513,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "ca56f9c14e417648"
+    "hash": "a9443b066a393e0b"
   },
   "seats": {
     "allied": "player",
