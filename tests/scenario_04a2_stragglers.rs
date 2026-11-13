@@ -131,8 +131,8 @@ use sim_core::World;
 use sim_data::Scenario;
 
 const TF1: TaskForceId = TaskForceId::new(1);
-const TF2: TaskForceId = TaskForceId::new(2);
-const TF3: TaskForceId = TaskForceId::new(3);
+const TF2: TaskForceId = TaskForceId::new(1_000_001);
+const TF3: TaskForceId = TaskForceId::new(1_000_002);
 
 fn ship(raw: u32) -> ShipId {
     ShipId::new(raw)

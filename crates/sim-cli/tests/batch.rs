@@ -956,14 +956,14 @@ fn the_fights_of_scenarios_4a_and_4_record_who_sighted_first() {
                 "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
                 "forces": [
                     {"task_force": 2, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
-                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2000001, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
                 ]
             },
             {
                 "day": 1, "pulse": "morning", "rounds": 1, "sighted_first": "both",
                 "forces": [
                     {"task_force": 3, "side": "allied", "first_sighted_round": 1, "rounds_surprised": 0},
-                    {"task_force": 5, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
+                    {"task_force": 2000001, "side": "japanese", "first_sighted_round": 1, "rounds_surprised": 0},
                 ]
             },
         ])

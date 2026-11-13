@@ -3215,7 +3215,7 @@ mod tests {
             truth.task_forces[&TF].ships,
             [SHIP].into_iter().collect::<BTreeSet<_>>()
         );
-        let new = &truth.task_forces[&TaskForceId::new(2)];
+        let new = &truth.task_forces[&TaskForceId::new(1_000_001)];
         assert_eq!(new.name, "Test force, detached");
         assert_eq!(new.ships, [second].into_iter().collect::<BTreeSet<_>>());
         assert_eq!(
@@ -3282,7 +3282,7 @@ mod tests {
 
         let truth = world.umpire();
         let new = &truth.task_forces[&new_id];
-        assert_eq!(new_id, TaskForceId::new(2));
+        assert_eq!(new_id, TaskForceId::new(1_000_001));
         assert_eq!(new.name, "Split");
         assert_eq!(new.side, Side::Allied);
         assert_eq!(new.from_hex, hx(2, 0));

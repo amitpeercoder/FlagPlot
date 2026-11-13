@@ -197,7 +197,7 @@
 //! Carrier A has no other carrier in her hex.
 //!
 //! - Group 1, the 5 scouts, which searched this pulse: the field is 262 miles
-//!   off, within their 300. All 5 land there and form group 8, with 5 pilots.
+//!   off, within their 300. All 5 land there and form group 1,000,001 (the first of the Allied series, decision 0086), with 5 pilots.
 //!   Group 1 is left with 0 aircraft and 0 pilots.
 //! - Group 2, its aircraft if the fuel roll spared it: the field at 262 is
 //!   beyond 250. It comes down in the sea at (2,0), beside ships of its own
@@ -208,7 +208,7 @@
 //!
 //! The Japanese groups land aboard carrier J, with no event.
 //!
-//! **Supply.** The sortie of the scouts went with them to group 8, so the
+//! **Supply.** The sortie of the scouts went with them to group 1,000,001, so the
 //! field pays for it: 5 aircraft x 2 t = 10 t. A carrier would have paid
 //! nothing.
 //!
@@ -297,9 +297,9 @@
 //!
 //! - Group 6 launches at the field once on day 2, and in the morning: carrier
 //!   J is still at (9,0), 240 miles off, from the day's first pulse.
-//! - Group 8's 5 scouts are on the ground when the raid arrives, and the
+//! - Group 1,000,001's 5 scouts are on the ground when the raid arrives, and the
 //!   raid's hits on aircraft fall on them.
-//! - The field's count at the end of day 2 is the ready aircraft group 8 has
+//! - The field's count at the end of day 2 is the ready aircraft group 1,000,001 has
 //!   left in the state, and the tonnes the state holds; it is open only if
 //!   both are above zero.
 //! - No aircraft takes off from carrier A on day 2: her deck is out.
@@ -1267,7 +1267,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
     }
 
     // Coming home to no deck: the scouts to the field, the others to the sea
-    // beside their ships, at 0.95. Group 1's 5 form group 8.
+    // beside their ships, at 0.95. Group 1's 5 form group 1,000,001.
     let landed = group_events(&afternoon, |k| {
         matches!(k, EventKind::AircraftLandedElsewhere { .. })
     });
@@ -1281,7 +1281,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
             pilots,
             formed,
         } => {
-            assert_eq!((from.raw(), to.raw()), (1, 8));
+            assert_eq!((from.raw(), to.raw()), (1, 1_000_001));
             assert_eq!(at, AirGroupLocation::Base(FIELD));
             assert_eq!((aircraft, pilots, formed), (5, 5, true));
             assert!(cites(landed, deck_out));
@@ -1365,12 +1365,12 @@ fn check_afternoon(world: &World, run: &mut Run) {
         }
         _ => unreachable!(),
     }
-    // Wear is rolled for group 8's sortie (it went with the aircraft), and
+    // Wear is rolled for group 1,000,001's sortie (it went with the aircraft), and
     // none is worn on these figures.
     let worn: Vec<&Event> =
         group_events(&afternoon, |k| matches!(k, EventKind::AircraftWorn { .. }));
     assert!(worn.iter().any(
-        |e| matches!(e.kind, EventKind::AircraftWorn { air_group, .. } if air_group.raw() == 8)
+        |e| matches!(e.kind, EventKind::AircraftWorn { air_group, .. } if air_group.raw() == 1_000_001)
     ));
     assert!(!worn.iter().any(
         |e| matches!(e.kind, EventKind::AircraftWorn { air_group, .. } if air_group.raw() == 1)
@@ -1464,7 +1464,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
     // Each group's aircraft are all accounted for, at the day's end.
     let (g1, g1p) = truth_group(world, 1);
     assert_eq!((g1, g1p), (0, Some(0)));
-    assert_eq!(truth_group(world, 8), (5, Some(5)));
+    assert_eq!(truth_group(world, 1_000_001), (5, Some(5)));
     let (g2, _) = truth_group(world, 2);
     assert_eq!(g2, 0);
     let (g3, g3p) = truth_group(world, 3);
@@ -2139,7 +2139,7 @@ fn over_two_days_the_raid_on_day_2_falls_on_the_scouts_that_landed() {
             }
             _ => unreachable!(),
         }
-        // Group 8's 5 scouts are on the ground; the raid's hits on aircraft
+        // Group 1,000,001's 5 scouts are on the ground; the raid's hits on aircraft
         // fall on them and on nothing else.
         let attack: Vec<&&Event> = day2
             .iter()
@@ -2166,7 +2166,10 @@ fn over_two_days_the_raid_on_day_2_falls_on_the_scouts_that_landed() {
             })
             .collect();
         let on_group_8: u32 = destroyed.iter().map(|(_, a)| *a).sum();
-        assert!(destroyed.iter().all(|(g, _)| *g == 8), "seed {seed}");
+        assert!(
+            destroyed.iter().all(|(g, _)| *g == 1_000_001),
+            "seed {seed}"
+        );
         assert_eq!(on_group_8, hits_on_aircraft.min(5), "seed {seed}");
         // No aircraft takes off from carrier A: her deck is out.
         for event in &day2 {
@@ -2206,7 +2209,7 @@ fn over_two_days_the_raid_on_day_2_falls_on_the_scouts_that_landed() {
             .map(|g| g.ready)
             .sum();
         assert_eq!(ready, at_field);
-        assert_eq!(ready, truth.air_groups[&group(8)].ready);
+        assert_eq!(ready, truth.air_groups[&group(1_000_001)].ready);
         // Open only if both are above zero: the result's days agree.
         let result = world.result().expect("objectives");
         let open = result

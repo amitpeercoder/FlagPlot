@@ -403,7 +403,7 @@
 //! group 5 (she has room), the other 3 come down in the sea, groups 2 and 3,
 //! 16 each, land at Henderson Field, within their radius of 200 nm, and join
 //! group 10, and group 4's 14 (TBF-1, radius 190) land there too, 183 nm from
-//! the carriers, and form group 21 (decision 8 of 0059).
+//! the carriers, and form group 1,000,001, the first of the Allied series (decisions 8 of 0059 and 0086).
 //!
 //! ## What cannot happen
 //!
