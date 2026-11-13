@@ -2,14 +2,14 @@ Scenario 6a: A raid on an airfield
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 37cca443674913f5  23 events
-day   2  hash be1060f234787bf5  16 events
-day   3  hash fedca4649eed15e3  17 events
+day   1  hash 0b9c44abce2ef64f  24 events
+day   2  hash 0373c5c395b9959a  18 events
+day   3  hash 06cfb49770c1e431  18 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:3 "Placeholder defending fighters" (Allied) at base:2: 7 ready, mission CombatAirPatrol, patrol share 1, no arc
-air_group:4 "Placeholder resting bombers" (Allied) at base:2: 8 ready, mission Rest, no arc
+air_group:4 "Placeholder resting bombers" (Allied) at base:2: 7 ready, mission Rest, no arc
 air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, arc 040-130 to 300 nm
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock
 base:2 "Placeholder airfield B" (Allied) at (5,0): 900 t of supply in stock, 20 anti-aircraft shots
@@ -18,6 +18,6 @@ Allied claim over (5,0): 5 aircraft shot down, day 1 morning
 Allied claim over (5,0): 3 aircraft shot down, day 2 morning
 Allied claim over (5,0): 6 aircraft shot down, day 3 morning
 Japanese: no contacts
-Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (5,0): 4 aircraft shot down, 2 aircraft destroyed on the ground, day 1 morning
 Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
 Japanese claim at (5,0): 1 aircraft destroyed on the ground, day 3 morning
