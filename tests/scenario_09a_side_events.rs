@@ -1285,7 +1285,6 @@ fn a_difference_the_side_can_meet_does_change_what_it_is_given() {
 }
 
 #[test]
-#[ignore = "a known leak: the number of a force made in the game counts the enemy's forces (reported to the architect)"]
 fn an_enemy_force_that_is_merely_there_changes_nothing_the_side_is_given() {
     // A known leak, kept as documentation: see decision 0047, "What it
     // costs". The architect will record it with its remedy (numbering created
@@ -1624,7 +1623,6 @@ fn a_side_view_measures_nothing_from_an_enemy_ships_true_place() {
 }
 
 #[test]
-#[ignore = "outside review finding 3:the number of an air group formed in the game counts the enemy's air groups"]
 fn an_enemy_air_group_that_is_merely_there_changes_nothing_the_side_is_given() {
     // Scenario 12c with Japanese carrier B's flight deck degraded: its scouts
     // come back to a deck they cannot land on and land aboard carrier B2,

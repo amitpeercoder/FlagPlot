@@ -2,9 +2,9 @@ Scenario 6c2: Tired lookouts
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash be85d72c28fe3fa4  5 events
-day   2  hash a858d0ded8113e7e  3 events
-day   3  hash a2b62ec1ba79126d  60 events
+day   1  hash ec60590ef8cea786  5 events
+day   2  hash 40183aed7c584e7c  3 events
+day   3  hash 451e117f3d45d827  60 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

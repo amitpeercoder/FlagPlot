@@ -526,7 +526,9 @@ fn objectives_change_no_hash_and_no_event() {
     // And it was 8a7cf075a69f2982 until air round 4 set
     // fighter_false_claim_chance to 0.7: claims are in belief, and so in the
     // hash.
-    assert!(baseline.contains("hash de197a1edf53a1ae"));
+    // And it was de197a1edf53a1ae until the state went to version 8 (decision
+    // 0086, the counters of units made in play are hashed).
+    assert!(baseline.contains("hash 0d70319bcaa38438"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set
