@@ -683,9 +683,9 @@ range_nm = 200
 # 09:20 to 09:40 (307, 439). Chikuma's No. 2 found the American carriers at
 # 12:05 Tokyo time, 153 degrees and about 260 miles from the carriers (441).
 # The arc is 120 to 180: south and south-east, about the base line, and it
-# holds the bearing of the sighting. The range is the E13A1's derived search
-# range, 253, below the record's 330; it becomes 330 when decision 0075
-# gives the type a search radius of its own. Chikuma's five floatplanes stand for
+# holds the bearing of the sighting (a reading: search method 8 and "left
+# half" are defined on no page read). The range is the 330 flown, within the
+# E13A1's search radius of 398 (decision 0075). Chikuma's five floatplanes stand for
 # the four to six of the vanguard (the other cruisers' and the battleships'
 # floatplanes are not in the scenario).
 [[order]]
@@ -702,7 +702,7 @@ air_group = 17
 kind = "set_search_arc"
 from_deg = 120
 to_deg = 180
-range_nm = 253
+range_nm = 330
 
 # A LIMIT OF THE RULES, not the record: the carriers' attack units are on
 # naval strike (below), as decision 0063 has them, but on the day they flew
