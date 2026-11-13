@@ -60,6 +60,7 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 
 - Which figure to prefer where sources disagree: the Japanese aircraft lost at Eastern Solomons (about 40, 62 or 75), and each day's losses over Guadalcanal.
 - The three claim chances of decision 0056 by side, and the surface claim figure of decision 0014, from claims set beside actual losses.
+- In the claims round: with no ship burning, a surface claim of ships sunk equals the truth, against what the briefing promises (a claim "can be well above" it). Decision 0085, 9.
 - Base sizes for the real map (decision 0052, item 15).
 - The points and levels of decision 0054, and history's result on that scale for scenarios 4, 5 and 6.
 
