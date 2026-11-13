@@ -1,6 +1,6 @@
 # 0088: Ships out of action, counted by the time they are away
 
-Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers at the end. Nothing is built: it is built straight after ship repair (decision 0069), whose yard function it reads, and the hand calculation is written by the architect before any code is delegated. The figures here are placeholders for the example only.
+Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers at the end. Built on Nov 13, 2026, straight after ship repair (decision 0069), whose yard function it reads, to the architect's specification and hand calculation; see "As built". The figures here are placeholders for the example only.
 
 Rewritten the same day. The first version drew one line at about thirty days and called a ship past it "out of the campaign". The designer asked what that means in a game that runs from Pearl Harbor to 1945, where a month away takes no ship out of anything. The line was wrong at that length, and so was the name. This version counts the time a ship is away against the length of what is being fought over. The file keeps its first name so that references to it hold.
 
