@@ -330,6 +330,10 @@ pub struct AirReach {
     /// For a fighter, the same figure: the radius within which its escorts go
     /// with a raid (decision 0030).
     pub escort_radius_nm: Option<Dec>,
+    /// How far a rebase order can move the group, in miles: twice the longer
+    /// of the type's search range and strike radius (decision 0091). The
+    /// reach in force does not change it.
+    pub transfer_range_nm: Dec,
     pub places: Vec<ReachLine>,
 }
 
@@ -785,6 +789,8 @@ fn air_reach(ctx: &Ctx<'_>, handle: &str, to: &[PlaceArg]) -> Option<MeasureAnsw
         reach: group.reach.name(),
         reach_nm: Dec(reach_nm),
         escort_radius_nm: (aircraft.role == AircraftRole::Fighter).then_some(Dec(radius)),
+        // The one rule the rebase order reads (decision 0091, 3).
+        transfer_range_nm: Dec(ctx.view.transfer_range_nm(group)),
         places: places
             .into_iter()
             .map(|(hex, to)| ReachLine {
@@ -1049,6 +1055,10 @@ impl AirReach {
                 self.reach, self.reach_nm
             ));
         }
+        text.push_str(&format!(
+            "- Transfer range for a rebase: {} miles\n",
+            self.transfer_range_nm
+        ));
         if self.places.is_empty() {
             text.push_str("- Places asked: none\n");
         }

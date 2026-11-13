@@ -138,6 +138,16 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NotYourLandUnit => base("not_your_land_unit"),
         RejectReason::NoMenAshoreHere => base("no_men_ashore_here"),
         RejectReason::NoTroopCapacity => base("no_troop_capacity"),
+        RejectReason::AirGroupAboardShip => base("air_group_aboard_ship"),
+        RejectReason::AirGroupAwayAtYard => base("air_group_away_at_yard"),
+        RejectReason::AlreadyAtBase => base("already_at_base"),
+        RejectReason::BeyondTransferRange {
+            distance_nm,
+            range_nm,
+        } => base("beyond_transfer_range")
+            .num("distance_nm", *distance_nm)
+            .num("range_nm", *range_nm),
+        RejectReason::AlreadyMovedToday => base("already_moved_today"),
     }
 }
 
@@ -1189,6 +1199,39 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .int("days_away", *days_away)
                 .int("return_day", *return_day),
         ),
+        EventKind::AircraftWrittenOff {
+            air_group,
+            base,
+            aircraft,
+        } => (
+            "aircraft_written_off",
+            d.id("air_group", *air_group)
+                .id("base", *base)
+                .int("aircraft", *aircraft),
+        ),
+        EventKind::AirGroupRebased {
+            air_group,
+            from,
+            to,
+            distance_nm,
+            transfer_range_nm,
+            ready,
+            pilots,
+        } => {
+            let data = d
+                .id("air_group", *air_group)
+                .id("from", *from)
+                .id("to", *to)
+                .num("distance_nm", *distance_nm)
+                .num("transfer_range_nm", *transfer_range_nm)
+                .int("ready", *ready);
+            // Left out where the group's pilots are not counted.
+            let data = match pilots {
+                Some(pilots) => data.int("pilots", *pilots),
+                None => data,
+            };
+            ("air_group_rebased", data)
+        }
         EventKind::ForceReturnedFromYard {
             task_force,
             base,

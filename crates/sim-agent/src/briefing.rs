@@ -296,6 +296,11 @@ pub struct LossesPart {
     /// at another carrier or a base (decision 0059). Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub aircraft_landed_elsewhere: Vec<LandedLine>,
+    /// Air groups moved to another base by a rebase order on the day just
+    /// resolved (decision 0091). Left out when none. Damaged aircraft left
+    /// behind are counted in `aircraft` as written off.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub air_groups_rebased: Vec<RebasedLine>,
     /// What the side claims of the enemy: claims received yesterday.
     pub claims: Vec<Claim>,
 }
@@ -311,6 +316,22 @@ pub struct LandedLine {
     pub pilots: u32,
     /// Whether `to` was formed by this landing.
     pub formed: bool,
+    pub event: u32,
+}
+
+/// An air group moved by a rebase order (decision 0091).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct RebasedLine {
+    pub air_group: Handle,
+    pub from: Handle,
+    pub to: Handle,
+    pub distance_nm: Dec,
+    pub transfer_range_nm: Dec,
+    /// Ready aircraft that went with the group.
+    pub ready: u32,
+    /// Pilots that went with it; `None` where the group's pilots are not
+    /// counted.
+    pub pilots: Option<u32>,
     pub event: u32,
 }
 
@@ -1154,6 +1175,7 @@ impl Day {
         let mut aircraft: BTreeMap<AirGroupId, AircraftLoss> = BTreeMap::new();
         let mut claims = Vec::new();
         let mut landed: Vec<LandedLine> = Vec::new();
+        let mut rebased: Vec<RebasedLine> = Vec::new();
         let mut spent: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut destroyed: BTreeMap<BaseId, Fixed> = BTreeMap::new();
         let mut stocks: BTreeMap<BaseId, StockMoves> = BTreeMap::new();
@@ -1343,6 +1365,31 @@ impl Day {
                     } if *written_off > 0 => {
                         loss(ctx, &mut aircraft, *air_group, id).written_off += written_off;
                     }
+                    EventKind::AircraftWrittenOff {
+                        air_group,
+                        aircraft: n,
+                        ..
+                    } if *n > 0 => {
+                        loss(ctx, &mut aircraft, *air_group, id).written_off += n;
+                    }
+                    EventKind::AirGroupRebased {
+                        air_group,
+                        from,
+                        to,
+                        distance_nm,
+                        transfer_range_nm,
+                        ready,
+                        pilots,
+                    } => rebased.push(RebasedLine {
+                        air_group: ctx.group(*air_group),
+                        from: ctx.base(*from),
+                        to: ctx.base(*to),
+                        distance_nm: Dec(*distance_nm),
+                        transfer_range_nm: Dec(*transfer_range_nm),
+                        ready: *ready,
+                        pilots: *pilots,
+                        event: id,
+                    }),
                     EventKind::AirGroupLost {
                         air_group,
                         aircraft: n,
@@ -1801,6 +1848,7 @@ impl Day {
                 ships_damaged: damaged,
                 aircraft: aircraft.into_values().collect(),
                 aircraft_landed_elsewhere: landed,
+                air_groups_rebased: rebased,
                 claims,
             },
             spent,

@@ -543,6 +543,25 @@
             }
           }
         },
+        "air_groups_rebased": {
+          "description": "Left out when none. Air groups moved to another base by a rebase order on the day just resolved (decision 0091). The group flew nothing that day. Its damaged aircraft, which could not fly, were written off at the base it left and are counted in aircraft as written_off.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "from", "to", "distance_nm", "transfer_range_nm", "ready", "pilots", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
+              "from": { "$ref": "defs.schema.json#/$defs/handle" },
+              "to": { "$ref": "defs.schema.json#/$defs/handle" },
+              "distance_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+              "transfer_range_nm": { "$ref": "defs.schema.json#/$defs/dec" },
+              "ready": { "description": "Ready aircraft that went with the group.", "type": "integer" },
+              "pilots": { "description": "Pilots that went with the group; null where its pilots are not counted.", "$ref": "defs.schema.json#/$defs/count_or_null" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
         "claims": {
           "description": "Claims yesterday: what the side's own people believe they did in a fight at sea or a raid. They can be wrong. A claim from the air (from_air true) says hits on ships and the kind they were taken for, ships sunk, aircraft shot down and aircraft destroyed on the ground; a claim of a fight at sea says ships sunk only, with the rest 0 and null.",
           "type": "array",

@@ -1,0 +1,114 @@
+# Scenario 22: an air group is moved to another base by order (decision 0091).
+#
+# Proves rebasing against a hand calculation: the move made at the start of
+# the day, the damaged aircraft written off, the day of the move flown with
+# nothing, and two refusals, beyond the transfer range and already there.
+# Three Allied bases lie on one row: base 1 at (0,0), base 2 at (5,0), 200 nm
+# east, and base 3 at (13,0), 520 nm east. There is no Japanese unit, no fight
+# and no random draw that can change anything. The hand calculation is in
+# tests/scenario_22_rebase.rs.
+#
+# No base repairs aircraft (no aircraft_repairs_per_day), and the scenario
+# names no wear, fatigue or air supply figures, so nothing wears, tires or is
+# grounded, and group 1 can fly its search in both daylight pulses of every
+# day it is not moving.
+#
+# Group 1's search: the arc 060 to 120, out to 400 nm. The frozen step 1
+# figures accept it: the bearings are multiples of 10 from 0 to 350, and 400
+# nm is above 0 and within the placeholder flying boat's 600 nm search range.
+#
+# PLACEHOLDER DATA. The bases, air groups, aircraft and map are invented.
+
+name = "Scenario 22: Rebasing an air group"
+placeholder = true
+seed = 1942
+days = 3
+map = "../map/placeholder_rebase.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder airfield 1"
+side = "allied"
+q = 0
+r = 0
+
+[[base]]
+id = 2
+name = "Placeholder airfield 2"
+side = "allied"
+q = 5
+r = 0
+
+[[base]]
+id = 3
+name = "Placeholder airfield 3"
+side = "allied"
+q = 13
+r = 0
+
+# Placeholder flying boat: search range 600 nm, strike range 0, so a transfer
+# range of 1,200 nm.
+[[air_group]]
+id = 1
+name = "Placeholder patrol squadron"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 6
+damaged = 2
+
+# Placeholder fighter: search range 0, strike range 250 nm, so a transfer
+# range of 500 nm.
+[[air_group]]
+id = 2
+name = "Placeholder fighter squadron"
+side = "allied"
+base = 1
+aircraft_type = 4
+ready = 12
+
+# Day 1: group 1 searches.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 60
+to_deg = 120
+range_nm = 400
+
+# Day 2: group 1 to base 2, 200 nm: accepted.
+[[order]]
+day = 2
+side = "allied"
+air_group = 1
+kind = "rebase"
+base = 2
+
+# Day 2: group 2 to base 3, 520 nm: refused, beyond its 500 nm.
+[[order]]
+day = 2
+side = "allied"
+air_group = 2
+kind = "rebase"
+base = 3
+
+# Day 2: group 2 to base 1: refused, already there.
+[[order]]
+day = 2
+side = "allied"
+air_group = 2
+kind = "rebase"
+base = 1

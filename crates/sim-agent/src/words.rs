@@ -143,6 +143,21 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::NoTroopCapacity => {
             " (a load with a unit needs a ship in the task force that can carry men, such as a transport)"
         }
+        R::AirGroupAboardShip => {
+            " (rebase is for a group at a base of your side; a group aboard a ship cannot be rebased)"
+        }
+        R::AirGroupAwayAtYard => {
+            " (a group aboard a ship that is away at a yard cannot be rebased until the ship is back)"
+        }
+        R::AlreadyAtBase => {
+            " (rebase needs another base of your side than the one the group is at)"
+        }
+        R::BeyondTransferRange { .. } => {
+            " (the transfer range is twice the longer of the aircraft type's search range and strike radius; measure with question air_reach gives it, and a nearer base can be used first, the move made over two days)"
+        }
+        R::AlreadyMovedToday => {
+            " (a group moves once a day; the order that moved it was given earlier in this day)"
+        }
         _ => "",
     };
     format!("{reason}{hint}")

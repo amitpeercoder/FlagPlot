@@ -465,6 +465,13 @@ impl<'a> SideView<'a> {
         self.ref_data.reach_nm(group.aircraft_type, group.reach)
     }
 
+    /// How far `group` may fly to another base in one move:
+    /// [`RefData::transfer_range_nm`], the one function the rebase order
+    /// reads (decision 0091, 3). The figures are rules, so common knowledge.
+    pub fn transfer_range_nm(&self, group: &AirGroup) -> Fixed {
+        self.ref_data.transfer_range_nm(group.aircraft_type)
+    }
+
     /// The contact `group` would launch a strike at now (decision 6 of 0063):
     /// `contact_to_strike` (`airstrike.rs`) on this side's belief and the
     /// group's own state, orders and reach, which is what the strike decision

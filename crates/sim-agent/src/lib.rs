@@ -48,9 +48,10 @@ pub use briefing::{
     Claim, ContactsPart, DamagedShip, DroppedContact, DueArrival, FedLine, Fight, Fired,
     FuelChange, FuelWarning, Heading, HexSupply, LandUnitsPart, LoadingCompleteLine, LossesPart,
     MenLostLine, MenMoved, NotThere, OrdersPart, OutOfReachWarning, PilotWarning,
-    PropulsionWarning, Raid, RefusedOrder, RepairedShip, ReplacementStream, ReportedContact,
-    ReturnedForce, ShipRangeWarning, StocksYesterday, Strike, SunkShip, SupplyChange,
-    SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
+    PropulsionWarning, Raid, RebasedLine, RefusedOrder, RepairedShip, ReplacementStream,
+    ReportedContact, ReturnedForce, ShipRangeWarning, StocksYesterday, Strike, SunkShip,
+    SupplyChange, SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine,
+    Warnings,
 };
 pub use common::{Dec, Handle, Place};
 pub use explain::{

@@ -83,6 +83,7 @@ fn text(kind: &OrderKind) -> String {
                 let kinds: Vec<&str> = kinds.iter().map(|kind| kind.name()).collect();
                 format!("target priority {}", kinds.join(", "))
             }
+            AirGroupOrder::Rebase { base } => format!("rebase to {base}"),
         },
     }
 }

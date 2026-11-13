@@ -427,6 +427,23 @@ impl Briefing {
                 evs(&[x.event])
             ));
         }
+        for x in &l.air_groups_rebased {
+            let mut line = format!(
+                "Rebased: {} moved from {} to {}, {} miles (transfer range {} miles), with {} ready",
+                x.air_group.text(),
+                x.from.text(),
+                x.to.text(),
+                x.distance_nm.0,
+                x.transfer_range_nm.0,
+                x.ready
+            );
+            if let Some(pilots) = x.pilots {
+                line.push_str(&format!(" and {pilots} pilots"));
+            }
+            line.push_str("; it flew nothing that day");
+            line.push_str(&evs(&[x.event]));
+            o.line(line);
+        }
         o.each("Claims yesterday", &l.claims, |x| {
             if x.from_air {
                 let (place, words) = sim_core::events::air_claim_words(
@@ -585,6 +602,9 @@ impl Briefing {
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));
+            }
+            if g.moved_yesterday {
+                s.push_str(", moved to this base yesterday and flew nothing yesterday");
             }
             if let Some(w) = &g.would_strike {
                 s.push_str(&format!(

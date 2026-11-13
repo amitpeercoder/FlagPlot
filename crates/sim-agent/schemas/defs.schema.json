@@ -359,6 +359,10 @@
           "type": "array",
           "items": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] }
         },
+        "moved_yesterday": {
+          "description": "Given (true) only for a group that a rebase order moved to its present base on the day just resolved (decision 0091): it flew nothing on that day, and its aircraft were on the ground at this base. Left out otherwise.",
+          "const": true
+        },
         "would_strike": {
           "description": "Given only for a group on naval_strike with ready aircraft that would launch now: the contact the staff would send it at if the strike decision were made at this moment, by the rule the decision uses (a contact reported in this pulse or the one before, within the group's reach, of a kind on its target list; the kind first on the list, then the nearest). The decision is made in each daylight pulse on the contacts held then, so a contact that is not sighted again may be too old by the morning. Left out when the group would launch at nothing.",
           "type": "object",

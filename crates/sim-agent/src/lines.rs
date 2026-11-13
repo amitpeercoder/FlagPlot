@@ -113,6 +113,11 @@ pub struct AirGroupLine {
     /// on naval strike, has no ready aircraft, or would launch at nothing.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub would_strike: Option<WouldStrike>,
+    /// Set only when the group was moved to another base by a rebase order
+    /// on the day just resolved (decision 0091): it flew nothing on that
+    /// day, and its place is the new base. Left out otherwise.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub moved_yesterday: bool,
 }
 
 /// The contact a naval strike group would launch at now.
@@ -276,6 +281,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
                 distance_nm: u32::try_from(choice.distance_nm.trunc())
                     .expect("an air distance is a whole number of miles"),
             }),
+        moved_yesterday: group.rebased_day == Some(ctx.view.day()),
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),
