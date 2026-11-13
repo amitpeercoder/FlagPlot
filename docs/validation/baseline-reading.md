@@ -128,6 +128,25 @@ What it shows:
 - **Allied torpedoes fired** misses further (36 against 4 to 6): every Allied destroyer now lives to fire. What is left is readiness (decision 0071's share, at its first value) and tubes that do not bear (decision 0074, held).
 - **Tenryu and Yubari** still miss, for the length of the fight and not the rate; the watch on them stands.
 
+### Savo Island after round 2, Nov 13, 2026
+
+Two figures moved, each in a round of its own: the strength of experience for guns to its cap of 0.5 (round 1) and the factor against a surprised target to 2 (round 2). Both act on one side more than the other. The report is `savo-island-r2.md`: judged 23, agree 19, at the edge 1, miss 3. The surface tuning is closed there (`tuning/savo-island-closed.md`).
+
+| What | Record | Tuning started | After round 2 |
+| --- | --- | --- | --- |
+| Japanese gun hits for each thousand shells | 81 to 117 | 38 to 72, 58: miss | 49 to 92, 75: agrees |
+| Gun hits on Allied ships | 153 to 219 | 30 to 129, 87: miss | 35 to 158, 116: at the edge |
+| Allied cruisers sunk | 4 | 0 to 4, 2: at the edge | 0 to 5, 3: agrees |
+| Northern group cruisers sunk | 3 | 0 to 3, 1: at the edge | 0 to 3, 2: agrees |
+| Minutes of action | 20 to 30 | 35 to 65, 40: miss | 35 to 65, 40: miss |
+| Tenryu and Yubari's shells, in hundreds | 1 | 2 to 5, 3: miss | 2 to 5, 3: miss |
+| Allied torpedoes fired | 4 to 6 | 16 to 36, 36: miss | 16 to 48, 34: miss |
+
+- **The chance to hit is done.** The Japanese rate agrees; gun hits on Allied ships are short by what the secondary guns scored, which the rules do not fire.
+- **The three misses are named and left:** the Japanese passing on, which no rule has; the pair's rounds, which follow from it, under the watch; and Allied torpedoes, of which Helm and Wilson fire 16 in nearly every run, two ships the rows have not firing for want of orders and for a target that was friendly.
+- **What a hit does and breaking off had no supported move.** A cruiser sinks at about the main battery hits the record's took. What is wrong is where the Japanese torpedoes go: all of them into the first fight, none into the northern group's, so Chicago sinks in about half the runs.
+- **The tuned figures are fitted on Savo Island and not yet checked.** Cape Esperance checks them.
+
 ## Eastern Solomons
 
 - **The American aircraft do not die.** The record has 13 to 14 lost to the enemy and 20 to 21 in all; the middle run loses 2, and no run reaches the record.
