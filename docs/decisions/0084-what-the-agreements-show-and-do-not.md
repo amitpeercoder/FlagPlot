@@ -114,7 +114,7 @@ The check of what is derived before what is tuned ("Tuning", 6) was Tenryu and Y
 
 ### 13. The ditchings of Ryujo's raid. Accepted
 
-Ruled: the ditchings of Ryujo's raid (B5N2s flown 200 miles on a derived radius of 175, from rows 79 and 412 of `aircraft_type_facts`, neither of which states a load; 412's block is headed B5N1) are not evidence for `ditch_chance_per_radius_beyond` and are left out of any round that tunes it. Fitting the shared figure to them would bend every type's ditching to one type's unsourced radius. Decision 0081 had called them evidence for that round; a dated note there points here, and its index entry and `docs/validation/baseline-reading.md` are corrected. A line is in `docs/step2-opening-list.md`.
+Ruled: the ditchings of Ryujo's raid (B5N2s flown 200 miles on a derived radius of 175, from rows 79 and 412 of `aircraft_type_facts`, neither of which states a load; 412's block is headed B5N1) are not evidence for `ditch_chance_per_radius_beyond` and are left out of any round that tunes it. Fitting the shared figure to them would bend every type's ditching to one type's unsourced radius. Decision 0081 had called them evidence for that round; a dated note there points here, and its index entry and `docs/validation/baseline-reading.md` are corrected. A line is in `docs/open-work.md`.
 
 ### 14. Aoba's hits at Cape Esperance. Accepted in part: the record kept, called weak
 

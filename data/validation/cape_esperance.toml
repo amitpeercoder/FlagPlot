@@ -28,6 +28,11 @@
 # Japanese survey or crew count exists. Furutaka's rows give lower bounds
 # only, so no range can be written for her and her measure is reported;
 # a total that holds her cannot be judged either.
+#
+# Changed on 2026-11-13 by the coordinating architect (decision 0089, ruling
+# 5): the reason of gun_hits_on_aoba is reworded. Only one statement says 40;
+# the other two bound it from either side and disagree with each other. No
+# record, row, range or judged flag changed.
 
 battle = "cape-esperance"
 scenario = "data/scenarios/17_cape_esperance.toml"
@@ -92,7 +97,7 @@ take = "hits_on"
 ships = [1]
 weapons = ["gun"]
 rows = [1598, 4034, 1599]
-reason = "Three statements that meet at 40: 'up to forty' (1598), a flat '40 hits' in the Australian official history (4034) and 'over 40' (1599). None is from a count: no counter is named in any, and no Japanese survey or crew count exists. 'Up to' bounds nothing below and 'over' nothing above, so this is a weak record, judged because three sources put the figure at one place. Outside research has looked for a bounded source; if a row arrives before the check is run the record changes, and it does not change after the run (decision 0084, finding 14). Many of her hits were duds by one lead (1695), so the count is not a measure of damage."
+reason = "One statement of 40, a flat '40 hits' in the Australian official history (4034), bounded from both sides by two others that disagree with each other: 'up to forty' (1598) and 'over 40' (1599). None is from a count: no counter is named in any, and no Japanese survey or crew count exists. 'Up to' bounds nothing below and 'over' nothing above, so this is a weak record, judged on the one statement that gives 40 (decision 0089, ruling 5). Outside research has looked for a bounded source; if a row arrives before the check is run the record changes, and it does not change after the run (decision 0084, finding 14). Many of her hits were duds by one lead (1695), so the count is not a measure of damage."
 
 [[measure]]
 id = "gun_hits_on_furutaka"

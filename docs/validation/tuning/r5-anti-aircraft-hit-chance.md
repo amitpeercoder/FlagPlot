@@ -51,6 +51,8 @@ So the guns make about 43% of the kills over the Enterprise force.
 
 The rules' 43% is consistent with it. The row cannot size a chance to hit: it gives no count of shots or of kills.
 
+*Note, Nov 13, 2026 (decision 0089, ruling 3):* the two shares are not comparable. The row's half is of the aircraft attacking; the rules' 43% is of the aircraft killed. If few attackers fell to fighters, guns could kill half the attackers and nearly all of those killed, so the two cannot be called consistent. `anti_aircraft_hit_chance` stays 0.05: looked at, not moved, and no row bears on it.
+
 **The rounds-per-gun rows** are 3947 to 3952. They give Yorktown's and a destroyer division's average expenditure per gun on the last day at the Coral Sea: 5-inch 50 and 65, 1.1-inch 180 and 500, 20 mm 330, .50 calibre 880. They size no chance either. The bulletin gives no count of aircraft shot down to set them against, as each row's note says. They also count rounds by calibre, where the rules count shots of a ship's or a base's anti-aircraft rating.
 
 ## Conclusion

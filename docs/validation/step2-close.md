@@ -11,9 +11,9 @@ Step 2 built the harness, measured the slice's battles against the record, tuned
 | Line of the spec | Met? | Shown by |
 | --- | --- | --- |
 | All three battles pass, or each miss is written down with its cause and accepted by the designer | **Met:** no battle passes; each miss is written down with its cause and was accepted by the designer on Nov 13, 2026 ("Accept all 11") | This page; the four reports in the table below |
-| No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met.** A note above every figure in its file (pull requests 226 and 227), and two summary pages list them. Outside `data/reference` and so outside the line: scenario 6's own figures, placeholders with notes in the scenario file and on the air page; and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" (left so by the architect's ruling, `docs/step2-opening-list.md`) | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
+| No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met.** A note above every figure in its file (pull requests 226 and 227), and two summary pages list them. Outside `data/reference` and so outside the line: scenario 6's own figures, placeholders with notes in the scenario file and on the air page; and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" (left so by the architect's ruling, `docs/open-work.md`) | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
 | The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **Met.** The frozen-figure tests, the invariants and the determinism scenario run in `cargo test` on every pull request. The hundred-seed soak, which CI does not run, was run by hand on Nov 13, 2026: 100 seeds of 180 days, 1,978,115 events, every check holding; the determinism scenario 9 of 9 and the invariants' tests 24 of 24 beside it | `docs/validation/closing-tests.md`, test 1 |
-| The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/step2-opening-list.md`, "Done" |
+| The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/open-work.md`, "Done, and recorded nowhere else" |
 | The legibility test is run again on the tuned Eastern Solomons | **Run, failed its rule by one item, and accepted as it stands by the designer** (Nov 13, 2026). The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again, and the rule not changed after the result | `docs/validation/closing-tests.md`, test 2 |
 | A cheap model given only the rulebook, the glossary, the data files and two scenarios reproduces a set of hand calculations exactly | **Met after a rerun, not at the first sitting.** First run: every number of the step 2 rules exact, but two derived chances cut where the hand calculations round; in the step 1 control one number wrong, on a term the rulebook did not define ("free round", "both fire from the start"), and two chances cut. The architect then ruled that such chances are written cut (R6), and the rulebook and glossary were fixed. The control sitting, run again on the fixed book, got every number exact. One new finding (R12, how a starting contact ages) was closed by a sentence in chapter 3 | `docs/validation/closing-tests.md`, test 3 |
 
@@ -34,6 +34,8 @@ The closing reports of the three tuned battles were remade on the final engine (
 ## Every named miss and every agreement at the edge
 
 **The designer decided on Nov 13, 2026: "Accept all 11"** named misses below.
+
+*Note, Nov 13, 2026:* the page the designer read counted 5 figures sized from rows and 4 fitted. Decision 0089 corrected that to 3 and 6 (two air figures are fits, not sizes). No miss, no edge and no verdict changed, and he is told of the correction.
 
 Figures are the 5th to the 95th percentile, then the median, then (in brackets) the runs of 1,000 that hold the record. Misses that share one cause are grouped.
 
@@ -144,6 +146,7 @@ From decision 0084, and the Cape Esperance check read under it:
 7. The hits did not transfer. The Japanese guns score a median of 6 hits; Duncan's loss and Aoba's hits miss.
 8. Part of the outcome agreement rests on fights by day the record does not have. In the 229 runs with no fight by day the median is 1 Japanese ship sunk, not the record's 2.
 9. The check shows none of the three figures fitted at Savo Island (`experience_gun_strength`, `surprised_target_factor`, the unready shares) right, and none wrong.
+10. Rabaul checks one figure held still at a time; it is not an independent test of the air model as a whole. Rabaul round 1 changed how many fighters survive on the ground, and so the fights that the check of the fighter and claim chances reads (decision 0089).
 
 ## The figures by status
 
@@ -153,22 +156,24 @@ From the two "figures closed" pages, which sort the figures alike (the figure no
 
 | Sized from rows | Fitted, not checked | Looked at, not moved | Placeholder | No battle reads it |
 | --- | --- | --- | --- | --- |
-| 5 | 4 | 19 | 61 | 12 |
+| 3 | 6 | 19 | 61 | 12 |
+
+*Corrected Nov 13, 2026 (decision 0089):* the counts were 5 sized and 4 fitted; `fighter_false_claim_chance` and `[base_hit] aircraft` are fitted, not sized.
 
 Three hand-made files are also read by no battle: `port_sizes.csv`, `ship_classes.csv`, `aircraft_types.csv`.
 
 Sized from rows:
 - `unready_gun_share` 0.5: Condition II, half the armament manned (decision 0068).
-- `unready_torpedo_share` 0.5: Bagley fired four of eight tubes (decisions 0071, 0074).
-- `fighter_false_claim_chance` 0.7: 43 claimed by VF-5 and VF-6 (air round 4).
-- `[base_hit] aircraft` 0.06: about 2.5 aircraft destroyed on the ground for about 212 bomber sorties (Rabaul round 1).
+- `unready_torpedo_share` 0.5: Bagley fired four of eight tubes, one ship's case (decisions 0071, 0074).
 - `[search_radius] divisor_of_scouting_range` 3: the Bureau of Aeronautics' method (decision 0075).
 
 Fitted, not checked:
 - `surprised_target_factor` 2 (Savo Island round 2).
 - `experience_gun_strength` 0.5, the cap (Savo Island round 1).
 - `anti_aircraft_before_attack_share` 0 (decision 0079).
-- `patrol_drawn_off_share` 0 (decision 0080).
+- `patrol_drawn_off_share` 0 (decision 0080; no row behind either end, decision 0089).
+- `[base_hit] aircraft` 0.06: about 2.5 aircraft destroyed on the ground for about 212 bomber sorties, through an assumed bomb a bomber and the placeholder bomb chance (Rabaul round 1; decision 0089).
+- `fighter_false_claim_chance` 0.7: 43 claimed by VF-5 and VF-6, fitted to the model's own kills (air round 4; decision 0089).
 
 **The slow air files** (`air-figures-closed.md`): `air_upkeep.toml` 3 placeholders and 1 read by no battle; `fatigue.toml` 3 placeholders and 2 read by no battle; `air_supply.toml` 4 placeholders. They are tuned on Rabaul and have no battle to check them; rounds 2 and 3 looked at fatigue and wear and moved nothing. Scenario 6's own 7 figures (repairs a day, supply, replacements, the rest threshold, the dive bombers' search) are placeholders or readings.
 
@@ -238,7 +243,7 @@ Also for the designer to look at: decision 0066 (land units) has three choices m
 
 ## Handed to step 3
 
-Gathered from `docs/step2-opening-list.md` and the round records, with duplicates removed.
+Gathered from `docs/open-work.md` and the round records, with duplicates removed.
 
 **Before step 3, already ruled:**
 - Ship repair (decision 0069) and "out of the campaign" on the objectives scale.
