@@ -147,7 +147,7 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
             " (rebase is for a group at a base of your side; a group aboard a ship cannot be rebased)"
         }
         R::AirGroupAwayAtYard => {
-            " (a group aboard a ship that is away at a yard cannot be rebased until the ship is back)"
+            " (rebase is for a group at a base of your side; a group aboard a ship cannot be rebased, at the yard or not)"
         }
         R::AlreadyAtBase => {
             " (rebase needs another base of your side than the one the group is at)"
