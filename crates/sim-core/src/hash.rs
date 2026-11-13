@@ -12,6 +12,7 @@
 use crate::belief::{BattleClaim, Contact};
 use crate::orders::{AirMission, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
+use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Replacement, Route, RulesOfEngagement,
     SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, TaskForce, TruthState,
@@ -115,8 +116,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `last_base_strike_day` after its `reach_order` (decision 0063);
 /// version 6 adds a ship's `experience` after its location (decision 0064);
 /// version 7 adds a ship's `torpedoes_one_side_fired` after its
-/// `torpedoes_ready` (decision 0083).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v7";
+/// `torpedoes_ready` (decision 0083);
+/// version 8 replaces the one task force counter with a counter for each side
+/// and each kind of unit made in play, hashed Allied then Japanese, task
+/// forces then air groups (decision 0086).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v8";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -138,7 +142,8 @@ fn name_every_field(world: &World) {
         // Hashed by count and next number only.
         orders: _,
         order_ids: _,
-        task_force_ids: _,
+        // Hashed: every counter, Allied then Japanese, task forces then air groups.
+        made_ids: _,
         // Not hashed: orders waiting for the next day are not yet state.
         pending: _,
         // Hashed by count only.
@@ -558,7 +563,12 @@ pub(crate) fn hash_world(world: &World) -> u64 {
 
     h.count(world.orders.len());
     h.u32(world.order_ids.next_raw());
-    h.u32(world.task_force_ids.next_raw());
+    for side in Side::ALL {
+        h.u32(world.made_ids.next_task_force(side));
+    }
+    for side in Side::ALL {
+        h.u32(world.made_ids.next_air_group(side));
+    }
     h.count(world.events.len());
 
     h.finish()

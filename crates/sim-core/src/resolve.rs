@@ -353,7 +353,8 @@ impl World {
         ships: &BTreeSet<ShipId>,
         name: String,
     ) -> TaskForceId {
-        let id = self.task_force_ids.alloc();
+        let parent_side = self.truth.task_forces[&parent].side;
+        let id = self.made_ids.alloc_task_force(parent_side);
         let parent_force = self
             .truth
             .task_forces
@@ -3214,7 +3215,7 @@ mod tests {
             truth.task_forces[&TF].ships,
             [SHIP].into_iter().collect::<BTreeSet<_>>()
         );
-        let new = &truth.task_forces[&TaskForceId::new(2)];
+        let new = &truth.task_forces[&TaskForceId::new(1_000_001)];
         assert_eq!(new.name, "Test force, detached");
         assert_eq!(new.ships, [second].into_iter().collect::<BTreeSet<_>>());
         assert_eq!(
@@ -3281,7 +3282,7 @@ mod tests {
 
         let truth = world.umpire();
         let new = &truth.task_forces[&new_id];
-        assert_eq!(new_id, TaskForceId::new(2));
+        assert_eq!(new_id, TaskForceId::new(1_000_001));
         assert_eq!(new.name, "Split");
         assert_eq!(new.side, Side::Allied);
         assert_eq!(new.from_hex, hx(2, 0));
@@ -3321,17 +3322,24 @@ mod tests {
 
     #[test]
     fn created_task_forces_get_the_next_ids_and_the_counter_is_hashed() {
-        // The scenario's only force is 1, so the first new force is 2, then 3.
+        // The Allied series starts at 1,000,001, whatever the scenario holds:
+        // the first new force is 1,000,001, then 1,000,002.
         let mut world = damage_world();
-        assert_eq!(world.task_force_ids.next_raw(), 2);
+        assert_eq!(world.made_ids.next_task_force(Side::Allied), 1_000_001);
+        assert_eq!(world.made_ids.next_task_force(Side::Japanese), 2_000_001);
         let a = add_ship(&mut world, 2, SystemState::Working);
         let b = add_ship(&mut world, 3, SystemState::Working);
         let first = world.split_task_force(TF, &[a].into_iter().collect(), "A".to_string());
         let second = world.split_task_force(TF, &[b].into_iter().collect(), "B".to_string());
-        assert_eq!((first, second), (TaskForceId::new(2), TaskForceId::new(3)));
-        assert_eq!(world.task_force_ids.next_raw(), 4);
+        assert_eq!(
+            (first, second),
+            (TaskForceId::new(1_000_001), TaskForceId::new(1_000_002))
+        );
+        assert_eq!(world.made_ids.next_task_force(Side::Allied), 1_000_003);
+        // The Japanese series is not touched by the Allied side's forces.
+        assert_eq!(world.made_ids.next_task_force(Side::Japanese), 2_000_001);
 
-        // A scenario whose highest force ID is 7 hands out 8.
+        // A scenario whose highest force ID is 7 still hands out 1,000,001.
         let mut high = damage_world();
         let mut moved = high.truth.task_forces.remove(&TF).expect("force");
         moved.id = TaskForceId::new(7);
@@ -3346,14 +3354,21 @@ mod tests {
             high.truth.clone(),
         )
         .expect("valid");
-        assert_eq!(rebuilt.task_force_ids.next_raw(), 8);
+        assert_eq!(rebuilt.made_ids.next_task_force(Side::Allied), 1_000_001);
 
-        // Two worlds identical but for the counter hash differently.
+        // Two worlds identical but for a counter hash differently.
         let base = damage_world();
         let mut counted = base.clone();
-        counted.task_force_ids.alloc();
+        counted.made_ids.alloc_task_force(Side::Allied);
         assert_eq!(base.truth, counted.truth);
         assert_ne!(base.state_hash(), counted.state_hash());
+        let mut japanese = base.clone();
+        japanese.made_ids.alloc_task_force(Side::Japanese);
+        assert_ne!(base.state_hash(), japanese.state_hash());
+        assert_ne!(counted.state_hash(), japanese.state_hash());
+        let mut group = base.clone();
+        group.made_ids.alloc_air_group(Side::Allied);
+        assert_ne!(base.state_hash(), group.state_hash());
     }
 
     #[test]
@@ -3670,7 +3685,6 @@ mod tests {
         truth.ships.insert(ship.id, ship);
         truth.task_forces.insert(TaskForceId::new(2), second);
         world.truth = truth;
-        world.task_force_ids.reserve(TaskForceId::new(2));
         world
     }
 

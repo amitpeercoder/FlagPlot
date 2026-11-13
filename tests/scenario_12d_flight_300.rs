@@ -47,8 +47,8 @@
 //! - Group 103 finds no room. The nearest base of its side is Henderson Field,
 //!   within the strike radius of their type, 200 nm (the SBD-3; its search
 //!   range is 200 nm too): all 11 land there. No group of their type is at the base, so they form a
-//!   new one, "VS-5 landed at base:1", numbered one above the highest air
-//!   group in the game, with 11 ready, at rest.
+//!   new one, "VS-5 landed at base:1", numbered from the Allied series (decision 0086), the
+//!   first, 1,000,001, with 11 ready, at rest.
 //! - Nothing comes down in the sea. Groups 102 and 104, aboard, are untouched.
 //!
 //! So: `AircraftLandedElsewhere` twice (21 to ship 11 joining group 105; 11 to
@@ -399,7 +399,7 @@ fn seed_28_day_4_afternoon_the_fighters_land_on_saratoga_and_the_scouts_form_a_g
         homing[1].kind,
         EventKind::AircraftLandedElsewhere {
             from: group(103),
-            to: group(121),
+            to: group(1_000_001),
             at: AirGroupLocation::Base(HENDERSON),
             aircraft: 11,
             pilots: 0,
@@ -413,7 +413,7 @@ fn seed_28_day_4_afternoon_the_fighters_land_on_saratoga_and_the_scouts_form_a_g
     assert!(homing[0].id < homing[1].id, "group 101 comes first");
     assert_eq!(
         homing[1].kind.to_string(),
-        "air_group:103 had no deck: 11 aircraft landed at base:1, forming air_group:121"
+        "air_group:103 had no deck: 11 aircraft landed at base:1, forming air_group:1000001"
     );
     assert!(!events
         .iter()
@@ -421,14 +421,29 @@ fn seed_28_day_4_afternoon_the_fighters_land_on_saratoga_and_the_scouts_form_a_g
 
     // --- The state at the end of day 4.
     let truth = world.umpire();
-    let formed = &truth.air_groups[&group(121)];
+    let formed = &truth.air_groups[&group(1_000_001)];
     assert_eq!(formed.name, "VS-5 landed at base:1");
     assert_eq!(formed.location, AirGroupLocation::Base(HENDERSON));
-    assert_eq!((formed.ready, formed.damaged), (11, 0));
+    // The 11 landed ready (the landing event above says so). The day's wear
+    // then drew for them keyed on their new number (decision 0086), and took
+    // it 9 ready and 1 damaged of the 11: a pinned outcome of seed 28, was (11, 0) when the
+    // group was numbered 121.
+    let worn = events.iter().find_map(|e| match e.kind {
+        EventKind::AircraftWorn {
+            air_group,
+            aircraft,
+            ready,
+            damaged,
+            ..
+        } if air_group == group(1_000_001) && e.day == 4 => Some((aircraft, ready, damaged)),
+        _ => None,
+    });
+    assert_eq!(worn, Some((11, 9, 1)), "the wear at the end of the day");
+    assert_eq!((formed.ready, formed.damaged), (9, 1));
     assert_eq!(formed.aircraft_type, AircraftTypeId::new(2001));
     assert_eq!(formed.side, Side::Allied);
     assert_eq!(formed.mission, sim_core::orders::AirMission::Rest);
-    assert_eq!(truth.air_groups.keys().max(), Some(&group(121)));
+    assert_eq!(truth.air_groups.keys().max(), Some(&group(1_000_001)));
     // Saratoga holds her 69 and the 21: 90, her capacity, and no more.
     let aboard: u32 = truth
         .air_groups
@@ -567,8 +582,8 @@ fn every_homecoming_follows_the_model_and_aircraft_land_at_henderson_in_some_run
         });
 
         // The receiving group, by the model's rule: the lowest-numbered group
-        // of the type and side at the place, else a new one numbered one above
-        // the highest; and a landing at a ship goes to a carrier of the side,
+        // of the type and side at the place, else a new one numbered next in its
+        // side's series (decision 0086); and a landing at a ship goes to a carrier of the side,
         // not the source's own ship.
         let mut henderson = 0;
         for (event, from, to, at, aircraft, formed) in landings(&events) {
@@ -612,8 +627,21 @@ fn every_homecoming_follows_the_model_and_aircraft_land_at_henderson_in_some_run
                         formed,
                         "seed {seed}: none of the type is there, so one is formed"
                     );
-                    let next = model_groups.iter().map(|g| g.id).max().expect("groups") + 1;
-                    assert_eq!(to, next, "seed {seed}: one above the highest");
+                    let series: u32 = match source.side {
+                        Side::Allied => 1_000_000,
+                        Side::Japanese => 2_000_000,
+                    };
+                    let next = model_groups
+                        .iter()
+                        .filter(|g| g.side == source.side && g.id > series)
+                        .map(|g| g.id)
+                        .max()
+                        .unwrap_or(series)
+                        + 1;
+                    assert_eq!(
+                        to, next,
+                        "seed {seed}: the next number of its side's series"
+                    );
                     let mut new = source.clone();
                     new.id = to;
                     new.place = at;

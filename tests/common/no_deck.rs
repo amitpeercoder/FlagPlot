@@ -85,7 +85,7 @@ impl Home {
 /// pulse (the last one of a ship counts). Each entry of the answer has the
 /// event that closed the deck. `groups` are updated: aircraft leave the
 /// source group, join or form the receiving group (a formed group has the
-/// number one above the highest, ready and in the air as landed), and the
+/// next number of its side's series, ready and in the air as landed), and the
 /// ditched are gone.
 pub fn homecoming(
     ships: &[ModelShip],
@@ -207,7 +207,20 @@ fn land(groups: &mut Vec<ModelGroup>, group: &ModelGroup, at: AirGroupLocation, 
             }
         }
         None => {
-            let to = groups.iter().map(|g| g.id).max().unwrap_or(0) + 1;
+            // Decision 0086: a formed group takes the next number of its own
+            // side's series, which starts at 1,000,001 (Allied) or 2,000,001
+            // (Japanese).
+            let series: u32 = match group.side {
+                sim_core::state::Side::Allied => 1_000_000,
+                sim_core::state::Side::Japanese => 2_000_000,
+            };
+            let to = groups
+                .iter()
+                .filter(|g| g.side == group.side && g.id > series)
+                .map(|g| g.id)
+                .max()
+                .unwrap_or(series)
+                + 1;
             groups.push(ModelGroup {
                 id: to,
                 side: group.side,

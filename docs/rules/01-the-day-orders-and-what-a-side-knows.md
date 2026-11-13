@@ -155,7 +155,7 @@ To change: differences.md row 17, a load order to a force that is out of fuel is
 
 The stance is engage or avoid. The straggler instruction is keep, detach, leave or retire. Chapter 4, Breaking off, and chapter 2, Stragglers, give what they do. The readiness is read by chapter 3, Readiness, alertness and fatigue of a force. [0014, 0016, 0021]
 
-Detaching ships creates a new force with the next free task force number. It starts at the parent's exact position and leg (the charge of the leg with it), idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. To change: differences.md row 24, the acceptance is to be recorded first. [0016, 0037]
+Detaching ships creates a new force with the next number of its side's series (the Allied side's from 1,000,001, the Japanese side's from 2,000,001). It starts at the parent's exact position and leg (the charge of the leg with it), idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. To change: differences.md row 24, the acceptance is to be recorded first. [0016, 0037, 0086]
 
 ### Air group orders
 
@@ -312,7 +312,7 @@ Limit: within a fight a side cannot tell one enemy ship or air group from anothe
 
 A side's own ships, task forces and air groups are shown to it numbered 1, 2, 3 for each kind, in the order of their numbers in the scenario, counting every unit it has had. Every answer it is given and every handle it writes uses these numbers; the engine keeps the scenario's numbers. Bases keep theirs: they are on the map for both sides. [0086]
 
-Limit: a force made during a game takes the next free task force number, and the enemy's forces use the same numbers. A side's new force number therefore depends on how many forces the enemy has, and because draws are keyed on a force's number, the luck of later forces depends on it. [0047]
+Units made in play are numbered by side. A task force made by a detach and an air group formed by a landing away from home take the next number of their own side's series, one counter for each side and kind, kept in the state: the Allied side's from 1,000,001 and the Japanese side's from 2,000,001. A scenario's own numbers are below 1,000,000, and the loader refuses any at or above it. A made unit's number, and so the draws keyed on it, depends on its own side's history only: an enemy unit that is merely there changes nothing. [0086]
 
 Limit: there are no claims for aircraft shot down in an air fight except the raid claim of decision 0056. A side sees its own air fight losses and nothing of the enemy's. [0047, 0056]
 

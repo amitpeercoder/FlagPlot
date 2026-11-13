@@ -2,15 +2,15 @@ Scenario 4: Savo Island, 8 to 9 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7e8b13702d992036  287 events
+day   1  hash 406b3e7fa51a15de  287 events
 
 task_force:1 "Eighth Fleet striking force" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; home port base:1
 task_force:2 "Southern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Northern group" (Allied): Idle at (2,-5); readiness normal, alert (alerted), rules of engagement: engage, break off at 1, stragglers: keep, keep 0; no home port
 task_force:4 "Yunagi" (Japanese): Arrived at (-1,-8); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
-task_force:5 "Eighth Fleet striking force, sent home" (Japanese): Underway at (0,-12), 10.52 nm from (0,-12) toward (-1,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
-ship:1 "Chokai": afloat in task_force:5; damage flotation 4.588835, fire 3.671068; propulsion degraded; 861.4287 gun rounds, torpedoes gone; 2190.839825 t of fuel, 0 t of supply
-ship:2 "Aoba": afloat in task_force:5; damage flotation 1.175961, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1767.22548 t of fuel, 0 t of supply
+task_force:2000001 "Eighth Fleet striking force, sent home" (Japanese): Underway at (0,-12), 10.52 nm from (0,-12) toward (-1,-12); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+ship:1 "Chokai": afloat in task_force:2000001; damage flotation 4.588835, fire 3.671068; propulsion degraded; 861.4287 gun rounds, torpedoes gone; 2190.839825 t of fuel, 0 t of supply
+ship:2 "Aoba": afloat in task_force:2000001; damage flotation 1.175961, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1767.22548 t of fuel, 0 t of supply
 ship:3 "Kako": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
 ship:4 "Kinugasa": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1701.734856 t of fuel, 0 t of supply
 ship:5 "Furutaka": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 516.85722 gun rounds, torpedoes gone; 1546.013588 t of fuel, 0 t of supply
