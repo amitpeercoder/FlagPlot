@@ -1,6 +1,6 @@
 # 0069: Ship repair
 
-Status: proposed, needs review. This is the plan for the designer's approval. Nothing is built. The hand calculation is written once the plan is approved, before any code is delegated.
+Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing is built. The hand calculation is written before any code is delegated.
 
 ## The gap
 
@@ -13,7 +13,7 @@ The record is in `docs/research/oob/step2-record.md`, section 3, from `ship_fact
 
 The spec does not ask for this before tuning (`docs/step2-spec.md`, "Rule work that comes before tuning"): it matters to a campaign, not to one battle's losses.
 
-## Decisions proposed
+## Decisions
 
 ### Repair at a forward base
 
@@ -81,12 +81,14 @@ The opening list has a second item: points on the objectives scale for a ship th
 
 ## When to build it
 
-Not before the three battles are tuned. The simulation core has experience (decision 0064) and the rule for a force not at battle readiness (decision 0068) to take first, and each raises the hash version. Ship repair changes no battle's result.
+Not before the three battles are tuned. Ship repair changes no battle's result, and tuning is what the step 2 spec asks for first.
 
-## Questions for the designer
+## Answered by the designer
 
-1. **The yard as a day of return, off the map?** Decisions 4 and 5. Recommended.
-2. **Days away worked out, with no random draw?** Decision 6. Recommended.
-3. **Forward repair by the staff, with no order?** Decision 2. Recommended: it is refuelling's rule, and a player who does not want a ship repaired has no reason to.
-4. **A whole force goes to the yard and returns together?** Decision 5. Recommended until forces can be formed by order.
-5. **Build it after tuning?** Recommended.
+Approved on Nov 13, 2026, each as recommended.
+
+1. **The yard is a day of return, off the map.** No passage is steamed. Decisions 4 and 5.
+2. **The days away are worked out, with no random draw.** Decision 6.
+3. **Forward repair is the staff's, with no order.** Decision 2.
+4. **A whole force goes to the yard and returns together,** until forces can be formed by order. Decision 5.
+5. **It is built after the three battles are tuned.**
