@@ -174,6 +174,10 @@ name = "scenario_16_all_together"
 path = "scenario_16_all_together.rs"
 
 [[test]]
+name = "scenario_17_cape_esperance"
+path = "scenario_17_cape_esperance.rs"
+
+[[test]]
 name = "scenario_17a_target_choice"
 path = "scenario_17a_target_choice.rs"
 

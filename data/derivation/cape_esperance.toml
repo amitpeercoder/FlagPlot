@@ -1,45 +1,52 @@
 # The ships of the night action at Cape Esperance, 11 to 12 October 1942:
-# Task Force 64's nine ships and the Japanese bombardment force's five
-# (data/validation/cape_esperance.toml). Only their experience values are
-# derived (decision 0064), so the list has no class ships yet: the class
-# figures of these ships cannot all be derived yet. The date is the
-# engagement's first day.
+# Task Force 64's nine ships and the Japanese bombardment group's five
+# (decision 0072; data/validation/cape_esperance.toml). The derivation tool
+# turns this list into data/reference/ship_classes_cape_esperance.csv and the
+# two files beside it, and the ships' experience values (decision 0064). The
+# date is the engagement's first day. The settlements this list rests on are
+# in decision 0072, "The ships", and on the rows; the exceptions are at the
+# end of rules.toml.
 #
-# THE CLASS LIST, NOT YET ENABLED (decision 0072, "The ships"). The
-# experience test derives this whole file and fails on any problem, so the
-# lines below stay comments until every ship derives. With the rows
-# settled for decision 0072, seven ships derive cleanly now: Farenholt,
-# Duncan, Buchanan, McCalla, Aoba, Furutaka, Kinugasa. The other seven
-# wait for exceptions in rules.toml (after decision 0070 lands; the rates
-# of fire are re-derived then in any case), for decision 0070 itself
-# (Fubuki and Hatsuyuki's 12.7 cm rate) and, for Laffey, for research.
-# Decision 0072 lists each.
-#
-# output = "../reference/ship_classes_cape_esperance.csv"
-# first_class_id = 3000
-# ships = [
-#     # Task Force 64, in the battle disposition of 22:35.
-#     "dd-491-farenholt", "dd-485-duncan", "dd-459-laffey",
-#     "ca-38-san-francisco", "cl-47-boise", "ca-25-salt-lake-city", "cl-50-helena",
-#     "dd-484-buchanan", "dd-488-mccalla",
-#     # The bombardment group (Goto).
-#     "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
-# ]
-#
-# Working assumption, not a fact (decision 0019, 5): no fit row holds for a
-# search radar on these ships on the date, and they are treated as not
-# fitted. For the four destroyers it changes nothing the rules read, since
-# a force sights with radar if any ship of it has it, and Boise, Helena and
-# Salt Lake City have a sourced surface-search set.
-# radar_unknown_means_none = [
-#     "dd-459-laffey", "dd-484-buchanan", "dd-485-duncan", "dd-488-mccalla",
-#     "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
-# ]
+# The class ids are pinned (decision 0077): 3000 to 3008, which no other list
+# uses.
 
 name = "Cape Esperance"
 date = "1942-10-11"
 rules = "rules.toml"
-ships = []
+output = "../reference/ship_classes_cape_esperance.csv"
+first_class_id = 3000
+
+ships = [
+    # Task Force 64, in the battle disposition of 22:35.
+    "dd-491-farenholt", "dd-485-duncan", "dd-459-laffey",
+    "ca-38-san-francisco", "cl-47-boise", "ca-25-salt-lake-city", "cl-50-helena",
+    "dd-484-buchanan", "dd-488-mccalla",
+    # The bombardment group (Goto).
+    "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
+]
+
+# Working assumption, not a fact (decision 0019, 5): no fit row read holds
+# for a search radar on these ships on the date, and they are treated as not
+# fitted. Duncan's two surface-search rows are disputed and low (fits 662,
+# 663), so none holds. For the destroyers it changes nothing the rules read:
+# a force sights with radar if any ship of it has it, and Boise and Helena
+# have an SG (decision 0077).
+radar_unknown_means_none = [
+    "dd-485-duncan", "dd-459-laffey", "dd-484-buchanan", "dd-488-mccalla",
+    "aoba", "furutaka", "kinugasa", "fubuki", "hatsuyuki",
+]
+
+# The class ids, pinned (decision 0077).
+[class_ids]
+3000 = ["aoba", "kinugasa"]
+3001 = ["furutaka"]
+3002 = ["fubuki", "hatsuyuki"]
+3003 = ["dd-491-farenholt", "dd-485-duncan", "dd-484-buchanan", "dd-488-mccalla"]
+3004 = ["dd-459-laffey"]
+3005 = ["ca-38-san-francisco"]
+3006 = ["cl-47-boise"]
+3007 = ["ca-25-salt-lake-city"]
+3008 = ["cl-50-helena"]
 
 # The questions and thresholds are in rules.toml, under [experience]. The
 # first day is 1942-10-11, so the three months are 1942-07-11 to 1942-10-11,
