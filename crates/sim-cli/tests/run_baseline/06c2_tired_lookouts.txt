@@ -4,16 +4,16 @@ seed 1942
 
 day   1  hash 61a1e21f82e4d117  5 events
 day   2  hash e53da2a3b6f95881  3 events
-day   3  hash ac8865f93e07e4a6  58 events
+day   3  hash 90e7c673e50d5e04  60 events
 
 task_force:1 "Placeholder attacking force" (Japanese): Underway at (10,0), 24 nm from (9,0) toward (10,0); readiness battle, alert, fatigue 15, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder defending force" (Allied): Idle at (5,0); readiness battle, alert, fatigue 45, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
 ship:2 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser A3": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1904 t of fuel, 0 t of supply
-ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 65, fire 5; propulsion degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 75, fire 0; propulsion degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 75, fire 5; fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 70, fire 10; propulsion out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 85, fire 0; propulsion out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder cruiser B3": afloat in task_force:2; damage flotation 85, fire 5; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (5,0): 4 ships, cruiser, age 2 pulses
 Allied: no battle claims
 Japanese contact:1 at (5,0): 3 ships, carrier, age 2 pulses
