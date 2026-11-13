@@ -26,6 +26,8 @@ is enough. A change to the engine that alters a result makes the test fail,
 rightly; the game is then played again or the record marked as of an older
 engine. The model's play is not judged here, only that it repeats.
 
+To put a recorded game on the viewer's map: `cargo run --release -p sim-cli -- export crates/sim-cli/tests/recorded_games/NAME/save.json --out /tmp/NAME.json`, then open `viewer/index.html` and pick the file. The replay is the umpire's view, truth and all.
+
 ## The games here
 
 Played on Nov 12, 2026 (decision 0051, "The games"): `eastern_solomons_sonnet`, `eastern_solomons_haiku` and `full_slice_five_days_sonnet`. Each has the player's `account.md`. The requests of an earlier round, played before objectives and claims existed, are in `docs/research/scenario-9-first-round/` and are not replayed.
@@ -65,3 +67,5 @@ Regenerated after decisions 0075 (an aircraft type has a search radius of its ow
 Regenerated after decision 0077 (a derived class has the radar figure only for a surface-search set with a plan position indicator). Every transcript is byte for byte as before; each `save.json` differs only in the data-file hash of `ship_classes_eastern_solomons.csv`. No answer and no daily hash moved.
 
 Regenerated after tuning round 1 (Nov 13, 2026), which set `experience_gun_strength` in `surface_combat.toml` to 0.5. Every transcript is byte for byte as before; each `save.json` differs only in the data-file hash of `surface_combat.toml`. No answer and no daily hash moved: no game here has a night surface fight between ships of unequal experience.
+
+Regenerated after tuning round 2 (Nov 13, 2026), which set `surprised_target_factor` in `surface_combat.toml` to 2. Every transcript is byte for byte as before; each `save.json` differs only in the data-file hash of `surface_combat.toml`. No answer and no daily hash moved: no game here reaches a night surface fight with a surprised force.

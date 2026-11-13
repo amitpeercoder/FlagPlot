@@ -20,7 +20,13 @@ torpedo_hit_chance_night = "0.04"
 torpedo_hit_chance_day = "0.02"
 
 # Multipliers on the chance to hit.
-surprised_target_factor = "1.5"
+# Tuning round 2 (docs/validation/tuning/r2-surprised-target-factor.md, Nov 13,
+# 2026): the factor against a surprised target is 2. Its size rests on one
+# ship, Canberra at Savo Island, hit 24 times of every calibre while surprised,
+# of which the main batteries' share is about three fifths. It carries one
+# round of surprise (decision 0076) and acts on torpedoes too. Still a
+# PLACEHOLDER as to size until Cape Esperance tests it on the other navy.
+surprised_target_factor = "2"
 lit_target_factor = "2"
 
 # The chance a gun or bomb hit lands on flotation. The rest land on fire. A

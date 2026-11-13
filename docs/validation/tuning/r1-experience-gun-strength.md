@@ -1,6 +1,6 @@
 # Round 1: the strength of experience for guns, 0.25 to 0.5
 
-Savo Island, Nov 13, 2026. The second mechanism in the order of tuning, the chance of a hit (`docs/step2-spec.md`, "Tuning", 2). Ruled by the coordinating architect before the move. Whether it is kept or reverted is the coordinating architect's word, on this record.
+Savo Island, Nov 13, 2026. The second mechanism in the order of tuning, the chance of a hit (`docs/step2-spec.md`, "Tuning", 2). Ruled by the coordinating architect before the move. **Kept by the architect, Nov 13, 2026.**
 
 ## What moved
 
