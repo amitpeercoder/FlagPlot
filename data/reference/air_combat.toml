@@ -1,82 +1,129 @@
-# PLACEHOLDER DATA. These figures are invented so the engine has something to
-# run. They are not historical and must not be used for validation.
-# See docs/decisions/0026-air-strikes.md.
+# The figures of air combat, at the close of step 2. Most are still
+# placeholders: invented so the engine has something to run, not historical.
+# Two were set from fact rows in the air rounds, and two endpoint shares were
+# chosen with the battles' results known. The note above each figure says what
+# it rests on. Every figure, with its record, is listed in
+# docs/validation/tuning/air-figures-closed.md. The round records named below
+# are in docs/validation/tuning/. The figures are tuned on the Eastern
+# Solomons and checked on Rabaul against Guadalcanal, except those only Rabaul
+# reads ([base_hit], base supply, the pilot over his own base), which have no
+# check battle (docs/step2-spec.md, "Tuning"). The frozen step 1 figures are in
+# data/reference/step1. See docs/decisions/0026-air-strikes.md.
 
+# Required by the loader and ignored once read: the scenario carries the flag.
 placeholder = true
 
 # A group strikes a contact no older than this. A contact keeps age 0 through
 # the pulse after the one it was reported in (decision 0012, 14), so 0 means
 # reported in this pulse or the one before.
+# Placeholder (decision 0026): a rule's choice. No row sizes it.
 strike_contact_max_age_pulses = 0
 
 # Chance one aircraft's weapon hits.
+# bomb_hit_chance: named in Rabaul round 1 and not moved, no value tried
+# (rabaul-r1-base-hit-aircraft.md): every raid on ships, and on fields
+# (decision 0034), reads it, and no row sizes it. torpedo_hit_chance: placeholder; no row sizes it, and no
+# round looked at it.
 bomb_hit_chance = "0.2"
 torpedo_hit_chance = "0.15"
 
 # Chance one fighter's shot brings down an aircraft, and chance one
 # anti-aircraft shot does (decision 0027).
+# Looked at and not moved in air round 3, at five values on both air battles
+# (r3-fighter-hit-chance.md). No row sizes it.
 fighter_hit_chance = "0.3"
+# Looked at and not moved in air round 5, from numbers in hand with no grid
+# (r5-anti-aircraft-hit-chance.md). No row sizes it.
 anti_aircraft_hit_chance = "0.05"
 
 # What either chance is multiplied by when the target type has pilot armour,
-# and again when it has self-sealing fuel tanks (decision 0029, 11).
+# and again when it has self-sealing fuel tanks (decision 0029, 11). That a
+# type has armour or tanks is from rows; the factors are not.
+# Both looked at and not moved in air round 3: no source sizes them, and every
+# fight reads them (r3-us-losses-named-misses.md).
 pilot_armour_factor = "0.75"
 self_sealing_tanks_factor = "0.75"
 
-# Claims from the air (decision 0056). PLACEHOLDER chances, to be set from
-# the record in step 2. Each whole shot of fighters (or each whole shot of the
-# guns of ships and bases) that missed is claimed as an aircraft shot down with
-# the chance given; each whole bomb or torpedo that missed is claimed as a hit
-# on a ship, or as an aircraft destroyed on the ground, with the last.
-# fighter_false_claim_chance: 0.7 from air round 4 (Nov 13, 2026), sized on
-# the Eastern Solomons from 43 claimed by VF-5 and VF-6 (engagement_outcomes
-# 257) against the runs' own 16 real kills and 38 missed shots by those
-# fighters (an assumption: no row splits the fighters' real kills from the
-# guns'). Checked, not tuned, on Rabaul's US claims. The other two stay
-# placeholders (docs/validation/tuning/r4-claims.md).
+# Claims from the air (decision 0056). Each whole shot of fighters (or each
+# whole shot of the guns of ships and bases) that missed is claimed as an
+# aircraft shot down with the chance given; each whole bomb or torpedo that
+# missed is claimed as a hit on a ship, or as an aircraft destroyed on the
+# ground, with the last.
+# Sized from rows in air round 4 (r4-claims.md): 0.7, from 43 claimed by VF-5
+# and VF-6 at the Eastern Solomons (engagement_outcomes 257) against the runs'
+# own 16 real kills and 38 missed shots by those fighters (an assumption: no
+# row splits the fighters' real kills from the guns'). Checked, not tuned, on
+# Rabaul's American claims.
 fighter_false_claim_chance = "0.7"
+# Looked at and not moved in air round 4: at the low end of the 0.05 to 0.12
+# the Eastern Solomons' rows allow for the ships' guns (r4-claims.md).
 anti_aircraft_false_claim_chance = "0.05"
+# Looked at and not moved in air round 4: one figure carries two kinds of claim
+# that the record prices differently, and no judged measure reads it
+# (r4-claims.md).
 bomb_false_claim_chance = "0.1"
 
-# Reach beyond the radius and running out of fuel (decision 0059). PLACEHOLDER
-# figures, to be set from the record in step 2.
+# Reach beyond the radius and running out of fuel (decision 0059).
 # An air group on extended reach strikes, and sends its escorts, out to its
 # type's strike radius times (1 + extended_reach_share), cut to a whole mile.
+# Placeholder (decision 0059). No row sizes it. Read at the Eastern Solomons,
+# where Ryujo's raid flies on extended reach.
 extended_reach_share = "0.25"
 # An aircraft that came back from a sortie beyond its radius runs out of fuel
 # with this chance for each whole radius beyond it: the chance is this figure
 # times (distance - radius) over radius, 1 at most. It may be more than 1.
+# Placeholder (decision 0059). No row sizes it. The ditchings of Ryujo's raid
+# are not evidence for it (decision 0084, finding 13); a round on fuel waits on
+# a radius with a bomb load (docs/step2-opening-list.md).
 ditch_chance_per_radius_beyond = "2"
 # The chance the crew of such an aircraft is recovered. A crew not recovered
 # is a pilot lost, where the group's pilots are counted.
+# Read by no battle of the slice: the Eastern Solomons counts no pilots, and in
+# scenario 6 no sortie is ordered beyond its radius. A placeholder (decision
+# 0059): the record has examples and no rate.
 crew_recovered_short_of_home = "0.7"
 # The chance the pilot of a patrol aircraft shot down over its own hex is
 # recovered (decision 6a of 0059): over a base of its side, and over its own
-# ships at sea. A pilot not recovered is lost. PLACEHOLDERS: the record has 12
-# of 23 pilots recovered over their own base and 19 of 19 beside their own
-# force, samples that favour those who lived to be written of.
+# ships at sea. A pilot not recovered is lost.
+# Placeholder with no check battle: read at Rabaul against Guadalcanal only,
+# and not tuned there. The record has 12 of 23 pilots recovered over their own
+# base, a sample that favours those who lived to be written of (decision 0059).
 crew_recovered_over_own_base = "0.6"
+# Read by no battle of the slice: the Eastern Solomons counts no pilots, and
+# scenario 6 has no ships. A placeholder: the record has 19 recovered beside
+# their own force and none stated lost (decision 0059: 19 of 19); the note adds
+# that up to 5 pilots at Santa Cruz may belong here
+# (docs/research/oob/ditching-and-rescue.md, section 2).
 crew_recovered_beside_own_force = "0.95"
 # The chance the crew of an aircraft that came down in the sea for want of a
 # deck (decision 9 of 0059) is recovered when no ship of its side is in the
 # hex. With a ship of its side there, crew_recovered_beside_own_force applies.
-# PLACEHOLDER: the record has 6 to 9 of 13 to 16 recovered in open sea.
+# Read by no battle of the slice: the Eastern Solomons counts no pilots, and in
+# scenario 6 every group is at a base, which never lacks a deck. A
+# placeholder: the record has 6 to 9 crews recovered and 4 to 7 lost in open
+# sea (docs/research/oob/ditching-and-rescue.md, section 2), about even.
 crew_recovered_open_sea = "0.5"
 
 # The share of the guns' shots of the raid's target (ships or base) that are
 # worked before the attack, the rest after it (decision 0079). 1 is step 1's
-# rule: every shot before. PLACEHOLDER: decision 0079 sets it to 0, all after
-# the attack. The record has the guns opening on the dive, after the fighters
-# had met the strike (events 222 and 223); no source sizes it.
+# rule: every shot before. Decision 0079 sets it to 0, all after the attack.
+# The record has the guns opening on the dive, after the fighters had met the
+# strike (events 222 and 223); no source sizes it.
+# Fitted and not checked: in decision 0084's words (finding 5), an endpoint
+# placeholder "chosen with both air battles' results known"; Rabaul against
+# Guadalcanal is a tuning battle for it, not a check.
 anti_aircraft_before_attack_share = "0"
 
 # The share of a raid's patrol that the escorts draw off one for one; the rest
 # is split between the escorts not drawn off and the bombers in proportion to
 # their numbers (decision 0080). 1 is step 1's rule: the escorts draw the
-# patrol off the bombers one for one. PLACEHOLDER: decision 0080 sets it to 0.
+# patrol off the bombers one for one. Decision 0080 sets it to 0.
 # Support for the direction: decision 0042's sentence, the forms' losses (12
 # bombers against 6 to 10 fighters) and row 271 (4 attack planes and 3
 # fighters lost at Henderson Field); no source sizes it.
+# Fitted and not checked: in decision 0084's words (finding 5), an endpoint
+# placeholder "chosen with both air battles' results known"; Rabaul against
+# Guadalcanal is a tuning battle for it, not a check.
 patrol_drawn_off_share = "0"
 
 # The share of the patrol's shots at a raid's bombers that are worked before the
@@ -93,12 +140,16 @@ patrol_before_attack_share = "0.4"
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 
-# Raids on a base (decision 0034). PLACEHOLDER figures.
+# Raids on a base (decision 0034).
 # A hit on a base's supply destroys this many tons, and no more than the base
 # has (decision 9).
+# Placeholder (decision 0034). No row sizes it and no measure reads base
+# supply. Read at Rabaul against Guadalcanal.
 base_supply_destroyed_per_hit_t = 50
 
 # Which system a bomb's system hit lands on. Adds to 1.
+# Placeholders: no row sizes any of the four, and no round looked at them.
+# Read at the Eastern Solomons.
 [bomb_system_hit]
 flight_deck = "0.5"
 propulsion = "0.2"
@@ -107,11 +158,13 @@ main_battery = "0.2"
 
 # Where a bomb hit on a base lands (decision 7 of 0034): one draw for each hit.
 # The two chances add to 1 at most; the rest of the hits land on nothing.
-# aircraft: 0.06 from Rabaul round 1 (Nov 13, 2026), sized from about 2.5
-# aircraft destroyed on the ground at Henderson Field (engagement_outcomes
-# 1266, 1272, 1283, 1299, 1330) for about 212 bomber sorties at a bomb chance
-# of 0.2 (one bomb a bomber, an assumption of the rules). Tuned on Rabaul with
-# no check battle (docs/validation/tuning/rabaul-r1-base-hit-aircraft.md).
+# aircraft: sized from rows in Rabaul round 1 (Nov 13, 2026), 0.3 to 0.06, from
+# about 2.5 aircraft destroyed on the ground at Henderson Field
+# (engagement_outcomes 1266, 1272, 1283, 1299, 1330) for about 212 bomber
+# sorties at a bomb chance of 0.2 (one bomb a bomber, an assumption of the
+# rules). Tuned on Rabaul with no check battle
+# (rabaul-r1-base-hit-aircraft.md).
+# supply: placeholder (decision 0034). No row sizes it and no measure reads it.
 [base_hit]
 aircraft = "0.06"
 supply = "0.3"

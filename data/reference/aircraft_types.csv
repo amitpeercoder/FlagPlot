@@ -1,5 +1,8 @@
 # PLACEHOLDER DATA. This type is invented so the engine has something to run.
-# It is not historical and must not be used for validation.
+# It is not historical and must not be used for validation. At the close of
+# step 2 no battle of the slice reads it: the Eastern Solomons and Rabaul read
+# derived types, and Savo Island loads this file and has no aircraft
+# (docs/validation/tuning/surface-and-search-figures-closed.md).
 #
 # search_range_nm: the furthest a search by this type can reach.
 # sweep_width_nm: the width of sea one aircraft covers as it flies.
