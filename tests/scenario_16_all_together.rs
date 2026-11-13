@@ -114,7 +114,8 @@
 //! | Allied | lit | 0.03 x 2 x 0.6 = 0.036 | |
 //!
 //! A firer whose fire control is degraded has half the chance of her row
-//! (seed 1942, round 2: an Allied ship at 60 shots x 0.009).
+//! (seed 1942, round 2: an Allied ship at 60 shots x 0.009), and one whose
+//! fire control is out has a quarter of it.
 //!
 //! The two rules never touch the same number. The share changes the shots and
 //! experience changes the chance; they meet only in the expected hits. An
@@ -262,7 +263,7 @@
 //!   0.7. Every gun salvo of a force 3 ship in the night's fight names
 //!   `unready_gun_share` 0.5 and has 60 or 30 shots; no salvo of a force 4
 //!   ship names it; every torpedo salvo has no share. Every salvo's chance is
-//!   a row of the table in 2, or half of one.
+//!   a row of the table in 2, or half or a quarter of one.
 //! - No strike is launched in the morning.
 //! - In the afternoon the four launches are as in 4, carrier A's flight deck
 //!   goes out, carrier J's is degraded and not out, and no carrier sinks.
