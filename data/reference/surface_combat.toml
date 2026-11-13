@@ -51,7 +51,11 @@ claimed_sunk_fire = 30
 # chances, the mean of the force's ships for its chance to sight. Each strength
 # is from 0 to 0.5; 0 switches the rule off. PLACEHOLDER: the middle of the
 # allowed range, for tuning to set. Nothing reads experience by day.
-experience_gun_strength = "0.25"
+# Tuning round 1 (docs/validation/tuning/r1-experience-gun-strength.md, Nov 13,
+# 2026): the gun strength stands at 0.5, the cap of decision 0064. Still a
+# PLACEHOLDER: the sources give its sign and no size. At the cap, any gap left
+# between the sides' gunnery is not experience's to carry.
+experience_gun_strength = "0.5"
 experience_torpedo_strength = "0.25"
 experience_sighting_strength = "0.25"
 
