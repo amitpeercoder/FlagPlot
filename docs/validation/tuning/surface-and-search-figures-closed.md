@@ -1,6 +1,6 @@
 # The surface, search and derivation figures: where each stands
 
-Nov 13, 2026, at the close of step 2. This page lists every figure of `surface_combat.toml`, `search.toml`, the model parameters of `data/derivation/rules.toml` and the other hand-made files of `data/reference`, with its value and what it rests on. The air figures are on `air-figures-closed.md`; where this page reads one of them differently, it says so below. It is a summary: the round records and decisions it names are the source, and each figure carries the same note as a comment above it in its file. A figure that moves changes its row here.
+Nov 13, 2026, at the close of step 2. This page lists every figure of `surface_combat.toml`, `search.toml`, the model parameters of `data/derivation/rules.toml` and the other hand-made files of `data/reference`, with its value and what it rests on. The air figures are on `air-figures-closed.md`. It is a summary: the round records and decisions it names are the source, and each figure carries the same note as a comment above it in its file. A figure that moves changes its row here.
 
 **What each status means:**
 - **Sized from rows.** Its value is what fact rows state, or a source's method, with the rows named.
@@ -99,7 +99,7 @@ The derived files (`ship_classes_*`, `aircraft_types_*`, `ship_experience_*`) ar
 Checked against the scenario files and the code on Nov 13, 2026.
 
 - **The three the spec names** ("Tuning"): `air_upkeep.carrier_repairs_per_day` (scenario 5 does not load `air_upkeep.toml`; scenario 6 has no carriers), and `fatigue.force_fatigue_per_pulse_alert` and `force_rest_per_pulse` (scenarios 4 and 5 do not load `fatigue.toml`; scenario 6 has no task forces). All three hold.
-- **Three of the four `crew_recovered_*` figures**, which the spec puts with Rabaul's. Every draw of them needs pilots counted, and the Eastern Solomons counts none. At Rabaul:
+- **Three of the four `crew_recovered_*` figures** (the spec's "Tuning" corrected to match on Nov 13, 2026). Every draw of them needs pilots counted, and the Eastern Solomons counts none. At Rabaul:
   - `crew_recovered_beside_own_force` needs a ship of the group's side (a patrol aboard a ship, or a landing in the sea beside one), and scenario 6 has no ships;
   - `crew_recovered_open_sea` needs a group whose deck is lost, and a group at a base is never affected (`landing.rs`);
   - `crew_recovered_short_of_home` needs a sortie beyond its type's radius, and scenario 6 orders no extended reach, so no strike launches beyond it. No run baseline of scenario 6 ditches.
@@ -110,14 +110,9 @@ Checked against the scenario files and the code on Nov 13, 2026.
 
 Two more are close to it. `radar_sighting_bonus` never acts at Savo Island, where no ship has a set that counts; at the Eastern Solomons only the Atlanta class has one, and the measures there have no surface fight. The day chances of the surface fight are read at Savo Island only in the runs with a fight by day, which its measure asks to have none.
 
-## Where this page reads the air figures differently
+## The air figures
 
-`air-figures-closed.md` lists every figure of `air_combat.toml`. The notes in that file follow it, with two differences, both from the records:
-
-- **`anti_aircraft_before_attack_share` and `patrol_drawn_off_share`** are noted as fitted, not checked, in decision 0084's words (finding 5): endpoint placeholders "chosen with both air battles' results known". Its list of limits names them with the fitted figures.
-- **`crew_recovered_short_of_home`, `crew_recovered_beside_own_force` and `crew_recovered_open_sea`** are noted as read by no battle of the slice (above), not as placeholders with no check battle.
-
-The comment on `crew_recovered_open_sea` now gives the note's own figures, 6 to 9 crews recovered and 4 to 7 lost (`docs/research/oob/ditching-and-rescue.md`, section 2). "6 to 9 of 13 to 16" (decision 0059) gives a total the note does not state.
+`air-figures-closed.md` lists every figure of `air_combat.toml`, and the notes in that file follow it. The comment on `crew_recovered_open_sea` gives the research note's own figures, 6 to 9 crews recovered and 4 to 7 lost (`docs/research/oob/ditching-and-rescue.md`, section 2); decision 0059's "6 to 9 of 13 to 16" gave a total the note does not state, and it carries a dated note saying so.
 
 ## Counts
 

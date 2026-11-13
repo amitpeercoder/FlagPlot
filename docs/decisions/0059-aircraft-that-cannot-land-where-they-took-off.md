@@ -55,6 +55,8 @@ The record of what became of such aircraft and their crews is in `docs/research/
 
 `extended_reach_share = "0.25"`, `ditch_chance_per_radius_beyond = "2"`, `crew_recovered_short_of_home = "0.7"`, `crew_recovered_beside_own_force = "0.95"`, `crew_recovered_open_sea = "0.5"`, `crew_recovered_over_own_base = "0.6"`. The record behind the last three is 19 crews of 19 recovered beside their own force and 6 to 9 of 13 to 16 in open sea; the first two have examples and no rates. For a pilot over his own base: of 23 American pilots with a stated fate 12 were recovered, a sample that favours those who lived to be written of, and a broader figure not yet read at its source has two in three surviving.
 
+*Note, Nov 13, 2026 (the figure notes):* "6 to 9 of 13 to 16" above gives a total the research note does not state. `docs/research/oob/ditching-and-rescue.md`, section 2, gives 6 to 9 crews recovered and 4 to 7 lost in open sea, and the comment on `crew_recovered_open_sea` in `data/reference/air_combat.toml` now says so. Three of these figures are read by no battle of the slice (`docs/validation/tuning/surface-and-search-figures-closed.md`).
+
 ## Why
 
 - **One rule for four gaps.** An aircraft goes out and must come down somewhere. Reach, ditching, a lost deck and a closed deck are the same question asked at different distances.

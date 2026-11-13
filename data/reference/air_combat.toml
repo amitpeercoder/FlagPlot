@@ -123,7 +123,10 @@ anti_aircraft_before_attack_share = "0"
 # fighters lost at Henderson Field); no source sizes it.
 # Fitted and not checked: in decision 0084's words (finding 5), an endpoint
 # placeholder "chosen with both air battles' results known"; Rabaul against
-# Guadalcanal is a tuning battle for it, not a check.
+# Guadalcanal is a tuning battle for it, not a check. Since then 0 is an end
+# the rows support, not a size: of the 38 fighters of Simpler's study, 12 of
+# the 30 who engaged met the escort first, at or above the proportional split
+# (decision 0087, 11).
 patrol_drawn_off_share = "0"
 
 # The share of the patrol's shots at a raid's bombers that are worked before the
