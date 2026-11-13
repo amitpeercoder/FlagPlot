@@ -1,5 +1,9 @@
-# PLACEHOLDER DATA. These figures are invented so the engine has something to
-# run. They are not historical and must not be used for validation.
+# Wear and carrier repair, at the close of step 2. Every figure is a
+# placeholder: invented so the engine has something to run, not historical.
+# Rabaul against Guadalcanal reads them and has no check battle; Rabaul round 3
+# looked at wear and moved nothing. The note above each figure says what it
+# rests on; docs/validation/tuning/air-figures-closed.md lists them all. The
+# frozen step 1 figures are in data/reference/step1.
 # See docs/decisions/0035-wear-repair-and-operational-losses.md.
 
 placeholder = true

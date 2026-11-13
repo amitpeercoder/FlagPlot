@@ -4,16 +4,17 @@ Nov 13, 2026, after Rabaul round 3 and air round 5. This page lists every air fi
 
 **What each status means:**
 - **Sized from rows.** A round set the value from fact rows, with the rows and the assumptions named.
+- **Fitted, not checked.** Chosen with the battles' results known, with no size from a source (decision 0084).
 - **Placeholder.** No row sizes it. It is not fitted to any measure, and its file says so.
 - **Placeholder, bounded.** No row sizes it, but rows give a range and the value lies inside it.
-- **No battle reads it.** No tuned battle of the slice loads it (`docs/step2-spec.md`, "Tuning").
+- **No battle reads it.** No tuned battle of the slice can move it (`docs/step2-spec.md`, "Tuning").
 
 **Which battle reads which file.**
 - Savo Island (scenario 4) loads `search.toml` and `surface_combat.toml`.
 - The Eastern Solomons (scenario 5) loads those and `air_combat.toml`.
 - Rabaul against Guadalcanal (scenario 6) loads those and also `air_upkeep.toml`, `fatigue.toml` and `air_supply.toml`.
 
-The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked on Rabaul. The rest, and `[base_hit]` and the `crew_recovered_*` figures, have no check battle: an agreement on them at Rabaul is a fit, not a check.
+The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked on Rabaul. The rest, and `[base_hit]` and `crew_recovered_over_own_base`, have no check battle: an agreement on them at Rabaul is a fit, not a check. The other three `crew_recovered_*` figures are read by no battle of the slice (corrected Nov 13, 2026, from the figure notes; `surface-and-search-figures-closed.md`).
 
 ## `air_combat.toml`
 
@@ -28,18 +29,18 @@ The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked o
 | `anti_aircraft_false_claim_chance` | 0.05 | Placeholder, bounded: left at the low end of what the rows give for the Eastern Solomons' ships' guns (255; 215 and others) | `r4-claims.md` |
 | `bomb_false_claim_chance` | 0.1 | Placeholder. One figure carries two kinds of claim that the record prices differently: about 1 per hit on ships, 20 or more per aircraft on the ground. No judged measure reads it | `r4-claims.md` |
 | `patrol_before_attack_share` | 0.4 | Placeholder, bounded: 0.22 to 0.61 (3979 to 3981). It was set inside that range before any result was read, and may move only inside it | Decision 0087 |
-| `patrol_drawn_off_share` | 0 | Placeholder. No source sizes it | Decision 0080 |
-| `anti_aircraft_before_attack_share` | 0 | Placeholder. Events 222 and 223 support guns that fire during the dive; no source sizes it | Decision 0079 |
+| `patrol_drawn_off_share` | 0 | Fitted, not checked: an endpoint placeholder "chosen with both air battles' results known" (decision 0084, finding 5). Since then 0 is an end the rows support, not a size: 12 of the 30 of Simpler's study who engaged met the escort first, at or above the proportional split (decision 0087, 11) | Decisions 0080, 0084, 0087 |
+| `anti_aircraft_before_attack_share` | 0 | Fitted, not checked: an endpoint placeholder "chosen with both air battles' results known" (decision 0084, finding 5). Events 222 and 223 support guns that fire during the dive; no source sizes it | Decisions 0079, 0084 |
 | `bomb_hit_chance` | 0.2 | Placeholder. Read by every raid on ships and on fields; not moved | `rabaul-r1-base-hit-aircraft.md` |
 | `torpedo_hit_chance` | 0.15 | Placeholder. No round has looked at it | The file |
 | `[bomb_system_hit]` | flight deck 0.5, propulsion 0.2, fire control 0.1, main battery 0.2 | Placeholder. No round has looked at it | The file |
 | `strike_contact_max_age_pulses` | 0 | Placeholder (decision 0026) | The file |
 | `extended_reach_share` | 0.25 | Placeholder (decision 0059) | The file |
 | `ditch_chance_per_radius_beyond` | 2 | Placeholder. Under decision 0084 the ditchings of Ryujo's raid are not evidence for it. A fuel round waits on research into a radius with a bomb load | Decision 0084; `docs/step2-opening-list.md` |
-| `crew_recovered_short_of_home` | 0.7 | Placeholder, no check battle | The file |
+| `crew_recovered_short_of_home` | 0.7 | No battle reads it: the Eastern Solomons counts no pilots, and scenario 6 orders no sortie beyond a radius | The file |
 | `crew_recovered_over_own_base` | 0.6 | Placeholder, no check battle. The record has 12 of 23, a sample that favours those who lived | The file |
-| `crew_recovered_beside_own_force` | 0.95 | Placeholder, no check battle. The record has 19 of 19, the same kind of sample | The file |
-| `crew_recovered_open_sea` | 0.5 | Placeholder, no check battle. The record has 6 to 9 of 13 to 16 | The file |
+| `crew_recovered_beside_own_force` | 0.95 | No battle reads it: the Eastern Solomons counts no pilots, and scenario 6 has no ships. The record has 19 recovered and none stated lost | The file |
+| `crew_recovered_open_sea` | 0.5 | No battle reads it: the Eastern Solomons counts no pilots, and in scenario 6 every group is at a base, which never lacks a deck. The record has 6 to 9 crews recovered and 4 to 7 lost (`docs/research/oob/ditching-and-rescue.md`, section 2) | The file |
 | `base_supply_destroyed_per_hit_t` | 50 | Placeholder (decision 0034). No row, no measure | The file |
 | `[base_hit] supply` | 0.3 | Placeholder. No row, no measure | `rabaul-r1-base-hit-aircraft.md` |
 

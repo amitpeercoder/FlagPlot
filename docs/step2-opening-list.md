@@ -69,6 +69,8 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - In the claims round: with no ship burning, a surface claim of ships sunk equals the truth, against what the briefing promises (a claim "can be well above" it). Decision 0085, 9.
 - Base sizes for the real map (decision 0052, item 15).
 - The points and levels of decision 0054, and history's result on that scale for scenarios 4, 5 and 6.
+- The objectives scale stays decision 0054's placeholders at the close of step 2, and the comments in scenarios 4, 5 and 6 that say it is "to be set from the record in step 2" stand until it is set: a scenario's bytes are named by the reports and the frozen copies. Step 2 reports the scale and does not judge it (ruled by the architect, Nov 13, 2026).
+- Port rows that no derivation reads: `place_facts.csv` has Noumea's one large berth and 5,000 tons a day in December 1942 (rows 96, 116) and no wharves at Henderson Field or Milne Bay (58, 85). `port_sizes.csv` stays placeholders, read by no battle of the slice.
 
 ## Known gaps between the model and the record
 
