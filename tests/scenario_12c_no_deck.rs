@@ -433,8 +433,8 @@ fn case_a_the_bombers_land_on_b2_the_scouts_split_and_ten_go_into_the_sea() {
     assert_eq!(
         landings(&world),
         [
-            (3, 6, at_ship(6), 18, 18, true),
-            (4, 7, at_ship(6), 6, 6, true),
+            (3, 2_000_001, at_ship(6), 18, 18, true),
+            (4, 2_000_002, at_ship(6), 6, 6, true),
         ]
     );
     let ditched = no_deck_ditchings(&world);
@@ -445,26 +445,26 @@ fn case_a_the_bombers_land_on_b2_the_scouts_split_and_ten_go_into_the_sea() {
     // At 1 none of the 10 crews is lost.
     assert_eq!((recovered, lost), (Some(10), 0));
     // The groups of the ship that sank end with no aircraft, and the new
-    // groups are numbered one above the highest, in order.
+    // groups are numbered from the Japanese series (decision 0086), in order.
     let groups = &world.umpire().air_groups;
     assert_eq!(groups[&BOMBERS].ready, 0);
     assert_eq!(groups[&SCOUTS].ready, 0);
     assert_eq!(
-        groups[&AirGroupId::new(6)].aircraft_type,
+        groups[&AirGroupId::new(2_000_001)].aircraft_type,
         groups[&BOMBERS].aircraft_type
     );
     assert_eq!(
-        groups[&AirGroupId::new(7)].aircraft_type,
+        groups[&AirGroupId::new(2_000_002)].aircraft_type,
         groups[&SCOUTS].aircraft_type
     );
     assert_eq!(
-        groups[&AirGroupId::new(6)].mission,
+        groups[&AirGroupId::new(2_000_001)].mission,
         sim_core::orders::AirMission::Rest
     );
     // A formed group: named from the old one and its place, on the side of
     // the old one, with the aircraft that landed as its strength, reach
     // normal and no search arc.
-    let formed = &groups[&AirGroupId::new(6)];
+    let formed = &groups[&AirGroupId::new(2_000_001)];
     assert_eq!(
         formed.name,
         "Placeholder Japanese dive bombers landed at ship:6"
@@ -474,7 +474,7 @@ fn case_a_the_bombers_land_on_b2_the_scouts_split_and_ten_go_into_the_sea() {
     assert_eq!(formed.strength, 18);
     assert_eq!(formed.reach, sim_core::orders::Reach::Normal);
     assert!(formed.search.is_none());
-    assert_eq!(groups[&AirGroupId::new(7)].strength, 6);
+    assert_eq!(groups[&AirGroupId::new(2_000_002)].strength, 6);
 }
 
 #[test]
@@ -517,8 +517,8 @@ fn case_b_all_34_land_at_the_base_each_forming_a_group_and_nothing_ditches() {
     assert_eq!(
         landings(&world),
         [
-            (3, 5, at_base(1), 18, 18, true),
-            (4, 6, at_base(1), 16, 16, true),
+            (3, 2_000_001, at_base(1), 18, 18, true),
+            (4, 2_000_002, at_base(1), 16, 16, true),
         ]
     );
     assert!(no_deck_ditchings(&world).is_empty());
@@ -634,8 +634,8 @@ fn case_d_with_two_bombers_the_deck_is_out_and_the_aircraft_come_home_as_in_case
     assert_eq!(
         landings(&world),
         [
-            (3, 6, at_ship(6), 18, 18, true),
-            (4, 7, at_ship(6), 6, 6, true),
+            (3, 2_000_001, at_ship(6), 18, 18, true),
+            (4, 2_000_002, at_ship(6), 6, 6, true),
         ]
     );
     let ditched = no_deck_ditchings(&world);

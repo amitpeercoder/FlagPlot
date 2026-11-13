@@ -2,8 +2,8 @@ Scenario 13b: An afternoon base strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7f7aff617e54e572  16 events
-day   2  hash 874bb7d13980be72  5 events
+day   1  hash dbabc2f21a10c341  17 events
+day   2  hash 6cee15d88b33d2e9  5 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -14,24 +14,25 @@ day   2  hash 874bb7d13980be72  5 events
 #7 D1 morning   ship:1 burned 32 t, 2904 t remaining  <- #6
 #8 D1 morning   ship:2 burned 12 t, 464 t remaining  <- #6
 #9 D1 afternoon air_group:1 launched 18 aircraft at base:1 at (0,0), 200 nm  <- order:2
-#10 D1 afternoon air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 2 hits: 1 on aircraft, 0 on supply, 1 on nothing  <- #9
-#11 D1 afternoon Allied claim at (0,0): 6 aircraft destroyed on the ground  <- #10
-#12 D1 afternoon task_force:1 steamed 72 nm at 16 kn from (5,0) to (3,0)  <- order:1
-#13 D1 afternoon ship:1 burned 24 t, 2880 t remaining  <- #12
-#14 D1 afternoon ship:2 burned 9 t, 455 t remaining  <- #12
-#15 D1 afternoon task_force:1 arrived at (3,0) at D1 16:30  <- #12
-#16 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
-#17 D2 morning   air_group:1 launched 18 aircraft at base:1 at (0,0), 120 nm  <- order:2
-#18 D2 morning   air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 5 hits: 3 on aircraft, 1 on supply, 1 on nothing  <- #17
-#19 D2 morning   base:1 lost 50 t of supply, 950 t left  <- #18
-#20 D2 morning   Allied claim at (0,0): 2 aircraft destroyed on the ground  <- #18
-#21 D2 -         base:1 at the end of the day: 950 t of supply, 0 aircraft ready: not open
+#10 D1 afternoon air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 2 hits: 0 on aircraft, 1 on supply, 1 on nothing  <- #9
+#11 D1 afternoon base:1 lost 50 t of supply, 950 t left  <- #10
+#12 D1 afternoon Allied claim at (0,0): 6 aircraft destroyed on the ground  <- #10
+#13 D1 afternoon task_force:1 steamed 72 nm at 16 kn from (5,0) to (3,0)  <- order:1
+#14 D1 afternoon ship:1 burned 24 t, 2880 t remaining  <- #13
+#15 D1 afternoon ship:2 burned 9 t, 455 t remaining  <- #13
+#16 D1 afternoon task_force:1 arrived at (3,0) at D1 16:30  <- #13
+#17 D1 -         base:1 at the end of the day: 950 t of supply, 0 aircraft ready: not open
+#18 D2 morning   air_group:1 launched 18 aircraft at base:1 at (0,0), 120 nm  <- order:2
+#19 D2 morning   air_group:1 bombs at base:1: 18 shots x 0.2 = 3.6 expected, 5 hits: 0 on aircraft, 3 on supply, 2 on nothing  <- #18
+#20 D2 morning   base:1 lost 150 t of supply, 800 t left  <- #19
+#21 D2 morning   Allied claim at (0,0): 2 aircraft destroyed on the ground  <- #19
+#22 D2 -         base:1 at the end of the day: 800 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder carrier force" (Allied): Arrived at (3,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder dive bombers" (Allied) aboard ship:1: 18 ready, mission BaseStrike on base:1, no arc
 ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2880 t of fuel, 0 t of supply
 ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 455 t of fuel, 0 t of supply
-base:1 "Placeholder airfield A" (Japanese) at (0,0): 950 t of supply in stock
+base:1 "Placeholder airfield A" (Japanese) at (0,0): 800 t of supply in stock
 Allied: no contacts
 Allied claim at (0,0): 6 aircraft destroyed on the ground, day 1 afternoon
 Allied claim at (0,0): 2 aircraft destroyed on the ground, day 2 morning

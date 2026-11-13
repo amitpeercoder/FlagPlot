@@ -2,14 +2,14 @@ Scenario 13b: An afternoon base strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7f7aff617e54e572  16 events
-day   2  hash 874bb7d13980be72  5 events
+day   1  hash dbabc2f21a10c341  17 events
+day   2  hash 6cee15d88b33d2e9  5 events
 
 task_force:1 "Placeholder carrier force" (Allied): Arrived at (3,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder dive bombers" (Allied) aboard ship:1: 18 ready, mission BaseStrike on base:1, no arc
 ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2880 t of fuel, 0 t of supply
 ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 455 t of fuel, 0 t of supply
-base:1 "Placeholder airfield A" (Japanese) at (0,0): 950 t of supply in stock
+base:1 "Placeholder airfield A" (Japanese) at (0,0): 800 t of supply in stock
 Allied: no contacts
 Allied claim at (0,0): 6 aircraft destroyed on the ground, day 1 afternoon
 Allied claim at (0,0): 2 aircraft destroyed on the ground, day 2 morning

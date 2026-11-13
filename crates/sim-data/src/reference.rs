@@ -969,7 +969,7 @@ mod tests {
         );
         assert_eq!(figures.bomb_system_hit.len(), 4);
         assert_eq!(figures.base_supply_destroyed_per_hit_t, Fixed::from_int(50));
-        assert_eq!(figures.base_hit_aircraft, Fixed::from_ratio(3, 10));
+        assert_eq!(figures.base_hit_aircraft, Fixed::from_ratio(6, 100));
         assert_eq!(figures.base_hit_supply, Fixed::from_ratio(3, 10));
         assert_eq!(figures.fighter_false_claim_chance, Fixed::from_ratio(7, 10));
         assert_eq!(
@@ -1001,12 +1001,14 @@ mod tests {
             "base_supply_destroyed_per_hit_t = -5"
         )
         .contains("negative"));
-        assert!(bad("[base_hit]\naircraft = \"0.3\"\nsupply = \"0.3\"\n", "").contains("base_hit"));
-        assert!(bad("aircraft = \"0.3\"", "aircraft = 0.3").contains("aircraft = 0.3"));
-        assert!(bad("aircraft = \"0.3\"", "aircraft = \"1.5\"").contains("base hit chance"));
+        assert!(
+            bad("[base_hit]\naircraft = \"0.06\"\nsupply = \"0.3\"\n", "").contains("base_hit")
+        );
+        assert!(bad("aircraft = \"0.06\"", "aircraft = 0.3").contains("aircraft = 0.3"));
+        assert!(bad("aircraft = \"0.06\"", "aircraft = \"1.5\"").contains("base hit chance"));
         assert!(bad("supply = \"0.3\"", "supply = \"-0.1\"").contains("base hit chance"));
         // Together they may not pass 1.
-        assert!(bad("aircraft = \"0.3\"", "aircraft = \"0.8\"").contains("add to"));
+        assert!(bad("aircraft = \"0.06\"", "aircraft = \"0.8\"").contains("add to"));
     }
 
     #[test]
