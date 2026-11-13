@@ -11,7 +11,7 @@ Step 2 built the harness, measured the slice's battles against the record, tuned
 | Line of the spec | Met? | Shown by |
 | --- | --- | --- |
 | All three battles pass, or each miss is written down with its cause and accepted by the designer | **Not yet.** No battle passes. Every miss is written down with its cause; your acceptance is the decision asked above. One agreement at the edge, Rabaul's Japanese fighters lost, has no cause named in any record | This page; the four reports in the table below |
-| No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met when pull requests 226 and 227 land.** Each puts a note above every figure in its file, and two summary pages list them. Not covered by the line, and still placeholders without a step 2 note: scenario 6's own figures (listed on the air page), and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
+| No figure in `data/reference` is a placeholder without a note saying what it rests on | **Met.** A note above every figure in its file (pull requests 226 and 227), and two summary pages list them. Outside `data/reference` and so outside the line: scenario 6's own figures, placeholders with notes in the scenario file and on the air page; and the objectives scale's points in the scenario files, whose comment still says "to be set from the record in step 2" (left so by the architect's ruling, `docs/step2-opening-list.md`) | `docs/validation/tuning/air-figures-closed.md`, `docs/validation/tuning/surface-and-search-figures-closed.md` |
 | The frozen-figure tests, the invariants, the determinism scenario and the soak still pass | **Met.** The frozen-figure tests, the invariants and the determinism scenario run in `cargo test` on every pull request. The hundred-seed soak, which CI does not run, was run by hand on Nov 13, 2026: 100 seeds of 180 days, 1,978,115 events, every check holding; the determinism scenario 9 of 9 and the invariants' tests 24 of 24 beside it | `docs/validation/closing-tests.md`, test 1 |
 | The scenario with every rule of step 2 acting together passes, and was built before tuning began | **Met.** Built Nov 13, 2026, before any figure was tuned; it runs in `cargo test` | `tests/scenario_16_all_together.rs`; `docs/step2-opening-list.md`, "Done" |
 | The legibility test is run again on the tuned Eastern Solomons | **Not met by the test's own rule, by one item.** The explanation, claims against truth, and truth and belief pass; two of four predictions pass where three are needed. Both misses are about where the enemy would be, which the opening briefing cannot show. Not run again. For you to accept or not (below) | `docs/validation/closing-tests.md`, test 2 |
@@ -26,7 +26,7 @@ Each report is 1,000 runs, seeds 1 to 1000. "At the edge" is an agreement whose 
 | Savo Island | 29 | 21 | 4 | 4 | `savo-island-after-0083.md` | The closing report after decision 0083. Tuned on |
 | Eastern Solomons | 15 | 11 | 2 | 2 | `eastern-solomons-r4.md` | The last remade report, air round 4 (claims). Rounds 3 and 5 and the Rabaul rounds made no new one for this battle. Tuned on |
 | Rabaul against Guadalcanal | 10 | 7 | 1 | 2 | `rabaul-guadalcanal-air-rabaul-r1.md` | The last remade report, Rabaul round 1. Rounds 2 and 3 moved nothing and made none (`rabaul-r3-wear.md` says so). Air figures checked on it; slow figures tuned on it |
-| Cape Esperance | 8 | 4 | 1 | 3 | `cape-esperance-check.md` (pull request 229) | Checked once, never tuned on |
+| Cape Esperance | 8 | 4 | 1 | 3 | `cape-esperance-check.md` | Checked once, never tuned on |
 | **All four** | **62** | **43** | **8** | **11** | | |
 
 The three tuning reports were made on state version 7; the Cape Esperance check on version 8. The engine moved to version 8 with decision 0086 after the three were made, and they were not remade.
@@ -101,7 +101,7 @@ Vincennes's and Quincy's hits above rest on it too. **Step 3:** secondary guns.
 
 | Measure | Verdict | Record | Runs | Cause | Recorded in |
 | --- | --- | --- | --- | --- | --- |
-| `sbds_ready_on_day_21` | miss | 22 | 27 to 33, 30 (0) | Aircraft under repair for days (5 of 31 on 25 August, row 455, against about 1.3 in the rules); strikes at ships that scenario 6 cannot fly; losses on take-off, landing and ferrying that do not go with distance | `tuning/rabaul-r3-wear.md` (pull request 226), handed on from `rabaul-r1-base-hit-aircraft.md` |
+| `sbds_ready_on_day_21` | miss | 22 | 27 to 33, 30 (0) | Aircraft under repair for days (5 of 31 on 25 August, row 455, against about 1.3 in the rules); strikes at ships that scenario 6 cannot fly; losses on take-off, landing and ferrying that do not go with distance | `tuning/rabaul-r3-wear.md`, handed on from `rabaul-r1-base-hit-aircraft.md` |
 
 **Step 3:** small airfields that wear aircraft faster, and wear that does not rise in a straight line with distance.
 
@@ -145,7 +145,7 @@ From decision 0084, and the Cape Esperance check read under it:
 
 ## The figures by status
 
-From the two "figures closed" pages, which land with pull requests 226 and 227.
+From the two "figures closed" pages.
 
 **Surface, search, air combat and derivation figures** (`surface-and-search-figures-closed.md`): 101 figures.
 
@@ -279,9 +279,9 @@ Gathered from `docs/step2-opening-list.md` and the round records, with duplicate
 
 Listed, not settled:
 
-1. **The air combat figures by status.** `air-figures-closed.md` (pull request 226) counts 23 rows of `air_combat.toml`: 2 sized from rows, 2 "placeholder, bounded", 19 placeholders. `surface-and-search-figures-closed.md` (pull request 227) counts 26 entries: 2 sized, 2 fitted, 7 looked at, 12 placeholders, 3 read by no battle. The differences: 227 calls the two zero shares of 0079 and 0080 "fitted", where 226 calls them placeholders; 226 calls `anti_aircraft_false_claim_chance` "bounded", where 227 counts it as looked at; 226 counts `[bomb_system_hit]` as one row, 227 as four.
-2. **The `crew_recovered_*` figures.** 226 says all four have no check battle. 227 says three of the four are read by no battle at all, and only `crew_recovered_over_own_base` is read, at Rabaul.
-3. **Cape Esperance.** 227's page says it is "not yet run"; pull request 229 records the check run on Nov 13, 2026.
+1. **The air combat figures by status.** `air-figures-closed.md` counts 23 rows of `air_combat.toml`: 2 sized from rows, 2 "placeholder, bounded", 19 placeholders. `surface-and-search-figures-closed.md` counts 26 entries: 2 sized, 2 fitted, 7 looked at, 12 placeholders, 3 read by no battle. The differences: the surface page calls the two zero shares of 0079 and 0080 "fitted", where the air page calls them placeholders; the air page calls `anti_aircraft_false_claim_chance` "bounded", where the surface page counts it as looked at; the air page counts `[bomb_system_hit]` as one row, the surface page as four.
+2. **The `crew_recovered_*` figures.** The air page says all four have no check battle. The surface page, and the spec as corrected with it, say three of the four are read by no battle at all, and only `crew_recovered_over_own_base` is read, at Rabaul.
+3. **Cape Esperance.** `surface-and-search-figures-closed.md` says it is "not yet run"; `cape-esperance-check.md` records the check run on Nov 13, 2026.
 4. **The Ryujo "left to attack" record.** The decisions index (0084) and `baseline-reading.md` give it as 36. Decision 0084's own dated note and `eastern-solomons-r4.md` give 38.
 5. **Decision 0074's status line** still says "not built"; its note and the index say it was built with 0083.
 6. **`savo-island-r2.md` as the spec quotes it.** The spec's "Where the model stands today" gives it as 19 agree, 1 at the edge, 3 miss, of 23. The file, remade for decision 0084's measures, now reads 21, 2, 6 of 29.
