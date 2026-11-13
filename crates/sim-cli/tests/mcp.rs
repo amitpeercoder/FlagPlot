@@ -1029,3 +1029,52 @@ fn the_recorded_game_harness_passes_a_good_game_and_fails_an_altered_one() {
     fs::write(&save, bytes).unwrap();
     assert!(check_recorded_game(&dir).is_err());
 }
+
+/// Finding 2 of the outside review of Nov 13, 2026 (prompt 11). Kept switched
+/// off until the architect rules on it; run with `--ignored` to see it.
+#[test]
+#[ignore = "outside review finding 2: play --export-save writes the enemy's orders from a game that is not over, through the command the player is given"]
+fn play_exports_no_enemy_order_from_a_game_that_is_not_over() {
+    let dir = temp_dir("review11");
+    let (game, save) = (dir.join("g.txt"), dir.join("save.json"));
+    let ended = run(&[
+        "play",
+        "--game",
+        s(&game),
+        "--scenario",
+        S07,
+        "--seat",
+        "allied",
+        "end_day",
+        "{}",
+    ]);
+    assert!(
+        ended.status.success(),
+        "{}",
+        String::from_utf8_lossy(&ended.stderr)
+    );
+    let answer: Value = serde_json::from_str(&out_text(&ended)).expect("end_day answers JSON");
+    assert_eq!(
+        answer["game_over"], false,
+        "the game must still be on: {answer}"
+    );
+    let exported = run(&["play", "--game", s(&game), "--export-save", s(&save)]);
+    assert!(
+        exported.status.success(),
+        "{}",
+        String::from_utf8_lossy(&exported.stderr)
+    );
+    let saved: Value = serde_json::from_str(&fs::read_to_string(&save).unwrap()).unwrap();
+    let enemy: Vec<&Value> = saved["orders"]
+        .as_array()
+        .expect("orders")
+        .iter()
+        .filter(|o| o["side"] == "japanese")
+        .collect();
+    assert!(
+        enemy.is_empty(),
+        "the Allied player exported {} Japanese orders mid-game, the first: {}",
+        enemy.len(),
+        enemy[0]
+    );
+}
