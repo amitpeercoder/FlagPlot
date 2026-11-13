@@ -212,7 +212,9 @@ What it shows:
 | `japanese_ships_claimed_sunk_per_hundred_sunk` | The same as `us_destroyers_sunk`: too few runs sink a US ship to keep |
 | `gun_hits_on_kinugasa`, at the edge | The rule of targets (decision 0078): Salt Lake City's place takes her while the three cruisers are afloat; in the record she took no fire (1686, 1687) |
 
-Limits that stay: no measure of who sighted whom first was written for this battle (decision 0072 says which events it could read); there is no measure of hits for each thousand shells (the measures file's closing note); and the fights by day above are not measured.
+Limits that stay: no measure of who sighted whom first was written for this battle (decision 0072 says which events it could read); there is no measure of hits for each thousand shells (the measures file's closing note); and the fights by day above are not measured. **The fights by day are a limit on the agreement of `japanese_ships_sunk`:** Task Force 64 fights stragglers by day in 771 runs of 1,000, and in the 229 runs without one the median is 1 Japanese ship sunk, not the record's 2.
+
+Observations for step 3, from the batch and not measured: the fights by day (771 runs); the short night fight (a median of 3 rounds of five minutes, against about 34 minutes of fire in the record); and the destroyers' torpedoes (every tube fired in nearly every run, where two ships attacked).
 
 ## Eastern Solomons
 
