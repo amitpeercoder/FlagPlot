@@ -363,6 +363,17 @@ struct RawRules {
     experience: Option<crate::experience::RawRulesExperience>,
     #[serde(default)]
     fire_rate: Option<crate::fire_rate::RawFireRate>,
+    #[serde(default)]
+    search_radius: Option<RawSearchRadius>,
+}
+
+/// The `[search_radius]` block of the rules file (decision 0075).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawSearchRadius {
+    divisor_of_scouting_range: toml::Value,
+    #[serde(default)]
+    exception: Vec<RawException>,
 }
 
 #[derive(Deserialize)]
@@ -393,6 +404,15 @@ impl Exception {
     }
 }
 
+/// The `[search_radius]` block: a type's search radius is its range in the
+/// scouting condition divided by this, rounded down (decision 0075).
+#[derive(Clone, Debug)]
+pub struct SearchRadiusRules {
+    pub divisor: i64,
+    /// Exceptions read only when the search radius is read.
+    pub exceptions: Vec<Exception>,
+}
+
 /// The rules file, checked.
 #[derive(Clone, Debug)]
 pub struct Rules {
@@ -409,6 +429,9 @@ pub struct Rules {
     pub experience: Option<crate::experience::ExperienceRules>,
     /// The cases of achieved rates of fire (decision 0070).
     pub fire_rate: Option<crate::fire_rate::FireRateRules>,
+    /// The search radius of an aircraft type (decision 0075); without the
+    /// block the search range is the strike radius.
+    pub search_radius: Option<SearchRadiusRules>,
 }
 
 fn constant(name: &str, value: &toml::Value, problems: &mut Vec<Problem>) -> Option<Dec> {
@@ -435,6 +458,48 @@ fn constant(name: &str, value: &toml::Value, problems: &mut Vec<Problem>) -> Opt
             None
         }
     }
+}
+
+/// Checks the exceptions of one list of them. `label` names the list in
+/// messages.
+fn parse_exceptions(
+    raw: Vec<RawException>,
+    label: &str,
+    problems: &mut Vec<Problem>,
+) -> Vec<Exception> {
+    let mut exceptions = Vec::new();
+    for (i, e) in raw.into_iter().enumerate() {
+        let figure = format!("{label} {}", i + 1);
+        let mut ok = true;
+        for (field, value) in [
+            ("entity", &e.entity),
+            ("fact", &e.fact),
+            ("reason", &e.reason),
+            ("agreed", &e.agreed),
+        ] {
+            if value.trim().is_empty() {
+                problems.push(rules_problem(&figure, format!("`{field}` is empty")));
+                ok = false;
+            }
+        }
+        if !e.agreed.trim().is_empty() && Day::parse_full(&e.agreed).is_none() {
+            problems.push(rules_problem(
+                &figure,
+                format!("`agreed` is `{}`, not a full date YYYY-MM-DD", e.agreed),
+            ));
+            ok = false;
+        }
+        if ok {
+            exceptions.push(Exception {
+                entity: e.entity,
+                fact: e.fact,
+                row: e.row,
+                reason: e.reason,
+                agreed: e.agreed,
+            });
+        }
+    }
+    exceptions
 }
 
 /// Parses the rules file. `None` when the constants cannot be used.
@@ -491,38 +556,23 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
         &raw.search_sweep_width_nm,
         &mut problems,
     );
-    let mut exceptions = Vec::new();
-    for (i, e) in raw.exception.into_iter().enumerate() {
-        let figure = format!("exception {}", i + 1);
-        let mut ok = true;
-        for (field, value) in [
-            ("entity", &e.entity),
-            ("fact", &e.fact),
-            ("reason", &e.reason),
-            ("agreed", &e.agreed),
-        ] {
-            if value.trim().is_empty() {
-                problems.push(rules_problem(&figure, format!("`{field}` is empty")));
-                ok = false;
+    let exceptions = parse_exceptions(raw.exception, "exception", &mut problems);
+    let search_radius = raw.search_radius.map(|raw| {
+        let divisor = match raw.divisor_of_scouting_range {
+            toml::Value::Integer(n) if n > 0 => n,
+            other => {
+                problems.push(rules_problem(
+                    "search_radius divisor_of_scouting_range",
+                    format!("must be a whole number above zero, not `{other}`"),
+                ));
+                1
             }
+        };
+        SearchRadiusRules {
+            divisor,
+            exceptions: parse_exceptions(raw.exception, "search_radius exception", &mut problems),
         }
-        if !e.agreed.trim().is_empty() && Day::parse_full(&e.agreed).is_none() {
-            problems.push(rules_problem(
-                &figure,
-                format!("`agreed` is `{}`, not a full date YYYY-MM-DD", e.agreed),
-            ));
-            ok = false;
-        }
-        if ok {
-            exceptions.push(Exception {
-                entity: e.entity,
-                fact: e.fact,
-                row: e.row,
-                reason: e.reason,
-                agreed: e.agreed,
-            });
-        }
-    }
+    });
     let experience = match raw.experience {
         Some(raw) => {
             let (experience, experience_problems) = crate::experience::parse_rules(raw);
@@ -551,6 +601,7 @@ pub fn parse_rules(text: &str) -> (Option<Rules>, Vec<Problem>) {
             exceptions,
             experience,
             fire_rate,
+            search_radius,
         }),
         _ => None,
     };

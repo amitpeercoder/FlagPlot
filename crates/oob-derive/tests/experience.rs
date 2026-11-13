@@ -997,6 +997,7 @@ fn check_writes_nothing_and_a_run_writes_the_experience_file() {
             files,
             written,
             unread,
+            ..
         } => {
             assert!(!written);
             // The rows not read are reported by a check, not written.

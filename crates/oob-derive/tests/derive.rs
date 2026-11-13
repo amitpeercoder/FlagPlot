@@ -4261,3 +4261,281 @@ fn a_weapon_with_no_practical_rate_takes_the_achieved_rate() {
     // Without the block it is still a missing rate.
     assert_one(&fails(&["shp"], &files), &["missing"]);
 }
+
+// The search radius of an aircraft type (decision 0075).
+//
+// Test type `dive-a`: range_normal_nm 528 (fact 4), so its strike radius is
+// 528 x 0.333333 = 175.999824, down to 175, as in the tests above.
+
+const SEARCH_BLOCK: &str = "\n[search_radius]\ndivisor_of_scouting_range = 3\n";
+
+fn search_exception(entity: &str, fact: &str, row: u32) -> String {
+    format!(
+        "\n[[search_radius.exception]]\nentity = \"{entity}\"\nfact = \"{fact}\"\nrow = {row}\n\
+         reason = \"The architect judged it\"\nagreed = \"2026-11-13\"\n"
+    )
+}
+
+/// The air base with the two attributes the search radius reads declared.
+fn search_base() -> Files {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "attributes.csv",
+        "range_max_nm,aircraft_type,integer,one\nscouting_radius_nm,aircraft_type,integer,one\n",
+    );
+    files
+}
+
+fn add_fact(files: &mut Files, line: String) {
+    append_lines(files, "aircraft_type_facts.csv", &format!("{line}\n"));
+}
+
+/// A range_max_nm row for dive-a that cannot be read without an exception.
+fn weak_range(id: u32, value: &str) -> String {
+    fact_row(
+        id,
+        "dive-a",
+        "range_max_nm",
+        value,
+        "",
+        "",
+        "low",
+        "disputed",
+    )
+}
+
+fn search_of(rules_tail: &str, files: &Files) -> Result<Outputs, Vec<String>> {
+    derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &air_rules(&format!("{SEARCH_BLOCK}{rules_tail}")),
+        files,
+    )
+}
+
+#[test]
+fn a_preferred_maximum_range_gives_a_third_of_it_as_the_search_radius() {
+    // Hand calculation. range_max_nm 1,200 is preferred, the only row, so it
+    // is read: 1200 / 3 = 400 exactly. The strike radius is not touched:
+    // 528 x 0.333333 = 175.999824, down to 175.
+    let mut files = search_base();
+    add_fact(&mut files, fact(500, "dive-a", "range_max_nm", "1200"));
+    let outputs = search_of("", &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,400,20,175,bomb,41.666666,1,1"
+    );
+    let search = plane_source(&outputs, "2000", "search_range_nm");
+    assert!(search[3].contains("decision 0075"), "{search:?}");
+    assert_eq!(search[4], "aircraft_type_facts.csv:500");
+    assert!(search[5].contains("1200 / 3 = 400"), "{search:?}");
+    assert!(!search[5].contains("exception"), "{search:?}");
+    // The strike radius keeps its own rule and its own row.
+    let strike = plane_source(&outputs, "2000", "strike_range_nm");
+    assert_eq!(strike[4], "aircraft_type_facts.csv:4");
+    assert!(outputs.search_not_settled.is_empty());
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains("Search radius exceptions used (decision 0075): none"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_sourced_scouting_radius_is_read_before_a_third_of_the_range() {
+    // scouting_radius_nm 333 is preferred and read as it is; the range
+    // 1200 / 3 = 400 is not used.
+    let mut files = search_base();
+    add_fact(&mut files, fact(500, "dive-a", "range_max_nm", "1200"));
+    add_fact(&mut files, fact(501, "dive-a", "scouting_radius_nm", "333"));
+    let outputs = search_of("", &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,333,20,175,bomb,41.666666,1,1"
+    );
+    assert_eq!(
+        plane_source(&outputs, "2000", "search_range_nm")[4],
+        "aircraft_type_facts.csv:501"
+    );
+}
+
+#[test]
+fn a_range_row_that_is_not_preferred_is_read_only_by_a_search_radius_exception() {
+    // Row 500 (1,200, unconfirmed) cannot be read: the search radius is not
+    // settled and the strike radius 175 is kept, and the run still succeeds.
+    let mut files = search_base();
+    add_fact(&mut files, weak_range(500, "1200"));
+    let outputs = search_of("", &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    // An exception of the top-level list for another fact does not count.
+    let other = exception_text("dive-a", "pilot_armour", 5);
+    let outputs = search_of(&other, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    // A search_radius exception names it: 1200 / 3 = 400.
+    let named = search_exception("dive-a", "range_max_nm", 500);
+    let outputs = search_of(&named, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,400,20,175,bomb,41.666666,1,1"
+    );
+    let search = plane_source(&outputs, "2000", "search_range_nm");
+    assert_eq!(search[4], "aircraft_type_facts.csv:500");
+    assert!(search[5].contains("rests on an exception"), "{search:?}");
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains("dive-a range_max_nm: aircraft_type_facts.csv row 500 (disputed)"),
+        "{header}"
+    );
+    // The strike radius did not use it, and it is not listed as an
+    // ordinary exception.
+    let strike = plane_source(&outputs, "2000", "strike_range_nm");
+    assert_eq!(strike[4], "aircraft_type_facts.csv:4");
+    assert!(!strike[5].contains("exception"), "{strike:?}");
+    assert!(
+        header.contains("Exceptions used (decision 0020, 3 and 0029, 5): none"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_top_level_exception_for_the_range_is_read_by_the_search_radius_too() {
+    let mut files = search_base();
+    add_fact(&mut files, weak_range(500, "1200"));
+    let top = exception_text("dive-a", "range_max_nm", 500);
+    let outputs = search_of(&top, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,400,20,175,bomb,41.666666,1,1"
+    );
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains("dive-a range_max_nm: aircraft_type_facts.csv row 500 (disputed)"),
+        "{header}"
+    );
+}
+
+#[test]
+fn ranges_that_disagree_with_nothing_to_settle_them_keep_the_strike_radius_and_say_so() {
+    // Rows 500 (1,200) and 501 (1,100), neither preferred, no exception:
+    // not settled, the strike radius 175 is the search radius, the run
+    // succeeds, and the type is listed.
+    let mut files = search_base();
+    add_fact(&mut files, weak_range(500, "1200"));
+    add_fact(&mut files, weak_range(501, "1100"));
+    let outputs = search_of("", &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    let search = plane_source(&outputs, "2000", "search_range_nm");
+    assert!(
+        search[3].starts_with("search radius not settled: "),
+        "{search:?}"
+    );
+    assert!(
+        search[3].ends_with("; the strike radius is kept (decision 0075)"),
+        "{search:?}"
+    );
+    assert!(
+        search[5].contains("search radius not settled"),
+        "{search:?}"
+    );
+    assert_eq!(outputs.search_not_settled.len(), 1);
+    assert!(
+        outputs.search_not_settled[0].starts_with("dive-a: "),
+        "{:?}",
+        outputs.search_not_settled
+    );
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains("Search radius not settled (the strike radius is kept):\n#   dive-a: "),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_type_with_no_range_row_at_all_keeps_the_strike_radius_and_is_listed() {
+    let outputs = search_of("", &search_base()).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    assert_eq!(outputs.search_not_settled.len(), 1);
+    assert!(
+        outputs.search_not_settled[0].contains("no rows in the facts"),
+        "{:?}",
+        outputs.search_not_settled
+    );
+}
+
+#[test]
+fn without_the_search_radius_block_the_search_range_is_the_strike_radius() {
+    // A readable maximum range is there, but the rules file has no
+    // [search_radius] block, so nothing reads it: search = strike = 175, no
+    // search lines in the header, nothing listed. (The test of the aircraft
+    // file above, with no such row, covers the same for every older rules
+    // file.)
+    let mut files = search_base();
+    add_fact(&mut files, fact(500, "dive-a", "range_max_nm", "1200"));
+    let outputs = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &air_rules(""),
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    assert!(outputs.search_not_settled.is_empty());
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(!header.contains("0075"), "{header}");
+}
+
+#[test]
+fn a_search_radius_exception_must_name_a_real_row_of_the_entity_and_fact() {
+    let mut files = search_base();
+    add_fact(&mut files, weak_range(500, "1200"));
+    // No such row.
+    let problems =
+        search_of(&search_exception("dive-a", "range_max_nm", 999), &files).expect_err("a problem");
+    assert_one(&problems, &["rules: exception: range_max_nm:", "row 999"]);
+    // Row 5 exists, but it is a pilot_armour row.
+    let problems =
+        search_of(&search_exception("dive-a", "range_max_nm", 5), &files).expect_err("a problem");
+    assert_one(&problems, &["rules: exception: range_max_nm:", "row 5"]);
+    // Row 500 exists but for another type.
+    let problems = search_of(
+        &search_exception("torp-a-plane", "range_max_nm", 500),
+        &files,
+    )
+    .expect_err("a problem");
+    assert_one(&problems, &["rules: exception: range_max_nm:", "row 500"]);
+}
+
+#[test]
+fn the_search_radius_divisor_must_be_a_whole_number_above_zero() {
+    for bad in ["0", "\"3\"", "3.0"] {
+        let rules = air_rules(&format!(
+            "\n[search_radius]\ndivisor_of_scouting_range = {bad}\n"
+        ));
+        let problems = derive_text(
+            &plane_list(&[("dive-a", Some("bomb-a"))]),
+            &rules,
+            &search_base(),
+        )
+        .expect_err("a problem");
+        assert!(
+            problems
+                .iter()
+                .any(|p| p.contains("divisor_of_scouting_range")),
+            "{bad}: {problems:#?}"
+        );
+    }
+}

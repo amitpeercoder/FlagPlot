@@ -57,6 +57,9 @@ pub struct Outputs {
     /// Rows of the experience ships that no question read, one line a ship
     /// (not written to the file).
     pub experience_unread: Vec<String>,
+    /// Aircraft types whose search radius was not settled, one line a type
+    /// (decision 0075); they are also in the aircraft file's header.
+    pub search_not_settled: Vec<String>,
 }
 
 /// `<stem>.sources.csv`, the sources file beside an aircraft CSV.
@@ -239,6 +242,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             aircraft_sources_csv,
             experience_csv: None,
             experience_unread: Vec::new(),
+            search_not_settled: Vec::new(),
         });
     }
     let names: Vec<&str> = (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 })
@@ -501,6 +505,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         aircraft_sources_csv,
         experience_csv: None,
         experience_unread: Vec::new(),
+        search_not_settled: Vec::new(),
     })
 }
 
@@ -594,6 +599,54 @@ fn render_aircraft(
                 one_line(&e.reason),
                 e.agreed
             ));
+        }
+    }
+    if let Some(block) = &rules.search_radius {
+        line(format!(
+            "Search radius (decision 0075): a type's range in the scouting condition / {}, rounded down; where it cannot be read the strike radius is kept and the type is listed as not settled",
+            block.divisor
+        ));
+        let mut own_used: BTreeMap<(usize, String, u64), &Row> = BTreeMap::new();
+        for result in aircraft {
+            for (index, row) in &result.search_used {
+                own_used.insert((*index, row.file.clone(), row.cite_key().1), row);
+            }
+        }
+        if own_used.is_empty() {
+            line("Search radius exceptions used (decision 0075): none".to_string());
+        } else {
+            line("Search radius exceptions used (decision 0075):".to_string());
+            for ((index, _, _), row) in &own_used {
+                let e = &block.exceptions[*index];
+                line(format!(
+                    "  {} {}: {} row {} ({}); reason: {}; agreed {}",
+                    e.entity,
+                    e.fact,
+                    row.file,
+                    row.id,
+                    row.standing,
+                    one_line(&e.reason),
+                    e.agreed
+                ));
+            }
+        }
+        let unsettled: Vec<(&str, &str)> = aircraft
+            .iter()
+            .zip(&list.aircraft)
+            .filter_map(|(result, entry)| {
+                result
+                    .search_not_settled
+                    .as_deref()
+                    .map(|why| (entry.type_key.as_str(), why))
+            })
+            .collect();
+        if unsettled.is_empty() {
+            line("Search radius not settled (the strike radius is kept): none".to_string());
+        } else {
+            line("Search radius not settled (the strike radius is kept):".to_string());
+            for (entity, why) in unsettled {
+                line(format!("  {entity}: {}", one_line(why)));
+            }
         }
     }
     if !own.is_empty() {

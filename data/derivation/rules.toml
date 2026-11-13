@@ -743,3 +743,42 @@ class = "jp-tenryu-class"
 row = 432
 reason = "The row's own note says it is the rate of the twin mount, Yubari's; Tenryu's four guns are in single mounts, so it is not her rate. Yubari still reads it, by the exception of 2026-11-10."
 agreed = "2026-11-13"
+
+# The search radius of an aircraft type (decision 0075): a third of the range
+# in the scouting condition, rounded down (the Bureau of Aeronautics' method).
+# It is read only for the search range of a type; the strike radius is as
+# decision 0029 has it. Where the exceptions below and the preference rules
+# cannot settle a type's range, the type keeps its strike radius as its
+# search radius and the run lists it as not settled. The exceptions below are
+# read only for this; they do not widen any other reading. No exception is
+# written for the PBY-5: no list derives it yet (decision 0075, "Disputes").
+[search_radius]
+divisor_of_scouting_range = 3
+
+[[search_radius.exception]]
+entity = "sbd-3"
+fact = "range_max_nm"
+row = 270
+reason = "It is the one row stating the range in the scout condition, which is what the rule asks for; row 226 states no condition."
+agreed = "2026-11-13"
+
+[[search_radius.exception]]
+entity = "tbf-1"
+fact = "range_max_nm"
+row = 290
+reason = "The only row in the scout condition."
+agreed = "2026-11-13"
+
+[[search_radius.exception]]
+entity = "b5n2"
+fact = "range_max_nm"
+row = 408
+reason = "The higher confidence of rows agreeing within 3 miles (rows 78 and 413)."
+agreed = "2026-11-13"
+
+[[search_radius.exception]]
+entity = "e13a1"
+fact = "range_max_nm"
+row = 493
+reason = "It states its condition, maximum fuel, and is the sheet whose normal range (row 494) the derivation already reads; row 501 states no condition and cites a book not read."
+agreed = "2026-11-13"

@@ -204,6 +204,16 @@ pub fn derive_with(
         fire_rate: env.fire_rate.as_ref(),
     };
     let mut outputs = output::render(&context).map_err(|problem| vec![problem])?;
+    outputs.search_not_settled = aircraft_results
+        .iter()
+        .zip(&list.aircraft)
+        .filter_map(|(result, entry)| {
+            result
+                .search_not_settled
+                .as_ref()
+                .map(|why| format!("{}: {why}", entry.type_key))
+        })
+        .collect();
     if let Some(exp) = &list.experience {
         let Some(exp_rules) = &rules.experience else {
             return Err(vec![Problem::new(
@@ -238,6 +248,10 @@ pub enum Outcome {
         /// Rows of the experience ships that no question read, one line a
         /// ship. They are not in the generated file.
         unread: Vec<String>,
+        /// Aircraft types whose search radius was not settled, so that the
+        /// strike radius is kept (decision 0075), one line a type. They are
+        /// also in the header of the aircraft file.
+        not_settled: Vec<String>,
     },
 }
 
@@ -289,6 +303,7 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
     };
     let list = list.expect("a list that derives has parsed");
     let unread = std::mem::take(&mut outputs.experience_unread);
+    let not_settled = std::mem::take(&mut outputs.search_not_settled);
     let mut files = Vec::new();
     if !list.ships.is_empty() {
         let class_path = dir.join(&list.output);
@@ -316,6 +331,7 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
             files: paths,
             written: false,
             unread,
+            not_settled,
         });
     }
     let mut done: Vec<&Path> = Vec::new();
@@ -332,5 +348,6 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         files: paths,
         written: true,
         unread,
+        not_settled,
     })
 }
