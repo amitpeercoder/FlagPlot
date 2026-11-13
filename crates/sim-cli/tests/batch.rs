@@ -1001,7 +1001,7 @@ fn the_header_names_what_the_counts_name() {
     assert_eq!(forces[0]["name"], "Task Force 16");
     assert_eq!(forces[0]["side"], "allied");
     let groups = summary["air_groups"].as_array().expect("air_groups");
-    assert_eq!(groups.len(), 20);
+    assert_eq!(groups.len(), 26);
     assert_eq!(groups[10]["name"], "Shokaku fighter unit");
     assert_eq!(groups[10]["side"], "japanese");
     assert!(groups[10]["aircraft_type"]

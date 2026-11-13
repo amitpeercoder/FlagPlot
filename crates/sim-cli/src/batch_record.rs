@@ -941,7 +941,22 @@ pub fn count(
             })
             .collect(),
         systems_out,
-        air_losses: losses.into_values().collect(),
+        // A group that lost nothing has no row. An event can count nothing
+        // (a fuel roll in which no aircraft ditched), and makes no row.
+        air_losses: losses
+            .into_values()
+            .filter(|row| {
+                row.shot_down
+                    + row.destroyed_on_ground
+                    + row.damaged_destroyed_on_ground
+                    + row.lost_with_ship
+                    + row.worn_out
+                    + row.ditched_fuel
+                    + row.ditched_no_deck
+                    + row.pilots_lost
+                    > 0
+            })
+            .collect(),
         ready,
         claims: Claims {
             japanese: side_claims(0),
