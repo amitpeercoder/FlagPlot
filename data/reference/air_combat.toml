@@ -80,7 +80,7 @@ extended_reach_share = "0.25"
 # times (distance - radius) over radius, 1 at most. It may be more than 1.
 # Placeholder (decision 0059). No row sizes it. The ditchings of Ryujo's raid
 # are not evidence for it (decision 0084, finding 13); a round on fuel waits on
-# a radius with a bomb load (docs/step2-opening-list.md).
+# a radius with a bomb load (docs/open-work.md).
 ditch_chance_per_radius_beyond = "2"
 # The chance the crew of such an aircraft is recovered. A crew not recovered
 # is a pilot lost, where the group's pilots are counted.

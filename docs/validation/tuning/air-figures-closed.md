@@ -36,7 +36,7 @@ The figures of `air_combat.toml` are tuned on the Eastern Solomons and checked o
 | `[bomb_system_hit]` | flight deck 0.5, propulsion 0.2, fire control 0.1, main battery 0.2 | Placeholders, four entries. No round has looked at them | The file |
 | `strike_contact_max_age_pulses` | 0 | Placeholder (decision 0026) | The file |
 | `extended_reach_share` | 0.25 | Placeholder (decision 0059) | The file |
-| `ditch_chance_per_radius_beyond` | 2 | Placeholder. Under decision 0084 the ditchings of Ryujo's raid are not evidence for it. A fuel round waits on research into a radius with a bomb load | Decision 0084; `docs/step2-opening-list.md` |
+| `ditch_chance_per_radius_beyond` | 2 | Placeholder. Under decision 0084 the ditchings of Ryujo's raid are not evidence for it. A fuel round waits on research into a radius with a bomb load | Decision 0084; `docs/open-work.md` |
 | `crew_recovered_short_of_home` | 0.7 | No battle reads it: the Eastern Solomons counts no pilots, and scenario 6 orders no sortie beyond a radius | The file |
 | `crew_recovered_over_own_base` | 0.6 | Placeholder, no check battle. The record has 12 of 23, a sample that favours those who lived | The file |
 | `crew_recovered_beside_own_force` | 0.95 | No battle reads it: the Eastern Solomons counts no pilots, and scenario 6 has no ships. The record has 19 recovered and none stated lost | The file |
@@ -122,4 +122,4 @@ The figures of reports and contacts in `search.toml` stay placeholders.
 | Rabaul, reported | Japanese claims on the ground (900 for each hundred destroyed) | The record's ratio is over two or three aircraft | `rabaul-r1-base-hit-aircraft.md` |
 | Rabaul, not judged | The escorts' claims (about 159 a run against about 100 on the forms) | The same shared chance as the Americans' | `r4-claims.md` |
 
-The rules missing behind these are on `docs/step2-opening-list.md`, in the lines for step 3 named by air round 3 and by Rabaul rounds 2 and 3.
+The rules missing behind these are on `docs/open-work.md`, in the lines for step 3 named by air round 3 and by Rabaul rounds 2 and 3.
