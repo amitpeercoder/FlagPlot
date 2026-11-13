@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 94d13898a0ce9763  153 events
+day   1  hash 9d7123734a99422a  153 events
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Arrived at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -28,11 +28,11 @@ Allied contact:1 at (2,-4): 3 ships, cruiser, age 2 pulses
 Allied contact:2 at (9,0): 1 ships, carrier, age 0 pulses
 Allied claims 0 enemy ships sunk at (2,-4), day 1 night
 Allied claim at (9,0): 1 hit on a carrier, 0 sunk, day 1 afternoon
-Allied claim over (2,0): 4 aircraft shot down, day 1 afternoon
+Allied claim over (2,0): 10 aircraft shot down, day 1 afternoon
 Japanese contact:1 at (1,-4): 2 ships, cruiser, age 2 pulses
 Japanese contact:2 at (2,0): 1 ships, carrier, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-4), day 1 night
-Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
+Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down, day 1 afternoon
 Japanese claim over (9,-6): 0 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):

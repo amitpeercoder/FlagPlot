@@ -28,7 +28,13 @@ self_sealing_tanks_factor = "0.75"
 # guns of ships and bases) that missed is claimed as an aircraft shot down with
 # the chance given; each whole bomb or torpedo that missed is claimed as a hit
 # on a ship, or as an aircraft destroyed on the ground, with the last.
-fighter_false_claim_chance = "0.1"
+# fighter_false_claim_chance: 0.7 from air round 4 (Nov 13, 2026), sized on
+# the Eastern Solomons from 43 claimed by VF-5 and VF-6 (engagement_outcomes
+# 257) against the runs' own 16 real kills and 38 missed shots by those
+# fighters (an assumption: no row splits the fighters' real kills from the
+# guns'). Checked, not tuned, on Rabaul's US claims. The other two stay
+# placeholders (docs/validation/tuning/r4-claims.md).
+fighter_false_claim_chance = "0.7"
 anti_aircraft_false_claim_chance = "0.05"
 bomb_false_claim_chance = "0.1"
 
@@ -101,6 +107,11 @@ main_battery = "0.2"
 
 # Where a bomb hit on a base lands (decision 7 of 0034): one draw for each hit.
 # The two chances add to 1 at most; the rest of the hits land on nothing.
+# aircraft: 0.06 from Rabaul round 1 (Nov 13, 2026), sized from about 2.5
+# aircraft destroyed on the ground at Henderson Field (engagement_outcomes
+# 1266, 1272, 1283, 1299, 1330) for about 212 bomber sorties at a bomb chance
+# of 0.2 (one bomb a bomber, an assumption of the rules). Tuned on Rabaul with
+# no check battle (docs/validation/tuning/rabaul-r1-base-hit-aircraft.md).
 [base_hit]
-aircraft = "0.3"
+aircraft = "0.06"
 supply = "0.3"
