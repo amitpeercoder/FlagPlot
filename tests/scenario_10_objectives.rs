@@ -521,9 +521,11 @@ fn objectives_change_no_hash_and_no_event() {
     // until decision 0079 had the live guns fire after the attack.
     // And it was 0fa763bf9d9b55d7 until decision 0080 had the live patrol
     // fire at the escorts and the bombers in proportion.
-    // And it was 6de9a643409a90ac until the state went to version 8 (decision
+    // And it was 6de9a643409a90ac until decision 0087 had part of the live
+    // patrol's fire at the bombers come after the attack.
+    // And it was 8a7cf075a69f2982 until the state went to version 8 (decision
     // 0086, the counters of units made in play are hashed).
-    assert!(baseline.contains("hash 1b0852d56f029bd6"));
+    assert!(baseline.contains("hash cb7c4b4073113bb4"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

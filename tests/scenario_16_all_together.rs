@@ -1021,6 +1021,7 @@ fn check_afternoon(world: &World, run: &mut Run) {
                 chance,
                 expected,
                 hits,
+                ..
             } => {
                 assert_ne!(at, AirTarget::Bombers, "no patrol shot at a bomber");
                 assert_eq!(shots, n(12));

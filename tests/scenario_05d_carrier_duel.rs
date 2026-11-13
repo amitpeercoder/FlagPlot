@@ -526,7 +526,8 @@ fn check_fight(
             shots: int(shots),
             chance,
             expected,
-            hits
+            hits,
+            after_attack: false,
         },
         "seed {seed}"
     );

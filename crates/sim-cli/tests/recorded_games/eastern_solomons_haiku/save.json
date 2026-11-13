@@ -26,14 +26,14 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "fee72093cc06b6e8"
+      "hash": "fe71bc60e64ccbe2"
     }
   ],
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "b4699be73776d2b8"
+      "hash": "e831ed7e24dd0412"
     }
   ],
   "orders": [

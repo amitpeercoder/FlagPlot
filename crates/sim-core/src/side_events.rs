@@ -158,12 +158,15 @@ pub enum SideEventKind {
         shots: Fixed,
     },
     /// The side's own fighters firing in a fight in the air. Not the air
-    /// group they fired at.
+    /// group they fired at. `after_attack` says whether it was the part of
+    /// the patrol's fire worked after the attack (decision 0087): the side's
+    /// own fighters, so nothing of the enemy is given away.
     AirFight {
         firer: AirGroupId,
         firing: AirFirer,
         at: AirTarget,
         shots: Fixed,
+        after_attack: bool,
     },
     /// The side's own ships firing at a raid. Not the raid's air group.
     /// `after_attack` says whether it was the part of the fire worked after
@@ -340,11 +343,13 @@ impl fmt::Display for SideEventKind {
                 firing,
                 at,
                 shots,
+                after_attack,
             } => write!(
                 f,
-                "{firer} {} at the enemy's {}: {shots} shots",
+                "{firer} {} at the enemy's {}: {shots} shots{}",
                 firing.name(),
-                at.name()
+                at.name(),
+                if *after_attack { " after the attack" } else { "" }
             ),
             SideEventKind::AntiAircraftFire {
                 task_force,
@@ -782,6 +787,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             firing,
             at,
             shots,
+            after_attack,
             ..
         } => cut_if(
             own_group(firer),
@@ -790,6 +796,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                 firing: *firing,
                 at: *at,
                 shots: *shots,
+                after_attack: *after_attack,
             },
         ),
         EventKind::AntiAircraftFire {
@@ -2191,6 +2198,7 @@ mod tests {
                     chance: Fixed::from_ratio(1, 4),
                     expected: Fixed::from_ratio(5, 2),
                     hits: 2,
+                    after_attack: false,
                 },
                 Cut("AirFight", &["target", "chance", "expected", "hits"]),
                 Nothing,

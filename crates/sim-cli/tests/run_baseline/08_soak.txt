@@ -2,186 +2,186 @@ Scenario 8: The soak, 180 days from 21 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 90064bc63798ac45  80 events
-day   2  hash 87b0903f5f460be2  72 events
-day   3  hash e74a7f8e33ff12f8  63 events
-day   4  hash 0a395633177bc696  271 events
-day   5  hash 56796ce6ca380f82  155 events
-day   6  hash e2dff027f24efbc2  117 events
-day   7  hash 11557b3055dad5b3  226 events
-day   8  hash 9bd76a4a24f959b7  160 events
-day   9  hash 6f9897d4ba1827a2  212 events
-day  10  hash 403b77bf6b299b1c  198 events
-day  11  hash 7bcdf836e098e49f  183 events
-day  12  hash 3872fc75dc23bf7f  159 events
-day  13  hash f187290b0715d689  171 events
-day  14  hash 4c5ca83057f86492  152 events
-day  15  hash 436268bfc798c08c  176 events
-day  16  hash 3cbfef0c44c8a898  182 events
-day  17  hash f29591cb3da4dd68  151 events
-day  18  hash 5aaf24c2b5fba7ca  167 events
-day  19  hash e2ae92107e3f5124  152 events
-day  20  hash 2c8743cdb7ba233a  91 events
-day  21  hash 8ca33aa7d16f73f5  98 events
-day  22  hash d488d6c3f633fe66  104 events
-day  23  hash b7e16a661175c3c0  101 events
-day  24  hash 556194f225ba0302  104 events
-day  25  hash 23c25b61e2ede429  94 events
-day  26  hash f21ec68dde177778  80 events
-day  27  hash 1d1eadcc7fd818c6  92 events
-day  28  hash 33a1814903b6669b  81 events
-day  29  hash ece1b1a64b91475a  89 events
-day  30  hash be3f68ec54d9c236  94 events
-day  31  hash a69d17c766284601  81 events
-day  32  hash b53f58c27de4dd0f  80 events
-day  33  hash 4cfbf1b7bebc5b4f  162 events
-day  34  hash 9fb00ca0044e4134  123 events
-day  35  hash e36b6b4817375ba1  115 events
-day  36  hash 418c091b2e439a08  78 events
-day  37  hash 00e075b737da10ab  100 events
-day  38  hash 01c498585fa7a316  74 events
-day  39  hash 14cbc21aea2e574a  101 events
-day  40  hash 422ae8eac1e81040  159 events
-day  41  hash a4c37ee41f6c1c81  88 events
-day  42  hash 98b63a7fcedf3ba8  129 events
-day  43  hash 6e8b6568da5ada82  163 events
-day  44  hash 000bf30b47c89d7c  94 events
-day  45  hash 8e2aab259b255e21  86 events
-day  46  hash 45076011818e2c38  181 events
-day  47  hash cffc75922bb98fe2  95 events
-day  48  hash 6dc8da21fb30b746  98 events
-day  49  hash cdd8e33614fe4b87  99 events
-day  50  hash 10572862b26b8634  143 events
-day  51  hash f8c16a364b07883f  98 events
-day  52  hash b7f6a3e75886f035  137 events
-day  53  hash 0c66d2b670c40906  82 events
-day  54  hash 712c3db9bcaf62df  79 events
-day  55  hash 1dce9d030fb2e9c3  146 events
-day  56  hash 57c1254a9dff8e4b  127 events
-day  57  hash 9d8ef8cc3639fbbe  84 events
-day  58  hash 4a076bf6952f5910  113 events
-day  59  hash ca49aabfc596b786  82 events
-day  60  hash f937e27042bb3510  141 events
-day  61  hash 1f5fde6c50c7d160  106 events
-day  62  hash 52225307f429a06e  77 events
-day  63  hash 7d506a20d24717d9  134 events
-day  64  hash 198aaa27d7985c22  110 events
-day  65  hash 1e12f28ebcb54951  99 events
-day  66  hash 5369bf7817f7feac  84 events
-day  67  hash e0ae11f381e74b15  102 events
-day  68  hash 1f9664c858ab9247  74 events
-day  69  hash c6d2fd744da6a816  102 events
-day  70  hash ffd3389fdbe2c03c  145 events
-day  71  hash e72e6c0977f4c68e  162 events
-day  72  hash c6303da698df377e  136 events
-day  73  hash 48db9117c86c312a  117 events
-day  74  hash f1c4eb3674275d4f  108 events
-day  75  hash 9f73b214e096b06e  113 events
-day  76  hash 2e10d66491148308  108 events
-day  77  hash e22671908e26b18d  92 events
-day  78  hash 8d1b6bd6085fcfe5  93 events
-day  79  hash 06eb1bee65480d50  99 events
-day  80  hash 2a86c911b7569e97  182 events
-day  81  hash 58924a866d61d164  128 events
-day  82  hash 36b4ca587dd98060  144 events
-day  83  hash bebbe86ab7f1d0cd  89 events
-day  84  hash ad47e01df115b462  77 events
-day  85  hash 0772dd9419356d84  118 events
-day  86  hash ceed1b268ce836e2  78 events
-day  87  hash a187464787ff8dbc  157 events
-day  88  hash 506e60bad540d365  113 events
-day  89  hash 8ca488fb6d86c792  87 events
-day  90  hash 9f71c509d218a047  83 events
-day  91  hash cf20129709b8fcc4  104 events
-day  92  hash b63f964f89da3c21  75 events
-day  93  hash b79f4b8e0f47297d  147 events
-day  94  hash 8ac553826b10ef1e  131 events
-day  95  hash 7cc48f2e1e672698  117 events
-day  96  hash eba712635da4ef66  89 events
-day  97  hash a886886af2ce3fa3  92 events
-day  98  hash 101127a673a54060  76 events
-day  99  hash 4c5cf19d2c45869a  85 events
-day 100  hash a103ed29f60da0d8  107 events
-day 101  hash 9a05b72a620d27bc  136 events
-day 102  hash 380f07ae5b9ce863  87 events
-day 103  hash 7f5763b48eaaf730  137 events
-day 104  hash be6999226476a55a  143 events
-day 105  hash 9ba66aa6d07dc969  101 events
-day 106  hash b359e6aed2958c94  120 events
-day 107  hash bca019b710c5dee6  92 events
-day 108  hash a07c7a36e5000052  76 events
-day 109  hash c6a17300af6ee3a3  96 events
-day 110  hash 4cb0323311a24dd8  118 events
-day 111  hash bf310eff53846752  97 events
-day 112  hash 0add295d93708350  106 events
-day 113  hash 194f7a531dc5cc1c  74 events
-day 114  hash ff21f6c54c2e3e7e  86 events
-day 115  hash 26626c25c1d05965  143 events
-day 116  hash 0de3a77805107875  95 events
-day 117  hash 72be2b301e118a61  114 events
-day 118  hash 61070654dcd5a206  116 events
-day 119  hash d9b2b0529715ddf2  144 events
-day 120  hash cc920b5e895dbfe0  110 events
-day 121  hash 0b2a5d5522e46662  114 events
-day 122  hash 8eebe1d941f456c6  89 events
-day 123  hash bfa3ac7b3fe6341b  140 events
-day 124  hash e85a778839e863ac  103 events
-day 125  hash e1e3d8de48c47412  83 events
-day 126  hash 7c4662b98837b000  71 events
-day 127  hash 89e4ae648bb084cc  98 events
-day 128  hash da34846ffc67340a  72 events
-day 129  hash baf9aad3c95a185b  69 events
-day 130  hash 5875d6b7e08dfa9f  163 events
-day 131  hash 30c60fb9b917023e  113 events
-day 132  hash d896d3d4c04800c9  89 events
-day 133  hash 88a6b0e96525e5f6  138 events
-day 134  hash 4e7d86d1ff07a2f4  91 events
-day 135  hash 0c44c66f56c48b34  94 events
-day 136  hash 4b67cd25e7d10855  99 events
-day 137  hash f9e8724e864b38bc  64 events
-day 138  hash 52428e25b421347a  73 events
-day 139  hash 2109a0a15183dbfd  101 events
-day 140  hash 132ffc88c0582950  133 events
-day 141  hash 1cb1cc1a87802985  83 events
-day 142  hash 67dceb9150179386  119 events
-day 143  hash e13e837f4e5a8e15  75 events
-day 144  hash 54880c315f5e59d9  78 events
-day 145  hash 25456b85f851f9cf  102 events
-day 146  hash 978630d53029ac83  117 events
-day 147  hash 01ab91cce6feb9b2  160 events
-day 148  hash 56d122c85946fff0  102 events
-day 149  hash 7816ec3c6b793f26  80 events
-day 150  hash db6cdd387d6657a5  76 events
-day 151  hash 61a82b5afd6bf62e  77 events
-day 152  hash 5138f69a863ecb7a  72 events
-day 153  hash 95fdf102f58f3754  127 events
-day 154  hash ff8ebf0bb0b42579  78 events
-day 155  hash fc5816ea6db58ccc  97 events
-day 156  hash 1631005cf17c82de  78 events
-day 157  hash 7a58e65a7e01ae93  72 events
-day 158  hash 427fc4b4c1a6e98b  70 events
-day 159  hash fbcfe025d48245ba  64 events
-day 160  hash e971e0aaac317424  156 events
-day 161  hash 977d16f653a6ccfa  70 events
-day 162  hash c54776c1f4e1fd9a  73 events
-day 163  hash d8a9c60401265238  74 events
-day 164  hash 07c082bfb0ffa25f  58 events
-day 165  hash 2e469b9715e76df2  65 events
-day 166  hash 3fead15ef5855a35  59 events
-day 167  hash 1e1275d42079bc46  71 events
-day 168  hash 74b7ef70ff33a8f5  79 events
-day 169  hash 338c38103b32b509  65 events
-day 170  hash df90c739476c9b6d  125 events
-day 171  hash f5eb07843413c955  80 events
-day 172  hash 03288fb5430e4442  97 events
-day 173  hash 1764f4735c9b1bf3  59 events
-day 174  hash 04a340d97e4b082f  59 events
-day 175  hash 10631436f56bbc70  73 events
-day 176  hash f09566d0338e9744  134 events
-day 177  hash f07d63adc9c59373  72 events
-day 178  hash 4d4eaf687a416ce6  127 events
-day 179  hash bbfeca786019c855  76 events
-day 180  hash a91198256b5003c9  82 events
+day   1  hash 52febf787e099ec3  81 events
+day   2  hash f87040a1225ab556  74 events
+day   3  hash dabc3cd2bc4ecebf  64 events
+day   4  hash f83350e815b763d2  287 events
+day   5  hash 99eecf7d79d49e52  119 events
+day   6  hash e399cdb5c0ffe5f5  97 events
+day   7  hash 3629c43f583a7c61  200 events
+day   8  hash 3da75323c292d323  141 events
+day   9  hash 6ff70aa0b40ebb06  197 events
+day  10  hash 5bccbcd10b829917  184 events
+day  11  hash 11b61e4355215cd6  173 events
+day  12  hash f6d9a8d50019b692  146 events
+day  13  hash c1e5f56ee5223765  160 events
+day  14  hash 2caba2d80060a439  139 events
+day  15  hash 4462df7ba2868f68  160 events
+day  16  hash b0abb1e17532d4e3  170 events
+day  17  hash 16310a0224020fd3  137 events
+day  18  hash 707b7a32afea6a54  153 events
+day  19  hash 06f16cca9838c955  135 events
+day  20  hash 8f9f762f64d3c71c  86 events
+day  21  hash ddd2e5ba80d2d647  87 events
+day  22  hash a49ed45d85cdd6d8  97 events
+day  23  hash 9a8f7ff86cb92bbd  90 events
+day  24  hash ed3a040ef75a0a85  90 events
+day  25  hash 5b040d3ff1020a2a  84 events
+day  26  hash e1c51cae8a07caa8  68 events
+day  27  hash e5ff3b120e9ed1ff  80 events
+day  28  hash 54a107a3f59e253f  66 events
+day  29  hash ba0764154271f096  83 events
+day  30  hash cd144f5cbf6af97b  82 events
+day  31  hash e320869a37803a8e  69 events
+day  32  hash a9b60edd0833b425  69 events
+day  33  hash 918122fa6cd4bfa3  148 events
+day  34  hash 2738a8f8c555587a  114 events
+day  35  hash c6ea8f3d35c6a415  103 events
+day  36  hash fe9c50b1eb122b8f  67 events
+day  37  hash 017c78243928581b  89 events
+day  38  hash 959a5d0736de11bb  66 events
+day  39  hash 2ec76572182369f1  83 events
+day  40  hash 77377d6d298a9699  145 events
+day  41  hash 04c759925190ca81  77 events
+day  42  hash a880b0fdfa446372  113 events
+day  43  hash 44a400744e172674  152 events
+day  44  hash 87a3a67b91daad6c  82 events
+day  45  hash 6e167355d57adb1f  77 events
+day  46  hash 5deb375c03dc0fa6  108 events
+day  47  hash e17e0741c2557aaa  70 events
+day  48  hash 2610e1d5e4ffc06e  73 events
+day  49  hash b6a814f6099160fc  91 events
+day  50  hash 22d9fee7a3373988  130 events
+day  51  hash a1083c2ee4f6e5a4  82 events
+day  52  hash b70fd73165a43ea9  130 events
+day  53  hash 3582e3543d505ea8  72 events
+day  54  hash 947c6fdaa3633583  67 events
+day  55  hash ecec9fa812eb5502  134 events
+day  56  hash 0335f889139dc555  119 events
+day  57  hash 6d0c5044073a96c8  70 events
+day  58  hash a237a3d425ab30bd  103 events
+day  59  hash e5a55acca4f41fb3  67 events
+day  60  hash 0ebb17e031785937  70 events
+day  61  hash b4895d82b295cd0a  85 events
+day  62  hash 2b59279f90b52d38  61 events
+day  63  hash d9a301e148593bb4  123 events
+day  64  hash ba1172d8a3ef52fb  93 events
+day  65  hash 275452952f3bd81d  89 events
+day  66  hash ac3e6266278d0daa  66 events
+day  67  hash efff3574096f0f0a  95 events
+day  68  hash ab4f9cd39494f0bb  68 events
+day  69  hash e9454d0b745e4f10  89 events
+day  70  hash d0a9ea39b157db54  107 events
+day  71  hash 4d93a9eb09c19e9b  114 events
+day  72  hash ddd66e3b766dcaab  114 events
+day  73  hash cb1fb5003743db1d  104 events
+day  74  hash 3a7b277d87d678a9  98 events
+day  75  hash fc54e62e975d3a17  96 events
+day  76  hash 21ab96d6180fdfe6  98 events
+day  77  hash 310ddf1e6440b3cb  85 events
+day  78  hash f6598c6fcec777b3  70 events
+day  79  hash 854df56cf302d2bf  92 events
+day  80  hash e371c4764431eda3  173 events
+day  81  hash 1b517adf30fda688  116 events
+day  82  hash 9c877f8acd2938e5  135 events
+day  83  hash 6486862aa2d7aad7  83 events
+day  84  hash 786bdc94970869b8  65 events
+day  85  hash 5dc113393ebe6528  107 events
+day  86  hash 9663519a2358059b  64 events
+day  87  hash d5cfc21b13c55dd6  140 events
+day  88  hash 9f834331a4bac22a  101 events
+day  89  hash 239bfecf805e0c6b  78 events
+day  90  hash 841c651da9c5076a  71 events
+day  91  hash d9842a4c6a284c12  92 events
+day  92  hash 881aea31ea7c04e8  70 events
+day  93  hash aefe967af27091cd  134 events
+day  94  hash 7241e3a9ac8057d9  116 events
+day  95  hash c2a27322d298cd2a  106 events
+day  96  hash 39b7cac317a38442  76 events
+day  97  hash f0edba157addeb73  82 events
+day  98  hash 816d3c06d526ffb5  64 events
+day  99  hash e2c7e184491c60f8  74 events
+day 100  hash 2beab30d1584581e  97 events
+day 101  hash 2463aca1a97a2b6b  132 events
+day 102  hash bc0e499e8f1cc26f  71 events
+day 103  hash bb804662b23ce2dd  129 events
+day 104  hash b9dbb6db0c9cd943  131 events
+day 105  hash 5a9d1d2c5e239d89  89 events
+day 106  hash 02ac07a1ce68bf00  113 events
+day 107  hash 7b88f726611eeee8  84 events
+day 108  hash 6e837179a8a21f33  71 events
+day 109  hash f0da2135c09d6356  89 events
+day 110  hash 2cce709e1a9a85bf  108 events
+day 111  hash d3ad8b46e91b82aa  80 events
+day 112  hash a02e68570ca3c467  97 events
+day 113  hash f8d43b8808319ba5  61 events
+day 114  hash 7a7b9f060f7ec5d0  68 events
+day 115  hash 6bd740bad7299e50  135 events
+day 116  hash 667ae759f8ffae9b  85 events
+day 117  hash e2fb82fecb0aa86e  106 events
+day 118  hash 627a219bd39c8f19  102 events
+day 119  hash 71b22f4a928eae99  130 events
+day 120  hash 347cd566511b1e14  98 events
+day 121  hash 6128b4cddc9b994c  104 events
+day 122  hash d2290f3b05087764  77 events
+day 123  hash fd735b2e51c8c8aa  124 events
+day 124  hash e1afaf04afc45d8b  96 events
+day 125  hash 84972d22404836b2  75 events
+day 126  hash 3ad307d3f1403866  60 events
+day 127  hash 2e97271f8f3e7bf3  86 events
+day 128  hash d6ccbc8be5d9579b  65 events
+day 129  hash 3454b03a274dcb12  56 events
+day 130  hash 745ec2d4746898bd  152 events
+day 131  hash e2dc2622735a5d9d  101 events
+day 132  hash e82c316c951196e1  74 events
+day 133  hash 3135cb2b56c36d30  127 events
+day 134  hash 9ee45253890d0b16  79 events
+day 135  hash 8fcce3784f217571  81 events
+day 136  hash e9dc72aa5f423228  86 events
+day 137  hash c6a54864098119c2  56 events
+day 138  hash 2cf1fa2840d68667  56 events
+day 139  hash 8436c491d8df480f  91 events
+day 140  hash ae9b1ce722d90698  122 events
+day 141  hash fb48d9cff63ffb4d  71 events
+day 142  hash 971c4e346b4db1c5  109 events
+day 143  hash e370390c778fd35e  62 events
+day 144  hash 45d3a7e7b0e72a88  70 events
+day 145  hash 4f9838b1a49f4571  90 events
+day 146  hash ea4403fad91857a6  110 events
+day 147  hash 29cba7e816c7e7c8  140 events
+day 148  hash b7690c8f21e80aa0  93 events
+day 149  hash 0561ba92e6bde8e5  76 events
+day 150  hash 5ac7c72a5ab030d4  65 events
+day 151  hash f54e248b0e1457cb  91 events
+day 152  hash e81a0015bd5af4ef  70 events
+day 153  hash b5f272234c29c85d  124 events
+day 154  hash 596098ac35d92c53  94 events
+day 155  hash 80ea1f349eeb28a1  99 events
+day 156  hash 63fd8cf7b73958fb  77 events
+day 157  hash 0041a6ec49326e9a  69 events
+day 158  hash d50ac494f14d8edb  89 events
+day 159  hash dd60e975e97d0c0e  62 events
+day 160  hash 0de80da701621822  148 events
+day 161  hash 08cac6ab25a4dca7  93 events
+day 162  hash dd8c0c583d5dbc44  71 events
+day 163  hash 34de098034eae465  69 events
+day 164  hash 45ec4cf0150710ef  84 events
+day 165  hash 2fb4b02d0b196e0e  63 events
+day 166  hash af8ac57205f32a99  58 events
+day 167  hash 3c375c5bd777f4db  93 events
+day 168  hash f56686e05c079f15  74 events
+day 169  hash 3b759e3d3761cf16  65 events
+day 170  hash 5e32e8c1c32d2835  123 events
+day 171  hash 2711246bc5017955  76 events
+day 172  hash 55fbeacd41be76f8  91 events
+day 173  hash e01fef766452c05f  56 events
+day 174  hash 2408e933b3f29b61  47 events
+day 175  hash b67073d9e842cd49  63 events
+day 176  hash 7318936eaf557fc4  122 events
+day 177  hash 79b306e0f3fe392d  59 events
+day 178  hash fac952e6f2351edf  117 events
+day 179  hash 23eb010d9ae1bd24  66 events
+day 180  hash f6e57913d96926f4  68 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -234,9 +234,9 @@ task_force:1000001 "Placeholder surface force 13A, left behind" (Allied): Idle a
 task_force:2000001 "Placeholder night force A, left behind" (Japanese): Idle at (0,10), 20 nm from (-1,10) toward (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2000002 "Placeholder night force A, left behind" (Japanese): Idle at (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2000003 "Placeholder surface force 7J, left behind" (Japanese): Idle at (-4,9), 20 nm from (-5,9) toward (-4,9); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
-air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 37 ready, 4 damaged, 41 pilots, mission BaseStrike on base:1, rests above 45, no arc
-air_group:2 "Tainan Air Group" (Japanese) at base:2: 59 ready, 5 damaged, 64 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
-air_group:3 "6th Air Group" (Japanese) at base:2: 13 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
+air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 38 ready, 3 damaged, 41 pilots, mission BaseStrike on base:1, rests above 45, no arc
+air_group:2 "Tainan Air Group" (Japanese) at base:2: 46 ready, 4 damaged, 64 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
+air_group:3 "6th Air Group" (Japanese) at base:2: 2 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
 air_group:4 "Placeholder Henderson fighter flight, no pilots" (Allied) at base:1: 0 ready, 0 pilots, mission CombatAirPatrol, patrol share 1, no arc
 air_group:5 "Placeholder Rabaul bomber flight" (Japanese) at base:2: 8 ready, 8 pilots, mission BaseStrike on base:1, rests above 45, no arc
 air_group:6 "Placeholder Henderson scout flight 1" (Allied) at base:1: 8 ready, 8 pilots, mission Search, fatigue 24, rests above 30, stood down, arc 240-300 to 200 nm
@@ -244,18 +244,18 @@ air_group:7 "Placeholder Henderson scout flight 2" (Allied) at base:1: 8 ready, 
 air_group:10 "VMF-223" (Allied) at base:1: 65 ready, 2 damaged, 67 pilots, mission CombatAirPatrol, patrol share 1, fatigue 40, rests above 40, no arc
 air_group:11 "VMSB-232" (Allied) at base:1: 27 ready, 1 damaged, 28 pilots, mission NavalStrike, no arc
 air_group:12 "Flight 300" (Allied) at base:1: 7 ready, 1 damaged, 8 pilots, mission NavalStrike, no arc
-air_group:13 "VMF-224" (Allied) at base:1: 30 ready, 25 damaged, 55 pilots, mission CombatAirPatrol, patrol share 1, fatigue 34, rests above 40, stood down, no arc
-air_group:14 "VMSB-231" (Allied) at base:1: 14 ready, 8 damaged, 22 pilots, mission NavalStrike, no arc
-air_group:15 "VF-5" (Allied) at base:1: 7 ready, 31 damaged, 52 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
+air_group:13 "VMF-224" (Allied) at base:1: 22 ready, 33 damaged, 55 pilots, mission CombatAirPatrol, patrol share 1, fatigue 34, rests above 40, stood down, no arc
+air_group:14 "VMSB-231" (Allied) at base:1: 7 ready, 15 damaged, 22 pilots, mission NavalStrike, no arc
+air_group:15 "VF-5" (Allied) at base:1: 3 ready, 48 damaged, 52 pilots, mission CombatAirPatrol, patrol share 1, fatigue 42, rests above 40, no arc
 air_group:16 "Fighters from Hornet and Wasp" (Allied) at base:1: 6 ready, 30 damaged, 42 pilots, mission CombatAirPatrol, patrol share 1, fatigue 34, rests above 40, stood down, no arc
 air_group:17 "VS-3" (Allied) at base:1: 7 ready, 13 damaged, 20 pilots, mission NavalStrike, no arc
-air_group:101 "VF-6" (Allied) aboard ship:1: 15 ready, mission CombatAirPatrol, patrol share 1, fatigue 94, no arc
+air_group:101 "VF-6" (Allied) aboard ship:1: 3 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:102 "VB-6" (Allied) aboard ship:1: 17 ready, mission Rest, no arc
-air_group:103 "VS-5" (Allied) aboard ship:1: 14 ready, 1 damaged, mission Search, fatigue 95, arc 290-090 to 250 nm
-air_group:104 "VT-3" (Allied) aboard ship:1: 6 ready, mission Search, fatigue 84, arc 290-090 to 250 nm
-air_group:105 "VF-5" (Allied) aboard ship:11: 20 ready, mission CombatAirPatrol, patrol share 1, fatigue 94, no arc
-air_group:106 "VB-3" (Allied) aboard ship:11: 12 ready, mission NavalStrike, no arc
-air_group:107 "VS-3" (Allied) aboard ship:11: 12 ready, mission NavalStrike, no arc
+air_group:103 "VS-5" (Allied) aboard ship:1: 3 ready, mission Search, arc 290-090 to 250 nm
+air_group:104 "VT-3" (Allied) aboard ship:1: 2 ready, mission Search, arc 290-090 to 250 nm
+air_group:105 "VF-5" (Allied) aboard ship:11: 34 ready, 1 damaged, mission CombatAirPatrol, patrol share 1, fatigue 94, no arc
+air_group:106 "VB-3" (Allied) aboard ship:11: 16 ready, mission NavalStrike, no arc
+air_group:107 "VS-3" (Allied) aboard ship:11: 15 ready, mission NavalStrike, no arc
 air_group:108 "VT-8" (Allied) aboard ship:11: 8 ready, mission NavalStrike, no arc
 air_group:111 "Shokaku fighter unit" (Japanese) aboard ship:19: 18 ready, mission CombatAirPatrol, patrol share 0.83, fatigue 89, no arc
 air_group:112 "Shokaku bomber unit" (Japanese) aboard ship:19: 0 ready, mission NavalStrike, no arc
@@ -266,14 +266,16 @@ air_group:116 "Zuikaku attack unit" (Japanese) aboard ship:20: 18 ready, mission
 air_group:117 "Chikuma floatplanes" (Japanese) aboard ship:21: 0 ready, mission Search, arc 120-180 to 330 nm
 air_group:118 "Ryujo fighter unit" (Japanese) aboard ship:33: 0 ready, mission CombatAirPatrol, patrol share 0.35, fatigue 3, no arc
 air_group:119 "Ryujo attack unit" (Japanese) aboard ship:33: 0 ready, mission BaseStrike on base:1, extended reach, no arc
-air_group:120 "Tone floatplanes" (Japanese) aboard ship:34: 0 ready, mission Rest, no arc
+air_group:120 "Tone floatplanes" (Japanese) aboard ship:34: 5 ready, mission Rest, no arc
 air_group:121 "Shokaku bomber unit, second wave" (Japanese) aboard ship:19: 9 ready, mission Rest, no arc
 air_group:122 "Zuikaku bomber unit, second wave" (Japanese) aboard ship:20: 18 ready, mission Rest, no arc
 air_group:123 "Shokaku fighter unit, second wave escort" (Japanese) aboard ship:19: 3 ready, mission Rest, no arc
 air_group:124 "Zuikaku fighter unit, second wave escort" (Japanese) aboard ship:20: 6 ready, mission Rest, no arc
 air_group:125 "VT-3, attack group" (Allied) aboard ship:1: 7 ready, mission Rest, no arc
 air_group:126 "VT-8, second group" (Allied) aboard ship:11: 5 ready, mission Rest, no arc
-ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 21.043768, fire 5.260942; all systems working; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
+air_group:1000001 "VS-5 landed at base:1" (Allied) at base:1: 9 ready, mission Rest, no arc
+air_group:1000002 "VT-3 landed at base:1" (Allied) at base:1: 5 ready, mission Rest, no arc
+ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 31.565652, fire 10.521884; propulsion degraded, flight deck out; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
 ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
 ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
 ship:4 "USS Atlanta": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1481 t of fuel, 0 t of supply
@@ -306,9 +308,9 @@ ship:30 "Yugumo": afloat in task_force:3; damage flotation 0, fire 0; all system
 ship:31 "Akizuki": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1035.30788 t of fuel, 0 t of supply
 ship:32 "Hatsukaze": afloat in task_force:3; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 469.8 t of fuel, 0 t of supply
 ship:33 "Ryujo": SUNK; damage flotation 100, fire 17.830188; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2309.093996 t of fuel, 0 t of supply
-ship:34 "Tone": SUNK; damage flotation 100, fire 16.852429; propulsion out, flight deck out; 0 gun rounds, torpedoes gone; 2542.216159 t of fuel, 0 t of supply
-ship:35 "Amatsukaze": SUNK; damage flotation 100, fire 92.96606; propulsion out; 0 gun rounds, torpedoes gone; 456.049415 t of fuel, 0 t of supply
-ship:36 "Tokitsukaze": SUNK; damage flotation 100, fire 92.96606; propulsion out; 0 gun rounds, torpedoes gone; 456.049415 t of fuel, 0 t of supply
+ship:34 "Tone": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2542.216159 t of fuel, 0 t of supply
+ship:35 "Amatsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 456.049415 t of fuel, 0 t of supply
+ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 456.049415 t of fuel, 0 t of supply
 ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 601.9 t of fuel, 960 t of supply
 ship:38 "Placeholder cargo ship 2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 601.9 t of fuel, 960 t of supply
 ship:39 "Placeholder destroyer 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
@@ -326,24 +328,24 @@ ship:50 "Placeholder cruiser E1": afloat in task_force:12; damage flotation 0, f
 ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1680 t of fuel, 0 t of supply
 ship:60 "Placeholder raider cruiser A1": SUNK; damage flotation 100, fire 94.5; propulsion out, fire control out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
 ship:61 "Placeholder raider destroyer A2": SUNK; damage flotation 100, fire 75.6; main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
-ship:62 "Placeholder raider cruiser B1": SUNK; damage flotation 100, fire 0; propulsion out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
-ship:63 "Placeholder raider destroyer B2": SUNK; damage flotation 100, fire 75.6; fire control out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
-ship:64 "Placeholder raider cruiser C1": SUNK; damage flotation 100, fire 18.9; fire control out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:62 "Placeholder raider cruiser B1": SUNK; damage flotation 100, fire 18.9; propulsion out, fire control degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:63 "Placeholder raider destroyer B2": SUNK; damage flotation 100, fire 75.6; propulsion degraded, fire control degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:64 "Placeholder raider cruiser C1": SUNK; damage flotation 100, fire 18.9; propulsion degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
 ship:65 "Placeholder raider destroyer C2": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 297.5 t of fuel, 0 t of supply
-ship:66 "Placeholder raider cruiser D1": SUNK; damage flotation 100, fire 18.9; propulsion out, main battery degraded; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
-ship:67 "Placeholder raider destroyer D2": SUNK; damage flotation 100, fire 100; propulsion out, fire control degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
-ship:68 "Placeholder raider cruiser E1": SUNK; damage flotation 100, fire 100; propulsion out, fire control out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:66 "Placeholder raider cruiser D1": SUNK; damage flotation 100, fire 18.9; propulsion degraded, fire control degraded; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:67 "Placeholder raider destroyer D2": SUNK; damage flotation 100, fire 100; propulsion out, main battery degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:68 "Placeholder raider cruiser E1": SUNK; damage flotation 100, fire 100; propulsion out, fire control degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
 ship:69 "Placeholder raider destroyer E2": afloat in task_force:34; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 297.5 t of fuel, 0 t of supply
-ship:70 "Placeholder raider cruiser F1": SUNK; damage flotation 100, fire 75.6; propulsion out, fire control degraded, main battery degraded; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
-ship:71 "Placeholder raider destroyer F2": SUNK; damage flotation 100, fire 100; fire control out, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:70 "Placeholder raider cruiser F1": SUNK; damage flotation 100, fire 75.6; propulsion out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:71 "Placeholder raider destroyer F2": SUNK; damage flotation 100, fire 100; propulsion degraded, fire control out, main battery degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
 ship:72 "Placeholder raider cruiser G1": SUNK; damage flotation 100, fire 56.7; propulsion out, fire control out, main battery out; 800 gun rounds, torpedoes ready; 1838 t of fuel, 0 t of supply
 ship:73 "Placeholder raider destroyer G2": afloat in task_force:36; damage flotation 75.6, fire 0; main battery degraded; 600 gun rounds, torpedoes ready; 297.5 t of fuel, 0 t of supply
-ship:74 "Placeholder raider cruiser H1": SUNK; damage flotation 100, fire 56.7; propulsion degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
-ship:75 "Placeholder raider destroyer H2": SUNK; damage flotation 100, fire 0; propulsion degraded, main battery degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
-ship:76 "Placeholder raider cruiser I1": SUNK; damage flotation 100, fire 56.7; propulsion degraded, fire control degraded, main battery out; 800 gun rounds, torpedoes ready; 1838 t of fuel, 0 t of supply
-ship:77 "Placeholder raider destroyer I2": SUNK; damage flotation 100, fire 100; propulsion out, fire control out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
-ship:78 "Placeholder raider cruiser J1": SUNK; damage flotation 100, fire 18.9; propulsion out, fire control out, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
-ship:79 "Placeholder raider destroyer J2": SUNK; damage flotation 100, fire 100; propulsion out, fire control out, main battery degraded; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:74 "Placeholder raider cruiser H1": SUNK; damage flotation 100, fire 56.7; propulsion degraded; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:75 "Placeholder raider destroyer H2": SUNK; damage flotation 100, fire 75.6; propulsion degraded, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:76 "Placeholder raider cruiser I1": SUNK; damage flotation 100, fire 37.8; propulsion degraded, fire control out, main battery degraded; 800 gun rounds, torpedoes ready; 1838 t of fuel, 0 t of supply
+ship:77 "Placeholder raider destroyer I2": SUNK; damage flotation 100, fire 100; propulsion out, fire control degraded, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
+ship:78 "Placeholder raider cruiser J1": SUNK; damage flotation 100, fire 56.7; propulsion out, fire control degraded, main battery out; 800 gun rounds, torpedoes ready; 1797.5 t of fuel, 0 t of supply
+ship:79 "Placeholder raider destroyer J2": SUNK; damage flotation 100, fire 100; propulsion out, fire control degraded, main battery out; 600 gun rounds, torpedoes ready; 398.75 t of fuel, 0 t of supply
 ship:80 "Placeholder convoy 2 cargo ship 1": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 34.4 t of fuel, 0 t of supply
 ship:81 "Placeholder convoy 2 cargo ship 2": afloat in task_force:21; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 34.4 t of fuel, 0 t of supply
 ship:82 "Placeholder convoy 3 cargo ship 1": afloat in task_force:22; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 372.5 t of fuel, 960 t of supply
@@ -384,10 +386,10 @@ ship:116 "Placeholder cruiser 13A1": afloat in task_force:1000001; damage flotat
 ship:117 "Placeholder cruiser 13A2": afloat in task_force:69; damage flotation 50, fire 5; main battery out; 800 gun rounds, torpedoes ready; 1720 t of fuel, 0 t of supply
 ship:118 "Placeholder picket destroyer": afloat in task_force:70; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
 ship:119 "Placeholder dry cruiser": afloat in task_force:71; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
-base:1 "Henderson Field" (Allied) at (2,-4): 15931.83 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
+base:1 "Henderson Field" (Allied) at (2,-4): 14744.69 t of supply in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 0 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 6400 t of supply in stock
-Allied contact:66 at (8,-11): 14 ships, carrier, age 3 pulses
+Allied: no contacts
 Allied claim over (2,-4): 6 aircraft shot down, day 1 morning
 Allied claim over (2,-4): 6 aircraft shot down, day 2 morning
 Allied claim over (2,-4): 3 aircraft shot down, day 3 morning
@@ -411,7 +413,7 @@ Allied claim over (2,-4): 5 aircraft shot down, day 16 morning
 Allied claim over (2,-4): 8 aircraft shot down, day 18 morning
 Allied claim over (2,-4): 9 aircraft shot down, day 20 morning
 Allied claim over (2,-4): 15 aircraft shot down, day 21 morning
-Allied claim over (2,-4): 10 aircraft shot down, day 22 morning
+Allied claim over (2,-4): 11 aircraft shot down, day 22 morning
 Allied claim over (2,-4): 4 aircraft shot down, day 23 morning
 Allied claim over (2,-4): 3 aircraft shot down, day 24 morning
 Allied claim over (2,-4): 5 aircraft shot down, day 25 afternoon
@@ -428,154 +430,156 @@ Allied claim over (2,-4): 9 aircraft shot down, day 43 morning
 Allied claim at (0,-4): 8 hits on a cruiser, 1 sunk, day 43 morning
 Allied claim at (0,-4): 6 hits on a destroyer, 1 sunk, day 43 afternoon
 Allied claim over (2,-4): 12 aircraft shot down, day 46 morning
-Allied claim at (7,-9): 10 hits on a cruiser, 0 sunk, day 46 afternoon
-Allied claim at (7,-9): 12 hits on a cruiser, 1 sunk, day 46 afternoon
-Allied claim over (2,-4): 14 aircraft shot down, day 49 morning
+Allied claim over (2,-4): 15 aircraft shot down, day 49 morning
 Allied claims 0 enemy ships sunk at (-4,5), day 50 night
-Allied claim over (2,-4): 12 aircraft shot down, day 52 morning
-Allied claim over (2,-4): 15 aircraft shot down, day 55 morning
-Allied claim at (0,-4): 11 hits on a cruiser, 1 sunk, day 55 afternoon
+Allied claim over (2,-4): 13 aircraft shot down, day 52 morning
+Allied claim over (2,-4): 18 aircraft shot down, day 55 morning
+Allied claim at (0,-4): 12 hits on a cruiser, 1 sunk, day 55 afternoon
 Allied claim at (0,-4): 10 hits on a destroyer, 1 sunk, day 56 morning
-Allied claim over (2,-4): 16 aircraft shot down, day 58 morning
-Allied claim at (7,-9): 7 hits on a cruiser, 1 sunk, day 60 afternoon
-Allied claim at (7,-9): 9 hits on a cruiser, 0 sunk, day 60 afternoon
+Allied claim over (2,-4): 18 aircraft shot down, day 58 morning
 Allied claim over (2,-4): 20 aircraft shot down, day 61 morning
 Allied claims 1 enemy ship sunk at (-4,7), day 63 night
 Allied claim over (2,-4): 4 aircraft shot down, day 64 morning
-Allied claim over (2,-4): 6 aircraft shot down, day 67 morning
-Allied claim over (7,-5): 10 aircraft shot down, day 69 morning
+Allied claim over (2,-4): 8 aircraft shot down, day 67 morning
+Allied claim over (7,-5): 7 aircraft shot down, day 69 morning
 Allied claim over (2,-4): 16 aircraft shot down, day 70 morning
-Allied claim at (0,-4): 6 hits on a battleship, 0 sunk, day 71 afternoon
-Allied claim at (7,-9): 7 hits on a destroyer, 1 sunk, day 71 afternoon
+Allied claim at (0,-4): 7 hits on a battleship, 0 sunk, day 71 afternoon
 Allied claim at (0,-4): 5 hits on a cruiser, 1 sunk, day 72 afternoon
-Allied claim over (2,-4): 12 aircraft shot down, day 73 morning
-Allied claim over (2,-4): 20 aircraft shot down, day 76 morning
-Allied claim over (2,-4): 13 aircraft shot down, day 79 morning
+Allied claim over (2,-4): 14 aircraft shot down, day 73 morning
+Allied claim over (2,-4): 21 aircraft shot down, day 76 morning
+Allied claim over (2,-4): 12 aircraft shot down, day 79 morning
 Allied claims 0 enemy ships sunk at (-4,9), day 80 night
-Allied claim over (2,-4): 22 aircraft shot down, day 82 morning
-Allied claim over (2,-4): 10 aircraft shot down, day 85 morning
+Allied claim over (2,-4): 25 aircraft shot down, day 82 morning
+Allied claim over (2,-4): 13 aircraft shot down, day 85 morning
 Allied claim at (0,-4): 7 hits on a destroyer, 1 sunk, day 87 morning
 Allied claim at (0,-4): 6 hits on a destroyer, 1 sunk, day 87 afternoon
-Allied claim over (2,-4): 6 aircraft shot down, day 88 morning
-Allied claim over (2,-4): 2 aircraft shot down, day 91 morning
+Allied claim over (2,-4): 8 aircraft shot down, day 88 morning
+Allied claim over (2,-4): 5 aircraft shot down, day 91 morning
 Allied claims 0 enemy ships sunk at (-8,15), day 93 night
-Allied claim over (2,-4): 9 aircraft shot down, day 94 morning
+Allied claim over (2,-4): 10 aircraft shot down, day 94 morning
 Allied claim over (2,-4): 12 aircraft shot down, day 97 morning
 Allied claim over (2,-4): 17 aircraft shot down, day 100 morning
-Allied claim at (0,-4): 15 hits on a cruiser, 1 sunk, day 101 morning
-Allied claim over (2,-4): 16 aircraft shot down, day 103 morning
+Allied claim at (0,-4): 16 hits on a cruiser, 1 sunk, day 101 morning
+Allied claim over (2,-4): 14 aircraft shot down, day 103 morning
 Allied claim at (0,-4): 9 hits on a cruiser, 1 sunk, day 104 afternoon
-Allied claim over (2,-4): 27 aircraft shot down, day 106 morning
-Allied claim over (2,-4): 19 aircraft shot down, day 109 morning
+Allied claim over (2,-4): 29 aircraft shot down, day 106 morning
+Allied claim over (2,-4): 21 aircraft shot down, day 109 morning
 Allied claims 1 enemy ship sunk at (-8,16), day 110 night
-Allied claim over (2,-4): 8 aircraft shot down, day 112 morning
-Allied claim over (2,-4): 3 aircraft shot down, day 115 morning
+Allied claim over (2,-4): 9 aircraft shot down, day 112 morning
+Allied claim over (2,-4): 4 aircraft shot down, day 115 morning
 Allied claim at (0,-4): 15 hits on a cruiser, 1 sunk, day 115 afternoon
-Allied claim over (2,-4): 10 aircraft shot down, day 118 morning
-Allied claim at (0,-4): 18 hits on a destroyer, 1 sunk, day 119 morning
+Allied claim over (2,-4): 12 aircraft shot down, day 118 morning
+Allied claim at (0,-4): 16 hits on a destroyer, 1 sunk, day 119 morning
 Allied claim over (2,-4): 18 aircraft shot down, day 121 morning
 Allied claims 0 enemy ships sunk at (-8,17), day 123 night
 Allied claim over (2,-4): 16 aircraft shot down, day 124 morning
 Allied claim over (2,-4): 15 aircraft shot down, day 127 morning
-Allied claim over (2,-4): 30 aircraft shot down, day 130 morning
-Allied claim at (-2,-4): 18 hits on a cruiser, 1 sunk, day 130 morning
-Allied claim over (2,-4): 24 aircraft shot down, day 133 morning
+Allied claim over (2,-4): 27 aircraft shot down, day 130 morning
+Allied claim at (-2,-4): 17 hits on a cruiser, 1 sunk, day 130 morning
+Allied claim over (2,-4): 19 aircraft shot down, day 133 morning
 Allied claim at (0,-4): 5 hits on a destroyer, 0 sunk, day 133 afternoon
-Allied claim over (2,-4): 6 aircraft shot down, day 136 morning
+Allied claim over (2,-4): 7 aircraft shot down, day 136 morning
 Allied claim over (2,-4): 9 aircraft shot down, day 139 morning
 Allied claims 1 enemy ship sunk at (-8,18), day 140 night
-Allied claim over (2,-4): 4 aircraft shot down, day 142 morning
+Allied claim over (2,-4): 5 aircraft shot down, day 142 morning
 Allied claim over (2,-4): 13 aircraft shot down, day 145 morning
-Allied claim at (0,-4): 15 hits on a battleship, 1 sunk, day 147 morning
-Allied claim at (0,-4): 9 hits on a destroyer, 1 sunk, day 147 afternoon
+Allied claim at (0,-4): 12 hits on a battleship, 1 sunk, day 147 morning
+Allied claim at (0,-4): 7 hits on a destroyer, 1 sunk, day 147 afternoon
 Allied claim over (2,-4): 14 aircraft shot down, day 148 morning
+Allied claim over (2,-4): 11 aircraft shot down, day 151 morning
 Allied claims 0 enemy ships sunk at (-8,19), day 153 night
-Allied claim at (-2,-4): 21 hits on a cruiser, 1 sunk, day 160 morning
-Allied claim at (0,-4): 18 hits on a destroyer, 1 sunk, day 160 afternoon
-Allied claim at (0,-4): 9 hits on a cruiser, 0 sunk, day 176 morning
-Allied claim at (0,-4): 14 hits on a cruiser, 1 sunk, day 176 afternoon
-Allied claim at (0,-4): 12 hits on a destroyer, 1 sunk, day 178 afternoon
+Allied claim over (2,-4): 19 aircraft shot down, day 154 morning
+Allied claim over (2,-4): 11 aircraft shot down, day 158 morning
+Allied claim at (-2,-4): 18 hits on a cruiser, 1 sunk, day 160 morning
+Allied claim at (0,-4): 15 hits on a destroyer, 1 sunk, day 160 afternoon
+Allied claim over (2,-4): 27 aircraft shot down, day 161 morning
+Allied claim over (2,-4): 12 aircraft shot down, day 164 morning
+Allied claim over (2,-4): 18 aircraft shot down, day 167 morning
+Allied claim at (0,-4): 8 hits on a cruiser, 0 sunk, day 176 morning
+Allied claim at (0,-4): 12 hits on a cruiser, 1 sunk, day 176 afternoon
+Allied claim at (0,-4): 11 hits on a destroyer, 1 sunk, day 178 afternoon
 Japanese: no contacts
-Japanese claim over (2,-4): 7 aircraft shot down, day 1 morning
-Japanese claim over (2,-4): 6 aircraft shot down, day 2 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 2 morning
 Japanese claim over (2,-4): 5 aircraft shot down, day 3 morning
 Japanese claim over (7,-9): 2 aircraft shot down, day 4 afternoon
 Japanese claim over (7,-9): 3 aircraft shot down, day 4 afternoon
-Japanese claim at (7,-5): 4 hits on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
-Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
-Japanese claim at (2,-4): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 4 afternoon
+Japanese claim at (7,-5): 6 hits on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
+Japanese claim at (7,-5): 2 hits on a carrier, 0 sunk, 2 aircraft shot down, day 4 afternoon
+Japanese claim at (2,-4): 4 aircraft shot down, 2 aircraft destroyed on the ground, day 4 afternoon
 Japanese claim at (2,-4): 3 aircraft shot down, 6 aircraft destroyed on the ground, day 5 morning
-Japanese claim at (2,-4): 1 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 2 aircraft destroyed on the ground, day 6 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 night
 Japanese claims 1 enemy ship sunk at (0,10), day 7 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
-Japanese claim at (2,-4): 1 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
-Japanese claim over (2,-4): 0 aircraft shot down, day 10 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 3 aircraft destroyed on the ground, day 9 morning
+Japanese claim at (2,-4): 1 aircraft destroyed on the ground, day 10 morning
 Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 12 morning
-Japanese claim at (2,-4): 2 aircraft shot down, 3 aircraft destroyed on the ground, day 13 morning
+Japanese claim at (2,-4): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 13 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 15 morning
-Japanese claim at (2,-4): 1 aircraft shot down, 1 aircraft destroyed on the ground, day 16 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 2 aircraft destroyed on the ground, day 16 morning
 Japanese claim over (2,-4): 1 aircraft shot down, day 18 morning
-Japanese claim at (2,-4): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 20 morning
+Japanese claim at (2,-4): 2 aircraft shot down, 6 aircraft destroyed on the ground, day 20 morning
 Japanese claim at (2,-4): 1 aircraft destroyed on the ground, day 21 morning
 Japanese claim over (2,-4): 0 aircraft shot down, day 22 morning
 Japanese claim over (2,-4): 0 aircraft shot down, day 23 morning
 Japanese claim over (2,-4): 0 aircraft shot down, day 24 morning
 Japanese claim over (2,-4): 0 aircraft shot down, day 25 afternoon
-Japanese claim at (2,-4): 1 aircraft destroyed on the ground, day 30 morning
+Japanese claim at (2,-4): 2 aircraft destroyed on the ground, day 30 morning
 Japanese claims 0 enemy ships sunk at (-4,3), day 33 night
 Japanese claims 0 enemy ships sunk at (-4,3), day 33 morning
 Japanese claims 1 enemy ship sunk at (-4,3), day 33 afternoon
 Japanese claim at (2,-4): 7 aircraft shot down, 1 aircraft destroyed on the ground, day 34 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 4 aircraft destroyed on the ground, day 37 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 3 aircraft destroyed on the ground, day 37 morning
 Japanese claim at (2,-4): 9 aircraft shot down, 4 aircraft destroyed on the ground, day 40 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 1 aircraft destroyed on the ground, day 43 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 43 morning
 Japanese claim at (2,-4): 10 aircraft shot down, 4 aircraft destroyed on the ground, day 46 morning
-Japanese claim over (7,-9): 0 aircraft shot down, day 46 afternoon
-Japanese claim over (7,-9): 0 aircraft shot down, day 46 afternoon
-Japanese claim at (2,-4): 8 aircraft shot down, 6 aircraft destroyed on the ground, day 49 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 4 aircraft destroyed on the ground, day 49 morning
 Japanese claims 1 enemy ship sunk at (-4,5), day 50 night
-Japanese claim at (2,-4): 5 aircraft shot down, 2 aircraft destroyed on the ground, day 52 morning
-Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 55 morning
-Japanese claim at (2,-4): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 58 morning
-Japanese claim over (7,-9): 0 aircraft shot down, day 60 afternoon
-Japanese claim over (7,-9): 0 aircraft shot down, day 60 afternoon
-Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 61 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 4 aircraft destroyed on the ground, day 64 morning
-Japanese claim at (2,-4): 8 aircraft shot down, 2 aircraft destroyed on the ground, day 67 morning
+Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 52 morning
+Japanese claim at (2,-4): 4 aircraft shot down, 3 aircraft destroyed on the ground, day 55 morning
+Japanese claim at (2,-4): 5 aircraft shot down, 2 aircraft destroyed on the ground, day 58 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 3 aircraft destroyed on the ground, day 61 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 3 aircraft destroyed on the ground, day 64 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 67 morning
 Japanese claim at (7,-5): 1 hit on a carrier, 0 sunk, day 69 morning
-Japanese claim at (2,-4): 10 aircraft shot down, 4 aircraft destroyed on the ground, day 70 morning
-Japanese claim over (7,-9): 0 aircraft shot down, day 71 afternoon
+Japanese claim at (2,-4): 8 aircraft shot down, 4 aircraft destroyed on the ground, day 70 morning
 Japanese claim at (2,-4): 11 aircraft shot down, 3 aircraft destroyed on the ground, day 73 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 3 aircraft destroyed on the ground, day 76 morning
-Japanese claim at (2,-4): 8 aircraft shot down, 2 aircraft destroyed on the ground, day 79 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 76 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 79 morning
 Japanese claims 0 enemy ships sunk at (-4,9), day 80 night
-Japanese claim at (2,-4): 11 aircraft shot down, 1 aircraft destroyed on the ground, day 82 morning
-Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 85 morning
-Japanese claim at (2,-4): 11 aircraft shot down, 3 aircraft destroyed on the ground, day 88 morning
-Japanese claim over (2,-4): 6 aircraft shot down, day 91 morning
+Japanese claim at (2,-4): 10 aircraft shot down, 2 aircraft destroyed on the ground, day 82 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 3 aircraft destroyed on the ground, day 85 morning
+Japanese claim at (2,-4): 9 aircraft shot down, 2 aircraft destroyed on the ground, day 88 morning
+Japanese claim over (2,-4): 4 aircraft shot down, day 91 morning
 Japanese claims 0 enemy ships sunk at (-8,15), day 93 night
-Japanese claim at (2,-4): 9 aircraft shot down, 3 aircraft destroyed on the ground, day 94 morning
-Japanese claim at (2,-4): 10 aircraft shot down, 3 aircraft destroyed on the ground, day 97 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 4 aircraft destroyed on the ground, day 94 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 3 aircraft destroyed on the ground, day 97 morning
 Japanese claim over (2,-4): 5 aircraft shot down, day 100 morning
-Japanese claim at (2,-4): 3 aircraft shot down, 6 aircraft destroyed on the ground, day 103 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 1 aircraft destroyed on the ground, day 106 morning
-Japanese claim at (2,-4): 8 aircraft shot down, 1 aircraft destroyed on the ground, day 109 morning
-Japanese claim at (2,-4): 8 aircraft shot down, 3 aircraft destroyed on the ground, day 112 morning
-Japanese claim at (2,-4): 9 aircraft shot down, 4 aircraft destroyed on the ground, day 115 morning
-Japanese claim at (2,-4): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 118 morning
-Japanese claim at (2,-4): 8 aircraft shot down, 3 aircraft destroyed on the ground, day 121 morning
+Japanese claim at (2,-4): 1 aircraft shot down, 2 aircraft destroyed on the ground, day 103 morning
+Japanese claim over (2,-4): 4 aircraft shot down, day 106 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 1 aircraft destroyed on the ground, day 109 morning
+Japanese claim at (2,-4): 5 aircraft shot down, 3 aircraft destroyed on the ground, day 112 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 3 aircraft destroyed on the ground, day 115 morning
+Japanese claim at (2,-4): 2 aircraft shot down, 1 aircraft destroyed on the ground, day 118 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 121 morning
 Japanese claims 1 enemy ship sunk at (-8,17), day 123 night
-Japanese claim over (2,-4): 8 aircraft shot down, day 124 morning
-Japanese claim at (2,-4): 10 aircraft shot down, 3 aircraft destroyed on the ground, day 127 morning
+Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 124 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 2 aircraft destroyed on the ground, day 127 morning
 Japanese claim over (2,-4): 6 aircraft shot down, day 130 morning
 Japanese claim over (2,-4): 7 aircraft shot down, day 133 morning
-Japanese claim at (2,-4): 5 aircraft shot down, 2 aircraft destroyed on the ground, day 136 morning
-Japanese claim over (2,-4): 8 aircraft shot down, day 139 morning
+Japanese claim at (2,-4): 4 aircraft shot down, 2 aircraft destroyed on the ground, day 136 morning
+Japanese claim over (2,-4): 7 aircraft shot down, day 139 morning
 Japanese claims 0 enemy ships sunk at (-8,18), day 140 night
 Japanese claim at (2,-4): 5 aircraft shot down, 2 aircraft destroyed on the ground, day 142 morning
-Japanese claim at (2,-4): 7 aircraft shot down, 2 aircraft destroyed on the ground, day 145 morning
-Japanese claim at (2,-4): 3 aircraft shot down, 3 aircraft destroyed on the ground, day 148 morning
+Japanese claim at (2,-4): 6 aircraft shot down, 2 aircraft destroyed on the ground, day 145 morning
+Japanese claim at (2,-4): 3 aircraft shot down, 4 aircraft destroyed on the ground, day 148 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 1 aircraft destroyed on the ground, day 151 morning
 Japanese claims 1 enemy ship sunk at (-8,19), day 153 night
+Japanese claim over (2,-4): 6 aircraft shot down, day 154 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 3 aircraft destroyed on the ground, day 158 morning
+Japanese claim at (2,-4): 10 aircraft shot down, 3 aircraft destroyed on the ground, day 161 morning
+Japanese claim at (2,-4): 8 aircraft shot down, 4 aircraft destroyed on the ground, day 164 morning
+Japanese claim at (2,-4): 10 aircraft shot down, 3 aircraft destroyed on the ground, day 167 morning
 Japanese claims 0 enemy ships sunk at (-8,20), day 170 night

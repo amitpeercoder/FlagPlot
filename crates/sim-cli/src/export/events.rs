@@ -634,6 +634,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             chance,
             expected,
             hits,
+            after_attack,
         } => (
             "air_fight",
             d.id("firer", *firer)
@@ -643,7 +644,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .num("shots", *shots)
                 .num("chance", *chance)
                 .num("expected", *expected)
-                .int("hits", *hits),
+                .int("hits", *hits)
+                .flag_when_true("after_attack", *after_attack),
         ),
         EventKind::AntiAircraftFire {
             task_force,

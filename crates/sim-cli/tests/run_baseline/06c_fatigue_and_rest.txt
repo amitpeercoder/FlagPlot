@@ -2,22 +2,22 @@ Scenario 6c: Fatigue and rest
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e7e48bfa98fa293e  34 events
-day   2  hash dc99f69e7502754a  25 events
-day   3  hash 0a4df88727bc7cfc  22 events
-day   4  hash fa0f1120eb5bbc09  23 events
-day   5  hash a1f5639adeab4f29  23 events
-day   6  hash d188d1532b55fb76  18 events
-day   7  hash d9bab5ac227d97c5  12 events
-day   8  hash 5a28771cb8621b24  25 events
+day   1  hash c3328f8ac23ebce6  35 events
+day   2  hash 1679666692eb758d  26 events
+day   3  hash 9565119290110b5c  23 events
+day   4  hash 5a364d385cd93180  24 events
+day   5  hash 3b7fe86513cd7a28  23 events
+day   6  hash b503eae6daee84a7  18 events
+day   7  hash 58674e6b437ad6d0  12 events
+day   8  hash ece281f0d0232513  25 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 2 ready, mission BaseStrike on base:2, fatigue 32, rests above 30, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, fatigue 32, rests above 40, stood down, no arc
 air_group:3 "Placeholder defending fighters" (Allied) at base:2: 3 ready, mission CombatAirPatrol, patrol share 1, fatigue 48, no arc
-air_group:4 "Placeholder resting bombers" (Allied) at base:2: 10 ready, mission Rest, no arc
+air_group:4 "Placeholder resting bombers" (Allied) at base:2: 8 ready, mission Rest, no arc
 air_group:5 "Placeholder scouts" (Allied) at base:2: 6 ready, mission Search, fatigue 80, rests above 50, arc 040-130 to 300 nm
 base:1 "Placeholder airfield A" (Japanese) at (0,0): 0 t of supply in stock
-base:2 "Placeholder airfield B" (Allied) at (5,0): 850 t of supply in stock, 20 anti-aircraft shots
+base:2 "Placeholder airfield B" (Allied) at (5,0): 950 t of supply in stock, 20 anti-aircraft shots
 Allied: no contacts
 Allied claim over (5,0): 5 aircraft shot down, day 1 morning
 Allied claim over (5,0): 3 aircraft shot down, day 2 morning
@@ -27,8 +27,8 @@ Allied claim over (5,0): 4 aircraft shot down, day 5 morning
 Allied claim over (5,0): 3 aircraft shot down, day 6 morning
 Allied claim over (5,0): 4 aircraft shot down, day 8 morning
 Japanese: no contacts
-Japanese claim at (5,0): 4 aircraft shot down, 1 aircraft destroyed on the ground, day 1 morning
-Japanese claim at (5,0): 2 aircraft shot down, 3 aircraft destroyed on the ground, day 2 morning
+Japanese claim at (5,0): 4 aircraft shot down, 2 aircraft destroyed on the ground, day 1 morning
+Japanese claim at (5,0): 2 aircraft shot down, 4 aircraft destroyed on the ground, day 2 morning
 Japanese claim over (5,0): 0 aircraft shot down, day 3 morning
 Japanese claim at (5,0): 2 aircraft destroyed on the ground, day 4 morning
 Japanese claim over (5,0): 2 aircraft shot down, day 5 morning

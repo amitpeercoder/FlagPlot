@@ -437,6 +437,7 @@ fn fights(events: &[Event]) -> Vec<(Fight, Event)> {
                 chance,
                 expected,
                 hits,
+                ..
             } => Some((
                 (
                     firing,
