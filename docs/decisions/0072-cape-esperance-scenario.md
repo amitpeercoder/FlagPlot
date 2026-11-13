@@ -1,6 +1,6 @@
 # 0072: The Cape Esperance scenario: what is in it and what is left out
 
-Status: plan; settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. Second stage built the same day: the ships derived and the scenario written, not run ("Built", at the end). The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
+Status: plan; settled by the architect, to be reviewed. Drafted by the architect's team lead on Nov 13, 2026. Second stage built the same day: the ships derived and the scenario written, not run ("Built", below). Third stage the same day: the scenario moved to `data/scenarios/` and the check run once, judged 8, agree 4, at the edge 1, miss 3 ("As built (the check)", at the end). The data choices below are settled as the architect's (decision 0015 and `docs/engineering/data-rules.md`, "Who settles data") and wait for the architect's review. No rule is added or changed.
 
 **No batch of this scenario is run or looked at before Savo Island is tuned, and it is never tuned on.** This stage ran no batch, no `validate` and no run of the scenario, and nothing below was set in answer to an outcome.
 
@@ -258,3 +258,48 @@ FTP 218 lists DD 491, Farenholt, in its DD 421/459 (Benson) table. That bears on
 ## Rule card
 
 No rule. These are scenario inputs and data settlements.
+
+## As built (the check), Nov 13, 2026
+
+The third stage: the one run of the check, committed in advance by decision 0084 (`docs/step2-spec.md`, "Tuning"). Nothing was tuned on it and nothing is changed by it; a rule or figure changed after it is not checked by it.
+
+**Before the batch, in one commit (897ba4f, on a branch cut from `main` at 3e90304):**
+- The scenario moved from `data/scenarios/not-run/` to `data/scenarios/17_cape_esperance.toml`. Its six data paths lost one `../`, since they are read from the scenario's own folder, and its header paragraph was rewritten. No figure, order, ship or other key changed.
+- `data/validation/cape_esperance.toml` got its `scenario` key and a `take` for each of its eleven measures (ships 1 to 5 the Japanese, 9 to 12 the US cruisers, 6, 7, 8, 13 and 14 the US destroyers, as "Ids" above), with a dated line at its head. No record, row, range, reason or judged flag changed. No measure was added: who sighted whom first stays unwritten.
+- Scenario 17's test reads the new path; the test of `validate` on a measures file with no scenario uses a hand-made file in place of this one.
+
+Nothing of the scenario was run before the batch but its hand-calculation test.
+
+**The commands, once each:**
+
+```
+cargo run --release -p sim-cli -- batch data/scenarios/17_cape_esperance.toml --runs 1000 --first-seed 1 --label check --out cape_esperance_check.json
+cargo run --release -p sim-cli -- validate cape_esperance_check.json data/validation/cape_esperance.toml
+```
+
+**Hashes** (as the report gives them; the batch file is not kept in the repository, as for the other battles):
+- The batch file: 100525c6c713b215 (SHA-256 c0c7ebd37390d4c4d6ef076654664aef75bb71c365fc703bd3c0684a77a42728).
+- State hash layout flagplot-state-v8.
+- The scenario file: 6984fa7a6979aa28.
+- `south_pacific.csv` ba6cb3aea5cc45f5; `ship_classes_cape_esperance.csv` c79b1bc1e17fcc16; `port_sizes.csv` da12e2b751976274; `aircraft_types.csv` 92830cbacc0a4328; `search.toml` 9d9cd2961a30d99a; `surface_combat.toml` 1a9a0ae06d7282b1.
+- The measures file: dcda49f98a4431be.
+
+**The result** (`docs/validation/cape-esperance-check.md`): judged 8, agree 4, at the edge 1, miss 3. The battle does not pass.
+
+| Measure | Record | 5th to 95th | Median | Runs holding the record | Left out | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| japanese_ships_sunk | 2 | 0 to 3 | 2 | 407 of 1000 | 0 | agrees |
+| japanese_ships_with_propulsion_out | 0 | 0 to 1 | 0 | 908 of 1000 | 0 | agrees |
+| us_cruisers_sunk | 0 | 0 to 0 | 0 | 960 of 1000 | 0 | agrees |
+| us_destroyers_sunk | 1 | 0 to 0 | 0 | 4 of 1000 | 0 | **MISS**: the record is outside the middle 90 percent; fewer than 1 run in 20 holds the record |
+| gun_hits_on_aoba | 40 | 13 to 55 | 29 | 18 of 1000 | 0 | **MISS**: fewer than 1 run in 20 holds the record |
+| gun_hits_on_furutaka | 90 | 10 to 57 | 27 | 0 of 1000 | 0 | reported |
+| gun_hits_on_kinugasa | 0 to 4 | 4 to 49 | 15 | 60 of 1000 | 0 | agrees, at the edge |
+| gun_hits_on_us_ships | 15 to 29 | 1 to 35 | 6 | 179 of 1000 | 0 | reported |
+| torpedo_hits_on_japanese_ships | 0 to 1 | 0 to 6 | 3 | 269 of 1000 | 0 | agrees |
+| japanese_ships_claimed_sunk_per_hundred_sunk | 200 to 300 | 100 to 300 | 100 | 2 of 44 | 956 | **MISS**: too few runs kept |
+| us_ships_claimed_sunk_per_hundred_sunk | 400 to 750 | 100 to 250 | 100 | 8 of 923 | 77 | reported |
+
+`docs/validation/baseline-reading.md` ("Cape Esperance: the check") reads it: what it shows, what it says of the three figures fitted at Savo Island within decision 0084's limits, and, marked as conjecture for step 3, what each miss most likely rests on. Two things the scenario does that the record does not, found in the batch and named there: Task Force 64 fights Japanese stragglers by day in 771 runs, since it is ordered to stay in (2,-5); and its five destroyers fire every tube. Neither is measured.
+
+The scenario now sits in `data/scenarios/`, so every loop over that folder runs it: CI's export, the run baseline of `crates/sim-cli/tests/export.rs` and the saved-games test. Those files were made after the check, from the same scenario; they record its outcome and were not read for the check.

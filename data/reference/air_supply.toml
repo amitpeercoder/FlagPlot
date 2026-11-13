@@ -1,5 +1,9 @@
-# PLACEHOLDER DATA. These figures are invented so the engine has something to
-# run. They are not historical and must not be used for validation.
+# Air supply, at the close of step 2. Every figure is a placeholder: invented
+# so the engine has something to run, not historical. Rabaul against
+# Guadalcanal reads them, no measure reads base supply, and no round looked at
+# them. The note above them says what they rest on;
+# docs/validation/tuning/air-figures-closed.md lists them all. The frozen step 1
+# figures are in data/reference/step1.
 # See docs/decisions/0039-base-supply-consumption.md.
 
 placeholder = true
