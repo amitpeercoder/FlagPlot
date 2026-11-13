@@ -1,0 +1,43 @@
+# PLACEHOLDER MAP. A strip of open sea with four anchorages, used by scenario
+# 20a (ship repair, decision 0069). The geography is invented: the bases are
+# 4 hexes (160 nm) and 8 hexes apart, and nothing here is a real place.
+
+placeholder = true
+
+# Ranges are inclusive. 40 nm hexes.
+[[region]]
+kind = "deep_sea"
+q = [-1, 10]
+r = [-1, 5]
+
+# Placeholder repair anchorage (base 1).
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Placeholder yard port (base 2).
+[[hex]]
+q = 4
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Placeholder bare anchorage (base 3).
+[[hex]]
+q = 0
+r = 4
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Placeholder enemy anchorage (base 4).
+[[hex]]
+q = 8
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

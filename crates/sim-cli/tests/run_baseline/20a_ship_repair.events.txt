@@ -1,0 +1,246 @@
+Scenario 20a: Ship repair, forward and at the yard
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 892d1f9c996ad91a  16 events
+day   2  hash 2e64873896fd85b0  9 events
+day   3  hash b0c3a8ad4c78bdd6  7 events
+day   4  hash 35ec1c35c68f0fb5  8 events
+day   5  hash 2e67e40b511126d7  5 events
+day   6  hash cf941b6ddec8201f  5 events
+day   7  hash 2681bf0838b53864  5 events
+day   8  hash aebbc7800c3a86be  5 events
+day   9  hash 19c26df316760dca  5 events
+day  10  hash 291cfc22dd92bed7  4 events
+day  11  hash a444d3734b801430  4 events
+day  12  hash 7d6514eacae4ec65  4 events
+day  13  hash a2d037171a68fd5e  4 events
+day  14  hash 406a9dcd228af963  4 events
+day  15  hash 585df0dd709d0184  4 events
+day  16  hash 17b6b15687397e61  4 events
+day  17  hash 8f5a092aa2dbb0c2  4 events
+day  18  hash 8bdf95f93938a96f  4 events
+day  19  hash 5c168d964b8b6cb8  4 events
+day  20  hash 18efc12fad8de80d  4 events
+day  21  hash da165b852f154bd6  4 events
+day  22  hash 59e918dda28f8f5b  4 events
+day  23  hash 7fd8980c5aa3bc8c  4 events
+day  24  hash ac6684bc08088de9  4 events
+day  25  hash ecebc349373a159a  4 events
+day  26  hash 3f7f755d9a29ac67  4 events
+day  27  hash 9f5eaea0a6c2cc00  4 events
+day  28  hash cee66025d1d608f5  4 events
+day  29  hash 15ba0a2c5081248e  4 events
+day  30  hash 22a04016d5420213  4 events
+day  31  hash bced013b084e92b4  4 events
+day  32  hash ff533d3b9f72a451  4 events
+day  33  hash 4e881dade5fb6f52  4 events
+day  34  hash d3f63b37c4a2b47f  4 events
+day  35  hash bafe25cbd5ef46c8  4 events
+day  36  hash f6ea04a60903aa8d  5 events
+day  37  hash 6764f4eb81f6a36e  4 events
+
+#1 D0 -         Japanese report: 2 ships, cruiser, at (4,0), held at the start: new contact:1
+#2 D1 -         order:1 rejected for task_force:1: no base of your side in the task force's hex is a port for the yard  <- order:1
+#3 D1 -         order:2 accepted for task_force:4  <- order:2
+#4 D1 -         order:3 accepted for task_force:4  <- order:3
+#5 D1 -         order:4 rejected for task_force:4: the task force is under way  <- order:4
+#6 D1 -         order:5 rejected for task_force:6: there is no base of your side here  <- order:5
+#7 D1 -         ship:1 repaired 6 points at base:1: fire 0, flotation 4
+#8 D1 night     task_force:4 steamed 80 nm at 16 kn from (4,0) to (2,2)  <- order:3, order:2
+#9 D1 night     ship:6 burned 10 t, 490 t remaining  <- #8
+#10 D1 night     task_force:4 arrived at (2,2) at D1 23:00  <- #8
+#11 D1 night     Japanese contact:1 aged to 1 pulses  <- #1
+#12 D1 morning   Japanese contact:1 aged to 2 pulses  <- #1
+#13 D1 afternoon Japanese contact:1 aged to 3 pulses  <- #1
+#14 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#15 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#16 D1 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#17 D1 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#18 D2 -         order:6 accepted for task_force:2  <- order:6
+#19 D2 -         task_force:2 left base:2 for the yard: ship:3 30 days, ship:4 12 days, passage 4, back on day 36  <- order:6
+#20 D2 -         ship:1 repaired 6 points at base:1: fire 0, flotation 0
+#21 D2 night     Japanese contact:1 aged to 4 pulses  <- #1
+#22 D2 morning   Japanese contact:1 dropped at 5 pulses  <- #1
+#23 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#24 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#25 D2 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#26 D2 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#27 D3 -         order:7 rejected for task_force:2: the task force is away at a yard until its day of return  <- order:7
+#28 D3 -         order:8 rejected for task_force:4: there is no base of your side here  <- order:8
+#29 D3 -         ship:1 repaired 6 points at base:1: fire 0, flotation 0
+#30 D3 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#31 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#32 D3 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#33 D3 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#34 D4 -         order:9 accepted for task_force:3  <- order:9
+#35 D4 -         task_force:3 left base:2 for the yard: ship:5 30 days, passage 4, back on day 38  <- order:9
+#36 D4 -         ship:1 repaired 2 points at base:1: fire 0, flotation 0, fire control working
+#37 D4 -         ship:2 repaired 4 points at base:1: fire 0, flotation 8
+#38 D4 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#39 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#40 D4 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#41 D4 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#42 D5 -         ship:2 repaired 6 points at base:1: fire 0, flotation 2
+#43 D5 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#44 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#45 D5 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#46 D5 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#47 D6 -         ship:2 repaired 6 points at base:1: fire 0, flotation 0
+#48 D6 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#49 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#50 D6 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#51 D6 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#52 D7 -         ship:2 repaired 6 points at base:1: fire 0, flotation 0, torpedo mounts working
+#53 D7 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#54 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#55 D7 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#56 D7 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#57 D8 -         ship:9 repaired 6 points at base:1: fire 0, flotation 10
+#58 D8 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#59 D8 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#60 D8 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#61 D8 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#62 D9 -         ship:9 repaired 5 points at base:1: fire 0, flotation 10, propulsion working
+#63 D9 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#64 D9 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#65 D9 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#66 D9 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#67 D10 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#68 D10 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#69 D10 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#70 D10 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#71 D11 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#72 D11 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#73 D11 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#74 D11 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#75 D12 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#76 D12 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#77 D12 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#78 D12 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#79 D13 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#80 D13 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#81 D13 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#82 D13 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#83 D14 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#84 D14 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#85 D14 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#86 D14 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#87 D15 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#88 D15 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#89 D15 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#90 D15 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#91 D16 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#92 D16 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#93 D16 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#94 D16 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#95 D17 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#96 D17 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#97 D17 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#98 D17 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#99 D18 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#100 D18 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#101 D18 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#102 D18 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#103 D19 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#104 D19 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#105 D19 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#106 D19 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#107 D20 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#108 D20 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#109 D20 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#110 D20 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#111 D21 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#112 D21 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#113 D21 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#114 D21 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#115 D22 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#116 D22 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#117 D22 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#118 D22 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#119 D23 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#120 D23 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#121 D23 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#122 D23 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#123 D24 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#124 D24 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#125 D24 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#126 D24 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#127 D25 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#128 D25 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#129 D25 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#130 D25 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#131 D26 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#132 D26 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#133 D26 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#134 D26 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#135 D27 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#136 D27 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#137 D27 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#138 D27 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#139 D28 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#140 D28 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#141 D28 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#142 D28 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#143 D29 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#144 D29 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#145 D29 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#146 D29 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#147 D30 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#148 D30 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#149 D30 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#150 D30 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#151 D31 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#152 D31 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#153 D31 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#154 D31 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#155 D32 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#156 D32 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#157 D32 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#158 D32 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#159 D33 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#160 D33 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#161 D33 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#162 D33 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#163 D34 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#164 D34 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#165 D34 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#166 D34 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#167 D35 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#168 D35 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#169 D35 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#170 D35 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#171 D36 -         task_force:2 back at base:2 from the yard, ship:3 and ship:4 repaired, refuelled and rearmed  <- #19
+#172 D36 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#173 D36 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#174 D36 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#175 D36 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#176 D37 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#177 D37 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#178 D37 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#179 D37 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder repair force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder repair force 2" (Allied): Idle at (4,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:3 "Placeholder repair force 3" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:4 "Placeholder repair force 4" (Allied): Arrived at (2,2); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:5 "Placeholder repair force 5" (Allied): Idle at (0,4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:6 "Placeholder repair force 6" (Allied): Idle at (8,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:7 "Placeholder repair force 7" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; main battery out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:3 "Placeholder cruiser 3": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:4 "Placeholder destroyer 4": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser 5": afloat in task_force:3, away at the yard; damage flotation 0, fire 0; propulsion out; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:6 "Placeholder destroyer 6": afloat in task_force:4; damage flotation 0, fire 3; all systems working; 600 gun rounds, torpedoes ready; 490 t of fuel, 0 t of supply
+ship:7 "Placeholder destroyer 7": afloat in task_force:5; damage flotation 2, fire 3; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:8 "Placeholder destroyer 8": afloat in task_force:6; damage flotation 2, fire 3; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:9 "Placeholder cruiser 9": afloat in task_force:7; damage flotation 10, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder repair anchorage" (Allied) at (0,0): 0 t of supply in stock
+base:2 "Placeholder yard port" (Allied) at (4,0): 0 t of supply in stock
+base:3 "Placeholder bare anchorage" (Allied) at (0,4): 0 t of supply in stock
+base:4 "Placeholder enemy anchorage" (Japanese) at (8,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
