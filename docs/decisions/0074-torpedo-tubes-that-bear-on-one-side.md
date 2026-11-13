@@ -1,6 +1,8 @@
 # 0074: A class's torpedo tubes are the tubes that bear on one side
 
-Status: settled by the architect on Nov 13, 2026, as a rule of the derivation (data is the architect's to settle). Not built. It is built after decision 0070 (rates of fire) is on main, because both change `data/derivation/rules.toml` and `oob-derive`. One question it leaves out is the designer's and is named under "What it leaves out": whether a ship may fire the tubes of her other side later in a fight.
+Status: written by the architect on Nov 13, 2026, as a rule of the derivation; not built. **Held by the coordinating architect on Nov 13, 2026 until Savo Island's first tuning rounds:** it is built only together with a rule for firing the other side's tubes in a later round, which is a plan for the designer, and only if the torpedo measures then call for it. It is not a condition of tuning.
+
+Why it is held. The tubes of one side alone take the five Japanese heavy cruisers from 40 torpedoes to 20, against 32 to 34 fired in the record, and would turn a measure that agrees today (torpedo hits on Allied ships) into a miss by leaving half a rule out. With the second side fired in a later round the totals come back to about what the rules give today, spread over two rounds, at the cost of new state for a ship, a new hash version and a rule for the designer. The gap on the Allied side (4 to 6 torpedoes fired of some 80 tubes) is unreadiness, which decision 0071's share carries, not tubes that bear. So by `docs/engineering/rule-complexity.md` the pair is not worth building before tuning shows whether the torpedo measures need it.
 
 ## The gap
 
