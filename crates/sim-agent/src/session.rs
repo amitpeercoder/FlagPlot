@@ -13,18 +13,63 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 use sim_core::hex::Hex;
+use sim_core::ids::{AirGroupId, ShipId, TaskForceId};
 use sim_core::orders::{OrderRequest, Origin, RejectReason};
 use sim_core::state::Side;
 use sim_core::World;
 
 use crate::answer::{FORMAT, VERSION};
 use crate::briefing::briefing_for_game;
+use crate::common::{map_unit_tokens, Ctx};
 use crate::explain::explain;
 use crate::measure::{measure, Question};
 use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
 use crate::record::{seat_name, CallError, Seat, SeatKind, TranscriptEntry, TOOLS};
+
+/// The umpire's number given to a unit the side named that is none of its
+/// own: no unit has it.
+const NO_SUCH_UNIT: u32 = u32::MAX;
+
+/// The first umpire's number given to a ship a detach order names that is not
+/// the side's own. No ship has one of these either.
+const FIRST_STAND_IN: u32 = 4_000_000_000;
+
+/// The body of an order with the side's numbers of ships (in a detach) turned
+/// into the umpire's. A number that names none of the side's ships becomes a
+/// stand-in, kept in `stand_ins` (stand-in to the number written) so a
+/// refusal can show the number the side wrote.
+fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32, u32>) -> Value {
+    let mut body = body.clone();
+    if body.get("kind").and_then(Value::as_str) != Some("detach") {
+        return body;
+    }
+    if let Some(Value::Array(ships)) = body.get_mut("ships") {
+        for ship in ships.iter_mut() {
+            let Some(number) = ship.as_u64().and_then(|n| u32::try_from(n).ok()) else {
+                continue;
+            };
+            let id = match ctx.own_ship(number) {
+                Some(own) => own.id.raw(),
+                None => {
+                    let existing = stand_ins.iter().find(|(_, n)| **n == number);
+                    match existing {
+                        Some((id, _)) => *id,
+                        None => {
+                            let id = FIRST_STAND_IN
+                                + u32::try_from(stand_ins.len()).expect("few ships in an order");
+                            stand_ins.insert(id, number);
+                            id
+                        }
+                    }
+                }
+            };
+            *ship = json!(id);
+        }
+    }
+    body
+}
 
 /// The one refusal for an order to a unit the side does not own, whether the
 /// unit is the enemy's or does not exist (decision 5 of 0050). The same text
@@ -278,9 +323,18 @@ impl Session {
                 .queued
                 .clear();
         }
+        // Each order is judged against the state as it is now, which queuing
+        // the others does not change, so the judging is done first.
+        let judged: Vec<Result<OrderRequest, String>> = {
+            let ctx = Ctx::new(self.world.side_view(side));
+            entries
+                .iter()
+                .map(|entry| self.judge(side, &ctx, entry))
+                .collect()
+        };
         let mut results = Vec::new();
-        for (index, entry) in entries.iter().enumerate() {
-            match self.judge(side, entry) {
+        for (index, judgement) in judged.into_iter().enumerate() {
+            match judgement {
                 Ok(request) => {
                     self.seats
                         .get_mut(&side)
@@ -323,7 +377,7 @@ impl Session {
     /// reason: it is the engine's `NotYourUnit` for an enemy unit and for a
     /// number that is nothing, and a unit not written as an orderable one is
     /// given the same.
-    fn judge(&self, side: Side, entry: &Value) -> Result<OrderRequest, String> {
+    fn judge(&self, side: Side, ctx: &Ctx<'_>, entry: &Value) -> Result<OrderRequest, String> {
         let unit = entry
             .get("unit")
             .and_then(Value::as_str)
@@ -334,7 +388,23 @@ impl Session {
         let body = entry
             .get("order")
             .ok_or_else(|| "malformed order: \"order\" is missing".to_string())?;
-        let kind = order_from_json(unit, body).map_err(|e| format!("malformed order: {e}"))?;
+        // The unit and the ships of a detach are named by the side's numbers
+        // (decision 0086); the engine is asked in the umpire's. A number
+        // that names no unit of the side becomes a number no unit has, so a
+        // unit of the enemy and one that does not exist are refused alike.
+        let (kind_of_unit, number) = unit
+            .split_once(':')
+            .expect("an orderable unit is kind:number");
+        let number: u32 = number.parse().expect("an orderable unit has a number");
+        let raw = match kind_of_unit {
+            "task_force" => ctx.own_force(number).map(|f| f.id.raw()),
+            _ => ctx.own_group(number).map(|g| g.id.raw()),
+        }
+        .unwrap_or(NO_SUCH_UNIT);
+        let mut stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
+        let body = unit_numbers_to_ids(ctx, body, &mut stand_ins);
+        let kind = order_from_json(&format!("{kind_of_unit}:{raw}"), &body)
+            .map_err(|e| format!("malformed order: {e}"))?;
         let request = OrderRequest {
             kind,
             origin: Origin::PLAYER,
@@ -342,7 +412,19 @@ impl Session {
         match self.world.check_order(side, &request) {
             Ok(()) => Ok(request),
             Err(RejectReason::NotYourUnit) => Err(NOT_KNOWN.to_string()),
-            Err(reason) => Err(crate::words::refusal(&reason)),
+            // The engine's words may name a ship by its umpire's number: show
+            // the side's, or the number the side wrote for a stand-in.
+            Err(reason) => Err(map_unit_tokens(
+                &crate::words::refusal(&reason),
+                |kind, raw| match kind {
+                    "ship" => stand_ins
+                        .get(&raw)
+                        .copied()
+                        .or_else(|| ctx.ship_number(ShipId::new(raw))),
+                    "task_force" => ctx.force_number(TaskForceId::new(raw)),
+                    _ => ctx.group_number(AirGroupId::new(raw)),
+                },
+            )),
         }
     }
 

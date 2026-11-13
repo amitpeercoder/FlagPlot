@@ -49,18 +49,53 @@ fn request(id: Value, seat: &str, tool: &str, arguments: Value) -> String {
     json!({"id": id, "seat": seat, "tool": tool, "arguments": arguments}).to_string()
 }
 
+/// An order as `issue_orders` takes it: its unit and the ships of a detach by
+/// the side's own numbers, 1, 2, 3... among its own in the order of the
+/// scenario's numbers (decision 0086).
+fn served_order(view: &sim_core::view::SideView<'_>, r: &sim_core::orders::OrderRequest) -> Value {
+    let mut doc =
+        json!({"unit": sim_agent::unit_text(&r.kind), "order": sim_agent::order_to_json(&r.kind)});
+    let number = |mut ids: Vec<u32>, raw: u32| -> u32 {
+        ids.sort();
+        u32::try_from(ids.iter().position(|i| *i == raw).expect("an own unit") + 1).unwrap()
+    };
+    let unit = match &r.kind {
+        sim_core::orders::OrderKind::TaskForce { target, .. } => format!(
+            "task_force:{}",
+            number(
+                view.task_forces().map(|f| f.id.raw()).collect(),
+                target.raw()
+            )
+        ),
+        sim_core::orders::OrderKind::AirGroup { target, .. } => format!(
+            "air_group:{}",
+            number(
+                view.air_groups().map(|g| g.id.raw()).collect(),
+                target.raw()
+            )
+        ),
+    };
+    doc["unit"] = json!(unit);
+    if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {
+        for ship in ships {
+            let raw = u32::try_from(ship.as_u64().expect("a ship")).unwrap();
+            *ship = json!(number(view.ships().map(|s| s.id.raw()).collect(), raw));
+        }
+    }
+    doc
+}
+
 /// The Allied orders of day 1 of the scenario, as `issue_orders` takes them.
 fn scripted_orders() -> Vec<Value> {
     let scenario = sim_data::Scenario::load(&Path::new(ROOT).join(SCENARIO)).expect("loads");
+    let view = scenario.world.side_view(sim_core::state::Side::Allied);
     scenario
         .scripted_orders()
         .get(&1)
         .expect("orders on day 1")
         .iter()
         .filter(|(side, _)| *side == sim_core::state::Side::Allied)
-        .map(|(_, r)| {
-            json!({"unit": sim_agent::unit_text(&r.kind), "order": sim_agent::order_to_json(&r.kind)})
-        })
+        .map(|(_, r)| served_order(&view, r))
         .collect()
 }
 

@@ -86,7 +86,17 @@ pub(crate) struct Ctx<'a> {
     numbers: BTreeMap<EventId, u32>,
     /// The side's own number for each of its orders, by the log's number.
     order_numbers: BTreeMap<OrderId, u32>,
+    /// The side's own ships, task forces and air groups in the umpire's id
+    /// order: a unit's number is its place in the list, counting from 1
+    /// (decision 0086). Every unit the view gives is in it, sunk ships and
+    /// lost groups too, so a number never changes during a game.
+    ship_ids: Vec<ShipId>,
+    force_ids: Vec<TaskForceId>,
+    group_ids: Vec<AirGroupId>,
 }
+
+/// The unit kinds whose numbers are the side's own.
+const OWN_KINDS: [&str; 3] = ["ship", "task_force", "air_group"];
 
 impl<'a> Ctx<'a> {
     pub fn new(view: SideView<'a>) -> Ctx<'a> {
@@ -108,9 +118,15 @@ impl<'a> Ctx<'a> {
             .enumerate()
             .map(|(i, o)| (o.id, u32::try_from(i + 1).expect("few orders")))
             .collect();
+        let ship_ids = ships.keys().copied().collect();
+        let force_ids = forces.keys().copied().collect();
+        let group_ids = groups.keys().copied().collect();
         Ctx {
             view,
             order_numbers,
+            ship_ids,
+            force_ids,
+            group_ids,
             ships,
             forces,
             groups,
@@ -155,7 +171,7 @@ impl<'a> Ctx<'a> {
     /// The line the log writes for an event, with an order named by the
     /// side's own number.
     pub fn event_text(&self, kind: &SideEventKind) -> String {
-        match kind {
+        let text = match kind {
             SideEventKind::Whole(EventKind::OrderAccepted { order, target }) => {
                 format!("order:{} accepted for {target}", self.order_number(*order))
             }
@@ -169,7 +185,49 @@ impl<'a> Ctx<'a> {
                 crate::words::refusal(reason)
             ),
             other => other.to_string(),
-        }
+        };
+        self.map_text(&text)
+    }
+
+    /// The side's number of one of its own ships (decision 0086).
+    pub fn ship_number(&self, id: ShipId) -> Option<u32> {
+        self.ship_ids.binary_search(&id).ok().map(position_number)
+    }
+
+    pub fn force_number(&self, id: TaskForceId) -> Option<u32> {
+        self.force_ids.binary_search(&id).ok().map(position_number)
+    }
+
+    pub fn group_number(&self, id: AirGroupId) -> Option<u32> {
+        self.group_ids.binary_search(&id).ok().map(position_number)
+    }
+
+    /// The own ship a side number names; `None` for a number that names none.
+    pub fn own_ship(&self, number: u32) -> Option<&'a Ship> {
+        let id = *self.ship_ids.get(number_position(number)?)?;
+        self.ships.get(&id).copied()
+    }
+
+    pub fn own_force(&self, number: u32) -> Option<&'a TaskForce> {
+        let id = *self.force_ids.get(number_position(number)?)?;
+        self.forces.get(&id).copied()
+    }
+
+    pub fn own_group(&self, number: u32) -> Option<&'a AirGroup> {
+        let id = *self.group_ids.get(number_position(number)?)?;
+        self.groups.get(&id).copied()
+    }
+
+    /// Text with each token `ship:N`, `task_force:N` or `air_group:N` that
+    /// names an own unit by the umpire's id rewritten to the side's number
+    /// (decision 0086). One pass: a rewritten number is not read again. A
+    /// token that names no own unit is left as it is.
+    pub fn map_text(&self, text: &str) -> String {
+        map_unit_tokens(text, |kind, raw| match kind {
+            "ship" => self.ship_number(ShipId::new(raw)),
+            "task_force" => self.force_number(TaskForceId::new(raw)),
+            _ => self.group_number(AirGroupId::new(raw)),
+        })
     }
 
     pub fn place(&self, hex: Hex) -> Place {
@@ -185,21 +243,27 @@ impl<'a> Ctx<'a> {
 
     pub fn ship(&self, id: ShipId) -> Handle {
         Handle {
-            handle: id.to_string(),
+            handle: self
+                .ship_number(id)
+                .map_or_else(|| id.to_string(), |n| format!("ship:{n}")),
             name: self.ships.get(&id).map(|s| s.name.clone()),
         }
     }
 
     pub fn force(&self, id: TaskForceId) -> Handle {
         Handle {
-            handle: id.to_string(),
+            handle: self
+                .force_number(id)
+                .map_or_else(|| id.to_string(), |n| format!("task_force:{n}")),
             name: self.forces.get(&id).map(|f| f.name.clone()),
         }
     }
 
     pub fn group(&self, id: AirGroupId) -> Handle {
         Handle {
-            handle: id.to_string(),
+            handle: self
+                .group_number(id)
+                .map_or_else(|| id.to_string(), |n| format!("air_group:{n}")),
             name: self.groups.get(&id).map(|g| g.name.clone()),
         }
     }
@@ -255,6 +319,58 @@ impl<'a> Ctx<'a> {
     }
 }
 
+/// A unit's number from its place in the list: places count from 0, numbers
+/// from 1.
+fn position_number(position: usize) -> u32 {
+    u32::try_from(position + 1).expect("few units")
+}
+
+/// The place in the list of a unit's number; `None` for 0.
+fn number_position(number: u32) -> Option<usize> {
+    usize::try_from(number.checked_sub(1)?).ok()
+}
+
+/// Rewrites each `ship:N`, `task_force:N` or `air_group:N` of `text` for
+/// which `number_of(kind, N)` gives a number to `kind:number`, in one pass.
+/// A token must start at a word boundary and end at the end of its digits.
+pub(crate) fn map_unit_tokens(text: &str, number_of: impl Fn(&str, u32) -> Option<u32>) -> String {
+    let bytes = text.as_bytes();
+    let mut out = String::with_capacity(text.len());
+    let mut copied = 0;
+    let mut i = 0;
+    while i < bytes.len() {
+        let at_boundary = i == 0 || !(bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'_');
+        if at_boundary {
+            if let Some(kind) = OWN_KINDS.iter().find(|k| {
+                text.get(i..).is_some_and(|t| t.starts_with(**k))
+                    && bytes.get(i + k.len()) == Some(&b':')
+            }) {
+                let digits_at = i + kind.len() + 1;
+                let digits = text[digits_at..]
+                    .bytes()
+                    .take_while(u8::is_ascii_digit)
+                    .count();
+                if digits > 0 {
+                    if let Some(number) = text[digits_at..digits_at + digits]
+                        .parse::<u32>()
+                        .ok()
+                        .and_then(|raw| number_of(kind, raw))
+                    {
+                        out.push_str(&text[copied..digits_at]);
+                        out.push_str(&number.to_string());
+                        copied = digits_at + digits;
+                    }
+                    i = digits_at + digits;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    out.push_str(&text[copied..]);
+    out
+}
+
 fn bare(handle: String) -> Handle {
     Handle { handle, name: None }
 }
@@ -296,4 +412,34 @@ pub(crate) fn cruise_range_nm(view: &SideView<'_>, ship: &Ship) -> Option<u32> {
         .fuel_t
         .mul_div(class.endurance_nm, class.fuel_capacity_t);
     u32::try_from(range.trunc().max(0)).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::map_unit_tokens;
+
+    fn swap(kind: &str, raw: u32) -> Option<u32> {
+        // Own units are the ones numbered 10 to 19, and become 1 to 10.
+        (kind != "air_group" && (10..20).contains(&raw)).then(|| raw - 9)
+    }
+
+    #[test]
+    fn a_token_of_an_own_unit_is_rewritten_once_and_nothing_else_is() {
+        assert_eq!(
+            map_unit_tokens(
+                "ship:12 \"X\" in task_force:10, with ship:2 and air_group:12",
+                swap
+            ),
+            "ship:3 \"X\" in task_force:1, with ship:2 and air_group:12"
+        );
+        // A rewritten number is not read again, a token inside a word is not
+        // one, and digits that go on are one number.
+        assert_eq!(map_unit_tokens("ship:10 ship:11", swap), "ship:1 ship:2");
+        assert_eq!(
+            map_unit_tokens("airship:12 my_ship:12 ship:120", swap),
+            "airship:12 my_ship:12 ship:120"
+        );
+        assert_eq!(map_unit_tokens("ship:", swap), "ship:");
+        assert_eq!(map_unit_tokens("é ship:15é", swap), "é ship:6é");
+    }
 }

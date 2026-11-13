@@ -1,6 +1,7 @@
 //! Playing a scenario through a session: a test player that gives the
 //! scenario's own orders through `issue_orders` and ends each day.
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
@@ -24,15 +25,96 @@ pub fn script_of(scenario: &Scenario, side: Side) -> ByDay {
     by_day
 }
 
-/// An order as `issue_orders` takes it.
+/// An order as a saved game holds it: its unit and its ships by the
+/// scenario's numbers.
 pub fn order_json(request: &OrderRequest) -> Value {
     json!({ "unit": unit_text(&request.kind), "order": order_to_json(&request.kind) })
+}
+
+/// The side's own number of each unit by the scenario's number (decision
+/// 0086), as `session_of` last saw the scenario on this thread. A task
+/// force, an air group or a ship belongs to one side, so the scenario's
+/// number alone says which.
+#[derive(Default)]
+struct Numbering {
+    ships: BTreeMap<u32, (Side, u32)>,
+    forces: BTreeMap<u32, (Side, u32)>,
+    groups: BTreeMap<u32, (Side, u32)>,
+}
+
+thread_local! {
+    static NUMBERING: RefCell<Numbering> = RefCell::new(Numbering::default());
+}
+
+fn register_numbering(world: &sim_core::World) {
+    let mut numbering = Numbering::default();
+    for side in Side::ALL {
+        let view = world.side_view(side);
+        let number = |handle: String| -> u32 {
+            handle
+                .split_once(':')
+                .and_then(|(_, n)| n.parse().ok())
+                .expect("a handle is kind:number")
+        };
+        for ship in view.ships() {
+            numbering.ships.insert(
+                ship.id.raw(),
+                (side, number(super::ship_handle(&view, ship.id))),
+            );
+        }
+        for force in view.task_forces() {
+            numbering.forces.insert(
+                force.id.raw(),
+                (side, number(super::force_handle(&view, force.id))),
+            );
+        }
+        for group in view.air_groups() {
+            numbering.groups.insert(
+                group.id.raw(),
+                (side, number(super::group_handle(&view, group.id))),
+            );
+        }
+    }
+    NUMBERING.with(|n| *n.borrow_mut() = numbering);
+}
+
+/// An order of `side` as `issue_orders` takes it: the unit and the ships of a
+/// detach by the side's own numbers. The numbers are those of the scenario of
+/// the last `session_of` on this thread. A scripted order for a unit of the
+/// other side, which a player cannot name (the full slice's Japanese order of
+/// day 5), is given a number above every number of the side's own, which no
+/// unit has.
+pub fn served_json(side: Side, request: &OrderRequest) -> Value {
+    NUMBERING.with(|n| {
+        let n = n.borrow();
+        let mut doc = order_json(request);
+        let (kind, raw) = match &request.kind {
+            sim_core::orders::OrderKind::TaskForce { target, .. } => ("task_force", target.raw()),
+            sim_core::orders::OrderKind::AirGroup { target, .. } => ("air_group", target.raw()),
+        };
+        let (owner, number) = if kind == "task_force" {
+            n.forces[&raw]
+        } else {
+            n.groups[&raw]
+        };
+        let number = if owner == side { number } else { 90_000 + raw };
+        doc["unit"] = json!(format!("{kind}:{number}"));
+        if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {
+            for ship in ships {
+                let raw = ship.as_u64().expect("a ship number") as u32;
+                let (owner, number) = n.ships[&raw];
+                *ship = json!(if owner == side { number } else { 90_000 + raw });
+            }
+        }
+        doc
+    })
 }
 
 /// A session over the scenario with the given sides held by players and the
 /// others by the script. Also returns the script of each side, for the test
 /// players.
 pub fn session_of(scenario: Scenario, players: &[Side]) -> (Session, BTreeMap<Side, ByDay>) {
+    register_numbering(&scenario.world);
     let scripts: BTreeMap<Side, ByDay> = Side::ALL
         .into_iter()
         .map(|side| (side, script_of(&scenario, side)))
@@ -57,7 +139,7 @@ pub fn play_day(
     side: Side,
     orders: &[OrderRequest],
 ) -> (Vec<(usize, String)>, Value) {
-    let list: Vec<Value> = orders.iter().map(order_json).collect();
+    let list: Vec<Value> = orders.iter().map(|o| served_json(side, o)).collect();
     let answer = session
         .call(side, "issue_orders", &json!({ "orders": list }))
         .expect("issue_orders is answered");
@@ -164,7 +246,7 @@ pub fn probe_battery(world: &sim_core::World, side: Side) -> Vec<Value> {
             .map(|c| (c.estimated_hex.q, c.estimated_hex.r)),
     );
     if let Some(force) = view.task_forces().next() {
-        let unit = format!("task_force:{}", force.id.raw());
+        let unit = super::force_handle(&view, force.id);
         let here = force.position();
         for (q, r) in places.iter().copied().chain([(here.q + 1, here.r)]) {
             out.push(order(
@@ -191,7 +273,10 @@ pub fn probe_battery(world: &sim_core::World, side: Side) -> Vec<Value> {
         if let Some(ship) = force.ships.iter().next() {
             out.push(order(
                 unit.clone(),
-                json!({ "kind": "detach", "ships": [ship.raw()] }),
+                json!({ "kind": "detach", "ships": [super::ship_handle(&view, *ship)
+                .strip_prefix("ship:")
+                .and_then(|n| n.parse::<u32>().ok())
+                .expect("a ship number")] }),
             ));
         }
         out.push(order(
@@ -201,7 +286,7 @@ pub fn probe_battery(world: &sim_core::World, side: Side) -> Vec<Value> {
     }
     let groups: Vec<_> = view.air_groups().collect();
     for group in groups.iter().take(1).chain(groups.last()) {
-        let unit = format!("air_group:{}", group.id.raw());
+        let unit = super::group_handle(&view, group.id);
         for mission in ["rest", "search", "naval_strike", "combat_air_patrol"] {
             out.push(order(
                 unit.clone(),

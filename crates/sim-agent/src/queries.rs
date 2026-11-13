@@ -327,7 +327,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
     let ctx = Ctx::new(*view);
     match kind {
         "ship" => {
-            let ship = *ctx.ships.get(&sim_core::ids::ShipId::new(id))?;
+            let ship = ctx.own_ship(id)?;
             let (task_force, port) = match ship.location {
                 ShipLocation::TaskForce(f) => (Some(ctx.force(f)), None),
                 ShipLocation::Port(b) => (None, Some(ctx.base(b))),
@@ -361,7 +361,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             }))
         }
         "task_force" => {
-            let force = *ctx.forces.get(&sim_core::ids::TaskForceId::new(id))?;
+            let force = ctx.own_force(id)?;
             Some(Detail::TaskForce(ForceDetail {
                 entity_kind: "task_force",
                 summary: force_line(&ctx, force),
@@ -393,7 +393,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
             }))
         }
         "air_group" => {
-            let group = *ctx.groups.get(&sim_core::ids::AirGroupId::new(id))?;
+            let group = ctx.own_group(id)?;
             Some(Detail::AirGroup(AirGroupDetail {
                 entity_kind: "air_group",
                 summary: air_group_line(&ctx, group),

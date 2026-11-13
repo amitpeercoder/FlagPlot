@@ -13,6 +13,7 @@ use sim_core::ids::UmpireKey;
 use sim_core::view::SideView;
 
 use super::validator::Schemas;
+use super::{entity_handle, force_handle, group_handle, ship_handle};
 
 /// What was produced for one view: the briefing and its text, and every answer
 /// as JSON text under a label, for comparing worlds.
@@ -113,9 +114,9 @@ pub fn handles_in(value: &Value, out: &mut BTreeSet<String>) {
 /// every unit named in an event it may see (decisions 0012 and 0047).
 pub fn allowed_handles(view: &SideView<'_>) -> BTreeSet<String> {
     let mut allowed = BTreeSet::new();
-    allowed.extend(view.ships().map(|s| s.id.to_string()));
-    allowed.extend(view.task_forces().map(|s| s.id.to_string()));
-    allowed.extend(view.air_groups().map(|s| s.id.to_string()));
+    allowed.extend(view.ships().map(|s| ship_handle(view, s.id)));
+    allowed.extend(view.task_forces().map(|s| force_handle(view, s.id)));
+    allowed.extend(view.air_groups().map(|s| group_handle(view, s.id)));
     allowed.extend(view.bases().map(|s| s.id.to_string()));
     // The bases of the other side are on the map (decision 0034, 2): their
     // numbers, names, places and holders are public, and nothing else of them.
@@ -125,7 +126,13 @@ pub fn allowed_handles(view: &SideView<'_>) -> BTreeSet<String> {
             .map(|c| format!("contact:{}", view.contact_number(c.id))),
     );
     for event in view.events() {
-        allowed.extend(event.kind.entities().iter().map(ToString::to_string));
+        allowed.extend(
+            event
+                .kind
+                .entities()
+                .iter()
+                .map(|e| entity_handle(view, *e)),
+        );
     }
     allowed
 }
@@ -210,7 +217,7 @@ pub fn sample_questions(
         .collect();
     let mut out = Vec::new();
     for force in view.task_forces().take(max_forces) {
-        let from = force.id.to_string();
+        let from = force_handle(view, force.id);
         for to in &targets {
             let place = |h: &str| PlaceArg::unit(h);
             out.push((
@@ -239,9 +246,9 @@ pub fn sample_questions(
     }
     for group in view.air_groups().take(max_forces * 2) {
         out.push((
-            format!("measure:air_reach:{}", group.id),
+            format!("measure:air_reach:{}", group_handle(view, group.id)),
             Question::AirReach {
-                air_group: group.id.to_string(),
+                air_group: group_handle(view, group.id),
                 to: targets.iter().map(|t| PlaceArg::unit(t)).collect(),
             },
         ));
@@ -342,9 +349,9 @@ pub fn check_view(
     // Every own unit and every contact.
     let handles: Vec<String> = view
         .ships()
-        .map(|s| s.id.to_string())
-        .chain(view.task_forces().map(|s| s.id.to_string()))
-        .chain(view.air_groups().map(|s| s.id.to_string()))
+        .map(|s| ship_handle(view, s.id))
+        .chain(view.task_forces().map(|s| force_handle(view, s.id)))
+        .chain(view.air_groups().map(|s| group_handle(view, s.id)))
         .chain(view.bases().map(|s| s.id.to_string()))
         .chain(
             view.contacts()

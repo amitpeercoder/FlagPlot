@@ -69,3 +69,45 @@ pub fn play(scenario: &mut Scenario, mut at_start: impl FnMut(&Scenario)) {
 pub fn schemas() -> validator::Schemas {
     validator::Schemas::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("schemas"))
 }
+
+/// The side's own number of each of its units, worked out here from the view
+/// alone and apart from the library: its ships, task forces and air groups
+/// are each numbered 1, 2, 3... in the order of the umpire's ids (decision
+/// 0086). The tests name units by these.
+pub fn ship_handle(view: &sim_core::view::SideView<'_>, id: sim_core::ids::ShipId) -> String {
+    let mut ids: Vec<_> = view.ships().map(|s| s.id).collect();
+    ids.sort();
+    let place = ids.iter().position(|i| *i == id).expect("an own ship");
+    format!("ship:{}", place + 1)
+}
+
+pub fn force_handle(view: &sim_core::view::SideView<'_>, id: sim_core::ids::TaskForceId) -> String {
+    let mut ids: Vec<_> = view.task_forces().map(|s| s.id).collect();
+    ids.sort();
+    let place = ids.iter().position(|i| *i == id).expect("an own force");
+    format!("task_force:{}", place + 1)
+}
+
+pub fn group_handle(view: &sim_core::view::SideView<'_>, id: sim_core::ids::AirGroupId) -> String {
+    let mut ids: Vec<_> = view.air_groups().map(|s| s.id).collect();
+    ids.sort();
+    let place = ids.iter().position(|i| *i == id).expect("an own group");
+    format!("air_group:{}", place + 1)
+}
+
+/// An entity of an event, written as the side is shown it: an own unit by its
+/// number, anything else as the log writes it.
+pub fn entity_handle(
+    view: &sim_core::view::SideView<'_>,
+    entity: sim_core::ids::EntityRef,
+) -> String {
+    use sim_core::ids::EntityRef;
+    match entity {
+        EntityRef::Ship(id) if view.ships().any(|s| s.id == id) => ship_handle(view, id),
+        EntityRef::TaskForce(id) if view.task_forces().any(|s| s.id == id) => {
+            force_handle(view, id)
+        }
+        EntityRef::AirGroup(id) if view.air_groups().any(|s| s.id == id) => group_handle(view, id),
+        other => other.to_string(),
+    }
+}

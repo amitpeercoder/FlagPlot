@@ -858,7 +858,7 @@ impl Day {
                     } => orders.refused.push(RefusedOrder {
                         order: ctx.order_number(*order),
                         target: ctx.entity(*target),
-                        reason: words::refusal(reason),
+                        reason: ctx.map_text(&words::refusal(reason)),
                         event: id,
                     }),
                     EventKind::ReportReceived {

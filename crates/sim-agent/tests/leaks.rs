@@ -31,7 +31,9 @@ use sim_core::ids::AirGroupId;
 use sim_core::state::{Arrival, Side};
 use sim_core::World;
 use support::check::{normalised_answers, sample_questions, without_event_numbers};
-use support::{load, load_text, play, scenario_path, scenario_text};
+use support::{
+    force_handle, group_handle, load, load_text, play, scenario_path, scenario_text, ship_handle,
+};
 
 const SIDES: [Side; 2] = [Side::Allied, Side::Japanese];
 
@@ -46,30 +48,25 @@ fn other(side: Side) -> Side {
 // 1. Not known.
 // ---------------------------------------------------------------------
 
-fn unknown_handles(world: &World, side: Side) -> Vec<String> {
+/// Handles that name nothing the side knows. A side has no handle for an
+/// enemy unit (decision 0086): the numbers just above its own count of each
+/// kind, as many as the enemy has units of that kind, stand for them.
+fn unknown_handles(world: &World, view: &sim_core::view::SideView<'_>, side: Side) -> Vec<String> {
     let truth = world.umpire();
     let mut handles: Vec<String> = Vec::new();
-    handles.extend(
-        truth
-            .ships
-            .values()
-            .filter(|u| u.side != side)
-            .map(|u| u.id.to_string()),
-    );
-    handles.extend(
-        truth
-            .task_forces
-            .values()
-            .filter(|u| u.side != side)
-            .map(|u| u.id.to_string()),
-    );
-    handles.extend(
-        truth
-            .air_groups
-            .values()
-            .filter(|u| u.side != side)
-            .map(|u| u.id.to_string()),
-    );
+    let enemy_ships = truth.ships.values().filter(|u| u.side != side).count();
+    let own_ships = view.ships().count();
+    handles.extend((1..=enemy_ships).map(|i| format!("ship:{}", own_ships + i)));
+    let enemy_forces = truth
+        .task_forces
+        .values()
+        .filter(|u| u.side != side)
+        .count();
+    let own_forces = view.task_forces().count();
+    handles.extend((1..=enemy_forces).map(|i| format!("task_force:{}", own_forces + i)));
+    let enemy_groups = truth.air_groups.values().filter(|u| u.side != side).count();
+    let own_groups = view.air_groups().count();
+    handles.extend((1..=enemy_groups).map(|i| format!("air_group:{}", own_groups + i)));
     // An enemy base is not here: its number, name, place and holder are on
     // the map and the side may ask for them (decision 0050, as amended).
     for kind in [
@@ -100,7 +97,7 @@ fn an_enemy_unit_a_missing_number_and_a_bad_handle_get_one_and_the_same_answer()
         scenario.run_to_end().expect("the run resolves");
         for side in SIDES {
             let view = scenario.world.side_view(side);
-            let handles = unknown_handles(&scenario.world, side);
+            let handles = unknown_handles(&scenario.world, &view, side);
             let first = serde_json::to_string(&get_entity(&view, &handles[0])).unwrap();
             assert!(first.contains("not_known"), "{name}: {first}");
             for handle in &handles {
@@ -110,9 +107,9 @@ fn an_enemy_unit_a_missing_number_and_a_bad_handle_get_one_and_the_same_answer()
             // An own unit is known.
             let own = view
                 .ships()
-                .map(|u| u.id.to_string())
-                .chain(view.task_forces().map(|u| u.id.to_string()))
-                .chain(view.air_groups().map(|u| u.id.to_string()))
+                .map(|u| ship_handle(&view, u.id))
+                .chain(view.task_forces().map(|u| force_handle(&view, u.id)))
+                .chain(view.air_groups().map(|u| group_handle(&view, u.id)))
                 .chain(view.bases().map(|u| u.id.to_string()))
                 .next()
                 .expect("an own unit");
@@ -309,7 +306,7 @@ fn what_an_enemy_base_holds_changes_nothing_the_tools_say_of_it() {
                     let handle = base.id.to_string();
                     out.push(serde_json::to_string(&get_entity(&view, &handle)).unwrap());
                     for force in view.task_forces() {
-                        let from = force.id.to_string();
+                        let from = force_handle(&view, force.id);
                         for question in [
                             Question::AirDistance {
                                 from: PlaceArg::unit(&from),
@@ -333,7 +330,7 @@ fn what_an_enemy_base_holds_changes_nothing_the_tools_say_of_it() {
                             serde_json::to_string(&measure(
                                 &view,
                                 &Question::AirReach {
-                                    air_group: group.id.to_string(),
+                                    air_group: group_handle(&view, group.id),
                                     to: vec![PlaceArg::unit(&handle)],
                                 },
                             ))
@@ -638,9 +635,9 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
     );
     let handles: Vec<String> = view
         .ships()
-        .map(|s| s.id.to_string())
-        .chain(view.task_forces().map(|s| s.id.to_string()))
-        .chain(view.air_groups().map(|s| s.id.to_string()))
+        .map(|s| ship_handle(view, s.id))
+        .chain(view.task_forces().map(|s| force_handle(view, s.id)))
+        .chain(view.air_groups().map(|s| group_handle(view, s.id)))
         .chain(view.bases().map(|s| s.id.to_string()))
         .chain(
             view.contacts()
@@ -656,7 +653,7 @@ fn answers(view: &sim_core::view::SideView<'_>, name: &str) -> BTreeMap<String, 
         let handle = base.id.to_string();
         out.insert(format!("entity:{handle}"), json(&get_entity(view, &handle)));
         if let Some(force) = view.task_forces().next() {
-            let from = force.id.to_string();
+            let from = force_handle(view, force.id);
             out.insert(
                 format!("measure:air_distance:{from}:{handle}"),
                 json(&measure(
