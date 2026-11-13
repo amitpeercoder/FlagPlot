@@ -474,6 +474,11 @@ pub enum RejectReason {
     /// A target list names a kind twice (decision 0063). Added at the end of
     /// the enum.
     TargetKindRepeated(ShipKind),
+    /// A load, load-fuel or set-route order to a task force that is out of
+    /// fuel: it cannot steam and has nothing to load into, so the order is
+    /// refused (rows 17 and 34 of `docs/rules/differences.md`). Added at the
+    /// end of the enum.
+    OutOfFuel,
 }
 
 impl fmt::Display for RejectReason {
@@ -532,6 +537,7 @@ impl fmt::Display for RejectReason {
             RejectReason::NoShipAfloat => f.write_str("the task force has no ship afloat"),
             RejectReason::AirGroupLost => f.write_str("the air group was lost with its ship"),
             RejectReason::TargetListEmpty => f.write_str("the target list names no kind of ship"),
+            RejectReason::OutOfFuel => f.write_str("the task force is out of fuel"),
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())
             }

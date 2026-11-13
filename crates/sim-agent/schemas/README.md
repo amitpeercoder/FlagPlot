@@ -91,7 +91,7 @@ A passage is a forecast, and its `assumptions` say so in fixed words: the force
 leaves at the start of the coming day, keeps the speed it makes now, meets
 nobody, loses no ship and has the fuel aboard now. `order` is `refused`, with a
 `refusal`, when the engine would refuse the route order (`no_route`,
-`already_there`, `no_ship_afloat`) and `outcome` is then `does_not_sail`.
+`already_there`, `no_ship_afloat`, `out_of_fuel`) and `outcome` is then `does_not_sail`.
 `route` lists every hex of the route; `entered_steps` of them are entered
 before the force arrives or stops (they differ only when a ship runs dry),
 and are the hexes the steaming events list. A hex the force is already in

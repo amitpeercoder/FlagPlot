@@ -1004,13 +1004,14 @@ fn ships_cannot_refuel_in_port_or_at_sea() {
     }
 }
 
-/// A force that has run out of fuel and is ordered again takes the order,
-/// steams nowhere and records that it ran out of fuel again. The only state
-/// that changes is the standing route and the order that set it: the force
-/// stays where it is, burns nothing, and ends out of fuel again.
+/// A force that has run out of fuel and is ordered again has the order
+/// refused as `OutOfFuel` (differences.md row 34). It records no second
+/// out-of-fuel event, and nothing about it changes: its status, position,
+/// leg, route and route order are the day before's.
 #[test]
-fn a_stranded_force_ordered_again_records_out_of_fuel_again_and_only_its_route_changes() {
-    use sim_core::ids::TaskForceId;
+fn a_stranded_force_ordered_again_is_refused_as_out_of_fuel_and_nothing_changes() {
+    use sim_core::ids::{EntityRef, TaskForceId};
+    use sim_core::orders::RejectReason;
     use sim_core::state::TaskForceStatus;
     let convoy = TaskForceId::new(5);
     let mut scenario = load(SOAK, 1942);
@@ -1018,33 +1019,35 @@ fn a_stranded_force_ordered_again_records_out_of_fuel_again_and_only_its_route_c
     let mut seen_out = 0;
     while let Some(summary) = scenario.next_day().expect("the day resolves") {
         let events = scenario.world.events();
-        let out_of_fuel: Vec<usize> = events
+        let out_of_fuel = events
             .iter()
             .filter(|e| matches!(e.kind, EventKind::TaskForceOutOfFuel { task_force, .. } if task_force == convoy))
-            .map(day_of)
-            .collect();
+            .count();
         let now = scenario.world.umpire().task_forces[&convoy].clone();
         if let Some(before) = &stranded {
-            if out_of_fuel.len() > seen_out {
-                // This day's order sent it nowhere and it ran dry again.
+            let refused = events.iter().any(|e| {
+                day_of(e) == usize::try_from(summary.day).expect("a day")
+                    && matches!(
+                        &e.kind,
+                        EventKind::OrderRejected {
+                            target,
+                            reason: RejectReason::OutOfFuel,
+                            ..
+                        } if *target == EntityRef::TaskForce(convoy)
+                    )
+            });
+            if refused {
+                // This day's order was refused and nothing was recorded or
+                // changed for the force.
                 let before: &sim_core::state::TaskForce = before;
+                assert_eq!(out_of_fuel, seen_out, "a second out-of-fuel event");
                 assert_eq!(now.status, TaskForceStatus::OutOfFuel);
-                assert_eq!(
-                    (now.from_hex, now.toward_hex),
-                    (before.from_hex, before.toward_hex)
-                );
-                assert_eq!(now.progress_nm, before.progress_nm);
-                let mut same = now.clone();
-                same.route = before.route.clone();
-                same.route_order = before.route_order;
-                assert_eq!(&same, before, "more than the route changed");
-                assert_ne!(now.route_order, before.route_order);
+                assert_eq!(&now, before, "the refused order changed the force");
                 return;
             }
         }
-        seen_out = out_of_fuel.len();
+        seen_out = out_of_fuel;
         stranded = (now.status == TaskForceStatus::OutOfFuel).then_some(now);
-        let _ = summary;
     }
     panic!("the convoy was never ordered again after running dry");
 }

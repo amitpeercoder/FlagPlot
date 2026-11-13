@@ -817,5 +817,5 @@ const PINNED: Pinned = Pinned {
     torpedo_hits_b: 0,
     hits_a: 42,
     hits_b: 4,
-    events: 74,
+    events: 73,
 };
