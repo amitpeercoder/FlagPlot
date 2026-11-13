@@ -33,7 +33,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Savo Island's orders from the record: the northern group's break-off level set at 1, and Yunagi in a task force of her own (decision 0024, the notes of Nov 13, 2026).
 - Frozen figures go with frozen scenarios: every test on the frozen figures reads a frozen copy of scenarios 4, 5, 7 and 8 in `data/scenarios/step2-frozen/` (decisions 0073 and 0075; `docs/step2-spec.md`, "Tests while figures move", 9).
 - `batch` at version 4, with who sighted first in each surface fight and the rounds each force was surprised (decision 0062).
-- Cape Esperance (decision 0072): planned, its ships derived and the class file frozen, and scenario 17 written in `data/scenarios/not-run/` with a test of the meeting only. It is not run before Savo Island is tuned.
+- Cape Esperance (decision 0072): planned, its ships derived and the class file frozen, and scenario 17 written with a test of the meeting only. The check was run once on Nov 13, 2026, after Savo Island was closed: judged 8, agree 4, at the edge 1, miss 3 (`docs/validation/cape-esperance-check.md`, read in `docs/validation/baseline-reading.md`). Nothing is tuned on it.
 - Tuning round 0, finding and surprise: nothing moved (`docs/validation/tuning/r0-finding-and-surprise.md`).
 - Tuning round 1: `experience_gun_strength` from 0.25 to 0.5, kept (`docs/validation/tuning/r1-experience-gun-strength.md`).
 - `export` takes a saved game as well as a scenario (`docs/commands.md`).
@@ -50,7 +50,7 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - A raiding force that fights and passes on: no rule has a force retire when it has done what it came for, so `minutes_of_action` misses at Savo Island (decision 0024, the note on break-off levels).
 - Secondary guns: a cruiser's secondary battery has no counterpart in the rules (`docs/step2-spec.md`, "Where the model stands today").
 - Identification under fire, and a force seen and stalked before the first shot (decision 0076, "The gaps, named").
-- Radar fire control, and land behind a target masking a set (decisions 0072 and 0077). No rule of radar fire control before Cape Esperance is run (0072, "Built", 1).
+- Radar fire control, and land behind a target masking a set (decisions 0072 and 0077). No rule of radar fire control before Cape Esperance is run (0072, "Built", 1). It has been run: `gun_hits_on_aoba` misses, and radar fire control is named among its likely causes, as conjecture, beside the short night fight and the rule of targets (`docs/validation/baseline-reading.md`, "Cape Esperance: the check").
 - A search flown in one pulse only (decision 0073, "What the rules cannot express").
 - One kind for every cruiser, so Tenryu and Yubari fire their guns at cruisers (decision 0078, "What it cannot give").
 - Experience for air groups (decision 0064, stage 2; the table above).
@@ -59,7 +59,8 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - `docs/rules/differences.md`, row 7: the report after a strike reads the force after the damage. To be made before the air figures are tuned.
 - The briefing's guns line after the attack (decision 0079): the briefing lists the guns' fire after the attack as a guns line of its own, not marked as after the attack. A wording item.
 - The fuel round leaves out the ditchings of Ryujo's raid on Henderson Field (decision 0084, finding 13): her B5N2s fly 200 miles on a derived radius of 175 whose rows state no load, so their ditchings are not evidence for `ditch_chance_per_radius_beyond`. A radius with a bomb load is asked of research (decision 0081, C5, option 2).
-- Aoba's and Furutaka's hits at Cape Esperance: measured ship by ship since Nov 13, 2026, before the check run (decision 0084, finding 14 and its note); the total of 130 to 134 is retired. Aoba is judged at 40, a weak record; Furutaka is reported only, her rows being lower bounds; Kinugasa is judged at 0 to 4. A row that bounds Aoba or Furutaka and arrives before the check is run changes the record; none changes it after.
+- Aoba's and Furutaka's hits at Cape Esperance: measured ship by ship since Nov 13, 2026, before the check run (decision 0084, finding 14 and its note); the total of 130 to 134 is retired. Aoba is judged at 40, a weak record; Furutaka is reported only, her rows being lower bounds; Kinugasa is judged at 0 to 4. A row that bounds Aoba or Furutaka and arrives before the check is run changes the record; none changes it after. The check has been run (Nov 13, 2026), so the records stand.
+- Named by the Cape Esperance check (`docs/validation/baseline-reading.md`), for step 3 and not tuned on: fire on a friend and a ship acting apart (Duncan), behind `us_destroyers_sunk` and the Japanese claims; Task Force 64 fighting Japanese stragglers by day in 771 runs of 1,000, since it is ordered to stay in (2,-5), which no measure counts; and its five destroyers firing every tube, where two attacked, the participation named at Savo Island.
 - In progress, numbers reserved: decisions 0079 to 0082, the air work (anti-aircraft fire after the attack; whom the patrol fires at; the Eastern Solomons orders; the Rabaul orders).
 
 ## What the architect settles from the research

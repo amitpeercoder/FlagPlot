@@ -7,7 +7,7 @@ This is the architect's reading of the first reports, made Nov 12, 2026 on the f
 | Savo Island | `savo-island-baseline.md` | 19 | 10 | 1 | 8 |
 | Eastern Solomons | `eastern-solomons-baseline.md` | 14 | 10 | 0 | 4 |
 | Rabaul against Guadalcanal | `rabaul-guadalcanal-air-baseline.md` | 10 | 3 | 1 | 6 |
-| Cape Esperance | `cape-esperance-not-built.md` | 7 | not run | not run | not run |
+| Cape Esperance | `cape-esperance-check.md`, the check (below) | 8 | 4 | 1 | 3 |
 
 An agreement at the edge is one whose record has no part in the middle half of the runs (the 25th to the 75th percentile). It still agrees by the rule; whether it counts against a battle at the close of step 2 is the designer's to decide after the first tuning rounds. The reports were remade once, the same day and on the same batches, when that mark was added to `validate`.
 
@@ -172,6 +172,49 @@ Each measure is judged alone. That several agree does not show one run holding t
   - The southern group's shells in tens.
 - **The watch on Tenryu and Yubari was met in form and ruled.** The minutes came to the middle and the pair still fire over the record. The architect did not reopen the derivation: the record's shells fill the rows' short firing window (`engagement_events` 1060, 1069, 1071) at the derived rate. The pair fire through every round of both fights, where they fired for part of the night. Decision 0084's finding 11 stands: the gate failed and certified no rate.
 - **The two tuned figures and the torpedo share stand,** looked at once more on this engine. They are fitted on Savo Island and not yet checked.
+
+## Cape Esperance: the check, Nov 13, 2026
+
+The one check of the surface figures (`docs/step2-spec.md`, "Tuning"; decision 0084, finding 1). One batch, label `check`, 1,000 runs, seeds 1 to 1000, on the figures and rules on `main` at 3e90304, with the scenario moved out of `not-run/` and the measures' takes added in commit 897ba4f before any batch of it existed. The report, `cape-esperance-check.md`, is kept as `validate` wrote it, and is not remade: it is the check on the engine of that commit. Nothing was tuned on it. Decision 0072, "As built (the check)", has the commands and the hashes.
+
+**Judged 8: 4 agree, 1 at the edge, 3 miss. The battle does not pass.**
+
+| Measure | Record (rows) | 5th to 95th, median | Runs holding | Verdict |
+| --- | --- | --- | --- | --- |
+| `japanese_ships_sunk` | 2 (1506, 1507, 1544, 1546, 1661, 1662) | 0 to 3, 2 | 407 | agrees |
+| `japanese_ships_with_propulsion_out` | 0 (1508, 1547, 1514) | 0 to 1, 0 | 908 | agrees |
+| `us_cruisers_sunk` | 0 (1526, 1529, 1536, 1538) | 0 to 0, 0 | 960 | agrees |
+| `torpedo_hits_on_japanese_ships` | 0 to 1 (1603, 1604) | 0 to 6, 3 | 269 | agrees |
+| `gun_hits_on_kinugasa` | 0 to 4 (1605, 4036, 1686, 1687, 1688) | 4 to 49, 15 | 60 | agrees, at the edge |
+| `us_destroyers_sunk` | 1 (1532, 1533, 1534, 1530) | 0 to 0, 0 | 4 | **miss**: outside the middle 90 percent, and held by fewer than 1 run in 20 |
+| `gun_hits_on_aoba` | 40 (1598, 4034, 1599) | 13 to 55, 29 | 18 | **miss**: held by fewer than 1 run in 20 |
+| `japanese_ships_claimed_sunk_per_hundred_sunk` | 200 to 300 (1524, 1522, 1532) | 100 to 300, 100, over the 44 runs kept | 2 of 44 | **miss**: too few runs kept (956 sink no US ship) |
+
+Reported, not judged: gun hits on Furutaka 10 to 57, median 27, against a floor of 90 that no run reaches; gun hits on the US ships 1 to 35, median 6, held by 179, against 15 to 29 (a ceiling, some of it their own side's); ships the US side claims sunk for each hundred sunk 100 to 250, median 100, held by 8 of 923, against 400 to 750. On the objectives scale the Allies win in 842 runs of 1,000 (449 major, 393 minor), 146 are a stalemate and 12 an Allied defeat.
+
+What it shows:
+
+- **The side with the radar and the surprise wins the night.** That is what the check was built to ask (the spec: "a model that gets Savo Island right only because the Japanese always win at night fails there"). It does not fail that way: two Japanese ships sunk in the middle run, and no US cruiser sunk in 960 runs. Task Force 64 sights first in 630 night fights of 1,000, both sides in the same round in 260, the Japanese first in 110; the Japanese force is surprised for one round in 630 runs.
+- **The Japanese hit almost nothing.** Their guns fire a median of 171 shots and score 6 hits; a US destroyer is sunk in 5 runs of 1,000, where Duncan was lost. In the record Duncan was hit by both sides (the measure of hits on US ships says so; rows 1596, 1597), she had left the column to attack between the lines, and the Japanese claimed two or three ships sunk where the rules give them none to claim in 956 runs. The claims miss follows from the destroyers' miss: the measure keeps only runs in which a US ship sinks.
+- **Aoba's 40 is missed by a weak record and a short fight.** The spread holds 40 (13 to 55), and a point record of a count near 30 is held by few runs of any spread; 0084 (finding 14) called the record weak before the run. Beside it, Kinugasa takes a median of 15 where her own reports say she took none, and Furutaka 27 where the rows put her over 90. The Allied guns spread their fire over the three cruisers like at like (decision 0078): San Francisco and Helena at Aoba, Boise at Furutaka, Salt Lake City at Kinugasa.
+- **The night fight is short.** A median of 3 rounds of five minutes (1 to 6), the Japanese force breaking off in the night in 974 runs, where the record's fire ran from 23:46 to about 00:20. The three Japanese cruisers take a median of 81 gun hits all told (46 to 118); 12 runs reach 130.
+- **Fights by day the record does not have.** In 771 runs Task Force 64 fights again in the morning, and in 352 in the afternoon too, against Japanese ships detached as stragglers that are still in its hex: it is ordered to stay in (2,-5), its turn away at 00:27 not ordered (decision 0072, 5). No measure of Cape Esperance counts fights by day. In the 229 runs with no fight by day the Japanese lose a median of 1 ship (0: 70, 1: 95, 2: 57, 3: 7); in the 771 with one, mostly 2 (1: 192, 2: 350, 3: 189, 4: 32, 5: 1). The two sets of runs are not alike, since a fight by day needs a ship already left behind, and the batch file does not say in which pulse a ship sank. So it is not shown how much of the agreement of `japanese_ships_sunk` rests on fights by day, only that some may.
+- **Allied torpedoes:** the five destroyers fire all 50 tubes in nearly every run (40 to 50); in the record Buchanan and Duncan attacked and Farenholt's mount jammed, with no count for any ship (decision 0072, "Gaps"). No measure counts them. It is the pattern of Helm and Wilson at Savo Island: every ship of a force that has sighted fires.
+
+**The three things fitted at Savo Island.** Within decision 0084's limits, which bind this paragraph: an agreement here cannot tell how well a side shot from how long it fired, its readiness and the damage it took; the US 6-inch rate of fire rests on Helena's firing in this battle, and Salt Lake City's is a case of the salvo rate; the meeting, who took part and the break-off levels were set with the outcome known; and each measure is judged alone. With that said: `experience_gun_strength` at 0.5 favours the Japanese here (all five at 3 against Task Force 64's mean of 2.11), and it did not turn the night their way; the Japanese guns, at about 47 hits for each thousand shots over the batch (the Allied at about 54), are not a measure (none is possible here), and their 6 hits in the middle run sit under the unready share and a round of surprise, so the check cannot say whether 0.5 is too much or too little. `surprised_target_factor` at 2 falls here on the Allied fire at a Japanese force surprised in round 1 in 630 runs; the hits it multiplies agree on ships sunk and miss on how they are spread between the cruisers, which is the rule of targets and not the factor, so the check gives no clean reading of it. The unready shares of 0.5 fall on the Japanese, as the scenario has them not ready (decision 0072, 9); their cruisers' main batteries fire a median of 85 shells (17 to 229) where the rows have 107 to 123 (`engagement_outcomes` 2276 to 2282), which is not a measure and is not against the share. **None of the three is shown wrong by the check, and none is shown right:** the outcomes it can read agree where the side that lost was the one the figures favour, and miss where the rules have no counterpart (fire on a friend, a ship between the lines) or a weak record.
+
+**Each miss and the edge, and what it most likely rests on (conjecture, for step 3; nothing is tuned on it):**
+
+| Measure | Most likely resting on |
+| --- | --- |
+| `us_destroyers_sunk` | Fire on a friend and ships acting apart, which the rules do not have (decision 0072, "What the rules cannot show"): Duncan was lost to fire from both sides after leaving the column. Behind them, the Japanese fire under the unready share and a round of surprise |
+| `gun_hits_on_aoba` | The weak point record (decision 0084, 14); the length of the night fight, with the Japanese level of 0.5, invented; the rule of targets spreading the fire evenly; radar fire control, which the rules do not have and which the architect ruled is written as a cause if the check misses for it (0072, "Built", 1). The run's hits on the three cruisers, 81 in the middle run against the record's figures, which are historians' and not counts, bear on it |
+| `japanese_ships_claimed_sunk_per_hundred_sunk` | The same as `us_destroyers_sunk`: too few runs sink a US ship to keep |
+| `gun_hits_on_kinugasa`, at the edge | The rule of targets (decision 0078): Salt Lake City's place takes her while the three cruisers are afloat; in the record she took no fire (1686, 1687) |
+
+Limits that stay: no measure of who sighted whom first was written for this battle (decision 0072 says which events it could read); there is no measure of hits for each thousand shells (the measures file's closing note); and the fights by day above are not measured. **The fights by day are a limit on the agreement of `japanese_ships_sunk`:** Task Force 64 fights stragglers by day in 771 runs of 1,000, and in the 229 runs without one the median is 1 Japanese ship sunk, not the record's 2.
+
+Observations for step 3, from the batch and not measured: the fights by day (771 runs); the short night fight (a median of 3 rounds of five minutes, against about 34 minutes of fire in the record); and the destroyers' torpedoes (every tube fired in nearly every run, where two ships attacked).
 
 ## Eastern Solomons
 

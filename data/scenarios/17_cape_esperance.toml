@@ -1,12 +1,13 @@
 # Scenario 17: Cape Esperance, the night of 11 to 12 October 1942.
 #
-# NOT RUN. No batch of this scenario is run or looked at before Savo Island
-# is tuned, and it is never tuned on (decision 0072; docs/step2-spec.md,
-# "Tuning"). It sits in data/scenarios/not-run/ so that no loop over
-# data/scenarios/*.toml (CI's export, the run baselines, the saved-games
-# test) runs it to an outcome. Its one test, tests/scenario_17_cape_esperance.rs,
-# proves only that it loads, where and when the two forces meet, each side's
-# readiness and the order of the ships.
+# THE CHECK, NEVER TUNED ON. This scenario checks the surface figures tuned
+# on Savo Island (decision 0072; docs/step2-spec.md, "Tuning"). It was moved
+# here from data/scenarios/not-run/ on Nov 13, 2026, with only its data paths
+# and this paragraph changed, before any batch of it was made. The check is
+# its first batch of 1,000 runs (decision 0084), and nothing is tuned on it.
+# Its test, tests/scenario_17_cape_esperance.rs, proves only that it loads,
+# where and when the two forces meet, each side's readiness and the order of
+# the ships.
 #
 # What is in the scenario and what is left out is
 # docs/decisions/0072-cape-esperance-scenario.md. The bombardment group steams
@@ -27,12 +28,12 @@ name = "Scenario 17: Cape Esperance, 11 to 12 October 1942"
 placeholder = true
 seed = 1942
 days = 1
-map = "../../map/south_pacific.csv"
-ship_classes = "../../reference/ship_classes_cape_esperance.csv"
-port_sizes = "../../reference/port_sizes.csv"
-aircraft_types = "../../reference/aircraft_types.csv"
-search = "../../reference/search.toml"
-surface_combat = "../../reference/surface_combat.toml"
+map = "../map/south_pacific.csv"
+ship_classes = "../reference/ship_classes_cape_esperance.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
 
 # Shortland, where the bombardment group came from and where Aoba and
 # Kinugasa returned (engagement_positions 493, engagement_events 529), and

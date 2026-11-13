@@ -1036,18 +1036,34 @@ fn what_validate_refuses() {
 
 #[test]
 fn a_measures_file_with_no_scenario_is_reported_not_run() {
+    // Cape Esperance was the file with no scenario until its check (decision
+    // 0084); a hand-made file stands in for it now.
     let d = dir("notbuilt");
+    let file = "battle = \"not-built\"\n\
+                facts = \"data/oob/engagement_outcomes.csv\"\n\n\
+                [[measure]]\n\
+                id = \"one\"\n\
+                counts = \"One thing\"\n\
+                record_low = 2\n\
+                record_high = 2\n\
+                judged = true\n\
+                rows = [1506]\n\
+                reason = \"A reason.\"\n\n\
+                [[measure]]\n\
+                id = \"two\"\n\
+                counts = \"Another thing\"\n\
+                record_low = 0\n\
+                record_high = 4\n\
+                judged = false\n\
+                rows = [1507]\n\
+                reason = \"Another reason.\"\n"
+        .to_string();
+    let measures_path = d.join("not_built.toml");
+    fs::write(&measures_path, &file).expect("measures");
     let out = d.join("cape.md");
-    let result = binary(&[
-        "validate",
-        "data/validation/cape_esperance.toml",
-        "--out",
-        &text(&out),
-    ]);
+    let result = binary(&["validate", &text(&measures_path), "--out", &text(&out)]);
     assert!(result.status.success(), "{}", stderr(&result));
     let report = fs::read_to_string(&out).expect("report");
-    let file = fs::read_to_string(Path::new(ROOT).join("data/validation/cape_esperance.toml"))
-        .expect("file");
     let measures = file.matches("[[measure]]").count();
     assert_eq!(
         report.matches("not run: scenario not built").count(),

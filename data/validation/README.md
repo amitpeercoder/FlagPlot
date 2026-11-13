@@ -94,7 +94,7 @@ The ranges, and the rows the measures read, are settled by the coordinating arch
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 18 measures, 15 judged |
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 32 measures, 29 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
-| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 11 measures, 8 judged. The scenario is written (`data/scenarios/not-run/17_cape_esperance.toml`) and not run, and the file has no `take` yet; it says what scope it assumes. No measure of hits for each thousand shells is possible: no side has both its shells fired and the hits they scored on record (the file's closing note, checked again by decision 0084) |
+| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 11 measures, 8 judged. The scenario is `data/scenarios/17_cape_esperance.toml`; the `scenario` key and the takes were added before any batch of it was made, and the check was run once on them (`docs/validation/cape-esperance-check.md`). No measure of hits for each thousand shells is possible: no side has both its shells fired and the hits they scored on record (the file's closing note, checked again by decision 0084) |
 | `passages.toml` | Ship passages | 6 passages, none judged |
 
-Still to write: for Cape Esperance, who sighted whom first, when the scenario is scoped.
+Not written: for Cape Esperance, who sighted whom first. The check has been run without it, and a measure added now would not be checked by that run (decision 0084).
