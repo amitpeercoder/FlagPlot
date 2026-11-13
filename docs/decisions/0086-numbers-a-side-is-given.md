@@ -54,7 +54,7 @@ Every number the game uses is counted for both sides together, and a side saw so
 
 ## Built
 
-Part 1, Nov 13, 2026. No run, state or hash changed: the run baselines, goldens of the engine and every recorded game's `save.json` are unchanged. The sim-agent goldens and the transcripts changed only in handles. The test for finding 8 is switched on. Finding 3's served form is tested in `crates/sim-agent/tests/numbering.rs`. Its core test, and the test of the force leak, wait for part 2.
+Part 1, Nov 13, 2026. No run, state or hash changed: the run baselines, goldens of the engine and every recorded game's `save.json` are unchanged. The sim-agent goldens and the transcripts changed only in handles. The umpire's output was compared byte for byte between a binary built from main (0c5c01f) and one built from this change, for scenarios 4, 5, 6 and 7: `export`, `run --events`, `events --unit` (a ship and a task force) and `events --why`. All twenty files are identical. In the scenario tests that moved to the key, no expected number changed: only how an id is read. The test for finding 8 is switched on. Finding 3's served form is tested in `crates/sim-agent/tests/numbering.rs`. Its core test, and the test of the force leak, wait for part 2.
 
 Part 2: not yet built.
 
