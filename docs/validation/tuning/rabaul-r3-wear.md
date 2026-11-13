@@ -120,3 +120,35 @@ The round moves `wear_chance_per_100_nm` and nothing else. It stops, and the fig
 4. **The fit needs an absurd value,** such as a chance above 1.
 
 The SBDs ready on day 21 is expected to stay a miss after the round. That is a finding, and does not stop the round.
+
+## What was run
+
+1,000 runs of Rabaul against Guadalcanal at each value of `wear_chance_per_100_nm`, seeds 1 to 1,000, on scratch copies of the figures. Medians, with the verdict. Written off is the mean a run, counted from the events.
+
+| `wear_chance_per_100_nm` | 0.02 (now) | 0.025 | 0.03 | 0.035 | 0.04 | 0.06 | 0.1 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SBDs ready on day 21, 22 | 30: miss | 30: miss | 29: miss | 29: miss | 28: miss | 27: miss | 23: agrees |
+| SBDs ready on day 5 (VMSB-232 and Flight 300) | 18 | 17 | 16 | 15 | 15 | 12 | 7 |
+| VMSB-232 ready on day 5, 9 | 10: agrees | 10: agrees | 10: agrees | 9: agrees | 9: agrees | 8: agrees | 5: miss |
+| F4Fs ready on day 21, 11 | 9: agrees | 10: agrees | 12: agrees | 14: agrees | 15: at the edge | 18: miss | 22: miss |
+| VMF-223 ready on day 10, 4 to 5 | 5: agrees | 6: agrees | 7: agrees | 7: agrees | 8: at the edge | 9: at the edge | 11: miss |
+| VMF-223 ready on day 5, 11 | 12: agrees | 12 | 12 | 12 | 12 | 12 | 12 |
+| US fighters lost to enemy aircraft, 7 to 23 | 25: agrees | 22: agrees | 20: agrees | 18: agrees | 17: agrees | 12: agrees | 9: agrees |
+| Japanese fighters lost to enemy action, 6 to 10 | 13: at the edge | 12: agrees | 11: agrees | 10: agrees | 10: agrees | 8: agrees | 6: agrees |
+| Japanese bombers lost to enemy action, 12 | 29: miss | 30: miss | 32: miss | 32: miss | 33: miss | 33: miss | 32: miss |
+| Japanese bombers forced down, 5 to 6 (reported) | 10 | 12 | 13 | 14 | 15 | 18 | 20 |
+| Bomber sorties reaching the island, 211 to 213 (reported) | 212 | 205 | 196 | 186 | 177 | 145 | 117 |
+| Destroyed on the ground, 2 to 3 | 2: agrees | 2 | 2 | 2 | 2 | 2 | 2 |
+| Claims per hundred shot down, 250 to 382 | 312: agrees | 317 | 320 | 325 | agrees | agrees | agrees |
+| Written off, SBDs (rows about 7.8) | 5.7 | 6.4 | 7.1 | 7.7 | 8.2 | 10.0 | 13.1 |
+| Written off, SBDs by day 21 (groups 11, 12, 14) | 4.3 | 4.8 | 5.3 | 5.7 | 6.1 | 7.5 | 9.8 |
+| Written off, F4Fs (rows about 6.1) | 8.2 | 8.4 | 8.7 | 8.9 | 9.0 | 9.5 | 9.8 |
+| Written off, G4Ms (forms 5 to 6, a floor) | 10.4 | 12.0 | 13.3 | 14.4 | 15.3 | 17.9 | 19.7 |
+| Written off, Zeros | 8.6 | 9.2 | 9.3 | 9.4 | 9.5 | 9.6 | 9.5 |
+
+**The Eastern Solomons.** 1,000 runs of scenario 5 on the copy at 0.1 give the same final hash in every run as on the live figures. None of its measures moves at any value of the grid.
+
+**What the grid shows.**
+- The SBDs' write-offs reach their rows, about 7.8, at about 0.035. There SBDs ready on day 21 is 29, still a miss. So the rows carry about one aircraft of the eight, as the record expected.
+- Every judged measure that moves for the better does so through the Japanese side: Rabaul's bombers and escorts wear more, fewer reach Henderson Field, and fewer American fighters are shot down. The Japanese bombers' write-offs go from 10 to 14 against their forms' 5 to 6, away from that source, and the bomber sorties reaching the island go from 212 to 186 against the forms' 211 to 213.
+- From 0.04 two judged measures go from agreeing to at the edge, and at 0.06 one is a miss. Only at 0.1 does the SBD count agree, with three other judged measures missing and the SBDs' write-offs at 13, beyond their rows: a stand-in for other causes.
