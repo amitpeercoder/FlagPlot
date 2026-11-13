@@ -1,6 +1,6 @@
 # 0080: Whom the patrol fires at
 
-Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code. Two details of the rule are the build session's, accepted by the architect: the rest is split against the escorts not yet drawn off (E − D), which is what makes s = 1 today's rule when the patrol outnumbers the escort; and the cap, so that no more shots go at the escorts than there are escorts left.
+Status: decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). The hand calculation's cases were worked and checked by the architect before any code. Two details of the rule are the build session's, accepted by the architect: the rest is split against the escorts not yet drawn off (E − D), which is what makes s = 1 today's rule when the patrol outnumbers the escort; and the cap, so that no more shots go at the escorts than there are escorts left. Built on Nov 13, 2026; see "As built".
 
 ## The gap
 
@@ -101,3 +101,54 @@ Nothing of this rule was run. A hand estimate on the counts of the air tuning pl
 - The proof that s = 1 is today: the logs of scenarios 05c, 06a, 13a, 13b and 16 on the frozen figure, byte for byte.
 - The run baselines, pins and recorded games of every live air scenario with a patrol.
 - `docs/rules/05` and the glossary in the same pull request.
+
+## As built
+
+**The code.** `crates/sim-core/src/airstrike.rs`:
+- A function `patrol_split` gives D, X and the two counts of shots, in whole-number arithmetic, with the cap.
+- `work_out_raid` uses it on the start-of-step counts.
+- The patrol's roll at the escorts is now skipped when it has no shots as well as when there are no escorts.
+- The breakdown adds `patrol_drawn_off_share`, `drawn_off` and `rest_at_escorts` after `patrol_share` when the share is below 1.
+
+The figure is required in `air_combat.toml`, checked to lie from 0 to 1: 0 live, 1 frozen. No state, stream, draw, event or field changed.
+
+**The proof that a share of 1 is decision 0027's rule.**
+- The split equals (the smaller of P and E, the rest) for every P and E from 0 to 30 and B from 1 to 30.
+- The event logs on the frozen figures of 05, 05c, 06, 06a, 12b, 13a, 13b, 16 and 19a, and case (a) of 19b for seeds 1 to 100, are byte for byte those of the binary before the rule.
+- No expected number of any hand calculation moved.
+
+**Its scenario.**
+- `19b_whom_the_patrol_fires_at`, with the hand calculation's six cases at shares 1, 0.5 and 0. Every number matched with no difference.
+- The shots on every seed from 1 to 1,000.
+- Case (e)'s totals inside their ranges.
+- Pinned outcomes on the scenario's own seed.
+
+**Before and after, 1,000 runs each, label `d0080`.** The reports are `docs/validation/eastern-solomons-d0080.md` and `rabaul-guadalcanal-air-d0080.md`. "Before" is main with decision 0079.
+
+Rabaul against Guadalcanal, a run:
+
+| | Record | Before | After |
+| --- | --- | --- | --- |
+| The patrol's shots at escorts / at bombers | | 131 / 25 | 67 / 87 |
+| Japanese fighters lost to enemy action | 6 to 10 (forms) | 30 to 50, 39: miss | 13 to 27, 20: miss |
+| Japanese bombers lost to enemy action | 12 (forms) | 6 to 19, 12: agrees | 22 to 40, 31: miss |
+| American fighters lost to enemy aircraft | 7 to 23 | 27 to 40, 34: miss | 28 to 41, 35: miss |
+| Bomber sorties that reach the island (reported) | 211 to 213 | 268 | 241 |
+| Aircraft destroyed on the ground | 2 to 3 | 16: miss | 14: miss |
+
+- The Japanese now lose about one fighter for every one and a half bombers. Before, it was three fighters for every bomber; the forms have about two bombers for every fighter.
+- Every chance is still the placeholder 0.3, so each fight still kills about five times what the record has. That is the next tuning round's, with the question of height and warning (the air plan's C3), and is not chased here.
+- Judged 10: agree 3, at the edge 1, miss 6 before; agree 2, at the edge 1, miss 7 after. Bombers lost turned from an agreement into a miss, because the patrol now reaches them at a chance of 0.3.
+
+Ryujo's raid on Henderson Field, at the Eastern Solomons: the Marine patrol of 13 against 15 escorts and 6 attack planes.
+
+| | Record (rows 271, 312, 1172) | Before | After |
+| --- | --- | --- | --- |
+| The patrol's shots at escorts / at attack planes | | 13 / 0 | 9 / 4 |
+| Attack planes shot down by the patrol, a run | 4 (271), of 5 lost in all (1172) | 0, in every run | 1.18; in 765 runs of 1,000 at least one |
+| Escorts shot down by the patrol | 3 (271) | 3.88 | 2.69 |
+| Marine fighters shot down by the escorts | 3 to 4 (311, 388, 700) | 2.51 | 2.51 |
+
+- The split is case (e) of the hand calculation exactly.
+- The Eastern Solomons measures do not move: judged 14, agree 8, miss 6, as with decision 0079 alone. Over the carriers the escorts are few against many bombers, so the patrol already fired mostly at the bombers.
+- Japanese aircraft lost to enemy action stays at a median of 28 against 29 to 32.
