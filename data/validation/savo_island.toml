@@ -122,6 +122,18 @@ weapons = ["torpedo"]
 rows = [25, 23, 24, 163, 38, 39, 61, 62, 63, 72, 73, 85]
 reason = "Canberra 0, 1 or 2: the 1950 analysis rejects any hit (25), the 1943 narrative says one or two (23, 24) and the Australian navy's history two (163). Chicago 1 (38, 39). Vincennes 1, 2 or 3 (61, 62, 63). Quincy 2 or 3 (72, 73). Astoria 0 (85). Low end 0 + 1 + 1 + 2, high end 2 + 1 + 3 + 3."
 
+[[measure]]
+id = "torpedo_hits_on_japanese_ships"
+counts = "Torpedo hits on the eight Japanese ships"
+record_low = 0
+record_high = 0
+judged = true
+take = "hits_on"
+ships = [1, 2, 3, 4, 5, 6, 7, 8]
+weapons = ["torpedo"]
+rows = [779, 780, 781, 782, 783, 784, 785, 786, 787, 132]
+reason = "No row has a torpedo hit on any of them. The 1950 analysis's summary of Japanese damage has Chokai, Aoba and Kinugasa slightly damaged (779, 780, 781) and Yubari and Tenryu slightly damaged (782, 783), Yubari with only scratches from a destroyer's light fire (784); Furutaka and Yunagi are not among the damaged (785, 786, 787) and Kako took no hit (132). None is a statement about torpedoes: the architect reads slight damage and none as no torpedo hit, since a torpedo does not leave a cruiser slightly damaged. At the baseline Allied torpedoes hit about three times a run, and the ships they stopped were caught by day in fights the record does not have."
+
 # ---------------------------------------------------------- hits a round
 #
 # Hits for each thousand shells fired, by side. A count of hits follows how
