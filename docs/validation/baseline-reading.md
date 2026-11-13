@@ -128,6 +128,25 @@ What it shows:
 - **Allied torpedoes fired** misses further (36 against 4 to 6): every Allied destroyer now lives to fire. What is left is readiness (decision 0071's share, at its first value) and tubes that do not bear (decision 0074, held).
 - **Tenryu and Yubari** still miss, for the length of the fight and not the rate; the watch on them stands.
 
+### Savo Island after round 2, Nov 13, 2026
+
+Two figures moved, each in a round of its own: the strength of experience for guns to its cap of 0.5 (round 1) and the factor against a surprised target to 2 (round 2). Both act on one side more than the other. The report is `savo-island-r2.md`: judged 23, agree 19, at the edge 1, miss 3. The chance to hit was closed there.
+
+| What | Record | Tuning started | After round 2 |
+| --- | --- | --- | --- |
+| Japanese gun hits for each thousand shells | 81 to 117 | 38 to 72, 58: miss | 49 to 92, 75: agrees |
+| Gun hits on Allied ships | 153 to 219 | 30 to 129, 87: miss | 35 to 158, 116: at the edge |
+| Allied cruisers sunk | 4 | 0 to 4, 2: at the edge | 0 to 5, 3: agrees |
+| Northern group cruisers sunk | 3 | 0 to 3, 1: at the edge | 0 to 3, 2: agrees |
+| Minutes of action | 20 to 30 | 35 to 65, 40: miss | 35 to 65, 40: miss |
+| Tenryu and Yubari's shells, in hundreds | 1 | 2 to 5, 3: miss | 2 to 5, 3: miss |
+| Allied torpedoes fired | 4 to 6 | 16 to 36, 36: miss | 16 to 48, 34: miss |
+
+- **The chance to hit is done.** The Japanese rate agrees; gun hits on Allied ships are short by what the secondary guns scored, which the rules do not fire.
+- **The three misses are named and left:** the Japanese passing on, which no rule has; the pair's rounds, which follow from it, under the watch; and Allied torpedoes, of which Helm and Wilson fire 16 in nearly every run, two ships the rows have not firing for want of orders and for a target that was friendly.
+- **What a hit does and breaking off had no supported move.** A cruiser sinks at about the main battery hits the record's took. What is wrong is where the Japanese torpedoes go: all of them into the first fight, none into the northern group's, so Chicago sinks in about half the runs.
+- **The tuned figures are fitted on Savo Island and not yet checked.** Cape Esperance checks them.
+
 ### The round 2 report with the measures of decision 0084, Nov 13, 2026
 
 `savo-island-r2.md` was remade on the same figures and seeds with six measures added and one counted in tens. Judged 29: 21 agree, 2 at the edge, 6 miss. The totals that agreed hid this:
@@ -138,6 +157,21 @@ What it shows:
 - **The southern group fires too much or nothing:** in tens, median 9 against 3 to 5, held by 10 runs. Counted in hundreds it had agreed, because a run that never fired held the record.
 
 Each measure is judged alone. That several agree does not show one run holding them together.
+
+### Savo Island after decision 0083: the closing record, Nov 13, 2026
+
+`savo-island-after-0083.md` is round 2's figures on the engine with decisions 0074 and 0083, and the measures of 0084, with `minutes_of_action` counting the sum of the two fights (32 to 36). Judged 29: 21 agree, 4 at the edge, 4 miss. The surface tuning is closed on it, with no further round (`tuning/savo-island-closed.md`). It is the closing record on its engine and is not remade for later engine changes.
+
+- **Torpedoes now reach the northern group**: 0 to 3, median 0, in 364 runs one or more, at the edge against 3 to 6. Before 0083 it was none in any run. The southern group's agree: median 3, held by 571.
+- **Chicago is still sunk in 565 runs.** The record's southern fight lasted about as long as the model's. The second sides went north in the record because the fights overlapped, which the rules do not do (decision 0083, "Fights that overlap"; a plan for the designer).
+- **Minutes of action agree,** with the record in the middle half. The fights are no shorter (median 40); the record now counts what a run counts.
+- **The four misses are named:**
+  - Allied torpedoes fired: Helm and Wilson fire where the rows have neither firing. That is participation, not the share.
+  - Tenryu and Yubari's shells.
+  - Vincennes's gun hits.
+  - The southern group's shells in tens.
+- **The watch on Tenryu and Yubari was met in form and ruled.** The minutes came to the middle and the pair still fire over the record. The architect did not reopen the derivation: the record's shells fill the rows' short firing window (`engagement_events` 1060, 1069, 1071) at the derived rate. The pair fire through every round of both fights, where they fired for part of the night. Decision 0084's finding 11 stands: the gate failed and certified no rate.
+- **The two tuned figures and the torpedo share stand,** looked at once more on this engine. They are fitted on Savo Island and not yet checked.
 
 ## Eastern Solomons
 

@@ -4,6 +4,7 @@
 use sim_core::events::{DamageTrack, DetachReason, EngagementEndReason, Weapon};
 use sim_core::map::{HexKind, Terrain};
 use sim_core::orders::{AirMission, Issuer, Mission, SpeedSetting, Stance};
+use sim_core::side_events::SideEndReason;
 use sim_core::state::{ShipSystem, Side, SystemState, TaskForceStatus};
 
 pub fn side(side: Side) -> &'static str {
@@ -107,6 +108,18 @@ pub fn end_reason(reason: EngagementEndReason) -> &'static str {
         EngagementEndReason::BrokeOff => "broke_off",
         EngagementEndReason::PassedUnseen => "passed_unseen",
         EngagementEndReason::MaxRounds => "max_rounds",
+    }
+}
+
+/// A fight's ending as a side is told it (decision 0085).
+pub fn side_end_reason(reason: SideEndReason) -> &'static str {
+    match reason {
+        SideEndReason::SlippedAway => "slipped_away",
+        SideEndReason::ForceSunk => "force_sunk",
+        SideEndReason::BrokeOff => "broke_off",
+        SideEndReason::PassedUnseen => "passed_unseen",
+        SideEndReason::MaxRounds => "max_rounds",
+        SideEndReason::ContactLost => "contact_lost",
     }
 }
 

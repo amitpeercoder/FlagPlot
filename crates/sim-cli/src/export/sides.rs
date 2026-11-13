@@ -324,7 +324,7 @@ fn describe_side(kind: &SideEventKind) -> (&'static str, Data, bool) {
             d.int("round", *round)
                 .id("task_force", *task_force)
                 .hex("hex", *hex)
-                .text("reason", names::end_reason(*reason)),
+                .text("reason", names::side_end_reason(*reason)),
             true,
         ),
         SideEventKind::SightingRoll {

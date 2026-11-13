@@ -234,7 +234,7 @@ A naval strike group considers each contact its side holds. A contact qualifies 
 
 From the contacts that qualify the group takes the one whose estimated kind comes first on its list, then the nearest by air distance, then the lowest contact number. With none it does nothing, and nothing is recorded. A report that names the wrong kind sends the strike wrong.
 
-This choice is one function, which takes the side's belief and the group's own state and orders and nothing else. The strike decision calls it, and the side's view offers it (`SideView::strike_choice`), so the briefing and a planner can ask what a group would strike now.
+This choice is one function, which takes the side's belief and the group's own state and orders and nothing else. The strike decision calls it, and the side's view offers it (`SideView::strike_choice`), so the briefing and a planner can ask what a group would strike now. The view takes the group's number and answers only for the side's own groups. [0085]
 
 It launches every aircraft it is able to fly. It flies to the hex the contact names, not to where the enemy really is. It records `StrikeLaunched` (group, contact, hex, aircraft, one-way air distance), caused by the group's mission order, by the group's reach order if it is on extended reach, by the group's target order if it has one (a group with none cites nothing new), and by the event of the report that last refreshed the contact. A strike in flight is working data of the pulse. It exists from the decision step to the air combat step and is not part of the state hash. [0026, 0032, 0040, 0059, 0063]
 

@@ -357,11 +357,11 @@ Each keeps every other field and its whole breakdown.
 
 | Event | The side sees |
 | --- | --- |
-| Engagement begun, engagement ended | A side that has come to know of the fight (below): its own force of the two, and the rest. Not the enemy's force. |
+| Engagement begun, engagement ended | A side that has come to know of the fight (below): its own force of the two, and the rest. Not the enemy's force. The beginning carries the hour of the round the side first knew of the fight, and the ending's reason is the side's own (below). [0085] |
 | Sighting roll | Own force, and only if the roll sighted: the round, the force, the chance and the fatigue factor. Not the force sighted. A roll that did not sight is hidden from both sides: it would say there was something to be found. |
 | Force surprised | The force surprised and the round. Not the force that surprised it. |
 | Force slipped away | The force that slipped away and the round. Not the force it slipped away from. |
-| Alarm roll | Own force, and only if the roll succeeded (alarmed): the force and the chance. Not the forces that fought. A failed alarm means the force noticed nothing. |
+| Alarm roll | Own force, and only if the roll succeeded (alarmed): the force and the chance. Not the forces that fought. A failed alarm means the force noticed nothing. Its breakdown is shown without the draw (below). [0085] |
 | Base attacked, for the base's side | The base, the shots, the chance, the expected hits and the hits, on aircraft and on supply. Not the air group that raided. |
 
 **Cut**
@@ -386,15 +386,19 @@ A side that is neither named sees nothing of the cut events. [0047]
 
 ### A surface fight
 
-A side knows of a surface fight from the earliest round in which one of these happens, found from the fight's own events between its `EngagementBegun` and `EngagementEnded`: its force's successful sighting roll, a salvo fired at its ships or by them, hits on its ships, its force being surprised, or its force slipping away. A fight the side never knows of is wholly absent for it, including its begun and ended events. For a fight it knows, those two events are shown whole at their place in the log. [0047]
+A side knows of a surface fight from the earliest round in which one of these happens, found from the fight's own events between its `EngagementBegun` and `EngagementEnded`: its force's successful sighting roll, a salvo fired at its ships or by them, hits on its ships, its force being surprised, or its force slipping away. A fight the side never knows of is wholly absent for it, including its begun and ended events. For a fight it knows, those two events are shown at their place in the log, cut as the table says. [0047]
+
+A fight is told from the round the side first knew of it. That round is the side's round 1, and every event of the fight it is given that carries a round (its salvoes, the salvoes at it, its sighting, surprise, slip, alert and break-off, the hits on its ships and the end) carries the side's count: the log's round less the rounds before it knew. The beginning carries the hour of that round: the hour the forces met plus `round_minutes` for each round before. A side that knew from round 1 is told the log's rounds and hour. The event's number is the log's, so two sides can still name one event. This is the one change made to an event otherwise given whole. [0085]
+
+The ending is told as the side's own force made it. "A force was sunk" is told only to the side whose force lost its last ship in the fight (its force has no ship, and its last sinking was in this fight); "a force broke off" only to the side whose force broke off in the last round. Otherwise the side is told **contact lost**. Slipped away, passed unseen and the last round fought are told as they are. What the side learns of the enemy's losses is its claim. [0085]
 
 An event of a fight that carries a round is shown only if its round is not before the round the side first knew. Round 0 hits are outside a fight. A force that breaks off in a round in which it has neither sighted nor been fired on, because its ships were crippled before the meeting, is not shown the break-off. The force's state still changes. [0014, 0047]
 
 ### Causes and breakdowns
 
-The causes of an event are cut the same way. A cause that is an order is kept if the side issued it. A cause that is an event is kept if the side may see that event. A cause that is dropped sets a flag on the event saying it has causes the side cannot see. [0047]
+The causes of an event are cut the same way. A cause that is an order is kept if the side issued it. A cause that is an event is kept if the side may see that event. A dropped cause is not marked on the event. Instead every event of a kind that can have causes the side cannot see carries a flag saying it may have more, whether or not this one does, so the flag says nothing of what the enemy did. The kinds flagged are: engagement begun and ended, force surprised, an alarm roll, an air attack on the side, a raid on its base, its fighters' and guns' fire at a raid (the enemy's launch is the cause), and aircraft lost. One exhaustive `match` in `side_events.rs` decides each kind. [0047, 0085]
 
-A side sees the whole breakdown, with its result, of an event it sees whole, and of an event cut of the enemy's name and nothing else. Any other cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `unready_gun_share`, `torpedo_mount_factor`, `unready_torpedo_share` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A search attempt keeps `aircraft`, `sweep_width_nm` and `arc_deg`. A salvo against the side and an air attack against it keep no factor. [0047, 0061, 0068, 0071]
+A side sees the whole breakdown, with its result, of an event it sees whole, and of an event cut of the enemy's name and nothing else. Any other cut event carries only the factors that are the side's own, and no result. A salvo keeps `guns`, `tubes`, `rate`, `minutes`, `main_battery_factor`, `unready_gun_share`, `torpedo_mount_factor`, `unready_torpedo_share` and `fire_control_factor`. An air attack and a base attack keep `aircraft`. An air fight and anti-aircraft fire keep `shots`. A search attempt keeps `aircraft`, `sweep_width_nm` and `arc_deg`. A salvo against the side and an air attack against it keep no factor. A side's breakdown never carries a raw random draw: the alarm roll's `draw` is dropped, and the log keeps it for the umpire. [0047, 0061, 0068, 0071, 0085]
 
 A claim is the exception. A side sees its own `ClaimReceived` whole and no breakdown of it, because the breakdown says how much of the claim is real. The log keeps it for the umpire. [0060]
 

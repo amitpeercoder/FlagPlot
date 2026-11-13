@@ -64,7 +64,13 @@ pub struct SideEvent {
     pub kind: SideEventKind,
     /// The causes the side may see: its own orders, and events it may see.
     pub causes: Vec<Cause>,
-    /// True if the event has causes the side may not see.
+    /// True if the event may have causes the side cannot see: an order of the
+    /// enemy's or an event of the enemy's. The flag is set by the kind of
+    /// the event, as this side is given it, and never by what a particular
+    /// event happened to cite, so it does not say whether the enemy gave an
+    /// order or did anything at all (decision 0085). A kind that can have
+    /// such causes always says so; the causes the side may see are listed in
+    /// `causes` whatever the flag says.
     pub hidden_causes: bool,
     /// Present when the log has one. For a whole event it is the log's. For a
     /// cut event it is cut too (see [`SideBreakdown`]).
@@ -84,7 +90,10 @@ pub struct SideBreakdown {
 /// What of an event a side may know.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum SideEventKind {
-    /// The event as the log has it.
+    /// The event as the log has it. The one alteration made to it is its
+    /// round, if it carries a round of a surface fight: that is counted from
+    /// the round in which the side first knew of the fight, as the side's
+    /// other events of the fight are (decision 0085, F6).
     Whole(EventKind),
     /// The side's own salvo: that it fired, and with how many shots. Not the
     /// ship it fired at, which is the enemy's (decision 0065).
@@ -168,19 +177,22 @@ pub enum SideEventKind {
     /// either (decisions 0012 and 0065).
     SearchAttempt { air_group: AirGroupId },
     /// A surface fight the side knows of has begun. `task_force` is the
-    /// side's own of the two forces the log names.
+    /// side's own of the two forces the log names. `elapsed_hours` is the
+    /// hour of the round in which the side first knew of the fight, not the
+    /// hour the forces met (decision 0085, F6).
     EngagementBegun {
         task_force: TaskForceId,
         hex: Hex,
         elapsed_hours: Fixed,
     },
     /// A surface fight the side knows of has ended. `task_force` is the
-    /// side's own of the two forces the log names.
+    /// side's own of the two forces the log names. `round` is counted from
+    /// the round in which the side first knew of the fight.
     EngagementEnded {
         round: u32,
         task_force: TaskForceId,
         hex: Hex,
-        reason: EngagementEndReason,
+        reason: SideEndReason,
     },
     /// The side's own force looked and sighted. Not the force it sighted.
     SightingRoll {
@@ -199,6 +211,42 @@ pub enum SideEventKind {
         task_force: TaskForceId,
         chance: Fixed,
     },
+}
+
+/// Why a surface fight ended, as a side is told (decision 0085, F5). It has
+/// the reasons of [`EngagementEndReason`] and one more, `ContactLost`, and
+/// the two reasons that are an enemy's doing, a force sunk and a force broke
+/// off, are the side's only when the force was its own. Otherwise the side is
+/// told it lost contact, which is all it can know: the enemy's force is
+/// gone, and it cannot tell sunk from broken off from out of sight.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SideEndReason {
+    /// A force that avoids sighted the enemy first and left.
+    SlippedAway,
+    /// The side's own force had no ship afloat.
+    ForceSunk,
+    /// The side's own force broke off.
+    BrokeOff,
+    /// Neither force sighted the other in all the rounds.
+    PassedUnseen,
+    /// The last round was fought.
+    MaxRounds,
+    /// The enemy's force was gone: sunk or broken off, the side cannot tell.
+    ContactLost,
+}
+
+impl SideEndReason {
+    /// The reason as the side's event text writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            SideEndReason::SlippedAway => EngagementEndReason::SlippedAway.name(),
+            SideEndReason::ForceSunk => EngagementEndReason::ForceSunk.name(),
+            SideEndReason::BrokeOff => EngagementEndReason::BrokeOff.name(),
+            SideEndReason::PassedUnseen => EngagementEndReason::PassedUnseen.name(),
+            SideEndReason::MaxRounds => EngagementEndReason::MaxRounds.name(),
+            SideEndReason::ContactLost => "contact lost",
+        }
+    }
 }
 
 impl SideEventKind {
@@ -390,14 +438,33 @@ pub(crate) struct Owners {
     pub(crate) air_groups: BTreeMap<AirGroupId, Side>,
     pub(crate) bases: BTreeMap<BaseId, Side>,
     pub(crate) orders: BTreeMap<OrderId, Side>,
+    /// The task forces with no ship. A force emptied is never removed and
+    /// never given a ship again, so a force here was emptied once, and for a
+    /// fight that ended in a force with no ship afloat, whether the side's
+    /// own force was the one is read from this and the log (decision 0085,
+    /// F5).
+    pub(crate) emptied_forces: BTreeSet<TaskForceId>,
+    /// Minutes in a round of a surface fight, from the reference data's
+    /// surface combat figures (0 without them, when there are no fights).
+    /// The hour a side first knew of a fight is worked from it (decision
+    /// 0085, F6).
+    pub(crate) round_minutes: u32,
 }
 
 impl Owners {
     pub(crate) fn from_state(
         truth: &TruthState,
         orders: &BTreeMap<OrderId, crate::orders::Order>,
+        round_minutes: u32,
     ) -> Owners {
         Owners {
+            emptied_forces: truth
+                .task_forces
+                .iter()
+                .filter(|(_, f)| f.ships.is_empty())
+                .map(|(id, _)| *id)
+                .collect(),
+            round_minutes,
             ships: truth.ships.iter().map(|(id, s)| (*id, s.side)).collect(),
             forces: truth
                 .task_forces
@@ -590,7 +657,16 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                 round: *round,
                 task_force: if own_force(a) { *a } else { *b },
                 hex: *hex,
-                reason: *reason,
+                // The truth's reason said without its enemy part; `project`
+                // gives the side the reasons that were its own.
+                reason: match reason {
+                    EngagementEndReason::SlippedAway => SideEndReason::SlippedAway,
+                    EngagementEndReason::PassedUnseen => SideEndReason::PassedUnseen,
+                    EngagementEndReason::MaxRounds => SideEndReason::MaxRounds,
+                    EngagementEndReason::ForceSunk | EngagementEndReason::BrokeOff => {
+                        SideEndReason::ContactLost
+                    }
+                },
             },
         ),
 
@@ -835,9 +911,14 @@ fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option
     if matches!(kind, SideEventKind::Whole(EventKind::ClaimReceived { .. })) {
         return None;
     }
+    // A raw random draw is never given to a side (decision 0085, C): it is
+    // the die, not a factor, and with the chance it says which side of the
+    // roll the die fell on. Today only the alarm roll records one. The
+    // umpire's breakdown keeps it.
+    let given = |factor: &&Factor| factor.name != "draw";
     if matches!(kind, SideEventKind::Whole(_)) || only_a_name_is_cut(kind) {
         return Some(SideBreakdown {
-            factors: breakdown.factors.clone(),
+            factors: breakdown.factors.iter().filter(given).copied().collect(),
             result: Some(breakdown.result),
         });
     }
@@ -845,6 +926,7 @@ fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option
     let factors: Vec<Factor> = breakdown
         .factors
         .iter()
+        .filter(given)
         .filter(|factor| own.contains(&factor.name))
         .copied()
         .collect();
@@ -961,6 +1043,345 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
     }
 }
 
+/// The ending a side is told of a fight whose truth ending is `reason`, which
+/// ended at `log[index]` (decision 0085, F5). The enemy's doings are not the
+/// side's to know: a force sunk or broken off is told only if it was the
+/// side's own, and otherwise as contact lost (already the reason in `seen`).
+///
+/// - `ForceSunk` is the side's only if its own force was emptied in this
+///   fight: that force has no ship now (an emptied force is never refilled)
+///   and the latest `ShipSunk` of it in the whole log lies inside this fight.
+/// - `BrokeOff` is the side's only if its own force broke off in the round
+///   the fight ended: a `ForceBrokeOff` of it in this fight in that round
+///   (the truth ending's causes are the `ForceBrokeOff` events of the forces
+///   that broke off, and the side's own is the one it may see).
+fn own_ending(
+    side: Side,
+    log: &[Event],
+    index: usize,
+    owners: &Owners,
+    told: SideEndReason,
+) -> SideEndReason {
+    let EventKind::EngagementEnded {
+        round,
+        a,
+        b,
+        reason,
+        ..
+    } = &log[index].kind
+    else {
+        return told;
+    };
+    let own = [*a, *b]
+        .into_iter()
+        .find(|id| owners.forces.get(id) == Some(&side));
+    let Some(own) = own else {
+        return told;
+    };
+    // The fight's own events: after its `EngagementBegun`, before this end.
+    let begun = log[..index].iter().rposition(|event| {
+        matches!(&event.kind, EventKind::EngagementBegun { a: x, b: y, .. } if x == a && y == b)
+    });
+    let Some(begun) = begun else {
+        return told;
+    };
+    match reason {
+        EngagementEndReason::ForceSunk => {
+            let latest = log.iter().rposition(|event| {
+                matches!(&event.kind, EventKind::ShipSunk { task_force, .. } if *task_force == own)
+            });
+            if owners.emptied_forces.contains(&own)
+                && latest.is_some_and(|sunk| sunk > begun && sunk < index)
+            {
+                SideEndReason::ForceSunk
+            } else {
+                told
+            }
+        }
+        EngagementEndReason::BrokeOff => {
+            let broke = log[begun + 1..index].iter().any(|event| {
+                matches!(&event.kind, EventKind::ForceBrokeOff { round: r, task_force, .. }
+                    if *task_force == own && r == round)
+            });
+            if broke {
+                SideEndReason::BrokeOff
+            } else {
+                told
+            }
+        }
+        EngagementEndReason::SlippedAway
+        | EngagementEndReason::PassedUnseen
+        | EngagementEndReason::MaxRounds => told,
+    }
+}
+
+/// Counts the rounds of a fight event from the round the side first knew of
+/// the fight (`known`), so a side that first knew of a fight in round 3 is
+/// told that round as its round 1 and learns nothing of how many rounds it
+/// did not know of; and gives `EngagementBegun` the hour of that round
+/// rather than the hour the forces met (decision 0085, F6). Every kind a
+/// side is given from inside a fight that carries a fight round is here, the
+/// cut kinds and the whole ones; a whole kind is altered in its round and
+/// nothing else. A round of 0 is a hit outside a fight and is left.
+fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -> SideEventKind {
+    let before = known.saturating_sub(1);
+    if before == 0 {
+        return kind;
+    }
+    let count = |round: u32| round.saturating_sub(before);
+    match kind {
+        SideEventKind::Salvo {
+            round,
+            firer,
+            weapon,
+            shots,
+        } => SideEventKind::Salvo {
+            round: count(round),
+            firer,
+            weapon,
+            shots,
+        },
+        SideEventKind::SalvoAgainst {
+            round,
+            target,
+            weapon,
+        } => SideEventKind::SalvoAgainst {
+            round: count(round),
+            target,
+            weapon,
+        },
+        SideEventKind::EngagementBegun {
+            task_force,
+            hex,
+            elapsed_hours,
+        } => SideEventKind::EngagementBegun {
+            task_force,
+            hex,
+            elapsed_hours: elapsed_hours
+                + Fixed::from_ratio(i64::from(round_minutes) * i64::from(before), 60),
+        },
+        SideEventKind::EngagementEnded {
+            round,
+            task_force,
+            hex,
+            reason,
+        } => SideEventKind::EngagementEnded {
+            round: count(round),
+            task_force,
+            hex,
+            reason,
+        },
+        SideEventKind::SightingRoll {
+            round,
+            task_force,
+            chance,
+            fatigue_factor,
+        } => SideEventKind::SightingRoll {
+            round: count(round),
+            task_force,
+            chance,
+            fatigue_factor,
+        },
+        SideEventKind::ForceSurprised { round, task_force } => SideEventKind::ForceSurprised {
+            round: count(round),
+            task_force,
+        },
+        SideEventKind::ForceSlippedAway { round, task_force } => SideEventKind::ForceSlippedAway {
+            round: count(round),
+            task_force,
+        },
+        SideEventKind::Whole(whole) => SideEventKind::Whole(match whole {
+            EventKind::ShipDamaged {
+                round,
+                ship,
+                track,
+                hits,
+                points,
+                value_after,
+            } if round > 0 => EventKind::ShipDamaged {
+                round: count(round),
+                ship,
+                track,
+                hits,
+                points,
+                value_after,
+            },
+            EventKind::SystemHit {
+                round,
+                ship,
+                system,
+                before,
+                after,
+            } if round > 0 => EventKind::SystemHit {
+                round: count(round),
+                ship,
+                system,
+                before,
+                after,
+            },
+            EventKind::ShipSunk {
+                round,
+                ship,
+                task_force,
+            } if round > 0 => EventKind::ShipSunk {
+                round: count(round),
+                ship,
+                task_force,
+            },
+            EventKind::ForceBecameAlert { round, task_force } => EventKind::ForceBecameAlert {
+                round: count(round),
+                task_force,
+            },
+            EventKind::ForceBrokeOff {
+                round,
+                task_force,
+                share,
+            } => EventKind::ForceBrokeOff {
+                round: count(round),
+                task_force,
+                share,
+            },
+            other => other,
+        }),
+        // No other kind a side is given carries a round of a fight.
+        other @ (SideEventKind::AirAttackAgainst { .. }
+        | SideEventKind::AirAttack { .. }
+        | SideEventKind::AirFight { .. }
+        | SideEventKind::AntiAircraftFire { .. }
+        | SideEventKind::BaseAntiAircraftFire { .. }
+        | SideEventKind::BaseAttacked { .. }
+        | SideEventKind::BaseAttackedAgainst { .. }
+        | SideEventKind::SearchAttempt { .. }
+        | SideEventKind::AlarmRoll { .. }) => other,
+    }
+}
+
+/// Whether an event of this kind, as the side is given it, can have causes
+/// the side may not see: an order of the enemy's, or an event of the enemy's
+/// or one the side is not given (decision 0085, F7). The flag is set by the
+/// kind and never by an event, so it cannot say whether the enemy gave an
+/// order or did anything: an enemy order that changes nothing changes nothing
+/// the side is given.
+///
+/// One exhaustive `match`, over the side's kinds and, for a whole event,
+/// over every kind of the log, so a new kind does not compile until it is
+/// decided. Each answer is read from where the code records the kind's
+/// causes. A kind is `true` if any cause it can carry may be one the side is
+/// not given; a kind that cites only the side's own orders and events it is
+/// given is `false`.
+fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
+    match kind {
+        SideEventKind::Whole(whole) => whole_may_have_hidden_causes(whole),
+        // Salvos, sighting and a slip cite the fight's beginning, which the
+        // side that knows of the fight is given, and the side's own roll and
+        // order. An own air attack on a ship or a base cites its own launch
+        // and its own losses. A search that sighted cites its own flight.
+        SideEventKind::Salvo { .. }
+        | SideEventKind::SalvoAgainst { .. }
+        | SideEventKind::SightingRoll { .. }
+        | SideEventKind::ForceSlippedAway { .. }
+        | SideEventKind::AirAttack { .. }
+        | SideEventKind::BaseAttacked { .. }
+        | SideEventKind::SearchAttempt { .. } => false,
+        // Surprised: cites the enemy's sighting roll. A fight's beginning:
+        // the steaming that brought the enemy in, and both sides' orders. Its
+        // end: the enemy's sinking, break-off or slipping away. An alarm: the
+        // end of a fight the side may not know of. A raid on the side, and
+        // the side's fire at one: the enemy's launch (and escorts).
+        SideEventKind::ForceSurprised { .. }
+        | SideEventKind::EngagementBegun { .. }
+        | SideEventKind::EngagementEnded { .. }
+        | SideEventKind::AlarmRoll { .. }
+        | SideEventKind::AirAttackAgainst { .. }
+        | SideEventKind::BaseAttackedAgainst { .. }
+        | SideEventKind::AirFight { .. }
+        | SideEventKind::AntiAircraftFire { .. }
+        | SideEventKind::BaseAntiAircraftFire { .. } => true,
+    }
+}
+
+/// [`may_have_hidden_causes`] for an event the side is given whole.
+fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
+    match kind {
+        // Aircraft lost to fire: the cause is the roll that shot them down,
+        // the enemy's fighters or guns unless the side's own fighters fired
+        // it, so it may be one the side is not given.
+        EventKind::AircraftLost { .. } => true,
+
+        // These cite only the side's own orders and its own events, or events
+        // the side is given: a steaming, a search, a report, a launch, a
+        // fatigue, and a hit on its own ship (whose cause is the salvo or air
+        // attack on that ship, which the side is given cut).
+        EventKind::OrderAccepted { .. }
+        | EventKind::OrderRejected { .. }
+        | EventKind::TaskForceSteamed { .. }
+        | EventKind::FuelBurned { .. }
+        | EventKind::TaskForceArrived { .. }
+        | EventKind::TaskForceOutOfFuel { .. }
+        | EventKind::CargoLoaded { .. }
+        | EventKind::CargoUnloaded { .. }
+        | EventKind::LoadingComplete { .. }
+        | EventKind::UnloadingComplete { .. }
+        | EventKind::SearchFlown { .. }
+        | EventKind::ReportReceived { .. }
+        | EventKind::ContactAged { .. }
+        | EventKind::ContactDropped { .. }
+        | EventKind::ShipDamaged { .. }
+        | EventKind::ShipSunk { .. }
+        | EventKind::ForceBecameAlert { .. }
+        | EventKind::ForceBrokeOff { .. }
+        | EventKind::ClaimReceived { .. }
+        | EventKind::SystemHit { .. }
+        | EventKind::ShipsDetached { .. }
+        | EventKind::ForceRetired { .. }
+        | EventKind::ForceAlertedByContact { .. }
+        | EventKind::ForceStoodDown { .. }
+        | EventKind::DamagedAircraftDestroyedOnGround { .. }
+        | EventKind::AircraftWorn { .. }
+        | EventKind::AircraftRepaired { .. }
+        | EventKind::AirGroupLost { .. }
+        | EventKind::StrikeLaunched { .. }
+        | EventKind::StrikeFoundNothing { .. }
+        | EventKind::EscortsSent { .. }
+        | EventKind::PilotsLost { .. }
+        | EventKind::ReplacementsReceived { .. }
+        | EventKind::AircraftArrived { .. }
+        | EventKind::ContactNotThere { .. }
+        | EventKind::BaseStrikeLaunched { .. }
+        | EventKind::AircraftDestroyedOnGround { .. }
+        | EventKind::BaseSupplyDestroyed { .. }
+        | EventKind::BaseSupplySpent { .. }
+        | EventKind::AirGroupFatigue { .. }
+        | EventKind::AirGroupStoodDown { .. }
+        | EventKind::AirGroupReturned { .. }
+        | EventKind::TaskForceFatigue { .. }
+        | EventKind::TaskForceTurnedBack { .. }
+        | EventKind::ShipRefuelled { .. }
+        | EventKind::AircraftDitched { .. }
+        | EventKind::AircraftLandedElsewhere { .. }
+        | EventKind::AircraftDitchedNoDeck { .. }
+        | EventKind::BaseAtDayEnd { .. } => false,
+
+        // Never given whole: each of these is cut (and decided in
+        // `may_have_hidden_causes`) or hidden from every side. If one were
+        // ever given whole, it is flagged.
+        EventKind::EngagementBegun { .. }
+        | EventKind::SightingRoll { .. }
+        | EventKind::ForceSurprised { .. }
+        | EventKind::Salvo { .. }
+        | EventKind::ForceSlippedAway { .. }
+        | EventKind::ForcesPassedUnseen { .. }
+        | EventKind::EngagementEnded { .. }
+        | EventKind::SearchAttempt { .. }
+        | EventKind::AlarmRoll { .. }
+        | EventKind::AirAttack { .. }
+        | EventKind::AirFight { .. }
+        | EventKind::AntiAircraftFire { .. }
+        | EventKind::BaseAntiAircraftFire { .. }
+        | EventKind::BaseAttacked { .. } => true,
+    }
+}
+
 /// The events of `log` a side may see, each cut down to what it may know, in
 /// log order.
 pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEvent> {
@@ -991,25 +1412,32 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
         .collect();
     log.iter()
         .zip(seen)
-        .filter_map(|(event, seen)| {
-            let kind = match seen {
+        .zip(&gates)
+        .enumerate()
+        .filter_map(|(index, ((event, seen), gate))| {
+            let mut kind = match seen {
                 Seen::Nothing => return None,
                 Seen::Whole => SideEventKind::Whole(event.kind.clone()),
                 Seen::Cut(kind) => kind,
             };
-            let mut causes = Vec::new();
-            let mut hidden_causes = false;
-            for cause in &event.causes {
-                let keep = match cause {
+            if let SideEventKind::EngagementEnded { reason, .. } = &mut kind {
+                *reason = own_ending(side, log, index, owners, *reason);
+            }
+            // Decision 0085, F6: a fight is counted from the round the side
+            // first knew of it.
+            if let Gate::Inside(Some(known)) = gate {
+                kind = count_from_known_round(kind, *known, owners.round_minutes);
+            }
+            let causes: Vec<Cause> = event
+                .causes
+                .iter()
+                .filter(|cause| match cause {
                     Cause::Order(order) => owners.orders.get(order) == Some(&side),
                     Cause::Event(earlier) => visible.contains(earlier),
-                };
-                if keep {
-                    causes.push(*cause);
-                } else {
-                    hidden_causes = true;
-                }
-            }
+                })
+                .copied()
+                .collect();
+            let hidden_causes = may_have_hidden_causes(&kind);
             let breakdown = side_breakdown(&kind, &event.breakdown);
             Some(SideEvent {
                 id: event.id,
@@ -1067,7 +1495,12 @@ mod tests {
         } else {
             (Side::Allied, Side::Japanese)
         };
-        let mut owners = Owners::default();
+        let mut owners = Owners {
+            // The reference data's round (decision 0085, F6): the hand-built
+            // logs below have no reference data to read it from.
+            round_minutes: 5,
+            ..Owners::default()
+        };
         for (n, side) in [(1, one), (2, two)] {
             owners.ships.insert(ship(n), side);
             owners.forces.insert(force(n), side);
@@ -2166,7 +2599,7 @@ mod tests {
         );
         assert_eq!(
             shown[0].to_string(),
-            "#1 D1 night     task_force:1 met the enemy at (3,-2) at D1 19:00: engagement begun"
+            "#1 D1 night     task_force:1 met the enemy at (3,-2) at D1 19:00: engagement begun  (and causes you cannot see)"
         );
     }
 
@@ -2231,11 +2664,11 @@ mod tests {
                     points: fx(1),
                     value_after: fx(1),
                 },
-                EventKind::FuelBurned {
-                    ship: ship(1),
-                    task_force: force(1),
-                    burned_t: fx(1),
-                    remaining_t: fx(9),
+                // A kind that can have causes the side cannot see.
+                EventKind::AircraftLost {
+                    air_group: group(1),
+                    aircraft: 1,
+                    remaining: 9,
                 },
             ]),
             2,
@@ -2263,14 +2696,15 @@ mod tests {
         let japanese = project(Side::Japanese, &events, &owners(false));
         assert!(japanese.iter().all(|e| e.id != EventId::new(3)));
 
-        // An event with every cause visible says so.
+        // The flag is the kind's, so an event of the kind with every cause
+        // visible says the same (decision 0085, F7).
         let clean = caused(events, 2, vec![Cause::Order(order(1))]);
         let allied = project(Side::Allied, &clean, &owners(false));
         let burned = allied
             .iter()
             .find(|e| e.id == EventId::new(3))
             .expect("seen");
-        assert!(!burned.hidden_causes);
+        assert!(burned.hidden_causes);
     }
 
     // ---- breakdowns ----
@@ -2651,15 +3085,17 @@ mod tests {
         // its own failed rolls.
         let japanese = project(Side::Japanese, &events, &owners);
         assert_eq!(ids(&japanese), vec![1, 5, 6, 8]);
+        // Its rounds are counted from the round it first knew (decision 0085,
+        // F6): its round 3 is the round 1 it is told of.
         assert!(matches!(
             japanese[2].kind,
-            SideEventKind::Salvo { round: 3, .. }
+            SideEventKind::Salvo { round: 1, .. }
         ));
         assert!(japanese
             .iter()
             .filter(|e| e.id.raw() != 1 && e.id.raw() != 8)
-            .all(|e| matches!(e.kind, SideEventKind::Salvo { round: 3, .. })
-                || matches!(&e.kind, SideEventKind::SightingRoll { round: 3, .. })));
+            .all(|e| matches!(e.kind, SideEventKind::Salvo { round: 1, .. })
+                || matches!(&e.kind, SideEventKind::SightingRoll { round: 1, .. })));
     }
 
     #[test]
@@ -2843,7 +3279,6 @@ mod tests {
     // architect has not yet ruled on. Run with `--ignored` to see it.
 
     #[test]
-    #[ignore = "outside review finding 5: a fight's ending says force_sunk to the side whose force survived, so it knows the enemy force is gone"]
     fn a_side_whose_force_survived_is_not_told_the_enemy_force_was_sunk() {
         // Allied force 1 sights and fires in round 1 and sinks the one ship
         // of Japanese force 2; its own ship is never hit. The Allied side
@@ -2873,13 +3308,12 @@ mod tests {
             .expect("the side knows the fight ended");
         assert_ne!(
             ending,
-            EngagementEndReason::ForceSunk,
+            SideEndReason::ForceSunk,
             "the Allied side, its own ship afloat, is told a force was sunk: the enemy's"
         );
     }
 
     #[test]
-    #[ignore = "outside review finding 6: a side that first knows of a fight in round 3 is given the fight's beginning, with the hour the forces met"]
     fn a_side_that_learns_of_a_fight_late_is_not_given_the_hour_it_began() {
         // The log of the test above: the Japanese side first knows of the
         // fight in round 3, by its own sighting. Decision 0047, 5: before
@@ -2907,7 +3341,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "outside review finding 7: hidden_causes is set by an enemy order that changed nothing, so it says the enemy gave one"]
     fn the_flag_of_hidden_causes_does_not_say_whether_the_enemy_gave_an_order() {
         // The fight begins in both logs; in the second the Japanese order 2
         // (its rules of engagement, restated) is among the beginning's
@@ -2925,5 +3358,235 @@ mod tests {
             one, two,
             "the Allied side's events differ only by an order of the enemy's it may not see"
         );
+    }
+
+    // ---- decision 0085: what a side is told of a fight's ending, hour, rounds ----
+
+    fn ending_of(events: &[SideEvent]) -> SideEndReason {
+        events
+            .iter()
+            .find_map(|e| match e.kind {
+                SideEventKind::EngagementEnded { reason, .. } => Some(reason),
+                _ => None,
+            })
+            .expect("the side knows the fight ended")
+    }
+
+    fn broke_off(round: u32, task_force: u32) -> EventKind {
+        EventKind::ForceBrokeOff {
+            round,
+            task_force: force(task_force),
+            share: Fixed::from_ratio(1, 2),
+        }
+    }
+
+    fn sunk(round: u32, ship_id: u32, task_force: u32) -> EventKind {
+        EventKind::ShipSunk {
+            round,
+            ship: ship(ship_id),
+            task_force: force(task_force),
+        }
+    }
+
+    #[test]
+    fn a_fight_the_enemy_force_broke_off_ends_for_a_side_in_contact_lost() {
+        // Allied force 1 sights and fires; Japanese force 2 breaks off.
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            salvo(1, 1, 2),
+            broke_off(1, 2),
+            ended(1, EngagementEndReason::BrokeOff),
+        ]);
+        let allied = project(Side::Allied, &events, &owners(false));
+        assert_eq!(ending_of(&allied), SideEndReason::ContactLost);
+        // The side is not given the enemy's break-off either.
+        assert!(!ids(&allied).contains(&4));
+        assert_eq!(
+            allied.last().expect("the end").to_string(),
+            "#5 D1 night     engagement of task_force:1 at (3,-2) ended in round 1: contact lost  (and causes you cannot see)"
+        );
+    }
+
+    #[test]
+    fn a_fight_the_sides_own_force_broke_off_ends_for_it_in_broke_off() {
+        // Allied force 1 sights, is fired on, and breaks off.
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            salvo(1, 2, 1),
+            damaged(1, 1),
+            broke_off(1, 1),
+            ended(1, EngagementEndReason::BrokeOff),
+        ]);
+        let allied = project(Side::Allied, &events, &owners(false));
+        assert_eq!(ending_of(&allied), SideEndReason::BrokeOff);
+        // The enemy is told the other way: its force broke nothing off.
+        let japanese = project(Side::Japanese, &events, &owners(false));
+        assert_eq!(ending_of(&japanese), SideEndReason::ContactLost);
+    }
+
+    #[test]
+    fn a_fight_the_sides_own_force_was_emptied_in_ends_for_it_in_force_sunk() {
+        // Japanese force 2's one ship is sunk by Allied fire in round 1.
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            salvo(1, 1, 2),
+            sunk(1, 2, 2),
+            ended(1, EngagementEndReason::ForceSunk),
+        ]);
+        let mut owners = owners(false);
+        owners.emptied_forces.insert(force(2));
+        let japanese = project(Side::Japanese, &events, &owners);
+        assert_eq!(ending_of(&japanese), SideEndReason::ForceSunk);
+        // The Allied side, whose force was not emptied, is told contact lost.
+        let allied = project(Side::Allied, &events, &owners);
+        assert_eq!(ending_of(&allied), SideEndReason::ContactLost);
+        // A force emptied in an earlier fight, whose last sinking is not in
+        // this one, is not "the force sunk" of this one.
+        let earlier = log(vec![
+            sunk(1, 1, 1),
+            begun(),
+            roll(1, 1, true),
+            salvo(1, 2, 1),
+            ended(1, EngagementEndReason::ForceSunk),
+        ]);
+        owners.emptied_forces.insert(force(1));
+        let allied = project(Side::Allied, &earlier, &owners);
+        assert_eq!(ending_of(&allied), SideEndReason::ContactLost);
+    }
+
+    #[test]
+    fn a_side_that_learns_of_a_fight_late_is_given_every_round_counted_from_its_own_first() {
+        // Japanese force 2 first knows of the fight in round 3 (its own
+        // sighting), has a ship hit, becomes alert and sinks, and sees an end
+        // in round 3. Every round it is given, whole kinds included, is
+        // counted from round 3 as round 1, and only that is altered in a
+        // whole kind.
+        let events = log(vec![
+            begun(),
+            roll(1, 1, true),
+            roll(1, 2, false),
+            roll(3, 2, true),
+            salvo(3, 2, 1),
+            salvo(3, 1, 2),
+            damaged(3, 2),
+            EventKind::ForceBecameAlert {
+                round: 3,
+                task_force: force(2),
+            },
+            sunk(3, 2, 2),
+            ended(3, EngagementEndReason::MaxRounds),
+        ]);
+        let japanese = project(Side::Japanese, &events, &owners(false));
+        let rounds: Vec<Option<u32>> = japanese
+            .iter()
+            .map(|e| match &e.kind {
+                SideEventKind::Salvo { round, .. }
+                | SideEventKind::SalvoAgainst { round, .. }
+                | SideEventKind::SightingRoll { round, .. }
+                | SideEventKind::EngagementEnded { round, .. }
+                | SideEventKind::Whole(
+                    EventKind::ShipDamaged { round, .. }
+                    | EventKind::ShipSunk { round, .. }
+                    | EventKind::ForceBecameAlert { round, .. },
+                ) => Some(*round),
+                _ => None,
+            })
+            .collect();
+        // begun, sighting, salvo, salvo against, damaged, alert, sunk, ended.
+        assert_eq!(
+            rounds,
+            vec![
+                None,
+                Some(1),
+                Some(1),
+                Some(1),
+                Some(1),
+                Some(1),
+                Some(1),
+                Some(1)
+            ]
+        );
+        // The hour: 1 + 2 rounds of 5 minutes is 1 h 10 min.
+        let hour = japanese.iter().find_map(|e| match e.kind {
+            SideEventKind::EngagementBegun { elapsed_hours, .. } => Some(elapsed_hours),
+            _ => None,
+        });
+        assert_eq!(hour, Some(fx(1) + Fixed::from_ratio(10, 60)));
+        // The hit is as the log has it, but for its round.
+        let hit = japanese
+            .iter()
+            .find_map(|e| match &e.kind {
+                SideEventKind::Whole(kind @ EventKind::ShipDamaged { .. }) => Some(kind.clone()),
+                _ => None,
+            })
+            .expect("the hit on its ship");
+        let EventKind::ShipDamaged {
+            ship: hit_ship,
+            track,
+            hits,
+            points,
+            value_after,
+            ..
+        } = damaged(1, 2)
+        else {
+            unreachable!()
+        };
+        assert_eq!(
+            hit,
+            EventKind::ShipDamaged {
+                round: 1,
+                ship: hit_ship,
+                track,
+                hits,
+                points,
+                value_after,
+            }
+        );
+        // A side that knows from round 1 is given the log's rounds and hour.
+        let allied = project(Side::Allied, &events, &owners(false));
+        assert!(allied
+            .iter()
+            .any(|e| matches!(e.kind, SideEventKind::SightingRoll { round: 1, .. })));
+        assert!(allied.iter().any(|e| matches!(
+            e.kind,
+            SideEventKind::EngagementBegun { elapsed_hours, .. } if elapsed_hours == fx(1)
+        )));
+    }
+
+    #[test]
+    fn a_side_is_given_no_raw_draw_in_the_breakdown_of_its_alarm_roll() {
+        let factor = |name, n| Factor { name, value: fx(n) };
+        let mut events = log(vec![EventKind::AlarmRoll {
+            task_force: force(1),
+            by_a: force(2),
+            by_b: force(3),
+            chance: Fixed::from_ratio(1, 4),
+            alarmed: true,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![factor("alarm_chance", 1), factor("draw", 123_456)],
+            result: Fixed::from_ratio(1, 4),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        let names: Vec<&str> = shown[0]
+            .breakdown
+            .as_ref()
+            .expect("a breakdown")
+            .factors
+            .iter()
+            .map(|f| f.name)
+            .collect();
+        assert_eq!(names, vec!["alarm_chance"]);
+        // The umpire's breakdown, the log's, keeps the draw.
+        assert!(events[0]
+            .breakdown
+            .as_ref()
+            .expect("the log's")
+            .factors
+            .iter()
+            .any(|f| f.name == "draw"));
     }
 }

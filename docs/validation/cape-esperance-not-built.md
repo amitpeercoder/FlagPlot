@@ -1,7 +1,7 @@
 # cape-esperance: measures not run
 
 Battle: cape-esperance
-Measures: data/validation/cape_esperance.toml (hash a81b899ede1acddd), 9 measures, 7 judged
+Measures: data/validation/cape_esperance.toml (hash 711aa14b9db6bffa), 11 measures, 8 judged
 
 **Not run: the scenario is not built.** There is no batch and no verdict.
 
@@ -11,7 +11,9 @@ Measures: data/validation/cape_esperance.toml (hash a81b899ede1acddd), 9 measure
 | japanese_ships_with_propulsion_out | 0 | - | - | - | - | not run: scenario not built |
 | us_cruisers_sunk | 0 | - | - | - | - | not run: scenario not built |
 | us_destroyers_sunk | 1 | - | - | - | - | not run: scenario not built |
-| gun_hits_on_japanese_cruisers | 130 to 134 | - | - | - | - | not run: scenario not built |
+| gun_hits_on_aoba | 40 | - | - | - | - | not run: scenario not built |
+| gun_hits_on_furutaka | 90 | - | - | - | - | not run: scenario not built |
+| gun_hits_on_kinugasa | 0 to 4 | - | - | - | - | not run: scenario not built |
 | gun_hits_on_us_ships | 15 to 29 | - | - | - | - | not run: scenario not built |
 | torpedo_hits_on_japanese_ships | 0 to 1 | - | - | - | - | not run: scenario not built |
 | japanese_ships_claimed_sunk_per_hundred_sunk | 200 to 300 | - | - | - | - | not run: scenario not built |

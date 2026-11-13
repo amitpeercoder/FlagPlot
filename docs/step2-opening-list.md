@@ -45,6 +45,7 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 Where an item says when it is done, that is the coordinating architect's ruling of Nov 13, 2026, on the designer's delegation.
 
 - One fight for three forces, so that fights can overlap: a plan for the designer at the close, not built in step 2 (decision 0083, "What it carries and what it does not"). Chicago's fate and the northern group's torpedo hits at Savo Island rest on it.
+- Ships of a force that do not fire at all: at Savo Island Helm and Wilson fired no torpedo, Wilson's order to attack not received and Helm's target friendly (`engagement_outcomes` 3217 to 3219), where in the rules every ship of a force that has sighted fires. `allied_torpedoes_fired` is a named miss resting on it; it is participation, not the torpedo share (architect's ruling, Nov 13, 2026; `docs/validation/tuning/savo-island-closed.md`).
 - Torpedo reloads: each tube fires once in a game, where Kako fired ten torpedoes from eight tubes at Savo Island and the Takao class had a gear for quick reloading (decision 0083, "What it carries and what it does not").
 - A raiding force that fights and passes on: no rule has a force retire when it has done what it came for, so `minutes_of_action` misses at Savo Island (decision 0024, the note on break-off levels).
 - Secondary guns: a cruiser's secondary battery has no counterpart in the rules (`docs/step2-spec.md`, "Where the model stands today").
@@ -58,13 +59,14 @@ Where an item says when it is done, that is the coordinating architect's ruling 
 - `docs/rules/differences.md`, row 7: the report after a strike reads the force after the damage. To be made before the air figures are tuned.
 - The briefing's guns line after the attack (decision 0079): the briefing lists the guns' fire after the attack as a guns line of its own, not marked as after the attack. A wording item.
 - The fuel round leaves out the ditchings of Ryujo's raid on Henderson Field (decision 0084, finding 13): her B5N2s fly 200 miles on a derived radius of 175 whose rows state no load, so their ditchings are not evidence for `ditch_chance_per_radius_beyond`. A radius with a bomb load is asked of research (decision 0081, C5, option 2).
-- Aoba's and Furutaka's hits at Cape Esperance: 40 and 90 are where an "up to" or "about" meets an "over", and no row bounds the far ends. Kept, judged, as a weak record (decision 0084, finding 14); outside research is asked for bounded sources. A row that arrives before the check is run changes the record; none changes it after.
+- Aoba's and Furutaka's hits at Cape Esperance: measured ship by ship since Nov 13, 2026, before the check run (decision 0084, finding 14 and its note); the total of 130 to 134 is retired. Aoba is judged at 40, a weak record; Furutaka is reported only, her rows being lower bounds; Kinugasa is judged at 0 to 4. A row that bounds Aoba or Furutaka and arrives before the check is run changes the record; none changes it after.
 - In progress, numbers reserved: decisions 0079 to 0082, the air work (anti-aircraft fire after the attack; whom the patrol fires at; the Eastern Solomons orders; the Rabaul orders).
 
 ## What the architect settles from the research
 
 - Which figure to prefer where sources disagree: the Japanese aircraft lost at Eastern Solomons (about 40, 62 or 75), and each day's losses over Guadalcanal.
 - The three claim chances of decision 0056 by side, and the surface claim figure of decision 0014, from claims set beside actual losses.
+- In the claims round: with no ship burning, a surface claim of ships sunk equals the truth, against what the briefing promises (a claim "can be well above" it). Decision 0085, 9.
 - Base sizes for the real map (decision 0052, item 15).
 - The points and levels of decision 0054, and history's result on that scale for scenarios 4, 5 and 6.
 

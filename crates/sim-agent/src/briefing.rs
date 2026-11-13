@@ -175,8 +175,10 @@ pub struct Fight {
     pub place: Place,
     /// The round in which it ended.
     pub rounds: u32,
-    /// `slipped_away`, `force_sunk`, `broke_off`, `passed_unseen` or
-    /// `max_rounds`.
+    /// `slipped_away`, `force_sunk` or `broke_off` (the side's own force was
+    /// sunk or broke off), `passed_unseen`, `max_rounds`, or `contact_lost`
+    /// (the enemy's force was gone, sunk or broken off, and the side cannot
+    /// tell which).
     pub ended: &'static str,
     pub event: u32,
 }
@@ -1252,7 +1254,7 @@ impl Day {
                     force: ctx.force(*task_force),
                     place: ctx.place(*hex),
                     rounds: *round,
-                    ended: words::end_reason(*reason),
+                    ended: words::side_end_reason(*reason),
                     event: id,
                 }),
                 // The rest of a fight reaches the briefing as its end, the
