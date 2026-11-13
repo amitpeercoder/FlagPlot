@@ -4,6 +4,12 @@
 
 placeholder = true
 
+# All four figures are placeholders that no row sizes and no measure reads.
+# The only rows on supply are American fuel (engagement_outcomes 3975; 3978,
+# low). There is nothing for bombs or for Japanese supply
+# (docs/research/oob/outside-research-nov-13.md, "What each slow figure now
+# has"; docs/validation/tuning/air-figures-closed.md).
+#
 # Supply one aircraft's sortie costs its base, in tons: this much, plus this
 # much for each 100 nm of the sortie.
 sortie_supply_t = "0.5"
