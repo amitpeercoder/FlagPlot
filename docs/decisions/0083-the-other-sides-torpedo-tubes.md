@@ -1,6 +1,6 @@
 # 0083: The other side's torpedo tubes
 
-Status: Decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). Built together with decision 0074, which was held for it. The hand calculation is written below, before any code is delegated. Not built yet.
+Status: Decided by the architect on the designer's delegation, Nov 13, 2026 ("Go ahead and decide all matters that need decisions"; "Yes, it decides"). Built together with decision 0074, which was held for it. The hand calculation below was written before any code was delegated, and the architect checked it. Built on Nov 13, 2026: see "As built".
 
 ## The gap
 
@@ -121,7 +121,11 @@ What the Savo Island list gives:
 - **It carries:** that a ship with wing mounts fires one side at a time, and the second side at whatever she next fights.
 - **It does not carry:**
   - **The bearing,** and so how long a ship takes to turn the other side on. The second side comes in the next round in which the ship fires, five minutes on, where the record has five to fifteen.
-  - **Reloads.**
+  - **Reloads.** Each tube fires once in a game. The rows have Kako firing more than her eight tubes:
+    - "At 0205 Kako fired two additional torpedoes at Astoria" (`engagement_events` 1102), after her starboard and port salvos.
+    - Her own table of ordnance expended reads 消耗数量 一〇 残額 六: ten expended and six remaining (`engagement_outcomes` 3501).
+    - The Takao class's row on tubes per side names 次発装填装置, a gear for loading spare torpedoes quickly (`ship_class_facts` 1341).
+    Torpedo reloads are on the open list of `docs/step2-opening-list.md`.
   - **A ship that holds her torpedoes for a better target.**
   - **Readiness.** That is decision 0071's share, which multiplies each salvo and is not changed here.
   - **How many ships of a force fire at all,** which no figure carries (decision 0071, "What the share carries").
@@ -193,4 +197,53 @@ Damage lands at the end of the round in the order the salvos were fired, gun sal
 
 ## As built
 
-Not built. This section is written when it is.
+Built on Nov 13, 2026, in three commits on branch `torpedo-sides`, each delegated to a developer and reviewed by the architect against the hand calculation above.
+
+**The class figure (decision 0074).** `torpedo_tubes_one_side` is a column of every class file, read by the loader as required: a file without it is refused, and that refusal is the check that no class file was missed. Every class file the scenarios and tests read is one of these:
+- the live `ship_classes.csv`;
+- the three derived lists, generated again by `oob-derive`;
+- the four frozen copies in `data/reference/step1`.
+
+The frozen scenarios in `data/scenarios/step2-frozen` hold no class data: they name these files. Every placeholder and frozen class has B equal to T. Placeholder class 8, "Placeholder cruiser with wing tubes", is new and appears in scenario 18 alone. It is 8 and not 7 because scenario 17a's test adds a class 7 of its own. `ShipClass` refuses B above T, and B of 0 where T is above 0. `oob-derive` writes 0074's figure by its rule, with the seven exceptions in `data/derivation/rules.toml`, and names the classes it cannot split:
+- at Savo Island, Kamikaze;
+- at Cape Esperance, Fubuki, Gleaves and Benson.
+
+Every `torpedo_tubes` value is unchanged.
+
+**The rule.**
+- `Ship::torpedoes_one_side_fired` is a new field, hashed straight after `torpedoes_ready`. `hash::STATE_VERSION` is `flagplot-state-v7`.
+- A new invariant covers the flag.
+- `Draw::TorpedoOtherSide` is code 5.
+- In `crates/sim-core/src/surface.rs`, `torpedo_salvo_tubes` gives B or T − B. `fire_ship` sets or clears the flags as above, and draws the second side from its own stream.
+- Unit tests cover cases B, D', E, F and G, and a class of 12 tubes with 8 on a side.
+- Scenario 18 (`data/scenarios/18_torpedo_sides.toml`, `tests/scenario_18_torpedo_sides.rs`) asserts cases A, A', C and D from the breakdowns, the properties over 1,000 seeds, and a pinned outcome for seed 1942 on the live figures. Its class 8 ships fired twice in 2,514 of 2,895 ship-runs.
+
+**What did not move.** Every scenario, run live and on the frozen figures, was compared with its event log before the change. Every log differs only in its hashes, except the two live logs of Savo Island, the only scenario with a class whose B is below T. No expected number of any hand calculation changed.
+
+Remade, in a commit of their own:
+- every run baseline;
+- the recorded games' saves: their transcripts are byte for byte as before;
+- the old-reader file of scenario 6;
+- the pinned hash of scenario 17a's case 8, whose log is unchanged;
+- the Eastern Solomons day hash that scenario 10's test reads.
+
+**What Savo Island shows.** 1,000 runs, seeds 1 to 1000. Before is the round 2 batch (`docs/validation/savo-island-r2.md`); after is the same figures with this decision and 0074. Each cell gives the 5th to the 95th percentile, the median, and in brackets the runs holding the record.
+
+| Measure | Record | Before | After |
+| --- | --- | --- | --- |
+| torpedo_hits_on_allied_ships | 4 to 9 | 1 to 8, 4 (524) | 1 to 8, 4 (560) |
+| Torpedo hits on the southern group (not a measure) | 1 to 3 | 1 to 8, 4 (418) | 1 to 6, 3 (571) |
+| Torpedo hits on the northern group (not a measure) | 3 to 6 | none in any run | 0 to 3, 0 (93); 364 runs have one or more |
+| allied_torpedoes_fired | 4 to 6 | 16 to 48, 34 (0), miss | 16 to 44, 26 (0), miss |
+| allied_cruisers_sunk | 4 | 0 to 5, 3 (221) | 1 to 5, 3 (220) |
+| southern_group_cruisers_sunk | 1 | 0 to 2, 1 (399) | 0 to 2, 1 (381) |
+| northern_group_cruisers_sunk | 3 | 0 to 3, 2 (368) | 0 to 3, 2 (424) |
+| allied_destroyers_sunk | 0 | 0 to 1, 0 (862) | 0 to 2, 0 (754) |
+| minutes_of_action | 20 to 30 | 35 to 65, 40 (25), miss | 30 to 65, 40 (112), at the edge |
+| tenryu_and_yubari_main_battery_shells_fired_in_hundreds | 1 | 2 to 5, 3 (37), miss | 2 to 4, 3 (35), miss |
+| gun_hits_on_allied_ships | 153 to 219 | 35 to 158, 116 (88), at the edge | 43 to 160, 109 (86), at the edge |
+| The report's head | | 19 agree, 1 at the edge, 3 miss | 18 agree, 3 at the edge, 2 miss |
+
+Torpedo hits by ship, runs with one or more: Vincennes 212, Quincy 219, Astoria 128, where each had none. The record has Vincennes 1 to 3, Quincy 2 or 3, Astoria none. Every other measure moved by less than the runs' own spread. The Japanese main battery shells went to the edge, with 101 runs holding.
+
+**Chicago is not mended.** She is sunk in 565 runs, against 560 before; both southern cruisers sink in 451 runs, against 471. The rule sends a second side to whatever the ship next fights, and the southern fight lasts two rounds or more in 682 runs of 1,000. So in most runs the second side goes into the same group, where the record has Chokai and Kako turning theirs on the northern group ten and fifteen minutes later. The cause is the length of the southern fight. That is the cause already named for `minutes_of_action`: the Japanese ended each fight by passing on, and no rule has that (decision 0024, the note on break-off levels). It is not this rule's timing, which no row gives a size to. Nothing is tuned for it.
