@@ -1,6 +1,6 @@
 # Measures for validation
 
-One file per battle: what step 2 measures in a run, and what the record gives for it. `docs/step2-spec.md` says how they are used. Nothing in the simulation reads these files; `sim-cli validate` will, once it is built.
+One file per battle: what step 2 measures in a run, and what the record gives for it. `docs/step2-spec.md` says how they are used. Nothing in the simulation reads these files; `sim-cli validate` does.
 
 ## Format
 

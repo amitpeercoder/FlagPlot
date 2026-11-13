@@ -13,14 +13,14 @@ If a spec or a rule is ambiguous or looks wrong, stop and ask. Do not guess. A d
 | Do anything | `docs/pillars.md`: what the game is and the five pillars every feature is tested against |
 | Ask what the game does today | `docs/rules/`: every rule as the code has it, in the order a day resolves. `docs/glossary.md`: one meaning for each word |
 | Ask why a rule is as it is | `docs/decisions/` (`README.md` is the index). `docs/rules/differences.md`: where a record and the code differ, with a ruling on each |
-| Work on step 2 | `docs/step2-spec.md`, the source of truth for step 2. `docs/step2-opening-list.md`: what is to be decided and built first. `data/validation/`: the measures, and its `README.md` for their rules (no recorded value without the rows it rests on; a range spans a dispute and changes no row's standing) |
+| Work on step 2 | `docs/step2-spec.md`, the source of truth for step 2. `docs/step2-opening-list.md`: what is to be decided and built first. `data/validation/`: the measures, and its `README.md` for their rules (no recorded value without the rows it rests on; a range spans a dispute and changes no row's standing). `docs/validation/`: the reports, and `docs/validation/tuning/`: each tuning round's record |
 | Ask what step 1 was for, or left out | `docs/step1-spec.md`, and decision 0052 |
 | Change or add a rule | `docs/engineering/rule-complexity.md`, `docs/engineering/traceability.md`, and the rule's chapter in `docs/rules/` |
 | Add or change state, a random draw, or anything in `sim-core` | `docs/engineering/determinism.md` |
 | Write anything a player, an agent or the UI will read | `docs/engineering/truth-and-belief.md`, and decisions 0047 to 0051 |
 | Add a crate, a dependency or a file that reads data | `docs/engineering/layout.md` |
 | Touch `data/oob`, `data/reference` or `data/derivation`, or use `references/` | `docs/engineering/data-rules.md`, then `data/oob/README.md` |
-| Build a scenario or its test, brief a developer, or open a pull request | `docs/engineering/roles-and-tests.md` |
+| Build a scenario or its test, brief a developer, or open a pull request | `docs/engineering/roles-and-tests.md`. A test on the frozen figures: `data/scenarios/step2-frozen/README.md` |
 | Run a command and want to know what it does | `docs/commands.md` |
 | Think about what is not planned yet | `docs/design/` (intelligence, materials and economy, storytelling and commands, planning an operation, the plan for ground combat) |
 
@@ -64,12 +64,14 @@ Each of these fails with no error and no failing test if it is missed. The page 
 - Nothing from the War in the Pacific: Admiral's Edition database, and nothing from `references/` is ever committed. Its manuals teach mechanics and lessons, not numbers.
 - One fact row is one source's statement, citing what was read. A source that disagrees gets its own row; rows are never overwritten. A missing fact is a gap, not a guess.
 - Entity IDs in data files are stable. Never renumber or reuse one. Files `oob-derive` generates are never edited by hand.
+- Class ids are pinned in each derivation list's `[class_ids]` table, each id with its ships; a new class takes a new id there.
 
 **Tests and numbers** (`docs/engineering/roles-and-tests.md`)
 
 - The hand calculation is written by the architect before any code is delegated, in the test file's doc comment. Nobody else changes an expected number, and never to make a test pass: a mismatch goes back to the architect.
 - When figures are tuned (step 2): one set of figures serves every battle and none is set for one scenario, a figure moves only toward something a source supports, a unit's experience value is never changed to improve a report (only the strength of its effect is tuned), and the hand-calculation tests run on the frozen step 1 figures (`data/reference/step1`). `docs/step2-spec.md` has the rules of tuning.
 - No test and no build step reads a Markdown file: CI skips its checks when only Markdown changed, so such a test would not run when its input does. If one must, exempt its input in `.github/scripts/needs-checks.sh` first.
+- Frozen figures go with frozen scenarios: a test on the frozen figures reads the frozen copy of a scenario in `data/scenarios/step2-frozen/`, never the live file (that folder's `README.md`).
 - A subagent's summary is a lead, not a fact. Check any claim a design choice will rest on against the source.
 
 **Git**
@@ -114,8 +116,8 @@ Kept short on purpose. The history of how each stage was built is in the decisio
 
 - **Step 1 is complete** against the spec as amended by decision 0052, which lists what it leaves out (ground combat, land units, shore bombardment, ship repair, base damage, crew and pilot quality, among others). All nine scenarios pass; scenario 9's recorded games are under `crates/sim-cli/tests/recorded_games/`.
 - **The rules as they stand are in `docs/rules/`.** `docs/rules/differences.md` lists where a decision record and the code differ, with a ruling on each; nine small code fixes it calls for are not made yet.
-- **Step 2 is under way** to `docs/step2-spec.md`. Another session owns the spec and the measures files (`data/validation/`); the build is planned from `docs/step2-opening-list.md`. Ships are charged straight-line miles (decision 0058) and the scenarios are re-derived for it. The step 1 figures are frozen for the hand-calculation tests, the reach rule is built (decision 0059), strike target priority is built (decision 0063), `batch` and `validate` are built for battles, and the baseline reports are in `docs/validation/`. Experience for ships (decision 0064) and the readiness rule, a force not ready fires part of its guns (decision 0068) and of its torpedoes (decision 0071), are built. The integration scenario, every rule of step 2 acting together (scenario 16), is built.
+- **Step 2 is under way** to `docs/step2-spec.md`. The coordinating architect keeps the spec and the measures files (`data/validation/`); what is open and done is in `docs/step2-opening-list.md`. Every rule the spec put before tuning is built, with scenario 16 acting them together, except experience for air groups, which waits on research (decision 0064); torpedo tubes that bear on one side are held (decision 0074). Tuning has begun on Savo Island: the reports and each round's record are in `docs/validation/`. Cape Esperance is planned (decision 0072) and not built.
 - **Every combat, wear, fatigue, supply and claim figure, and every point value, is a placeholder** until step 2 sets it from the record. The loss spreads of Savo Island and of the four weeks over Guadalcanal are known not to match history yet (decisions 0024, 0042).
-- **The order-of-battle facts** (`data/oob`) cover Savo Island, the Eastern Solomons, the air campaign of August and September 1942 and strike launch ranges; research on Cape Esperance, ditching and crew recovery, and training is arriving in its own pull requests. Rows are unsettled until a derivation reads them (a measure takes a range across a dispute and settles nothing); `data/oob/README.md` says how firm they are and what is missing.
+- **The order-of-battle facts** (`data/oob`) cover Savo Island, the Eastern Solomons, Cape Esperance, the air campaign of August and September 1942, strike launch ranges, ditching and crew recovery, training, rates of fire achieved, torpedoes fired, search distances flown, orders and conduct, passages and the land forces on Guadalcanal. Rows are unsettled until a derivation reads them (a measure takes a range across a dispute and settles nothing); `data/oob/README.md` says how firm they are and what is missing.
 
 When a stage lands, change the line it makes untrue. Do not add a line for it.
