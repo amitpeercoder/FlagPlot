@@ -2,7 +2,7 @@ Scenario 12a: Long reach
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 22f6f5aedeee547c  18 events
+day   1  hash f61aaecc060f2238  18 events
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (11,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

@@ -2,20 +2,20 @@ Scenario 7: The full slice, 21 August to 3 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 99acb740bb86eba5  37 events
-day   2  hash c395007054b760e1  32 events
-day   3  hash 2da37b8ac38386a8  25 events
-day   4  hash 81accd4d2d9b68bc  255 events
-day   5  hash 05dbb269c1c0a80c  150 events
-day   6  hash 5e86293165121536  111 events
-day   7  hash 7c851b38b4e28d43  200 events
-day   8  hash 5ef149911d82b2ac  118 events
-day   9  hash a5b59a6946eb96e9  184 events
-day  10  hash 945d164cbef07b53  147 events
-day  11  hash 8da63193b5ef7aee  142 events
-day  12  hash bb225bdf9dc807d1  123 events
-day  13  hash 81080ed5ae68d1ac  142 events
-day  14  hash 2a4e7e039c50fa8a  123 events
+day   1  hash ffadc48eecfe8b4e  37 events
+day   2  hash 2938958408e62416  32 events
+day   3  hash 9918389dfe0598ab  25 events
+day   4  hash ee9bbf2a329a5e03  255 events
+day   5  hash 79f6d2ba7e8f6359  150 events
+day   6  hash c15f91e94677972d  111 events
+day   7  hash 5ead7e6ffd5d2912  203 events
+day   8  hash 3201622c7cd66cf9  129 events
+day   9  hash 53453bced827a2dd  181 events
+day  10  hash 7973194e963e4fce  154 events
+day  11  hash 270e4cd04b9d09e6  137 events
+day  12  hash 2c0f8ba4968f47d2  115 events
+day  13  hash 1ffe75b3b73f841f  144 events
+day  14  hash 9b1f434fe69d57aa  125 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -23,15 +23,15 @@ task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness 
 task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-9); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:5 "Placeholder supply convoy" (Allied): Arrived at (2,-4); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:3
 task_force:6 "Placeholder night force A" (Japanese): Arrived at (0,10); readiness battle, alert, fatigue 75, rules of engagement: engage, break off at 0.5, stragglers: detach, keep 0; no home port
-task_force:7 "Placeholder night force B" (Allied): Idle at (0,10); readiness normal, not alert, fatigue 94, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:7 "Placeholder night force B" (Allied): Idle at (0,10); readiness normal, alert (alerted), fatigue 94, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:8 "Placeholder bystander" (Allied): Idle at (0,10); readiness normal, alert (alerted), fatigue 5, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:9 "Placeholder dry destroyer" (Allied): OutOfFuel at (4,13); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:10 "Placeholder night force C" (Japanese): Arrived at (0,14); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:11 "Placeholder night force D" (Allied): Arrived at (-8,14); readiness normal, not alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:12 "Placeholder night force E" (Japanese): Arrived at (0,12); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:13 "Placeholder night force F" (Allied): Arrived at (-8,12); readiness normal, not alert, fatigue 27, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:14 "Placeholder night force A, left behind" (Japanese): Idle at (0,10), 20 nm from (-1,10) toward (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:15 "Placeholder night force A, left behind" (Japanese): Idle at (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2000001 "Placeholder night force A, left behind" (Japanese): Idle at (0,10), 20 nm from (-1,10) toward (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2000002 "Placeholder night force A, left behind" (Japanese): Idle at (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 37 ready, 41 pilots, mission Rest, fatigue 51.2, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 19 ready, 4 damaged, 24 pilots, mission CombatAirPatrol, patrol share 0, fatigue 51.2, no arc
 air_group:3 "6th Air Group" (Japanese) at base:2: 12 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, fatigue 10.24, no arc
@@ -105,9 +105,9 @@ ship:36 "Tokitsukaze": afloat in task_force:4; damage flotation 0, fire 0; all s
 ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
 ship:38 "Placeholder cargo ship 2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
 ship:39 "Placeholder destroyer 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
-ship:40 "Placeholder cruiser A1": afloat in task_force:14; damage flotation 93.75, fire 6.25; propulsion out, fire control out; 560 gun rounds, torpedoes gone; 1508 t of fuel, 0 t of supply
-ship:41 "Placeholder cruiser A2": afloat in task_force:15; damage flotation 25, fire 17.5; propulsion out, main battery degraded; 440 gun rounds, torpedoes gone; 1488 t of fuel, 0 t of supply
-ship:42 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 25; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:40 "Placeholder cruiser A1": afloat in task_force:2000001; damage flotation 93.75, fire 11.25; propulsion out, main battery out, torpedo mounts degraded; 560 gun rounds, torpedoes gone; 1508 t of fuel, 0 t of supply
+ship:41 "Placeholder cruiser A2": afloat in task_force:2000002; damage flotation 35, fire 22.5; propulsion out, fire control degraded, main battery degraded; 440 gun rounds, torpedoes gone; 1488 t of fuel, 0 t of supply
+ship:42 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 30; propulsion degraded, fire control degraded, main battery out, torpedo mounts out; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
 ship:43 "Placeholder cruiser B2": afloat in task_force:7; damage flotation 10, fire 10; torpedo mounts degraded; 560 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
 ship:44 "Placeholder destroyer bystander": SUNK; damage flotation 100, fire 20; fire control degraded, main battery out, torpedo mounts degraded; 420 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
 ship:45 "Placeholder dry destroyer": afloat in task_force:9; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
@@ -120,7 +120,7 @@ ship:51 "Placeholder cruiser F1": afloat in task_force:13; damage flotation 0, f
 base:1 "Henderson Field" (Allied) at (2,-4): 4442.9 t of supply in stock, 195.575 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day
 base:2 "Rabaul" (Japanese) at (-5,-13): 9034.84 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 600 t of fuel in stock
-Allied: no contacts
+Allied contact:6 at (-1,10): 1 ships, carrier, age 0 pulses
 Allied claim at (7,-9): 3 hits on a carrier, 0 sunk, day 4 afternoon
 Allied claim at (7,-9): 11 hits on a carrier, 1 sunk, day 4 afternoon
 Allied claim over (7,-5): 20 aircraft shot down, day 4 afternoon
@@ -130,7 +130,7 @@ Allied claim over (2,-4): 1 aircraft shot down, day 5 morning
 Allied claim over (2,-4): 6 aircraft shot down, day 6 morning
 Allied claims 0 enemy ships sunk at (0,10), day 7 night
 Allied claims 0 enemy ships sunk at (0,10), day 7 morning
-Allied claims 0 enemy ships sunk at (0,10), day 7 afternoon
+Allied claims 0 enemy ships sunk at (0,10), day 7 morning
 Allied claims 0 enemy ships sunk at (0,10), day 8 afternoon
 Allied claim over (2,-4): 2 aircraft shot down, day 9 morning
 Allied claim over (2,-4): 13 aircraft shot down, day 10 morning
@@ -145,7 +145,7 @@ Japanese claim at (2,-4): 4 aircraft shot down, 8 aircraft destroyed on the grou
 Japanese claim at (2,-4): 3 aircraft shot down, 4 aircraft destroyed on the ground, day 6 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 night
 Japanese claims 1 enemy ship sunk at (0,10), day 7 morning
-Japanese claims 0 enemy ships sunk at (0,10), day 7 afternoon
+Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
 Japanese claim at (2,-4): 4 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
 Japanese claim at (2,-4): 1 aircraft shot down, 2 aircraft destroyed on the ground, day 10 morning

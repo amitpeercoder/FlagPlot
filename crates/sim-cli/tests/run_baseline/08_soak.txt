@@ -2,186 +2,186 @@ Scenario 8: The soak, 180 days from 21 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3d80457eea841d36  80 events
-day   2  hash 522b883b630c24f5  72 events
-day   3  hash a22bda1a273c9bbb  63 events
-day   4  hash e1783e966cfd0a31  271 events
-day   5  hash ca39824c70a7827f  155 events
-day   6  hash 5f02c7c9cd414dd5  117 events
-day   7  hash 2c32ec193872cb4c  225 events
-day   8  hash bf42a0c47139bf85  126 events
-day   9  hash a4f5add3baf92918  202 events
-day  10  hash cd252baa0eee2d6a  165 events
-day  11  hash 7b95d6923164b72d  172 events
-day  12  hash 2b1782bfb7c1fda2  146 events
-day  13  hash 316785b81b058f19  155 events
-day  14  hash 534ac2d70ce3efe5  134 events
-day  15  hash 5e75df73ebbfcd42  159 events
-day  16  hash a715ccda9d644ac7  162 events
-day  17  hash c9ac9bee55516c87  143 events
-day  18  hash cdcbf604a440e397  147 events
-day  19  hash 4d532c92d999284b  128 events
-day  20  hash 3317f7ee28cb2f57  97 events
-day  21  hash 7f75313b66d0389a  97 events
-day  22  hash c7c71e14bdf86e82  102 events
-day  23  hash 51e2c2bbca4d7cad  101 events
-day  24  hash 7fc2e054941c79bf  104 events
-day  25  hash 0338543ad0cd4354  94 events
-day  26  hash fde594706abc3889  80 events
-day  27  hash 628afe974e0c89c4  95 events
-day  28  hash 92b7a6454a5dd839  84 events
-day  29  hash 089db5956b2f644e  92 events
-day  30  hash 7a1346c5b4fa66ab  99 events
-day  31  hash 8b8d1862c105ebd1  82 events
-day  32  hash caf22e8a80336877  80 events
-day  33  hash 9fe405654acd14fc  162 events
-day  34  hash 67147e43b719bbfe  123 events
-day  35  hash b155ab418f9baab8  115 events
-day  36  hash 224410630168677d  78 events
-day  37  hash e250f2a9c56020cc  100 events
-day  38  hash 08a83a99307356a7  74 events
-day  39  hash 0e69cef03df34a7b  101 events
-day  40  hash c9ace15e2f53dfce  159 events
-day  41  hash 7fcb0e79ec412005  88 events
-day  42  hash ebc2ee657f2fb562  129 events
-day  43  hash b18bf59f63182bca  163 events
-day  44  hash 82f00124875db12b  94 events
-day  45  hash 61664bd14466ba7f  86 events
-day  46  hash c1f93e5c604bddfb  181 events
-day  47  hash 585e0f7dd882a5d7  95 events
-day  48  hash 42a0b1009b824f90  98 events
-day  49  hash fb3497706150fac9  99 events
-day  50  hash a1a08cd85dece051  143 events
-day  51  hash 23b5c30c58bc6e25  98 events
-day  52  hash 95a27f0e75efebcb  137 events
-day  53  hash 4f3f4cbfd379c403  82 events
-day  54  hash 20355aa46a47bb95  79 events
-day  55  hash dd8fe211dac9110c  146 events
-day  56  hash 03a58b45f87224a3  127 events
-day  57  hash b3c4777db334edbe  84 events
-day  58  hash 5f744a46721e6776  113 events
-day  59  hash 08182af890eea5e8  82 events
-day  60  hash a735555483cb5fde  141 events
-day  61  hash 14b63ffca0a5f60b  106 events
-day  62  hash bf69597f6547b5a3  77 events
-day  63  hash 1c9977d298f2626f  134 events
-day  64  hash d4dd78c328e4b1cf  110 events
-day  65  hash 19a12ea02d994084  99 events
-day  66  hash 95f3381473953701  84 events
-day  67  hash 50a3c60796ca4d7e  102 events
-day  68  hash 9328cbea0babf7fa  74 events
-day  69  hash 2338e37c892bfd8c  102 events
-day  70  hash d42aa6f95f641e37  145 events
-day  71  hash 6203ea423efe8f90  162 events
-day  72  hash 633e9b2f29ab7904  136 events
-day  73  hash d564021ba99c4067  117 events
-day  74  hash caba81655ab262b4  108 events
-day  75  hash 61ccc15742c1a632  113 events
-day  76  hash 7af3d7fd7f6cb49d  108 events
-day  77  hash 772dab37a0bb1343  92 events
-day  78  hash b8ceb21e45491a01  93 events
-day  79  hash 25ec0914cb5b30de  99 events
-day  80  hash f50f7e1a9ba5d2d3  179 events
-day  81  hash b03ffb6c942dfd0d  126 events
-day  82  hash be2c9e99df6e9bdb  147 events
-day  83  hash 8b0b3cad39c7b5ff  88 events
-day  84  hash 6eb72be944ed5784  77 events
-day  85  hash 334b5e4643ac6d8e  118 events
-day  86  hash 105392502cb16bd7  78 events
-day  87  hash d4af49b923b09923  157 events
-day  88  hash 2c8bebb595d0ef78  113 events
-day  89  hash c6740f90fb40b85c  87 events
-day  90  hash a868c0733b53d752  83 events
-day  91  hash aece1838c219d5bf  104 events
-day  92  hash 0f4aa15d2674ec3b  75 events
-day  93  hash f031a80e39b85976  147 events
-day  94  hash f6a1206ce5aac385  131 events
-day  95  hash e66621b1ef6b445d  117 events
-day  96  hash d2666890f0576946  89 events
-day  97  hash a5b4bfe7dd1b85d4  92 events
-day  98  hash 6eaefaa4b2127874  76 events
-day  99  hash eccc77395242b603  85 events
-day 100  hash 678c91f0cfbadbd9  107 events
-day 101  hash c9563b89dbdb1b51  136 events
-day 102  hash 421bd7e578105fba  87 events
-day 103  hash 8b9d184dbbf93dc3  137 events
-day 104  hash 9e36243390af6f7c  143 events
-day 105  hash 801a24d1b6d29100  101 events
-day 106  hash a5375798a06d5d54  120 events
-day 107  hash c552ad507a245bec  92 events
-day 108  hash 7b2cd2fc09105821  76 events
-day 109  hash abc111f142b83eb6  96 events
-day 110  hash 8daf1088473830bb  118 events
-day 111  hash 7446a43b6cb1ecdb  97 events
-day 112  hash 487c2ccd2bfb142d  106 events
-day 113  hash 24a2ba56f6bd40f4  74 events
-day 114  hash 6331d9027aa0282a  86 events
-day 115  hash fa37f7821f37d9c7  143 events
-day 116  hash 995bab2903174724  95 events
-day 117  hash ca542fc3ea00e96b  114 events
-day 118  hash 60da62ba0d8e5061  116 events
-day 119  hash be1c4a48c8ab1a6c  144 events
-day 120  hash c4a23344265c40f0  110 events
-day 121  hash 773eaadf46830205  114 events
-day 122  hash 4b0412f8161a3a0b  89 events
-day 123  hash 3142901e9af71490  140 events
-day 124  hash acea32f6389ada77  103 events
-day 125  hash ba955d826a0c31ce  83 events
-day 126  hash 5f9bf9fd2525ba0c  71 events
-day 127  hash 6a247f82216572df  98 events
-day 128  hash 355afe5d96c45d21  72 events
-day 129  hash 5c084cb7f5e1d3e9  69 events
-day 130  hash e4f5bafbcc2bcf51  163 events
-day 131  hash fbd3cf45d5f608a9  113 events
-day 132  hash b05b2812ed72c511  89 events
-day 133  hash 729bd873ba2132da  138 events
-day 134  hash dd47fddeeea97104  91 events
-day 135  hash a2db5a5431124c7a  94 events
-day 136  hash 9a9da16ba7557038  99 events
-day 137  hash 22160458236893e6  64 events
-day 138  hash 1f0e6683626fd700  73 events
-day 139  hash a43df0a2af256a83  101 events
-day 140  hash 2333af04e0a6b42e  133 events
-day 141  hash 099e03c1334ddbe3  83 events
-day 142  hash 293ca7e36d4a159c  119 events
-day 143  hash 411e863233551e9f  75 events
-day 144  hash 4172a3c1415c7da4  78 events
-day 145  hash 1161bc5227a8da60  102 events
-day 146  hash 93bc0d59fe0867ef  117 events
-day 147  hash dac312b693a63402  160 events
-day 148  hash 3b26cf44e03efd7a  102 events
-day 149  hash b84eabc7411cbdea  80 events
-day 150  hash c17bb3bdb5a36d44  76 events
-day 151  hash 81e87e5354482028  77 events
-day 152  hash e5b9f1d789490860  72 events
-day 153  hash c571b226bf6f12bf  127 events
-day 154  hash 33635a28523d7024  78 events
-day 155  hash bbc78fad89723f04  97 events
-day 156  hash 5f9065c4f4958dc0  78 events
-day 157  hash db8c48e1dc0598f5  72 events
-day 158  hash 6b51a5b8f0532706  70 events
-day 159  hash dfa0b742b230af8d  64 events
-day 160  hash 5b06fbafe3295ec3  156 events
-day 161  hash d97960c3ce57ef61  70 events
-day 162  hash 8278dd77d4f1d652  73 events
-day 163  hash c8b1526d1cf7856b  74 events
-day 164  hash e2300d956c3cf1b4  58 events
-day 165  hash c569adda632314ab  65 events
-day 166  hash d706ba3213cdb297  59 events
-day 167  hash 18a8a2ce53e97880  71 events
-day 168  hash 493ac5c978aa72ec  79 events
-day 169  hash fe3604fd747b0536  65 events
-day 170  hash 3110235dc6f2ac2b  125 events
-day 171  hash 3d6627e51225a5a0  80 events
-day 172  hash 490e65060099443b  97 events
-day 173  hash f20b8b5148918fde  59 events
-day 174  hash 48f1ab455c53ca3a  59 events
-day 175  hash 3210dc3dacaac93b  73 events
-day 176  hash dcb1ebb8fe8153ec  134 events
-day 177  hash 707bc748e2f50500  72 events
-day 178  hash e679a9897fbfd30d  127 events
-day 179  hash da54ca9e126108fd  76 events
-day 180  hash e2e55329c41d2168  82 events
+day   1  hash 90064bc63798ac45  80 events
+day   2  hash 87b0903f5f460be2  72 events
+day   3  hash e74a7f8e33ff12f8  63 events
+day   4  hash 0a395633177bc696  271 events
+day   5  hash 56796ce6ca380f82  155 events
+day   6  hash e2dff027f24efbc2  117 events
+day   7  hash 11557b3055dad5b3  226 events
+day   8  hash 9bd76a4a24f959b7  160 events
+day   9  hash 6f9897d4ba1827a2  212 events
+day  10  hash 403b77bf6b299b1c  198 events
+day  11  hash 7bcdf836e098e49f  183 events
+day  12  hash 3872fc75dc23bf7f  159 events
+day  13  hash f187290b0715d689  171 events
+day  14  hash 4c5ca83057f86492  152 events
+day  15  hash 436268bfc798c08c  176 events
+day  16  hash 3cbfef0c44c8a898  182 events
+day  17  hash f29591cb3da4dd68  151 events
+day  18  hash 5aaf24c2b5fba7ca  167 events
+day  19  hash e2ae92107e3f5124  152 events
+day  20  hash 2c8743cdb7ba233a  91 events
+day  21  hash 8ca33aa7d16f73f5  98 events
+day  22  hash d488d6c3f633fe66  104 events
+day  23  hash b7e16a661175c3c0  101 events
+day  24  hash 556194f225ba0302  104 events
+day  25  hash 23c25b61e2ede429  94 events
+day  26  hash f21ec68dde177778  80 events
+day  27  hash 1d1eadcc7fd818c6  92 events
+day  28  hash 33a1814903b6669b  81 events
+day  29  hash ece1b1a64b91475a  89 events
+day  30  hash be3f68ec54d9c236  94 events
+day  31  hash a69d17c766284601  81 events
+day  32  hash b53f58c27de4dd0f  80 events
+day  33  hash 4cfbf1b7bebc5b4f  162 events
+day  34  hash 9fb00ca0044e4134  123 events
+day  35  hash e36b6b4817375ba1  115 events
+day  36  hash 418c091b2e439a08  78 events
+day  37  hash 00e075b737da10ab  100 events
+day  38  hash 01c498585fa7a316  74 events
+day  39  hash 14cbc21aea2e574a  101 events
+day  40  hash 422ae8eac1e81040  159 events
+day  41  hash a4c37ee41f6c1c81  88 events
+day  42  hash 98b63a7fcedf3ba8  129 events
+day  43  hash 6e8b6568da5ada82  163 events
+day  44  hash 000bf30b47c89d7c  94 events
+day  45  hash 8e2aab259b255e21  86 events
+day  46  hash 45076011818e2c38  181 events
+day  47  hash cffc75922bb98fe2  95 events
+day  48  hash 6dc8da21fb30b746  98 events
+day  49  hash cdd8e33614fe4b87  99 events
+day  50  hash 10572862b26b8634  143 events
+day  51  hash f8c16a364b07883f  98 events
+day  52  hash b7f6a3e75886f035  137 events
+day  53  hash 0c66d2b670c40906  82 events
+day  54  hash 712c3db9bcaf62df  79 events
+day  55  hash 1dce9d030fb2e9c3  146 events
+day  56  hash 57c1254a9dff8e4b  127 events
+day  57  hash 9d8ef8cc3639fbbe  84 events
+day  58  hash 4a076bf6952f5910  113 events
+day  59  hash ca49aabfc596b786  82 events
+day  60  hash f937e27042bb3510  141 events
+day  61  hash 1f5fde6c50c7d160  106 events
+day  62  hash 52225307f429a06e  77 events
+day  63  hash 7d506a20d24717d9  134 events
+day  64  hash 198aaa27d7985c22  110 events
+day  65  hash 1e12f28ebcb54951  99 events
+day  66  hash 5369bf7817f7feac  84 events
+day  67  hash e0ae11f381e74b15  102 events
+day  68  hash 1f9664c858ab9247  74 events
+day  69  hash c6d2fd744da6a816  102 events
+day  70  hash ffd3389fdbe2c03c  145 events
+day  71  hash e72e6c0977f4c68e  162 events
+day  72  hash c6303da698df377e  136 events
+day  73  hash 48db9117c86c312a  117 events
+day  74  hash f1c4eb3674275d4f  108 events
+day  75  hash 9f73b214e096b06e  113 events
+day  76  hash 2e10d66491148308  108 events
+day  77  hash e22671908e26b18d  92 events
+day  78  hash 8d1b6bd6085fcfe5  93 events
+day  79  hash 06eb1bee65480d50  99 events
+day  80  hash 2a86c911b7569e97  182 events
+day  81  hash 58924a866d61d164  128 events
+day  82  hash 36b4ca587dd98060  144 events
+day  83  hash bebbe86ab7f1d0cd  89 events
+day  84  hash ad47e01df115b462  77 events
+day  85  hash 0772dd9419356d84  118 events
+day  86  hash ceed1b268ce836e2  78 events
+day  87  hash a187464787ff8dbc  157 events
+day  88  hash 506e60bad540d365  113 events
+day  89  hash 8ca488fb6d86c792  87 events
+day  90  hash 9f71c509d218a047  83 events
+day  91  hash cf20129709b8fcc4  104 events
+day  92  hash b63f964f89da3c21  75 events
+day  93  hash b79f4b8e0f47297d  147 events
+day  94  hash 8ac553826b10ef1e  131 events
+day  95  hash 7cc48f2e1e672698  117 events
+day  96  hash eba712635da4ef66  89 events
+day  97  hash a886886af2ce3fa3  92 events
+day  98  hash 101127a673a54060  76 events
+day  99  hash 4c5cf19d2c45869a  85 events
+day 100  hash a103ed29f60da0d8  107 events
+day 101  hash 9a05b72a620d27bc  136 events
+day 102  hash 380f07ae5b9ce863  87 events
+day 103  hash 7f5763b48eaaf730  137 events
+day 104  hash be6999226476a55a  143 events
+day 105  hash 9ba66aa6d07dc969  101 events
+day 106  hash b359e6aed2958c94  120 events
+day 107  hash bca019b710c5dee6  92 events
+day 108  hash a07c7a36e5000052  76 events
+day 109  hash c6a17300af6ee3a3  96 events
+day 110  hash 4cb0323311a24dd8  118 events
+day 111  hash bf310eff53846752  97 events
+day 112  hash 0add295d93708350  106 events
+day 113  hash 194f7a531dc5cc1c  74 events
+day 114  hash ff21f6c54c2e3e7e  86 events
+day 115  hash 26626c25c1d05965  143 events
+day 116  hash 0de3a77805107875  95 events
+day 117  hash 72be2b301e118a61  114 events
+day 118  hash 61070654dcd5a206  116 events
+day 119  hash d9b2b0529715ddf2  144 events
+day 120  hash cc920b5e895dbfe0  110 events
+day 121  hash 0b2a5d5522e46662  114 events
+day 122  hash 8eebe1d941f456c6  89 events
+day 123  hash bfa3ac7b3fe6341b  140 events
+day 124  hash e85a778839e863ac  103 events
+day 125  hash e1e3d8de48c47412  83 events
+day 126  hash 7c4662b98837b000  71 events
+day 127  hash 89e4ae648bb084cc  98 events
+day 128  hash da34846ffc67340a  72 events
+day 129  hash baf9aad3c95a185b  69 events
+day 130  hash 5875d6b7e08dfa9f  163 events
+day 131  hash 30c60fb9b917023e  113 events
+day 132  hash d896d3d4c04800c9  89 events
+day 133  hash 88a6b0e96525e5f6  138 events
+day 134  hash 4e7d86d1ff07a2f4  91 events
+day 135  hash 0c44c66f56c48b34  94 events
+day 136  hash 4b67cd25e7d10855  99 events
+day 137  hash f9e8724e864b38bc  64 events
+day 138  hash 52428e25b421347a  73 events
+day 139  hash 2109a0a15183dbfd  101 events
+day 140  hash 132ffc88c0582950  133 events
+day 141  hash 1cb1cc1a87802985  83 events
+day 142  hash 67dceb9150179386  119 events
+day 143  hash e13e837f4e5a8e15  75 events
+day 144  hash 54880c315f5e59d9  78 events
+day 145  hash 25456b85f851f9cf  102 events
+day 146  hash 978630d53029ac83  117 events
+day 147  hash 01ab91cce6feb9b2  160 events
+day 148  hash 56d122c85946fff0  102 events
+day 149  hash 7816ec3c6b793f26  80 events
+day 150  hash db6cdd387d6657a5  76 events
+day 151  hash 61a82b5afd6bf62e  77 events
+day 152  hash 5138f69a863ecb7a  72 events
+day 153  hash 95fdf102f58f3754  127 events
+day 154  hash ff8ebf0bb0b42579  78 events
+day 155  hash fc5816ea6db58ccc  97 events
+day 156  hash 1631005cf17c82de  78 events
+day 157  hash 7a58e65a7e01ae93  72 events
+day 158  hash 427fc4b4c1a6e98b  70 events
+day 159  hash fbcfe025d48245ba  64 events
+day 160  hash e971e0aaac317424  156 events
+day 161  hash 977d16f653a6ccfa  70 events
+day 162  hash c54776c1f4e1fd9a  73 events
+day 163  hash d8a9c60401265238  74 events
+day 164  hash 07c082bfb0ffa25f  58 events
+day 165  hash 2e469b9715e76df2  65 events
+day 166  hash 3fead15ef5855a35  59 events
+day 167  hash 1e1275d42079bc46  71 events
+day 168  hash 74b7ef70ff33a8f5  79 events
+day 169  hash 338c38103b32b509  65 events
+day 170  hash df90c739476c9b6d  125 events
+day 171  hash f5eb07843413c955  80 events
+day 172  hash 03288fb5430e4442  97 events
+day 173  hash 1764f4735c9b1bf3  59 events
+day 174  hash 04a340d97e4b082f  59 events
+day 175  hash 10631436f56bbc70  73 events
+day 176  hash f09566d0338e9744  134 events
+day 177  hash f07d63adc9c59373  72 events
+day 178  hash 4d4eaf687a416ce6  127 events
+day 179  hash bbfeca786019c855  76 events
+day 180  hash a91198256b5003c9  82 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -230,10 +230,10 @@ task_force:68 "Placeholder surface force 13J" (Japanese): Arrived at (-12,20); r
 task_force:69 "Placeholder surface force 13A" (Allied): Arrived at (-4,20); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:70 "Placeholder battle picket" (Japanese): Idle at (-12,1); readiness battle, alert, fatigue 100, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:71 "Placeholder dry cruiser" (Allied): OutOfFuel at (-11,0), 20 nm from (-12,0) toward (-11,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:72 "Placeholder night force A, left behind" (Japanese): Idle at (0,10), 20 nm from (-1,10) toward (0,10); readiness battle, alert, fatigue 60, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:73 "Placeholder night force A, left behind" (Japanese): Idle at (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:74 "Placeholder surface force 7J, left behind" (Japanese): Idle at (-4,9), 20 nm from (-5,9) toward (-4,9); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
-task_force:75 "Placeholder surface force 13A, left behind" (Allied): Idle at (-8,20), 20 nm from (-7,20) toward (-8,20); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:1000001 "Placeholder surface force 13A, left behind" (Allied): Idle at (-8,20), 20 nm from (-7,20) toward (-8,20); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2000001 "Placeholder night force A, left behind" (Japanese): Idle at (0,10), 20 nm from (-1,10) toward (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2000002 "Placeholder night force A, left behind" (Japanese): Idle at (0,10); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2000003 "Placeholder surface force 7J, left behind" (Japanese): Idle at (-4,9), 20 nm from (-5,9) toward (-4,9); readiness battle, alert, fatigue 100, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)" (Japanese) at base:2: 37 ready, 4 damaged, 41 pilots, mission BaseStrike on base:1, rests above 45, no arc
 air_group:2 "Tainan Air Group" (Japanese) at base:2: 59 ready, 5 damaged, 64 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
 air_group:3 "6th Air Group" (Japanese) at base:2: 13 ready, 13 pilots, mission CombatAirPatrol, patrol share 0, rests above 45, no arc
@@ -312,10 +312,10 @@ ship:36 "Tokitsukaze": SUNK; damage flotation 100, fire 92.96606; propulsion out
 ship:37 "Placeholder cargo ship 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 601.9 t of fuel, 960 t of supply
 ship:38 "Placeholder cargo ship 2": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 601.9 t of fuel, 960 t of supply
 ship:39 "Placeholder destroyer 1": afloat in task_force:5; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
-ship:40 "Placeholder cruiser A1": SUNK; damage flotation 100, fire 11.25; propulsion out, fire control degraded, main battery out, torpedo mounts degraded; 560 gun rounds, torpedoes gone; 1700 t of fuel, 0 t of supply
-ship:41 "Placeholder cruiser A2": afloat in task_force:73; damage flotation 45, fire 17.5; propulsion out, fire control degraded, main battery out; 380 gun rounds, torpedoes gone; 1680 t of fuel, 0 t of supply
-ship:42 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 25; propulsion degraded, fire control out, main battery out, torpedo mounts degraded; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
-ship:43 "Placeholder cruiser B2": afloat in task_force:7; damage flotation 20, fire 10; torpedo mounts degraded; 440 gun rounds, torpedoes gone; 1968.75 t of fuel, 0 t of supply
+ship:40 "Placeholder cruiser A1": afloat in task_force:2000001; damage flotation 93.75, fire 11.25; propulsion out, main battery out, torpedo mounts degraded; 560 gun rounds, torpedoes gone; 1700 t of fuel, 0 t of supply
+ship:41 "Placeholder cruiser A2": afloat in task_force:2000002; damage flotation 35, fire 22.5; propulsion out, fire control degraded, main battery degraded; 440 gun rounds, torpedoes gone; 1680 t of fuel, 0 t of supply
+ship:42 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 30; propulsion degraded, fire control degraded, main battery out, torpedo mounts out; 680 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
+ship:43 "Placeholder cruiser B2": afloat in task_force:7; damage flotation 10, fire 10; torpedo mounts degraded; 560 gun rounds, torpedoes gone; 1968.75 t of fuel, 0 t of supply
 ship:44 "Placeholder destroyer bystander": SUNK; damage flotation 100, fire 20; fire control degraded, main battery out, torpedo mounts degraded; 420 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
 ship:45 "Placeholder dry destroyer": afloat in task_force:9; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
 ship:46 "Placeholder cruiser C1": afloat in task_force:10; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1920 t of fuel, 0 t of supply
@@ -358,7 +358,7 @@ ship:90 "Placeholder destroyer 6J1": SUNK; damage flotation 100, fire 0; propuls
 ship:91 "Placeholder destroyer 6J2": afloat in task_force:54; damage flotation 80, fire 0; fire control out, torpedo mounts degraded; 600 gun rounds, torpedoes ready; 180 t of fuel, 0 t of supply
 ship:92 "Placeholder cruiser 6A1": afloat in task_force:55; damage flotation 0, fire 0; all systems working; 740 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
 ship:93 "Placeholder cruiser 6A2": afloat in task_force:55; damage flotation 0, fire 0; all systems working; 740 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
-ship:94 "Placeholder cruiser 7J1": afloat in task_force:74; damage flotation 50, fire 20; propulsion out, fire control degraded, main battery out; 680 gun rounds, torpedoes gone; 1860 t of fuel, 0 t of supply
+ship:94 "Placeholder cruiser 7J1": afloat in task_force:2000003; damage flotation 50, fire 20; propulsion out, fire control degraded, main battery out; 680 gun rounds, torpedoes gone; 1860 t of fuel, 0 t of supply
 ship:95 "Placeholder destroyer 7J2": afloat in task_force:56; damage flotation 70, fire 15; propulsion degraded, fire control out; 480 gun rounds, torpedoes gone; 407.851563 t of fuel, 0 t of supply
 ship:96 "Placeholder cruiser 7A1": afloat in task_force:57; damage flotation 5, fire 0; propulsion degraded; 560 gun rounds, torpedoes gone; 1825 t of fuel, 0 t of supply
 ship:97 "Placeholder destroyer 7A2": afloat in task_force:57; damage flotation 10, fire 10; all systems working; 360 gun rounds, torpedoes gone; 412.5 t of fuel, 0 t of supply
@@ -380,7 +380,7 @@ ship:112 "Placeholder destroyer 12A2": afloat in task_force:67; damage flotation
 ship:113 "Placeholder destroyer 12A3": afloat in task_force:67; damage flotation 0, fire 0; all systems working; 540 gun rounds, torpedoes gone; 350.89844 t of fuel, 0 t of supply
 ship:114 "Placeholder cruiser 13J1": afloat in task_force:68; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
 ship:115 "Placeholder cruiser 13J2": afloat in task_force:68; damage flotation 0, fire 0; all systems working; 680 gun rounds, torpedoes gone; 1360 t of fuel, 0 t of supply
-ship:116 "Placeholder cruiser 13A1": afloat in task_force:75; damage flotation 75, fire 0; propulsion out, main battery degraded; 800 gun rounds, torpedoes ready; 1860 t of fuel, 0 t of supply
+ship:116 "Placeholder cruiser 13A1": afloat in task_force:1000001; damage flotation 75, fire 0; propulsion out, main battery degraded; 800 gun rounds, torpedoes ready; 1860 t of fuel, 0 t of supply
 ship:117 "Placeholder cruiser 13A2": afloat in task_force:69; damage flotation 50, fire 5; main battery out; 800 gun rounds, torpedoes ready; 1720 t of fuel, 0 t of supply
 ship:118 "Placeholder picket destroyer": afloat in task_force:70; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
 ship:119 "Placeholder dry cruiser": afloat in task_force:71; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 0 t of fuel, 0 t of supply
@@ -400,10 +400,9 @@ Allied claim over (2,-4): 1 aircraft shot down, day 5 morning
 Allied claim over (2,-4): 7 aircraft shot down, day 6 morning
 Allied claims 0 enemy ships sunk at (0,10), day 7 night
 Allied claims 0 enemy ships sunk at (0,10), day 7 morning
-Allied claims 1 enemy ship sunk at (0,10), day 7 afternoon
+Allied claims 0 enemy ships sunk at (0,10), day 7 morning
 Allied claims 0 enemy ships sunk at (0,10), day 8 afternoon
 Allied claim over (2,-4): 4 aircraft shot down, day 9 morning
-Allied claims 0 enemy ships sunk at (0,10), day 9 morning
 Allied claim over (2,-4): 17 aircraft shot down, day 10 morning
 Allied claim over (2,-4): 13 aircraft shot down, day 12 morning
 Allied claim over (2,-4): 7 aircraft shot down, day 13 morning
@@ -509,10 +508,9 @@ Japanese claim at (2,-4): 3 aircraft shot down, 6 aircraft destroyed on the grou
 Japanese claim at (2,-4): 1 aircraft shot down, 3 aircraft destroyed on the ground, day 6 morning
 Japanese claims 0 enemy ships sunk at (0,10), day 7 night
 Japanese claims 1 enemy ship sunk at (0,10), day 7 morning
-Japanese claims 0 enemy ships sunk at (0,10), day 7 afternoon
+Japanese claims 0 enemy ships sunk at (0,10), day 7 morning
 Japanese claims 1 enemy ship sunk at (0,10), day 8 afternoon
 Japanese claim at (2,-4): 1 aircraft shot down, 4 aircraft destroyed on the ground, day 9 morning
-Japanese claims 0 enemy ships sunk at (0,10), day 9 morning
 Japanese claim over (2,-4): 0 aircraft shot down, day 10 morning
 Japanese claim at (2,-4): 6 aircraft shot down, 1 aircraft destroyed on the ground, day 12 morning
 Japanese claim at (2,-4): 2 aircraft shot down, 3 aircraft destroyed on the ground, day 13 morning
