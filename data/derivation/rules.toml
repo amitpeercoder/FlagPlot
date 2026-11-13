@@ -392,7 +392,7 @@ agreed = "2026-11-11"
 entity = "b5n2"
 fact = "range_normal_nm"
 row = 79
-reason = "Chosen on the Eastern Solomons sheet: 528 miles with a torpedo, two weak sources that agree."
+reason = "Chosen on the Eastern Solomons sheet: 528 miles, the normal range, with no load stated; two weak sources that agree (rows 79 and 412)."
 agreed = "2026-11-11"
 
 [[exception]]
