@@ -684,7 +684,8 @@ range_nm = 200
 # 12:05 Tokyo time, 153 degrees and about 260 miles from the carriers (441).
 # The arc is 120 to 180: south and south-east, about the base line, and it
 # holds the bearing of the sighting. The range is the E13A1's derived search
-# range, 253, below the record's 330. Chikuma's five floatplanes stand for
+# range, 253, below the record's 330; it becomes 330 when decision 0075
+# gives the type a search radius of its own. Chikuma's five floatplanes stand for
 # the four to six of the vanguard (the other cruisers' and the battleships'
 # floatplanes are not in the scenario).
 [[order]]
@@ -703,48 +704,13 @@ from_deg = 120
 to_deg = 180
 range_nm = 253
 
-# The carriers' dawn search was flown by their attack planes, and the attack
-# planes struck nothing that day (the strikes were dive bombers and fighters:
-# engagement_events 344, 371, 374, 376 to 379). Shokaku's: 7 Type 97s, one to
-# each line, to 250 miles, launched 04:15 Tokyo time (366); "7 attack aircraft
-# searched 250 nm to the south" (369), on Nagumo's base line of 150 degrees
-# (303). The arc is 120 to 180, seven lines about 150. Zuikaku's: 12 Type 97s
-# at 04:35, 60 to 110 degrees to 230 miles and 0 to 60 to 200 (368; the first
-# figure is illegible, read as 60 because the two sectors then meet). The
-# range of both is the B5N2's derived search range, 175, below the record.
-# Each group flies all its aircraft, in both pulses: the record has 7 and 12,
-# at dawn only.
-[[order]]
-day = 1
-side = "japanese"
-air_group = 13
-kind = "set_air_mission"
-mission = "search"
-
-[[order]]
-day = 1
-side = "japanese"
-air_group = 13
-kind = "set_search_arc"
-from_deg = 120
-to_deg = 180
-range_nm = 175
-
-[[order]]
-day = 1
-side = "japanese"
-air_group = 16
-kind = "set_air_mission"
-mission = "search"
-
-[[order]]
-day = 1
-side = "japanese"
-air_group = 16
-kind = "set_search_arc"
-from_deg = 0
-to_deg = 110
-range_nm = 175
+# A LIMIT OF THE RULES, not the record: the carriers' attack units are on
+# naval strike (below), as decision 0063 has them, but on the day they flew
+# the dawn search and found nothing (engagement_events 366, 368, 369, 440),
+# and in the afternoon they were held and neither searched nor struck. A
+# search cannot be ordered for one pulse, so the scenario cannot say so: an
+# order to search would add an afternoon search the record does not have, and
+# the dawn search finds nothing in the rules either (decision 0073).
 
 # Tone's floatplanes (group 20) have no order. No row has the Ryujo
 # detachment search on the 24th. The one row that has Tone launch searchers
@@ -753,8 +719,7 @@ range_nm = 175
 # and the search was ordered to the vanguard's commander (437).
 
 # Every bomber group is ordered to strike ships, except Ryujo's attack unit,
-# which raids Henderson Field (below), and the fleet carriers' attack units,
-# which search (above).
+# which raids Henderson Field (below).
 
 [[order]]
 day = 1
@@ -810,7 +775,7 @@ mission = "naval_strike"
 # 12, 2026 after two trials: the default list sent both groups 250 miles at
 # one destroyer in the full slice on its own seed, and a list without
 # transports held them all day for a ten-ship force reported as transports.
-# Ryujo's groups get no target order.
+# Their torpedo units and Ryujo's groups get no target order.
 [[order]]
 day = 1
 side = "japanese"
@@ -828,6 +793,13 @@ kinds = ["carrier", "battleship", "cruiser", "transport"]
 [[order]]
 day = 1
 side = "japanese"
+air_group = 13
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "japanese"
 air_group = 15
 kind = "set_air_mission"
 mission = "naval_strike"
@@ -838,6 +810,13 @@ side = "japanese"
 air_group = 15
 kind = "set_target_priority"
 kinds = ["carrier", "battleship", "cruiser", "transport"]
+
+[[order]]
+day = 1
+side = "japanese"
+air_group = 16
+kind = "set_air_mission"
+mission = "naval_strike"
 
 # Ryujo's attack unit raids Henderson Field (decision 0063, "What it costs"):
 # the record has her launch 15 fighters and 6 attack planes at it
