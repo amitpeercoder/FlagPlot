@@ -162,6 +162,16 @@
 //! a target list (decision 0063) launches only at a contact whose reported
 //! kind is on it, the one that comes first on the list, then the nearest.
 //!
+//! The report a strike sends after its attack draws its position error,
+//! count and kind with the attack, and is read against the force after the
+//! damage: the true count is the ships of the force still afloat once this
+//! attack's damage and every earlier one's in the step has landed, and the
+//! true kind is the most important kind among them; if none is afloat it
+//! reads the ships the force had at the start of the step, as a fight's
+//! report does. So once Ryujo sinks, the later attacks on her detachment
+//! read three ships, whose most important kind is cruiser. Worked again under
+//! differences row 7, Nov 13, 2026; no number of this calculation moved.
+//!
 //! Distances from the American carriers' (7,-5) and from Henderson Field
 //! (2,-4) to the true hex (7,-9) and the six hexes next to it, 40 x root (dq x
 //! dq + dr x dr + dq x dr) to the nearest mile:
@@ -1158,6 +1168,14 @@ fn report_from(
     true_count: u32,
     true_kind: ShipKind,
 ) -> (Hex, u32, ShipKind) {
+    let draws = report_draws(cx, stream, true_hex);
+    read_report(cx, draws, true_count, true_kind)
+}
+
+/// The draws of a report, in order: position error (the hex it names), then
+/// the count's draw, then the kind's. A strike takes them with its attack
+/// and reads them against the force after the damage (differences row 7).
+fn report_draws(cx: &Ctx, stream: &mut RngStream, true_hex: Hex) -> (Hex, u64, u64) {
     let direction = if stream.chance(cx.search.position_error_chance) {
         Some(usize::try_from(stream.below(6)).expect("below 6"))
     } else {
@@ -1175,7 +1193,20 @@ fn report_from(
             }
         }
     };
-    let v = stream.below(scale());
+    let count_draw = stream.below(scale());
+    let kind_draw = stream.below(scale());
+    (hex, count_draw, kind_draw)
+}
+
+/// What the draws of a report say of a force of `true_count` ships whose most
+/// important kind is `true_kind`.
+fn read_report(
+    cx: &Ctx,
+    draws: (Hex, u64, u64),
+    true_count: u32,
+    true_kind: ShipKind,
+) -> (Hex, u32, ShipKind) {
+    let (hex, v, kind_draw) = draws;
     let under = raw_u64(cx.search.count_under_chance);
     let over = raw_u64(cx.search.count_over_chance);
     let count = if v < under {
@@ -1185,7 +1216,7 @@ fn report_from(
     } else {
         true_count
     };
-    let v = stream.below(scale());
+    let v = kind_draw;
     let row = &cx.search.kind_confusion[&true_kind];
     let mut cumulative = 0u64;
     let mut kind = None;
@@ -1274,7 +1305,11 @@ enum Outcome {
         force: u32,
         hits: u32,
         tracks: [u32; 2],
-        report: (Hex, u32, ShipKind),
+        /// The report's draws, read against the force after the damage.
+        report: (Hex, u64, u64),
+        /// The force's ships afloat at the start of the step, which the
+        /// report reads if the damage leaves none afloat.
+        began: Vec<u32>,
     },
     /// Bombs on a base: the bombs that hit, and where they landed.
     BaseAttack {
@@ -2170,9 +2205,9 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
             work.raids.push(raid_work);
             continue;
         }
-        let ship_count =
-            u32::try_from(ships_of_force(force).filter(|s| afloat.contains(s)).count())
-                .expect("few ships");
+        let began: Vec<u32> = ships_of_force(force)
+            .filter(|s| afloat.contains(s))
+            .collect();
         for (&(group, left), launch_index) in bombers.iter().zip(&raid.strikes) {
             if left == 0 {
                 outcomes.insert(group, Outcome::Spent);
@@ -2205,7 +2240,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 // One draw for the system, always.
                 let _ = stream.below(scale());
             }
-            let report = report_from(cx, &mut stream, launch.hex, ship_count, ShipKind::Carrier);
+            let report = report_draws(cx, &mut stream, launch.hex);
             outcomes.insert(
                 group,
                 Outcome::Attack {
@@ -2215,6 +2250,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     hits,
                     tracks,
                     report,
+                    began: began.clone(),
                 },
             );
         }
@@ -2507,6 +2543,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                 hits,
                 tracks,
                 report,
+                began,
             } => {
                 let attack_id = finding[&launch.group];
                 let info = &cx.ships[ship];
@@ -2631,7 +2668,29 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     system_hits += 1;
                 }
                 assert!(system_hits <= *hits, "seed {seed}");
-                // The report, citing the attack.
+                // The report, citing the attack. It reads the force after
+                // this attack's damage and every earlier one's: the ships
+                // still afloat, or those it began the step with if none is
+                // (differences row 7).
+                let now_afloat: Vec<u32> = ships_of_force(*force)
+                    .filter(|s| afloat.contains(s))
+                    .collect();
+                let seen = if now_afloat.is_empty() {
+                    began
+                } else {
+                    &now_afloat
+                };
+                let seen_kind = seen
+                    .iter()
+                    .map(|s| cx.ships[s].kind)
+                    .min()
+                    .expect("the force had a ship afloat");
+                let report = read_report(
+                    cx,
+                    *report,
+                    u32::try_from(seen.len()).expect("few ships"),
+                    seen_kind,
+                );
                 let belief = &mut beliefs[own];
                 let (contact, created) = belief.contact_for(cx, report.0);
                 let received = cur.next("a report");

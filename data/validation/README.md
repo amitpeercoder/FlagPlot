@@ -1,6 +1,6 @@
 # Measures for validation
 
-One file per battle: what step 2 measures in a run, and what the record gives for it. `docs/step2-spec.md` says how they are used. Nothing in the simulation reads these files; `sim-cli validate` will, once it is built.
+One file per battle: what step 2 measures in a run, and what the record gives for it. `docs/step2-spec.md` says how they are used. Nothing in the simulation reads these files; `sim-cli validate` does.
 
 ## Format
 
@@ -78,7 +78,7 @@ No passage is judged today. Research found no long run at one held speed, and a 
 
 ## Who settles them
 
-The ranges are settled by the architect of the session that owns the step 2 spec, and each file says so with the date. Rows that feed derivation and scenarios are settled by the build session's architect.
+The ranges, and the rows the measures read, are settled by the coordinating architect (the main session), who keeps these files and the step 2 spec since Nov 13, 2026; each file says who settled it, with the date. Files settled before then name the spec session's architect, whose session is archived.
 
 ## Files
 
@@ -87,7 +87,7 @@ The ranges are settled by the architect of the session that owns the step 2 spec
 | `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 16 measures, 14 judged |
 | `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 26 measures, 23 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
-| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is not built; the file says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
+| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is written (`data/scenarios/not-run/17_cape_esperance.toml`) and not run, and the file has no `take` yet; it says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
 | `passages.toml` | Ship passages | 6 passages, none judged |
 
 Still to write: for Cape Esperance, who sighted whom first, when the scenario is scoped.
