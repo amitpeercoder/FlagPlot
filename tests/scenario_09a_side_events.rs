@@ -26,7 +26,7 @@ use std::path::{Path, PathBuf};
 
 use sim_core::events::{Cause, EngagementEndReason, Event, EventKind};
 use sim_core::ids::{EntityRef, EventId};
-use sim_core::side_events::{SideEvent, SideEventKind};
+use sim_core::side_events::{SideCause, SideEvent, SideEventKind};
 use sim_core::state::{Side, TruthState};
 use sim_core::World;
 
@@ -185,10 +185,12 @@ fn fights(world: &World) -> Vec<(u32, u32, [sim_core::ids::TaskForceId; 2])> {
     let mut found = Vec::new();
     for event in world.events().iter() {
         match &event.kind {
-            EventKind::EngagementBegun { a, b, .. } => open = Some((event.id.raw(), [*a, *b])),
+            EventKind::EngagementBegun { a, b, .. } => {
+                open = Some((event.id.umpire_raw(common::umpire_key()), [*a, *b]))
+            }
             EventKind::EngagementEnded { .. } => {
                 let (first, forces) = open.take().expect("an end follows a beginning");
-                found.push((first, event.id.raw(), forces));
+                found.push((first, event.id.umpire_raw(common::umpire_key()), forces));
             }
             _ => {}
         }
@@ -206,7 +208,10 @@ fn first_round_known(world: &World, side: Side, first: u32, last: u32) -> Option
     world
         .events()
         .iter()
-        .filter(|e| e.id.raw() >= first && e.id.raw() <= last)
+        .filter(|e| {
+            e.id.umpire_raw(common::umpire_key()) >= first
+                && e.id.umpire_raw(common::umpire_key()) <= last
+        })
         .filter_map(|e| match &e.kind {
             EventKind::SightingRoll {
                 round,
@@ -240,7 +245,10 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
     for event in &events {
         let log = full[&event.id];
         let name = side_name(&event.kind);
-        let at = format!("{label} {side:?} #{} {name}", event.id.raw());
+        let at = format!(
+            "{label} {side:?} #{} {name}",
+            event.id.umpire_raw(common::umpire_key())
+        );
 
         // The day and the pulse are the log's.
         assert_eq!((event.day, event.pulse), (log.day, log.pulse), "{at}");
@@ -435,28 +443,34 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
         };
         assert!(own, "{at}: an event with no unit of the side");
 
-        // 5. Every cause is the side's own order or an event it has.
+        // 5. Every cause is the side's own order or an event it has, by the
+        // side's own number (decision 0086).
+        let view = world.side_view(side);
         for cause in &event.causes {
             match cause {
-                Cause::Order(id) => assert_eq!(
-                    world.order(*id).map(|o| o.side),
+                SideCause::Order(number) => assert_eq!(
+                    view.order_by_number(*number).map(|o| o.side),
                     Some(side),
                     "{at}: a cause is an order of the other side"
                 ),
-                Cause::Event(id) => assert!(
-                    visible.contains(id),
-                    "{at}: a cause, #{}, is an event the side does not have",
-                    id.raw()
+                SideCause::Event(number) => assert!(
+                    view.event_by_number(*number)
+                        .is_some_and(|e| visible.contains(&e.id)),
+                    "{at}: a cause, #{number}, is an event the side does not have"
                 ),
             }
         }
         // The causes kept are a subset of the log's, in the log's order, and
         // the flag, set by the kind, is true wherever any were dropped
-        // (decision 0085, F7).
-        let kept: Vec<Cause> = log
+        // (decision 0085, F7). The log's causes are put in the side's
+        // numbers to compare.
+        let kept: Vec<SideCause> = log
             .causes
             .iter()
-            .copied()
+            .filter_map(|cause| match cause {
+                Cause::Order(id) => view.order_number(*id).map(SideCause::Order),
+                Cause::Event(id) => view.event_number(*id).map(SideCause::Event),
+            })
             .filter(|cause| event.causes.contains(cause))
             .collect();
         assert_eq!(kept, event.causes, "{at}: causes are a subsequence");
@@ -472,10 +486,17 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
         let known = first_round_known(world, side, *first, *last);
         let inside: Vec<&SideEvent> = events
             .iter()
-            .filter(|e| e.id.raw() >= *first && e.id.raw() <= *last)
+            .filter(|e| {
+                e.id.umpire_raw(common::umpire_key()) >= *first
+                    && e.id.umpire_raw(common::umpire_key()) <= *last
+            })
             .collect();
-        let begun_seen = inside.iter().any(|e| e.id.raw() == *first);
-        let ended_seen = inside.iter().any(|e| e.id.raw() == *last);
+        let begun_seen = inside
+            .iter()
+            .any(|e| e.id.umpire_raw(common::umpire_key()) == *first);
+        let ended_seen = inside
+            .iter()
+            .any(|e| e.id.umpire_raw(common::umpire_key()) == *last);
         assert_eq!(
             begun_seen,
             known.is_some(),
@@ -505,20 +526,20 @@ fn assert_no_truth(world: &World, side: Side, label: &str) {
                 assert!(
                     log_round >= known,
                     "{label} {side:?} #{}: round {log_round} is before the side knew of the fight (round {known})",
-                    event.id.raw()
+                    event.id.umpire_raw(common::umpire_key())
                 );
                 assert_eq!(
                     round,
                     log_round - (known - 1),
                     "{label} {side:?} #{}: not counted from the round the side first knew",
-                    event.id.raw()
+                    event.id.umpire_raw(common::umpire_key())
                 );
             }
         }
-        for event in events
-            .iter()
-            .filter(|e| e.id.raw() > *first && e.id.raw() < *last)
-        {
+        for event in events.iter().filter(|e| {
+            e.id.umpire_raw(common::umpire_key()) > *first
+                && e.id.umpire_raw(common::umpire_key()) < *last
+        }) {
             let kind = match &event.kind {
                 SideEventKind::Whole(kind) => full_name(kind),
                 cut => side_name(cut),
@@ -671,7 +692,7 @@ fn walk(
     let event = view.event(id).unwrap_or_else(|| {
         panic!(
             "{label}: a cause leads to #{}, which {side:?} may not see",
-            id.raw()
+            id.umpire_raw(common::umpire_key())
         )
     });
     if event.hidden_causes {
@@ -683,17 +704,25 @@ fn walk(
         assert!(
             log.causes.is_empty(),
             "{label}: #{} lost its causes silently",
-            id.raw()
+            id.umpire_raw(common::umpire_key())
         );
         ends.no_causes += 1;
     }
     for cause in &event.causes {
         match cause {
-            Cause::Order(order) => {
-                assert_eq!(world.order(*order).map(|o| o.side), Some(side), "{label}");
+            SideCause::Order(number) => {
+                let order = view
+                    .order_by_number(*number)
+                    .unwrap_or_else(|| panic!("{label}: cause order:{number} is not an order"));
+                assert_eq!(world.order(order.id).map(|o| o.side), Some(side), "{label}");
                 ends.own_order += 1;
             }
-            Cause::Event(earlier) => walk(world, side, *earlier, seen, ends, label),
+            SideCause::Event(number) => {
+                let earlier = view
+                    .event_by_number(*number)
+                    .unwrap_or_else(|| panic!("{label}: cause #{number} is not an event"));
+                walk(world, side, earlier.id, seen, ends, label)
+            }
         }
     }
 }
@@ -724,7 +753,7 @@ fn from_a_ship_sunk_the_causes_a_side_may_see_lead_back_to_its_own_order_or_to_w
                                 | EventKind::TaskForceSteamed { .. }
                         )
                     );
-                    if !sunk && !(others && event.id.raw() % 11 == 0) {
+                    if !sunk && !(others && event.id.umpire_raw(common::umpire_key()) % 11 == 0) {
                         continue;
                     }
                     sunk_walks += 1;
@@ -735,7 +764,7 @@ fn from_a_ship_sunk_the_causes_a_side_may_see_lead_back_to_its_own_order_or_to_w
                     assert!(
                         ends.own_order + ends.hidden_causes + ends.no_causes > 0,
                         "{label}: the walk from #{} ended nowhere",
-                        event.id.raw()
+                        event.id.umpire_raw(common::umpire_key())
                     );
                     // A ship sunk walks back through the hit it took to the
                     // salvo or air attack that was made at it, which the
@@ -751,11 +780,15 @@ fn from_a_ship_sunk_the_causes_a_side_may_see_lead_back_to_its_own_order_or_to_w
                                 )
                             )
                         });
-                        assert!(through_cut, "{label}: #{}", event.id.raw());
+                        assert!(
+                            through_cut,
+                            "{label}: #{}",
+                            event.id.umpire_raw(common::umpire_key())
+                        );
                         assert!(
                             ends.hidden_causes + ends.own_order > 0,
                             "{label}: #{}",
-                            event.id.raw()
+                            event.id.umpire_raw(common::umpire_key())
                         );
                         sunk_totals.own_order += ends.own_order;
                         sunk_totals.hidden_causes += ends.hidden_causes;
@@ -801,7 +834,10 @@ fn the_accessors_agree_with_one_another() {
             .find(|id| !seen.contains(id))
             .expect("some event is hidden");
         assert_eq!(view.event(hidden), None);
-        assert_eq!(view.event(EventId::new(u32::MAX)), None);
+        assert_eq!(
+            view.event(EventId::for_umpire(u32::MAX, common::umpire_key())),
+            None
+        );
     }
 }
 
@@ -1085,15 +1121,13 @@ struct Norm {
     day: u32,
     pulse: Option<sim_core::time::Pulse>,
     kind: SideEventKind,
-    causes: Vec<Result<usize, sim_core::ids::OrderId>>,
+    causes: Vec<SideCause>,
     hidden_causes: bool,
     breakdown: Option<sim_core::side_events::SideBreakdown>,
 }
 
 fn normalised(world: &World, side: Side) -> Vec<Norm> {
     let events = world.side_view(side).events();
-    let place: BTreeMap<EventId, usize> =
-        events.iter().enumerate().map(|(i, e)| (e.id, i)).collect();
     events
         .into_iter()
         .enumerate()
@@ -1102,14 +1136,7 @@ fn normalised(world: &World, side: Side) -> Vec<Norm> {
             day: e.day,
             pulse: e.pulse,
             kind: e.kind,
-            causes: e
-                .causes
-                .iter()
-                .map(|c| match c {
-                    Cause::Event(id) => Ok(place[id]),
-                    Cause::Order(id) => Err(*id),
-                })
-                .collect(),
+            causes: e.causes,
             hidden_causes: e.hidden_causes,
             breakdown: e.breakdown,
         })
@@ -1120,7 +1147,7 @@ fn own_orders(world: &World, side: Side) -> Vec<(u32, u32)> {
     world
         .orders()
         .filter(|o| o.side == side)
-        .map(|o| (o.id.raw(), o.day_issued))
+        .map(|o| (o.id.umpire_raw(common::umpire_key()), o.day_issued))
         .collect()
 }
 
@@ -1392,7 +1419,7 @@ fn the_flag_of_hidden_causes_is_set_by_the_kind_and_is_true_wherever_a_cause_was
                         assert!(
                             event.hidden_causes,
                             "{name} seed {seed} {side:?}: #{} ({kind}) lost a cause and does not say so",
-                            event.id.raw()
+                            event.id.umpire_raw(common::umpire_key())
                         );
                     }
                 }
@@ -1404,13 +1431,13 @@ fn the_flag_of_hidden_causes_is_set_by_the_kind_and_is_true_wherever_a_cause_was
 }
 
 #[test]
-#[ignore = "outside review finding 8: SideView::events() and orders() carry the full log's and the order book's numbers, which an unseen enemy order moves"]
 fn the_numbers_a_side_view_carries_do_not_move_with_what_the_enemy_does() {
     // `rejected_order`: the enemy gives an order on the last day that is
-    // refused. The side sees nothing of it once the full log's numbers are
-    // taken out (`what_a_side_cannot_know_changes_nothing_it_is_given`), but
-    // a Rust caller of the view reads those numbers: its events' numbers in
-    // the full log, and its own orders' numbers, counted across both sides.
+    // refused. A Rust caller of the view reads the numbers it carries: each
+    // event's own `number` and its causes (the side's numbers of events and
+    // orders), and the side's number of each of its own orders. The full
+    // log's numbers and the order book's, which both sides share, are opaque
+    // (decision 0086), so none of these moves.
     let mut moved = Vec::new();
     for name in LEAK_SCENARIOS {
         let text = scenario_text(name);
@@ -1431,8 +1458,13 @@ fn the_numbers_a_side_view_carries_do_not_move_with_what_the_enemy_does() {
             let two = run_text(&second, name, 1);
             let numbers = |w: &World| {
                 let view = w.side_view(side);
-                let events: Vec<u32> = view.events().iter().map(|e| e.id.raw()).collect();
-                let orders: Vec<u32> = view.orders().map(|o| o.id.raw()).collect();
+                let events: Vec<(u32, Vec<SideCause>)> = view
+                    .events()
+                    .iter()
+                    .map(|e| (e.number, e.causes.clone()))
+                    .collect();
+                let orders: Vec<Option<u32>> =
+                    view.orders().map(|o| view.order_number(o.id)).collect();
                 (events, orders)
             };
             let (a, b) = (numbers(&one), numbers(&two));
@@ -1449,6 +1481,65 @@ fn the_numbers_a_side_view_carries_do_not_move_with_what_the_enemy_does() {
         moved.is_empty(),
         "the numbers a side view carries moved with a refused enemy order in: {moved:?}"
     );
+}
+
+#[test]
+fn the_ids_a_side_is_given_show_no_number() {
+    // Decision 0086: from outside the core, an event, order or contact ID
+    // prints its kind alone, in Display and in Debug (also inside a side's
+    // event and order), and a side's own events and orders are counted 1, 2,
+    // 3 by the view. The umpire reads the real number through its key.
+    let world = run("07_full_slice.toml", 1);
+    let key = world.umpire_key();
+    let has_digit = |text: String| text.chars().any(|c| c.is_ascii_digit());
+    for side in SIDES {
+        let view = world.side_view(side);
+        let events = view.events();
+        assert!(events.len() > 10, "{side:?} sees events");
+        // The ID a side holds shows no number, though its umpire number is
+        // large enough to have digits.
+        let event = events.last().expect("some");
+        assert!(event.id.umpire_raw(&key) > 0);
+        assert_eq!(event.id.to_string(), "event");
+        assert_eq!(format!("{:?}", event.id), "EventId(_)");
+        let order = view.orders().next().expect("an own order");
+        assert_eq!(order.id.to_string(), "order");
+        assert_eq!(format!("{:?}", order.id), "OrderId(_)");
+        if let Some(contact) = view.contacts().next() {
+            assert_eq!(format!("{:?}", contact.id), "ContactId(_)");
+            assert_eq!(contact.id.to_string(), "contact");
+            assert_eq!(view.contact_number(contact.id), contact.id.umpire_raw(&key));
+            assert_eq!(
+                view.contact_by_number(view.contact_number(contact.id))
+                    .map(|c| c.id),
+                Some(contact.id)
+            );
+        }
+        // The Debug of a whole side event and its text carry no log number:
+        // the event's own number and the side's cause numbers are the only
+        // ones, and they run 1, 2, 3.
+        for (i, shown) in events.iter().enumerate() {
+            assert_eq!(shown.number as usize, i + 1, "{side:?}: counted from 1");
+            assert_eq!(view.event_number(shown.id), Some(shown.number));
+            assert_eq!(
+                view.event_by_number(shown.number).map(|e| e.id),
+                Some(shown.id)
+            );
+            assert!(
+                shown
+                    .to_string()
+                    .starts_with(&format!("#{} ", shown.number)),
+                "{side:?}: {shown}"
+            );
+            assert!(!has_digit(format!("{:?}", shown.id)));
+            assert!(!has_digit(shown.id.to_string()));
+        }
+        for (i, own) in view.orders().enumerate() {
+            let number = u32::try_from(i + 1).expect("few orders");
+            assert_eq!(view.order_number(own.id), Some(number), "{side:?}");
+            assert_eq!(view.order_by_number(number).map(|o| o.id), Some(own.id));
+        }
+    }
 }
 
 #[test]

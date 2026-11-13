@@ -486,7 +486,7 @@ fn event_causes(event: &Event) -> Vec<u32> {
         .causes
         .iter()
         .filter_map(|cause| match cause {
-            Cause::Event(id) => Some(id.raw()),
+            Cause::Event(id) => Some(id.umpire_raw(common::umpire_key())),
             Cause::Order(_) => None,
         })
         .collect()
@@ -500,7 +500,12 @@ fn factor(event: &Event, name: &str) -> Fixed {
         .factors
         .iter()
         .find(|f| f.name == name)
-        .unwrap_or_else(|| panic!("event #{} has no factor {name}", event.id.raw()))
+        .unwrap_or_else(|| {
+            panic!(
+                "event #{} has no factor {name}",
+                event.id.umpire_raw(common::umpire_key())
+            )
+        })
         .value
 }
 
@@ -519,7 +524,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
     };
     let mut open = false;
     for (index, event) in events.iter().enumerate() {
-        let id = event.id.raw();
+        let id = event.id.umpire_raw(common::umpire_key());
         assert_eq!(usize::try_from(id).expect("small"), index + 1);
         let pulse = event.pulse;
         match &event.kind {
@@ -632,7 +637,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 day: event.day,
                 pulse,
                 force: task_force.raw(),
-                kind: AlertKind::Contact(contact.raw()),
+                kind: AlertKind::Contact(contact.umpire_raw(common::umpire_key())),
                 causes: event_causes(event),
             }),
             EventKind::ForceBecameAlert { task_force, .. } => p.alerts.push(AlertRec {
@@ -731,7 +736,7 @@ fn parse(seed: u64, events: &[Event]) -> Parsed {
                 p.day_zero_reports.push(Report {
                     event: id,
                     side: *side,
-                    contact: contact.raw(),
+                    contact: contact.umpire_raw(common::umpire_key()),
                 });
             }
             _ => {}

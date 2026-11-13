@@ -303,13 +303,14 @@ fn a_base_strike_beyond_the_radius_is_warned_in_the_scenarios_that_have_one() {
 
 #[test]
 fn a_base_strike_at_a_base_beyond_the_radius_is_warned_with_the_distance() {
-    // The Marine dive bombers of Henderson Field ordered at Rabaul, 556 miles
-    // away.
+    // The Marine dive bombers of Henderson Field (air group 11 of scenario 7,
+    // `air_group:2` to the Allied side; decision 0086) ordered at Rabaul, 556
+    // miles away.
     let mut session = session_for("07_full_slice.toml", 1942);
     let answer = call(
         &mut session,
         "issue_orders",
-        json!({"orders": [{"unit": "air_group:11", "order":
+        json!({"orders": [{"unit": "air_group:2", "order":
             {"kind": "set_air_mission", "mission": "base_strike", "target_base": 2}}]}),
     );
     assert_eq!(answer["results"][0]["status"], "queued", "{answer}");
@@ -321,32 +322,32 @@ fn a_base_strike_at_a_base_beyond_the_radius_is_warned_with_the_distance() {
         .expect("list");
     let warning = warnings
         .iter()
-        .find(|w| w["air_group"]["handle"] == "air_group:11")
-        .unwrap_or_else(|| panic!("no warning for air_group:11 in {warnings:?}"));
+        .find(|w| w["air_group"]["handle"] == "air_group:2")
+        .unwrap_or_else(|| panic!("no warning for air_group:2 in {warnings:?}"));
     assert_eq!(warning["mission"], "base_strike");
     assert_eq!(warning["nearest"]["handle"], "base:2");
     let distance = call(
         &mut session,
         "measure",
-        json!({"question": "air_distance", "from": "air_group:11", "to": "base:2"}),
+        json!({"question": "air_distance", "from": "air_group:2", "to": "base:2"}),
     );
     assert_eq!(warning["distance_nm"], distance["distance_nm"]);
     let reach = call(
         &mut session,
         "measure",
-        json!({"question": "air_reach", "air_group": "air_group:11", "to": ["base:2"]}),
+        json!({"question": "air_reach", "air_group": "air_group:2", "to": ["base:2"]}),
     );
     assert_eq!(warning["radius_nm"], reach["radius_nm"]);
     assert_eq!(reach["places"][0]["within"], false);
     let text = text_of(&mut session);
     assert!(
         text.contains(&format!(
-            "Out of reach: air_group:11 \"{}\" is on base strike with a radius of {} miles, but its target base:2 \"{}\" is {} miles away",
+            "Out of reach: air_group:2 \"{}\" is on base strike with a radius of {} miles, but its target base:2 \"{}\" is {} miles away",
             made["air_groups"]
                 .as_array()
                 .unwrap()
                 .iter()
-                .find(|g| g["air_group"]["handle"] == "air_group:11")
+                .find(|g| g["air_group"]["handle"] == "air_group:2")
                 .unwrap()["air_group"]["name"]
                 .as_str()
                 .unwrap(),
@@ -433,7 +434,8 @@ fn a_base_strike_on_an_own_base_says_a_base_the_enemy_holds_is_needed() {
     let mut session = session_for("06a_base_raid.toml", 1942);
     let reason = refusal_of(
         &mut session,
-        "air_group:4",
+        // Allied air group 4 of scenario 6a is `air_group:2` to the side.
+        "air_group:2",
         json!({"kind": "set_air_mission", "mission": "base_strike", "target_base": 2}),
     );
     assert!(
@@ -766,7 +768,7 @@ fn an_air_group_line_gives_its_types_radius_and_search_range() {
         );
         let kind = view
             .air_groups()
-            .find(|g| g.id.to_string() == handle)
+            .find(|g| support::group_handle(&view, g.id) == handle)
             .and_then(|g| view.aircraft_type(g.aircraft_type))
             .expect("the type");
         assert_eq!(group["search_range_nm"], kind.search_range_nm.to_string());

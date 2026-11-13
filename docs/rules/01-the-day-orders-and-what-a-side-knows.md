@@ -263,7 +263,7 @@ Each side's orders are put in order of the unit they are for before they are num
 
 Each order takes the next order number, in one sequence for both sides in one game, starting at 1. The Allied side's orders on a day are numbered before the Japanese side's. An order a rule gives inside a day takes the next number at the moment it is given. The number appears in the event that accepts or refuses the order and in the causes of what follows. No roll is keyed on an order's number. [0008, 0043, 0055]
 
-A player is shown a side's own count of its orders, 1, 2, 3, in the order they were taken in, and never the log's number. [0055]
+A player is shown a side's own count of its orders, 1, 2, 3, in the order they were taken in, and never the log's number. [0055] Outside the simulation core an order's number cannot be read at all: the side's view gives the side's count, and only the umpire's tools read the log's number. [0086]
 
 ### Who can issue
 
@@ -310,6 +310,8 @@ A side learns of what its forces did when a day is over. [0007, 0034, 0047, 0050
 
 Limit: within a fight a side cannot tell one enemy ship or air group from another. It knows that its ship fired and that its ship was fired on, not at which ship or by which. [0065]
 
+A side's own ships, task forces and air groups are shown to it numbered 1, 2, 3 for each kind, in the order of their numbers in the scenario, counting every unit it has had. Every answer it is given and every handle it writes uses these numbers; the engine keeps the scenario's numbers. Bases keep theirs: they are on the map for both sides. [0086]
+
 Limit: a force made during a game takes the next free task force number, and the enemy's forces use the same numbers. A side's new force number therefore depends on how many forces the enemy has, and because draws are keyed on a force's number, the luck of later forces depends on it. [0047]
 
 Limit: there are no claims for aircraft shot down in an air fight except the raid claim of decision 0056. A side sees its own air fight losses and nothing of the enemy's. [0047, 0056]
@@ -318,7 +320,7 @@ Limit: there are no claims for aircraft shot down in an air fight except the rai
 
 ### The rule
 
-The event log is the truth. It holds both sides' orders, rolls, hits and losses. A side is given its own version, and each event is, for that side, whole, cut down, or absent. Nothing is added or altered. A cut event is a variant with no field for what is removed, so nothing removed can be carried in it. A cut event keeps its number in the full log. [0047]
+The event log is the truth. It holds both sides' orders, rolls, hits and losses. A side is given its own version, and each event is, for that side, whole, cut down, or absent. Nothing is added or altered. A cut event is a variant with no field for what is removed, so nothing removed can be carried in it. A cut event keeps its number in the full log, which only the umpire can read. A side numbers the events it is given 1, 2, 3, in the order it is given them, and their causes are given by those numbers and by its own count of its orders. Event, order and contact numbers cannot be read, printed or made outside the simulation core; the umpire's tools read them with the umpire's key, which only the world gives. [0047, 0086]
 
 The rule is one exhaustive `match` over every kind of event in `side_events.rs`. A new kind of event does not compile until it is placed in the table. [0047]
 
