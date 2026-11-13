@@ -38,15 +38,15 @@
     },
     {
       "file": "data/scenarios/../reference/air_upkeep.toml",
-      "hash": "b2db73fbc8e30d0e"
+      "hash": "df9d2d85410fc456"
     },
     {
       "file": "data/scenarios/../reference/fatigue.toml",
-      "hash": "32b26b3bef8a1089"
+      "hash": "2edbdfcbe6b6b13b"
     },
     {
       "file": "data/scenarios/../reference/air_supply.toml",
-      "hash": "4269ae7b442c3edc"
+      "hash": "41a42219f5a2d684"
     }
   ],
   "format": "flagplot-saved-game",
