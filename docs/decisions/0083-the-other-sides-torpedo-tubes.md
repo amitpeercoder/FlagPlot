@@ -151,7 +151,7 @@ Figures read:
 | `unready_torpedo_share` | 1 (0.5 where a case says so, by an altered copy of the frozen figures, as scenario 15b does) |
 | Experience strengths | 0 |
 
-A torpedo hit from class 8 or class 1 on class 1 or 7 does 100 x 200 / 400 = 50 points. Its system chance is min(1, 50 x 0.06) = 1.
+A torpedo hit from class 8 or class 1 on class 1 or 8 does 100 x 200 / 400 = 50 points. Its system chance is min(1, 50 x 0.06) = 1.
 
 | Case | Salvo | Tubes | Shots | Chance | Expected hits | After it |
 | --- | --- | --- | --- | --- | --- | --- |

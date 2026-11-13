@@ -97,6 +97,10 @@ pub enum InvariantViolation {
     AirGroupFatigueOutOfRange(AirGroupId),
     /// A replacement stream names a base that does not exist (decision 0038).
     ReplacementAtUnknownBase(BaseId),
+    /// The ship has fired the first side of its torpedoes but has no torpedoes
+    /// ready, or its class has no second side to fire (decision 0083).
+    /// Added at the end of the enum.
+    TorpedoSideFiredWithoutASecondSide(ShipId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -242,6 +246,12 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::TaskForceFatigueOutOfRange(task_force) => {
                 write!(f, "{task_force} has a fatigue outside 0 to 100")
             }
+            InvariantViolation::TorpedoSideFiredWithoutASecondSide(ship) => {
+                write!(
+                    f,
+                    "{ship} has fired one side of its torpedoes but has no second side to fire"
+                )
+            }
             InvariantViolation::TaskForceHomePortOfOtherSide(task_force, base) => {
                 write!(
                     f,
@@ -282,7 +292,20 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
                 ship.id,
             ));
         }
+        if ship.torpedoes_one_side_fired && !ship.torpedoes_ready {
+            violations.push(InvariantViolation::TorpedoSideFiredWithoutASecondSide(
+                ship.id,
+            ));
+        }
         if let Some(class) = ref_data.ship_classes.get(&ship.class) {
+            if ship.torpedoes_one_side_fired
+                && ship.torpedoes_ready
+                && class.torpedo_tubes <= class.torpedo_tubes_one_side
+            {
+                violations.push(InvariantViolation::TorpedoSideFiredWithoutASecondSide(
+                    ship.id,
+                ));
+            }
             if ship.fuel_t > class.fuel_capacity_t {
                 violations.push(InvariantViolation::ShipOverFuelCapacity(ship.id));
             }
@@ -821,6 +844,57 @@ mod tests {
                 InvariantViolation::ShipSystemNotInClass(SHIP, ShipSystem::TorpedoMounts),
             ]
         );
+    }
+
+    #[test]
+    fn a_torpedo_side_fired_is_caught_without_ready_torpedoes_or_a_second_side() {
+        let (mut truth, map) = setup_with_ship();
+        let mut ref_data = RefData::default();
+        let class = |tubes: u32, one_side: u32| ShipClass {
+            id: ShipClassId::new(1),
+            name: "Cruiser".to_string(),
+            kind: ShipKind::Cruiser,
+            cruise_speed_kn: Fixed::from_int(10),
+            max_speed_kn: Fixed::from_int(12),
+            fuel_capacity_t: Fixed::from_int(1000),
+            endurance_nm: Fixed::from_int(1000),
+            cargo_capacity_t: Fixed::from_int(100),
+            main_guns: 8,
+            gun_rounds_per_min: Fixed::from_int(3),
+            gun_rounds_per_gun: 150,
+            gun_damage: Fixed::from_int(20),
+            torpedo_tubes: tubes,
+            torpedo_tubes_one_side: one_side,
+            torpedo_damage: Fixed::from_int(200),
+            toughness: Fixed::from_int(400),
+            radar: false,
+            aircraft_capacity: 0,
+            anti_aircraft: 0,
+        };
+        // A class with a second side: the flag on a ship with torpedoes ready
+        // is sound; with none ready it is caught.
+        ref_data
+            .ship_classes
+            .insert(ShipClassId::new(1), class(8, 4));
+        ship_mut(&mut truth).torpedoes_one_side_fired = true;
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
+        ship_mut(&mut truth).torpedoes_ready = false;
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::TorpedoSideFiredWithoutASecondSide(SHIP)]
+        );
+        // A class with one side only (B equal to T): caught even if ready.
+        ship_mut(&mut truth).torpedoes_ready = true;
+        ref_data
+            .ship_classes
+            .insert(ShipClassId::new(1), class(8, 8));
+        assert_eq!(
+            check(&truth, &map, &ref_data),
+            vec![InvariantViolation::TorpedoSideFiredWithoutASecondSide(SHIP)]
+        );
+        // The flag clear is never a violation.
+        ship_mut(&mut truth).torpedoes_one_side_fired = false;
+        assert_eq!(check(&truth, &map, &ref_data), Vec::new());
     }
 
     #[test]

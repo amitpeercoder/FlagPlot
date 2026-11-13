@@ -1,0 +1,126 @@
+# Scenario 18: scenario 15b's set-up, for the rule that a ship with wing tubes
+# fires one side at a time (decision 0083).
+#
+# Scenario 15b exactly (which is scenario 15a, which is scenario 4a), except
+# that force A's three cruisers are class 8, "Placeholder cruiser with wing
+# tubes": class 1 in every figure, with 8 tubes of which 4 bear on one side.
+# Each fires 4 tubes in the first round in which it fires torpedoes and the
+# other 4 in the next, from a stream of its own. Force B's three cruisers are
+# class 1 and fire all 8 tubes once, as before. The hand calculation is
+# written out in tests/scenario_18_torpedo_sides.rs. The test runs this file
+# with seeds 1 to 1000, and variants of its text for the cases that need
+# another set-up.
+#
+# PLACEHOLDER DATA. The ships, combat figures and map are invented.
+
+name = "Scenario 18: Night action, a ship with wing tubes fires one side at a time"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_night_action.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# The attacking force starts at (0,0) and steams east through (5,0). It is
+# at battle readiness, so it is alert.
+[[task_force]]
+id = 1
+name = "Placeholder attacking force"
+side = "japanese"
+q = 0
+r = 0
+mission = "surface_combat"
+readiness = "battle"
+
+# The defending force lies stopped at (5,0), 200 nm east. It is at normal
+# readiness and its side holds no contact, so it is not alert.
+[[task_force]]
+id = 2
+name = "Placeholder defending force"
+side = "allied"
+q = 5
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser A1"
+class = 8
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser A2"
+class = 8
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser A3"
+class = 8
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cruiser B3"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+# Day 1, Japanese: steam east to (10,0) at cruise speed, and fight.
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_route"
+waypoints = [[10, 0]]
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_speed"
+speed = "cruise"
+
+[[order]]
+day = 1
+side = "japanese"
+task_force = 1
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"
+
+# Day 1, Allied: hold position, and fight.
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+kind = "set_rules_of_engagement"
+stance = "engage"
+break_off = "0.5"

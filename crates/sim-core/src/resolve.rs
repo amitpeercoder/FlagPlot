@@ -2043,6 +2043,7 @@ mod tests {
         hash_after(&|w| ship(w).fire_damage = nm(10));
         hash_after(&|w| ship(w).gun_rounds = nm(10));
         hash_after(&|w| ship(w).torpedoes_ready = true);
+        hash_after(&|w| ship(w).torpedoes_one_side_fired = true);
         hash_after(&|w| ship(w).location = ShipLocation::Sunk);
         hash_after(&|w| force(w).readiness = Readiness::Battle);
         hash_after(&|w| force(w).readiness_order = Some(crate::ids::OrderId::new(1)));

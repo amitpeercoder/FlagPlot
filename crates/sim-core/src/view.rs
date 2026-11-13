@@ -598,6 +598,7 @@ mod tests {
                         fire_damage: Fixed::ZERO,
                         gun_rounds: Fixed::from_int(800),
                         torpedoes_ready: false,
+                        torpedoes_one_side_fired: false,
                         systems: ShipSystems::ALL_WORKING,
                         experience: Ship::DEFAULT_EXPERIENCE,
                     },
