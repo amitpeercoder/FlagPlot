@@ -4488,9 +4488,10 @@ mod tests {
     fn a_contact_at_the_start_of_a_pulse_alerts_a_force_citing_its_report() {
         // Allied force 1 (normal readiness) at (0,0), Allied force 2 at
         // battle readiness at (1,0). A fresh Allied contact at (2,0) is 2
-        // hexes from force 1 and 1 from force 2: both are alerted (battle
-        // readiness does not stop the flag tracking the contact). Each event
-        // cites the report behind the contact, and alerted_by is the event.
+        // hexes from force 1 and 1 from force 2: force 1 is alerted, and
+        // force 2, at battle readiness, is not (differences.md row 2). The
+        // event cites the report behind the contact, and alerted_by is the
+        // event.
         let scene = Scene::new(
             1,
             Pulse::Night,
@@ -4503,8 +4504,8 @@ mod tests {
         let (contact, report) = give_contact(&mut world, Side::Allied, Hex::new(2, 0));
         world.alert_from_belief(1, Pulse::Night);
         let alerts = alerts_by_contact(&world);
-        assert_eq!(alerts.len(), 2);
-        for (alert, id) in alerts.iter().zip([1, 2]) {
+        assert_eq!(alerts.len(), 1);
+        for (alert, id) in alerts.iter().zip([1]) {
             assert_eq!(
                 alert.kind,
                 EventKind::ForceAlertedByContact {
@@ -4518,13 +4519,20 @@ mod tests {
             assert_eq!(force(&world, id).alerted_by, Some(alert.id));
             assert!(force(&world, id).is_alert());
         }
-        // Nothing but the alerts and the report was recorded.
-        assert_eq!(world.events().len(), 3);
+        // Force 2 is at battle readiness: not flagged, no event for it.
+        assert!(!force(&world, 2).alerted);
+        assert_eq!(force(&world, 2).alerted_by, None);
+        assert!(!alerts.iter().any(|alert| matches!(
+            alert.kind,
+            EventKind::ForceAlertedByContact { task_force, .. } if task_force == TaskForceId::new(2)
+        )));
+        // Nothing but the alert and the report was recorded.
+        assert_eq!(world.events().len(), 2);
 
         // Still alerted by the same contact: nothing happens, alerted_by
         // stays.
         world.alert_from_belief(1, Pulse::Morning);
-        assert_eq!(world.events().len(), 3);
+        assert_eq!(world.events().len(), 2);
         assert_eq!(force(&world, 1).alerted_by, Some(alerts[0].id));
     }
 

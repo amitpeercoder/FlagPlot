@@ -633,8 +633,12 @@ fn case_7_an_unarmed_ship_counting_for_its_place() {
 /// main before decision 0078 was built, and its hash. The hash was
 /// 0x7baddf6faffed244 until the state went to version 7 (decision 0083, a
 /// ship's flag for the side of her torpedo tubes fired); the log is unchanged.
+/// Remade Nov 13, 2026: battle readiness is no longer alerted by a contact
+/// (differences.md row 2), so the two alert events are gone from the log, the
+/// events after them are numbered two lower, and the hash is
+/// 0x8339eb579d472d65 no longer.
 const CASE_8_LOG: &str = include_str!("golden/17a_case_8_events.txt");
-const CASE_8_HASH: u64 = 0x8339eb579d472d65;
+const CASE_8_HASH: u64 = 0xea7b03f80b83130c;
 
 fn log_text(events: &[Event]) -> String {
     let mut text = String::new();

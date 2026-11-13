@@ -253,7 +253,7 @@
 //! - The field at the day's end: 490 t, 5 aircraft ready, open.
 //! - Aircraft destroyed: 11 Japanese (2 + 3 + 6) and 13 Allied (5 + 1 + 7).
 //! - Result: Allied 5.5 + 5 = 10.5, Japanese 6.5 + 10 = 16.5, margin 6, a
-//!   minor Japanese victory. 166 events.
+//!   minor Japanese victory. 165 events.
 //!
 //! ## 8. Properties, over seeds 1 to 1,000
 //!
@@ -1919,7 +1919,7 @@ fn seed_1942_gives_what_it_gave_pinned() {
     let setup = Setup::working("pinned");
     let mut scenario = setup.base.with_seed(1942).expect("a seed");
     let summaries = scenario.run_to_end().expect("the run resolves");
-    assert_eq!(summaries[0].event_count, 166);
+    assert_eq!(summaries[0].event_count, 165);
     let world = scenario.world;
     let run = check_run(&world);
     assert!(!run.unseen && !run.day_fight);
