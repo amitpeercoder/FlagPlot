@@ -9,7 +9,8 @@ The reading was done by Sonnet agents: three readers quoting from saved pages, a
 | File | Rows | What |
 | --- | --- | --- |
 | `ship_class_facts.csv` | 1354 to 1358 | Fuel capacity of four classes from FTP 218; one full-load displacement for the Benson class |
-| `fits.csv` | 748 to 757 | Laffey's 5-inch guns, San Francisco's main battery, the Fubuki class's torpedo |
+| `fits.csv` | 748 to 750, 756, 757 | Laffey's 5-inch guns, San Francisco's main battery |
+| `ship_class_facts.csv` | 1359 to 1362 | The Fubuki class's torpedo model (`torpedo_model`) |
 | `engagement_outcomes.csv` | 3859 to 3941 | Savo Island: general quarters, readiness, first fire and reasons fire was late, by ship |
 
 Standing follows the checker's rule: `preferred` where a value is supported, `unconfirmed` where it is not, and `disputed` where rows give different values.
@@ -51,10 +52,10 @@ No second source that says "standard" was found. DANFS prints "dp. 1,620" and th
 
 Every source read says Type 90; none says Type 93 before August 1943.
 
-- US Naval Technical Mission to Japan, report O-01-1, on the night action of 14 November 1942: "The Japanese destroyers were fitted with Type 90 torpedoes, except SAMIDARE which had Type 93." The destroyers named are Samidare, Shirayuki and Hatsuyuki (fits 751, 752; low confidence because the OCR dropped a line, confirmed by the reader from the page image).
-- NavWeaps lists the Type 90 for "Heavy Cruisers and Fubuki destroyer classes" (753). Japanese Wikipedia has the change from the Type 8 at about 1935 (754). English Wikipedia has the class still loaded with the Type 90 from the start of the war to mid 1943 (755).
+- US Naval Technical Mission to Japan, report O-01-1, on the night action of 14 November 1942: "The Japanese destroyers were fitted with Type 90 torpedoes, except SAMIDARE which had Type 93." The destroyers named are Samidare, Shirayuki and Hatsuyuki (class row 1359, entered for the class by inference; low confidence because the OCR dropped a line, confirmed by the reader from the page image).
+- NavWeaps lists the Type 90 for "Heavy Cruisers and Fubuki destroyer classes" (1360). Japanese Wikipedia has the change from the Type 8 at about 1935 (1361). English Wikipedia has the class still loaded with the Type 90 from the start of the war to mid 1943 (1362).
 - Leads, not rows: Japanese Wikipedia says some ships' tubes were altered for the Type 93 from August 1943. The same US report's summary gives the Type 90 as in service 1931 to 1942 without naming a class.
-- These rows carry no tube count, because the passages state the type only. Nothing names Murakumo.
+- These are statements of type only, with no tube count, so they are rows of the class attribute `torpedo_model` in `ship_class_facts.csv` (1359 to 1362). They were first entered as fits 751 to 755 with an empty count, which a derivation cannot read; those five ids are retired and will not be reused. Nothing names Murakumo.
 
 ## San Francisco's main battery
 
