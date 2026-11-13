@@ -1278,5 +1278,5 @@ const PINNED: Pinned = Pinned {
     b_gun_shots: 120,
     hits_a: 42,
     hits_b: 4,
-    events: 74,
+    events: 73,
 };

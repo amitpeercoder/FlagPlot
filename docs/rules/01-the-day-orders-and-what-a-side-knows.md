@@ -151,11 +151,11 @@ The orders that exist are the ones in the tables below. The spec lists more (for
 
 [0008, 0011, 0014, 0016, 0017, 0021, 0046]
 
-To change: differences.md row 17, a load order to a force that is out of fuel is to be refused, and row 34, a route order to a force with no fuel is to be refused.
+A route, load or load-fuel order to a force that is out of fuel is refused (Every reason an order is refused, below; differences.md rows 17 and 34).
 
 The stance is engage or avoid. The straggler instruction is keep, detach, leave or retire. Chapter 4, Breaking off, and chapter 2, Stragglers, give what they do. The readiness is read by chapter 3, Readiness, alertness and fatigue of a force. [0014, 0016, 0021]
 
-Detaching ships creates a new force with the next number of its side's series (the Allied side's from 1,000,001, the Japanese side's from 2,000,001). It starts at the parent's exact position and leg (the charge of the leg with it), idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event `ShipsDetached` is recorded before the event that accepts the order, and cites the order. To change: differences.md row 24, the acceptance is to be recorded first. [0016, 0037, 0086]
+Detaching ships creates a new force with the next number of its side's series (the Allied side's from 1,000,001, the Japanese side's from 2,000,001). It starts at the parent's exact position and leg (the charge of the leg with it), idle, with no route. It copies the parent's side, mission, speed setting and speed order, home port, readiness and readiness order, alerted flag and the event that alerted it, fatigue, and rules of engagement and rules order. The event that accepts the order is recorded first, then `ShipsDetached`, with the same day and pulse, citing the order (differences.md row 24). [0016, 0037, 0086]
 
 ### Air group orders
 
@@ -195,10 +195,12 @@ Then, by kind:
 
 | Order | Reason | When |
 | --- | --- | --- |
+| Set route | Out of fuel | The force's status is out of fuel. Tried before the waypoints. [differences.md row 34] |
 | Set route | Waypoint off the map | A waypoint is not on the map. The first waypoint is tried first, then each in turn. |
 | Set route | Waypoint unreachable | The first waypoint cannot be reached by sea from the force's position (or the hex it would turn back to), or a later one cannot be reached from the one before. A land hex is unreachable. |
 | Set route | Empty route | The force does not move anywhere: no waypoint other than where it already is, and no leg in progress to finish. |
 | Load, Load fuel | Under way | The force's status is under way. |
+| Load, Load fuel | Out of fuel | The force's status is out of fuel. [differences.md row 17] |
 | Load, Load fuel | No own base here | No base of the issuer's side is in the force's position. |
 | Set rules of engagement | Break-off level out of range | The level is below 0 or above 1. |
 | Set rules of engagement | Keep share out of range | The share is below 0 or above 1. Tried after the break-off level. |
@@ -490,7 +492,7 @@ The rules for each draw are in chapters 3, 4 and 5. The output of the generator 
 
 ## Invariants
 
-At the end of every day, after the third pulse and the end-of-day phases, the engine checks the state. They are also checked when a game is built. A violation is always a bug in the rules, never a legal state. If any is broken, `resolve_day` returns an error naming the day and every violation, and no hash is recorded for the day. The day counter has already advanced and the events are kept. To change: differences.md row 25, the invariants are to be checked before the counter advances. [0004]
+At the end of every day, after the third pulse and the end-of-day phases, the engine checks the state. They are also checked when a game is built. A violation is always a bug in the rules, never a legal state. If any is broken, `resolve_day` returns an error naming the day and every violation, and no hash is recorded for the day. The invariants are checked before the day counter advances, so the counter still names the day before; the events are kept (differences.md row 25). [0004]
 
 The checks:
 

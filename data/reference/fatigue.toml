@@ -4,6 +4,12 @@
 
 placeholder = true
 
+# The three air fatigue figures are placeholders that no row sizes. Rabaul
+# round 2 looked at them and moved none (docs/validation/tuning/rabaul-r2-fatigue.md):
+# the forms' raid sizes by day cannot size them, and rows 3976 and 3977 are one
+# officer's recollection, named only. Nothing else was found
+# (docs/research/oob/outside-research-nov-13.md, "What each slow figure now has").
+#
 # Fatigue an air group gains in a daylight pulse in which it flew: this much
 # for the sortie, plus this much for each 100 nm of it.
 air_fatigue_per_sortie = 3
@@ -12,6 +18,9 @@ air_fatigue_per_100_nm = 2
 # Fatigue an air group loses in a daylight pulse in which it did not fly.
 air_rest_per_pulse = 5
 
+# The two task force figures are placeholders that no battle of the slice
+# reads: scenarios 4 and 5 do not load this file and scenario 6 has no task
+# forces (docs/step2-spec.md, "Tuning").
 # Fatigue a task force gains at the start of a pulse in which it is alert,
 # and loses at the start of one in which it is not (decision 0037).
 force_fatigue_per_pulse_alert = 5

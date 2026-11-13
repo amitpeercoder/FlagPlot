@@ -42,11 +42,17 @@ q = 2
 r = -4
 supply_t = 4000
 anti_aircraft = 8
+# Supply and repairs a day are placeholders that no row sizes. On 25 August
+# 5 of 31 aircraft were under repair (engagement_outcomes 455); repair time
+# was looked for and not found, only that major repair went to Australia
+# (docs/research/oob/outside-research-nov-13.md). Too fast a repair is a
+# cause of the named miss of SBDs ready on day 21
+# (docs/validation/tuning/rabaul-r3-wear.md).
 aircraft_repairs_per_day = 3
 
 # The Rabaul airfields, Lakunai and Vunakanau, in one hex. Nothing attacks
 # them in this scenario, so they are given no guns. Supply and repairs a day
-# are placeholders.
+# are placeholders that no row sizes (docs/validation/tuning/air-figures-closed.md).
 [[base]]
 id = 2
 name = "Rabaul"
@@ -216,7 +222,9 @@ pilots = 12
 # 60 fighters and 72 bombers; 337: 85 aircraft from 15 to 28 September) and
 # one dated arrival, the 6th Air Group's 13 (row 32), which is the arrival
 # above. Rows giving aircraft reaching the scenario's units at Rabaul by day
-# and type would settle it. Left as decision 0042 set it.
+# and type would settle it. Left as decision 0042 set it. No row sizes a daily
+# rate of pilots either (docs/research/oob/outside-research-nov-13.md, "What
+# each slow figure now has"; docs/validation/tuning/air-figures-closed.md).
 [[replacement]]
 side = "japanese"
 base = 2

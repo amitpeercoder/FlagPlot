@@ -1105,6 +1105,8 @@ pub(crate) fn forecast_passage(
     let waypoints = [destination];
     let refusal = if task_force.ships.is_empty() {
         Some(RejectReason::NoShipAfloat)
+    } else if task_force.status == TaskForceStatus::OutOfFuel {
+        Some(RejectReason::OutOfFuel)
     } else {
         task_force.check_route(map, &waypoints).err()
     };
@@ -1374,6 +1376,26 @@ mod tests {
             truth.task_forces.insert(id, force);
         }
         World::new(seed, ref_data, map, truth).expect("valid setup")
+    }
+
+    #[test]
+    fn the_passage_forecast_refuses_an_out_of_fuel_force_as_the_order_does() {
+        // Row 34: intake refuses a route to a force out of fuel, and the
+        // forecast mirrors it.
+        let mut world = world(1, &[Force::new(1, Side::Allied, hex(0))]);
+        let id = TaskForceId::new(1);
+        world.truth.task_forces.get_mut(&id).expect("force").status = TaskForceStatus::OutOfFuel;
+        let forecast = forecast_passage(
+            &world.map,
+            &world.ref_data,
+            &world.truth.task_forces[&id],
+            &world.truth.ships,
+            hex(5),
+            None,
+            1,
+        );
+        assert_eq!(forecast.refusal, Some(RejectReason::OutOfFuel));
+        assert_eq!(forecast.end, PassageEnd::Refused);
     }
 
     /// The night movement step of day 1, run once.

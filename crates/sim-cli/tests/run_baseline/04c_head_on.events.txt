@@ -2,7 +2,7 @@ Scenario 4c2b: Head on
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 63383e8d4702d069  80 events
+day   1  hash 3ddaee4b552dbda0  78 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2
@@ -72,18 +72,16 @@ day   1  hash 63383e8d4702d069  80 events
 #66 D1 night     task_force:2 steamed 12 nm at 16 kn from (5,0) to (5,0)  <- order:1
 #67 D1 night     ship:4 burned 3 t, 1952 t remaining  <- #66
 #68 D1 night     ship:5 burned 3 t, 1952 t remaining  <- #66
-#69 D1 morning   task_force:1 alerted by contact:1  <- #62
-#70 D1 morning   task_force:2 alerted by contact:1  <- #64
-#71 D1 morning   task_force:2 steamed 96 nm at 16 kn from (5,0) to (3,0)  <- order:1
-#72 D1 morning   ship:4 burned 24 t, 1928 t remaining  <- #71
-#73 D1 morning   ship:5 burned 24 t, 1928 t remaining  <- #71
-#74 D1 morning   Allied contact:1 aged to 1 pulses  <- #64
-#75 D1 morning   Japanese contact:1 aged to 1 pulses  <- #62
-#76 D1 afternoon task_force:2 steamed 96 nm at 16 kn from (3,0) to (0,0)  <- order:1
-#77 D1 afternoon ship:4 burned 24 t, 1904 t remaining  <- #76
-#78 D1 afternoon ship:5 burned 24 t, 1904 t remaining  <- #76
-#79 D1 afternoon Allied contact:1 aged to 2 pulses  <- #64
-#80 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #62
+#69 D1 morning   task_force:2 steamed 96 nm at 16 kn from (5,0) to (3,0)  <- order:1
+#70 D1 morning   ship:4 burned 24 t, 1928 t remaining  <- #69
+#71 D1 morning   ship:5 burned 24 t, 1928 t remaining  <- #69
+#72 D1 morning   Allied contact:1 aged to 1 pulses  <- #64
+#73 D1 morning   Japanese contact:1 aged to 1 pulses  <- #62
+#74 D1 afternoon task_force:2 steamed 96 nm at 16 kn from (3,0) to (0,0)  <- order:1
+#75 D1 afternoon ship:4 burned 24 t, 1904 t remaining  <- #74
+#76 D1 afternoon ship:5 burned 24 t, 1904 t remaining  <- #74
+#77 D1 afternoon Allied contact:1 aged to 2 pulses  <- #64
+#78 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #62
 
 task_force:1 "Placeholder eastbound force" (Japanese): Underway at (5,0), 20 nm from (4,0) toward (5,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder westbound force" (Allied): Underway at (0,0), 24 nm from (1,0) toward (0,0); readiness battle, alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

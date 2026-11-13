@@ -109,7 +109,7 @@
         "order": { "enum": ["accepted", "refused"] },
         "refusal": {
           "oneOf": [
-            { "enum": ["no_route", "already_there", "no_ship_afloat"] },
+            { "enum": ["no_route", "already_there", "no_ship_afloat", "out_of_fuel"] },
             { "type": "null" }
           ]
         },
