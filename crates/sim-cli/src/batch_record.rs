@@ -765,7 +765,22 @@ pub fn count(
             })
             .collect(),
         systems_out,
-        air_losses: losses.into_values().collect(),
+        // Groups with any non-zero value only (decision 0062): an
+        // `AircraftWorn` that wrote nothing off opens a row and adds nothing.
+        air_losses: losses
+            .into_values()
+            .filter(|row| {
+                row.shot_down
+                    + row.destroyed_on_ground
+                    + row.damaged_destroyed_on_ground
+                    + row.lost_with_ship
+                    + row.worn_out
+                    + row.ditched_fuel
+                    + row.ditched_no_deck
+                    + row.pilots_lost
+                    > 0
+            })
+            .collect(),
         ready,
         claims: Claims {
             japanese: side_claims(0),
