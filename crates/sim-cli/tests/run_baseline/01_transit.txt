@@ -2,9 +2,9 @@ Scenario 1: Transit, Noumea to Espiritu Santo
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 01b1f74aee8c05c7  13 events
-day   2  hash c966c8f0b1f645c4  6 events
-day   3  hash d97a4697c71a37c3  2 events
+day   1  hash 67253143151a25c8  13 events
+day   2  hash 4da6eec9e0bc3b3f  6 events
+day   3  hash f8f973e2f5efa440  2 events
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (8,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1901.5 t of fuel, 0 t of supply

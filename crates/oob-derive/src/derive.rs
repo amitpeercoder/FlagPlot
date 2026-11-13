@@ -14,7 +14,7 @@ use crate::reading::{
 
 /// The figures of a class row, in the column order of the class CSV after
 /// `id` and `name`.
-pub const FIGURES: [&str; 14] = [
+pub const FIGURES: [&str; 15] = [
     "kind",
     "cruise_speed_kn",
     "max_speed_kn",
@@ -26,6 +26,7 @@ pub const FIGURES: [&str; 14] = [
     "gun_rounds_per_gun",
     "gun_damage",
     "torpedo_tubes",
+    "torpedo_tubes_one_side",
     "torpedo_damage",
     "toughness",
     "radar",
@@ -37,19 +38,20 @@ pub const AIR_FIGURES: [&str; 2] = ["aircraft_capacity", "anti_aircraft"];
 
 /// Indexes of the surface weapon figures a ship the list names in
 /// `surface_weapons_not_modelled` has written as 0: main guns, rate of
-/// fire, rounds per gun, gun damage, torpedo tubes, torpedo damage.
-pub const SURFACE_WEAPONS: std::ops::RangeInclusive<usize> = 6..=11;
+/// fire, rounds per gun, gun damage, torpedo tubes, torpedo tubes on one
+/// side, torpedo damage.
+pub const SURFACE_WEAPONS: std::ops::RangeInclusive<usize> = 6..=12;
 
 pub const NOT_MODELLED_NOTE: &str =
     "assumption of the scenario, not a fact: surface weapons not modelled (decision 0029)";
 
 pub const KIND: usize = 0;
 pub const CARGO: usize = 5;
-pub const RADAR: usize = 13;
+pub const RADAR: usize = 14;
 
 /// Figures that are whole numbers in the class CSV: the counts and the
 /// rounds carried. The rest are written as exact decimals.
-pub const WHOLE: [usize; 5] = [6, 8, 10, 14, 15];
+pub const WHOLE: [usize; 6] = [6, 8, 10, 11, 15, 16];
 
 /// The class types the simulation has a kind for.
 const KIND_FOR_TYPE: [(&str, &str); 6] = [
@@ -73,6 +75,11 @@ const RATE_OF_FIRE: &str = "rate_of_fire_practical_rpm";
 /// A gun's designed rate, read only where the rules file names a row of it.
 const DESIGNED_RATE: &str = "rate_of_fire_rpm";
 const ROUNDS: &str = "main_rounds_per_gun";
+/// The attributes that say how a class's torpedo tubes bear (decision 0074).
+const PER_BROADSIDE: &str = "torpedo_tubes_per_broadside";
+const MOUNT_POSITION: &str = "torpedo_mount_position";
+/// The note for a class no row of which says how its tubes bear.
+pub const NOT_SPLIT_NOTE: &str = "not split: no row says how its tubes bear";
 
 /// The rounds per gun written for a ship the list names in
 /// `main_gun_ammunition_not_limiting` when no `main_rounds_per_gun` row
@@ -158,6 +165,9 @@ pub struct ShipResult {
     pub designed_rate: bool,
     /// The surface weapon figures are the scenario's assumption of 0.
     pub weapons_not_modelled: bool,
+    /// The ship has tubes and no readable row says how they bear, so the
+    /// tubes on one side are all of them (decision 0074, 3).
+    pub tubes_not_split: bool,
     /// Exceptions used: index into the rules' list, and the row read.
     pub used: Vec<(usize, Row)>,
 }
@@ -867,6 +877,7 @@ impl<'a> Env<'a> {
         // main battery, ammunition and torpedoes
         let mut designed_rate = false;
         let mut ammunition_assumed = false;
+        let mut tubes_not_split = false;
         if surface_weapons_not_modelled {
             for i in SURFACE_WEAPONS {
                 put(
@@ -928,32 +939,41 @@ impl<'a> Env<'a> {
                     Value::Num(Dec::from_int(i64::from(tubes.value.count)).unwrap_or(Dec::ZERO)),
                     tubes.bare(),
                 );
+                if let Some((one_side, not_split)) = self.tubes_one_side(&mut w, keys, &tubes) {
+                    tubes_not_split = not_split;
+                    let value =
+                        Value::Num(Dec::from_int(i64::from(one_side.value)).unwrap_or(Dec::ZERO));
+                    put(&mut figs, 11, value, one_side.bare());
+                    if let (true, Some(figure)) = (not_split, figs[11].as_mut()) {
+                        figure.notes.insert(NOT_SPLIT_NOTE.to_string());
+                    }
+                }
                 if tubes.value.count == 0 {
-                    put(&mut figs, 11, Value::Num(Dec::ZERO), tubes.bare());
+                    put(&mut figs, 12, Value::Num(Dec::ZERO), tubes.bare());
                 } else if let Some(got) =
-                    self.weapon_fact(&mut w, &tubes, "warhead_kg", FIGURES[11])
+                    self.weapon_fact(&mut w, &tubes, "warhead_kg", FIGURES[12])
                 {
                     match got.value.mul(self.rules.torpedo_damage_per_warhead_kg) {
-                        Some(damage) => put(&mut figs, 11, Value::Num(damage), got.bare()),
-                        None => w.failed(FIGURES[11], overflow("torpedo damage")),
+                        Some(damage) => put(&mut figs, 12, Value::Num(damage), got.bare()),
+                        None => w.failed(FIGURES[12], overflow("torpedo damage")),
                     }
                 }
             }
         }
 
         // toughness
-        if let Some(got) = self.fact(&mut w, keys, "displacement_standard_lt", FIGURES[12]) {
+        if let Some(got) = self.fact(&mut w, keys, "displacement_standard_lt", FIGURES[13]) {
             match got.value.div(self.rules.displacement_lt_per_toughness) {
                 Some(toughness) if !toughness.is_positive() => w.fail(
                     Kind::ZeroToughness,
-                    FIGURES[12],
+                    FIGURES[13],
                     format!(
                         "displacement_standard_lt {} / {} = {toughness}, which is not above zero",
                         got.value, self.rules.displacement_lt_per_toughness
                     ),
                 ),
-                Some(toughness) => put(&mut figs, 12, Value::Num(toughness), got.bare()),
-                None => w.failed(FIGURES[12], overflow("toughness")),
+                Some(toughness) => put(&mut figs, 13, Value::Num(toughness), got.bare()),
+                None => w.failed(FIGURES[13], overflow("toughness")),
             }
         }
 
@@ -997,8 +1017,197 @@ impl<'a> Env<'a> {
             ammunition_assumed,
             designed_rate,
             weapons_not_modelled: surface_weapons_not_modelled,
+            tubes_not_split,
             used: w.used,
         })
+    }
+
+    /// One fact about how a class's tubes bear, as text: `Ok(None)` where no
+    /// row is readable (none at all, none preferred or excepted, none that
+    /// holds on the date), a failure where rows that are readable disagree
+    /// or cannot be placed on the date, as for every other fact.
+    fn split_row(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        attribute: &str,
+    ) -> Result<Option<Got<String>>, ()> {
+        let (ship, class) = keys;
+        let read = resolve_over(
+            self.index.rows(Table::ShipFacts, ship, attribute),
+            &format!("{attribute} of ship {ship}"),
+            self.index.rows(Table::ClassFacts, class, attribute),
+            &format!("{attribute} of class {class}"),
+            self.date,
+            &self.rules.exceptions,
+        );
+        match read {
+            Ok(read) => {
+                let value = read.rows[0].value.clone();
+                let (cites, excepted, doubts) = w.take(&read);
+                Ok(Some(Got {
+                    value,
+                    cites,
+                    excepted,
+                    doubts,
+                }))
+            }
+            Err(failure)
+                if matches!(
+                    failure.kind,
+                    Kind::Missing | Kind::NotPreferred | Kind::NotOnDate
+                ) =>
+            {
+                Ok(None)
+            }
+            Err(failure) => {
+                w.failed(FIGURES[11], failure);
+                Err(())
+            }
+        }
+    }
+
+    /// The tubes that bear on one side (decisions 0074 and 0083), and
+    /// whether the class is not split. With T tubes: a readable
+    /// `torpedo_tubes_per_broadside` row gives the number; else a readable
+    /// `torpedo_mount_position` row gives T for a centreline fit and T / 2
+    /// for a wing fit; else T, and the class is named as not split. A class
+    /// with no tubes has 0 and reads nothing more.
+    fn tubes_one_side(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        tubes: &Got<Fit>,
+    ) -> Option<(Got<u32>, bool)> {
+        let figure = FIGURES[11];
+        let total = tubes.value.count;
+        if total == 0 {
+            return Some((tubes.map_value(0), false));
+        }
+        let (ship, class) = keys;
+        let who = format!("{ship} (class {class})");
+        let number = self.split_row(w, keys, PER_BROADSIDE).ok()?;
+        let position = self.split_row(w, keys, MOUNT_POSITION).ok()?;
+        let mut cites = tubes.cites.clone();
+        let mut excepted = tubes.excepted;
+        let mut doubts = tubes.doubts.clone();
+        let mut rows = Vec::new();
+        for got in [&number, &position].into_iter().flatten() {
+            cites.extend(got.cites.iter().cloned());
+            excepted |= got.excepted;
+            doubts.extend(got.doubts.iter().cloned());
+            rows.extend(got.cites.iter().map(|(f, id)| format!("{f}:{id}")));
+        }
+        let rows = rows.join(", ");
+        let mut refuse = |kind: Kind, message: String| -> Option<(Got<u32>, bool)> {
+            w.fail(kind, figure, message);
+            None
+        };
+        let stated = match &number {
+            Some(got) => match got.value.trim().parse::<u32>() {
+                Ok(n) => Some(n),
+                Err(_) => {
+                    return refuse(
+                        Kind::BadValue,
+                        format!(
+                            "{PER_BROADSIDE} of {who}: row {rows} has value `{}`, which is not a whole number of tubes",
+                            got.value
+                        ),
+                    )
+                }
+            },
+            None => None,
+        };
+        if let Some(n) = stated {
+            if n > total {
+                return refuse(
+                    Kind::BadValue,
+                    format!(
+                        "{PER_BROADSIDE} of {who}: {n} tubes on one side is above the {total} tubes of the fit (rows {rows})"
+                    ),
+                );
+            }
+            if n == 0 {
+                return refuse(
+                    Kind::BadValue,
+                    format!(
+                        "{PER_BROADSIDE} of {who}: 0 tubes on one side where the fit has {total} (rows {rows})"
+                    ),
+                );
+            }
+        }
+        let place = position.as_ref().map(|got| got.value.trim().to_string());
+        if let Some(place) = &place {
+            match place.as_str() {
+                "centreline" | "wing" | "mixed" | "fixed" => {}
+                other => {
+                    return refuse(
+                        Kind::BadValue,
+                        format!(
+                            "{MOUNT_POSITION} of {who}: row {rows} has value `{other}`, which is not centreline, wing, mixed or fixed"
+                        ),
+                    )
+                }
+            }
+            if place == "wing" && !total.is_multiple_of(2) {
+                return refuse(
+                    Kind::BadValue,
+                    format!(
+                        "{MOUNT_POSITION} of {who}: wing mounts with {total} tubes, an odd number, cannot be halved (rows {rows})"
+                    ),
+                );
+            }
+        }
+        let value = match (stated, place.as_deref()) {
+            (Some(n), Some("centreline")) if n < total => {
+                return refuse(
+                    Kind::Conflict,
+                    format!(
+                        "{who}: rows {rows} disagree: centreline mounts bear all {total} tubes on either side, and the number of tubes on one side is {n}"
+                    ),
+                )
+            }
+            (Some(n), Some("wing")) if n != total / 2 => {
+                return refuse(
+                    Kind::Conflict,
+                    format!(
+                        "{who}: rows {rows} disagree: wing mounts give {} tubes on one side, and the number of tubes on one side is {n}",
+                        total / 2
+                    ),
+                )
+            }
+            (Some(n), _) => n,
+            (None, Some("centreline")) => total,
+            (None, Some("wing")) => total / 2,
+            (None, Some(other)) => {
+                return refuse(
+                    Kind::BadValue,
+                    format!(
+                        "{MOUNT_POSITION} of {who}: a `{other}` fit with no readable {PER_BROADSIDE} row: the position alone does not give the tubes on one side (rows {rows})"
+                    ),
+                )
+            }
+            (None, None) => {
+                return Some((
+                    Got {
+                        value: total,
+                        cites,
+                        excepted,
+                        doubts,
+                    },
+                    true,
+                ))
+            }
+        };
+        Some((
+            Got {
+                value,
+                cites,
+                excepted,
+                doubts,
+            },
+            false,
+        ))
     }
 
     /// Whether the display of a surface-search set has a plan position

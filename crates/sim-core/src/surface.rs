@@ -231,10 +231,21 @@ fn gun_shots(
     (full * factor * share).min(ship.gun_rounds)
 }
 
-/// The torpedo shots a ship fires in its first firing round: tubes x the
-/// torpedo mount factor x `share` (the share of its torpedoes a force not
-/// ready fires, 1 for a force that is ready: decision 0071). Zero if it has no
-/// torpedoes left to fire.
+/// The tubes of a ship's next torpedo salvo (decision 0083): the tubes that
+/// bear on one side, B, for the first salvo, and the rest, T - B, for the
+/// second. For a class with B equal to T there is one salvo, of T.
+fn torpedo_salvo_tubes(ship: &Ship, class: &ShipClass) -> u32 {
+    if ship.torpedoes_one_side_fired {
+        class.torpedo_tubes - class.torpedo_tubes_one_side
+    } else {
+        class.torpedo_tubes_one_side
+    }
+}
+
+/// The torpedo shots a ship fires in its next firing round: the tubes of the
+/// salvo (see [`torpedo_salvo_tubes`]) x the torpedo mount factor x `share`
+/// (the share of its torpedoes a force not ready fires, 1 for a force that is
+/// ready: decision 0071). Zero if it has no torpedoes left to fire.
 fn torpedo_shots(
     ship: &Ship,
     class: &ShipClass,
@@ -245,7 +256,7 @@ fn torpedo_shots(
         return Fixed::ZERO;
     }
     let factor = figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts);
-    Fixed::from_int(i64::from(class.torpedo_tubes)) * factor * share
+    Fixed::from_int(i64::from(torpedo_salvo_tubes(ship, class))) * factor * share
 }
 
 impl World {
@@ -1015,6 +1026,8 @@ impl World {
         let torpedo_share = fight.torpedo_share(force);
         let torpedo_shot_count = torpedo_shots(ship, class, figures, torpedo_share);
         let torpedoes_fired = ship.torpedoes_ready && class.torpedo_tubes > 0;
+        let second_side = ship.torpedoes_one_side_fired;
+        let class_has_second_side = class.torpedo_tubes > class.torpedo_tubes_one_side;
         let fire_control =
             figures.system_factor(ShipSystem::FireControl, ship.systems.fire_control);
         // The firer's own experience, in a dark fight, when the weapon's
@@ -1060,7 +1073,7 @@ impl World {
                 figures.torpedo_hit_chance_day
             },
             shot_factors: [
-                Fixed::from_int(i64::from(class.torpedo_tubes)),
+                Fixed::from_int(i64::from(torpedo_salvo_tubes(ship, class))),
                 Fixed::ONE,
                 Fixed::ONE,
                 figures.system_factor(ShipSystem::TorpedoMounts, ship.systems.torpedo_mounts),
@@ -1093,15 +1106,35 @@ impl World {
         // Torpedoes are used up only when a salvo is fired. With the mounts
         // out none are fired and none are used, so no state changes without
         // an event (decision 0016, 6).
+        //
+        // A class with a second side keeps its torpedoes ready after the
+        // first side and fires the rest in the next round it fires
+        // (decision 0083).
         if torpedoes_fired && torpedo.is_some() {
-            self.truth
-                .ships
-                .get_mut(&firer)
-                .expect("firer exists")
-                .torpedoes_ready = false;
+            let ship = self.truth.ships.get_mut(&firer).expect("firer exists");
+            if !second_side && class_has_second_side {
+                ship.torpedoes_one_side_fired = true;
+            } else {
+                ship.torpedoes_ready = false;
+                ship.torpedoes_one_side_fired = false;
+            }
         }
         if let Some(torpedo) = torpedo {
-            self.fire_weapon(fight, round, force, &mut stream, &torpedo);
+            if second_side {
+                // The second side's salvo has a stream of its own, opened for
+                // that salvo alone.
+                let mut other_side = self.rng_pair(
+                    fight.day,
+                    Some(fight.pulse),
+                    Subsystem::SurfaceCombat,
+                    Draw::TorpedoOtherSide,
+                    EntityRef::Ship(firer),
+                    EntityRef::TaskForce(fight.forces[enemy].id),
+                );
+                self.fire_weapon(fight, round, force, &mut other_side, &torpedo);
+            } else {
+                self.fire_weapon(fight, round, force, &mut stream, &torpedo);
+            }
         }
         fight.fire_streams.insert(firer, stream);
     }
@@ -1755,6 +1788,20 @@ mod tests {
                     [8, 3, 100, 20, 8, 200, 400],
                     true,
                 ),
+                (
+                    8,
+                    "cruiser with wing tubes",
+                    ShipKind::Cruiser,
+                    [8, 3, 100, 20, 8, 200, 400],
+                    false,
+                ),
+                (
+                    9,
+                    "destroyer with wing and centreline tubes",
+                    ShipKind::Destroyer,
+                    [4, 6, 150, 5, 12, 200, 100],
+                    false,
+                ),
             ];
             for (
                 id,
@@ -1780,6 +1827,7 @@ mod tests {
                         gun_rounds_per_gun: rounds,
                         gun_damage: Fixed::from_int(i64::from(gun_damage)),
                         torpedo_tubes: tubes,
+                        torpedo_tubes_one_side: tubes,
                         torpedo_damage: Fixed::from_int(i64::from(torpedo_damage)),
                         toughness: Fixed::from_int(i64::from(tough)),
                         radar,
@@ -1787,6 +1835,15 @@ mod tests {
                         anti_aircraft: 0,
                     },
                 );
+            }
+            // Class 8 has 4 of its 8 tubes on a side, class 9 (Mahan-like) 8
+            // of its 12 (decision 0083). Every other class has B equal to T.
+            for (id, one_side) in [(8, 4), (9, 8)] {
+                ref_data
+                    .ship_classes
+                    .get_mut(&ShipClassId::new(id))
+                    .expect("class")
+                    .torpedo_tubes_one_side = one_side;
             }
             ref_data.port_sizes.insert(
                 0,
@@ -3554,6 +3611,278 @@ mod tests {
             count(&world, |k| matches!(k, EventKind::EngagementBegun { .. })),
             2
         );
+    }
+
+    // ---- 10b. the other side's torpedo tubes (decision 0083) ----
+    //
+    // Class 8 is class 1 with 8 tubes of which 4 bear on one side (B 4, T 8).
+    // Class 9 is a Mahan-like destroyer (T 12, B 8). Class 1 has B equal to T.
+    // Round 1's first side is B tubes; the next round in which the ship has
+    // torpedo shots she fires T - B, and then her torpedoes are spent.
+
+    /// The listed ships fire nothing: no gun rounds, no torpedoes.
+    fn silent(world: &mut World, ships: &[u32]) {
+        for id in ships {
+            let ship = ship_mut(world, *id);
+            ship.gun_rounds = Fixed::ZERO;
+            ship.torpedoes_ready = false;
+        }
+    }
+
+    /// (round, shots) of each torpedo salvo of one ship.
+    fn torpedo_rounds_of(world: &World, ship: u32) -> Vec<(u32, Fixed)> {
+        torpedo_salvos_of(world, ship)
+            .iter()
+            .map(|s| (s.round, s.shots))
+            .collect()
+    }
+
+    #[test]
+    fn a_ship_with_wing_tubes_fires_b_and_then_t_minus_b_in_the_next_round() {
+        // Case A, shots only (harmless: every torpedo misses so the fight
+        // runs on): round 1 4 tubes, round 2 4 tubes, then none. 4 x 1 x 1 = 4
+        // shots each.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, harmless);
+        assert_eq!(
+            torpedo_rounds_of(&world, 1),
+            vec![(1, Fixed::from_int(4)), (2, Fixed::from_int(4))]
+        );
+        assert!(!ship(&world, 1).torpedoes_ready);
+        assert!(!ship(&world, 1).torpedoes_one_side_fired);
+        // The class 1 ship fires its 8 tubes once.
+        assert_eq!(torpedo_rounds_of(&world, 2), vec![(1, Fixed::from_int(8))]);
+        assert!(!ship(&world, 2).torpedoes_one_side_fired);
+    }
+
+    #[test]
+    fn the_first_side_leaves_the_torpedoes_ready_and_the_flag_set() {
+        // A fight that ends after round 1 (the silent allied force breaks
+        // off, having been fired on) leaves the ship with one side fired.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1, 1]).stance(Stance::Avoid),
+        ]);
+        let world = run(&scene, |w| {
+            harmless(w);
+            silent(w, &[2, 3]);
+        });
+        assert_eq!(endings(&world), vec![(1, EngagementEndReason::BrokeOff)]);
+        assert_eq!(torpedo_salvos_of(&world, 1).len(), 1);
+        assert!(ship(&world, 1).torpedoes_ready);
+        assert!(ship(&world, 1).torpedoes_one_side_fired);
+        let violations = invariants::check(world.umpire(), world.map(), world.ref_data());
+        assert!(violations.is_empty(), "{violations:?}");
+    }
+
+    #[test]
+    fn case_b_the_second_side_goes_into_a_second_fight_from_its_own_stream() {
+        // The first fight ends after round 1 (as above). A second fight in the
+        // same pulse: round 1 is her first firing round, so she fires the
+        // other 4 tubes at the target of decision 0078 (the most important
+        // kind afloat, the one in place 0 of 2: ship 2), from the stream
+        // keyed on `TorpedoOtherSide`, her and force 2. The hit chance 0.125
+        // is set for the second fight only: 4 x 0.125 = 0.5 expected.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1, 1]).stance(Stance::Avoid),
+        ]);
+        let mut world = run(&scene, |w| {
+            harmless(w);
+            silent(w, &[2, 3]);
+        });
+        let before = world.events().len();
+        figures_mut(&mut world).torpedo_hit_chance_day = fx("0.125");
+        scene.run_step(&mut world);
+        assert!(world.events().len() > before, "a second fight happened");
+
+        let torpedoes = torpedo_salvos_of(&world, 1);
+        assert_eq!(torpedoes.len(), 2);
+        let second = &torpedoes[1];
+        assert_eq!(second.shots, Fixed::from_int(4));
+        assert_eq!(second.target, 2);
+        assert_eq!(second.chance, fx("0.125"));
+        assert_eq!(second.expected, fx("0.5"));
+        assert!(!ship(&world, 1).torpedoes_ready);
+        assert!(!ship(&world, 1).torpedoes_one_side_fired);
+
+        let figures = world.ref_data.surface_combat.clone().unwrap();
+        let mut stream = world.rng_pair(
+            1,
+            Some(Pulse::Morning),
+            Subsystem::SurfaceCombat,
+            Draw::TorpedoOtherSide,
+            EntityRef::Ship(ShipId::new(1)),
+            EntityRef::TaskForce(TaskForceId::new(2)),
+        );
+        let hits = replay_shots(&mut stream, 4, fx("0.125"));
+        let systems = replay_torpedo_hits(&mut stream, &figures, hits);
+        assert_eq!(second.hits, hits);
+        let (tracks, recorded) = outcome_of_salvo(&world, second.id);
+        assert_eq!(tracks, [hits, 0]);
+        assert_eq!(recorded, systems);
+    }
+
+    #[test]
+    fn case_d_prime_mounts_out_at_the_second_sides_turn_fire_nothing_and_change_nothing() {
+        // State after the first side: ready and the flag set. Mounts out:
+        // no salvo, so no event and no change; the side waits.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, |w| {
+            harmless(w);
+            let ship = ship_mut(w, 1);
+            ship.torpedoes_one_side_fired = true;
+            ship.systems.torpedo_mounts = SystemState::Out;
+        });
+        assert!(torpedo_salvos_of(&world, 1).is_empty());
+        assert!(ship(&world, 1).torpedoes_ready);
+        assert!(ship(&world, 1).torpedoes_one_side_fired);
+        // Her guns were not touched.
+        assert_eq!(gun_salvos_of(&world, 1).len(), 6);
+        // Mounts out before the first side: the same, flag clear.
+        let world = run(&scene, |w| {
+            harmless(w);
+            ship_mut(w, 1).systems.torpedo_mounts = SystemState::Out;
+        });
+        assert!(torpedo_salvos_of(&world, 1).is_empty());
+        assert!(ship(&world, 1).torpedoes_ready);
+        assert!(!ship(&world, 1).torpedoes_one_side_fired);
+    }
+
+    #[test]
+    fn case_e_a_ship_sunk_in_round_1_fires_its_first_side_and_no_second() {
+        // Ship 2 (class 8) starts at flotation 95 and sinks to the 30 points
+        // of ship 1's gun salvo, still firing its first 4 tubes in round 1.
+        // The fight ends with its force sunk, so no second salvo.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[8]),
+        ]);
+        let world = run(&scene, |w| {
+            flotation_only(w);
+            ship_mut(w, 2).flotation_damage = Fixed::from_int(95);
+        });
+        assert_eq!(endings(&world), vec![(1, EngagementEndReason::ForceSunk)]);
+        assert_eq!(torpedo_rounds_of(&world, 2), vec![(1, Fixed::from_int(4))]);
+        assert_eq!(ship(&world, 2).location, ShipLocation::Sunk);
+        assert!(ship(&world, 2).torpedoes_one_side_fired);
+        let violations = invariants::check(world.umpire(), world.map(), world.ref_data());
+        assert!(violations.is_empty(), "{violations:?}");
+    }
+
+    #[test]
+    fn case_g_with_no_gun_ammunition_the_second_side_still_fires() {
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, |w| {
+            harmless(w);
+            ship_mut(w, 1).gun_rounds = Fixed::ZERO;
+        });
+        assert!(gun_salvos_of(&world, 1).is_empty());
+        assert_eq!(
+            torpedo_rounds_of(&world, 1),
+            vec![(1, Fixed::from_int(4)), (2, Fixed::from_int(4))]
+        );
+    }
+
+    #[test]
+    fn a_ship_with_only_its_second_side_left_counts_for_the_surprise_test() {
+        // Night, force 1 sights and force 2 (not alert) does not. Ship 1 has
+        // no gun rounds; its only salvo is the second side's 4 tubes. That
+        // makes force 2 surprised; with the torpedoes spent it is not.
+        let hex = Hex::new(5, 0);
+        let scene = night_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]).not_alert(),
+        ]);
+        let surprised = |world: &World| {
+            count(world, |k| {
+                matches!(k, EventKind::ForceSurprised { round: 1, .. })
+            })
+        };
+        let world = run(&scene, |w| {
+            only_force_1_sights_by_roll(w);
+            let ship = ship_mut(w, 1);
+            ship.gun_rounds = Fixed::ZERO;
+            ship.torpedoes_one_side_fired = true;
+        });
+        assert_eq!(surprised(&world), 1);
+        assert_eq!(torpedo_salvos_of(&world, 1)[0].shots, Fixed::from_int(4));
+        let world = run(&scene, |w| {
+            only_force_1_sights_by_roll(w);
+            let ship = ship_mut(w, 1);
+            ship.gun_rounds = Fixed::ZERO;
+            ship.torpedoes_ready = false;
+        });
+        assert_eq!(surprised(&world), 0);
+    }
+
+    #[test]
+    fn case_f_a_class_with_b_equal_to_t_fires_one_salvo_and_never_sets_the_flag() {
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[1]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, harmless);
+        for firer in [1, 2] {
+            assert_eq!(
+                torpedo_rounds_of(&world, firer),
+                vec![(1, Fixed::from_int(8))]
+            );
+            assert!(!ship(&world, firer).torpedoes_ready);
+            assert!(!ship(&world, firer).torpedoes_one_side_fired);
+        }
+    }
+
+    #[test]
+    fn a_mahan_like_class_fires_8_and_then_4() {
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[9]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, harmless);
+        assert_eq!(
+            torpedo_rounds_of(&world, 1),
+            vec![(1, Fixed::from_int(8)), (2, Fixed::from_int(4))]
+        );
+        assert!(!ship(&world, 1).torpedoes_ready);
+        assert!(!ship(&world, 1).torpedoes_one_side_fired);
+    }
+
+    #[test]
+    fn a_degraded_mount_spends_a_side_with_the_shots_it_gave() {
+        // Case D: degraded mounts give 4 x 0.5 = 2 shots in each salvo; the
+        // two tubes of the side that did not fire are not kept.
+        let hex = Hex::new(5, 0);
+        let scene = day_scene(vec![
+            ForceSpec::new(1, Side::Japanese, hex, &[8]),
+            ForceSpec::new(2, Side::Allied, hex, &[1]),
+        ]);
+        let world = run(&scene, |w| {
+            harmless(w);
+            ship_mut(w, 1).systems.torpedo_mounts = SystemState::Degraded;
+        });
+        assert_eq!(
+            torpedo_rounds_of(&world, 1),
+            vec![(1, Fixed::from_int(2)), (2, Fixed::from_int(2))]
+        );
+        assert!(!ship(&world, 1).torpedoes_ready);
     }
 
     // ---- 11. three forces in one hex ----

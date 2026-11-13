@@ -38,12 +38,14 @@ A list kept by the architect, begun on Nov 12, 2026 as step 1 closed. Step 2 is 
 - Tuning round 1: `experience_gun_strength` from 0.25 to 0.5, kept (`docs/validation/tuning/r1-experience-gun-strength.md`).
 - `export` takes a saved game as well as a scenario (`docs/commands.md`).
 - Tuning round 2: `surprised_target_factor` from 1.5 to 2, kept; the chance to hit is closed (`docs/validation/tuning/r2-surprised-target-factor.md`, report `docs/validation/savo-island-r2.md`).
+- Tubes that bear on one side, and the other side fired in the ship's next torpedo round: built (decisions 0074 and 0083); the state hash is at version 7.
 
 ## Open, named by the work of Nov 13, 2026
 
 Where an item says when it is done, that is the coordinating architect's ruling of Nov 13, 2026, on the designer's delegation.
 
-- The other side's torpedo tubes fired in a later round of a fight: a rule for the designer, held with decision 0074.
+- One fight for three forces, so that fights can overlap: a plan for the designer at the close, not built in step 2 (decision 0083, "What it carries and what it does not"). Chicago's fate and the northern group's torpedo hits at Savo Island rest on it.
+- Torpedo reloads: each tube fires once in a game, where Kako fired ten torpedoes from eight tubes at Savo Island and the Takao class had a gear for quick reloading (decision 0083, "What it carries and what it does not").
 - A raiding force that fights and passes on: no rule has a force retire when it has done what it came for, so `minutes_of_action` misses at Savo Island (decision 0024, the note on break-off levels).
 - Secondary guns: a cruiser's secondary battery has no counterpart in the rules (`docs/step2-spec.md`, "Where the model stands today").
 - Identification under fire, and a force seen and stalked before the first shot (decision 0076, "The gaps, named").

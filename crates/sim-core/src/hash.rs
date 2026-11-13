@@ -113,8 +113,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `arc_order` (decision 0059);
 /// version 5 adds an air group's `target_priority`, `target_order` and
 /// `last_base_strike_day` after its `reach_order` (decision 0063);
-/// version 6 adds a ship's `experience` after its location (decision 0064).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v6";
+/// version 6 adds a ship's `experience` after its location (decision 0064);
+/// version 7 adds a ship's `torpedoes_one_side_fired` after its
+/// `torpedoes_ready` (decision 0083).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v7";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -176,6 +178,7 @@ fn name_every_field(world: &World) {
             fire_damage: _,
             gun_rounds: _,
             torpedoes_ready: _,
+            torpedoes_one_side_fired: _,
             systems,
             experience: _,
         } = ship;
@@ -348,6 +351,7 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.i64(ship.fire_damage.raw());
         h.i64(ship.gun_rounds.raw());
         h.u8(u8::from(ship.torpedoes_ready));
+        h.u8(u8::from(ship.torpedoes_one_side_fired));
         for system in ShipSystem::ALL {
             h.u8(ship.systems.get(system).code());
         }
