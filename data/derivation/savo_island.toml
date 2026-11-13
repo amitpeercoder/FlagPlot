@@ -42,6 +42,25 @@ radar_unknown_means_none = [
 # ammunition is treated as not limiting.
 main_gun_ammunition_not_limiting = ["tenryu", "yubari", "yunagi"]
 
+# The class ids, pinned (decision 0077): each id and the ships that have it, as
+# they stood on main before the table. A row is made for each id, in id order,
+# whether or not two rows of a class have equal figures. Ids are never
+# renumbered.
+[class_ids]
+1000 = ["aoba", "kinugasa"]
+1001 = ["kako", "furutaka"]
+1002 = ["yunagi"]
+1003 = ["chokai"]
+1004 = ["tenryu"]
+1005 = ["yubari"]
+1006 = ["hmas-canberra"]
+1007 = ["dd-386-bagley", "dd-392-patterson", "dd-388-helm", "dd-393-jarvis"]
+1008 = ["dd-387-blue", "dd-390-ralph-talbot"]
+1009 = ["dd-408-wilson"]
+1010 = ["ca-44-vincennes"]
+1011 = ["ca-39-quincy", "ca-34-astoria"]
+1012 = ["ca-29-chicago"]
+
 # The experience values of the ships (decision 0064; the questions and their
 # thresholds are in rules.toml, under [experience]). The first day of the
 # engagement is 1942-08-08, so the three months are 1942-05-08 to 1942-08-08

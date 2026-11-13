@@ -23,7 +23,7 @@ day   1  hash fb0b45f822ee98df  276 events
 #17 D1 night     ship:8 burned 68.774766 t, 344.225234 t remaining  <- #9
 #18 D1 night     task_force:1 and task_force:2 met at (2,-5) at D1 01:31: engagement begun  <- #9, order:5, order:1
 #19 D1 night     round 1: task_force:1 looked for task_force:2, chance 0.625: sighted  <- #18
-#20 D1 night     round 1: task_force:2 looked for task_force:1, chance 0.4375: not sighted  <- #18
+#20 D1 night     round 1: task_force:2 looked for task_force:1, chance 0.3125: not sighted  <- #18
 #21 D1 night     round 1: task_force:2 was surprised by task_force:1  <- #19
 #22 D1 night     round 1: ship:1 guns at ship:9: 56.42855 shots x 0.05625 = 3.174105 expected, 6 hits  <- #18
 #23 D1 night     round 1: ship:1 torpedoes at ship:9: 8 shots x 0.075 = 0.6 expected, 0 hits  <- #18
@@ -77,7 +77,7 @@ day   1  hash fb0b45f822ee98df  276 events
 #71 D1 night     task_force:3 heard the fight of task_force:1 and task_force:2, chance 0.5: not alarmed  <- #67
 #72 D1 night     task_force:1 and task_force:3 met at (2,-5) at D1 01:31: engagement begun  <- #9, order:5, order:2
 #73 D1 night     round 1: task_force:1 looked for task_force:3, chance 0.625: sighted  <- #72
-#74 D1 night     round 1: task_force:3 looked for task_force:1, chance 0.3325: not sighted  <- #72
+#74 D1 night     round 1: task_force:3 looked for task_force:1, chance 0.2375: not sighted  <- #72
 #75 D1 night     round 1: task_force:3 was surprised by task_force:1  <- #73
 #76 D1 night     round 1: ship:1 guns at ship:13: 56.42855 shots x 0.05625 = 3.174105 expected, 4 hits  <- #72
 #77 D1 night     round 1: ship:2 guns at ship:14: 33.85713 shots x 0.05625 = 1.904463 expected, 0 hits  <- #72

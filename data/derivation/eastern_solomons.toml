@@ -45,6 +45,33 @@ radar_unknown_means_none = [
     "ryujo", "amatsukaze", "tokitsukaze",
 ]
 
+# The class ids, pinned (decision 0077): each id and the ships that have it, as
+# they stood on main before the table. A row is made for each id, in id order,
+# whether or not two rows of a class have equal figures. Ids are never
+# renumbered.
+[class_ids]
+2000 = ["akizuki"]
+2001 = ["akigumo", "hatsukaze", "amatsukaze", "tokitsukaze"]
+2002 = ["hiei", "kirishima"]
+2003 = ["kumano", "suzuya"]
+2004 = ["nagara"]
+2005 = ["ryujo"]
+2006 = ["zuikaku"]
+2007 = ["shokaku"]
+2008 = ["chikuma", "tone"]
+2009 = ["kazagumo", "makigumo", "yugumo"]
+2010 = ["cl-51-atlanta"]
+2011 = ["dd-397-benham", "dd-398-ellet"]
+2012 = ["dd-348-farragut", "dd-351-macdonough", "dd-352-worden", "dd-353-dale"]
+2013 = ["dd-435-grayson", "dd-436-monssen"]
+2014 = ["dd-401-maury"]
+2015 = ["cv-3-saratoga"]
+2016 = ["ca-32-new-orleans", "ca-36-minneapolis"]
+2017 = ["bb-55-north-carolina"]
+2018 = ["dd-360-phelps", "dd-363-balch"]
+2019 = ["ca-33-portland"]
+2020 = ["cv-6-enterprise"]
+
 # The aircraft types that flew from the carriers and from Henderson Field,
 # each with the load it attacks with in this scenario (decision 0029, 7).
 # A fighter attacks nothing on the surface.

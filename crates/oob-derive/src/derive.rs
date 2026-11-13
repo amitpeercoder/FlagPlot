@@ -82,7 +82,24 @@ const ROUNDS: &str = "main_rounds_per_gun";
 pub const AMMUNITION_NOT_LIMITING_ROUNDS: i64 = 9999;
 
 const RADAR_SLOTS: [&str; 2] = ["air_search_radar", "surface_search_radar"];
+/// The slot whose sets give the `radar` figure (decision 0077, 2). The
+/// other slot is read only to know that a radar fit is on record.
+const SURFACE_SLOT: &str = "surface_search_radar";
+/// The attribute of a sensor that says what its display shows, and the
+/// text of its value that marks a plan position indicator (decision 0077, 1).
+const DISPLAY: &str = "display";
+const PLAN_POSITION: &str = "PPI";
 const AA_SLOTS: [&str; 2] = ["heavy_aa", "light_aa"];
+
+/// What a surface-search set's display rows say (decision 0077).
+enum Display {
+    /// A readable row whose value has a plan position indicator.
+    Plan(Read),
+    /// A readable row whose value has none.
+    NoPlan(Read),
+    /// No readable row: the set and the fit row naming it.
+    NotGiven(String),
+}
 
 /// A fact row cited by a figure: file and id.
 pub type Cite = (String, u64);
@@ -122,11 +139,17 @@ pub struct ShipOpts {
 #[derive(Clone, Debug)]
 pub struct ShipResult {
     pub ship: String,
+    /// The ship's name in ships.csv.
+    pub ship_name: String,
     pub class_id: u64,
     pub class_name: String,
     pub figures: Vec<Figure>,
     /// Radar was unknown and the list says to treat it as not fitted.
     pub radar_assumed: bool,
+    /// Surface-search sets of the ship that did not count for the radar
+    /// figure because no readable row gives their display (decision 0077,
+    /// 3): the set and the fit row naming it.
+    pub radar_not_counted: Vec<String>,
     /// No rounds-per-gun row exists and the list says to treat main-gun
     /// ammunition as not limiting.
     pub ammunition_assumed: bool,
@@ -141,6 +164,7 @@ pub struct ShipResult {
 
 pub(crate) struct ShipInfo {
     pub(crate) row_id: String,
+    pub(crate) name: String,
     pub(crate) class: String,
 }
 
@@ -294,6 +318,7 @@ impl<'a> Env<'a> {
                 rec.get("key").to_string(),
                 ShipInfo {
                     row_id: rec.get("id").to_string(),
+                    name: rec.get("name").to_string(),
                     class: rec.get("class").to_string(),
                 },
             );
@@ -934,9 +959,18 @@ impl<'a> Env<'a> {
 
         // radar
         let mut radar_assumed = false;
-        if let Some((fitted, sources)) = self.radar(&mut w, keys, assume_no_radar) {
+        let mut radar_not_counted = Vec::new();
+        if let Some((fitted, sources, not_counted)) = self.radar(&mut w, keys, assume_no_radar) {
             radar_assumed = fitted.1;
             put(&mut figs, RADAR, Value::Flag(fitted.0), sources);
+            if let Some(figure) = figs[RADAR].as_mut() {
+                for set in &not_counted {
+                    figure.notes.insert(format!(
+                        "not counted: no row gives the display of {set} (decision 0077)"
+                    ));
+                }
+            }
+            radar_not_counted = not_counted;
         }
 
         // aircraft capacity and anti-aircraft shots (decision 0029)
@@ -954,15 +988,47 @@ impl<'a> Env<'a> {
             .collect();
         Ok(ShipResult {
             ship: ship.to_string(),
+            ship_name: ship_info.name.clone(),
             class_id: class.row_id.parse().unwrap_or(0),
             class_name: class.name.clone(),
             figures,
             radar_assumed,
+            radar_not_counted,
             ammunition_assumed,
             designed_rate,
             weapons_not_modelled: surface_weapons_not_modelled,
             used: w.used,
         })
+    }
+
+    /// Whether the display of a surface-search set has a plan position
+    /// indicator (decision 0077, 1 and 4): its `display` row is read as
+    /// every fact is, with exceptions. No readable row is not a failure:
+    /// the set is not counted and is named (decision 0077, 3). Rows that
+    /// disagree are.
+    fn plan_position(&self, item: &str, fit: &str) -> Result<Display, Failure> {
+        let rows = self.index.rows(Table::SensorFacts, item, DISPLAY);
+        match resolve(
+            rows,
+            &format!("{DISPLAY} of sensor {item}"),
+            self.date,
+            &self.rules.exceptions,
+        ) {
+            Ok(read) => Ok(if read.rows[0].value.contains(PLAN_POSITION) {
+                Display::Plan(read)
+            } else {
+                Display::NoPlan(read)
+            }),
+            Err(failure)
+                if matches!(
+                    failure.kind,
+                    Kind::Missing | Kind::NotPreferred | Kind::NotOnDate
+                ) =>
+            {
+                Ok(Display::NotGiven(format!("{item} ({fit})")))
+            }
+            Err(failure) => Err(failure),
+        }
     }
 
     fn slot_read(
@@ -1177,19 +1243,26 @@ impl<'a> Env<'a> {
         }
     }
 
-    /// Radar (decision 0020 as changed by decision 0029, 3): the figure and
-    /// whether it is the list's assumption. Yes if any readable row in
-    /// either slot holds on the date with a count above 0 (or no count, for
-    /// a real set); the sets need not agree. A sourced "none" (a no-radar
-    /// stand-in item at count 0) beside a fitted set is a conflict.
+    /// Radar (decision 0020 as changed by decision 0029, 3 and decision
+    /// 0077): the figure and whether it is the list's assumption, and the
+    /// sets not counted for want of a display row. The figure is yes only if
+    /// a readable surface-search fit has count above 0 and the set it names
+    /// has a readable `display` row containing "PPI". An air-search fit does
+    /// not give the figure, but is read to know that a radar fit is on
+    /// record. A sourced "none" (a no-radar stand-in item at count 0) beside
+    /// a fitted set is a conflict.
+    #[allow(clippy::type_complexity)]
     fn radar(
         &self,
         w: &mut Work,
         keys: (&str, &str),
         assume_no_radar: bool,
-    ) -> Option<((bool, bool), Got<()>)> {
+    ) -> Option<((bool, bool), Got<()>, Vec<String>)> {
         let mut reads: Vec<Read> = Vec::new();
         let mut fitted = false;
+        let mut counted = false;
+        let mut not_counted: Vec<String> = Vec::new();
+        let mut display_reads: Vec<Read> = Vec::new();
         let mut stand_in = false;
         let mut slots_found = 0;
         let mut absent: Vec<String> = Vec::new();
@@ -1201,8 +1274,12 @@ impl<'a> Env<'a> {
             let slot_read = match self.slot_read(keys, slot, false) {
                 Ok(slot_read) => slot_read,
                 Err(failure) => {
-                    w.failed(FIGURES[RADAR], failure);
-                    hard = true;
+                    if slot == SURFACE_SLOT {
+                        w.failed(FIGURES[RADAR], failure);
+                        hard = true;
+                    } else {
+                        absent.push(failure.message);
+                    }
                     continue;
                 }
             };
@@ -1218,6 +1295,10 @@ impl<'a> Env<'a> {
                         } else {
                             match count(&read, slot) {
                                 Ok(n) => Some(n),
+                                Err(failure) if slot != SURFACE_SLOT => {
+                                    absent.push(failure.message);
+                                    continue;
+                                }
                                 Err(failure) => {
                                     w.failed(FIGURES[RADAR], failure);
                                     hard = true;
@@ -1236,6 +1317,20 @@ impl<'a> Env<'a> {
                             _ => {
                                 fitted = true;
                                 fitted_items.push(format!("{item} ({})", read.rows[0].cite()));
+                                if slot == SURFACE_SLOT {
+                                    match self.plan_position(&item, &read.rows[0].cite()) {
+                                        Ok(Display::Plan(display)) => {
+                                            counted = true;
+                                            display_reads.push(display);
+                                        }
+                                        Ok(Display::NoPlan(display)) => display_reads.push(display),
+                                        Ok(Display::NotGiven(set)) => not_counted.push(set),
+                                        Err(failure) => {
+                                            w.failed(FIGURES[RADAR], failure);
+                                            hard = true;
+                                        }
+                                    }
+                                }
                             }
                         }
                         found = true;
@@ -1249,6 +1344,7 @@ impl<'a> Env<'a> {
                     {
                         absent.push(failure.message);
                     }
+                    Err(failure) if slot != SURFACE_SLOT => absent.push(failure.message),
                     Err(failure) => {
                         w.failed(FIGURES[RADAR], failure);
                         hard = true;
@@ -1281,7 +1377,7 @@ impl<'a> Env<'a> {
             excepted: false,
             doubts: doubts.into_iter().collect(),
         };
-        for read in &reads {
+        for read in reads.iter().chain(&display_reads) {
             let (c, e, d) = w.take(read);
             sources.cites.extend(c);
             sources.excepted |= e;
@@ -1301,13 +1397,13 @@ impl<'a> Env<'a> {
             return None;
         }
         if fitted {
-            return Some(((true, false), sources));
+            return Some(((counted, false), sources, not_counted));
         }
         if stand_in || both_empty {
-            return Some(((false, false), sources));
+            return Some(((false, false), sources, not_counted));
         }
         if assume_no_radar {
-            return Some(((false, true), sources));
+            return Some(((false, true), sources, not_counted));
         }
         let mut found_text: Vec<String> = reads
             .iter()

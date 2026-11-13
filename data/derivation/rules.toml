@@ -782,3 +782,20 @@ fact = "range_max_nm"
 row = 493
 reason = "It states its condition, maximum fuel, and is the sheet whose normal range (row 494) the derivation already reads; row 501 states no condition and cites a book not read."
 agreed = "2026-11-13"
+
+# Which radar sets give a class its radar figure (decision 0077). The figure
+# is 1 only if a read surface_search_radar fit has a count above 0 and the
+# set it names has a read `display` row in sensor_facts.csv whose value
+# contains "PPI", a plan position indicator. An air_search_radar fit does not
+# give the figure, whatever its display; it is read only to know that a
+# radar fit is on record. A surface-search set with no read display row, or
+# of a type the source does not state, gives 0 and is named in the class
+# file's header and in the sources file as not counted, because no row gives
+# its display; it is a gap for the research session, not a refusal. A set
+# whose display row is read and has no "PPI" gives 0 with no note. "Read" is
+# what it is for every fact (decisions 0020 and 0023): a preferred row that
+# holds on the list's date, or a row an exception names; rows that disagree
+# stop the derivation. A sourced "none" (a no-radar stand-in item at count 0)
+# gives 0, and the list's radar_unknown_means_none works as before (decision
+# 0019, 5). No exception is written for this rule: the display rows are read
+# as they stand.
