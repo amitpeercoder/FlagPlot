@@ -21,15 +21,20 @@
 //!
 //! Both sides hold two objectives: ships sunk and ships crippled.
 //!
+//! Worked again under decision 0078 (Nov 13, 2026), which changed the rule
+//! for whom a ship fires at, so the seed's fight came out otherwise. Before
+//! it the facts were Kako and Furutaka sunk against Canberra and Patterson,
+//! and the result a minor Allied victory by 3.
+//!
 //! | Fact | |
 //! | ---- | - |
-//! | Japanese ships sunk | ship 3 Kako and ship 5 Furutaka, cruisers |
-//! | Allied ships sunk | ship 9 Canberra, a cruiser; ship 11 Patterson, a destroyer |
-//! | Ships afloat with propulsion out | none on either side (Chokai, Aoba and Chicago have it degraded, which does not count) |
+//! | Japanese ships sunk | ship 3 Kako, a cruiser; ship 8 Yunagi, a destroyer |
+//! | Allied ships sunk | ship 9 Canberra and ship 10 Chicago, cruisers |
+//! | Ships afloat with propulsion out | none on either side |
 //!
-//! Allied points: 2 cruisers x 4 = 8. Japanese points: 4 + 1 = 5. Allied
-//! margin 8 - 5 = 3, which is exactly the minor level: a minor Allied
-//! victory and a minor Japanese defeat.
+//! Allied points: 4 + 1 = 5. Japanese points: 2 cruisers x 4 = 8. Allied
+//! margin 5 - 8 = -3, which is exactly the minor level: a minor Japanese
+//! victory and a minor Allied defeat.
 //!
 //! The night itself was a decisive Japanese victory. This result is the
 //! scenario's known fault (decision 0024) set on the scale, not a claim
@@ -311,21 +316,22 @@ fn fuel_losses(world: &World, side: Side) -> u32 {
 // ---------------------------------------------------------------------
 
 #[test]
-fn savo_island_is_a_minor_allied_victory_by_the_margin_of_exactly_three() {
-    // The frozen copy of scenario 4 (data/scenarios/step2-frozen): the scoring
-    // below was worked on the scenario as it stood before the northern
-    // group's break-off level was set from the record on Nov 13, 2026
-    // (decision 0024), and no number of it changes.
+fn savo_island_is_a_minor_japanese_victory_by_the_margin_of_exactly_three() {
+    // The frozen copy of scenario 4 (data/scenarios/step2-frozen): the
+    // scenario as it stood before the northern group's break-off level and
+    // Yunagi's detachment were set from the record on Nov 13, 2026 (decision
+    // 0024). The scoring was worked again under decision 0078, the rule for
+    // whom a ship fires at.
     let world = run("step2-frozen/04_savo_island.toml");
-    // Japanese ships sunk: Kako (3) and Furutaka (5), cruisers.
-    assert_eq!(ship_ids(&world, Side::Japanese, sunk), vec![3, 5]);
-    assert!([3, 5]
+    // Japanese ships sunk: Kako (3), a cruiser, and Yunagi (8), a destroyer.
+    assert_eq!(ship_ids(&world, Side::Japanese, sunk), vec![3, 8]);
+    assert_eq!(kind_of(&world, 3), ShipKind::Cruiser);
+    assert_eq!(kind_of(&world, 8), ShipKind::Destroyer);
+    // Allied: Canberra (9) and Chicago (10), cruisers.
+    assert_eq!(ship_ids(&world, Side::Allied, sunk), vec![9, 10]);
+    assert!([9, 10]
         .iter()
         .all(|s| kind_of(&world, *s) == ShipKind::Cruiser));
-    // Allied: Canberra (9), a cruiser, and Patterson (11), a destroyer.
-    assert_eq!(ship_ids(&world, Side::Allied, sunk), vec![9, 11]);
-    assert_eq!(kind_of(&world, 9), ShipKind::Cruiser);
-    assert_eq!(kind_of(&world, 11), ShipKind::Destroyer);
     // No ship afloat with propulsion out.
     assert!(ship_ids(&world, Side::Japanese, propulsion_out).is_empty());
     assert!(ship_ids(&world, Side::Allied, propulsion_out).is_empty());
@@ -333,17 +339,17 @@ fn savo_island_is_a_minor_allied_victory_by_the_margin_of_exactly_three() {
     let result = result_of(&world);
     assert_eq!(result.allied.objectives.len(), 2);
     assert_eq!(result.japanese.objectives.len(), 2);
-    assert_eq!(line(&result.allied, 0), ("ships_sunk", n(2), n(8)));
+    assert_eq!(line(&result.allied, 0), ("ships_sunk", n(2), n(5)));
     assert_eq!(line(&result.allied, 1), ("ships_crippled", n(0), n(0)));
-    assert_eq!(line(&result.japanese, 0), ("ships_sunk", n(2), n(5)));
+    assert_eq!(line(&result.japanese, 0), ("ships_sunk", n(2), n(8)));
     assert_eq!(line(&result.japanese, 1), ("ships_crippled", n(0), n(0)));
-    assert_eq!(result.allied.total, n(8));
-    assert_eq!(result.japanese.total, n(5));
-    // 8 - 5 = 3, exactly the minor level.
-    assert_eq!(result.allied.margin, n(3));
-    assert_eq!(result.japanese.margin, n(-3));
-    assert_eq!(result.allied.outcome, Outcome::Victory(Level::Minor));
-    assert_eq!(result.japanese.outcome, Outcome::Defeat(Level::Minor));
+    assert_eq!(result.allied.total, n(5));
+    assert_eq!(result.japanese.total, n(8));
+    // 5 - 8 = -3, exactly the minor level.
+    assert_eq!(result.allied.margin, n(-3));
+    assert_eq!(result.japanese.margin, n(3));
+    assert_eq!(result.allied.outcome, Outcome::Defeat(Level::Minor));
+    assert_eq!(result.japanese.outcome, Outcome::Victory(Level::Minor));
 }
 
 // ---------------------------------------------------------------------
