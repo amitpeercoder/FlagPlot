@@ -516,6 +516,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             chance,
             expected,
             hits,
+            after_attack,
         } => (
             "base_anti_aircraft_fire",
             d.id("base", *base)
@@ -523,7 +524,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .num("shots", *shots)
                 .num("chance", *chance)
                 .num("expected", *expected)
-                .int("hits", *hits),
+                .int("hits", *hits)
+                .flag_when_true("after_attack", *after_attack),
         ),
         EventKind::BaseAttacked {
             air_group,
@@ -650,6 +652,7 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             chance,
             expected,
             hits,
+            after_attack,
         } => (
             "anti_aircraft_fire",
             d.id("task_force", *task_force)
@@ -657,7 +660,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .num("shots", *shots)
                 .num("chance", *chance)
                 .num("expected", *expected)
-                .int("hits", *hits),
+                .int("hits", *hits)
+                .flag_when_true("after_attack", *after_attack),
         ),
         EventKind::AircraftLost {
             air_group,

@@ -2,18 +2,18 @@ Scenario 5d: Carrier duel
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bd8bcbb51189b0f5  34 events
-day   2  hash cff6e4cb67742544  45 events
+day   1  hash a0069cad434135ef  35 events
+day   2  hash 61256e024c45f9bf  43 events
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder carrier force B" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-air_group:1 "Placeholder scouting squadron A" (Allied) aboard ship:1: 0 ready, mission Search, arc 040-130 to 300 nm
-air_group:2 "Placeholder bombing squadron A" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
-air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 5 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:1 "Placeholder scouting squadron A" (Allied) aboard ship:1: 4 ready, mission Search, arc 040-130 to 300 nm
+air_group:2 "Placeholder bombing squadron A" (Allied) aboard ship:1: 14 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 9 ready, mission CombatAirPatrol, patrol share 0.5, no arc
 air_group:4 "Placeholder scouting squadron B" (Japanese) aboard ship:4: 8 ready, mission Search, arc 220-310 to 300 nm
-air_group:5 "Placeholder bombing squadron B" (Japanese) aboard ship:4: 12 ready, mission NavalStrike, no arc
-air_group:6 "Placeholder fighting squadron B" (Japanese) aboard ship:4: 7 ready, mission CombatAirPatrol, patrol share 0.5, no arc
-ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 40, fire 20; flight deck out; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+air_group:5 "Placeholder bombing squadron B" (Japanese) aboard ship:4: 11 ready, mission NavalStrike, no arc
+air_group:6 "Placeholder fighting squadron B" (Japanese) aboard ship:4: 8 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 50, fire 10; flight deck out; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder cruiser A1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser A2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:4 "Placeholder carrier B": afloat in task_force:2; damage flotation 50, fire 0; propulsion degraded; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
@@ -25,5 +25,5 @@ Allied claim over (4,0): 9 aircraft shot down, day 2 morning
 Allied claim over (4,0): 2 aircraft shot down, day 2 afternoon
 Japanese contact:1 at (4,0): 3 ships, cruiser, age 0 pulses
 Japanese claim over (9,0): 4 aircraft shot down, day 1 afternoon
-Japanese claim at (4,0): 3 hits on a cruiser, 0 sunk, day 2 morning
-Japanese claim at (4,0): 6 hits on a cruiser, 0 sunk, day 2 afternoon
+Japanese claim at (4,0): 4 hits on a cruiser, 0 sunk, day 2 morning
+Japanese claim at (4,0): 6 hits on a carrier, 0 sunk, day 2 afternoon

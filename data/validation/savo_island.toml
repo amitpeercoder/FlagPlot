@@ -10,6 +10,19 @@
 #
 # The ranges were settled by the architect of the spec session on
 # 2026-11-12. No row's standing was changed.
+#
+# Changed on 2026-11-13 by the coordinating architect, who now owns this
+# file, with decision 0084: torpedo hits on each group, Chicago sunk and each
+# northern cruiser's gun hits are added, so that a run that agrees on a
+# total with the wrong ships hit is seen; and the southern group's shells are
+# counted in tens, where a run that never fires does not hold the record.
+# Each measure is still judged alone: agreement on several of them does not
+# show that one run holds them together.
+#
+# Changed on 2026-11-13 by the architect, who now owns this file, with
+# decision 0083: minutes_of_action's record is the sum of the two fights as
+# the rows give each (32 to 36), not the span of the night (20 to 30), since
+# the rules hold the fights one after the other and a run counts their sum.
 
 battle = "savo-island"
 scenario = "data/scenarios/04_savo_island.toml"
@@ -38,6 +51,17 @@ take = "ships_sunk"
 ships = [9, 10]
 rows = [761, 765, 768]
 reason = "Canberra (761, 765). Chicago was not (768)."
+
+[[measure]]
+id = "chicago_sunk"
+counts = "1 if USS Chicago is sunk at the end of the run, else 0"
+record_low = 0
+record_high = 0
+judged = true
+take = "ships_sunk"
+ships = [10]
+rows = [768, 769]
+reason = "Chicago was damaged by a torpedo in the bow, fought on and steamed away; she was repaired at Noumea, Sydney and San Francisco (768, 769). Added by decision 0084: southern_group_cruisers_sunk holds its record of one when Chicago sinks and Canberra does not, which the record never had."
 
 [[measure]]
 id = "northern_group_cruisers_sunk"
@@ -149,6 +173,42 @@ rows = [19, 20, 37, 50, 58, 59, 60, 69, 70, 71, 82, 83, 49, 93, 96]
 reason = "Low end: Canberra 24 (19, 20), Chicago 1 (37), Patterson 1 (50), Vincennes 57 (58, 59), Quincy 36 (69, 70), Astoria 34 by the count of larger calibres only (83). High end: Vincennes 74 (60), Quincy 54 (71) and Astoria 65 by the count of all calibres (82). Bagley, Helm and Wilson took none (49, 93, 96). The record counts hits of every calibre and cannot be split; a ship in the rules fires its main battery only, so a run will be low by what the Japanese secondary guns scored (step 2 spec, 'Where the model stands today')."
 
 [[measure]]
+id = "gun_hits_on_vincennes"
+counts = "Gun hits on USS Vincennes, all calibres"
+record_low = 57
+record_high = 74
+judged = true
+take = "hits_on"
+ships = [13]
+weapons = ["gun"]
+rows = [58, 59, 60]
+reason = "57 known hits (58, 59), or 74 with the 1950 analysis's 17 more it counts possible (60). Added by decision 0084: gun_hits_on_allied_ships can agree on its total with the hits on the wrong ships. Like that total, the record is of every calibre and a run is of main batteries only."
+
+[[measure]]
+id = "gun_hits_on_quincy"
+counts = "Gun hits on USS Quincy, all calibres"
+record_low = 36
+record_high = 54
+judged = true
+take = "hits_on"
+ships = [14]
+weapons = ["gun"]
+rows = [69, 70, 71]
+reason = "36 known hits (69, 70), or 54 with the 1950 analysis's 18 more it counts possible (71). Added by decision 0084, for the reason gun_hits_on_vincennes was. The record is of every calibre and a run is of main batteries only."
+
+[[measure]]
+id = "gun_hits_on_astoria"
+counts = "Gun hits on USS Astoria, all calibres"
+record_low = 34
+record_high = 65
+judged = true
+take = "hits_on"
+ships = [15]
+weapons = ["gun"]
+rows = [83, 82]
+reason = "34 actual hits of the larger calibres by the 1950 analysis (83), or at least 65 of all calibres by the Bureau of Ships (82); the two rows dispute each other and give the two ends. Added by decision 0084, for the reason gun_hits_on_vincennes was. The record is of every calibre and a run is of main batteries only."
+
+[[measure]]
 id = "gun_hits_on_japanese_ships"
 counts = "Gun hits on the eight Japanese ships, all calibres"
 record_low = 10
@@ -171,6 +231,30 @@ ships = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 weapons = ["torpedo"]
 rows = [25, 23, 24, 163, 38, 39, 61, 62, 63, 72, 73, 85]
 reason = "Canberra 0, 1 or 2: the 1950 analysis rejects any hit (25), the 1943 narrative says one or two (23, 24) and the Australian navy's history two (163). Chicago 1 (38, 39). Vincennes 1, 2 or 3 (61, 62, 63). Quincy 2 or 3 (72, 73). Astoria 0 (85). Low end 0 + 1 + 1 + 2, high end 2 + 1 + 3 + 3."
+
+[[measure]]
+id = "torpedo_hits_on_the_southern_group"
+counts = "Torpedo hits on the four ships of the southern group"
+record_low = 1
+record_high = 3
+judged = true
+take = "hits_on"
+ships = [9, 10, 11, 12]
+weapons = ["torpedo"]
+rows = [25, 23, 24, 163, 38, 39]
+reason = "Canberra 0, 1 or 2: the 1950 analysis rejects any hit (25), the 1943 narrative says one or two (23, 24), the Australian navy's history two (163); the rows dispute each other and give the ends. Chicago 1, the bow hit that burst (38, 39). No row has a torpedo hit on Patterson or Bagley. Low end 0 + 1, high end 2 + 1. Added by decision 0084: torpedo_hits_on_allied_ships agreed on its total while the northern cruisers took none in every run (decision 0083 found it), so each group is judged on its own."
+
+[[measure]]
+id = "torpedo_hits_on_the_northern_group"
+counts = "Torpedo hits on the five ships of the northern group"
+record_low = 3
+record_high = 6
+judged = true
+take = "hits_on"
+ships = [13, 14, 15, 16, 17]
+weapons = ["torpedo"]
+rows = [61, 62, 63, 72, 73, 85]
+reason = "Vincennes 1, 2 or 3 (61, 62, 63), Quincy 2 or 3 (72, 73), Astoria none (85); the rows of each ship dispute each other and give the ends. No row has a torpedo hit on Helm or Wilson. Low end 1 + 2, high end 3 + 3. Added by decision 0084, for the reason torpedo_hits_on_the_southern_group was."
 
 [[measure]]
 id = "torpedo_hits_on_japanese_ships"
@@ -241,7 +325,9 @@ reason = "Shells fired: 471 (10). Hits: 10 to 17 on the eight Japanese ships, as
 # Until decision 0070 these five measures counted every calibre, under ids
 # that said "gun_shells" where these say "main_battery_shells". Those ids
 # are retired: japanese_, allied_, southern_group_, northern_group_ and
-# tenryu_and_yubari_ followed by gun_shells_fired_in_hundreds.
+# tenryu_and_yubari_ followed by gun_shells_fired_in_hundreds. Since
+# decision 0084 the southern group's is counted in tens, under a new id;
+# southern_group_main_battery_shells_fired_in_hundreds is retired.
 
 [[measure]]
 id = "japanese_main_battery_shells_fired_in_hundreds"
@@ -268,16 +354,17 @@ rows = [12, 53, 54, 94, 97]
 reason = "Eight-inch from the five cruisers: 107 (12). Five-inch from the destroyers of the two groups, whose main battery it is: Wilson 212 (97), Patterson 33 or 50 (53, 54, which dispute each other), Helm one salvo of four at no visible target (94), Bagley none. So 352 to 373, which is 3 hundreds at either end. Ralph Talbot's 12 are outside the scenario. At the first baseline the Allied groups fired about 2,800 a run; hits for each thousand shells agreed all the same, and hid it. This measure is here so that cannot hide again."
 
 [[measure]]
-id = "southern_group_main_battery_shells_fired_in_hundreds"
-counts = "Main battery shots the four ships of the southern group fire in the run, in hundreds, rounded down"
-record_low = 0
-record_high = 0
+id = "southern_group_main_battery_shells_fired_in_tens"
+counts = "Main battery shots the four ships of the southern group fire in the run, in tens, rounded down"
+record_low = 3
+record_high = 5
 judged = true
-take = "shots_in_hundreds"
+take = "shots"
 ships = [9, 10, 11, 12]
 weapon = "gun"
+unit = "tens"
 rows = [27, 41, 48, 53, 54]
-reason = "Canberra fired no eight-inch shell (27, disputed: the other reading is that one gun may have fired one salvo) and Chicago none (41). Bagley fired no gun at the enemy (48). Patterson fired 33 or 50 five-inch (53, 54). That is 33 to 50 shells, or a few more by the other reading of Canberra: under a hundred by any of them. It is the measure decision 0068 is checked on: a group that was not at battle readiness and barely fired."
+reason = "Canberra fired no eight-inch shell (27, disputed: the other reading is that one gun of a turret may have fired one salvo) and Chicago none (41). Bagley fired no gun at the enemy (48). Patterson fired 33 (53, the 1950 analysis, with its own question mark) or 50 (54, the 1943 narrative, service rounds without her 20 star shells); the two rows dispute each other and give the ends. So 33 to 50 shells, or one or two more by the other reading of Canberra: 3 to 5 tens. It is the measure decision 0068 is checked on: a group that was not at battle readiness and fired little, but fired. Counted in tens since decision 0084: until then it was southern_group_main_battery_shells_fired_in_hundreds, record 0, which a run in which the group never fired held as well as the record; that id is retired."
 
 [[measure]]
 id = "northern_group_main_battery_shells_fired_in_hundreds"
@@ -308,12 +395,13 @@ reason = "Tenryu 80 and Yubari 96 of 5.5 inch (148, 154; 176 together, as row 3 
 [[measure]]
 id = "minutes_of_action"
 counts = "Minutes of surface fighting in the run: the rounds each fight ran, summed, times the minutes a round stands for"
-record_low = 20
-record_high = 30
+record_low = 32
+record_high = 36
 judged = true
 take = "minutes_of_action"
-rows = [14, 15, 16]
-reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). It is the measure for when a force breaks off, the last mechanism in the order of tuning. Judged since the batch file gives the rounds each fight ran, whatever ended it (decision 0062). A round in which a force slips away and no shot is fired is counted. Fights by day are counted too: the record has none, so a run that has one runs longer than the night did, and that is a true miss. A round is five minutes on the frozen figures, so the measure moves in fives."
+facts = "data/oob/engagement_events.csv"
+rows = [59, 81, 90, 94, 1080]
+reason = "The sum of the two fights, each from its own rows, as the measure counts. The southern fight: from the first fire at about 01:43 (59) to the group dissolved into independent ships by 01:50 (81), 7 minutes; or 10, by the 1943 narrative's 'no more than 10 minutes' (engagement_outcomes 17). The northern fight: from the searchlights at 01:50 (90) and the first salvo about 01:51 (94) to the end of the night's half-hour at about 02:15 (engagement_outcomes 15, and the note of 17), 25 minutes; or 26, to Chokai putting out her searchlight at 02:16 (1080, unconfirmed). Low end 7 + 25, high end 10 + 26. Patterson's cease fire at about 02:00 (742, unconfirmed) is left out: it is one destroyer's own gun, against the narrative's figure for the whole southern fight (engagement_outcomes 17), and a group's fight is not measured by its last straggler's gun. Not the span of the night: 'no more than half an hour' (engagement_outcomes 14), 'the half-hour between 0145 and 0215' (15) and 'a brief twenty-minute action' (16) are the night from first fire to last. The two fights overlapped from 01:50 to about 01:53, and in the rules fights are held one after the other, so the span is not what a run counts. A run counts in five-minute rounds, so 35 is the one value of a run inside the record. Fights by day are counted too: the record has none. It is the measure for when a force breaks off, the last mechanism in the order of tuning."
 
 [[measure]]
 id = "surface_fights_by_day"

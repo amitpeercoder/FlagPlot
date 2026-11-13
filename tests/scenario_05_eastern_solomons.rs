@@ -2114,6 +2114,7 @@ fn work_the_run(run: &Run, cx: &Ctx) -> Worked {
                     chance,
                     expected,
                     hits,
+                    after_attack: false,
                 },
                 text: format!(
                     "task_force:{force} guns at the raid of air_group:{}: {}",

@@ -166,12 +166,20 @@ pub enum SideEventKind {
         shots: Fixed,
     },
     /// The side's own ships firing at a raid. Not the raid's air group.
+    /// `after_attack` says whether it was the part of the fire worked after
+    /// the attack (decision 0079): the side's own guns, so nothing of the
+    /// enemy is given away.
     AntiAircraftFire {
         task_force: TaskForceId,
         shots: Fixed,
+        after_attack: bool,
     },
     /// The side's own base firing at a raid. Not the raid's air group.
-    BaseAntiAircraftFire { base: BaseId, shots: Fixed },
+    BaseAntiAircraftFire {
+        base: BaseId,
+        shots: Fixed,
+        after_attack: bool,
+    },
     /// The side's own bombs falling on an enemy base: that it attacked and
     /// with how many shots, not what they hit. The base is named: a base is
     /// on the map for both sides, and the side ordered the strike on it.
@@ -338,11 +346,27 @@ impl fmt::Display for SideEventKind {
                 firing.name(),
                 at.name()
             ),
-            SideEventKind::AntiAircraftFire { task_force, shots } => {
-                write!(f, "{task_force} guns at a raid: {shots} shots")
+            SideEventKind::AntiAircraftFire {
+                task_force,
+                shots,
+                after_attack,
+            } => {
+                write!(
+                    f,
+                    "{task_force} guns at a raid: {shots} shots{}",
+                    if *after_attack { " after the attack" } else { "" }
+                )
             }
-            SideEventKind::BaseAntiAircraftFire { base, shots } => {
-                write!(f, "{base} guns at a raid: {shots} shots")
+            SideEventKind::BaseAntiAircraftFire {
+                base,
+                shots,
+                after_attack,
+            } => {
+                write!(
+                    f,
+                    "{base} guns at a raid: {shots} shots{}",
+                    if *after_attack { " after the attack" } else { "" }
+                )
             }
             SideEventKind::BaseAttacked {
                 air_group,
@@ -769,19 +793,29 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             },
         ),
         EventKind::AntiAircraftFire {
-            task_force, shots, ..
+            task_force,
+            shots,
+            after_attack,
+            ..
         } => cut_if(
             own_force(task_force),
             SideEventKind::AntiAircraftFire {
                 task_force: *task_force,
                 shots: *shots,
+                after_attack: *after_attack,
             },
         ),
-        EventKind::BaseAntiAircraftFire { base, shots, .. } => cut_if(
+        EventKind::BaseAntiAircraftFire {
+            base,
+            shots,
+            after_attack,
+            ..
+        } => cut_if(
             own_base(base),
             SideEventKind::BaseAntiAircraftFire {
                 base: *base,
                 shots: *shots,
+                after_attack: *after_attack,
             },
         ),
 
@@ -2169,6 +2203,7 @@ mod tests {
                     chance: Fixed::from_ratio(1, 10),
                     expected: fx(3),
                     hits: 1,
+                    after_attack: false,
                 },
                 Cut("AntiAircraftFire", GUNS_CUT),
                 Nothing,
@@ -2243,6 +2278,7 @@ mod tests {
                     chance: Fixed::from_ratio(1, 10),
                     expected: fx(3),
                     hits: 1,
+                    after_attack: false,
                 },
                 Cut("BaseAntiAircraftFire", GUNS_CUT),
                 Nothing,

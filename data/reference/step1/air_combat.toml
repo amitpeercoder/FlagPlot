@@ -63,6 +63,18 @@ crew_recovered_beside_own_force = "1"
 # stands for the same rule.
 crew_recovered_open_sea = "1"
 
+# The share of the guns' shots of the raid's target (ships or base) that are
+# worked before the attack, the rest after it (decision 0079). 1 is step 1's
+# rule: every shot before. Frozen at 1, which leaves step 1 as it was (the
+# live file has 0, a placeholder).
+anti_aircraft_before_attack_share = "1"
+
+# The share of a raid's patrol that the escorts draw off one for one, the rest
+# split between the escorts not drawn off and the bombers (decision 0080). 1 is
+# step 1's rule. Frozen at 1, which leaves step 1 as it was (the live file has
+# 0, a placeholder).
+patrol_drawn_off_share = "1"
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

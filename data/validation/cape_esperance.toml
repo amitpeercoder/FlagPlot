@@ -18,6 +18,15 @@
 #
 # The ranges were settled by the architect of the spec session on
 # 2026-11-12. No row's standing was changed.
+#
+# Changed on 2026-11-13 by the coordinating architect, before the check is
+# run (decision 0084, finding 14): the hits on the Japanese cruisers are
+# measured ship by ship. gun_hits_on_japanese_cruisers (130 to 134) is
+# retired: it added Aoba's 40 and Furutaka's 90, and neither is a count.
+# Every figure for them is a historian's with no counter named, and no
+# Japanese survey or crew count exists. Furutaka's rows give lower bounds
+# only, so no range can be written for her and her measure is reported;
+# a total that holds her cannot be judged either.
 
 battle = "cape-esperance"
 facts = "data/oob/engagement_outcomes.csv"
@@ -63,13 +72,31 @@ reason = "Duncan, abandoned on fire; she sank by two accounts (1532, 1534) and w
 # ----------------------------------------------------------------- hits
 
 [[measure]]
-id = "gun_hits_on_japanese_cruisers"
-counts = "Gun hits on Aoba, Furutaka and Kinugasa, all calibres"
-record_low = 130
-record_high = 134
+id = "gun_hits_on_aoba"
+counts = "Gun hits on Aoba, all calibres"
+record_low = 40
+record_high = 40
 judged = true
-rows = [1598, 1599, 1600, 1601, 1605, 1686, 1687, 1688]
-reason = "Aoba 40 (1598, 1599) and Furutaka 90 (1600, 1601). Kinugasa none by her own signal and her division's report, read twice (1686, 1687, 1688), or 4 by the tabular record (1605): low end without them, high end with. Aoba's 40 is 'up to' in one source and 'over' in the other, so it is taken as 40. No row counts the hits on Fubuki, which sank, or on Hatsuyuki, so the measure is of the cruisers alone."
+rows = [1598, 4034, 1599]
+reason = "Three statements that meet at 40: 'up to forty' (1598), a flat '40 hits' in the Australian official history (4034) and 'over 40' (1599). None is from a count: no counter is named in any, and no Japanese survey or crew count exists. 'Up to' bounds nothing below and 'over' nothing above, so this is a weak record, judged because three sources put the figure at one place. Outside research has looked for a bounded source; if a row arrives before the check is run the record changes, and it does not change after the run (decision 0084, finding 14). Many of her hits were duds by one lead (1695), so the count is not a measure of damage."
+
+[[measure]]
+id = "gun_hits_on_furutaka"
+counts = "Gun hits on Furutaka, all calibres"
+record_low = 90
+record_high = 90
+judged = false
+rows = [1600, 1601, 1602, 4035]
+reason = "'About 90' (1600), 'over 90' (1601), 'more than 90 above the waterline alone' (1602) and 'over 90 times' (4035, likely repeating 1601): lower bounds only, perhaps one count repeated, with no counter named. No row bounds the figure above, so no range can be written; 90 is the floor they share. Not judged for that reason (decision 0084, finding 14). Reported, so the size of the run's figure stays in view."
+
+[[measure]]
+id = "gun_hits_on_kinugasa"
+counts = "Gun hits on Kinugasa, all calibres"
+record_low = 0
+record_high = 4
+judged = true
+rows = [1605, 4036, 1686, 1687, 1688]
+reason = "Four by a reference site's tabular record (1605) and a tertiary site with no references that gives the same 4 (4036). None by her division's report, which says twice that she received no enemy fire (1686, 1687), and by her own battle flash, 'no damage' (1688). The rows dispute each other, so by this file's rule the range spans them: 0 to 4."
 
 [[measure]]
 id = "gun_hits_on_us_ships"
@@ -110,11 +137,18 @@ rows = [1656, 1655, 1657, 1506, 1507]
 reason = "The ships' own reports add to 15 (1655); a conference of their captains cut that to 8 (1656) and the fleet commander made it 9 (1657). Two were sunk (1506, 1507). Low end 8 in 2, high end 15 in 2. Not judged: more ships were claimed than the five the scenario would hold, as with the Japanese claim at Savo Island."
 
 # No measure of hits for each thousand shells, the one experience is tested
-# on at Savo Island, and there will not be one. The US ships' rounds fired
-# are known for one cruiser and part of another (rows 1636, 1637, 1639), and
-# the Japanese ships' from an encyclopedia alone (1648 to 1653). Research
-# looked again and found no US action report online and no count of hits in
-# the Japanese division's report (docs/research/oob, pull request 100).
+# on at Savo Island, and there will not be one. Checked again by decision
+# 0084 before the run, against the rows as they stand. The US main battery
+# shells are on record for Salt Lake City (296: 1636, 1704) and Helena (580
+# or 560: 2980, 3001), with Boise's 5-inch and 6-inch together as "more
+# than 1,000" from the press (1715) and McCalla's 390 (1641); none for San
+# Francisco, Farenholt, Duncan, Laffey or Buchanan, and the hits on the
+# Japanese ships are the whole force's. The Japanese cruisers' main
+# batteries fired 7, 20 or 36, and 80 (2276 to 2282; 1648 to 1653, 1700),
+# the destroyers' are not known (2283), and the hits on US ships include an
+# uncounted share from their own side. So neither side has both its shells
+# and its hits on record. The rates of fire derived from Salt Lake City and
+# Helena here are cases of decision 0070, so they could not check it either.
 #
 # So experience is checked here by hits received on each side, the two
 # measures above, and by ships sunk. Those count what a side did and not how

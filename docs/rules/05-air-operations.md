@@ -291,8 +291,9 @@ The air combat step runs in each daylight pulse after the strike decision. Every
 
 1. Group the strikes into raids, split the fighters, send the escorts, count the aircraft on the ground at attacked bases, note the patrols and strikes for wear, and divide the patrol.
 2. Work out every raid on the start-of-step counts, whatever the others do. Nothing is written.
-3. For each raid in order of its first strike group, record `EscortsSent` for each group that sends escorts, then each fire roll as an event (`AirFight`, then `AntiAircraftFire` or `BaseAntiAircraftFire`), then take the losses of each roll off the groups and record `AircraftLost` for each group that lost aircraft, and `PilotsLost` where the rule below says.
+3. For each raid in order of its first strike group, record `EscortsSent` for each group that sends escorts, then each fire roll before the attack as an event (`AirFight`, then `AntiAircraftFire` or `BaseAntiAircraftFire`), then take the losses of each roll off the groups and record `AircraftLost` for each group that lost aircraft, and `PilotsLost` where the rule below says.
 4. For each strike group in order of group number, record what it found: `StrikeFoundNothing`, `AirAttack` or `BaseAttacked`. A strike group with no bomber left records nothing and sends no report.
+4a. For each raid in order of its first strike group, record the guns' fire after the attack, if it has shots (see "Anti-aircraft fire"), then the `AircraftLost` and `PilotsLost` it causes. [0079]
 5. In the same group order, apply each attack: for ships, apply the damage and send the sighting report; for a base, apply the hits on aircraft and supply; for a strike that found nothing, send the report that nothing is there.
 6. Record the claims of the pulse's raids (see "The report and the claim").
 
@@ -316,25 +317,25 @@ A side sees: `AirFight` for its own escorts as the firer, cut to the shots and w
 
 ### The patrol against the escorts and the bombers
 
-If the raid meets a patrol, the patrol fires from one stream keyed on (the first patrol group over the hex, the raid's first strike group). It fires first at the escorts and then at the bombers, each roll a shot per fighter:
+If the raid meets a patrol, the patrol fires from one stream keyed on (the first patrol group over the hex, the raid's first strike group). Its shots are split between the escorts and the bombers. With P the raid's share, E its escorts and B its bombers at the start of the step, the escorts draw off D = the smaller of P and E, times `air_combat.toml: patrol_drawn_off_share`, cut to a whole number. The rest, R = P − D, is split in proportion between the escorts not drawn off and the bombers: X = R × (E − D) / (E − D + B), cut to a whole number, and never more than E − D, so no more shots go at the escorts than there are escorts left. It fires first at the escorts and then at the bombers, each roll a shot per fighter:
 
-1. At the escorts: shots = the smaller of the raid's share and the escort count. Chance: `fighter_hit_chance` times the protection factors of the first escort group's type. Hits come off the escorts, lowest group first, no more than they have. Skipped if the raid has no escorts.
-2. At the bombers: shots = the share less the shots at the escorts. Skipped if 0. Chance: `fighter_hit_chance` times the protection factors of the first strike group's type. Hits come off the raid's strike groups, lowest group first, no more than they have.
+1. At the escorts: shots = D + X. Chance: `fighter_hit_chance` times the protection factors of the first escort group's type. Hits come off the escorts, lowest group first, no more than they have. Skipped if the raid has no escorts or the shots are 0.
+2. At the bombers: shots = R − X. Skipped if 0. Chance: `fighter_hit_chance` times the protection factors of the first strike group's type. Hits come off the raid's strike groups, lowest group first, no more than they have.
 
-So escorts draw the patrol off the bombers one for one, and a raid with no escorts takes its whole share. Records `AirFight` for each roll (firer: first patrol group, target: first escort or first strike group, firing patrol, at escorts or bombers). The breakdown of a patrol roll lists, first, the whole patrol, the raid's aircraft, the aircraft of all the raids, and the raid's share, then the shots and chance. [0027, 0029, 0033]
+At a share of 1 the escorts draw the patrol off the bombers one for one, and a raid with no escorts takes its whole share: the rule as it was before decision 0080. Records `AirFight` for each roll (firer: first patrol group, target: first escort or first strike group, firing patrol, at escorts or bombers). The breakdown of a patrol roll lists, first, the whole patrol, the raid's aircraft, the aircraft of all the raids, and the raid's share; when the share drawn off is below 1, also that share, the fighters drawn off (D) and the rest's shots at the escorts (X); then the shots and chance. [0027, 0029, 0033, 0080]
 
 A side sees: `AirFight` for its own patrol, cut to the shots and without the group fired at (decision 0065). The attacker sees only its own `AircraftLost`.
 
 ### Anti-aircraft fire
 
-The guns of the target fire at the bombers that are left (the strike groups' aircraft after the patrol's hits). Skipped if there are no bombers left or the guns have no shots.
+The guns of the target fire at the bombers that are left (the strike groups' aircraft after the patrol's hits). Skipped if there are no bombers left or the guns have no shots. Their shots, n, are split by `air_combat.toml: anti_aircraft_before_attack_share`: the first k = n times the share, cut to a whole number, are worked before the attack, and the other n − k after it. Both parts are rolled in order from the one stream below, one draw for each shot, so the draws, the guns' hits in all and each group's losses are the same at every share. The hits of the fire before the attack come off the bombers before they attack. The hits of the fire after come off the bombers the fire before left, lowest group first, after their attack is worked out, and whatever the attack did stands. A part with no shots records nothing, so at a share of 1 the guns fire as they did before the rule. The fire after the attack is the same event with `after_attack` set, recorded in step 4a of the air combat step; it cites the raid's launch and the `AirAttack` or `BaseAttacked` events of the raid's groups, and its `AircraftLost` cite it. When the share is below 1 each part's breakdown also names the guns' shots in all and the share. [0079]
 
 - Raid on ships: the shots are the sum of the `anti_aircraft` of the class of every ship afloat in the task force attacked. Damage does not reduce them. The stream is keyed on (the lowest-numbered ship afloat in that force, the raid's first strike group). One roll covers every ship. Records `AntiAircraftFire`.
 - Raid on a base: the shots are the base's `anti_aircraft`, a figure of the base's entry in the scenario file (0 if not given). The stream is keyed on (the base, the raid's first strike group). Records `BaseAntiAircraftFire`. Ships in the hex do not fire at a raid on the base, and the base does not fire at a raid on ships.
 
 The chance is `air_combat.toml: anti_aircraft_hit_chance` times the protection factors of the first strike group's type. Hits come off the strike groups, lowest first, no more than they have. There is no ammunition limit. [0027, 0029, 0034, 0033]
 
-A side sees: `AntiAircraftFire` or `BaseAntiAircraftFire` for its own ships or base, cut to the shots and without the raid's group (decision 0065). The attacker sees its own `AircraftLost`.
+A side sees: `AntiAircraftFire` or `BaseAntiAircraftFire` for its own ships or base, cut to the shots and whether it was after the attack, without the raid's group (decisions 0065, 0079). The attacker sees its own `AircraftLost`.
 
 ### Each shot is rolled
 

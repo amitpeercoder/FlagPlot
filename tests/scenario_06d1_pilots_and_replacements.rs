@@ -1002,7 +1002,8 @@ fn work_the_raid(
                 shots: int(20),
                 chance: hundredths(5),
                 expected,
-                hits
+                hits,
+                after_attack: false,
             },
             "seed {seed}"
         );

@@ -1232,12 +1232,14 @@ impl Day {
                     shots: Dec(*shots),
                     event: id,
                 }),
-                SideEventKind::AntiAircraftFire { task_force, shots } => guns.push(Guns {
+                SideEventKind::AntiAircraftFire {
+                    task_force, shots, ..
+                } => guns.push(Guns {
                     by: ctx.force(*task_force),
                     shots: Dec(*shots),
                     event: id,
                 }),
-                SideEventKind::BaseAntiAircraftFire { base, shots } => guns.push(Guns {
+                SideEventKind::BaseAntiAircraftFire { base, shots, .. } => guns.push(Guns {
                     by: ctx.base(*base),
                     shots: Dec(*shots),
                     event: id,

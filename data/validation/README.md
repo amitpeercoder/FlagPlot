@@ -37,7 +37,7 @@ Then one `[[measure]]` table for each measure:
 | `hits_on` | `ships`, `weapons` | Hits of those weapons on those ships, as rolled. A salvo is rolled at the ships afloat when its round starts, so a hit on a ship that another salvo sinks in the same round is counted. The record counts hits on a ship already sinking too |
 | `hits_per_thousand_shots` | `side`, `weapon` | The side's hits with that weapon over the run, times 1,000, divided by its shots, rounded down. The shots are the exact figure the rules fired, fractions and all. A run in which the side fires no shot is left out |
 | `shots_in_hundreds` | `side` or `ships`, not both; `weapon` | The side's shots with that weapon over the run, or those ships' shots in surface fights, summed and then divided by 100 and rounded down, once. Shells are counted in hundreds because a record of shells is one figure, and no run would hold a figure of thousands to the shell |
-| `shots` | `side` or `ships`, not both; `weapon` | The shots with that weapon over the run, summed and rounded down to a whole shot |
+| `shots` | `side` or `ships`, not both; `weapon`; `unit`, if wanted | The shots with that weapon over the run, summed and rounded down to a whole shot. With `unit = "tens"` the sum is divided by 10 and then rounded down, once; `unit = "shells"` is the default. Tens are for a record of a few dozen shells, which hundreds would floor to nothing, so that a run that never fires would hold it (decision 0084). No other take has `unit` |
 | `air_losses` | `air_groups`, `causes` | Aircraft of those groups lost to those causes. The causes are the batch file's: `shot_down`, `destroyed_on_ground`, `damaged_destroyed_on_ground`, `lost_with_ship`, `worn_out`, `ditched_fuel`, `ditched_no_deck`. No aircraft is counted under two |
 | `pilots_lost` | `air_groups` | Pilots of those groups lost |
 | `ready` | `air_groups`, `day` | Aircraft of those groups ready at the end of that day, the first day being 1 |
@@ -75,6 +75,8 @@ No passage is judged today. Research found no long run at one held speed, and a 
 - **The record is cut to the scenario's scope.** A battle's totals in the histories often cover more days and more forces than the scenario holds.
 - **A measure is not judged where the rules cannot produce what the record counts,** such as a strike lost coming home in the dark. It is still reported, so the gap stays in view. Where only a part of the record is out of reach and a row gives that part its own number, the part is taken out of the record, the `reason` says so, and the rest is judged.
 - **A fact that is yes or no is a measure of 0 or 1.** It is judged by the same test as any other.
+- **A record of something that happened is not one a run holds by doing nothing.** A record of a few shells is counted in a unit where it is not 0 (decision 0084). Where a record of 0 is held as well by a run in which the event never had the chance to happen, the `reason` says so.
+- **Each measure is judged alone.** Agreement on several measures does not show that one run holds them together; where a total can agree with its parts wrong, the parts get measures of their own (decision 0084).
 - **Whole numbers only,** as in every data file.
 
 ## Figures a battle cannot reach
@@ -89,10 +91,10 @@ The ranges, and the rows the measures read, are settled by the coordinating arch
 
 | File | Battle | State |
 | --- | --- | --- |
-| `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 16 measures, 14 judged |
-| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 26 measures, 23 judged |
+| `eastern_solomons.toml` | Eastern Solomons, 24 August 1942 | 18 measures, 15 judged |
+| `savo_island.toml` | Savo Island, 8 to 9 August 1942 | 32 measures, 29 judged |
 | `rabaul_guadalcanal.toml` | Rabaul against Guadalcanal, 21 August to 17 September 1942 | 15 measures, 10 judged |
-| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 9 measures, 7 judged. The scenario is written (`data/scenarios/not-run/17_cape_esperance.toml`) and not run, and the file has no `take` yet; it says what scope it assumes. No measure of hits for each thousand shells is possible: the rounds fired are not on record |
+| `cape_esperance.toml` | Cape Esperance, 11 to 12 October 1942 | 11 measures, 8 judged. The scenario is written (`data/scenarios/not-run/17_cape_esperance.toml`) and not run, and the file has no `take` yet; it says what scope it assumes. No measure of hits for each thousand shells is possible: no side has both its shells fired and the hits they scored on record (the file's closing note, checked again by decision 0084) |
 | `passages.toml` | Ship passages | 6 passages, none judged |
 
 Still to write: for Cape Esperance, who sighted whom first, when the scenario is scoped.

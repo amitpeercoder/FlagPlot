@@ -239,14 +239,26 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey) -> (&'static str, Data, 
                 .num("shots", *shots),
             true,
         ),
-        SideEventKind::AntiAircraftFire { task_force, shots } => (
+        SideEventKind::AntiAircraftFire {
+            task_force,
+            shots,
+            after_attack,
+        } => (
             "anti_aircraft_fire",
-            d.id("task_force", *task_force).num("shots", *shots),
+            d.id("task_force", *task_force)
+                .num("shots", *shots)
+                .flag_when_true("after_attack", *after_attack),
             true,
         ),
-        SideEventKind::BaseAntiAircraftFire { base, shots } => (
+        SideEventKind::BaseAntiAircraftFire {
+            base,
+            shots,
+            after_attack,
+        } => (
             "base_anti_aircraft_fire",
-            d.id("base", *base).num("shots", *shots),
+            d.id("base", *base)
+                .num("shots", *shots)
+                .flag_when_true("after_attack", *after_attack),
             true,
         ),
         SideEventKind::BaseAttacked {

@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a70fc87cbbfbaf6d  150 events
+day   1  hash 9abe8ba6f8542a7c  151 events
 
 #1 D1 -         order:1 accepted for task_force:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -125,35 +125,36 @@ day   1  hash a70fc87cbbfbaf6d  150 events
 #119 D1 afternoon air_group:6 launched 4 aircraft at base:1 at (9,-6), 240 nm  <- order:16
 #120 D1 afternoon air_group:7 sent 12 escorts with air_group:5  <- order:17, order:18, order:19, #118
 #121 D1 afternoon air_group:7 escorts at the patrol of air_group:3: 12 shots x 0.3 = 3.6 expected, 5 hits  <- #118, #120
-#122 D1 afternoon air_group:3 patrol at the escorts of air_group:7: 11 shots x 0.3 = 3.3 expected, 2 hits  <- #118, #120
-#123 D1 afternoon air_group:3 lost 5 aircraft, 6 left  <- #121
-#124 D1 afternoon air_group:7 lost 2 aircraft, 10 left  <- #122
-#125 D1 afternoon air_group:7 lost 2 pilots, 10 left  <- #124
-#126 D1 afternoon air_group:2 bombs at ship:2: 1 shots x 0.2 = 0.2 expected, 0 hits  <- #117
-#127 D1 afternoon air_group:5 bombs at ship:1: 6 shots x 0.2 = 1.2 expected, 1 hit  <- #118
-#128 D1 afternoon air_group:6 bombs at base:1: 4 shots x 0.2 = 0.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #119
-#129 D1 afternoon Allied report: 1 ship, carrier, at (9,0): refreshed contact:2  <- #126
-#130 D1 afternoon ship:1 took 1 hit on flotation, 10 points, now 10  <- #127
-#131 D1 afternoon Japanese report: 1 ship, carrier, at (2,0): refreshed contact:2  <- #127
-#132 D1 afternoon Allied claim at (9,0): 1 hit on a carrier, 0 sunk  <- #126
-#133 D1 afternoon Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down  <- #121, #127
-#134 D1 afternoon Allied claim over (2,0): 4 aircraft shot down  <- #122
-#135 D1 afternoon Japanese claim over (9,-6): 0 aircraft shot down  <- #128
-#136 D1 afternoon air_group:2 strike sortie of 280 nm, 30 beyond its radius of 250: 1 aircraft x 0.24 = 0.24 expected out of fuel, 0 ditched, 0 crews recovered, 0 pilots lost, 1 ready left  <- #117
-#137 D1 afternoon air_group:5 strike sortie of 280 nm, 30 beyond its radius of 250: 6 aircraft x 0.24 = 1.44 expected out of fuel, 3 ditched, 2 crews recovered, 1 pilot lost, 3 ready left  <- #118
-#138 D1 afternoon air_group:5 lost 1 pilot, 5 left  <- #137
-#139 D1 afternoon air_group:7 escort sortie of 280 nm, 30 beyond its radius of 250: 10 aircraft x 0.24 = 2.4 expected out of fuel, 6 ditched, 5 crews recovered, 1 pilot lost, 4 ready left  <- #120
-#140 D1 afternoon air_group:7 lost 1 pilot, 9 left  <- #139
-#141 D1 afternoon air_group:1 search sortie of 600 nm: 4 aircraft x 0.17 = 0.68 expected worn, 1 worn, 0 written off, 3 ready and 2 damaged left  <- #111
-#142 D1 afternoon air_group:2 strike sortie of 560 nm: 1 aircraft x 0.162 = 0.162 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- #117
-#143 D1 afternoon air_group:3 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 6 ready and 1 damaged left  <- order:7
-#144 D1 afternoon air_group:4 search sortie of 600 nm: 5 aircraft x 0.17 = 0.85 expected worn, 2 worn, 0 written off, 3 ready and 2 damaged left  <- #114
-#145 D1 afternoon air_group:5 strike sortie of 560 nm: 3 aircraft x 0.162 = 0.486 expected worn, 1 worn, 0 written off, 2 ready and 1 damaged left  <- #118
-#146 D1 afternoon air_group:6 base strike sortie of 480 nm: 4 aircraft x 0.146 = 0.584 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- #119
-#147 D1 afternoon air_group:7 escort sortie of 560 nm: 4 aircraft x 0.162 = 0.648 expected worn, 1 worn, 0 written off, 3 ready and 1 damaged left  <- #120
-#148 D1 afternoon Allied contact:1 aged to 2 pulses  <- #85
-#149 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #87
-#150 D1 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
+#122 D1 afternoon air_group:3 patrol at the escorts of air_group:7: 7 shots x 0.3 = 2.1 expected, 1 hit  <- #118, #120
+#123 D1 afternoon air_group:3 patrol at the bombers of air_group:5: 4 shots x 0.3 = 1.2 expected, 1 hit  <- #118
+#124 D1 afternoon air_group:3 lost 5 aircraft, 6 left  <- #121
+#125 D1 afternoon air_group:7 lost 1 aircraft, 11 left  <- #122
+#126 D1 afternoon air_group:7 lost 1 pilot, 11 left  <- #125
+#127 D1 afternoon air_group:5 lost 1 aircraft, 5 left  <- #123
+#128 D1 afternoon air_group:5 lost 1 pilot, 5 left  <- #127
+#129 D1 afternoon air_group:2 bombs at ship:2: 1 shots x 0.2 = 0.2 expected, 0 hits  <- #117
+#130 D1 afternoon air_group:5 bombs at ship:1: 5 shots x 0.2 = 1 expected, 0 hits  <- #118, #127
+#131 D1 afternoon air_group:6 bombs at base:1: 4 shots x 0.2 = 0.8 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #119
+#132 D1 afternoon Allied report: 1 ship, carrier, at (9,0): refreshed contact:2  <- #129
+#133 D1 afternoon Japanese report: 1 ship, carrier, at (3,0): refreshed contact:2  <- #130
+#134 D1 afternoon Allied claim at (9,0): 1 hit on a carrier, 0 sunk  <- #129
+#135 D1 afternoon Japanese claim at (2,0): 1 hit on a cruiser, 0 sunk, 5 aircraft shot down  <- #121, #130
+#136 D1 afternoon Allied claim over (2,0): 4 aircraft shot down  <- #122, #123
+#137 D1 afternoon Japanese claim over (9,-6): 0 aircraft shot down  <- #131
+#138 D1 afternoon air_group:2 strike sortie of 280 nm, 30 beyond its radius of 250: 1 aircraft x 0.24 = 0.24 expected out of fuel, 0 ditched, 0 crews recovered, 0 pilots lost, 1 ready left  <- #117
+#139 D1 afternoon air_group:5 strike sortie of 280 nm, 30 beyond its radius of 250: 5 aircraft x 0.24 = 1.2 expected out of fuel, 3 ditched, 3 crews recovered, 0 pilots lost, 2 ready left  <- #118
+#140 D1 afternoon air_group:7 escort sortie of 280 nm, 30 beyond its radius of 250: 11 aircraft x 0.24 = 2.64 expected out of fuel, 6 ditched, 4 crews recovered, 2 pilots lost, 5 ready left  <- #120
+#141 D1 afternoon air_group:7 lost 2 pilots, 9 left  <- #140
+#142 D1 afternoon air_group:1 search sortie of 600 nm: 4 aircraft x 0.17 = 0.68 expected worn, 1 worn, 0 written off, 3 ready and 2 damaged left  <- #111
+#143 D1 afternoon air_group:2 strike sortie of 560 nm: 1 aircraft x 0.162 = 0.162 expected worn, 0 worn, 0 written off, 1 ready and 0 damaged left  <- #117
+#144 D1 afternoon air_group:3 patrol sortie of 0 nm: 6 aircraft x 0.05 = 0.3 expected worn, 0 worn, 0 written off, 6 ready and 1 damaged left  <- order:7
+#145 D1 afternoon air_group:4 search sortie of 600 nm: 5 aircraft x 0.17 = 0.85 expected worn, 2 worn, 0 written off, 3 ready and 2 damaged left  <- #114
+#146 D1 afternoon air_group:5 strike sortie of 560 nm: 2 aircraft x 0.162 = 0.324 expected worn, 1 worn, 0 written off, 1 ready and 1 damaged left  <- #118
+#147 D1 afternoon air_group:6 base strike sortie of 480 nm: 4 aircraft x 0.146 = 0.584 expected worn, 0 worn, 0 written off, 4 ready and 0 damaged left  <- #119
+#148 D1 afternoon air_group:7 escort sortie of 560 nm: 5 aircraft x 0.162 = 0.81 expected worn, 1 worn, 1 written off, 4 ready and 0 damaged left  <- #120
+#149 D1 afternoon Allied contact:1 aged to 2 pulses  <- #85
+#150 D1 afternoon Japanese contact:1 aged to 2 pulses  <- #87
+#151 D1 -         base:1 at the end of the day: 500 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder Allied carrier force" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder Japanese carrier force" (Japanese): Arrived at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -163,10 +164,10 @@ air_group:1 "Placeholder Allied scouts" (Allied) aboard ship:1: 3 ready, 2 damag
 air_group:2 "Placeholder Allied dive bombers" (Allied) aboard ship:1: 1 ready, 1 pilots, mission NavalStrike, extended reach, no arc
 air_group:3 "Placeholder Allied fighters" (Allied) aboard ship:1: 6 ready, 1 damaged, 12 pilots, mission CombatAirPatrol, patrol share 1, no arc
 air_group:4 "Placeholder Japanese scouts" (Japanese) aboard ship:2: 3 ready, 2 damaged, 5 pilots, mission Search, arc 260-280 to 300 nm
-air_group:5 "Placeholder Japanese dive bombers" (Japanese) aboard ship:2: 2 ready, 1 damaged, 5 pilots, mission NavalStrike, extended reach, no arc
+air_group:5 "Placeholder Japanese dive bombers" (Japanese) aboard ship:2: 1 ready, 1 damaged, 5 pilots, mission NavalStrike, extended reach, no arc
 air_group:6 "Placeholder Japanese attack unit" (Japanese) aboard ship:2: 4 ready, 4 pilots, mission BaseStrike on base:1, no arc
-air_group:7 "Placeholder Japanese fighters" (Japanese) aboard ship:2: 3 ready, 1 damaged, 9 pilots, mission CombatAirPatrol, patrol share 0, extended reach, no arc
-ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 10, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+air_group:7 "Placeholder Japanese fighters" (Japanese) aboard ship:2: 4 ready, 9 pilots, mission CombatAirPatrol, patrol share 0, extended reach, no arc
+ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder carrier J": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2906.666667 t of fuel, 0 t of supply
 ship:3 "Placeholder cruiser B1": SUNK; damage flotation 100, fire 5; propulsion out, fire control out, torpedo mounts degraded; 740 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B2": afloat in task_force:3; damage flotation 85, fire 65; propulsion out, fire control out, main battery out, torpedo mounts out; 710 gun rounds, torpedoes gone; 2000 t of fuel, 0 t of supply
@@ -181,12 +182,12 @@ Allied claims 0 enemy ships sunk at (2,-4), day 1 night
 Allied claim at (9,0): 1 hit on a carrier, 0 sunk, day 1 afternoon
 Allied claim over (2,0): 4 aircraft shot down, day 1 afternoon
 Japanese contact:1 at (1,-4): 2 ships, cruiser, age 2 pulses
-Japanese contact:2 at (2,0): 1 ships, carrier, age 0 pulses
+Japanese contact:2 at (3,0): 1 ships, carrier, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-4), day 1 night
-Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
+Japanese claim at (2,0): 1 hit on a cruiser, 0 sunk, 5 aircraft shot down, day 1 afternoon
 Japanese claim over (9,-6): 0 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
-Allied: 5.5 points (aircraft_destroyed 11 = 5.5; ships_sunk 0 = 0; ships_crippled 0 = 0; base_open at base:1 0 of 1 days = 0), margin -7, minor defeat
-Japanese: 12.5 points (aircraft_destroyed 5 = 2.5; ships_sunk 1 = 5; ships_crippled 1 = 0; base_open at base:1 1 of 1 days = 5), margin 7, minor victory
+Allied: 6 points (aircraft_destroyed 12 = 6; ships_sunk 0 = 0; ships_crippled 0 = 0; base_open at base:1 0 of 1 days = 0), margin -6.5, minor defeat
+Japanese: 12.5 points (aircraft_destroyed 5 = 2.5; ships_sunk 1 = 5; ships_crippled 1 = 0; base_open at base:1 1 of 1 days = 5), margin 6.5, minor victory
 History: Invented: a night action of cruisers, a carrier duel beyond the dive bombers' radius, and a raid on the field where the broken carrier's aircraft came down.

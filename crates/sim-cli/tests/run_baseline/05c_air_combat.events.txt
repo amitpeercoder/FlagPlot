@@ -2,7 +2,7 @@ Scenario 5c: Escort, patrol and guns
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 087c85ae5def9bd9  27 events
+day   1  hash 056b896558dc423a  32 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -18,32 +18,37 @@ day   1  hash 087c85ae5def9bd9  27 events
 #12 D1 afternoon air_group:2 launched 18 aircraft at contact:1 at (9,0), 200 nm  <- order:3, #11
 #13 D1 afternoon air_group:3 sent 6 escorts with air_group:2  <- order:4, order:5, #12
 #14 D1 afternoon air_group:3 escorts at the patrol of air_group:4: 6 shots x 0.3 = 1.8 expected, 4 hits  <- #12, #13
-#15 D1 afternoon air_group:4 patrol at the escorts of air_group:3: 6 shots x 0.3 = 1.8 expected, 2 hits  <- #12, #13
-#16 D1 afternoon air_group:4 patrol at the bombers of air_group:2: 6 shots x 0.3 = 1.8 expected, 0 hits  <- #12
-#17 D1 afternoon task_force:2 guns at the raid of air_group:2: 36 shots x 0.05 = 1.8 expected, 2 hits  <- #12
-#18 D1 afternoon air_group:4 lost 4 aircraft, 8 left  <- #14
-#19 D1 afternoon air_group:3 lost 2 aircraft, 10 left  <- #15
-#20 D1 afternoon air_group:2 lost 2 aircraft, 16 left  <- #17
-#21 D1 afternoon air_group:2 bombs at ship:3: 16 shots x 0.2 = 3.2 expected, 5 hits  <- #12, #20
-#22 D1 afternoon ship:3 took 5 hits on flotation, 50 points, now 50  <- #21
-#23 D1 afternoon ship:3 propulsion hit, working -> degraded  <- #21
-#24 D1 afternoon ship:3 main battery hit, no change, still working  <- #21
-#25 D1 afternoon Allied report: 3 ships, cruiser, at (9,0): refreshed contact:1  <- #21
-#26 D1 afternoon Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down  <- #14, #21
-#27 D1 afternoon Japanese claim over (9,0): 6 aircraft shot down  <- #15, #16, #17
+#15 D1 afternoon air_group:4 patrol at the escorts of air_group:3: 3 shots x 0.3 = 0.9 expected, 1 hit  <- #12, #13
+#16 D1 afternoon air_group:4 patrol at the bombers of air_group:2: 9 shots x 0.3 = 2.7 expected, 1 hit  <- #12
+#17 D1 afternoon air_group:4 lost 4 aircraft, 8 left  <- #14
+#18 D1 afternoon air_group:3 lost 1 aircraft, 11 left  <- #15
+#19 D1 afternoon air_group:2 lost 1 aircraft, 17 left  <- #16
+#20 D1 afternoon air_group:2 bombs at ship:3: 17 shots x 0.2 = 3.4 expected, 5 hits  <- #12, #19
+#21 D1 afternoon task_force:2 guns at the raid of air_group:2: 36 shots x 0.05 = 1.8 expected, 2 hits after the attack  <- #12, #20
+#22 D1 afternoon air_group:2 lost 2 aircraft, 15 left  <- #21
+#23 D1 afternoon ship:3 took 4 hits on flotation, 40 points, now 40  <- #20
+#24 D1 afternoon ship:3 took 1 hit on fire, 10 points, now 10  <- #20
+#25 D1 afternoon ship:3 fire control hit, no change, still working  <- #20
+#26 D1 afternoon ship:3 flight deck hit, working -> degraded  <- #20
+#27 D1 afternoon ship:3 flight deck hit, degraded -> out  <- #20
+#28 D1 afternoon ship:3 flight deck hit, no change, still out  <- #20
+#29 D1 afternoon Allied report: 3 ships, battleship, at (9,0): refreshed contact:1  <- #20
+#30 D1 afternoon Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down  <- #14, #20
+#31 D1 afternoon Japanese claim over (9,0): 6 aircraft shot down  <- #15, #16, #21
+#32 D1 afternoon air_group:4 had no deck: 8 aircraft came down in the sea at (9,0), beside ships of its own side (chance 0.95), 0 ready left  <- #27, order:6
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder scouting squadron" (Allied) aboard ship:1: 8 ready, mission Search, arc 040-130 to 300 nm
-air_group:2 "Placeholder bombing squadron" (Allied) aboard ship:1: 16 ready, mission NavalStrike, no arc
-air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, no arc
-air_group:4 "Placeholder fighting squadron B" (Japanese) aboard ship:3: 8 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:2 "Placeholder bombing squadron" (Allied) aboard ship:1: 15 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder fighting squadron A" (Allied) aboard ship:1: 11 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:4 "Placeholder fighting squadron B" (Japanese) aboard ship:3: 0 ready, mission CombatAirPatrol, patrol share 1, no arc
 ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
-ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 50, fire 0; propulsion degraded; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 40, fire 10; flight deck out; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
 ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
-Allied contact:1 at (9,0): 3 ships, cruiser, age 0 pulses
+Allied contact:1 at (9,0): 3 ships, battleship, age 0 pulses
 Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 4 aircraft shot down, day 1 afternoon
 Japanese: no contacts
 Japanese claim over (9,0): 6 aircraft shot down, day 1 afternoon

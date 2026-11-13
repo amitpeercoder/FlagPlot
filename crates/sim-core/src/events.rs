@@ -633,7 +633,8 @@ pub enum EventKind {
     },
     /// The ships of a task force fired their anti-aircraft guns at the
     /// bombers of a raid (decision 7 of 0027). `air_group` is the raid's
-    /// first strike group.
+    /// first strike group. `after_attack` is true for the part of the guns'
+    /// fire worked after the raid's attack (decision 0079).
     AntiAircraftFire {
         task_force: TaskForceId,
         air_group: AirGroupId,
@@ -641,6 +642,7 @@ pub enum EventKind {
         chance: Fixed,
         expected: Fixed,
         hits: u32,
+        after_attack: bool,
     },
     /// An air group lost aircraft to one fight or one round of fire
     /// (decision 11 of 0027). `remaining` is what it has ready afterwards.
@@ -699,6 +701,7 @@ pub enum EventKind {
     },
     /// A base fired its anti-aircraft guns at the bombers of a raid on it
     /// (decision 5 of 0034). `air_group` is the raid's first strike group.
+    /// `after_attack` is as for `AntiAircraftFire` (decision 0079).
     BaseAntiAircraftFire {
         base: BaseId,
         air_group: AirGroupId,
@@ -706,6 +709,7 @@ pub enum EventKind {
         chance: Fixed,
         expected: Fixed,
         hits: u32,
+        after_attack: bool,
     },
     /// A strike group's bombs fell on a base (decisions 6 and 7 of 0034).
     /// `hits` is the bombs that hit, and `hits_on_aircraft` and
@@ -1319,10 +1323,12 @@ impl fmt::Display for EventKind {
                 chance,
                 expected,
                 hits,
+                after_attack,
             } => write!(
                 f,
-                "{base} guns at the raid of {air_group}: {shots} shots x {chance} = {expected} expected, {hits} {}",
-                if *hits == 1 { "hit" } else { "hits" }
+                "{base} guns at the raid of {air_group}: {shots} shots x {chance} = {expected} expected, {hits} {}{}",
+                if *hits == 1 { "hit" } else { "hits" },
+                if *after_attack { " after the attack" } else { "" }
             ),
             EventKind::BaseAttacked {
                 air_group,
@@ -1576,10 +1582,12 @@ impl fmt::Display for EventKind {
                 chance,
                 expected,
                 hits,
+                after_attack,
             } => write!(
                 f,
-                "{task_force} guns at the raid of {air_group}: {shots} shots x {chance} = {expected} expected, {hits} {}",
-                if *hits == 1 { "hit" } else { "hits" }
+                "{task_force} guns at the raid of {air_group}: {shots} shots x {chance} = {expected} expected, {hits} {}{}",
+                if *hits == 1 { "hit" } else { "hits" },
+                if *after_attack { " after the attack" } else { "" }
             ),
             EventKind::AircraftLost {
                 air_group,
