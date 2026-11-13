@@ -33,7 +33,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "0d04cb0974969f1f"
+      "hash": "20910289677d2764"
     }
   ],
   "orders": [
@@ -407,10 +407,10 @@
     {
       "day": 1,
       "order": {
-        "from_deg": 110,
+        "from_deg": 120,
         "kind": "set_search_arc",
         "range_nm": "253",
-        "to_deg": 200
+        "to_deg": 180
       },
       "origin": {
         "intent": null,
@@ -430,59 +430,15 @@
         "issuer": "player"
       },
       "side": "japanese",
-      "unit": "air_group:20"
+      "unit": "air_group:13"
     },
     {
       "day": 1,
       "order": {
-        "from_deg": 110,
+        "from_deg": 120,
         "kind": "set_search_arc",
-        "range_nm": "253",
-        "to_deg": 200
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:20"
-    },
-    {
-      "day": 1,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "naval_strike"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:12"
-    },
-    {
-      "day": 1,
-      "order": {
-        "kind": "set_target_priority",
-        "kinds": [
-          "carrier",
-          "battleship",
-          "cruiser",
-          "transport"
-        ]
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:12"
-    },
-    {
-      "day": 1,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "naval_strike"
+        "range_nm": "175",
+        "to_deg": 180
       },
       "origin": {
         "intent": null,
@@ -495,6 +451,65 @@
       "day": 1,
       "order": {
         "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:16"
+    },
+    {
+      "day": 1,
+      "order": {
+        "from_deg": 0,
+        "kind": "set_search_arc",
+        "range_nm": "175",
+        "to_deg": 110
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:16"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:12"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_target_priority",
+        "kinds": [
+          "carrier",
+          "battleship",
+          "cruiser",
+          "transport"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "japanese",
+      "unit": "air_group:12"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
         "mission": "naval_strike"
       },
       "origin": {
@@ -521,19 +536,6 @@
       },
       "side": "japanese",
       "unit": "air_group:15"
-    },
-    {
-      "day": 1,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "naval_strike"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "japanese",
-      "unit": "air_group:16"
     },
     {
       "day": 1,
@@ -565,7 +567,7 @@
   ],
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
-    "hash": "f6e1a405a8039d60"
+    "hash": "f70997b1582c9021"
   },
   "seats": {
     "allied": "player",

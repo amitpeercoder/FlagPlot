@@ -497,8 +497,9 @@ fn objectives_change_no_hash_and_no_event() {
     // That was 9887acc2b651abb9 until decision 0067 recorded each base's
     // count at the end of the day: the hash counts the events of the log. And
     // it was 798ce5b9ab626198 until the hash went to version 6 (decision
-    // 0064, a ship's experience).
-    assert!(baseline.contains("hash 1710b81aa6539e01"));
+    // 0064, a ship's experience). And it was 1710b81aa6539e01 until decision
+    // 0073 set the Japanese search from the record.
+    assert!(baseline.contains("hash 8a9a6dd3dcb875e6"));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set
