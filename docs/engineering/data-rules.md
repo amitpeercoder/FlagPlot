@@ -6,7 +6,7 @@ Where figures come from, the order-of-battle facts, who settles them, and how th
 
 - **Do not invent historical figures.** Anything made up is marked `placeholder` in its file and uses a name starting with "Placeholder".
 - **Nothing from the War in the Pacific: Admiral's Edition database.** Real data comes from open historical sources, with the source recorded.
-- Entity IDs in data files are stable. Never renumber or reuse one.
+- Entity IDs in data files are stable. Never renumber or reuse one. That holds for generated files too: the class ids of a derived ship class file are pinned in its derivation list (`[class_ids]`, each id with its ships), and `oob-derive` refuses a list that generates class files without them (decision 0077).
 
 ### Order-of-battle facts
 
