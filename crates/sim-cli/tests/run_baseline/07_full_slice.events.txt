@@ -5,7 +5,7 @@ seed 1942
 day   1  hash 55f0778243236c4c  61 events
 day   2  hash 0cb1a84e92ce2521  57 events
 day   3  hash 7a7c24e9413a3119  51 events
-day   4  hash ad775158b30daea4  269 events
+day   4  hash c69284063d196111  269 events
 day   5  hash 09d158780bdd6e6d  124 events
 day   6  hash b7752c48e06b1415  106 events
 day   7  hash da24879a962c7395  194 events
@@ -378,7 +378,7 @@ day  14  hash adb6c0a60196034b  119 events
 #359 D4 afternoon air_group:119 lost with ship:33: 0 aircraft  <- #357
 #360 D4 afternoon ship:33 flight deck hit, no change, still out  <- #340
 #361 D4 afternoon ship:33 flight deck hit, no change, still out  <- #340
-#362 D4 afternoon Allied report: 5 ships, cruiser, at (7,-9): refreshed contact:1  <- #340
+#362 D4 afternoon Allied report: 4 ships, cruiser, at (7,-9): refreshed contact:1  <- #340
 #363 D4 afternoon ship:33 took 4 hits on flotation, 71.320752 points, now 100  <- #341
 #364 D4 afternoon ship:33 took 1 hit on fire, 17.830188 points, now 17.830188  <- #341
 #365 D4 afternoon ship:33 flight deck hit, no change, still out  <- #341
@@ -386,12 +386,12 @@ day  14  hash adb6c0a60196034b  119 events
 #367 D4 afternoon ship:33 flight deck hit, no change, still out  <- #341
 #368 D4 afternoon ship:33 propulsion hit, no change, still out  <- #341
 #369 D4 afternoon ship:33 propulsion hit, no change, still out  <- #341
-#370 D4 afternoon Allied report: 4 ships, carrier, at (8,-10): refreshed contact:1  <- #341
+#370 D4 afternoon Allied report: 3 ships, cruiser, at (8,-10): refreshed contact:1  <- #341
 #371 D4 afternoon ship:33 took 3 hits on flotation, 51.79245 points, now 100  <- #342
 #372 D4 afternoon ship:33 propulsion hit, no change, still out  <- #342
 #373 D4 afternoon ship:33 propulsion hit, no change, still out  <- #342
 #374 D4 afternoon ship:33 propulsion hit, no change, still out  <- #342
-#375 D4 afternoon Allied report: 4 ships, cruiser, at (7,-10): refreshed contact:1  <- #342
+#375 D4 afternoon Allied report: 3 ships, cruiser, at (7,-10): refreshed contact:1  <- #342
 #376 D4 afternoon ship:1 took 5 hits on flotation, 26.30471 points, now 26.30471  <- #343
 #377 D4 afternoon ship:1 main battery hit, no change, still working  <- #343
 #378 D4 afternoon ship:1 propulsion hit, working -> degraded  <- #343
