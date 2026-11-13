@@ -153,4 +153,4 @@ Ryujo's raid on Henderson Field, at the Eastern Solomons: the Marine patrol of 1
 | Marine fighters shot down by the escorts | 3 to 4 (311, 388, 700) | 2.51 | 2.51 |
 
 - The split is case (e) of the hand calculation exactly.
-- The Eastern Solomons verdicts do not move: judged 14, agree 10, at the edge 1, miss 3, as with decision 0079. Over the carriers the escorts are few against many bombers, so the patrol already fired mostly at the bombers.
+- The Eastern Solomons verdicts do not move: judged 14, agree 10, at the edge 1, miss 3, as with decision 0079. After decision 0084 added its measures the report was remade on the same code: judged 15, agree 11, at the edge 1, miss 3. `eastern-solomons-baseline.md` was remade with it, because its header named the figures file before this rule; one count moved there (Japanese losses to all causes held by 191 runs, where it was 201). Over the carriers the escorts are few against many bombers, so the patrol already fired mostly at the bombers.
