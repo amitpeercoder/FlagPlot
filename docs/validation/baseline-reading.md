@@ -60,30 +60,41 @@ Three more judged measures count the shells of the southern group, the northern 
 - **The two Allied groups agree, and neither agreement is strong.** The southern group's record is under a hundred shells; 373 runs of 1,000 hold it, most of them runs in which the group never fired at all, and the middle run fires 4 hundreds. The northern group's record is 3 to 4 hundreds; 79 runs hold it and the middle run fires 8. One round at half manning is 67 shells for a cruiser and 150 for a destroyer, which is already more than any ship of the southern group fired all night.
 - **The order of work that follows,** as the spec has it: the rates of fire in the derivation, from rows on rates achieved; then the fights by day; then the share, which stays at one half until then and goes lower only for the confusion decision 0068 names.
 
-### The Savo Island report tuning starts from, Nov 13, 2026
+### The reports tuning starts from, Nov 13, 2026
 
-Remade on batch version 4 after everything that had to come before tuning was on main: the rates of fire as achieved (decision 0070), the share of torpedoes a force not ready fires (decision 0071), the northern group's break-off level set from the record (decision 0024, the note of Nov 13, 2026), the record of who sighted first (decision 0062, version 4) and its measures. Judged 23, agree 13, at the edge 3, miss 7.
+All three were remade once, on batch version 4, after everything that had to come before tuning was on main: the rates of fire as achieved (decision 0070), the share of torpedoes a force not ready fires (0071), the Japanese search at the Eastern Solomons from the record and a search radius of its own (0073, 0075), the northern group's break-off level set from the record (0024, the note of Nov 13, 2026), the record of who sighted first (0062, version 4) with its measures, and which radar sets count for sighting ships at night (0077).
 
-| What moved | Record | Now, 5th to 95th and median | Verdict |
+| Battle | Judged | Agree | At the edge | Miss |
+| --- | --- | --- | --- | --- |
+| Savo Island | 23 | 14 | 2 | 7 |
+| Eastern Solomons | 14 | 10 | 0 | 4 |
+| Rabaul against Guadalcanal | 10 | 3 | 1 | 6 |
+
+Savo Island, where the surface figures are tuned first:
+
+| What | Record | 5th to 95th and median | Verdict |
 | --- | --- | --- | --- |
-| Japanese main battery shells, in hundreds | 10 to 11 | 8 to 21, 17 | agrees, at the edge |
-| Allied main battery shells, in hundreds | 3 | 2 to 11, 5 | agrees |
+| Night fights the Japanese did not sight first | 0 | 0 to 2, 1 | agrees (335 runs hold it) |
+| Japanese main battery shells, in hundreds | 10 to 11 | 9 to 21, 17 | agrees, at the edge |
+| Allied main battery shells, in hundreds | 3 | 1 to 10, 4 | agrees |
 | Tenryu and Yubari's shells, in hundreds | 1 | 2 to 4, 3 | miss |
-| Gun hits on Allied ships | 153 to 219 | 32 to 137, 95 | miss |
-| Japanese gun hits for each thousand shells | 81 to 117 | 35 to 68, 54 | miss |
+| Gun hits on Allied ships | 153 to 219 | 35 to 139, 100 | miss |
+| Japanese gun hits for each thousand shells | 81 to 117 | 37 to 71, 57 | miss |
 | Allied cruisers sunk | 4 | 0 to 2, 1 | miss |
+| Northern group cruisers sunk | 3 | 0 to 2, 0 | miss |
 | Allied destroyers sunk | 0 | 1 to 4, 3 | miss |
-| Allied torpedoes fired | 4 to 6 | 12 to 36, 32 | miss |
-| Night fights the Japanese did not sight first | 0 | 0 to 2, 1 | agrees, at the edge |
-| Minutes of action | 20 to 30 | 30 to 60, 40 | agrees, at the edge |
+| Allied torpedoes fired | 4 to 6 | 8 to 36, 20 | miss |
+| Minutes of action | 20 to 30 | 30 to 60, 35 | agrees, at the edge |
 
 What it shows:
 
-- **The shells are now about right and the hits are not.** With the achieved rates both sides fire near what they fired. The Japanese hit at about 54 for each thousand shells against 81 to 117, so they land half the hits the record has and no more than two cruisers sink. That is the chance to hit, the second mechanism, and nothing else is left for it to hide behind.
-- **Tenryu and Yubari** (the check of what is derived before what is tuned, step 2 spec, "Tuning", 6). Their rate of fire is derived from rows and did not change between the batches in which this measure moved: it agreed at the edge after decision 0070 and misses again now that the northern group stays and its fight runs longer. What is left is the rounds they fire, about five against three, which is the length of the fight and not the rate. The coordinating architect rules the check explained and not a hold on the first round.
-- **Finding and surprise.** The Japanese sight first in under half the night fights; in four runs of five at least one fight goes the other way or has both sides sight in the same round. The measure agrees at the edge, because one run in five holds the record. A tuning round aims at the middle half of the runs ("Tuning", 10), so this is the first mechanism's task. The two measures of rounds surprised are reported only: the rules end a force's surprise in the round after it is first fired on (decision 0076).
-- **Allied torpedoes fired** is judged for the first time and misses by five or six times, with the share of decision 0071 at its first value. That is a figure for tuning, not a rule.
+- **The shells are now about right and the hits are not.** With the achieved rates both sides fire near what they fired. The Japanese hit at about 57 for each thousand shells against 81 to 117, so they land half the hits the record has and no more than two cruisers sink. That is the chance to hit, the second mechanism, and nothing else is left for it to hide behind.
+- **Tenryu and Yubari** (the check of what is derived before what is tuned, step 2 spec, "Tuning", 6). Their rate of fire is derived from rows and did not change between the batches in which this measure moved: it agreed at the edge after decision 0070 and misses again now that the northern group stays and its fight runs longer. What is left is the rounds they fire, about five against three, which is the length of the fight and not the rate. The coordinating architect rules the check explained and not a hold, with a watch: every round's record gives this measure and the rounds the pair fire; if the minutes of action come to the middle of the runs and the pair still fire over the record, tuning stops and it goes back to the derivation; and no figure is moved to mend this measure itself.
+- **Finding and surprise.** With no Allied ship given the radar bonus (decision 0077, a mend in the derivation and not a tuning round), the Japanese sight first in 57 night fights of 100, where it was 44, and one run in three has every night fight go their way. The measure now agrees plainly by the rule, with a median of one fight a run still going the other way: mostly both sides sighting in the same round of five minutes. A round aims at the middle half of the runs ("Tuning", 10), so this is still the first mechanism's task. The two measures of rounds surprised are reported only: the rules end a force's surprise in the round after it is first fired on (decision 0076).
+- **Allied torpedoes fired** is judged for the first time and misses by about four times, with the share of decision 0071 at its first value. Half of what is left is tubes that do not bear on one side (decision 0074, held).
 - **Minutes of action and Japanese shells** are at the edge for a cause that is named and left: the Japanese ended each fight by passing on, and the rules have no force that retires when it has done what it came for (decision 0024, the note).
+
+The Eastern Solomons and Rabaul reports keep the misses they had: American aircraft lost, the all-or-nothing strike on Ryujo and claims at the Eastern Solomons; fighter losses, aircraft destroyed on the ground, claims and the aircraft ready after three weeks at Rabaul. Nothing in this remake was aimed at them.
 
 ## Eastern Solomons
 
