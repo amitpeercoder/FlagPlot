@@ -18,6 +18,15 @@
 #
 # The ranges were settled by the architect of the spec session on
 # 2026-11-12. No row's standing was changed.
+#
+# Changed on 2026-11-13 by the coordinating architect, before the check is
+# run (decision 0084, finding 14): the hits on the Japanese cruisers are
+# measured ship by ship. gun_hits_on_japanese_cruisers (130 to 134) is
+# retired: it added Aoba's 40 and Furutaka's 90, and neither is a count.
+# Every figure for them is a historian's with no counter named, and no
+# Japanese survey or crew count exists. Furutaka's rows give lower bounds
+# only, so no range can be written for her and her measure is reported;
+# a total that holds her cannot be judged either.
 
 battle = "cape-esperance"
 facts = "data/oob/engagement_outcomes.csv"
@@ -63,13 +72,31 @@ reason = "Duncan, abandoned on fire; she sank by two accounts (1532, 1534) and w
 # ----------------------------------------------------------------- hits
 
 [[measure]]
-id = "gun_hits_on_japanese_cruisers"
-counts = "Gun hits on Aoba, Furutaka and Kinugasa, all calibres"
-record_low = 130
-record_high = 134
+id = "gun_hits_on_aoba"
+counts = "Gun hits on Aoba, all calibres"
+record_low = 40
+record_high = 40
 judged = true
-rows = [1598, 1599, 1600, 1601, 1605, 1686, 1687, 1688]
-reason = "Aoba 40 (1598, 1599) and Furutaka 90 (1600, 1601). Kinugasa none by her own signal and her division's report, read twice (1686, 1687, 1688), or 4 by the tabular record (1605): low end without them, high end with. Aoba's 40 is where 'up to forty' (1598) and 'over 40' (1599) meet, and neither statement bounds its far end; Furutaka's 90 is 'about' in one source and 'over' in the other (1600, 1601), likewise unbounded. So this is a weak record, kept and judged for now by the architect's ruling of Nov 13, 2026 (decision 0084), which lists it among the limits of the check. Outside research is asked for bounded sources: if a row arrives before the check is run the record changes, and it does not change after the run. No row counts the hits on Fubuki, which sank, or on Hatsuyuki, so the measure is of the cruisers alone."
+rows = [1598, 4034, 1599]
+reason = "Three statements that meet at 40: 'up to forty' (1598), a flat '40 hits' in the Australian official history (4034) and 'over 40' (1599). None is from a count: no counter is named in any, and no Japanese survey or crew count exists. 'Up to' bounds nothing below and 'over' nothing above, so this is a weak record, judged because three sources put the figure at one place. Outside research has looked for a bounded source; if a row arrives before the check is run the record changes, and it does not change after the run (decision 0084, finding 14). Many of her hits were duds by one lead (1695), so the count is not a measure of damage."
+
+[[measure]]
+id = "gun_hits_on_furutaka"
+counts = "Gun hits on Furutaka, all calibres"
+record_low = 90
+record_high = 90
+judged = false
+rows = [1600, 1601, 1602, 4035]
+reason = "'About 90' (1600), 'over 90' (1601), 'more than 90 above the waterline alone' (1602) and 'over 90 times' (4035, likely repeating 1601): lower bounds only, perhaps one count repeated, with no counter named. No row bounds the figure above, so no range can be written; 90 is the floor they share. Not judged for that reason (decision 0084, finding 14). Reported, so the size of the run's figure stays in view."
+
+[[measure]]
+id = "gun_hits_on_kinugasa"
+counts = "Gun hits on Kinugasa, all calibres"
+record_low = 0
+record_high = 4
+judged = true
+rows = [1605, 4036, 1686, 1687, 1688]
+reason = "Four by a reference site's tabular record (1605) and a tertiary site with no references that gives the same 4 (4036). None by her division's report, which says twice that she received no enemy fire (1686, 1687), and by her own battle flash, 'no damage' (1688). The rows dispute each other, so by this file's rule the range spans them: 0 to 4."
 
 [[measure]]
 id = "gun_hits_on_us_ships"
