@@ -10,6 +10,11 @@
 #
 # The ranges were settled by the architect of the spec session on
 # 2026-11-12. No row's standing was changed.
+#
+# Changed on 2026-11-13 by the architect, who now owns this file, with
+# decision 0083: minutes_of_action's record is the sum of the two fights as
+# the rows give each (32 to 36), not the span of the night (20 to 30), since
+# the rules hold the fights one after the other and a run counts their sum.
 
 battle = "savo-island"
 scenario = "data/scenarios/04_savo_island.toml"
@@ -308,12 +313,13 @@ reason = "Tenryu 80 and Yubari 96 of 5.5 inch (148, 154; 176 together, as row 3 
 [[measure]]
 id = "minutes_of_action"
 counts = "Minutes of surface fighting in the run: the rounds each fight ran, summed, times the minutes a round stands for"
-record_low = 20
-record_high = 30
+record_low = 32
+record_high = 36
 judged = true
 take = "minutes_of_action"
-rows = [14, 15, 16]
-reason = "Half an hour from the enemy's appearing round Savo until he ceased fire (14, 15); twenty minutes by Quincy's report (16). It is the measure for when a force breaks off, the last mechanism in the order of tuning. Judged since the batch file gives the rounds each fight ran, whatever ended it (decision 0062). A round in which a force slips away and no shot is fired is counted. Fights by day are counted too: the record has none, so a run that has one runs longer than the night did, and that is a true miss. A round is five minutes on the frozen figures, so the measure moves in fives."
+facts = "data/oob/engagement_events.csv"
+rows = [59, 81, 90, 94, 1080]
+reason = "The sum of the two fights, each from its own rows, as the measure counts. The southern fight: from the first fire at about 01:43 (59) to the group dissolved into independent ships by 01:50 (81), 7 minutes; or 10, by the 1943 narrative's 'no more than 10 minutes' (engagement_outcomes 17). The northern fight: from the searchlights at 01:50 (90) and the first salvo about 01:51 (94) to the end of the night's half-hour at about 02:15 (engagement_outcomes 15, and the note of 17), 25 minutes; or 26, to Chokai putting out her searchlight at 02:16 (1080, unconfirmed). Low end 7 + 25, high end 10 + 26. Patterson's cease fire at about 02:00 (742, unconfirmed) is left out: it is one destroyer's own gun, against the narrative's figure for the whole southern fight (engagement_outcomes 17), and a group's fight is not measured by its last straggler's gun. Not the span of the night: 'no more than half an hour' (engagement_outcomes 14), 'the half-hour between 0145 and 0215' (15) and 'a brief twenty-minute action' (16) are the night from first fire to last. The two fights overlapped from 01:50 to about 01:53, and in the rules fights are held one after the other, so the span is not what a run counts. A run counts in five-minute rounds, so 35 is the one value of a run inside the record. Fights by day are counted too: the record has none. It is the measure for when a force breaks off, the last mechanism in the order of tuning."
 
 [[measure]]
 id = "surface_fights_by_day"
