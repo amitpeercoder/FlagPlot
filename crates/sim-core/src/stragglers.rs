@@ -303,8 +303,9 @@ impl World {
         (new_force, event)
     }
 
-    /// Sends a force for its home port with a staff set-route order that
-    /// cites `detaching_event` (decision 14). A force with no home port, or
+    /// Sends a force for its home port with a set-route order that the
+    /// local commander issues (decision 0055) and that cites
+    /// `detaching_event` (decision 14). A force with no home port, or
     /// already at a centre at the home port, gets no order. A rejected order
     /// leaves the force as it is: idle.
     fn head_home(&mut self, day: u32, pulse: Pulse, force: TaskForceId, detaching_event: EventId) {

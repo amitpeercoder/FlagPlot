@@ -11,7 +11,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Readiness** | What a force is ordered to be: normal or battle (decision 0021) | Whether it is alert at this moment |
 | **Alert** | The state of a force whose lookouts see at full effect. A force at battle readiness is always alert | An order |
 | **Ready** | A force's state as a fight begins, kept for the whole fight: at battle readiness, or alert since before the present pulse began. A force that is not ready fires its guns at a share, `unready_gun_share`, in every round, and its torpedoes at a share, `unready_torpedo_share` (decisions 0068, 0071) | Alert. A force alerted in this pulse sees at full effect and is not ready |
-| **Alerted** | How a force at normal readiness came to be alert: by a fresh contact nearby, by being fired on, or by an alarm | |
+| **Alerted** | How a force at normal readiness came to be alert: by a fresh contact nearby, by being fired on, or by an alarm. A contact never alerts or stands down a force at battle readiness | |
 | **Alarm** | The roll a force that is not alert makes when a fight with gunfire happens in its hex | |
 | **Stance** | A force's ordered way of meeting an enemy: engage or avoid (decision 0014) | |
 | **Avoiding for the pulse** | What a force does after it breaks off or slips away: it takes the avoid stance until the pulse ends, whatever its orders (decision 0022) | A change to its orders |
@@ -71,8 +71,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Burn** | The fuel a ship uses steaming a distance: the distance times the cruise burn per mile, times the speed multiplier (decision 0006) | Fuel carried as cargo, which cannot be burned |
 | **Under way** | The status of a force that has a route to steam. A force dead in the water is still under way | Moving |
 | **Arrived** | The status of a force that has reached the centre of its last waypoint | Docked |
-| **Out of fuel** | The status of a force whose fuel ran out before its last waypoint | A force with no fuel that is not under way |
-| **Stopped** | Not under way: idle, arrived or out of fuel. Refuelling also asks that the force is exactly at a hex centre | |
+| **Out of fuel** | The status of a force whose fuel ran out before its last waypoint. It takes no route, load or load-fuel order until it has taken fuel in port | A force with no fuel that is not under way |
+| **Stopped** | Not under way: idle, arrived or out of fuel. Refuelling and cargo handling also ask that the force is exactly at a hex centre | |
 | **Dead in the water** | Describes a ship whose propulsion is out, or the force it slows. Its speed is 0 | Crippled |
 | **Sound ship** | A ship whose propulsion is working | A ship with no damage |
 | **Cargo** | Supply or fuel carried in a ship's hold, in tons, up to the class's cargo capacity | The fuel a ship steams on |

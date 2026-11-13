@@ -54,11 +54,9 @@
 #54 D1 morning   task_force:2 steamed 20 nm at 16 kn from (0,0) to (0,0)  <- order:1, order:2
 #55 D1 morning   ship:3 burned 5 t, 1940 t remaining  <- #54
 #56 D1 morning   task_force:2 arrived at (0,0) at D1 09:00  <- #54
-#57 D1 afternoon task_force:1 alerted by contact:1  <- #50
-#58 D1 afternoon task_force:2 alerted by contact:1  <- #52
-#59 D1 afternoon task_force:1 and task_force:2 met at (0,0) at D1 12:00: engagement begun  <- order:4, order:3
-#60 D1 afternoon round 1: task_force:1 looked for task_force:2, chance 1: sighted  <- #59
-#61 D1 afternoon round 1: task_force:2 looked for task_force:1, chance 1: sighted  <- #59
-#62 D1 afternoon engagement of task_force:1 and task_force:2 at (0,0) ended in round 6: reached the last round  <- #59
-#63 D1 afternoon Japanese report: 1 ship, cruiser, at (0,0): refreshed contact:1  <- #62
-#64 D1 afternoon Allied report: 2 ships, destroyer, at (1,-1): refreshed contact:1  <- #62
+#57 D1 afternoon task_force:1 and task_force:2 met at (0,0) at D1 12:00: engagement begun  <- order:4, order:3
+#58 D1 afternoon round 1: task_force:1 looked for task_force:2, chance 1: sighted  <- #57
+#59 D1 afternoon round 1: task_force:2 looked for task_force:1, chance 1: sighted  <- #57
+#60 D1 afternoon engagement of task_force:1 and task_force:2 at (0,0) ended in round 6: reached the last round  <- #57
+#61 D1 afternoon Japanese report: 1 ship, cruiser, at (0,0): refreshed contact:1  <- #60
+#62 D1 afternoon Allied report: 2 ships, destroyer, at (1,-1): refreshed contact:1  <- #60

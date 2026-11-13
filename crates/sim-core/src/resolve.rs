@@ -46,7 +46,8 @@ pub(crate) enum PulsePhase {
     /// and before the replacements (decision 2 of 0041).
     AirArrival,
     /// Replacement aircraft and pilots arrive at the bases the scenario names,
-    /// right after the repair, from day 2 (decisions 6 to 8 of 0038).
+    /// after the repair and the arrivals, from day 2 (decisions 6 to 8 of
+    /// 0038).
     AirReplacement,
     /// Each base pays the daily supply for its aircraft, after the repair
     /// and the replacements (decisions 2 and 5 of 0039).
@@ -54,8 +55,9 @@ pub(crate) enum PulsePhase {
     /// Aircraft that flew roll for wear, after the air combat step of a
     /// daylight pulse (decisions 3 to 7 of 0035).
     AircraftWear,
-    /// The staff stands tired groups down and returns rested ones, right
-    /// after the repair at the start of the day (decision 8 of 0036).
+    /// The staff stands tired groups down and returns rested ones, at the
+    /// start of the day, after the repair, the arrivals, the replacements and
+    /// the supply upkeep and before movement (decision 8 of 0036).
     AirGroupRest,
 }
 
@@ -140,13 +142,16 @@ impl World {
             self.run_end_of_day_phase(day, phase);
         }
 
-        self.truth.day = day;
-
+        // The invariants are checked before the day counter advances, so a
+        // day that breaks one is not counted. Nothing the check reads uses
+        // `truth.day`.
         let violations = invariants::check(&self.truth, &self.map, &self.ref_data);
         if !violations.is_empty() {
             return Err(SimError::InvariantsViolated { day, violations });
         }
 
+        // The hash reads `truth.day`, so it is set first.
+        self.truth.day = day;
         let state_hash = self.state_hash();
         self.day_hashes.push(state_hash);
         Ok(DaySummary {
@@ -290,7 +295,8 @@ impl World {
     }
 
     /// Takes in one order: numbers it, checks it, applies it if it is sound,
-    /// records `OrderAccepted` or `OrderRejected` and stores it. The event's
+    /// records `OrderAccepted` or `OrderRejected` (and, after an acceptance,
+    /// the follow-up event `apply_order` returns) and stores it. The event's
     /// causes are the order itself followed by `extra_causes`. `pulse` is
     /// `None` at the start of a day and the current pulse for an order the
     /// simulation issues mid-day. Returns the order's ID, the event's ID and
@@ -314,10 +320,10 @@ impl World {
         let target = order.kind.target();
         let result = self.validate_order(&order);
         let accepted = result.is_ok();
-        let mut turned_back: Option<EventKind> = None;
+        let mut follow_up: Option<EventKind> = None;
         let kind = match result {
             Ok(()) => {
-                turned_back = self.apply_order(&order);
+                follow_up = self.apply_order(&order);
                 EventKind::OrderAccepted { order: id, target }
             }
             Err(reason) => EventKind::OrderRejected {
@@ -329,11 +335,13 @@ impl World {
         let mut causes = vec![Cause::Order(id)];
         causes.extend(extra_causes);
         let event = self.events.record(day, pulse, kind, causes, None);
-        // A route order that turned the force round between two hexes changed
-        // its leg and maybe its position: say so, citing the order.
-        if let Some(turned_back) = turned_back {
+        // The follow-up event of an accepted order, recorded after the
+        // acceptance and citing the order: a route order that turned the
+        // force round between two hexes changed its leg and maybe its
+        // position, and an ordered detach names the new force.
+        if let Some(follow_up) = follow_up {
             self.events
-                .record(day, pulse, turned_back, vec![Cause::Order(id)], None);
+                .record(day, pulse, follow_up, vec![Cause::Order(id)], None);
         }
         self.orders.insert(id, order);
         (id, event, accepted)
@@ -434,11 +442,17 @@ impl World {
                 }
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
+                        if task_force.status == TaskForceStatus::OutOfFuel {
+                            return Err(RejectReason::OutOfFuel);
+                        }
                         task_force.check_route(&self.map, waypoints)
                     }
                     TaskForceOrder::Load | TaskForceOrder::LoadFuel => {
                         if task_force.status == TaskForceStatus::Underway {
                             return Err(RejectReason::UnderWay);
+                        }
+                        if task_force.status == TaskForceStatus::OutOfFuel {
+                            return Err(RejectReason::OutOfFuel);
                         }
                         let own_base_here = self.truth.bases.values().any(|base| {
                             base.side == order.side && base.hex == task_force.position()
@@ -644,8 +658,10 @@ impl World {
     /// Makes an accepted order the standing one. It stays in force until
     /// another order replaces it.
     ///
-    /// Returns the event to record after the order's own, if the order turned
-    /// a task force round between two hexes (a route order does: see
+    /// Returns the follow-up event to record after the order's own
+    /// acceptance, if there is one: `ShipsDetached` for an ordered detach
+    /// (the split itself happens here), or `TaskForceTurnedBack` if a route
+    /// order turned a task force round between two hexes (see
     /// `TaskForce::turn_back`).
     fn apply_order(&mut self, order: &Order) -> Option<EventKind> {
         match &order.kind {
@@ -658,28 +674,22 @@ impl World {
                     let name = format!("{}, detached", self.truth.task_forces[target].name);
                     let new_force = self.split_task_force(*target, &listed, name);
                     // Name the new force in the log: the order's acceptance
-                    // names only the parent.
-                    self.events.record(
-                        order.day_issued,
-                        None,
-                        EventKind::ShipsDetached {
-                            parent: *target,
-                            new_force,
-                            ships: listed.iter().copied().collect(),
-                            escorts: Vec::new(),
-                            reason: DetachReason::Ordered,
-                        },
-                        vec![Cause::Order(order.id)],
-                        None,
-                    );
-                    return None;
+                    // names only the parent. The caller records this after
+                    // the acceptance, citing the order.
+                    return Some(EventKind::ShipsDetached {
+                        parent: *target,
+                        new_force,
+                        ships: listed.iter().copied().collect(),
+                        escorts: Vec::new(),
+                        reason: DetachReason::Ordered,
+                    });
                 }
                 let task_force = self
                     .truth
                     .task_forces
                     .get_mut(target)
                     .expect("order was validated against this task force");
-                let mut turned_back = None;
+                let mut follow_up = None;
                 match task_force_order {
                     TaskForceOrder::SetRoute(waypoints) => {
                         // Turning back is decided on the state the order
@@ -690,7 +700,7 @@ impl World {
                         if turns_back {
                             task_force.turn_back();
                             if let Some(toward) = task_force.toward_hex {
-                                turned_back = Some(EventKind::TaskForceTurnedBack {
+                                follow_up = Some(EventKind::TaskForceTurnedBack {
                                     task_force: task_force.id,
                                     from: task_force.from_hex,
                                     toward,
@@ -758,7 +768,7 @@ impl World {
                         unreachable!("detach orders are applied above")
                     }
                 }
-                turned_back
+                follow_up
             }
             OrderKind::AirGroup {
                 target,
@@ -1486,6 +1496,39 @@ mod tests {
         world.submit_orders(Side::Allied, vec![order(TaskForceOrder::Load)]);
         world.resolve_day().expect("day resolves");
         assert_eq!(rejection(&world), Some(RejectReason::NoOwnBaseHere));
+    }
+
+    #[test]
+    fn load_and_set_route_orders_to_a_force_out_of_fuel_are_refused() {
+        // Rows 17 and 34 of differences.md: an out-of-fuel force refuses
+        // load, load-fuel and set-route orders with `OutOfFuel`.
+        for request in [
+            order(TaskForceOrder::Load),
+            order(TaskForceOrder::LoadFuel),
+            route_to(2, 0),
+        ] {
+            let mut world = world_with_fuel(2000);
+            world
+                .truth
+                .task_forces
+                .get_mut(&TF)
+                .expect("task force")
+                .status = TaskForceStatus::OutOfFuel;
+            world.submit_orders(Side::Allied, vec![request]);
+            world.resolve_day().expect("day resolves");
+            assert_eq!(rejection(&world), Some(RejectReason::OutOfFuel));
+        }
+    }
+
+    #[test]
+    fn a_failing_invariant_returns_the_error_and_leaves_the_day_unchanged() {
+        // Row 25: the invariants are checked before the day counter advances.
+        let mut world = world_with_fuel(2000);
+        world.truth.ships.get_mut(&SHIP).expect("ship").fuel_t = Fixed::from_int(-1);
+        let day = world.day();
+        let result = world.resolve_day();
+        assert!(matches!(result, Err(SimError::InvariantsViolated { .. })));
+        assert_eq!(world.day(), day);
     }
 
     #[test]
@@ -3234,6 +3277,35 @@ mod tests {
             EventKind::OrderAccepted { target, .. } if target == crate::ids::EntityRef::TaskForce(TF)
         ));
         assert_sound(&world);
+    }
+
+    #[test]
+    fn an_ordered_detach_records_the_acceptance_before_the_detachment() {
+        // Row 24: the acceptance comes first; the detachment follows it with
+        // the same day and pulse, citing the order.
+        let mut world = damage_world();
+        let second = add_ship(&mut world, 2, SystemState::Working);
+        world.submit_orders(
+            Side::Allied,
+            vec![order(TaskForceOrder::DetachShips(vec![second]))],
+        );
+        world.resolve_day().expect("day resolves");
+        let events: Vec<_> = world.events().iter().collect();
+        let accepted = events
+            .iter()
+            .position(|e| matches!(e.kind, EventKind::OrderAccepted { .. }))
+            .expect("accepted");
+        let detached = events
+            .iter()
+            .position(|e| matches!(e.kind, EventKind::ShipsDetached { .. }))
+            .expect("detached");
+        assert!(accepted < detached);
+        assert_eq!(events[accepted].day, events[detached].day);
+        assert_eq!(events[accepted].pulse, events[detached].pulse);
+        let EventKind::OrderAccepted { order: id, .. } = events[accepted].kind else {
+            unreachable!("matched above");
+        };
+        assert_eq!(events[detached].causes, vec![Cause::Order(id)]);
     }
 
     #[test]
