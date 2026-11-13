@@ -12,7 +12,7 @@ Nothing else. **Its kind:** a surface figure, tuned on Savo Island and not check
 
 ## The row its size rests on
 
-Canberra is the record's one clean case of fire at a surprised ship. She "was hit 24 times in less than two minutes" (`engagement_outcomes` 21, medium, preferred), "not less than twenty-four 8-inch and 4.7-inch hits" (rows 19 and 20, high, preferred), made no reply with her main battery, and the Japanese passed on. In the model that is this factor's case exactly: in the 577 runs of 1,000 in which the southern group is surprised, its fight lasts a median of one round.
+Canberra is the record's one clean case of fire at a surprised ship. She "was hit 24 times in less than two minutes" (`engagement_outcomes` 21, medium, preferred, which names no calibre), "not less than twenty-four 8-inch and 4.7-inch hits" (row 20, the 1950 analysis, high, preferred), and "at least 24 five-inch shells" (row 19, the 1943 narrative, high, preferred: the same count with another calibre), made no reply with her main battery, and the Japanese passed on. In the model that is this factor's case exactly: in the 577 runs of 1,000 in which the southern group is surprised, its fight lasts a median of one round.
 
 | Factor | Canberra's gun hits in those 577 runs: 25th, median, 75th |
 | --- | --- |
@@ -25,13 +25,15 @@ Where the group is not surprised she takes a median of 10 whatever the factor.
 
 **The arithmetic of the size.** The 24 hits are of every calibre and a ship in the rules fires her main battery only. The measures set the two side by side on the assumption that the secondary guns shot as the main did, and the Japanese main batteries fired 1,090 to 1,190 of the 1,867 shells, about three fifths. Three fifths of 24 is about 14 main battery hits, and the surprised Canberra's median is 14 at a factor of 2. At 2.5 it is 18, three quarters of 24, which would ask the factor to carry part of what the secondary guns scored. No row gives the main batteries a larger share of the fire at Canberra in particular.
 
+**What the three fifths is, corrected Nov 13, 2026 (decision 0084).** Said plainly: three fifths is the whole Japanese force's expenditure over the whole action, every target together, applied to Canberra as an assumption. No row gives the share of main battery shells among those fired at Canberra, or among the hits she took; row 20 names 8-inch and 4.7-inch hits without counting either, and row 19 calls them all five-inch. The research on targets (decision 0078) has the heavy cruisers' main batteries, their secondary guns and the light cruisers' guns at different targets, so the force's mix need not be the mix at any one ship. The arithmetic also assumes the secondary guns hit as often as the main. So 2 is a figure fitted at Savo Island, inside a direction the sources support (a surprised ship is easier to hit) and with a size no source gives. It is a placeholder, and it is not sized from a source. Nor can the Canberra count size it for torpedoes, which it also multiplies (below): her shell hits say nothing of a torpedo's chance.
+
 **What that support is worth.** It is one ship's, in the battle the figure is tuned on. It will be tested at Cape Esperance on the other navy, where the Japanese were the surprised side and Aoba and Furutaka took about 40 and about 90 hits (`engagement_outcomes` 1598 to 1602). Until then the figure stays a placeholder as to its size.
 
 **It carries one round.** The rules end a force's surprise in the round after it is first fired on, and the record has about one round of surprise under fire (decision 0076). The factor reaches 17 in 100 of the Japanese gun salvos at Allied ships, all of them in that round.
 
 ## It is also a torpedo figure
 
-The factor multiplies the chance of a torpedo at a surprised target as it does a shell's. Torpedo hits on Allied ships go from a median of 3 to 4, toward the record of 4 to 9 (524 runs hold it, from 410). No other torpedo figure was touched.
+The factor multiplies the chance of a torpedo at a surprised target as it does a shell's, at the size fitted to Canberra's shell hits; nothing in the record sizes it for torpedoes. Torpedo hits on Allied ships go from a median of 3 to 4, toward the record of 4 to 9 (524 runs hold it, from 410). No other torpedo figure was touched.
 
 **What decision 0074 would have changed** (it is written and held): with the tubes that bear on one side, the five Japanese heavy cruisers would fire 4 torpedoes each in the surprised round and not 8, so about half of that gain would not be there. The round is not held for it.
 

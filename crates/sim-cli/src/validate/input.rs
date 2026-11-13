@@ -277,6 +277,9 @@ pub struct Measure {
     pub by: Option<Vec<String>>,
     #[serde(default)]
     pub task_forces: Option<Vec<u32>>,
+    /// The unit a `shots` take counts in: "shells" (the default) or "tens".
+    #[serde(default)]
+    pub unit: Option<String>,
     /// Only where the measure's rows are in another fact file than the one
     /// the file names at its head. Nothing checks rows against a fact file.
     #[serde(default)]
