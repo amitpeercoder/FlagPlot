@@ -931,6 +931,7 @@
       "unit": "task_force:5"
     }
   ],
+  "rules_version": 1,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "c2ae35f541de3eda"
@@ -940,5 +941,6 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "version": 1
+  "state_version": "flagplot-state-v18",
+  "version": 2
 }
