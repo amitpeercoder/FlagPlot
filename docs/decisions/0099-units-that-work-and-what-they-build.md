@@ -100,6 +100,15 @@ Decision 0093, 6, stands as to who fights. The construction units come back as w
 - **Research,** before real units and real work can be set.
 - **The rulebook:** chapter 7, chapter 2 (bases, working cargo), chapter 5 (repair, rebasing, landing elsewhere), chapter 1 and the glossary, in the same pull request as the code. It is built after decisions 0094 to 0098.
 
+## Rulings by the architect, with the hand calculation
+
+Made on Nov 14, 2026, while writing the hand calculation of scenario 30 (`tests/scenario_30_working_units.rs`). Each fills a place the decisions above left open.
+
+1. **Only fighting men make a hex contested or hold a base.** Decision 1 says working men are not counted when a side is tested for being beaten. The same holds wherever the rules of the fight count a side's men ashore: a hex is contested when both sides have men of fighting units ashore and a unit is on attack, and a base whose side has only working men in the hex falls without a fight, as a base with no men does (decision 0090, 16). A working unit is always on defend, and an attack order to it is refused. Its men are still hit in proportion with the rest when the fighting men beside them are fired on.
+2. **Work on an airfield.** The day's work is added whole on the day the airfield is built, and nothing is added after. A unit with no order then works the port. A scenario may state a base with no airfield and with work already done on one.
+3. **Defences are not cut to a whole number.** 450 of work is 2.25 points.
+4. **Work on aircraft makes a base a place of repair.** A night's repairs at a base are its own figure and the repairs the work of the day before gives, also where its own figure is 0.
+
 ## Rule card
 
 | | |
