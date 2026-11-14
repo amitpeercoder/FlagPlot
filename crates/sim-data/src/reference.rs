@@ -2310,4 +2310,247 @@ mod tests {
             "1.5".parse::<Fixed>().expect("fixed")
         );
     }
+
+    // ------------------------------------------------------------------
+    // The figures of decision 0092: shore bombardment, the share of a base
+    // hit that lands on men, and the ground report.
+    // ------------------------------------------------------------------
+
+    /// `text` without the lines that give any of `keys`.
+    fn without_keys(text: &str, keys: &[&str]) -> String {
+        let kept: Vec<&str> = text
+            .lines()
+            .filter(|line| {
+                !keys
+                    .iter()
+                    .any(|key| line.trim_start().starts_with(&format!("{key} =")))
+            })
+            .collect();
+        format!("{}\n", kept.join("\n"))
+    }
+
+    /// `text` with the line giving `key` replaced by `key = value`.
+    fn with_key(text: &str, key: &str, value: &str) -> String {
+        let mut found = false;
+        let lines: Vec<String> = text
+            .lines()
+            .map(|line| {
+                if line.trim_start().starts_with(&format!("{key} =")) {
+                    found = true;
+                    format!("{key} = {value}")
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect();
+        assert!(found, "{key} is in the file");
+        format!("{}\n", lines.join("\n"))
+    }
+
+    const BOMBARDMENT_KEYS: [&str; 4] = [
+        "bombardment_minutes",
+        "bombardment_hit_chance",
+        "bombardment_reference_gun_damage",
+        "bombardment_false_claim_chance",
+    ];
+
+    #[test]
+    fn the_bombardment_figures_load_all_four_or_none() {
+        let loaded = parse_surface_combat_figures(&combat_text(), here()).expect("parses");
+        assert!(loaded.bombardment.is_some(), "the shipped file has them");
+        // None of the four: the file loads and no force bombards.
+        let none = without_keys(&combat_text(), &BOMBARDMENT_KEYS);
+        assert_eq!(
+            parse_surface_combat_figures(&none, here())
+                .expect("loads as before")
+                .bombardment,
+            None
+        );
+        // Any part of the set is refused, with the four named.
+        for count in 1..=3 {
+            for start in 0..4 {
+                let dropped: Vec<&str> = (0..count)
+                    .map(|i| BOMBARDMENT_KEYS[(start + i) % 4])
+                    .collect();
+                let partial = without_keys(&combat_text(), &dropped);
+                let message = parse_surface_combat_figures(&partial, here())
+                    .expect_err("a partial set is refused")
+                    .message;
+                assert!(
+                    message.contains("give all four or none"),
+                    "without {dropped:?}: {message}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_bombardment_figures_are_in_range_and_not_floats() {
+        let bad = |key: &str, value: &str| {
+            parse_surface_combat_figures(&with_key(&combat_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("bombardment_minutes", "0").contains("bombardment_minutes"));
+        assert!(bad("bombardment_reference_gun_damage", "0")
+            .contains("bombardment_reference_gun_damage"));
+        assert!(bad("bombardment_reference_gun_damage", "-5")
+            .contains("bombardment_reference_gun_damage"));
+        assert!(bad("bombardment_hit_chance", "\"1.5\"").contains("bombardment_hit_chance"));
+        assert!(bad("bombardment_hit_chance", "\"-0.1\"").contains("bombardment_hit_chance"));
+        assert!(
+            bad("bombardment_false_claim_chance", "2").contains("bombardment_false_claim_chance")
+        );
+        assert!(bad("bombardment_false_claim_chance", "\"-0.5\"")
+            .contains("bombardment_false_claim_chance"));
+        // A TOML float is refused for a quantity, and a fraction of a minute
+        // for the whole number of minutes.
+        assert!(bad("bombardment_hit_chance", "0.05").contains("bombardment_hit_chance"));
+        assert!(bad("bombardment_reference_gun_damage", "20.5")
+            .contains("bombardment_reference_gun_damage"));
+        assert!(!bad("bombardment_minutes", "30.5").is_empty());
+        // The edges are allowed: a chance of 0 and of 1.
+        for edge in ["0", "1"] {
+            let text = with_key(&combat_text(), "bombardment_hit_chance", edge);
+            let figures = parse_surface_combat_figures(&text, here()).expect("the edge loads");
+            assert_eq!(
+                figures.bombardment.expect("held").hit_chance,
+                Fixed::from_int(edge.parse().unwrap())
+            );
+        }
+    }
+
+    #[test]
+    fn the_ground_report_error_is_both_keys_or_neither_and_in_range() {
+        let loaded = parse_ground_figures(&ground_text(), here()).expect("parses");
+        let error = loaded.report_error.expect("the shipped file has them");
+        assert!(error.low <= error.high);
+        // Only one of the two is refused.
+        for dropped in ["report_error_low", "report_error_high"] {
+            let text = without_keys(&ground_text(), &[dropped]);
+            let message = parse_ground_figures(&text, here())
+                .expect_err("one alone is refused")
+                .message;
+            assert!(
+                message.contains("report_error_low and report_error_high together"),
+                "without {dropped}: {message}"
+            );
+        }
+        // Out of range: below 0, or the low above the high.
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("report_error_low", "\"-0.1\"").contains("report_error_low"));
+        assert!(bad("report_error_high", "\"0.1\"")
+            .contains("not 0 or more with the low not above the high"));
+        assert!(bad("report_error_low", "\"2\"").contains("report_error_low"));
+        // A float is refused, as every quantity.
+        assert!(bad("report_error_low", "0.5").contains("report_error_low"));
+        assert!(bad("report_error_high", "1.5").contains("report_error_high"));
+        // The edge where they meet is allowed: the report is then exact.
+        let exact = with_key(&ground_text(), "report_error_low", "1");
+        let exact = with_key(&exact, "report_error_high", "1");
+        let figures = parse_ground_figures(&exact, here()).expect("an exact report loads");
+        let error = figures.report_error.expect("held");
+        assert_eq!((error.low, error.high), (Fixed::ONE, Fixed::ONE));
+    }
+
+    #[test]
+    fn the_men_lost_per_base_hit_is_a_whole_number_of_0_or_more() {
+        let bad = |value: &str| {
+            parse_ground_figures(
+                &with_key(&ground_text(), "men_lost_per_base_hit", value),
+                here(),
+            )
+            .expect_err("rejected")
+            .message
+        };
+        assert!(bad("-1").contains("men_lost_per_base_hit"));
+        assert!(bad("\"2.5\"").contains("men_lost_per_base_hit"));
+        assert!(bad("2.5").contains("men_lost_per_base_hit"));
+        // 0 is allowed: a hit on men then removes nobody.
+        let zero = with_key(&ground_text(), "men_lost_per_base_hit", "0");
+        assert_eq!(
+            parse_ground_figures(&zero, here())
+                .expect("0 loads")
+                .men_lost_per_base_hit,
+            Fixed::ZERO
+        );
+    }
+
+    #[test]
+    fn the_share_of_hits_that_land_on_men_is_in_range_and_adds_up_with_the_others() {
+        let bad = |value: &str| {
+            parse_air_combat_figures(&with_key(&air_combat_text(), "men", value), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("\"1.5\"").contains("base hit chance on men"));
+        assert!(bad("\"-0.1\"").contains("base hit chance on men"));
+        assert!(bad("0.2").contains("men"));
+        // Together with aircraft and supply it may not pass 1.
+        assert!(bad("\"0.99\"").contains("add to"));
+    }
+
+    #[test]
+    fn files_without_the_figures_of_decision_0092_load_as_before() {
+        let surface = without_keys(&combat_text(), &BOMBARDMENT_KEYS);
+        assert_eq!(
+            parse_surface_combat_figures(&surface, here())
+                .expect("loads")
+                .bombardment,
+            None
+        );
+        let air = without_keys(&air_combat_text(), &["men"]);
+        assert_eq!(
+            parse_air_combat_figures(&air, here())
+                .expect("loads")
+                .base_hit_men,
+            Fixed::ZERO,
+            "no share for men"
+        );
+        let ground = without_keys(
+            &ground_text(),
+            &[
+                "men_lost_per_base_hit",
+                "report_error_low",
+                "report_error_high",
+            ],
+        );
+        let figures = parse_ground_figures(&ground, here()).expect("loads");
+        assert_eq!(figures.men_lost_per_base_hit, Fixed::ZERO);
+        assert_eq!(figures.report_error, None);
+        // The rest of the ground figures are untouched.
+        let full = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.men_per_shot, full.men_per_shot);
+        assert_eq!(figures.beaten_share, full.beaten_share);
+        // The frozen files of step 1 have the figures too, with their first
+        // values.
+        let frozen = |name: &str| {
+            fs::read_to_string(
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../data/reference/step1")
+                    .join(name),
+            )
+            .expect("the frozen file reads")
+        };
+        let ground = parse_ground_figures(&frozen("ground.toml"), here()).expect("parses");
+        assert_eq!(ground.men_lost_per_base_hit, Fixed::from_int(10));
+        let error = ground.report_error.expect("held");
+        assert_eq!(
+            (error.low, error.high),
+            (Fixed::from_ratio(1, 2), Fixed::from_ratio(3, 2))
+        );
+        let surface =
+            parse_surface_combat_figures(&frozen("surface_combat.toml"), here()).expect("parses");
+        let bombardment = surface.bombardment.expect("held");
+        assert_eq!(bombardment.minutes, 30);
+        assert_eq!(bombardment.hit_chance, Fixed::from_ratio(5, 100));
+        assert_eq!(bombardment.reference_gun_damage, Fixed::from_int(20));
+        assert_eq!(bombardment.false_claim_chance, Fixed::from_ratio(1, 100));
+        let air = parse_air_combat_figures(&frozen("air_combat.toml"), here()).expect("parses");
+        assert_eq!(air.base_hit_men, Fixed::from_ratio(2, 10));
+    }
 }

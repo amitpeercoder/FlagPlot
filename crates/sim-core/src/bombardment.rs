@@ -587,3 +587,448 @@ impl World {
         );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ids::{AircraftTypeId, ShipClassId};
+    use crate::map::{HexData, Map};
+    use crate::refdata::{
+        AircraftRole, AircraftType, AttackWeapon, GroundFigures, PortSize, RefData, SearchFigures,
+        ShipClass, ShipKind, SurfaceCombatFigures,
+    };
+    use crate::state::{AirGroup, Base, LandUnit, Ship, ShipLocation, Side, TaskForce, TruthState};
+
+    const AT: Hex = Hex::new(0, 0);
+    const ELSEWHERE: Hex = Hex::new(4, 0);
+
+    fn n(whole: i64) -> Fixed {
+        Fixed::from_int(whole)
+    }
+
+    fn fx(text: &str) -> Fixed {
+        text.parse().expect("a decimal")
+    }
+
+    /// A gun ship: guns, rounds a minute, rounds a gun and gun damage.
+    fn class(id: u32, guns: u32, rate: i64, rounds_per_gun: u32, damage: i64) -> ShipClass {
+        ShipClass {
+            id: ShipClassId::new(id),
+            name: format!("Test class {id}"),
+            kind: ShipKind::Cruiser,
+            cruise_speed_kn: n(16),
+            max_speed_kn: n(32),
+            fuel_capacity_t: n(1000),
+            endurance_nm: n(8000),
+            cargo_capacity_t: Fixed::ZERO,
+            main_guns: guns,
+            gun_rounds_per_min: n(rate),
+            gun_rounds_per_gun: rounds_per_gun,
+            gun_damage: n(damage),
+            torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
+            torpedo_damage: Fixed::ZERO,
+            toughness: n(100),
+            radar: false,
+            aircraft_capacity: 0,
+            anti_aircraft: 0,
+            troop_capacity_men: 0,
+        }
+    }
+
+    /// Class 1 is the cruiser of scenario 24 (8 guns at 3 a minute, gun
+    /// damage 20), class 2 its destroyer (4 guns at 6 a minute, gun damage
+    /// 5), class 3 a heavy gun ship (2 guns at 2 a minute, gun damage 60).
+    fn classes() -> [ShipClass; 3] {
+        [
+            class(1, 8, 3, 100, 20),
+            class(2, 4, 6, 150, 5),
+            class(3, 2, 2, 100, 60),
+        ]
+    }
+
+    /// Allied base 1 at AT, with an air group of 20 ready and 4 damaged
+    /// fighters and 2000 t of supply; Japanese force 1 at AT on the
+    /// bombardment mission, with one ship of each of `ship_classes` (ship
+    /// numbers 1, 2, ... in the order given, each full of rounds); and,
+    /// if `men` is not 0, Allied unit 1 of that many men ashore at AT.
+    fn world(ship_classes: &[u32], men: u32) -> World {
+        let mut map = Map::new();
+        for q in -1..=9 {
+            for r in -1..=1 {
+                map.insert(Hex::new(q, r), HexData::open_sea());
+            }
+        }
+        let mut ref_data = RefData::default();
+        for class in classes() {
+            ref_data.ship_classes.insert(class.id, class);
+        }
+        ref_data.aircraft_types.insert(
+            AircraftTypeId::new(5),
+            AircraftType {
+                id: AircraftTypeId::new(5),
+                name: "Test fighter".to_string(),
+                role: AircraftRole::Fighter,
+                search_range_nm: Fixed::ZERO,
+                sweep_width_nm: Fixed::ZERO,
+                strike_range_nm: n(250),
+                attack_weapon: AttackWeapon::None,
+                attack_damage: Fixed::ZERO,
+                pilot_armour: false,
+                self_sealing_tanks: false,
+            },
+        );
+        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.air_combat = Some(AirCombatFigures::from_air_combat_toml());
+        ref_data.ground = Some(GroundFigures::FIRST);
+        ref_data.port_sizes.insert(
+            0,
+            PortSize {
+                berths: 0,
+                berth_rate_t_per_h: Fixed::ZERO,
+                lighter_rate_t_per_h: n(20),
+            },
+        );
+
+        let mut truth = TruthState::default();
+        truth.bases.insert(
+            BaseId::new(1),
+            Base {
+                supply_t: n(2000),
+                ..Base::new(BaseId::new(1), "Base 1".to_string(), Side::Allied, AT)
+            },
+        );
+        truth.air_groups.insert(
+            AirGroupId::new(1),
+            AirGroup {
+                ready: 20,
+                damaged: 4,
+                strength: 26,
+                ..AirGroup::new(
+                    AirGroupId::new(1),
+                    "Air group 1".to_string(),
+                    Side::Allied,
+                    crate::state::AirGroupLocation::Base(BaseId::new(1)),
+                    AircraftTypeId::new(5),
+                )
+            },
+        );
+        if men > 0 {
+            truth.land_units.insert(
+                LandUnitId::new(1),
+                LandUnit::new(
+                    LandUnitId::new(1),
+                    "Unit 1".to_string(),
+                    Side::Allied,
+                    men,
+                    Some(AT),
+                ),
+            );
+        }
+        let mut force = TaskForce::at(
+            TaskForceId::new(1),
+            "Force 1".to_string(),
+            Side::Japanese,
+            AT,
+            Mission::Bombardment,
+        );
+        for (index, class_id) in ship_classes.iter().enumerate() {
+            let id = ShipId::new(u32::try_from(index).expect("a few ships") + 1);
+            force.ships.insert(id);
+            let class = &classes()[(*class_id - 1) as usize];
+            truth.ships.insert(
+                id,
+                Ship {
+                    gun_rounds: n(i64::from(class.main_guns * class.gun_rounds_per_gun)),
+                    ..Ship::new(
+                        id,
+                        format!("Ship {index}"),
+                        class.id,
+                        Side::Japanese,
+                        ShipLocation::TaskForce(force.id),
+                    )
+                },
+            );
+        }
+        truth.task_forces.insert(force.id, force);
+        World::new(7, ref_data, map, truth).expect("valid setup")
+    }
+
+    fn fires(world: &World) -> Vec<(ShipId, Fixed, Fixed, Fixed, Fixed, Fixed)> {
+        world
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::BombardmentFire {
+                    ship,
+                    shells,
+                    weighed_shots,
+                    chance,
+                    expected,
+                    rounds_left,
+                    ..
+                } => Some((
+                    *ship,
+                    *shells,
+                    *weighed_shots,
+                    *chance,
+                    *expected,
+                    *rounds_left,
+                )),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_shell_is_weighed_by_its_ships_gun_damage_over_the_reference() {
+        let mut world = world(&[1, 2, 3], 1000);
+        world.bombard_bases(1, Pulse::Night);
+        let fired = fires(&world);
+        // Ship 1, the cruiser: 3 x 8 x 30 = 720 shells of 800, gun damage 20
+        // over the reference 20: 720 weighed shots.
+        // Ship 2, the destroyer: 6 x 4 x 30 = 720 but 600 aboard, so 600
+        // shells at 5/20: 150 weighed shots, at 0.05 expecting 7.5 hits.
+        // Ship 3, the heavy: 2 x 2 x 30 = 120 shells at 60/20: 360 weighed
+        // shots, which is more than its shells.
+        assert_eq!(
+            fired,
+            vec![
+                (ShipId::new(1), n(720), n(720), fx("0.05"), n(36), n(80)),
+                (ShipId::new(2), n(600), n(150), fx("0.05"), fx("7.5"), n(0)),
+                (ShipId::new(3), n(120), n(360), fx("0.05"), n(18), n(80)),
+            ]
+        );
+        // The rounds are spent: before = after + shells, for every ship.
+        for (ship, shells, _, _, _, left) in fired {
+            let aboard = {
+                let class = &classes()[(ship.raw() - 1) as usize];
+                n(i64::from(class.main_guns * class.gun_rounds_per_gun))
+            };
+            assert_eq!(aboard, left + shells, "{ship:?}");
+            assert_eq!(world.truth.ships[&ship].gun_rounds, left);
+        }
+        // A second night with the same ships: only the ships with rounds
+        // left fire, and what they fire is what they have.
+        let before = world.events().len();
+        world.bombard_bases(2, Pulse::Night);
+        let second: Vec<_> = world.events().iter().skip(before).cloned().collect();
+        let second_fires: Vec<(ShipId, Fixed, Fixed)> = second
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::BombardmentFire {
+                    ship,
+                    shells,
+                    weighed_shots,
+                    ..
+                } => Some((*ship, *shells, *weighed_shots)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            second_fires,
+            vec![
+                (ShipId::new(1), n(80), n(80)),
+                (ShipId::new(3), n(80), n(240))
+            ],
+            "the destroyer has nothing left and does not fire"
+        );
+        for ship in [1, 2, 3] {
+            assert_eq!(
+                world.truth.ships[&ShipId::new(ship)].gun_rounds,
+                Fixed::ZERO
+            );
+        }
+        // A third night: nothing to fire, so nothing happens at all.
+        let before = world.events().len();
+        world.bombard_bases(3, Pulse::Night);
+        assert_eq!(world.events().len(), before);
+    }
+
+    #[test]
+    fn the_men_share_applies_only_with_men_of_the_bases_side_ashore_in_its_hex() {
+        let base = BaseId::new(1);
+        let unit = LandUnitId::new(1);
+        // Men of the base's side in its hex: the table's share.
+        let world_with_men = world(&[1], 500);
+        assert_eq!(world_with_men.base_hit_men_share(base), Some(fx("0.2")));
+        // No unit at all.
+        assert_eq!(world(&[1], 0).base_hit_men_share(base), None);
+        // An unknown base.
+        assert_eq!(world_with_men.base_hit_men_share(BaseId::new(9)), None);
+
+        // Enemy men in the hex are not the base's side's.
+        let mut enemy = world(&[1], 500);
+        enemy.truth.land_units.get_mut(&unit).unwrap().side = Side::Japanese;
+        assert_eq!(enemy.base_hit_men_share(base), None);
+        // Its own men in another hex.
+        let mut elsewhere = world(&[1], 500);
+        elsewhere.truth.land_units.get_mut(&unit).unwrap().hex = Some(ELSEWHERE);
+        assert_eq!(elsewhere.base_hit_men_share(base), None);
+        // Its own men still aboard ship, not ashore.
+        let mut aboard = world(&[1], 500);
+        aboard.truth.land_units.get_mut(&unit).unwrap().hex = None;
+        assert_eq!(aboard.base_hit_men_share(base), None);
+        // A unit in the hex with no man ashore.
+        let mut empty = world(&[1], 500);
+        empty.truth.land_units.get_mut(&unit).unwrap().men_ashore = 0;
+        assert_eq!(empty.base_hit_men_share(base), None);
+        // Men of both sides there: the base's side's men count.
+        let mut both = world(&[1], 500);
+        let mut other = LandUnit::new(
+            LandUnitId::new(2),
+            "Unit 2".to_string(),
+            Side::Japanese,
+            300,
+            Some(AT),
+        );
+        other.men_ashore = 300;
+        both.truth.land_units.insert(other.id, other);
+        assert_eq!(both.base_hit_men_share(base), Some(fx("0.2")));
+        both.truth.land_units.get_mut(&unit).unwrap().men_ashore = 0;
+        assert_eq!(
+            both.base_hit_men_share(base),
+            None,
+            "only the enemy's are left"
+        );
+
+        // Without the ground figures, or with a hit that removes nobody, or
+        // without the air combat figures, the share lands on nothing.
+        let mut no_ground = world(&[1], 500);
+        no_ground.ref_data.ground = None;
+        assert_eq!(no_ground.base_hit_men_share(base), None);
+        let mut removes_nobody = world(&[1], 500);
+        removes_nobody
+            .ref_data
+            .ground
+            .as_mut()
+            .unwrap()
+            .men_lost_per_base_hit = Fixed::ZERO;
+        assert_eq!(removes_nobody.base_hit_men_share(base), None);
+        let mut no_air = world(&[1], 500);
+        no_air.ref_data.air_combat = None;
+        assert_eq!(no_air.base_hit_men_share(base), None);
+    }
+
+    #[test]
+    fn hit_draws_land_the_same_with_and_without_men_when_no_hit_lands_in_the_men_band() {
+        let with_men = world(&[1], 500);
+        let without = world(&[1], 0);
+        let air = AirCombatFigures::from_air_combat_toml();
+        let base = BaseId::new(1);
+        // The bands, in millionths: aircraft below 0.3, supply to 0.6, men
+        // to 0.8, nothing above.
+        let (men_from, men_to) = (600_000u64, 800_000u64);
+        let (mut identical, mut in_band) = (0, 0);
+        for hits in [1u32, 3, 8, 30] {
+            for ship in 1..=400u32 {
+                let stream = |world: &World| {
+                    world.rng_pair(
+                        1,
+                        Some(Pulse::Night),
+                        Subsystem::SurfaceCombat,
+                        Draw::Bombardment,
+                        EntityRef::Ship(ShipId::new(ship)),
+                        EntityRef::Base(base),
+                    )
+                };
+                // The same draws, read once on the side.
+                let mut reading = stream(&without);
+                let draws: Vec<u64> = (0..hits)
+                    .map(|_| reading.below(Fixed::SCALE.unsigned_abs()))
+                    .collect();
+                let none_in_band = draws.iter().all(|d| *d < men_from || *d >= men_to);
+                let a = without.land_base_hits(&mut stream(&without), hits, base, &air);
+                let b = with_men.land_base_hits(&mut stream(&with_men), hits, base, &air);
+                // Aircraft and supply are the same whatever the men: the
+                // band for men sits after theirs.
+                assert_eq!((a.aircraft, a.supply), (b.aircraft, b.supply));
+                // With no man to hit nothing lands on men.
+                assert_eq!(a.men, 0);
+                let expected_men = u32::try_from(
+                    draws
+                        .iter()
+                        .filter(|d| **d >= men_from && **d < men_to)
+                        .count(),
+                )
+                .unwrap();
+                assert_eq!(b.men, expected_men);
+                if none_in_band {
+                    assert_eq!(a, b);
+                    identical += 1;
+                } else {
+                    in_band += 1;
+                }
+            }
+        }
+        assert!(
+            identical > 100 && in_band > 100,
+            "{identical} and {in_band}"
+        );
+    }
+
+    #[test]
+    fn hits_on_men_remove_ten_a_hit_from_the_units_in_proportion_and_no_more_than_are_there() {
+        let base = BaseId::new(1);
+        let mut world = world(&[1], 1000);
+        // A second Allied unit of 3000 men in the hex.
+        world.truth.land_units.insert(
+            LandUnitId::new(2),
+            LandUnit::new(
+                LandUnitId::new(2),
+                "Unit 2".to_string(),
+                Side::Allied,
+                3000,
+                Some(AT),
+            ),
+        );
+        let cause = world.events.next_id();
+        // 6 hits remove 60 men, 15 from unit 1 and 45 from unit 2.
+        world.apply_hits_on_men(1, Some(Pulse::Night), base, 6, cause);
+        assert_eq!(world.truth.land_units[&LandUnitId::new(1)].men_ashore, 985);
+        assert_eq!(world.truth.land_units[&LandUnitId::new(2)].men_ashore, 2955);
+        // The losses cite the event that caused them.
+        let lost: Vec<_> = world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::MenLostToFire { .. }))
+            .collect();
+        assert_eq!(lost.len(), 2);
+        assert!(lost.iter().all(|e| e.causes == vec![Cause::Event(cause)]));
+        // No hit, no loss.
+        let before = world.events().len();
+        world.apply_hits_on_men(1, Some(Pulse::Night), base, 0, cause);
+        assert_eq!(world.events().len(), before);
+        // Far more hits than men: everyone is lost, no more, and the units
+        // are destroyed and leave the hex.
+        world.apply_hits_on_men(1, Some(Pulse::Night), base, 1_000_000, cause);
+        for id in [1, 2] {
+            let unit = &world.truth.land_units[&LandUnitId::new(id)];
+            assert_eq!((unit.men_ashore, unit.hex), (0, None));
+        }
+        let destroyed = world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::LandUnitDestroyed { .. }))
+            .count();
+        assert_eq!(destroyed, 2);
+        let total: u32 = world
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::MenLostToFire { lost, .. } => Some(*lost),
+                _ => None,
+            })
+            .sum();
+        assert_eq!(total, 4000, "the men lost are the men there were");
+        // Without the ground figures a hit on men removes nobody.
+        let mut no_ground = super::tests::world(&[1], 1000);
+        no_ground.ref_data.ground = None;
+        no_ground.apply_hits_on_men(1, Some(Pulse::Night), base, 50, cause);
+        assert_eq!(
+            no_ground.truth.land_units[&LandUnitId::new(1)].men_ashore,
+            1000
+        );
+    }
+}

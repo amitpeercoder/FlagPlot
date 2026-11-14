@@ -4367,4 +4367,106 @@ task_force = 3
             .iter()
             .any(|file| file.to_string_lossy().contains("step1/ground.toml")));
     }
+
+    // -----------------------------------------------------------------
+    // Opening estimates of the enemy's men ashore (decision 0092, 16).
+    // -----------------------------------------------------------------
+
+    fn estimate(body: &str) -> String {
+        format!("\n[[estimate]]\n{body}\n")
+    }
+
+    #[test]
+    fn an_opening_estimate_is_held_on_day_0_with_no_error_and_no_cause() {
+        let scenario =
+            parse_with(&estimate("side = \"japanese\"\nq = 3\nr = 0\nmen = 300")).expect("loads");
+        let view = scenario.world.side_view(Side::Japanese);
+        let held = view.ground_estimate(Hex::new(3, 0)).expect("held");
+        assert_eq!((held.men, held.day, held.hex), (300, 0, Hex::new(3, 0)));
+        assert_eq!(view.ground_estimates().count(), 1);
+        // The other side holds none, and is told nothing.
+        let other = scenario.world.side_view(Side::Allied);
+        assert_eq!(other.ground_estimates().count(), 0);
+        assert!(other.events().is_empty());
+        // One event on day 0, citing nothing.
+        let events: Vec<_> = scenario.world.events().iter().collect();
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].day, 0);
+        assert!(events[0].causes.is_empty());
+        assert!(events[0].breakdown.is_none());
+        // A second for another hex, or for the other side at the same hex,
+        // is allowed; the scenario keeps what it was given.
+        let two = format!(
+            "{}{}{}",
+            estimate("side = \"japanese\"\nq = 3\nr = 0\nmen = 300"),
+            estimate("side = \"japanese\"\nq = 4\nr = 0\nmen = 1"),
+            estimate("side = \"allied\"\nq = 3\nr = 0\nmen = 0"),
+        );
+        let scenario = parse_with(&two).expect("loads");
+        assert_eq!(
+            scenario
+                .world
+                .side_view(Side::Japanese)
+                .ground_estimates()
+                .count(),
+            2
+        );
+        assert_eq!(
+            scenario
+                .world
+                .side_view(Side::Allied)
+                .ground_estimate(Hex::new(3, 0))
+                .expect("held")
+                .men,
+            0
+        );
+        // It is kept through a copy for another seed.
+        let other = scenario.with_seed(77).expect("copies");
+        assert_eq!(
+            other
+                .world
+                .side_view(Side::Japanese)
+                .ground_estimates()
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn a_bad_opening_estimate_is_a_load_error() {
+        // Off the map.
+        let message = error_of(&estimate("side = \"japanese\"\nq = 99\nr = 0\nmen = 300"));
+        assert!(message.contains("off the map"), "{message}");
+        // Two for the same side and hex.
+        let message = error_of(&format!(
+            "{}{}",
+            estimate("side = \"japanese\"\nq = 3\nr = 0\nmen = 300"),
+            estimate("side = \"japanese\"\nq = 3\nr = 0\nmen = 400"),
+        ));
+        assert!(message.contains("second estimate"), "{message}");
+        // An unknown key.
+        let message = error_of(&estimate(
+            "side = \"japanese\"\nq = 3\nr = 0\nmen = 300\nerror = 2",
+        ));
+        assert!(message.contains("error"), "{message}");
+        // A float, or a negative number, for men.
+        for men in ["300.5", "0.5", "-1", "\"300\""] {
+            let message = error_of(&estimate(&format!(
+                "side = \"japanese\"\nq = 3\nr = 0\nmen = {men}"
+            )));
+            assert!(message.contains("men"), "men = {men}: {message}");
+        }
+        // A key missing.
+        for body in [
+            "q = 3\nr = 0\nmen = 300",
+            "side = \"japanese\"\nr = 0\nmen = 300",
+            "side = \"japanese\"\nq = 3\nmen = 300",
+            "side = \"japanese\"\nq = 3\nr = 0",
+        ] {
+            let message = error_of(&estimate(body));
+            assert!(message.contains("missing field"), "{body}: {message}");
+        }
+        // A side that is neither.
+        assert!(parse_with(&estimate("side = \"french\"\nq = 3\nr = 0\nmen = 300")).is_err());
+    }
 }

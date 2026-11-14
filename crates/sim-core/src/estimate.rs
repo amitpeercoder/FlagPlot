@@ -296,4 +296,266 @@ mod tests {
             }
         }
     }
+
+    // ---- By hand-built worlds: the opening estimate and the daily report.
+
+    use crate::events::Event;
+    use crate::map::{HexData, Map};
+    use crate::refdata::{GroundFigures, PortSize, RefData, SearchFigures};
+    use crate::state::{Base, LandUnit, TruthState};
+
+    const AT: Hex = Hex::new(0, 0);
+    const OTHER: Hex = Hex::new(4, 0);
+
+    fn world(
+        search: bool,
+        units: &[(u32, Side, u32, Hex)],
+        bases: &[(u32, Side, Hex, bool)],
+    ) -> World {
+        let mut map = Map::new();
+        for q in -1..=9 {
+            for r in -1..=1 {
+                map.insert(Hex::new(q, r), HexData::open_sea());
+            }
+        }
+        let mut ref_data = RefData::default();
+        if search {
+            ref_data.search = Some(SearchFigures::from_search_toml());
+        }
+        if search {
+            ref_data.ground = Some(GroundFigures::FIRST);
+        }
+        ref_data.port_sizes.insert(
+            0,
+            PortSize {
+                berths: 0,
+                berth_rate_t_per_h: Fixed::ZERO,
+                lighter_rate_t_per_h: Fixed::from_int(20),
+            },
+        );
+        let mut truth = TruthState::default();
+        for (id, side, hex, on_map) in bases {
+            truth.bases.insert(
+                BaseId::new(*id),
+                Base {
+                    on_map: *on_map,
+                    ..Base::new(BaseId::new(*id), format!("Base {id}"), *side, *hex)
+                },
+            );
+        }
+        for (id, side, men, hex) in units {
+            truth.land_units.insert(
+                LandUnitId::new(*id),
+                LandUnit::new(
+                    LandUnitId::new(*id),
+                    format!("Unit {id}"),
+                    *side,
+                    *men,
+                    Some(*hex),
+                ),
+            );
+        }
+        World::new(7, ref_data, map, truth).expect("valid setup")
+    }
+
+    fn estimate(side: Side, hex: Hex, men: u32) -> StartingEstimate {
+        StartingEstimate { side, hex, men }
+    }
+
+    fn log(world: &World) -> Vec<Event> {
+        world.events().iter().cloned().collect()
+    }
+
+    #[test]
+    fn opening_estimates_are_held_on_day_0_through_belief() {
+        let mut world = world(true, &[], &[]);
+        world
+            .hold_starting_estimates(vec![
+                estimate(Side::Japanese, AT, 300),
+                estimate(Side::Allied, AT, 0),
+                estimate(Side::Japanese, OTHER, 1),
+            ])
+            .expect("held");
+        let held = world.side_view(Side::Japanese);
+        assert_eq!(
+            held.ground_estimate(AT).map(|e| (e.men, e.day)),
+            Some((300, 0))
+        );
+        assert_eq!(
+            held.ground_estimate(OTHER).map(|e| (e.men, e.day)),
+            Some((1, 0))
+        );
+        assert_eq!(
+            world
+                .side_view(Side::Allied)
+                .ground_estimate(AT)
+                .map(|e| e.men),
+            Some(0)
+        );
+        // One event each, on day 0, with no cause and no breakdown.
+        let events = log(&world);
+        assert_eq!(events.len(), 3);
+        assert!(events
+            .iter()
+            .all(|e| e.day == 0 && e.causes.is_empty() && e.breakdown.is_none()));
+        // None given is nothing, even with no search figures.
+        let mut bare = super::tests::world(false, &[], &[]);
+        bare.hold_starting_estimates(Vec::new())
+            .expect("nothing to hold");
+        assert!(bare
+            .hold_starting_estimates(vec![estimate(Side::Allied, AT, 5)])
+            .expect_err("needs search figures")
+            .to_string()
+            .contains("search figures"));
+    }
+
+    #[test]
+    fn a_bad_opening_estimate_changes_nothing() {
+        let mut world = world(true, &[], &[]);
+        let hash = world.state_hash();
+        let events = log(&world);
+        let refused = |world: &mut World, estimates: Vec<StartingEstimate>| -> String {
+            world
+                .hold_starting_estimates(estimates)
+                .expect_err("refused")
+                .to_string()
+        };
+        // Off the map, after a good one: the good one is not kept.
+        let message = refused(
+            &mut world,
+            vec![
+                estimate(Side::Japanese, AT, 300),
+                estimate(Side::Japanese, Hex::new(50, 0), 5),
+            ],
+        );
+        assert!(message.contains("off the map"), "{message}");
+        // Two for the same side and hex.
+        let message = refused(
+            &mut world,
+            vec![
+                estimate(Side::Japanese, AT, 300),
+                estimate(Side::Japanese, AT, 400),
+            ],
+        );
+        assert!(message.contains("second estimate"), "{message}");
+        assert_eq!(world.state_hash(), hash);
+        assert_eq!(log(&world), events);
+        assert_eq!(
+            world.side_view(Side::Japanese).ground_estimates().count(),
+            0
+        );
+        // After a day has been resolved.
+        world.truth.day = 1;
+        let message = refused(&mut world, vec![estimate(Side::Allied, AT, 5)]);
+        assert!(message.contains("before day 1"), "{message}");
+    }
+
+    #[test]
+    fn a_ground_report_is_made_where_both_sides_have_men_and_finds_the_enemys_bases() {
+        // Allied unit 1 (1000 men) and Japanese unit 2 (400) at AT; the
+        // Japanese base there is off the Allied map; Allied unit 3 alone at
+        // OTHER.
+        let mut world = world(
+            true,
+            &[
+                (1, Side::Allied, 1000, AT),
+                (2, Side::Japanese, 400, AT),
+                (3, Side::Allied, 50, OTHER),
+            ],
+            &[(1, Side::Japanese, AT, false), (2, Side::Allied, AT, true)],
+        );
+        world.report_ashore(1, OTHER, None);
+        assert!(log(&world).is_empty(), "one side alone: no report");
+        world.report_ashore(1, AT, None);
+        let events = log(&world);
+        let reports: Vec<(Side, u32)> = events
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::GroundReportReceived {
+                    side,
+                    men,
+                    replaced,
+                    ..
+                } => {
+                    assert!(!replaced);
+                    Some((*side, *men))
+                }
+                _ => None,
+            })
+            .collect();
+        // The Allied side reports first, of the Japanese 400; then the
+        // Japanese side, of the Allied 1000. Each is between half and one
+        // and a half times the truth.
+        assert_eq!(
+            reports.iter().map(|r| r.0).collect::<Vec<_>>(),
+            [Side::Allied, Side::Japanese]
+        );
+        assert!((200..=600).contains(&reports[0].1), "{reports:?}");
+        assert!((500..=1500).contains(&reports[1].1), "{reports:?}");
+        // The Allied report found the Japanese base; the Japanese side found
+        // nothing (the Allied base was on its map).
+        let found: Vec<(Side, u32)> = events
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::BaseFound { side, base, .. } => Some((*side, base.raw())),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(found, vec![(Side::Allied, 1)]);
+        assert!(world.truth.bases[&BaseId::new(1)].on_map);
+        // A report is replaced the next day.
+        world.report_ashore(2, AT, None);
+        let replaced = log(&world)
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    EventKind::GroundReportReceived { replaced: true, .. }
+                )
+            })
+            .count();
+        assert_eq!(replaced, 2);
+        assert_eq!(
+            world
+                .side_view(Side::Allied)
+                .ground_estimate(AT)
+                .map(|e| e.day),
+            Some(2)
+        );
+        // Found once: no second event for the base.
+        assert_eq!(
+            log(&world)
+                .iter()
+                .filter(|e| matches!(e.kind, EventKind::BaseFound { .. }))
+                .count(),
+            1
+        );
+    }
+
+    #[test]
+    fn no_ground_report_is_made_without_the_report_error_figures() {
+        let mut world = world(
+            true,
+            &[(1, Side::Allied, 1000, AT), (2, Side::Japanese, 400, AT)],
+            &[],
+        );
+        world.ref_data.ground.as_mut().unwrap().report_error = None;
+        world.report_ashore(1, AT, None);
+        assert!(log(&world).is_empty());
+        assert_eq!(world.side_view(Side::Allied).ground_estimates().count(), 0);
+        // A unit with no man ashore does not count as a side being there.
+        let mut world = super::tests::world(
+            true,
+            &[(1, Side::Allied, 1000, AT), (2, Side::Japanese, 400, AT)],
+            &[],
+        );
+        world
+            .truth
+            .land_units
+            .get_mut(&LandUnitId::new(2))
+            .unwrap()
+            .men_ashore = 0;
+        world.report_ashore(1, AT, None);
+        assert!(log(&world).is_empty());
+    }
 }
