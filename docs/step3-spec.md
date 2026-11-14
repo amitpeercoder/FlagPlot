@@ -2,7 +2,9 @@
 
 Status: confirmed by the designer on Nov 14, 2026, and the source of truth for step 3. The architect wrote it after the designer read a first draft and an outside review of it and set the target below; the designer then answered its four questions ("Decided by the designer", at the end). Nothing is built. Each stage still gets its plan and its decision record before any code.
 
-Amended by the architect on Nov 14, 2026, with the designer's agreement, after a second outside review. The designer's four decisions are unchanged. What changed: a sixth point of the target (the choices), orders that can honour a reserve, what an unattended staff may do, a separate setup for staff play, what the risk levels change, how the proof is kept fair, and a list of requirements for the stage briefs.
+Amended by the architect on Nov 14, 2026, with the designer's agreement, after a second outside review. The designer's four decisions are unchanged. Amended again the same day, after the designer set out the play the step must support ("The play it must support", below): the estimate now offers an operation at more than one date, and a rule for preparing a landing is named as a condition of stage 3 (decision 0095).
+
+What changed in the first amendment: a sixth point of the target (the choices), orders that can honour a reserve, what an unattended staff may do, a separate setup for staff play, what the risk levels change, how the proof is kept fair, and a list of requirements for the stage briefs.
 
 `docs/pillars.md` gives step 3 one line: the layer that turns intent into orders, serving player delegation and the enemy AI, so it is built once. This says what that means for the slice, what it must prove, and in what order it is built.
 
@@ -21,7 +23,7 @@ It has no screen. Step 4 puts a minimal interface over it. Step 3 is judged by t
 1. **The campaign.** The full slice, 7 August to 14 September 1942 (decision 0093), is played to its end, staff against staff, over a thousand seeds. Each side starts from area intents and the commander's limits. No scenario and no person gives a task or a unit order.
 2. **Command.** The commander can step in anywhere, hold anything and give it back. The staff neither works round a hold nor takes up a stale job on release.
 3. **Reasons.** Every order, and every decision not to act, explains itself from what the side knew.
-4. **The estimate.** Before an operation is committed the commander is told what it needs, when it could go and what it may cost, from a trial that never touches the live enemy.
+4. **The estimate.** Before an operation is committed the commander is told what it needs, when it could go and what it may cost, from a trial that never touches the live enemy. It is offered at two or three dates, each with what waiting buys and what the enemy is believed to gain by it.
 5. **The proof.** A model that commands by intent alone does at least as well as the same model ordering every unit, in a fraction of the decisions. This is the first pillar as a claim that can fail.
 
 6. **The choices.** In a small set of constructed situations the staff lays out two real courses, what each gives up, what is not known and by when the commander must choose; and a change of priority or risk changes what it recommends, for a reason it can state. Running alone shows the staff is competent. This shows the commander still has something to decide.
@@ -34,6 +36,19 @@ It has no screen. Step 4 puts a minimal interface over it. Step 3 is judged by t
 - An estimate checked against history. A trial can be checked only against the engine it runs.
 - The six months of the campaign from the record. The battles of October and November are not researched.
 - A staff that plays well in any absolute sense. It is measured against no orders, against the script and against a model ordering units, and no further.
+
+## The play it must support
+
+Set out by the designer on Nov 14, 2026. Each line is checked against this spec.
+
+| The designer asked for | Where it is met |
+| --- | --- |
+| The player plans a large invasion and the control of an island | Stage 3: taking and holding a place |
+| The longer ahead he plans, the better his chances: troops and resources ready, and more known of the enemy, as claims | What time buys is real things: stocks, repaired ships, rested groups, forces come available, more reports. The estimate shows it by offering the operation at more than one date. Preparing a landing adds what is prepared as such (decision 0095). Training of troops is not modelled |
+| He plans, and the staff answers "what if". Other plans are in priority, since they draw on the same troops, shipping and stocks | The trial and its courses; priority, commitments and the report of what was displaced |
+| The plan is carried out | An approved plan, its baseline and the daily report against it |
+| It can be amended at any time, at a cost to the readiness built up | Amendments at any time. A change costs what it physically costs, and part of a landing's preparation (decision 0095) |
+| He feels like a general or an admiral, with their trade-offs and their strain | The choices, the command report and the interrupts give the decisions. Whether it feels so is judged by a person at step 4. This step has one seat, the area commander, who may take any force himself by holding it |
 
 ## Scope
 
@@ -55,6 +70,7 @@ Not in step 3:
 - Weather, light and the moon (after the kill gate).
 - Reading the enemy's intentions from signals. The enemy's plans come to exist in this step; nothing reads them yet.
 - The economy, production and allocation between areas (step 5). Allocation inside the area, among the ships, aircraft, fuel and supply the slice has, is in.
+- Training of troops, and a choice of seats. The seat is the area commander.
 - Closing the historical misses of step 2. They are accepted limits of the model (`docs/validation/step2-close.md`) and none is a condition of this step.
 
 ## What it builds on
@@ -78,6 +94,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | A force that acts at a place and steams on by itself | A decision of its own, after decision 0092 | Not built. Needed before stage 2 |
 | A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
 | A day from which a force may be used | Stage 2 | Not built |
+| Preparing a landing | Decision 0095 | A plan. Needed before stage 3 |
 | The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2. It is frozen before stage 5's games are played |
 
 ## The seat and the levels
@@ -143,7 +160,7 @@ A plan is a draft, proposed, approved, complete, failed or cancelled.
 
 - **A draft** is the staff's. It can be trialled. It gives no orders.
 - **Approved,** it has a **baseline:** its objectives, dates, forces and phases as approved. The baseline never changes.
-- **An amendment** is a numbered change to an approved plan, with its reason. The report of plan against actual is always against the baseline, with the amendments listed.
+- **An amendment** is a numbered change to an approved plan, with its reason. Before it is made the staff says what it costs: what must turn round, unload or wait, and what a landing loses of its preparation. The report of plan against actual is always against the baseline, with the amendments listed.
 - **What the staff may amend alone:** routes, the day of a run inside the slack the plan gives, one like force for another inside the forces allowed, the order of tasks inside a phase.
 - **What needs the commander:** an objective, an objective's date, and cancelling. The staff proposes it and raises an interrupt. A proposal never crosses a hard limit. Where only a wider limit would meet the intent, the staff says which limit and by how much, and that is all it may do.
 - **While a proposal waits,** the forces in it go on with the approved plan as far as it can still be carried out inside the limits. A force that cannot go on takes the plan's fallback, which every plan states: hold where it is, or come home.
@@ -236,6 +253,7 @@ A trial is the staff's war game of a draft plan (`docs/design/planning.md`). It 
 - **No trial inside a trial.** Both sides inside a trial play by doctrine alone.
 - **A fixed budget of work,** in games and days, not a time on a clock. The course chosen never depends on how fast the machine was. The budget is set from a measurement of the whole workload, staff and all.
 - **Its assumptions are in the estimate.** What was assumed about the unseen is shown with the figures.
+- **It answers "what if we wait".** For an operation the staff trials the same course at two or three starting dates. Each shows what the later date buys (stock, forces come available, repairs done, a landing's preparation, more reports) and what the enemy is believed to do with the same days. The dates are chosen from when those things change, not at even steps.
 - **It is checked three ways, apart:** that its sampling is right, in small cases worked by hand; that over independent runs its spreads hold the outcome as often as it says and are narrow enough to be of use, by a rule with numbers written before the run; and that controlled cases of a wrong picture move the estimate as expected. Runs that never reach an objective are reported, not dropped.
 
 How the unseen is filled in is the hardest problem of the step. The first draft's recommendation stands as the starting point: what the side holds, plus forces it knew of and has lost, placed by how far they could have gone.
@@ -268,7 +286,7 @@ Each stage is a plan for the designer's approval, then a decision record with it
 | 0 | The rules' choices inside a day as functions of belief. The rules version on a saved game. A measurement of a day's cost with a staff-sized workload | The ground the staff stands on |
 | 1 | The command contract, whole: intent and limits, commitments, the plan's life, hold and release, runs and interrupts, reasons, saving. A staff for one area intent: keep a base supplied from a pool of shipping | The loop end to end: propose, explain, approve, run a quiet week, a shortage that stops the clock, a hold and its release, a save in the middle |
 | 2 | Doctrine for the fighting tasks, on both sides. The enemy played by the staff | A battle of the slice, and then a week of it, with no unit order from anyone |
-| 3 | Taking and holding a place: landing, marching, bombardment, follow-up supply, pulling out. Area intent in full | The 39 days, staff against staff, from area intents alone |
+| 3 | Taking and holding a place: preparing, landing, marching, bombardment, follow-up supply, pulling out. Area intent in full | The 39 days, staff against staff, from area intents alone |
 | 4 | The trial: the constructor, bounded trials, requirements, a window, two or three courses, the estimate's checks | The estimate a commander decides on |
 | 5 | The proof: a model commanding by intent against the same model ordering units. The interface step 4 needs: propose, explain, commit, run until stopped, revise | The first pillar, measured |
 
@@ -317,6 +335,7 @@ Requirements each stage's record takes up, from the second review. They are not 
 - **Stage 1, the command report:** open matters keep one identity from day to day, so a delayed convoy is one concern for a week and not seven.
 - **Stage 2.** The numbers of the risk table. The day from which a force may be used.
 - **Stage 4, the unseen.** A world with no unseen carrier is valid and proves nothing. The constructor's tests state what the worlds must hold across a trial: where the scenario says a side believes a force exists and has not seen it, some worlds have it. "Not seen" and "believed absent" are different inputs. Where nothing supports a probability the estimate says so and shows the cases apart. What the enemy is assumed to want and to believe inside a trial is built from the side's permitted inputs and shown as an assumption.
+- **Stage 4, dates.** One of the built situations of "The choices" is the date of a landing: go now, less prepared and against fewer men, or later.
 - **Stage 4, quality.** A trial is offered at stated sizes, each a fixed amount of work with what is lost in precision at the smaller. A trial can be abandoned with no effect on the game.
 - **Stage 5.** The objectives scale is frozen before its games. A better score never hides a supply line lost or a carrier spent for nothing: the operational measures are judged with it.
 
