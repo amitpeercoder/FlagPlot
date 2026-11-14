@@ -407,7 +407,13 @@ fn an_activity_order_is_for_a_unit_aboard_too_and_a_posture_still_needs_a_man_as
     );
     // The checks of a posture and a march are as they were.
     assert_eq!(
-        check(1, LandUnitOrder::SetPosture(Posture::Attack)),
+        check(
+            1,
+            LandUnitOrder::SetPosture {
+                posture: Posture::Attack,
+                when_spent: None
+            }
+        ),
         Err(RejectReason::NoMenAshore)
     );
     assert_eq!(
@@ -415,10 +421,25 @@ fn an_activity_order_is_for_a_unit_aboard_too_and_a_posture_still_needs_a_man_as
         Err(RejectReason::NoMenAshore)
     );
     assert_eq!(
-        check(7, LandUnitOrder::SetPosture(Posture::Attack)),
+        check(
+            7,
+            LandUnitOrder::SetPosture {
+                posture: Posture::Attack,
+                when_spent: None
+            }
+        ),
         Err(RejectReason::LandUnitDestroyed)
     );
-    assert_eq!(check(6, LandUnitOrder::SetPosture(Posture::Attack)), Ok(()));
+    assert_eq!(
+        check(
+            6,
+            LandUnitOrder::SetPosture {
+                posture: Posture::Attack,
+                when_spent: None
+            }
+        ),
+        Ok(())
+    );
 }
 
 #[test]
@@ -2531,7 +2552,13 @@ fn two_worlds_that_differ_only_in_a_prepare_order_give_the_enemy_the_same_events
         // The enemy's own act, so that it has events of its own.
         world.submit_orders(
             Side::Japanese,
-            vec![unit_request(9, LandUnitOrder::SetPosture(Posture::Defend))],
+            vec![unit_request(
+                9,
+                LandUnitOrder::SetPosture {
+                    posture: Posture::Defend,
+                    when_spent: None,
+                },
+            )],
         );
         for _ in 0..3 {
             world.resolve_day().expect("a day");

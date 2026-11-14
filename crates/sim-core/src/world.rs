@@ -93,11 +93,13 @@ impl Default for MadeIds {
 /// saved game records it with the version of the state's layout, and a
 /// replay under other rules is refused before it runs. It began at 1 with
 /// decision 0100, is 2 from decision 0103 (an airfield damaged and mended,
-/// which changes scenario 24) and 3 from decision 0104 (a beaten side falls
-/// back, which changes scenarios 23 and 30). A pull request raises it by one when
+/// which changes scenario 24), 3 from decision 0104 (a beaten side falls
+/// back, which changes scenarios 23 and 30) and 4 from decision 0105 (who is
+/// engaged in a fight ashore and an attack that fails, which changes every
+/// live fight ashore). A pull request raises it by one when
 /// it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 3;
+pub const RULES_VERSION: u32 = 4;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

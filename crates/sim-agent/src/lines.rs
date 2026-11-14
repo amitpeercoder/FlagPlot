@@ -608,6 +608,11 @@ pub struct LandUnitLine {
     /// Left out when none is.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub posture_order: Option<u32>,
+    /// What the unit does when its attack is spent, as its standing attack
+    /// order says (decision 0105, 6): "hold" or "fall_back". Left out when
+    /// the order gave none. The unit's own side only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub when_spent: Option<&'static str>,
     /// The unit's march, if it has a march order standing (decision 0094, 11):
     /// left out when it has none.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -751,6 +756,8 @@ pub struct MarchLine {
 /// A march that is a falling back (decision 0104, 8).
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct FallingBackLine {
+    /// Why: "beaten" (decision 0104) or "attack_spent" (decision 0105).
+    pub reason: &'static str,
     /// The hex the unit was beaten in and fell back from.
     pub from: Place,
     /// The side's number of the event that records the falling back.
@@ -856,6 +863,7 @@ pub(crate) fn land_unit_line(
         fatigue: Dec(unit.fatigue),
         fed_share: Dec(unit.fed_share),
         posture_order: unit.posture_order.and_then(|o| ctx.order_number_if_own(o)),
+        when_spent: unit.when_spent.map(|w| w.name()),
         march: unit.march.map(|march| MarchLine {
             to: ctx.place(march.to),
             days_marched: march.days,
@@ -875,6 +883,14 @@ pub(crate) fn land_unit_line(
                     ctx.view.event(id).and_then(|e| match e.kind {
                         SideEventKind::Whole(EventKind::UnitFellBack { from, .. }) => {
                             Some(FallingBackLine {
+                                reason: "beaten",
+                                from: ctx.place(from),
+                                event: e.number,
+                            })
+                        }
+                        SideEventKind::Whole(EventKind::SpentUnitFellBack { from, .. }) => {
+                            Some(FallingBackLine {
+                                reason: "attack_spent",
                                 from: ctx.place(from),
                                 event: e.number,
                             })

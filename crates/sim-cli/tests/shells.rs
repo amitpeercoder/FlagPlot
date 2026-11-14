@@ -135,7 +135,9 @@ fn the_export_writes_the_new_events_with_every_field() {
         let list = estimates[side].as_array().expect("a list");
         assert_eq!(list.len(), 1, "{estimates}");
         assert_eq!(list[0]["hex"], serde_json::json!([8, 0]));
-        assert_eq!(list[0]["day"], 2);
+        // The Japanese battalion lives through the fights since the limit on
+        // engaged men (decision 0105), so the reports go on to day 4.
+        assert_eq!(list[0]["day"], 4);
     }
 }
 
@@ -197,9 +199,10 @@ fn a_side_is_exported_only_what_it_may_see_of_a_bombardment() {
     assert!(of_kind(japanese, "men_lost_to_fire").is_empty());
     assert_eq!(of_kind(japanese, "claim_received").len(), 2);
     // A side's ground report is its own: the Japanese side holds the opening
-    // estimate and the two reports of the Allied men, never the Allied ones.
+    // estimate and the four reports of the Allied men (one for each day of
+    // fighting, decision 0105), never the Allied ones.
     let reports = of_kind(japanese, "ground_report_received");
-    assert_eq!(reports.len(), 3);
+    assert_eq!(reports.len(), 5);
     assert!(reports.iter().all(|e| e["data"]["side"] == "japanese"));
 }
 
@@ -225,11 +228,14 @@ fn the_batch_counts_men_lost_by_cause_and_shells_fired_by_side() {
         assert_eq!(run["bombardment_shells"]["allied"], "0");
         let lost = &run["men_lost"];
         // Men are lost to fire only by the side shelled, 10 a hit on men, and
-        // in the fight ashore the Japanese battalion's 800 men and the Allied
-        // division's few; none are unfed or lost with a ship.
+        // in the fight ashore a part of the Japanese battalion's 800 men (the
+        // division fires with no more men than the limit on engaged men,
+        // decision 0105) and the Allied division's few, 20 a hit; none are
+        // unfed or lost with a ship.
         assert_eq!(lost["japanese"]["fire"], 0);
         assert_eq!(lost["allied"]["fire"].as_u64().unwrap() % 10, 0);
-        assert_eq!(lost["japanese"]["fight"], 800);
+        let japanese_fight = lost["japanese"]["fight"].as_u64().unwrap();
+        assert!(japanese_fight > 0 && japanese_fight < 800 && japanese_fight % 20 == 0);
         assert!(lost["allied"]["fight"].as_u64().unwrap() <= 3000);
         for side in ["allied", "japanese"] {
             assert_eq!(lost[side]["unfed"], 0);

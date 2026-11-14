@@ -14,7 +14,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
     Activity, AirGroupOrder, AirMission, Cargo, LandUnitOrder, Mission, OrderKind, Posture, Reach,
-    Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder, WhenSpent,
 };
 use sim_core::refdata::ShipKind;
 
@@ -153,10 +153,20 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             }),
         },
         OrderKind::LandUnit { order, .. } => match order {
-            LandUnitOrder::SetPosture(posture) => json!({
-                "kind": "set_posture",
-                "posture": posture.name(),
-            }),
+            LandUnitOrder::SetPosture {
+                posture,
+                when_spent,
+            } => match when_spent {
+                Some(when_spent) => json!({
+                    "kind": "set_posture",
+                    "posture": posture.name(),
+                    "when_spent": when_spent.name(),
+                }),
+                None => json!({
+                    "kind": "set_posture",
+                    "posture": posture.name(),
+                }),
+            },
             LandUnitOrder::March(hex) => json!({
                 "kind": "march",
                 "hex": [hex.q, hex.r],
@@ -460,11 +470,27 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
         }
         "land_unit" => {
             let order = match kind {
-                "set_posture" => LandUnitOrder::SetPosture(match text(value, "posture")? {
-                    "defend" => Posture::Defend,
-                    "attack" => Posture::Attack,
-                    other => return Err(format!("unknown posture \"{other}\"")),
-                }),
+                "set_posture" => LandUnitOrder::SetPosture {
+                    posture: match text(value, "posture")? {
+                        "defend" => Posture::Defend,
+                        "attack" => Posture::Attack,
+                        other => return Err(format!("unknown posture \"{other}\"")),
+                    },
+                    // What the unit does when its attack is spent (decision 6
+                    // of 0105); left out for none.
+                    when_spent: match value.get("when_spent") {
+                        None | Some(Value::Null) => None,
+                        Some(_) => Some(match text(value, "when_spent")? {
+                            "hold" => WhenSpent::Hold,
+                            "fall_back" => WhenSpent::FallBack,
+                            other => {
+                                return Err(format!(
+                                    "unknown when_spent \"{other}\": hold or fall_back"
+                                ))
+                            }
+                        }),
+                    },
+                },
                 "march" => {
                     let pair = value
                         .get("hex")
@@ -592,5 +618,24 @@ mod tests {
     fn an_unknown_cargo_is_refused() {
         let bad: Value = serde_json::from_str(r#"{"kind":"load","cargo":"oil"}"#).expect("JSON");
         assert!(load_of(&bad).is_err());
+    }
+
+    #[test]
+    fn a_posture_order_with_when_spent_round_trips() {
+        for text in [
+            r#"{"kind":"set_posture","posture":"attack","when_spent":"hold"}"#,
+            r#"{"kind":"set_posture","posture":"attack","when_spent":"fall_back"}"#,
+            r#"{"kind":"set_posture","posture":"attack"}"#,
+            r#"{"kind":"set_posture","posture":"defend"}"#,
+        ] {
+            let value: Value = serde_json::from_str(text).expect("JSON");
+            let kind = order_from_json("land_unit:3", &value).expect("parses");
+            assert_eq!(order_to_json(&kind), value);
+        }
+        let bad: Value = serde_json::from_str(
+            r#"{"kind":"set_posture","posture":"attack","when_spent":"flee"}"#,
+        )
+        .expect("JSON");
+        assert!(order_from_json("land_unit:3", &bad).is_err());
     }
 }

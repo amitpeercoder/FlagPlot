@@ -132,7 +132,10 @@ fn posture_order(target: u32, posture: Posture) -> OrderRequest {
     OrderRequest {
         kind: OrderKind::LandUnit {
             target: lu(target),
-            order: LandUnitOrder::SetPosture(posture),
+            order: LandUnitOrder::SetPosture {
+                posture,
+                when_spent: None,
+            },
         },
         origin: Origin::PLAYER,
     }

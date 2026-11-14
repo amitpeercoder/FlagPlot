@@ -66,30 +66,30 @@
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
-      "hash": "dfebfaded048966f"
+      "hash": "9c4316095d7247ab"
     }
   ],
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "bed4d8fe127e2976"
+      "hash": "91b0bd65b7b78893"
     },
     {
       "day": 2,
-      "hash": "fa7655b4ebc88329"
+      "hash": "86e3da5910e7ebb0"
     },
     {
       "day": 3,
-      "hash": "9b423dab76e24fde"
+      "hash": "c3884e963462d329"
     },
     {
       "day": 4,
-      "hash": "8abeb8288635837b"
+      "hash": "6b1f6a4c44122dcc"
     },
     {
       "day": 5,
-      "hash": "430e5edbe9bcac7e"
+      "hash": "4faac81317e556e1"
     }
   ],
   "orders": [
@@ -480,16 +480,16 @@
       "unit": "task_force:5"
     }
   ],
-  "rules_version": 3,
+  "rules_version": 4,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
-    "hash": "d192af3a6fe3da7a"
+    "hash": "f8fc8df6e1e2da5f"
   },
   "seats": {
     "allied": "player",
     "japanese": "script"
   },
   "seed": 1942,
-  "state_version": "flagplot-state-v20",
+  "state_version": "flagplot-state-v21",
   "version": 2
 }

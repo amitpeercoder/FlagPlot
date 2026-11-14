@@ -13,7 +13,7 @@ use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObject
 use sim_core::orders::{
     Activity, AirGroupOrder, AirMission, Cargo, Issuer, Job, LandUnitOrder, Mission, OrderKind,
     OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction,
-    TaskForceOrder,
+    TaskForceOrder, WhenSpent,
 };
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
@@ -540,9 +540,13 @@ enum ActionSpec {
     /// Send the whole force to the yard from the base it is stopped at
     /// (decision 0069). No other key.
     SendToYard {},
-    /// A land unit's posture, `defend` or `attack` (decision 0090).
+    /// A land unit's posture, `defend` or `attack` (decision 0090). An
+    /// attack order may carry `when_spent`, `hold` or `fall_back`: what the
+    /// unit does when its attack is spent (decision 6 of 0105).
     SetPosture {
         posture: PostureSpec,
+        #[serde(default)]
+        when_spent: Option<WhenSpentSpec>,
     },
     /// March a land unit to a neighbouring hex (decision 0094). The hex is
     /// `[q, r]`.
@@ -587,6 +591,22 @@ impl From<ActivitySpec> for Activity {
 enum PostureSpec {
     Defend,
     Attack,
+}
+
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum WhenSpentSpec {
+    Hold,
+    FallBack,
+}
+
+impl From<WhenSpentSpec> for WhenSpent {
+    fn from(spec: WhenSpentSpec) -> WhenSpent {
+        match spec {
+            WhenSpentSpec::Hold => WhenSpent::Hold,
+            WhenSpentSpec::FallBack => WhenSpent::FallBack,
+        }
+    }
 }
 
 impl From<PostureSpec> for Posture {
@@ -2072,8 +2092,21 @@ impl Scenario {
                 }
                 (None, None, Some(raw)) => {
                     let order = match &spec.action {
-                        ActionSpec::SetPosture { posture } => {
-                            LandUnitOrder::SetPosture((*posture).into())
+                        ActionSpec::SetPosture {
+                            posture,
+                            when_spent,
+                        } => {
+                            // Only an attack order says what the unit does
+                            // when its attack is spent (decision 6 of 0105).
+                            if matches!(posture, PostureSpec::Defend) && when_spent.is_some() {
+                                return Err(fail(format!(
+                                    "the set_posture order on day {day} gives when_spent, which only posture attack takes"
+                                )));
+                            }
+                            LandUnitOrder::SetPosture {
+                                posture: (*posture).into(),
+                                when_spent: when_spent.map(Into::into),
+                            }
                         }
                         ActionSpec::March { hex: [q, r] } => {
                             LandUnitOrder::March(Hex::new(*q, *r))

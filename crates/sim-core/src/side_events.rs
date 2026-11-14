@@ -268,6 +268,9 @@ pub enum SideEventKind {
     /// Enemy men surrendered ashore (decision 8 of 0104): where and how many.
     /// Not which unit.
     EnemySurrendered { hex: Hex, men: u32 },
+    /// The side's own attack ashore failed (decision 9 of 0105): where. Not
+    /// either side's weight of fire, which is the umpire's comparison.
+    GroundAttackFailed { hex: Hex },
     /// The side's own ship fired in a shore bombardment (decision 0092, 17):
     /// its shells and weighed shots and the rounds it has left. Not the
     /// chance or the hits.
@@ -367,9 +370,9 @@ impl SideEventKind {
             SideEventKind::BaseAttacked {
                 air_group, base, ..
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
-            SideEventKind::GroundFight { .. } | SideEventKind::EnemySurrendered { .. } => {
-                Vec::new()
-            }
+            SideEventKind::GroundFight { .. }
+            | SideEventKind::EnemySurrendered { .. }
+            | SideEventKind::GroundAttackFailed { .. } => Vec::new(),
             SideEventKind::GroundFire { unit, .. } => vec![EntityRef::LandUnit(*unit)],
             SideEventKind::BaseChangedSide { base, .. }
             | SideEventKind::ShoreBombardmentAgainst { base, .. } => vec![EntityRef::Base(*base)],
@@ -516,6 +519,9 @@ impl fmt::Display for SideEventKind {
                 write!(f, "{task_force} heard a fight, chance {chance}: alarmed")
             }
             SideEventKind::GroundFight { hex } => write!(f, "fight ashore at {hex}"),
+            SideEventKind::GroundAttackFailed { hex } => {
+                write!(f, "the attack at {hex} failed")
+            }
             SideEventKind::EnemySurrendered { hex, men } => {
                 write!(f, "{men} enemy men surrendered at {hex}")
             }
@@ -1085,6 +1091,21 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         }
         // The test of a side beaten weighs both sides' men: the umpire's.
         EventKind::SideBeatenAshore { .. } => Seen::Nothing,
+        // An attack that failed (decision 9 of 0105): the side that attacked
+        // is told that it failed and where, which its men know, without
+        // either weight of fire; the enemy is told nothing.
+        EventKind::GroundAttackFailed {
+            side: failed, hex, ..
+        } => {
+            if *failed == side {
+                Seen::Cut(SideEventKind::GroundAttackFailed { hex: *hex })
+            } else {
+                Seen::Nothing
+            }
+        }
+        // A spent attacker falling back is its own side's, as a falling
+        // back after a defeat (decision 9 of 0105).
+        EventKind::SpentUnitFellBack { unit, .. } => whole_if(own_unit(unit)),
         // Both sides see a base change side; the stocks left in it only the
         // new holder.
         EventKind::BaseChangedSide {
@@ -1248,6 +1269,8 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
         | SideEventKind::GroundFight { .. }
         | SideEventKind::BaseChangedSide { .. }
         | SideEventKind::EnemySurrendered { .. }
+        // An attack that failed has no breakdown.
+        | SideEventKind::GroundAttackFailed { .. }
         // A force's bombardment has no breakdown.
         | SideEventKind::ShoreBombardment { .. }
         | SideEventKind::ShoreBombardmentAgainst { .. } => &[],
@@ -1281,6 +1304,11 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             // of 0099).
             "defences",
             "defences_factor",
+            // The cut to its own fire by the limit on engaged men, named
+            // only where the limit cuts (decision 9 of 0105).
+            "shots_before_limit",
+            "side_firing_men",
+            "engaged_men",
         ],
         SideEventKind::Salvo { .. } => &[
             "guns",
@@ -1690,6 +1718,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
         | SideEventKind::GroundFire { .. }
         | SideEventKind::BaseChangedSide { .. }
         | SideEventKind::EnemySurrendered { .. }
+        | SideEventKind::GroundAttackFailed { .. }
         | SideEventKind::BombardmentFire { .. }
         | SideEventKind::ShoreBombardment { .. }
         | SideEventKind::ShoreBombardmentAgainst { .. }) => other,
@@ -1749,6 +1778,8 @@ fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
         | SideEventKind::BaseChangedSide { .. }
         // A surrender the enemy is told of cites the test that beat its side.
         | SideEventKind::EnemySurrendered { .. }
+        // An attack that failed cites the enemy's fire beside its own.
+        | SideEventKind::GroundAttackFailed { .. }
         // A bombardment of the side's base cites the enemy's ships' fire.
         | SideEventKind::ShoreBombardmentAgainst { .. } => true,
     }
@@ -1894,6 +1925,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         // surrender cites the hex's, which its side is given whole.
         EventKind::UnitFellBack { .. } | EventKind::MenSurrenderedAshore { .. } => true,
         EventKind::UnitSurrendered { .. } => false,
+        // A spent attacker's falling back cites its own going back to
+        // defend, which its side is given whole (decision 0105).
+        EventKind::SpentUnitFellBack { .. } => false,
 
         // Never given whole: each of these is cut (and decided in
         // `may_have_hidden_causes`) or hidden from every side. If one were
@@ -1915,6 +1949,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::GroundFight { .. }
         | EventKind::GroundFire { .. }
         | EventKind::SideBeatenAshore { .. }
+        | EventKind::GroundAttackFailed { .. }
         | EventKind::BombardmentFire { .. }
         | EventKind::ShoreBombardment { .. } => true,
     }
@@ -3533,6 +3568,31 @@ mod tests {
                 Whole,
                 Cut("EnemySurrendered", &["side"]),
             )),
+            // An attack that failed is told to the side that attacked, where
+            // only, and to the enemy not at all (decision 9 of 0105).
+            sided(row(
+                EventKind::GroundAttackFailed {
+                    side: Side::Allied,
+                    hex: hex(),
+                    weight: fx(3),
+                    enemy_weight: fx(18),
+                },
+                Cut("GroundAttackFailed", &["side", "weight", "enemy_weight"]),
+                Nothing,
+            )),
+            // A spent attacker's falling back is its own side's alone.
+            sided(row(
+                EventKind::SpentUnitFellBack {
+                    unit: unit(1),
+                    side: Side::Allied,
+                    from: hex(),
+                    to: Hex::new(4, -2),
+                    men: 300,
+                    fatigue: fx(100),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3573,7 +3633,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 118, "the log has 118 kinds of event");
+        assert_eq!(all.len(), 120, "the log has 120 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

@@ -158,3 +158,15 @@ airfield_landing_refused_at = 50
 # that falls back gains this much fatigue at once, to 100 at most, beside the
 # fatigue of each day's march.
 beaten_fatigue = 30
+
+# Who is engaged in a fight ashore, and an attack that fails (decision 0105).
+# Placeholders set by the architect for decision 0105, resting on no source.
+# The most firing men a side counts in a day's fight, as a multiple of the
+# other side's fighting men ashore in the hex at the start of the fight; above
+# it each of the side's units' shots are cut in proportion. 1 or more.
+engagement_ratio = 3
+
+# Fatigue a unit on attack gains on a day its side's attack failed (its weight
+# of fire below the other side's), beside the fatigue of a day's attack, to
+# 100 at most. From 0 to 100.
+failed_attack_fatigue = 30

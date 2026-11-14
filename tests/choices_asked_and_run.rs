@@ -49,6 +49,11 @@
 //!   same step, before its day is worked out (scenarios 23 and 24: the
 //!   engine finds no men where the view, before the fight, found a unit at
 //!   ready).
+//! - `AttackSpent`: a column that marched into the hex in the same step put
+//!   down a dump there before the fight, so the engine finds a base of the
+//!   unit's side with supply where the view, before the march, found none
+//!   (the full slice, days 16 and 37: the Ichiki echelon's and the Kawaguchi
+//!   parts' supply at the airfield's hex; decision 0105, "As built").
 //!
 //! No number in this test depends on a figure, so it runs on the live
 //! figures; the frozen copies of `data/scenarios/step2-frozen` run on the
@@ -72,6 +77,7 @@ const IN_STEP: &[&str] = &[
     "Reroute",
     "Halt",
     "UnitDay",
+    "AttackSpent",
 ];
 
 /// The name of a question's kind: its variant's name, from its `Debug` form.
@@ -245,6 +251,7 @@ fn every_choice_of_every_scenario_is_the_answer_its_side_is_given() {
         "SteamOn",
         "BackToDefend",
         "UnitDay",
+        "AttackSpent",
     ] {
         assert!(
             tallies.get(kind).is_some_and(|tally| tally.made > 0),

@@ -1252,12 +1252,23 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
         if let Some(order) = u.posture_order {
             s.push_str(&format!(" (posture set by your order {order})"));
         }
+        if let Some(w) = u.when_spent {
+            s.push_str(&format!(
+                "; when its attack is spent: {}",
+                w.replace('_', " ")
+            ));
+        }
         if let Some(m) = &u.march {
             if let Some(f) = &m.falling_back {
+                let why = if f.reason == "attack_spent" {
+                    format!("after its attack at {} was spent", at(&f.from))
+                } else {
+                    format!("after the defeat at {}", at(&f.from))
+                };
                 s.push_str(&format!(
-                    "; falling back to {} after the defeat at {}, day {} of {}; carries no supply ({} counted){}",
+                    "; falling back to {} {}, day {} of {}; carries no supply ({} counted){}",
                     at(&m.to),
-                    at(&f.from),
+                    why,
                     m.days_marched + 1,
                     m.of_days,
                     m.days_counted.0,
@@ -1568,12 +1579,25 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             ev(m.event)
         ));
     }
-    for f in &land.fell_back_yesterday {
+    for a in &land.attacks_failed_yesterday {
         o.line(format!(
-            "Fell back yesterday: {} fell back from {} to {} after the defeat, {} men, fatigue {}{}",
+            "Attack failed yesterday at {}: your attack did not carry the hex and its men are tired for it{}",
+            at(&a.place),
+            ev(a.event)
+        ));
+    }
+    for f in &land.fell_back_yesterday {
+        let why = if f.reason == "attack_spent" {
+            "its attack spent"
+        } else {
+            "after the defeat"
+        };
+        o.line(format!(
+            "Fell back yesterday: {} fell back from {} to {}, {}, {} men, fatigue {}{}",
             f.land_unit.text(),
             at(&f.from),
             at(&f.to),
+            why,
             f.men,
             f.fatigue.0,
             ev(f.event)

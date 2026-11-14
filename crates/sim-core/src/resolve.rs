@@ -915,9 +915,26 @@ impl World {
                     return Ok(());
                 }
                 if unit.working
-                    && matches!(land_unit_order, LandUnitOrder::SetPosture(Posture::Attack))
+                    && matches!(
+                        land_unit_order,
+                        LandUnitOrder::SetPosture {
+                            posture: Posture::Attack,
+                            ..
+                        }
+                    )
                 {
                     return Err(RejectReason::WorkingUnitDefends);
+                }
+                // Only an attack order says what the unit does when its
+                // attack is spent (decision 6 of 0105, "As built").
+                if matches!(
+                    land_unit_order,
+                    LandUnitOrder::SetPosture {
+                        posture: Posture::Defend,
+                        when_spent: Some(_),
+                    }
+                ) {
+                    return Err(RejectReason::InstructionNeedsAttack);
                 }
                 let Some(here) = unit.hex.filter(|_| unit.men_ashore > 0) else {
                     return Err(RejectReason::NoMenAshore);
@@ -1173,9 +1190,13 @@ impl World {
                     .get_mut(target)
                     .expect("order was validated against this land unit");
                 match land_unit_order {
-                    LandUnitOrder::SetPosture(posture) => {
+                    LandUnitOrder::SetPosture {
+                        posture,
+                        when_spent,
+                    } => {
                         unit.posture = *posture;
                         unit.posture_order = Some(order.id);
+                        unit.when_spent = *when_spent;
                         Vec::new()
                     }
                     LandUnitOrder::SetActivity(activity) => {

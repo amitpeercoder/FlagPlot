@@ -67,6 +67,7 @@ fn choice_name(question: &CoreQuestion) -> &'static str {
         CoreQuestion::Ground(q) => match q {
             GroundQuestion::BackToDefend { .. } => "back_to_defend",
             GroundQuestion::UnitDay { .. } => "unit_day",
+            GroundQuestion::AttackSpent { .. } => "attack_spent",
         },
     }
 }
@@ -100,7 +101,8 @@ fn units_of(view: &SideView<'_>, question: &CoreQuestion) -> Vec<String> {
             view,
             match q {
                 GroundQuestion::BackToDefend { unit, .. }
-                | GroundQuestion::UnitDay { unit, .. } => *unit,
+                | GroundQuestion::UnitDay { unit, .. }
+                | GroundQuestion::AttackSpent { unit, .. } => *unit,
             },
         )],
     }
@@ -151,6 +153,7 @@ fn check_facts(view: &SideView<'_>, answer: &Answer, line: &Value, label: &str) 
             assert_eq!(a["kept"], plan.kept, "{label}");
         }
         Answer::Ground(GroundAnswer::BackToDefend(b)) => assert_eq!(a["goes_back"], *b, "{label}"),
+        Answer::Ground(GroundAnswer::AttackSpent(c)) => assert_eq!(a["does"], c.name(), "{label}"),
         _ => {}
     }
 }

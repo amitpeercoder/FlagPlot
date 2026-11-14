@@ -11,7 +11,7 @@
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
 use crate::events::Cause;
-use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting};
+use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent};
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
@@ -155,8 +155,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 19 adds a base's `airfield_damage` after its `day_work` and an
 /// arrival's `waiting` after its pilots (decision 0103);
 /// version 20 makes a march's order its cause, an order or the event of a
-/// falling back (decision 0104).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v20";
+/// falling back (decision 0104);
+/// version 21 adds a land unit's `when_spent` after its `working`
+/// (decision 0105).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v21";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -423,6 +425,7 @@ fn name_every_field(world: &World) {
                 works: _,
             },
         working: _,
+        when_spent: _,
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
@@ -844,6 +847,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         // After the skills (decision 0099).
         h.u8(u8::from(unit.working));
+        // After working (decision 0105): 0 for no instruction.
+        h.u8(unit.when_spent.map_or(0, WhenSpent::code));
     }
 
     h.count(world.beliefs.len());

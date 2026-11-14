@@ -165,3 +165,10 @@ airfield_landing_refused_at = 50
 # that falls back gains this much fatigue at once, to 100 at most, beside the
 # fatigue of each day's march.
 beaten_fatigue = 30
+
+# Who is engaged in a fight ashore, and an attack that fails (decision 0105).
+# The frozen values switch both off: the limit never cuts and a failed day
+# costs nothing.
+engagement_ratio = 1000000
+
+failed_attack_fatigue = 0

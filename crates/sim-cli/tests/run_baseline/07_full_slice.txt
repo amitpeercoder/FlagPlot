@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 68299f5e825458ef  216 events
-day   2  hash 48f6f942af065e1a  178 events
-day   3  hash 1dff04947749fa75  145 events
-day   4  hash bd7c8a3664776085  145 events
-day   5  hash 54d0a81fa070329a  67 events
-day   6  hash 39b0005b14fe872a  41 events
-day   7  hash 0744e34ec406bf0e  30 events
-day   8  hash fbfd26eac64ee4c9  48 events
-day   9  hash d686b91023650ed5  54 events
-day  10  hash f23638e9bb51cff1  56 events
-day  11  hash a48039c876c40612  78 events
-day  12  hash 16d608aac67483de  66 events
-day  13  hash d53b3533f9d99bfc  104 events
-day  14  hash 450cae4329f20890  81 events
-day  15  hash 7fa916aacca049e2  103 events
-day  16  hash 11557f6c59878c8c  88 events
-day  17  hash 0cd8a2bbbcc197c1  48 events
-day  18  hash e86b038030269beb  210 events
-day  19  hash 71e9afa1265699ca  154 events
-day  20  hash 49b6b3750b24697c  179 events
-day  21  hash df106c1a02c4288f  223 events
-day  22  hash bff59c062830bc00  112 events
-day  23  hash e2ea9e87ad79a511  193 events
-day  24  hash 50cc79545e5839b2  187 events
-day  25  hash b2b7790934b76298  212 events
-day  26  hash a9aca964a71227b6  159 events
-day  27  hash a9be9ecd090233c5  165 events
-day  28  hash 695dd54180cb2022  126 events
-day  29  hash ed77f2885535a1c8  137 events
-day  30  hash 562331dfd89216c5  167 events
-day  31  hash 752fca57d8e2bfac  169 events
-day  32  hash 18226a52a3d2a6e0  148 events
-day  33  hash ba3b13543d2c0759  112 events
-day  34  hash b25913b26093efa5  122 events
-day  35  hash 2d228c691ffd2c16  134 events
-day  36  hash 483d905e5bc4d7c5  143 events
-day  37  hash 45ca496a5aa1a4b4  202 events
-day  38  hash 04143920dd8c1d6a  182 events
-day  39  hash 6967014e552ce514  129 events
+day   1  hash 67015946c9ea5d91  216 events
+day   2  hash 83611c297486bbe3  178 events
+day   3  hash ca5379f2ca7c0a0a  145 events
+day   4  hash 744b198ade317fab  145 events
+day   5  hash d0fc2fd65f4e234b  67 events
+day   6  hash d1985c00decff5b0  41 events
+day   7  hash 1d62da803992b51a  30 events
+day   8  hash e27b88ad17acd7cb  48 events
+day   9  hash 0ba21e901b0277a7  54 events
+day  10  hash ae826068ace18c20  56 events
+day  11  hash 9471a512e3352761  78 events
+day  12  hash ad34c6ec30dcdd24  66 events
+day  13  hash 3e7d1e1befb20b40  108 events
+day  14  hash d6e1404c7e86b4b6  82 events
+day  15  hash 456a1bf8d2ca3b16  100 events
+day  16  hash 227d893c18b0ff2f  95 events
+day  17  hash 6ab2a5af76247ccc  53 events
+day  18  hash 84673999eb1f5a8b  215 events
+day  19  hash 885ad9d66d28ae21  158 events
+day  20  hash 8109f28cbbb9d28c  181 events
+day  21  hash eaf2b621edf47c36  225 events
+day  22  hash 9f1ba245d02d6d26  114 events
+day  23  hash ed424098234b7070  195 events
+day  24  hash 56c5cf9e90710772  189 events
+day  25  hash 204fe7570c7c562f  214 events
+day  26  hash cbdcc6721c61c2c9  161 events
+day  27  hash 698ad0be2ace34c1  167 events
+day  28  hash 400b8e249ea50579  128 events
+day  29  hash 171ca284c96273f8  139 events
+day  30  hash f7273638a03eb974  169 events
+day  31  hash baae9a0f73af5bc8  171 events
+day  32  hash da87e946ca8073c3  150 events
+day  33  hash b8db144395c54cc9  114 events
+day  34  hash 63cb86e7144442a9  124 events
+day  35  hash 54ab46b7857e32b7  136 events
+day  36  hash 3cfe3b041d96f1d8  145 events
+day  37  hash ab064331807a46cd  211 events
+day  38  hash 18599c6935f4e008  149 events
+day  39  hash 8b74f902f754de27  134 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -239,41 +239,41 @@ ship:130 "Placeholder fast transport, task force 38, 3": afloat in task_force:38
 ship:131 "Placeholder fast transport, task force 38, 4": afloat in task_force:38; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:132 "Placeholder fast transport, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:133 "Placeholder fast transport, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-base:1 "Lunga" (Allied) at (2,-4): 3482.365 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
+base:1 "Lunga" (Allied) at (2,-4): 3482.165 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
 base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 0 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 771.65 t of supply in stock, no airfield
 base:5 "Placeholder Japanese stock at Taivu" (Japanese) at (3,-4): 6.01 t of supply in stock, no airfield, formed in play, on its own side's map only
-base:6 "Placeholder Japanese stock west of the Lunga" (Japanese) at (2,-5): 0 t of supply in stock, no airfield, 12149.019644 of work done on the airfield, formed in play, on its own side's map only
+base:6 "Placeholder Japanese stock west of the Lunga" (Japanese) at (2,-5): 0 t of supply in stock, no airfield, 12447.234568 of work done on the airfield, formed in play, on its own side's map only
 base:7 "Shortland" (Japanese) at (-2,-8): 0 t of supply in stock, no airfield
 base:8 "Landing at (2,-4)" (Allied) at (2,-4): 155.25 t of supply in stock, no airfield
 base:9 "Landing at (3,-5)" (Allied) at (3,-5): 147.15 t of supply in stock, no airfield, formed in play, on its own side's map only
-base:10 "Dump at (2,-4)" (Japanese) at (2,-4): 91.15 t of supply in stock, no airfield
-land_unit:1 "Combat Group A (5th Marines less 2/5)" (Allied): 4194 men ashore at (2,-4)
-land_unit:2 "Combat Group B (1st Marines)" (Allied): 4443 men ashore at (2,-4)
-land_unit:3 "Support Group, Guadalcanal" (Allied): 1336 men ashore at (2,-4)
-land_unit:4 "1st Pioneer Battalion" (Allied): 645 men ashore at (2,-4)
-land_unit:5 "1st Raider Battalion" (Allied): 805 men ashore at (2,-4)
-land_unit:6 "1st Parachute Battalion" (Allied): 384 men ashore at (2,-4)
-land_unit:7 "2d Battalion, 5th Marines" (Allied): 1053 men ashore at (2,-4)
+base:10 "Dump at (2,-4)" (Japanese) at (2,-4): 71.31 t of supply in stock, no airfield
+land_unit:1 "Combat Group A (5th Marines less 2/5)" (Allied): 4207 men ashore at (2,-4)
+land_unit:2 "Combat Group B (1st Marines)" (Allied): 4457 men ashore at (2,-4)
+land_unit:3 "Support Group, Guadalcanal" (Allied): 1340 men ashore at (2,-4)
+land_unit:4 "1st Pioneer Battalion" (Allied): 647 men ashore at (2,-4)
+land_unit:5 "1st Raider Battalion" (Allied): 807 men ashore at (2,-4)
+land_unit:6 "1st Parachute Battalion" (Allied): 385 men ashore at (2,-4)
+land_unit:7 "2d Battalion, 5th Marines" (Allied): 1056 men ashore at (2,-4)
 land_unit:8 "2d Marines and the rest of the Tulagi side" (Allied): 3732 men ashore at (3,-5)
 land_unit:9 "CUB One detachment" (Allied): 122 men ashore at (2,-4)
-land_unit:10 "6th Naval Construction Battalion" (Allied): 386 men ashore at (2,-4)
-land_unit:11 "Naval guard troops, Lunga" (Japanese): 37 men ashore at (2,-5)
-land_unit:12 "11th Construction Unit" (Japanese): 162 men ashore at (2,-5)
-land_unit:13 "13th Construction Unit" (Japanese): 165 men ashore at (2,-5)
+land_unit:10 "6th Naval Construction Battalion" (Allied): 387 men ashore at (2,-4)
+land_unit:11 "Naval guard troops, Lunga" (Japanese): 42 men ashore at (2,-5)
+land_unit:12 "11th Construction Unit" (Japanese): 181 men ashore at (2,-5)
+land_unit:13 "13th Construction Unit" (Japanese): 189 men ashore at (2,-5)
 land_unit:14 "Tulagi garrison" (Japanese): no men ashore
 land_unit:15 "Construction unit, Tulagi" (Japanese): no men ashore
-land_unit:16 "Yokosuka 5th Special Naval Landing Force" (Japanese): 64 men ashore at (2,-5)
-land_unit:17 "Ichiki Detachment, first echelon" (Japanese): no men ashore, on attack, fatigue 55
-land_unit:18 "Force landed at Tassafaronga on 29 August" (Japanese): 425 men ashore at (2,-5)
-land_unit:19 "Kawaguchi main body, part 1" (Japanese): no men ashore, fatigue 70
-land_unit:20 "Kawaguchi main body, part 2" (Japanese): no men ashore, fatigue 75
-land_unit:21 "Kawaguchi main body, part 3" (Japanese): no men ashore, fatigue 60
-land_unit:22 "Kawaguchi main body, part 4" (Japanese): no men ashore, fatigue 65
-land_unit:23 "Kawaguchi main body, part 5" (Japanese): no men ashore, fatigue 70
+land_unit:16 "Yokosuka 5th Special Naval Landing Force" (Japanese): 55 men ashore at (2,-5)
+land_unit:17 "Ichiki Detachment, first echelon" (Japanese): 207 men ashore at (2,-5)
+land_unit:18 "Force landed at Tassafaronga on 29 August" (Japanese): 424 men ashore at (2,-5)
+land_unit:19 "Kawaguchi main body, part 1" (Japanese): 545 men ashore at (2,-4), fatigue 100
+land_unit:20 "Kawaguchi main body, part 2" (Japanese): 67 men ashore at (2,-4), fatigue 100
+land_unit:21 "Kawaguchi main body, part 3" (Japanese): 454 men ashore at (2,-4), fatigue 100
+land_unit:22 "Kawaguchi main body, part 4" (Japanese): 169 men ashore at (2,-4), fatigue 100
+land_unit:23 "Kawaguchi main body, part 5" (Japanese): 169 men ashore at (2,-4), fatigue 100
 land_unit:24 "Aoba Detachment, part" (Japanese): 576 men ashore at (2,-5), fatigue 25
-land_unit:25 "Oka group" (Japanese): no men ashore, on attack, fatigue 35
+land_unit:25 "Oka group" (Japanese): 162 men ashore at (2,-4), on attack, fatigue 45
 Allied contact:11 at (0,10): 3 ships, carrier, age 3 pulses
 Allied contact:12 at (8,-11): 14 ships, carrier, age 3 pulses
 Allied claim over (2,-4): 9 aircraft shot down, day 18 afternoon
@@ -295,7 +295,7 @@ Allied claim over (2,-4): 6 aircraft shot down, day 35 morning
 Allied claim over (2,-4): 22 aircraft shot down, day 36 morning
 Allied claim over (2,-4): 8 aircraft shot down, day 37 morning
 Allied claim over (2,-4): 20 aircraft shot down, day 38 morning
-Allied estimate at (2,-4): 178 enemy men ashore, reported day 38
+Allied estimate at (2,-4): 915 enemy men ashore, reported day 39
 Japanese: no contacts
 Japanese claim over (2,-4): 11 aircraft shot down, day 18 afternoon
 Japanese claim at (2,-4): 20 aircraft shot down, 3 aircraft destroyed on the ground, day 19 morning
@@ -317,8 +317,8 @@ Japanese claim at (2,-4): 12 aircraft shot down, 4 aircraft destroyed on the gro
 Japanese claim at (2,-4): 9 aircraft shot down, 1 aircraft destroyed on the ground, day 36 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 37 morning
 Japanese claim over (2,-4): 2 aircraft shot down, day 38 morning
-Japanese estimate at (2,-4): 8153 enemy men ashore, reported day 38
+Japanese estimate at (2,-4): 19209 enemy men ashore, reported day 39
 
 Result (the placeholder scale of decision 0054):
-Allied: 142.410416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 7127 = 71.27), margin 125.527083, decisive victory
-Japanese: 16.883333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 390 = 3.9), margin -125.527083, decisive defeat
+Allied: 124.300416 points (ships_sunk 2 = 14; ships_crippled 0 = 0; aircraft_destroyed 90 = 4.5; cargo_landed at base:1 6194.75 = 30.97375; base_open at base:1 26 of 39 days = 6.666666; base_held at base:1 1 = 10; base_held at base:4 1 = 5; men_lost 5316 = 53.16), margin 107.817083, decisive victory
+Japanese: 16.483333 points (ships_sunk 2 = 5; ships_crippled 1 = 2; aircraft_destroyed 53 = 2.65; base_open at base:1 13 of 39 days = 3.333333; base_held at base:1 0 = 0; base_held at base:4 0 = 0; men_lost 350 = 3.5), margin -107.817083, decisive defeat

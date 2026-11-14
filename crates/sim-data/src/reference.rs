@@ -823,6 +823,10 @@ struct GroundFile {
     work_per_airfield_damage_point: Quantity,
     beaten_fatigue: Quantity,
     airfield_landing_refused_at: Quantity,
+    /// Who is engaged, and an attack that fails (decision 0105). Required
+    /// like the older keys.
+    engagement_ratio: Quantity,
+    failed_attack_fatigue: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -917,6 +921,8 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         )?,
         airfield_damage_per_hit: number("airfield_damage_per_hit", &file.airfield_damage_per_hit)?,
         beaten_fatigue: number("beaten_fatigue", &file.beaten_fatigue)?,
+        engagement_ratio: number("engagement_ratio", &file.engagement_ratio)?,
+        failed_attack_fatigue: number("failed_attack_fatigue", &file.failed_attack_fatigue)?,
         work_per_airfield_damage_point: number(
             "work_per_airfield_damage_point",
             &file.work_per_airfield_damage_point,
@@ -2497,6 +2503,38 @@ mod tests {
         for value in ["0", "100"] {
             parse_ground_figures(&with_key(&ground_text(), "beaten_fatigue", value), here())
                 .expect("loads");
+        }
+    }
+
+    #[test]
+    fn the_engagement_figures_are_read_required_and_in_range() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.engagement_ratio, Fixed::from_int(3));
+        assert_eq!(figures.failed_attack_fatigue, Fixed::from_int(30));
+        for key in ["engagement_ratio", "failed_attack_fatigue"] {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(parse_ground_figures(&text, here())
+                .expect_err("a missing key is refused")
+                .message
+                .contains(key));
+        }
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("engagement_ratio", "\"0.5\"").contains("engagement_ratio"));
+        assert!(bad("engagement_ratio", "0").contains("engagement_ratio"));
+        assert!(bad("failed_attack_fatigue", "101").contains("failed_attack_fatigue"));
+        assert!(bad("failed_attack_fatigue", "-1").contains("failed_attack_fatigue"));
+        for (key, value) in [
+            ("engagement_ratio", "1"),
+            ("engagement_ratio", "\"2.5\""),
+            ("engagement_ratio", "1000000"),
+            ("failed_attack_fatigue", "0"),
+            ("failed_attack_fatigue", "100"),
+        ] {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here()).expect("loads");
         }
     }
 
