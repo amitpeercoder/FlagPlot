@@ -656,6 +656,10 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         if unit.fatigue > Fixed::ZERO {
             state += &format!(", fatigue {}", unit.fatigue);
         }
+        // Fieldworks, where the unit has dug any (decision 0106).
+        if unit.fieldworks > Fixed::ZERO {
+            state += &format!(", fieldworks {}", unit.fieldworks);
+        }
         println!(
             "{} \"{}\" ({}): {ashore}{state}",
             unit.id,

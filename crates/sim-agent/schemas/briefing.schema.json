@@ -996,8 +996,39 @@
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
-              "change": { "description": "gained (on attack and fired), rested, marched or marched_and_attacked (decision 0094, 8), or landed (the unit's first men landed from a ship, decision 6 of 0095).", "enum": ["gained", "rested", "marched", "marched_and_attacked", "landed"] },
+              "change": { "description": "gained (on attack and fired), rested, marched or marched_and_attacked (decision 0094, 8), landed (the unit's first men landed from a ship, decision 6 of 0095), or strained (bombs or shells landed on the side's men in the unit's hex, so it did not rest: under fire, did not rest, decision 10 of 0106).", "enum": ["gained", "rested", "marched", "marched_and_attacked", "landed", "strained"] },
               "fatigue": { "description": "The unit's fatigue afterwards.", "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fieldworks_yesterday": {
+          "description": "Changes of the side's own units' fieldworks yesterday (decision 0106, 5, 6 and 12): units that dug in, whose fieldworks fire wore down, or that left them. Left out when none. The enemy is told nothing of it.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "change", "fieldworks", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "change": { "description": "dug (the unit dug in where it stands), worn (hits on men wore the fieldworks down) or lost (the unit marched, fell back, was taken aboard or was set to attack, and left them).", "enum": ["dug", "worn", "lost"] },
+              "fieldworks": { "description": "The unit's fieldworks afterwards.", "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "defences_worn_yesterday": {
+          "description": "The side's own bases whose defences hits on its men wore down yesterday (decision 0106, 12). Left out when none. The enemy is told nothing of it.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "place", "hits", "defences", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "hits": { "description": "The hits on the side's men in the hex that wore the defences.", "type": "integer" },
+              "defences": { "description": "The base's defences afterwards, 0 to 100.", "$ref": "defs.schema.json#/$defs/dec" },
               "event": { "type": "integer" }
             }
           }
