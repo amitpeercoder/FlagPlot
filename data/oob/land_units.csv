@@ -100,3 +100,5 @@ id,key,name,nation,service,kind,parent
 1095,us-whaling-group,Whaling Group,us,usmc,task-group,
 1096,jp-yokosuka-5th-snlf-takahashi-detachment,"Takahashi Expeditionary Force, Yokosuka 5th Special Naval Landing Force",jp,ijn,echelon,jp-yokosuka-5th-snlf
 1097,jp-3d-battalion-4th-infantry,"3d Battalion, 4th Infantry",jp,ija,formation,jp-4th-infantry
+1098,us-forces-south-pacific-area,"US forces, South Pacific Area (the Army and Navy bases and the forces afloat)",us,mixed,forces-at-place,
+1099,us-forces-southwest-pacific-area,"US forces, Southwest Pacific Area (Australia)",us,mixed,forces-at-place,
