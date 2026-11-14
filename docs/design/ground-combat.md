@@ -142,7 +142,7 @@ The one place where interactions can hide is a base's side. Many rules read it: 
 
 - **State:** land units, men aboard ships, a side's ground estimates, and a base's side becoming something that changes. Each new field goes into `hash::hash_world` and `hash::name_every_field`; the hash version is raised and the golden files remade (decision 0057). This is done once for each stage that adds state, not once for each field.
 - **Stable codes:** a kind code for a land unit and the new `Draw` values, each added at the end. The `GroundCombat` subsystem code is already there.
-- **Figures:** a new `ground_combat.toml`, and its first values added to the frozen step 1 figures as the tests require. A scenario that does not name the file loads no ground rule, so every existing scenario runs as it does now.
+- **Figures:** a new `ground_combat.toml`, and its first values added to the frozen step 1 figures as the tests require. A scenario that does not name the file loads no ground rule, so every existing scenario runs as it does now. *(Nov 14, 2026: built as `data/reference/ground.toml`.)*
 - **Data:** a land unit entry in the scenario file; troop capacity on a ship class; an opening estimate.
 - **The agent interface:** the briefing gains a part for land units and the estimate of the enemy ashore, with a schema change; the queries gain a land unit; orders gain posture and the load order that names a unit.
 - **The viewer:** land units and a base's side by day.
