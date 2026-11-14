@@ -1,13 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/measure",
-  "title": "measure: air distance, sea route, passage of a task force, days at the yard of a task force, air reach of an air group",
+  "title": "measure: air distance, sea route, passage of a task force, days at the yard of a task force, air reach of an air group, the choices the rules would make now for an own unit",
   "oneOf": [
     { "$ref": "#/$defs/air_distance" },
     { "$ref": "#/$defs/sea_route" },
     { "$ref": "#/$defs/passage" },
     { "$ref": "#/$defs/yard" },
     { "$ref": "#/$defs/air_reach" },
+    { "$ref": "#/$defs/choices" },
     { "$ref": "defs.schema.json#/$defs/not_known" }
   ],
   "$defs": {
@@ -250,6 +251,33 @@
             }
           }
         }
+      }
+    },
+    "choices": {
+      "description": "What the rules would choose now for one of the side's own air groups, task forces or land units: each question the staff asks for it, with the parameters it was asked with and the answer. Every unit, ship, base and contact is a handle of the side's own.",
+      "type": "object",
+      "required": ["format", "version", "kind", "question", "unit", "note", "choices"],
+      "additionalProperties": false,
+      "properties": {
+        "format": { "const": "flagplot-agent" },
+        "version": { "const": 3 },
+        "kind": { "const": "measure" },
+        "question": { "const": "choices" },
+        "unit": { "$ref": "defs.schema.json#/$defs/handle" },
+        "note": { "type": "string" },
+        "choices": { "type": "array", "items": { "$ref": "#/$defs/choice_line" } }
+      }
+    },
+    "choice_line": {
+      "type": "object",
+      "required": ["choice", "asked", "answer"],
+      "additionalProperties": false,
+      "properties": {
+        "choice": {
+          "enum": ["strike", "aircraft_able_to_fly", "base_strike", "fighter_split", "escort", "landing", "rest", "alert", "ready", "break_off", "stragglers", "head_home", "reroute", "halt", "steam_on", "back_to_defend", "unit_day"]
+        },
+        "asked": { "description": "The parameters of the question; empty if it has none.", "type": "object" },
+        "answer": { "description": "The answer's fields, which differ with the choice.", "type": "object" }
       }
     }
   }

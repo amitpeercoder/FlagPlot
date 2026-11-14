@@ -1,7 +1,7 @@
 //! `measure`: the geometry of the map and of the side's own units, answered
 //! with the functions the rules themselves use (decision 0049).
 //!
-//! Four questions: the air distance between two places, the sea route between
+//! Six questions (the sixth, `choices`, is in `choices.rs`): the air distance between two places, the sea route between
 //! two places, the passage of one of the side's own task forces to a place,
 //! and the air reach of one of its air groups. A place is a hex, or one of the
 //! side's own units, or a contact it holds (which stands for the hex the side
@@ -28,6 +28,7 @@ use sim_core::view::SideView;
 use sim_core::{PassageEnd, PassageForecast};
 
 use crate::answer::{NotKnown, FORMAT, VERSION};
+use crate::choices::Choices;
 use crate::common::{map_unit_tokens, Ctx, Dec, Handle, Place};
 use crate::words;
 
@@ -118,6 +119,9 @@ pub enum Question {
         #[serde(deserialize_with = "places_or_one")]
         to: Vec<PlaceArg>,
     },
+    /// What the rules would choose now for one of the side's own air groups,
+    /// task forces or land units (decision 0100).
+    Choices { unit: String },
 }
 
 /// `to` of an air reach question: a list of places, or one place, which is a
@@ -413,6 +417,7 @@ pub enum MeasureAnswer {
     Passage(Box<Passage>),
     Yard(Box<Yard>),
     AirReach(AirReach),
+    Choices(Box<Choices>),
     NotKnown(NotKnown),
 }
 
@@ -547,6 +552,9 @@ fn answer(
             yard(ctx, task_force, context).map(|y| MeasureAnswer::Yard(Box::new(y)))
         }
         Question::AirReach { air_group, to } => air_reach(ctx, air_group, to),
+        Question::Choices { unit } => {
+            crate::choices::choices(ctx, unit).map(|c| MeasureAnswer::Choices(Box::new(c)))
+        }
     }
 }
 
@@ -851,6 +859,7 @@ impl MeasureAnswer {
             MeasureAnswer::Passage(a) => a.to_text(),
             MeasureAnswer::Yard(a) => a.to_text(),
             MeasureAnswer::AirReach(a) => a.to_text(),
+            MeasureAnswer::Choices(a) => a.to_text(),
             MeasureAnswer::NotKnown(_) => "FLAG PLOT MEASURE\n- Not known.\n".to_string(),
         }
     }

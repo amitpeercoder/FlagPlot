@@ -29,6 +29,7 @@
 
 mod answer;
 mod briefing;
+mod choices;
 mod common;
 mod explain;
 mod lines;
@@ -56,6 +57,7 @@ pub use briefing::{
     SupplyChange, SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine,
     Warnings,
 };
+pub use choices::{ChoiceLine, Choices};
 pub use common::{Dec, Handle, Place};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
