@@ -665,9 +665,9 @@ fn case_7_an_unarmed_ship_counting_for_its_place() {
 /// 0105, who is engaged and an attack that fails); the log was unchanged
 /// again. It was 0xd820fe9c8958853f until the state went to version 22
 /// (decision 0106, cover, fieldworks and strain); the log was unchanged
-/// again.
+/// again. Values after this change are in the git history of
+/// `tests/golden/pinned_hashes.txt`, which `sh scripts/regenerate.sh` writes.
 const CASE_8_LOG: &str = include_str!("golden/17a_case_8_events.txt");
-const CASE_8_HASH: u64 = 0xd1cb5b16d729a2f8;
 
 fn log_text(events: &[Event]) -> String {
     let mut text = String::new();
@@ -689,5 +689,8 @@ fn case_8_mixed_kinds_against_one_ship_and_the_order_of_the_salvos() {
     // The rule before decision 0078 gives these targets, so the log is the
     // log it gave, byte for byte, and so is the hash.
     assert_eq!(log_text(&run.events), CASE_8_LOG);
-    assert_eq!(run.hash, CASE_8_HASH);
+    assert_eq!(
+        run.hash,
+        common::pinned_hash("scenario_17a_case_8", run.hash)
+    );
 }

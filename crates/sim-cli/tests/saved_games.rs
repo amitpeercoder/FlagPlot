@@ -256,8 +256,11 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
         serde_json::from_str(&fs::read_to_string(&game).expect("reads")).expect("JSON");
     assert_eq!(value["format"], "flagplot-saved-game");
     assert_eq!(value["version"], 2);
-    assert_eq!(value["state_version"], "flagplot-state-v22");
-    assert_eq!(value["rules_version"], 5);
+    assert_eq!(
+        value["state_version"],
+        std::str::from_utf8(sim_core::hash::STATE_VERSION).expect("the version is text")
+    );
+    assert_eq!(value["rules_version"], sim_core::world::RULES_VERSION);
     assert_eq!(
         value["scenario"]["file"],
         "data/scenarios/07_full_slice.toml"
@@ -453,7 +456,13 @@ fn a_version_1_saved_game_is_refused_with_the_reason() {
 fn a_saved_game_of_other_rules_is_refused_naming_both() {
     let error = refusal_of_edited_save("rules", |v| v["rules_version"] = serde_json::json!(99));
     assert!(error.contains("rules version 99"), "{error}");
-    assert!(error.contains("engine has rules version 5"), "{error}");
+    assert!(
+        error.contains(&format!(
+            "engine has rules version {}",
+            sim_core::world::RULES_VERSION
+        )),
+        "{error}"
+    );
 }
 
 #[test]
@@ -462,5 +471,8 @@ fn a_saved_game_of_another_state_layout_is_refused_naming_both() {
         v["state_version"] = serde_json::json!("flagplot-state-v0");
     });
     assert!(error.contains("flagplot-state-v0"), "{error}");
-    assert!(error.contains("flagplot-state-v22"), "{error}");
+    assert!(
+        error.contains(std::str::from_utf8(sim_core::hash::STATE_VERSION).expect("text")),
+        "{error}"
+    );
 }

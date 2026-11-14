@@ -566,7 +566,13 @@ fn objectives_change_no_hash_and_no_event() {
     // And it was 9d7e930d20a01b77 until the state went to version 22
     // (decision 0106, cover, fieldworks and strain); the event log did not
     // change.
-    assert!(baseline.contains("hash a445dd4a907e245c"));
+    // Values after this change are in the git history of
+    // tests/golden/pinned_hashes.txt, which `sh scripts/regenerate.sh` writes.
+    let pinned = common::pinned_hash(
+        "scenario_10_eastern_solomons_day_1",
+        live.world.day_hashes()[0],
+    );
+    assert!(baseline.contains(&format!("hash {pinned:016x}")));
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

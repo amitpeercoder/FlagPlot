@@ -247,7 +247,10 @@ fn a_batch_says_what_it_was_run_on_and_carries_the_callers_label() {
     // file and of every data file it names, and the label as given.
     let plain = parse(&batch("inputs-plain", FIGHT, &["--runs", "2"]));
     let inputs = &plain["inputs"];
-    assert_eq!(inputs["state_version"], "flagplot-state-v22");
+    assert_eq!(
+        inputs["state_version"],
+        std::str::from_utf8(sim_core::hash::STATE_VERSION).expect("the version is text")
+    );
     let scenario = fs::read(PathBuf::from(ROOT).join(FIGHT)).expect("the scenario reads");
     let mut hasher = sim_core::hash::StateHasher::new();
     hasher.bytes(&scenario);
@@ -1184,6 +1187,131 @@ fn the_day_by_day_loop_makes_the_same_run_as_running_to_the_end() {
     }
 }
 
+/// JSON with its keys in the order the text gave them (a `Value` sorts them),
+/// for rewriting the old-format batch fixture in its own form.
+enum Ordered {
+    Object(Vec<(String, Ordered)>),
+    Array(Vec<Ordered>),
+    Leaf(Value),
+}
+
+impl<'de> serde::Deserialize<'de> for Ordered {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct Visit;
+        impl<'de> serde::de::Visitor<'de> for Visit {
+            type Value = Ordered;
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                f.write_str("JSON")
+            }
+            fn visit_map<A: serde::de::MapAccess<'de>>(
+                self,
+                mut map: A,
+            ) -> Result<Ordered, A::Error> {
+                let mut entries = Vec::new();
+                while let Some(entry) = map.next_entry::<String, Ordered>()? {
+                    entries.push(entry);
+                }
+                Ok(Ordered::Object(entries))
+            }
+            fn visit_seq<A: serde::de::SeqAccess<'de>>(
+                self,
+                mut seq: A,
+            ) -> Result<Ordered, A::Error> {
+                let mut items = Vec::new();
+                while let Some(item) = seq.next_element::<Ordered>()? {
+                    items.push(item);
+                }
+                Ok(Ordered::Array(items))
+            }
+            fn visit_bool<E>(self, v: bool) -> Result<Ordered, E> {
+                Ok(Ordered::Leaf(Value::from(v)))
+            }
+            fn visit_i64<E>(self, v: i64) -> Result<Ordered, E> {
+                Ok(Ordered::Leaf(Value::from(v)))
+            }
+            fn visit_u64<E>(self, v: u64) -> Result<Ordered, E> {
+                Ok(Ordered::Leaf(Value::from(v)))
+            }
+            fn visit_f64<E>(self, v: f64) -> Result<Ordered, E> {
+                Ok(Ordered::Leaf(Value::from(v)))
+            }
+            fn visit_str<E>(self, v: &str) -> Result<Ordered, E> {
+                Ok(Ordered::Leaf(Value::from(v)))
+            }
+            fn visit_unit<E>(self) -> Result<Ordered, E> {
+                Ok(Ordered::Leaf(Value::Null))
+            }
+        }
+        deserializer.deserialize_any(Visit)
+    }
+}
+
+impl Ordered {
+    fn write(&self, out: &mut String) {
+        match self {
+            Ordered::Object(entries) => {
+                out.push('{');
+                for (index, (key, value)) in entries.iter().enumerate() {
+                    if index > 0 {
+                        out.push(',');
+                    }
+                    out.push_str(&serde_json::to_string(key).expect("a key writes"));
+                    out.push(':');
+                    value.write(out);
+                }
+                out.push('}');
+            }
+            Ordered::Array(items) => {
+                out.push('[');
+                for (index, item) in items.iter().enumerate() {
+                    if index > 0 {
+                        out.push(',');
+                    }
+                    item.write(out);
+                }
+                out.push(']');
+            }
+            Ordered::Leaf(value) => out.push_str(&value.to_string()),
+        }
+    }
+}
+
+/// The old file's keys and structure with today's values; the `"version"` at
+/// the top stays the old file's.
+fn project(old: &Ordered, new: &Ordered, top: bool) -> Ordered {
+    match (old, new) {
+        (Ordered::Object(old), Ordered::Object(new)) => Ordered::Object(
+            old.iter()
+                .map(|(key, old_value)| {
+                    if top && key == "version" {
+                        let Ordered::Leaf(version) = old_value else {
+                            panic!("the version is a number");
+                        };
+                        return (key.clone(), Ordered::Leaf(version.clone()));
+                    }
+                    let new_value = new
+                        .iter()
+                        .find(|(k, _)| k == key)
+                        .map(|(_, v)| v)
+                        .unwrap_or_else(|| panic!("today's batch has no key {key}"));
+                    (key.clone(), project(old_value, new_value, false))
+                })
+                .collect(),
+        ),
+        (Ordered::Array(old), Ordered::Array(new)) => {
+            assert!(new.len() >= old.len(), "today's batch has fewer entries");
+            Ordered::Array(
+                old.iter()
+                    .zip(new)
+                    .map(|(o, n)| project(o, n, false))
+                    .collect(),
+            )
+        }
+        (_, Ordered::Leaf(value)) => Ordered::Leaf(value.clone()),
+        _ => panic!("today's batch has another shape"),
+    }
+}
+
 #[test]
 fn the_keys_a_version_1_reader_used_keep_their_values() {
     // Files made by `batch` before decision 0062, three seeds each.
@@ -1198,17 +1326,35 @@ fn the_keys_a_version_1_reader_used_keep_their_values() {
     // runs of the day it was captured. Scenario 6, which has no surface
     // fight, keeps the test's purpose: what a version 1 reader used is still
     // where it was.
+    //
+    // What the test proves: every key a version 1 reader used is still where
+    // it was, with today's value. The values themselves are remade with each
+    // rule build: with `FLAGPILOT_UPDATE_GOLDEN=1` (`sh scripts/regenerate.sh`)
+    // the test writes the file again, with exactly the file's keys, structure
+    // and `"version": 1`, every other value taken from today's batch, and
+    // then makes the assertions below on what it wrote.
     for file in ["06_rabaul_guadalcanal"] {
         let before_path = PathBuf::from(ROOT)
             .join("crates/sim-cli/tests/batch_before")
             .join(format!("{file}.json"));
-        let before: Value =
-            serde_json::from_slice(&fs::read(before_path).expect("the old file")).expect("JSON");
-        let after = parse(&batch(
+        let fresh = batch(
             "old-reader",
             &format!("data/scenarios/{file}.toml"),
             &["--runs", "3"],
-        ));
+        );
+        let after = parse(&fresh);
+        if std::env::var("FLAGPILOT_UPDATE_GOLDEN").is_ok() {
+            let old: Ordered =
+                serde_json::from_slice(&fs::read(&before_path).expect("the old file"))
+                    .expect("JSON");
+            let new: Ordered = serde_json::from_slice(&fresh).expect("JSON");
+            let mut text = String::new();
+            project(&old, &new, true).write(&mut text);
+            text.push('\n');
+            fs::write(&before_path, text).expect("the old file writes");
+        }
+        let before: Value =
+            serde_json::from_slice(&fs::read(before_path).expect("the old file")).expect("JSON");
         assert_eq!(before["version"], 1);
         assert_eq!(after["version"], 5);
         for (key, value) in before.as_object().expect("an object") {
