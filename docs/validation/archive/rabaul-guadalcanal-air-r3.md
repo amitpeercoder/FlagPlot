@@ -1,8 +1,10 @@
-# rabaul-guadalcanal-air: validation of batch `d0087`
+*Archived on Nov 14, 2026: a report of one round of step 2, kept as a record. The battle's closing report is [rabaul-guadalcanal-air-close.md](../rabaul-guadalcanal-air-close.md); step 2's close is [step2-close.md](../step2-close.md).*
+
+# rabaul-guadalcanal-air: validation of batch `r3`
 
 Battle: rabaul-guadalcanal-air
 Scenario: data/scenarios/06_rabaul_guadalcanal.toml
-Batch: label `d0087`, 1000 runs, seeds 1 to 1000, file hash 4befa1b317395b64
+Batch: label `r3`, 1000 runs, seeds 1 to 1000, file hash c8277bd03b1b6a0c
 Inputs: state hash layout flagplot-state-v7, scenario file hash 7e02fa82236e0f69
 - data/scenarios/../map/south_pacific.csv ba6cb3aea5cc45f5
 - data/scenarios/../reference/ship_classes.csv 366fefba209ee1bc

@@ -124,7 +124,7 @@ The figure is required in `air_combat.toml`, checked to lie from 0 to 1: 0 live,
 - Pinned outcomes on the scenario's own seed.
 
 **Before and after, 1,000 runs each, label `d0080`.**
-- The reports are `docs/validation/eastern-solomons-d0080.md` and `rabaul-guadalcanal-air-d0080.md`. They were made on the code merged with main after decisions 0081 to 0083, with decision 0079 in, against the measures as they stood then.
+- The reports are `docs/validation/archive/eastern-solomons-d0080.md` and `docs/validation/archive/rabaul-guadalcanal-air-d0080.md`. They were made on the code merged with main after decisions 0081 to 0083, with decision 0079 in, against the measures as they stood then.
 - "Before" is that code without this rule (the `d0079` reports), on the same seeds.
 - An earlier pair, made on the scenarios before 0081 and 0082, was replaced by these.
 

@@ -122,7 +122,7 @@ At Santa Cruz the same fighter director found the same, in words: "most enemy ai
 - Every number of the hand calculation matched.
 
 **Before and after, 1,000 runs each, label `d0087`.**
-- The reports are `docs/validation/eastern-solomons-d0087.md` and `rabaul-guadalcanal-air-d0087.md`, made on the code with decisions 0079, 0080 and 0081 to 0084.
+- The reports are `docs/validation/archive/eastern-solomons-d0087.md` and `docs/validation/archive/rabaul-guadalcanal-air-d0087.md`, made on the code with decisions 0079, 0080 and 0081 to 0084.
 - "Before" is the `d0080` pair, the same code without this rule.
 
 | Eastern Solomons | Record | Before: 5th to 95th, median (runs holding) | After |
