@@ -1141,6 +1141,13 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // 0092, 19), and the enemy base its report found (decision 15).
         EventKind::GroundReportReceived { side: owner, .. }
         | EventKind::BaseFound { side: owner, .. } => whole_if(*owner == side),
+        // A side sees its own marches whole: each day marched, the arrival,
+        // the supply carried and a base formed, and a march stopped. The
+        // enemy sees nothing of them (decision 0094, 11).
+        EventKind::MarchDay { unit, .. }
+        | EventKind::MarchBaseFormed { unit, .. }
+        | EventKind::MarchArrived { unit, .. }
+        | EventKind::MarchStopped { unit, .. } => whole_if(own_unit(unit)),
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1770,7 +1777,13 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         // (decision 0092).
         | EventKind::MenLostToFire { .. }
         | EventKind::GroundReportReceived { .. }
-        | EventKind::BaseFound { .. } => false,
+        | EventKind::BaseFound { .. }
+        // A march cites only the side's own order, its own march and its own
+        // bases' supply (decision 0094).
+        | EventKind::MarchDay { .. }
+        | EventKind::MarchBaseFormed { .. }
+        | EventKind::MarchArrived { .. }
+        | EventKind::MarchStopped { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -3163,6 +3176,51 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // A march (decision 0094, 11): its own side's whole, the
+            // enemy's nothing.
+            row(
+                EventKind::MarchDay {
+                    unit: unit(1),
+                    from: hex(),
+                    to: Hex::new(1, 0),
+                    days: 1,
+                    of: 3,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::MarchBaseFormed {
+                    base: base(1),
+                    side: Side::Allied,
+                    hex: Hex::new(1, 0),
+                    unit: unit(1),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::MarchArrived {
+                    unit: unit(1),
+                    from: hex(),
+                    to: Hex::new(1, 0),
+                    men: 1000,
+                    supply_t: Fixed::from_int(25),
+                    base: Some(base(1)),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::MarchStopped {
+                    unit: unit(1),
+                    to: Hex::new(1, 0),
+                    days: 2,
+                    reason: crate::events::MarchStop::Ordered,
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3203,7 +3261,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 95, "the log has 95 kinds of event");
+        assert_eq!(all.len(), 99, "the log has 99 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

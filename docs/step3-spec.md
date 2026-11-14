@@ -90,7 +90,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | The fight ashore, a base that changes side, `base_held` | Decision 0090 | Built |
 | Rebasing an air group | Decision 0091 | Built |
 | Shore bombardment, hits on men, the estimate of the enemy ashore | Decision 0092 | Built |
-| Marching overland | Decision 0094 | Hand calculation written |
+| Marching overland | Decision 0094 | Built |
 | The full slice of 39 days with the landings | Decision 0093 | Planned |
 | The rules' choices inside a day as functions of belief | Decision 0055, "Left for later" | Not built: stage 0 |
 | A rules version on a saved game | This spec | Not built: stage 0 |

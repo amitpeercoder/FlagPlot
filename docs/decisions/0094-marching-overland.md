@@ -94,3 +94,18 @@ The hand calculation is in `tests/scenario_25_march.rs`.
 | --- | --- |
 | Reads | A land unit's men ashore, hex, side, fatigue and march; the map's land links; the bases of the side in both hexes and their stock; the three figures and the daily charge |
 | Writes | A land unit's hex, fatigue and march; a base's supply; a new base; the events |
+
+## As built
+
+Built on Nov 14, 2026 (scenario 25, state version 14). Choices the record did not make:
+
+- **An order to the hex the unit already marches to keeps the days marched.** Decision 4 says an order to another hex starts the count again; the same hex is read as not another, so a repeated order changes nothing but the order the march cites.
+- **An order to the unit's own hex with no march standing** is accepted and does nothing. With a march standing it records `MarchStopped` (reason ordered), citing the order.
+- **A march stops in the phase** if the unit has no man ashore (`MarchStopped`, no men ashore), or if its men are in a hex no land link joins to the hex it marches to, which can happen only if they went aboard and landed elsewhere (`MarchStopped`, no land link). A unit whose men ashore are all lost after the day's marches keeps its march until the next day's phase stops it; the invariant on a march is checked only for a unit with men ashore.
+- **Refusals** reuse the reasons the posture order has (not your land unit, destroyed, no men ashore) and add one, `NoLandLink`, for a hex no link joins to the unit's own, whether a neighbour or not.
+- **The fatigue of a day** is one `LandUnitFatigue` event with two new changes, marched and marched and attacked; the sum of the two gains is capped once at 100.
+- **The supply taken** is recorded as `BaseSupplySpent` with a new reason, march, one for each base that pays; the arrival (`MarchArrived`) records what was carried and the base it went into, with a breakdown of the amount wanted. The agent's briefing shows it as taken by marches, not in the day's spending, so a one-off does not distort the forecast of days of supply.
+- **A base formed by a march** is numbered as a landing's base (after the highest base number) and named "Dump at (q,r)"; it has its own event, `MarchBaseFormed`, since a landing's names a task force. Once a ground report finds it, the enemy sees its name, as for any found base.
+- **The figures are required:** a ground file without the three keys is refused. Both ground files in the repository give them. `march_days_per_hex` is a whole number of 1 or more, `fatigue_per_march_day` from 0 to 100, `march_supply_days` 0 or more.
+- **Land links.** A TOML map gives them as `[[land_link]]` with `a` and `b`; a scenario may name a file of them with the key `land_links`, a CSV `q1,r1,q2,r2,landmass,reason` with both text columns required, applied to whatever map the scenario names. The loader refuses a link between hexes that are not neighbours, off the map, neither land nor coast, or listed twice. Links are map data and not hashed; a saved game records the links file's hash with the other data files. No links file is written for the real map: that is the next stage's data.
+- **The agent interface** writes the order `{"kind": "march", "hex": [q, r]}`, shows a unit's march (hex, days marched of the days needed) and the hexes it can march to (`march_to`), and the day's march events in the briefing. The schema version stays 3: fields and values were only added.

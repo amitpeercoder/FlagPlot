@@ -953,7 +953,7 @@
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
-              "change": { "enum": ["gained", "rested"] },
+              "change": { "description": "gained (on attack and fired), rested, marched or marched_and_attacked (decision 0094, 8).", "enum": ["gained", "rested", "marched", "marched_and_attacked"] },
               "fatigue": { "description": "The unit's fatigue afterwards.", "$ref": "defs.schema.json#/$defs/dec" },
               "event": { "type": "integer" }
             }
@@ -982,6 +982,72 @@
             "additionalProperties": false,
             "properties": {
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "marches_yesterday": {
+          "description": "Marches the side's own units made a day of yesterday (decision 0094, 11). The men are still in from unless days is of_days. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "from", "to", "days", "of_days", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "from": { "$ref": "defs.schema.json#/$defs/place" },
+              "to": { "$ref": "defs.schema.json#/$defs/place" },
+              "days": { "type": "integer" },
+              "of_days": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "march_arrivals_yesterday": {
+          "description": "Marches that ended yesterday: the unit's men arrived (decision 0094, 4 and 9), with the supply carried from the bases left and the base it went into (null when none was carried). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "from", "to", "men", "supply_t", "base", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "from": { "$ref": "defs.schema.json#/$defs/place" },
+              "to": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer" },
+              "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "bases_formed_by_march_yesterday": {
+          "description": "Bases a march formed yesterday to hold the supply it carried (decision 0094, 9): the side's own, on its own map only. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "place", "land_unit", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "marches_stopped_yesterday": {
+          "description": "Marches that stopped short yesterday (decision 0094, 3), with the days marched and why: ordered, no_men_ashore or no_land_link. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "to", "days", "reason", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "to": { "$ref": "defs.schema.json#/$defs/place" },
+              "days": { "type": "integer" },
+              "reason": { "enum": ["ordered", "no_men_ashore", "no_land_link"] },
               "event": { "type": "integer" }
             }
           }
@@ -1073,7 +1139,9 @@
                         "sorties_and_upkeep_t": { "description": "Paid for sorties flown and aircraft kept at the base.", "$ref": "defs.schema.json#/$defs/dec" },
                         "repairs_t": { "$ref": "defs.schema.json#/$defs/dec" },
                         "destroyed_by_raids_t": { "$ref": "defs.schema.json#/$defs/dec" },
-                        "men_fed_t": { "description": "Paid to feed men ashore (decision 0066, 16). Present only when something was paid for men.", "$ref": "defs.schema.json#/$defs/dec" }
+                        "men_fed_t": { "description": "Paid to feed men ashore (decision 0066, 16). Present only when something was paid for men.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "taken_by_marches_t": { "description": "Taken out by units that marched out of the base's hex (decision 0094, 9). Present only when something was taken.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "arrived_with_marches_t": { "description": "Put in by units that marched into the base's hex. Present only when something was put in.", "$ref": "defs.schema.json#/$defs/dec" }
                       }
                     },
                     { "type": "null" }

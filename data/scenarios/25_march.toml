@@ -1,0 +1,93 @@
+# Scenario 25: marching overland (decision 0094).
+#
+# Proves marching against a hand calculation, on four coast hexes in a row:
+# P (0,0), Q (1,0), R (2,0) and S (3,0), with land links P to Q and R to S
+# only. An Allied unit marches from P to Q with supply, forms a dump there and
+# attacks on arrival; its later order to march to R, which no land link
+# joins to Q, is refused; and a Japanese unit marches from R to S from a
+# shore with no base and carries nothing. The hand calculation is in
+# tests/scenario_25_march.rs.
+#
+# No air combat, wear, fatigue or air supply figures are named, so no aircraft
+# flies and nothing wears, tires or is grounded. Each night the men's supply
+# is the first thing charged.
+#
+# PLACEHOLDER DATA. The units, bases and map are invented.
+
+name = "Scenario 25: Marching overland"
+placeholder = true
+seed = 1942
+days = 5
+map = "../map/placeholder_march.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base P, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 100
+
+[[base]]
+id = 2
+name = "Placeholder base Q, Japanese"
+side = "japanese"
+q = 1
+r = 0
+supply_t = 50
+
+[[land_unit]]
+id = 1
+name = "Placeholder Allied regiment at P"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+posture = "attack"
+
+[[land_unit]]
+id = 2
+name = "Placeholder Japanese battalion at Q"
+side = "japanese"
+men = 400
+q = 1
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 3
+name = "Placeholder Japanese company at R"
+side = "japanese"
+men = 100
+q = 2
+r = 0
+posture = "defend"
+
+# Day 1: unit 1 marches from P to Q and unit 3 from R to S.
+[[order]]
+day = 1
+side = "allied"
+land_unit = 1
+kind = "march"
+hex = [1, 0]
+
+[[order]]
+day = 1
+side = "japanese"
+land_unit = 3
+kind = "march"
+hex = [3, 0]
+
+# Day 4: refused, as no land link joins Q to R.
+[[order]]
+day = 4
+side = "allied"
+land_unit = 1
+kind = "march"
+hex = [2, 0]

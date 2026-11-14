@@ -779,6 +779,11 @@ struct GroundFile {
     men_lost_per_base_hit: Option<Quantity>,
     report_error_low: Option<Quantity>,
     report_error_high: Option<Quantity>,
+    /// Marching overland (decision 0094). Required like the older keys.
+    /// Days is a whole number, read as one.
+    march_days_per_hex: u32,
+    fatigue_per_march_day: Quantity,
+    march_supply_days: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -828,6 +833,9 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
                 ))
             }
         },
+        march_days_per_hex: file.march_days_per_hex,
+        fatigue_per_march_day: number("fatigue_per_march_day", &file.fatigue_per_march_day)?,
+        march_supply_days: number("march_supply_days", &file.march_supply_days)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -2218,6 +2226,65 @@ mod tests {
     }
 
     #[test]
+    fn the_march_figures_are_read_and_each_is_required() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.march_days_per_hex, 3);
+        assert_eq!(figures.fatigue_per_march_day, Fixed::from_int(10));
+        assert_eq!(figures.march_supply_days, Fixed::from_int(5));
+        for key in [
+            "march_days_per_hex",
+            "fatigue_per_march_day",
+            "march_supply_days",
+        ] {
+            let text = without_keys(&ground_text(), &[key]);
+            assert!(
+                parse_ground_figures(&text, here())
+                    .expect_err("a missing key is refused")
+                    .message
+                    .contains(key),
+                "without {key}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_march_figures_refuse_floats_and_bad_values() {
+        let bad = |key: &str, value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), key, value), here())
+                .expect_err("rejected")
+                .message
+        };
+        // Days: a whole number of 1 or more.
+        assert!(bad("march_days_per_hex", "0").contains("march_days_per_hex"));
+        assert!(bad("march_days_per_hex", "-1").contains("march_days_per_hex"));
+        assert!(bad("march_days_per_hex", "2.5").contains("march_days_per_hex"));
+        assert!(bad("march_days_per_hex", "\"3\"").contains("march_days_per_hex"));
+        let one = with_key(&ground_text(), "march_days_per_hex", "1");
+        assert_eq!(
+            parse_ground_figures(&one, here())
+                .expect("1 loads")
+                .march_days_per_hex,
+            1
+        );
+        // Fatigue: 0 to 100, no float.
+        assert!(bad("fatigue_per_march_day", "-1").contains("fatigue_per_march_day"));
+        assert!(bad("fatigue_per_march_day", "101").contains("fatigue_per_march_day"));
+        assert!(bad("fatigue_per_march_day", "10.5").contains("fatigue_per_march_day"));
+        // Supply days: 0 or more, no float.
+        assert!(bad("march_supply_days", "-1").contains("march_supply_days"));
+        assert!(bad("march_supply_days", "5.5").contains("march_supply_days"));
+        let text = with_key(&ground_text(), "march_supply_days", "\"2.5\"");
+        assert_eq!(
+            parse_ground_figures(&text, here())
+                .expect("a decimal string loads")
+                .march_supply_days,
+            Fixed::from_ratio(5, 2)
+        );
+        let zero = with_key(&ground_text(), "march_supply_days", "0");
+        assert!(parse_ground_figures(&zero, here()).is_ok());
+    }
+
+    #[test]
     fn the_troop_capacity_column_defaults_to_0_and_is_read_when_present() {
         let without = classes("1,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0\n")
             .expect("parses");
@@ -2538,6 +2605,9 @@ mod tests {
         };
         let ground = parse_ground_figures(&frozen("ground.toml"), here()).expect("parses");
         assert_eq!(ground.men_lost_per_base_hit, Fixed::from_int(10));
+        assert_eq!(ground.march_days_per_hex, 3);
+        assert_eq!(ground.fatigue_per_march_day, Fixed::from_int(10));
+        assert_eq!(ground.march_supply_days, Fixed::from_int(5));
         let error = ground.report_error.expect("held");
         assert_eq!(
             (error.low, error.high),

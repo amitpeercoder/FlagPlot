@@ -129,6 +129,10 @@ pub enum InvariantViolation {
     /// A land unit's fatigue is outside 0 to 100 or its fed share outside 0
     /// to 1 (decision 0090). Added at the end of the enum.
     LandUnitFigureOutOfRange(LandUnitId),
+    /// A land unit with men ashore marches to a hex no land link joins to
+    /// its own, or has marched the full days and not arrived (decision
+    /// 0094). Added at the end of the enum.
+    LandUnitMarchUnsound(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -326,6 +330,10 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::LandUnitFigureOutOfRange(unit) => write!(
                 f,
                 "{unit} has a fatigue outside 0 to 100 or a fed share outside 0 to 1"
+            ),
+            InvariantViolation::LandUnitMarchUnsound(unit) => write!(
+                f,
+                "{unit} marches to a hex no land link joins to its own, or has marched the full days and not arrived"
             ),
         }
     }
@@ -622,6 +630,16 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         let share_ok = unit.fed_share >= Fixed::ZERO && unit.fed_share <= Fixed::ONE;
         if !fatigue_ok || !share_ok {
             violations.push(InvariantViolation::LandUnitFigureOutOfRange(unit.id));
+        }
+        // A unit whose men ashore were all lost after the day's marches keeps
+        // its march until the next day's, which stops it (decision 0094).
+        if let (Some(march), Some(hex)) = (unit.march, unit.hex) {
+            let days_ok = ref_data
+                .ground
+                .is_some_and(|ground| march.days < ground.march_days_per_hex);
+            if !map.has_land_link(hex, march.to) || !days_ok {
+                violations.push(InvariantViolation::LandUnitMarchUnsound(unit.id));
+            }
         }
     }
 

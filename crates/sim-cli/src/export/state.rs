@@ -59,6 +59,18 @@ pub struct LandUnitOut {
     /// 8). Left out when 1.
     #[serde(skip_serializing_if = "num_is_one")]
     fed_share: Num,
+    /// The unit's march (decision 0094): the hex it marches to and the days
+    /// marched. Left out when it has none, so a file made where no unit
+    /// marches is unchanged.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    march: Option<MarchOut>,
+}
+
+/// A land unit's march in progress.
+#[derive(Serialize)]
+pub struct MarchOut {
+    to: Pos,
+    days: u32,
 }
 
 /// The men of one land unit aboard a ship.
@@ -310,6 +322,10 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
         posture: unit.posture.name(),
         fatigue: Num(unit.fatigue),
         fed_share: Num(unit.fed_share),
+        march: unit.march.map(|march| MarchOut {
+            to: Pos::from(march.to),
+            days: march.days,
+        }),
     }
 }
 

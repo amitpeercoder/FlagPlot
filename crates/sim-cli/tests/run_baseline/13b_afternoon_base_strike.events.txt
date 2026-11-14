@@ -2,8 +2,8 @@ Scenario 13b: An afternoon base strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5b3747da1d74150e  17 events
-day   2  hash 6e222a9a98d1097e  5 events
+day   1  hash 2c9c0964d6500c71  17 events
+day   2  hash 591f51f4c611130b  5 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

@@ -714,6 +714,16 @@ impl Briefing {
                             s.men_fed_t.map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
                         ),
                         ("destroyed by raids", s.destroyed_by_raids_t.0),
+                        (
+                            "taken by marching units",
+                            s.taken_by_marches_t
+                                .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                        ),
+                        (
+                            "brought by marching units",
+                            s.arrived_with_marches_t
+                                .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                        ),
                     ]);
                     o.sub(format!(
                         "Stocks yesterday: supply {} t to {} t ({causes})",
@@ -1101,6 +1111,21 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
         if let Some(order) = u.posture_order {
             s.push_str(&format!(" (posture set by your order {order})"));
         }
+        if let Some(m) = &u.march {
+            s.push_str(&format!(
+                "; marching to {}, {} of {} days marched",
+                at(&m.to),
+                m.days_marched,
+                m.of_days
+            ));
+            if let Some(order) = m.order {
+                s.push_str(&format!(" (by your order {order})"));
+            }
+        }
+        if !u.march_to.is_empty() {
+            let to: Vec<String> = u.march_to.iter().map(at).collect();
+            s.push_str(&format!("; can march to {}", to.join(", ")));
+        }
         s.push_str(match u.fed_last_night {
             "fed" => "; fed last night",
             "partly_fed" => "; partly fed last night",
@@ -1251,10 +1276,11 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
         o.line(format!(
             "Fatigue yesterday: {} {}, fatigue now {}{}",
             f.land_unit.text(),
-            if f.change == "gained" {
-                "attacked and tired"
-            } else {
-                "rested"
+            match f.change {
+                "gained" => "attacked and tired",
+                "marched" => "marched and tired",
+                "marched_and_attacked" => "marched, attacked and tired",
+                _ => "rested",
             },
             f.fatigue.0,
             ev(f.event)
@@ -1273,6 +1299,54 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             "Fed share restored: {} has no men ashore and its fed share is 1{}",
             r.land_unit.text(),
             ev(r.event)
+        ));
+    }
+    for m in &land.marches_yesterday {
+        o.line(format!(
+            "March yesterday: {} marched from {} toward {}, {} of {} days{}",
+            m.land_unit.text(),
+            at(&m.from),
+            at(&m.to),
+            m.days,
+            m.of_days,
+            ev(m.event)
+        ));
+    }
+    for m in &land.march_arrivals_yesterday {
+        let carried = match &m.base {
+            Some(base) => format!("carrying {} t of supply into {}", m.supply_t.0, base.text()),
+            None => "carrying no supply".to_string(),
+        };
+        o.line(format!(
+            "Arrived yesterday: {} men of {} from {} at {}, {carried}{}",
+            m.men,
+            m.land_unit.text(),
+            at(&m.from),
+            at(&m.to),
+            ev(m.event)
+        ));
+    }
+    for b in &land.bases_formed_by_march_yesterday {
+        o.line(format!(
+            "Base formed yesterday: {} at {} by the march of {}; it is on your map only{}",
+            b.base.text(),
+            at(&b.place),
+            b.land_unit.text(),
+            ev(b.event)
+        ));
+    }
+    for m in &land.marches_stopped_yesterday {
+        let why = match m.reason {
+            "ordered" => "you ordered it to stay",
+            "no_men_ashore" => "it has no men ashore",
+            _ => "no land link joins its hex to the hex it marched to",
+        };
+        o.line(format!(
+            "March stopped yesterday: {} stopped its march to {} after {}: {why}{}",
+            m.land_unit.text(),
+            at(&m.to),
+            plural(m.days, "day", "days"),
+            ev(m.event)
         ));
     }
     if o.0.len() == before {

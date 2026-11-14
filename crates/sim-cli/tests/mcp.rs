@@ -332,6 +332,15 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "wrong by up to half either way",
         "an opening estimate of the enemy's men, dated day 0, which can be far wrong",
         "Bombs from the air now also hit men ashore",
+        // Marching (decision 0094).
+        "marches with march {hex: [q, r]}",
+        "lists the hexes it can march to, under march_to",
+        "A march takes the scenario's march_days_per_hex days",
+        "fatigue_per_march_day",
+        "march_supply_days days of its men's daily charge",
+        "the enemy does not know of it until a ground report finds it",
+        "ordering the unit's own hex stops the march",
+        "A map with no land links allows no march",
     ] {
         assert!(instructions.contains(phrase), "instructions lack: {phrase}");
     }
@@ -350,6 +359,11 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         // Bombardment (decision 0092).
         "BOMBARDMENT. set_mission {mission: bombardment} is a standing order",
         "a base not on your map cannot be bombarded",
+        // Marching (decision 0094).
+        "march {hex: [q, r]}, for moving (see MARCH)",
+        "MARCH. march {hex: [q, r]} sends a land unit's men ashore to a neighbouring hex joined to the unit's hex by a land link",
+        "the unit's own hex stops a march",
+        "no land link joins its hex to the hex named",
         // 10. The patrol share.
         "set_patrol_share {share} is the share of the group kept over its own hex: 1 (where it starts) keeps every fighter at home and sends no escort, 0.5 keeps half at home and lets half escort",
     ] {

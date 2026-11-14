@@ -392,6 +392,25 @@ impl<'a> SideView<'a> {
         self.map.get(hex)
     }
 
+    /// The hexes joined to `hex` by a land link, in hex order (decision 1 of
+    /// 0094). The map is common knowledge. Empty on a map with no land
+    /// links.
+    pub fn land_neighbours(&self, hex: Hex) -> Vec<Hex> {
+        self.map.land_neighbours(hex)
+    }
+
+    /// Where one of the side's own land units can be ordered to march: the
+    /// hexes joined to its hex by a land link, in hex order (decision 3 of
+    /// 0094). `None` for a unit that is not the side's or has no man ashore.
+    pub fn march_destinations(&self, unit: LandUnitId) -> Option<Vec<Hex>> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|land_unit| land_unit.side == self.side && land_unit.men_ashore > 0)?;
+        land_unit.hex.map(|hex| self.map.land_neighbours(hex))
+    }
+
     /// The fewest steps by sea from every hex that can reach `target` to it
     /// (decision 0048, warnings). The map is common knowledge, so this is
     /// not enemy truth; it counts steps, not miles (a step is charged by

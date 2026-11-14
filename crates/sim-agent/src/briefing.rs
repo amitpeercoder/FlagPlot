@@ -623,9 +623,70 @@ pub struct LandUnitsPart {
     /// when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fed_share_restored_yesterday: Vec<FedShareRestoredLine>,
+    /// Marches the side's own units made a day of yesterday (decision 0094,
+    /// 11). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub marches_yesterday: Vec<MarchDayLine>,
+    /// Marches that ended yesterday: the unit arrived, with the supply it
+    /// carried and the base it went into. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub march_arrivals_yesterday: Vec<MarchArrivedLine>,
+    /// Bases a march formed yesterday, the side's own. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub bases_formed_by_march_yesterday: Vec<MarchBaseFormedLine>,
+    /// Marches that stopped short yesterday, and why. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub marches_stopped_yesterday: Vec<MarchStoppedLine>,
     /// For each hex with men of the side ashore, the days of supply its base
     /// holds at the present charge.
     pub supply_by_hex: Vec<HexSupply>,
+}
+
+/// A unit marched a day (decision 0094, 4). Its men are still in `from`
+/// unless `days` is `of_days`.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MarchDayLine {
+    pub land_unit: Handle,
+    pub from: Place,
+    pub to: Place,
+    pub days: u32,
+    pub of_days: u32,
+    pub event: u32,
+}
+
+/// A unit's men arrived after a march (decision 0094, 4 and 9).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MarchArrivedLine {
+    pub land_unit: Handle,
+    pub from: Place,
+    pub to: Place,
+    pub men: u32,
+    /// The supply the unit carried from the bases it left, in tons.
+    pub supply_t: Dec,
+    /// The base the supply went into; `None` when the unit carried none.
+    pub base: Option<Handle>,
+    pub event: u32,
+}
+
+/// A base a march formed to hold the supply it carried (decision 0094, 9).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MarchBaseFormedLine {
+    pub base: Handle,
+    pub place: Place,
+    pub land_unit: Handle,
+    pub event: u32,
+}
+
+/// A march that stopped short (decision 0094, 3).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MarchStoppedLine {
+    pub land_unit: Handle,
+    pub to: Place,
+    /// The days it had marched.
+    pub days: u32,
+    /// `ordered`, `no_men_ashore` or `no_land_link`.
+    pub reason: &'static str,
+    pub event: u32,
 }
 
 /// Men of a unit put ashore from, or taken aboard, a ship.
@@ -729,7 +790,8 @@ pub struct FireLine {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct FatigueLine {
     pub land_unit: Handle,
-    /// `gained` (on attack and fired) or `rested`.
+    /// `gained` (on attack and fired), `rested`, `marched` or
+    /// `marched_and_attacked` (decision 0094, 8).
     pub change: &'static str,
     /// The unit's fatigue afterwards.
     pub fatigue: Dec,
@@ -1255,6 +1317,10 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         fatigue_yesterday: ground.fatigue,
         back_to_defend_yesterday: ground.back_to_defend,
         fed_share_restored_yesterday: ground.fed_share_restored,
+        marches_yesterday: ground.marches,
+        march_arrivals_yesterday: ground.march_arrivals,
+        bases_formed_by_march_yesterday: ground.march_bases_formed,
+        marches_stopped_yesterday: ground.marches_stopped,
         supply_by_hex,
     })
 }
@@ -1316,6 +1382,10 @@ struct GroundDay {
     fatigue: Vec<FatigueLine>,
     back_to_defend: Vec<BackToDefendLine>,
     fed_share_restored: Vec<FedShareRestoredLine>,
+    marches: Vec<MarchDayLine>,
+    march_arrivals: Vec<MarchArrivedLine>,
+    march_bases_formed: Vec<MarchBaseFormedLine>,
+    marches_stopped: Vec<MarchStoppedLine>,
 }
 
 /// What moved in and out of a base's stocks yesterday, by cause, from the
@@ -1331,11 +1401,16 @@ struct StockMoves {
     fuel_landed: Fixed,
     fuel_loaded: Fixed,
     fuel_refuelling: Fixed,
+    /// Taken out of the base by a march (decision 0094, 9).
+    march_out: Fixed,
+    /// Put into the base by a march.
+    march_in: Fixed,
 }
 
 impl StockMoves {
     fn supply_net(&self) -> Fixed {
-        self.supply_landed
+        self.supply_landed + self.march_in
+            - self.march_out
             - self.supply_loaded
             - self.sorties_and_upkeep
             - self.repairs
@@ -1369,6 +1444,14 @@ pub struct SupplyChange {
     /// was paid for men.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub men_fed_t: Option<Dec>,
+    /// Taken by a unit that marched out of the base's hex (decision 0094,
+    /// 9). Left out when nothing was taken.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub taken_by_marches_t: Option<Dec>,
+    /// Put into the base by a unit that marched into its hex. Left out when
+    /// nothing was put in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub arrived_with_marches_t: Option<Dec>,
 }
 
 /// How a base's fuel stock moved yesterday.
@@ -1404,6 +1487,8 @@ fn stocks_yesterday(
         moves.repairs,
         moves.men,
         moves.destroyed,
+        moves.march_out,
+        moves.march_in,
     ]
     .iter()
     .any(|t| !t.is_zero());
@@ -1423,6 +1508,8 @@ fn stocks_yesterday(
             repairs_t: Dec(moves.repairs),
             destroyed_by_raids_t: Dec(moves.destroyed),
             men_fed_t: (!moves.men.is_zero()).then_some(Dec(moves.men)),
+            taken_by_marches_t: (!moves.march_out.is_zero()).then_some(Dec(moves.march_out)),
+            arrived_with_marches_t: (!moves.march_in.is_zero()).then_some(Dec(moves.march_in)),
         }),
         fuel: fuel_moved.then(|| FuelChange {
             start_t: Dec(base.fuel_t - moves.fuel_net()),
@@ -1775,10 +1862,17 @@ impl Day {
                         reason,
                         ..
                     } => {
-                        let total = spent.entry(*base).or_insert(Fixed::ZERO);
-                        *total += *paid_t;
+                        // What a column takes with it is a one-off, not a
+                        // running charge: it is a line of the stocks and
+                        // not part of what the base spends in a day
+                        // (decision 0094, 9).
+                        if *reason != SupplyUse::March {
+                            let total = spent.entry(*base).or_insert(Fixed::ZERO);
+                            *total += *paid_t;
+                        }
                         let moves = stocks.entry(*base).or_default();
                         match reason {
+                            SupplyUse::March => moves.march_out += *paid_t,
                             SupplyUse::Sorties | SupplyUse::Upkeep => {
                                 moves.sorties_and_upkeep += *paid_t;
                             }
@@ -1916,6 +2010,61 @@ impl Day {
                         task_force: ctx.force(*task_force),
                         event: id,
                     }),
+                    EventKind::MarchDay {
+                        unit,
+                        from,
+                        to,
+                        days,
+                        of,
+                    } => ground.marches.push(MarchDayLine {
+                        land_unit: ctx.land_unit(*unit),
+                        from: ctx.place(*from),
+                        to: ctx.place(*to),
+                        days: *days,
+                        of_days: *of,
+                        event: id,
+                    }),
+                    EventKind::MarchArrived {
+                        unit,
+                        from,
+                        to,
+                        men,
+                        supply_t,
+                        base,
+                    } => {
+                        if let Some(base) = base {
+                            stocks.entry(*base).or_default().march_in += *supply_t;
+                        }
+                        ground.march_arrivals.push(MarchArrivedLine {
+                            land_unit: ctx.land_unit(*unit),
+                            from: ctx.place(*from),
+                            to: ctx.place(*to),
+                            men: *men,
+                            supply_t: Dec(*supply_t),
+                            base: base.map(|b| ctx.base(b)),
+                            event: id,
+                        });
+                    }
+                    EventKind::MarchBaseFormed {
+                        base, hex, unit, ..
+                    } => ground.march_bases_formed.push(MarchBaseFormedLine {
+                        base: ctx.base(*base),
+                        place: ctx.place(*hex),
+                        land_unit: ctx.land_unit(*unit),
+                        event: id,
+                    }),
+                    EventKind::MarchStopped {
+                        unit,
+                        to,
+                        days,
+                        reason,
+                    } => ground.marches_stopped.push(MarchStoppedLine {
+                        land_unit: ctx.land_unit(*unit),
+                        to: ctx.place(*to),
+                        days: *days,
+                        reason: reason.name(),
+                        event: id,
+                    }),
                     EventKind::UnitDivided {
                         from,
                         unit,
@@ -2030,6 +2179,8 @@ impl Day {
                         change: match change {
                             LandFatigueChange::Gained => "gained",
                             LandFatigueChange::Rested => "rested",
+                            LandFatigueChange::Marched => "marched",
+                            LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
                         },
                         fatigue: Dec(*fatigue),
                         event: id,

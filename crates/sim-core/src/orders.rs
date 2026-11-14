@@ -439,6 +439,11 @@ pub enum LandUnitOrder {
     /// Defend or attack (decision 0090, 2). A standing order: it stands
     /// until another replaces it, or until the unit is too tired to attack.
     SetPosture(Posture),
+    /// March the unit's men ashore to a neighbouring hex joined to its hex
+    /// by a land link, or stop a march by naming the unit's own hex
+    /// (decision 0094, 3). A standing order: it stands until the unit
+    /// arrives or another march order replaces it. Added at the end.
+    March(Hex),
 }
 
 /// An order together with the unit it is for.
@@ -608,6 +613,9 @@ pub enum RejectReason {
     /// An order to an air group lost with the base it was at when the base
     /// changed side (decision 0090, 20). Added at the end of the enum.
     AirGroupLostWithBase,
+    /// A march order names a hex that no land link joins to the unit's hex
+    /// (decision 0094, 3). Added at the end of the enum.
+    NoLandLink(Hex),
 }
 
 impl fmt::Display for RejectReason {
@@ -698,6 +706,10 @@ impl fmt::Display for RejectReason {
             RejectReason::AirGroupLostWithBase => {
                 f.write_str("the air group was lost with its base")
             }
+            RejectReason::NoLandLink(hex) => write!(
+                f,
+                "no land link joins the land unit's hex to {hex}: men can march only to a neighbouring hex the map links by land"
+            ),
             RejectReason::TargetKindRepeated(kind) => {
                 write!(f, "the target list names {} twice", kind.name())
             }

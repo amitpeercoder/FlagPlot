@@ -1,8 +1,10 @@
-//! The hex map: what each hex is and what sites it holds, and the shortest
-//! sea paths over it (decisions 10 to 15 of
-//! `docs/decisions/0017-map-and-pathfinding.md`).
+//! The hex map: what each hex is and what sites it holds, the shortest sea
+//! paths over it (decisions 10 to 15 of
+//! `docs/decisions/0017-map-and-pathfinding.md`), and the land links men can
+//! march along (decisions 1 and 2 of
+//! `docs/decisions/0094-marching-overland.md`).
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
@@ -91,6 +93,15 @@ impl HexData {
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Map {
     hexes: BTreeMap<Hex, HexData>,
+    /// The land links (decision 1 of 0094), each pair with the lower hex
+    /// first. Reference data, like the rest of the map: not hashed. A map
+    /// with none allows no march.
+    land_links: BTreeSet<(Hex, Hex)>,
+}
+
+/// Whether a hex has land men can stand on: land or coast.
+const fn holds_land(kind: HexKind) -> bool {
+    matches!(kind, HexKind::Land | HexKind::Coast)
 }
 
 impl Map {
@@ -278,6 +289,55 @@ impl Map {
         self.sea_charged_nm_in(&self.sea_distances_to(to), from, to)
     }
 
+    /// Adds a land link between two hexes (decision 1 of 0094). Refused, and
+    /// nothing changed, unless the two are neighbours, both are on the map
+    /// and both are land or coast, and the link is not already there. The
+    /// link runs both ways.
+    pub fn add_land_link(&mut self, a: Hex, b: Hex) -> Result<(), String> {
+        if !a.neighbors().contains(&b) {
+            return Err(format!(
+                "land link {a} to {b}: the hexes are not neighbours"
+            ));
+        }
+        for hex in [a, b] {
+            match self.get(hex) {
+                None => return Err(format!("land link {a} to {b}: {hex} is not on the map")),
+                Some(data) if !holds_land(data.kind) => {
+                    return Err(format!(
+                        "land link {a} to {b}: {hex} is neither land nor coast"
+                    ))
+                }
+                Some(_) => {}
+            }
+        }
+        if !self.land_links.insert((a.min(b), a.max(b))) {
+            return Err(format!("land link {a} to {b} is listed twice"));
+        }
+        Ok(())
+    }
+
+    /// Whether men can march from `from` to `to` (decision 3 of 0094): a land
+    /// link joins them. Never true of a hex and itself.
+    pub fn has_land_link(&self, from: Hex, to: Hex) -> bool {
+        self.land_links.contains(&(from.min(to), from.max(to)))
+    }
+
+    /// The hexes joined to `hex` by a land link, in hex order.
+    pub fn land_neighbours(&self, hex: Hex) -> Vec<Hex> {
+        let mut out: Vec<Hex> = hex
+            .neighbors()
+            .into_iter()
+            .filter(|other| self.has_land_link(hex, *other))
+            .collect();
+        out.sort();
+        out
+    }
+
+    /// Every land link, each with the lower hex first, in order.
+    pub fn land_links(&self) -> impl Iterator<Item = (Hex, Hex)> + '_ {
+        self.land_links.iter().copied()
+    }
+
     pub fn len(&self) -> usize {
         self.hexes.len()
     }
@@ -353,6 +413,59 @@ mod tests {
         }
         assert_eq!(here, target, "the path ends at the target");
         hexes
+    }
+
+    fn coast(map: &mut Map, hexes: &[(i32, i32)]) {
+        for (q, r) in hexes {
+            map.insert(
+                hx(*q, *r),
+                HexData {
+                    kind: HexKind::Coast,
+                    ..HexData::open_sea()
+                },
+            );
+        }
+    }
+
+    #[test]
+    fn a_land_link_joins_two_neighbouring_land_or_coast_hexes_both_ways() {
+        let mut map = sea(0..=3, 0..=1);
+        coast(&mut map, &[(0, 0), (1, 0)]);
+        make_land(&mut map, &[(2, 0)]);
+        assert!(map.land_neighbours(hx(0, 0)).is_empty());
+        map.add_land_link(hx(1, 0), hx(0, 0))
+            .expect("coast to coast");
+        map.add_land_link(hx(1, 0), hx(2, 0))
+            .expect("coast to land");
+        assert!(map.has_land_link(hx(0, 0), hx(1, 0)));
+        assert!(map.has_land_link(hx(1, 0), hx(0, 0)));
+        assert!(!map.has_land_link(hx(0, 0), hx(0, 0)));
+        assert!(!map.has_land_link(hx(0, 0), hx(2, 0)));
+        assert_eq!(map.land_neighbours(hx(1, 0)), vec![hx(0, 0), hx(2, 0)]);
+        assert_eq!(
+            map.land_links().collect::<Vec<_>>(),
+            vec![(hx(0, 0), hx(1, 0)), (hx(1, 0), hx(2, 0))]
+        );
+    }
+
+    #[test]
+    fn a_land_link_is_refused_off_the_map_at_sea_between_strangers_or_twice() {
+        let mut map = sea(0..=3, 0..=1);
+        coast(&mut map, &[(0, 0), (1, 0), (3, 0)]);
+        let refused = |map: &mut Map, a: (i32, i32), b: (i32, i32)| {
+            let before = map.clone();
+            let error = map
+                .add_land_link(hx(a.0, a.1), hx(b.0, b.1))
+                .expect_err("refused");
+            assert_eq!(*map, before, "a refused link changes nothing");
+            error
+        };
+        assert!(refused(&mut map, (0, 0), (3, 0)).contains("not neighbours"));
+        assert!(refused(&mut map, (0, 0), (0, 0)).contains("not neighbours"));
+        assert!(refused(&mut map, (1, 0), (2, 0)).contains("neither land nor coast"));
+        assert!(refused(&mut map, (0, 0), (-1, 0)).contains("not on the map"));
+        map.add_land_link(hx(0, 0), hx(1, 0)).expect("sound");
+        assert!(refused(&mut map, (1, 0), (0, 0)).contains("twice"));
     }
 
     #[test]

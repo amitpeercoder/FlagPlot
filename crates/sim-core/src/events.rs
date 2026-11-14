@@ -148,6 +148,9 @@ pub enum SupplyUse {
     /// The men of the side ashore in the base's hex, for the day (decision
     /// 0066, 16). Added at the end.
     Men,
+    /// The supply a land unit took with it when it marched out of the base's
+    /// hex (decision 0094, 9). Added at the end.
+    March,
 }
 
 impl SupplyUse {
@@ -158,6 +161,7 @@ impl SupplyUse {
             SupplyUse::Upkeep => "upkeep",
             SupplyUse::Repairs => "repairs",
             SupplyUse::Men => "men",
+            SupplyUse::March => "march",
         }
     }
 }
@@ -193,6 +197,35 @@ pub enum LandFatigueChange {
     Gained,
     /// Any other unit with men ashore.
     Rested,
+    /// The unit marched that day and did not fire on attack (decision 8 of
+    /// 0094). Added at the end.
+    Marched,
+    /// The unit marched that day and also fired on attack: it gains both
+    /// (decision 8 of 0094). Added at the end.
+    MarchedAndAttacked,
+}
+
+/// Why a land unit's march stopped short of its hex (decision 0094, 3).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MarchStop {
+    /// An order named the unit's own hex.
+    Ordered,
+    /// The unit had no man ashore left to march.
+    NoMenAshore,
+    /// The unit's men ashore are in a hex no land link joins to the hex it
+    /// was marching to: they left the shore and landed elsewhere.
+    NoLandLink,
+}
+
+impl MarchStop {
+    /// The name as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            MarchStop::Ordered => "ordered",
+            MarchStop::NoMenAshore => "no_men_ashore",
+            MarchStop::NoLandLink => "no_land_link",
+        }
+    }
 }
 
 /// One of the two damage tracks of a ship. Named systems are separate
@@ -1209,6 +1242,45 @@ pub enum EventKind {
         base: BaseId,
         hex: Hex,
     },
+    /// A land unit marched a day from `from` toward `to` in the ground
+    /// combat phase (decision 0094, 4): `days` of the `of` the march takes.
+    /// Its men are still at `from` unless `days` is `of`.
+    MarchDay {
+        unit: LandUnitId,
+        from: Hex,
+        to: Hex,
+        days: u32,
+        of: u32,
+    },
+    /// A march formed a base for its side in the hex it reached, to hold the
+    /// supply it carried (decision 0094, 9): no guns, no repairs, and on its
+    /// own side's map only.
+    MarchBaseFormed {
+        base: BaseId,
+        side: Side,
+        hex: Hex,
+        unit: LandUnitId,
+    },
+    /// A land unit's `men` ashore arrived in `to` from `from`, and its march
+    /// order is spent (decision 0094, 4 and 9). `supply_t` is the supply it
+    /// carried from its side's bases at `from`, put into `base`; `base` is
+    /// `None` when it carried nothing.
+    MarchArrived {
+        unit: LandUnitId,
+        from: Hex,
+        to: Hex,
+        men: u32,
+        supply_t: Fixed,
+        base: Option<BaseId>,
+    },
+    /// A land unit's march to `to` stopped after `days` days marched, and the
+    /// unit stays where it is (decision 0094, 3).
+    MarchStopped {
+        unit: LandUnitId,
+        to: Hex,
+        days: u32,
+        reason: MarchStop,
+    },
 }
 
 impl EventKind {
@@ -1556,6 +1628,17 @@ impl EventKind {
             }
             EventKind::GroundReportReceived { .. } => Vec::new(),
             EventKind::BaseFound { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::MarchDay { unit, .. } | EventKind::MarchStopped { unit, .. } => {
+                vec![EntityRef::LandUnit(*unit)]
+            }
+            EventKind::MarchBaseFormed { base, unit, .. } => {
+                vec![EntityRef::Base(*base), EntityRef::LandUnit(*unit)]
+            }
+            EventKind::MarchArrived { unit, base, .. } => {
+                let mut entities = vec![EntityRef::LandUnit(*unit)];
+                entities.extend(base.iter().map(|b| EntityRef::Base(*b)));
+                entities
+            }
         }
     }
 }
@@ -2000,6 +2083,7 @@ impl fmt::Display for EventKind {
                     SupplyUse::Upkeep => format!("{aircraft} aircraft at the base for the day"),
                     SupplyUse::Repairs => format!("{aircraft} repairs"),
                     SupplyUse::Men => format!("{men} men ashore for the day"),
+                    SupplyUse::March => format!("{men} men marching out of the hex"),
                 };
                 if paid_t < asked_t {
                     write!(
@@ -2580,6 +2664,10 @@ impl fmt::Display for EventKind {
                     write!(f, "{unit} attacked: fatigue {fatigue}")
                 }
                 LandFatigueChange::Rested => write!(f, "{unit} rested: fatigue {fatigue}"),
+                LandFatigueChange::Marched => write!(f, "{unit} marched: fatigue {fatigue}"),
+                LandFatigueChange::MarchedAndAttacked => {
+                    write!(f, "{unit} marched and attacked: fatigue {fatigue}")
+                }
             },
             EventKind::LandUnitBackToDefend { unit, fatigue } => write!(
                 f,
@@ -2692,6 +2780,56 @@ impl fmt::Display for EventKind {
                 "{} found enemy {base} at {hex}: it is on the {} side's map",
                 side.name(),
                 side.name()
+            ),
+            EventKind::MarchDay {
+                unit,
+                from,
+                to,
+                days,
+                of,
+            } => write!(
+                f,
+                "{unit} marched from {from} toward {to}: {days} of {of} {}",
+                if *of == 1 { "day" } else { "days" }
+            ),
+            EventKind::MarchBaseFormed {
+                base,
+                side,
+                hex,
+                unit,
+            } => write!(
+                f,
+                "{base} formed at {hex} for the {} side to hold the supply {unit} carried",
+                side.name()
+            ),
+            EventKind::MarchArrived {
+                unit,
+                from,
+                to,
+                men,
+                supply_t,
+                base,
+            } => {
+                write!(f, "{unit} arrived at {to} from {from} with {men} men")?;
+                match base {
+                    Some(base) => write!(f, ", carrying {supply_t} t of supply into {base}"),
+                    None => f.write_str(", carrying no supply"),
+                }
+            }
+            EventKind::MarchStopped {
+                unit,
+                to,
+                days,
+                reason,
+            } => write!(
+                f,
+                "{unit} stopped its march to {to} after {days} {}: {}",
+                if *days == 1 { "day" } else { "days" },
+                match reason {
+                    MarchStop::Ordered => "ordered to stay",
+                    MarchStop::NoMenAshore => "it has no men ashore",
+                    MarchStop::NoLandLink => "no land link joins its hex to it",
+                }
             ),
         }
     }

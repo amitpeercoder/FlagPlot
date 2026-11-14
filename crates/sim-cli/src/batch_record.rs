@@ -910,6 +910,9 @@ pub fn count(
                     // The men's supply is its own thing, not aircraft
                     // upkeep, and no batch records it (decision 0066).
                     SupplyUse::Men => {}
+                    // What a marching unit took with it (decision 0094) is
+                    // not aircraft upkeep either.
+                    SupplyUse::March => {}
                 }
             }
             _ => {}

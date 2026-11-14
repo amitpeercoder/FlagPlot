@@ -414,3 +414,39 @@ man hit by a bomb is byte for byte what it was.
   `claimed_on_ground` aircraft, `from_air` false).
 - **Men lost** in `land_units.lost_yesterday` have the cause `fire` (a bomb or a
   shell on the base).
+
+## Marching overland (decision 0094)
+
+Fields and values added only, so `version` stays 3. Each is left out when it has
+nothing to say, so the answer for a game with no march (and for any map with no
+land links) is byte for byte what it was.
+
+- **The march order.** `{"unit": "land_unit:1", "order": {"kind": "march",
+  "hex": [1, 0]}}`: the hex is a neighbour of the unit's hex joined to it by a
+  land link, or the unit's own hex, which stops a march. It stands until the unit
+  arrives or another march order replaces it. A unit that is not the side's own,
+  one that does not exist and one written wrongly get the one refusal `not
+  known`; a destroyed unit, a unit with no man ashore and a hex no land link
+  joins to the unit's get the engine's reasons with a hint (the last names
+  `march_to`). `order.schema.json` has the kind in its `land_unit_order`.
+- **A land unit line** (`list_forces`, `get_entity`, the briefing's `units`) has
+  `march` (`to`, `days_marched`, `of_days`, and `order`, the side's number of the
+  march order) while a march order stands, and `march_to`, the places the unit can
+  be ordered to march to (the neighbours the map joins to its hex by land, in hex
+  order; left out for a unit with no man ashore and on a map with no land links).
+- **The briefing's `land_units` part** has, each left out when empty,
+  `marches_yesterday` (a day marched: `from`, `to`, `days`, `of_days`),
+  `march_arrivals_yesterday` (`men`, the `supply_t` carried and the `base` it went
+  into, null when none was carried), `bases_formed_by_march_yesterday` (the side's
+  own base) and `marches_stopped_yesterday` (`days` marched and `reason`:
+  `ordered`, `no_men_ashore` or `no_land_link`). `fatigue_yesterday` changes have
+  the values `marched` and `marched_and_attacked`.
+- **A base's `stocks_yesterday.supply`** has `taken_by_marches_t` (taken out by a
+  unit that marched out of the base's hex) and `arrived_with_marches_t` (put in by
+  one that marched into it), each present only when it is above 0, so the line
+  still adds up. What a march takes out is a one-off, so it is not part of
+  `spent_yesterday_t` and does not enter the days of supply.
+- **What the enemy is told.** Nothing of a side's march is in the other side's
+  answers: no unit, no day marched, no arrival and no supply carried. It learns
+  that men have come by a ground report (an estimate of men in the hex) and that a
+  base exists when a report finds it (`bases_found_yesterday`).

@@ -137,6 +137,10 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "kind": "set_posture",
                 "posture": posture.name(),
             }),
+            LandUnitOrder::March(hex) => json!({
+                "kind": "march",
+                "hex": [hex.q, hex.r],
+            }),
         },
     }
 }
@@ -390,6 +394,22 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     "attack" => Posture::Attack,
                     other => return Err(format!("unknown posture \"{other}\"")),
                 }),
+                "march" => {
+                    let pair = value
+                        .get("hex")
+                        .and_then(Value::as_array)
+                        .ok_or("\"hex\" is missing")?;
+                    let get = |i: usize| {
+                        pair.get(i)
+                            .and_then(Value::as_i64)
+                            .and_then(|n| i32::try_from(n).ok())
+                            .ok_or("\"hex\" is not a pair of whole numbers")
+                    };
+                    if pair.len() != 2 {
+                        return Err("\"hex\" is not a pair of whole numbers".to_string());
+                    }
+                    LandUnitOrder::March(Hex::new(get(0)?, get(1)?))
+                }
                 other => return Err(format!("unknown land unit order \"{other}\"")),
             };
             Ok(OrderKind::LandUnit {

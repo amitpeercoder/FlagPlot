@@ -93,6 +93,9 @@ impl World {
         let Some(figures) = self.ref_data.ground else {
             return;
         };
+        // The marches come first, before the day's fights (decision 0094,
+        // 4): a unit that arrives fights in its new hex.
+        let marched = self.march_land_units(day, &figures);
         let mut hexes: BTreeMap<Hex, HexUnits> = BTreeMap::new();
         for unit in self.truth.land_units.values() {
             if let (Some(hex), true) = (unit.hex, unit.men_ashore > 0) {
@@ -100,7 +103,7 @@ impl World {
             }
         }
         for (hex, units) in hexes {
-            self.resolve_hex(day, hex, &units, &figures);
+            self.resolve_hex(day, hex, &units, &marched, &figures);
         }
     }
 
@@ -130,7 +133,14 @@ impl World {
             .collect()
     }
 
-    fn resolve_hex(&mut self, day: u32, hex: Hex, units: &HexUnits, figures: &GroundFigures) {
+    fn resolve_hex(
+        &mut self,
+        day: u32,
+        hex: Hex,
+        units: &HexUnits,
+        marched: &BTreeMap<LandUnitId, EventId>,
+        figures: &GroundFigures,
+    ) {
         let attacks = [self.attacks(&units.units[0]), self.attacks(&units.units[1])];
         let present = [!units.units[0].is_empty(), !units.units[1].is_empty()];
         let contested = present[0] && present[1] && (attacks[0] || attacks[1]);
@@ -152,7 +162,13 @@ impl World {
             .collect();
         all.sort();
         for unit in all {
-            self.tire_or_rest(day, unit, fired.get(&unit).copied(), figures);
+            self.tire_or_rest(
+                day,
+                unit,
+                fired.get(&unit).copied(),
+                marched.get(&unit).copied(),
+                figures,
+            );
         }
 
         // A side beaten (decisions 15 and 16).
@@ -427,13 +443,16 @@ impl World {
     }
 
     /// A unit's fatigue for the day (decision 12), then back to defend if it
-    /// is on attack and too tired (decision 14). A unit with no man ashore
-    /// keeps its fatigue.
+    /// is on attack and too tired (decision 14). A unit that marched gains
+    /// the march's fatigue in place of resting, and one that marched and
+    /// fired on attack gains both (decision 8 of 0094). A unit with no man
+    /// ashore keeps its fatigue.
     fn tire_or_rest(
         &mut self,
         day: u32,
         unit_id: LandUnitId,
         fire_event: Option<EventId>,
+        march_event: Option<EventId>,
         figures: &GroundFigures,
     ) {
         let unit = self
@@ -445,39 +464,53 @@ impl World {
             return;
         }
         let before = unit.fatigue;
-        let (change, after) = if fire_event.is_some() {
-            (
-                LandFatigueChange::Gained,
-                (before + figures.fatigue_per_attack_day).min(Fixed::from_int(100)),
-            )
+        let hundred = Fixed::from_int(100);
+        let mut factors = vec![Factor {
+            name: "fatigue_before",
+            value: before,
+        }];
+        let change = match (fire_event.is_some(), march_event.is_some()) {
+            (true, false) => LandFatigueChange::Gained,
+            (false, true) => LandFatigueChange::Marched,
+            (true, true) => LandFatigueChange::MarchedAndAttacked,
+            (false, false) => LandFatigueChange::Rested,
+        };
+        let after = if change == LandFatigueChange::Rested {
+            factors.push(Factor {
+                name: "rest_per_day",
+                value: figures.rest_per_day,
+            });
+            (before - figures.rest_per_day).max(Fixed::ZERO)
         } else {
-            (
-                LandFatigueChange::Rested,
-                (before - figures.rest_per_day).max(Fixed::ZERO),
-            )
+            let mut gained = Fixed::ZERO;
+            if march_event.is_some() {
+                factors.push(Factor {
+                    name: "fatigue_per_march_day",
+                    value: figures.fatigue_per_march_day,
+                });
+                gained += figures.fatigue_per_march_day;
+            }
+            if fire_event.is_some() {
+                factors.push(Factor {
+                    name: "fatigue_per_attack_day",
+                    value: figures.fatigue_per_attack_day,
+                });
+                gained += figures.fatigue_per_attack_day;
+            }
+            (before + gained).min(hundred)
         };
         unit.fatigue = after;
         let mut fatigue_event = None;
         if after != before {
-            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                factors: vec![
-                    Factor {
-                        name: "fatigue_before",
-                        value: before,
-                    },
-                    Factor {
-                        name: match change {
-                            LandFatigueChange::Gained => "fatigue_per_attack_day",
-                            LandFatigueChange::Rested => "rest_per_day",
-                        },
-                        value: match change {
-                            LandFatigueChange::Gained => figures.fatigue_per_attack_day,
-                            LandFatigueChange::Rested => figures.rest_per_day,
-                        },
-                    },
-                ],
+            let breakdown = self.config.record_breakdowns.then_some(Breakdown {
+                factors,
                 result: after,
             });
+            let causes: Vec<Cause> = fire_event
+                .into_iter()
+                .chain(march_event)
+                .map(Cause::Event)
+                .collect();
             fatigue_event = Some(self.events.record(
                 day,
                 None,
@@ -486,7 +519,7 @@ impl World {
                     change,
                     fatigue: after,
                 },
-                fire_event.map(Cause::Event).into_iter().collect(),
+                causes,
                 breakdown,
             ));
         }

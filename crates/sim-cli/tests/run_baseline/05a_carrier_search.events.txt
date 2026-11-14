@@ -2,8 +2,8 @@ Scenario 5a: Carrier search
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 86e810bea122b0d8  16 events
-day   2  hash f65d633d46acd3d7  11 events
+day   1  hash c0a77c2342249f83  16 events
+day   2  hash f13cbf816ee1ae90  11 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

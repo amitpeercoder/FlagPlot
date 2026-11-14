@@ -370,6 +370,30 @@ pub struct LandUnitLine {
     /// Left out when none is.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub posture_order: Option<u32>,
+    /// The unit's march, if it has a march order standing (decision 0094, 11):
+    /// left out when it has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub march: Option<MarchLine>,
+    /// The hexes the unit's men ashore can be ordered to march to: the
+    /// neighbours the map joins to their hex by land, in hex order (decision
+    /// 0094, 1 and 3). Left out when there are none, as on a map with no land
+    /// links and for a unit with no man ashore.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub march_to: Vec<Place>,
+}
+
+/// A land unit's march in progress (decision 0094, 4): where to, the days
+/// marched and the days the march takes. The unit is where it was until it
+/// has marched them all.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MarchLine {
+    pub to: Place,
+    pub days_marched: u32,
+    /// The days a march takes: the scenario's `march_days_per_hex`.
+    pub of_days: u32,
+    /// The number of the side's march order, if it is still known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order: Option<u32>,
 }
 
 /// How the side's men ashore were fed in the last night pulse, by hex, from
@@ -449,5 +473,21 @@ pub(crate) fn land_unit_line(
         fatigue: Dec(unit.fatigue),
         fed_share: Dec(unit.fed_share),
         posture_order: unit.posture_order.and_then(|o| ctx.order_number_if_own(o)),
+        march: unit.march.map(|march| MarchLine {
+            to: ctx.place(march.to),
+            days_marched: march.days,
+            of_days: ctx
+                .view
+                .ground_figures()
+                .map_or(0, |figures| figures.march_days_per_hex),
+            order: ctx.order_number_if_own(march.order),
+        }),
+        march_to: ctx
+            .view
+            .march_destinations(unit.id)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|hex| ctx.place(hex))
+            .collect(),
     }
 }

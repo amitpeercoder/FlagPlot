@@ -181,7 +181,7 @@ Step 2 is under way and its spec says ground combat is not in it. Three things k
 
 Agreed by the designer on Nov 12, 2026, on the architect's suggestion.
 
-1. **Men move only by sea in the first build.** Movement overland between hexes is a later rule of its own. The slice as far as the kill gate is the fight for Guadalcanal and Tulagi; the land fight in New Guinea waits.
+1. **Men move only by sea in the first build.** Movement overland between hexes is a later rule of its own. The slice as far as the kill gate is the fight for Guadalcanal and Tulagi; the land fight in New Guinea waits. Note, Nov 14, 2026: marching overland between linked hexes is now built by decision 0094.
 2. **The ground figures get a few coarse measures and no more.** Two or three, such as whether each attack on the airfield that the record names failed, and how fast an unfed force wasted. They are enough to make the campaign plausible. The measures belong to `docs/step2-spec.md` and `data/validation/`, which the second session owns: it adds them when stage 4 gives them something to measure, from the facts of stage 0.
 3. **Men aboard a ship that sinks are all lost,** as a known error, until there is a way to hold survivors who have no unit to go back to. It is put right together with pilots aboard a sinking carrier (decision 0059, item 10).
 4. **The plan is approved, and stage 0 starts now.** The code of stage 1 waits for step 2's three rules to land, as above.
