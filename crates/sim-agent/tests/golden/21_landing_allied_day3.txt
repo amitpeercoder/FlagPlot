@@ -52,9 +52,9 @@ BASES
   - Stocks yesterday: supply 0 t to 14 t (landed 14 t)
 
 LAND UNITS
-- land_unit:1 "Placeholder battalion 1": 600 men ashore at (8,0) Landing at (8,0); not known whether fed last night
-- land_unit:2 "Placeholder battalion 2": 400 men ashore at (8,0) Landing at (8,0); not known whether fed last night
-- land_unit:3 "Placeholder battalion 3": 262 men ashore at (10,0); 200 men aboard (ship:3 "Placeholder fast transport 1" 200); unfed last night
+- land_unit:1 "Placeholder battalion 1": 600 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 1; not known whether fed last night
+- land_unit:2 "Placeholder battalion 2": 400 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 1; not known whether fed last night
+- land_unit:3 "Placeholder battalion 3": 262 men ashore at (10,0); 200 men aboard (ship:3 "Placeholder fast transport 1" 200); posture defend, fatigue 0, fed share 0; unfed last night
 - Landed yesterday: 320 men of land_unit:1 "Placeholder battalion 1" from ship:1 "Placeholder troop transport 1" at (8,0) Landing at (8,0), 320 ashore and 280 left aboard [event 26]
 - Landed yesterday: 320 men of land_unit:2 "Placeholder battalion 2" from ship:2 "Placeholder troop transport 2" at (8,0) Landing at (8,0), 320 ashore and 80 left aboard [event 27]
 - Landed yesterday: 280 men of land_unit:1 "Placeholder battalion 1" from ship:1 "Placeholder troop transport 1" at (8,0) Landing at (8,0), 600 ashore and 0 left aboard [event 28]

@@ -59,6 +59,9 @@ as wanted, no longer 1 or 0, and a new field `days` beside it says how many
 days were counted; the points are the objective's points times `count` over
 `days`. `days` is null for every other objective.
 
+The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
+and values, so `version` stays 3.
+
 Land units (decision 0066) add only fields, so `version` stays 3: the
 briefing's `land_units` part and `men_fed_t` of a base's supply change, the
 `land_units` list of `list_forces`, the `land_unit` entity, `troops` of a ship
@@ -347,3 +350,43 @@ strike as a base that does not exist.
   `men_fed_t` when anything was paid for men. `rules_in_play.supply` is true
   where the ground figures are loaded as well as where the air supply figures
   are, since bases then spend supply on men.
+
+## The fight ashore and a base that changes side (decision 0090, as built)
+
+Fields and values added only, so `version` stays 3. The one place a field that
+was always present can now be `null` is `location` of an air group line, which
+is `null` for a group lost with a base that changed side: no group had that
+state before, so no answer of an earlier game changes, and the group's line
+also has `lost_with_base: true` (left out otherwise) and `place: null`.
+
+- **The posture order.** A land unit is ordered like any other unit:
+  `{"unit": "land_unit:2", "order": {"kind": "set_posture", "posture":
+  "attack"}}` (`defend` or `attack`). The unit is the side's own handle; one
+  that is not the side's own, one that does not exist and one written wrongly
+  all get the one refusal `not known`. A destroyed unit and a unit with no man
+  ashore get the engine's reasons (`the land unit is destroyed`, `the land unit
+  has no men ashore`) with a hint. A posture order is a standing order.
+  `order.schema.json` has a `land_unit_order`.
+- **A land unit line** (`list_forces`, `get_entity`, the briefing's `units`)
+  has `posture`, `fatigue` (0 to 100) and `fed_share` (0 to 1), and
+  `posture_order`, the side's number of its standing posture order, left out
+  when there is none.
+- **The briefing's `land_units` part** has, each left out when empty,
+  `fights_yesterday` (the hex only, never the attacker), `fire_yesterday` (the
+  side's own unit, its firing men and its shots, never the chance or the hits),
+  `fatigue_yesterday`, `back_to_defend_yesterday` and
+  `fed_share_restored_yesterday`. Men lost in the fight are lines of
+  `lost_yesterday` with `cause` `fight`, the hex and what is left ashore.
+- **The briefing's `base_changes` part** follows `land_units` and is left out
+  when nothing changed side and nothing was lost with a base: `taken` (the
+  stocks kept and the stocks lost), `lost` (the base and the hex, never its
+  stocks), `air_groups_lost`, `ships_lost`, `home_ports_lost` and
+  `strike_missions_cleared`. A side is told only its own half: the winner is
+  not told of the groups and the ship the other side lost with the base.
+- **Objectives.** `base_held` (the base is the side's own at the end; known
+  progress is exact, `count` 1 when the base is the side's own now) and
+  `men_lost` (points for each hundred enemy men lost, by any cause; not
+  observable before the end). They appear in the briefing and in the result.
+- **Bases.** The side of a base changes during a game, so the lists of bases
+  and the places that name them are read from the present state on every call;
+  nothing is kept from the start of the game.

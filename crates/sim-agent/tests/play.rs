@@ -112,8 +112,8 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Cargo, Mission, OrderKind, OrderRequest, Origin, Reach, Readiness,
-    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, Cargo, LandUnitOrder, Mission, OrderKind, OrderRequest, Origin,
+    Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
 use support::play::{order_json, play_day, served_json, session_of, ByDay};
@@ -269,6 +269,12 @@ fn examples() -> Vec<OrderKind> {
     ] {
         out.push(ag(AirGroupOrder::SetAirMission(mission)));
     }
+    for posture in [Posture::Defend, Posture::Attack] {
+        out.push(OrderKind::LandUnit {
+            target: sim_core::ids::LandUnitId::new(4),
+            order: LandUnitOrder::SetPosture(posture),
+        });
+    }
     out
 }
 
@@ -277,10 +283,14 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     let schemas = schemas();
     let mut seen_tf = [false; TF_KINDS];
     let mut seen_ag = [false; AG_KINDS];
+    let mut seen_posture = false;
     for kind in examples() {
         match &kind {
             OrderKind::TaskForce { order, .. } => seen_tf[tf_index(order)] = true,
             OrderKind::AirGroup { order, .. } => seen_ag[ag_index(order)] = true,
+            OrderKind::LandUnit { order, .. } => match order {
+                LandUnitOrder::SetPosture(_) => seen_posture = true,
+            },
         }
         let request = OrderRequest {
             kind: kind.clone(),
@@ -297,6 +307,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     }
     assert!(seen_tf.iter().all(|s| *s), "task force kinds: {seen_tf:?}");
     assert!(seen_ag.iter().all(|s| *s), "air group kinds: {seen_ag:?}");
+    assert!(seen_posture, "the land unit order is in the examples");
     // Every scripted order of every scenario is in the schema too.
     for name in [
         "05_eastern_solomons.toml",

@@ -155,10 +155,48 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::BeyondTransferRange { .. } => {
             " (the transfer range is twice the longer of the aircraft type's search range and strike radius; measure with question air_reach gives it, and a nearer base can be used first, the move made over two days)"
         }
+        R::LandUnitDestroyed => {
+            " (a destroyed unit has no man left, ashore or aboard, and takes no order)"
+        }
+        R::NoMenAshore => {
+            " (set_posture is for a unit with men ashore; a unit still aboard ship has none to order until it lands)"
+        }
+        R::AirGroupLostWithBase => {
+            " (the group was lost when the base it was at changed side; it has no place and takes no order)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }
         _ => "",
     };
     format!("{reason}{hint}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::refusal;
+    use sim_core::orders::RejectReason;
+
+    #[test]
+    fn the_refusals_of_a_posture_order_and_of_a_lost_group_have_their_hints() {
+        let destroyed = refusal(&RejectReason::LandUnitDestroyed);
+        assert!(
+            destroyed.starts_with("the land unit is destroyed (a destroyed unit has no man left"),
+            "{destroyed}"
+        );
+        let none_ashore = refusal(&RejectReason::NoMenAshore);
+        assert!(
+            none_ashore.starts_with(
+                "the land unit has no men ashore (set_posture is for a unit with men ashore"
+            ),
+            "{none_ashore}"
+        );
+        let lost = refusal(&RejectReason::AirGroupLostWithBase);
+        assert!(
+            lost.starts_with(
+                "the air group was lost with its base (the group was lost when the base"
+            ),
+            "{lost}"
+        );
+    }
 }

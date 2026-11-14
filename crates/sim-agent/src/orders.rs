@@ -11,8 +11,8 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
-    AirGroupOrder, AirMission, Cargo, Mission, OrderKind, Reach, Readiness, SpeedSetting, Stance,
-    StragglerInstruction, TaskForceOrder,
+    AirGroupOrder, AirMission, Cargo, LandUnitOrder, Mission, OrderKind, Posture, Reach, Readiness,
+    SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
 };
 use sim_core::refdata::ShipKind;
 
@@ -21,6 +21,7 @@ pub fn unit_text(kind: &OrderKind) -> String {
     match kind {
         OrderKind::TaskForce { target, .. } => format!("task_force:{}", target.raw()),
         OrderKind::AirGroup { target, .. } => format!("air_group:{}", target.raw()),
+        OrderKind::LandUnit { target, .. } => format!("land_unit:{}", target.raw()),
     }
 }
 
@@ -131,6 +132,12 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "base": base.raw(),
             }),
         },
+        OrderKind::LandUnit { order, .. } => match order {
+            LandUnitOrder::SetPosture(posture) => json!({
+                "kind": "set_posture",
+                "posture": posture.name(),
+            }),
+        },
     }
 }
 
@@ -180,10 +187,10 @@ fn fixed(value: &Value, key: &str) -> Result<Fixed, String> {
 }
 
 /// Whether `unit` is written as a unit an order can be for:
-/// `task_force:N` or `air_group:N` with `N` a whole number.
+/// `task_force:N`, `air_group:N` or `land_unit:N` with `N` a whole number.
 pub fn is_orderable_unit(unit: &str) -> bool {
     match unit.split_once(':') {
-        Some(("task_force" | "air_group", number)) => number.parse::<u32>().is_ok(),
+        Some(("task_force" | "air_group" | "land_unit", number)) => number.parse::<u32>().is_ok(),
         _ => false,
     }
 }
@@ -373,6 +380,20 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
             };
             Ok(OrderKind::AirGroup {
                 target: AirGroupId::new(raw),
+                order,
+            })
+        }
+        "land_unit" => {
+            let order = match kind {
+                "set_posture" => LandUnitOrder::SetPosture(match text(value, "posture")? {
+                    "defend" => Posture::Defend,
+                    "attack" => Posture::Attack,
+                    other => return Err(format!("unknown posture \"{other}\"")),
+                }),
+                other => return Err(format!("unknown land unit order \"{other}\"")),
+            };
+            Ok(OrderKind::LandUnit {
+                target: LandUnitId::new(raw),
                 order,
             })
         }

@@ -850,4 +850,678 @@ mod tests {
         assert!(!is_beaten(400, 2000, share));
         assert!(!is_beaten(520, 600, share));
     }
+
+    // ---- A base that changes side, by hand-built worlds (decisions 20 to
+    // 23 of 0090). Each world is Japanese base 1 at AT with nobody to
+    // defend it, and 1,000 Allied men ashore there on attack: the base falls
+    // without a fight in the ground combat phase.
+
+    use crate::events::Event;
+    use crate::ids::{AircraftTypeId, OrderId, ShipClassId};
+    use crate::invariants;
+    use crate::map::{HexData, Map};
+    use crate::orders::{
+        AirGroupOrder, Mission, OrderKind, OrderRequest, Origin, Reach, RejectReason,
+    };
+    use crate::refdata::{
+        AircraftRole, AircraftType, AttackWeapon, PortSize, RefData, SearchFigures, ShipClass,
+        ShipKind,
+    };
+    use crate::state::{
+        AirGroup, Base, LandUnit, Replacement, Ship, TaskForce, Troops, TruthState, YardTrip,
+    };
+
+    /// The contested hex, with Japanese base 1; Japanese base 2 and Allied
+    /// base 3 are elsewhere.
+    const AT: Hex = Hex::new(0, 0);
+    const ELSEWHERE: Hex = Hex::new(4, 0);
+    const FAR: Hex = Hex::new(8, 0);
+
+    fn n(whole: i64) -> Fixed {
+        Fixed::from_int(whole)
+    }
+
+    fn bid(id: u32) -> BaseId {
+        BaseId::new(id)
+    }
+
+    fn gid(id: u32) -> AirGroupId {
+        AirGroupId::new(id)
+    }
+
+    fn lid(id: u32) -> LandUnitId {
+        LandUnitId::new(id)
+    }
+
+    fn sid(id: u32) -> ShipId {
+        ShipId::new(id)
+    }
+
+    fn tid(id: u32) -> TaskForceId {
+        TaskForceId::new(id)
+    }
+
+    fn escort_class() -> ShipClass {
+        ShipClass {
+            id: ShipClassId::new(1),
+            name: "Test ship".to_string(),
+            kind: ShipKind::Cruiser,
+            cruise_speed_kn: n(16),
+            max_speed_kn: n(32),
+            fuel_capacity_t: n(1000),
+            endurance_nm: n(8000),
+            cargo_capacity_t: Fixed::ZERO,
+            main_guns: 0,
+            gun_rounds_per_min: Fixed::ZERO,
+            gun_rounds_per_gun: 0,
+            gun_damage: Fixed::ZERO,
+            torpedo_tubes: 0,
+            torpedo_tubes_one_side: 0,
+            torpedo_damage: Fixed::ZERO,
+            toughness: n(100),
+            radar: false,
+            aircraft_capacity: 20,
+            anti_aircraft: 0,
+            troop_capacity_men: 600,
+        }
+    }
+
+    fn fighter_type() -> AircraftType {
+        AircraftType {
+            id: AircraftTypeId::new(5),
+            name: "Test fighter".to_string(),
+            role: AircraftRole::Fighter,
+            search_range_nm: Fixed::ZERO,
+            sweep_width_nm: Fixed::ZERO,
+            strike_range_nm: n(250),
+            attack_weapon: AttackWeapon::None,
+            attack_damage: Fixed::ZERO,
+            pilot_armour: false,
+            self_sealing_tanks: false,
+        }
+    }
+
+    fn air_group(
+        id: u32,
+        side: Side,
+        location: AirGroupLocation,
+        ready: u32,
+        damaged: u32,
+        pilots: Option<u32>,
+    ) -> AirGroup {
+        AirGroup {
+            ready,
+            damaged,
+            pilots,
+            strength: ready + damaged + 2,
+            ..AirGroup::new(
+                gid(id),
+                format!("Air group {id}"),
+                side,
+                location,
+                AircraftTypeId::new(5),
+            )
+        }
+    }
+
+    /// The world: Japanese base 1 (60 t of supply, 40 t of fuel) at AT, with
+    /// no Japanese man there; Japanese base 2 at ELSEWHERE; Allied base 3 at
+    /// FAR. Allied unit 1, 1,000 men on attack at AT.
+    ///
+    /// Japanese: air group 1 at base 1 (9 ready, 2 damaged, 10 pilots); ship
+    /// 1 in port at base 1, with air group 7 aboard (6 ready, 1 damaged, 5
+    /// pilots) and 150 men of unit 2 (all it has); task force 1 at sea with
+    /// ship 2 and base 1 as its home port; task force 2 at sea with ship 3
+    /// and base 2 as its home port.
+    ///
+    /// Allied: air group 5 at base 3 on a strike on base 1; air group 6 at
+    /// base 3 on a strike on base 2.
+    fn world() -> World {
+        let mut map = Map::new();
+        for q in -1..=9 {
+            for r in -1..=1 {
+                map.insert(Hex::new(q, r), HexData::open_sea());
+            }
+        }
+        let mut ref_data = RefData::default();
+        ref_data
+            .ship_classes
+            .insert(escort_class().id, escort_class());
+        ref_data
+            .aircraft_types
+            .insert(fighter_type().id, fighter_type());
+        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.port_sizes.insert(
+            0,
+            PortSize {
+                berths: 0,
+                berth_rate_t_per_h: Fixed::ZERO,
+                lighter_rate_t_per_h: n(20),
+            },
+        );
+        ref_data.ground = Some(GroundFigures::FIRST);
+
+        let mut truth = TruthState::default();
+        for (id, side, hex, supply, fuel) in [
+            (1, Side::Japanese, AT, 60, 40),
+            (2, Side::Japanese, ELSEWHERE, 10, 0),
+            (3, Side::Allied, FAR, 100, 0),
+        ] {
+            truth.bases.insert(
+                bid(id),
+                Base {
+                    supply_t: n(supply),
+                    fuel_t: n(fuel),
+                    ..Base::new(bid(id), format!("Base {id}"), side, hex)
+                },
+            );
+        }
+        let mut unit = LandUnit::new(
+            lid(1),
+            "Allied unit".to_string(),
+            Side::Allied,
+            1000,
+            Some(AT),
+        );
+        unit.posture = Posture::Attack;
+        truth.land_units.insert(unit.id, unit);
+        truth.land_units.insert(
+            lid(2),
+            LandUnit::new(lid(2), "Japanese unit".to_string(), Side::Japanese, 0, None),
+        );
+        for (id, home, hex, ship) in [(1, 1, Hex::new(2, 0), 2), (2, 2, Hex::new(5, 0), 3)] {
+            let mut force = TaskForce::at(
+                tid(id),
+                format!("Force {id}"),
+                Side::Japanese,
+                hex,
+                Mission::Escort,
+            );
+            force.home_port = Some(bid(home));
+            force.ships.insert(sid(ship));
+            truth.task_forces.insert(force.id, force);
+            truth.ships.insert(
+                sid(ship),
+                Ship::new(
+                    sid(ship),
+                    format!("Ship {ship}"),
+                    ShipClassId::new(1),
+                    Side::Japanese,
+                    ShipLocation::TaskForce(tid(id)),
+                ),
+            );
+        }
+        truth.ships.insert(
+            sid(1),
+            Ship {
+                troops: Some(Troops {
+                    unit: lid(2),
+                    men: 150,
+                }),
+                ..Ship::new(
+                    sid(1),
+                    "Ship in port".to_string(),
+                    ShipClassId::new(1),
+                    Side::Japanese,
+                    ShipLocation::Port(bid(1)),
+                )
+            },
+        );
+        for group in [
+            air_group(
+                1,
+                Side::Japanese,
+                AirGroupLocation::Base(bid(1)),
+                9,
+                2,
+                Some(10),
+            ),
+            air_group(
+                7,
+                Side::Japanese,
+                AirGroupLocation::Ship(sid(1)),
+                6,
+                1,
+                Some(5),
+            ),
+            AirGroup {
+                mission: AirMission::BaseStrike(bid(1)),
+                mission_order: Some(OrderId::new(1)),
+                ..air_group(5, Side::Allied, AirGroupLocation::Base(bid(3)), 6, 0, None)
+            },
+            AirGroup {
+                mission: AirMission::BaseStrike(bid(2)),
+                mission_order: Some(OrderId::new(2)),
+                ..air_group(6, Side::Allied, AirGroupLocation::Base(bid(3)), 6, 0, None)
+            },
+        ] {
+            truth.air_groups.insert(group.id, group);
+        }
+        let world = World::new(7, ref_data, map, truth).expect("valid setup");
+        assert!(invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+        world
+    }
+
+    fn all_events(world: &World) -> Vec<Event> {
+        world.events().iter().cloned().collect()
+    }
+
+    fn sound(world: &World) {
+        let violations = invariants::check(&world.truth, &world.map, &world.ref_data);
+        assert!(violations.is_empty(), "{violations:?}");
+    }
+
+    /// The world after the ground combat phase of day 1.
+    fn fallen() -> World {
+        let mut world = world();
+        world.fight_ashore(1);
+        sound(&world);
+        world
+    }
+
+    fn one(events: &[Event], pick: impl Fn(&EventKind) -> bool) -> &Event {
+        let found: Vec<&Event> = events.iter().filter(|e| pick(&e.kind)).collect();
+        assert_eq!(found.len(), 1, "{found:?}");
+        found[0]
+    }
+
+    #[test]
+    fn a_base_with_no_man_falls_to_a_unit_on_attack_with_half_its_stocks() {
+        let world = fallen();
+        let events = all_events(&world);
+        let beaten = one(&events, |k| matches!(k, EventKind::SideBeatenAshore { .. }));
+        assert_eq!(
+            beaten.kind,
+            EventKind::SideBeatenAshore {
+                side: Side::Japanese,
+                hex: AT,
+                men: 0,
+                enemy_men: 1000,
+                fought: false,
+            }
+        );
+        let changed = one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        assert_eq!(
+            changed.kind,
+            EventKind::BaseChangedSide {
+                base: bid(1),
+                hex: AT,
+                from: Side::Japanese,
+                to: Side::Allied,
+                supply_t: n(30),
+                fuel_t: n(20),
+                supply_lost_t: n(30),
+                fuel_lost_t: n(20),
+            }
+        );
+        assert!(changed.causes.contains(&Cause::Event(beaten.id)));
+        let base = &world.truth.bases[&bid(1)];
+        assert_eq!(
+            (base.side, base.supply_t, base.fuel_t, base.on_map),
+            (Side::Allied, n(30), n(20), true)
+        );
+        // The base at another hex is not touched.
+        assert_eq!(world.truth.bases[&bid(2)].side, Side::Japanese);
+        assert_eq!(world.truth.bases[&bid(2)].supply_t, n(10));
+    }
+
+    #[test]
+    fn a_force_of_the_beaten_side_whose_home_port_it_was_has_none_and_another_keeps_its_own() {
+        let world = fallen();
+        let events = all_events(&world);
+        let changed = one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        let lost = one(&events, |k| matches!(k, EventKind::HomePortLost { .. }));
+        assert_eq!(
+            lost.kind,
+            EventKind::HomePortLost {
+                task_force: tid(1),
+                base: bid(1),
+            }
+        );
+        assert_eq!(lost.causes, vec![Cause::Event(changed.id)]);
+        assert_eq!(world.truth.task_forces[&tid(1)].home_port, None);
+        assert_eq!(world.truth.task_forces[&tid(2)].home_port, Some(bid(2)));
+    }
+
+    #[test]
+    fn a_winning_group_on_a_strike_at_the_base_rests_and_one_on_another_base_is_untouched() {
+        let world = fallen();
+        let events = all_events(&world);
+        let changed = one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        let cleared = one(&events, |k| {
+            matches!(k, EventKind::StrikeMissionCleared { .. })
+        });
+        assert_eq!(
+            cleared.kind,
+            EventKind::StrikeMissionCleared {
+                air_group: gid(5),
+                base: bid(1),
+            }
+        );
+        assert_eq!(cleared.causes, vec![Cause::Event(changed.id)]);
+        let five = &world.truth.air_groups[&gid(5)];
+        assert_eq!((five.mission, five.mission_order), (AirMission::Rest, None));
+        let six = &world.truth.air_groups[&gid(6)];
+        assert_eq!(
+            (six.mission, six.mission_order),
+            (AirMission::BaseStrike(bid(2)), Some(OrderId::new(2)))
+        );
+        assert!(!events.iter().any(|e| matches!(&e.kind,
+            EventKind::StrikeMissionCleared { air_group, .. } if *air_group == gid(6))));
+    }
+
+    #[test]
+    fn an_air_group_at_the_base_is_lost_whole_with_its_pilots() {
+        let world = fallen();
+        let events = all_events(&world);
+        let changed = one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        let lost = one(&events, |k| {
+            matches!(k, EventKind::AirGroupLostWithBase { .. })
+        });
+        assert_eq!(
+            lost.kind,
+            EventKind::AirGroupLostWithBase {
+                air_group: gid(1),
+                base: bid(1),
+                aircraft: 11,
+            }
+        );
+        assert_eq!(lost.causes, vec![Cause::Event(changed.id)]);
+        let group = &world.truth.air_groups[&gid(1)];
+        assert_eq!(group.location, AirGroupLocation::Lost);
+        assert_eq!((group.ready, group.damaged, group.pilots), (0, 0, Some(0)));
+        let pilots = events
+            .iter()
+            .find(|e| {
+                matches!(&e.kind, EventKind::PilotsLost { air_group, .. } if *air_group == gid(1))
+            })
+            .expect("the pilots are lost");
+        assert_eq!(
+            pilots.kind,
+            EventKind::PilotsLost {
+                air_group: gid(1),
+                lost: 10,
+                left: 0,
+            }
+        );
+        assert_eq!(pilots.causes, vec![Cause::Event(lost.id)]);
+        // Allied groups elsewhere are not touched.
+        assert_eq!(
+            world.truth.air_groups[&gid(5)].location,
+            AirGroupLocation::Base(bid(3))
+        );
+    }
+
+    #[test]
+    fn a_group_with_no_pilots_counted_is_lost_with_no_pilot_event() {
+        let mut world = world();
+        world.truth.air_groups.get_mut(&gid(1)).unwrap().pilots = None;
+        world.fight_ashore(1);
+        let events = all_events(&world);
+        assert_eq!(world.truth.air_groups[&gid(1)].pilots, None);
+        assert!(!events.iter().any(|e| matches!(&e.kind,
+            EventKind::PilotsLost { air_group, .. } if *air_group == gid(1))));
+        assert_eq!(
+            world.truth.air_groups[&gid(1)].location,
+            AirGroupLocation::Lost
+        );
+        sound(&world);
+    }
+
+    #[test]
+    fn a_ship_in_port_is_sunk_with_the_group_and_the_men_aboard_her() {
+        let world = fallen();
+        let events = all_events(&world);
+        let changed = one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        let sunk = one(&events, |k| matches!(k, EventKind::ShipLostWithBase { .. }));
+        assert_eq!(
+            sunk.kind,
+            EventKind::ShipLostWithBase {
+                ship: sid(1),
+                base: bid(1),
+            }
+        );
+        assert_eq!(sunk.causes, vec![Cause::Event(changed.id)]);
+        assert_eq!(world.truth.ships[&sid(1)].location, ShipLocation::Sunk);
+        // The group aboard her is lost with her, as with a ship that sinks.
+        let group = one(&events, |k| matches!(k, EventKind::AirGroupLost { .. }));
+        assert_eq!(
+            group.kind,
+            EventKind::AirGroupLost {
+                air_group: gid(7),
+                ship: sid(1),
+                aircraft: 7,
+            }
+        );
+        assert_eq!(group.causes, vec![Cause::Event(sunk.id)]);
+        let aboard = &world.truth.air_groups[&gid(7)];
+        assert_eq!(
+            (aboard.ready, aboard.damaged, aboard.pilots),
+            (0, 0, Some(0))
+        );
+        // The men aboard her are lost with her, and a unit with no man left
+        // is destroyed.
+        let men = one(&events, |k| matches!(k, EventKind::MenLostWithShip { .. }));
+        assert_eq!(
+            men.kind,
+            EventKind::MenLostWithShip {
+                unit: lid(2),
+                ship: sid(1),
+                men: 150,
+            }
+        );
+        assert_eq!(men.causes, vec![Cause::Event(sunk.id)]);
+        assert_eq!(world.truth.ships[&sid(1)].troops, None);
+        assert!(events
+            .iter()
+            .any(|e| e.kind == EventKind::LandUnitDestroyed { unit: lid(2) }));
+        // A force at sea in the hex or near it is not touched.
+        assert!(matches!(
+            world.truth.ships[&sid(2)].location,
+            ShipLocation::TaskForce(_)
+        ));
+    }
+
+    #[test]
+    fn every_order_to_a_group_lost_with_its_base_is_refused() {
+        let mut world = fallen();
+        let requests: Vec<OrderRequest> = [
+            AirGroupOrder::SetAirMission(AirMission::Search),
+            AirGroupOrder::SetSearchArc {
+                from_deg: 0,
+                to_deg: 90,
+                range_nm: n(100),
+            },
+            AirGroupOrder::SetPatrolShare { share: Fixed::ONE },
+            AirGroupOrder::SetRestThreshold { fatigue: n(50) },
+            AirGroupOrder::SetReach {
+                reach: Reach::Extended,
+            },
+            AirGroupOrder::SetTargetPriority {
+                kinds: vec![ShipKind::Carrier],
+            },
+            AirGroupOrder::Rebase { base: bid(2) },
+        ]
+        .into_iter()
+        .map(|order| OrderRequest {
+            kind: OrderKind::AirGroup {
+                target: gid(1),
+                order,
+            },
+            origin: Origin::PLAYER,
+        })
+        .collect();
+        let count = requests.len();
+        world.submit_orders(Side::Japanese, requests);
+        world.resolve_day().expect("the day resolves");
+        let events = all_events(&world);
+        let refused: Vec<&RejectReason> = events
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::OrderRejected { reason, .. } => Some(reason),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(refused, vec![&RejectReason::AirGroupLostWithBase; count]);
+        assert!(!events
+            .iter()
+            .any(|e| matches!(e.kind, EventKind::OrderAccepted { .. })));
+        // The group is still lost and flies nothing.
+        assert_eq!(
+            world.truth.air_groups[&gid(1)].location,
+            AirGroupLocation::Lost
+        );
+        sound(&world);
+    }
+
+    #[test]
+    fn a_force_away_at_the_yard_from_the_port_returns_to_the_hex_and_finds_no_base() {
+        let mut world = world();
+        // Force 1 left from base 1 and is due back on day 2. Its ship is at
+        // the yard.
+        {
+            let force = world.truth.task_forces.get_mut(&tid(1)).unwrap();
+            force.ships.clear();
+            force.from_hex = AT;
+            force.yard_trip = Some(YardTrip {
+                base: bid(1),
+                return_day: 2,
+                departure: EventId::new(0),
+            });
+            world.truth.ships.get_mut(&sid(2)).unwrap().location = ShipLocation::Yard(tid(1));
+        }
+        sound(&world);
+        world.resolve_day().expect("day 1 resolves: the base falls");
+        assert_eq!(world.truth.bases[&bid(1)].side, Side::Allied);
+        // The force is away and has lost its home port, with an event.
+        assert_eq!(world.truth.task_forces[&tid(1)].home_port, None);
+        assert!(world.truth.task_forces[&tid(1)].yard_trip.is_some());
+        let events = all_events(&world);
+        let changed = one(&events, |k| matches!(k, EventKind::BaseChangedSide { .. }));
+        let lost = one(&events, |k| matches!(k, EventKind::HomePortLost { .. }));
+        assert_eq!(lost.causes, vec![Cause::Event(changed.id)]);
+        sound(&world);
+        world
+            .resolve_day()
+            .expect("day 2 resolves: the force returns");
+        let events = all_events(&world);
+        let back = one(&events, |k| {
+            matches!(k, EventKind::ForceReturnedFromYard { .. })
+        });
+        assert_eq!(back.day, 2);
+        assert!(matches!(&back.kind,
+            EventKind::ForceReturnedFromYard { task_force, base, .. }
+                if *task_force == tid(1) && *base == bid(1)));
+        let force = &world.truth.task_forces[&tid(1)];
+        assert_eq!(force.yard_trip, None);
+        assert_eq!(force.position(), AT);
+        assert_eq!(force.home_port, None);
+        assert_eq!(
+            world.truth.ships[&sid(2)].location,
+            ShipLocation::TaskForce(tid(1))
+        );
+        // No Japanese base is in the hex: it finds none.
+        assert!(!world
+            .truth
+            .bases
+            .values()
+            .any(|base| base.side == Side::Japanese && base.hex == AT));
+        sound(&world);
+    }
+
+    #[test]
+    fn a_replacement_stream_of_the_beaten_side_delivers_nothing_after_the_base_falls() {
+        let mut world = world();
+        world.truth.replacements.push(Replacement {
+            side: Side::Japanese,
+            base: bid(1),
+            aircraft_type: AircraftTypeId::new(5),
+            aircraft_per_day: 5,
+            pilots_per_day: 3,
+        });
+        world.resolve_day().expect("day 1");
+        // An Allied group of the same type, short of its strength, is now at
+        // base 1, which is the Allied side's.
+        world.truth.air_groups.insert(
+            gid(8),
+            air_group(
+                8,
+                Side::Allied,
+                AirGroupLocation::Base(bid(1)),
+                4,
+                0,
+                Some(1),
+            ),
+        );
+        let before = world.truth.air_groups[&gid(8)].clone();
+        world.resolve_day().expect("day 2");
+        world.resolve_day().expect("day 3");
+        let events = all_events(&world);
+        assert!(!events
+            .iter()
+            .any(|e| matches!(e.kind, EventKind::ReplacementsReceived { .. })));
+        assert_eq!(world.truth.air_groups[&gid(8)], before);
+        // The lost group has nothing either.
+        let lost = &world.truth.air_groups[&gid(1)];
+        assert_eq!(
+            (lost.location, lost.ready, lost.pilots),
+            (AirGroupLocation::Lost, 0, Some(0))
+        );
+        sound(&world);
+    }
+
+    #[test]
+    fn from_the_next_day_the_base_feeds_men_of_its_new_side() {
+        let mut world = world();
+        world.resolve_day().expect("day 1: the base falls");
+        let events = all_events(&world);
+        // Night of day 1: no base of the side yet; the 1,000 men are unfed
+        // and lose 50.
+        let night_1 = events
+            .iter()
+            .find_map(|e| match &e.kind {
+                EventKind::MenFed {
+                    side: Side::Allied,
+                    base,
+                    men,
+                    fed,
+                    unfed,
+                    ..
+                } if e.day == 1 => Some((*base, *men, *fed, *unfed)),
+                _ => None,
+            })
+            .expect("the night of day 1");
+        assert_eq!(night_1, (None, 1000, 0, 1000));
+        assert_eq!(world.truth.land_units[&lid(1)].men_ashore, 950);
+        assert_eq!(world.truth.land_units[&lid(1)].fed_share, Fixed::ZERO);
+        world.resolve_day().expect("day 2");
+        let events = all_events(&world);
+        // Night of day 2: the 950 men are fed from base 1, which pays
+        // 950 x 0.005 = 4.75 t of its 30.
+        let fed = events
+            .iter()
+            .find_map(|e| match &e.kind {
+                EventKind::MenFed {
+                    side: Side::Allied,
+                    base,
+                    men,
+                    fed,
+                    unfed,
+                    ..
+                } if e.day == 2 => Some((*base, *men, *fed, *unfed)),
+                _ => None,
+            })
+            .expect("the night of day 2");
+        assert_eq!(fed, (Some(bid(1)), 950, 950, 0));
+        assert_eq!(
+            world.truth.bases[&bid(1)].supply_t,
+            "25.25".parse().unwrap()
+        );
+        assert_eq!(world.truth.land_units[&lid(1)].fed_share, Fixed::ONE);
+        // The Japanese unit never fed from it, and nothing of the Japanese
+        // side is charged there.
+        assert!(!events.iter().any(|e| matches!(&e.kind,
+            EventKind::MenFed { side: Side::Japanese, hex, .. } if *hex == AT)));
+        sound(&world);
+    }
 }

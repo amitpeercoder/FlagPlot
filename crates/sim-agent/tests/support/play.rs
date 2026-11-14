@@ -40,6 +40,7 @@ struct Numbering {
     ships: BTreeMap<u32, (Side, u32)>,
     forces: BTreeMap<u32, (Side, u32)>,
     groups: BTreeMap<u32, (Side, u32)>,
+    land_units: BTreeMap<u32, (Side, u32)>,
 }
 
 thread_local! {
@@ -74,6 +75,12 @@ fn register_numbering(world: &sim_core::World) {
                 (side, number(super::group_handle(&view, group.id))),
             );
         }
+        for unit in view.land_units() {
+            numbering.land_units.insert(
+                unit.id.raw(),
+                (side, number(super::land_unit_handle(&view, unit.id))),
+            );
+        }
     }
     NUMBERING.with(|n| *n.borrow_mut() = numbering);
 }
@@ -91,11 +98,12 @@ pub fn served_json(side: Side, request: &OrderRequest) -> Value {
         let (kind, raw) = match &request.kind {
             sim_core::orders::OrderKind::TaskForce { target, .. } => ("task_force", target.raw()),
             sim_core::orders::OrderKind::AirGroup { target, .. } => ("air_group", target.raw()),
+            sim_core::orders::OrderKind::LandUnit { target, .. } => ("land_unit", target.raw()),
         };
-        let (owner, number) = if kind == "task_force" {
-            n.forces[&raw]
-        } else {
-            n.groups[&raw]
+        let (owner, number) = match kind {
+            "task_force" => n.forces[&raw],
+            "land_unit" => n.land_units[&raw],
+            _ => n.groups[&raw],
         };
         let number = if owner == side { number } else { 90_000 + raw };
         doc["unit"] = json!(format!("{kind}:{number}"));

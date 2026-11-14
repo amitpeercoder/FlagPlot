@@ -452,6 +452,7 @@ impl Session {
         let number: u32 = number.parse().expect("an orderable unit has a number");
         let raw = match kind_of_unit {
             "task_force" => ctx.own_force(number).map(|f| f.id.raw()),
+            "land_unit" => ctx.own_land_unit(number).map(|u| u.id.raw()),
             _ => ctx.own_group(number).map(|g| g.id.raw()),
         }
         .unwrap_or(NO_SUCH_UNIT);
@@ -466,6 +467,13 @@ impl Session {
         match self.world.check_order(side, &request) {
             Ok(()) => Ok(request),
             Err(RejectReason::NotYourUnit) => Err(NOT_KNOWN.to_string()),
+            // A posture order for a land unit that is not the side's own
+            // (an enemy's, or one that does not exist) is refused alike.
+            Err(RejectReason::NotYourLandUnit)
+                if matches!(request.kind, OrderKind::LandUnit { .. }) =>
+            {
+                Err(NOT_KNOWN.to_string())
+            }
             // The engine's words may name a ship by its umpire's number: show
             // the side's, or the number the side wrote for a stand-in.
             Err(reason) => Err(map_unit_tokens(

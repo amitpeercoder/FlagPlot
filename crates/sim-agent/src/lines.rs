@@ -77,8 +77,13 @@ pub struct PropulsionLine {
 pub struct AirGroupLine {
     pub air_group: Handle,
     pub aircraft_type: String,
-    /// The base or the ship it is at.
-    pub location: Handle,
+    /// The base or the ship it is at; `None` for a group lost with a base
+    /// that changed side (decision 0090, 20), which has no place.
+    pub location: Option<Handle>,
+    /// Set only for a group lost with its base (decision 0090, 20): it has
+    /// no place, no aircraft and takes no order. Left out otherwise.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub lost_with_base: bool,
     pub place: Option<Place>,
     pub ready: u32,
     pub damaged: u32,
@@ -252,8 +257,9 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
 
 pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
     let location = match group.location {
-        sim_core::state::AirGroupLocation::Base(base) => ctx.base(base),
-        sim_core::state::AirGroupLocation::Ship(ship) => ctx.ship(ship),
+        sim_core::state::AirGroupLocation::Base(base) => Some(ctx.base(base)),
+        sim_core::state::AirGroupLocation::Ship(ship) => Some(ctx.ship(ship)),
+        sim_core::state::AirGroupLocation::Lost => None,
     };
     let target = match group.mission {
         AirMission::BaseStrike(base) => Some(ctx.base(base)),
@@ -285,6 +291,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         air_group: ctx.group(group.id),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),
+        lost_with_base: location.is_none(),
         location,
         place: ctx.group_hex(group).map(|hex| ctx.place(hex)),
         ready: group.ready,
@@ -350,6 +357,19 @@ pub struct LandUnitLine {
     /// `not_known` when the side holds no such event for the hex (no night
     /// has been resolved, or the unit came ashore since).
     pub fed_last_night: &'static str,
+    /// `defend` or `attack` (decision 0090, 1).
+    pub posture: &'static str,
+    /// How tired the unit is, 0 to 100 (decision 0090, 11). It cuts the men
+    /// who fire and nothing else.
+    pub fatigue: Dec,
+    /// The share of the unit's men fed at the last night's charge, 0 to 1
+    /// (decision 0090, 8): 1 until the first night and for a unit that had
+    /// no man ashore at the charge.
+    pub fed_share: Dec,
+    /// The number of the side's standing posture order, if one is in force.
+    /// Left out when none is.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub posture_order: Option<u32>,
 }
 
 /// How the side's men ashore were fed in the last night pulse, by hex, from
@@ -425,5 +445,9 @@ pub(crate) fn land_unit_line(
             None => "not_ashore",
             Some(hex) => fed.get(&hex).copied().unwrap_or("not_known"),
         },
+        posture: unit.posture.name(),
+        fatigue: Dec(unit.fatigue),
+        fed_share: Dec(unit.fed_share),
+        posture_order: unit.posture_order.and_then(|o| ctx.order_number_if_own(o)),
     }
 }

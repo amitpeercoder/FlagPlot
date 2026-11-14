@@ -42,9 +42,10 @@ pub struct LevelsPart {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ObjectiveLine {
     /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
-    /// `aircraft_destroyed`, `cargo_landed` or `base_open`.
+    /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held` or
+    /// `men_lost`.
     pub kind: &'static str,
-    /// The base of `cargo_landed` and `base_open`.
+    /// The base of `cargo_landed`, `base_open` and `base_held`.
     pub base: Option<Handle>,
     /// For `base_open`: true if the side wants the base shut.
     pub closed: Option<bool>,
@@ -59,7 +60,9 @@ pub struct ObjectiveLine {
     pub horizon_days: Option<u32>,
     /// Points for one aircraft (`aircraft_destroyed`), one ton
     /// (`cargo_landed`) or the base being as wanted on every day
-    /// (`base_open`, which earns the share of the days it was).
+    /// (`base_open`, which earns the share of the days it was); the base
+    /// being the side's own at the end (`base_held`); or each 100 enemy men
+    /// lost (`men_lost`, decision 0090, 26).
     pub points: Option<Dec>,
     /// What the side knows of its progress, from its own units and the events
     /// it may see.
@@ -213,6 +216,8 @@ fn line(
             line.closed = Some(*closed);
             line.points = Some(Dec(*points));
         }
+        Objective::BaseHeld { points, .. } => line.points = Some(Dec(*points)),
+        Objective::MenLost { points_per_100_men } => line.points = Some(Dec(*points_per_100_men)),
     }
     line
 }

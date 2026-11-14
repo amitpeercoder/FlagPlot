@@ -687,7 +687,8 @@ fn eastern_solomons_the_japanese_launches_are_at_the_distance_measure_gives_from
                             })?;
                     Some((g.id.to_string(), force))
                 }
-                sim_core::state::AirGroupLocation::Base(_) => None,
+                sim_core::state::AirGroupLocation::Base(_)
+                | sim_core::state::AirGroupLocation::Lost => None,
             })
             .collect();
         let radius: BTreeMap<String, Fixed> = view
