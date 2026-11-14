@@ -128,8 +128,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 10 adds a ship's `troops` after its `system_repair_points`, a
 /// base's `on_map` after its `yard_passage_days`, a cargo order's `unit` after
 /// its order and the cargo action `LoadNoCargo` (code 4), and the land units
-/// after the arrivals (decision 0066).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v10";
+/// after the arrivals (decision 0066);
+/// version 11 adds an air group's `rebased_day` after its
+/// `last_base_strike_day` (decision 0091).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v11";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -301,6 +303,7 @@ fn name_every_field(world: &World) {
             target_priority: _,
             target_order: _,
             last_base_strike_day: _,
+            rebased_day: _,
         } = group;
         if let Some(SearchArc {
             from_deg: _,
@@ -577,6 +580,8 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
         h.optional_u32(group.target_order.map(|id| id.raw()));
         h.optional_u32(group.last_base_strike_day);
+        // Last in the group (decision 0091).
+        h.optional_u32(group.rebased_day);
     }
 
     h.count(truth.replacements.len());

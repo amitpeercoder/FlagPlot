@@ -1,0 +1,17 @@
+Scenario 22: Rebasing an air group
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 63cc1cc4030e8b8e  7 events
+day   2  hash a948fc167d8487dd  8 events
+day   3  hash df98ca2d38e4d691  5 events
+
+air_group:1 "Placeholder patrol squadron" (Allied) at base:2: 6 ready, mission Search, arc 060-120 to 400 nm
+air_group:2 "Placeholder fighter squadron" (Allied) at base:1: 12 ready, mission Rest, no arc
+base:1 "Placeholder airfield 1" (Allied) at (0,0): 0 t of supply in stock
+base:2 "Placeholder airfield 2" (Allied) at (5,0): 0 t of supply in stock
+base:3 "Placeholder airfield 3" (Allied) at (13,0): 0 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

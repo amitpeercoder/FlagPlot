@@ -1,0 +1,35 @@
+# PLACEHOLDER MAP. A strip of open sea with three airfields on one row, used
+# by scenario 22 (decision 0091): (0,0), (5,0) 200 nm east and (13,0) 520 nm
+# east. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 15]
+r = [-3, 3]
+
+# Stands in for base 1.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for base 2, 200 nm east.
+[[hex]]
+q = 5
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for base 3, 520 nm east.
+[[hex]]
+q = 13
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

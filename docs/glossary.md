@@ -30,6 +30,8 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Target list** | The kinds of ship a strike group goes for, in order, set by order. The default is all six kinds in the order of importance. A group is launched only at a contact taken for a kind on its list, and attacks over the target the ship its list ranks first, the kinds not on it following in the order of importance (decision 0063) | Target priority, priorities |
 | **In the air** | Describes the aircraft of a group that flew in the pulse and were not shot down, until the wear phase of the pulse brings them home (decision 0059) | Aboard |
 | **Landed elsewhere** | Describes aircraft that were in the air when their own deck was lost and landed at another carrier or a base, joining or forming a group there (decision 0059) | Rebased |
+| **Rebase** | An order that moves an air group at a base to another base of its side at once. Its ready aircraft and pilots go with it, its damaged aircraft are written off, and it flies nothing that day (decision 0091) | Landed elsewhere; a group moving with its ship |
+| **Transfer range** | How far an air group may be rebased: twice the longer of its type's search range and strike radius, by air distance between the two bases (decision 0091) | Reach; radius |
 | **Ditched** | Describes an aircraft that ran out of fuel on the way home from a sortie beyond its radius, or that found no deck to land on, and came down in the sea. It is gone from the group for good and its crew may be recovered or lost (decision 0059) | Shot down, written off |
 | **Range** | How far an aircraft flies one way, as a sourced fact. Only the derivation tool reads it. The engine reads the radius columns, whose names say range (corrected against the code, which reads `search_range_nm`) | |
 | **Crippled** | A ship afloat, at sea, in port or at the yard, whose propulsion or flight deck is out. The objective `ships_crippled` counts them; degraded does not count (decision 0054) | Heavily damaged; slowed |
@@ -134,14 +136,14 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Result** | The umpire's points, margin and outcome for each side, worked from the final truth and the event log. It is given when the game ends | What a side knows of its progress |
 | **Cargo landed** | For the objective: the tons a side's ships unloaded at a base less the tons they loaded back there, never below 0 (decision 0067) | Tons unloaded |
 | **Base open** | A base that ends a day with supply above zero and at least one ready aircraft at it. The objective counts the days (decision 0067) | A base's state at the end of the game |
-| **Air group** | One unit of aircraft of one type, at a base or aboard a ship | A raid |
+| **Air group** | One unit of aircraft of one type, at a base or aboard a ship. A group at a base may be moved to another base by a rebase order | A raid |
 | **Ready aircraft** | Aircraft of a group that are fit to fly | |
 | **Damaged aircraft** | Aircraft that came back worn and cannot fly until repaired | Aircraft lost |
 | **Strength** | The ceiling an air group's aircraft and pilots are replaced up to | The number of aircraft it has now |
 | **Pilots** | A count for an air group. One pilot stands for the crew of one aircraft | People |
 | **Sortie** | One kind of flight by one group in one pulse, out and back: a search, a strike, a patrol or an escort | |
 | **Wear** | The roll an aircraft that came back makes after a sortie. A worn aircraft leaves ready and joins damaged, or is written off | |
-| **Write off** | To lose a worn aircraft for good | Shoot down |
+| **Write off** | To lose an aircraft for good without a fight: a worn aircraft that is not repaired, or a damaged aircraft left behind when its group is rebased (decision 0091) | Shoot down |
 | **Fatigue** | A number from 0 to 100 for an air group or a task force. It rises by flying or by being alert, and falls by rest | |
 | **Stood down** | Describes an air group the staff has stopped from flying for the day because its fatigue is above its rest threshold | |
 | **Rest threshold** | The fatigue above which the staff stands an air group down (decision 0036) | |

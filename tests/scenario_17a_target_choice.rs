@@ -641,9 +641,11 @@ fn case_7_an_unarmed_ship_counting_for_its_place() {
 /// was 0x69d03b89e5b56452 until the state went to version 9 (decision 0069,
 /// ship repair) and five figures were added to surface_combat.toml; the log
 /// was unchanged. It was 0x8b7cd91a2f608ed5 until the state went to version
-/// 10 (decision 0066, land units); the log was unchanged again.
+/// 10 (decision 0066, land units); the log was unchanged again. It was
+/// 0x8411a9fd58a3680b until the state went to version 11 (decision 0091,
+/// rebasing); the log was unchanged again.
 const CASE_8_LOG: &str = include_str!("golden/17a_case_8_events.txt");
-const CASE_8_HASH: u64 = 0x8411a9fd58a3680b;
+const CASE_8_HASH: u64 = 0x3f24661c88fb42de;
 
 fn log_text(events: &[Event]) -> String {
     let mut text = String::new();

@@ -35,6 +35,7 @@ mod ground;
 mod invariants;
 mod landing;
 mod movement;
+mod rebase;
 mod refuel;
 mod resolve;
 mod search;

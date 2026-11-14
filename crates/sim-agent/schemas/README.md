@@ -85,7 +85,7 @@ nothing of the question.
 | `sea_route` | `from`, `to`: places | whether ships can get there, the hexes entered in order and the miles |
 | `passage` | `task_force`: `"task_force:N"`; `to`: a place; `speed` (optional): `"cruise"`, `"full"` or knots above zero, `17` or `"17.5"` | a forecast of the force's passage: the route, the speed, the hours, the day, pulse and clock time of arrival, and each ship's fuel |
 | `yard` | `task_force`: `"task_force:N"` | what a `send_to_yard` order given now would do (decision 0069): whether the engine would take it and why not, the port and passage, each ship's days of repair, the days away, the day it leaves, `return_day` and `returns_before_end`; for a force away, its port and `return_day` |
-| `air_reach` | `air_group`: `"air_group:N"`; `to`: a list of places | the type's radius, and for each place the air distance and whether it is within the radius |
+| `air_reach` | `air_group`: `"air_group:N"`; `to`: a list of places | the type's radius, the transfer range a `rebase` order can cover, and for each place the air distance and whether it is within the radius |
 
 A place is `{"q": 2, "r": -4}`, or the handle of one of the side's own ships,
 task forces, air groups or bases, or of a contact it holds (which stands for

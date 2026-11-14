@@ -698,6 +698,14 @@ pub fn count(
                 written_off,
                 ..
             } => loss(&mut losses, *air_group).worn_out += u64::from(*written_off),
+            // Damaged aircraft left behind by a rebase are lost for good as
+            // aircraft written off by wear are, and counted with them
+            // (decision 0091, 5).
+            EventKind::AircraftWrittenOff {
+                air_group,
+                aircraft,
+                ..
+            } => loss(&mut losses, *air_group).worn_out += u64::from(*aircraft),
             EventKind::AircraftDitched {
                 air_group, ditched, ..
             } => loss(&mut losses, *air_group).ditched_fuel += u64::from(*ditched),

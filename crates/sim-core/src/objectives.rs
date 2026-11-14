@@ -35,14 +35,15 @@
 //!   she left for a yard. Her share is the days out, at most the horizon,
 //!   over the horizon; her points are her kind's points times her share.
 //! - `aircraft_destroyed`: the aircraft of the enemy's air groups lost for
-//!   good, from six events: `AircraftLost` (shot down, in the air),
+//!   good, from these events: `AircraftLost` (shot down, in the air),
 //!   `AirGroupLost` (lost with a sunk ship, ready and damaged),
 //!   `AircraftDestroyedOnGround` (ready), `DamagedAircraftDestroyedOnGround`
 //!   (damaged), `AircraftWorn::written_off` and `AircraftDitched::ditched`
 //!   (out of fuel on the way home, decision 5 of 0059: counted for the enemy
-//!   though no one claims it) and `AircraftDitchedNoDeck` (no deck, decision
-//!   9 of 0059). Aircraft that land elsewhere are not lost and are not
-//!   counted. Not counted: `AircraftWorn`
+//!   though no one claims it), `AircraftDitchedNoDeck` (no deck, decision
+//!   9 of 0059) and `AircraftWrittenOff` (damaged aircraft left behind by a
+//!   rebase, decision 0091, 5). Aircraft that land elsewhere are not lost and
+//!   are not counted. Not counted: `AircraftWorn`
 //!   `worn` (damaged and repaired later, not lost), `PilotsLost` (pilots, not
 //!   aircraft; the aircraft's own event counts the aircraft), `AircraftRepaired`
 //!   and every event that adds aircraft.
@@ -426,6 +427,13 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
                 ..
             }
             | EventKind::AircraftDitchedNoDeck {
+                air_group,
+                aircraft,
+                ..
+            }
+            // Damaged aircraft left behind by a rebase (decision 0091, 5),
+            // counted as aircraft lost to wear are.
+            | EventKind::AircraftWrittenOff {
                 air_group,
                 aircraft,
                 ..

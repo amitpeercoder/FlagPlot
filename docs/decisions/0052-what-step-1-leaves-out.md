@@ -15,6 +15,8 @@ A check of the spec against the code, made as step 1 closes, found things the sp
 5. **Pilots are a count for each air group, not people** (decision 0038). Skills by mission, experience and status for each pilot wait for step 2, where pilot quality is tuned against the record. This was built so and is now recorded as a choice.
 6. **Weapons are figures on a ship class and an aircraft type, not a table of their own.** The derivation reads weapons from the order-of-battle facts (decision 0020) and writes the figures a rule needs. A weapon table in the simulation's data would repeat them.
 7. **Task force orders to form, disband and add ships, and air group orders to rebase, set target priority and set a range limit**, stay deferred as decision 0050 says. A search arc's range is the only range limit there is.
+
+   *Nov 14, 2026: rebasing is now built, by decision 0091.*
 8. **Weather** stays out, as decisions 0005, 0012, 0017, 0036 and 0042 each say for their own rule.
 9. **Events for one unit will be built before step 1 is called done.** The spec's definition of done says the event log answers "what happened to this entity". `explain` answers "why" for an event, and nothing yet lists the events that name one unit. It is small and it is promised, so it is built and not deferred.
 10. **The spec's count of crates and scenarios is out of date** (three crates, eight scenarios). `CLAUDE.md` holds the layout as it is. The spec gets a note under "Scope" pointing here and is otherwise left as written, so it still shows what was first intended.

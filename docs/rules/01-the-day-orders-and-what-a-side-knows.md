@@ -52,7 +52,7 @@ A side sees: nothing is hidden. It is common knowledge.
 
 1. **Returns from the yard.** Each force whose day of return is this day, in force number order, comes back to its base with its ships repaired, refuelled and rearmed. Chapter 4, Repair. [0069]
 2. **Refuelling in port.** A force stopped at its own side's base fills its ships from the base's fuel stock. Chapter 2, Refuelling in port. [0045]
-3. **Orders intake.** Every order submitted since the last day is numbered, checked and applied, or refused. Events carry no pulse. A yard order is applied here, at its acceptance. This chapter, Orders. [0008, 0043, 0069]
+3. **Orders intake.** Every order submitted since the last day is numbered, checked and applied, or refused. Events carry no pulse. A yard order and a rebase order are applied here, at their acceptance. This chapter, Orders; chapter 5, Rebasing an air group. [0008, 0043, 0069, 0091]
 4. **Forward repair.** Each base that mends points of ship damage a day spends them on the forces stopped in its hex. Chapter 4, Repair. [0069]
 
 Returns come first, so that a force back from the yard is at its base for the day's refuelling and for its orders. Refuelling comes before intake, so the orders of the day are checked against a state in which refuelling has happened. Forward repair comes after intake, so that the days a yard order states are the days the force leaves with, and a force ordered to sail that morning is not repaired that day. None of the four is a pulse phase: each runs once a day, outside the pulses. [0045, 0069]
@@ -135,7 +135,7 @@ A side sees: it sees the events of its own units, as the event table below says,
 
 An order is addressed to one unit: a task force or an air group. It carries an origin: who issued it, and the intent it serves if any. An order that is taken in gets a number, is kept whether accepted or refused, and has one event: accepted, or refused with a reason. [0008, 0055]
 
-The orders that exist are the ones in the tables below. The spec lists more (form, disband, add ships, rebase, range limit, base orders, land unit orders). They are not built. [0008, 0050, 0052]
+The orders that exist are the ones in the tables below. The spec lists more (form, disband, add ships, range limit, base orders, land unit orders). They are not built. [0008, 0050, 0052]
 
 ### Task force orders
 
@@ -174,8 +174,9 @@ A send to yard order, when it is taken in, is applied after its acceptance: the 
 | Set rest threshold (0 to 100) | The fatigue above which the staff stands the group down at the start of the day. | Rest threshold |
 | Set reach (normal or extended) | How far its strikes and escorts may go: the type's strike radius, or a share more (chapter 5, Radius and reach). Normal is the default. | Reach |
 | Set target priority (a list of kinds of ship: carrier, battleship, cruiser, destroyer, transport, auxiliary) | The kinds a group's strikes go for, in order, and the order that set the list. The default is all six kinds in the order of importance. A kind not on the list is never launched at (chapter 5, Naval strike: the contact), and the list ranks the ships a group attacks (chapter 5, The attack on a ship). | Target priority |
+| Rebase (`rebase`, an air group and a base) | Not a standing order. Moves a group at a base to another base of its side at once and writes off its damaged aircraft (below, and chapter 5, Rebasing an air group). | None |
 
-[0012, 0026, 0027, 0034, 0036, 0059, 0063]
+[0012, 0026, 0027, 0034, 0036, 0059, 0063, 0091]
 
 ### When an order is checked, and against what
 
@@ -254,8 +255,14 @@ Then, by kind:
 | Set reach | No air combat figures | The order is extended and the scenario has none. Normal reach is always accepted, so a group can go back to it. |
 | Set search arc | Invalid bearing | A bearing is not a multiple of 10 from 0 to 350. The from bearing is tried first. |
 | Set search arc | Invalid search range | The range is zero or below, or above the aircraft type's search range (`aircraft_types` file: `search_range_nm`). |
+| Rebase | Away at the yard | The group is aboard a ship that is away at the yard: "the air group is aboard a ship that is away at a yard". Tried before the next, so a group aboard a ship at the yard is told this. [0091] |
+| Rebase | Aboard a ship | The group is aboard any other ship: "the air group is aboard a ship". |
+| Rebase | Already moved today | The group has already moved to another base that day, by an earlier order of the day: "the air group has already moved to another base today". |
+| Rebase | Not your base | The base does not exist or is not the issuer's. One reason for both, as for a home port. A base a landing formed (chapter 7) is the side's own and may be named. |
+| Rebase | Already at the base | The group is at the base named: "the air group is already at that base". |
+| Rebase | Beyond the transfer range | The air distance between the two bases' hexes is above the type's transfer range: "the base is D nm away, beyond the air group's transfer range of R nm", with the distance and the range (chapter 5, Rebasing an air group). Both are figures the side knows. |
 
-[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059, 0066]
+[0008, 0016, 0017, 0021, 0026, 0027, 0034, 0036, 0044, 0059, 0066, 0091]
 
 A refused order changes nothing but the log and the order counter. It is kept in the order record. [0008]
 
@@ -276,6 +283,8 @@ A route order that finds a force between two hexes may turn it round. The event 
 A side sees: its own turn-back and detach events whole, with the cause. The enemy sees nothing. [0047]
 
 A side sees the same of the yard events: its own `ForceLeftForYard`, with the order as cause, whole. [0069]
+
+A rebase order, when it is taken in, is applied after its acceptance: `AircraftWrittenOff` is recorded if the group had damaged aircraft, then the group's place becomes the new base and `AirGroupRebased` is recorded. Both cite the order. Chapter 5, Rebasing an air group, gives what the move does and what follows the group. A side sees its own `AircraftWrittenOff` and `AirGroupRebased`, whole, and the enemy sees nothing of them. [0091]
 
 ### How orders are numbered and sorted
 
@@ -375,6 +384,7 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | Air group lost, air group fatigue, air group stood down, air group returned | Own air group |
 | Strike launched, base strike launched, strike found nothing, escorts sent | Own air group |
 | Aircraft lost, pilots lost | Own air group |
+| Air group rebased, aircraft written off | Own air group |
 | Base supply destroyed, base supply spent (aircraft or men), base at day end, base formed | Own base |
 | Men embarked, men landed, men lost with a ship, men lost unfed, land unit destroyed | Own land unit |
 | Unit divided | The unit it came from is own |
@@ -542,7 +552,7 @@ Three invariants hold by construction and are not checked: an air group's ready 
 
 ### The state hash
 
-At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v10`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. Version 10 added a ship's `troops` (the unit and the men, or none) after her `system_repair_points`, a base's `on_map` after its `yard_passage_days`, a cargo order's land unit (an optional number) after its order, the cargo action `LoadNoCargo` (code 4), and the land units (number, side, men ashore and hex, not the name) after the arrivals. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0066, 0069, 0083, 0086]
+At the end of each day the engine computes one 64-bit hash of the state and appends it to the daily hashes. It is FNV-1a over a fixed-order walk of the state, begun by the version string `flagplot-state-v11`. A task force's `leg_nm` is written right after its `progress_nm`; version 3 added it. An air group's reach code and the order that set it are written last, after its arc order; version 4 added them. An air group's target list (its count, then each kind's code in list order), the order that set it and the game day of its last base strike (written as an optional number) are written after that; version 5 added them. A ship's experience is written after its location; version 6 added it. A ship's `torpedoes_one_side_fired` is written straight after her `torpedoes_ready`; version 7 added it. Version 8 replaced the one counter of task forces made in play with a counter for each side and each kind of unit made in play, written Allied then Japanese, task forces then air groups. Version 9 added a base's `ship_repair_points_per_day` and `yard_passage_days` after its `fuel_t`, a ship's `system_repair_points` after her `experience`, the ship location `Yard` (code 4) and a task force's `yard_trip` after its `fatigue`. Version 10 added a ship's `troops` (the unit and the men, or none) after her `system_repair_points`, a base's `on_map` after its `yard_passage_days`, a cargo order's land unit (an optional number) after its order, the cargo action `LoadNoCargo` (code 4), and the land units (number, side, men ashore and hex, not the name) after the arrivals. Version 11 added an air group's `rebased_day` (an optional number), written after its last base strike day. [0004, 0057, 0058 item 7, 0059, 0063, 0064, 0066, 0069, 0083, 0086, 0091]
 
 The hash covers: the seed; the day; every ship, task force, base, air group, land unit, arrival and replacement stream; both sides' contacts and claims; the count of orders and the next order number and next task force number; and the count of events. It does not cover the names of ships, task forces, bases, air groups or land units, the contents of the events or orders, the map, the reference data, the orders waiting for the next day or the objectives. No tag byte stands in for a field that is not in use. Every field of every unit is written, always, in one order. A field added to the state is added to the hash in the same change, and the version is raised when what is hashed or its order changes. [0004, 0055, 0057]
 

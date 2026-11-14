@@ -667,7 +667,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::AircraftDestroyedOnGround { air_group, .. }
         | EventKind::AirGroupFatigue { air_group, .. }
         | EventKind::AirGroupStoodDown { air_group, .. }
-        | EventKind::AirGroupReturned { air_group, .. } => whole_if(own_group(air_group)),
+        | EventKind::AirGroupReturned { air_group, .. }
+        // Moved to another base by order, and the damaged aircraft left
+        // behind: the side's own, never shown to the enemy (decision 0091, 9).
+        | EventKind::AircraftWrittenOff { air_group, .. }
+        | EventKind::AirGroupRebased { air_group, .. } => whole_if(own_group(air_group)),
 
         // Bases.
         EventKind::BaseSupplyDestroyed { base, .. }
@@ -1444,7 +1448,10 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::MenFed { .. }
         | EventKind::MenLostUnfed { .. }
         | EventKind::LandUnitDestroyed { .. }
-        | EventKind::UnitLoadingComplete { .. } => false,
+        | EventKind::UnitLoadingComplete { .. }
+        // A rebase cites only the side's own order (decision 0091).
+        | EventKind::AircraftWrittenOff { .. }
+        | EventKind::AirGroupRebased { .. } => false,
 
         // Never given whole: each of these is cut (and decided in
         // `may_have_hidden_causes`) or hidden from every side. If one were
@@ -2600,6 +2607,28 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            row(
+                EventKind::AircraftWrittenOff {
+                    air_group: group(1),
+                    base: base(1),
+                    aircraft: 2,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::AirGroupRebased {
+                    air_group: group(1),
+                    from: base(1),
+                    to: base(2),
+                    distance_nm: fx(200),
+                    transfer_range_nm: fx(1200),
+                    ready: 6,
+                    pilots: None,
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -2640,7 +2669,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 76, "the log has 76 kinds of event");
+        assert_eq!(all.len(), 78, "the log has 78 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

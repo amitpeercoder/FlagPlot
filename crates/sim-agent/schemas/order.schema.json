@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/order",
   "title": "order: one order for one unit, as saved games and issue_orders write it",
-  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach, set_readiness and send_to_yard (no other key); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach and set_target_priority. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
+  "description": "unit is \"task_force:N\" or \"air_group:N\". The body's kind must be one of that kind of unit's: a task force's are set_route, set_speed, set_mission, load, unload, set_rules_of_engagement, set_home_port, detach, set_readiness and send_to_yard (no other key); load takes an optional unit, a land unit written \"land_unit:N\"; an air group's are set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority and rebase. The decoder checks the pairing; the schema checks the fields of each kind. Every quantity is a decimal string, every count a whole number. waypoints are [q, r] pairs. A load names no cargo for supply; with a unit it may name cargo supply, fuel or none.",
   "type": "object",
   "required": [
     "unit",
@@ -384,6 +384,23 @@
               "description": "The kinds of ship the group's strikes go for, in order, first choice first: at least one, none named twice. A naval_strike group launches only at a contact taken for a kind on this list, the kind earliest on it first, then the nearest; a contact of any other kind is never launched at, so a short list holds the strike back. Over the target the group attacks the ship of the force found that ranks first by the list, kinds not on it following in the order carrier, battleship, cruiser, destroyer, transport, auxiliary. The default is all six kinds in that order. The list is a standing order: it stays until another replaces it.",
               "type": "array",
               "items": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "base"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rebase"
+            },
+            "base": {
+              "description": "The number of a base of your side, other than the one the group is at, within the group's transfer range: twice the longer of its aircraft type's search range and strike radius. Not a standing order: it is done at the start of the day and spent. The group flies nothing that day, and its damaged aircraft are written off at the base it leaves. Not for a group aboard a ship.",
+              "type": "integer"
             }
           }
         }

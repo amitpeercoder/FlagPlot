@@ -171,9 +171,10 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetRestThreshold { .. } => 7,
         AirGroupOrder::SetReach { .. } => 8,
         AirGroupOrder::SetTargetPriority { .. } => 9,
+        AirGroupOrder::Rebase { .. } => 10,
     }
 }
-const AG_KINDS: usize = 10;
+const AG_KINDS: usize = 11;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -245,6 +246,9 @@ fn examples() -> Vec<OrderKind> {
         }),
         ag(AirGroupOrder::SetTargetPriority {
             kinds: vec![ShipKind::Carrier],
+        }),
+        ag(AirGroupOrder::Rebase {
+            base: BaseId::new(3),
         }),
     ];
     for mission in [

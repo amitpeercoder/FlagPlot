@@ -587,7 +587,7 @@ function snapshot(cur, aux) {
     sunk: new Set(cur.sunk),
     shipForce: new Map(cur.shipForce),
     moves: aux.moves, fights: aux.fights, searches: aux.searches,
-    air: aux.air, reach: cur.reach, mission: cur.mission,
+    air: aux.air, reach: cur.reach, mission: cur.mission, groupBase: cur.groupBase,
   };
 }
 
@@ -595,7 +595,9 @@ function snapshot(cur, aux) {
 /** Where an air group is: its base's hex, or the hex of the force its ship is in; null when the ship is sunk or in no force. state has forces, shipForce and sunk (the rebuild's cur, or a step's state). */
 function airGroupHex(bases, state, g) {
   if (!g) return null;
-  if (g.base != null) { const b = bases.get(g.base); return b ? [b.q, b.r] : null; }
+  // The base it is at in this state: a rebase (decision 0091) moves it from its starting base.
+  const base = state.groupBase && state.groupBase.has(g.id) ? state.groupBase.get(g.id) : g.base;
+  if (base != null) { const b = bases.get(base); return b ? [b.q, b.r] : null; }
   if (g.ship != null) {
     if (state.sunk.has(g.ship)) return null;
     const fid = state.shipForce.get(g.ship), f = fid !== undefined ? state.forces.get(fid) : null;
@@ -791,7 +793,8 @@ function buildModel(replay) {
   // Rebuild
   const cur = { forces: new Map(), shipForce: new Map(), sunk: new Set(), contacts: { allied: new Map(), japanese: new Map() }, reach: new Map(), mission: new Map(), landUnits: new Map(), formedBases: new Map() };
   for (const u of initial.land_units || []) cur.landUnits.set(u.id, { id: u.id, name: u.name, side: u.side, men_ashore: u.men_ashore || 0, hex: Array.isArray(u.hex) ? u.hex.slice() : (u.hex ? [u.hex.q, u.hex.r] : null) });
-  for (const g of groupTable.values()) { cur.reach.set(g.id, g.reach0); cur.mission.set(g.id, g.mission); }
+  cur.groupBase = new Map();
+  for (const g of groupTable.values()) { cur.reach.set(g.id, g.reach0); cur.mission.set(g.id, g.mission); cur.groupBase.set(g.id, g.base); }
   // reach and mission are replaced, never changed in place, so each step's snapshot keeps its own.
   const setAirOrder = (map, id, v) => { const m = new Map(map); m.set(id, v); return m; };
   let hasAir = false;
@@ -895,6 +898,10 @@ function buildModel(replay) {
           if (am) cur.mission = setAirOrder(cur.mission, t.id, am[1]);
           break;
         }
+        // A group moved to another base by order (decision 0091): replaced, never changed in place, as the mission is.
+        case 'air_group_rebased':
+          cur.groupBase = setAirOrder(cur.groupBase, d.air_group, d.to);
+          break;
         case 'force_became_alert':
         case 'force_alerted_by_contact':
         case 'alarm_roll':
@@ -2425,7 +2432,8 @@ function baseSection(id) {
   const kv = el('dl', { class: 'kv' });
   kv.append(el('dt', { text: 'Side' }), el('dd', { text: b.side || '?' }), el('dt', { text: 'Hex' }), el('dd', { text: '(' + b.q + ', ' + b.r + ')' }));
   sec.append(kv);
-  sec.append(airGroupsBlock([...m.groupTable.values()].filter(g => g.base === id && (g.formedStep === undefined || g.formedStep <= S.step)), st));
+  const baseOf = g => (st.groupBase && st.groupBase.has(g.id) ? st.groupBase.get(g.id) : g.base);
+  sec.append(airGroupsBlock([...m.groupTable.values()].filter(g => baseOf(g) === id && (g.formedStep === undefined || g.formedStep <= S.step)), st));
   return sec;
 }
 
