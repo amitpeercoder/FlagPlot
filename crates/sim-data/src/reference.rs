@@ -821,6 +821,7 @@ struct GroundFile {
     /// Required like the older keys.
     airfield_damage_per_hit: Quantity,
     work_per_airfield_damage_point: Quantity,
+    beaten_fatigue: Quantity,
     airfield_landing_refused_at: Quantity,
 }
 
@@ -915,6 +916,7 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
             &file.fighting_unit_work_share,
         )?,
         airfield_damage_per_hit: number("airfield_damage_per_hit", &file.airfield_damage_per_hit)?,
+        beaten_fatigue: number("beaten_fatigue", &file.beaten_fatigue)?,
         work_per_airfield_damage_point: number(
             "work_per_airfield_damage_point",
             &file.work_per_airfield_damage_point,
@@ -2472,6 +2474,29 @@ mod tests {
                     .contains(key),
                 "without {key}"
             );
+        }
+    }
+
+    #[test]
+    fn the_beaten_fatigue_is_read_required_and_in_range() {
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.beaten_fatigue, Fixed::from_int(30));
+        let text = without_keys(&ground_text(), &["beaten_fatigue"]);
+        assert!(parse_ground_figures(&text, here())
+            .expect_err("a missing key is refused")
+            .message
+            .contains("beaten_fatigue"));
+        let bad = |value: &str| {
+            parse_ground_figures(&with_key(&ground_text(), "beaten_fatigue", value), here())
+                .expect_err("rejected")
+                .message
+        };
+        assert!(bad("101").contains("beaten_fatigue"));
+        assert!(bad("-1").contains("beaten_fatigue"));
+        assert!(bad("0.5").contains("beaten_fatigue"));
+        for value in ["0", "100"] {
+            parse_ground_figures(&with_key(&ground_text(), "beaten_fatigue", value), here())
+                .expect("loads");
         }
     }
 

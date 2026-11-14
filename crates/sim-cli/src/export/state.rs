@@ -2,6 +2,7 @@
 
 use serde::Serialize;
 use sim_core::hex::Hex;
+use sim_core::ids::UmpireKey;
 use sim_core::orders::{AirMission, Reach};
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
@@ -117,6 +118,11 @@ pub struct MarchOut {
     days: u32,
     /// The days counted toward the march (decision 0098, 4).
     counted: Num,
+    /// The event that set the march, for a falling back (decision 0104).
+    /// Left out for a march an order set, so a file made where no unit falls
+    /// back is unchanged.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cause_event: Option<u32>,
 }
 
 /// A land unit's skills (decision 0098), 0 to 4 each.
@@ -393,7 +399,7 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
-pub fn snapshot(truth: &TruthState, ref_data: &RefData) -> Snapshot {
+pub fn snapshot(truth: &TruthState, ref_data: &RefData, key: &UmpireKey) -> Snapshot {
     Snapshot {
         task_forces: truth.task_forces.values().map(task_force).collect(),
         ships: truth
@@ -407,11 +413,15 @@ pub fn snapshot(truth: &TruthState, ref_data: &RefData) -> Snapshot {
             .map(|group| air_group(group, ref_data))
             .collect(),
         bases: bases(truth),
-        land_units: truth.land_units.values().map(land_unit).collect(),
+        land_units: truth
+            .land_units
+            .values()
+            .map(|unit| land_unit(unit, key))
+            .collect(),
     }
 }
 
-fn land_unit(unit: &LandUnit) -> LandUnitOut {
+fn land_unit(unit: &LandUnit, key: &UmpireKey) -> LandUnitOut {
     LandUnitOut {
         id: unit.id.raw(),
         name: unit.name.clone(),
@@ -425,6 +435,10 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
             to: Pos::from(march.to),
             days: march.days,
             counted: Num(march.counted),
+            cause_event: match march.cause {
+                sim_core::events::Cause::Order(_) => None,
+                sim_core::events::Cause::Event(id) => Some(id.umpire_raw(key)),
+            },
         }),
         activity: unit.activity.name(),
         job: unit.activity.job().map(|job| job.name()),
@@ -658,7 +672,7 @@ pub fn final_state(world: &World) -> FinalOut {
         air_groups,
         bases,
         land_units,
-    } = snapshot(world.umpire(), world.ref_data());
+    } = snapshot(world.umpire(), world.ref_data(), &world.umpire_key());
     let key = world.umpire_key();
     let contacts = |side: Side| -> Vec<ContactOut> {
         world

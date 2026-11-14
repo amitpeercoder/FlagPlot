@@ -583,3 +583,16 @@ Fields added only, so `version` stays 3.
   `AirfieldMended` and `ArrivalWaiting` events, each with its `event`.
 - **What the enemy is told.** Nothing: an enemy base keeps its public line, and no event of an
   enemy field's damage, mending or held arrivals reaches a side.
+
+## A beaten side falls back (decision 0104)
+
+Fields added only, so `version` stays 3.
+
+- **A land unit line's `march`** has `falling_back` (`from`, the hex of the defeat, and `event`)
+  when the march is a falling back; such a march has no `order`, and the unit carries no supply.
+- **The briefing's `land_units`** has `fell_back_yesterday` (`land_unit`, `from`, `to`, `men`,
+  `fatigue` after), `surrendered_yesterday` (`land_unit`, `place`, `men`) and
+  `prisoners_taken_yesterday` (`place`, `men`: enemy men who surrendered, counted as prisoners
+  taken), each left out when none and each with its `event`.
+- **What the enemy is told.** Of an enemy unit's falling back, nothing. Of its surrender, the hex
+  and the men, never which unit.

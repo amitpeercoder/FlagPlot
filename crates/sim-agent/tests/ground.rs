@@ -198,9 +198,17 @@ fn neither_side_is_told_an_enemy_land_unit_or_the_enemys_men() {
         }
     }
     let (text, _) = briefing(&mut session, Side::Allied);
-    for men in ["600 men", "300 men", "165 men", "500 men"] {
+    for men in ["600 men", "300 men", "500 men"] {
         assert!(!text.contains(men), "the Allies were told {men}");
     }
+    // The 165 men of the Japanese unit that surrendered are told, as the
+    // surrender: the hex and the men, never which unit (decision 0104, 8).
+    assert!(
+        text.contains("An enemy unit surrendered at (6,0)")
+            && text.contains("165 men taken prisoner"),
+        "{text}"
+    );
+    assert_eq!(text.matches("165 men").count(), 1, "{text}");
     let (text, _) = briefing(&mut session, Side::Japanese);
     for men in ["2000 men", "980 men", "48 men"] {
         assert!(!text.contains(men), "the Japanese were told {men}");

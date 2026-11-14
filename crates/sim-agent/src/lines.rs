@@ -742,6 +742,19 @@ pub struct MarchLine {
     /// The number of the side's march order, if it is still known.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub order: Option<u32>,
+    /// Set when the march is a falling back after a defeat (decision 0104):
+    /// the hex of the defeat. Such a march has no order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub falling_back: Option<FallingBackLine>,
+}
+
+/// A march that is a falling back (decision 0104, 8).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FallingBackLine {
+    /// The hex the unit was beaten in and fell back from.
+    pub from: Place,
+    /// The side's number of the event that records the falling back.
+    pub event: u32,
 }
 
 /// How the side's men ashore were fed in the last night pulse, by hex, from
@@ -851,7 +864,25 @@ pub(crate) fn land_unit_line(
                 .view
                 .ground_figures()
                 .map_or(0, |figures| figures.march_days_per_hex),
-            order: ctx.order_number_if_own(march.order),
+            order: match march.cause {
+                sim_core::events::Cause::Order(order) => ctx.order_number_if_own(order),
+                // A falling back has no order (decision 0104).
+                sim_core::events::Cause::Event(_) => None,
+            },
+            falling_back: match march.cause {
+                sim_core::events::Cause::Order(_) => None,
+                sim_core::events::Cause::Event(id) => {
+                    ctx.view.event(id).and_then(|e| match e.kind {
+                        SideEventKind::Whole(EventKind::UnitFellBack { from, .. }) => {
+                            Some(FallingBackLine {
+                                from: ctx.place(from),
+                                event: e.number,
+                            })
+                        }
+                        _ => None,
+                    })
+                }
+            },
         }),
         march_to: ctx
             .view

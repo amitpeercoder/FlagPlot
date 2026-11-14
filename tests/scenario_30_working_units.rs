@@ -256,20 +256,10 @@
 //! - Base 6 keeps 997.5 x 0.5 = 498.75 t, and 498.75 t are lost.
 //! - It keeps its defences of 30 and its 5000 of work done on the airfield.
 //!   It still has no airfield.
-//! - Unit 9 makes no work on day 1: when the work is made its side has no
-//!   base in the hex. It makes none after.
+//! - E has no land link, so unit 9 has nowhere to fall back to. It
+//!   surrenders in the same phase (decision 0104, 7): its 500 men are lost
+//!   and the unit is destroyed. It makes no work.
 //! - Unit 10 is not tired: it attacked nothing.
-//!
-//! From the night of day 2 the Allied side has no base at E, and unit 9 is
-//! unfed, with a fed share of 0:
-//!
-//! | Night of day | Unfed | Lost             | Unit 9's men |
-//! | ------------ | ----- | ---------------- | ------------ |
-//! | 2            | 500   | 25               | 475          |
-//! | 3            | 475   | 23.75, 23        | 452          |
-//! | 4            | 452   | 22.6, 22         | 430          |
-//! | 5            | 430   | 21.5, 21         | 409          |
-//! | 6            | 409   | 20.45, 20        | 389          |
 //!
 //! From the night of day 2 unit 10 is fed by base 6, the lower-numbered of
 //! its side's two bases there: 0.5 t a night, five times. Base 6 holds
@@ -292,7 +282,7 @@ mod common;
 
 use std::path::PathBuf;
 
-use sim_core::events::{Event, EventKind, SupplyUse};
+use sim_core::events::{Cause, Event, EventKind, SupplyUse};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, LandUnitId, TaskForceId};
@@ -1245,14 +1235,47 @@ fn at_e_working_men_do_not_hold_a_base() {
     for day in 0..=6 {
         assert_eq!(run.unit_at(day, 10).fatigue, n(0), "day {day}");
     }
-    // Unit 9's men.
-    for (day, men) in [(1, 500), (2, 475), (3, 452), (4, 430), (5, 409), (6, 389)] {
-        assert_eq!(run.unit_at(day, 9).men_ashore, men, "day {day}");
-        assert_eq!(
-            run.unit_at(day, 9).fed_share,
-            if day == 1 { n(1) } else { n(0) },
-            "day {day}"
-        );
+    // Unit 9: E has no land link, so it surrenders on day 1 with its 500 men
+    // and is destroyed (decision 0104, 7). It is not unfed on any night.
+    let surrendered = run.all(|k| matches!(k, EventKind::UnitSurrendered { .. }));
+    assert_eq!(surrendered.len(), 1);
+    assert_eq!(surrendered[0].day, 1);
+    assert_eq!(
+        surrendered[0].kind,
+        EventKind::UnitSurrendered {
+            unit: unit(9),
+            side: Side::Allied,
+            hex: E,
+            men: 500,
+        }
+    );
+    // The unit's surrender cites the hex's, which cites the test that beat
+    // the side.
+    let together = run.all(|k| matches!(k, EventKind::MenSurrenderedAshore { .. }));
+    assert_eq!(together.len(), 1);
+    assert_eq!(
+        together[0].kind,
+        EventKind::MenSurrenderedAshore {
+            side: Side::Allied,
+            hex: E,
+            men: 500,
+        }
+    );
+    assert_eq!(
+        together[0].causes,
+        vec![Cause::Event(beaten[0].id)],
+        "it cites the test that beat the side"
+    );
+    assert_eq!(surrendered[0].causes, vec![Cause::Event(together[0].id)]);
+    let destroyed =
+        run.all(|k| matches!(k, EventKind::LandUnitDestroyed { unit } if unit.raw() == 9));
+    assert_eq!(destroyed.len(), 1);
+    assert_eq!(destroyed[0].day, 1);
+    assert!(run
+        .all(|k| matches!(k, EventKind::MenLostUnfed { unit, .. } if unit.raw() == 9))
+        .is_empty());
+    for day in 1..=6 {
+        assert_eq!(run.unit_at(day, 9).men_ashore, 0, "day {day}");
     }
     // Unit 10 is fed by base 6, 0.5 t a night, five times.
     assert_eq!(run.supply_after_night(2, 6), fx("498.25"));

@@ -53,23 +53,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "b57fdba88c62dacd"
+      "hash": "cafec8e61c7b2139"
     },
     {
       "day": 2,
-      "hash": "c8007466df1116ea"
+      "hash": "6e9767d1950522de"
     },
     {
       "day": 3,
-      "hash": "6f1092fac8a08903"
+      "hash": "09d26be933163597"
     },
     {
       "day": 4,
-      "hash": "69b76178280f765e"
+      "hash": "88ff2ef806e3479a"
     },
     {
       "day": 5,
-      "hash": "ac81e7e355ee5362"
+      "hash": "6f02db658ed7ba06"
     }
   ],
   "orders": [
@@ -931,7 +931,7 @@
       "unit": "task_force:5"
     }
   ],
-  "rules_version": 2,
+  "rules_version": 3,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "c2ae35f541de3eda"
@@ -941,6 +941,6 @@
     "japanese": "script"
   },
   "seed": 1942,
-  "state_version": "flagplot-state-v19",
+  "state_version": "flagplot-state-v20",
   "version": 2
 }

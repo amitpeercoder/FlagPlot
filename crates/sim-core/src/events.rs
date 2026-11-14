@@ -1549,6 +1549,35 @@ pub enum EventKind {
         points: Fixed,
         damage: Fixed,
     },
+    /// A unit of a side beaten in `from` was set to march out of it to `to`
+    /// (decision 1 of 0104), with `men` ashore, tired by the defeat:
+    /// `fatigue` is what it has afterwards. Added at the end.
+    UnitFellBack {
+        unit: LandUnitId,
+        side: Side,
+        from: Hex,
+        to: Hex,
+        men: u32,
+        fatigue: Fixed,
+    },
+    /// A unit of a side beaten in `hex` with nowhere to fall back to
+    /// surrendered (decision 7 of 0104): its `men` ashore are lost. Added at
+    /// the end.
+    UnitSurrendered {
+        unit: LandUnitId,
+        side: Side,
+        hex: Hex,
+        men: u32,
+    },
+    /// The units of a side beaten in `hex` that had nowhere to fall back to
+    /// surrendered, `men` ashore in all (decision 7 of 0104): one event for
+    /// the hex, so that what the enemy is told shows no count of units. It
+    /// names no unit. Added at the end.
+    MenSurrenderedAshore {
+        side: Side,
+        hex: Hex,
+        men: u32,
+    },
 }
 
 impl EventKind {
@@ -1871,7 +1900,9 @@ impl EventKind {
             | EventKind::MenLostInFight { unit, .. }
             | EventKind::LandUnitFatigue { unit, .. }
             | EventKind::LandUnitBackToDefend { unit, .. } => vec![EntityRef::LandUnit(*unit)],
-            EventKind::GroundFight { .. } | EventKind::SideBeatenAshore { .. } => Vec::new(),
+            EventKind::GroundFight { .. }
+            | EventKind::SideBeatenAshore { .. }
+            | EventKind::MenSurrenderedAshore { .. } => Vec::new(),
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
                 air_group, base, ..
@@ -1939,6 +1970,9 @@ impl EventKind {
             } => vec![EntityRef::AirGroup(*air_group), EntityRef::Base(*base)],
             EventKind::AirfieldMended { unit, base, .. } => {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
+            }
+            EventKind::UnitFellBack { unit, .. } | EventKind::UnitSurrendered { unit, .. } => {
+                vec![EntityRef::LandUnit(*unit)]
             }
             EventKind::PreparationShared {
                 parent,
@@ -3342,6 +3376,33 @@ impl fmt::Display for EventKind {
             } => write!(
                 f,
                 "{unit} mended {points} of damage on the airfield of {base}, damage {damage}"
+            ),
+            EventKind::UnitFellBack {
+                unit,
+                side,
+                from,
+                to,
+                men,
+                fatigue,
+            } => write!(
+                f,
+                "{unit} of the {} side fell back from {from} toward {to} with {men} men: fatigue {fatigue}",
+                side.name()
+            ),
+            EventKind::UnitSurrendered {
+                unit,
+                side,
+                hex,
+                men,
+            } => write!(
+                f,
+                "{unit} of the {} side surrendered at {hex}: {men} men lost",
+                side.name()
+            ),
+            EventKind::MenSurrenderedAshore { side, hex, men } => write!(
+                f,
+                "men of the {} side surrendered at {hex}: {men} men ashore in all",
+                side.name()
             ),
         }
     }

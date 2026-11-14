@@ -2,7 +2,7 @@ Scenario 5c: Escort, patrol and guns
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 025ada682107b3b3  33 events
+day   1  hash d088561c3df3c5b7  33 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

@@ -1076,6 +1076,40 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .num("points", *points)
                 .num("damage", *damage),
         ),
+        EventKind::UnitFellBack {
+            unit,
+            side,
+            from,
+            to,
+            men,
+            fatigue,
+        } => (
+            "unit_fell_back",
+            d.id("unit", *unit)
+                .text("side", names::side(*side))
+                .hex("from", *from)
+                .hex("to", *to)
+                .int("men", *men)
+                .num("fatigue", *fatigue),
+        ),
+        EventKind::UnitSurrendered {
+            unit,
+            side,
+            hex,
+            men,
+        } => (
+            "unit_surrendered",
+            d.id("unit", *unit)
+                .text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("men", *men),
+        ),
+        EventKind::MenSurrenderedAshore { side, hex, men } => (
+            "men_surrendered_ashore",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("men", *men),
+        ),
         EventKind::FightDayCounted {
             unit,
             days,

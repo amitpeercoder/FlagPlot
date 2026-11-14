@@ -62,7 +62,8 @@
 //!   0090, 25).
 //! - `men_lost`: enemy men lost, by any cause, from these events:
 //!   `MenLostWithShip`, `MenLostUnfed`, `MenLostInFight` (decision 0090,
-//!   26) and `MenLostToFire` (decision 0092, 20). The points are the objective's points for each 100 men, a part of
+//!   26), `MenLostToFire` (decision 0092, 20) and `UnitSurrendered`
+//!   (decision 7 of 0104). The points are the objective's points for each 100 men, a part of
 //!   100 scoring its part.
 
 use core::fmt;
@@ -520,7 +521,9 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
             | EventKind::MenLostUnfed { unit, lost, .. }
             | EventKind::MenLostInFight { unit, lost, .. }
             // Men lost to a bomb or a shell count too (decision 0092, 20).
-            | EventKind::MenLostToFire { unit, lost, .. } => {
+            | EventKind::MenLostToFire { unit, lost, .. }
+            // Men who surrendered are lost (decision 7 of 0104).
+            | EventKind::UnitSurrendered { unit, men: lost, .. } => {
                 if let Some(unit) = truth.land_units.get(unit) {
                     out.get_mut(&other(unit.side))
                         .expect("both sides")

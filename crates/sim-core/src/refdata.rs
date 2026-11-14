@@ -1185,6 +1185,9 @@ pub struct GroundFigures {
     /// The damage at or above which a field takes no aircraft (decision 5 of
     /// 0103), from 0 to 100.
     pub airfield_landing_refused_at: Fixed,
+    /// Fatigue a unit gains when its side is beaten and it falls back
+    /// (decision 1 of 0104), from 0 to 100.
+    pub beaten_fatigue: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1243,6 +1246,7 @@ impl GroundFigures {
         airfield_damage_per_hit: Fixed::from_int(2),
         work_per_airfield_damage_point: Fixed::from_int(50),
         airfield_landing_refused_at: Fixed::from_int(50),
+        beaten_fatigue: Fixed::from_int(30),
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1397,6 +1401,13 @@ impl GroundFigures {
             if share.is_negative() || share > Fixed::ONE {
                 return Some(format!("ground {label} {share} is not between 0 and 1"));
             }
+        }
+        // The fatigue of defeat (decision 0104).
+        if self.beaten_fatigue.is_negative() || self.beaten_fatigue > Fixed::from_int(100) {
+            return Some(format!(
+                "ground beaten_fatigue {} is not between 0 and 100",
+                self.beaten_fatigue
+            ));
         }
         // The airfield's damage (decision 0103).
         if self.airfield_damage_per_hit.is_negative() {

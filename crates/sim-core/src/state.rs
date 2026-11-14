@@ -13,6 +13,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+use crate::events::Cause;
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
@@ -1120,8 +1121,9 @@ pub struct March {
     /// it leaves and enters (decision 4 of 0098). Equal to `days` for a unit
     /// whose movement factor is 1.
     pub counted: Fixed,
-    /// The march order.
-    pub order: OrderId,
+    /// What set the march: the march order, or for a falling back (decision
+    /// 0104) the event that records it.
+    pub cause: Cause,
 }
 
 impl LandUnit {

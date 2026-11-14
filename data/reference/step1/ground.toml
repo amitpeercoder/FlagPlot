@@ -159,3 +159,9 @@ work_per_airfield_damage_point = 50
 # The damage at or above which a field takes no aircraft (no rebase to it, no
 # landing, no arrival), from 0 to 100.
 airfield_landing_refused_at = 50
+
+# The fatigue of defeat (decision 0104). Placeholder set by the architect for
+# decision 0104, resting on no source: a unit whose side is beaten in a hex and
+# that falls back gains this much fatigue at once, to 100 at most, beside the
+# fatigue of each day's march.
+beaten_fatigue = 30

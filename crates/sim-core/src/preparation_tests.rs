@@ -1546,7 +1546,10 @@ fn a_unit_that_does_not_fire_counts_no_day_of_fighting() {
     let mut world = world_with(live(), |truth| {
         for (id, side, men, posture) in [
             (10, Side::Allied, 50, Posture::Defend),
-            (11, Side::Japanese, 600, Posture::Attack),
+            // 100 men, so that unit 10's 50 are not beaten (0.2 x 100 = 20,
+            // and at most 20 are lost to the one shot) and it does not
+            // surrender, having no land link to fall back by.
+            (11, Side::Japanese, 100, Posture::Attack),
         ] {
             let mut land_unit = LandUnit::new(lu(id), format!("Unit {id}"), side, men, Some(F));
             land_unit.posture = posture;
@@ -1570,6 +1573,45 @@ fn a_unit_that_does_not_fire_counts_no_day_of_fighting() {
     world.fight_ashore(1);
     // Unfed: no firing men, no shots, no day.
     assert_eq!(unit(&world, 10).fight_days, 0);
+    assert_eq!(unit(&world, 11).fight_days, 1);
+}
+
+#[test]
+fn a_unit_that_fired_and_then_surrendered_counts_no_day_of_fighting() {
+    // 100 Allied men fire and are beaten by 600 (0.2 x 600 = 120 against at
+    // most 100 less 0 or 20): F has no land link, so what is left of the unit
+    // surrenders (decision 0104, 7) and the unit is destroyed.
+    let mut world = world_with(live(), |truth| {
+        for (id, side, men, posture) in [
+            (10, Side::Allied, 100, Posture::Defend),
+            (11, Side::Japanese, 600, Posture::Attack),
+        ] {
+            let mut land_unit = LandUnit::new(lu(id), format!("Unit {id}"), side, men, Some(F));
+            land_unit.posture = posture;
+            truth.land_units.insert(lu(id), land_unit);
+        }
+    });
+    world.fight_ashore(1);
+    // It fired: one shot.
+    assert_eq!(fires(&world, 10).len(), 1);
+    assert_eq!(
+        (fires(&world, 10)[0].1, fires(&world, 10)[0].2),
+        (n(1), 100)
+    );
+    // It surrendered and was destroyed, and counted no day.
+    let surrendered = find(&world, |event| match event.kind {
+        EventKind::UnitSurrendered { unit, hex, .. } if unit == lu(10) => Some(hex),
+        _ => None,
+    });
+    assert_eq!(surrendered, vec![F]);
+    assert_eq!(unit(&world, 10).men_ashore, 0);
+    assert_eq!(unit(&world, 10).fight_days, 0);
+    let counted = find(&world, |event| match event.kind {
+        EventKind::FightDayCounted { unit, .. } if unit == lu(10) => Some(()),
+        _ => None,
+    });
+    assert_eq!(counted, Vec::new());
+    // The other side's unit counts its day.
     assert_eq!(unit(&world, 11).fight_days, 1);
 }
 

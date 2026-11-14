@@ -2,14 +2,14 @@ Scenario 29: What a land unit is good at
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9470aa8b0a08fd6e  60 events
-day   2  hash 543e729c2584c592  55 events
-day   3  hash 9f0ecbfbd0ebb0f6  58 events
-day   4  hash fd8e1e6d880d2db3  53 events
-day   5  hash 01402a12bbbd2a72  39 events
-day   6  hash 882af1927fd03ac4  41 events
-day   7  hash 70673347f13a673c  35 events
-day   8  hash 6ea63526adde71ae  35 events
+day   1  hash 33dcc506145317a2  60 events
+day   2  hash c8f3deca6d2c4159  55 events
+day   3  hash 49b611a73cdddf89  58 events
+day   4  hash 191339b178c8bba6  53 events
+day   5  hash 48577381a203d4f7  39 events
+day   6  hash 0094c572fc951188  41 events
+day   7  hash a58e8e67c030a8d8  35 events
+day   8  hash 10ff69d59879e2e2  35 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2

@@ -1,6 +1,6 @@
 # 0104: A beaten side falls back
 
-Status: a plan by the architect, written on Nov 14, 2026. The designer answered its two questions on Nov 14, 2026: the men fall back by marching (decision 1), and men with nowhere to go surrender (decision 7, his choice against the architect's proposal to leave surrender out). Confirmed. Nothing is built. It adds one placeholder figure.
+Status: a plan by the architect, written on Nov 14, 2026. The designer answered its two questions on Nov 14, 2026: the men fall back by marching (decision 1), and men with nowhere to go surrender (decision 7, his choice against the architect's proposal to leave surrender out). Confirmed. Built on Nov 14, 2026 ("As built" at the end). It adds one placeholder figure.
 
 ## The gap
 
@@ -62,3 +62,19 @@ Answered on Nov 14, 2026.
 
 1. **Decision 1:** the men fall back by marching. Agreed.
 2. **Decision 7:** the designer chose a rule of surrender now, for men with nowhere to go.
+
+## As built
+
+Built on Nov 14, 2026 (scenario 32, state version 20, rules label 3; the hand calculation is in `tests/scenario_32_falling_back.rs`, on the placeholder map `data/map/placeholder_falling_back.toml`). Every number of the hand calculation matched the run. The code is in `crates/sim-core/src/ground_combat.rs` (after the bases of a beaten side change side) and `march.rs`. Choices the record did not make, and the architect's rulings during the build:
+
+- **State.** A march's order became its cause (`March.cause`: the march order, or the event `UnitFellBack` for a falling back), hashed in the place of the order with a code byte (`flagplot-state-v20`). Nothing else of the state is new.
+- **When and in what order.** The units of the beaten side with men ashore in the hex fall back in unit order, after the bases change side, so "a base of its side" in a linked hex is read at that moment. The fatigue of defeat is added after the day's fatigue step, capped at 100. A unit on attack goes on the defence and its posture order is spent. `UnitFellBack` (the unit, side, from, to, men, fatigue after) cites the side beaten; the march's days cite `UnitFellBack`.
+- **A unit already marching** (any march) when its side is beaten in its hex is left as it is: no new march, no fatigue. *Accepted by the architect.*
+- **A hex with a base of its side is taken whatever stands there,** as decision 2 has it. The property of the hand calculation was written wider than the rule; the architect amended it to "unless that hex held a base of its side", and the test holds a case with an enemy fighting unit beside the base.
+- **No supply, no base.** A march whose cause is a falling back takes no supply from the hex it left and so forms no base where it arrives; the arrival event says 0 t.
+- **Orders the next day.** A march order to a unit falling back replaces the march as a march order replaces any march: to the same hex it keeps the days marched, and as a march by order it then carries supply from the bases of its side in the hex it left. An attack order is taken and the march goes on, as for any marching unit (decision 0094). *Both accepted by the architect.*
+- **Surrender is told once for the hex.** The men of a hex with nowhere to go are recorded as one `MenSurrenderedAshore` (side, hex, men), which both sides are told, the enemy as the hex and the men only; then each unit's `UnitSurrendered` (its men ashore lost), seen by its own side only, then its destruction if it has no men aboard. As first built each unit's surrender was told to the enemy, which showed how many units there were (the enemy-view property of scenario 23 caught it); so the record's two new events are three. `men_lost` counts `UnitSurrendered`, so each man is counted once; the batch tally of men lost by cause has no cause for them.
+- **A unit that fired and then surrendered** counts no day of fighting: it is destroyed. *The architect's ruling.*
+- **Earlier hand calculations amended.** Scenarios 23 and 30 each have a unit of a beaten side on a hex with no land link, which now surrenders on day 1 (scenario 23's unit 3, 165 men at Y; scenario 30's unit 9, 500 men at E). The architect amended both hand calculations to the surrender, following decision 7, and the sim-core unit test of a unit that does not fire was given a side that is not beaten, with a second test for the surrender. No other scenario, frozen or live, changes apart from its hashes: no existing scenario has a side beaten in a hex with a land link. The August slice does not load the ground figures yet.
+- **What a side sees.** The agent shows a falling back on the unit's line (to where, after which defeat, the day of the march, that it carries no supply) and in the briefing the units that fell back or surrendered yesterday; the enemy's briefing says only how many enemy men surrendered where, as prisoners taken. The MCP instructions gained a paragraph, "Falling back". The schemas stay at version 3: fields only.
+- **Regenerated.** Every run baseline (23 and 30 in their events, the rest in hashes only), the recorded games (saves only: versions and daily hashes), the batch fixture of scenario 6 and the pinned hashes of scenarios 10 and 17a. The rules label rose to 3 because scenarios 23 and 30 changed.

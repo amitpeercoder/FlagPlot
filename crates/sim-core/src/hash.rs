@@ -10,6 +10,7 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
+use crate::events::Cause;
 use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting};
 use crate::refdata::ShipKind;
 use crate::state::Side;
@@ -152,8 +153,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// after the activity's code, a skill's `works` after its `atoll`, and a land
 /// unit's `working` after its skills (decision 0099);
 /// version 19 adds a base's `airfield_damage` after its `day_work` and an
-/// arrival's `waiting` after its pilots (decision 0103).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v19";
+/// arrival's `waiting` after its pilots (decision 0103);
+/// version 20 makes a march's order its cause, an order or the event of a
+/// falling back (decision 0104).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v20";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -426,7 +429,7 @@ fn name_every_field(world: &World) {
         to: _,
         days: _,
         counted: _,
-        order: _,
+        cause: _,
     })) = land_units.values().next().map(|unit| unit.march)
     {}
     for belief in beliefs.values() {
@@ -791,7 +794,18 @@ pub(crate) fn hash_world(world: &World) -> u64 {
                 h.i32(march.to.r);
                 h.u32(march.days);
                 h.i64(march.counted.raw());
-                h.u32(march.order.raw());
+                // The cause, after the counted days (decision 0104): an order
+                // or the event of a falling back.
+                match march.cause {
+                    Cause::Order(id) => {
+                        h.u8(1);
+                        h.u32(id.raw());
+                    }
+                    Cause::Event(id) => {
+                        h.u8(2);
+                        h.u32(id.raw());
+                    }
+                }
             }
             None => h.u8(0),
         }
