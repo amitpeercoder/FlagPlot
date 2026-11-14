@@ -18,7 +18,7 @@
 //!
 //! The port's work speeds the next day's cargo at the base (`cargo.rs`), the
 //! aircraft's work the next night's repairs (`upkeep.rs`), and defences the
-//! defender's chance to hit (`ground_combat.rs`).
+//! defender's chance to hit (`ground_combat/fight.rs`).
 //!
 //! Reads: a land unit's mark, activity, men ashore, hex, fed share and works
 //! skill and its activity order; the bases of its side in its hex, their
