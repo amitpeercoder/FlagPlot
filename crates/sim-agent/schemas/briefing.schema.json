@@ -28,6 +28,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/away_force" }
     },
+    "halts": {
+      "description": "Yesterday's halts at marked waypoints and the forces that steamed on (decision 0096, 7). Left out when there were none.",
+      "$ref": "#/$defs/halts"
+    },
     "air_groups": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/air_group_line" } },
     "bases": { "type": "array", "items": { "$ref": "#/$defs/base" } },
     "land_units": {
@@ -716,6 +720,45 @@
         "systems_degraded": { "type": "array", "items": { "enum": ["propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"] } },
         "systems_out": { "type": "array", "items": { "enum": ["propulsion", "fire_control", "main_battery", "torpedo_mounts", "flight_deck"] } },
         "event": { "type": "integer" }
+      }
+    },
+    "halts": {
+      "type": "object",
+      "required": ["halted", "steamed_on"],
+      "additionalProperties": false,
+      "properties": {
+        "halted": {
+          "description": "Forces that halted at a marked waypoint to act there.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "place", "at", "waits_for", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "at": { "description": "The clock time it halted, such as D1 22:00.", "type": "string" },
+              "waits_for": { "description": "The reason it halted: bombard, cargo or both, in that order.", "type": "array", "items": { "enum": ["bombard", "cargo"] } },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "steamed_on": {
+          "description": "Halted forces that steamed on, each with the reasons.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "place", "waited_for", "reasons", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "waited_for": { "type": "array", "items": { "enum": ["bombard", "cargo"] } },
+              "reasons": { "description": "Why it went: bombarded, cannot_bombard_any_longer (no ship could fire any longer) and cargo_work_done, those that apply.", "type": "array", "items": { "enum": ["bombarded", "cannot_bombard_any_longer", "cargo_work_done"] } },
+              "event": { "type": "integer" }
+            }
+          }
+        }
       }
     },
     "base_changes": {

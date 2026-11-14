@@ -450,3 +450,28 @@ land links) is byte for byte what it was.
   answers: no unit, no day marched, no arrival and no supply carried. It learns
   that men have come by a ground report (an estimate of men in the hex) and that a
   base exists when a report finds it (`bases_found_yesterday`).
+
+## A force that acts and steams on (decision 0096)
+
+Fields and values added only, so `version` stays 3. Each is left out when it has
+nothing to say, so the answer for a game with no marked route and no halt (and
+every answer for a scenario that does not use the rule) is byte for byte what it
+was.
+
+- **The route order's `act_at`.** `{"kind": "set_route", "waypoints": [[1, 0],
+  [3, 0], [1, 0]], "act_at": [[3, 0]]}`: hexes, each one of the waypoints; every
+  waypoint at a marked hex is marked, the last never counts as marked. Written
+  only when it is not empty, so a route with no mark is written as it always was.
+  A mark that is not a waypoint is refused with the engine's words and a hint
+  (`order.schema.json`, `task_force_order`).
+- **The status `halted`** (`force_line.status`).
+- **A force line** (`list_forces`, `get_entity`'s `summary`, the briefing's
+  `task_forces`) has `act_at` (the marks of the route not yet passed, as places in
+  hex order) and `halt` (`place`, `since` as a clock time, `waits_for`: `bombard`,
+  `cargo` or both, and `bombarded` once it has fired).
+- **The briefing's `halts` part** has `halted` (`task_force`, `place`, `at`,
+  `waits_for`, `event`) and `steamed_on` (`task_force`, `place`, `waited_for`,
+  `reasons`: `bombarded`, `cannot_bombard_any_longer`, `cargo_work_done`, and
+  `event`). `explain` of either event works like that of any own event.
+- **What the enemy is told.** Nothing: no halt, no mark, no steaming on. It sees
+  the force only as it sees any force, by contact.

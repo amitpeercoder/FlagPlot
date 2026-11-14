@@ -341,6 +341,15 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "the enemy does not know of it until a ground report finds it",
         "ordering the unit's own hex stops the march",
         "A map with no land links allows no march",
+        // Acting at a place and steaming on (decision 0096).
+        "set_route {waypoints: [[q, r], ...], act_at: [[q, r], ...]}",
+        "A force halts at a marked waypoint only if it has work there",
+        "by day it waits for the night",
+        "The last waypoint needs no mark",
+        "a new route order ends a halt",
+        "To raid by night and be gone by day, route the force to the enemy base marked to act there and then back out",
+        "To send a convoy that comes home by itself, give an unload order and a route to the base marked to act there, then home",
+        "The enemy sees none of it",
     ] {
         assert!(instructions.contains(phrase), "instructions lack: {phrase}");
     }
@@ -364,6 +373,13 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
         "MARCH. march {hex: [q, r]} sends a land unit's men ashore to a neighbouring hex joined to the unit's hex by a land link",
         "the unit's own hex stops a march",
         "no land link joins its hex to the hex named",
+        // Acting at a place and steaming on (decision 0096).
+        "set_route {waypoints: [[q, r], ...], act_at: [[q, r], ...] (optional)}",
+        "ACT AT A PLACE. A route may mark waypoints to act at with act_at",
+        "the last waypoint needs no mark",
+        "A new route order ends a halt",
+        "To raid by night and be gone by day: route the force to the enemy base",
+        "To send a convoy that comes home by itself: give an unload order and a route to the base marked to act there, then home",
         // 10. The patrol share.
         "set_patrol_share {share} is the share of the group kept over its own hex: 1 (where it starts) keeps every fighter at home and sends no escort, 0.5 keeps half at home and lets half escort",
     ] {

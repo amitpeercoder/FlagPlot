@@ -187,6 +187,12 @@ fn examples() -> Vec<OrderKind> {
     };
     let mut out = vec![
         tf(TaskForceOrder::route(vec![Hex::new(2, -4), Hex::new(0, 7)])),
+        // A marked route (decision 0096): a mark is a hex, and a hex that
+        // appears twice on the route is one mark.
+        tf(TaskForceOrder::SetRoute {
+            waypoints: vec![Hex::new(2, -4), Hex::new(0, 7), Hex::new(2, -4)],
+            act_at: [Hex::new(0, 7)].into_iter().collect(),
+        }),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Cruise)),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Full)),
         tf(TaskForceOrder::SetSpeed(SpeedSetting::Knots(fx("17.5")))),
@@ -327,6 +333,48 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
             }
         }
     }
+}
+
+#[test]
+fn a_marked_route_writes_act_at_and_an_unmarked_one_writes_none() {
+    let schemas = schemas();
+    let unit = "task_force:3";
+    let kind = |order| OrderKind::TaskForce {
+        target: TaskForceId::new(3),
+        order,
+    };
+    // No mark: the key is not there, so the order is written as it always was.
+    let plain = kind(TaskForceOrder::route(vec![Hex::new(1, 0), Hex::new(3, 0)]));
+    let body = order_to_json(&plain);
+    assert_eq!(
+        body,
+        json!({"kind": "set_route", "waypoints": [[1, 0], [3, 0]]})
+    );
+    assert!(body.get("act_at").is_none(), "{body}");
+    // A mark: written in hex order, read back to the same order.
+    let marked = kind(TaskForceOrder::SetRoute {
+        waypoints: vec![Hex::new(1, 0), Hex::new(3, 0), Hex::new(1, 0)],
+        act_at: [Hex::new(3, 0), Hex::new(1, 0)].into_iter().collect(),
+    });
+    let body = order_to_json(&marked);
+    assert_eq!(body["act_at"], json!([[1, 0], [3, 0]]), "{body}");
+    let doc = json!({"unit": unit, "order": body});
+    assert!(schemas.check("order.schema.json", &doc).is_empty(), "{doc}");
+    assert_eq!(
+        order_from_json(unit, &doc["order"]).expect("decodes"),
+        marked
+    );
+    // act_at that is not a list of hexes is an error, and null is no mark.
+    let bad = json!({"kind": "set_route", "waypoints": [[1, 0]], "act_at": 3});
+    assert!(order_from_json(unit, &bad).is_err());
+    let null = json!({"kind": "set_route", "waypoints": [[1, 0]], "act_at": null});
+    assert_eq!(
+        order_from_json(unit, &null).expect("null is no mark"),
+        kind(TaskForceOrder::route(vec![Hex::new(1, 0)]))
+    );
+    // The schema refuses a mark that is not a hex pair of integers.
+    let doc = json!({"unit": unit, "order": {"kind": "set_route", "waypoints": [[1, 0]], "act_at": [["x"]]}});
+    assert!(!schemas.check("order.schema.json", &doc).is_empty());
 }
 
 #[test]

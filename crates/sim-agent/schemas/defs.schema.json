@@ -213,7 +213,8 @@
             "underway",
             "arrived",
             "out_of_fuel",
-            "away_at_yard"
+            "away_at_yard",
+            "halted"
           ]
         },
         "mission": {
@@ -274,6 +275,23 @@
         "cargo_fuel_t": {
           "description": "Tons of fuel carried as cargo (not the fuel the ships burn), summed over the ships afloat. null under the same condition.",
           "$ref": "#/$defs/dec_or_null"
+        },
+        "act_at": {
+          "description": "Decision 0096: the waypoints of the force's route it is marked to act at that it has not passed (a halted force's own hex included while it lies there), in hex order; never the last waypoint. Left out when none.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/place" }
+        },
+        "halt": {
+          "description": "Decision 0096: present while the force is halted at a marked waypoint (status halted). Left out otherwise.",
+          "type": "object",
+          "required": ["place", "since", "waits_for"],
+          "additionalProperties": false,
+          "properties": {
+            "place": { "$ref": "#/$defs/place" },
+            "since": { "description": "The clock time it halted, such as D1 22:00.", "type": "string" },
+            "waits_for": { "description": "What it waits to do before it steams on: bombard (done in a night pulse), cargo, or both in that order.", "type": "array", "items": { "enum": ["bombard", "cargo"] } },
+            "bombarded": { "description": "true once it has bombarded since it halted; left out until then.", "const": true }
+          }
         }
       }
     },
