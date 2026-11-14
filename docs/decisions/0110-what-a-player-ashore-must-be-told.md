@@ -1,10 +1,10 @@
 # 0110: What a player commanding ashore must be told
 
-Status: a plan by the architect, written on Nov 14, 2026, from the account of a model that commanded the Allied side for the first five days of the lengthened slice with the game's tools alone (`crates/sim-cli/tests/recorded_games/full_slice_five_days_sonnet/account.md`). It landed, took both bases and built the airfield, and it named what it could not work out. Items 1 to 9 change what a side is told of its own affairs and are the architect's, inside the agent interface the designer approved (decisions 0047 to 0051). Item 10 changes what a side believes and needs the designer's confirmation. Nothing is built. No rule of the fight, of supply or of work changes.
+Status: a plan by the architect, written on Nov 14, 2026, from the account of a model that commanded the Allied side for the first five days of the lengthened slice with the game's tools alone (`crates/sim-cli/tests/recorded_games/full_slice_five_days_sonnet/account.md`). It landed, took both bases and built the airfield, and it named what it could not work out. Items 1 to 9 change what a side is told of its own affairs and are the architect's, inside the agent interface the designer approved (decisions 0047 to 0051). Item 10 changes what a side believes: the designer confirmed it on Nov 14, 2026. Nothing is built. No rule of the fight, of supply or of work changes.
 
 Summary: What a player commanding ashore must be told, from a model's five days in the Allied seat: why a unit made no work, the arrivals that are due and what they wait for, the rule of fatigue, whether a base counts as open today, what a base without fuel means for the ships there, when a force has nothing left to unload, a landing summed up for each force, and one hex's bases shown together; and a report that says when a side's men find no enemy in their hex
 
-Standing: Plan. Item 10 needs review. Not built
+Standing: Item 10 confirmed by the designer, Nov 14, 2026; the rest settled by the architect. Not built
 
 ## What the account showed
 
@@ -50,4 +50,6 @@ Each item below is something the side already has in its own view. None gives it
 
 ## Question for the designer
 
-1. **Item 10:** when a side's men stand in a hex and find no enemy there, the side is told so and its old estimate is cleared. I recommend it: it is what the men on the ground would report, and without it a player fights an enemy who has left. The other choice is to leave the estimate as it is and only show its day, by item 11.
+Answered on Nov 14, 2026.
+
+1. **Item 10:** when a side's men stand in a hex and find no enemy there, the side is told so and its old estimate is cleared. Agreed.
