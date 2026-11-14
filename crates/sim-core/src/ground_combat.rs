@@ -25,6 +25,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::choices::ground::{GroundAnswer, GroundQuestion, UnitDay};
+use crate::choices::{Answer, Question};
 use crate::damage::roll_shots;
 use crate::events::{Breakdown, Cause, EventKind, ExperienceSource, Factor, LandFatigueChange};
 use crate::fixed::Fixed;
@@ -34,7 +36,7 @@ use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, LandUnitId, ShipId, Tas
 use crate::orders::{Activity, AirMission, Posture};
 use crate::refdata::GroundFigures;
 use crate::rng::{Draw, Subsystem};
-use crate::state::{AirGroupLocation, LandUnit, ShipLocation, Side, Skills};
+use crate::state::{AirGroupLocation, LandUnit, ShipLocation, Side, Skills, TruthState};
 use crate::world::World;
 
 /// The other side.
@@ -111,6 +113,75 @@ pub(crate) fn is_beaten(men: u32, enemy_men: u32, beaten_share: Fixed) -> bool {
 /// and its part, the loss in the hex and the side's men there at the start.
 type SideLoss = (Side, Vec<(LandUnitId, u32, u32)>, u32, u32);
 
+/// Whether a land unit goes back to defend (decision 14 of 0090): it is on
+/// attack and its fatigue is above the limit. Decision 1 of 0100: the
+/// engine and a side's view both ask it.
+pub(crate) fn goes_back_to_defend(posture: Posture, fatigue: Fixed, limit: Fixed) -> bool {
+    posture == Posture::Attack && fatigue > limit
+}
+
+/// What a land unit's day is (decision 3b of 0099): none if no man is
+/// ashore or aboard; none if it marched or its hex was contested; else work
+/// if it is a working unit (always) or was set to work, training if it was
+/// set to train, and else, standing ready, rehearsal if it is on the roster
+/// of a force that qualified today (`rostered_with`) and `with_force` says
+/// it is in that force's hex or aboard its ships. `with_force` is asked only
+/// then. Decision 1 of 0100: the engine and a side's view both ask it.
+// The inputs are the unit's state and the three facts of the day; a struct
+// would only rename them.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn unit_day(
+    men_ashore: u32,
+    men_aboard: u32,
+    working: bool,
+    activity: Activity,
+    marched: bool,
+    contested: bool,
+    rostered_with: Option<TaskForceId>,
+    with_force: impl FnOnce(TaskForceId) -> bool,
+) -> UnitDay {
+    if men_ashore == 0 && men_aboard == 0 {
+        return UnitDay::NoMen;
+    }
+    if marched {
+        return UnitDay::Marched;
+    }
+    if contested {
+        return UnitDay::Contested;
+    }
+    // A working unit always works (decision 1 of 0099).
+    let activity = if working {
+        Activity::Work(activity.job())
+    } else {
+        activity
+    };
+    match activity {
+        Activity::Work(job) => UnitDay::Work(job),
+        Activity::Train => UnitDay::Train,
+        Activity::Ready => match rostered_with {
+            Some(force) if with_force(force) => UnitDay::Rehearse(force),
+            _ => UnitDay::Ready,
+        },
+    }
+}
+
+/// Whether every man of `unit_id` is ashore in the hex of `force` or aboard
+/// its ships, with at least one man (decision 3b of 0099, and 4 of 0095).
+/// Reads only the unit and the force, which a side holds of its own.
+pub(crate) fn is_with_force(truth: &TruthState, unit_id: LandUnitId, force: TaskForceId) -> bool {
+    let unit = &truth.land_units[&unit_id];
+    let force = &truth.task_forces[&force];
+    let aboard_here: u32 = force
+        .ships
+        .iter()
+        .filter_map(|ship| truth.ships[ship].troops)
+        .filter(|troops| troops.unit == unit_id)
+        .map(|troops| troops.men)
+        .sum();
+    let ashore_ok = unit.men_ashore == 0 || unit.hex == Some(force.from_hex);
+    ashore_ok && aboard_here == truth.men_aboard(unit_id) && unit.men_ashore + aboard_here > 0
+}
+
 /// One hex's units with men ashore at the start of the phase, by side.
 #[derive(Default)]
 struct HexUnits {
@@ -173,32 +244,39 @@ impl World {
         for unit_id in units {
             let unit = &self.truth.land_units[&unit_id];
             let aboard = self.truth.men_aboard(unit_id);
-            if unit.men_ashore == 0 && aboard == 0 {
-                continue;
-            }
             // A unit that marched, or whose hex was contested, marches or
             // fights: none of the three.
             let contested =
                 unit.men_ashore > 0 && unit.hex.is_some_and(|hex| contested_hexes.contains(&hex));
-            if marched.contains_key(&unit_id) || contested {
-                continue;
-            }
-            // A working unit always works (decision 1 of 0099).
-            let activity = if unit.working {
-                Activity::Work(unit.activity.job())
-            } else {
-                unit.activity
-            };
-            match activity {
-                Activity::Work(job) => self.work_day(day, unit_id, job, figures, &mut on_airfields),
-                Activity::Train => self.train_day(day, unit_id, figures),
-                Activity::Ready => {
-                    if let Some(force) = rostered.get(&unit_id) {
-                        if self.is_with_force(unit_id, *force) {
-                            self.rehearse_day(day, unit_id, *force, figures);
-                        }
-                    }
-                }
+            let marched_today = marched.contains_key(&unit_id);
+            let rostered_with = rostered.get(&unit_id).copied();
+            let side = unit.side;
+            let answer = unit_day(
+                unit.men_ashore,
+                aboard,
+                unit.working,
+                unit.activity,
+                marched_today,
+                contested,
+                rostered_with,
+                |force| is_with_force(&self.truth, unit_id, force),
+            );
+            self.trace_choice(side, || {
+                (
+                    Question::Ground(GroundQuestion::UnitDay {
+                        unit: unit_id,
+                        marched: marched_today,
+                        contested,
+                        rostered_with,
+                    }),
+                    Answer::Ground(GroundAnswer::UnitDay(answer)),
+                )
+            });
+            match answer {
+                UnitDay::NoMen | UnitDay::Marched | UnitDay::Contested | UnitDay::Ready => {}
+                UnitDay::Work(job) => self.work_day(day, unit_id, job, figures, &mut on_airfields),
+                UnitDay::Train => self.train_day(day, unit_id, figures),
+                UnitDay::Rehearse(force) => self.rehearse_day(day, unit_id, force, figures),
             }
         }
         // The airfields the day's work built (decision 5 of 0099).
@@ -248,25 +326,6 @@ impl World {
                 counted,
             );
         }
-    }
-
-    /// Whether every man of `unit` is ashore in the hex of `force` or aboard
-    /// its ships, with at least one man (decision 3b of 0099, and 4 of
-    /// 0095).
-    fn is_with_force(&self, unit_id: LandUnitId, force: TaskForceId) -> bool {
-        let unit = &self.truth.land_units[&unit_id];
-        let force = &self.truth.task_forces[&force];
-        let aboard_here: u32 = force
-            .ships
-            .iter()
-            .filter_map(|ship| self.truth.ships[ship].troops)
-            .filter(|troops| troops.unit == unit_id)
-            .map(|troops| troops.men)
-            .sum();
-        let ashore_ok = unit.men_ashore == 0 || unit.hex == Some(force.from_hex);
-        ashore_ok
-            && aboard_here == self.truth.men_aboard(unit_id)
-            && unit.men_ashore + aboard_here > 0
     }
 
     /// A day of training for a unit set to train, if the conditions of
@@ -919,15 +978,26 @@ impl World {
                 breakdown,
             ));
         }
-        let unit = self
-            .truth
-            .land_units
-            .get_mut(&unit_id)
-            .expect("the land unit exists");
-        if unit.posture == Posture::Attack && unit.fatigue > figures.attack_fatigue_limit {
+        let unit = &self.truth.land_units[&unit_id];
+        let (side, posture, fatigue) = (unit.side, unit.posture, unit.fatigue);
+        let back = goes_back_to_defend(posture, fatigue, figures.attack_fatigue_limit);
+        self.trace_choice(side, || {
+            (
+                Question::Ground(GroundQuestion::BackToDefend {
+                    unit: unit_id,
+                    fatigue,
+                }),
+                Answer::Ground(GroundAnswer::BackToDefend(back)),
+            )
+        });
+        if back {
+            let unit = self
+                .truth
+                .land_units
+                .get_mut(&unit_id)
+                .expect("the land unit exists");
             unit.posture = Posture::Defend;
             unit.posture_order = None;
-            let fatigue = unit.fatigue;
             let breakdown = self.config.record_breakdowns.then(|| Breakdown {
                 factors: vec![
                     Factor {
@@ -1956,5 +2026,309 @@ mod tests {
         assert!(!events.iter().any(|e| matches!(&e.kind,
             EventKind::MenFed { side: Side::Japanese, hex, .. } if *hex == AT)));
         sound(&world);
+    }
+
+    // ---- The choices of the land units (decision 0100) ----
+
+    use crate::belief::{GroundReport, Report};
+    use crate::choices::{EndOfDayPhase, Moment};
+    use crate::orders::Job;
+
+    /// Decision 14 of 0090 by hand: only a unit on attack goes back, and
+    /// only above the limit of 60 (not at it).
+    #[test]
+    fn a_unit_goes_back_to_defend_only_on_attack_and_above_the_limit() {
+        assert!(goes_back_to_defend(Posture::Attack, n(61), n(60)));
+        assert!(!goes_back_to_defend(Posture::Attack, n(60), n(60)));
+        assert!(!goes_back_to_defend(Posture::Defend, n(100), n(60)));
+    }
+
+    /// Decision 3b of 0099 by hand: no men is no day; a march or a contested
+    /// hex is the day; a working unit works whatever its activity; training
+    /// is training; a ready unit rehearses only if rostered and with the
+    /// force (`with_force` is not asked otherwise).
+    #[test]
+    fn a_units_day_is_the_first_of_no_men_march_fight_work_train_rehearse_ready() {
+        let day = |ashore, aboard, working, activity, marched, contested, roster, with| {
+            unit_day(
+                ashore,
+                aboard,
+                working,
+                activity,
+                marched,
+                contested,
+                roster,
+                |_| with,
+            )
+        };
+        let ready = Activity::Ready;
+        assert_eq!(
+            day(0, 0, false, ready, true, true, None, true),
+            UnitDay::NoMen
+        );
+        assert_eq!(
+            day(10, 0, false, ready, true, true, None, true),
+            UnitDay::Marched
+        );
+        assert_eq!(
+            day(0, 10, false, ready, false, true, None, true),
+            UnitDay::Contested
+        );
+        assert_eq!(
+            day(10, 0, true, Activity::Train, false, false, None, true),
+            UnitDay::Work(None)
+        );
+        assert_eq!(
+            day(
+                10,
+                0,
+                false,
+                Activity::Work(Some(Job::Port)),
+                false,
+                false,
+                None,
+                true
+            ),
+            UnitDay::Work(Some(Job::Port))
+        );
+        assert_eq!(
+            day(
+                10,
+                0,
+                false,
+                Activity::Train,
+                false,
+                false,
+                Some(tid(1)),
+                true
+            ),
+            UnitDay::Train
+        );
+        assert_eq!(
+            day(10, 0, false, ready, false, false, Some(tid(1)), true),
+            UnitDay::Rehearse(tid(1))
+        );
+        assert_eq!(
+            day(10, 0, false, ready, false, false, Some(tid(1)), false),
+            UnitDay::Ready
+        );
+        assert_eq!(
+            day(10, 0, false, ready, false, false, None, true),
+            UnitDay::Ready
+        );
+    }
+
+    /// The test world with a tired Allied unit on attack (unit 1, fatigue
+    /// 100) and a second Allied unit (3) ashore at the Allied base with its
+    /// force, idle there, preparing a landing with it on the roster.
+    fn ground_world() -> World {
+        let mut world = world();
+        world
+            .truth
+            .land_units
+            .get_mut(&lid(1))
+            .expect("unit 1")
+            .fatigue = n(100);
+        world.truth.land_units.insert(
+            lid(3),
+            LandUnit::new(
+                lid(3),
+                "Allied unit 3".to_string(),
+                Side::Allied,
+                500,
+                Some(FAR),
+            ),
+        );
+        let mut force = TaskForce::at(
+            tid(3),
+            "Force 3".to_string(),
+            Side::Allied,
+            FAR,
+            Mission::Escort,
+        );
+        force.preparation = Some(crate::state::Preparation {
+            hex: FAR,
+            roster: [lid(3)].into_iter().collect(),
+            loading: Fixed::ZERO,
+            order: OrderId::new(9),
+        });
+        world.truth.task_forces.insert(force.id, force);
+        sound(&world);
+        world
+    }
+
+    /// Asked from the Allied view before the phase, every question of the
+    /// view gives the answer the engine traced for the same unit: unit 1,
+    /// on attack at fatigue 100, goes back to defend (the engine's fatigue
+    /// is 95 after resting, still above 60); unit 3 rehearses with force 3;
+    /// unit 2 (Japanese, in port) is not the side's. The questions the
+    /// engine traced are answered by the view as the engine did.
+    #[test]
+    fn the_view_gives_the_answers_the_engine_traced_for_land_units() {
+        let mut world = ground_world();
+        let before = world.clone();
+        world.trace_choices(true);
+        world.pass_moment(Moment::EndOfDay {
+            day: 1,
+            phase: EndOfDayPhase::GroundCombat,
+        });
+        world.fight_ashore(1);
+        let trace = world.take_choice_trace();
+        let allied = before.side_view(Side::Allied);
+        let mut back = 0;
+        let mut rehearse = 0;
+        for entry in &trace {
+            // The one exception, an in-step change: the Japanese base falls
+            // in this same step and its ship in port is sunk with the men
+            // aboard, so unit 2 has no men by the time its day is chosen.
+            if entry.side == Side::Japanese {
+                continue;
+            }
+            let asked = before.side_view(entry.side).ask(&entry.question);
+            assert_eq!(asked, Some(entry.answer.clone()), "{entry:?}");
+            match &entry.answer {
+                Answer::Ground(GroundAnswer::BackToDefend(true)) => back += 1,
+                Answer::Ground(GroundAnswer::UnitDay(UnitDay::Rehearse(force))) => {
+                    assert_eq!(*force, tid(3));
+                    rehearse += 1;
+                }
+                _ => {}
+            }
+        }
+        assert_eq!((back, rehearse), (1, 1), "{trace:?}");
+        // The questions of the view, with the staff's default inputs, are
+        // answered as the engine answered them here, where nothing marched
+        // or fought.
+        for question in allied.questions() {
+            let Some(Answer::Ground(answer)) = allied.ask(&question) else {
+                panic!("a question the view lists has an answer: {question:?}");
+            };
+            assert!(
+                trace.iter().any(|entry| {
+                    entry.answer == Answer::Ground(answer.clone())
+                        && matches!(
+                            (&entry.question, &question),
+                            (
+                                Question::Ground(GroundQuestion::BackToDefend { unit: a, .. }),
+                                Question::Ground(GroundQuestion::BackToDefend { unit: b, .. }),
+                            ) | (
+                                Question::Ground(GroundQuestion::UnitDay { unit: a, .. }),
+                                Question::Ground(GroundQuestion::UnitDay { unit: b, .. }),
+                            ) if a == b
+                        )
+                }),
+                "{question:?} -> {answer:?}"
+            );
+        }
+    }
+
+    /// A march that stops, or a fight, changes `marched` and `contested`
+    /// inside the step: the question carries them, and the view answers with
+    /// them as given.
+    #[test]
+    fn a_marched_or_contested_unit_has_no_day_of_its_own_whatever_its_activity() {
+        let world = ground_world();
+        let view = world.side_view(Side::Allied);
+        for (marched, contested, want) in [
+            (true, false, UnitDay::Marched),
+            (false, true, UnitDay::Contested),
+            (false, false, UnitDay::Rehearse(tid(3))),
+        ] {
+            let answer = view.ask_ground(&GroundQuestion::UnitDay {
+                unit: lid(3),
+                marched,
+                contested,
+                rostered_with: Some(tid(3)),
+            });
+            assert_eq!(answer, Some(GroundAnswer::UnitDay(want)));
+        }
+        // Not the side's unit, or not the side's force: no answer.
+        assert_eq!(
+            view.ask_ground(&GroundQuestion::UnitDay {
+                unit: lid(2),
+                marched: false,
+                contested: false,
+                rostered_with: None
+            }),
+            None
+        );
+        assert_eq!(
+            view.ask_ground(&GroundQuestion::UnitDay {
+                unit: lid(3),
+                marched: false,
+                contested: false,
+                rostered_with: Some(tid(1))
+            }),
+            None
+        );
+    }
+
+    /// The default `contested` is true only when the side's own fighting
+    /// unit there is on attack and it holds an estimate of enemy men in the
+    /// hex.
+    #[test]
+    fn the_default_contested_needs_an_own_attack_and_an_estimate_of_enemy_men() {
+        let mut world = ground_world();
+        let contested = |world: &World| -> bool {
+            world
+                .side_view(Side::Allied)
+                .ground_questions()
+                .into_iter()
+                .find_map(|question| match question {
+                    GroundQuestion::UnitDay {
+                        unit, contested, ..
+                    } if unit == lid(1) => Some(contested),
+                    _ => None,
+                })
+                .expect("a question for unit 1")
+        };
+        assert!(!contested(&world));
+        let figures = SearchFigures::from_search_toml();
+        world
+            .beliefs
+            .get_mut(&Side::Allied)
+            .expect("belief")
+            .apply_report(
+                &Report::Ground(GroundReport {
+                    hex: AT,
+                    men: 300,
+                    day: 0,
+                    received_event: EventId::new(1),
+                }),
+                &figures,
+            );
+        assert!(contested(&world));
+        world
+            .truth
+            .land_units
+            .get_mut(&lid(1))
+            .expect("unit 1")
+            .posture = Posture::Defend;
+        assert!(!contested(&world));
+    }
+
+    /// Two worlds that differ only in what the Allied side cannot see (an
+    /// enemy unit's men ashore in its own hex, its force, its base's
+    /// stores) give the same questions and answers from the Allied view.
+    #[test]
+    fn the_enemys_men_ashore_change_no_answer_of_the_view_of_the_land_units() {
+        let a = ground_world();
+        let mut b = ground_world();
+        let enemy = b.truth.land_units.get_mut(&lid(2)).expect("unit 2");
+        enemy.men_ashore = 400;
+        enemy.hex = Some(AT);
+        enemy.posture = Posture::Attack;
+        enemy.fatigue = n(70);
+        b.truth.bases.get_mut(&bid(1)).expect("base 1").supply_t = n(1);
+        b.truth
+            .task_forces
+            .get_mut(&tid(1))
+            .expect("force 1")
+            .from_hex = Hex::new(3, 1);
+        let (va, vb) = (a.side_view(Side::Allied), b.side_view(Side::Allied));
+        assert_eq!(va.questions(), vb.questions());
+        for question in va.questions() {
+            assert_eq!(va.ask(&question), vb.ask(&question), "{question:?}");
+        }
     }
 }
