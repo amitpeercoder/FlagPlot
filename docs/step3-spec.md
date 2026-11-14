@@ -2,6 +2,8 @@
 
 Status: confirmed by the designer on Nov 14, 2026, and the source of truth for step 3. The architect wrote it after the designer read a first draft and an outside review of it and set the target below; the designer then answered its four questions ("Decided by the designer", at the end). Nothing is built. Each stage still gets its plan and its decision record before any code.
 
+Amended by the architect on Nov 14, 2026, with the designer's agreement, after a second outside review. The designer's four decisions are unchanged. What changed: a sixth point of the target (the choices), orders that can honour a reserve, what an unattended staff may do, a separate setup for staff play, what the risk levels change, how the proof is kept fair, and a list of requirements for the stage briefs.
+
 `docs/pillars.md` gives step 3 one line: the layer that turns intent into orders, serving player delegation and the enemy AI, so it is built once. This says what that means for the slice, what it must prove, and in what order it is built.
 
 ## What step 3 is for
@@ -22,6 +24,8 @@ It has no screen. Step 4 puts a minimal interface over it. Step 3 is judged by t
 4. **The estimate.** Before an operation is committed the commander is told what it needs, when it could go and what it may cost, from a trial that never touches the live enemy.
 5. **The proof.** A model that commands by intent alone does at least as well as the same model ordering every unit, in a fraction of the decisions. This is the first pillar as a claim that can fail.
 
+6. **The choices.** In a small set of constructed situations the staff lays out two real courses, what each gives up, what is not known and by when the commander must choose; and a change of priority or risk changes what it recommends, for a reason it can state. Running alone shows the staff is competent. This shows the commander still has something to decide.
+
 **Stretch.** The 180-day soak runs staff against staff with every invariant holding. After step 3, once the battles of October and November 1942 are researched, the goal is the real campaign carried past 14 September.
 
 **Out of reach for this step, and not claimed:**
@@ -38,6 +42,7 @@ In step 3:
 - **Intent and limits** as objects: what a commander asks of an area, a force and a base, and what he will not trade for it.
 - **The staff:** deterministic code that reads one side's view, intents and limits and gives the day's orders, each with its reason.
 - **The plan** as a lasting object with a baseline, amendments and a daily report of plan against actual.
+- **The command report:** a short account of what changed against the plan, what needs a decision, what was won or lost for good, and what is still open (`docs/design/storytelling.md` gives threads and plan-against-actual to this step).
 - **Hold, release and override.**
 - **Running time:** a run of several days that stops for a reason.
 - **The trial:** the staff's war game of a draft plan.
@@ -70,7 +75,10 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | The full slice of 39 days with the landings | Decision 0093 | Planned |
 | The rules' choices inside a day as functions of belief | Decision 0055, "Left for later" | Not built: stage 0 |
 | A rules version on a saved game | This spec | Not built: stage 0 |
-| The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2 |
+| A force that acts at a place and steams on by itself | A decision of its own, after decision 0092 | Not built. Needed before stage 2 |
+| A load of a stated weight, and refuelling that leaves a reserve | Stage 1 | Not built |
+| A day from which a force may be used | Stage 2 | Not built |
+| The objectives scale set from the record | `docs/open-work.md` | Open. Not a condition of stages 0 to 2. It is frozen before stage 5's games are played |
 
 ## The seat and the levels
 
@@ -103,14 +111,31 @@ A commander also sets **limits**. They are few:
 | Reserve | Fuel or supply at a base, or rounds in a force, that the staff may not plan to go below | Hard for planning. An event can still take a stock below it |
 | Risk | One of three: preserve the force, balanced, or press | Tradable against a date, within its level |
 
-The staff may trade a date against risk and against a lower intent. It may not cross a hard limit to meet a date. When it cannot meet an intent inside its limits it says so, says which limit binds, and goes on with the rest.
+The staff may trade a date against risk and against a lower intent. It may not cross a hard limit to meet a date, and nothing but the commander changing a limit changes it: not a higher priority, not an empty seat. When it cannot meet an intent inside its limits it says so, says which limit binds, and goes on with the rest.
+
+**A limit the orders cannot honour is not a limit.** Today a load order fills a ship from the stock and names no weight, and a force in port refuels before the day's orders are taken. Stage 1 gives the staff the orders it needs to leave a reserve where it lies: a load of a stated weight, and refuelling that stops at a base's reserve. A draw that the staff's own plan causes is never an event that excuses going below a reserve. Its acceptance case: two tasks load from one base without both counting the same stock, a convoy with room to spare leaves the reserve behind, and a force refuelling there that morning is in the sum.
+
+### What the risk levels change
+
+Risk is judged from belief. It is not a promise against what the side has not seen. Forbidding the use of a carrier is the forces limit, and is hard; risk is about how a force the staff may use is exposed.
+
+| The staff's choice | Preserve the force | Balanced | Press |
+| --- | --- | --- | --- |
+| Committing scarce ships to a task | Only where the task cannot be done without them | Where they add to it | Whenever they are free |
+| The evidence it strikes on | A fresh contact of a kind worth the strike | A contact within the age the doctrine sets | An older contact, or a place the enemy is expected |
+| How far it reaches | Inside the radius, with a margin | To the radius | Beyond it, at the cost the rules give |
+| Fuel and rounds kept to get home | A margin above the passage home | The passage home | The passage home, cut fine |
+| An operation that has lost ships | Stops and comes home | Goes on if the objective can still be met | Goes on while any objective can be met |
+
+The numbers behind each cell are fixed in stage 2's record. Its acceptance cases: on the same information the three levels give different orders in cases chosen to show each row; a new report changes the order with the level unchanged; and a choice that went badly still has a reason that stands.
 
 ### Competing demands
 
 - **A commitment** is a force given to a task from one day to another. A force has one commitment at a time; it may have another after it.
-- **Where two intents need the same force,** the higher priority has it. At equal priority the earlier date has it, then the lower number. This is fixed, so the same inputs give the same allocation.
+- **Where two intents need the same force,** the higher priority has it, among the forces not held to another task by a protected commitment. At equal priority the earlier date has it, then the lower number. This is fixed, so the same inputs give the same allocation.
 - **The staff reports what was displaced:** the shortfall at the lower intent, in its own measure, and the commitment that caused it.
 - **A changed priority is a new allocation** from the next day, and the report says what moved.
+- **A commitment counts what follows it:** the passage to the next task, loading and refuelling. A force is free when it can be where the next task starts, not when the last one ends. Stock at a base is committed by weight and by day as forces are. The tie-break is applied among the tasks a force can in fact do.
 
 ### The plan's life
 
@@ -120,14 +145,17 @@ A plan is a draft, proposed, approved, complete, failed or cancelled.
 - **Approved,** it has a **baseline:** its objectives, dates, forces and phases as approved. The baseline never changes.
 - **An amendment** is a numbered change to an approved plan, with its reason. The report of plan against actual is always against the baseline, with the amendments listed.
 - **What the staff may amend alone:** routes, the day of a run inside the slack the plan gives, one like force for another inside the forces allowed, the order of tasks inside a phase.
-- **What needs the commander:** an objective, an objective's date, a force outside those allowed, anything that crosses a limit, and cancelling. The staff proposes it and raises an interrupt. With no commander present the staff takes the proposal that keeps the higher priority and records that it did.
+- **What needs the commander:** an objective, an objective's date, and cancelling. The staff proposes it and raises an interrupt. A proposal never crosses a hard limit. Where only a wider limit would meet the intent, the staff says which limit and by how much, and that is all it may do.
+- **While a proposal waits,** the forces in it go on with the approved plan as far as it can still be carried out inside the limits. A force that cannot go on takes the plan's fallback, which every plan states: hold where it is, or come home.
+- **With no commander present,** on either side, the staff chooses among what it is allowed: it slips the date, then cuts the objective to what can be met, then stands the task down, taking the first that is feasible, and records which. It never widens a limit. The same rule holds for a player who runs time and does not answer.
+- **A plan drafted inside the limits may be approved by rule.** The commander says whether drafts inside his limits are approved as they are made or wait for him. With no commander they are approved. This is what lets a campaign begin from a statement.
 - **A phase** has a condition to begin and a condition to end, each read from the side's view. A task is done, failed or expired by a condition of the same kind.
 - **An order stands until the reason for it changes.** The staff does not give a replacement order on a day when it would give the same order again, and a changed order names what changed. A convoy is not turned round twice by two small changes.
 - **Cancelled with ships at sea,** each force is given a task to come home, and keeps it.
 
 ### Hold and release
 
-- **What can be held:** one setting of a unit (its search arc), a unit (a force, an air group, a land unit), or a base. A held force holds its ships and the groups and men aboard them.
+- **What can be held:** one setting of a unit (its search arc), a unit (a force, an air group, a land unit), or a base. A held force holds its ships and the groups and men aboard them. A held setting holds that setting and what it depends on to mean anything (a held search arc holds the group to the search mission), and leaves the rest of the unit to the staff.
 - **A hold forbids staff orders to what is held, and staff orders to anything else that would change it:** sending the carrier of a held group to the yard, detaching a held force's ships, loading a held unit's men, rebasing into a held base's place in a plan.
 - **A hold does not stop the game's rules.** A held base still pays its daily supply and repairs its aircraft.
 - **When the commander takes a unit, its orders stand** until he changes them.
@@ -137,7 +165,7 @@ A plan is a draft, proposed, approved, complete, failed or cancelled.
 ### Running time
 
 - **A run** is a number of days, with a limit, that resolves day after day and stops early for a reason. The day's orders are listed before a run; listing is not waiting.
-- **An interrupt** is a condition the commander sets. It is tested before the first day of a run and between days.
+- **An interrupt** is a condition the commander sets. It is tested before the first day of a run and between days. A condition that is already true when it is set, or at the start of a run, fires once and then waits to be crossed again.
 - **It fires on a change, not on a state.** A base below its threshold stops the clock on the day it crosses, and not again until it has been above. Acknowledging an interrupt does not re-arm it; crossing back does.
 - **Several reasons on one day stop the clock once,** listed together.
 - **A preview changes nothing.** If the commander changes anything after a preview, what he was shown is void and is worked out again before the day runs.
@@ -196,7 +224,7 @@ What it must be able to decide in the slice, and the orders each needs:
 | Rest, repair and replace | Which groups stand down, which ships go to a repair base or the yard | Exist |
 | Use shipping from a pool | Which ships form a convoy | Forming and merging forces by order: required, decided in stage 1 |
 
-A force that retires when it has done what it came for is a staff decision and needs no new order.
+A force that retires when it has done what it came for cannot be left to the staff's next day. Orders are taken once a day, so a force that arrives by night to bombard or to unload would lie there through the daylight that follows. It needs a standing instruction that the force carries out by itself inside the day: act at this place, then steam on. That is a rule of its own, decided before stage 2, and the daily cycle of command stays as it is.
 
 ## The trial
 
@@ -217,6 +245,15 @@ How the unseen is filled in is the hardest problem of the step. The first draft'
 The same staff plays the Japanese side from Japanese intents and limits, which a scenario states. It reads the Japanese view. It is not told the Allied plan and reads nothing of the truth.
 
 The scripted scenarios of steps 1 and 2 stay as they are. They are the validation fixtures.
+
+## Two setups of the campaign
+
+The 39-day slice is built first with scripted orders, each force sent out on the day the record gives (decision 0093). Every force is in it from day 1, because nothing brings a force in later. Taking the scripts away would hand a staff forces weeks before they were there to use.
+
+- **The scripted setup** is kept as it is, for the measures against the record.
+- **The staff setup** has the same forces, bases and map and no scripted order. Each force has a day from which its side may use it, from a source where one gives it, and declared as made up where none does. It is a dated entry in the forces limit.
+- **A side knows its own forces' days and not the enemy's.** A staff cannot plan on an enemy arrival it has not been told of.
+- **After its day a force is the staff's to use as it sees fit.** No date of any operation is fixed by the setup.
 
 ## What a side is told
 
@@ -251,7 +288,9 @@ The hand calculation still comes first wherever a stage has arithmetic: a convoy
 - **Situations it was not written for.** Starts and upsets that no doctrine was written around.
 - **The campaign.** The 39 days, staff against staff, a thousand seeds, every invariant holding, no order refused that the staff should have known would be, and both sides doing something: the measures above, each inside bounds set in stage 3's record.
 - **Legibility.** A cheap model, given a decision's record, says what the staff is trying to do and what would change its mind, at a pass mark written before the run. It does not score predictions that depend on where a hidden enemy is.
-- **The proof.** The same model plays the same side of the campaign both ways over the same seeds: by intent only, and by unit orders. By intent it scores no worse on the objectives scale and gives fewer than a set share of the decisions. The numbers of games, the margin and the share are fixed in stage 5's record before a game is played.
+- **The choices.** A few situations built for the purpose, through the tools: commit scarce cover now or keep it; sail on what is known or wait while supply runs down; go on after losing an escort or change the objective. For each the staff gives the feasible courses, what each gives up, what is unknown and the day by which to choose. Where one course is plainly best it says so. A change of priority or of risk changes the recommendation and the reason. Accepting a recommendation takes one answer.
+- **The proof.** The same model plays the same side of the campaign both ways: by intent only, and by unit orders. By intent it scores no worse on the objectives scale, by a margin fixed beforehand, and gives fewer than a set share of the decisions. Fixed in stage 5's record before a game is played: the model and its version, separate sessions, the prompts, what each is shown, the tools each has, the opponent, the seeds, the budget, and what is done with a game not finished. A decision is one intent, limit, hold, override or approval, or one unit order, however the tools batch them. Commands given, decisions that took judgement and calls made are reported apart. The games of the test are not the situations the doctrine was improved on, and the operational measures are reported beside the score. A failure is put down to its cause: what the staff could not do, what intent could not say, what a reason did not explain, or how the model used the tools.
+- **Speed.** On a named machine, with the workloads named in stage 0: a day's staff decisions for both sides, a preview, a quiet week, a trial at each quality offered, each late in the campaign with its history behind it, inside times the designer accepts. The time is measured outside the game's logic and never changes a result. Memory and storage for reasons and trial records are measured with it.
 
 Whether it is fun is judged by people at step 4, as the pillars say.
 
@@ -259,12 +298,27 @@ Whether it is fun is judged by people at step 4, as the pillars say.
 
 - The campaign of the target runs as the campaign test says.
 - The contract's cases all pass, and the save case among them.
+- The choices are shown: each built situation gives courses that differ, and the recommendation moves with priority and risk.
+- The command report gives a quiet week in a few lines and a heavy loss with what it means for the operation, each item leading to its reasons.
 - Every staff decision answers "why", acted on or not.
 - The leak tests pass for orders, reasons, feasibility, interrupts, numbers shown and trials.
 - A trial of the campaign's main operation returns within its budget, is the same twice, changes nothing, and passes its three checks.
 - The staff beats no orders by the margin set, on each battle of the slice and on the campaign.
 - The proof is run, and its result is reported whichever way it falls. If the model by intent does worse, the step is not done, and what it lacked is the next work.
 - The rulebook has a chapter on the staff: every decision it makes, as the code has it.
+
+## For the stage briefs
+
+Requirements each stage's record takes up, from the second review. They are not open questions.
+
+- **Stage 0.** The measurement names its machine and workloads, as "Speed" above. A small experiment builds a trial's private world from a few of the slice's side views, to find what the constructor lacks before stage 4 depends on it.
+- **Stage 1 is built in four steps, each with something to run:** one feasible convoy plan; two supply intents that compete; a hold and its release; then a shortage that stops a run, and a save resumed exactly. The commitment cases include the passage to the next task, loading, refuelling and a second operation on the same base.
+- **Stage 1, holds:** a held setting, a held unit and a held parent force are tested apart. Guarding a hold must not freeze the whole chain of command above it.
+- **Stage 1, the command report:** open matters keep one identity from day to day, so a delayed convoy is one concern for a week and not seven.
+- **Stage 2.** The numbers of the risk table. The day from which a force may be used.
+- **Stage 4, the unseen.** A world with no unseen carrier is valid and proves nothing. The constructor's tests state what the worlds must hold across a trial: where the scenario says a side believes a force exists and has not seen it, some worlds have it. "Not seen" and "believed absent" are different inputs. Where nothing supports a probability the estimate says so and shows the cases apart. What the enemy is assumed to want and to believe inside a trial is built from the side's permitted inputs and shown as an assumption.
+- **Stage 4, quality.** A trial is offered at stated sizes, each a fixed amount of work with what is lost in precision at the smaller. A trial can be abandoned with no effect on the game.
+- **Stage 5.** The objectives scale is frozen before its games. A better score never hides a supply line lost or a carrier spent for nothing: the operational measures are judged with it.
 
 ## Decided by the designer
 
