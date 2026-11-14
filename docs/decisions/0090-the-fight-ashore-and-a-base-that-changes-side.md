@@ -1,6 +1,6 @@
 # 0090: The fight ashore, and a base that changes side
 
-Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer agreed decisions 9 and 16 on Nov 13, 2026, and on decision 20 asked for rebasing by order to be built first (decision 0091), so that a player can fly a group out; with that, decisions 20 and 21 stand. Built on Nov 14, 2026: see "As built" at the end. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) and rebasing (decision 0091) to merge; the hand calculation is written before any code is delegated.
+Status: a plan by the architect, written on Nov 13, 2026. It is stage 2 of the ground combat plan the designer approved (`docs/design/ground-combat.md`). The designer agreed decisions 9 and 16 on Nov 13, 2026, and on decision 20 asked for rebasing by order to be built first (decision 0091), so that a player can fly a group out; with that, decisions 20 and 21 stand. Built on Nov 14, 2026: see "As built" at the end. Every figure is a placeholder set by the architect. Code waits for stage 1 (decision 0066) and rebasing (decision 0091) to merge; the hand calculation is written before any code is delegated. *(Nov 14, 2026: both merged before the build: decision 0066, scenario 21, and decision 0091, scenario 22.)*
 
 ## The gap
 

@@ -55,7 +55,7 @@ These are my readings; the check is the spec session's.
 
 ## The file
 
-`data/oob/passages.csv`, one row per passage per source. `oob-check` does not read it yet.
+`data/oob/passages.csv`, one row per passage per source. `oob-check` does not read it yet. *(Nov 14, 2026: it does now: `crates/oob-check/src/passages.rs`.)*
 
 | Column | May be blank | Holds |
 | --- | --- | --- |

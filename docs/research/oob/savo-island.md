@@ -162,7 +162,7 @@ The rule asks for guns, rate of fire, shell weight, torpedo tubes, torpedo and w
 | Radar on 8 August | Japanese: none. Blue, Ralph Talbot: SC. Astoria: SC and two fire-control sets. Vincennes, Quincy: a fire-control set that gave ranges, type not named. Chicago: CXAM from 1940, and a set that ranged a ship that night. **Canberra: Type 271 on the Australian official history, settled by Amit against Type 241 on two websites.** Bagley, Patterson, Helm: the same history says the pickets had the best radar of the squadron's nine ships, which suggests the others had some set. That is an inference, kept as low-grade rows; decision 0019 treats these ships as not fitted until a source names a set. **Wilson, Jarvis, Australia, and a search set for Vincennes: nothing found** |
 | Night optics | The technical mission reports confirm 12, 15 and 18 cm binoculars and 90 and 110 cm searchlights existed. Nothing found gives numbers per ship or a sighting range except the ranges in the detection tables above |
 
-Four choices the sources leave open (damage measure, ships with no radar found, torpedoes with no named type, disputed placements) have proposals in `savo-island-choices.md`. They are for Amit to confirm.
+Four choices the sources leave open (damage measure, ships with no radar found, torpedoes with no named type, disputed placements) have proposals in `savo-island-choices.md`. They are for Amit to confirm. *(Nov 14, 2026: confirmed by the designer on Nov 10, 2026, decision 0019.)*
 
 ## What a rule would need to model
 

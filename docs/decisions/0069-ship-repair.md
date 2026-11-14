@@ -1,6 +1,6 @@
 # 0069: Ship repair
 
-Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing is built. The hand calculation is written before any code is delegated.
+Status: confirmed. The designer approved the plan on Nov 13, 2026, with the answers below. Nothing was built when this was written; built on Nov 13, 2026 (scenario 20a, pull request 235; `crates/sim-core/src/repair.rs`). The hand calculation is written before any code is delegated.
 
 Nov 13, 2026, at the close of step 2: **this is next.** The designer decided ("Reported only; repair first"; `docs/step2-spec.md`, "Decided by the designer", 16) that ship repair and "out of the campaign" are built next and the objectives scale set from the record, before step 3 begins; land units and basic ground combat follow those.
 
@@ -100,7 +100,7 @@ Approved on Nov 13, 2026, each as recommended.
 
 ## As planned for the build
 
-Nov 13, 2026. Written by the team lead for the coordinating architect's check, on `origin/main` at state version 8. Nothing here is built, and nothing stands until the architect has read the whole section and ruled on the choices at its end. The decided text above is not changed. Where this section picks something the decisions did not say, it is listed again under "Choices for the architect", with a recommendation. The hand calculation is in `tests/scenario_20a_ship_repair.rs`.
+Nov 13, 2026. Written by the team lead for the coordinating architect's check, on `origin/main` at state version 8. Nothing here is built, and nothing stands until the architect has read the whole section and ruled on the choices at its end. The decided text above is not changed. Where this section picks something the decisions did not say, it is listed again under "Choices for the architect", with a recommendation. The hand calculation is in `tests/scenario_20a_ship_repair.rs`. *(Nov 14, 2026: built on Nov 13, 2026, scenario 20a.)*
 
 ### Two named quantities: days of repair and days away
 

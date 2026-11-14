@@ -1,6 +1,6 @@
 # Order-of-battle source policy
 
-Status: proposal, for review by Amit. It governs what may be entered in `data/oob/` and how it is cited.
+Status: proposal, for review by Amit. It governs what may be entered in `data/oob/` and how it is cited. *(Nov 14, 2026: decision 0015, confirmed by the designer, and `docs/engineering/data-rules.md` name this page as the policy.)*
 
 This is a working policy written by a non-lawyer. It is cautious on purpose. If the repo is made public, the "needs a decision" items at the end should be settled first.
 

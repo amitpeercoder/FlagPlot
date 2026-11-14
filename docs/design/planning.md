@@ -79,10 +79,10 @@ The player chooses, changes a course and asks for it to be tried again, or drops
 | Missing | Where it stands | What it holds up |
 | --- | --- | --- |
 | The staff planner | Step 3; its approach is an open question in the pillars | Everything here. The trial is its central job |
-| Ground combat and land units | Left out of step 1 (decision 0052); to be built before step 3 (answer 1 below) | An invasion, and any estimate of troops lost |
+| Ground combat and land units | Left out of step 1 (decision 0052); to be built before step 3 (answer 1 below) *(Nov 14, 2026: stages 1 to 3 are built: decisions 0066, 0090 and 0092.)* | An invasion, and any estimate of troops lost |
 | Weather, light and the moon | Left out of step 1 (decision 0052); after the kill gate (answer 1 below) | A best date on anything but stocks and arrivals |
 | Estimates of enemy intent | Layer 3 of `docs/design/intelligence.md`, which needs the planner | A trial that knows an enemy convoy is expected |
-| Figures set from the record | Step 2, under way | Any trial worth believing. On placeholder figures a spread of losses means nothing |
+| Figures set from the record | Step 2, under way *(Nov 14, 2026: closed on Nov 13, 2026)* | Any trial worth believing. On placeholder figures a spread of losses means nothing |
 | Materials and oil | Step 5 (`docs/design/economy.md`) | In the slice, resources are shipping, fuel and supply stocks, which exist |
 
 ## Rules it must keep
