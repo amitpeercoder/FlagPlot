@@ -356,7 +356,7 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
     for phrase in [
         // 5. Load and unload.
         "LOAD AND UNLOAD",
-        "work only while the force is stopped (idle or arrived) in the hex of a base of your own side",
+        "work only while the force is stopped (idle, arrived, or halted at a marked waypoint) in the hex of a base of your own side",
         "a load in the same day as a sailing is refused",
         "unload {} is never refused, wherever the force is",
         "an unload given while the force is at sea is queued, stands as the force's cargo order, and is carried out after the force arrives",

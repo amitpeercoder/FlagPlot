@@ -37,8 +37,8 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 9 | Night pulse | Daily supply for aircraft | Chapter 5, Daily supply |
 | 10 | Night pulse | Men's supply: the men ashore are fed from every base of their side in the hex, the unfed are lost in part | Chapter 7, The men's supply |
 | 11 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |
-| 12 | Night pulse | Movement: the straggler pass, forces move in order of clock time, fights where they meet | Chapter 2, Movement and Stragglers; chapter 4, Meeting |
-| 13 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map, fires at the base | Chapter 1, The night pulse; chapter 4, Shore bombardment |
+| 12 | Night pulse | Movement: halted forces whose work is done steam on, the straggler pass, forces move in order of clock time (a force with a marked waypoint and work there halts at it), fights where they meet | Chapter 2, Movement, Halting at a marked waypoint and steaming on, and Stragglers; chapter 4, Meeting |
+| 13 | Night pulse | Night search and surface engagements: empty. Shore bombardment: a force on the bombardment mission, in the hex of an enemy base on its side's map (a halted force is in it), fires at the base | Chapter 1, The night pulse; chapter 4, Shore bombardment |
 | 14 | Night pulse | Loading and unloading, with men taken aboard and landed, units divided and bases formed | Chapter 2, Cargo; chapter 7 |
 | 15 | Morning and afternoon | Air search and its sighting reports | Chapter 3, Air search |
 | 16 | Morning and afternoon | Strike decisions and launches | Chapter 5, The strike decision |

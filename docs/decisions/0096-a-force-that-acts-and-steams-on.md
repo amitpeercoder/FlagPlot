@@ -1,6 +1,6 @@
 # 0096: A force that acts at a place and steams on
 
-Status: confirmed as to the need by the step 3 spec, which the designer confirmed on Nov 14, 2026 ("What it builds on": needed before stage 2). The rule's details are the architect's, of the same date. Not built. It has no figure. The hand calculation is in `tests/scenario_26_act_and_steam_on.rs`.
+Status: confirmed as to the need by the step 3 spec, which the designer confirmed on Nov 14, 2026 ("What it builds on": needed before stage 2). The rule's details are the architect's, of the same date. Built on Nov 14, 2026 (scenario 26). It has no figure. The hand calculation is in `tests/scenario_26_act_and_steam_on.rs`.
 
 ## The gap
 
@@ -60,3 +60,22 @@ Without the mark it would steam through the hex and fire nothing. With the base 
 | --- | --- |
 | Reads | A force's route and its marks, position, mission, cargo order, ships and their rounds; the bases in the hex, their side and whether they are on the map; the land units of the order; whether the force bombarded or completed cargo since it halted |
 | Writes | A force's status, route index and halt; the events |
+
+## As built
+
+Built on Nov 14, 2026 (scenario 26, state version 15). Choices the record did not make:
+
+- **Marks are by hex.** A route's `act_at` is a set of hexes, each one of the route's waypoints, else the order is refused (`MarkNotOnRoute`). Every waypoint at a marked hex is marked. The last waypoint is never treated as marked, though a mark on its hex is accepted.
+- **Work is looked for when the force's mover is made** at the start of each pulse's movement, and again after each fight. The halt is at the first marked waypoint from the force's next one on where it has work. The forecast (`measure`) does not foresee halts.
+- **A bombardment is work** if the mission is bombardment, the force is not at the yard, a ship is afloat, an other-side base on the force's side's map is in the hex, the bombardment and air combat figures are loaded, and a ship would fire a shell by the phase's gun rule.
+- **Cargo is work** if the cargo order can work in the hex by the cargo rule and is not complete by the cargo rule's own test of when nothing remains to move. The same test says when the cargo is done.
+- **Halted** is a status of its own (code 5): at the hex centre, not moving, stopped as an arrived force is, so it can be met and fought, refuel and be repaired at a base of its side, take a load order or be sent to the yard. It works cargo from the hour it halted, and its cargo events cite the halt.
+- **`TaskForceHalted`** records the hex, the work and the hour, citing the route order and the segment that reached the waypoint, or the standing route and speed orders if the force steamed no distance that pulse. The bombardment cites the route order and the halt.
+- **"Can no longer bombard"** includes a change of mission or of the base, as well as no ship that can fire.
+- **Steaming on comes before the straggler pass,** at the start of each pulse's movement, in force order. `TaskForceSteamedOn` records the hex, the work and whether the force fired, citing the route order, the halt, the bombardment and the cargo completion event. The force moves in that pulse with the full hours, toward the waypoint after the one it halted at.
+- **A new route order, retiring after a fight and a trip to the yard each end a halt,** with no event of the halt's own: the order accepted is the record.
+- **A force that halts where its fuel also runs out is halted.** When it steams on it has no fuel and is out of fuel by the rule as it is.
+- **A halted force with no ship left stays as it is.**
+- **State version 15:** a route's `act_at` after its next index, the status `Halted`, and a task force's `halt` after its yard trip.
+- **The agent interface** writes `act_at` on a route order, shows a force's marks, halt and the status `halted` in the briefing, `list_forces` and `get_entity`, and lists yesterday's halts and steamings on with the reason. The enemy is shown none of it. The schema version stays 3: fields and values were only added. The two events are the side's own and whole; the enemy sees neither.
+- **Scenario 26 on the frozen figures:** task force 1 halts at (0,0) at hour 10 and fires 720 shells (32 hits: 10 on aircraft, 9 on supply, 13 on nothing; base 1 loses 10 aircraft and 450 t of supply), steams on in the morning and arrives at (4,0) at hour 22. Task force 2 halts at (0,3) at hour 16, unloads 100 t by 15:00, steams on in the night of day 2 and arrives at (4,3) at hour 40. Task force 3 passes its marked waypoint. The dice are those of the frozen figures.

@@ -81,7 +81,7 @@ Scenario 24, of made-up ships, units and bases marked placeholder, in two parts:
 ## What it leaves out
 
 - **Runway damage.** A bombardment destroys aircraft and supply and does not close the field.
-- **Bombardment by day, and by a force that is passing.** The force must end the night's movement in the hex.
+- **Bombardment by day, and by a force that is passing.** The force must end the night's movement in the hex. Note of Nov 14, 2026: a force may now act at a marked waypoint and steam on (decision 0096).
 - **Fire from the shore on ships.**
 - **A claim of supply destroyed or of enemy men lost.**
 - **Patrols and scouts ashore.** A side with no men in a hex gets no ground report of it, and aircraft report nothing of men.

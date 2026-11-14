@@ -74,8 +74,11 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Burn** | The fuel a ship uses steaming a distance: the distance times the cruise burn per mile, times the speed multiplier (decision 0006) | Fuel carried as cargo, which cannot be burned |
 | **Under way** | The status of a force that has a route to steam. A force dead in the water is still under way | Moving |
 | **Arrived** | The status of a force that has reached the centre of its last waypoint | Docked |
+| **Mark, act at** | A hex a route order names, one of the route's waypoints, where the force is to act. Every waypoint at a marked hex is marked, and the last waypoint is never treated as marked. A mark halts a force only if it has work there (decision 0096) | A waypoint that the force always stops at |
+| **Halt, halted** | A force's stop at a marked waypoint where it has work, a bombardment or cargo. The status is halted: at the hex centre, not moving, stopped as an arrived force is. It lasts until its work is done (decision 0096) | Arrived |
+| **Steam on** | What a halted force does when its work is done: it resumes its route toward the waypoint after the one it halted at, in the same pulse and with the pulse's full hours (decision 0096) | Retiring |
 | **Out of fuel** | The status of a force whose fuel ran out before its last waypoint. It takes no route, load or load-fuel order until it has taken fuel in port | A force with no fuel that is not under way |
-| **Stopped** | Not under way: idle, arrived or out of fuel. Refuelling and cargo handling also ask that the force is exactly at a hex centre | |
+| **Stopped** | Not under way: idle, arrived, halted or out of fuel. Refuelling and cargo handling also ask that the force is exactly at a hex centre | |
 | **Dead in the water** | Describes a ship whose propulsion is out, or the force it slows. Its speed is 0. Such a ship is also crippled | Heavily damaged |
 | **Sound ship** | A ship whose propulsion is working | A ship with no damage |
 | **Cargo** | Supply or fuel carried in a ship's hold, in tons, up to the class's cargo capacity. Men are not cargo room, but they are worked as cargo, at a weight per man (decision 0066) | The fuel a ship steams on; the men aboard |
