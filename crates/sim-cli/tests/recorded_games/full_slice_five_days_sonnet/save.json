@@ -73,93 +73,165 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "3e6b3d4bd6156bf7"
+      "hash": "461f00ea96b6e9f9"
     },
     {
       "day": 2,
-      "hash": "1d3636ea143431ef"
+      "hash": "c295f3b74e6208d2"
     },
     {
       "day": 3,
-      "hash": "16c4bd18c27d7b47"
+      "hash": "e93eb9f23dfdbc1f"
     },
     {
       "day": 4,
-      "hash": "26cc87b055e386ad"
+      "hash": "74cbe199a3af45b8"
     },
     {
       "day": 5,
-      "hash": "3a888e6338cffcd2"
+      "hash": "57ffcaf1b83f4e90"
     }
   ],
   "orders": [
     {
       "day": 1,
       "order": {
-        "kind": "load"
+        "hex": [
+          2,
+          -4
+        ],
+        "kind": "prepare_landing",
+        "roster": [
+          "land_unit:1",
+          "land_unit:2",
+          "land_unit:3",
+          "land_unit:4"
+        ]
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "task_force:5"
+      "unit": "task_force:20"
     },
     {
       "day": 1,
       "order": {
-        "from_deg": 0,
-        "kind": "set_search_arc",
-        "range_nm": "250",
-        "to_deg": 0
+        "kind": "set_route",
+        "waypoints": [
+          [
+            2,
+            -4
+          ]
+        ]
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:103"
+      "unit": "task_force:20"
     },
     {
       "day": 1,
       "order": {
-        "kind": "set_air_mission",
-        "mission": "search"
+        "kind": "unload"
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:103"
+      "unit": "task_force:20"
     },
     {
       "day": 1,
       "order": {
-        "from_deg": 270,
-        "kind": "set_search_arc",
-        "range_nm": "200",
-        "to_deg": 90
+        "hex": [
+          3,
+          -5
+        ],
+        "kind": "prepare_landing",
+        "roster": [
+          "land_unit:5",
+          "land_unit:6",
+          "land_unit:7",
+          "land_unit:8"
+        ]
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:107"
+      "unit": "task_force:21"
     },
     {
       "day": 1,
       "order": {
-        "kind": "set_air_mission",
-        "mission": "search"
+        "kind": "set_route",
+        "waypoints": [
+          [
+            3,
+            -5
+          ]
+        ]
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:107"
+      "unit": "task_force:21"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "unload"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:21"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            4,
+            -3
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:1"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            4,
+            -3
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:2"
     },
     {
       "day": 1,
@@ -191,14 +263,57 @@
       "day": 1,
       "order": {
         "kind": "set_air_mission",
-        "mission": "combat_air_patrol"
+        "mission": "search"
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:10"
+      "unit": "air_group:103"
+    },
+    {
+      "day": 1,
+      "order": {
+        "from_deg": 270,
+        "kind": "set_search_arc",
+        "range_nm": "350",
+        "to_deg": 90
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:103"
+    },
+    {
+      "day": 1,
+      "order": {
+        "kind": "set_air_mission",
+        "mission": "search"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:107"
+    },
+    {
+      "day": 1,
+      "order": {
+        "from_deg": 0,
+        "kind": "set_search_arc",
+        "range_nm": "350",
+        "to_deg": 120
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "air_group:107"
     },
     {
       "day": 1,
@@ -224,7 +339,7 @@
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:104"
+      "unit": "air_group:106"
     },
     {
       "day": 1,
@@ -237,7 +352,7 @@
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:106"
+      "unit": "air_group:104"
     },
     {
       "day": 1,
@@ -263,22 +378,20 @@
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:11"
+      "unit": "air_group:125"
     },
     {
       "day": 1,
       "order": {
-        "from_deg": 0,
-        "kind": "set_search_arc",
-        "range_nm": "200",
-        "to_deg": 0
+        "kind": "set_air_mission",
+        "mission": "naval_strike"
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:103"
+      "unit": "air_group:126"
     },
     {
       "day": 1,
@@ -311,6 +424,347 @@
     {
       "day": 2,
       "order": {
+        "hex": [
+          2,
+          -4
+        ],
+        "kind": "prepare_landing",
+        "roster": [
+          "land_unit:10"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:26"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            2,
+            -4
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:26"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "unload"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:26"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            2,
+            -4
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:23"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "unload"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:23"
+    },
+    {
+      "day": 2,
+      "order": {
+        "hex": [
+          2,
+          -4
+        ],
+        "kind": "prepare_landing",
+        "roster": [
+          "land_unit:9"
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:22"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            2,
+            -4
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:22"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "unload"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:22"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "load"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:5"
+    },
+    {
+      "day": 2,
+      "order": {
+        "activity": "work",
+        "job": "airfield",
+        "kind": "set_activity"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:3"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:5"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:6"
+    },
+    {
+      "day": 2,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:7"
+    },
+    {
+      "day": 3,
+      "order": {
+        "kind": "set_posture",
+        "posture": "attack",
+        "when_spent": "hold"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:1"
+    },
+    {
+      "day": 3,
+      "order": {
+        "kind": "set_posture",
+        "posture": "attack",
+        "when_spent": "hold"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:2"
+    },
+    {
+      "day": 3,
+      "order": {
+        "kind": "set_posture",
+        "posture": "attack",
+        "when_spent": "hold"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:3"
+    },
+    {
+      "day": 3,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:8"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:1"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:2"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_posture",
+        "posture": "defend"
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "land_unit:3"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            6
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:20"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            6
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:21"
+    },
+    {
+      "day": 4,
+      "order": {
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            6
+          ]
+        ]
+      },
+      "origin": {
+        "intent": null,
+        "issuer": "player"
+      },
+      "side": "allied",
+      "unit": "task_force:22"
+    },
+    {
+      "day": 4,
+      "order": {
         "kind": "set_route",
         "waypoints": [
           [
@@ -327,59 +781,6 @@
       "unit": "task_force:5"
     },
     {
-      "day": 2,
-      "order": {
-        "kind": "set_speed",
-        "speed": "full"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "task_force:5"
-    },
-    {
-      "day": 2,
-      "order": {
-        "kind": "unload"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "task_force:5"
-    },
-    {
-      "day": 2,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "rest"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "air_group:103"
-    },
-    {
-      "day": 2,
-      "order": {
-        "from_deg": 270,
-        "kind": "set_search_arc",
-        "range_nm": "200",
-        "to_deg": 60
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "air_group:107"
-    },
-    {
       "day": 4,
       "order": {
         "kind": "unload"
@@ -392,89 +793,32 @@
       "unit": "task_force:5"
     },
     {
-      "day": 4,
+      "day": 5,
       "order": {
-        "kind": "set_air_mission",
-        "mission": "rest"
+        "activity": "work",
+        "job": "airfield",
+        "kind": "set_activity"
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "air_group:107"
-    },
-    {
-      "day": 4,
-      "order": {
-        "from_deg": 270,
-        "kind": "set_search_arc",
-        "range_nm": "200",
-        "to_deg": 60
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "air_group:103"
-    },
-    {
-      "day": 4,
-      "order": {
-        "kind": "set_air_mission",
-        "mission": "search"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "air_group:103"
+      "unit": "land_unit:1"
     },
     {
       "day": 5,
       "order": {
-        "kind": "set_route",
-        "waypoints": [
-          [
-            7,
-            -7
-          ]
-        ]
+        "activity": "work",
+        "job": "airfield",
+        "kind": "set_activity"
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "task_force:2"
-    },
-    {
-      "day": 5,
-      "order": {
-        "kind": "set_readiness",
-        "readiness": "battle"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "task_force:2"
-    },
-    {
-      "day": 5,
-      "order": {
-        "kind": "set_readiness",
-        "readiness": "battle"
-      },
-      "origin": {
-        "intent": null,
-        "issuer": "player"
-      },
-      "side": "allied",
-      "unit": "task_force:1"
+      "unit": "land_unit:2"
     },
     {
       "day": 5,
@@ -492,20 +836,25 @@
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "task_force:5"
+      "unit": "task_force:23"
     },
     {
       "day": 5,
       "order": {
-        "kind": "set_speed",
-        "speed": "full"
+        "kind": "set_route",
+        "waypoints": [
+          [
+            7,
+            6
+          ]
+        ]
       },
       "origin": {
         "intent": null,
         "issuer": "player"
       },
       "side": "allied",
-      "unit": "task_force:5"
+      "unit": "task_force:26"
     }
   ],
   "rules_version": 5,
