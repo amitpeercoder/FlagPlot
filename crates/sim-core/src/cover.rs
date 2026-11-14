@@ -5,14 +5,14 @@
 //! defences in its hex and its own fieldworks; a unit that is marching or on
 //! attack has none (decision 1). Cover cuts the men a hit on men takes from
 //! a unit (decision 2, in `bombardment.rs`) and the men a defending unit
-//! loses in the fight (decision 3, in `ground_combat.rs`). A fighting unit on
+//! loses in the fight (decision 3, in `ground_combat/fight.rs`). A fighting unit on
 //! the defence that did not march digs fieldworks each day, in the ground
 //! combat phase after the day's fatigue (decision 5), and loses them when it
 //! marches, falls back, is taken aboard or is set to attack (decision 6). A
 //! point of a base's defences costs more in each grade (decision 8, in
 //! `works.rs`). Hits on men are counted for the day in each hex and side;
 //! the ground combat phase settles strain on them in place of rest (decision
-//! 10, in `ground_combat.rs`), and each hit wears cover (decision 12).
+//! 10, in `ground_combat/fatigue.rs`), and each hit wears cover (decision 12).
 //!
 //! Reads: a land unit's posture, march, hex, side, men ashore, working mark
 //! and fieldworks; the bases of its side in its hex and their defences; the

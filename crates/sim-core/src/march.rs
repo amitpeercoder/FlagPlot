@@ -8,7 +8,7 @@
 //! it carried from its side's bases in the hex it left, and its order is
 //! spent. A march made by a unit falling back (decision 0104) has an event
 //! for its cause in place of an order and carries nothing. The fatigue of a day's march is gained in the phase's fatigue
-//! step, after the fights (`ground_combat.rs`). There is no randomness.
+//! step, after the fights (`ground_combat/fatigue.rs`). There is no randomness.
 //!
 //! Reads: a land unit's men ashore, hex, side, march and skills; the map's
 //! land links and terrain; the bases of the side in both hexes and their
