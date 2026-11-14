@@ -488,6 +488,9 @@ pub struct LandUnitLine {
     /// The unit's experience, 0 to 4 (decision 0097, 1): 2 is its service's
     /// standard. It moves its chance to hit.
     pub experience: u32,
+    /// What the unit is good at (decision 0098): 0 to 4, 2 the standard,
+    /// fixed in play. Shown only for the side's own units.
+    pub skills: SkillsLine,
     /// Days of training counted toward the next step of experience, and the
     /// days a step takes and the experience training stops at (decision
     /// 0097, 3).
@@ -503,6 +506,28 @@ pub struct LandUnitLine {
     /// 0095, 1). Left out otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub roster: Option<RosterLine>,
+}
+
+/// A land unit's skills (decision 0098), 0 to 4 each.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SkillsLine {
+    /// Assault from the sea: moves the rehearsal gained a day.
+    pub assault: u32,
+    /// Holding ground: moves the chance to hit while its side defends.
+    pub holding: u32,
+    /// Weight: moves its shots and each man's daily supply.
+    pub weight: u32,
+    /// Movement by terrain of the hex.
+    pub movement: MovementSkillsLine,
+}
+
+/// A land unit's movement skills by terrain (decision 0098, 4).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MovementSkillsLine {
+    pub clear: u32,
+    pub jungle: u32,
+    pub mountain: u32,
+    pub atoll: u32,
 }
 
 /// A unit's days of training toward its next step of experience.
@@ -551,6 +576,10 @@ pub struct RosterLine {
 pub struct MarchLine {
     pub to: Place,
     pub days_marched: u32,
+    /// The days counted toward the march (decision 0098, 4): each day
+    /// marched counts as the unit's movement factor for the hexes it leaves
+    /// and enters.
+    pub days_counted: Dec,
     /// The days a march takes: the scenario's `march_days_per_hex`.
     pub of_days: u32,
     /// The number of the side's march order, if it is still known.
@@ -638,6 +667,7 @@ pub(crate) fn land_unit_line(
         march: unit.march.map(|march| MarchLine {
             to: ctx.place(march.to),
             days_marched: march.days,
+            days_counted: Dec(march.counted),
             of_days: ctx
                 .view
                 .ground_figures()
@@ -654,6 +684,17 @@ pub(crate) fn land_unit_line(
         activity: unit.activity.name(),
         activity_order: unit.activity_order.and_then(|o| ctx.order_number_if_own(o)),
         experience: u32::from(unit.experience),
+        skills: SkillsLine {
+            assault: u32::from(unit.skills.assault),
+            holding: u32::from(unit.skills.holding),
+            weight: u32::from(unit.skills.weight),
+            movement: MovementSkillsLine {
+                clear: u32::from(unit.skills.clear),
+                jungle: u32::from(unit.skills.jungle),
+                mountain: u32::from(unit.skills.mountain),
+                atoll: u32::from(unit.skills.atoll),
+            },
+        },
         training: TrainingLine {
             days: unit.training_days,
             of_days: ctx

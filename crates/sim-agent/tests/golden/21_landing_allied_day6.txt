@@ -52,10 +52,10 @@ BASES
   - Stocks yesterday: supply 3 t to 0 t (feeding men ashore 3 t)
 
 LAND UNITS
-- land_unit:1 "Placeholder battalion 1": 585 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; partly fed last night
-- land_unit:2 "Placeholder battalion 2": 390 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; partly fed last night
-- land_unit:3 "Placeholder battalion 3": 226 men ashore at (10,0); posture defend, fatigue 0, fed share 0; unfed last night
-- land_unit:4 "Placeholder battalion 3, detachment 4": 195 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; partly fed last night
+- land_unit:1 "Placeholder battalion 1": 585 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
+- land_unit:2 "Placeholder battalion 2": 390 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
+- land_unit:3 "Placeholder battalion 3": 226 men ashore at (10,0); posture defend, fatigue 0, fed share 0; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; unfed last night
+- land_unit:4 "Placeholder battalion 3, detachment 4": 195 men ashore at (8,0) Landing at (8,0); posture defend, fatigue 0, fed share 0.5; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; partly fed last night
 - Fed last night: 1200 men ashore at (8,0) Landing at (8,0): 600 fed from base:2 "Landing at (8,0)", 600 unfed [event 56]
 - Fed last night: 237 men ashore at (10,0): none fed, no base of the side in the hex, 237 unfed [event 60]
 - Men lost yesterday: land_unit:1 "Placeholder battalion 1" lost 15 men unfed at (8,0) Landing at (8,0), 585 left ashore [event 57]

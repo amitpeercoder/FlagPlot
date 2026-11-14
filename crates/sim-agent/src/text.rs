@@ -1185,10 +1185,11 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
         }
         if let Some(m) = &u.march {
             s.push_str(&format!(
-                "; marching to {}, {} of {} days marched",
+                "; marching to {}, {} of {} days marched ({} counted)",
                 at(&m.to),
                 m.days_marched,
-                m.of_days
+                m.of_days,
+                m.days_counted.0
             ));
             if let Some(order) = m.order {
                 s.push_str(&format!(" (by your order {order})"));
@@ -1213,6 +1214,16 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
                 u.fighting.of_days
             ));
         }
+        s.push_str(&format!(
+            "; skills assault {}, holding {}, weight {}, movement clear {}, jungle {}, mountain {}, atoll {}",
+            u.skills.assault,
+            u.skills.holding,
+            u.skills.weight,
+            u.skills.movement.clear,
+            u.skills.movement.jungle,
+            u.skills.movement.mountain,
+            u.skills.movement.atoll
+        ));
         if u.activity != "ready" {
             s.push_str(&format!("; activity {}", u.activity));
             if let Some(order) = u.activity_order {
@@ -1412,12 +1423,13 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
     }
     for m in &land.marches_yesterday {
         o.line(format!(
-            "March yesterday: {} marched from {} toward {}, {} of {} days{}",
+            "March yesterday: {} marched from {} toward {}, {} of {} days ({} counted){}",
             m.land_unit.text(),
             at(&m.from),
             at(&m.to),
             m.days,
             m.of_days,
+            m.counted.0,
             ev(m.event)
         ));
     }

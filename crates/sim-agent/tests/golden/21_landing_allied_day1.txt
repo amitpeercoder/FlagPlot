@@ -49,9 +49,9 @@ BASES
   - Yesterday: 0 t supply spent, 0 t destroyed; no spending yesterday
 
 LAND UNITS
-- land_unit:1 "Placeholder battalion 1": 600 men aboard (ship:1 "Placeholder troop transport 1" 600); posture defend, fatigue 0, fed share 1
-- land_unit:2 "Placeholder battalion 2": 400 men aboard (ship:2 "Placeholder troop transport 2" 400); posture defend, fatigue 0, fed share 1
-- land_unit:3 "Placeholder battalion 3": 500 men ashore at (10,0); posture defend, fatigue 0, fed share 1; not known whether fed last night
+- land_unit:1 "Placeholder battalion 1": 600 men aboard (ship:1 "Placeholder troop transport 1" 600); posture defend, fatigue 0, fed share 1; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2
+- land_unit:2 "Placeholder battalion 2": 400 men aboard (ship:2 "Placeholder troop transport 2" 400); posture defend, fatigue 0, fed share 1; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2
+- land_unit:3 "Placeholder battalion 3": 500 men ashore at (10,0); posture defend, fatigue 0, fed share 1; skills assault 2, holding 2, weight 2, movement clear 2, jungle 2, mountain 2, atoll 2; not known whether fed last night
 - Yesterday: no man was landed, embarked, fed, unfed or lost
 - Supply at (10,0): no base of the side here, so the 500 men ashore get none
 

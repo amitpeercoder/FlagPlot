@@ -71,6 +71,10 @@ pub struct LandUnitOut {
     /// Experience, 0 to 4 (decision 0097, 1). Left out at the standard, 2.
     #[serde(skip_serializing_if = "is_standard_experience")]
     experience: u8,
+    /// The unit's skills (decision 0098). Left out when every one is the
+    /// standard, so a file made before the rule is unchanged.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    skills: Option<SkillsOut>,
     /// Days of training and of firing counted toward the next step of
     /// experience. Each left out when 0.
     #[serde(skip_serializing_if = "is_zero_days")]
@@ -104,6 +108,20 @@ pub struct PreparationOut {
 pub struct MarchOut {
     to: Pos,
     days: u32,
+    /// The days counted toward the march (decision 0098, 4).
+    counted: Num,
+}
+
+/// A land unit's skills (decision 0098), 0 to 4 each.
+#[derive(Serialize)]
+pub struct SkillsOut {
+    assault: u8,
+    holding: u8,
+    weight: u8,
+    clear: u8,
+    jungle: u8,
+    mountain: u8,
+    atoll: u8,
 }
 
 /// The men of one land unit aboard a ship.
@@ -378,9 +396,19 @@ fn land_unit(unit: &LandUnit) -> LandUnitOut {
         march: unit.march.map(|march| MarchOut {
             to: Pos::from(march.to),
             days: march.days,
+            counted: Num(march.counted),
         }),
         activity: unit.activity.name(),
         experience: unit.experience,
+        skills: (unit.skills != sim_core::state::Skills::STANDARD_ALL).then_some(SkillsOut {
+            assault: unit.skills.assault,
+            holding: unit.skills.holding,
+            weight: unit.skills.weight,
+            clear: unit.skills.clear,
+            jungle: unit.skills.jungle,
+            mountain: unit.skills.mountain,
+            atoll: unit.skills.atoll,
+        }),
         training_days: unit.training_days,
         fight_days: unit.fight_days,
         rehearsal: unit.rehearsal_hex.map(|hex| RehearsalOut {

@@ -430,12 +430,12 @@ land links) is byte for byte what it was.
   joins to the unit's get the engine's reasons with a hint (the last names
   `march_to`). `order.schema.json` has the kind in its `land_unit_order`.
 - **A land unit line** (`list_forces`, `get_entity`, the briefing's `units`) has
-  `march` (`to`, `days_marched`, `of_days`, and `order`, the side's number of the
+  `march` (`to`, `days_marched`, `days_counted` (decision 0098), `of_days`, and `order`, the side's number of the
   march order) while a march order stands, and `march_to`, the places the unit can
   be ordered to march to (the neighbours the map joins to its hex by land, in hex
   order; left out for a unit with no man ashore and on a map with no land links).
 - **The briefing's `land_units` part** has, each left out when empty,
-  `marches_yesterday` (a day marched: `from`, `to`, `days`, `of_days`),
+  `marches_yesterday` (a day marched: `from`, `to`, `days`, `counted`, `of_days`),
   `march_arrivals_yesterday` (`men`, the `supply_t` carried and the `base` it went
   into, null when none was carried), `bases_formed_by_march_yesterday` (the side's
   own base) and `marches_stopped_yesterday` (`days` marched and `reason`:
@@ -519,3 +519,19 @@ no preparation looks as it did.
 - **What the enemy is told.** Nothing of any of it: no loading, rehearsal, roster,
   experience, day counted or order. The only trace of it in the other side's answers
   is what its own reports show (the men ashore, and the fight).
+
+## What a land unit is good at (decision 0098)
+
+Fields added only, so `version` stays 3.
+
+- **A land unit line** (`list_forces`, `get_entity`, the briefing's `units`) always
+  has `skills`: `assault`, `holding` and `weight`, and `movement` (`clear`, `jungle`,
+  `mountain`, `atoll`), each a whole number 0 to 4, 2 the standard, fixed in play. The
+  march (`march.days_counted`) and the briefing's `marches_yesterday` (`counted`) say
+  the days counted toward `of_days`, a decimal: a day marched counts as the unit's
+  movement factor for the hexes it leaves and enters. The text says the skills on every
+  unit line and the days counted beside the days marched.
+- **The supply estimate** of the briefing's `supply_by_hex` (`daily_charge_t`) counts
+  each unit's men by its weight, the engine's own `daily_charge_t`.
+- **What the enemy is told.** Nothing: skills appear only on the side's own unit
+  lines, and there is no line for an enemy land unit.

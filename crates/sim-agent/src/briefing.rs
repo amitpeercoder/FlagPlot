@@ -677,6 +677,8 @@ pub struct MarchDayLine {
     pub from: Place,
     pub to: Place,
     pub days: u32,
+    /// The days counted toward `of_days` (decision 0098, 4).
+    pub counted: Dec,
     pub of_days: u32,
     pub event: u32,
 }
@@ -1413,22 +1415,22 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
         .values()
         .map(|u| land_unit_line(ctx, u, &fed))
         .collect();
-    // The hexes with men of the side ashore, in hex order.
-    let mut men_by_hex: BTreeMap<Hex, u32> = BTreeMap::new();
+    // The hexes with men of the side ashore, in hex order, and what their
+    // daily supply costs, each unit by its weight (decision 0098, 5).
+    let mut men_by_hex: BTreeMap<Hex, (u32, Fixed)> = BTreeMap::new();
     for unit in ctx.land_units.values() {
         if let Some(hex) = unit.hex {
-            *men_by_hex.entry(hex).or_insert(0) += unit.men_ashore;
+            let entry = men_by_hex.entry(hex).or_insert((0, Fixed::ZERO));
+            entry.0 += unit.men_ashore;
+            entry.1 += view.daily_charge_t(unit.id).unwrap_or(Fixed::ZERO);
         }
     }
     let per_aircraft = view
         .air_supply_figures()
         .map_or(Fixed::ZERO, |f| f.daily_supply_t_per_aircraft);
-    let per_man = view
-        .ground_figures()
-        .map_or(Fixed::ZERO, |f| f.daily_supply_t_per_man);
     let supply_by_hex = men_by_hex
         .into_iter()
-        .map(|(hex, men)| {
+        .map(|(hex, (men, men_charge))| {
             // The base that feeds the men: the side's lowest-numbered in the
             // hex (decision 0066, 16).
             let base = ctx.bases.values().find(|b| b.hex == hex);
@@ -1439,8 +1441,7 @@ fn land_units_part(ctx: &Ctx<'_>, view: &SideView<'_>, ground: GroundDay) -> Opt
                     .map(|g| g.ready + g.damaged)
                     .sum()
             });
-            let charge = per_aircraft * Fixed::from_int(i64::from(aircraft))
-                + per_man * Fixed::from_int(i64::from(men));
+            let charge = per_aircraft * Fixed::from_int(i64::from(aircraft)) + men_charge;
             HexSupply {
                 place: ctx.place(hex),
                 men_ashore: men,
@@ -2181,13 +2182,14 @@ impl Day {
                         from,
                         to,
                         days,
+                        counted,
                         of,
-                        ..
                     } => ground.marches.push(MarchDayLine {
                         land_unit: ctx.land_unit(*unit),
                         from: ctx.place(*from),
                         to: ctx.place(*to),
                         days: *days,
+                        counted: Dec(*counted),
                         of_days: *of,
                         event: id,
                     }),
