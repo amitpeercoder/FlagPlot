@@ -140,3 +140,7 @@ max_speed_kn,ship,decimal,knots,one,"Maximum speed a source states for the ship;
 displacement_full_lt,ship,integer,long tons,one,"Full load displacement a source states for the ship (the class attribute of the same name, read of the ship)"
 displacement_standard_lt,ship,integer,long tons,one,"Standard displacement a source states for the ship (the class attribute of the same name, read of the ship)"
 fuel_capacity_lt,ship,integer,long tons,one,"Fuel a source states the ship could carry; the note says oil or coal (the class attribute of the same name, read of the ship)"
+gross_tonnage_grt,ship,integer,gross register tons,one,"Gross register tonnage of a merchant-built hull, as a source lists it"
+deadweight_lt,ship,integer,long tons,one,"Deadweight tonnage, as a source lists it (D.W.)"
+tonnage_note,ship,text,,many,A tonnage a source gives without saying which kind
+radar_fit_note,ship,text,,many,"A statement of a ship's radar, or that she had none, where no set is named"
