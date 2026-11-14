@@ -1245,6 +1245,15 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             whole_if(own_force(task_force))
         }
 
+        // A side's commands, its plans and its staff's reasons are its own:
+        // seen whole by it and not at all by the enemy (decision 0107).
+        EventKind::CommandTaken { side: owner, .. }
+        | EventKind::CommandRefused { side: owner, .. }
+        | EventKind::PlanDrafted { side: owner, .. }
+        | EventKind::PlanStateChanged { side: owner, .. }
+        | EventKind::PlanAmended { side: owner, .. }
+        | EventKind::StaffReason { side: owner, .. } => whole_if(*owner == side),
+
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
 
@@ -1944,6 +1953,15 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::LoadBelowReserve { .. }
         | EventKind::RefuellingHeldAtReserve { .. }
         | EventKind::LoadHeldAtReserve { .. } => false,
+
+        // A command is the root record and its follow-ups cite it; a staff's
+        // reason cites the side's own order and its answer (decision 0107).
+        EventKind::CommandTaken { .. }
+        | EventKind::CommandRefused { .. }
+        | EventKind::PlanDrafted { .. }
+        | EventKind::PlanStateChanged { .. }
+        | EventKind::PlanAmended { .. }
+        | EventKind::StaffReason { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -3707,6 +3725,66 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            sided(row(
+                EventKind::CommandTaken {
+                    side: Side::Allied,
+                    issuer: crate::orders::Issuer::Player,
+                    command: crate::command::CommandKind::Approve {
+                        plan: crate::command::PlanId::new(1),
+                    },
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::CommandRefused {
+                    side: Side::Allied,
+                    issuer: crate::orders::Issuer::Staff,
+                    command: crate::command::CommandKind::Approve {
+                        plan: crate::command::PlanId::new(1),
+                    },
+                    reason: crate::command::CommandRefusal::NotYours,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::PlanDrafted {
+                    side: Side::Allied,
+                    plan: crate::command::PlanId::new(1),
+                    intent: crate::ids::IntentId::new(1),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::PlanStateChanged {
+                    side: Side::Allied,
+                    plan: crate::command::PlanId::new(1),
+                    from: crate::command::PlanState::Draft,
+                    to: crate::command::PlanState::Preparing,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::PlanAmended {
+                    side: Side::Allied,
+                    plan: crate::command::PlanId::new(1),
+                    number: 1,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::StaffReason {
+                    side: Side::Allied,
+                    order: None,
+                    reason: Box::default(),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3747,7 +3825,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 128, "the log has 128 kinds of event");
+        assert_eq!(all.len(), 134, "the log has 134 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

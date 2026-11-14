@@ -30,6 +30,8 @@
 //! base's reserves through the reserve limit. Draws no random number.
 
 pub(crate) mod intake;
+#[cfg(test)]
+mod tests;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
@@ -569,6 +571,152 @@ pub enum CommandRefusal {
     NoSuchRun(u32),
     /// The plan's intent has no forces limit.
     NoForcesLimit,
+    /// A run names no ship. Added at the end (decision 0107).
+    NoShips,
+}
+
+impl core::fmt::Display for CommandRefusal {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            CommandRefusal::NotYours => f.write_str("the issuer may not give this command"),
+            CommandRefusal::IntentNumberNotUsable(id) => {
+                write!(f, "{id} is not a number an intent may take")
+            }
+            CommandRefusal::NoSuchIntent(id) => write!(f, "{id} is not in force"),
+            CommandRefusal::NotYourBase(base) => write!(f, "{base} is not one of the side's bases"),
+            CommandRefusal::NotYourShip(ship) => write!(f, "{ship} is not one of the side's ships"),
+            CommandRefusal::NotYourForce(force) => {
+                write!(f, "{force} is not one of the side's forces")
+            }
+            CommandRefusal::NoDays => f.write_str("a number of days is 0"),
+            CommandRefusal::BadArea => f.write_str("the area is empty or off the map"),
+            CommandRefusal::BadWeight(weight) => write!(f, "{weight} t is not an allowed weight"),
+            CommandRefusal::NoSuchPlan(plan) => write!(f, "{plan} does not exist"),
+            CommandRefusal::WrongPlanState(state) => {
+                write!(
+                    f,
+                    "the plan is {}, which the command does not apply to",
+                    state.name()
+                )
+            }
+            CommandRefusal::NoLeave(leave) => write!(f, "no leave to {}", leave.name()),
+            CommandRefusal::NotInPool(ship) => write!(f, "{ship} is not in the intent's pool"),
+            CommandRefusal::AlreadyCommitted(ship) => {
+                write!(f, "{ship} is committed on a day asked for")
+            }
+            CommandRefusal::NotCommitted(ship) => write!(f, "{ship} is not committed to the plan"),
+            CommandRefusal::BadDays => f.write_str("the days are out of order"),
+            CommandRefusal::NoSuchRun(run) => write!(f, "the plan has no run {run}"),
+            CommandRefusal::NoForcesLimit => f.write_str("the intent has no forces limit"),
+            CommandRefusal::NoShips => f.write_str("the run names no ship"),
+        }
+    }
+}
+
+impl Leave {
+    pub const fn name(self) -> &'static str {
+        match self {
+            Leave::Prepare => "prepare",
+            Leave::Launch => "launch",
+        }
+    }
+}
+
+impl core::fmt::Display for CommandKind {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            CommandKind::SetIntent { intent, kind } => match kind {
+                IntentKind::KeepSupplied {
+                    base,
+                    floor_days,
+                    interval_days,
+                } => {
+                    write!(
+                        f,
+                        "set {intent} to keep {base} supplied at {floor_days} days"
+                    )?;
+                    match interval_days {
+                        Some(days) => write!(f, ", a run every {days} days"),
+                        None => Ok(()),
+                    }
+                }
+            },
+            CommandKind::WithdrawIntent { intent } => write!(f, "withdraw {intent}"),
+            CommandKind::SetLimit(limit) => match limit {
+                Limit::Forces { intent, limit } => write!(
+                    f,
+                    "limit {intent}'s forces to {} ships and {} task forces from {}",
+                    limit.ships.len(),
+                    limit.task_forces.len(),
+                    limit.source
+                ),
+                Limit::Area { intent, hexes } => {
+                    write!(f, "limit {intent}'s area to {} hexes", hexes.len())
+                }
+                Limit::Priority { intent, rank } => match rank {
+                    Some(rank) => write!(f, "rank {intent} at {rank}"),
+                    None => write!(f, "leave {intent} unranked"),
+                },
+                Limit::Protected { intent, ships } => {
+                    write!(f, "protect {} ships of {intent}", ships.len())
+                }
+                Limit::Reserve {
+                    base,
+                    supply_t,
+                    fuel_t,
+                } => write!(
+                    f,
+                    "reserve {supply_t} t of supply and {fuel_t} t of fuel at {base}"
+                ),
+                Limit::Risk { intent, risk } => write!(f, "risk of {intent} is {}", risk.name()),
+            },
+            CommandKind::SetLeave { leave, given } => write!(
+                f,
+                "{} the leave to {}",
+                if *given { "give" } else { "withhold" },
+                leave.name()
+            ),
+            CommandKind::Approve { plan } => write!(f, "approve {plan}"),
+            CommandKind::CancelPlan { plan } => write!(f, "cancel {plan}"),
+            CommandKind::CommitShips {
+                plan,
+                run,
+                ships,
+                from_day,
+                to_day,
+            } => {
+                write!(f, "commit {} ships to {plan}", ships.len())?;
+                if let Some(run) = run {
+                    write!(f, " run {run}")?;
+                }
+                write!(f, " from day {from_day} to day {to_day}")
+            }
+            CommandKind::FreeShips { plan, ships } => {
+                write!(f, "free {} ships from {plan}", ships.len())
+            }
+            CommandKind::AddRun { plan, run } => write!(
+                f,
+                "add a run of {} t with {} ships to {plan}, loading day {}, due day {}",
+                run.load_t,
+                run.ships.len(),
+                run.days.load,
+                run.days.arrive
+            ),
+            CommandKind::TimeRun { plan, run, days } => write!(
+                f,
+                "time run {run} of {plan}: load day {}, sail {}, arrive {}, free {}",
+                days.load, days.sail, days.arrive, days.free
+            ),
+            CommandKind::MarkPlan { plan, outcome } => write!(
+                f,
+                "mark {plan} {}",
+                match outcome {
+                    PlanOutcome::Complete => "complete",
+                    PlanOutcome::Failed => "failed",
+                }
+            ),
+        }
+    }
 }
 
 /// A command handed in: what and by whom.
@@ -761,7 +909,11 @@ impl Staff for CheckedStaff<'_> {
 /// The first part in which `given` differs from `saved`, in words, or
 /// `None` if they are the same.
 pub fn first_difference(saved: &StaffDecisions, given: &StaffDecisions) -> Option<String> {
-    fn part<T: PartialEq + core::fmt::Debug>(name: &str, saved: &[T], given: &[T]) -> Option<String> {
+    fn part<T: PartialEq + core::fmt::Debug>(
+        name: &str,
+        saved: &[T],
+        given: &[T],
+    ) -> Option<String> {
         for i in 0..saved.len().max(given.len()) {
             match (saved.get(i), given.get(i)) {
                 (Some(a), Some(b)) if a == b => {}

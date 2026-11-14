@@ -378,8 +378,10 @@ impl World {
             pending.entry(*side).or_default();
         }
         for (side, requests) in pending {
-            let mut all: Vec<(OrderRequest, Option<&StaffOrder>)> =
-                requests.into_iter().map(|request| (request, None)).collect();
+            let mut all: Vec<(OrderRequest, Option<&StaffOrder>)> = requests
+                .into_iter()
+                .map(|request| (request, None))
+                .collect();
             if let Some(decisions) = staff.get(&side) {
                 for order in &decisions.orders {
                     all.push((
@@ -426,6 +428,22 @@ impl World {
         request: OrderRequest,
         extra_causes: Vec<Cause>,
     ) -> (OrderId, EventId, bool) {
+        self.take_in_order_checked(day, pulse, side, request, extra_causes, None)
+    }
+
+    /// [`World::take_in_order`] with a rejection decided beforehand: where
+    /// `forced` is `Some`, the order is numbered, stored and rejected for
+    /// that reason without being checked (a staff's order outside its
+    /// intent's forces limit, decision 0107). With `None` it is the same.
+    pub(crate) fn take_in_order_checked(
+        &mut self,
+        day: u32,
+        pulse: Option<Pulse>,
+        side: Side,
+        request: OrderRequest,
+        extra_causes: Vec<Cause>,
+        forced: Option<RejectReason>,
+    ) -> (OrderId, EventId, bool) {
         let id = self.order_ids.alloc();
         let order = Order {
             id,
@@ -435,7 +453,10 @@ impl World {
             origin: request.origin,
         };
         let target = order.kind.target();
-        let result = self.validate_order(&order);
+        let result = match forced {
+            Some(reason) => Err(reason),
+            None => self.validate_order(&order),
+        };
         let accepted = result.is_ok();
         let mut follow_ups: Vec<EventKind> = Vec::new();
         let kind = match result {

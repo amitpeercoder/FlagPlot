@@ -885,6 +885,10 @@ pub enum RejectReason {
     /// An order to a force that was stood down and has ceased to be
     /// (decision 14 of 0111). Added at the end of the enum.
     ForceWasStoodDown,
+    /// An order a staff handed in is for a unit that is not inside its
+    /// intent's forces limit, or its intent is not in force (decision 0107,
+    /// "As built"). Added at the end of the enum.
+    OutsideForcesLimit,
 }
 
 impl fmt::Display for RejectReason {
@@ -1028,6 +1032,9 @@ impl fmt::Display for RejectReason {
             RejectReason::ForceWasStoodDown => {
                 f.write_str("the task force no longer exists: it was stood down in port")
             }
+            RejectReason::OutsideForcesLimit => f.write_str(
+                "the order is for a unit outside the forces limit of the intent it serves",
+            ),
         }
     }
 }

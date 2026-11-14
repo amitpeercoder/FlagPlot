@@ -245,6 +245,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::ForceWasStoodDown => {
             " (a force that was stood down has ceased to be: it keeps its number but takes no order; its ships lie in port in no force and form_task_force makes a new one)"
         }
+        R::OutsideForcesLimit => {
+            " (a staff's order must be for a unit inside the forces limit of the intent it serves)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }

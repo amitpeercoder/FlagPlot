@@ -59,10 +59,10 @@ mod upkeep;
 pub mod works;
 
 pub use airstrike::StrikeChoice;
+pub use command::{Staff, StaffDecisions, Staffs};
 pub use estimate::StartingEstimate;
 pub use invariants::InvariantViolation;
 pub use movement::{PassageEnd, PassageForecast, ShipPassage};
 pub use start::StartingContact;
-pub use command::{Staff, StaffDecisions, Staffs};
 pub use view::DaysOfSupply;
 pub use world::{DaySummary, SimConfig, SimError, World};

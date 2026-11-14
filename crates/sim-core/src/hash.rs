@@ -10,6 +10,10 @@
 //! `docs/decisions/0004-state-hash.md`.
 
 use crate::belief::{BattleClaim, Contact, GroundEstimate};
+use crate::command::{
+    Amendment, AmendmentChange, Baseline, CommandState, Commitment, ForcesLimit, Intent,
+    IntentKind, IntentLimits, Leaves, Limit, Plan, Run, RunDays,
+};
 use crate::events::Cause;
 use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent};
 use crate::refdata::ShipKind;
@@ -163,8 +167,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// 0106);
 /// version 23 adds a cargo order's `weight_t` and `heeds_reserve` after its
 /// `unit`, and a base's `supply_reserve_t` and `fuel_reserve_t` after its
-/// `airfield_damage` (decision 0111).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v23";
+/// `airfield_damage` (decision 0111);
+/// version 24 adds each side's command state after the beliefs, Allied then
+/// Japanese: its intents, leaves, plans, commitments and next plan number
+/// (decision 0107).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v24";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -191,7 +198,7 @@ fn name_every_field(world: &World) {
         // Not hashed: orders waiting for the next day are not yet state.
         pending: _,
         // Hashed after the beliefs, Allied then Japanese (decision 0107).
-        command: _,
+        command,
         // Not hashed: commands and a staff's hand-in waiting for the next
         // day are not yet state, as orders waiting are not.
         pending_commands: _,
@@ -457,6 +464,84 @@ fn name_every_field(world: &World) {
         cause: _,
     })) = land_units.values().next().map(|unit| unit.march)
     {}
+    for state in command.values() {
+        let CommandState {
+            intents,
+            leaves,
+            plans,
+            commitments,
+            next_plan: _,
+        } = state;
+        if let Some(Intent {
+            id: _,
+            kind,
+            limits,
+            set_day: _,
+            plan: _,
+            withdrawn_day: _,
+        }) = intents.values().next()
+        {
+            let IntentKind::KeepSupplied {
+                base: _,
+                floor_days: _,
+                interval_days: _,
+            } = kind;
+            name_limits(limits);
+        }
+        let Leaves {
+            prepare: _,
+            launch: _,
+        } = leaves;
+        if let Some(Plan {
+            id: _,
+            intent: _,
+            state: _,
+            baseline,
+            amendments,
+            runs,
+        }) = plans.values().next()
+        {
+            if let Some(Baseline {
+                day: _,
+                kind: _,
+                limits,
+            }) = baseline
+            {
+                name_limits(limits);
+            }
+            if let Some(Amendment {
+                number: _,
+                day: _,
+                change,
+            }) = amendments.first()
+            {
+                match change {
+                    AmendmentChange::Intent(_) | AmendmentChange::Limit(_) => {}
+                }
+            }
+            if let Some(Run {
+                number: _,
+                ships: _,
+                load_t: _,
+                source: _,
+                days:
+                    RunDays {
+                        load: _,
+                        sail: _,
+                        arrive: _,
+                        free: _,
+                    },
+            }) = runs.values().next()
+            {}
+        }
+        if let Some(Commitment {
+            plan: _,
+            run: _,
+            from_day: _,
+            to_day: _,
+        }) = commitments.values().flatten().next()
+        {}
+    }
     for belief in beliefs.values() {
         if let Some(Contact {
             id: _,
@@ -491,6 +576,200 @@ fn name_every_field(world: &World) {
         }) = belief.ground_estimates().next()
         {}
     }
+}
+
+/// Names every field of the limits of an intent, with no `..`.
+fn name_limits(limits: &IntentLimits) {
+    let IntentLimits {
+        forces,
+        area: _,
+        priority: _,
+        protected: _,
+        risk: _,
+    } = limits;
+    if let Some(ForcesLimit {
+        ships: _,
+        task_forces: _,
+        source: _,
+    }) = forces
+    {}
+}
+
+/// Hashes the kind of an intent: its code and its fields.
+fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
+    h.u8(kind.code());
+    match kind {
+        IntentKind::KeepSupplied {
+            base,
+            floor_days,
+            interval_days,
+        } => {
+            h.u32(base.raw());
+            h.u32(floor_days);
+            h.optional_u32(interval_days);
+        }
+    }
+}
+
+/// Hashes the limits of an intent: forces, area, priority, protected, risk.
+fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
+    match &limits.forces {
+        Some(forces) => {
+            h.u8(1);
+            hash_forces(h, forces);
+        }
+        None => h.u8(0),
+    }
+    match &limits.area {
+        Some(area) => {
+            h.u8(1);
+            h.count(area.len());
+            for hex in area {
+                h.i32(hex.q);
+                h.i32(hex.r);
+            }
+        }
+        None => h.u8(0),
+    }
+    h.optional_u32(limits.priority);
+    h.count(limits.protected.len());
+    for ship in &limits.protected {
+        h.u32(ship.raw());
+    }
+    h.u8(limits.risk.code());
+}
+
+fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
+    h.count(forces.ships.len());
+    for ship in &forces.ships {
+        h.u32(ship.raw());
+    }
+    h.count(forces.task_forces.len());
+    for force in &forces.task_forces {
+        h.u32(force.raw());
+    }
+    h.u32(forces.source.raw());
+}
+
+/// Hashes one limit as a command set it, for an amendment: a code for the
+/// kind, then its fields. Codes are never renumbered.
+fn hash_limit(h: &mut StateHasher, limit: &Limit) {
+    match limit {
+        Limit::Forces { intent, limit } => {
+            h.u8(1);
+            h.u32(intent.raw());
+            hash_forces(h, limit);
+        }
+        Limit::Area { intent, hexes } => {
+            h.u8(2);
+            h.u32(intent.raw());
+            h.count(hexes.len());
+            for hex in hexes {
+                h.i32(hex.q);
+                h.i32(hex.r);
+            }
+        }
+        Limit::Priority { intent, rank } => {
+            h.u8(3);
+            h.u32(intent.raw());
+            h.optional_u32(*rank);
+        }
+        Limit::Protected { intent, ships } => {
+            h.u8(4);
+            h.u32(intent.raw());
+            h.count(ships.len());
+            for ship in ships {
+                h.u32(ship.raw());
+            }
+        }
+        Limit::Reserve {
+            base,
+            supply_t,
+            fuel_t,
+        } => {
+            h.u8(5);
+            h.u32(base.raw());
+            h.i64(supply_t.raw());
+            h.i64(fuel_t.raw());
+        }
+        Limit::Risk { intent, risk } => {
+            h.u8(6);
+            h.u32(intent.raw());
+            h.u8(risk.code());
+        }
+    }
+}
+
+/// Hashes one side's command state in a fixed walk of every field (decision
+/// 0107).
+fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
+    h.count(state.intents.len());
+    for intent in state.intents.values() {
+        h.u32(intent.id.raw());
+        hash_intent_kind(h, intent.kind);
+        hash_limits(h, &intent.limits);
+        h.u32(intent.set_day);
+        h.u32(intent.plan.raw());
+        h.optional_u32(intent.withdrawn_day);
+    }
+    h.u8(u8::from(state.leaves.prepare));
+    h.u8(u8::from(state.leaves.launch));
+    h.count(state.plans.len());
+    for plan in state.plans.values() {
+        h.u32(plan.id.raw());
+        h.u32(plan.intent.raw());
+        h.u8(plan.state.code());
+        match &plan.baseline {
+            Some(baseline) => {
+                h.u8(1);
+                h.u32(baseline.day);
+                hash_intent_kind(h, baseline.kind);
+                hash_limits(h, &baseline.limits);
+            }
+            None => h.u8(0),
+        }
+        h.count(plan.amendments.len());
+        for amendment in &plan.amendments {
+            h.u32(amendment.number);
+            h.u32(amendment.day);
+            match &amendment.change {
+                AmendmentChange::Intent(kind) => {
+                    h.u8(1);
+                    hash_intent_kind(h, *kind);
+                }
+                AmendmentChange::Limit(limit) => {
+                    h.u8(2);
+                    hash_limit(h, limit);
+                }
+            }
+        }
+        h.count(plan.runs.len());
+        for run in plan.runs.values() {
+            h.u32(run.number);
+            h.count(run.ships.len());
+            for ship in &run.ships {
+                h.u32(ship.raw());
+            }
+            h.i64(run.load_t.raw());
+            h.u32(run.source.raw());
+            h.u32(run.days.load);
+            h.u32(run.days.sail);
+            h.u32(run.days.arrive);
+            h.u32(run.days.free);
+        }
+    }
+    h.count(state.commitments.len());
+    for (ship, list) in &state.commitments {
+        h.u32(ship.raw());
+        h.count(list.len());
+        for commitment in list {
+            h.u32(commitment.plan.raw());
+            h.optional_u32(commitment.run);
+            h.u32(commitment.from_day);
+            h.u32(commitment.to_day);
+        }
+    }
+    h.u32(state.next_plan);
 }
 
 /// Hashes everything that defines the state of a game. When a field is added
@@ -945,6 +1224,13 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.u32(estimate.day);
             h.u32(estimate.report_event.raw());
         }
+    }
+
+    // After the beliefs (decision 0107): each side's command state, Allied
+    // then Japanese.
+    for side in Side::ALL {
+        h.u8(side.code());
+        hash_command_state(&mut h, &world.command[&side]);
     }
 
     h.count(world.orders.len());

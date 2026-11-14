@@ -511,7 +511,10 @@ impl World {
     /// (decision 0107). They are taken in, or refused, at the first step of
     /// the next day, in the order handed in.
     pub fn submit_commands(&mut self, side: Side, commands: Vec<CommandKind>) {
-        self.pending_commands.entry(side).or_default().extend(commands);
+        self.pending_commands
+            .entry(side)
+            .or_default()
+            .extend(commands);
     }
 
     /// Queues what one side's staff hands in for the coming day, without a
