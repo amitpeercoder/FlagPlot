@@ -103,7 +103,18 @@ fn text(kind: &OrderKind) -> String {
             AirGroupOrder::Rebase { base } => format!("rebase to {base}"),
         },
         OrderKind::LandUnit { order, .. } => match order {
-            LandUnitOrder::SetPosture(posture) => format!("posture {}", posture.name()),
+            LandUnitOrder::SetPosture {
+                posture,
+                when_spent: None,
+            } => format!("posture {}", posture.name()),
+            LandUnitOrder::SetPosture {
+                posture,
+                when_spent: Some(when_spent),
+            } => format!(
+                "posture {}, when spent {}",
+                posture.name(),
+                when_spent.name()
+            ),
             LandUnitOrder::March(hex) => format!("march to {hex}"),
             LandUnitOrder::SetActivity(activity) => format!("activity {}", activity.name()),
         },

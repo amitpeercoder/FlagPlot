@@ -257,6 +257,38 @@ impl Posture {
     }
 }
 
+/// What a land unit on attack does when its attack is spent: when it goes
+/// back to defend because it is tired, in a hex where the enemy has fighting
+/// men ashore (decision 6 of 0105). An attack order may carry one; with none
+/// the unit holds if it can be fed where it stands and else falls back
+/// (decision 7).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum WhenSpent {
+    /// It stays in the hex, on the defence.
+    Hold,
+    /// It falls back by the rule of decision 0104, without surrendering.
+    FallBack,
+}
+
+impl WhenSpent {
+    /// A stable number for the instruction. Part of the state hash (0 is no
+    /// instruction). Never renumber it; add new ones at the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            WhenSpent::Hold => 1,
+            WhenSpent::FallBack => 2,
+        }
+    }
+
+    /// The instruction's name as scenario files, orders and the log write it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            WhenSpent::Hold => "hold",
+            WhenSpent::FallBack => "fall_back",
+        }
+    }
+}
+
 /// What a land unit that is not marching or fighting does with its day
 /// (decision 4 of 0099, 3b of 0099 and 4 of 0097).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
@@ -558,7 +590,12 @@ pub enum AirGroupOrder {
 pub enum LandUnitOrder {
     /// Defend or attack (decision 0090, 2). A standing order: it stands
     /// until another replaces it, or until the unit is too tired to attack.
-    SetPosture(Posture),
+    /// An attack order may say what the unit does when its attack is spent
+    /// (decision 6 of 0105); a defend order carries no instruction.
+    SetPosture {
+        posture: Posture,
+        when_spent: Option<WhenSpent>,
+    },
     /// March the unit's men ashore to a neighbouring hex joined to its hex
     /// by a land link, or stop a march by naming the unit's own hex
     /// (decision 0094, 3). A standing order: it stands until the unit
@@ -764,6 +801,10 @@ pub enum RejectReason {
     /// base that is not its side's or has no airfield: it waits for its base
     /// (decision 0101). Added at the end of the enum.
     AirGroupWaitsForBase,
+    /// A defend order that says what the unit does when its attack is
+    /// spent: only an attack order carries the instruction (decision 6 of
+    /// 0105, "As built"). Added at the end of the enum.
+    InstructionNeedsAttack,
 }
 
 impl fmt::Display for RejectReason {
@@ -882,6 +923,9 @@ impl fmt::Display for RejectReason {
             RejectReason::AirGroupWaitsForBase => {
                 f.write_str("the air group has no aircraft and waits for its base")
             }
+            RejectReason::InstructionNeedsAttack => f.write_str(
+                "only an attack order says what the unit does when its attack is spent",
+            ),
         }
     }
 }

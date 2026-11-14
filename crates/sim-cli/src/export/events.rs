@@ -158,6 +158,7 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NoAirfield => base("no_airfield"),
         RejectReason::WorkingUnitDefends => base("working_unit_defends"),
         RejectReason::WorkingUnitWorks => base("working_unit_works"),
+        RejectReason::InstructionNeedsAttack => base("instruction_needs_attack"),
         RejectReason::AirfieldTooDamaged { damage, refused_at } => base("airfield_too_damaged")
             .num("damage", *damage)
             .num("refused_at", *refused_at),
@@ -1110,6 +1111,34 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
             d.text("side", names::side(*side))
                 .hex("hex", *hex)
                 .int("men", *men),
+        ),
+        EventKind::GroundAttackFailed {
+            side,
+            hex,
+            weight,
+            enemy_weight,
+        } => (
+            "ground_attack_failed",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .num("weight", *weight)
+                .num("enemy_weight", *enemy_weight),
+        ),
+        EventKind::SpentUnitFellBack {
+            unit,
+            side,
+            from,
+            to,
+            men,
+            fatigue,
+        } => (
+            "spent_unit_fell_back",
+            d.id("unit", *unit)
+                .text("side", names::side(*side))
+                .hex("from", *from)
+                .hex("to", *to)
+                .int("men", *men)
+                .num("fatigue", *fatigue),
         ),
         EventKind::FightDayCounted {
             unit,

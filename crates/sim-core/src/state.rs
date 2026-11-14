@@ -23,7 +23,7 @@ use crate::ids::{
 use crate::map::{Map, Terrain};
 use crate::orders::{
     Activity, AirMission, CargoAction, Mission, Posture, Reach, Readiness, RejectReason,
-    SpeedSetting, Stance, StragglerInstruction,
+    SpeedSetting, Stance, StragglerInstruction, WhenSpent,
 };
 use crate::refdata::ShipKind;
 
@@ -1039,6 +1039,11 @@ pub struct LandUnit {
     /// for being beaten, and its activity is always work. Set by the
     /// scenario and never changed in play.
     pub working: bool,
+    /// What the unit does when its attack is spent, as its attack order said
+    /// (decision 6 of 0105): `None` for no instruction, for a unit on
+    /// defend, and for one on attack by its scenario entry. Set by a posture
+    /// order and spent with it.
+    pub when_spent: Option<WhenSpent>,
 }
 
 /// A land unit's skills (decision 0098, 1 to 4): each a whole number from 0
@@ -1163,6 +1168,7 @@ impl LandUnit {
             fight_days: 0,
             skills: Skills::STANDARD_ALL,
             working: false,
+            when_spent: None,
         }
     }
 }

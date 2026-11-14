@@ -130,9 +130,9 @@ fn is_about(question: &Question, unit: &Unit) -> bool {
             | MovementQuestion::SteamOn { force } => force == id,
         },
         (Question::Ground(q), Unit::Land(id)) => match q {
-            GroundQuestion::BackToDefend { unit, .. } | GroundQuestion::UnitDay { unit, .. } => {
-                unit == id
-            }
+            GroundQuestion::BackToDefend { unit, .. }
+            | GroundQuestion::UnitDay { unit, .. }
+            | GroundQuestion::AttackSpent { unit, .. } => unit == id,
         },
         _ => false,
     }
@@ -456,6 +456,12 @@ impl Writer<'_, '_> {
             (GroundQuestion::BackToDefend { fatigue, .. }, GroundAnswer::BackToDefend(back)) => {
                 asked.insert("fatigue".into(), json!(Dec(*fatigue)));
                 ("back_to_defend", json!({"goes_back": back}))
+            }
+            // What the unit would do when its attack is spent (decisions 6
+            // and 7 of 0105), at the hex it stands in.
+            (GroundQuestion::AttackSpent { hex, .. }, GroundAnswer::AttackSpent(choice)) => {
+                asked.insert("hex".into(), json!(self.ctx.place(*hex)));
+                ("attack_spent", json!({"does": choice.name()}))
             }
             (
                 GroundQuestion::UnitDay {

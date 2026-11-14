@@ -2832,6 +2832,8 @@ impl Day {
                         event: id,
                     })
                 }
+                // TODO(0105): the briefing's line for an attack that failed.
+                SideEventKind::GroundAttackFailed { .. } => {}
                 SideEventKind::GroundFight { hex } => ground.fights.push(FightLine {
                     place: ctx.place(*hex),
                     event: id,

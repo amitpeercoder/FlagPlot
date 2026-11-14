@@ -1578,6 +1578,29 @@ pub enum EventKind {
         hex: Hex,
         men: u32,
     },
+    /// The attack of `side` in `hex` failed that day (decision 4 of 0105):
+    /// it attacked and its weight of fire (`weight`, the sum over its units
+    /// of shots times chance, after the limit on engaged men) was below the
+    /// other side's (`enemy_weight`). Worked out before any die is rolled.
+    /// Added at the end.
+    GroundAttackFailed {
+        side: Side,
+        hex: Hex,
+        weight: Fixed,
+        enemy_weight: Fixed,
+    },
+    /// A land unit whose attack was spent fell back from `from` toward `to`
+    /// by its order's instruction or its default (decisions 6 and 7 of
+    /// 0105), with `men` ashore, tired by `beaten_fatigue`: `fatigue` is what
+    /// it has afterwards. Its side was not beaten. Added at the end.
+    SpentUnitFellBack {
+        unit: LandUnitId,
+        side: Side,
+        from: Hex,
+        to: Hex,
+        men: u32,
+        fatigue: Fixed,
+    },
 }
 
 impl EventKind {
@@ -1902,7 +1925,9 @@ impl EventKind {
             | EventKind::LandUnitBackToDefend { unit, .. } => vec![EntityRef::LandUnit(*unit)],
             EventKind::GroundFight { .. }
             | EventKind::SideBeatenAshore { .. }
-            | EventKind::MenSurrenderedAshore { .. } => Vec::new(),
+            | EventKind::MenSurrenderedAshore { .. }
+            | EventKind::GroundAttackFailed { .. } => Vec::new(),
+            EventKind::SpentUnitFellBack { unit, .. } => vec![EntityRef::LandUnit(*unit)],
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
                 air_group, base, ..
@@ -3402,6 +3427,28 @@ impl fmt::Display for EventKind {
             EventKind::MenSurrenderedAshore { side, hex, men } => write!(
                 f,
                 "men of the {} side surrendered at {hex}: {men} men ashore in all",
+                side.name()
+            ),
+            EventKind::GroundAttackFailed {
+                side,
+                hex,
+                weight,
+                enemy_weight,
+            } => write!(
+                f,
+                "the {} side's attack at {hex} failed: weight of fire {weight} against {enemy_weight}",
+                side.name()
+            ),
+            EventKind::SpentUnitFellBack {
+                unit,
+                side,
+                from,
+                to,
+                men,
+                fatigue,
+            } => write!(
+                f,
+                "{unit} of the {} side, its attack spent, fell back from {from} toward {to} with {men} men: fatigue {fatigue}",
                 side.name()
             ),
         }

@@ -1,8 +1,10 @@
-//! The questions of the land units: going back to defend, and what a unit's day is (decision 0100, 1).
+//! The questions of the land units: going back to defend, what a spent
+//! attacker does, and what a unit's day is (decisions 0100, 1, and 0105).
 
 use crate::fixed::Fixed;
+use crate::hex::Hex;
 use crate::ids::{LandUnitId, TaskForceId};
-use crate::orders::Job;
+use crate::orders::{Job, WhenSpent};
 
 /// A question about one of the side's own units in ground.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -31,6 +33,16 @@ pub enum GroundQuestion {
         contested: bool,
         rostered_with: Option<TaskForceId>,
     },
+    /// Whether a land unit whose attack is spent holds or falls back
+    /// (decisions 6 and 7 of 0105): its order's instruction, and with none,
+    /// hold if its side has a base in `hex` with supply above 0. The engine
+    /// asks it when the unit has gone back to defend because it is tired, in
+    /// a hex where the enemy has fighting men ashore, and carries the hex the
+    /// unit stands in then. Asked from a side's view, it is the unit's present
+    /// hex. Where it falls back to is not part of the choice: that reads
+    /// where the enemy's men truly are, and stays with the rules (decision 2
+    /// of 0104). Added at the end.
+    AttackSpent { unit: LandUnitId, hex: Hex },
 }
 
 /// What a land unit's day is (decision 3b of 0099).
@@ -59,4 +71,6 @@ pub enum GroundAnswer {
     BackToDefend(bool),
     /// What the unit's day is.
     UnitDay(UnitDay),
+    /// Whether the spent attacker holds or falls back.
+    AttackSpent(WhenSpent),
 }

@@ -1188,6 +1188,14 @@ pub struct GroundFigures {
     /// Fatigue a unit gains when its side is beaten and it falls back
     /// (decision 1 of 0104), from 0 to 100.
     pub beaten_fatigue: Fixed,
+    /// The most firing men a side counts in a day's fight, as a multiple of
+    /// the other side's fighting men ashore in the hex at the start of the
+    /// fight (decision 1 of 0105), 1 or more.
+    pub engagement_ratio: Fixed,
+    /// Fatigue a unit on attack gains on a day its side's attack failed,
+    /// beside the fatigue of a day's attack (decision 5 of 0105), from 0 to
+    /// 100.
+    pub failed_attack_fatigue: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1247,6 +1255,8 @@ impl GroundFigures {
         work_per_airfield_damage_point: Fixed::from_int(50),
         airfield_landing_refused_at: Fixed::from_int(50),
         beaten_fatigue: Fixed::from_int(30),
+        engagement_ratio: Fixed::from_int(1_000_000),
+        failed_attack_fatigue: Fixed::ZERO,
     };
 
     /// Describes what is wrong with the figures, if anything. The weight of
@@ -1407,6 +1417,22 @@ impl GroundFigures {
             return Some(format!(
                 "ground beaten_fatigue {} is not between 0 and 100",
                 self.beaten_fatigue
+            ));
+        }
+        // Who is engaged, and an attack that fails (decision 0105). A ratio
+        // of 1 or more never cuts the smaller side (decision 1).
+        if self.engagement_ratio < Fixed::ONE {
+            return Some(format!(
+                "ground engagement_ratio {} is below 1",
+                self.engagement_ratio
+            ));
+        }
+        if self.failed_attack_fatigue.is_negative()
+            || self.failed_attack_fatigue > Fixed::from_int(100)
+        {
+            return Some(format!(
+                "ground failed_attack_fatigue {} is not between 0 and 100",
+                self.failed_attack_fatigue
             ));
         }
         // The airfield's damage (decision 0103).

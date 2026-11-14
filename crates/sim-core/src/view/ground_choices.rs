@@ -1,7 +1,10 @@
-//! A side's questions of the land units: going back to defend, and what a unit's day is (decision 0100, 2).
+//! A side's questions of the land units: going back to defend, what a spent
+//! attacker does, and what a unit's day is (decisions 0100, 2, and 0105).
 
 use crate::choices::ground::{GroundAnswer, GroundQuestion};
-use crate::ground_combat::{goes_back_to_defend, is_with_force, unit_day};
+use crate::ground_combat::{
+    fed_where_it_stands, goes_back_to_defend, is_with_force, unit_day, when_attack_spent,
+};
 use crate::hex::Hex;
 use crate::ids::{LandUnitId, TaskForceId};
 use crate::orders::Posture;
@@ -53,6 +56,16 @@ impl SideView<'_> {
                     |force| is_with_force(self.truth, unit, force),
                 )))
             }
+            GroundQuestion::AttackSpent { unit, hex } => {
+                let land_unit = self.own_land_unit(unit)?;
+                if land_unit.men_ashore == 0 {
+                    return None;
+                }
+                Some(GroundAnswer::AttackSpent(when_attack_spent(
+                    land_unit.when_spent,
+                    fed_where_it_stands(self.truth, self.side, hex),
+                )))
+            }
         }
     }
 
@@ -73,7 +86,11 @@ impl SideView<'_> {
     ///   fears is not counted);
     /// - `rostered_with`: the force whose roster the unit is on, if that
     ///   force would qualify to gain loading on the day in hand
-    ///   (decision 4 of 0095).
+    ///   (decision 4 of 0095);
+    ///
+    /// and, for each unit with men ashore on attack, whether it would hold
+    /// or fall back when its attack is spent, asked at its present hex
+    /// (decisions 6 and 7 of 0105).
     pub(crate) fn ground_questions(&self) -> Vec<GroundQuestion> {
         if self.ref_data.ground.is_none() {
             return Vec::new();
@@ -102,6 +119,12 @@ impl SideView<'_> {
                     contested: self.fight_certain_at(unit),
                     rostered_with: rostered_among(self.truth, qualifying.iter().copied(), unit.id),
                 });
+            }
+            if let Some(hex) = unit
+                .hex
+                .filter(|_| unit.men_ashore > 0 && unit.posture == Posture::Attack)
+            {
+                questions.push(GroundQuestion::AttackSpent { unit: unit.id, hex });
             }
         }
         questions

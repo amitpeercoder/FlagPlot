@@ -823,6 +823,10 @@ struct GroundFile {
     work_per_airfield_damage_point: Quantity,
     beaten_fatigue: Quantity,
     airfield_landing_refused_at: Quantity,
+    /// Who is engaged, and an attack that fails (decision 0105). Required
+    /// like the older keys.
+    engagement_ratio: Quantity,
+    failed_attack_fatigue: Quantity,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -917,6 +921,8 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         )?,
         airfield_damage_per_hit: number("airfield_damage_per_hit", &file.airfield_damage_per_hit)?,
         beaten_fatigue: number("beaten_fatigue", &file.beaten_fatigue)?,
+        engagement_ratio: number("engagement_ratio", &file.engagement_ratio)?,
+        failed_attack_fatigue: number("failed_attack_fatigue", &file.failed_attack_fatigue)?,
         work_per_airfield_damage_point: number(
             "work_per_airfield_damage_point",
             &file.work_per_airfield_damage_point,

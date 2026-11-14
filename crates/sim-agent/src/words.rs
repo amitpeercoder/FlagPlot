@@ -216,6 +216,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::WorkingUnitDefends => {
             " (a unit shown as working only works: it is always on defend and never attacks; only a fighting unit can be put on attack)"
         }
+        R::InstructionNeedsAttack => {
+            " (when_spent says what a unit does when its attack is spent, hold or fall_back; only a set_posture order with posture attack takes it)"
+        }
         R::WorkingUnitWorks => {
             " (a unit shown as working only works: set_activity work, with a job if you want one, is the only activity it takes; it does not stand ready or train)"
         }

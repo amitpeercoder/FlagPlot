@@ -283,10 +283,18 @@ fn examples() -> Vec<OrderKind> {
     ] {
         out.push(ag(AirGroupOrder::SetAirMission(mission)));
     }
-    for posture in [Posture::Defend, Posture::Attack] {
+    for (posture, when_spent) in [
+        (Posture::Defend, None),
+        (Posture::Attack, None),
+        (Posture::Attack, Some(sim_core::orders::WhenSpent::Hold)),
+        (Posture::Attack, Some(sim_core::orders::WhenSpent::FallBack)),
+    ] {
         out.push(OrderKind::LandUnit {
             target: sim_core::ids::LandUnitId::new(4),
-            order: LandUnitOrder::SetPosture(posture),
+            order: LandUnitOrder::SetPosture {
+                posture,
+                when_spent,
+            },
         });
     }
     out.push(OrderKind::LandUnit {
@@ -318,7 +326,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
             OrderKind::TaskForce { order, .. } => seen_tf[tf_index(order)] = true,
             OrderKind::AirGroup { order, .. } => seen_ag[ag_index(order)] = true,
             OrderKind::LandUnit { order, .. } => match order {
-                LandUnitOrder::SetPosture(_) => seen_posture = true,
+                LandUnitOrder::SetPosture { .. } => seen_posture = true,
                 LandUnitOrder::March(_) => seen_march = true,
                 LandUnitOrder::SetActivity(_) => seen_activity = true,
             },
