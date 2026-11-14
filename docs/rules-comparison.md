@@ -171,7 +171,7 @@ Land units, sea transport, supply, marching, combat, capture, fatigue, training,
 | --- | --- | --- |
 | Composition | Squads, guns, vehicles, tanks and support devices | Men, with unit skills and weight abstracting differences |
 | Fire | Weapon acquisition, range, soft/armoured targets and penetration | Shots derived from effective manpower and generic hit chances. *Note, Nov 14, 2026: a side's fire now counts no more men than a multiple of the enemy's fighting men in the hex (decision 0105), so a large force does not fire in full on a small one; losses are still taken from all its units in proportion.* |
-| Sequence | Bombardment, defensive fire, attacking fire and assault | Both sides calculate fire from starting strengths, then apply losses |
+| Sequence | Bombardment, defensive fire, attacking fire and assault | Both sides calculate fire from starting strengths, then apply losses. *Note, Nov 14, 2026: a defender's part of the loss is then cut by its cover (decision 0106).* |
 | Attack choices | Bombardment, deliberate and shock attacks | Attack or defend. *Note, Nov 14, 2026: an attack order may say what the unit does when its attack is spent, hold or fall back (decision 0105).* |
 | Terrain | Changes movement, supply and combat | Changes marching through movement skills; no combat terrain effect |
 | Defeat | Adjusted assault odds, forts, retreat and surrender | Surviving fighting-man ratio determines defeat and base capture. *Note, Nov 14, 2026: an attack that fails by the odds now tires its men, so a hopeless attack stops in a day or two, and a spent attacker holds or falls back by its order or by whether it can be fed where it stands (decision 0105); it does not surrender.* |
@@ -188,7 +188,7 @@ Other consequential differences:
 
 Engineering is narrower too. Flag Plot can build an airfield, accumulate defences, and assign work that improves next-day handling or aircraft repair. Airfields are present or absent. *Note, Nov 14, 2026: an airfield now also has damage from 0 to 100, which work on it mends (decision 0103).* Port work provides a temporary handling boost, not a permanent increase in port size.
 
-AE supports progressive facility sizes, runway/service/port damage and repair, and fortifications reduced by attacks and engineers. Flag Plot's defences increase defensive fire accuracy; they do not wear down and transfer intact with a captured base. Working units never fire, even in close combat.
+AE supports progressive facility sizes, runway/service/port damage and repair, and fortifications reduced by attacks and engineers. Flag Plot's defences increase defensive fire accuracy; they do not wear down and transfer intact with a captured base. *Note, Nov 14, 2026: bombs and shells that hit men now wear defences down, slowly (decision 0106); work mends them, and they still transfer intact with a captured base. Defences also have three grades, each dearer to build, and give the men behind them cover, which cuts the men lost to bombs, shells and the fight; troops on the defence dig fieldworks for themselves. Engineers breaching defences and an assault wearing them down are not built.* Working units never fire, even in close combat.
 
 **Operational effect:** Landing preparation and logistics have consequences, but terrain, equipment, disruption, recovery, retreat and replacement do not create AE's land-campaign dynamics.
 
@@ -236,7 +236,7 @@ This ranking is an assessment of operational consequences, not an approved imple
 3. **Sustained fleet operations.** Replenishment, rearming, machinery wear and repair-facility constraints are much thinner.
 4. **Threats to shipping.** Submarines and mines are absent.
 5. **Developing battle damage.** Fires and flooding do not evolve after an attack.
-6. **Land-campaign dynamics.** Terrain, equipment, disruption, retreat and replacements are largely absent. *Note, Nov 14, 2026: a beaten side's falling back and surrender are built (decision 0104), and so are a failed attack's fatigue and a spent attacker's falling back or holding (decision 0105); the rest stands.*
+6. **Land-campaign dynamics.** Terrain, equipment, disruption, retreat and replacements are largely absent. *Note, Nov 14, 2026: a beaten side's falling back and surrender are built (decision 0104), and so are a failed attack's fatigue and a spent attacker's falling back or holding (decision 0105), and so are cover, digging in, the strain of fire on rest, and the wearing of defences by fire (decision 0106); the rest stands.*
 7. **Weather.** Plans face no weather-driven loss of air cover or cancellation of offensive missions.
 
 Importance depends on the scenario. Missing industry barely affects a one-night Savo scenario; missing engagement range and participation rules directly affect it. Across Guadalcanal, airfield suppression, replenishment, weather and accumulated damage become much harder to omit without changing the commander's decisions.
