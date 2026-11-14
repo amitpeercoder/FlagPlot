@@ -1655,6 +1655,62 @@ pub enum EventKind {
         hits: u32,
         defences: Fixed,
     },
+    /// Ships in port at a base, in no force, were formed into a task force
+    /// (decision 12 of 0111), citing the order. Added at the end.
+    TaskForceFormed {
+        task_force: TaskForceId,
+        side: Side,
+        base: BaseId,
+        ships: Vec<ShipId>,
+    },
+    /// A force was joined to another at a base (decision 13 of 0111), citing
+    /// the order: `ships` moved from `joined`, which ceased to be, into
+    /// `into`. Added at the end.
+    TaskForceJoined {
+        joined: TaskForceId,
+        into: TaskForceId,
+        base: BaseId,
+        ships: Vec<ShipId>,
+    },
+    /// A force was stood down at a base (decision 14 of 0111), citing the
+    /// order: `ships` lie in port there in no force, and the force ceased to
+    /// be. Added at the end.
+    TaskForceStoodDownInPort {
+        task_force: TaskForceId,
+        base: BaseId,
+        ships: Vec<ShipId>,
+    },
+    /// A load the commander ordered may take `below_t` tons of the base's
+    /// stock below its reserve (decision 9 of 0111): the answer to the
+    /// order, recorded after its acceptance and citing it. Added at the end.
+    LoadBelowReserve {
+        task_force: TaskForceId,
+        base: BaseId,
+        cargo: Cargo,
+        below_t: Fixed,
+        reserve_t: Fixed,
+    },
+    /// A ship's refuelling stopped at the fuel reserve of its side's bases in
+    /// the hex (decision 7 of 0111): it still lacks `short_t` tons, and those
+    /// bases hold fuel no longer above their reserves. Recorded after the
+    /// ship's refuelling, if it took any. Added at the end.
+    RefuellingHeldAtReserve {
+        ship: ShipId,
+        task_force: TaskForceId,
+        hex: Hex,
+        short_t: Fixed,
+    },
+    /// A load the staff ordered is complete because the base holds no more
+    /// of the cargo above its reserve (decisions 4 and 8 of 0111), with
+    /// `aboard_t` of it aboard the force, short of its weight or its room.
+    /// Recorded after the load's completion, citing it. Added at the end.
+    LoadHeldAtReserve {
+        task_force: TaskForceId,
+        base: BaseId,
+        cargo: Cargo,
+        aboard_t: Fixed,
+        reserve_t: Fixed,
+    },
 }
 
 impl EventKind {
@@ -1984,6 +2040,44 @@ impl EventKind {
             EventKind::SpentUnitFellBack { unit, .. }
             | EventKind::FieldworksChanged { unit, .. } => vec![EntityRef::LandUnit(*unit)],
             EventKind::DefencesWorn { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::TaskForceFormed {
+                task_force,
+                base,
+                ships,
+                ..
+            }
+            | EventKind::TaskForceStoodDownInPort {
+                task_force,
+                base,
+                ships,
+            } => {
+                let mut entities = vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)];
+                entities.extend(ships.iter().map(|ship| EntityRef::Ship(*ship)));
+                entities
+            }
+            EventKind::TaskForceJoined {
+                joined,
+                into,
+                base,
+                ships,
+            } => {
+                let mut entities = vec![
+                    EntityRef::TaskForce(*joined),
+                    EntityRef::TaskForce(*into),
+                    EntityRef::Base(*base),
+                ];
+                entities.extend(ships.iter().map(|ship| EntityRef::Ship(*ship)));
+                entities
+            }
+            EventKind::LoadBelowReserve {
+                task_force, base, ..
+            }
+            | EventKind::LoadHeldAtReserve {
+                task_force, base, ..
+            } => vec![EntityRef::TaskForce(*task_force), EntityRef::Base(*base)],
+            EventKind::RefuellingHeldAtReserve {
+                ship, task_force, ..
+            } => vec![EntityRef::Ship(*ship), EntityRef::TaskForce(*task_force)],
             EventKind::BaseChangedSide { base, .. } => vec![EntityRef::Base(*base)],
             EventKind::AirGroupLostWithBase {
                 air_group, base, ..
@@ -3532,6 +3626,66 @@ impl fmt::Display for EventKind {
                 "{hits} {} on men of the {} side at {hex} wore the defences of {base} to {defences}",
                 if *hits == 1 { "hit" } else { "hits" },
                 side.name()
+            ),
+            EventKind::TaskForceFormed {
+                task_force,
+                base,
+                ships,
+                ..
+            } => write!(
+                f,
+                "{} formed into {task_force} at {base}",
+                join_ships(ships)
+            ),
+            EventKind::TaskForceJoined {
+                joined,
+                into,
+                base,
+                ships,
+            } => write!(
+                f,
+                "{joined} joined {into} at {base} with {}; {joined} has ceased to be",
+                join_ships(ships)
+            ),
+            EventKind::TaskForceStoodDownInPort {
+                task_force,
+                base,
+                ships,
+            } => write!(
+                f,
+                "{task_force} stood down at {base}: {} lie in port in no force; {task_force} has ceased to be",
+                join_ships(ships)
+            ),
+            EventKind::LoadBelowReserve {
+                task_force,
+                base,
+                cargo,
+                below_t,
+                reserve_t,
+            } => write!(
+                f,
+                "{task_force}'s load of {} may take {below_t} t below {base}'s reserve of {reserve_t} t",
+                cargo.name()
+            ),
+            EventKind::RefuellingHeldAtReserve {
+                ship,
+                task_force,
+                hex,
+                short_t,
+            } => write!(
+                f,
+                "{ship} of {task_force} is {short_t} t short of full: the fuel at {hex} is at its reserve"
+            ),
+            EventKind::LoadHeldAtReserve {
+                task_force,
+                base,
+                cargo,
+                aboard_t,
+                reserve_t,
+            } => write!(
+                f,
+                "{task_force}'s load of {} stopped at {base}'s reserve of {reserve_t} t, with {aboard_t} t aboard",
+                cargo.name()
             ),
         }
     }

@@ -518,6 +518,32 @@ function synthetic() {
   };
   run('a failed alarm roll alerts nobody', alarm(true), 2);
   run('a successful alarm roll alerts the force', alarm(false), 2);
+  // Decision 0111: a force formed at a base from ships in port, joined to another, and one stood down. The engine keeps a
+  // joined or stood-down force with no ships, so the rebuild must too; the formed force starts at its base.
+  const forming = () => {
+    const r = base();
+    const tf = (id, ships) => ({ id, name: 'TF' + id, side: 'allied', position: { q: 0, r: 0 }, ships, readiness: 'normal', alerted: false });
+    r.bases = [{ id: 1, name: 'Port', side: 'allied', q: 0, r: 0, supply: '10', fuel: '5', supply_reserve: '2', fuel_reserve: '1' }];
+    r.initial.task_forces = [tf(1, [1]), tf(2, [2])];
+    r.initial.ships = [{ id: 1, name: 'A', side: 'allied' }, { id: 2, name: 'B', side: 'allied' }, { id: 3, name: 'C', side: 'allied' }];
+    r.final.task_forces = [tf(1, [1, 3]), tf(2, []), tf(3, [])];
+    r.final.ships = [{ id: 1, location: { task_force: 1 } }, { id: 2, location: { port: 1 } }, { id: 3, location: { task_force: 1 } }];
+    const e = (id, kind, entities, data) => ({ id, day: 1, pulse: 'night', kind, text: '#' + id + ' D1 night     ' + kind, causes: [], entities, data });
+    r.events = [
+      e(1, 'task_force_formed', ['task_force:3', 'base:1', 'ship:3'], { task_force: 3, base: 1, ships: [3] }),
+      e(2, 'task_force_joined', ['task_force:3', 'task_force:1', 'base:1', 'ship:3'], { joined: 3, into: 1, base: 1, ships: [3] }),
+      e(3, 'task_force_stood_down_in_port', ['task_force:2', 'base:1', 'ship:2'], { task_force: 2, base: 1, ships: [2] }),
+    ];
+    return r;
+  };
+  run('a force formed, joined and stood down', forming(), 2);
+  {
+    const m = Core.buildModel(forming());
+    const end = m.states[m.states.length - 1];
+    assert(end.forces.get(3) && end.forces.get(3).ships.length === 0 && end.forces.get(1).ships.join() === '1,3' && end.forces.get(2).ships.length === 0, 'forming: force ships after the three events');
+    const b = m.bases.get(1);
+    assert(b.supply_reserve === '2' && b.fuel_reserve === '1', 'forming: the base record keeps both reserves');
+  }
   const nolatlon = base();
   nolatlon.labels = [{ place: 'nowhere', feature: 'x', lat: -5, lon: 150 }];
   run('labels but no lat/lon on the map', nolatlon, 1);

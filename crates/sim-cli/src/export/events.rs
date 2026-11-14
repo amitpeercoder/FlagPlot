@@ -163,6 +163,18 @@ fn reject_reason(reason: &RejectReason) -> Data {
             .num("damage", *damage)
             .num("refused_at", *refused_at),
         RejectReason::AirGroupWaitsForBase => base("air_group_waits_for_base"),
+        // Decision 0111.
+        RejectReason::WeightNotAboveZero(weight) => {
+            base("weight_not_above_zero").num("weight_t", *weight)
+        }
+        RejectReason::NoShipsToForm => base("no_ships_to_form"),
+        RejectReason::ShipNamedTwice(ship) => base("ship_named_twice").id("ship", *ship),
+        RejectReason::ShipNotInPortHere(ship) => base("ship_not_in_port_here").id("ship", *ship),
+        RejectReason::RouteToFollow => base("route_to_follow"),
+        RejectReason::NotAtSameBase(other) => base("not_at_same_base").id("task_force", *other),
+        RejectReason::CannotJoinItself => base("cannot_join_itself"),
+        RejectReason::ForceWasJoined { into } => base("force_was_joined").id("into", *into),
+        RejectReason::ForceWasStoodDown => base("force_was_stood_down"),
     }
 }
 
@@ -1839,6 +1851,76 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey) -> (&'static str, Data
                 .id("by_b", *by_b)
                 .num("chance", *chance)
                 .flag("alarmed", *alarmed),
+        ),
+        // Decision 0111.
+        EventKind::TaskForceFormed {
+            task_force,
+            side: _,
+            base,
+            ships,
+        } => (
+            "task_force_formed",
+            d.id("task_force", *task_force)
+                .id("base", *base)
+                .ids("ships", ships),
+        ),
+        EventKind::TaskForceJoined {
+            joined,
+            into,
+            base,
+            ships,
+        } => (
+            "task_force_joined",
+            d.id("joined", *joined)
+                .id("into", *into)
+                .id("base", *base)
+                .ids("ships", ships),
+        ),
+        EventKind::TaskForceStoodDownInPort {
+            task_force,
+            base,
+            ships,
+        } => (
+            "task_force_stood_down_in_port",
+            d.id("task_force", *task_force)
+                .id("base", *base)
+                .ids("ships", ships),
+        ),
+        EventKind::LoadBelowReserve {
+            task_force,
+            base,
+            cargo,
+            below_t,
+            reserve_t,
+        } => (
+            "load_below_reserve",
+            cargo_named(d.id("task_force", *task_force).id("base", *base), *cargo)
+                .num("below_t", *below_t)
+                .num("reserve_t", *reserve_t),
+        ),
+        EventKind::RefuellingHeldAtReserve {
+            ship,
+            task_force,
+            hex,
+            short_t,
+        } => (
+            "refuelling_held_at_reserve",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("short_t", *short_t),
+        ),
+        EventKind::LoadHeldAtReserve {
+            task_force,
+            base,
+            cargo,
+            aboard_t,
+            reserve_t,
+        } => (
+            "load_held_at_reserve",
+            cargo_named(d.id("task_force", *task_force).id("base", *base), *cargo)
+                .num("aboard_t", *aboard_t)
+                .num("reserve_t", *reserve_t),
         ),
     }
 }

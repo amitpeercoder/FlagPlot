@@ -222,6 +222,18 @@ pub struct BaseLine {
     /// is above 0, so a base never hit on its airfield is listed as it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub airfield_damage: Option<AirfieldDamageLine>,
+    /// The reserves the base keeps (decision 0111): refuelling and the staff's
+    /// loads never take a stock below them. The side's own bases only, and
+    /// left out while both are 0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reserves: Option<BaseReservesLine>,
+}
+
+/// A base's reserves, in tons (decision 0111).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct BaseReservesLine {
+    pub supply_reserve_t: Dec,
+    pub fuel_reserve_t: Dec,
 }
 
 /// The damage to a base's airfield (decision 0103).
@@ -484,7 +496,17 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
         airfield_size: data.map_or(0, |d| d.airfield_size),
         works: base_works_line(ctx, base),
         airfield_damage: base_airfield_damage_line(ctx, base),
+        reserves: base_reserves_line(base),
     }
+}
+
+/// The base's reserves, or `None` while both are 0.
+pub(crate) fn base_reserves_line(base: &Base) -> Option<BaseReservesLine> {
+    let any = base.supply_reserve_t > Fixed::ZERO || base.fuel_reserve_t > Fixed::ZERO;
+    any.then_some(BaseReservesLine {
+        supply_reserve_t: Dec(base.supply_reserve_t),
+        fuel_reserve_t: Dec(base.fuel_reserve_t),
+    })
 }
 
 /// The base's airfield damage line, or `None` while the damage is 0.

@@ -674,6 +674,73 @@ impl Briefing {
             }
         }
 
+        if let Some(c) = &self.force_changes {
+            o.heading("FORCE CHANGES");
+            let ships = names;
+            for f in &c.formed {
+                o.line(format!(
+                    "Formed yesterday: {} at {} from {}{}",
+                    f.task_force.text(),
+                    f.base.text(),
+                    ships(&f.ships),
+                    ev(f.event)
+                ));
+            }
+            for j in &c.joined {
+                o.line(format!(
+                    "Joined yesterday: {} joined {} at {} with {}; {} has ceased to be{}",
+                    j.joined.text(),
+                    j.into.text(),
+                    j.base.text(),
+                    ships(&j.ships),
+                    j.joined.text(),
+                    ev(j.event)
+                ));
+            }
+            for d in &c.stood_down {
+                o.line(format!(
+                    "Stood down yesterday: {} at {}: {} lie in port in no force; {} has ceased to be{}",
+                    d.task_force.text(),
+                    d.base.text(),
+                    ships(&d.ships),
+                    d.task_force.text(),
+                    ev(d.event)
+                ));
+            }
+            for l in &c.loads_below_reserve {
+                o.line(format!(
+                    "Load below the reserve: {}'s load of {} may take {} t below {}'s reserve of {} t{}",
+                    l.task_force.text(),
+                    l.cargo,
+                    l.tons.0,
+                    l.base.text(),
+                    l.reserve_t.0,
+                    ev(l.event)
+                ));
+            }
+            for l in &c.loads_held_at_reserve {
+                o.line(format!(
+                    "Load held at the reserve: {}'s load of {} stopped at {}'s reserve of {} t, with {} t aboard{}",
+                    l.task_force.text(),
+                    l.cargo,
+                    l.base.text(),
+                    l.reserve_t.0,
+                    l.tons.0,
+                    ev(l.event)
+                ));
+            }
+            for r in &c.refuelling_held_at_reserve {
+                o.line(format!(
+                    "Refuelling held at the reserve: {} of {} is {} t short of full: the fuel at {} is at its reserve{}",
+                    r.ship.text(),
+                    r.task_force.text(),
+                    r.short_t.0,
+                    at(&r.place),
+                    ev(r.event)
+                ));
+            }
+        }
+
         o.heading("AIR GROUPS");
         // Squadron name: the part before the first comma.
         let squadron = |g: &crate::lines::AirGroupLine| -> Option<String> {
@@ -859,6 +926,18 @@ impl Briefing {
                 o.sub(format!(
                     "Works: {airfield}; defences {} ({}); yesterday's work on the port {}, on the aircraft {}",
                     w.defences.0, w.grade, w.port_work_yesterday.0, w.aircraft_work_yesterday.0
+                ));
+            }
+            if let Some(r) = &b.reserves {
+                o.sub(format!(
+                    "Reserves: {} t supply, {} t fuel (refuelling and the staff's loads never take a stock below its reserve; your own load order may)",
+                    r.supply_reserve_t.0, r.fuel_reserve_t.0
+                ));
+            }
+            if !b.ships_in_port.is_empty() {
+                o.sub(format!(
+                    "In port in no force: {} (form_task_force takes ships from here)",
+                    names(&b.ships_in_port)
                 ));
             }
             if let Some(d) = &b.airfield_damage {

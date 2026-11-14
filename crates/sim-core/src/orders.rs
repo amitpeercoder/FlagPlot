@@ -1,9 +1,11 @@
 //! Unit-level orders: the only way to influence the simulation.
 //!
 //! Only the orders the scenarios so far need exist: task force orders (route,
-//! speed, mission, load, unload and rules of engagement) and air group orders
-//! (mission and search arc). The spec lists the full set (form, disband and
-//! so on). They arrive with the scenarios that use them.
+//! speed, mission, load, unload, rules of engagement, and joining and
+//! standing down, decision 0111), air group orders (mission and search arc),
+//! land unit orders, and the base order that forms a task force (decision
+//! 0111). The spec lists the full set. They arrive with the scenarios that
+//! use them.
 
 use core::fmt;
 use std::collections::BTreeSet;
@@ -523,6 +525,38 @@ pub enum TaskForceOrder {
         hex: Hex,
         roster: BTreeSet<LandUnitId>,
     },
+    /// Load supply or fuel until the force has `weight_t` tons of it aboard,
+    /// all its ships together, filled in ship order (decisions 1 to 4 of
+    /// 0111). A level, not an addition: a force with that much aboard loads
+    /// nothing. A standing order of the "cargo" kind, accepted under the
+    /// conditions of `Load`, with a weight above 0. Added at the end.
+    LoadTo {
+        cargo: Cargo,
+        weight_t: Fixed,
+    },
+    /// Join this force to the named force of the side, stopped at the same
+    /// base (decision 13 of 0111). The named force keeps its number, orders
+    /// and settings and takes this force's ships with all they carry; this
+    /// force's orders end and it ceases to be. Done when it is accepted.
+    /// Added at the end.
+    JoinTo(TaskForceId),
+    /// Stand the force down at the base it is stopped at (decision 14 of
+    /// 0111): its ships lie in port there in no force, with what they carry,
+    /// its orders end and it ceases to be. Done when it is accepted. Added
+    /// at the end.
+    StandDown,
+}
+
+/// An order to a base of the side (decision 0111). Added with the first.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum BaseOrder {
+    /// Form the listed ships, the side's, lying in port at this base in no
+    /// force, into a new task force (decision 12 of 0111). It takes the next
+    /// number of the side's made series, is stopped at the base with the
+    /// mission `Transport`, cruise speed, the default engagement settings,
+    /// and the base as its home port. Done when it is accepted. Forming
+    /// orders are taken in before every other order of the day.
+    FormTaskForce { ships: Vec<ShipId> },
 }
 
 impl TaskForceOrder {
@@ -624,6 +658,8 @@ pub enum OrderKind {
         target: LandUnitId,
         order: LandUnitOrder,
     },
+    /// Added at the end (decision 0111).
+    Base { target: BaseId, order: BaseOrder },
 }
 
 impl OrderKind {
@@ -633,7 +669,21 @@ impl OrderKind {
             OrderKind::TaskForce { target, .. } => EntityRef::TaskForce(*target),
             OrderKind::AirGroup { target, .. } => EntityRef::AirGroup(*target),
             OrderKind::LandUnit { target, .. } => EntityRef::LandUnit(*target),
+            OrderKind::Base { target, .. } => EntityRef::Base(*target),
         }
+    }
+
+    /// Whether the order forms a task force: such orders are taken in before
+    /// every other order of the day, so that an order to the new force on
+    /// the same day finds it (decision 0111, As built).
+    pub fn forms_task_force(&self) -> bool {
+        matches!(
+            self,
+            OrderKind::Base {
+                order: BaseOrder::FormTaskForce { .. },
+                ..
+            }
+        )
     }
 }
 
@@ -805,6 +855,36 @@ pub enum RejectReason {
     /// spent: only an attack order carries the instruction (decision 6 of
     /// 0105, "As built"). Added at the end of the enum.
     InstructionNeedsAttack,
+    /// A load order's weight is 0 or below (decision 1 of 0111). Added at
+    /// the end of the enum.
+    WeightNotAboveZero(Fixed),
+    /// A forming order lists no ships (decision 15 of 0111). Added at the
+    /// end of the enum.
+    NoShipsToForm,
+    /// A forming order names a ship twice (decision 15 of 0111). Added at
+    /// the end of the enum.
+    ShipNamedTwice(ShipId),
+    /// A ship a forming order names is not one of the side's lying in port
+    /// at the base in no force (decision 15 of 0111). One reason for a ship
+    /// that does not exist, an enemy's, one in a force and one elsewhere.
+    /// Added at the end of the enum.
+    ShipNotInPortHere(ShipId),
+    /// A join or stand-down order to a force that is stopped but has a route
+    /// still to follow: halted at a marked waypoint (decision 15 of 0111).
+    /// Added at the end of the enum.
+    RouteToFollow,
+    /// A join order names a force that is not stopped at the same base
+    /// (decision 15 of 0111). Added at the end of the enum.
+    NotAtSameBase(TaskForceId),
+    /// A join order names the force it is given to. Added at the end of the
+    /// enum.
+    CannotJoinItself,
+    /// An order to a force that was joined to another and has ceased to be
+    /// (decision 13 of 0111). Added at the end of the enum.
+    ForceWasJoined { into: TaskForceId },
+    /// An order to a force that was stood down and has ceased to be
+    /// (decision 14 of 0111). Added at the end of the enum.
+    ForceWasStoodDown,
 }
 
 impl fmt::Display for RejectReason {
@@ -926,6 +1006,28 @@ impl fmt::Display for RejectReason {
             RejectReason::InstructionNeedsAttack => f.write_str(
                 "only an attack order says what the unit does when its attack is spent",
             ),
+            RejectReason::WeightNotAboveZero(weight) => {
+                write!(f, "weight {weight} t is not above 0")
+            }
+            RejectReason::NoShipsToForm => f.write_str("no ships are listed to form a force"),
+            RejectReason::ShipNamedTwice(ship) => write!(f, "{ship} is listed twice"),
+            RejectReason::ShipNotInPortHere(ship) => {
+                write!(f, "{ship} is not one of your ships in port here in no force")
+            }
+            RejectReason::RouteToFollow => {
+                f.write_str("the task force is stopped on its way and has a route to follow")
+            }
+            RejectReason::NotAtSameBase(other) => {
+                write!(f, "{other} is not stopped at the same base")
+            }
+            RejectReason::CannotJoinItself => f.write_str("a task force cannot join itself"),
+            RejectReason::ForceWasJoined { into } => write!(
+                f,
+                "the task force no longer exists: it was joined to {into}"
+            ),
+            RejectReason::ForceWasStoodDown => {
+                f.write_str("the task force no longer exists: it was stood down in port")
+            }
         }
     }
 }

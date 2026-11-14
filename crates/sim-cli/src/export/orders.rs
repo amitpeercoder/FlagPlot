@@ -3,7 +3,7 @@
 use serde::Serialize;
 use sim_core::ids::UmpireKey;
 use sim_core::orders::{
-    AirGroupOrder, AirMission, LandUnitOrder, Order, OrderKind, TaskForceOrder,
+    AirGroupOrder, AirMission, BaseOrder, LandUnitOrder, Order, OrderKind, TaskForceOrder,
 };
 
 use super::names;
@@ -79,6 +79,18 @@ fn text(kind: &OrderKind) -> String {
                 } else {
                     format!("prepare a landing at {hex} with {}", units.join(", "))
                 }
+            }
+            // Decision 0111.
+            TaskForceOrder::LoadTo { cargo, weight_t } => {
+                format!("load {} from the base here up to {weight_t} t", cargo.name())
+            }
+            TaskForceOrder::JoinTo(other) => format!("join {other} at the base here"),
+            TaskForceOrder::StandDown => "stand down in port".to_string(),
+        },
+        OrderKind::Base { order, .. } => match order {
+            BaseOrder::FormTaskForce { ships } => {
+                let ships: Vec<String> = ships.iter().map(ToString::to_string).collect();
+                format!("form a task force of {}", ships.join(", "))
             }
         },
         OrderKind::AirGroup { order, .. } => match order {

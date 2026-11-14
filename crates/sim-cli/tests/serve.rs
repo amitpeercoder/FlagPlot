@@ -81,6 +81,8 @@ fn served_order(view: &sim_core::view::SideView<'_>, r: &sim_core::orders::Order
                 target.raw()
             )
         ),
+        // A base is the engine's own number (the briefing names bases by it).
+        sim_core::orders::OrderKind::Base { target, .. } => format!("base:{}", target.raw()),
     };
     doc["unit"] = json!(unit);
     if let Some(ships) = doc["order"].get_mut("ships").and_then(Value::as_array_mut) {

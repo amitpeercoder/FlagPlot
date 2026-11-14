@@ -845,6 +845,23 @@ function rebuildFromSteps(ctx) {
           for (const s of [...(d.ships || []), ...(d.escorts || [])]) shipForce.set(s, d.new_force);
           break;
         }
+        // Decision 0111: a formed force starts at its base; a joined or stood-down force's ships leave it.
+        case 'task_force_formed': {
+          const base = bases.get(d.base);
+          if (!live.forces.has(d.task_force)) {
+            const q = base ? base.q : 0, r = base ? base.r : 0;
+            live.forces.set(d.task_force, { q, r });
+            trails.set(d.task_force, [[q, r]]);
+          }
+          for (const s of d.ships || []) shipForce.set(s, d.task_force);
+          break;
+        }
+        case 'task_force_joined':
+          for (const s of d.ships || []) shipForce.set(s, d.into);
+          break;
+        case 'task_force_stood_down_in_port':
+          for (const s of d.ships || []) shipForce.delete(s);
+          break;
         case 'air_group_rebased': {
           const m = new Map(live.groupBase); m.set(d.air_group, d.to); live.groupBase = m;
           break;
@@ -1259,6 +1276,33 @@ function buildModel(replay) {
             if (!nf.ships.includes(s)) nf.ships.push(s);
             cur.shipForce.set(s, d.new_force);
           }
+          break;
+        }
+        // Decision 0111: a force formed at a base from ships in port in no force; a force joined to another (it stays, with no
+        // ships, as the engine keeps it); a force stood down in port (its ships lie in no force).
+        case 'task_force_formed': {
+          const base = bases.get(d.base), fin = finalForces.get(d.task_force);
+          const q = base ? base.q : 0, r = base ? base.r : 0;
+          if (!cur.forces.has(d.task_force)) {
+            cur.forces.set(d.task_force, {
+              id: d.task_force, name: fin ? fin.name : 'TF ' + d.task_force, side: fin ? fin.side : (base ? base.side : null),
+              q, r, ships: [], trail: [[q, r]], detachedFrom: null, readiness: (fin && fin.readiness) || 'normal', alerted: false,
+            });
+          }
+          const nf = cur.forces.get(d.task_force);
+          for (const s of d.ships || []) { if (!nf.ships.includes(s)) nf.ships.push(s); cur.shipForce.set(s, d.task_force); }
+          break;
+        }
+        case 'task_force_joined': {
+          const from = cur.forces.get(d.joined), into = cur.forces.get(d.into);
+          if (from) from.ships = from.ships.filter(x => !(d.ships || []).includes(x));
+          for (const s of d.ships || []) { if (into && !into.ships.includes(s)) into.ships.push(s); cur.shipForce.set(s, d.into); }
+          break;
+        }
+        case 'task_force_stood_down_in_port': {
+          const f = cur.forces.get(d.task_force);
+          if (f) f.ships = f.ships.filter(x => !(d.ships || []).includes(x));
+          for (const s of d.ships || []) cur.shipForce.delete(s);
           break;
         }
         // A force away at the yard has no ship on the map and is not sunk: its ships leave the force's list and come
@@ -2098,7 +2142,7 @@ function renderScreen() {
     if (hl.bases.has(b.id)) g.append(sv('rect', { class: 'ring-hl', x: -10, y: -10, width: 20, height: 20 }));
     if (S.selBase === b.id) g.append(sv('rect', { class: 'ring-sel', x: -13, y: -13, width: 26, height: 26, rx: 4 }));
     g.append(sv('path', { class: 'basemark side-' + side, d: 'M0 -7L7 0L0 7L-7 0Z' }));
-    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')' }));
+    g.append(sv('title', { text: (b.name || 'base ' + b.id) + ' (' + (b.side || '?') + ', base:' + b.id + (b.supply !== undefined ? ', supply ' + b.supply : '') + reserveText(b) + ')' }));
     gBase.append(g);
     if (bm.label) gBase.append(sv('text', { class: 'lbl base', x: bm.x + 10, y: bm.y + 4, text: bm.label }));
   }
@@ -2437,7 +2481,7 @@ function renderReadout() {
   if (feat.length) line(feat.join(', '));
   if ((hx.closed || []).length) line('Closed sides: ' + hx.closed.join(', '));
   for (const p of m.placementsByHex.get(S.hoverKey) || []) line('Place: ' + p.label.place + (p.label.feature ? ' (' + p.label.feature + ')' : ''));
-  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + holderOf(st, b) + (b.side !== holderOf(st, b) ? ', taken from the ' + b.side + ' side' : '') + (b.supply !== undefined ? ', supply ' + b.supply : '') + ')');
+  for (const b of m.basesByHex.get(S.hoverKey) || []) line('Base: ' + b.name + ' (' + holderOf(st, b) + (b.side !== holderOf(st, b) ? ', taken from the ' + b.side + ' side' : '') + (b.supply !== undefined ? ', supply ' + b.supply : '') + reserveText(b) + ')');
   const formed = st.formedBases && st.formedBases.get(S.hoverKey);
   if (formed) line('Base ' + formed.id + ' (' + formed.side + '): formed by a landing');
   if (st.landUnits) for (const u of st.landUnits.values()) if (u.hex && u.hex[0] === q && u.hex[1] === r && u.men_ashore > 0) line('Land unit: ' + u.name + (u.side ? ' (' + u.side + ')' : '') + ', ' + u.men_ashore + ' men ashore' + (u.posture === 'attack' ? ', on attack' : '') + (u.fatigue > 0 ? ', fatigue ' + u.fatigue : '') + (u.fieldworks > 0 ? ', fieldworks ' + u.fieldworks : '') + (u.fed_share !== undefined && u.fed_share < 1 ? ', fed share ' + u.fed_share : '') + (u.march ? ', marching to (' + u.march.to[0] + ',' + u.march.to[1] + '), ' + u.march.days + (u.march.of ? ' of ' + u.march.of : '') + ' days marched' : ''));
@@ -2869,6 +2913,13 @@ function airGroupsBlock(groups, st) {
 }
 
 /** The side that holds a base at a step: the side the replay starts it with, changed by each base_changed_side event up to the step (decision 0090). */
+// What a base keeps in reserve (decision 0111), shown beside its supply; the record leaves a reserve out when it is 0.
+function reserveText(b) {
+  const bits = [];
+  if (b.supply_reserve !== undefined) bits.push('supply ' + b.supply_reserve);
+  if (b.fuel_reserve !== undefined) bits.push('fuel ' + b.fuel_reserve);
+  return bits.length ? ', reserve ' + bits.join(' and ') : '';
+}
 function holderOf(st, b) { return (st && st.baseSide && st.baseSide.get(b.id)) || b.side; }
 
 function baseSection(id) {

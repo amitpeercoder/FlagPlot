@@ -148,6 +148,46 @@ impl HaltGround<'_> {
         !self.nothing_remains_of(cargo, &ships, hex, base, landing_here)
     }
 
+    /// The tons of `cargo` aboard `ships` together.
+    pub(crate) fn aboard_of(&self, ships: &[ShipId], cargo: Cargo) -> Fixed {
+        ships
+            .iter()
+            .map(|id| {
+                let ship = &self.ships[id];
+                match cargo {
+                    Cargo::Supply => ship.supply_t,
+                    Cargo::Fuel => ship.cargo_fuel_t,
+                }
+            })
+            .fold(Fixed::ZERO, |sum, tons| sum + tons)
+    }
+
+    /// What a load of `named` may still put aboard `ships` by its weight
+    /// (decision 2 of 0111): the weight less what is aboard, not below 0,
+    /// or `None` for a load with no weight, which fills the room.
+    pub(crate) fn weight_left(
+        &self,
+        cargo: CargoOrder,
+        ships: &[ShipId],
+        named: Cargo,
+    ) -> Option<Fixed> {
+        cargo
+            .weight_t
+            .map(|weight| (weight - self.aboard_of(ships, named)).max(Fixed::ZERO))
+    }
+
+    /// The stock a load of `named` may draw on at `base` (decision 8 of
+    /// 0111): all of it, or for a load that heeds the reserve what the base
+    /// holds above its reserve.
+    pub(crate) fn stock_for(&self, cargo: CargoOrder, base: BaseId, named: Cargo) -> Fixed {
+        let base = &self.bases[&base];
+        if cargo.heeds_reserve {
+            base.above_reserve(named)
+        } else {
+            base.stock_of(named)
+        }
+    }
+
     /// [`World::nothing_remains`] for `cargo` worked by `ships` in `hex`.
     pub(crate) fn nothing_remains_of(
         &self,
@@ -174,12 +214,12 @@ impl HaltGround<'_> {
         };
         let cargo_done = match (cargo.action.loads(), base) {
             (Some(named), Some(base)) => {
-                let base = &self.bases[&base];
-                let stock = match named {
-                    Cargo::Supply => base.supply_t,
-                    Cargo::Fuel => base.fuel_t,
-                };
-                stock.is_zero()
+                // The stock it may draw on is gone, or the weight is aboard,
+                // or no ship has room (decision 4 of 0111).
+                self.stock_for(cargo, base, named).is_zero()
+                    || self
+                        .weight_left(cargo, ships, named)
+                        .is_some_and(|left| left.is_zero())
                     || ships.iter().all(|id| {
                         let ship = &self.ships[id];
                         ship.supply_t + ship.cargo_fuel_t
@@ -296,14 +336,16 @@ impl World {
         let mut berths_used: BTreeMap<(Side, Hex), u32> = BTreeMap::new();
         let mut berthed: Vec<ShipId> = Vec::new();
         for participant in &participants {
-            // The stock a load draws on: supply or fuel (decision 0046).
+            // The stock a load draws on: supply or fuel (decision 0046), above
+            // the reserve for a load that heeds it, and what its weight still
+            // allows (decisions 2 and 8 of 0111).
+            let named = participant.cargo.action.loads().unwrap_or(Cargo::Supply);
+            let ground = self.halt_ground();
             let stock = participant.base.map_or(Fixed::ZERO, |id| {
-                let base = &self.truth.bases[&id];
-                match participant.cargo.action.loads() {
-                    Some(Cargo::Fuel) => base.fuel_t,
-                    _ => base.supply_t,
-                }
+                ground.stock_for(participant.cargo, id, named)
             });
+            let weight_left = ground.weight_left(participant.cargo, &participant.ships, named);
+            let stock = weight_left.map_or(stock, |left| stock.min(left));
             let unit_ashore = match participant.cargo.unit {
                 Some(unit) if men_rules => self.men_ashore_in(unit, participant.hex),
                 _ => 0,
@@ -613,16 +655,18 @@ impl World {
             // (decisions 3 and 4 of 0046).
             let mut moves: Vec<(Cargo, Fixed)> = Vec::new();
             if loading {
-                match p.cargo.action.loads() {
-                    Some(Cargo::Supply) => {
-                        let stock = self.truth.bases[&base_id].supply_t;
-                        moves.push((Cargo::Supply, work_t.min(room).min(stock)));
+                if let Some(named) = p.cargo.action.loads() {
+                    // The stock it may draw on, above the reserve for a load
+                    // that heeds it, worked at each moment; and no more than
+                    // the weight still allows, the ships filled in ship order
+                    // (decisions 2, 3 and 8 of 0111).
+                    let ground = self.halt_ground();
+                    let stock = ground.stock_for(p.cargo, base_id, named);
+                    let mut moved = work_t.min(room).min(stock);
+                    if let Some(left) = ground.weight_left(p.cargo, &p.ships, named) {
+                        moved = moved.min(left);
                     }
-                    Some(Cargo::Fuel) => {
-                        let stock = self.truth.bases[&base_id].fuel_t;
-                        moves.push((Cargo::Fuel, work_t.min(room).min(stock)));
-                    }
-                    None => {}
+                    moves.push((named, moved));
                 }
             } else {
                 let supply_moved = work_t.min(supply_before);
@@ -808,6 +852,7 @@ impl World {
         let completed = self
             .events
             .record(day, Some(pulse), kind, cargo_events, breakdown);
+        self.load_held_at_reserve(day, pulse, p, base, completed);
         // A halted force's cargo work is done, and it may steam on (decision
         // 0096, 4).
         if let Some(halt) = self
@@ -844,6 +889,49 @@ impl World {
                 );
             }
         }
+    }
+
+    /// After a load's completion: if it heeds the reserve and is complete
+    /// because the base holds no more above it, while the base still holds
+    /// some, short of the weight and with room aboard, the reserve stopped it
+    /// (decisions 4 and 8 of 0111).
+    fn load_held_at_reserve(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        base: Option<BaseId>,
+        completed: EventId,
+    ) {
+        let (Some(named), Some(base_id), true) =
+            (p.cargo.action.loads(), base, p.cargo.heeds_reserve)
+        else {
+            return;
+        };
+        let ground = self.halt_ground();
+        let record = &self.truth.bases[&base_id];
+        let held = ground.stock_for(p.cargo, base_id, named).is_zero()
+            && record.stock_of(named) > Fixed::ZERO
+            && !ground
+                .weight_left(p.cargo, &p.ships, named)
+                .is_some_and(|left| left.is_zero())
+            && p.ships.iter().any(|id| {
+                let ship = &self.truth.ships[id];
+                ship.supply_t + ship.cargo_fuel_t
+                    < self.ref_data.ship_classes[&ship.class].cargo_capacity_t
+            });
+        if !held {
+            return;
+        }
+        let kind = EventKind::LoadHeldAtReserve {
+            task_force: p.task_force,
+            base: base_id,
+            cargo: named,
+            aboard_t: ground.aboard_of(&p.ships, named),
+            reserve_t: record.reserve_of(named),
+        };
+        self.events
+            .record(day, Some(pulse), kind, vec![Cause::Event(completed)], None);
     }
 
     /// Whether the order is done. An unload: nothing aboard any ship, men
@@ -1332,11 +1420,11 @@ mod tests {
             force.toward_hex = Some(Hex::new(1, 0));
             force.progress_nm = Fixed::from_int(4);
             force.leg_nm = Fixed::from_int(crate::hex::HEX_NM);
-            force.cargo_order = Some(crate::state::CargoOrder {
-                action: crate::orders::CargoAction::Load,
-                order: crate::ids::OrderId::new(1),
-                unit: None,
-            });
+            force.cargo_order = Some(crate::state::CargoOrder::new(
+                crate::orders::CargoAction::Load,
+                crate::ids::OrderId::new(1),
+                None,
+            ));
         }
         assert_eq!(world.truth.task_forces[&tf(1)].position(), Hex::new(0, 0));
         world.run_pulse_phase(1, Pulse::Night, crate::resolve::PulsePhase::Loading);

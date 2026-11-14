@@ -1434,11 +1434,11 @@ mod tests {
             // At the home port with a load order, so cargo handling meets
             // the empty force.
             force.from_hex = hx(0, 0);
-            force.cargo_order = Some(crate::state::CargoOrder {
-                action: crate::orders::CargoAction::Load,
-                order: OrderId::new(5),
-                unit: None,
-            });
+            force.cargo_order = Some(crate::state::CargoOrder::new(
+                crate::orders::CargoAction::Load,
+                OrderId::new(5),
+                None,
+            ));
         }
         world.handle_stragglers(1, Pulse::Night);
         assert!(force(&world, 1).ships.is_empty());

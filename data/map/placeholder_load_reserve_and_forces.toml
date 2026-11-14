@@ -1,0 +1,25 @@
+# PLACEHOLDER MAP. Open sea with two coast hexes, used by scenario 39
+# (decision 0111): S at (0,0) with port size 1, one berth, and T at (10,0)
+# with port size 0, which works by lighter only. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 12]
+r = [-2, 2]
+
+# S: a base with one berth.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 1
+
+# T: a base with no berth, by lighter.
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+port_size = 0

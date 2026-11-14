@@ -1,0 +1,189 @@
+# Scenario 39: a load up to a weight, a reserve at a base, and forces formed,
+# joined and stood down (decision 0111).
+#
+# Proves decision 0111 against a hand calculation. At S, two forces are
+# refuelled and load supply from one base that keeps a reserve of each: the
+# refuelling stops at the fuel reserve, a load ordered by the staff stops at
+# the supply reserve and one ordered by the commander does not. At T, a load
+# up to a weight is shared between two small ships in ship order, two ships
+# lying in port are formed into a force, a force is joined to it and the
+# formed force is stood down into port. The hand calculation is in
+# tests/scenario_39_load_reserve_and_forces.rs. There is no enemy, no search
+# and no random draw.
+#
+# Force 2's day-1 load is ordered with the staff as its issuer. The force
+# formed on day 1 takes the first number of the Allied made series, 1000001
+# (decision 0086), which the day-2 join and the day-3 and day-4 orders name.
+# Classes 3 and 12 are the placeholder cargo ship and the placeholder fast
+# transport with cargo.
+#
+# PLACEHOLDER DATA. The bases, ships and map are invented.
+
+name = "Scenario 39: A load up to a weight, a reserve, and forces formed and joined"
+placeholder = true
+seed = 1942
+days = 4
+map = "../map/placeholder_load_reserve_and_forces.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+
+# S: port size 1, with a reserve of each stock.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 500
+supply_reserve_t = 400
+fuel_reserve_t = 300
+
+# T: port size 0, no reserve.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 10
+r = 0
+supply_t = 100
+
+# Force 1: stopped at S, loads by the commander's order.
+[[task_force]]
+id = 1
+name = "Placeholder cargo force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 850
+task_force = 1
+
+# Force 2: stopped at S, loads by the staff's order.
+[[task_force]]
+id = 2
+name = "Placeholder cargo force 2"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 2
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 900
+task_force = 2
+
+# Force 3: stopped at T, two small ships that share a weight.
+[[task_force]]
+id = 3
+name = "Placeholder fast transport force 3"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[ship]]
+id = 3
+name = "Placeholder fast transport 3"
+class = 12
+side = "allied"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 4
+name = "Placeholder fast transport 4"
+class = 12
+side = "allied"
+fuel_t = 500
+task_force = 3
+
+# Ships 5 and 6 lie in port at T in no force.
+[[ship]]
+id = 5
+name = "Placeholder cargo ship 5"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 2
+
+[[ship]]
+id = 6
+name = "Placeholder cargo ship 6"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 2
+
+# Day 1: three loads up to a weight, and ships 5 and 6 formed into a force.
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "load"
+weight_t = 250
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 2
+issuer = "staff"
+kind = "load"
+weight_t = 500
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 3
+kind = "load"
+weight_t = 50
+
+[[order]]
+day = 1
+side = "allied"
+base = 2
+kind = "form_task_force"
+ships = [5, 6]
+
+# Day 2: a second load by the commander below the reserve, and force 3 joined
+# to the force formed on day 1 (task force 1000001).
+[[order]]
+day = 2
+side = "allied"
+task_force = 1
+kind = "load"
+weight_t = 450
+
+[[order]]
+day = 2
+side = "allied"
+task_force = 3
+kind = "join"
+into = 1000001
+
+# Day 3: the formed force loads up to 60 t.
+[[order]]
+day = 3
+side = "allied"
+task_force = 1000001
+kind = "load"
+weight_t = 60
+
+# Day 4: the formed force is stood down.
+[[order]]
+day = 4
+side = "allied"
+task_force = 1000001
+kind = "stand_down"

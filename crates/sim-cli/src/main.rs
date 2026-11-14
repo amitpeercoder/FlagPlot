@@ -670,6 +670,22 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
         } else {
             String::new()
         };
+        // What the base keeps in reserve, only where it keeps some
+        // (decision 0111, 6).
+        let reserve = {
+            let mut parts = Vec::new();
+            if base.supply_reserve_t > Fixed::ZERO {
+                parts.push(format!("{} t of supply", base.supply_reserve_t));
+            }
+            if base.fuel_reserve_t > Fixed::ZERO {
+                parts.push(format!("{} t of fuel", base.fuel_reserve_t));
+            }
+            if parts.is_empty() {
+                String::new()
+            } else {
+                format!(", reserve {}", parts.join(" and "))
+            }
+        };
         // A base a landing formed is marked (decision 0066, 12).
         let formed = if base.on_map {
             ""
@@ -677,13 +693,14 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             ", formed in play, on its own side's map only"
         };
         println!(
-            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}{}{}",
+            "{} \"{}\" ({}) at {}: {} t of supply in stock{}{}{}{}{}{}",
             base.id,
             base.name,
             base.side.name(),
             base.hex,
             base.supply_t,
             fuel,
+            reserve,
             guns,
             repairs,
             works,

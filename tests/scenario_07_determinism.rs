@@ -497,7 +497,13 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     // The two kinds of decision 0106, `FieldworksChanged` and
     // `DefencesWorn`: the frozen figures switch the rule off. Scenario 34
     // records them on its own figures, and its own test reads them.
-    const NOT_IN_THE_FULL_SLICE: [&str; 60] = [
+    //
+    // The six kinds of decision 0111, `TaskForceFormed`, `TaskForceJoined`,
+    // `TaskForceStoodDownInPort`, `LoadBelowReserve`,
+    // `RefuellingHeldAtReserve` and `LoadHeldAtReserve`: the full slice
+    // gives none of the new orders and no base a reserve. Scenario 39
+    // records them, and its own test reads them.
+    const NOT_IN_THE_FULL_SLICE: [&str; 66] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -558,6 +564,12 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "SpentUnitFellBack",
         "FieldworksChanged",
         "DefencesWorn",
+        "TaskForceFormed",
+        "TaskForceJoined",
+        "TaskForceStoodDownInPort",
+        "LoadBelowReserve",
+        "RefuellingHeldAtReserve",
+        "LoadHeldAtReserve",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

@@ -51,6 +51,19 @@
               "status": {
                 "const": "queued"
               },
+              "below_reserve": {
+                "description": "For a queued load of supply or fuel (decision 0111): present when, as the stocks stand now, the load may take tons below the reserve of the base it loads from. Your own load order is not held to the reserve; the staff's is. tons is the tons below; text is the sentence a player reads.",
+                "type": "object",
+                "required": ["base", "cargo", "tons", "reserve_t", "text"],
+                "additionalProperties": false,
+                "properties": {
+                  "base": { "type": "string" },
+                  "cargo": { "enum": ["supply", "fuel"] },
+                  "tons": { "$ref": "defs.schema.json#/$defs/dec" },
+                  "reserve_t": { "$ref": "defs.schema.json#/$defs/dec" },
+                  "text": { "type": "string" }
+                }
+              },
               "day_of_return": {
                 "description": "For a queued send_to_yard order: the day the force would be back, worked from the ships' damage as it stands (decision 0069).",
                 "type": "integer"

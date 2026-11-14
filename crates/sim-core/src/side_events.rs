@@ -1233,6 +1233,17 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // defences whole; the enemy sees none of it (decision 14 of 0106).
         EventKind::FieldworksChanged { unit, .. } => whole_if(own_unit(unit)),
         EventKind::DefencesWorn { side: owner, .. } => whole_if(*owner == side),
+        // A side sees its own forces formed, joined and stood down, and its
+        // own loads and refuelling at a reserve, whole; the enemy is told
+        // nothing of any of it (decision 17 of 0111).
+        EventKind::TaskForceFormed { side: owner, .. } => whole_if(*owner == side),
+        EventKind::TaskForceJoined { into, .. } => whole_if(own_force(into)),
+        EventKind::TaskForceStoodDownInPort { task_force, .. }
+        | EventKind::LoadBelowReserve { task_force, .. }
+        | EventKind::LoadHeldAtReserve { task_force, .. }
+        | EventKind::RefuellingHeldAtReserve { task_force, .. } => {
+            whole_if(own_force(task_force))
+        }
 
         // Nothing: a pass in the dark.
         EventKind::ForcesPassedUnseen { .. } => Seen::Nothing,
@@ -1923,7 +1934,16 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         // cites the halt, the route order, and the side's own bombardment
         // (given it cut) or cargo completion (decision 0096).
         | EventKind::TaskForceHalted { .. }
-        | EventKind::TaskForceSteamedOn { .. } => false,
+        | EventKind::TaskForceSteamedOn { .. }
+        // Forming, joining, standing down and the answer below a reserve
+        // cite the side's own order; a load or refuelling held at a reserve
+        // cites the side's own load or arrival (decision 0111).
+        | EventKind::TaskForceFormed { .. }
+        | EventKind::TaskForceJoined { .. }
+        | EventKind::TaskForceStoodDownInPort { .. }
+        | EventKind::LoadBelowReserve { .. }
+        | EventKind::RefuellingHeldAtReserve { .. }
+        | EventKind::LoadHeldAtReserve { .. } => false,
 
         // Men lost in a fight cite the enemy's fire; a base taken cites the
         // test that beat the other side (decision 0090).
@@ -3624,6 +3644,69 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // Forces formed, joined and stood down, and loads and refuelling
+            // at a reserve, are their own side's alone (decision 17 of 0111).
+            sided(row(
+                EventKind::TaskForceFormed {
+                    task_force: force(1),
+                    side: Side::Allied,
+                    base: BaseId::new(1),
+                    ships: vec![ship(1)],
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::TaskForceJoined {
+                    joined: force(1),
+                    into: force(1),
+                    base: BaseId::new(1),
+                    ships: vec![ship(1)],
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::TaskForceStoodDownInPort {
+                    task_force: force(1),
+                    base: BaseId::new(1),
+                    ships: vec![ship(1)],
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::LoadBelowReserve {
+                    task_force: force(1),
+                    base: BaseId::new(1),
+                    cargo: crate::orders::Cargo::Supply,
+                    below_t: fx(200),
+                    reserve_t: fx(400),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::RefuellingHeldAtReserve {
+                    ship: ship(1),
+                    task_force: force(1),
+                    hex: hex(),
+                    short_t: fx(50),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::LoadHeldAtReserve {
+                    task_force: force(1),
+                    base: BaseId::new(1),
+                    cargo: crate::orders::Cargo::Supply,
+                    aboard_t: fx(350),
+                    reserve_t: fx(400),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -3664,7 +3747,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 122, "the log has 122 kinds of event");
+        assert_eq!(all.len(), 128, "the log has 128 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
